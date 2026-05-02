@@ -47,7 +47,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
     if (!getAccessToken()) return;
     uploadsApi.listMedia()
       .then(({ uploads }) => setMediaUploads(uploads || []))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setMediaLoading(false));
   }, []);
 
@@ -249,19 +249,18 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
                 <p className="text-sm font-medium text-zinc-200">{t('setup.audioReady')}</p>
                 <p className="text-xs text-zinc-500 truncate max-w-full px-2">{audioName}</p>
                 {audioSource && (
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                    audioSource === 'spotify' ? 'bg-green-500/15 text-green-400'
-                    : audioSource === 'youtube' ? 'bg-red-500/15 text-red-400'
-                    : 'bg-zinc-700/50 text-zinc-400'
-                  }`}>
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${audioSource === 'spotify' ? 'bg-green-500/15 text-green-400'
+                      : audioSource === 'youtube' ? 'bg-red-500/15 text-red-400'
+                        : 'bg-zinc-700/50 text-zinc-400'
+                    }`}>
                     {audioSource === 'spotify' && <SpotifyIcon className="w-3 h-3" />}
                     {audioSource === 'youtube' && <Video className="w-3 h-3" />}
                     {audioSource === 'local' && <FolderOpen className="w-3 h-3" />}
                     {audioSource === 'cloud' && <Cloud className="w-3 h-3" />}
                     {audioSource === 'spotify' ? 'Spotify'
                       : audioSource === 'youtube' ? 'YouTube'
-                      : audioSource === 'local' ? t('setup.local') || 'Local'
-                      : t('setup.cloud') || 'Cloud'}
+                        : audioSource === 'local' ? t('setup.local') || 'Local'
+                          : t('setup.cloud') || 'Cloud'}
                   </span>
                 )}
                 <Button
@@ -311,9 +310,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
                         >
                           <div className="w-7 h-7 rounded-md bg-zinc-800 border border-zinc-700/60 flex items-center justify-center shrink-0 group-hover:border-primary/40 transition-colors overflow-hidden">
                             {upload.thumbnailUrl ? (
-                              <img 
-                                src={upload.thumbnailUrl} 
-                                alt={upload.title || 'Thumbnail'} 
+                              <img
+                                src={upload.thumbnailUrl}
+                                alt={upload.title || 'Thumbnail'}
                                 className="w-full h-full object-cover"
                                 onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                               />
@@ -395,7 +394,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-red-500/70 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                     </svg>
                     <Input
                       type="text"
@@ -462,10 +461,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
                       <SpotifyIcon className="w-5 h-5 text-primary shrink-0" />
                       <div className="flex flex-col">
                         <span className="text-sm font-medium text-primary group-hover:text-primary/80 transition-colors">
-                          {t('spotify.connectAccount') || 'Connect Spotify Account'}
+                          {t('settings.spotify.connectAccount', 'Connect Spotify Account')}
                         </span>
                         <span className="text-[10px] text-zinc-500">
-                          {t('spotify.connectToAccess') || 'Connect to access your library'}
+                          {t('settings.spotify.connectToAccess', 'Connect Spotify to access your library and playlists')}
                         </span>
                       </div>
                     </button>
@@ -505,7 +504,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
                   value={lyricsText}
                   onChange={(e) => setLyricsText(e.target.value)}
                   placeholder={t('setup.pasteLyricsDesc')}
-                  className="flex-1 min-h-[120px] bg-zinc-900/50 border-zinc-700/50 text-zinc-200 placeholder:text-zinc-500 resize-none font-mono text-sm leading-relaxed focus:border-primary/50"
+                  className="flex-1 min-h-[120px] max-h-full field-sizing-fixed overflow-y-auto bg-zinc-900/50 border-zinc-700/50 text-zinc-200 placeholder:text-zinc-500 resize-none font-mono text-sm leading-relaxed focus:border-primary/50"
                 />
 
                 {/* Import file button */}
