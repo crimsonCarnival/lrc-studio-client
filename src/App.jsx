@@ -486,7 +486,7 @@ function AppInner() {
             }>
               <UploadsLibrary
                 onSelect={(upload) => navigate(`/uploads/${upload.id}`)}
-                onBack={() => navigate('/project/new')}
+                onBack={() => navigate(-1)}
               />
             </Suspense>
           } />
@@ -520,7 +520,7 @@ function AppInner() {
                   loadProject(projectId);
                   navigate(`/project/${projectId}`);
                 }}
-                onBack={() => navigate('/project/new')}
+                onBack={() => navigate(-1)}
               />
             </Suspense>
           } />
