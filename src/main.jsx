@@ -63,11 +63,12 @@ function RootRoutes() {
       </div>
     }>
       <Routes>
+        <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/share/:id" element={<SharedProjectRoute />} />
         
         {/* Auth routes */}
-        <Route path="/login" element={user ? <Navigate to="/project/new" replace /> : <AuthPage tab="login" />} />
-        <Route path="/register" element={user ? <Navigate to="/project/new" replace /> : <AuthPage tab="register" />} />
+        <Route path="/login" element={user ? <Navigate to="/home" replace /> : <AuthPage tab="login" />} />
+        <Route path="/register" element={user ? <Navigate to="/home" replace /> : <AuthPage tab="register" />} />
         
         {/* Protected app routes - App handles nested routing inside itself */}
         <Route path="/*" element={
