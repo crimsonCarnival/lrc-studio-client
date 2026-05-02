@@ -153,6 +153,13 @@ function AppInner() {
     }
   }, [activeProjectId, navigate, location.pathname, location.search]);
 
+  // Pause player when navigating away from the project page
+  useEffect(() => {
+    if (!location.pathname.startsWith('/project/')) {
+      playerRef.current?.pause?.();
+    }
+  }, [location.pathname, playerRef]);
+
   const [showNamingModal, setShowNamingModal] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [projectCoverUrl, setProjectCoverUrl] = useState('');
