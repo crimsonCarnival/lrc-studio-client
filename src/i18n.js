@@ -16,6 +16,10 @@ i18n
   .init({
     resources,
     fallbackLng: 'en',
+    detection: {
+      order: ['querystring', 'localStorage', 'navigator'],
+      lookupQuerystring: 'hl',
+    },
     interpolation: {
       escapeValue: false
     }
