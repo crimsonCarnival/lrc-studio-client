@@ -1,5 +1,6 @@
 import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 
 // Auto-reload when a new deployment invalidates lazy-loaded chunks
 window.addEventListener('vite:preloadError', () => {
@@ -16,9 +17,18 @@ import { Spinner } from './components/ui/skeleton'
 import './i18n.js'
 
 const AuthPage = lazy(() => import('./components/Auth/AuthPage.jsx'));
+const SharedProjectViewer = lazy(() => import('./components/Shared/SharedProjectViewer.jsx'));
 
-function Root() {
+// Wrapper for SharedProjectViewer to get the id param
+function SharedProjectRoute() {
+  const { id } = useParams();
+  return <SharedProjectViewer projectId={id} />;
+}
+
+// Protected Route Wrapper
+function ProtectedRoute({ children }) {
   const { user, loading } = useAuthContext();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -29,21 +39,46 @@ function Root() {
   }
 
   if (!user) {
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
+  }
+
+  return children;
+}
+
+function RootRoutes() {
+  const { user, loading } = useAuthContext();
+
+  if (loading) {
     return (
-      <Suspense fallback={
-        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-          <Spinner size={24} className="text-primary" />
-        </div>
-      }>
-        <AuthPage />
-      </Suspense>
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <Spinner size={24} className="text-primary" />
+      </div>
     );
   }
 
   return (
-    <TooltipProvider>
-      <App />
-    </TooltipProvider>
+    <Suspense fallback={
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <Spinner size={24} className="text-primary" />
+      </div>
+    }>
+      <Routes>
+        <Route path="/share/:id" element={<SharedProjectRoute />} />
+        
+        {/* Auth routes */}
+        <Route path="/login" element={user ? <Navigate to="/project/new" replace /> : <AuthPage tab="login" />} />
+        <Route path="/register" element={user ? <Navigate to="/project/new" replace /> : <AuthPage tab="register" />} />
+        
+        {/* Protected app routes - App handles nested routing inside itself */}
+        <Route path="/*" element={
+          <ProtectedRoute>
+            <TooltipProvider>
+              <App />
+            </TooltipProvider>
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </Suspense>
   );
 }
 
@@ -51,7 +86,9 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
       <AuthProvider>
-        <Root />
+        <BrowserRouter>
+          <RootRoutes />
+        </BrowserRouter>
       </AuthProvider>
       <Toaster
         position="bottom-center"
