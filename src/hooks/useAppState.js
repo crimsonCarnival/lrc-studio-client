@@ -55,7 +55,8 @@ export function useAppState(user) {
     if (themeParam && settings.interface.theme !== themeParam) {
       updateSetting('interface.theme', themeParam);
     }
-  }, [searchParams, i18n, settings.interface.theme, updateSetting]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Sync current language and theme back to URL
   useEffect(() => {
