@@ -355,6 +355,7 @@ function VirtualizedLineList({
                 <EditorLineItem
                   line={{ ...line, nextTimestamp: nextTimestamps[i] }}
                   i={i}
+                  displayedActiveIndex={displayedActiveIndex}
                   isActive={isActive}
                   isLocked={isActiveLineLocked && i === activeLineIndex}
                   isSynced={isSynced}

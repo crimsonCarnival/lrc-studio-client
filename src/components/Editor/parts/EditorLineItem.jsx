@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { serializeToRubyMarkup, isKanji, toHiragana, toKatakana, hasCJK } from '../../../utils/furigana';
 import { formatTimestamp } from '../../../utils/lrc';
@@ -149,6 +149,7 @@ function TimestampBadge({ value, isSynced, isFocused, isActive, precision, onCli
 const EditorLineItem = React.memo(({
   line,
   i,
+  displayedActiveIndex,
   isActive,
   isLocked,
   isSynced,
@@ -285,6 +286,9 @@ const EditorLineItem = React.memo(({
     ? Math.min(1, Math.max(0, (playbackPosition - line.timestamp) / (segmentEnd - line.timestamp)))
     : null;
 
+  const distanceFromActive = displayedActiveIndex != null ? Math.abs(i - displayedActiveIndex) : 0;
+  const staggerDelay = `${Math.min(distanceFromActive * 20, 150)}ms`;
+
   return (
     <div
       ref={isActive ? activeLineRef : null}
@@ -299,7 +303,8 @@ const EditorLineItem = React.memo(({
       onDragOver={(e) => handleDragOver(e, i)}
       onDragEnd={handleDragEnd}
       onDrop={(e) => handleDrop(e, i)}
-      className={`flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-2 sm:gap-3 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer group relative overflow-hidden ${selectedLines.has(i)
+      style={{ animationDelay: staggerDelay }}
+      className={`flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-2 sm:gap-3 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer group relative overflow-hidden animate-preview-line-in ${selectedLines.has(i)
         ? 'bg-primary/15 border border-primary/40 ring-1 ring-primary/20'
         : isActive
           ? isLocked
