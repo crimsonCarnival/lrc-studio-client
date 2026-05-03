@@ -582,6 +582,32 @@ export const admin = {
       method: 'POST',
     });
   },
+  
+  async getStats() {
+    return request('/admin/stats');
+  },
+
+  async getBannedIps() {
+    return request('/admin/banned-ips');
+  },
+
+  async blockIp(ip, reason) {
+    return request('/admin/banned-ips', {
+      method: 'POST',
+      body: JSON.stringify({ ip, reason }),
+    });
+  },
+
+  async unblockIp(ipId) {
+    return request(`/admin/banned-ips/${ipId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async getAuditLogs(params) {
+    const query = new URLSearchParams(params).toString();
+    return request(`/admin/audit-logs?${query}`);
+  },
 
   async getLogs() {
     return request('/admin/logs');

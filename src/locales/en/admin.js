@@ -6,6 +6,28 @@ export default {
     searchPlaceholder: 'Search users by username or email...',
     loading: 'Loading users...',
     noUsers: 'No users found.',
+    stats: {
+      total: 'Total Users',
+      active: 'Active Today',
+      banned: 'Suspended',
+      appeals: 'Pending Appeals',
+      deleted: 'Deleted Accounts'
+    },
+    tabs: {
+      users: 'User Management',
+      ipBlocklist: 'IP Command Center',
+      auditLogs: 'Audit History',
+      requestLogger: 'Live Monitor'
+    },
+    filters: {
+      allRoles: 'All Roles',
+      allStatuses: 'All Statuses',
+      active: 'Active Only',
+      banned: 'Suspended Only',
+      deleted: 'Deleted Only',
+      verified: 'Verified Only',
+      premium: 'Premium Only'
+    }
   },
   table: {
     user: 'User',
@@ -39,6 +61,18 @@ export default {
     untilLabel: 'Banned Until',
     banUntilHint: 'Leave empty for permanent ban',
     banIpLabel: 'Also ban last known IP address',
+    projects: 'Projects',
+    uploads: 'Uploads',
+    blockIp: 'Block IP Address',
+    ipPlaceholder: '1.2.3.4',
+    ipReason: 'Network-wide block reason...',
+    unblock: 'Unblock IP',
+    admin: 'Admin',
+    target: 'Target',
+    action: 'Action',
+    details: 'Details',
+    date: 'Date',
+    noAuditLogs: 'No administrative actions recorded yet.',
   },
   logger: {
     title: 'Live Request Logger',

@@ -5,7 +5,7 @@ import { X, Activity, RefreshCw, CheckCircle2, AlertCircle, Ban } from 'lucide-r
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 
-export default function RequestLogger({ open, onClose }) {
+export default function RequestLogger({ open, onClose, mode = 'portal' }) {
   const { t } = useTranslation();
   const [logs, setLogs] = useState([]);
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -20,7 +20,7 @@ export default function RequestLogger({ open, onClose }) {
   };
 
   useEffect(() => {
-    if (!open) return;
+    if (mode === 'portal' && !open) return;
     
     fetchLogs();
     
@@ -28,9 +28,9 @@ export default function RequestLogger({ open, onClose }) {
     
     const interval = setInterval(fetchLogs, 2000);
     return () => clearInterval(interval);
-  }, [open, autoRefresh]);
+  }, [open, autoRefresh, mode]);
 
-  if (!open) return null;
+  if (mode === 'portal' && !open) return null;
 
   const StatusIcon = ({ code }) => {
     if (code >= 500) return <AlertCircle className="w-4 h-4 text-red-500" />;
@@ -38,8 +38,8 @@ export default function RequestLogger({ open, onClose }) {
     return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
   };
 
-  const drawer = (
-    <div className="fixed inset-y-0 right-0 w-[600px] bg-zinc-950 border-l border-zinc-800/80 shadow-2xl z-50 flex flex-col transform transition-transform duration-300">
+  const content = (
+    <div className={`flex flex-col h-full bg-zinc-950 font-mono text-xs ${mode === 'portal' ? 'fixed inset-y-0 right-0 w-[600px] border-l border-zinc-800/80 shadow-2xl z-50 transform transition-transform duration-300' : 'relative w-full'}`}>
       <div className="p-4 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-900/50">
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-indigo-400" />
@@ -58,14 +58,18 @@ export default function RequestLogger({ open, onClose }) {
           <Button variant="ghost" size="icon-sm" onClick={fetchLogs} disabled={autoRefresh}>
             <RefreshCw className={`w-4 h-4 text-zinc-400 ${autoRefresh ? 'animate-spin' : ''}`} />
           </Button>
-          <div className="w-px h-4 bg-zinc-800 mx-1" />
-          <Button variant="ghost" size="icon-sm" onClick={onClose}>
-            <X className="w-4 h-4 text-zinc-400" />
-          </Button>
+          {mode === 'portal' && (
+            <>
+              <div className="w-px h-4 bg-zinc-800 mx-1" />
+              <Button variant="ghost" size="icon-sm" onClick={onClose}>
+                <X className="w-4 h-4 text-zinc-400" />
+              </Button>
+            </>
+          )}
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-0 font-mono text-xs">
+      <div className="flex-1 overflow-y-auto p-0">
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 bg-zinc-950 border-b border-zinc-800/80 z-10">
             <tr>
@@ -91,7 +95,8 @@ export default function RequestLogger({ open, onClose }) {
     </div>
   );
 
-  return createPortal(drawer, document.body);
+  if (mode === 'portal') return createPortal(content, document.body);
+  return content;
 }
 
 function LogRow({ log, StatusIcon, t }) {

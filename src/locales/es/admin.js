@@ -6,6 +6,28 @@ export default {
     searchPlaceholder: 'Buscar usuarios por nombre o correo...',
     loading: 'Cargando usuarios...',
     noUsers: 'No se encontraron usuarios.',
+    stats: {
+      total: 'Total Usuarios',
+      active: 'Activos Hoy',
+      banned: 'Suspendidos',
+      appeals: 'Apelaciones Pendientes',
+      deleted: 'Cuentas Eliminadas'
+    },
+    tabs: {
+      users: 'Gestión de Usuarios',
+      ipBlocklist: 'Control de IP',
+      auditLogs: 'Historial de Auditoría',
+      requestLogger: 'Monitor en Vivo'
+    },
+    filters: {
+      allRoles: 'Todos los Roles',
+      allStatuses: 'Todos los Estados',
+      active: 'Solo Activos',
+      banned: 'Solo Suspendidos',
+      deleted: 'Solo Eliminados',
+      verified: 'Solo Verificados',
+      premium: 'Solo Premium'
+    }
   },
   table: {
     user: 'Usuario',
@@ -39,6 +61,18 @@ export default {
     untilLabel: 'Baneado Hasta',
     banUntilHint: 'Dejar vacío para baneo permanente',
     banIpLabel: 'También banear la última dirección IP conocida',
+    projects: 'Proyectos',
+    uploads: 'Archivos',
+    blockIp: 'Bloquear Dirección IP',
+    ipPlaceholder: '1.2.3.4',
+    ipReason: 'Razón del bloqueo de red...',
+    unblock: 'Desbloquear IP',
+    admin: 'Admin',
+    target: 'Objetivo',
+    action: 'Acción',
+    details: 'Detalles',
+    date: 'Fecha',
+    noAuditLogs: 'Aún no se han registrado acciones administrativas.',
   },
   logger: {
     title: 'Registro en Vivo',
