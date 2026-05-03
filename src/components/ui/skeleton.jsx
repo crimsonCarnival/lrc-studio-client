@@ -200,3 +200,43 @@ export function SkeletonPreview({ className }) {
     </div>
   );
 }
+
+/* ─── Player skeleton ───────────────────────────────────────────────── */
+/* Mirrors: artwork/title → play controls + timeline → volume/options */
+export function SkeletonPlayer({ className }) {
+  return (
+    <div className={cn("h-14 lg:h-[72px] flex items-center justify-between px-2 sm:px-4 lg:px-0 w-full animate-fade-in gap-4", className)}>
+      {/* Left: Artwork and title */}
+      <div className="flex items-center gap-3 w-[120px] sm:w-[180px] lg:w-[240px] flex-shrink-0">
+        <Skeleton className="w-10 h-10 lg:w-12 lg:h-12 rounded-lg flex-shrink-0" />
+        <div className="flex-col gap-1.5 hidden sm:flex flex-1">
+          <Skeleton className="h-3.5 w-3/4" />
+          <Skeleton className="h-2.5 w-1/2" />
+        </div>
+      </div>
+      
+      {/* Center: Controls and timeline */}
+      <div className="flex-1 flex flex-col items-center justify-center gap-1.5 max-w-2xl px-2">
+        <div className="flex items-center gap-3 lg:gap-4">
+          <Skeleton className="w-5 h-5 rounded-full" />
+          <Skeleton className="w-6 h-6 rounded-full" />
+          <Skeleton className="w-9 h-9 lg:w-10 lg:h-10 rounded-full" />
+          <Skeleton className="w-6 h-6 rounded-full" />
+          <Skeleton className="w-5 h-5 rounded-full" />
+        </div>
+        <div className="w-full flex items-center gap-2 hidden lg:flex">
+          <Skeleton className="h-2.5 w-8 flex-shrink-0" />
+          <Skeleton className="h-1.5 flex-1 rounded-full" />
+          <Skeleton className="h-2.5 w-8 flex-shrink-0" />
+        </div>
+      </div>
+      
+      {/* Right: Volume and options */}
+      <div className="flex items-center justify-end gap-3 w-[120px] sm:w-[180px] lg:w-[240px] flex-shrink-0">
+        <Skeleton className="w-5 h-5 rounded-md hidden lg:block" />
+        <Skeleton className="w-20 h-1.5 rounded-full hidden lg:block" />
+        <Skeleton className="w-5 h-5 rounded-md hidden lg:block" />
+      </div>
+    </div>
+  );
+}

@@ -80,6 +80,7 @@ export function useAppState(user) {
   // ——— Lines state with undo/redo ———
   // editorMode must be declared before useHistory so getCompanion can close over it
   const [editorMode, setEditorModeRaw] = useState('lrc');
+  const [isProjectLoading, setIsProjectLoading] = useState(false);
 
   const [lines, setLines, undo, redo, canUndo, canRedo] = useHistory([], {
     limit: settings.advanced?.history?.limit || 50,
@@ -221,6 +222,7 @@ export function useAppState(user) {
 
     // If authenticated, try server first (source of truth)
     if (getAccessToken()) {
+      setIsProjectLoading(true);
       projects.get(activeProjectId)
         .then(({ project }) => {
           // Server data found - use it as source of truth
@@ -280,7 +282,8 @@ export function useAppState(user) {
             localStorage.removeItem(ACTIVE_PROJECT_ID_KEY);
             localStorage.removeItem(PROJECT_KEY);
           } catch { /* ignore */ }
-        });
+        })
+        .finally(() => setIsProjectLoading(false));
     } else {
       // Not authenticated - use localStorage
       restoreFromLocalStorage();
@@ -658,6 +661,7 @@ export function useAppState(user) {
     // Try server project ID first (short alphanumeric), then fall back to legacy base64 decoding
     const looksLikeProjectId = /^[A-Za-z0-9_-]{6,21}$/.test(encoded) && !encoded.includes('eJy');
     if (looksLikeProjectId) {
+      setIsProjectLoading(true);
       projects.get(encoded)
         .then(({ project }) => {
           const parsed = {
@@ -681,7 +685,8 @@ export function useAppState(user) {
               restoreProject(parsed);
             })
             .catch((err) => console.error('Failed to decode shared project URL', err));
-        });
+        })
+        .finally(() => setIsProjectLoading(false));
     } else {
       // Legacy base64-encoded project
       decompressFromBase64(encoded)
@@ -1027,6 +1032,7 @@ export function useAppState(user) {
       // Persist to server: update existing or create new
       if (getAccessToken()) {
         const persistProject = async () => {
+          setIsProjectLoading(true);
           // First create upload if we have YouTube URL
           let uploadIdToSave = null;
           if (pendingProject.ytUrl) {
@@ -1069,6 +1075,7 @@ export function useAppState(user) {
                 setActiveProjectId(existingId);
                 localStorage.setItem(ACTIVE_PROJECT_ID_KEY, existingId);
               }
+              setIsProjectLoading(false);
               return;
             } catch {
               // update failed (404, 403, etc) — fall through to create
@@ -1079,6 +1086,7 @@ export function useAppState(user) {
             setActiveProjectId(res.projectId);
             localStorage.setItem(ACTIVE_PROJECT_ID_KEY, res.projectId);
           } catch { /* ignore create project errors */ }
+          setIsProjectLoading(false);
         };
         persistProject();
       }
@@ -1119,7 +1127,9 @@ export function useAppState(user) {
 
   // ——— Load a project from the library ———
   const loadProject = useCallback(async (projectId) => {
-    const { project } = await projects.get(projectId);
+    setIsProjectLoading(true);
+    try {
+      const { project } = await projects.get(projectId);
     const projectLines = (project.lyrics?.lines || []).map((l) => ({
       text: l.text || '',
       timestamp: l.timestamp ?? null,
@@ -1168,7 +1178,12 @@ export function useAppState(user) {
       playbackSpeed: project.state?.playbackSpeed || 1,
       projectId,
     }));
-  }, [setLines, setMediaTitle]);
+    } catch (err) {
+      console.error('Failed to load project:', err);
+    } finally {
+      setIsProjectLoading(false);
+    }
+  }, [setLines, setSyncMode, setActiveLineIndex, setMediaTitle, setActiveProjectId]);
 
   // ——— Clear all data when media is removed ———
   const handleMediaChange = useCallback(
@@ -1499,5 +1514,6 @@ export function useAppState(user) {
     activeProjectId,
     loadProject,
     handleCloudinaryUpload,
+    isProjectLoading,
   };
 }

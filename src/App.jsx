@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useCallback, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation, useParams } from 'react-router-dom';
 import Player from './components/Player';
 import { SettingsProvider } from './contexts/SettingsContext';
-import { SkeletonList, SkeletonEditor, SkeletonPreview, SkeletonSetup } from './components/ui/skeleton';
+import { SkeletonList, SkeletonEditor, SkeletonPreview, SkeletonSetup, SkeletonPlayer } from './components/ui/skeleton';
 
 const Editor = lazy(() => import('./components/Editor'));
 const Preview = lazy(() => import('./components/Preview'));
@@ -103,6 +103,7 @@ function AppInner() {
     projectMetadata,
     setProjectMetadata,
     handleCloudinaryUpload,
+    isProjectLoading,
   } = useAppState();
 
   useScrollLock(!!pendingProject);
@@ -577,8 +578,18 @@ function AppInner() {
           } />
           <Route path="project/:id" element={
             <EditorContainer loadProject={loadProject} activeProjectId={activeProjectId}>
-              <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-3 lg:gap-4 min-h-0 overflow-visible transition-all duration-300">
-                {/* Left: Editor */}
+              {isProjectLoading ? (
+                <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-3 lg:gap-4 min-h-0 overflow-visible transition-all duration-300">
+                  <div className={`${editorColClass} flex flex-col gap-2 sm:gap-3 lg:gap-4 min-h-0 max-lg:h-full`}>
+                    <SkeletonEditor />
+                  </div>
+                  <div className={`${previewColClass} flex flex-col min-h-0 max-lg:h-full`}>
+                    <SkeletonPreview />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-3 lg:gap-4 min-h-0 overflow-visible transition-all duration-300">
+                  {/* Left: Editor */}
                 {showEditor && (
                   <div className={`${editorColClass} relative flex flex-col gap-2 sm:gap-3 lg:gap-4 min-h-0 max-lg:h-full transition-all duration-300 ${mobileTab !== 'editor' ? 'max-lg:hidden' : ''}`}>
                     {isSharedProject && sharedReadOnly && (
@@ -654,6 +665,7 @@ function AppInner() {
                   </div>
                 )}
               </div>
+              )}
             </EditorContainer>
           } />
           <Route path="home" element={
@@ -677,30 +689,34 @@ function AppInner() {
           Hidden during setup phase but kept mounted for playerRef. ── */}
       <div className={`lg:relative lg:z-raised lg:w-full lg:border-t lg:border-zinc-700/50 lg:bg-zinc-900/80 lg:backdrop-blur-md lg:shadow-[0_-4px_24px_rgba(0,0,0,0.3)] max-lg:fixed max-lg:inset-x-0 max-lg:bottom-14 max-lg:z-player ${!isReady ? 'hidden' : ''}`}>
         <div className="max-w-7xl mx-auto max-lg:p-0 lg:px-6 lg:py-3">
-          <Player
-            ref={playerRef}
-            mediaTitle={mediaTitle}
-            onTitleChange={(newTitle) => {
-              // Only auto-update the project title from media metadata if:
-              // 1. We are in the initial setup screen
-              // 2. The current title is empty or "Untitled"
-              const isSetupPhase = location.pathname === '/project/new';
-              if (isSetupPhase || !mediaTitle || mediaTitle === t('library.untitled') || mediaTitle === 'Untitled') {
-                setMediaTitle(newTitle);
-              }
-            }}
-            onTimeUpdate={handleTimeUpdate}
-            onDurationChange={handleDurationChange}
-            onMediaChange={handleMediaChange}
-            onYtUrlChange={handleYtUrlChange}
-            onCloudinaryUpload={handleCloudinaryUpload}
-            initialYtUrl={restoredYtUrl}
-            initialSeek={restoredPosition}
-            initialSpeed={restoredSpeed}
-            lines={lines}
-            playbackPosition={playbackPosition}
-            syncMode={syncMode}
-          />
+          {isProjectLoading && isReady ? (
+            <SkeletonPlayer />
+          ) : (
+            <Player
+              ref={playerRef}
+              mediaTitle={mediaTitle}
+              onTitleChange={(newTitle) => {
+                // Only auto-update the project title from media metadata if:
+                // 1. We are in the initial setup screen
+                // 2. The current title is empty or "Untitled"
+                const isSetupPhase = location.pathname === '/project/new';
+                if (isSetupPhase || !mediaTitle || mediaTitle === t('library.untitled') || mediaTitle === 'Untitled') {
+                  setMediaTitle(newTitle);
+                }
+              }}
+              onTimeUpdate={handleTimeUpdate}
+              onDurationChange={handleDurationChange}
+              onMediaChange={handleMediaChange}
+              onYtUrlChange={handleYtUrlChange}
+              onCloudinaryUpload={handleCloudinaryUpload}
+              initialYtUrl={restoredYtUrl}
+              initialSeek={restoredPosition}
+              initialSpeed={restoredSpeed}
+              lines={lines}
+              playbackPosition={playbackPosition}
+              syncMode={syncMode}
+            />
+          )}
         </div>
       </div>
 
