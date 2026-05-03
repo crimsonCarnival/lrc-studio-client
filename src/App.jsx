@@ -26,7 +26,7 @@ import {
   PopoverTrigger,
 } from './components/ui/popover';
 import { Tip } from './components/ui/tip';
-import { Music2, UploadCloud, Globe, Settings as SettingsIcon, Eye, EyeOff, Lock, LockOpen, LayoutList, User, LogOut, BookOpen, Pencil, Share2, Loader2, Sun, Moon, Monitor } from 'lucide-react';
+import { Music2, UploadCloud, Globe, Settings as SettingsIcon, Eye, EyeOff, Lock, LockOpen, LayoutList, User, LogOut, BookOpen, Pencil, Share2, Loader2, Sun, Moon, Monitor, AlertCircle } from 'lucide-react';
 import { useScrollLock } from './hooks/useScrollLock';
 import { useNetworkStatus } from './hooks/useNetworkStatus';
 
@@ -88,6 +88,8 @@ function AppInner() {
     restoredPosition,
     restoredSpeed,
     confirmModal,
+    requestConfirm,
+    hasUnsavedChanges,
     isAutosaving,
     exportToUrl,
     isSharedProject,
@@ -117,6 +119,7 @@ function AppInner() {
   // Normalize: if old 'preview' mode was saved, fall back to 'default'
   const focusMode = ['default', 'sync', 'playback'].includes(rawFocusMode) ? rawFocusMode : 'default';
   const [hideEditor, setHideEditor] = useState(false);
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
 
   const isReady = location.pathname.startsWith('/project/') && location.pathname !== '/project/new';
 
@@ -254,16 +257,34 @@ function AppInner() {
         </div>
       )}
 
-
+      {/* Logo and Header */}
       <header className="relative z-sticky flex flex-row items-center justify-between gap-2 w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-5 animate-fade-in">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0">
+          <button 
+            onClick={() => {
+              if (hasUnsavedChanges()) {
+                setShowUnsavedModal(true);
+              } else {
+                navigate('/home');
+              }
+            }}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+          >
             <Music2 className="w-4 sm:w-5 h-4 sm:h-5 text-white" strokeWidth={2} />
-          </div>
+          </button>
           <div className="overflow-hidden flex items-center gap-2 min-w-0">
-            <h1 className="text-base sm:text-lg font-bold text-zinc-100 tracking-tight truncate shrink-0">
+            <button
+              onClick={() => {
+                if (hasUnsavedChanges()) {
+                  setShowUnsavedModal(true);
+                } else {
+                  navigate('/home');
+                }
+              }}
+              className="text-base sm:text-lg font-bold text-zinc-100 tracking-tight truncate shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            >
               {t('app.name')}
-            </h1>
+            </button>
             {isReady && (
               <>
                 <span className="text-zinc-600 shrink-0">/</span>
@@ -337,8 +358,7 @@ function AppInner() {
           )}
 
           {/* Library button */}
-          {isReady && (
-            <Tip content={t('library.title')}>
+          <Tip content={t('library.title')}>
               <Button
                 variant="outline"
                 aria-label={t('library.title')}
@@ -357,7 +377,7 @@ function AppInner() {
                 <BookOpen className="w-4 sm:w-[18px] h-4 sm:h-[18px]" strokeWidth={1.8} />
               </Button>
             </Tip>
-          )}
+
 
           {/* Uploads button — always visible so users can manage files before/during setup */}
           <Tip content={t('uploads.title')}>
@@ -777,6 +797,51 @@ function AppInner() {
                 className="flex-1 bg-primary hover:bg-primary-dim text-zinc-950 font-semibold text-sm rounded-xl h-10"
               >
                 {t('project.restore')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unsaved Changes Modal */}
+      {showUnsavedModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 animate-fade-in">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowUnsavedModal(false)} />
+          <div className="relative w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-5 sm:p-6 animate-scale-in flex flex-col gap-4">
+            <div className="flex items-center gap-3 text-red-400 mb-2">
+              <AlertCircle className="w-6 h-6" />
+              <h3 className="text-lg font-bold text-zinc-100">{t('app.unsavedChangesTitle')}</h3>
+            </div>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              {t('app.unsavedChangesMessage')}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 mt-2">
+              <Button
+                variant="outline"
+                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700 font-semibold text-sm h-10 rounded-xl"
+                onClick={() => setShowUnsavedModal(false)}
+              >
+                {t('app.cancel')}
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 bg-zinc-800 hover:bg-red-500/20 text-red-400 border-zinc-700 hover:border-red-500/30 font-semibold text-sm h-10 rounded-xl"
+                onClick={() => {
+                  setShowUnsavedModal(false);
+                  navigate('/home');
+                }}
+              >
+                {t('app.discard')}
+              </Button>
+              <Button
+                className="flex-1 bg-primary text-zinc-950 hover:bg-primary-dim font-semibold text-sm h-10 rounded-xl"
+                onClick={async () => {
+                  setShowUnsavedModal(false);
+                  await handleManualSave();
+                  navigate('/home');
+                }}
+              >
+                {t('app.saveAndExit')}
               </Button>
             </div>
           </div>
