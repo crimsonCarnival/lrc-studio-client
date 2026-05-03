@@ -27,6 +27,7 @@ export default function Editor({
   handleRemoveAllLyrics,
   isAutosaving,
   compact,
+  onNewProject,
 }) {
   "use no memo";
   const {
@@ -137,6 +138,7 @@ export default function Editor({
         compact={compact}
         overlappingLines={overlappingLines}
         onConvertReadings={handleConvertReadings}
+        onNewProject={onNewProject}
       />
 
       <div className="flex flex-col flex-1 min-h-0 min-w-0">

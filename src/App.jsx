@@ -104,6 +104,7 @@ function AppInner() {
     activeProjectId,
     projectMetadata,
     setProjectMetadata,
+    resetAppState,
     handleCloudinaryUpload,
     isProjectLoading,
   } = useAppState();
@@ -157,6 +158,13 @@ function AppInner() {
       playerRef.current?.pause?.();
     }
   }, [location.pathname, playerRef]);
+
+  // Reset project state when entering the "New Project" screen
+  useEffect(() => {
+    if (location.pathname === '/project/new') {
+      resetAppState();
+    }
+  }, [location.pathname, resetAppState]);
 
   const [showNamingModal, setShowNamingModal] = useState(false);
   const [pendingSetupData, setPendingSetupData] = useState(null);
@@ -651,6 +659,7 @@ function AppInner() {
                             handleRemoveAllLyrics={handleRemoveAllLyrics}
                             isAutosaving={isAutosaving}
                             compact={false}
+                            onNewProject={() => navigate('/project/new')}
                           />
                         </Suspense>
                       </div>

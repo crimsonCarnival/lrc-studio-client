@@ -12,7 +12,7 @@ import {
   PopoverSeparator,
 } from '@/components/ui/popover';
 import { Tip } from '@/components/ui/tip';
-import { Undo2, Redo2, ListChecks, TimerOff, Trash2, MousePointerClick, FileText, Repeat, Pencil, Save, Check, Eraser, SquareX, MoreHorizontal, X } from 'lucide-react';
+import { Undo2, Redo2, ListChecks, TimerOff, Trash2, MousePointerClick, FileText, Repeat, Pencil, Save, Check, Eraser, SquareX, MoreHorizontal, X, Plus } from 'lucide-react';
 
 function ActionsDropdown({ children, t }) {
   const [open, setOpen] = useState(false);
@@ -61,6 +61,7 @@ export default function EditorToolbar({
   compact,
   overlappingLines,
   onConvertReadings,
+  onNewProject,
 }) {
   const { t } = useTranslation();
   const hasAnyTimestamp = lines.some((l) => l.timestamp != null);
@@ -243,6 +244,14 @@ export default function EditorToolbar({
                     )}
                   </>
                 )}
+                <PopoverSeparator />
+                <PopoverItem
+                  onClick={onNewProject}
+                  className="text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  {t('home.newProject')}
+                </PopoverItem>
                 <PopoverSeparator />
                 <PopoverItem
                   onClick={() => {
@@ -516,6 +525,14 @@ export default function EditorToolbar({
                   </PopoverItem>
                 </>
               )}
+              <PopoverSeparator className="bg-zinc-700/50" />
+              <PopoverItem
+                onClick={onNewProject}
+                className="text-xs text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer gap-2"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                {t('home.newProject')}
+              </PopoverItem>
               <PopoverSeparator className="bg-zinc-700/50" />
               <PopoverItem
                 onClick={() => {

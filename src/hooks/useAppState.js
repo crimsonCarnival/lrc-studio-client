@@ -1171,30 +1171,37 @@ export function useAppState(user) {
     setPendingProject(null);
   };
 
-  // ——— Remove all lyrics and clear project ———
+  // ——— Remove all lyrics and clear editor content ———
   const handleRemoveAllLyrics = useCallback(async () => {
     // Clear React state
     setLines([]);
     setSyncMode(false);
     setActiveLineIndex(0);
+    // Note: We keep activeProjectId and mediaTitle if they want to reuse the project
+    // But they can also just navigate to /project/new to start a completely fresh one
+  }, [setLines, setSyncMode, setActiveLineIndex]);
+
+  // ——— Reset app state (for new project) without deleting from DB ———
+  const resetAppState = useCallback(() => {
+    setLines([]);
+    setSyncMode(false);
+    setActiveLineIndex(0);
     setMediaTitle('');
     setProjectMetadata({ description: '', tags: [] });
-
-    // Clear localStorage
+    setProjectYtUrl('');
+    setRestoredYtUrl('');
+    setRestoredPosition(0);
+    setRestoredSpeed(1);
+    setActiveProjectId(null);
+    activeProjectIdRef.current = null;
+    setIsSharedProject(false);
+    setSharedReadOnly(true);
+    localStorage.removeItem(ACTIVE_PROJECT_ID_KEY);
     localStorage.removeItem(PROJECT_KEY);
-
-    // Delete project from database if it exists
-    if (activeProjectId && getAccessToken()) {
-      try {
-        await projects.remove(activeProjectId);
-      } catch {
-        // Ignore errors - project might not exist on server
-      }
-      localStorage.removeItem(ACTIVE_PROJECT_ID_KEY);
-      setActiveProjectId(null);
-      activeProjectIdRef.current = null;
-    }
-  }, [activeProjectId, setLines, setSyncMode, setActiveLineIndex, setMediaTitle, setProjectMetadata, setActiveProjectId]);
+    localStorage.removeItem(SHARED_PROJECT_KEY);
+    lastServerSnapshotRef.current = null;
+    setCloudinaryAudio(null);
+  }, [setLines, setActiveProjectId]);
 
   // ——— Load a project from the library ———
   const loadProject = useCallback(async (projectId) => {
@@ -1587,6 +1594,7 @@ export function useAppState(user) {
     setShareModal,
     activeProjectId,
     loadProject,
+    resetAppState,
     handleCloudinaryUpload,
     isProjectLoading,
   };
