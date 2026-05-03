@@ -1141,6 +1141,7 @@ export function useAppState(user) {
               // Update succeeded — keep the same activeProjectId
               if (!activeProjectId) {
                 setActiveProjectId(existingId);
+                activeProjectIdRef.current = existingId;
                 localStorage.setItem(ACTIVE_PROJECT_ID_KEY, existingId);
               }
               setIsProjectLoading(false);
@@ -1152,6 +1153,7 @@ export function useAppState(user) {
           try {
             const res = await projects.create(serverPayload);
             setActiveProjectId(res.projectId);
+            activeProjectIdRef.current = res.projectId;
             localStorage.setItem(ACTIVE_PROJECT_ID_KEY, res.projectId);
           } catch { /* ignore create project errors */ }
           setIsProjectLoading(false);
@@ -1190,6 +1192,7 @@ export function useAppState(user) {
       }
       localStorage.removeItem(ACTIVE_PROJECT_ID_KEY);
       setActiveProjectId(null);
+      activeProjectIdRef.current = null;
     }
   }, [activeProjectId, setLines, setSyncMode, setActiveLineIndex, setMediaTitle, setProjectMetadata, setActiveProjectId]);
 
@@ -1218,6 +1221,7 @@ export function useAppState(user) {
     if (project.state?.playbackSpeed) setRestoredSpeed(project.state.playbackSpeed);
     if (project.title) setMediaTitle(project.title);
     setActiveProjectId(projectId);
+    activeProjectIdRef.current = projectId;
     updateServerSnapshot({
       title: project.title || '',
       metadata: project.metadata || { description: '', tags: [] },
