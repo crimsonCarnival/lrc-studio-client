@@ -1422,6 +1422,25 @@ export function useAppState(user) {
     }
   }, [t, loadProject]); // loadProject included as dependency
 
+  const hasUnsavedChanges = useCallback(() => {
+    // Unsaved local project with actual content
+    if (!activeProjectId && lines.length > 0) return true;
+    
+    // Server project with potential differences
+    if (activeProjectId && lastServerSnapshotRef.current) {
+      if (isAutosaving) return true;
+      if (mediaTitle !== lastServerSnapshotRef.current.title) return true;
+      
+      // Compare actual line content to accurately detect unsaved text/timestamp edits
+      // We must use buildProjectPayload to get the rounded timestamps to correctly match the snapshot
+      const currentPayloadLines = buildProjectPayload().lines || [];
+      const currentLinesStr = JSON.stringify(currentPayloadLines);
+      const snapshotLinesStr = JSON.stringify(lastServerSnapshotRef.current.lines || []);
+      if (currentLinesStr !== snapshotLinesStr) return true;
+    }
+    return false;
+  }, [activeProjectId, lines, mediaTitle, isAutosaving, buildProjectPayload]);
+
   return {
     t,
     i18n,
@@ -1468,6 +1487,8 @@ export function useAppState(user) {
     restoredPosition,
     restoredSpeed,
     exportToUrl,
+    requestConfirm,
+    hasUnsavedChanges,
     confirmModal,
     isAutosaving,
     isSharedProject,
