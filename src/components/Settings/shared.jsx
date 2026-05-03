@@ -35,6 +35,9 @@ export function Section({ title, icon: Icon, children, searchTerm }) {
     if (!React.isValidElement(child)) return child;
 
     if (searchTerm) {
+      const normalize = (str) =>
+        str.toString().toLowerCase().replace(/[\s-]/g, '');
+
       const label =
         typeof child.props.label === 'string'
           ? child.props.label
@@ -42,9 +45,14 @@ export function Section({ title, icon: Icon, children, searchTerm }) {
       const desc =
         typeof child.props.description === 'string' ? child.props.description : '';
 
-      const match =
-        label.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-        desc.toString().toLowerCase().includes(searchTerm.toLowerCase());
+      const normalizedLabel = normalize(label);
+      const normalizedDesc = normalize(desc);
+      const searchTokens = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+      
+      const match = searchTokens.every(token => {
+        const normalizedToken = normalize(token);
+        return normalizedLabel.includes(normalizedToken) || normalizedDesc.includes(normalizedToken);
+      });
 
       if (!match) return null;
     }

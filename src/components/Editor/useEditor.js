@@ -101,69 +101,83 @@ export function useEditor({
     stampTargetRef.current = 'main';
   }, [activeLineIndex]);
 
-  // When switching to words mode, ensure every line has a words array
   useEffect(() => {
     if (editorMode === 'words') {
       setLines((prev) =>
         prev.map((line) => {
-          const text = (line.text || '').trim();
-          if (!text) return line;
-          const hasCJK = /[\u3000-\u9FFF\uF900-\uFAFF]/.test(text);
+          const rawValue = (line.text || '').trim();
+          if (!rawValue) return line;
 
-          if (hasCJK) {
-            // Mixed CJK+Latin: split CJK chars individually, keep Latin runs as words
-            const cjkTokens = [];
-            const codePoints = [...text];
-            let ci = 0;
-            while (ci < codePoints.length) {
-              const ch = codePoints[ci];
-              if (!ch.trim()) { ci++; continue; }
-              if (/[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch)) {
-                cjkTokens.push(ch);
-                ci++;
-              } else {
-                let j = ci;
-                while (j < codePoints.length && !/[\u3000-\u9FFF\uF900-\uFAFF]/.test(codePoints[j]) && codePoints[j].trim()) j++;
-                cjkTokens.push(codePoints.slice(ci, j).join(''));
-                ci = j;
-              }
-            }
-            if (!cjkTokens.length) return line;
-            // If existing words reconstruct to the same text, keep them — preserves readings & timestamps
-            if (line.words?.length) {
-              const existingText = line.words.map(w => w.word).join('');
-              const strippedText = cjkTokens.join('');
-              if (existingText === strippedText) return line;
-              // Text changed — re-tokenize, preserving timestamps and readings by char position
-              const newWords = cjkTokens.map((tok) => ({ word: tok, time: null }));
-              let charIdx = 0;
-              line.words.forEach((oldWord) => {
-                let pos = 0;
-                let tokIdx = 0;
-                while (tokIdx < newWords.length && pos + [...newWords[tokIdx].word].length <= charIdx) {
-                  pos += [...newWords[tokIdx].word].length;
-                  tokIdx++;
-                }
-                if (tokIdx < newWords.length) {
-                  if (oldWord.time != null) newWords[tokIdx].time = oldWord.time;
-                  if (oldWord.reading) newWords[tokIdx].reading = oldWord.reading;
-                }
-                charIdx += [...oldWord.word].length;
-              });
-              return { ...line, words: newWords };
-            }
-            return { ...line, words: cjkTokens.map((word) => ({ word, time: null })) };
+          const { plainText, segments } = parseRubyMarkup(rawValue);
+          const hasMarkup = segments.some(s => s.reading);
+          const textChanged = plainText !== (line.text || '');
+
+          // If no markup and already has words that match the current text, skip
+          if (!hasMarkup && line.words?.length) {
+            const existingText = line.words.map(w => w.word).join('');
+            if (existingText === plainText) return line;
           }
 
-          // Latin: keep existing words if present
-          if (line.words?.length) return line;
-          const tokens = text.split(/\s+/).filter(Boolean);
-          if (!tokens.length) return line;
-          return { ...line, words: tokens.map((word) => ({ word, time: null })) };
+          // Build a map from old char positions so timestamps survive edits if text didn't change too much
+          const oldWordAtPos = new Map();
+          let flat = 0;
+          for (const w of line.words || []) {
+            for (let k = 0; k < [...w.word].length; k++) oldWordAtPos.set(flat + k, w);
+            flat += [...w.word].length;
+          }
+
+          let charPos = 0;
+          const newWords = [];
+          const isCJKText = hasCJK(plainText);
+
+          for (const seg of segments) {
+            const segChars = [...seg.text];
+            if (seg.reading) {
+              // Annotated segment — store as one word with the reading
+              const anchor = oldWordAtPos.get(charPos);
+              newWords.push({ word: seg.text, time: anchor?.time ?? null, reading: seg.reading });
+              charPos += segChars.length;
+            } else if (isCJKText) {
+              // Mixed CJK+Latin: split CJK chars individually, keep Latin runs as words
+              let ci = 0;
+              while (ci < segChars.length) {
+                const ch = segChars[ci];
+                if (!ch.trim()) { charPos++; ci++; continue; }
+                if (/[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch)) {
+                  const old = oldWordAtPos.get(charPos);
+                  const w = { word: ch, time: old?.time ?? null };
+                  if (old?.reading) w.reading = old.reading;
+                  newWords.push(w);
+                  charPos++; ci++;
+                } else {
+                  let j = ci;
+                  while (j < segChars.length && !/[\u3000-\u9FFF\uF900-\uFAFF]/.test(segChars[j]) && segChars[j].trim()) j++;
+                  const latinToken = segChars.slice(ci, j).join('');
+                  const old = oldWordAtPos.get(charPos);
+                  newWords.push({ word: latinToken, time: old?.time ?? null });
+                  charPos += [...latinToken].length;
+                  ci = j;
+                }
+              }
+            } else {
+              // Pure Latin
+              const tokens = seg.text.split(/\s+/).filter(Boolean);
+              for (const token of tokens) {
+                const old = oldWordAtPos.get(charPos);
+                newWords.push({ word: token, time: old?.time ?? null });
+                charPos += [...token].length;
+              }
+            }
+          }
+
+          const filteredWords = newWords.filter(w => w.word.trim());
+          if (filteredWords.length === 0) return line;
+
+          return { ...line, text: plainText, words: filteredWords };
         })
       );
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editorMode]);
 
   const displayedActiveIndex = isActiveLineLocked
@@ -179,8 +193,6 @@ export function useEditor({
   const handleLineHoverEnd = useCallback(() => {
     setHoveredLineIndex(null);
   }, []);
-
-  // ——— Paste-area handlers ———
 
   const handleConfirmLyrics = async () => {
     const looksLikeLrc = /^\[(\d{1,2}):(\d{2}\.\d{2,3})\]/m.test(rawText);
@@ -205,10 +217,71 @@ export function useEditor({
         return;
       }
     }
-    const newTexts = rawText.split('\n').map((text) => text.trim());
-    const updated = newTexts.map((text, i) => {
+
+    const newLinesData = rawText.split('\n').map((rawLine) => {
+      const { plainText, segments } = parseRubyMarkup(rawLine.trim());
+      const isCJKText = hasCJK(plainText);
+      const newWords = [];
+      for (const seg of segments) {
+        const segChars = [...seg.text];
+        if (seg.reading) {
+          newWords.push({ word: seg.text, time: null, reading: seg.reading });
+        } else if (isCJKText) {
+          let ci = 0;
+          while (ci < segChars.length) {
+            const ch = segChars[ci];
+            if (!ch.trim()) { ci++; continue; }
+            if (/[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch)) {
+              newWords.push({ word: ch, time: null });
+              ci++;
+            } else {
+              let j = ci;
+              while (j < segChars.length && !/[\u3000-\u9FFF\uF900-\uFAFF]/.test(segChars[j]) && segChars[j].trim()) j++;
+              const latinToken = segChars.slice(ci, j).join('');
+              newWords.push({ word: latinToken, time: null });
+              ci = j;
+            }
+          }
+        } else {
+          const tokens = seg.text.split(/\s+/).filter(Boolean);
+          for (const token of tokens) {
+            newWords.push({ word: token, time: null });
+          }
+        }
+      }
+      return { plainText, words: newWords.length > 0 ? newWords : undefined };
+    });
+
+    const updated = newLinesData.map((data, i) => {
       const old = lines[i] || {};
-      return { ...old, text, timestamp: old.timestamp ?? null, id: old.id || crypto.randomUUID() };
+      const line = {
+        ...old,
+        text: data.plainText,
+        timestamp: old.timestamp ?? null,
+        id: old.id || crypto.randomUUID()
+      };
+      if (data.words) {
+        // If we already had words with timestamps, try to preserve them by position
+        if (old.words?.length) {
+          let charIdx = 0;
+          old.words.forEach((oldWord) => {
+            let pos = 0;
+            let tokIdx = 0;
+            while (tokIdx < data.words.length && pos + [...data.words[tokIdx].word].length <= charIdx) {
+              pos += [...data.words[tokIdx].word].length;
+              tokIdx++;
+            }
+            if (tokIdx < data.words.length) {
+              if (oldWord.time != null) data.words[tokIdx].time = oldWord.time;
+              // Markup readings in the paste area take priority over old readings
+              if (!data.words[tokIdx].reading && oldWord.reading) data.words[tokIdx].reading = oldWord.reading;
+            }
+            charIdx += [...oldWord.word].length;
+          });
+        }
+        line.words = data.words;
+      }
+      return line;
     });
     setLines(updated);
     setActiveLineIndex(Math.max(0, updated.findIndex((l) => l.timestamp == null)));

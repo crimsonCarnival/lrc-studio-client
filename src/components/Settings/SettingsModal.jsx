@@ -28,8 +28,8 @@ const TABS = [
 function tabPanelClass(tabId, activeTab, searchTerm) {
   if (searchTerm) return 'flex flex-col';
   const isActive = activeTab === tabId;
-  return `col-start-1 row-start-1 px-6 pt-4 pb-0 flex flex-col min-h-0 transition-opacity duration-150 ${
-    isActive ? 'opacity-100 z-raised' : 'opacity-0 z-base pointer-events-none'
+  return `col-start-1 row-start-1 px-6 pt-4 pb-0 flex flex-col min-h-0 transition-all duration-200 ease-out ${
+    isActive ? 'opacity-100 z-raised animate-tab-slide-in' : 'opacity-0 z-base pointer-events-none'
   }`;
 }
 
@@ -72,7 +72,7 @@ export default function SettingsModal({ isOpen, onClose }) {
           className="w-full max-w-lg pointer-events-auto flex flex-col max-h-[85vh]"
           style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
         >
-          <div className="bg-zinc-900 border border-zinc-700/80 rounded-2xl shadow-elevated w-full flex flex-col h-full animate-fade-in overflow-hidden">
+          <div className="bg-zinc-900 border border-zinc-700/80 rounded-2xl shadow-elevated w-full flex flex-col h-full animate-slide-up-fade overflow-hidden">
             {/* Header (drag handle) */}
             <div
               className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-zinc-800/60 flex-shrink-0 cursor-grab active:cursor-grabbing select-none"
@@ -115,10 +115,10 @@ export default function SettingsModal({ isOpen, onClose }) {
                         role="tab"
                         aria-selected={isActive}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`relative flex flex-1 min-w-0 flex-col items-center gap-0.5 px-2 sm:px-3 py-2.5 text-[9px] sm:text-[10px] font-semibold whitespace-nowrap transition-all duration-150 outline-none -mb-px border-b-2 ${
+                        className={`relative flex flex-1 min-w-0 flex-col items-center gap-0.5 px-2 sm:px-3 py-2.5 text-[9px] sm:text-[10px] font-semibold whitespace-nowrap transition-all duration-200 outline-none -mb-px border-b-2 ${
                           isActive
-                            ? 'text-primary border-primary'
-                            : 'text-zinc-500 hover:text-zinc-300 border-transparent hover:border-zinc-600'
+                            ? 'text-primary border-primary scale-105'
+                            : 'text-zinc-500 hover:text-zinc-300 border-transparent hover:border-zinc-600 hover:scale-105'
                         }`}
                       >
                         {tab.icon && <tab.icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-primary' : ''}`} />}

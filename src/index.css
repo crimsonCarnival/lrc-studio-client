@@ -215,7 +215,23 @@ body,
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
+  animation: fade-in 0.3s cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+/* Slide-up fade (popovers, dropdowns, panels) */
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-slide-up-fade {
+  animation: slide-up-fade 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 /* Just-synced flash */
@@ -253,17 +269,76 @@ ruby rt {
 @keyframes preview-line-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(10px);
+    filter: blur(2px);
   }
   to {
     opacity: var(--line-opacity, 1);
     transform: translateY(0);
+    filter: blur(0px);
   }
 }
 
 .animate-preview-line-in {
-  animation: preview-line-in 0.4s ease-out both;
+  animation: preview-line-in 0.45s cubic-bezier(0, 0, 0.2, 1) both;
   animation-delay: var(--stagger, 0ms);
+}
+
+/* Editor line: active-state sweep highlight */
+@keyframes line-become-active {
+  0% {
+    box-shadow: inset 3px 0 0 rgba(29, 185, 84, 0);
+    background-color: transparent;
+  }
+  40% {
+    box-shadow: inset 3px 0 0 rgba(29, 185, 84, 0.8);
+  }
+  100% {
+    box-shadow: inset 3px 0 0 rgba(29, 185, 84, 0.3);
+  }
+}
+
+.animate-line-become-active {
+  animation: line-become-active 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Word chip stamp pop */
+@keyframes word-stamp {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.22); }
+  70%  { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+.animate-word-stamp {
+  animation: word-stamp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Settings tab slide in */
+@keyframes tab-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-tab-slide-in {
+  animation: tab-slide-in 0.2s cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+/* Active line left-bar indicator grow */
+@keyframes bar-grow {
+  from { transform: scaleY(0); opacity: 0; }
+  to   { transform: scaleY(1); opacity: 1; }
+}
+
+.animate-bar-grow {
+  transform-origin: top center;
+  animation: bar-grow 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 /* Timestamp badge pulse on active line */

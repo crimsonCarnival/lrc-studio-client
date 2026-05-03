@@ -208,7 +208,7 @@ function renderMainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPo
   }
 
   return (
-    <p className={`transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass}`} style={{ lineHeight: hasReadings ? '2' : undefined }}>
+    <p className={`transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass}`} style={{ lineHeight: hasReadings ? '2' : undefined, willChange: 'opacity, transform' }}>
       {effectiveHasWordTimestamps
         ? line.words.map((w, wi) => {
             const nextT = line.words.slice(wi + 1).find((w2) => w2.time != null)?.time;

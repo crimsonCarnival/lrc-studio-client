@@ -125,7 +125,7 @@ function TimestampBadge({ value, isSynced, isFocused, isActive, precision, onCli
         onClick={onClick}
         onDoubleClick={onDoubleClick}
         onWheel={onWheel}
-        className={`flex items-center rounded px-1.5 py-0.5 text-[10px] font-mono tabular-nums transition-all w-fit ${
+        className={`flex items-center rounded px-1.5 py-0.5 text-[10px] font-mono tabular-nums transition-all duration-200 ease-out w-fit ${
           isFocused
             ? 'bg-primary/25 ring-1 ring-primary/50 text-primary font-semibold'
             : isSynced
@@ -145,6 +145,39 @@ function TimestampBadge({ value, isSynced, isFocused, isActive, precision, onCli
     </div>
   );
 }
+
+/** Word chip that pops when first stamped (null→time). */
+function StampedWordChip({ time, children, className, onClick, onDoubleClick }) {
+  const prevTimeRef = useRef(null);
+  const btnRef = useRef(null);
+
+  useEffect(() => {
+    // Trigger pop animation whenever time transitions from null to a value
+    if (prevTimeRef.current == null && time != null && btnRef.current) {
+      const el = btnRef.current;
+      el.classList.remove('animate-word-stamp');
+      // Force a reflow to restart the animation
+      void el.offsetWidth;
+      el.classList.add('animate-word-stamp');
+      const cleanup = () => el.classList.remove('animate-word-stamp');
+      el.addEventListener('animationend', cleanup, { once: true });
+    }
+    prevTimeRef.current = time;
+  }, [time]);
+
+  return (
+    <button
+      ref={btnRef}
+      type="button"
+      onClick={onClick}
+      onDoubleClick={onDoubleClick}
+      className={className}
+    >
+      {children}
+    </button>
+  );
+}
+
 
 const EditorLineItem = React.memo(({
   line,
@@ -312,7 +345,7 @@ const EditorLineItem = React.memo(({
       onDragEnd={handleDragEnd}
       onDrop={(e) => handleDrop(e, i)}
       style={{ animationDelay: staggerDelay }}
-      className={`flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-2 sm:gap-3 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer group relative overflow-hidden animate-preview-line-in ${selectedLines.has(i)
+      className={`flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-2 sm:gap-3 px-3 py-2 rounded-lg transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden animate-preview-line-in ${selectedLines.has(i)
         ? 'bg-primary/15 border border-primary/40 ring-1 ring-primary/20'
         : isActive
           ? isLocked
@@ -327,7 +360,7 @@ const EditorLineItem = React.memo(({
     >
       {/* Lock/unlock indicator */}
       {isActive && (
-        <div className={`absolute left-0 inset-y-0 w-1 z-0 rounded-l-xl ${
+        <div className={`absolute left-0 inset-y-0 w-1 z-0 rounded-l-xl animate-bar-grow ${
           isLocked
             ? 'bg-primary shadow-[0_0_12px_rgba(29,185,84,0.6)] opacity-90'
             : 'bg-primary/40 opacity-60'
@@ -463,8 +496,8 @@ const EditorLineItem = React.memo(({
                       {w.time != null ? (
                         <div className="group/word flex items-center gap-0.5">
                           <Tip content={canHaveReading ? t('editor.wordChipTitleReading', { word: w.word, time: formatTime(w.time) }) : t('editor.wordChipTitle', { word: w.word, time: formatTime(w.time) })}>
-                            <button
-                              type="button"
+                            <StampedWordChip
+                              time={w.time}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (playerRef?.current?.seek) {
@@ -475,7 +508,7 @@ const EditorLineItem = React.memo(({
                                 setFocusedTimestamp({ lineIndex: i, type: 'word', wordIndex: wi });
                               }}
                               onDoubleClick={(e) => { e.stopPropagation(); if (canHaveReading) setEditingReadingWordIndex(wi); }}
-                              className={`text-[11px] px-1.5 py-0.5 rounded border leading-none transition-colors cursor-pointer hover:border-primary hover:bg-primary/20 hover:text-primary ${
+                              className={`text-[11px] px-1.5 py-0.5 rounded border leading-none transition-all duration-200 cursor-pointer hover:border-primary hover:bg-primary/20 hover:text-primary ${
                                 isFocusedWord
                                   ? 'bg-primary/30 border-primary text-primary ring-1 ring-primary/50'
                                   : isActiveWord
@@ -484,7 +517,7 @@ const EditorLineItem = React.memo(({
                               }`}
                             >
                               {displayWord}
-                            </button>
+                            </StampedWordChip>
                           </Tip>
                           <Tip content={t('editor.clearWordTimestamp', { word: w.word })}>
                             <button
@@ -711,7 +744,7 @@ const EditorLineItem = React.memo(({
           <div className={`flex flex-col gap-0.5 group/text min-w-0 w-full ${editorMode === 'words' ? 'pt-0.5' : ''}`}>
             <div className="flex items-center gap-2">
               <p
-                className={`text-xs transition-colors ${editorMode !== 'words' && (line.words?.some(w => w.reading) || editingReadingWordIndex != null || inlineEditCharIdx != null) ? 'overflow-hidden' : 'truncate'} ${isActive
+                className={`text-xs transition-all duration-300 ease-out ${editorMode !== 'words' && (line.words?.some(w => w.reading) || editingReadingWordIndex != null || inlineEditCharIdx != null) ? 'overflow-hidden' : 'truncate'} ${isActive
                   ? 'text-zinc-100 font-medium'
                   : isSynced
                     ? line.words?.some(w => w.time != null) ? 'text-zinc-300' : 'text-zinc-100'
