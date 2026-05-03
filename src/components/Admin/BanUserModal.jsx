@@ -19,6 +19,7 @@ export default function BanUserModal({ isOpen, user, onConfirm, onCancel }) {
   const [reason, setReason] = useState('');
   const [bannedUntil, setBannedUntil] = useState('');
   const [banIp, setBanIp] = useState(false);
+  const [banDevice, setBanDevice] = useState(false);
   
   useScrollLock(isOpen);
 
@@ -27,12 +28,13 @@ export default function BanUserModal({ isOpen, user, onConfirm, onCancel }) {
       setReason('');
       setBannedUntil('');
       setBanIp(false);
+      setBanDevice(false);
     }
   }, [isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onConfirm({ reason, bannedUntil: bannedUntil || null, banIp });
+    onConfirm({ reason, bannedUntil: bannedUntil || null, banIp, banDevice });
   };
 
   return (
@@ -80,19 +82,36 @@ export default function BanUserModal({ isOpen, user, onConfirm, onCancel }) {
               </p>
             </div>
 
-            <div className="flex items-center gap-2 px-1">
-              <Checkbox 
-                id="ban-ip" 
-                checked={banIp} 
-                onCheckedChange={setBanIp}
-                className="border-zinc-700 data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500"
-              />
-              <Label 
-                htmlFor="ban-ip" 
-                className="text-xs font-medium text-zinc-300 cursor-pointer select-none"
-              >
-                {t('admin.table.banIpLabel') || 'Also ban last known IP address'}
-              </Label>
+            <div className="flex flex-col gap-3 px-1">
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="ban-ip" 
+                  checked={banIp} 
+                  onCheckedChange={setBanIp}
+                  className="border-zinc-700 data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500"
+                />
+                <Label 
+                  htmlFor="ban-ip" 
+                  className="text-xs font-medium text-zinc-300 cursor-pointer select-none"
+                >
+                  {t('admin.table.banIpLabel') || 'Also ban last known IP address'}
+                </Label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  id="ban-device" 
+                  checked={banDevice} 
+                  onCheckedChange={setBanDevice}
+                  className="border-zinc-700 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500"
+                />
+                <Label 
+                  htmlFor="ban-device" 
+                  className="text-xs font-medium text-zinc-300 cursor-pointer select-none"
+                >
+                  {t('admin.table.banDeviceLabel') || 'Also ban this specific machine'}
+                </Label>
+              </div>
             </div>
           </div>
 

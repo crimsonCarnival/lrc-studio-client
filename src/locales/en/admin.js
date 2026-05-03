@@ -16,6 +16,7 @@ export default {
     tabs: {
       users: 'User Management',
       ipBlocklist: 'IP Command Center',
+      deviceBlocklist: 'Device Control',
       auditLogs: 'Audit History',
       requestLogger: 'Live Monitor'
     },
@@ -61,6 +62,7 @@ export default {
     untilLabel: 'Banned Until',
     banUntilHint: 'Leave empty for permanent ban',
     banIpLabel: 'Also ban last known IP address',
+    banDeviceLabel: 'Also ban this specific machine',
     projects: 'Projects',
     uploads: 'Uploads',
     blockIp: 'Block IP Address',
@@ -72,6 +74,7 @@ export default {
     action: 'Action',
     details: 'Details',
     date: 'Date',
+    device: 'Device',
     noAuditLogs: 'No administrative actions recorded yet.',
   },
   logger: {

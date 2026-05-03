@@ -10,6 +10,7 @@ import {
   compileSRT as localCompileSRT,
   inferEndTimes as localInferEndTimes,
 } from './utils/lrc';
+import { getDeviceId } from './utils/device';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -37,6 +38,9 @@ async function request(path, options = {}) {
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
+
+  // Always send device identifier
+  headers['X-Device-Id'] = getDeviceId();
 
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
@@ -600,6 +604,23 @@ export const admin = {
 
   async unblockIp(ipId) {
     return request(`/admin/banned-ips/${ipId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async getBannedDevices() {
+    return request('/admin/banned-devices');
+  },
+
+  async blockDevice(deviceId, reason) {
+    return request('/admin/banned-devices', {
+      method: 'POST',
+      body: JSON.stringify({ deviceId, reason }),
+    });
+  },
+
+  async unblockDevice(deviceIdId) {
+    return request(`/admin/banned-devices/${deviceIdId}`, {
       method: 'DELETE',
     });
   },

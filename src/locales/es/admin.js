@@ -16,6 +16,7 @@ export default {
     tabs: {
       users: 'Gestión de Usuarios',
       ipBlocklist: 'Control de IP',
+      deviceBlocklist: 'Control de Hardware',
       auditLogs: 'Historial de Auditoría',
       requestLogger: 'Monitor en Vivo'
     },
@@ -61,6 +62,7 @@ export default {
     untilLabel: 'Baneado Hasta',
     banUntilHint: 'Dejar vacío para baneo permanente',
     banIpLabel: 'También banear la última dirección IP conocida',
+    banDeviceLabel: 'También banear esta máquina específica',
     projects: 'Proyectos',
     uploads: 'Archivos',
     blockIp: 'Bloquear Dirección IP',
@@ -72,6 +74,7 @@ export default {
     action: 'Acción',
     details: 'Detalles',
     date: 'Fecha',
+    device: 'Equipo',
     noAuditLogs: 'Aún no se han registrado acciones administrativas.',
   },
   logger: {

@@ -21,6 +21,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
   const [bannedIps, setBannedIps] = useState([]);
+  const [bannedDevices, setBannedDevices] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   
   // UI States
@@ -30,9 +31,10 @@ export default function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState('');
   const [showLogger, setShowLogger] = useState(false);
   const [ipForm, setIpForm] = useState({ ip: '', reason: '' });
+  const [deviceForm, setDeviceForm] = useState({ deviceId: '', reason: '' });
 
   // Modal States
-  const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: '', user: null, ipId: null });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: '', user: null, ipId: null, deviceId: null });
   const [banModal, setBanModal] = useState({ isOpen: false, user: null });
   const [appealModal, setAppealModal] = useState({ isOpen: false, user: null });
 
@@ -73,6 +75,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchDevices = async () => {
+    setLoading(true);
+    try {
+      const data = await admin.getBannedDevices();
+      setBannedDevices(data);
+    } catch (err) {
+      toast.error(t('admin.toast.fetchError'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchAuditLogs = async () => {
     setLoading(true);
     try {
@@ -89,6 +103,7 @@ export default function AdminDashboard() {
     fetchStats();
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'ips') fetchIps();
+    if (activeTab === 'devices') fetchDevices();
     if (activeTab === 'audit') fetchAuditLogs();
   };
 
@@ -145,13 +160,14 @@ export default function AdminDashboard() {
     }
   };
 
-  const onBanConfirm = async ({ reason, bannedUntil, banIp }) => {
+  const onBanConfirm = async ({ reason, bannedUntil, banIp, banDevice }) => {
     const { user } = banModal;
     setBanModal({ isOpen: false, user: null });
     try {
-      await admin.banUser(user.id || user._id, { reason, bannedUntil, banIp });
+      await admin.banUser(user.id || user._id, { reason, bannedUntil, banIp, banDevice });
       toast.success(t('admin.toast.bannedSuccess', { name: user.username }));
       fetchUsers();
+      fetchStats();
     } catch (err) {
       toast.error(t('admin.toast.statusError'));
     }
@@ -191,9 +207,27 @@ export default function AdminDashboard() {
     setConfirmModal({ isOpen: true, type: 'unblock_ip', ipId });
   };
 
+  const handleBlockDevice = async (e) => {
+    e.preventDefault();
+    if (!deviceForm.deviceId) return;
+    try {
+      await admin.blockDevice(deviceForm.deviceId, deviceForm.reason);
+      toast.success('Device blocked successfully');
+      setDeviceForm({ deviceId: '', reason: '' });
+      fetchDevices();
+      fetchStats();
+    } catch (err) {
+      toast.error(err.message || 'Failed to block device');
+    }
+  };
+
+  const handleUnblockDevice = (deviceId) => {
+    setConfirmModal({ isOpen: true, type: 'unblock_device', deviceId });
+  };
+
   const onConfirmAction = async () => {
-    const { type, user, ipId } = confirmModal;
-    setConfirmModal({ isOpen: false, type: '', user: null, ipId: null });
+    const { type, user, ipId, deviceId } = confirmModal;
+    setConfirmModal({ isOpen: false, type: '', user: null, ipId: null, deviceId: null });
     
     try {
       if (type === 'role') {
@@ -207,6 +241,11 @@ export default function AdminDashboard() {
         await admin.unblockIp(ipId);
         toast.success('IP unblocked successfully');
         fetchIps();
+        fetchStats();
+      } else if (type === 'unblock_device') {
+        await admin.unblockDevice(deviceId);
+        toast.success('Device unblocked successfully');
+        fetchDevices();
         fetchStats();
       }
       fetchUsers();
@@ -259,6 +298,7 @@ export default function AdminDashboard() {
         {[
           { id: 'users', icon: Users, label: t('admin.dashboard.tabs.users') },
           { id: 'ips', icon: Globe, label: t('admin.dashboard.tabs.ipBlocklist') },
+          { id: 'devices', icon: ShieldAlert, label: t('admin.dashboard.tabs.deviceBlocklist') },
           { id: 'audit', icon: History, label: t('admin.dashboard.tabs.auditLogs') },
           { id: 'monitor', icon: Activity, label: t('admin.dashboard.tabs.requestLogger') },
         ].map(tab => (
@@ -494,6 +534,70 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {activeTab === 'devices' && (
+          <div className="p-6 flex flex-col h-full gap-6">
+            <form onSubmit={handleBlockDevice} className="flex flex-wrap items-end gap-4 bg-zinc-950/50 p-4 rounded-xl border border-zinc-800">
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('admin.table.device')}</label>
+                <Input 
+                  placeholder="dv_..."
+                  value={deviceForm.deviceId}
+                  onChange={(e) => setDeviceForm({ ...deviceForm, deviceId: e.target.value })}
+                  className="bg-zinc-900 border-zinc-800"
+                />
+              </div>
+              <div className="flex-[2] min-w-[300px]">
+                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('admin.table.ipReason')}</label>
+                <Input 
+                  placeholder={t('admin.table.reasonPlaceholder')}
+                  value={deviceForm.reason}
+                  onChange={(e) => setDeviceForm({ ...deviceForm, reason: e.target.value })}
+                  className="bg-zinc-900 border-zinc-800"
+                />
+              </div>
+              <Button type="submit" disabled={!deviceForm.deviceId} className="bg-indigo-600 hover:bg-indigo-500 text-white gap-2">
+                <Ban className="w-4 h-4" /> {t('admin.table.ban')}
+              </Button>
+            </form>
+
+            <div className="flex-1 overflow-y-auto">
+              {bannedDevices.length === 0 ? (
+                <div className="text-center p-12 text-zinc-500">{t('admin.dashboard.noUsers')}</div>
+              ) : (
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-zinc-800/50 bg-zinc-950/30">
+                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Device ID</th>
+                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Reason</th>
+                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Added</th>
+                      <th className="p-4 text-right"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/30">
+                    {bannedDevices.map(item => (
+                      <tr key={item.id} className="hover:bg-zinc-800/30 transition-colors">
+                        <td className="p-4 font-mono text-xs text-indigo-400 font-bold">{item.deviceId}</td>
+                        <td className="p-4 text-xs text-zinc-400 italic">"{item.reason || 'No reason'}"</td>
+                        <td className="p-4 text-[10px] text-zinc-500">{new Date(item.createdAt).toLocaleString()}</td>
+                        <td className="p-4 text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleUnblockDevice(item.id)}
+                            className="text-emerald-500 hover:bg-emerald-500/10 h-8"
+                          >
+                            {t('admin.table.unblock')}
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        )}
+
         {activeTab === 'audit' && (
           <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -554,6 +658,7 @@ export default function AdminDashboard() {
         title={
           confirmModal.type === 'role' ? t('admin.table.roleTitle') : 
           confirmModal.type === 'unblock_ip' ? t('admin.table.unblock') :
+          confirmModal.type === 'unblock_device' ? t('admin.table.unblock') :
           t('admin.table.deleteTitle')
         }
         message={
@@ -561,10 +666,12 @@ export default function AdminDashboard() {
             ? t('admin.table.confirmRoleChange', { name: confirmModal.user?.username, role: confirmModal.user?.role === 'admin' ? 'user' : 'admin' }) 
             : confirmModal.type === 'unblock_ip'
             ? "Are you sure you want to remove this IP block? This network will be able to register and login again."
+            : confirmModal.type === 'unblock_device'
+            ? "Are you sure you want to remove this hardware block? This machine will be able to access the platform again."
             : t('admin.table.confirmDelete', { name: confirmModal.user?.username })
         }
         onConfirm={onConfirmAction}
-        onCancel={() => setConfirmModal({ isOpen: false, type: '', user: null, ipId: null })}
+        onCancel={() => setConfirmModal({ isOpen: false, type: '', user: null, ipId: null, deviceId: null })}
       />
 
       <BanUserModal
