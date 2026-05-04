@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Section, SettingRow, ShortcutInput } from '../shared';
+import { Section, SettingRow, ShortcutInput, ModifierInput } from '../shared';
 import { useShortcutsSettings } from '../hooks/useShortcutsSettings';
 import NumberInput from '@shared/NumberInput';
 import { Button } from '@ui/button';
