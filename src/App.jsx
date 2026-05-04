@@ -100,6 +100,7 @@ function AppInner() {
     handleDurationChange,
     handleYtUrlChange,
     restoredYtUrl,
+    restoredCloudinaryUpload,
     restoredPosition,
     restoredSpeed,
     confirmModal,
@@ -135,7 +136,7 @@ function AppInner() {
   // Normalize: if old 'preview' mode was saved, fall back to 'default'
   const focusMode = ['default', 'sync', 'playback'].includes(rawFocusMode) ? rawFocusMode : 'default';
   const [hideEditor, setHideEditor] = useState(false);
-  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const [unsavedModalTarget, setUnsavedModalTarget] = useState(null);
 
   const isReady = location.pathname.startsWith('/project/') && location.pathname !== '/project/new';
 
@@ -224,6 +225,8 @@ function AppInner() {
 
   // Mobile tab state: 'editor' | 'preview'
   const [mobileTab, setMobileTab] = useState('editor');
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const setFocusMode = useCallback((mode) => {
     updateSetting('interface.focusMode', mode);
@@ -296,8 +299,8 @@ function AppInner() {
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink">
           <button
             onClick={() => {
-              if (hasUnsavedChanges()) {
-                setShowUnsavedModal(true);
+              if (location.pathname.startsWith('/project/') && hasUnsavedChanges()) {
+                setUnsavedModalTarget('/home');
               } else {
                 navigate('/home');
               }
@@ -309,8 +312,8 @@ function AppInner() {
           <div className="overflow-hidden flex items-center gap-2 min-w-0">
             <button
               onClick={() => {
-                if (hasUnsavedChanges()) {
-                  setShowUnsavedModal(true);
+                if (location.pathname.startsWith('/project/') && hasUnsavedChanges()) {
+                  setUnsavedModalTarget('/home');
                 } else {
                   navigate('/home');
                 }
@@ -391,10 +394,14 @@ function AppInner() {
               variant="outline"
               aria-label={t('library.title')}
               onClick={() => {
-                if (location.pathname.startsWith('/library')) {
-                  navigate(activeProjectId ? `/project/${activeProjectId}` : '/project/new');
+                if (location.pathname.startsWith('/project/') && hasUnsavedChanges()) {
+                  setUnsavedModalTarget('/library');
                 } else {
-                  navigate('/library');
+                  if (location.pathname.startsWith('/library')) {
+                    navigate(activeProjectId ? `/project/${activeProjectId}` : '/project/new');
+                  } else {
+                    navigate('/library');
+                  }
                 }
               }}
               className={`px-2 sm:px-3 h-8 sm:h-9 rounded-lg sm:rounded-xl flex-shrink-0 transition-colors ${location.pathname.startsWith('/library')
@@ -413,10 +420,14 @@ function AppInner() {
               variant="outline"
               aria-label={t('uploads.title')}
               onClick={() => {
-                if (location.pathname.startsWith('/uploads')) {
-                  navigate(activeProjectId ? `/project/${activeProjectId}` : '/project/new');
+                if (location.pathname.startsWith('/project/') && hasUnsavedChanges()) {
+                  setUnsavedModalTarget('/uploads');
                 } else {
-                  navigate('/uploads');
+                  if (location.pathname.startsWith('/uploads')) {
+                    navigate(activeProjectId ? `/project/${activeProjectId}` : '/project/new');
+                  } else {
+                    navigate('/uploads');
+                  }
                 }
               }}
               className={`px-2 sm:px-3 h-8 sm:h-9 rounded-lg sm:rounded-xl flex-shrink-0 transition-colors ${location.pathname.startsWith('/uploads')
@@ -697,6 +708,8 @@ function AppInner() {
                           shareModal={shareModal}
                           setShareModal={setShareModal}
                           hasMedia={hasMedia}
+                          isPlaying={isPlaying}
+                          playbackSpeed={playbackSpeed}
                           activeProjectId={activeProjectId}
                           project={pendingProject || null}
                           projectMetadata={projectMetadata}
@@ -735,6 +748,8 @@ function AppInner() {
             <Player
               ref={playerRef}
               mediaTitle={mediaTitle}
+              onPlayingChange={setIsPlaying}
+              onSpeedChange={setPlaybackSpeed}
               onTitleChange={(newTitle) => {
                 // Only auto-update the project title from media metadata if:
                 // 1. We are in the initial setup screen
@@ -750,6 +765,7 @@ function AppInner() {
               onYtUrlChange={handleYtUrlChange}
               onCloudinaryUpload={handleCloudinaryUpload}
               initialYtUrl={restoredYtUrl}
+              initialCloudinaryUpload={restoredCloudinaryUpload}
               initialSeek={restoredPosition}
               initialSpeed={restoredSpeed}
               projectMetadata={projectMetadata}
@@ -860,9 +876,9 @@ function AppInner() {
       )}
 
       {/* Unsaved Changes Modal */}
-      {showUnsavedModal && (
+      {unsavedModalTarget && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 animate-fade-in">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowUnsavedModal(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setUnsavedModalTarget(null)} />
           <div className="relative w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-5 sm:p-6 animate-scale-in flex flex-col gap-4">
             <div className="flex items-center gap-3 text-red-400 mb-2">
               <AlertCircle className="w-6 h-6" />
@@ -875,16 +891,17 @@ function AppInner() {
               <Button
                 variant="outline"
                 className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700 font-semibold text-sm h-10 rounded-xl"
-                onClick={() => setShowUnsavedModal(false)}
+                onClick={() => setUnsavedModalTarget(null)}
               >
                 {t('app.cancel')}
               </Button>
               <Button
-                variant="outline"
-                className="flex-1 bg-zinc-800 hover:bg-red-500/20 text-red-400 border-zinc-700 hover:border-red-500/30 font-semibold text-sm h-10 rounded-xl"
+                variant="ghost"
+                className="flex-1 text-red-400 hover:text-red-300 hover:bg-transparent font-semibold text-sm h-10 rounded-xl"
                 onClick={() => {
-                  setShowUnsavedModal(false);
-                  navigate('/home');
+                  const target = unsavedModalTarget;
+                  setUnsavedModalTarget(null);
+                  navigate(target);
                 }}
               >
                 {t('app.discard')}
@@ -892,9 +909,10 @@ function AppInner() {
               <Button
                 className="flex-1 bg-primary text-zinc-950 hover:bg-primary-dim font-semibold text-sm h-10 rounded-xl"
                 onClick={async () => {
-                  setShowUnsavedModal(false);
+                  const target = unsavedModalTarget;
+                  setUnsavedModalTarget(null);
                   await handleManualSave();
-                  navigate('/home');
+                  navigate(target);
                 }}
               >
                 {t('app.saveAndExit')}
