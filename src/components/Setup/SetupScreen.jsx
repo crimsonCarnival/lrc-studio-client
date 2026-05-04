@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { FolderOpen, Music2, FileText, Upload, Check, ArrowRight, Trash2, Video, Cloud } from 'lucide-react';
+import { FolderOpen, Music2, FileText, Upload, Check, ArrowRight, Trash2, Video, Cloud, Link2 } from 'lucide-react';
 import { lyrics as lyricsApi, uploads as uploadsApi, spotify as spotifyApi, getAccessToken } from '../../api';
 import { formatTime } from '../../utils/formatTime';
 import { SkeletonMediaItem } from '@/components/ui/skeleton';
@@ -66,6 +66,14 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
   const handleAudioFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('audio/')) {
+      toast.error(t('setup.invalidAudioType') || 'Please select a valid audio file.');
+      if (audioInputRef.current) audioInputRef.current.value = '';
+      return;
+    }
+
     if (playerRef.current?.loadLocalAudio) {
       playerRef.current.loadLocalAudio(file);
     }
@@ -76,21 +84,69 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
     // Record will be saved after Cloudinary upload completes (via onCloudinaryUpload in Player)
   };
 
-  const handleLoadYt = () => {
-    if (!ytUrl.trim()) return;
+  const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\//;
+  const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
+  const YT_PATTERN = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|watch\?.+&v=)|youtu\.be\/)([^&?/\s]{11})/;
+
+  const detectedUrlType = (() => {
+    const v = ytUrl.trim().split(/\s+/)[0];
+    if (!v) return 'none';
+    if (CDN_PATTERN.test(v)) return 'cdn';
+    if (AUDIO_URL_PATTERN.test(v)) return 'cdn';
+    if (YT_PATTERN.test(v) || v.length === 11) return 'youtube';
+    return 'unknown';
+  })();
+
+  const handleLoadUrl = async () => {
+    const trimmed = ytUrl.trim().split(/\s+/)[0];
+    if (!trimmed) return;
+
+    if (detectedUrlType === 'cdn') {
+      // Extract filename cleanly from URL path
+      const pathOnly = trimmed.split('?')[0].split('#')[0];
+      const lastSegment = pathOnly.split('/').pop() || 'audio';
+      const dotIdx = lastSegment.lastIndexOf('.');
+      const rawName = dotIdx > 0 ? lastSegment.slice(0, dotIdx) : lastSegment;
+      const ext = dotIdx > 0 ? lastSegment.slice(dotIdx + 1).toLowerCase() : 'mp4';
+      const fileName = `${rawName}.${ext}`;
+      const title = rawName.length > 30 ? 'Cloud Audio' : rawName;
+
+      if (playerRef.current?.loadFromUrl) {
+        playerRef.current.loadFromUrl(trimmed, title);
+      }
+      setAudioName(title);
+      setAudioReady(true);
+      setAudioSource('cloud');
+      setSelectedUpload(null);
+
+      saveUploadRecord({
+        source: 'cloudinary',
+        cloudinaryUrl: trimmed,
+        fileName,
+        title,
+      });
+      return;
+    }
+
+    const videoId = trimmed.match(YT_PATTERN)?.[1] || (trimmed.length === 11 ? trimmed : null);
+    if (!videoId) {
+      toast.error(t('player.invalidUrl') || 'Invalid URL format');
+      return;
+    }
+
     setYtLoading(true);
     if (playerRef.current?.loadYouTube) {
-      playerRef.current.loadYouTube(ytUrl.trim());
+      playerRef.current.loadYouTube(trimmed);
     }
-    setAudioName(ytUrl.trim());
+    setAudioName(trimmed);
     setAudioReady(true);
     setAudioSource('youtube');
     setSelectedUpload(null);
     setYtLoading(false);
-    // Save YouTube URL as a media record (title will be auto-fetched by backend)
+    
     saveUploadRecord({
       source: 'youtube',
-      youtubeUrl: ytUrl.trim(),
+      youtubeUrl: trimmed,
       fileName: '',
     });
   };
@@ -107,19 +163,23 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
         playerRef.current.loadYouTube(upload.youtubeUrl);
       }
     } else if (upload.source === 'cloudinary' && upload.cloudinaryUrl) {
-      // Load cloudinary audio via URL — fetch as blob and load
-      fetch(upload.cloudinaryUrl)
-        .then((res) => res.blob())
-        .then((blob) => {
-          const file = new File([blob], upload.fileName || 'audio.mp3', { type: blob.type || 'audio/mpeg' });
-          if (playerRef.current?.loadLocalAudio) {
-            playerRef.current.loadLocalAudio(file);
-          }
-        })
-        .catch(() => {
-          toast.error('Failed to load audio from cloud');
-          setAudioReady(false);
-        });
+      if (playerRef.current?.loadFromUrl) {
+        playerRef.current.loadFromUrl(upload.cloudinaryUrl, upload.title || upload.fileName);
+      } else {
+        // Fallback for older playerRef or different context
+        fetch(upload.cloudinaryUrl)
+          .then((res) => res.blob())
+          .then((blob) => {
+            const file = new File([blob], upload.fileName || 'audio.mp3', { type: blob.type || 'audio/mpeg' });
+            if (playerRef.current?.loadLocalAudio) {
+              playerRef.current.loadLocalAudio(file);
+            }
+          })
+          .catch(() => {
+            toast.error('Failed to load audio from cloud');
+            setAudioReady(false);
+          });
+      }
     }
   };
 
@@ -141,7 +201,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
   const handleYtKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      handleLoadYt();
+      handleLoadUrl();
     }
   };
 
@@ -380,25 +440,33 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
                   <div className="flex-1 h-px bg-zinc-800" />
                 </div>
 
-                {/* YouTube URL */}
+                {/* Unified URL input */}
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-red-500/70 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                    </svg>
+                    {detectedUrlType === 'cdn' ? (
+                      <Cloud className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-blue-400/80 pointer-events-none" />
+                    ) : detectedUrlType === 'youtube' ? (
+                      <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-red-500/70 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                      </svg>
+                    ) : (
+                      <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500 pointer-events-none" />
+                    )}
                     <Input
                       type="text"
                       value={ytUrl}
                       onChange={(e) => setYtUrl(e.target.value)}
                       onKeyDown={handleYtKeyDown}
-                      placeholder={t('player.pasteUrl')}
+                      placeholder="Paste YouTube or CDN audio URL..."
                       className="pl-8 bg-zinc-800/50 border-zinc-700/60 text-sm"
                     />
                   </div>
                   <Button
-                    onClick={handleLoadYt}
+                    onClick={handleLoadUrl}
                     disabled={!ytUrl.trim() || ytLoading}
-                    className="bg-primary hover:bg-primary-dim text-zinc-950 font-semibold text-sm rounded-xl px-4"
+                    className={`text-zinc-950 font-semibold text-sm rounded-xl px-4 transition-colors ${
+                      detectedUrlType === 'cdn' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-primary hover:bg-primary-dim'
+                    }`}
                   >
                     {t('player.load')}
                   </Button>
