@@ -146,10 +146,10 @@ function TimestampBadge({ value, isSynced, isFocused, isActive, precision, onCli
   );
 }
 
-/** Word chip that pops when first stamped (null→time). */
-function StampedWordChip({ time, children, className, onClick, onDoubleClick }) {
+function StampedWordChip({ time, focusedTimestamp, lineIndex, wi, isSecondary, children, className, onClick, onDoubleClick }) {
   const prevTimeRef = useRef(null);
   const btnRef = useRef(null);
+  const isFocused = (focusedTimestamp?.type === (isSecondary ? 'secondaryWord' : 'word')) && focusedTimestamp?.wordIndex === wi && focusedTimestamp?.lineIndex === lineIndex;
 
   useEffect(() => {
     // Trigger pop animation whenever time transitions from null to a value
@@ -171,7 +171,7 @@ function StampedWordChip({ time, children, className, onClick, onDoubleClick }) 
       type="button"
       onClick={onClick}
       onDoubleClick={onDoubleClick}
-      className={className}
+      className={`${className} ${isFocused ? '!bg-primary !text-zinc-950 !border-primary ring-2 ring-primary/40 shadow-[0_0_12px_rgba(var(--primary-rgb),0.3)]' : ''}`}
     >
       {children}
     </button>
@@ -246,6 +246,16 @@ const EditorLineItem = React.memo(({
     clearTimeout(nudgeTimerRef.current);
     nudgeTimerRef.current = setTimeout(() => setNudgeIndicator(null), 600);
   }, []);
+
+  const handleWordClick = useCallback((e, w, wi, isSecondary = false) => {
+    e.stopPropagation();
+    if (w.time != null && playerRef?.current?.seek) {
+      playerRef.current.seek(w.time);
+      if (settings.playback?.seekPlays && playerRef.current.play) playerRef.current.play();
+    }
+    if (activeWordIndex !== -1) handleSetActiveWordIndex(wi);
+    setFocusedTimestamp({ lineIndex: i, type: isSecondary ? 'secondaryWord' : 'word', wordIndex: wi });
+  }, [playerRef, settings.playback?.seekPlays, activeWordIndex, handleSetActiveWordIndex, setFocusedTimestamp, i]);
 
   const handleTimestampWheel = useCallback((e, index) => {
     e.preventDefault();
@@ -498,22 +508,15 @@ const EditorLineItem = React.memo(({
                           <Tip content={canHaveReading ? t('editor.wordChipTitleReading', { word: w.word, time: formatTime(w.time) }) : t('editor.wordChipTitle', { word: w.word, time: formatTime(w.time) })}>
                             <StampedWordChip
                               time={w.time}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (playerRef?.current?.seek) {
-                                  playerRef.current.seek(w.time);
-                                  if (settings.playback?.seekPlays && playerRef.current.play) playerRef.current.play();
-                                }
-                                if (activeWordIndex !== -1) handleSetActiveWordIndex(wi);
-                                setFocusedTimestamp({ lineIndex: i, type: 'word', wordIndex: wi });
-                              }}
+                              focusedTimestamp={focusedTimestamp}
+                              lineIndex={i}
+                              wi={wi}
+                              onClick={(e) => handleWordClick(e, w, wi)}
                               onDoubleClick={(e) => { e.stopPropagation(); if (canHaveReading) setEditingReadingWordIndex(wi); }}
-                              className={`text-[11px] px-1.5 py-0.5 rounded border leading-none transition-all duration-200 cursor-pointer hover:border-primary hover:bg-primary/20 hover:text-primary ${
-                                isFocusedWord
-                                  ? 'bg-primary/30 border-primary text-primary ring-1 ring-primary/50'
-                                  : isActiveWord
-                                    ? 'bg-primary/20 border-primary/60 text-primary animate-pulse-glow'
-                                    : 'bg-zinc-800 border-primary/30 text-primary/70'
+                              className={`text-[11px] px-1.5 py-0.5 rounded border leading-none transition-all duration-200 cursor-pointer ${
+                                isActiveWord || isFocusedWord
+                                  ? 'bg-primary text-zinc-950 border-primary ring-2 ring-primary/40 shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)] animate-pulse-glow'
+                                  : 'bg-zinc-800 border-primary/30 text-primary/70 hover:border-primary hover:bg-primary/20 hover:text-primary'
                               }`}
                             >
                               {displayWord}
@@ -532,10 +535,11 @@ const EditorLineItem = React.memo(({
                       ) : (
                         <span
                           onDoubleClick={(e) => { e.stopPropagation(); if (canHaveReading) setEditingReadingWordIndex(wi); }}
-                          className={`text-[11px] px-1.5 py-0.5 rounded border leading-none ${
-                            isActiveWord
-                              ? 'bg-primary/20 border-primary/60 text-primary animate-pulse-glow'
-                              : 'bg-zinc-800/50 border-zinc-700/30 text-zinc-600'
+                          onClick={(e) => handleWordClick(e, w, wi)}
+                          className={`text-[11px] px-1.5 py-0.5 rounded border leading-none transition-all cursor-pointer ${
+                            isActiveWord || isFocusedWord
+                              ? 'bg-primary text-zinc-950 border-primary ring-2 ring-primary/40 shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)] animate-pulse-glow'
+                              : 'bg-zinc-800/50 border-zinc-700/30 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400'
                           }`}
                         >
                           {displayWord}
@@ -558,27 +562,21 @@ const EditorLineItem = React.memo(({
                   return w.time != null ? (
                     <div key={wi} className="group/sword flex items-center gap-0.5">
                       <Tip content={`${w.word} @ ${formatTime(w.time)}`}>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (playerRef?.current?.seek) {
-                              playerRef.current.seek(w.time);
-                              if (settings.playback?.seekPlays && playerRef.current.play) playerRef.current.play();
-                            }
-                            if (activeWordIndex !== -1) handleSetActiveWordIndex(wi);
-                            setFocusedTimestamp({ lineIndex: i, type: 'secondaryWord', wordIndex: wi });
-                          }}
-                          className={`text-[11px] px-1.5 py-0.5 rounded border leading-none transition-colors cursor-pointer hover:border-accent-blue hover:bg-accent-blue/20 hover:text-accent-blue ${
-                            isFocusedSecondaryWord
-                              ? 'bg-accent-blue/30 border-accent-blue text-accent-blue ring-1 ring-accent-blue/50'
-                              : isActiveSecondaryWord
-                                ? 'bg-accent-blue/20 border-accent-blue/60 text-accent-blue animate-pulse-glow'
-                                : 'bg-accent-blue/10 border-accent-blue/30 text-accent-blue/70'
+                        <StampedWordChip
+                          time={w.time}
+                          focusedTimestamp={focusedTimestamp}
+                          lineIndex={i}
+                          wi={wi}
+                          isSecondary={true}
+                          onClick={(e) => handleWordClick(e, w, wi, true)}
+                          className={`text-[11px] px-1.5 py-0.5 rounded border leading-none transition-colors cursor-pointer ${
+                            isActiveSecondaryWord || isFocusedSecondaryWord
+                              ? 'bg-accent-blue text-zinc-950 border-accent-blue ring-2 ring-accent-blue/40 shadow-[0_0_12px_rgba(var(--accent-blue-rgb),0.5)] animate-pulse-glow'
+                              : 'bg-accent-blue/10 border-accent-blue/30 text-accent-blue/70 hover:bg-accent-blue/20 hover:text-accent-blue hover:border-accent-blue'
                           }`}
                         >
                           {w.word}
-                        </button>
+                        </StampedWordChip>
                       </Tip>
                       <Tip content={t('editor.clearWordTimestamp', { word: w.word })}>
                         <button
@@ -593,10 +591,11 @@ const EditorLineItem = React.memo(({
                   ) : (
                     <span
                       key={wi}
-                      className={`text-[11px] px-1.5 py-0.5 rounded border leading-none transition-colors ${
-                        isActiveSecondaryWord
-                          ? 'bg-accent-blue/20 border-accent-blue/60 text-accent-blue animate-pulse-glow'
-                          : 'bg-zinc-800/50 border-zinc-700/30 text-zinc-500'
+                      onClick={(e) => handleWordClick(e, w, wi, true)}
+                      className={`text-[11px] px-1.5 py-0.5 rounded border leading-none transition-all cursor-pointer ${
+                        isActiveSecondaryWord || isFocusedSecondaryWord
+                          ? 'bg-accent-blue text-zinc-900 border-accent-blue ring-2 ring-accent-blue/40 shadow-[0_0_12px_rgba(var(--accent-blue-rgb),0.5)] animate-pulse-glow'
+                          : 'bg-zinc-800/50 border-zinc-700/30 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-400'
                       }`}
                     >
                       {w.word}
@@ -744,7 +743,7 @@ const EditorLineItem = React.memo(({
           <div className={`flex flex-col gap-0.5 group/text min-w-0 w-full ${editorMode === 'words' ? 'pt-0.5' : ''}`}>
             <div className="flex items-center gap-2">
               <p
-                className={`text-xs transition-all duration-300 ease-out ${editorMode !== 'words' && (line.words?.some(w => w.reading) || editingReadingWordIndex != null || inlineEditCharIdx != null) ? 'overflow-hidden' : 'truncate'} ${isActive
+                className={`text-xs transition-all duration-300 ease-out ${editorMode !== 'words' && (line.words?.some(w => w.reading) || editingReadingWordIndex != null || inlineEditCharIdx != null) ? 'overflow-hidden' : 'break-words whitespace-pre-wrap'} ${isActive
                   ? 'text-zinc-100 font-medium'
                   : isSynced
                     ? line.words?.some(w => w.time != null) ? 'text-zinc-300' : 'text-zinc-100'
@@ -755,20 +754,25 @@ const EditorLineItem = React.memo(({
                   : undefined}
               >
                 {editorMode === 'words' && line.words?.length > 0
-                  ? line.words.map((w, wi) => (
-                      <span
-                        key={wi}
-                        className={`transition-colors ${
-                          isActive && wi === activeWordIndex
-                            ? 'text-primary underline decoration-dotted underline-offset-2'
-                            : w.time != null
-                              ? 'text-primary/70'
-                              : isActive || isSynced ? 'text-zinc-100' : ''
-                        }`}
-                      >
-                        {w.word}{' '}
-                      </span>
-                    ))
+                  ? line.words.map((w, wi) => {
+                      const isFocusedWord = focusedTimestamp?.lineIndex === i && focusedTimestamp?.type === 'word' && focusedTimestamp?.wordIndex === wi;
+                      const isActiveWord = isActive && wi === activeWordIndex;
+                      return (
+                        <span
+                          key={wi}
+                          onClick={(e) => handleWordClick(e, w, wi)}
+                          className={`transition-all px-0.5 rounded cursor-pointer ${
+                            isActiveWord || isFocusedWord
+                              ? 'text-primary [text-shadow:0_0_0.8px_currentColor] underline decoration-dotted underline-offset-2'
+                              : w.time != null
+                                ? 'text-primary/70 hover:bg-zinc-800'
+                                : isActive || isSynced ? 'text-zinc-100 hover:bg-zinc-800' : 'hover:bg-zinc-800'
+                          }`}
+                        >
+                          {w.word}{' '}
+                        </span>
+                      );
+                    })
                   : line.words?.length > 0
                     ? line.words.map((w, wi) => {
                         const canHaveReading = isKanji(w.word || '');
@@ -868,22 +872,6 @@ const EditorLineItem = React.memo(({
                   </span>
                 </Tip>
               )}
-              <Tip content={t('editor.editLine') || 'Edit text (Double-click)'}>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingLineIndex(i);
-                    setEditingText(serializeToRubyMarkup(line.words) || line.text);
-                    setEditingSecondary(line.secondary || '');
-                    setEditingTranslation(line.translation || '');
-                  }}
-                  className="opacity-0 group-hover:opacity-100 flex-shrink-0 text-zinc-500 hover:text-primary hover:bg-zinc-800/60"
-                >
-                  <Pencil className="w-3 h-3" />
-                </Button>
-              </Tip>
             </div>
             {line.secondary && (
               <p className="text-[10px] text-zinc-500 leading-tight pl-0.5 truncate">{line.secondary}</p>
@@ -894,43 +882,36 @@ const EditorLineItem = React.memo(({
           </div>
         )}
       </div>
-      {/* Mark button — always visible on the active unsaved line */}
-      {isActive && editingLineIndex !== i && (
-        <Tip content={
-            editorMode === 'words' && line.timestamp != null
-              ? stampTarget === 'secondary'
-                ? `Stamp "${(line.secondaryWords ?? line.secondary?.trim().split(/\s+/).filter(Boolean).map(w => ({ word: w })))?.[Math.min(activeWordIndex, (line.secondaryWords ?? line.secondary?.trim().split(/\s+/).filter(Boolean).map(w => ({ word: w })) ?? [])?.length - 1)]?.word || 'word'}" (${activeWordIndex}/${(line.secondaryWords ?? line.secondary?.trim().split(/\s+/).filter(Boolean))?.length ?? 0})`
-                : `Stamp "${line.words?.[Math.min(activeWordIndex, (line.words?.length ?? 1) - 1)]?.word || 'word'}" (${activeWordIndex}/${line.words?.length ?? 0})`
-              : t('editor.mark')
-          }>
-          <Button
-            onClick={(e) => { e.stopPropagation(); handleMark(); }}
-            className={`h-7 px-2 gap-1.5 border font-semibold rounded-lg flex-shrink-0 text-xs ${
+      {/* Action Toolbar */}
+      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+        {/* Mark button — always visible on the active unsaved line */}
+        {isActive && editingLineIndex !== i && (
+          <Tip content={
               editorMode === 'words' && line.timestamp != null
                 ? stampTarget === 'secondary'
-                  ? 'bg-accent-blue/15 hover:bg-accent-blue/25 border-accent-blue/40 text-accent-blue'
-                  : 'bg-sky-500/15 hover:bg-sky-500/25 border-sky-500/40 text-sky-400'
-                : 'bg-primary/20 hover:bg-primary/30 border-primary/40 text-primary'
-            }`}
-        >
-          {editorMode === 'words' && line.timestamp != null && stampTarget === 'secondary'
-            ? (() => {
-                const secWords = line.secondaryWords ?? line.secondary?.trim().split(/\s+/).filter(Boolean).map(w => ({ word: w }));
-                const w = secWords?.[Math.min(activeWordIndex, (secWords?.length ?? 1) - 1)];
-                return w ? <span className="font-mono text-[10px] max-w-[48px] truncate">{w.word}</span> : null;
-              })()
-            : editorMode === 'words' && line.timestamp != null && line.words?.[Math.min(activeWordIndex, (line.words?.length ?? 1) - 1)] ? (
-            <span className="font-mono text-[10px] max-w-[48px] truncate">{line.words[Math.min(activeWordIndex, (line.words?.length ?? 1) - 1)].word.replace(/^[()'"]+|[,;.!?()'"]+$/g, '')}</span>
-          ) : (
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          )}
-          </Button>
-        </Tip>
-      )}
-      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                  ? `Stamp "${(line.secondaryWords ?? line.secondary?.trim().split(/\s+/).filter(Boolean).map(w => ({ word: w })))?.[Math.max(0, Math.min(activeWordIndex, (line.secondaryWords ?? line.secondary?.trim().split(/\s+/).filter(Boolean).map(w => ({ word: w })) ?? [])?.length - 1))]?.word || 'word'}" (${Math.max(0, activeWordIndex)}/${(line.secondaryWords ?? line.secondary?.trim().split(/\s+/).filter(Boolean))?.length ?? 0})`
+                  : `Stamp "${line.words?.[Math.max(0, Math.min(activeWordIndex, (line.words?.length ?? 1) - 1))]?.word || 'word'}" (${Math.max(0, activeWordIndex)}/${line.words?.length ?? 0})`
+                : t('editor.mark')
+            }>
+            <Button
+              onClick={(e) => { e.stopPropagation(); handleMark(); }}
+              className={`h-7 w-7 justify-center border font-semibold rounded-lg flex-shrink-0 text-xs shadow-md animate-in fade-in zoom-in-90 duration-200 ${
+                editorMode === 'words' && line.timestamp != null
+                  ? stampTarget === 'secondary'
+                    ? 'bg-accent-blue/15 hover:bg-accent-blue/25 border-accent-blue/40 text-accent-blue'
+                    : 'bg-sky-500/15 hover:bg-sky-500/25 border-sky-500/40 text-sky-400'
+                  : 'bg-primary/20 hover:bg-primary/30 border-primary/40 text-primary'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </Button>
+          </Tip>
+        )}
+
+        <div className="flex items-center gap-0 px-0.5 py-0.5 rounded-full bg-zinc-800/40 backdrop-blur-md border border-zinc-700/50 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-sm">
         {isSynced && (
           <>
             <Tip content={t('editor.jumpSync')}>
@@ -944,53 +925,49 @@ const EditorLineItem = React.memo(({
                     if (playerRef.current.play) playerRef.current.play();
                   }
                 }}
-                className="text-zinc-500 hover:bg-primary/20 hover:text-primary mr-1"
+                className="text-zinc-500 hover:bg-primary/20 hover:text-primary"
               >
                 <Play className="w-3 h-3" fill="currentColor" />
               </Button>
             </Tip>
-            {line.nextTimestamp != null && (
-              <Tip content={t('editor.loopCurrentLine')}>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (playerRef?.current?.setLoop) {
-                      playerRef.current.setLoop(line.timestamp, line.endTime ?? line.nextTimestamp);
-                      playerRef.current.seek(line.timestamp);
-                      if (playerRef.current.play) playerRef.current.play();
-                    }
-                  }}
-                  className="text-zinc-500 hover:bg-accent-purple/20 hover:text-accent-purple mr-1"
-                >
-                  <Repeat className="w-3 h-3" />
-                </Button>
-              </Tip>
-            )}
+
             {selectedLines.size === 0 && (
               <>
-                <Tip content={`-${settings.editor?.nudge?.default || 0.1}s`}>
+                <Tip content={(() => {
+                  const nudgeVal = settings.editor?.nudge?.default || 0.1;
+                  if (focusedTimestamp?.lineIndex === i) {
+                    if (editorMode === 'words' && (focusedTimestamp.type === 'word' || focusedTimestamp.type === 'secondaryWord')) return `Nudge Word (-${nudgeVal}s)`;
+                    if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return `Nudge End Time (-${nudgeVal}s)`;
+                  }
+                  return `Nudge Line (-${nudgeVal}s)`;
+                })()}>
                   <Button
                     variant="ghost"
                     size="icon-xs"
                     onClick={(e) => { e.stopPropagation(); shiftTime(i, -(settings.editor?.nudge?.default || 0.1)); }}
-                    className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60"
+                    className={`transition-colors ${focusedTimestamp?.lineIndex === i ? 'text-primary hover:text-primary-dim hover:bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60'}`}
                   >
                     <ChevronLeft className="w-3 h-3" />
                   </Button>
                 </Tip>
-                <Tip content={`+${settings.editor?.nudge?.default || 0.1}s`}>
+                <Tip content={(() => {
+                  const nudgeVal = settings.editor?.nudge?.default || 0.1;
+                  if (focusedTimestamp?.lineIndex === i) {
+                    if (editorMode === 'words' && (focusedTimestamp.type === 'word' || focusedTimestamp.type === 'secondaryWord')) return `Nudge Word (+${nudgeVal}s)`;
+                    if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return `Nudge End Time (+${nudgeVal}s)`;
+                  }
+                  return `Nudge Line (+${nudgeVal}s)`;
+                })()}>
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    onClick={(e) => { e.stopPropagation(); shiftTime(i, (settings.editor?.nudge?.default || 0.1)); }}
-                    className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60"
+                    onClick={(e) => { e.stopPropagation(); shiftTime(i, settings.editor?.nudge?.default || 0.1); }}
+                    className={`transition-colors ${focusedTimestamp?.lineIndex === i ? 'text-primary hover:text-primary-dim hover:bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60'}`}
                   >
                     <ChevronRight className="w-3 h-3" />
                   </Button>
                 </Tip>
-                <div className="w-px h-4 bg-zinc-700/50 mx-1" />
+                <div className="w-px h-4 bg-zinc-700/50 mx-0.5" />
                 <Tip content={t('editor.addLine')}>
                   <Button
                     variant="ghost"
@@ -1001,9 +978,44 @@ const EditorLineItem = React.memo(({
                     <Plus className="w-3 h-3" />
                   </Button>
                 </Tip>
+                <div className="w-px h-4 bg-zinc-700/50 mx-0.5" />
+                <Tip content={t('editor.editLine')}>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingLineIndex(i);
+                      setEditingText(serializeToRubyMarkup(line.words) || line.text);
+                      setEditingSecondary(line.secondary || '');
+                      setEditingTranslation(line.translation || '');
+                    }}
+                    className="text-zinc-500 hover:text-sky-400 hover:bg-sky-500/10"
+                  >
+                    <Pencil className="w-3 h-3" />
+                  </Button>
+                </Tip>
               </>
             )}
           </>
+        )}
+        {!isSynced && selectedLines.size === 0 && (
+           <Tip content={t('editor.editLine')}>
+             <Button
+               variant="ghost"
+               size="icon-xs"
+               onClick={(e) => {
+                 e.stopPropagation();
+                 setEditingLineIndex(i);
+                 setEditingText(serializeToRubyMarkup(line.words) || line.text);
+                 setEditingSecondary(line.secondary || '');
+                 setEditingTranslation(line.translation || '');
+               }}
+               className="text-zinc-500 hover:text-sky-400 hover:bg-sky-500/10"
+             >
+               <Pencil className="w-3 h-3" />
+             </Button>
+           </Tip>
         )}
         {selectedLines.size === 0 && (
           <Popover>
@@ -1043,10 +1055,11 @@ const EditorLineItem = React.memo(({
             </PopoverContent>
           </Popover>
         )}
+        </div>
       </div>
       {/* Progress stripe for active synced line */}
       {segmentProgress != null && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-800/50">
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-800/50 animate-in fade-in duration-300">
           <div
             className="h-full bg-primary/50 transition-[width] duration-100 ease-linear rounded-full"
             style={{ width: `${segmentProgress * 100}%` }}
