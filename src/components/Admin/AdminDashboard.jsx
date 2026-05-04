@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { admin } from '../../api';
 import { useAuthContext } from '../../contexts/useAuthContext';
@@ -6,9 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ShieldAlert, Trash2, Ban, CheckCircle2, RefreshCw, Activity, User as UserIcon, Undo2, Users, Globe, History, BarChart3, Music, Info, FileText, Filter } from 'lucide-react';
 import toast from 'react-hot-toast';
-import RequestLogger from './RequestLogger';
 import ConfirmModal from '../shared/ConfirmModal';
-import PromptModal from '../shared/PromptModal';
 import BanUserModal from './BanUserModal';
 import AppealDetailsModal from './AppealDetailsModal';
 
@@ -16,20 +14,19 @@ export default function AdminDashboard() {
   const { t } = useTranslation();
   const { user: currentUser } = useAuthContext();
   const [activeTab, setActiveTab] = useState('users'); // users, ips, audit, monitor
-  
+
   // Data States
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
   const [bannedIps, setBannedIps] = useState([]);
   const [bannedDevices, setBannedDevices] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
-  
+
   // UI States
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [showLogger, setShowLogger] = useState(false);
   const [ipForm, setIpForm] = useState({ ip: '', reason: '' });
   const [deviceForm, setDeviceForm] = useState({ deviceId: '', reason: '' });
 
@@ -37,11 +34,14 @@ export default function AdminDashboard() {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: '', user: null, ipId: null, deviceId: null });
   const [banModal, setBanModal] = useState({ isOpen: false, user: null });
   const [appealModal, setAppealModal] = useState({ isOpen: false, user: null });
+  // Track whether stats have been fetched at least once (avoid re-fetching on tab switch)
+  const statsFetchedRef = useRef(false);
 
   const fetchStats = async () => {
     try {
       const data = await admin.getStats();
       setStats(data);
+      statsFetchedRef.current = true;
     } catch (err) {
       console.error('Failed to fetch stats', err);
     }
@@ -50,10 +50,10 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { users: fetchedUsers } = await admin.getUsers({ 
-        search, 
-        role: roleFilter, 
-        status: statusFilter 
+      const { users: fetchedUsers } = await admin.getUsers({
+        search,
+        role: roleFilter,
+        status: statusFilter
       });
       setUsers(fetchedUsers);
     } catch (error) {
@@ -99,16 +99,28 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchData = () => {
-    fetchStats();
+  // Fetch stats once on mount (not on every tab switch) and fetch tab data in parallel
+  const fetchData = (forceStats = false) => {
+    if (!statsFetchedRef.current || forceStats) fetchStats();
     if (activeTab === 'users') fetchUsers();
-    if (activeTab === 'ips') fetchIps();
-    if (activeTab === 'devices') fetchDevices();
-    if (activeTab === 'audit') fetchAuditLogs();
+    else if (activeTab === 'ips') fetchIps();
+    else if (activeTab === 'devices') fetchDevices();
+    else if (activeTab === 'audit') fetchAuditLogs();
   };
 
+  // On mount: fetch stats + initial tab data in parallel
+  const hasInitialized = useRef(false);
   useEffect(() => {
-    fetchData();
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      // Parallel: stats and initial tab content
+      fetchStats();
+    }
+    // Tab content always refreshes on tab switch
+    if (activeTab === 'users') fetchUsers();
+    else if (activeTab === 'ips') fetchIps();
+    else if (activeTab === 'devices') fetchDevices();
+    else if (activeTab === 'audit') fetchAuditLogs();
   }, [activeTab]);
 
   useEffect(() => {
@@ -228,7 +240,7 @@ export default function AdminDashboard() {
   const onConfirmAction = async () => {
     const { type, user, ipId, deviceId } = confirmModal;
     setConfirmModal({ isOpen: false, type: '', user: null, ipId: null, deviceId: null });
-    
+
     try {
       if (type === 'role') {
         const newRole = user.role === 'admin' ? 'user' : 'admin';
@@ -266,28 +278,30 @@ export default function AdminDashboard() {
           <p className="text-zinc-500 mt-1">{t('admin.dashboard.subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={fetchData}>
+          <Button variant="ghost" size="icon" onClick={() => fetchData(true)}>
             <RefreshCw className={`w-5 h-5 text-zinc-400 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-8">
         {[
           { label: t('admin.dashboard.stats.total'), value: stats?.totalUsers, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
           { label: t('admin.dashboard.stats.active'), value: stats?.activeUsers, icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+          { label: 'Projects', value: stats?.totalProjects, icon: BarChart3, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+          { label: 'Uploads', value: stats?.totalUploads, icon: Music, color: 'text-pink-400', bg: 'bg-pink-400/10' },
           { label: t('admin.dashboard.stats.appeals'), value: stats?.pendingAppeals, icon: FileText, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
           { label: t('admin.dashboard.stats.banned'), value: stats?.bannedUsers, icon: Ban, color: 'text-red-400', bg: 'bg-red-400/10' },
           { label: t('admin.dashboard.stats.deleted'), value: stats?.deletedUsers, icon: Trash2, color: 'text-zinc-500', bg: 'bg-zinc-500/10' },
         ].map((s, i) => (
-          <div key={i} className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl flex items-center gap-4 hover:border-zinc-700 transition-colors">
-            <div className={`p-3 rounded-xl ${s.bg}`}>
+          <div key={i} className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl flex flex-col sm:flex-row items-center sm:items-start gap-4 hover:border-zinc-700 transition-colors">
+            <div className={`p-3 rounded-xl ${s.bg} shrink-0`}>
               <s.icon className={`w-6 h-6 ${s.color}`} />
             </div>
-            <div>
-              <p className="text-zinc-500 text-xs font-medium uppercase tracking-wider">{s.label}</p>
-              <p className="text-2xl font-bold text-zinc-100">{s.value ?? '—'}</p>
+            <div className="text-center sm:text-left min-w-0">
+              <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-0.5 truncate">{s.label}</p>
+              <p className="text-xl font-bold text-zinc-100">{s.value ?? '—'}</p>
             </div>
           </div>
         ))}
@@ -300,16 +314,14 @@ export default function AdminDashboard() {
           { id: 'ips', icon: Globe, label: t('admin.dashboard.tabs.ipBlocklist') },
           { id: 'devices', icon: ShieldAlert, label: t('admin.dashboard.tabs.deviceBlocklist') },
           { id: 'audit', icon: History, label: t('admin.dashboard.tabs.auditLogs') },
-          { id: 'monitor', icon: Activity, label: t('admin.dashboard.tabs.requestLogger') },
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              activeTab === tab.id 
-                ? 'bg-zinc-800 text-zinc-100 shadow-lg ring-1 ring-zinc-700' 
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
+                ? 'bg-zinc-800 text-zinc-100 shadow-lg ring-1 ring-zinc-700'
                 : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
-            }`}
+              }`}
           >
             <tab.icon className="w-4 h-4" />
             {tab.label}
@@ -323,7 +335,7 @@ export default function AdminDashboard() {
           <>
             <div className="p-4 border-b border-zinc-800/50 flex flex-wrap items-center gap-4 bg-zinc-900/50">
               <div className="relative flex-1 max-w-md">
-                <Input 
+                <Input
                   placeholder={t('admin.dashboard.searchPlaceholder')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -331,8 +343,8 @@ export default function AdminDashboard() {
                 />
                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
               </div>
-              <select 
-                value={roleFilter} 
+              <select
+                value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
                 className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 outline-none focus:border-indigo-500"
               >
@@ -340,8 +352,8 @@ export default function AdminDashboard() {
                 <option value="admin">Admin</option>
                 <option value="user">User</option>
               </select>
-              <select 
-                value={statusFilter} 
+              <select
+                value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 outline-none focus:border-indigo-500"
               >
@@ -386,12 +398,11 @@ export default function AdminDashboard() {
                           </div>
                         </td>
                         <td className="p-4">
-                          <button 
+                          <button
                             disabled={isSelf}
                             onClick={() => handleChangeRole(user)}
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-all ${
-                              user.role === 'admin' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                            }`}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-all ${user.role === 'admin' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                              }`}
                           >
                             {user.role}
                           </button>
@@ -475,7 +486,7 @@ export default function AdminDashboard() {
             <form onSubmit={handleBlockIp} className="flex flex-wrap items-end gap-4 bg-zinc-950/50 p-4 rounded-xl border border-zinc-800">
               <div className="flex-1 min-w-[200px]">
                 <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('admin.table.blockIp')}</label>
-                <Input 
+                <Input
                   placeholder={t('admin.table.ipPlaceholder')}
                   value={ipForm.ip}
                   onChange={(e) => setIpForm({ ...ipForm, ip: e.target.value })}
@@ -484,7 +495,7 @@ export default function AdminDashboard() {
               </div>
               <div className="flex-[2] min-w-[300px]">
                 <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('admin.table.ipReason')}</label>
-                <Input 
+                <Input
                   placeholder={t('admin.table.reasonPlaceholder')}
                   value={ipForm.reason}
                   onChange={(e) => setIpForm({ ...ipForm, reason: e.target.value })}
@@ -516,9 +527,9 @@ export default function AdminDashboard() {
                         <td className="p-4 text-xs text-zinc-400 italic">"{item.reason || 'No reason'}"</td>
                         <td className="p-4 text-[10px] text-zinc-500">{new Date(item.createdAt).toLocaleString()}</td>
                         <td className="p-4 text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleUnblockIp(item.id)}
                             className="text-emerald-500 hover:bg-emerald-500/10 h-8"
                           >
@@ -539,7 +550,7 @@ export default function AdminDashboard() {
             <form onSubmit={handleBlockDevice} className="flex flex-wrap items-end gap-4 bg-zinc-950/50 p-4 rounded-xl border border-zinc-800">
               <div className="flex-1 min-w-[200px]">
                 <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('admin.table.device')}</label>
-                <Input 
+                <Input
                   placeholder="dv_..."
                   value={deviceForm.deviceId}
                   onChange={(e) => setDeviceForm({ ...deviceForm, deviceId: e.target.value })}
@@ -548,7 +559,7 @@ export default function AdminDashboard() {
               </div>
               <div className="flex-[2] min-w-[300px]">
                 <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('admin.table.ipReason')}</label>
-                <Input 
+                <Input
                   placeholder={t('admin.table.reasonPlaceholder')}
                   value={deviceForm.reason}
                   onChange={(e) => setDeviceForm({ ...deviceForm, reason: e.target.value })}
@@ -580,9 +591,9 @@ export default function AdminDashboard() {
                         <td className="p-4 text-xs text-zinc-400 italic">"{item.reason || 'No reason'}"</td>
                         <td className="p-4 text-[10px] text-zinc-500">{new Date(item.createdAt).toLocaleString()}</td>
                         <td className="p-4 text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleUnblockDevice(item.id)}
                             className="text-emerald-500 hover:bg-emerald-500/10 h-8"
                           >
@@ -624,11 +635,10 @@ export default function AdminDashboard() {
                           <span className="text-xs font-bold text-indigo-400">{log.adminName}</span>
                         </td>
                         <td className="p-4">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                            log.action.includes('ban') ? 'bg-red-500/10 text-red-400' :
-                            log.action.includes('unban') || log.action.includes('reactivate') ? 'bg-emerald-500/10 text-emerald-400' :
-                            'bg-zinc-800 text-zinc-400'
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${log.action.includes('ban') ? 'bg-red-500/10 text-red-400' :
+                              log.action.includes('unban') || log.action.includes('reactivate') ? 'bg-emerald-500/10 text-emerald-400' :
+                                'bg-zinc-800 text-zinc-400'
+                            }`}>
                             {log.action.replace('_', ' ')}
                           </span>
                         </td>
@@ -647,28 +657,25 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === 'monitor' && (
-          <RequestLogger mode="inline" />
-        )}
       </div>
 
       {/* Confirm Action Modal */}
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         title={
-          confirmModal.type === 'role' ? t('admin.table.roleTitle') : 
-          confirmModal.type === 'unblock_ip' ? t('admin.table.unblock') :
-          confirmModal.type === 'unblock_device' ? t('admin.table.unblock') :
-          t('admin.table.deleteTitle')
+          confirmModal.type === 'role' ? t('admin.table.roleTitle') :
+            confirmModal.type === 'unblock_ip' ? t('admin.table.unblock') :
+              confirmModal.type === 'unblock_device' ? t('admin.table.unblock') :
+                t('admin.table.deleteTitle')
         }
         message={
-          confirmModal.type === 'role' 
-            ? t('admin.table.confirmRoleChange', { name: confirmModal.user?.username, role: confirmModal.user?.role === 'admin' ? 'user' : 'admin' }) 
+          confirmModal.type === 'role'
+            ? t('admin.table.confirmRoleChange', { name: confirmModal.user?.username, role: confirmModal.user?.role === 'admin' ? 'user' : 'admin' })
             : confirmModal.type === 'unblock_ip'
-            ? "Are you sure you want to remove this IP block? This network will be able to register and login again."
-            : confirmModal.type === 'unblock_device'
-            ? "Are you sure you want to remove this hardware block? This machine will be able to access the platform again."
-            : t('admin.table.confirmDelete', { name: confirmModal.user?.username })
+              ? "Are you sure you want to remove this IP block? This network will be able to register and login again."
+              : confirmModal.type === 'unblock_device'
+                ? "Are you sure you want to remove this hardware block? This machine will be able to access the platform again."
+                : t('admin.table.confirmDelete', { name: confirmModal.user?.username })
         }
         onConfirm={onConfirmAction}
         onCancel={() => setConfirmModal({ isOpen: false, type: '', user: null, ipId: null, deviceId: null })}
