@@ -30,7 +30,7 @@ export default defineConfig({
           proxy.on('error', (err, _req, _res) => {
             console.log('Proxy error (Render):', err);
           });
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
+          proxy.on('proxyReq', (_, req, _res) => {
             console.log('Proxying request to Render:', req.method, req.url);
           });
         },
@@ -39,21 +39,45 @@ export default defineConfig({
   },
   envPrefix: 'VITE_',
   build: {
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // Core React runtime — loaded first
           if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
             return 'vendor-react';
           }
+          // i18n — large but only needed after initial paint
           if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next') || id.includes('node_modules/i18next-browser-languagedetector')) {
             return 'vendor-i18n';
           }
+          // Toasts — lightweight, keep separate for cache efficiency
           if (id.includes('node_modules/react-hot-toast')) {
             return 'vendor-toast';
           }
+          // Waveform — heavy, never needed on initial render
           if (id.includes('node_modules/wavesurfer.js')) {
             return 'vendor-wavesurfer';
+          }
+          // UI icon library — large, tree-shaken but still substantial
+          if (id.includes('node_modules/lucide-react')) {
+            return 'vendor-lucide';
+          }
+          // Radix UI primitives (used by shadcn components)
+          if (id.includes('node_modules/radix-ui') || id.includes('node_modules/@radix-ui')) {
+            return 'vendor-radix';
+          }
+          // Tanstack Virtual — only needed when Preview/lists mount
+          if (id.includes('node_modules/@tanstack')) {
+            return 'vendor-tanstack';
+          }
+          // Validation
+          if (id.includes('node_modules/zod')) {
+            return 'vendor-zod';
+          }
+          // Router
+          if (id.includes('node_modules/react-router')) {
+            return 'vendor-router';
           }
         },
       },
