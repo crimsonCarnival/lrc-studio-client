@@ -1477,7 +1477,7 @@ export function useAppState(user) {
           };
 
           if (lines.length > 0 && settings.advanced.confirmDestructive) {
-            requestConfirm(t('confirm.removeAll') || 'Replace existing lyrics?', applyImport);
+            requestConfirm(t('confirm.removeAll') || 'Replace existing lyrics?', applyImport, { title: t('confirm.replaceTitle') || 'Replace Lyrics', variant: 'danger' });
           } else {
             applyImport();
           }

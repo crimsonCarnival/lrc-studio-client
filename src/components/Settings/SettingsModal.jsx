@@ -95,7 +95,7 @@ export default function SettingsModal({ isOpen, onClose }) {
               </div>
               <Button
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 onClick={onClose}
                 className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 ml-4"
               >

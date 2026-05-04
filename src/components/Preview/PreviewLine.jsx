@@ -181,6 +181,7 @@ function needsSpaceAfter(currentWord, nextWord) {
 // Fill effect is ONLY applied when word-level timestamps exist.
 function renderMainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying, playbackSpeed }) {
   const fillTrack = settings.editor?.display?.karaokeFillTrack ?? 'main';
+  const fillEasing = settings.editor?.display?.karaokeFillEasing ?? 'linear';
   const skipMainFill = isActive && fillTrack === 'secondary';
   const effectiveHasWordTimestamps = hasWordTimestamps && !skipMainFill;
   const highlightMode = settings.editor?.display?.activeHighlight;
@@ -271,7 +272,7 @@ function renderMainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPo
                       style={{ 
                         animationName: 'karaoke-fill-anim',
                         animationDuration: `${(endTime - startTime) / playbackSpeed}s`,
-                        animationTimingFunction: 'linear',
+                        animationTimingFunction: fillEasing,
                         animationFillMode: 'both',
                         animationDelay: `${(startTime - playbackPosition) / playbackSpeed}s`,
                         animationPlayState: isPlaying ? 'running' : 'paused',
@@ -295,6 +296,7 @@ function renderMainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPo
 
 function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings, isPlaying, playbackSpeed }) {
   const fillTrack = settings?.editor?.display?.karaokeFillTrack ?? 'main';
+  const fillEasing = settings?.editor?.display?.karaokeFillEasing ?? 'linear';
   const hasSecondaryStamps = line.secondaryWords?.some((w) => w.time != null);
   const doFill = isActive && hasSecondaryStamps && (fillTrack === 'secondary' || fillTrack === 'both');
   // secondary stays dim (inactive style) when fillTrack is 'main' — no active styling applied
@@ -370,7 +372,7 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
                 style={{ 
                   animationName: 'karaoke-fill-anim',
                   animationDuration: `${(endTime - startTime) / playbackSpeed}s`,
-                  animationTimingFunction: 'linear',
+                  animationTimingFunction: fillEasing,
                   animationFillMode: 'both',
                   animationDelay: `${(startTime - playbackPosition) / playbackSpeed}s`,
                   animationPlayState: isPlaying ? 'running' : 'paused',

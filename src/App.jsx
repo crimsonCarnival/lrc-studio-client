@@ -379,7 +379,7 @@ function AppInner() {
                   }
                 }}
                 className={`${lines.length === 0 ? '!hidden' : 'hidden lg:flex'} px-2 py-1.5 h-auto text-[10px] font-bold border rounded-lg gap-1 flex-shrink-0 transition-colors ${(hideEditor || focusMode === 'playback')
-                  ? 'bg-primary text-zinc-950 border-primary hover:bg-primary/90 hover:text-zinc-950'
+                  ? 'bg-primary text-zinc-950 border-primary hover:bg-primary-dim hover:text-zinc-950'
                   : 'bg-zinc-800/80 border-zinc-700/60 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
                   }`}
               >
@@ -405,7 +405,7 @@ function AppInner() {
                 }
               }}
               className={`px-2 sm:px-3 h-8 sm:h-9 rounded-lg sm:rounded-xl flex-shrink-0 transition-colors ${location.pathname.startsWith('/library')
-                ? 'bg-primary text-zinc-950 border-primary hover:bg-primary/90 hover:text-zinc-950'
+                ? 'bg-primary text-zinc-950 border-primary hover:bg-primary-dim hover:text-zinc-950'
                 : 'bg-zinc-800/80 border-zinc-700/60 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
                 }`}
             >
@@ -431,7 +431,7 @@ function AppInner() {
                 }
               }}
               className={`px-2 sm:px-3 h-8 sm:h-9 rounded-lg sm:rounded-xl flex-shrink-0 transition-colors ${location.pathname.startsWith('/uploads')
-                ? 'bg-primary text-zinc-950 border-primary hover:bg-primary/90 hover:text-zinc-950'
+                ? 'bg-primary text-zinc-950 border-primary hover:bg-primary-dim hover:text-zinc-950'
                 : 'bg-zinc-800/80 border-zinc-700/60 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'
                 }`}
             >

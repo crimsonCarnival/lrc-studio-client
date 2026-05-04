@@ -22,7 +22,7 @@ function ActionsDropdown({ children, t }) {
         <PopoverTrigger asChild>
           <Button
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
           >
             {open ? <X className="w-3.5 h-3.5" /> : <MoreHorizontal className="w-3.5 h-3.5" />}
@@ -126,7 +126,7 @@ export default function EditorToolbar({
             <Tip content={t('editor.backToEdit')}>
             <Button
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               onClick={() => {
                 setRawText(lines.map(l => serializeToRubyMarkup(l.words) || l.text).join('\n'));
                 setSyncMode(false);
@@ -140,7 +140,7 @@ export default function EditorToolbar({
             <Tip content={t('editor.loopCurrentLine')}>
             <Button
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               onClick={() => isActiveLineLocked && updateSetting('playback.loopCurrentLine', !settings?.playback?.loopCurrentLine)}
               disabled={!isActiveLineLocked}
               className={`${
@@ -159,7 +159,7 @@ export default function EditorToolbar({
             <Tip content={selectedLines?.size === lines.length ? t('editor.selection.deselectAll') : t('editor.selection.selectAll')}>
             <Button
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               onClick={() => {
                 if (selectedLines?.size === lines.length) {
                   setSelectedLines(new Set());
@@ -183,7 +183,7 @@ export default function EditorToolbar({
             <Tip content={t('editor.selection.clearTimestamps')}>
             <Button
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               onClick={handleClearTimestamps}
               className="text-orange-400 hover:text-orange-300 hover:bg-orange-500/10"
             >
@@ -255,7 +255,7 @@ export default function EditorToolbar({
                 <PopoverSeparator />
                 <PopoverItem
                   onClick={() => {
-                    requestConfirm(t('confirm.removeAll'), handleRemoveAllLyrics);
+                    requestConfirm(t('confirm.removeAll'), handleRemoveAllLyrics, { title: t('confirm.removeAllTitle') || 'Remove All Lyrics', variant: 'danger' });
                   }}
                   className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
                 >
@@ -282,7 +282,7 @@ export default function EditorToolbar({
               <Tip content={isAutosaving ? (t('project.saved') || 'Saved') : (t('project.save') || 'Save')}>
               <Button
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 onClick={handleManualSave}
                 className={`flex-shrink-0 ${
                   isAutosaving
@@ -312,7 +312,7 @@ export default function EditorToolbar({
           <Tip content={t('editor.backToEdit')}>
           <Button
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             onClick={() => {
               setRawText(lines.map(l => serializeToRubyMarkup(l.words) || l.text).join('\n'));
               setSyncMode(false);
@@ -380,7 +380,7 @@ export default function EditorToolbar({
           <Tip content={isAutosaving ? (t('project.saved') || 'Saved') : (t('project.save') || 'Save')}>
           <Button
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             onClick={handleManualSave}
             className={`flex-shrink-0 ${
               isAutosaving
@@ -407,7 +407,7 @@ export default function EditorToolbar({
           <Tip content={t('editor.loopCurrentLine')}>
           <Button
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             onClick={() => isActiveLineLocked && updateSetting('playback.loopCurrentLine', !settings?.playback?.loopCurrentLine)}
             disabled={!isActiveLineLocked}
             className={`flex-shrink-0 transition-colors ${
@@ -431,7 +431,7 @@ export default function EditorToolbar({
           <Button
             id="select-all-btn"
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             onClick={() => {
               if (selectedLines?.size === lines.length) {
                 setSelectedLines(new Set());
@@ -455,7 +455,7 @@ export default function EditorToolbar({
           <Button
             id="clear-timestamps-btn"
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             onClick={handleClearTimestamps}
             className="text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 flex-shrink-0"
           >
@@ -466,7 +466,7 @@ export default function EditorToolbar({
             <Tip content={t('editor.clearWordTimestamps')}>
             <Button
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               onClick={handleClearAllWordTimestamps}
               className="text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 flex-shrink-0"
             >
@@ -478,7 +478,7 @@ export default function EditorToolbar({
             <Tip content={t('editor.clearActiveLineWordTimestamps')}>
             <Button
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               onClick={handleClearActiveLineWordTimestamps}
               className="text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/10 flex-shrink-0"
             >
@@ -536,7 +536,7 @@ export default function EditorToolbar({
               <PopoverSeparator className="bg-zinc-700/50" />
               <PopoverItem
                 onClick={() => {
-                  requestConfirm(t('confirm.removeAll'), handleRemoveAllLyrics);
+                  requestConfirm(t('confirm.removeAll'), handleRemoveAllLyrics, { title: t('confirm.removeAllTitle') || 'Remove All Lyrics', variant: 'danger' });
                 }}
                 className="text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer gap-2"
               >

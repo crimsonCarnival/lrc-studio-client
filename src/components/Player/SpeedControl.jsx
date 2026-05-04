@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import NumberInput from '../shared/NumberInput';
 import { Button } from '@/components/ui/button';
@@ -89,7 +89,7 @@ const SpeedControl = React.memo(function SpeedControl({
           </div>
           <div className="border-t border-zinc-700/50 p-2" onPointerDown={(e) => e.stopPropagation()}>
             <label className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-1 block">
-              {t('player.customSpeed') || 'Custom'} ({MIN_SPEED}–{MAX_SPEED}x)
+              {t('player.customSpeed') || 'Custom'} ({MIN_SPEED}�{MAX_SPEED}x)
             </label>
             <div className="flex gap-1.5">
               <NumberInput
@@ -109,7 +109,7 @@ const SpeedControl = React.memo(function SpeedControl({
                 disabled={!isCustomValid}
                 className="px-2.5 bg-primary hover:bg-primary-dim disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 font-semibold"
               >
-                ✓
+                ?
               </Button>
             </div>
           </div>

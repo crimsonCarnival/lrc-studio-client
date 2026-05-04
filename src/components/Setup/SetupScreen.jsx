@@ -325,9 +325,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
                 )}
                 <Button
                   variant="ghost"
-                  size="sm"
                   onClick={() => { setAudioReady(false); setAudioName(''); setYtUrl(''); setSelectedUpload(null); setAudioSource(null); }}
-                  className="text-xs text-zinc-500 hover:text-zinc-300"
+                  className="h-8 px-3 rounded-lg text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 transition-all"
                 >
                   {t('setup.changeAudio')}
                 </Button>
@@ -464,7 +463,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
                   <Button
                     onClick={handleLoadUrl}
                     disabled={!ytUrl.trim() || ytLoading}
-                    className={`text-zinc-950 font-semibold text-sm rounded-xl px-4 transition-colors ${
+                    className={`h-10 px-5 text-zinc-950 font-semibold text-sm rounded-xl transition-colors ${
                       detectedUrlType === 'cdn' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-primary hover:bg-primary-dim'
                     }`}
                   >
@@ -549,9 +548,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
                 {lyricsFileName && <p className="text-xs text-zinc-500 truncate max-w-full px-2">{lyricsFileName}</p>}
                 <Button
                   variant="ghost"
-                  size="sm"
                   onClick={() => { setParsedLines(null); setLyricsFileName(''); setLyricsText(''); }}
-                  className="text-xs text-zinc-500 hover:text-zinc-300"
+                  className="h-8 px-3 rounded-lg text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 transition-all"
                 >
                   {t('setup.changeLyrics')}
                 </Button>
@@ -592,7 +590,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads, o
           <div className="flex justify-center mt-4 sm:mt-6 animate-fade-in">
             <Button
               onClick={handleProceed}
-              className="bg-primary hover:bg-primary-dim text-zinc-950 font-semibold text-sm rounded-xl h-10 sm:h-11 px-6 sm:px-8 gap-2 shadow-lg shadow-primary/20"
+              className="h-10 px-5 bg-primary hover:bg-primary-dim text-zinc-950 font-semibold text-sm rounded-xl gap-2 shadow-lg shadow-primary/20 transition-all"
             >
               {t('setup.next')}
               <ArrowRight className="w-4 h-4" />

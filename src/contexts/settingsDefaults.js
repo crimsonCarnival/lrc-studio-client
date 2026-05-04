@@ -35,7 +35,8 @@ export const DEFAULT_SETTINGS = {
       languageLayout: 'stacked',
       translationLayout: 'side-by-side',
       readingFormat: 'hiragana',
-      karaokeFillTrack: 'main'
+      karaokeFillTrack: 'main',
+      karaokeFillEasing: 'linear'
     },
     scroll: {
       mode: 'smooth',

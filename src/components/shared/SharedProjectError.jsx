@@ -27,7 +27,7 @@ export default function SharedProjectError({ status, projectId }) {
         
         <Button 
           onClick={() => window.location.href = '/'}
-          className="w-full h-11 bg-primary text-zinc-950 hover:bg-primary/90 font-semibold gap-2"
+          className="w-full h-10 bg-primary text-zinc-950 hover:bg-primary-dim font-semibold gap-2 rounded-xl"
         >
           <Home className="w-4 h-4" />
           {t('common.goHome', 'Go to Homepage')}

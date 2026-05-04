@@ -6,6 +6,7 @@ import { Tip } from '@/components/ui/tip';
 import { Music, Video, Upload, FileText, Trash2, ExternalLink, Clock, ArrowLeft, Loader2, Pencil } from 'lucide-react';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import ProjectSetupModal from '../Setup/ProjectSetupModal';
+import useConfirm from '../../hooks/useConfirm';
 
 function formatRelativeTime(dateStr, t) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -31,6 +32,7 @@ export default function Library({ onOpenProject, onBack }) {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
   const [editingProject, setEditingProject] = useState(null);
+  const [requestConfirm, confirmModal] = useConfirm();
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -45,17 +47,23 @@ export default function Library({ onOpenProject, onBack }) {
 
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
 
-  const handleDelete = async (e, projectId) => {
+  const handleDelete = (e, projectId, title) => {
     e.stopPropagation();
-    setDeletingId(projectId);
-    try {
-      await projects.remove(projectId);
-      setItems((prev) => prev.filter((s) => s.projectId !== projectId));
-    } catch {
-      // ignore
-    } finally {
-      setDeletingId(null);
-    }
+    requestConfirm(
+      t('confirm.deleteProject', { title: title || t('library.untitled') }) || `Delete "${title || 'Untitled'}"? This cannot be undone.`,
+      async () => {
+        setDeletingId(projectId);
+        try {
+          await projects.remove(projectId);
+          setItems((prev) => prev.filter((s) => s.projectId !== projectId));
+        } catch {
+          // ignore
+        } finally {
+          setDeletingId(null);
+        }
+      },
+      { title: t('confirm.deleteProjectTitle') || 'Delete Project', variant: 'danger' }
+    );
   };
 
   return (
@@ -64,7 +72,7 @@ export default function Library({ onOpenProject, onBack }) {
       <div className="flex items-center gap-3 mb-5">
         <Button
           variant="ghost"
-          size="icon-sm"
+          size="icon"
           onClick={onBack}
           className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0"
         >
@@ -150,7 +158,7 @@ export default function Library({ onOpenProject, onBack }) {
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                 <Button
                   variant="ghost"
-                  size="icon-sm"
+                  size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     setEditingProject(project);
@@ -162,8 +170,8 @@ export default function Library({ onOpenProject, onBack }) {
                 </Button>
                 <Button
                   variant="ghost"
-                  size="icon-sm"
-                  onClick={(e) => handleDelete(e, project.projectId)}
+                  size="icon"
+                  onClick={(e) => handleDelete(e, project.projectId, project.title)}
                   disabled={deletingId === project.projectId}
                   className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 w-7 h-7"
                 >
@@ -204,6 +212,7 @@ export default function Library({ onOpenProject, onBack }) {
         initialTags={editingProject?.metadata?.tags || []}
         isEditing={true}
       />
+      {confirmModal}
     </div>
   );
 }

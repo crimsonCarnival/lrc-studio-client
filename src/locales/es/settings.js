@@ -157,6 +157,10 @@ export default {
     "fillTrackMain": "Letra principal",
     "fillTrackSecondary": "Secundaria (romaji)",
     "fillTrackBoth": "Ambas",
+    "karaokeFillEasing": "Efecto de animacion de relleno",
+    "karaokeFillEasingDesc": "Controla como el relleno barre cada palabra",
+    "fillEasingLinear": "Lineal (Preciso)",
+    "fillEasingEaseInOut": "Ease In/Out (Suave)",
     "readingFormat": "Formato furigana",
     "readingFormatDesc": "Tipo de lectura para furigana japonés generado"
   },

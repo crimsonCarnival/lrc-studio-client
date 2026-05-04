@@ -62,7 +62,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
           </SelectTrigger>
           <SelectContent className="bg-zinc-900 border-zinc-700">
             <SelectItem value="en">English</SelectItem>
-            <SelectItem value="es">Español</SelectItem>
+            <SelectItem value="es">Espa�ol</SelectItem>
           </SelectContent>
         </Select>
       </SettingRow>
@@ -184,6 +184,20 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             <SelectItem value="main">{t('settings.interface.fillTrackMain')}</SelectItem>
             <SelectItem value="secondary">{t('settings.interface.fillTrackSecondary')}</SelectItem>
             <SelectItem value="both">{t('settings.interface.fillTrackBoth')}</SelectItem>
+          </SelectContent>
+        </Select>
+      </SettingRow>
+      <SettingRow icon={Sparkles} label={t('settings.interface.karaokeFillEasing') || 'Fill Easing'} description={t('settings.interface.karaokeFillEasingDesc') || 'Controls how the karaoke fill animates across each word'}>
+        <Select
+          value={settings.editor?.display?.karaokeFillEasing ?? 'linear'}
+          onValueChange={(val) => updateSetting('editor.display.karaokeFillEasing', val)}
+        >
+          <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-900 border-zinc-700">
+            <SelectItem value="linear">{t('settings.interface.fillEasingLinear') || 'Linear (Accurate)'}</SelectItem>
+            <SelectItem value="ease-in-out">{t('settings.interface.fillEasingEaseInOut') || 'Ease In/Out (Smooth)'}</SelectItem>
           </SelectContent>
         </Select>
       </SettingRow>

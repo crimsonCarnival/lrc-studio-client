@@ -139,7 +139,7 @@ export default function Preview(props) {
                 <Tip content={t('preview.furigana', 'Furigana')}>
                   <Button
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon"
                     onClick={() => setShowFuriganaInPreview((v) => !v)}
                     className={`flex-shrink-0 transition-colors ${showFuriganaInPreview ? 'text-primary bg-primary/10 hover:bg-primary/20' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'}`}
                   >
@@ -157,7 +157,7 @@ export default function Preview(props) {
                   <Button
                     ref={shareTriggerRef}
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon"
                     onClick={handleShareToggle}
                     className={`flex-shrink-0 transition-colors ${isSharedProject
                       ? 'text-primary bg-primary/10 hover:bg-primary/20'
@@ -178,7 +178,7 @@ export default function Preview(props) {
                 <Tip content={sharedReadOnly ? t('share.readOnlyTitle') : t('share.editingTitle')}>
                   <Button
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon"
                     onClick={() => setSharedReadOnly?.(!sharedReadOnly)}
                     className={`flex-shrink-0 ${sharedReadOnly ? 'text-amber-400 hover:text-amber-300 bg-amber-400/10 hover:bg-amber-400/20' : 'text-emerald-400 hover:text-emerald-300 bg-emerald-400/10 hover:bg-emerald-400/20'}`}
                   >
@@ -193,7 +193,7 @@ export default function Preview(props) {
                 <Tip content={t('preview.toggleTranslations') || 'Toggle Translations'}>
                   <Button
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon"
                     onClick={() => setShowTranslationsInPreview(!showTranslationsInPreview)}
                     className={`flex-shrink-0 ${showTranslationsInPreview ? 'text-primary hover:text-primary-dim bg-zinc-800/50 hover:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'}`}
                   >
@@ -207,7 +207,7 @@ export default function Preview(props) {
                 <Tip content={t('export.title') || 'Export File'}>
                   <Button
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon"
                     data-export-toggle
                     onClick={() => setShowExportPanel(!showExportPanel)}
                     className={`flex-shrink-0 ${showExportPanel ? 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'}`}
@@ -229,7 +229,7 @@ export default function Preview(props) {
                   <PopoverTrigger asChild>
                     <Button
                       variant="ghost"
-                      size="icon-sm"
+                      size="icon"
                       className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0"
                     >
                       <Plus className="w-4 sm:w-5 h-4 sm:h-5" />

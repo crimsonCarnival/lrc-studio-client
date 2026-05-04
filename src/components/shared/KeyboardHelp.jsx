@@ -114,7 +114,7 @@ export default function KeyboardHelp({ isOpen, onClose }) {
             </h3>
             <Button
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               onClick={onClose}
               onPointerDown={(e) => e.stopPropagation()}
               className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800"

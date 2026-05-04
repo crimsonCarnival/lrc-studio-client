@@ -127,7 +127,7 @@ export default function Home() {
               </div>
               <Button
                 onClick={() => navigate('/project/new')}
-                className="bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-full px-5 sm:px-6 h-10 sm:h-11 gap-2 text-sm sm:text-base w-full sm:w-auto"
+                className="h-10 px-6 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-full gap-2 text-sm sm:text-base w-full sm:w-auto transition-all"
               >
                 <Plus className="w-4 h-4" />
                 {t('home.newProject')}

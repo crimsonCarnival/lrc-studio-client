@@ -58,7 +58,7 @@ export default function PromptModal({ isOpen, title, message, onConfirm, onCance
             </Button>
             <Button
               type="submit"
-              className="flex-1 bg-primary hover:bg-primary/90 text-zinc-950 font-bold"
+              className="flex-1 h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-semibold rounded-xl"
             >
               {confirmText || t('common.confirm')}
             </Button>

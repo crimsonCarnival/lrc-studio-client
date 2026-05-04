@@ -185,8 +185,8 @@ body,
 }
 
 .karaoke-fill-mask {
-  mask-image: linear-gradient(to right, black 0%, black calc(100% - 12px), transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, black 0%, black calc(100% - 12px), transparent 100%);
+  mask-image: linear-gradient(to right, black 0%, black calc(100% - 6px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 0%, black calc(100% - 6px), transparent 100%);
 }
 
 /* Edge blur mask */
@@ -215,7 +215,7 @@ body,
 /* Keyframes for smooth karaoke fill with overshoot to clear soft-edged masks */
 @keyframes karaoke-fill-anim {
   from { width: 0%; }
-  to { width: calc(100% + 20px); }
+  to { width: calc(100% + 30px); }
 }
 
 /* Fade in */

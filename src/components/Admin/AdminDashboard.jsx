@@ -463,7 +463,7 @@ export default function AdminDashboard() {
                                         {t('admin.table.unban')}
                                       </Button>
                                     )}
-                                    <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(user)} className="w-8 h-8 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg">
+                                    <Button variant="ghost" size="icon" onClick={() => handleDelete(user)} className="w-8 h-8 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg">
                                       <Trash2 className="w-4 h-4" />
                                     </Button>
                                   </>

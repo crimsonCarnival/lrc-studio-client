@@ -8,7 +8,7 @@ import ConfirmModal from '../components/shared/ConfirmModal';
  *
  * Usage:
  *   const [requestConfirm, confirmModal] = useConfirm();
- *   requestConfirm('Are you sure?', () => { doThing(); });
+ *   requestConfirm('Are you sure?', () => { doThing(); }, { variant: 'danger', title: 'Delete Project' });
  *   // Render {confirmModal} somewhere in the JSX tree
  */
 export default function useConfirm() {
@@ -16,12 +16,20 @@ export default function useConfirm() {
   const [config, setConfig] = useState({
     isOpen: false,
     message: '',
+    title: '',
+    variant: 'danger',
     onConfirm: null,
   });
 
-  const requestConfirm = useCallback((message, action) => {
+  const requestConfirm = useCallback((message, action, options = {}) => {
     if (settings.advanced?.confirmDestructive) {
-      setConfig({ isOpen: true, message, onConfirm: action });
+      setConfig({
+        isOpen: true,
+        message,
+        title: options.title || '',
+        variant: options.variant ?? 'danger',
+        onConfirm: action,
+      });
     } else {
       action();
     }
@@ -30,13 +38,15 @@ export default function useConfirm() {
   const modal = (
     <ConfirmModal
       isOpen={config.isOpen}
+      title={config.title}
       message={config.message}
+      variant={config.variant}
       onConfirm={() => {
         const action = config.onConfirm;
-        setConfig({ isOpen: false, message: '', onConfirm: null });
+        setConfig({ isOpen: false, message: '', title: '', variant: 'danger', onConfirm: null });
         if (action) setTimeout(action, 0);
       }}
-      onCancel={() => setConfig({ isOpen: false, message: '', onConfirm: null })}
+      onCancel={() => setConfig({ isOpen: false, message: '', title: '', variant: 'danger', onConfirm: null })}
     />
   );
 

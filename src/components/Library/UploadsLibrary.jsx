@@ -9,6 +9,7 @@ import { Cloud, Video, Trash2, ArrowLeft, Loader2, Music2, Clock, Edit2, Check, 
 import { SkeletonCard } from '@/components/ui/skeleton';
 import SpotifyIcon from '../shared/SpotifyIcon';
 import toast from 'react-hot-toast';
+import useConfirm from '../../hooks/useConfirm';
 
 function formatRelativeTime(dateStr, t) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -43,6 +44,7 @@ export default function UploadsLibrary({ onSelect, onBack }) {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [savingTitle, setSavingTitle] = useState(false);
+  const [requestConfirm, confirmModal] = useConfirm();
 
   const fetchUploads = useCallback(async () => {
     try {
@@ -57,17 +59,23 @@ export default function UploadsLibrary({ onSelect, onBack }) {
 
   useEffect(() => { fetchUploads(); }, [fetchUploads]);
 
-  const handleDelete = async (e, uploadId) => {
+  const handleDelete = (e, uploadId, title) => {
     e.stopPropagation();
-    setDeletingId(uploadId);
-    try {
-      await uploadsApi.deleteMedia(uploadId);
-      setItems((prev) => prev.filter((u) => u.id !== uploadId));
-    } catch {
-      // ignore
-    } finally {
-      setDeletingId(null);
-    }
+    requestConfirm(
+      t('confirm.deleteUpload', { title: title || t('uploads.untitled') }) || `Remove "${title || 'Untitled'}" from your media library?`,
+      async () => {
+        setDeletingId(uploadId);
+        try {
+          await uploadsApi.deleteMedia(uploadId);
+          setItems((prev) => prev.filter((u) => u.id !== uploadId));
+        } catch {
+          // ignore
+        } finally {
+          setDeletingId(null);
+        }
+      },
+      { title: t('confirm.deleteUploadTitle') || 'Remove Media', variant: 'danger' }
+    );
   };
 
   const handleStartEdit = (e, upload) => {
@@ -121,7 +129,7 @@ export default function UploadsLibrary({ onSelect, onBack }) {
       <div className="flex items-center gap-3 mb-5">
         <Button
           variant="ghost"
-          size="icon-sm"
+          size="icon"
           onClick={onBack}
           className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0"
         >
@@ -218,7 +226,7 @@ export default function UploadsLibrary({ onSelect, onBack }) {
                   <>
                     <Button
                       variant="ghost"
-                      size="icon-sm"
+                      size="icon"
                       onClick={(e) => handleSaveTitle(e, upload.id)}
                       disabled={savingTitle}
                       className="text-zinc-500 hover:text-green-400 hover:bg-green-500/10 w-7 h-7"
@@ -231,7 +239,7 @@ export default function UploadsLibrary({ onSelect, onBack }) {
                     </Button>
                     <Button
                       variant="ghost"
-                      size="icon-sm"
+                      size="icon"
                       onClick={handleCancelEdit}
                       disabled={savingTitle}
                       className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700 w-7 h-7"
@@ -243,16 +251,16 @@ export default function UploadsLibrary({ onSelect, onBack }) {
                   <>
                     <Button
                       variant="ghost"
-                      size="icon-sm"
+                      size="icon"
                       onClick={(e) => handleStartEdit(e, upload)}
-                      className="text-zinc-500 hover:text-blue-400 hover:bg-blue-500/10 w-7 h-7"
+                      className="text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 w-7 h-7"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
-                      size="icon-sm"
-                      onClick={(e) => handleDelete(e, upload.id)}
+                      size="icon"
+                      onClick={(e) => handleDelete(e, upload.id, upload.title || upload.fileName)}
                       disabled={deletingId === upload.id}
                       className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 w-7 h-7"
                     >
@@ -267,6 +275,7 @@ export default function UploadsLibrary({ onSelect, onBack }) {
           ))}
         </div>
       )}
+      {confirmModal}
     </div>
   );
 }

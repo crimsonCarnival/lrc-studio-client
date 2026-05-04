@@ -157,6 +157,10 @@ export default {
     "fillTrackMain": "Main lyrics",
     "fillTrackSecondary": "Secondary (romaji)",
     "fillTrackBoth": "Both",
+    "karaokeFillEasing": "Fill animation easing",
+    "karaokeFillEasingDesc": "Controls how the fill sweeps across each word",
+    "fillEasingLinear": "Linear (Accurate)",
+    "fillEasingEaseInOut": "Ease In/Out (Smooth)",
     "readingFormat": "Furigana format",
     "readingFormatDesc": "Reading script for generated Japanese furigana"
   },

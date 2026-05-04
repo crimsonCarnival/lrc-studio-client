@@ -1,4 +1,4 @@
-ï»¿import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../../contexts/useSettings';
 import { useAuthContext } from '../../contexts/useAuthContext';
@@ -149,7 +149,7 @@ export default function ExportPanel({
               );
             })}
 
-            {/* Secondary & translation checkboxes â€” LRC-specific */}
+            {/* Secondary & translation checkboxes — LRC-specific */}
             {(hasSecondary || hasFurigana || hasTranslations) && (
               <div className="space-y-1.5 pt-1 border-t border-zinc-700/30">
                 {(hasSecondary || hasFurigana) && (
@@ -264,7 +264,7 @@ export default function ExportPanel({
                 disabled={exportingPlaylist}
                 className="px-3 bg-green-600 hover:bg-green-500 text-white text-xs font-medium h-8 shrink-0 disabled:opacity-50"
               >
-                {exportingPlaylist ? 'â€¦' : t('spotify.createPlaylist')}
+                {exportingPlaylist ? '…' : t('spotify.createPlaylist')}
               </Button>
             </div>
           </div>

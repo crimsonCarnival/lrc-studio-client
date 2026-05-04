@@ -413,7 +413,7 @@ const Player = forwardRef(function Player(
       onDurationChange?.(0);
       onTitleChange?.('');
       onMediaChange?.(false);
-    });
+    }, { title: t('confirm.removeMediaTitle') || 'Remove Media', variant: 'danger' });
   }, [source, local, yt, sp, requestConfirm, t, onTimeUpdate, onDurationChange, onTitleChange, onMediaChange]);
 
   return (

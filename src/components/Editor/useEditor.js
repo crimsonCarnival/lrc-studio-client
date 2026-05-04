@@ -474,7 +474,7 @@ export function useEditor({
         playerRef.current.seek(targetTime);
       }
     },
-    [playerRef, setLines, focusedTimestamp],
+    [playerRef, setLines, focusedTimestamp, editorMode],
   );
 
   const handleMark = useCallback(() => {
@@ -608,7 +608,7 @@ export function useEditor({
     requestConfirm(t('confirm.clearTimestamps') || 'Clear all timestamps?', () => {
       setLines((prev) => clearAllTimestamps(prev, editorMode === 'srt', editorMode === 'words'));
       setActiveLineIndex(0);
-    });
+    }, { title: t('confirm.clearTimestampsTitle') || 'Clear Timestamps', variant: 'default' });
   };
 
   const handleClearAllWordTimestamps = () => {
@@ -616,7 +616,7 @@ export function useEditor({
       setLines((prev) => prev.map((l) =>
         l.words ? { ...l, words: l.words.map((w) => ({ ...w, time: null })) } : l
       ));
-    });
+    }, { title: t('confirm.clearWordTimestampsTitle') || 'Clear Word Timestamps', variant: 'default' });
   };
 
   const handleClearActiveLineWordTimestamps = () => {
@@ -737,7 +737,7 @@ export function useEditor({
         return newLines;
       });
       setEditingLineIndex(null);
-    });
+    }, { title: t('confirm.deleteLineTitle') || 'Delete Line', variant: 'danger' });
   };
 
   const handleAddLine = useCallback(
@@ -888,7 +888,7 @@ export function useEditor({
         ),
       );
       clearSelection();
-    });
+    }, { title: t('confirm.bulkClearTitle') || 'Clear Selected Timestamps', variant: 'default' });
   }, [selectedLines, editorMode, setLines, clearSelection, requestConfirm, t]);
 
   const handleBulkDelete = useCallback(() => {
@@ -902,7 +902,7 @@ export function useEditor({
         return Math.max(0, prev - offset);
       });
       clearSelection();
-    });
+    }, { title: t('confirm.bulkDeleteTitle') || 'Delete Lines', variant: 'danger' });
   }, [selectedLines, t, setLines, setActiveLineIndex, clearSelection, requestConfirm]);
 
   const handleBulkShift = (delta) => {
