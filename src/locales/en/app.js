@@ -11,6 +11,6 @@ export default {
   "unsavedChangesTitle": "Unsaved Changes",
   "unsavedChangesMessage": "You have unsaved changes. What would you like to do before leaving?",
   "discard": "Discard",
-  "saveAndExit": "Save and go Home",
+  "saveAndExit": "Save",
   "cancel": "Cancel"
 };
