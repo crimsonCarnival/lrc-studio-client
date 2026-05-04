@@ -21,15 +21,35 @@ import { LogIn, UserPlus, Music2, Copy, Check } from 'lucide-react';
 function SharedProjectViewerInner({ projectId }) {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const startTime = parseInt(searchParams.get('s')) || 0;
+  const getStartTime = () => {
+    const s = searchParams.get('s') || searchParams.get('t');
+    if (s) return parseInt(s);
+    // Fallback for malformed URLs (e.g., ?readonly=1?s=55)
+    const match = window.location.search.match(/[?&][st]=(\d+)/);
+    return match ? parseInt(match[1]) : 0;
+  };
+  const startTime = getStartTime();
+  const [hasMedia, setHasMedia] = useState(false);
+
+  // Clear query params after initial parse to prevent "reload to seek" tricks
+  useEffect(() => {
+    if (window.location.search.includes('s=') || window.location.search.includes('t=')) {
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.delete('s');
+      newUrl.searchParams.delete('t');
+      window.history.replaceState(null, '', newUrl.toString());
+    }
+  }, []);
 
   // ── Minimal state ──
   const [lines, setLines] = useState([]);
   const [editorMode, setEditorMode] = useState('lrc');
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [playbackPosition, setPlaybackPosition] = useState(0);
   const [mediaTitle, setMediaTitle] = useState('');
   const [initialYtUrl, setInitialYtUrl] = useState('');
-  const [hasMedia, setHasMedia] = useState(false);
+  const [initialCloudinaryUpload, setInitialCloudinaryUpload] = useState(null);
 
   // ── Fetch state ──
   const [loadStatus, setLoadStatus] = useState('loading'); // 'loading' | 'ok' | 403 | 404
@@ -60,6 +80,8 @@ function SharedProjectViewerInner({ projectId }) {
         setProjectData(project);
         if (project.upload?.youtubeUrl) {
           setInitialYtUrl(project.upload.youtubeUrl);
+        } else if (project.upload?.source === 'cloudinary' || project.upload?.cloudinaryUrl) {
+          setInitialCloudinaryUpload(project.upload);
         }
         setLoadStatus('ok');
       })
@@ -146,6 +168,8 @@ function SharedProjectViewerInner({ projectId }) {
           shareModal={null}
           setShareModal={() => { }}
           hasMedia={hasMedia}
+          isPlaying={isPlaying}
+          playbackSpeed={playbackSpeed}
           activeProjectId={projectId}
           project={projectData}
           projectMetadata={projectData?.metadata}
@@ -160,11 +184,14 @@ function SharedProjectViewerInner({ projectId }) {
             ref={playerRef}
             mediaTitle={mediaTitle}
             onTimeUpdate={handleTimeUpdate}
+            onPlayingChange={setIsPlaying}
+            onSpeedChange={setPlaybackSpeed}
             onDurationChange={() => { }}
             onMediaChange={handleMediaChange}
             onYtUrlChange={() => { }}
             onTitleChange={setMediaTitle}
             initialYtUrl={initialYtUrl}
+            initialCloudinaryUpload={initialCloudinaryUpload}
             initialSeek={startTime}
             initialSpeed={1}
             lines={lines}
