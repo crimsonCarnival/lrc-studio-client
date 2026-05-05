@@ -27,7 +27,6 @@ function AppInner() {
     setLines,
     setEditorMode,
     setSyncMode,
-    hasMedia,
   } = appState;
 
   useScrollLock(!!pendingProject);

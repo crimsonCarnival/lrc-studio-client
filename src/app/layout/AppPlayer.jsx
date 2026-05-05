@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { SkeletonPlayer } from '@ui/skeleton';
 import Player from '@features/player/Player';
 import { useSettings } from '@/contexts/useSettings';
-import { motion } from 'framer-motion';
+import { motion } from 'framer-motion'; // eslint-disable-line no-unused-vars
 import { GripVertical } from 'lucide-react';
 
 /**

@@ -2,7 +2,7 @@ import { Suspense, lazy, useEffect, useState, useRef, useCallback } from 'react'
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { SkeletonList, SkeletonEditor, SkeletonPreview, SkeletonSetup } from '@ui/skeleton';
 import { Loader2, GripVertical } from 'lucide-react';
-import { motion, Reorder } from 'framer-motion';
+import { Reorder } from 'framer-motion';
 
 const Editor = lazy(() => import('@features/editor/components/Editor'));
 const Preview = lazy(() => import('@features/preview/Preview'));
@@ -114,7 +114,7 @@ export function AppRouter({
       setIsResizing(false);
       window.removeEventListener('mousemove', handleResize);
     }, { once: true });
-  }, [handleResize, isDesktop]);
+  }, [handleResize, isDesktop, lockLayout]);
 
   return (
     <Routes>

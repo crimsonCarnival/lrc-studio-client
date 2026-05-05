@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 /**
  * Synchronizes key application state with URL parameters using descriptive names.
@@ -8,7 +8,6 @@ import { useLocation, useSearchParams } from 'react-router-dom';
  */
 export function useUrlParamsSync(appState, layoutState) {
   const { i18n } = useTranslation();
-  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const isFirstLoad = useRef(true);
   const lastParamsRef = useRef('');
@@ -110,5 +109,5 @@ export function useUrlParamsSync(appState, layoutState) {
       lastParamsRef.current = paramsString;
       setSearchParams(params, { replace: true });
     }
-  }, [i18n.language, editorMode, playbackSpeed, focusMode, mobileTab, searchParams, setSearchParams]);
+  }, [i18n.language, editorMode, playbackSpeed, focusMode, mobileTab, layoutSwap, searchParams, setSearchParams]);
 }
