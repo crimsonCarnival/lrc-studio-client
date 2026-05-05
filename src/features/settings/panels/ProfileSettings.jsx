@@ -10,7 +10,7 @@ import { Input } from '@ui/input';
 import { Textarea } from '@ui/textarea';
 import toast from 'react-hot-toast';
 
-export default function ProfileSettings({ searchTerm, onTabChange }) {
+export default function ProfileSettings({ searchTerm }) {
   const { t } = useTranslation();
   const { user, setUser, connectSpotify, disconnectSpotify } = useAuthContext();
   
@@ -60,7 +60,7 @@ export default function ProfileSettings({ searchTerm, onTabChange }) {
       });
       setUser(updatedUser);
       toast.success(t('profile.avatarUpdated'));
-    } catch (err) {
+    } catch {
       toast.error(t('profile.avatarUploadFailed'));
     } finally {
       setUploading(false);

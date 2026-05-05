@@ -62,7 +62,7 @@ export default function SettingsModal({ isOpen, onClose }) {
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/70 z-modal-backdrop animate-fade-in"
+                className="fixed inset-0 bg-black/70 backdrop-blur-sm z-modal-backdrop animate-fade-in"
                 onClick={onClose}
             />
             {/* Modal */}

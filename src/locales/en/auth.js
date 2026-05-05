@@ -12,7 +12,7 @@ export default {
   "hasAccount": "Already have an account?",
   "loginError": "Invalid credentials",
   "registerError": "Registration failed. Please try again.",
-  "validationError": "Please check your information and try again.",
+  "validationError": "Please check your credentials and try again.",
   "tooManyAttempts": "Too many attempts. Please try again later.",
   "usernameTaken": "Username or email already taken",
   "loggedInAs": "Logged in as {{name}}",
@@ -21,14 +21,14 @@ export default {
   "validation": {
     "passwordMinLength": "Password must be at least 8 characters",
     "usernameMinLength": "Username must be at least 3 characters",
-    "usernamePattern": "Only letters, numbers, hyphens and underscores",
+    "usernamePattern": "Only letters, numbers, hyphens, dots, double dots and underscores",
     "emailInvalid": "Please enter a valid email address",
     "fieldRequired": "This field is required"
   },
   "unbanTitle": "Welcome Back!",
   "unbanMessage": "Your account suspension has been lifted. You can now use all features again.",
   "registrationBlockedTitle": "Registration Restricted",
-  "registrationBlockedMessage": "This account or network has been flagged due to previous policy violations.",
-  "registrationBlockedDetail": "To maintain platform integrity, we do not allow new accounts to be created using credentials associated with banned users.",
-  "securityNotice": "Security Violation Detected"
+  "registrationBlockedMessage": "Registration is currently unavailable.",
+  "registrationBlockedDetail": "Registration is currently unavailable, check back later.",
+  "securityNotice": "Registration is currently unavailable, check back later."
 };

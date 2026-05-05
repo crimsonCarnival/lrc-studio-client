@@ -1,13 +1,13 @@
 export default {
   "paste": "Pegar Letra",
   "apply": "Aplicar",
-  "copied": "¡Copiado!",
-  "saved": "¡Guardado!",
+  "copied": "Copiado",
+  "saved": "Guardado",
   "global": "Global",
-  "goHome": "Ir al inicio",
+  "goHome": "Ir a Inicio",
   "cancel": "Cancelar",
   "confirm": "Confirmar",
   "back": "Volver",
   "close": "Cerrar",
-  "gotIt": "¡Entendido!"
+  "gotIt": "Entendido"
 };

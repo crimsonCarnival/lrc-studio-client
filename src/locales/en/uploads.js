@@ -10,5 +10,17 @@ export default {
   "updateFailed": "Failed to update title",
   "associatedProjects": "Associated Projects",
   "details": "Media Details",
-  "unnamed": "Unnamed Audio"
+  "unnamed": "Unnamed Audio",
+  "errorLoading": "Error Loading Media",
+  "notFound": "Media not found",
+  "source": "Source",
+  "duration": "Duration",
+  "unknown": "Unknown",
+  "unknownFile": "Unknown File",
+  "noProjects": "No projects are using this media yet.",
+  "startNewProject": "Start a new project from the Setup screen.",
+  "youtube": "YouTube",
+  "audioFile": "Audio File",
+  "cloudinary": "Cloud",
+  "spotify": "Spotify"
 };

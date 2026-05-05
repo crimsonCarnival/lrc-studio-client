@@ -6,7 +6,6 @@ import { useSettings } from '../contexts/useSettings';
 import useHistory from './useHistory';
 import useConfirm from './useConfirm';
 import { useThemeSync } from './useThemeSync';
-import { useI18nSync } from './useI18nSync';
 import { useDragAndDrop } from './useDragAndDrop';
 import { useGlobalShortcuts } from './useGlobalShortcuts';
 import { useLoopCurrentLine } from './useLoopCurrentLine';
@@ -27,7 +26,6 @@ export function useAppState(user) {
   const [searchParams] = useSearchParams();
 
   useThemeSync();
-  useI18nSync();
 
   // ——— Lines state with undo/redo ———
   // editorMode must be declared before useHistory so getCompanion can close over it

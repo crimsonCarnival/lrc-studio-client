@@ -24,5 +24,6 @@ export default {
   "forbiddenDesc": "You do not have permission to view this project.",
   "errorTitle": "Error Loading Project",
   "errorDesc": "An unexpected error occurred while trying to load the project.",
-  "untitled": "Untitled"
+  "untitled": "Untitled",
+  "editMetadata": "Edit Metadata"
 };

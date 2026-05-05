@@ -14,12 +14,12 @@ import useConfirm from '@/hooks/useConfirm';
 function formatRelativeTime(dateStr, t) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return t('library.justNow') || 'Just now';
-  if (mins < 60) return t('library.minutesAgo', { count: mins }) || `${mins}m ago`;
+  if (mins < 1) return t('library.justNow');
+  if (mins < 60) return t('library.minutesAgo', { count: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return t('library.hoursAgo', { count: hours }) || `${hours}h ago`;
+  if (hours < 24) return t('library.hoursAgo', { count: hours });
   const days = Math.floor(hours / 24);
-  if (days < 30) return t('library.daysAgo', { count: days }) || `${days}d ago`;
+  if (days < 30) return t('library.daysAgo', { count: days });
   return new Date(dateStr).toLocaleDateString();
 }
 
@@ -29,10 +29,10 @@ function SourceIcon({ source }) {
   return <Cloud className="w-4 h-4 text-blue-400" />;
 }
 
-function SourceLabel({ source }) {
-  if (source === 'youtube') return 'YouTube';
-  if (source === 'cloudinary') return 'Cloud';
-  if (source === 'spotify') return 'Spotify';
+function SourceLabel({ source, t }) {
+  if (source === 'youtube') return t('uploads.youtube');
+  if (source === 'cloudinary') return t('uploads.cloudinary');
+  if (source === 'spotify') return t('uploads.spotify');
   return source;
 }
 
@@ -62,7 +62,7 @@ export default function UploadsLibrary({ onSelect, onBack }) {
   const handleDelete = (e, uploadId, title) => {
     e.stopPropagation();
     requestConfirm(
-      t('confirm.deleteUpload', { title: title || t('uploads.untitled') }) || `Remove "${title || 'Untitled'}" from your media library?`,
+      t('confirm.deleteUpload', { title: title || t('uploads.untitled') }),
       async () => {
         setDeletingId(uploadId);
         try {
@@ -74,7 +74,7 @@ export default function UploadsLibrary({ onSelect, onBack }) {
           setDeletingId(null);
         }
       },
-      { title: t('confirm.deleteUploadTitle') || 'Remove Media', variant: 'danger' }
+      { title: t('confirm.deleteUploadTitle'), variant: 'danger' }
     );
   };
 
@@ -93,7 +93,7 @@ export default function UploadsLibrary({ onSelect, onBack }) {
   const handleSaveTitle = async (e, uploadId) => {
     e.stopPropagation();
     if (!editTitle.trim()) {
-      toast.error(t('uploads.titleRequired') || 'Title is required');
+      toast.error(t('uploads.titleRequired'));
       return;
     }
 
@@ -105,9 +105,9 @@ export default function UploadsLibrary({ onSelect, onBack }) {
       );
       setEditingId(null);
       setEditTitle('');
-      toast.success(t('uploads.titleUpdated') || 'Title updated');
+      toast.success(t('uploads.titleUpdated'));
     } catch {
-      toast.error(t('uploads.updateFailed') || 'Failed to update title');
+      toast.error(t('uploads.updateFailed'));
     } finally {
       setSavingTitle(false);
     }
@@ -193,7 +193,7 @@ export default function UploadsLibrary({ onSelect, onBack }) {
                     </span>
                   )}
                   <span className="text-[10px] font-bold uppercase text-zinc-500 bg-zinc-700/50 px-1.5 py-0.5 rounded flex-shrink-0">
-                    <SourceLabel source={upload.source} />
+                    <SourceLabel source={upload.source} t={t} />
                   </span>
                 </div>
 

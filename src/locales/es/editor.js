@@ -23,7 +23,7 @@ export default {
   "dragToReorder": "Arrastrar para reordenar",
   "addLine": "Añadir línea",
   "removeLine": "Eliminar esta línea",
-  "editLine": "Editar texto (Doble clic)",
+  "editLine": "Editar texto",
   "shiftAll": "Desplazar todo",
   "shiftAllTitle": "Desplazar todas las marcas de tiempo",
   "loopCurrentLine": "Repetir línea actual",

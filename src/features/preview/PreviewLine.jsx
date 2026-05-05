@@ -63,7 +63,7 @@ export default function PreviewLine({
         opacity: parallaxOpacity,
         animationDelay: staggerDelay,
       }}
-      className={`group px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition-all duration-100 ease-out flex select-none relative overflow-hidden animate-preview-line-in ${hasMedia ? 'cursor-pointer' : 'cursor-default'
+      className={`group px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition-opacity duration-100 ease-out flex select-none relative overflow-hidden animate-preview-line-in ${hasMedia ? 'cursor-pointer' : 'cursor-default'
         } ${translationLayout === 'side-by-side' && line.translation && showTranslationsInPreview
           ? 'flex-row items-center gap-3 sm:gap-6'
           : 'flex-col'
@@ -110,7 +110,7 @@ export default function PreviewLine({
           {/* Right column: translation */}
           <div className="flex-1 min-w-0 border-l border-zinc-700/40 pl-3 sm:pl-6">
             <p
-              className={`transition-all duration-100 w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive
+              className={`transition-colors duration-100 w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive
                 ? `${activeFontSizes[sizeOption]} text-zinc-500 font-medium ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`
                 : `${inactiveFontSizes[sizeOption]} text-zinc-600`
                 }`}
@@ -137,7 +137,7 @@ export default function PreviewLine({
           {/* Translation Track — below secondary */}
           {(line.translation && showTranslationsInPreview) && (
             <p
-              className={`transition-all duration-100 w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive
+              className={`transition-colors duration-100 w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive
                 ? `${activeFontSizes[sizeOption]} text-zinc-500 font-medium ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`
                 : `${inactiveFontSizes[sizeOption]} text-zinc-600`
                 }`}
@@ -211,7 +211,7 @@ function renderMainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPo
   const words = line.words || [];
 
   return (
-    <p className={`transition-all duration-100 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass}`} style={{ lineHeight: hasReadings ? '2' : undefined, willChange: 'opacity, transform' }}>
+    <p className={`transition-colors duration-100 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass}`} style={{ lineHeight: hasReadings ? '2' : undefined, willChange: 'opacity, transform' }}>
       {effectiveHasWordTimestamps
         ? words.map((w, wi) => {
           // Calculate effective start and end times for this word (interpolate if untimed)
@@ -287,7 +287,7 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
   const doFill = isActive && hasSecondaryStamps && (fillTrack === 'secondary' || fillTrack === 'both');
   // secondary stays dim (inactive style) when fillTrack is 'main' — no active styling applied
   const treatAsActive = isActive && fillTrack !== 'main';
-  const baseClass = `transition-all duration-100 w-full break-words overflow-wrap-anywhere hyphens-auto ${treatAsActive
+  const baseClass = `transition-colors duration-100 w-full break-words overflow-wrap-anywhere hyphens-auto ${treatAsActive
     ? `${activeSecondarySizes[sizeOption]} text-zinc-400 font-medium`
     : `${inactiveSecondarySizes[sizeOption]} text-zinc-600`
     }`;

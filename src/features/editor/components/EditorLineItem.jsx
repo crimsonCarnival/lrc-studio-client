@@ -354,7 +354,7 @@ const EditorLineItem = React.memo(({
       onDragEnd={handleDragEnd}
       onDrop={(e) => handleDrop(e, i)}
       style={{ animationDelay: staggerDelay }}
-      className={`flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-2 sm:gap-3 px-3 py-2 rounded-lg transition-all duration-300 ease-out cursor-pointer group relative overflow-hidden animate-preview-line-in ${selectedLines.has(i)
+      className={`flex items-center gap-2 sm:gap-3 px-3 py-2 rounded-lg transition-colors duration-300 ease-out cursor-pointer group relative overflow-hidden animate-preview-line-in ${selectedLines.has(i)
         ? 'bg-primary/15 border border-primary/40 ring-1 ring-primary/20'
         : isActive
           ? isLocked

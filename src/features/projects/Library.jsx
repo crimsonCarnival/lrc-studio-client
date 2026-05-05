@@ -43,7 +43,7 @@ export default function Library({ onOpenProject, onBack }) {
   const handleDelete = (e, projectId, title) => {
     e.stopPropagation();
     requestConfirm(
-      t('confirm.deleteProject', { title: title || t('library.untitled') }) || `Delete "${title || 'Untitled'}"? This cannot be undone.`,
+      t('confirm.deleteProject', { title: title || t('library.untitled') }),
       async () => {
         setDeletingId(projectId);
         try {
@@ -55,7 +55,7 @@ export default function Library({ onOpenProject, onBack }) {
           setDeletingId(null);
         }
       },
-      { title: t('confirm.deleteProjectTitle') || 'Delete Project', variant: 'danger' }
+      { title: t('confirm.deleteProjectTitle'), variant: 'danger' }
     );
   };
 
@@ -135,7 +135,7 @@ export default function Library({ onOpenProject, onBack }) {
                   {project.upload?.youtubeUrl && (
                     <span className="text-xs text-zinc-500 flex items-center gap-1">
                       <Video className="w-3 h-3" />
-                      YouTube
+                      {t('uploads.youtube')}
                     </span>
                   )}
                 </div>
@@ -160,7 +160,7 @@ export default function Library({ onOpenProject, onBack }) {
                     setEditingProject(project);
                   }}
                   className="text-zinc-500 hover:text-primary hover:bg-primary/10 w-7 h-7"
-                  title={t('project.editMetadata') || 'Edit Metadata'}
+                  title={t('project.editMetadata')}
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </Button>

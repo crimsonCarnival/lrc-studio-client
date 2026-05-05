@@ -10,5 +10,17 @@ export default {
   "updateFailed": "Error al actualizar el título",
   "associatedProjects": "Proyectos asociados",
   "details": "Detalles del contenido",
-  "unnamed": "Audio sin nombre"
+  "unnamed": "Audio sin nombre",
+  "errorLoading": "Error al cargar el contenido",
+  "notFound": "Contenido no encontrado",
+  "source": "Fuente",
+  "duration": "Duración",
+  "unknown": "Desconocido",
+  "unknownFile": "Archivo desconocido",
+  "noProjects": "Ningún proyecto está usando este contenido todavía.",
+  "startNewProject": "Inicia un nuevo proyecto desde la pantalla de Configuración.",
+  "youtube": "YouTube",
+  "audioFile": "Archivo de audio",
+  "cloudinary": "Nube",
+  "spotify": "Spotify"
 };

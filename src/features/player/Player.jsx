@@ -380,10 +380,10 @@ const Player = forwardRef(function Player(
   useEffect(() => {
     if (initialCloudinaryUpload?.id && loadedCloudinaryRef.current !== initialCloudinaryUpload.id) {
       loadedCloudinaryRef.current = initialCloudinaryUpload.id;
-      
+
       // Directly stream the URL instead of downloading a full blob
       local.loadFromUrl(initialCloudinaryUpload.cloudinaryUrl, initialCloudinaryUpload.title || initialCloudinaryUpload.fileName);
-      
+
       // Pre-set the Cloudinary info in state so it knows it's linked
       onCloudinaryUpload?.({
         id: initialCloudinaryUpload.id,
@@ -415,16 +415,16 @@ const Player = forwardRef(function Player(
         className={`fixed -top-[9999px] -left-[9999px] w-0 h-0 opacity-0 pointer-events-none ${source === 'youtube' && yt.ytReady ? '' : 'hidden'}`}
       />
 
-      {/* ─────────────── Desktop full card (hidden on mobile) ─────────────── */}
-      <div className="max-lg:hidden glass rounded-xl sm:rounded-2xl p-2.5 sm:p-4 space-y-1.5 sm:space-y-3 animate-fade-in overflow-visible">
+      {/* ─────────────── Desktop full bar content (hidden on mobile) ─────────────── */}
+      <div className="max-lg:hidden animate-fade-in overflow-visible flex flex-col items-center w-full">
         {/* Header */}
-        <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 mb-1">
-          <h2 className="text-xs sm:text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2 overflow-hidden flex-1 pb-0.5 min-w-0">
+        <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 mb-2">
+          <h2 className="text-xs sm:text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2 overflow-hidden pb-0.5 min-w-0">
             <span className="uppercase shrink-0 text-xs sm:text-sm flex items-center gap-1.5"><Headphones className="w-3.5 h-3.5" />{t('player.title')}</span>
             {hasMedia && mediaTitle && (
-              <div className="flex items-center gap-2 px-1.5 py-0.5 rounded text-xs min-w-0 flex-1">
+              <div className="flex items-center gap-2 px-1.5 py-0.5 rounded text-xs min-w-0">
                 <Music2 className="w-2.5 h-2.5 text-primary shrink-0" strokeWidth={2.5} />
-                <span className="text-primary normal-case tracking-normal truncate">{mediaTitle}</span>
+                <span className="text-primary normal-case tracking-normal truncate max-w-[300px]">{mediaTitle}</span>
               </div>
             )}
           </h2>
@@ -520,11 +520,10 @@ const Player = forwardRef(function Player(
                   id="load-media-url-btn"
                   onClick={handleUrlLoad}
                   disabled={cdnLoading}
-                  className={`px-4 text-white text-sm font-medium rounded-lg shrink-0 ${
-                    detectedUrlType === 'cdn'
+                  className={`px-4 text-white text-sm font-medium rounded-lg shrink-0 ${detectedUrlType === 'cdn'
                       ? 'bg-blue-600 hover:bg-blue-500'
                       : 'bg-red-600 hover:bg-red-500'
-                  }`}
+                    }`}
                 >
                   {cdnLoading ? '…' : t('player.load')}
                 </Button>
@@ -708,8 +707,8 @@ const Player = forwardRef(function Player(
         )}
 
         {(local.localUrl || yt.ytReady || sp.ready) && (
-          <div className="space-y-1 sm:space-y-2 pt-1 sm:pt-2 animate-fade-in">
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
+          <div className="space-y-1 sm:space-y-2 pt-1 sm:pt-2 animate-fade-in w-full max-w-[1200px] mx-auto">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap justify-center w-full">
               <Button
                 id="play-pause-btn"
                 onClick={togglePlay}
@@ -849,7 +848,7 @@ const Player = forwardRef(function Player(
       </div>
 
       {/* ─────────────── Compact mobile bar (hidden on desktop) ─────────────── */}
-      <div className="lg:hidden border-t border-zinc-700/50 bg-zinc-900/90 backdrop-blur-md">
+      <div className="lg:hidden w-full overflow-hidden">
         {/* No media */}
         {!hasMedia && (
           <div className="flex flex-col gap-1 px-3 py-2">
@@ -895,9 +894,8 @@ const Player = forwardRef(function Player(
                     <Button
                       onClick={handleUrlLoad}
                       disabled={cdnLoading}
-                      className={`px-3 h-9 text-white text-xs font-medium rounded-lg shrink-0 ${
-                        detectedUrlType === 'cdn' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-red-600 hover:bg-red-500'
-                      }`}
+                      className={`px-3 h-9 text-white text-xs font-medium rounded-lg shrink-0 ${detectedUrlType === 'cdn' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-red-600 hover:bg-red-500'
+                        }`}
                     >
                       {cdnLoading ? '…' : t('player.load')}
                     </Button>
@@ -974,108 +972,114 @@ const Player = forwardRef(function Player(
         {/* Has media: seekbar row + action row */}
         {hasMedia && (
           <>
-            {/* Row 1 — seekbar (h-10) */}
-            <div className="flex items-center gap-2 px-3 h-10">
-              <button
-                onClick={togglePlay}
-                aria-label={isPlaying ? 'Pause' : 'Play'}
-                className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform"
-              >
-                {isPlaying
-                  ? <Pause className="w-3.5 h-3.5 text-zinc-950" fill="currentColor" />
-                  : <Play className="w-3.5 h-3.5 text-zinc-950 ml-0.5" fill="currentColor" />}
-              </button>
-              <span className="text-[10px] font-mono tabular-nums text-zinc-400 w-10 shrink-0 text-right">
-                {formatTime(currentTime)}
-              </span>
-              <div className="flex-1 relative min-w-0">
-                {loopA != null && loopB != null && duration > 0 && (
-                  <div
-                    className="absolute top-0 bottom-0 bg-accent-purple/15 border-x border-accent-purple/40 rounded-sm pointer-events-none z-base"
-                    style={{
-                      left: `${(loopA / duration) * 100}%`,
-                      width: `${((loopB - loopA) / duration) * 100}%`,
-                    }}
-                  />
-                )}
-                <input
-                  type="range" min={0} max={duration || 0} step={0.1} value={currentTime}
-                  aria-label="Seek" aria-valuenow={Math.round(currentTime)} aria-valuemin={0} aria-valuemax={Math.round(duration)}
-                  onChange={(e) => seek(parseFloat(e.target.value))}
-                  className="w-full relative z-raised"
-                  style={{ background: `linear-gradient(to right, var(--color-primary) ${duration ? (currentTime / duration) * 100 : 0}%, rgba(255, 255, 255, 0.15) ${duration ? (currentTime / duration) * 100 : 0}%)` }}
-                />
+            <div className="flex flex-col gap-3 px-4 py-4 w-full">
+              {/* Top Row: Play/Pause, Seeker, Speed */}
+              <div className="flex items-center gap-3 w-full">
+                <button
+                  onClick={togglePlay}
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
+                  className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform shadow-lg shadow-primary/20"
+                >
+                  {isPlaying
+                    ? <Pause className="w-4 h-4 text-zinc-950" fill="currentColor" />
+                    : <Play className="w-4 h-4 text-zinc-950 ml-0.5" fill="currentColor" />}
+                </button>
+                
+                <div className="flex-1 flex flex-col gap-1">
+                  <div className="flex-1 relative min-w-0 h-6 flex items-center">
+                    {loopA != null && loopB != null && duration > 0 && (
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 h-1 bg-accent-purple/30 border-x border-accent-purple/50 rounded-sm pointer-events-none z-base"
+                        style={{
+                          left: `${(loopA / duration) * 100}%`,
+                          width: `${((loopB - loopA) / duration) * 100}%`,
+                        }}
+                      />
+                    )}
+                    <input
+                      type="range" min={0} max={duration || 0} step={0.1} value={currentTime}
+                      aria-label="Seek" aria-valuenow={Math.round(currentTime)} aria-valuemin={0} aria-valuemax={Math.round(duration)}
+                      onChange={(e) => seek(parseFloat(e.target.value))}
+                      className="w-full relative z-raised h-1 appearance-none bg-zinc-800 rounded-full outline-none"
+                      style={{ background: `linear-gradient(to right, var(--color-primary) ${duration ? (currentTime / duration) * 100 : 0}%, rgba(255, 255, 255, 0.1) ${duration ? (currentTime / duration) * 100 : 0}%)` }}
+                    />
+                  </div>
+                  <div className="flex justify-between items-center px-0.5">
+                    <span className="text-[10px] font-mono tabular-nums text-zinc-500">
+                      {formatTime(currentTime)}
+                    </span>
+                    <span className="text-[10px] font-mono tabular-nums text-zinc-500">
+                      {formatTime(duration)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="shrink-0">
+                  <SpeedControl playbackSpeed={playbackSpeed} applySpeed={applySpeed} MIN_SPEED={MIN_SPEED} MAX_SPEED={MAX_SPEED} SPEED_PRESETS={SPEED_PRESETS} />
+                </div>
               </div>
-              <span className="text-[10px] font-mono tabular-nums text-zinc-400 w-10 shrink-0">
-                {formatTime(duration)}
-              </span>
-              <SpeedControl playbackSpeed={playbackSpeed} applySpeed={applySpeed} MIN_SPEED={MIN_SPEED} MAX_SPEED={MAX_SPEED} SPEED_PRESETS={SPEED_PRESETS} />
-            </div>
 
-            {/* Row 2 — finger-friendly action buttons (h-12) */}
-            <div className="flex items-center justify-evenly h-12 border-t border-zinc-800/40">
-              <button
-                onClick={() => seek(Math.max(0, currentTime - (settings.playback?.seekTime ?? 5)))}
-                aria-label={`Skip back ${settings.playback?.seekTime ?? 5} seconds`}
-                className="flex flex-col items-center justify-center w-11 h-11 rounded-xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800/60 transition-all"
-              >
-                <SkipBack className="w-5 h-5" />
-                <span className="text-[8px] font-bold leading-none mt-0.5">{settings.playback?.seekTime ?? 5}</span>
-              </button>
+              {/* Bottom Row: Secondary Controls */}
+              <div className="flex items-center justify-around w-full gap-2 px-2">
+                <button
+                  onClick={() => seek(Math.max(0, currentTime - (settings.playback?.seekTime ?? 5)))}
+                  className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800 transition-all"
+                >
+                  <SkipBack className="w-5 h-5" />
+                  <span className="text-[9px] font-bold mt-0.5 text-zinc-500">{settings.playback?.seekTime ?? 5}</span>
+                </button>
 
-              <button
-                onClick={() => {
-                  if (loopA != null && loopB != null) {
-                    clearLoop();
-                  } else {
-                    const now = source === 'local' ? (audioRef.current?.currentTime ?? currentTime) : source === 'youtube' ? (yt.getCurrentTime?.() ?? currentTime) : currentTime;
-                    if (lines?.length) {
-                      let activeIdx = -1;
-                      for (let i = 0; i < lines.length; i++) {
-                        if (lines[i].timestamp != null && lines[i].timestamp <= now) activeIdx = i;
-                      }
-                      if (activeIdx >= 0) {
-                        const a = lines[activeIdx].timestamp;
-                        let b = lines[activeIdx].endTime ?? null;
-                        if (b == null) {
-                          b = duration;
-                          for (let i = activeIdx + 1; i < lines.length; i++) {
-                            if (lines[i].timestamp != null) { b = lines[i].timestamp; break; }
-                          }
+                <button
+                  onClick={() => {
+                    if (loopA != null && loopB != null) {
+                      clearLoop();
+                    } else {
+                      const now = currentTime;
+                      if (lines?.length) {
+                        let activeIdx = -1;
+                        for (let i = 0; i < lines.length; i++) {
+                          if (lines[i].timestamp != null && lines[i].timestamp <= now) activeIdx = i;
                         }
-                        setLoop(a, b);
+                        if (activeIdx >= 0) {
+                          const a = lines[activeIdx].timestamp;
+                          let b = lines[activeIdx].endTime ?? null;
+                          if (b == null) {
+                            b = duration;
+                            for (let i = activeIdx + 1; i < lines.length; i++) {
+                              if (lines[i].timestamp != null) { b = lines[i].timestamp; break; }
+                            }
+                          }
+                          setLoop(a, b);
+                        }
                       }
                     }
-                  }
-                }}
-                aria-label={loopA != null && loopB != null ? 'Clear A-B loop' : 'Set A-B loop'}
-                className={`flex flex-col items-center justify-center w-11 h-11 rounded-xl transition-all ${loopA != null && loopB != null ? 'text-accent-purple bg-accent-purple/10' : 'text-zinc-400 active:text-zinc-100 active:bg-zinc-800/60'}`}
-              >
-                <Repeat className="w-5 h-5" />
-              </button>
-
-              <VolumeControl />
-
-              <button
-                onClick={() => seek(Math.min(duration, currentTime + (settings.playback?.seekTime ?? 5)))}
-                aria-label={`Skip forward ${settings.playback?.seekTime ?? 5} seconds`}
-                className="flex flex-col items-center justify-center w-11 h-11 rounded-xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800/60 transition-all"
-              >
-                <SkipForward className="w-5 h-5" />
-                <span className="text-[8px] font-bold leading-none mt-0.5">{settings.playback?.seekTime ?? 5}</span>
-              </button>
-
-              {syncMode && (
-                <button
-                  onPointerDown={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('editor:mark')); }}
-                  aria-label="Mark timestamp"
-                  className="flex flex-col items-center justify-center w-12 h-11 rounded-xl bg-primary/15 border border-primary/30 text-primary active:bg-primary/25 active:scale-95 transition-all"
+                  }}
+                  className={`flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all ${loopA != null && loopB != null ? 'text-accent-purple bg-accent-purple/10' : 'text-zinc-400 active:bg-zinc-800'}`}
                 >
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                    <circle cx="12" cy="12" r="3" fill="currentColor" />
-                  </svg>
+                  <Repeat className="w-5 h-5" />
                 </button>
-              )}
+
+                <div className="w-12 h-12 flex items-center justify-center">
+                  <VolumeControl />
+                </div>
+
+                <button
+                  onClick={() => seek(Math.min(duration, currentTime + (settings.playback?.seekTime ?? 5)))}
+                  className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800 transition-all"
+                >
+                  <SkipForward className="w-5 h-5" />
+                  <span className="text-[9px] font-bold mt-0.5 text-zinc-500">{settings.playback?.seekTime ?? 5}</span>
+                </button>
+
+                {syncMode && (
+                  <button
+                    onPointerDown={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('editor:mark')); }}
+                    className="w-12 h-12 rounded-2xl bg-primary/20 border border-primary/40 text-primary active:bg-primary/30 active:scale-95 transition-all flex items-center justify-center"
+                  >
+                    <div className="w-3 h-3 rounded-full bg-current shadow-[0_0_10px_rgba(var(--color-primary-rgb),0.5)]" />
+                  </button>
+                )}
+              </div>
             </div>
           </>
         )}

@@ -208,12 +208,12 @@ export default function AdminDashboard() {
     if (!ipForm.ip) return;
     try {
       await admin.blockIp(ipForm.ip, ipForm.reason);
-      toast.success('IP blocked successfully');
+      toast.success(t('admin.toast.ipBlocked'));
       setIpForm({ ip: '', reason: '' });
       fetchIps();
       fetchStats();
     } catch (err) {
-      toast.error(err.message || 'Failed to block IP');
+      toast.error(err.message || t('admin.toast.ipBlockError'));
     }
   };
 
@@ -226,12 +226,12 @@ export default function AdminDashboard() {
     if (!deviceForm.deviceId) return;
     try {
       await admin.blockDevice(deviceForm.deviceId, deviceForm.reason);
-      toast.success('Device blocked successfully');
+      toast.success(t('admin.toast.deviceBlocked'));
       setDeviceForm({ deviceId: '', reason: '' });
       fetchDevices();
       fetchStats();
     } catch (err) {
-      toast.error(err.message || 'Failed to block device');
+      toast.error(err.message || t('admin.toast.deviceBlockError'));
     }
   };
 
@@ -253,12 +253,12 @@ export default function AdminDashboard() {
         toast.success(t('admin.toast.deleteSuccess', { name: user.username }));
       } else if (type === 'unblock_ip') {
         await admin.unblockIp(ipId);
-        toast.success('IP unblocked successfully');
+        toast.success(t('admin.toast.ipUnblocked'));
         fetchIps();
         fetchStats();
       } else if (type === 'unblock_device') {
         await admin.unblockDevice(deviceId);
-        toast.success('Device unblocked successfully');
+        toast.success(t('admin.toast.deviceUnblocked'));
         fetchDevices();
         fetchStats();
       }
@@ -291,8 +291,8 @@ export default function AdminDashboard() {
         {[
           { label: t('admin.dashboard.stats.total'), value: stats?.totalUsers, icon: Users, color: 'text-blue-400', bg: 'bg-blue-400/10' },
           { label: t('admin.dashboard.stats.active'), value: stats?.activeUsers, icon: Activity, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-          { label: 'Projects', value: stats?.totalProjects, icon: BarChart3, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
-          { label: 'Uploads', value: stats?.totalUploads, icon: Music, color: 'text-pink-400', bg: 'bg-pink-400/10' },
+          { label: t('admin.table.projects'), value: stats?.totalProjects, icon: BarChart3, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+          { label: t('admin.table.uploads'), value: stats?.totalUploads, icon: Music, color: 'text-pink-400', bg: 'bg-pink-400/10' },
           { label: t('admin.dashboard.stats.appeals'), value: stats?.pendingAppeals, icon: FileText, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
           { label: t('admin.dashboard.stats.banned'), value: stats?.bannedUsers, icon: Ban, color: 'text-red-400', bg: 'bg-red-400/10' },
           { label: t('admin.dashboard.stats.deleted'), value: stats?.deletedUsers, icon: Trash2, color: 'text-zinc-500', bg: 'bg-zinc-500/10' },
@@ -351,8 +351,8 @@ export default function AdminDashboard() {
                 className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-300 outline-none focus:border-indigo-500"
               >
                 <option value="">{t('admin.dashboard.filters.allRoles')}</option>
-                <option value="admin">Admin</option>
-                <option value="user">User</option>
+                <option value="admin">{t('admin.table.admin')}</option>
+                <option value="user">{t('admin.table.user')}</option>
               </select>
               <select
                 value={statusFilter}
@@ -451,7 +451,7 @@ export default function AdminDashboard() {
                                   <>
                                     {user.banAppeal ? (
                                       <Button variant="secondary" size="sm" onClick={() => setAppealModal({ isOpen: true, user })} className="h-8 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/30 gap-1.5">
-                                        <Info className="w-3.5 h-3.5" /> Review Appeal
+                                        <Info className="w-3.5 h-3.5" /> {t('admin.table.reviewAppeal')}
                                       </Button>
                                     ) : (
                                       !user.isBanned && (
@@ -516,9 +516,9 @@ export default function AdminDashboard() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-zinc-800/50 bg-zinc-950/30">
-                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">IP Address</th>
-                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Reason</th>
-                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Added</th>
+                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('admin.table.ipAddress')}</th>
+                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('admin.table.ipReason')}</th>
+                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('admin.table.added')}</th>
                       <th className="p-4 text-right"></th>
                     </tr>
                   </thead>
@@ -526,7 +526,7 @@ export default function AdminDashboard() {
                     {bannedIps.map(item => (
                       <tr key={item.id} className="hover:bg-zinc-800/30 transition-colors">
                         <td className="p-4 font-mono text-sm text-red-400 font-bold">{item.ip}</td>
-                        <td className="p-4 text-xs text-zinc-400 italic">"{item.reason || 'No reason'}"</td>
+                        <td className="p-4 text-xs text-zinc-400 italic">"{item.reason || t('admin.table.noReason')}"</td>
                         <td className="p-4 text-[10px] text-zinc-500">{new Date(item.createdAt).toLocaleString()}</td>
                         <td className="p-4 text-right">
                           <Button
@@ -580,9 +580,9 @@ export default function AdminDashboard() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-zinc-800/50 bg-zinc-950/30">
-                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Device ID</th>
-                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Reason</th>
-                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Added</th>
+                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('admin.table.deviceId')}</th>
+                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('admin.table.ipReason')}</th>
+                      <th className="p-4 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('admin.table.added')}</th>
                       <th className="p-4 text-right"></th>
                     </tr>
                   </thead>
@@ -590,7 +590,7 @@ export default function AdminDashboard() {
                     {bannedDevices.map(item => (
                       <tr key={item.id} className="hover:bg-zinc-800/30 transition-colors">
                         <td className="p-4 font-mono text-xs text-indigo-400 font-bold">{item.deviceId}</td>
-                        <td className="p-4 text-xs text-zinc-400 italic">"{item.reason || 'No reason'}"</td>
+                        <td className="p-4 text-xs text-zinc-400 italic">"{item.reason || t('admin.table.noReason')}"</td>
                         <td className="p-4 text-[10px] text-zinc-500">{new Date(item.createdAt).toLocaleString()}</td>
                         <td className="p-4 text-right">
                           <Button
@@ -674,9 +674,9 @@ export default function AdminDashboard() {
           confirmModal.type === 'role'
             ? t('admin.table.confirmRoleChange', { name: confirmModal.user?.username, role: confirmModal.user?.role === 'admin' ? 'user' : 'admin' })
             : confirmModal.type === 'unblock_ip'
-              ? "Are you sure you want to remove this IP block? This network will be able to register and login again."
+              ? t('admin.table.confirmUnblockIp')
               : confirmModal.type === 'unblock_device'
-                ? "Are you sure you want to remove this hardware block? This machine will be able to access the platform again."
+                ? t('admin.table.confirmUnblockDevice')
                 : t('admin.table.confirmDelete', { name: confirmModal.user?.username })
         }
         onConfirm={onConfirmAction}

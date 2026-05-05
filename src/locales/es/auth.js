@@ -21,14 +21,14 @@ export default {
   "validation": {
     "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
     "usernameMinLength": "El nombre de usuario debe tener al menos 3 caracteres",
-    "usernamePattern": "Solo letras, números, guiones y guiones bajos",
+    "usernamePattern": "Solo letras, números, guiones, puntos, dobles puntos y guiones bajos",
     "emailInvalid": "Ingresa un correo electrónico válido",
     "fieldRequired": "Este campo es obligatorio"
   },
   "unbanTitle": "¡Bienvenido de nuevo!",
   "unbanMessage": "La suspensión de tu cuenta ha sido levantada. Ya puedes usar todas las funciones.",
   "registrationBlockedTitle": "Registro Restringido",
-  "registrationBlockedMessage": "Esta cuenta o red ha sido marcada por violaciones previas a nuestras políticas.",
-  "registrationBlockedDetail": "Para mantener la integridad de la plataforma, no permitimos crear cuentas nuevas con credenciales asociadas a usuarios baneados.",
-  "securityNotice": "Aviso de Seguridad Detectado"
+  "registrationBlockedMessage": "El registro no está disponible actualmente.",
+  "registrationBlockedDetail": "El registro no está disponible actualmente, vuelve a intentarlo más tarde.",
+  "securityNotice": "El registro de cuentas está temporalmente deshabilitado. Disculpa las molestias."
 };

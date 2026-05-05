@@ -24,5 +24,6 @@ export default {
   "forbiddenDesc": "No tienes permiso para ver este proyecto.",
   "errorTitle": "Error al cargar el proyecto",
   "errorDesc": "Se produjo un error inesperado al intentar cargar el proyecto.",
-  "untitled": "Sin título"
+  "untitled": "Sin título",
+  "editMetadata": "Editar metadatos"
 };
