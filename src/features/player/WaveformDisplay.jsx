@@ -187,7 +187,7 @@ const WaveformDisplay = ({
       {/* Main waveform + overlays */}
       <div
         ref={waveContainerRef}
-        className="w-full h-10 relative rounded-lg overflow-hidden bg-zinc-900/40 border border-zinc-800/50 cursor-crosshair select-none"
+        className="w-full h-10 relative rounded-lg overflow-hidden bg-zinc-900/40 border border-zinc-800/50 cursor-pointer select-none"
         onMouseDown={handleWaveMouseDown}
       >
         {/* WaveSurfer renders inside here */}

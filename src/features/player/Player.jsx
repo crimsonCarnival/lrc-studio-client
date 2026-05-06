@@ -8,6 +8,7 @@ import useYouTubePlayer from './useYouTubePlayer';
 import useSpotifyPlayer from './useSpotifyPlayer';
 import SpotifyBrowser from './SpotifyBrowser';
 import WaveformDisplay from './WaveformDisplay';
+import PlaybackProgress from './PlaybackProgress';
 import VolumeControl from './VolumeControl';
 import SpeedControl from './SpeedControl';
 import { Button } from '@ui/button';
@@ -664,6 +665,19 @@ const Player = forwardRef(function Player(
           </div>
         )}
 
+        {source !== 'local' && hasMedia && (
+          <div className="animate-fade-in w-full max-w-[1200px] mx-auto px-4">
+            <PlaybackProgress
+              playbackPosition={playbackPosition}
+              duration={duration}
+              onSeek={seek}
+              loopA={loopA}
+              loopB={loopB}
+              onLoopChange={(a, b) => { setLoopA(a); setLoopB(b); }}
+            />
+          </div>
+        )}
+
         {(local.localUrl || yt.ytReady || sp.ready) && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
             <div className="flex items-center justify-between gap-3 w-full relative min-h-[48px] pb-1.5 lg:pb-2">
@@ -790,7 +804,9 @@ const Player = forwardRef(function Player(
                  )}
  
                  <Tip content={settings.playback?.loopCurrentLine
-                   ? `${t('player.loopActive') || 'Loop'}: ${formatTime(loopA)} – ${formatTime(loopB)} · click to disable`
+                   ? (loopA != null && loopB != null)
+                     ? `${t('player.loopActive')}: ${formatTime(loopA)} – ${formatTime(loopB)} · ${t('player.clickToDisable')}`
+                     : t('player.setLoop')
                    : t('player.setLoop') || 'Loop current line'
                  }>
                    <Button

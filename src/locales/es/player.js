@@ -27,5 +27,6 @@ export default {
   "moveToTop": "Mover arriba",
   "moveToBottom": "Mover abajo",
   "mark": "Marcar posición actual",
-  "loop": "Bucle"
+  "loop": "Bucle",
+  "clickToDisable": "clic para desactivar"
 };

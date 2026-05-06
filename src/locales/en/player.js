@@ -27,5 +27,6 @@ export default {
   "moveToTop": "Move to top",
   "moveToBottom": "Move to bottom",
   "mark": "Mark current position",
-  "loop": "Loop"
+  "loop": "Loop",
+  "clickToDisable": "click to disable"
 };

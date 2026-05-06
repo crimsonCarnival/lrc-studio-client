@@ -75,7 +75,7 @@ export default function EditorToolbar({
     <div className="flex flex-col gap-2 mb-1 sm:mb-2 sticky top-[-1px] lg:static z-raised py-2 px-4 -mx-4 border-b border-zinc-800/50 transition-all bg-zinc-950/50 backdrop-blur-md lg:bg-transparent lg:backdrop-blur-none lg:border-none lg:p-0 lg:m-0">
       {/* Top Row: Title + Sync Info + Save */}
       <div className="flex items-center justify-between gap-3 w-full">
-        <div className="flex items-center gap-2 overflow-hidden flex-1 pb-1">
+        <div className="flex items-center gap-2 overflow-hidden flex-1">
           <h2 className="text-xs sm:text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2">
             <span className="uppercase shrink-0 text-xs sm:text-sm flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5" />
@@ -276,14 +276,6 @@ export default function EditorToolbar({
                   {t('editor.clearWordTimestamps')}
                 </PopoverItem>
               )}
-
-              <PopoverSeparator className="bg-zinc-800/50" />
-
-              {/* Advanced Actions */}
-              <PopoverItem onClick={() => updateSetting('editor.showDisabledLines', !settings.editor?.showDisabledLines)}>
-                <EyeOff className={`w-4 h-4 ${!settings.editor?.showDisabledLines ? 'text-primary' : ''}`} />
-                {settings.editor?.showDisabledLines ? t('editor.hideDisabled') : t('editor.showDisabled')}
-              </PopoverItem>
 
               <PopoverSeparator className="bg-zinc-800/50" />
 
