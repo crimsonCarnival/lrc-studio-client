@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronLeft, Calendar, FileAudio, Video, Trash2, Edit3, Music2, Clock } from 'lucide-react';
+import { ChevronLeft, Calendar, FileAudio, Video, Music2, Clock } from 'lucide-react';
 import { uploads } from '@/api';
 import { Button } from '@ui/button';
+import NotFoundPage from '@/shared/NotFoundPage';
 
 export default function UploadDetailView({ onBack }) {
   const { id } = useParams();
@@ -41,6 +42,9 @@ export default function UploadDetailView({ onBack }) {
   }
 
   if (error || !media) {
+    if (error.includes('404')) {
+      return <NotFoundPage type="upload" />;
+    }
     return (
       <div className="glass rounded-xl sm:rounded-2xl p-5 flex flex-col items-center justify-center h-full">
         <FileAudio className="w-12 h-12 text-zinc-600 mb-4" />

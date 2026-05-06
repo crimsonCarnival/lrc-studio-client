@@ -15,6 +15,7 @@ const SetupScreen = lazy(() => import('@features/editor/components/SetupScreen')
 const Home = lazy(() => import('@features/projects/Home'));
 const AdminDashboard = lazy(() => import('@features/admin/AdminDashboard'));
 const ProfilePage = lazy(() => import('@features/profile/ProfilePage'));
+const NotFoundPage = lazy(() => import('@shared/NotFoundPage'));
 
 function EditorContainer({ loadProject, activeProjectId, children }) {
   const { id } = useParams();
@@ -70,6 +71,8 @@ export function AppRouter({
     playbackSpeed,
     pendingProject,
     projectMetadata,
+    loadError,
+    setLoadError,
     handleSetupComplete,
     setShowSettings,
     setShowKeyboardHelp,
@@ -182,7 +185,9 @@ export function AppRouter({
       } />
       <Route path="project/:id" element={
         <EditorContainer loadProject={loadProject} activeProjectId={activeProjectId}>
-          {isProjectLoading ? (
+          {loadError === 'project' ? (
+            <NotFoundPage type="project" />
+          ) : isProjectLoading ? (
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
               <div className={`${editorColClass} flex flex-col gap-4`}><SkeletonEditor /></div>
               <div className={`${previewColClass} flex flex-col`}><SkeletonPreview /></div>
@@ -292,7 +297,7 @@ export function AppRouter({
           <ProfilePage />
         </Suspense>
       } />
-      <Route path="*" element={<Navigate to="/home" replace />} />
+      <Route path="*" element={<NotFoundPage type="general" />} />
     </Routes>
   );
 }

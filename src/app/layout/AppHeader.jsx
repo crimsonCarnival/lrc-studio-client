@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Music2, UploadCloud, Settings as SettingsIcon, LogOut, BookOpen, Pencil,
-  ShieldAlert, Eye, EyeOff, User, HelpCircle,
+  ShieldAlert, Eye, EyeOff, User, HelpCircle, Lightbulb
 } from 'lucide-react';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
@@ -46,6 +46,21 @@ export function AppHeader({
       setCounts({ library: pRes.projects?.length || 0, uploads: uRes.uploads?.length || 0 });
     } catch (err) { console.error('Failed to fetch counts for menu:', err); }
   };
+
+  // ——— Tip Rotation Logic ———
+  const [tipIndex, setTipIndex] = useState(0);
+  const tips = t('home.tips', { returnObjects: true });
+  const hasTips = Array.isArray(tips) && tips.length > 0;
+
+  useEffect(() => {
+    if (!hasTips) return;
+    const interval = setInterval(() => {
+      setTipIndex(prev => (prev + 1) % tips.length);
+    }, 20000); // Rotate every 20s
+    return () => clearInterval(interval);
+  }, [hasTips, tips.length]);
+
+  const isHomePage = location.pathname === '/home' || location.pathname === '/';
 
   const goHomeOrWarn = () => {
     if (location.pathname.startsWith('/project/') && hasUnsavedChanges()) {
@@ -111,8 +126,8 @@ export function AppHeader({
                     className="h-6 lg:h-7 text-xs lg:text-sm bg-zinc-800/60 border-zinc-700/60 text-zinc-200 min-w-[100px] max-w-[200px]"
                   />
                 ) : (
-                  <button 
-                    onClick={() => setEditingProjectName(true)} 
+                  <button
+                    onClick={() => setEditingProjectName(true)}
                     className="flex items-center gap-1.5 min-w-0 group py-1 -my-1"
                     aria-label={t('setup.projectNamePlaceholder')}
                   >
@@ -135,6 +150,20 @@ export function AppHeader({
             )}
           </div>
         </div>
+
+        {/* ── Center: Tips (Hidden on Home) ── */}
+        {!isHomePage && hasTips && (
+          <div className="hidden lg:flex flex-1 items-center justify-center px-8 animate-fade-in pointer-events-none">
+            <div className="flex items-center gap-3 px-4 py-1.5 bg-zinc-900/40 border border-zinc-800/60 rounded-full max-w-xl group pointer-events-auto cursor-help transition-all hover:bg-zinc-800/40 hover:border-zinc-700/60 shadow-inner">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Lightbulb className="w-3 h-3 text-amber-400/80 group-hover:text-amber-400 transition-colors" />
+              </div>
+              <p className="text-[11px] font-medium text-zinc-400 group-hover:text-zinc-300 transition-colors truncate">
+                {tips[tipIndex]}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ── Right-hand nav controls ── */}
         <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">

@@ -97,6 +97,7 @@ export function useAppState(user) {
   });
   const [cloudinaryAudio, setCloudinaryAudio] = useState(null);
   const [projectSpotifyTrackId, setProjectSpotifyTrackId] = useState('');
+  const [loadError, setLoadError] = useState(null); // 'project', 'upload', 'user', etc.
   // Refs for stale-closure-safe reads inside save callbacks and guarded setLines
   const lastServerSnapshotRef = useRef(null);
   // Guard: prevents two concurrent project.create() calls (manual + autosave race)
@@ -251,8 +252,11 @@ export function useAppState(user) {
             }));
           } catch { /* ignore localStorage errors */ }
         })
-        .catch(() => {
+        .catch((err) => {
           // Server failed (404, network error, etc.) — stale project ID, clear it
+          if (err.status === 404) {
+            setLoadError('project');
+          }
           setActiveProjectId(null);
           try {
             localStorage.removeItem(ACTIVE_PROJECT_ID_KEY);
@@ -676,6 +680,8 @@ export function useAppState(user) {
     handleCloudinaryUpload,
     setProjectSpotifyTrackId,
     isProjectLoading,
+    loadError,
+    setLoadError,
     setHasMedia,
     registerAfterSave,
   };

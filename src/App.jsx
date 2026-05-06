@@ -141,6 +141,11 @@ function AppInner() {
     }
   }, [location.pathname, playerRef]);
 
+  // Reset load errors when navigating
+  useEffect(() => {
+    if (appState.loadError) appState.setLoadError(null);
+  }, [location.pathname, appState.loadError, appState.setLoadError]);
+
   // Reset project state when entering "New Project"
   useEffect(() => {
     if (location.pathname === '/project/new') {
