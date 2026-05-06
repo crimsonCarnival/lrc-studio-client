@@ -10,6 +10,8 @@ import Player from '@features/player/Player';
 import Preview from '@features/preview/Preview';
 import SharedProjectError from './SharedProjectError';
 import { LogIn, UserPlus, Music2, Copy, Check } from 'lucide-react';
+import { useAuthContext } from '@/contexts/useAuthContext';
+import { AppHeader } from '@/app/layout/AppHeader';
 
 /**
  * Full-page, unauthenticated shared-project viewer.
@@ -30,6 +32,7 @@ function SharedProjectViewerInner({ projectId }) {
   };
   const startTime = getStartTime();
   const [hasMedia, setHasMedia] = useState(false);
+  const { user, logout } = useAuthContext();
 
   // Clear query params after initial parse to prevent "reload to seek" tricks
   useEffect(() => {
@@ -97,26 +100,32 @@ function SharedProjectViewerInner({ projectId }) {
 
   // ── Redirect helpers ──
   const redirectUrl = `/share/${projectId}`;
-  const registerUrl = `/?tab=register&redirect=${encodeURIComponent(redirectUrl)}`;
-
+  
   // ── Clone project handler ──
   const handleClone = useCallback(async () => {
-    if (getAccessToken()) {
+    if (user || getAccessToken()) {
       // Already logged in - clone directly
       setIsCloning(true);
       try {
         const result = await projects.clone(projectId);
         // Redirect to the new project
-        window.location.href = `/?projectId=${result.projectId}`;
+        window.location.href = `/project/${result.projectId}`;
       } catch (err) {
         console.error('Failed to clone project:', err);
         setIsCloning(false);
       }
     } else {
       localStorage.setItem('lrc-syncer-redirect', window.location.pathname + window.location.hash);
-      window.location.href = registerUrl;
+      const returnUrl = `/share/${projectId}?clone=1`;
+      window.location.href = `/login?redirect=${encodeURIComponent(returnUrl)}`;
     }
-  }, [projectId, registerUrl]);
+  }, [projectId, user]);
+
+  useEffect(() => {
+    if ((user || getAccessToken()) && searchParams.get('clone') === '1' && !isCloning) {
+      handleClone();
+    }
+  }, [user, searchParams, handleClone, isCloning]);
 
   const handleCopyLink = useCallback(() => {
     navigator.clipboard.writeText(window.location.href);
@@ -140,7 +149,27 @@ function SharedProjectViewerInner({ projectId }) {
 
   // ── Viewer ──
   return (
-    <div className="min-h-screen lg:h-screen bg-zinc-950 relative overflow-x-hidden flex flex-col">
+    <div className={`min-h-screen lg:h-screen bg-zinc-950 relative overflow-x-hidden flex flex-col ${user ? 'pt-[60px] sm:pt-[72px] lg:pt-[88px]' : ''}`}>
+      {user && (
+        <AppHeader
+          user={user}
+          logout={logout}
+          isReady={true}
+          lines={lines}
+          mediaTitle={mediaTitle}
+          setMediaTitle={() => {}}
+          triggerImportSave={() => {}}
+          hasUnsavedChanges={() => false}
+          activeProjectId={projectId}
+          setShowSettings={() => {}}
+          setShowKeyboardHelp={() => {}}
+          focusMode="default"
+          setFocusMode={() => {}}
+          hideEditor={false}
+          setHideEditor={() => {}}
+          setUnsavedModalTarget={() => {}}
+        />
+      )}
       {/* Background blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>

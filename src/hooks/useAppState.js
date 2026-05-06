@@ -605,17 +605,29 @@ export function useAppState(user) {
     // Server project with potential differences
     if (activeProjectId && lastServerSnapshotRef.current) {
       if (isAutosaving) return true;
-      if (mediaTitle !== lastServerSnapshotRef.current.title) return true;
       
-      // Compare actual line content to accurately detect unsaved text/timestamp edits
-      // We must use buildProjectPayload to get the rounded timestamps to correctly match the snapshot
-      const currentPayloadLines = buildProjectPayload().lines || [];
-      const currentLinesStr = JSON.stringify(currentPayloadLines);
-      const snapshotLinesStr = JSON.stringify(lastServerSnapshotRef.current.lines || []);
-      if (currentLinesStr !== snapshotLinesStr) return true;
+      const payload = buildProjectPayload();
+      const patch = buildProjectPatch({
+        prevSnapshot: lastServerSnapshotRef.current,
+        title: mediaTitle || '',
+        metadata: projectMetadata,
+        state: {
+          syncMode,
+          activeLineIndex,
+          playbackPosition: payload.playbackPosition || 0,
+          playbackSpeed: payload.playbackSpeed || 1,
+          saveTime: payload.saveTime,
+          timezone: payload.timezone,
+          utcOffset: payload.utcOffset,
+        },
+        editorMode,
+        lines: payload.lines || [],
+      });
+      
+      return Object.keys(patch).length > 0;
     }
     return false;
-  }, [activeProjectId, lines, mediaTitle, isAutosaving, buildProjectPayload]);
+  }, [activeProjectId, lines, mediaTitle, projectMetadata, syncMode, activeLineIndex, editorMode, isAutosaving, buildProjectPayload]);
 
   return {
     t,

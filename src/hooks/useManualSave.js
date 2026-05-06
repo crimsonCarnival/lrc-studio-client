@@ -42,10 +42,22 @@ export function buildProjectPatch({ prevSnapshot, title, metadata, state, upload
   const patch = {};
   if (!prevSnapshot || prevSnapshot.title !== title) patch.title = title;
   if (!prevSnapshot || !deepEqual(prevSnapshot.metadata, metadata)) patch.metadata = metadata;
-  if (!prevSnapshot || !deepEqual(prevSnapshot.state, state)) patch.state = state;
   if (uploadId !== undefined && (!prevSnapshot || prevSnapshot.uploadId !== uploadId)) patch.uploadId = uploadId;
   const lyricsPatch = buildLyricsPatch(prevSnapshot, editorMode, lines);
   if (lyricsPatch) patch.lyrics = lyricsPatch;
+
+  const prevState = prevSnapshot?.state || {};
+  const isStateDirty = !prevSnapshot || 
+      prevState.syncMode !== state.syncMode ||
+      prevState.activeLineIndex !== state.activeLineIndex ||
+      prevState.playbackPosition !== state.playbackPosition ||
+      prevState.playbackSpeed !== state.playbackSpeed;
+      
+  // If anything else changed, or the state itself changed, include the state patch (to update saveTime)
+  if (isStateDirty || Object.keys(patch).length > 0) {
+    patch.state = state;
+  }
+  
   return patch;
 }
 

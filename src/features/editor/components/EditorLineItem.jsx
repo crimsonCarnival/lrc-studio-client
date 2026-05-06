@@ -507,7 +507,7 @@ const EditorLineItem = React.memo(({
                   const isEditingReading = editingReadingWordIndex === wi;
                   const isFocusedWord = focusedTimestamp?.lineIndex === i && focusedTimestamp?.type === 'word' && focusedTimestamp?.wordIndex === wi;
                   const isActiveWord = wi === activeWordIndex;
-                  const canHaveReading = isKanji(w.word || '');
+                  const canHaveReading = hasCJK(w.word || '');
                   const readingFmt = settings?.editor?.display?.readingFormat || 'hiragana';
                   const fmtReading = (r) => r ? (readingFmt === 'katakana' ? toKatakana(r) : toHiragana(r)) : r;
                   return (
@@ -843,7 +843,7 @@ const EditorLineItem = React.memo(({
                   })
                   : line.words?.length > 0
                     ? line.words.map((w, wi) => {
-                      const canHaveReading = isKanji(w.word || '');
+                      const canHaveReading = hasCJK(w.word || '');
                       const isEditingThisReading = editingReadingWordIndex === wi;
                       const rubyFmt = settings?.editor?.display?.readingFormat || 'hiragana';
                       const fmtR = (r) => r ? (rubyFmt === 'katakana' ? toKatakana(r) : toHiragana(r)) : r;
@@ -922,16 +922,13 @@ const EditorLineItem = React.memo(({
                       }
                       return (
                         <React.Fragment key={wi}>
-                          <span
-                            onClick={(e) => { e.stopPropagation(); setEditingReadingWordIndex(wi); }}
-                            className="cursor-default"
-                          >{w.word}</span>
+                          <span className="cursor-default text-zinc-300/90">{w.word}</span>
                           {trailingSpace}
                         </React.Fragment>
                       );
                     })
                     : [...(line.text || '♪')].map((ch, ci) => {
-                      if (!isKanji(ch)) return <span key={ci}>{ch}</span>;
+                      if (!hasCJK(ch)) return <span key={ci} className="text-zinc-300/90">{ch}</span>;
                       const rubyFmt = settings?.editor?.display?.readingFormat || 'hiragana';
                       if (inlineEditCharIdx === ci) {
                         return (
