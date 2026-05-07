@@ -1,5 +1,5 @@
 {
-  "name": "ag-lyrics-syncer",
+  "name": "lrc-studio",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@crimson-carnival/ds-js": "^1.0.2",
+    "@fingerprintjs/fingerprintjs": "^5.2.0",
     "@fontsource-variable/geist": "^5.2.8",
     "@fontsource-variable/noto-serif-jp": "^5.2.9",
     "@tanstack/react-virtual": "^3.13.23",
@@ -24,6 +25,7 @@
     "radix-ui": "^1.4.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-google-recaptcha-v3": "^1.11.0",
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^17.0.0",
     "react-resizable-panels": "^4.11.0",
