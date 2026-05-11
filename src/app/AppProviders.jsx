@@ -1,12 +1,15 @@
 import { SettingsProvider } from '../contexts/SettingsContext';
+import { SetupProvider } from '../contexts/SetupContext';
 import { TooltipProvider } from '@ui/tooltip';
 
 export function AppProviders({ children }) {
   return (
     <SettingsProvider>
-      <TooltipProvider>
-        {children}
-      </TooltipProvider>
+      <SetupProvider>
+        <TooltipProvider>
+          {children}
+        </TooltipProvider>
+      </SetupProvider>
     </SettingsProvider>
   );
 }
