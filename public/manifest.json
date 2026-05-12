@@ -1,6 +1,6 @@
 {
-  "name": "Syncify",
-  "short_name": "Syncify",
+  "name": "LRC Studio",
+  "short_name": "LRC Studio",
   "description": "Synchronization tool for lyrics and music.",
   "start_url": "/",
   "display": "standalone",
