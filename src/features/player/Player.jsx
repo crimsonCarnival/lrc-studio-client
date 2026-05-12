@@ -256,7 +256,7 @@ const Player = forwardRef(function Player(
         });
       } catch (err) {
         console.error('Failed to save CDN upload:', err);
-        toast.error('Failed to save media reference');
+        toast.error(t('player.saveMediaRefFailed') || 'Failed to save media reference');
       } finally {
         setCdnLoading(false);
       }
@@ -415,25 +415,30 @@ const Player = forwardRef(function Player(
     }
   }, [hasMedia, initialSeek, initialSpeed, seek, applySpeed, source, yt, local]);
 
-  // ——— Auto-load initial Cloudinary media ———
+  // ——— Auto-load initial Cloudinary/Spotify media ———
   const loadedCloudinaryRef = useRef(null);
   useEffect(() => {
     if (initialCloudinaryUpload?.id && loadedCloudinaryRef.current !== initialCloudinaryUpload.id) {
       loadedCloudinaryRef.current = initialCloudinaryUpload.id;
 
-      // Directly stream the URL instead of downloading a full blob
-      local.loadFromUrl(initialCloudinaryUpload.cloudinaryUrl, initialCloudinaryUpload.title || initialCloudinaryUpload.fileName);
-
-      // Pre-set the Cloudinary info in state so it knows it's linked
-      onCloudinaryUpload?.({
-        id: initialCloudinaryUpload.id,
-        cloudinaryUrl: initialCloudinaryUpload.cloudinaryUrl,
-        publicId: initialCloudinaryUpload.publicId,
-        fileName: initialCloudinaryUpload.fileName,
-        duration: initialCloudinaryUpload.duration,
-      });
+      if (initialCloudinaryUpload.source === 'spotify' && initialCloudinaryUpload.spotifyTrackId) {
+        // Handle Spotify
+        sp.playTrack(initialCloudinaryUpload.spotifyTrackId, initialCloudinaryUpload.title || initialCloudinaryUpload.artist || '', false);
+        onSpotifyTrackIdChange?.(initialCloudinaryUpload.spotifyTrackId);
+        onTitleChange?.(initialCloudinaryUpload.title || initialCloudinaryUpload.artist || '');
+      } else if (initialCloudinaryUpload.cloudinaryUrl) {
+        // Handle Cloudinary
+        local.loadFromUrl(initialCloudinaryUpload.cloudinaryUrl, initialCloudinaryUpload.title || initialCloudinaryUpload.fileName);
+        onCloudinaryUpload?.({
+          id: initialCloudinaryUpload.id,
+          cloudinaryUrl: initialCloudinaryUpload.cloudinaryUrl,
+          publicId: initialCloudinaryUpload.publicId,
+          fileName: initialCloudinaryUpload.fileName,
+          duration: initialCloudinaryUpload.duration,
+        });
+      }
     }
-  }, [initialCloudinaryUpload, local, onCloudinaryUpload]);
+  }, [initialCloudinaryUpload, local, sp, onCloudinaryUpload, onSpotifyTrackIdChange, onTitleChange]);
 
 
   return (
@@ -846,7 +851,7 @@ const Player = forwardRef(function Player(
                         value={yt.ytUrl}
                         onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
                         onKeyDown={(e) => e.key === 'Enter' && handleUrlLoad()}
-                        placeholder="YouTube or CDN URL"
+                        placeholder={t('player.pasteCdnUrl') || 'Paste YouTube, Spotify, or CDN URL...'}
                         className="flex-1 h-9 pl-6 bg-zinc-800/60 text-zinc-100 placeholder-zinc-500 border-zinc-700 text-xs"
                       />
                     </div>
@@ -1064,7 +1069,7 @@ const Player = forwardRef(function Player(
                 </div>
                 <div className="flex flex-col">
                   <span className="text-lg font-bold text-white tracking-tight">{t('spotify.browse')}</span>
-                  <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold opacity-60">Spotify Music Library</span>
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold opacity-60">{t('spotify.libraryTitle')}</span>
                 </div>
               </div>
               <Button
