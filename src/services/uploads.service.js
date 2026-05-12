@@ -138,17 +138,34 @@ export const uploadsService = {
   },
 
   async saveMedia(input) {
-    const data = await gqlRequest(`
-      mutation SaveMedia($input: SaveMediaInput!) {
-        saveMedia(input: $input) {
-          id
-          source
-          fileName
-          title
+    try {
+      const data = await gqlRequest(`
+        mutation SaveMedia($input: SaveMediaInput!) {
+          saveMedia(input: $input) {
+            id
+            source
+            fileName
+            title
+          }
         }
+      `, { input });
+      // Return upload directly (both GraphQL and normalized REST response)
+      return data.saveMedia;
+    } catch (err) {
+      // Fallback to REST for unauthenticated requests or GraphQL errors
+      console.warn('GraphQL saveMedia failed, falling back to REST:', err.message);
+      try {
+        const restData = await request('/uploads/media', {
+          method: 'POST',
+          body: JSON.stringify(input),
+        });
+        // REST returns { upload }, extract just the upload for consistency
+        return restData.upload;
+      } catch (restErr) {
+        console.error('REST fallback also failed:', restErr);
+        throw err;
       }
-    `, { input });
-    return data.saveMedia;
+    }
   },
 
   async deleteMedia(id) {
