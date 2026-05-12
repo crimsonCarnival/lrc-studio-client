@@ -75,7 +75,6 @@ export function useEditor({
     stampTargetRef.current = stampTarget;
   });
 
-  // Sync active word cursor with lines (covers undo/redo restoring a previous stamp state)
   useEffect(() => {
     if (editorMode !== 'words') {
       setActiveWordIndex(0);
@@ -83,14 +82,12 @@ export function useEditor({
       return;
     }
 
-    // If the user has manually focused a word, do not auto-advance the cursor away from it
-    if (focusedTimestamp?.type === 'word' || focusedTimestamp?.type === 'secondaryWord') {
-      return;
-    }
-
+    // When the active line changes or we enter Words mode, 
+    // find the first unstamped word as a starting point.
     const words = stampTarget === 'secondary'
       ? lines[activeLineIndex]?.secondaryWords
       : lines[activeLineIndex]?.words;
+    
     if (!words?.length) {
       setActiveWordIndex(0);
       activeWordIndexRef.current = 0;
@@ -100,7 +97,7 @@ export function useEditor({
     const newIdx = idx === -1 ? words.length : idx;
     setActiveWordIndex(newIdx);
     activeWordIndexRef.current = newIdx;
-  }, [activeLineIndex, lines, editorMode, stampTarget, focusedTimestamp]);
+  }, [activeLineIndex, editorMode, stampTarget]); // Only re-initialize on structural changes
 
   // Reset stampTarget when the active line changes
   useEffect(() => {
@@ -126,10 +123,13 @@ export function useEditor({
 
           // Build a map from old char positions so timestamps survive edits if text didn't change too much
           const oldWordAtPos = new Map();
+          // Text→reading fallback for when position-based matching misses (e.g. 々 boundary shifts)
+          const oldReadingByText = new Map();
           let flat = 0;
           for (const w of line.words || []) {
             for (let k = 0; k < [...w.word].length; k++) oldWordAtPos.set(flat + k, w);
             flat += [...w.word].length;
+            if (w.reading) oldReadingByText.set(w.word, w.reading);
           }
 
           let charPos = 0;
@@ -155,11 +155,10 @@ export function useEditor({
                   while (j < segChars.length && isKanji(segChars[j])) j++;
                   const kanjiGroup = segChars.slice(ci, j).join('');
                   
-                  // Check if this group already has a timestamp in the old word map
-                  // (approximate by the first character's position)
                   const old = oldWordAtPos.get(charPos);
                   const w = { word: kanjiGroup, time: old?.time ?? null };
                   if (old?.reading && old.word === kanjiGroup) w.reading = old.reading;
+                  if (!w.reading && oldReadingByText.has(kanjiGroup)) w.reading = oldReadingByText.get(kanjiGroup);
                   newWords.push(w);
                   
                   charPos += [...kanjiGroup].length;
@@ -168,6 +167,7 @@ export function useEditor({
                   const old = oldWordAtPos.get(charPos);
                   const w = { word: ch, time: old?.time ?? null };
                   if (old?.reading) w.reading = old.reading;
+                  if (!w.reading && oldReadingByText.has(ch)) w.reading = oldReadingByText.get(ch);
                   newWords.push(w);
                   charPos++; ci++;
                 } else {
@@ -651,6 +651,7 @@ export function useEditor({
     setModifiedLines(prev => new Set(prev).add(index));
     setLines((prev) => {
       const updated = [...prev];
+      if (index < 0 || index >= updated.length) return prev;
       const prevLine = updated[index];
       const { plainText, segments } = parseRubyMarkup(newText || '');
       const hasMarkup = segments.some(s => s.reading);
@@ -659,14 +660,17 @@ export function useEditor({
       if (newTranslation !== undefined) line.translation = newTranslation || undefined;
       // Always re-tokenize when text or markup changed
       const textChanged = plainText !== (prevLine.text || '');
-      if (hasMarkup || (line.words && textChanged)) {
+      // Always generate words if they are missing or text changed
+      if (textChanged || hasMarkup || !line.words) {
         const isCJKText = hasCJK(plainText || '');
         // Build a map from old char positions so timestamps survive edits
         const oldWordAtPos = new Map();
+        const oldReadingByText = new Map();
         let flat = 0;
         for (const w of prevLine.words || []) {
           for (let k = 0; k < [...w.word].length; k++) oldWordAtPos.set(flat + k, w);
           flat += [...w.word].length;
+          if (w.reading) oldReadingByText.set(w.word, w.reading);
         }
         let charPos = 0;
         const newWords = [];
@@ -690,6 +694,7 @@ export function useEditor({
                 const old = oldWordAtPos.get(charPos);
                 const w = { word: kanjiGroup, time: old?.time ?? null };
                 if (old?.reading && old.word === kanjiGroup) w.reading = old.reading;
+                if (!w.reading && oldReadingByText.has(kanjiGroup)) w.reading = oldReadingByText.get(kanjiGroup);
                 newWords.push(w);
                 charPos += [...kanjiGroup].length;
                 ci = j;
@@ -697,6 +702,7 @@ export function useEditor({
                 const old = oldWordAtPos.get(charPos);
                 const w = { word: ch, time: old?.time ?? null };
                 if (old?.reading) w.reading = old.reading;
+                if (!w.reading && oldReadingByText.has(ch)) w.reading = oldReadingByText.get(ch);
                 newWords.push(w);
                 charPos++; ci++;
               } else {
