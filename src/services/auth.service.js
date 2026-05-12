@@ -24,10 +24,15 @@ export const authService = {
     });
   },
 
-  async refresh(refreshToken) {
+  async refresh() {
     return request('/auth/refresh', {
       method: 'POST',
-      body: JSON.stringify({ refreshToken }),
+    });
+  },
+
+  async logout() {
+    return request('/auth/logout', {
+      method: 'POST',
     });
   },
 
