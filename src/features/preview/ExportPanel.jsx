@@ -6,7 +6,6 @@ import { Input } from '@ui/input';
 import { FloatingInput } from '@ui/floating-input';
 import { Checkbox } from '@ui/checkbox';
 import { Label } from '@ui/label';
-import toast from 'react-hot-toast';
 
 export default function ExportPanel({
   showExportPanel,
@@ -52,8 +51,6 @@ export default function ExportPanel({
 
 
   if (!showExportPanel) return null;
-
-  const isLrc = settings.export?.downloadFormat === 'lrc';
 
   return (
     <div
