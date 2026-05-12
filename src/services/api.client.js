@@ -1,19 +1,29 @@
 import { getDeviceId } from '../utils/device.js';
+import { authEvents } from '../utils/authEvents.js';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
-let accessToken = null;
+let isLoggedIn = false;
 
-export function setAccessToken(token) {
-  accessToken = token;
+export function setAuthFlag(val) {
+  isLoggedIn = !!val;
 }
 
+export function getIsLoggedIn() {
+  return isLoggedIn;
+}
+
+// Backward-compatibility alias for synchronous auth checks
 export function getAccessToken() {
-  return accessToken;
+  return isLoggedIn;
+}
+
+export function setAccessToken(token) {
+  isLoggedIn = !!token;
 }
 
 export function clearAccessToken() {
-  accessToken = null;
+  isLoggedIn = false;
 }
 
 export async function request(path, options = {}) {
@@ -23,15 +33,12 @@ export async function request(path, options = {}) {
     headers['Content-Type'] = 'application/json';
   }
 
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  }
-
   // Always send device identifier
   headers['X-Device-Id'] = await getDeviceId();
 
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
+    credentials: 'include', // Automatically send HttpOnly cookies
     headers,
   });
 
@@ -40,6 +47,10 @@ export async function request(path, options = {}) {
     const err = new Error(body.error || `Request failed: ${res.status}`);
     err.status = res.status;
     err.body = body;
+    // 401 means the access token cookie expired or is missing — signal the auth layer
+    if (res.status === 401) {
+      authEvents.emit('token:expired');
+    }
     throw err;
   }
 
