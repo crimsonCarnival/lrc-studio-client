@@ -23,6 +23,7 @@ import { Tip } from '@ui/tip';
 function ReadingInput({ defaultValue, onCommit, onCancel, className, style, placeholder, readingFormat }) {
   const ref = useRef(null);
   const [error, setError] = useState(false);
+  const committedRef = useRef(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -33,7 +34,10 @@ function ReadingInput({ defaultValue, onCommit, onCancel, className, style, plac
   }, [readingFormat]);
 
   const commit = (val, direction = 0) => {
+    if (committedRef.current) return;
+
     if (!val) {
+      committedRef.current = true;
       onCommit('', direction);
       return;
     }
@@ -47,15 +51,18 @@ function ReadingInput({ defaultValue, onCommit, onCancel, className, style, plac
     }
 
     // Final conversion pass to catch any lingering romaji
-    final = isKatakana ? window.wanakana?.toKatakana(final) : window.wanakana?.toHiragana(final);
-
-    // Validate: must be entirely Kana (Hiragana, Katakana, or long vowel marks)
-    if (final && !window.wanakana?.isKana(final)) {
-      setError(true);
-      setTimeout(() => setError(false), 1000);
-      return;
+    if (window.wanakana) {
+      final = isKatakana ? window.wanakana.toKatakana(final) : window.wanakana.toHiragana(final);
     }
 
+    // Validate: must be entirely Kana (Hiragana, Katakana, or long vowel marks)
+    if (window.wanakana && final && !window.wanakana.isKana(final)) {
+      setError(true);
+      setTimeout(() => setError(false), 1000);
+      return; // committedRef stays false so user can correct and retry
+    }
+
+    committedRef.current = true;
     onCommit(final, direction);
   };
 
@@ -72,6 +79,7 @@ function ReadingInput({ defaultValue, onCommit, onCancel, className, style, plac
           commit(e.target.value, e.key === 'Tab' ? (e.shiftKey ? -1 : 1) : 0);
         } else if (e.key === 'Escape') {
           e.preventDefault();
+          committedRef.current = true; // prevent blur-on-unmount from committing
           onCancel();
         }
         e.stopPropagation();
@@ -286,14 +294,14 @@ const EditorLineItem = React.memo(({
       if (!ch) return { start: null, end: null, range: null };
       const isCharKanji = isKanji(ch);
 
-      // Initial click
+      // Initial click: open reading input immediately for contiguous kanji
       if (prev.start === null) {
         if (!isCharKanji) return { start: null, end: null, range: null };
 
         let s = ci, e = ci;
         while (s > 0 && isKanji(textChars[s - 1])) s--;
         while (e < textChars.length - 1 && isKanji(textChars[e + 1])) e++;
-        return { start: s, end: (s === e ? null : e), range: null };
+        return { start: null, end: null, range: { s, e } };
       }
 
       // Subsequent click
@@ -320,6 +328,7 @@ const EditorLineItem = React.memo(({
 
   useEffect(() => {
     if (!isActive) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelection({ start: null, end: null, range: null });
     } else {
       activeLineRef?.current?.focus();
@@ -591,8 +600,9 @@ const EditorLineItem = React.memo(({
               <div className="flex flex-wrap gap-x-1 gap-y-1 w-full pr-2 min-h-[22px] items-end content-start">
                 {line.words?.map((w, wi) => {
                   const displayWord = w.word.replace(/^[()'"]+|[,;.!?()'"]+$/g, '');
+                  // In Words mode, only show the automatic "next word" cursor if no word is manually focused anywhere
                   const isFocusedWord = focusedTimestamp?.lineIndex === i && focusedTimestamp?.type === 'word' && focusedTimestamp?.wordIndex === wi;
-                  const isActiveWord = wi === activeWordIndex;
+                  const isActiveWord = wi === activeWordIndex && !focusedTimestamp;
                   return (
                     <div key={wi} className="flex flex-col items-center gap-1">
                       {/* Word chip */}
@@ -666,8 +676,8 @@ const EditorLineItem = React.memo(({
                   ? line.secondaryWords
                   : line.secondary.trim().split(/\s+/).filter(Boolean).map((word) => ({ word, time: null }))
                 ).map((w, wi) => {
-                  const isActiveSecondaryWord = wi === activeWordIndex;
                   const isFocusedSecondaryWord = focusedTimestamp?.lineIndex === i && focusedTimestamp?.type === 'secondaryWord' && focusedTimestamp?.wordIndex === wi;
+                  const isActiveSecondaryWord = wi === activeWordIndex && !focusedTimestamp;
                   return w.time != null ? (
                     <div key={wi} className="group/sword flex items-center gap-0.5">
                       <Tip content={`${w.word} @ ${formatTime(w.time)}`}>
@@ -869,20 +879,21 @@ const EditorLineItem = React.memo(({
           <div className={`flex flex-col gap-1 group/text min-w-0 w-full ${editorMode === 'words' ? 'pt-0.5' : ''}`}>
             <div className="flex items-center gap-2">
               <p
-                className={`text-[13px] lg:text-xs transition-all duration-300 ease-out ${editorMode !== 'words' && (line.words?.some(w => w.reading) || editingReadingWordIndex != null || selection.start != null || selection.range != null) ? 'overflow-hidden' : 'break-words whitespace-pre-wrap'} ${isActive
+                className={`text-[13px] lg:text-xs transition-all duration-300 ease-out ${(line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null))) ? 'overflow-hidden' : 'break-words whitespace-pre-wrap'} ${isActive
                   ? 'text-zinc-100 font-medium'
                   : isSynced
                     ? line.words?.some(w => w.time != null) ? 'text-zinc-300' : 'text-zinc-100'
                     : 'text-zinc-500'
                   }`}
-                style={editorMode !== 'words' && (line.words?.some(w => w.reading) || editingReadingWordIndex != null || selection.start != null || selection.range != null)
+                style={(line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null)))
                   ? { lineHeight: '2.4' }
                   : { lineHeight: '1.6' }}
               >
                 {line.words?.length > 0
                   ? line.words.map((w, wi) => {
-                    const isFocusedWord = (focusedTimestamp?.lineIndex === i && focusedTimestamp?.type === 'word' && focusedTimestamp?.wordIndex === wi) || (focusedTimestamp?.lineIndex === i && focusedTimestamp?.type === 'secondaryWord' && focusedTimestamp?.wordIndex === wi);
-                    const isActiveWord = isActive && wi === activeWordIndex;
+                    // Strictly hide the automatic cursor if any word is focused to prevent multiple highlights
+                    const isActiveWord = editorMode === 'words' && isActive && wi === activeWordIndex && !focusedTimestamp;
+                    const isFocusedWord = (focusedTimestamp?.lineIndex === i && (focusedTimestamp?.type === 'word' || focusedTimestamp?.type === 'secondaryWord') && focusedTimestamp?.wordIndex === wi);
                     const canHaveReading = hasKanji(w.word || '');
                     const isEditing = editingReadingWordIndex === wi;
                     const rubyFmt = settings?.editor?.display?.readingFormat || 'hiragana';
@@ -891,12 +902,12 @@ const EditorLineItem = React.memo(({
 
                     const spanClass = editorMode === 'words'
                       ? `transition-all px-0.5 rounded ${isActiveWord || isFocusedWord
-                        ? 'text-primary [text-shadow:0_0_0.8px_currentColor] underline decoration-dotted underline-offset-2'
+                        ? 'bg-primary/20 text-primary [text-shadow:0_0_0.8px_currentColor] underline decoration-dotted underline-offset-2'
                         : w.time != null
                           ? 'text-primary/70 hover:bg-zinc-800'
                           : isActive || isSynced ? 'text-zinc-100 hover:bg-zinc-800' : 'hover:bg-zinc-800'
                       }`
-                      : `transition-colors px-0.5 rounded ${isActiveWord || isFocusedWord ? 'bg-primary/20 text-primary' : 'hover:bg-white/5'}`;
+                      : `transition-colors px-0.5 rounded ${isFocusedWord && canHaveReading ? 'text-zinc-100 underline decoration-zinc-500 underline-offset-4' : (canHaveReading ? 'hover:bg-white/5' : '')}`;
 
                     const content = (
                       <span className={spanClass}>
@@ -928,8 +939,9 @@ const EditorLineItem = React.memo(({
                     return (
                       <React.Fragment key={wi}>
                         <ruby
-                          className={`group/ruby cursor-pointer ${canHaveReading ? 'hover:text-primary' : ''}`}
+                          className={`group/ruby ${editorMode === 'words' || canHaveReading ? 'cursor-pointer' : 'cursor-default'} ${canHaveReading ? 'hover:text-primary' : ''}`}
                           onClick={(e) => {
+                            if (editorMode !== 'words' && !canHaveReading) return;
                             e.stopPropagation();
                             if (editorMode === 'words') {
                               handleWordClick(e, w, wi);
@@ -938,7 +950,7 @@ const EditorLineItem = React.memo(({
                             }
                           }}
                           onDoubleClick={(e) => {
-                            if (editorMode !== 'words' && canHaveReading) {
+                            if (canHaveReading) {
                               e.stopPropagation();
                               e.preventDefault();
                               clearTimeout(wordClickTimerRef.current);
@@ -947,13 +959,13 @@ const EditorLineItem = React.memo(({
                           }}
                         >
                           {content}
-                          {canHaveReading && editorMode !== 'words' && (
+                          {canHaveReading && (editorMode !== 'words' || w.reading) && (
                             <rt
                               className={`select-none transition-colors ${w.reading ? 'text-[10px] font-mono text-zinc-400 group-hover/ruby:text-primary' : 'border-b-2 border-zinc-700/30 border-dashed min-h-[4px] group-hover/ruby:border-primary/40'}`}
-                              onClick={(e) => {
+                              onClick={editorMode !== 'words' ? (e) => {
                                 e.stopPropagation();
                                 setEditingReadingWordIndex(wi);
-                              }}
+                              } : undefined}
                             >
                               {w.reading ? fmtR(w.reading) : '　'}
                             </rt>
@@ -992,8 +1004,8 @@ const EditorLineItem = React.memo(({
                         );
                       }
 
-                      return segmentChars.map((ch, i) => {
-                        const ci = startCi + i;
+                      return segmentChars.map((ch, ci_off) => {
+                        const ci = startCi + ci_off;
                         const isNonCJK = !hasCJK(ch);
 
                         const handleCharClick = (e) => {
