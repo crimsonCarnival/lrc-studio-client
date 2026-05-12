@@ -6,13 +6,68 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Label } from '@ui/label';
 import { Checkbox } from '@ui/checkbox';
-import { Music2, Eye, EyeOff, ArrowRight, ArrowLeft, Lightbulb, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, ArrowLeft, Lightbulb, Loader2, Globe, Check, Music2, FileText, Zap } from 'lucide-react';
+import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import RegistrationBlockedModal from './RegistrationBlockedModal';
 import { translateAuthError } from '@/utils/authErrors';
 import { auth } from '@/api';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useThemeSync } from '@/hooks/useThemeSync';
 import { FloatingInput } from '@ui/floating-input';
+
+const LANG_NAMES = {
+  en: { en: 'English',  es: 'Inglés',    ja: '英語'        },
+  es: { en: 'Spanish',  es: 'Español',   ja: 'スペイン語'  },
+  ja: { en: 'Japanese', es: 'Japonés',   ja: '日本語'      },
+};
+
+const LANGUAGES = [
+  { code: 'en', short: 'EN' },
+  { code: 'es', short: 'ES' },
+  { code: 'ja', short: 'JA' },
+];
+
+function getLangLabel(code, currentLang) {
+  const native = LANG_NAMES[code]?.[code] || code;
+  const translated = LANG_NAMES[code]?.[currentLang];
+  if (!translated || translated === native) return native;
+  return `${native} (${translated})`;
+}
+
+function LangSwitcher({ i18n }) {
+  const currentCode = (i18n?.language || 'en').split('-')[0];
+  const currentShort = currentCode.toUpperCase();
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          className="flex items-center gap-1 h-8 px-2.5 text-zinc-400 hover:text-zinc-200 bg-zinc-900/60 hover:bg-zinc-800/80 border border-zinc-800/50 rounded-xl transition-colors text-[11px] font-bold"
+          title="Language"
+        >
+          <Globe className="w-3.5 h-3.5" />
+          {currentShort}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-48 p-1" align="end" sideOffset={6}>
+        {LANGUAGES.map(({ code, short }) => {
+          const label = getLangLabel(code, currentCode);
+          const active = currentCode === code;
+          return (
+            <PopoverItem
+              key={code}
+              onClick={() => i18n?.changeLanguage(code)}
+              className={`flex items-center gap-2.5 cursor-pointer text-sm py-2 ${active ? 'text-primary' : ''}`}
+            >
+              <span className="text-[10px] font-bold text-zinc-500 w-6 shrink-0">{short}</span>
+              <span className="flex-1 text-left">{label}</span>
+              <Check className={`size-3 shrink-0 ${active ? 'text-primary' : 'invisible'}`} />
+            </PopoverItem>
+          );
+        })}
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 // ─── Sub-components ────────────────────────────────────────────────────────
 const REMEMBER_ME_KEY = 'lrc-studio-remember-me';
@@ -204,7 +259,7 @@ function LoginIdentifierStep({ t, onNext, onSwitchToRegister }) {
 
 // ─── Login Step 2 — Password ───────────────────────────────────────────────
 
-function LoginPasswordStep({ t, identifierData, onBack, onLogin }) {
+function LoginPasswordStep({ t, identifierData, onBack, onLogin, onSuccess }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -229,6 +284,7 @@ function LoginPasswordStep({ t, identifierData, onBack, onLogin }) {
     setLoading(true);
     try {
       await onLogin({ identifier: identifierData.identifier, password });
+      onSuccess?.();
     } catch (err) {
       setError(translateAuthError(t, err, 'login', identifierData.identifier));
     } finally {
@@ -306,7 +362,7 @@ function LoginPasswordStep({ t, identifierData, onBack, onLogin }) {
 
 // ─── Register Form ─────────────────────────────────────────────────────────
 
-function RegisterForm({ t, onSwitchToLogin, onRegister }) {
+function RegisterForm({ t, onSwitchToLogin, onRegister, onSuccess }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -337,6 +393,7 @@ function RegisterForm({ t, onSwitchToLogin, onRegister }) {
     setLoading(true);
     try {
       await onRegister({ username: username || undefined, email: email || undefined, password });
+      onSuccess?.();
     } catch (err) {
       if (err.status === 403) {
         setBlockedMessage(translateAuthError(t, err, 'register', username || email));
@@ -459,11 +516,12 @@ function RegisterForm({ t, onSwitchToLogin, onRegister }) {
 // ─── Main AuthPage ──────────────────────────────────────────────────────────
 
 export default function AuthPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { login, register } = useAuthContext();
   const [searchParams, setSearchParams] = useSearchParams();
   useThemeSync();
   const action = searchParams.get('action') || 'signin';
+  const redirect = searchParams.get('redirect') || '';
   usePageTitle();
 
   // The 'view' state manages internal steps (identifier vs password) 
@@ -492,9 +550,11 @@ export default function AuthPage() {
     const targetAction = view === 'register' ? 'signup' : 'signin';
     
     if (currentAction !== targetAction && !(currentAction === 'sign-in' && targetAction === 'signin')) {
-      setSearchParams({ action: targetAction }, { replace: true });
+      const newParams = { action: targetAction };
+      if (redirect) newParams.redirect = redirect;
+      setSearchParams(newParams, { replace: true });
     }
-  }, [view, action, setSearchParams]);
+  }, [view, action, setSearchParams, redirect]);
 
   const handleIdentifierNext = useCallback((data) => {
     setIdentifierData(data);
@@ -510,55 +570,142 @@ export default function AuthPage() {
     setView(newView);
     setIdentifierData(null);
     // Force immediate URL update to be snappy
-    setSearchParams({ action: newView === 'register' ? 'signup' : 'signin' }, { replace: true });
-  }, [setSearchParams]);
+    const newParams = { action: newView === 'register' ? 'signup' : 'signin' };
+    if (redirect) newParams.redirect = redirect;
+    setSearchParams(newParams, { replace: true });
+  }, [setSearchParams, redirect]);
+
+  const handleAuthSuccess = useCallback(() => {
+    const redirectTo = searchParams.get('redirect');
+    if (redirectTo) {
+      // Use window.location.href (not navigate) so the target page gets a full
+      // reload and its own useEffect hooks fire cleanly — important for clone=1.
+      window.location.href = redirectTo;
+    }
+    // If no redirect, do nothing — the auth context will handle routing to home.
+  }, [searchParams]);
+
+  const features = [
+    { icon: Music2, key: 'featureSync', descKey: 'featureSyncDesc' },
+    { icon: FileText, key: 'featureExport', descKey: 'featureExportDesc' },
+    { icon: Zap, key: 'featureConnect', descKey: 'featureConnectDesc' },
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-4 font-sans">
+    <div className="min-h-screen flex relative overflow-hidden font-sans">
       <Background />
 
-      <div className="relative z-raised w-full max-w-sm mx-auto">
-        {/* Logo */}
-        <div className="flex flex-col items-center mb-10">
-          <div className="w-16 h-16 flex items-center justify-center mb-3">
-            <img 
-              src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png" 
-              alt="LRC Studio" 
-              className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(29,185,84,0.3)]"
+      {/* Language switcher — top right */}
+      <div className="fixed top-4 right-4 z-raised">
+        <LangSwitcher i18n={i18n} />
+      </div>
+
+      {/* ── Left branding panel (hidden on mobile) ─────────────────────── */}
+      <div className="hidden lg:flex flex-col w-[420px] xl:w-[460px] shrink-0 relative border-r border-zinc-800/50 px-10 py-10">
+        {/* Subtle left-side glow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/4 via-transparent to-accent-purple/3 pointer-events-none" />
+
+        {/* Logo + wordmark */}
+        <div className="relative flex items-center gap-3 mb-auto">
+          <div className="w-9 h-9 shrink-0">
+            <img
+              src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png"
+              alt="LRC Studio"
+              className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(29,185,84,0.35)]"
             />
           </div>
-          <p className="text-base font-bold text-zinc-100 tracking-tight font-heading">{t('app.name')}</p>
+          <span className="text-sm font-bold text-zinc-100 tracking-tight font-heading">{t('app.name')}</span>
         </div>
 
-        {/* Card */}
-        <div className="bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/40 rounded-3xl shadow-2xl shadow-black/60 p-8">
-          {view === 'login-identifier' && (
-            <LoginIdentifierStep
-              t={t}
-              onNext={handleIdentifierNext}
-              onSwitchToRegister={() => switchView('register')}
-            />
-          )}
+        {/* Hero content */}
+        <div className="relative flex-1 flex flex-col justify-center py-10">
+          <h2 className="text-3xl xl:text-4xl font-bold text-zinc-100 leading-snug tracking-tight font-heading mb-8">
+            {t('auth.tagline', 'Sync lyrics to music, your way')}
+          </h2>
 
-          {view === 'login-password' && identifierData && (
-            <LoginPasswordStep
-              t={t}
-              identifierData={identifierData}
-              onBack={handleBack}
-              onLogin={login}
-            />
-          )}
-
-          {view === 'register' && (
-            <RegisterForm
-              t={t}
-              onSwitchToLogin={() => switchView('login-identifier')}
-              onRegister={register}
-            />
-          )}
+          <ul className="flex flex-col gap-5">
+            {features.map(({ icon: Icon, key, descKey }) => (
+              <li key={key} className="flex items-start gap-3.5">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <Icon className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-zinc-200">{t(`auth.${key}`)}</p>
+                  <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{t(`auth.${descKey}`)}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <TipFooter t={t} seed={tipSeed} />
+        {/* Footer */}
+        <p className="relative text-[10px] text-zinc-700 mt-auto">
+          &copy; {new Date().getFullYear()} LRC Studio
+        </p>
+      </div>
+
+      {/* ── Right form panel ────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 py-10 relative">
+
+        {/* Mobile-only logo */}
+        <div className="flex flex-col items-center mb-8 lg:hidden">
+          <div className="w-12 h-12 mb-2">
+            <img
+              src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png"
+              alt="LRC Studio"
+              className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(29,185,84,0.3)]"
+            />
+          </div>
+          <p className="text-sm font-bold text-zinc-100 font-heading">{t('app.name')}</p>
+          <p className="text-xs text-zinc-600 mt-0.5">{t('auth.tagline')}</p>
+        </div>
+
+        <div className="w-full max-w-[400px]">
+          {/* Card */}
+          <div className="bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/40 rounded-3xl shadow-2xl shadow-black/60 p-7 sm:p-8">
+            {view === 'login-identifier' && (
+              <LoginIdentifierStep
+                t={t}
+                onNext={handleIdentifierNext}
+                onSwitchToRegister={() => switchView('register')}
+              />
+            )}
+
+            {view === 'login-password' && identifierData && (
+              <LoginPasswordStep
+                t={t}
+                identifierData={identifierData}
+                onBack={handleBack}
+                onLogin={login}
+                onSuccess={handleAuthSuccess}
+              />
+            )}
+
+            {view === 'register' && (
+              <RegisterForm
+                t={t}
+                onSwitchToLogin={() => switchView('login-identifier')}
+                onRegister={register}
+                onSuccess={handleAuthSuccess}
+              />
+            )}
+          </div>
+
+          <TipFooter t={t} seed={tipSeed} />
+
+          {/* reCAPTCHA Notice */}
+          <div className="mt-6 px-4 text-center animate-fade-in" style={{ animationDelay: '500ms' }}>
+            <p className="text-[10px] leading-relaxed text-zinc-600">
+              <Trans
+                i18nKey="auth.recaptchaNotice"
+                components={[
+                  <a key="0" href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="text-zinc-500 hover:text-zinc-300 underline underline-offset-2 transition-colors" />,
+                  <a key="1" href="https://policies.google.com/terms" target="_blank" rel="noreferrer" className="text-zinc-500 hover:text-zinc-300 underline underline-offset-2 transition-colors" />
+                ]}
+              />
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
