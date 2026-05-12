@@ -114,6 +114,7 @@ function DeviceRow({ device, onTransfer, isActive }) {
 }
 
 function PlaylistRow({ playlist, onClick }) {
+  const { t } = useTranslation();
   return (
     <button
       onClick={() => onClick(playlist)}
@@ -128,7 +129,7 @@ function PlaylistRow({ playlist, onClick }) {
       )}
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-zinc-200 truncate">{playlist.name}</p>
-        <p className="text-[10px] text-zinc-500 truncate">{playlist.owner} · {playlist.trackCount} tracks</p>
+        <p className="text-[10px] text-zinc-500 truncate">{playlist.owner} · {playlist.trackCount} {t('spotify.tracks')}</p>
       </div>
       <ChevronRight className="w-4 h-4 text-zinc-600 shrink-0" />
     </button>
