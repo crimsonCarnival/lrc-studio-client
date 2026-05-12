@@ -162,7 +162,7 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
     }
   };
 
-  const prepareExportLines = (inputLines) => {
+  const prepareExportLines = useCallback((inputLines) => {
     let result = inputLines;
     if (settings.export?.stripEmptyLines) {
       result = result.filter(l => l.text.trim() !== '');
@@ -176,9 +176,9 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
       });
     }
     return result;
-  };
+  }, [settings.export?.stripEmptyLines, settings.export?.normalizeTimestamps]);
 
-  const applyIncludeFlags = (inputLines) => {
+  const applyIncludeFlags = useCallback((inputLines) => {
     return inputLines.map(l => {
       const newLine = { ...l };
       if (!includeWordTimestamps && newLine.words) {
@@ -189,7 +189,7 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
       }
       return newLine;
     });
-  };
+  }, [includeWordTimestamps]);
 
   const handleExport = useCallback(async () => {
     const name = (exportFilename || 'lyrics').trim();
@@ -235,7 +235,8 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
     }
   }, [
     exportFilename, lines, settings, duration, includeTranslations,
-    includeSecondary, includeMetadata, metadata, t, setShowExportPanel
+    includeSecondary, includeMetadata, metadata, t, setShowExportPanel,
+    applyIncludeFlags, prepareExportLines
   ]);
 
   const handleCopy = useCallback(async () => {
@@ -280,7 +281,8 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
     }
   }, [
     lines, settings, duration, includeTranslations,
-    includeSecondary, includeMetadata, metadata, t
+    includeSecondary, includeMetadata, metadata, t,
+    applyIncludeFlags, prepareExportLines
   ]);
 
   return {
