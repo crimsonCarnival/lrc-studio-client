@@ -231,6 +231,29 @@
 
 ## はじめに
 
+### Dockerの使用（推奨される簡単なセットアップ）
+
+> [!IMPORTANT]
+> コマンドを実行する前に、**Docker Desktopが起動していることを確認してください**。Windowsを使用している場合は、Dockerエンジンが完全に初期化されていることを確認してください。
+
+DockerとDocker Composeがインストールされている場合は、次の1つのコマンドでスタック全体を起動できます：
+
+```bash
+docker-compose up -d --build
+```
+
+これにより、以下のことが行われます：
+1. クライアントのビルド（Nginx + 静的ファイル）
+2. サーバーのビルド（Node.js）
+3. MongoDBインスタンスの起動
+4. すべてを相互に接続
+
+アプリケーションは [http://localhost](http://localhost) で利用可能になります。
+
+---
+
+### 手動インストール
+
 ### 前提条件
 
 - Node.js v18 以上
@@ -245,26 +268,47 @@
    cd lrc-studio
    ```
 
-2. 依存関係をインストールします:
+2. クライアントとサーバーの両方の依存関係をインストールします:
 
    ```bash
+   # クライアントの依存関係をインストール
+   cd client
+   npm install
+
+   # 別のターミナルで、サーバーの依存関係をインストール
+   cd ../server
    npm install
    ```
 
 3. 環境変数を設定します:
 
+   **クライアント (`client/.env`):**
    ```bash
    cp .env.example .env
-   # .env を編集して VITE_API_URL をバックエンドサーバーに設定します
+   # ローカル開発用に VITE_API_URL が http://localhost:3000 に設定されていることを確認してください
+   ```
+
+   **サーバー (`server/.env`):**
+   ```bash
+   cp .env.example .env
+   # MONGODB_URI およびその他の必要なキーを設定してください
    ```
 
 4. 開発サーバーを起動します:
 
+   **サーバー:**
    ```bash
+   cd server
    npm run dev
    ```
 
-5. ブラウザで [http://localhost:5173](http://localhost:5173) を開きます。
+   **クライアント:**
+   ```bash
+   cd client
+   npm run dev
+   ```
+
+5. ブラウザで [http://127.0.0.1:5173](http://127.0.0.1:5173) を開きます。
 
 ### 利用可能なスクリプト
 
