@@ -53,14 +53,14 @@ const VolumeControl = React.memo(function VolumeControl() {
         <button
           onClick={() => updateSetting('playback.volume', Math.max(0, settings.playback.volume - 0.1))}
           className="w-8 h-8 rounded-full bg-zinc-800/60 flex items-center justify-center text-zinc-500 active:bg-zinc-700 active:text-zinc-200"
-          aria-label="Decrease volume"
+          aria-label={t('player.decreaseVolume')}
         >
           <Minus className="w-4 h-4" />
         </button>
         <button
           onClick={() => updateSetting('playback.volume', Math.min(1, settings.playback.volume + 0.1))}
           className="w-8 h-8 rounded-full bg-zinc-800/60 flex items-center justify-center text-zinc-500 active:bg-zinc-700 active:text-zinc-200"
-          aria-label="Increase volume"
+          aria-label={t('player.increaseVolume')}
         >
           <Plus className="w-4 h-4" />
         </button>
