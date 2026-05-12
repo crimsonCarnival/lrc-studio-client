@@ -1,5 +1,5 @@
-import { getAccessToken } from './api.client.js';
 import { getDeviceId } from '../utils/device.js';
+import { authEvents } from '../utils/authEvents.js';
 
 // Use the same base as the REST client — relative paths work fine with fetch + Vite proxy.
 const GQL_ENDPOINT = (import.meta.env.VITE_API_URL || '/api') + '/graphql';
@@ -12,20 +12,15 @@ const GQL_ENDPOINT = (import.meta.env.VITE_API_URL || '/api') + '/graphql';
  * @returns {Promise<any>} The `data` field from the GraphQL response.
  */
 export async function gqlRequest(query, variables = {}) {
-  const token = getAccessToken();
   const deviceId = await getDeviceId();
-
   const headers = {
     'Content-Type': 'application/json',
     'X-Device-Id': deviceId,
   };
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
   const res = await fetch(GQL_ENDPOINT, {
     method: 'POST',
+    credentials: 'include', // Automatically send HttpOnly cookies
     headers,
     body: JSON.stringify({ query, variables }),
   });
@@ -37,6 +32,13 @@ export async function gqlRequest(query, variables = {}) {
     const err = new Error(json.errors?.[0]?.message || `GraphQL request failed: ${res.status}`);
     err.status = res.status;
     err.graphqlErrors = json.errors;
+
+    // 401 means the access token was expired and the server detected it.
+    // Signal the auth layer so it can refresh or log the user out.
+    if (res.status === 401) {
+      authEvents.emit('token:expired');
+    }
+
     throw err;
   }
 
@@ -49,3 +51,4 @@ export async function gqlRequest(query, variables = {}) {
 
   return json.data;
 }
+
