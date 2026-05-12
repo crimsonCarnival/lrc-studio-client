@@ -261,7 +261,7 @@ const Player = forwardRef(function Player(
         setCdnLoading(false);
       }
     }
-  }, [local, onCloudinaryUpload, yt]);
+  }, [local, onCloudinaryUpload, yt, t]);
 
   const handleUrlLoad = useCallback(() => {
     const trimmed = yt.ytUrl.trim().split(/\s+/)[0];
@@ -296,7 +296,7 @@ const Player = forwardRef(function Player(
     } finally {
       setSyncingNowPlaying(false);
     }
-  }, [sp, t]);
+  }, [sp, t, onSpotifyTrackIdChange]);
 
   const hasMedia = (source === 'local' && local.localUrl) || (source === 'youtube' && yt.ytReady) || (source === 'spotify' && sp.ready);
 
@@ -318,6 +318,7 @@ const Player = forwardRef(function Player(
         })
         .catch(() => { });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [local, yt, sp, onTitleChange]);
 
   // ——— Unified controls ———
