@@ -10,9 +10,10 @@ import EditorSyncControls from './EditorSyncControls';
 import ActionDrawer, { DrawerItem } from '@/shared/ActionDrawer';
 import { Play, X, Pencil, Trash2 } from 'lucide-react';
 import { formatTime } from '@/utils/formatTime';
-import { hasCJK } from '@/utils/furigana';
+import { hasKanji } from '@/utils/furigana';
 
 export default function Editor({
+  user,
   lines,
   setLines,
   syncMode,
@@ -29,6 +30,7 @@ export default function Editor({
   setEditorMode,
   onImport,
   handleManualSave,
+  handleGuestSave,
   handleRemoveAllLyrics,
   isAutosaving,
   isSaving,
@@ -151,6 +153,7 @@ export default function Editor({
       className={`lg:glass lg:rounded-2xl rounded-none p-3 sm:p-5 flex ${compact ? 'flex-row gap-2' : 'flex-col'} flex-1 animate-fade-in min-h-0`}
     >
       <EditorToolbar
+        user={user}
         editorMode={editorMode}
         setEditorMode={setEditorMode}
         updateSetting={updateSetting}
@@ -172,6 +175,7 @@ export default function Editor({
         setRawText={setRawText}
         setSyncMode={setSyncMode}
         handleManualSave={handleManualSave}
+        handleGuestSave={handleGuestSave}
         handleRemoveAllLyrics={handleRemoveAllLyrics}
         isAutosaving={isAutosaving}
         isSaving={isSaving}
@@ -179,6 +183,9 @@ export default function Editor({
         overlappingLines={overlappingLines}
         onNewProject={onNewProject}
         onShowKeyboardHelp={onShowKeyboardHelp}
+        activeLineIndex={activeLineIndex}
+        activeWordIndex={activeWordIndex}
+        stampTarget={stampTarget}
       />
 
       {/* Visual separator between toolbar and lyrics list */}
@@ -303,7 +310,7 @@ export default function Editor({
               />
             )}
 
-            {hasCJK(activeWordMenuData.word?.word || '') && (
+            {hasKanji(activeWordMenuData.word?.word || '') && (
               <DrawerItem
                 icon={Pencil}
                 label={activeWordMenuData.word?.reading ? t('editor.editReading') : t('editor.addReading')}
