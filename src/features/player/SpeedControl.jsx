@@ -45,7 +45,7 @@ const SpeedControl = React.memo(function SpeedControl({
         onClick={stepDown}
         disabled={playbackSpeed <= MIN_SPEED}
         className="w-8 h-8 lg:w-6 lg:h-6 flex items-center justify-center rounded-full lg:rounded bg-zinc-800/60 lg:bg-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        aria-label="Decrease speed"
+        aria-label={t('player.decreaseSpeed')}
       >
         <Minus className="w-4 h-4 lg:w-3 lg:h-3" />
       </button>
@@ -83,7 +83,7 @@ const SpeedControl = React.memo(function SpeedControl({
                     : ''
                 }`}
               >
-                {speed}x {speed === 1 && <span className="text-zinc-500 font-sans ml-1">(normal)</span>}
+                {speed}x {speed === 1 && <span className="text-zinc-500 font-sans ml-1">{t('player.speedNormal')}</span>}
               </PopoverItem>
             ))}
           </div>
@@ -100,7 +100,7 @@ const SpeedControl = React.memo(function SpeedControl({
                 value={customSpeedInput}
                 onChange={(e) => setCustomSpeedInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleCustomSpeedSubmit()}
-                placeholder="e.g. 1.3"
+                placeholder={t('player.speedPlaceholder')}
                 className="flex-1 w-0 h-9 lg:h-8"
               />
               <Button
@@ -109,7 +109,7 @@ const SpeedControl = React.memo(function SpeedControl({
                 disabled={!isCustomValid}
                 className="px-3 bg-primary hover:bg-primary-dim disabled:bg-zinc-900 disabled:text-zinc-700 text-zinc-950 font-bold"
               >
-                OK
+                {t('common.apply')}
               </Button>
             </div>
           </div>
@@ -121,7 +121,7 @@ const SpeedControl = React.memo(function SpeedControl({
         onClick={stepUp}
         disabled={playbackSpeed >= MAX_SPEED}
         className="w-8 h-8 lg:w-6 lg:h-6 flex items-center justify-center rounded-full lg:rounded bg-zinc-800/60 lg:bg-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        aria-label="Increase speed"
+        aria-label={t('player.increaseSpeed')}
       >
         <Plus className="w-4 h-4 lg:w-3 lg:h-3" />
       </button>
