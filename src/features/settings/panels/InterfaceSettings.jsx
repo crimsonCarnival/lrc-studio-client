@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Section, SettingRow, Toggle } from '../shared';
 import { useInterfaceSettings } from '../hooks/useInterfaceSettings';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { Monitor, Moon, Sparkles, Globe, ScrollText, AlignCenter, AlignLeft, Type, Rows2, LayoutList, ChevronDown, Columns, BookOpen, Lock } from 'lucide-react';
+import { Monitor, Moon, Sparkles, Globe, ScrollText, AlignCenter, AlignLeft, Type, Rows2, LayoutList, ChevronDown, Columns, BookOpen, Lock, Bell } from 'lucide-react';
 
 export default function InterfaceSettings({ settings, updateSetting, searchTerm }) {
   const { t } = useTranslation();
@@ -16,6 +16,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
     handleFontSizeChange,
     handleSpacingChange,
     handleTranslationLayoutChange,
+    handleToastPositionChange,
   } = useInterfaceSettings(updateSetting);
 
   return (
@@ -224,6 +225,21 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
           checked={settings.interface?.lockLayout ?? false}
           onChange={(v) => updateSetting('interface.lockLayout', v)}
         />
+      </SettingRow>
+      <SettingRow icon={Bell} label={t('settings.interface.toastPosition') || 'Toast Position'} description={t('settings.interface.toastPositionDesc') || 'Controls where notifications appear on the screen'}>
+        <Select
+          value={settings.interface?.toastPosition ?? 'bottom-right'}
+          onValueChange={(val) => handleToastPositionChange({ target: { value: val } })}
+        >
+          <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-900 border-zinc-700">
+            <SelectItem value="bottom-left">{t('settings.options.positions.bottomLeft') || 'Bottom Left'}</SelectItem>
+            <SelectItem value="bottom-center">{t('settings.options.positions.bottomCenter') || 'Bottom Center'}</SelectItem>
+            <SelectItem value="bottom-right">{t('settings.options.positions.bottomRight') || 'Bottom Right'}</SelectItem>
+          </SelectContent>
+        </Select>
       </SettingRow>
     </Section>
   );
