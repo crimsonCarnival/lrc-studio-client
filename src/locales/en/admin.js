@@ -75,6 +75,7 @@ export default {
     noAuditLogs: 'No administrative actions recorded yet.',
     ipAddress: 'IP Address',
     added: 'Added',
+    you: 'You',
     noReason: 'No reason',
     reviewAppeal: 'Review Appeal',
     deviceId: 'Device ID',

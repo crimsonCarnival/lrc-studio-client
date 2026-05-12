@@ -75,6 +75,7 @@ export default {
     noAuditLogs: '管理操作はまだ記録されていません。',
     ipAddress: 'IPアドレス',
     added: '追加日',
+    you: 'あなた',
     noReason: '理由なし',
     reviewAppeal: '異議申立を確認',
     deviceId: 'デバイスID',

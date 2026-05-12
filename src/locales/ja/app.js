@@ -22,5 +22,14 @@ export default {
   "unsavedChangesMessage": "保存されていない変更があります。退出前にどうしますか？",
   "discard": "破棄",
   "saveAndExit": "保存",
-  "cancel": "キャンセル"
+  "cancel": "キャンセル",
+  "backToLibrary": "ライブラリに戻る",
+  "viewUploads": "アップロードを見る",
+  "backToDashboard": "ホームに戻る",
+  "backHome": "ホームに戻る",
+  "goBack": "戻る",
+  "tab": {
+    "editor": "エディター",
+    "preview": "プレビュー"
+  }
 };

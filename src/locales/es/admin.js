@@ -75,6 +75,7 @@ export default {
     noAuditLogs: 'Aún no se han registrado acciones administrativas.',
     ipAddress: 'Dirección IP',
     added: 'Agregado',
+    you: 'Tú',
     noReason: 'Sin razón',
     reviewAppeal: 'Revisar Apelación',
     deviceId: 'ID de Dispositivo',
@@ -105,6 +106,9 @@ export default {
     submittedAt: 'Enviada el',
   },
   toast: {
+    appealSuccess: 'Apelación enviada con éxito',
+    appealError: 'Error al enviar la apelación',
+    noAppealForUnban: 'No hay apelación enviada para este usuario',
     fetchError: 'Error al obtener usuarios',
     statusError: 'Error al cambiar el estado del usuario',
     deleteSuccess: 'Usuario {{name}} eliminado',

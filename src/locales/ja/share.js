@@ -30,5 +30,19 @@ export default {
   "public": "リンクを知っている人全員",
   "includeTime": "現在の時刻から開始",
   "by": "作成者:",
-  "guest": "ゲスト"
+  "guest": "ゲスト",
+  "visibility": "公開設定",
+  "useCurrent": "現在の位置",
+  "securityCheck": "セキュリティチェック",
+  "verifying": "Google reCAPTCHAでセッションを確認中...",
+  "linkingMedia": "メディアをリンク中",
+  "preparingUpload": "音声とメディアのメタデータを処理中...",
+  "updatingProject": "プロジェクトを更新中",
+  "syncing": "最新の変更をクラウドに同期中...",
+  "generatingLink": "リンクを生成中",
+  "almostReady": "共有可能なプロジェクトURLを作成中...",
+  "generating": "リンクを生成中...",
+  "noDescription": "説明がありません",
+  "noTags": "タグなし",
+  "recaptchaNotice": "reCAPTCHA 保護。 <0>プライバシー</0> と <1>規約</1> が適用されます。"
 };

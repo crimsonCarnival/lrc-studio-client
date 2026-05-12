@@ -41,5 +41,14 @@ export default {
   "searchResults": "Resultados de Búsqueda",
   "recentProjects": "Proyectos Recientes",
   "noResults": "No se encontraron proyectos que coincidan con \"{{query}}\"",
-  "noDescription": "Sin descripción"
+  "noDescription": "Sin descripción",
+  "connectSpotify": "Conectar Spotify",
+  "connectSpotifyDesc": "Explora tus listas y biblioteca directamente",
+  "noResultsFound": "No se encontraron proyectos",
+  "proTip": "Consejo",
+  "ytSearchFailed": "La búsqueda falló. Inténtalo de nuevo.",
+  "ytNoResults": "No se encontraron resultados. Intenta con una búsqueda diferente.",
+  "ytSearchPrompt": "Busca una canción o pega una URL de YouTube arriba",
+  "viewLibrary": "Biblioteca de Proyectos",
+  "viewLibraryDesc": "Administra y organiza todos tus proyectos de sincronización guardados."
 };

@@ -8,6 +8,7 @@ export default {
   "sharedProject": "Sesión compartida desde enlace",
   "sharecopied": "¡Enlace copiado al portapapeles!",
   "shareFailed": "No se pudo copiar el enlace. Intenta guardar manualmente.",
+  "saving": "Guardando…",
   "save": "Guardar",
   "saved": "Guardado",
   "saveFailed": "Error al guardar",

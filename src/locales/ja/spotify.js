@@ -39,5 +39,8 @@ export default {
   "exportToPlaylist": "プレイリストにエクスポート",
   "exportFailed": "プレイリストの作成に失敗しました",
   "importAll": "すべてインポート",
-  "bulkImported": "{{count}}トラックをライブラリにインポートしました"
+  "bulkImported": "{{count}}トラックをライブラリにインポートしました",
+  "authRequired": "この機能を使用するにはSpotifyにログインしてください",
+  "tracks": "トラック",
+  "libraryTitle": "Spotify音楽ライブラリ"
 };

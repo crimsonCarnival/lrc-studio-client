@@ -6,6 +6,10 @@ export default {
   "manualSave": "Save Project",
   "applyChanges": "Apply Changes",
 
+  "connections": {
+    "label": "Connections"
+  },
+
   "spotify": {
     "label": "Spotify",
     "connect": "Connect Spotify",
@@ -18,7 +22,9 @@ export default {
     "premiumRequired": "Spotify Premium is required for playback integration",
     "connectSuccess": "Spotify connected successfully",
     "connectFailed": "Failed to connect Spotify",
-    "disconnected": "Spotify disconnected"
+    "disconnected": "Spotify disconnected",
+    "connectAccount": "Connect Spotify Account",
+    "connectToAccess": "Connect Spotify to access your library"
   },
 
   "playback": {
@@ -140,6 +146,7 @@ export default {
     "karaokeFillEasingDesc": "Controls the smoothness of the karaoke progress fill",
     "fillEasingLinear": "Linear (Accurate)",
     "fillEasingEaseInOut": "Ease In/Out (Smooth)",
+    "readingFormat": "Reading Format",
     "readingFormatDesc": "Select the preferred script for pronunciation aids",
     "lockLayout": "Lock Workspace Layout",
     "lockLayoutDesc": "Freeze panels and the player bar in place to prevent accidental reordering or resizing"
@@ -201,7 +208,8 @@ export default {
   "advanced": {
     "label": "Advanced",
     "autoSave": "Auto-Save",
-    "autoSaveDesc": "Periodically save your work to local storage",
+    "autoSaveDesc": "Periodically save your work automatically",
+    "autoSaveGuestNote": "Requires an account — sign up to enable cloud auto-save",
     "autoSaveInterval": "Save Interval",
     "autoSaveIntervalDesc": "How often to perform an automatic save",
     "autoSaveSeconds": "{{count}} seconds",

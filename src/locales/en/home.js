@@ -44,5 +44,11 @@ export default {
   "noDescription": "No description",
   "connectSpotify": "Connect Spotify",
   "connectSpotifyDesc": "Browse your playlists and library directly",
-  "noResultsFound": "No projects found"
+  "noResultsFound": "No projects found",
+  "proTip": "Pro Tip",
+  "ytSearchFailed": "Search failed. Please try again.",
+  "ytNoResults": "No results found. Try a different query.",
+  "ytSearchPrompt": "Search for a song or paste a YouTube URL above",
+  "viewLibrary": "Project Library",
+  "viewLibraryDesc": "Manage and organize all your saved synchronization projects."
 };

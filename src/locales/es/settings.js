@@ -6,6 +6,10 @@ export default {
   "manualSave": "Guardar Proyecto",
   "applyChanges": "Aplicar Cambios",
 
+  "connections": {
+    "label": "Conexiones"
+  },
+
   "spotify": {
     "label": "Spotify",
     "connect": "Conectar Spotify",
@@ -18,7 +22,9 @@ export default {
     "premiumRequired": "Se requiere Spotify Premium para la integración",
     "connectSuccess": "Spotify conectado correctamente",
     "connectFailed": "Error al conectar Spotify",
-    "disconnected": "Spotify desconectado"
+    "disconnected": "Spotify desconectado",
+    "connectAccount": "Conectar cuenta de Spotify",
+    "connectToAccess": "Conecta Spotify para acceder a tu biblioteca"
   },
 
   "playback": {
@@ -203,6 +209,7 @@ export default {
     "label": "Avanzado",
     "autoSave": "Auto-guardado",
     "autoSaveDesc": "Guarda tu trabajo periódicamente en el navegador",
+    "autoSaveGuestNote": "Requiere una cuenta — regístrate para activar el guardado automático en la nube",
     "autoSaveInterval": "Intervalo de guardado",
     "autoSaveIntervalDesc": "Cada cuánto tiempo realizar el guardado",
     "autoSaveSeconds": "{{count}} segundos",

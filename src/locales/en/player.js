@@ -9,6 +9,7 @@ export default {
   "dropHint": "MP3, WAV, FLAC, OGG and more",
   "or": "or",
   "pasteUrl": "Paste YouTube URL...",
+  "pasteCdnUrl": "Paste YouTube, Spotify, or CDN URL...",
   "load": "Load",
   "noMedia": "Load an audio file or YouTube link\nto start syncing lyrics",
   "speed": "Speed",
@@ -28,5 +29,12 @@ export default {
   "moveToBottom": "Move to bottom",
   "mark": "Mark current position",
   "loop": "Loop",
-  "clickToDisable": "click to disable"
+  "clickToDisable": "click to disable",
+  "speedNormal": "(normal)",
+  "speedPlaceholder": "e.g. 1.3",
+  "decreaseSpeed": "Decrease speed",
+  "increaseSpeed": "Increase speed",
+  "decreaseVolume": "Decrease volume",
+  "increaseVolume": "Increase volume",
+  "saveMediaRefFailed": "Failed to save media reference"
 };

@@ -22,5 +22,14 @@ export default {
   "unsavedChangesMessage": "You have unsaved changes. What would you like to do before leaving?",
   "discard": "Discard",
   "saveAndExit": "Save",
-  "cancel": "Cancel"
+  "cancel": "Cancel",
+  "backToLibrary": "Back to Library",
+  "viewUploads": "View Uploads",
+  "backToDashboard": "Back to Home",
+  "backHome": "Return Home",
+  "goBack": "Go Back",
+  "tab": {
+    "editor": "Editor",
+    "preview": "Preview"
+  }
 };

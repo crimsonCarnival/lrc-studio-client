@@ -13,5 +13,8 @@ export default {
   "saveAndLeave": "Guardar y salir",
   "discardAndLeave": "Descartar y salir",
   "discard": "Descartar",
-  "restore": "Restaurar"
+  "restore": "Restaurar",
+  "language.en": "English",
+  "language.es": "Español",
+  "language.ja": "日本語"
 };

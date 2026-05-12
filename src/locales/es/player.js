@@ -9,6 +9,7 @@ export default {
   "dropHint": "MP3, WAV, FLAC, OGG y más",
   "or": "o",
   "pasteUrl": "Pega la URL de YouTube...",
+  "pasteCdnUrl": "Pega URL de YouTube, Spotify o CDN...",
   "load": "Cargar",
   "noMedia": "Carga un archivo de audio o enlace de YouTube\npara empezar a sincronizar letras",
   "speed": "Velocidad",
@@ -28,5 +29,12 @@ export default {
   "moveToBottom": "Mover abajo",
   "mark": "Marcar posición actual",
   "loop": "Bucle",
-  "clickToDisable": "clic para desactivar"
+  "clickToDisable": "clic para desactivar",
+  "speedNormal": "(normal)",
+  "speedPlaceholder": "ej. 1.3",
+  "decreaseSpeed": "Reducir velocidad",
+  "increaseSpeed": "Aumentar velocidad",
+  "decreaseVolume": "Bajar volumen",
+  "increaseVolume": "Subir volumen",
+  "saveMediaRefFailed": "Error al guardar referencia multimedia"
 };

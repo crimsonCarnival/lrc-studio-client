@@ -1,6 +1,7 @@
 export default {
   "title": "Subidas",
-  "count": "{{count}} archivos",
+  "count_one": "{{count}} archivo",
+  "count_other": "{{count}} archivos",
   "empty": "No hay subidas aún",
   "emptyHint": "Sube archivos de audio o enlaza URLs de YouTube para verlos aquí",
   "untitled": "Sin título",

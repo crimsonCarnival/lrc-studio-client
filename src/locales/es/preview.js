@@ -4,7 +4,7 @@ export default {
   "toggleTranslations": "Alternar traducciones",
   "secondaryLyrics": "Letra Secundaria",
   "translation": "Traducción",
-  "lyricsHeader": "",
+  "lyricsHeader": "Letra",
   "pasteInstruction": "Pega una línea por línea. Se organizarán en orden de arriba a abajo con las marcas de tiempo de las letras principales.",
   "pastePlaceholder": "Pega tu texto aquí...",
   "saveTracks": "Guardar Pistas",

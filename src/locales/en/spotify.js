@@ -39,5 +39,8 @@ export default {
   "exportToPlaylist": "Export to playlist",
   "exportFailed": "Failed to create playlist",
   "importAll": "Import all",
-  "bulkImported": "{{count}} tracks imported to library"
+  "bulkImported": "{{count}} tracks imported to library",
+  "authRequired": "Log in to Spotify to use this feature",
+  "tracks": "tracks",
+  "libraryTitle": "Spotify Music Library"
 };

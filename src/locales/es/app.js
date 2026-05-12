@@ -22,5 +22,14 @@ export default {
   "unsavedChangesMessage": "Tienes cambios sin guardar. ¿Qué deseas hacer antes de salir?",
   "discard": "Descartar",
   "saveAndExit": "Guardar",
-  "cancel": "Cancelar"
+  "cancel": "Cancelar",
+  "backToLibrary": "Volver a la Biblioteca",
+  "viewUploads": "Ver Subidas",
+  "backToDashboard": "Volver al Inicio",
+  "backHome": "Volver al Inicio",
+  "goBack": "Atrás",
+  "tab": {
+    "editor": "Editor",
+    "preview": "Vista previa"
+  }
 };

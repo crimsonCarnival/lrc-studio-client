@@ -13,5 +13,8 @@ export default {
   "saveAndLeave": "保存して退出",
   "discardAndLeave": "破棄して退出",
   "discard": "破棄",
-  "restore": "復元"
+  "restore": "復元",
+  "language.en": "English",
+  "language.es": "Español",
+  "language.ja": "日本語"
 };

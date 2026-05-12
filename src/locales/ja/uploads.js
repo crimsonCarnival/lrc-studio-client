@@ -1,6 +1,7 @@
 export default {
   "title": "アップロード",
-  "count": "{{count}}ファイル",
+  "count_one": "{{count}}ファイル",
+  "count_other": "{{count}}ファイル",
   "empty": "アップロードはまだありません",
   "emptyHint": "音声ファイルをアップロードするかYouTubeのURLをリンクするとここに表示されます",
   "untitled": "無題",

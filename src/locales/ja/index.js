@@ -19,6 +19,7 @@ import uploads from './uploads.js';
 import spotify from './spotify.js';
 import admin from './admin.js';
 import profile from './profile.js';
+import errorLocale from './error.js';
 
 export default {
   translation: {
@@ -42,6 +43,7 @@ export default {
     uploads,
     spotify,
     admin,
-    profile
+    profile,
+    error: errorLocale
   }
 };

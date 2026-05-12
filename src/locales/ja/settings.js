@@ -6,6 +6,10 @@ export default {
   "manualSave": "プロジェクトを保存",
   "applyChanges": "変更を適用",
 
+  "connections": {
+    "label": "接続"
+  },
+
   "spotify": {
     "label": "Spotify",
     "connect": "Spotifyに接続",
@@ -18,7 +22,9 @@ export default {
     "premiumRequired": "再生統合にはSpotify Premiumが必要です",
     "connectSuccess": "Spotifyに接続しました",
     "connectFailed": "Spotifyへの接続に失敗しました",
-    "disconnected": "Spotifyを切断しました"
+    "disconnected": "Spotifyを切断しました",
+    "connectAccount": "Spotifyアカウントに接続",
+    "connectToAccess": "ライブラリにアクセスするにはSpotifyに接続してください"
   },
 
   "playback": {
@@ -140,6 +146,7 @@ export default {
     "karaokeFillEasingDesc": "カラオケ進行状況の塗りつぶしの滑らかさを制御",
     "fillEasingLinear": "リニア（正確）",
     "fillEasingEaseInOut": "イーズイン/アウト（スムーズ）",
+    "readingFormat": "読み方形式",
     "readingFormatDesc": "発音補助に使用する表記体系を選択",
     "lockLayout": "ワークスペースレイアウトをロック",
     "lockLayoutDesc": "パネルとプレイヤーバーを固定し、誤った並べ替えやサイズ変更を防止"
@@ -202,6 +209,7 @@ export default {
     "label": "詳細設定",
     "autoSave": "自動保存",
     "autoSaveDesc": "定期的に作業をローカルストレージに保存",
+    "autoSaveGuestNote": "アカウントが必要です — クラウド自動保存を有効にするには登録してください",
     "autoSaveInterval": "保存間隔",
     "autoSaveIntervalDesc": "自動保存の実行頻度",
     "autoSaveSeconds": "{{count}}秒",

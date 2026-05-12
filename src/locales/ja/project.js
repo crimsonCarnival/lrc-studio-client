@@ -8,6 +8,7 @@ export default {
   "sharedProject": "リンクから共有されたプロジェクト",
   "sharecopied": "リンクをクリップボードにコピーしました！",
   "shareFailed": "リンクをコピーできませんでした。手動で保存してみてください。",
+  "saving": "保存中…",
   "save": "保存",
   "saved": "保存しました",
   "saveFailed": "保存に失敗しました",

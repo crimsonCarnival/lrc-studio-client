@@ -8,6 +8,7 @@ export default {
   "sharedProject": "Shared project from link",
   "sharecopied": "Link copied to clipboard!",
   "shareFailed": "Could not copy link. Try saving manually.",
+  "saving": "Saving…",
   "save": "Save",
   "saved": "Saved",
   "saveFailed": "Failed to save",

@@ -9,6 +9,7 @@ export default {
   "dropHint": "MP3、WAV、FLAC、OGGなど",
   "or": "または",
   "pasteUrl": "YouTubeのURLを貼り付け…",
+  "pasteCdnUrl": "YouTube、Spotify、CDNのURLを貼り付け…",
   "load": "読み込み",
   "noMedia": "音声ファイルまたはYouTubeリンクを読み込んで\n歌詞の同期を開始",
   "speed": "速度",
@@ -28,5 +29,12 @@ export default {
   "moveToBottom": "末尾に移動",
   "mark": "現在位置をマーク",
   "loop": "ループ",
-  "clickToDisable": "クリックで無効化"
+  "clickToDisable": "クリックで無効化",
+  "speedNormal": "（標準）",
+  "speedPlaceholder": "例：1.3",
+  "decreaseSpeed": "速度を下げる",
+  "increaseSpeed": "速度を上げる",
+  "decreaseVolume": "音量を下げる",
+  "increaseVolume": "音量を上げる",
+  "saveMediaRefFailed": "メディア参照の保存に失敗しました"
 };

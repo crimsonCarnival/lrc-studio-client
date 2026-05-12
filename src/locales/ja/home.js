@@ -41,5 +41,14 @@ export default {
   "searchResults": "検索結果",
   "recentProjects": "最近のプロジェクト",
   "noResults": "\"{{query}}\"に一致するプロジェクトが見つかりません",
-  "noDescription": "説明なし"
+  "noDescription": "説明なし",
+  "connectSpotify": "Spotifyに接続",
+  "connectSpotifyDesc": "プレイリストとライブラリを直接参照",
+  "noResultsFound": "プロジェクトが見つかりません",
+  "proTip": "ヒント",
+  "ytSearchFailed": "検索に失敗しました。もう一度お試しください。",
+  "ytNoResults": "結果が見つかりません。別のキーワードで検索してください。",
+  "ytSearchPrompt": "曲を検索するか、上にYouTubeのURLを貼り付けてください",
+  "viewLibrary": "プロジェクトライブラリ",
+  "viewLibraryDesc": "保存されたすべての同期プロジェクトを管理および整理します。"
 };

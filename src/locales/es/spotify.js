@@ -39,5 +39,8 @@ export default {
   "exportToPlaylist": "Exportar a playlist",
   "exportFailed": "No se pudo crear la playlist",
   "importAll": "Importar todo",
-  "bulkImported": "{{count}} pistas importadas a la biblioteca"
+  "bulkImported": "{{count}} pistas importadas a la biblioteca",
+  "authRequired": "Inicia sesión en Spotify para usar esta función",
+  "tracks": "pistas",
+  "libraryTitle": "Biblioteca de Música de Spotify"
 };
