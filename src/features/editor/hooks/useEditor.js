@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { lyrics } from '@/api';
 import { matchKey } from '@/utils/keyboard';
-import { parseRubyMarkup, hasCJK } from '@/utils/furigana';
+import { parseRubyMarkup, hasCJK, isKanji } from '@/utils/furigana';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/contexts/useSettings';
 import useConfirm from '@/hooks/useConfirm';
@@ -144,12 +144,27 @@ export function useEditor({
               newWords.push({ word: seg.text, time: anchor?.time ?? null, reading: seg.reading });
               charPos += segChars.length;
             } else if (isCJKText) {
-              // Mixed CJK+Latin: split CJK chars individually, keep Latin runs as words
+              // Mixed CJK+Latin: group contiguous Kanji, split other CJK chars, keep Latin runs
               let ci = 0;
               while (ci < segChars.length) {
                 const ch = segChars[ci];
                 if (!ch.trim()) { charPos++; ci++; continue; }
-                if (/[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch)) {
+                
+                if (isKanji(ch)) {
+                  let j = ci;
+                  while (j < segChars.length && isKanji(segChars[j])) j++;
+                  const kanjiGroup = segChars.slice(ci, j).join('');
+                  
+                  // Check if this group already has a timestamp in the old word map
+                  // (approximate by the first character's position)
+                  const old = oldWordAtPos.get(charPos);
+                  const w = { word: kanjiGroup, time: old?.time ?? null };
+                  if (old?.reading && old.word === kanjiGroup) w.reading = old.reading;
+                  newWords.push(w);
+                  
+                  charPos += [...kanjiGroup].length;
+                  ci = j;
+                } else if (/[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch)) {
                   const old = oldWordAtPos.get(charPos);
                   const w = { word: ch, time: old?.time ?? null };
                   if (old?.reading) w.reading = old.reading;
@@ -237,7 +252,12 @@ export function useEditor({
           while (ci < segChars.length) {
             const ch = segChars[ci];
             if (!ch.trim()) { ci++; continue; }
-            if (/[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch)) {
+            if (isKanji(ch)) {
+              let j = ci;
+              while (j < segChars.length && isKanji(segChars[j])) j++;
+              newWords.push({ word: segChars.slice(ci, j).join(''), time: null });
+              ci = j;
+            } else if (/[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch)) {
               newWords.push({ word: ch, time: null });
               ci++;
             } else {
@@ -658,12 +678,22 @@ export function useEditor({
             newWords.push({ word: seg.text, time: anchor?.time ?? null, reading: seg.reading });
             charPos += segChars.length;
           } else if (isCJKText) {
-            // Mixed CJK+Latin: split CJK chars individually, keep Latin runs as whole words
+            // Mixed CJK+Latin: group Kanji, split other CJK, keep Latin runs
             let ci = 0;
             while (ci < segChars.length) {
               const ch = segChars[ci];
               if (!ch.trim()) { charPos++; ci++; continue; }
-              if (/[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch)) {
+              if (isKanji(ch)) {
+                let j = ci;
+                while (j < segChars.length && isKanji(segChars[j])) j++;
+                const kanjiGroup = segChars.slice(ci, j).join('');
+                const old = oldWordAtPos.get(charPos);
+                const w = { word: kanjiGroup, time: old?.time ?? null };
+                if (old?.reading && old.word === kanjiGroup) w.reading = old.reading;
+                newWords.push(w);
+                charPos += [...kanjiGroup].length;
+                ci = j;
+              } else if (/[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch)) {
                 const old = oldWordAtPos.get(charPos);
                 const w = { word: ch, time: old?.time ?? null };
                 if (old?.reading) w.reading = old.reading;
