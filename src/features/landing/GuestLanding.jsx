@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import {
   Music2, FileText, Zap, Download, Mic2, Globe,
@@ -44,10 +45,7 @@ export default function GuestLanding() {
 
   return (
     <div ref={scrollRef} className="h-full overflow-y-auto scroll-smooth scrollbar-none">
-      {/* Wavy background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <SmoothWavyCanvas />
-      </div>
+      <SmoothWavyCanvas />
 
       {/* ── Hero ───────────────────────────────────────── */}
       <section className="relative min-h-screen flex flex-col items-center justify-center px-4 text-center">
@@ -70,7 +68,7 @@ export default function GuestLanding() {
               {t('landing.headline')}{' '}
               <span className="text-primary">{t('landing.headlineAccent')}</span>
             </h1>
-            <p className="text-zinc-400 text-base sm:text-lg max-w-xl leading-relaxed">
+            <p className="text-zinc-300 text-base sm:text-lg max-w-xl leading-relaxed">
               {t('landing.sub')}
             </p>
           </motion.div>
@@ -88,7 +86,7 @@ export default function GuestLanding() {
               variant="ghost"
               size="lg"
               onClick={() => navigate('/auth/signin')}
-              className="gap-2 px-6 h-11 text-sm font-medium text-zinc-300 hover:text-zinc-100"
+              className="gap-2 px-6 h-11 text-sm font-medium text-zinc-400 hover:text-zinc-100"
             >
               {t('landing.ctaSignIn')}
               <ArrowRight className="size-4" />
@@ -107,7 +105,7 @@ export default function GuestLanding() {
             viewport={{ root: scrollRef, once: true, margin: '-80px' }}
             variants={stagger}
           >
-            <motion.h2 variants={fadeUp} className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
+            <motion.h2 variants={fadeUp} className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
               {t('landing.featuresLabel')}
             </motion.h2>
             <motion.p variants={fadeUp} className="text-2xl sm:text-3xl font-semibold text-zinc-100 tracking-tight">
@@ -134,7 +132,7 @@ export default function GuestLanding() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <h3 className="text-sm font-semibold text-zinc-100">{t(titleKey)}</h3>
-                  <p className="text-xs text-zinc-500 leading-relaxed">{t(descKey)}</p>
+                  <p className="text-xs text-zinc-400 leading-relaxed">{t(descKey)}</p>
                 </div>
               </motion.div>
             ))}
@@ -153,7 +151,7 @@ export default function GuestLanding() {
         >
           {/* Section header */}
           <div className="flex flex-col items-center gap-2 text-center">
-            <motion.h2 variants={fadeUp} className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
+            <motion.h2 variants={fadeUp} className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
               {t('landing.howLabel')}
             </motion.h2>
             <motion.p variants={fadeUp} className="text-2xl sm:text-3xl font-semibold text-zinc-100 tracking-tight">
@@ -174,14 +172,14 @@ export default function GuestLanding() {
               >
                 <ThemedShineBorder />
                 <div className="flex items-center justify-center size-9 rounded-xl bg-zinc-800/80 border border-zinc-700/50 relative shrink-0">
-                  <Icon className="size-4 text-zinc-300" />
-                  <span className="absolute -top-1.5 -right-1.5 text-[8px] font-black text-primary bg-zinc-950 border border-primary/30 rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                  <Icon className="size-4 text-zinc-400" />
+                  <span className="absolute -top-1.5 -right-1.5 text-[8px] font-black text-primary bg-zinc-900 border border-primary/30 rounded-full w-4 h-4 flex items-center justify-center leading-none">
                     {step}
                   </span>
                 </div>
                 <div className="flex flex-col gap-0.5 text-left">
                   <h3 className="text-xs font-semibold text-zinc-100">{t(titleKey)}</h3>
-                  <p className="text-[11px] text-zinc-500 leading-relaxed">{t(descKey)}</p>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">{t(descKey)}</p>
                 </div>
               </motion.div>
             ))}
@@ -189,7 +187,7 @@ export default function GuestLanding() {
 
           {/* CTA */}
           <motion.div variants={fadeUp} className="flex flex-col items-center gap-5 text-center w-full max-w-lg pt-2">
-            <div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent" />
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-400/50 dark:via-zinc-700/50 to-transparent" />
             <h2 className="text-xl sm:text-2xl font-semibold text-zinc-100">
               {t('landing.ctaFooterTitle')}
             </h2>
@@ -211,7 +209,7 @@ export default function GuestLanding() {
                 {t('landing.ctaSignUp')}
               </Button>
             </div>
-            <p className="text-xs text-zinc-600">{t('landing.ctaFooterSub')}</p>
+            <p className="text-xs text-zinc-400">{t('landing.ctaFooterSub')}</p>
           </motion.div>
         </motion.div>
       </section>
