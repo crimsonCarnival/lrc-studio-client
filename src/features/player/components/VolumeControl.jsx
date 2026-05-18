@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSettings } from '@/contexts/useSettings';
+import { useSettings } from '@/features/settings/useSettings';
 import { Button } from '@ui/button';
 import { Volume2, VolumeX, Minus, Plus } from 'lucide-react';
 import { Tip } from '@ui/tip';

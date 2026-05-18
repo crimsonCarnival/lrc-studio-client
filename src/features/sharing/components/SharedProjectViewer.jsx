@@ -1,20 +1,20 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+﻿import { useRef, useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { SettingsProvider } from '@/contexts/SettingsContext';
+import { SettingsProvider } from '@/features/settings/SettingsContext';
 import { TooltipProvider } from '@ui/tooltip';
 import { Spinner } from '@ui/skeleton';
 import { Button } from '@ui/button';
-import { projects } from '@/api';
+import { projects } from '@/app/api';
 import Player from '@features/player/components/Player';
-import Preview from '@features/preview/Preview';
+import Preview from '@features/preview/components/Preview';
 import SharedProjectError from './SharedProjectError';
 import { LogIn, UserPlus, Music2, Copy, Check, ExternalLink } from 'lucide-react';
 import { Tip } from '@ui/tip';
-import { useAuthContext } from '@/contexts/useAuthContext';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 import { AppHeader } from '@/app/layout/AppHeader';
-import { usePageTitle } from '@/hooks/usePageTitle';
-import ClientOnlyDate from '@shared/ClientOnlyDate';
+import { usePageTitle } from '@/shared/hooks/usePageTitle';
+import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
 
 /**
  * Full-page, unauthenticated shared-project viewer.

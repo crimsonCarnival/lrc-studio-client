@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+﻿import { useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
@@ -11,9 +11,9 @@ import {
   Trash2, ListChecks,
   Repeat, EyeOff, MoreHorizontal, Plus, X, Loader2, HelpCircle, Languages, Music
 } from 'lucide-react';
-import { serializeToRubyMarkup, hasCJK } from '@/utils/furigana';
+import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
 import GeniusSearchBar from '../genius/GeniusSearchBar';
-import { savePendingProject } from '@/features/editor/services/guestProjectDb';
+import { savePendingProject } from '@/features/editor/services/guest-project-db';
 
 // Mobile-friendly dropdown for actions that overflow
 const ActionsDropdown = ({ children, icon: Icon = MoreHorizontal, label }) => {

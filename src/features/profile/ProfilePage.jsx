@@ -1,9 +1,9 @@
-import { useTranslation } from 'react-i18next';
+﻿import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { ArrowLeft, User, ShieldCheck } from 'lucide-react';
-import ProfileSettings from '@features/settings/panels/ProfileSettings';
-import { useAuthContext } from '@/contexts/useAuthContext';
+import ProfileSettings from '@features/settings/components/panels/ProfileSettings';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 
 export default function ProfilePage() {

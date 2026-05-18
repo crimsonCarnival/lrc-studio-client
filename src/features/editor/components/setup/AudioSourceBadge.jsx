@@ -1,5 +1,5 @@
-import { Video, FolderOpen, Cloud } from 'lucide-react';
-import SpotifyIcon from '@shared/SpotifyIcon';
+﻿import { Video, FolderOpen, Cloud } from 'lucide-react';
+import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import { useTranslation } from 'react-i18next';
 
 export default function AudioSourceBadge({ source }) {

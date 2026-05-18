@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { extractVideoId } from '../playerService';
+import { extractVideoId } from '../services/player.service';
 
 // Module-level WeakMap: stores raw YouTube player objects outside React's
 // tracking system so React DevTools never walks the cross-origin iframe.

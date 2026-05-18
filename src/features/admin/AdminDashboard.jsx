@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { admin } from '@/api';
-import { useAuthContext } from '@/contexts/useAuthContext';
+import { admin } from '@/app/api';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Button } from '@ui/button';
 import { ShieldAlert, RefreshCw, Users, Globe, History } from 'lucide-react';
 import toast from 'react-hot-toast';
-import ConfirmModal from '@shared/ConfirmModal';
+import ConfirmModal from '@shared/ui/ConfirmModal';
 import BanUserModal from './BanUserModal';
 import AppealDetailsModal from './AppealDetailsModal';
 import AdminStatsCards from './AdminStatsCards';

@@ -1,8 +1,8 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAuthContext } from '@/contexts/useAuthContext';
-import { auth } from '@/api';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { auth } from '@/app/api';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import toast from 'react-hot-toast';
 

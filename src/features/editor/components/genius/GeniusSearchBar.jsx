@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Input } from '@ui/input';
 import { Loader2, Search, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { genius } from '@services/genius.service';
+import { genius } from '@features/editor/services/genius.service';
 import GeniusResultCard from './GeniusResultCard';
 import GeniusLyricsModal from './GeniusLyricsModal';
 

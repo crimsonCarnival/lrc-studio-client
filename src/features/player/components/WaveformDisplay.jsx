@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
-import { formatTime } from '@/utils/formatTime';
+import { formatTime } from '@/shared/utils/format-time';
 
 /**
  * Enhanced Waveform display with:

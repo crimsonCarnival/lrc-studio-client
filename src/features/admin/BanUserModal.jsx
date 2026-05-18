@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useScrollLock } from '@/hooks/useScrollLock';
+import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import {
   Dialog,
   DialogContent,

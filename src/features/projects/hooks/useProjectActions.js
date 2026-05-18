@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
-import { projects, uploads, getAccessToken } from '@/api';
+﻿import { useCallback } from 'react';
+import { projects, uploads, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { updateServerSnapshot } from '@/features/editor/hooks/useManualSave';
-import { STORAGE_KEYS } from '@/services/storage.service';
+import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 
 function sanitizeLines(raw) {
   return (raw || []).flatMap((l) => {

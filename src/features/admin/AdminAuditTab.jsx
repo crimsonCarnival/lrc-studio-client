@@ -1,5 +1,5 @@
-import { useTranslation } from 'react-i18next';
-import ClientOnlyDate from '@shared/ClientOnlyDate';
+﻿import { useTranslation } from 'react-i18next';
+import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
 
 export default function AdminAuditTab({ auditLogs }) {
   const { t } = useTranslation();

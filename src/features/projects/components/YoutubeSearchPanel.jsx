@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+﻿import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, X, Loader2, ExternalLink } from 'lucide-react';
-import { youtube } from '@/services/youtube.service';
+import { youtube } from '@/features/player/services/youtube.service';
 import { Skeleton } from '@ui/skeleton';
 
 function YtIcon({ className }) {

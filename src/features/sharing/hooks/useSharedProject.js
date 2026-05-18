@@ -1,10 +1,10 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+﻿import { useState, useRef, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { projects, uploads, getAccessToken } from '@/api';
+import { projects, uploads, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import { useSettings } from '@/contexts/useSettings';
-import { STORAGE_KEYS } from '@/services/storage.service';
+import { useSettings } from '@/features/settings/useSettings';
+import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 
 // Legacy URL-encoded share fallbacks
 async function decompressFromBase64(str) {

@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { flushSync } from 'react-dom';
-import { ScrollProgress } from '@/components/magicui/scroll-progress';
+import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -8,14 +8,14 @@ import {
   ShieldAlert, Eye, EyeOff, User, HelpCircle, Lightbulb, ArrowLeft, Check,
   Sun, Moon, Monitor, Palette, Globe, ExternalLink
 } from 'lucide-react';
-import { useSetupContext } from '@/contexts/SetupContext';
+import { useSetupContext } from '@/features/editor/SetupContext';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
-import { Kbd } from '@shared/Kbd';
-import { projects, uploads } from '@/api';
-import { savePendingProject } from '@/features/editor/services/guestProjectDb';
+import { Kbd } from '@ui/kbd';
+import { projects, uploads } from '@/app/api';
+import { savePendingProject } from '@/features/editor/services/guest-project-db';
 
 const THEMES = [
   { id: 'system',  label: 'System', Icon: Monitor, swatch: 'bg-zinc-500' },
@@ -386,26 +386,28 @@ export function AppHeader({
           {/* Auth section */}
           {!user ? (
             <div className="flex items-center gap-1 flex-shrink-0">
-              <button
-                onClick={async () => {
-                  if ((lines?.length ?? 0) > 0) {
-                    try {
-                      await saveToIdb();
-                      navigate(`/auth?action=signin&redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
-                    } catch {
-                      import('react-hot-toast').then(({ default: toast }) => {
-                        toast.error("Couldn't save draft locally — try a different browser or disable private mode.");
-                      });
+              <div className="relative hidden sm:flex items-center flex-shrink-0">
+                <button
+                  onClick={async () => {
+                    if ((lines?.length ?? 0) > 0) {
+                      try {
+                        await saveToIdb();
+                        navigate(`/auth?action=signin&redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
+                      } catch {
+                        import('react-hot-toast').then(({ default: toast }) => {
+                          toast.error("Couldn't save draft locally — try a different browser or disable private mode.");
+                        });
+                      }
+                    } else {
+                      navigate('/auth?action=signin');
                     }
-                  } else {
-                    navigate('/auth?action=signin');
-                  }
-                }}
-                className="hidden sm:flex h-8 px-3 text-xs font-semibold text-zinc-300 hover:text-zinc-100 bg-zinc-800/70 hover:bg-zinc-700/80 border border-zinc-800/50 rounded-xl transition-colors flex-shrink-0"
-              >
-                {t('auth.signIn', 'Sign in')}
-              </button>
-              <div className="relative flex-shrink-0">
+                  }}
+                  className="h-8 px-3 text-xs font-semibold text-zinc-300 hover:text-zinc-100 bg-zinc-800/70 hover:bg-zinc-700/80 border border-zinc-800/50 rounded-xl transition-colors"
+                >
+                  {t('auth.signIn', 'Sign in')}
+                </button>
+              </div>
+              <div className="relative flex items-center flex-shrink-0">
                 <button
                   onClick={async () => {
                     if ((lines?.length ?? 0) > 0) {

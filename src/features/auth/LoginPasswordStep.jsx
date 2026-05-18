@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
-import { translateAuthError } from '@/utils/authErrors';
+import { translateAuthError } from '@/shared/utils/auth-errors';
 import { FieldError, AvatarBadge, GoogleButton } from './auth-shared';
 
 // ─── Login Step 2 — Password ───────────────────────────────────────────────

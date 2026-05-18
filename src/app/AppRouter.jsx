@@ -1,16 +1,16 @@
-import {
+﻿import {
   Suspense, lazy, useEffect, useState, useRef, useCallback, useMemo, Fragment, memo
 } from 'react';
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { SkeletonList, SkeletonEditor, SkeletonPreview, SkeletonSetup } from '@ui/skeleton';
 import { Loader2, GripVertical } from 'lucide-react';
 import { Reorder } from 'framer-motion';
-import { usePageTitle } from '@/hooks/usePageTitle';
-import { useAuthContext } from '@/contexts/useAuthContext';
-import { STORAGE_KEYS, storage } from '@/services/storage.service';
+import { usePageTitle } from '@/shared/hooks/usePageTitle';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
 
 const EditorLazy = lazy(() => import('@features/editor/components/core/Editor'));
-const PreviewLazy = lazy(() => import('@features/preview/Preview'));
+const PreviewLazy = lazy(() => import('@features/preview/components/Preview'));
 
 // Memo wrappers prevent Editor/Preview from re-rendering when AppRouter
 // re-renders due to hover/drag/resize layout state changes — which are
@@ -25,7 +25,7 @@ const Home = lazy(() => import('@features/projects/components/Home'));
 const GuestLanding = lazy(() => import('@features/landing/GuestLanding'));
 const AdminDashboard = lazy(() => import('@features/admin/AdminDashboard'));
 const ProfilePage = lazy(() => import('@features/profile/ProfilePage'));
-const NotFoundPage = lazy(() => import('@shared/NotFoundPage'));
+const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 
 function EditorContainer({ loadProject, activeProjectId, children }) {
   const { id } = useParams();
@@ -58,7 +58,7 @@ function ForkHandler({ appState, navigate }) {
     }
 
     ran.current = true;
-    import('@/api').then(({ projects }) => {
+    import('@/app/api').then(({ projects }) => {
       projects.clone(id)
         .then((res) => {
           loadProject(res.projectId);

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import NumberInput from '@shared/NumberInput';
+import NumberInput from '@shared/ui/NumberInput';
 import { Button } from '@ui/button';
 import {
   Popover,

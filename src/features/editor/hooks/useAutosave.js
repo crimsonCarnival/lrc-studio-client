@@ -1,8 +1,8 @@
-import { useRef, useCallback, useEffect } from 'react';
-import { uploads, projects, getAccessToken } from '@/api';
+﻿import { useRef, useCallback, useEffect } from 'react';
+import { uploads, projects, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import { authEvents } from '@/utils/authEvents.js';
-import { STORAGE_KEYS } from '@/services/storage.service';
+import { authEvents } from '@/shared/utils/auth-events';
+import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 
 /**
  * Dual-condition autosave: fires when either the time interval elapses

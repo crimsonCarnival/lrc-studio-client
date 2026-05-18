@@ -1,11 +1,11 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+﻿import { useState, useRef, useCallback, useEffect } from 'react';
 const DateTimeFormat = Intl.DateTimeFormat;
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { projects, uploads, getAccessToken, auth } from '@/api';
+import { projects, uploads, getAccessToken, auth } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import { authEvents } from '@/utils/authEvents.js';
-import { STORAGE_KEYS } from '@/services/storage.service';
+import { authEvents } from '@/shared/utils/auth-events';
+import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 
 const _defaultTzFormatter = new Intl.DateTimeFormat();
 const _tzFormatters = new Map();

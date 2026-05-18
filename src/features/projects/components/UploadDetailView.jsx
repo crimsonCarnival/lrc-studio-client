@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import useDynamicTranslation from '@/hooks/useDynamicTranslation';
+import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { ChevronLeft, Calendar, FileAudio, Video, Music2, Clock } from 'lucide-react';
-import { uploads } from '@/api';
+import { uploads } from '@/app/api';
 import { Button } from '@ui/button';
-import NotFoundPage from '@/shared/NotFoundPage';
-import ClientOnlyDate from '@shared/ClientOnlyDate';
+import NotFoundPage from '@/app/NotFoundPage';
+import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 
 export default function UploadDetailView({ onBack }) {

@@ -1,4 +1,4 @@
-import { formatTimestamp } from '@/utils/lrc';
+﻿import { formatTimestamp } from '@/shared/utils/lrc';
 import { InlineTimestampEdit } from '../line/InlineTimestampEdit';
 import { TimestampBadge } from '../line/TimestampBadge';
 

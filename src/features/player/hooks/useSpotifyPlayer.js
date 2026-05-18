@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { spotify as spotifyApi } from '@/api';
+﻿import { useState, useRef, useCallback, useEffect } from 'react';
+import { spotify as spotifyApi } from '@/app/api';
 
 const SDK_URL = 'https://sdk.scdn.co/spotify-player.js';
 const POLL_INTERVAL = 200; // ms

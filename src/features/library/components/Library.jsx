@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { projects } from '@/api';
+import { projects } from '@/app/api';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { Music, Video, Upload, FileText, Trash2, ExternalLink, Clock, ArrowLeft, Loader2, Pencil } from 'lucide-react';
 import { SkeletonCard } from '@ui/skeleton';
 import ProjectSetupModal from '@features/editor/components/setup/ProjectSetupModal';
-import useConfirm from '@/hooks/useConfirm';
-import { useSettings } from '@/contexts/useSettings';
-import { formatInTimezone, getRelativeTime } from '@/utils/date';
+import useConfirm from '@/shared/hooks/useConfirm';
+import { useSettings } from '@/features/settings/useSettings';
+import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
 
 
 function SourceIcon({ source }) {

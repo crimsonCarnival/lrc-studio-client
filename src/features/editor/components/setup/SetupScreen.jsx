@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+﻿import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@ui/button';
@@ -14,13 +14,13 @@ import {
   FolderOpen, Music2, FileText, Upload, Check, ArrowRight, Trash2,
   Video, Cloud, Link2, Loader2, Lock, Globe, Sparkles, X, LockKeyhole, Lightbulb, Search
 } from 'lucide-react';
-import { useSetupContext } from '@/contexts/SetupContext';
-import { lyrics as lyricsApi, uploads as uploadsApi, spotify as spotifyApi, getAccessToken } from '@/api';
-import { genius as geniusApi } from '@services/genius.service';
+import { useSetupContext } from '@/features/editor/SetupContext';
+import { lyrics as lyricsApi, uploads as uploadsApi, spotify as spotifyApi, getAccessToken } from '@/app/api';
+import { genius as geniusApi } from '@features/editor/services/genius.service';
 import { SkeletonMediaItem } from '@ui/skeleton';
 import SpotifyBrowser from '@features/player/components/SpotifyBrowser';
-import SpotifyIcon from '@shared/SpotifyIcon';
-import { useAuthContext } from '@/contexts/useAuthContext';
+import SpotifyIcon from '@features/player/components/SpotifyIcon';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 import YoutubeSearchPanel from '@features/projects/components/YoutubeSearchPanel';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 import toast from 'react-hot-toast';

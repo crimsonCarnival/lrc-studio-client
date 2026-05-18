@@ -1,9 +1,9 @@
-import { useTranslation } from 'react-i18next';
-import { Kbd } from "@shared/Kbd";
+﻿import { useTranslation } from 'react-i18next';
+import { Kbd } from "@ui/kbd";
 import { Button } from '@ui/button';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { Tip } from '@ui/tip';
-import { KEY_SYMBOLS } from '../../../settings/keySymbols';
+import { KEY_SYMBOLS } from '@features/settings/key-symbols';
 
 export default function EditorSyncControls({
   settings,

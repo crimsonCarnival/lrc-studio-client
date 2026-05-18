@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useAuthContext } from '@/contexts/useAuthContext';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import { getPendingProject, clearPendingProject } from '@/features/editor/services/guestProjectDb';
-import { request } from '@/services/api.client';
+import { getPendingProject, clearPendingProject } from '@/features/editor/services/guest-project-db';
+import { request } from '@/app/api.client';
 
 const BACKOFF_INTERVALS_MS = [2000, 4000, 8000, 16000, 32000];
 const STEADY_INTERVAL_MS = 30000;

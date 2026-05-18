@@ -1,10 +1,10 @@
-import { useState, useCallback, useMemo, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
+﻿import { useState, useCallback, useMemo, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import useDynamicTranslation from '@/hooks/useDynamicTranslation';
-import { useSettings } from '@/contexts/useSettings';
+import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
+import { useSettings } from '@/features/settings/useSettings';
 import { useSpotifyAuth } from '../hooks/useSpotifyAuth';
 
-import { formatTime } from '@/utils/formatTime';
+import { formatTime } from '@/shared/utils/format-time';
 import useLocalAudio from '../hooks/useLocalAudio';
 import useYouTubePlayer from '../hooks/useYouTubePlayer';
 import useSpotifyPlayer from '../hooks/useSpotifyPlayer';
@@ -18,8 +18,8 @@ import { Input } from '@ui/input';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/popover';
 import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, Video, ChevronDown, Link2, PanelTop, PanelBottom, Bookmark, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Tip } from '@ui/tip';
-import { uploads as uploadsApi, spotify as spotifyApi, getAccessToken } from '@/api';
-import SpotifyIcon from '@shared/SpotifyIcon';
+import { uploads as uploadsApi, spotify as spotifyApi, getAccessToken } from '@/app/api';
+import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import toast from 'react-hot-toast';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 

@@ -1,10 +1,10 @@
-import { Suspense, lazy } from 'react';
+﻿import { Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { useTranslation } from 'react-i18next';
 
-const Settings = lazy(() => import('@features/settings/SettingsModal'));
-const KeyboardHelp = lazy(() => import('@shared/KeyboardHelp'));
+const Settings = lazy(() => import('@features/settings/components/SettingsModal'));
+const KeyboardHelp = lazy(() => import('@features/settings/components/KeyboardHelp'));
 import ProjectSetupModal from '@features/editor/components/setup/ProjectSetupModal';
 
 /**

@@ -1,6 +1,6 @@
-import { useTranslation } from 'react-i18next';
-import { hasCJK } from '@/utils/furigana';
-import { formatTime } from '@/utils/formatTime';
+﻿import { useTranslation } from 'react-i18next';
+import { hasCJK } from '@/shared/utils/furigana';
+import { formatTime } from '@/shared/utils/format-time';
 import { Tip } from '@ui/tip';
 import { InlineTimestampEdit } from '../line/InlineTimestampEdit';
 import { TimestampBadge } from '../line/TimestampBadge';

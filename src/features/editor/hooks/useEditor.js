@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+﻿import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { lyrics } from '@/api';
-import { matchKey } from '@/utils/keyboard';
-import { parseRubyMarkup, hasCJK, isKanji } from '@/utils/furigana';
+import { lyrics } from '@/app/api';
+import { matchKey } from '@/shared/utils/keyboard';
+import { parseRubyMarkup, hasCJK, isKanji } from '@/shared/utils/furigana';
 import { useTranslation } from 'react-i18next';
-import { useSettings } from '@/contexts/useSettings';
-import useConfirm from '@/hooks/useConfirm';
+import { useSettings } from '@/features/settings/useSettings';
+import useConfirm from '@/shared/hooks/useConfirm';
 import {
   applyBulkShift,
   applyGlobalOffset,
@@ -13,7 +13,7 @@ import {
   clearLineTimestamp,
   applyMark,
   detectDuplicateTimestamps,
-} from './editorService';
+} from '../services/editor.service';
 import { useFileImport } from './useFileImport';
 import { useDragReorder } from './useDragReorder';
 

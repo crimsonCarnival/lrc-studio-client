@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useAuthContext } from '@/contexts/useAuthContext';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 import PasswordStrength from './components/PasswordStrength.jsx';
-import { authService } from '@/services/auth.service';
+import { authService } from '@/features/auth/services/auth.service';
 import toast from 'react-hot-toast';
 
 export default function ResetPasswordPage() {

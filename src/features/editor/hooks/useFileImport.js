@@ -1,6 +1,6 @@
-import { useRef } from 'react';
+﻿import { useRef } from 'react';
 import toast from 'react-hot-toast';
-import { lyrics } from '@/api';
+import { lyrics } from '@/app/api';
 import { useTranslation } from 'react-i18next';
 
 export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, setSyncMode, onImport }) {

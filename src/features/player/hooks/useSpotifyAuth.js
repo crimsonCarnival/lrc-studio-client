@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { spotify as spotifyApi } from '@/api';
+﻿import { useCallback } from 'react';
+import { spotify as spotifyApi } from '@/app/api';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 

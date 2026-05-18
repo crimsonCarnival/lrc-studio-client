@@ -1,8 +1,8 @@
-import { useTranslation } from 'react-i18next';
+﻿import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { SkeletonPlayer } from '@ui/skeleton';
 import Player from '@features/player/components/Player';
-import { useSettings } from '@/contexts/useSettings';
+import { useSettings } from '@/features/settings/useSettings';
 
 /**
  * Docked player bar — desktop bottom, mobile above tab bar.

@@ -1,5 +1,5 @@
-import { useMemo, useCallback, useRef } from 'react';
-import { formatTime } from '@/utils/formatTime';
+﻿import { useMemo, useCallback, useRef } from 'react';
+import { formatTime } from '@/shared/utils/format-time';
 
 /**
  * Fallback playback position indicator for sources that don't have a waveform (YouTube, Spotify).

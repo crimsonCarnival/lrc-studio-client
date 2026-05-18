@@ -1,5 +1,5 @@
-import { Video, Cloud, Trash2 } from 'lucide-react';
-import SpotifyIcon from '@shared/SpotifyIcon';
+﻿import { Video, Cloud, Trash2 } from 'lucide-react';
+import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import { SkeletonMediaItem } from '@ui/skeleton';
 import { useTranslation } from 'react-i18next';
 

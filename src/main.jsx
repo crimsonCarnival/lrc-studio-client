@@ -1,4 +1,4 @@
-import { StrictMode, lazy, Suspense } from 'react'
+﻿import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 
@@ -9,11 +9,11 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from '
 import { Toaster } from 'react-hot-toast'
 import { TooltipProvider } from '@ui/tooltip'
 import './index.css';
-import './i18n.js';
+import '@/app/i18n.js';
 import { useTranslation } from 'react-i18next';
 import { useEffect } from 'react';
-import App from './App.jsx'
-import ErrorBoundary from '@shared/ErrorBoundary.jsx'
+import App from '@/app/App.jsx'
+import ErrorBoundary from '@shared/ui/ErrorBoundary'
 
 // eslint-disable-next-line react-refresh/only-export-components
 function LanguageSync() {
@@ -23,10 +23,10 @@ function LanguageSync() {
   }, [i18n.language]);
   return null;
 }
-import { AuthProvider, useAuthContext } from './contexts/AuthContext.jsx'
+import { AuthProvider, useAuthContext } from '@/features/auth/AuthContext.jsx'
 import { Spinner } from '@ui/skeleton'
 import { AppProviders } from './app/AppProviders';
-import { useSettings } from './contexts/useSettings';
+import { useSettings } from '@/features/settings/useSettings';
 import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 
 // eslint-disable-next-line react-refresh/only-export-components

@@ -1,13 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { LazyMotion, domAnimation, m as M } from 'framer-motion';
 import { useSearchParams, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
-import { useAuthContext } from '@/contexts/useAuthContext';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 import { toast } from 'react-hot-toast';
 import { Music2, FileText, Zap } from 'lucide-react';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
-import { usePageTitle } from '@/hooks/usePageTitle';
-import { useThemeSync } from '@/hooks/useThemeSync';
+import { usePageTitle } from '@/shared/hooks/usePageTitle';
+import { useThemeSync } from '@/shared/hooks/useThemeSync';
 import LoginIdentifierStep from './LoginIdentifierStep';
 import LoginPasswordStep from './LoginPasswordStep';
 import SignUpForm from './SignUpForm';

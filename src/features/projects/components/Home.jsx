@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useDynamicTranslation from '@/hooks/useDynamicTranslation';
-import { useAuthContext } from '@/contexts/useAuthContext';
-import { projects } from '@/api';
+import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { projects } from '@/app/api';
 import { Music2, Video, Plus, Search, Play, FileText, ChevronRight, Activity, Lightbulb, Library as LibraryIcon } from 'lucide-react';
-import SpotifyIcon from '@shared/SpotifyIcon';
+import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import ProjectSetupModal from '@features/editor/components/setup/ProjectSetupModal';
 import { useSpotifyAuth } from '@/features/player/hooks/useSpotifyAuth';
 import { ThemedShineBorder } from '@ui/themed-shine-border';

@@ -1,10 +1,10 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, Zap } from 'lucide-react';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
-import { translateAuthError } from '@/utils/authErrors';
+import { translateAuthError } from '@/shared/utils/auth-errors';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import RegistrationBlockedModal from './RegistrationBlockedModal';
 import { FieldError, ErrorBanner, ContextBanner, GoogleButton } from './auth-shared';

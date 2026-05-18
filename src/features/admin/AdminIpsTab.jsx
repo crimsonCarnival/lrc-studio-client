@@ -1,8 +1,8 @@
-import { useTranslation } from 'react-i18next';
+﻿import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Ban } from 'lucide-react';
-import ClientOnlyDate from '@shared/ClientOnlyDate';
+import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
 
 export default function AdminIpsTab({
   ipForm,

@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+﻿import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { spotify as spotifyApi, getAccessToken } from '@/api';
-import { formatTime } from '@/utils/formatTime';
+import { spotify as spotifyApi, getAccessToken } from '@/app/api';
+import { formatTime } from '@/shared/utils/format-time';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
@@ -11,7 +11,7 @@ import {
   Loader2, ChevronRight, ChevronLeft, Monitor, Smartphone, Speaker,
   Plus, Check, SkipForward, Download,
 } from 'lucide-react';
-import SpotifyIcon from '@shared/SpotifyIcon';
+import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import { LRUCache } from '@crimson-carnival/ds-js';
 
 const searchCache = new LRUCache(30);

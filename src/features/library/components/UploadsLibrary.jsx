@@ -1,18 +1,18 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import useDynamicTranslation from '@/hooks/useDynamicTranslation';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
+import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useTranslation } from 'react-i18next';
-import { uploads as uploadsApi } from '@/api';
-import { formatTime } from '@/utils/formatTime';
-import { formatInTimezone, getRelativeTime } from '@/utils/date';
-import { useSettings } from '@/contexts/useSettings';
+import { uploads as uploadsApi } from '@/app/api';
+import { formatTime } from '@/shared/utils/format-time';
+import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
+import { useSettings } from '@/features/settings/useSettings';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { Cloud, Video, Trash2, ArrowLeft, Loader2, Music2, Clock, Edit2, Check, X } from 'lucide-react';
 import { SkeletonCard } from '@ui/skeleton';
-import SpotifyIcon from '@shared/SpotifyIcon';
+import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import toast from 'react-hot-toast';
-import useConfirm from '@/hooks/useConfirm';
+import useConfirm from '@/shared/hooks/useConfirm';
 
 
 function SourceIcon({ source }) {

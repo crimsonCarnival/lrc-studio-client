@@ -1,6 +1,6 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+﻿import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { serializeToRubyMarkup, parseRubyMarkup, isKanji, hasKanji } from '@/utils/furigana';
+import { serializeToRubyMarkup, parseRubyMarkup, isKanji, hasKanji } from '@/shared/utils/furigana';
 import { Checkbox } from '@ui/checkbox';
 import { Tip } from '@ui/tip';
 import { GripVertical } from 'lucide-react';

@@ -1,10 +1,10 @@
-import { useRef, useEffect, useReducer } from 'react';
+﻿import { useRef, useEffect, useReducer } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Copy, Check, AlertCircle, Clock, Calendar, Cloud, Share2 } from 'lucide-react';
 import { Tip } from '@ui/tip';
-import { formatTime } from '@/utils/formatTime';
+import { formatTime } from '@/shared/utils/format-time';
 
 /**
  * SharePanel component for the sharing popover.

@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import useDraggable from '@/hooks/useDraggable';
-import { DEFAULT_SETTINGS } from '@/contexts/settingsDefaults';
+﻿import { useState, useEffect, useCallback, useRef } from 'react';
+import useDraggable from '@/shared/hooks/useDraggable';
+import { DEFAULT_SETTINGS } from '@/features/settings/settings-defaults';
 
 export function useSettingsModal(isOpen, onClose, globalSettings, updateAllSettings) {
   const [settings, setSettings] = useState(globalSettings || DEFAULT_SETTINGS);

@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState, useEffect } from 'react';
+﻿import { useMemo, useCallback, useState, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '@features/editor/hooks/useEditor';
@@ -8,10 +8,10 @@ import EditorPasteArea from '../setup/EditorPasteArea';
 import EditorLineItem from '../line/EditorLineItem';
 import SelectionActionBar from './SelectionActionBar';
 import EditorSyncControls from './EditorSyncControls';
-import ActionDrawer, { DrawerItem } from '@/shared/ActionDrawer';
+import ActionDrawer, { DrawerItem } from '@/shared/ui/ActionDrawer';
 import { Play, X, Pencil, Trash2, Eraser } from 'lucide-react';
-import { formatTime } from '@/utils/formatTime';
-import { hasKanji } from '@/utils/furigana';
+import { formatTime } from '@/shared/utils/format-time';
+import { hasKanji } from '@/shared/utils/furigana';
 
 export default function Editor({
   user,

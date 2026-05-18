@@ -1,5 +1,5 @@
-import React from 'react';
-import { parseRubyMarkup, hasKanji, isKanji, hasCJK, toHiragana, toKatakana } from '@/utils/furigana';
+﻿import React from 'react';
+import { parseRubyMarkup, hasKanji, isKanji, hasCJK, toHiragana, toKatakana } from '@/shared/utils/furigana';
 import { ReadingInput } from './ReadingInput';
 import { Tip } from '@ui/tip';
 import { useTranslation } from 'react-i18next';

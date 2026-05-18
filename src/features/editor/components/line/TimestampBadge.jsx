@@ -1,4 +1,4 @@
-import { formatTimestamp } from '@/utils/lrc';
+﻿import { formatTimestamp } from '@/shared/utils/lrc';
 
 /**
  * Timestamp badge that supports double-click to edit and shows wheel-nudge indicator.

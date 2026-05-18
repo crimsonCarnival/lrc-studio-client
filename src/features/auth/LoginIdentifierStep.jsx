@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { Trans } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Loader2, Zap } from 'lucide-react';
@@ -6,8 +6,8 @@ import { Button } from '@ui/button';
 import { Checkbox } from '@ui/checkbox';
 import { Label } from '@ui/label';
 import { FloatingInput } from '@ui/floating-input';
-import { translateAuthError } from '@/utils/authErrors';
-import { auth } from '@/api';
+import { translateAuthError } from '@/shared/utils/auth-errors';
+import { auth } from '@/app/api';
 import { FieldError, RedirectMessage, ContextBanner, GoogleButton } from './auth-shared';
 import { REMEMBER_ME_KEY } from './auth-constants';
 
