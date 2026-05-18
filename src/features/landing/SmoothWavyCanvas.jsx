@@ -22,7 +22,6 @@ function readThemeColors() {
     primary: hexToRgb(s.getPropertyValue('--color-primary').trim() || '#c4a7e7'),
     secondary: hexToRgb(s.getPropertyValue('--color-accent-purple').trim() || '#c4a7e7'),
     accent: hexToRgb(s.getPropertyValue('--color-accent-blue').trim() || '#9ccfd8'),
-    // light theme needs higher opacity so dark lines show on cream background
     opacityScale: isLight ? 2.2 : 1,
   };
 }
@@ -30,6 +29,7 @@ function readThemeColors() {
 const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }) => {
   const canvasRef = useRef(null);
   const rafRef = useRef(null);
+  const animateRef = useRef(null);
   const timeRef = useRef(0);
   const mouseRef = useRef({ x: 0, y: 0 });
   const colorsRef = useRef(readThemeColors());
@@ -120,7 +120,6 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }) => {
     for (let i = 0; i < numAccent; i++) {
       const offset = (i / numAccent) * width * 1.5 - width * 0.25;
       const amp = 30 + 15 * Math.cos(t * 0.22 + i * 0.12);
-      const freq = 0.01 + 0.004 * Math.sin(t * 0.16 + i * 0.1);
       const phase = t * (0.4 + 0.2 * Math.sin(i * 0.13));
       const opacity = (0.06 + 0.04 * Math.abs(Math.sin(t * 0.24 + i * 0.15))) * opBase;
 
@@ -139,8 +138,10 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }) => {
       ctx.stroke();
     }
 
-    rafRef.current = requestAnimationFrame(animate);
+    rafRef.current = requestAnimationFrame(animateRef.current);
   }, [animationSpeed, lineOpacity]);
+
+  animateRef.current = animate;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -157,7 +158,7 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }) => {
     window.addEventListener('resize', handleResize);
     canvas.addEventListener('mousemove', handleMouseMove);
 
-    animate();
+    animateRef.current();
 
     return () => {
       observer.disconnect();
