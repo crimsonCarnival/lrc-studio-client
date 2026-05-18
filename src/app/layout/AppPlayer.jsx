@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 import { SkeletonPlayer } from '@ui/skeleton';
-import Player from '@features/player/Player';
+import Player from '@features/player/components/Player';
 import { useSettings } from '@/contexts/useSettings';
 
 /**
