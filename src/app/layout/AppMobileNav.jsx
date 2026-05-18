@@ -47,7 +47,7 @@ export function AppMobileNav({ mobileTab, setMobileTab, activeProjectId, isReady
           }`}
           aria-label={label}
         >
-          <Icon className="w-5 h-5" strokeWidth={mobileTab === id ? 2.5 : 1.8} />
+          <Icon className="size-5" strokeWidth={mobileTab === id ? 2.5 : 1.8} />
           <span>{label}</span>
         </button>
       ))}
