@@ -23,8 +23,7 @@ function LanguageSync() {
   }, [i18n.language]);
   return null;
 }
-import { AuthProvider } from './contexts/AuthContext.jsx'
-import { useAuthContext } from './contexts/useAuthContext.js'
+import { AuthProvider, useAuthContext } from './contexts/AuthContext.jsx'
 import { Spinner } from '@ui/skeleton'
 import { AppProviders } from './app/AppProviders';
 import { useSettings } from './contexts/useSettings';
@@ -33,7 +32,11 @@ import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 // eslint-disable-next-line react-refresh/only-export-components
 const AuthPage = lazy(() => import('@features/auth/AuthPage.jsx'));
 // eslint-disable-next-line react-refresh/only-export-components
-const SharedProjectViewer = lazy(() => import('@shared/SharedProjectViewer.jsx'));
+const SharedProjectViewer = lazy(() => import('@features/sharing/components/SharedProjectViewer.jsx'));
+// eslint-disable-next-line react-refresh/only-export-components
+const ResetPasswordPage = lazy(() => import('@features/auth/ResetPasswordPage.jsx'));
+// eslint-disable-next-line react-refresh/only-export-components
+const ChangePasswordPage = lazy(() => import('@features/auth/ChangePasswordPage.jsx'));
 
 // Wrapper for SharedProjectViewer to get the id param
 // eslint-disable-next-line react-refresh/only-export-components
@@ -43,7 +46,7 @@ function SharedProjectRoute() {
 }
 
 // Guest-accessible paths — these work without an account.
-const GUEST_ACCESSIBLE_PATHS = ['/project/new', '/project/local'];
+const GUEST_ACCESSIBLE_PATHS = ['/', '/project/new', '/project/local'];
 
 // Protected Route Wrapper
 // eslint-disable-next-line react-refresh/only-export-components
@@ -59,10 +62,19 @@ function ProtectedRoute({ children }) {
     );
   }
 
+  // Logged-in users landing on root should go to the home dashboard.
+  if (user && location.pathname === '/') {
+    return <Navigate to="/home" replace />;
+  }
+
   // Guests can access the setup / local project page without signing in.
   const isGuestAllowed = GUEST_ACCESSIBLE_PATHS.includes(location.pathname);
   if (!user && !isGuestAllowed) {
-    return <Navigate to={`/auth/signin?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
+    let redirectUrl = location.pathname + location.search;
+    if (location.pathname === '/change-password') {
+      redirectUrl = '/home';
+    }
+    return <Navigate to={`/auth/signin?redirect=${encodeURIComponent(redirectUrl)}`} replace />;
   }
 
   return children;
@@ -95,8 +107,6 @@ function RootRoutes() {
       </div>
     }>
       <Routes>
-        {/* Guests go to the project setup page; authenticated users go to /home */}
-        <Route path="/" element={<Navigate to={user ? '/home' : '/project/new'} replace />} />
         <Route path="/share/:id" element={<SharedProjectRoute />} />
 
         {/* Legacy redirects */}
@@ -106,6 +116,12 @@ function RootRoutes() {
         {/* Auth routes */}
         <Route path="/auth" element={user ? <AuthRedirect /> : <AuthPage />} />
         <Route path="/auth/:mode" element={user ? <AuthRedirect /> : <AuthPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/change-password" element={
+          <ProtectedRoute>
+            <ChangePasswordPage />
+          </ProtectedRoute>
+        } />
 
         {/* Protected app routes - App handles nested routing inside itself */}
         <Route path="/*" element={
@@ -149,7 +165,14 @@ function AppToaster() {
   );
 }
 
-createRoot(document.getElementById('root')).render(
+const rootElement = document.getElementById('root');
+
+// Only create root once to prevent HMR issues
+if (!window.__reactRoot) {
+  window.__reactRoot = createRoot(rootElement);
+}
+
+window.__reactRoot.render(
   <StrictMode>
     <ErrorBoundary>
       <GoogleReCaptchaProvider reCaptchaKey={import.meta.env.VITE_RECAPTCHA_KEY}>
@@ -165,4 +188,4 @@ createRoot(document.getElementById('root')).render(
       </GoogleReCaptchaProvider>
     </ErrorBoundary>
   </StrictMode>,
-)
+);
