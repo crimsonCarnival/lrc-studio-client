@@ -7,8 +7,9 @@ import { Loader2, GripVertical } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuthContext } from '@/contexts/useAuthContext';
+import { STORAGE_KEYS, storage } from '@/services/storage.service';
 
-const EditorLazy = lazy(() => import('@features/editor/components/Editor'));
+const EditorLazy = lazy(() => import('@features/editor/components/core/Editor'));
 const PreviewLazy = lazy(() => import('@features/preview/Preview'));
 
 // Memo wrappers prevent Editor/Preview from re-rendering when AppRouter
@@ -16,11 +17,12 @@ const PreviewLazy = lazy(() => import('@features/preview/Preview'));
 // purely cosmetic and don't affect editor or preview content.
 const Editor = memo(EditorLazy);
 const Preview = memo(PreviewLazy);
-const Library = lazy(() => import('@features/projects/Library'));
-const UploadsLibrary = lazy(() => import('@features/projects/UploadsLibrary'));
-const UploadDetailView = lazy(() => import('@features/projects/UploadDetailView'));
-const SetupScreen = lazy(() => import('@features/editor/components/SetupScreen'));
-const Home = lazy(() => import('@features/projects/Home'));
+const Library = lazy(() => import('@features/library/components/Library'));
+const UploadsLibrary = lazy(() => import('@features/library/components/UploadsLibrary'));
+const UploadDetailView = lazy(() => import('@features/projects/components/UploadDetailView'));
+const SetupScreen = lazy(() => import('@features/editor/components/setup/SetupScreen'));
+const Home = lazy(() => import('@features/projects/components/Home'));
+const GuestLanding = lazy(() => import('@features/landing/GuestLanding'));
 const AdminDashboard = lazy(() => import('@features/admin/AdminDashboard'));
 const ProfilePage = lazy(() => import('@features/profile/ProfilePage'));
 const NotFoundPage = lazy(() => import('@shared/NotFoundPage'));
@@ -49,8 +51,8 @@ function ForkHandler({ appState, navigate }) {
 
     if (!user || user.isGuest) {
       // Store intention and redirect to login
-      localStorage.setItem('lrc-syncer-redirect', `/project/fork/${id}`);
-      localStorage.setItem('cloneAfterAuth', id);
+      storage.set(STORAGE_KEYS.REDIRECT, `/project/fork/${id}`);
+      storage.set(STORAGE_KEYS.CLONE_AFTER_AUTH, id);
       navigate(`/auth/signin?redirect=${encodeURIComponent(`/project/fork/${id}`)}`);
       return;
     }
@@ -77,7 +79,7 @@ function ForkHandler({ appState, navigate }) {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">
-      <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      <Loader2 className="size-10 animate-spin text-primary" />
       <p className="text-sm font-medium animate-pulse">
         {t('project.cloning') || 'Cloning project...'}
       </p>
@@ -111,7 +113,6 @@ export function AppRouter({
     duration,
     triggerImportSave,
     handleManualSave,
-    handleGuestSave,
     handleRemoveAllLyrics,
     isAutosaving,
     isSaving,
@@ -132,6 +133,7 @@ export function AppRouter({
     handleSetupComplete,
     setShowSettings,
     setShowKeyboardHelp,
+    buildProjectPayload,
   } = appState;
 
   usePageTitle(mediaTitle);
@@ -197,14 +199,12 @@ export function AppRouter({
   const startResizing = useCallback(() => {
     if (!isDesktop || lockLayout) return;
     setIsResizing(true);
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none'; // Prevent text selection while dragging
+    document.body.style.cssText += 'cursor: col-resize; user-select: none;';
     const onMove = (e) => handleResizeRef.current(e);
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', () => {
       setIsResizing(false);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
+      document.body.style.cssText = document.body.style.cssText.replace('cursor: col-resize; user-select: none;', '');
       window.removeEventListener('mousemove', onMove);
     }, { once: true });
   }, [isDesktop, lockLayout]);
@@ -295,7 +295,7 @@ export function AppRouter({
                         >
                           {/* Drag Handle - Hidden visually but functional */}
                           <div className={`absolute -top-4 left-1/2 -translate-x-1/2 opacity-0 transition-all duration-300 z-50 cursor-grab active:cursor-grabbing bg-zinc-800 backdrop-blur-xl border border-zinc-600/50 rounded-xl p-2 shadow-2xl pointer-events-auto max-lg:hidden hover:scale-110 hover:border-primary/50 group/handle ${draggingItem === item || lockLayout ? 'hidden' : ''}`}>
-                            <GripVertical className="w-5 h-5 text-zinc-400 group-hover/handle:text-primary transition-colors" />
+                            <GripVertical className="size-5 text-zinc-400 group-hover/handle:text-primary transition-colors" />
                           </div>
 
                           <Suspense fallback={isEditor ? <SkeletonEditor /> : <SkeletonPreview />}>
@@ -308,7 +308,7 @@ export function AppRouter({
                                 undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo}
                                 editorMode={editorMode} setEditorMode={setEditorMode} duration={duration}
                                 onImport={triggerImportSave} handleManualSave={handleManualSave}
-                                handleGuestSave={handleGuestSave}
+                                buildProjectPayload={buildProjectPayload}
                                 handleRemoveAllLyrics={handleRemoveAllLyrics} isAutosaving={isAutosaving}
                                 isSaving={isSaving}
                                 onNewProject={() => navigate('/project/new')}
@@ -333,6 +333,7 @@ export function AppRouter({
                       {/* Resize Handle — overlays the center of the gap-6 (24px) gap */}
                       {isDesktop && !lockLayout && index === 0 && items.length > 1 && (
                         <div
+                          role="separator"
                           onMouseDown={startResizing}
                           onMouseEnter={() => setIsHoveringDivider(true)}
                           onMouseLeave={() => setIsHoveringDivider(false)}
@@ -353,13 +354,18 @@ export function AppRouter({
         </EditorContainer>
       } />
       <Route path="home" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>}>
           <Home />
         </Suspense>
       } />
       <Route path="profile" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
           <ProfilePage />
+        </Suspense>
+      } />
+      <Route index element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>}>
+          <GuestLanding />
         </Suspense>
       } />
       <Route path="*" element={<NotFoundPage type="general" />} />
