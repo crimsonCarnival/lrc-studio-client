@@ -27,6 +27,7 @@ Una aplicación web profesional para sincronizar letras de canciones con audio, 
   - [Prerrequisitos](#prerrequisitos)
   - [Instalación](#instalación)
   - [Scripts Disponibles](#scripts-disponibles)
+- [Consideraciones de Implementación en Docker](#consideraciones-de-implementación-en-docker)
 - [Referencia de Formato de Archivo LRC](#referencia-de-formato-de-archivo-lrc)
   - [LRC Estándar](#lrc-estándar)
   - [Enhanced LRC (Nivel de palabra)](#enhanced-lrc-nivel-de-palabra)
@@ -72,6 +73,7 @@ Una aplicación web profesional para sincronizar letras de canciones con audio, 
 - **Importar archivo** — Carga archivos existentes `.lrc`, `.srt` o `.txt`. El LRC a nivel de palabra (Enhanced LRC) también es compatible y preserva las marcas de tiempo por palabra.
 - **Importar URL** — Importa letras desde un URL remoto a través del panel de importación.
 - **Detección de pegado** — Al pegar un bloque LRC o SRT en el editor se detecta y analiza automáticamente.
+- **Búsqueda y extracción de Genius** — Busca canciones en Genius.com directamente desde el asistente de configuración o la barra de herramientas del editor, previsualiza la letra e impórtala instantáneamente como líneas no sincronizadas.
 
 ### Exportación
 
@@ -103,6 +105,7 @@ Una aplicación web profesional para sincronizar letras de canciones con audio, 
 
 - **Biblioteca de proyectos** — Navega, busca y gestiona todos tus proyectos. Cada proyecto almacena letras, marcas de tiempo, referencias multimedia y el estado del editor.
 - **Sincronización en la nube** — Los usuarios autenticados tienen sus proyectos guardados en el servidor automáticamente. Los proyectos se crean al guardar por primera vez y se parchean incrementalmente por eficiencia.
+- **Modo Invitado y Reclamación de Proyectos** — Edita y trabaja en proyectos sin crear una cuenta. Cuando estés listo para guardar, precrea el proyecto y mígralo de forma segura a tu cuenta sin problemas al iniciar sesión a través de un token de reclamación único y seguro.
 - **Autoguardado** — El autoguardado de doble condición se dispara después de un intervalo de tiempo configurable o después de 5 ediciones de líneas, lo que ocurra primero.
 - **Guardado manual** — Botón de guardar con indicador de estado de autoguardado (rueda de carga → marca de verificación).
 - **Respaldo de almacenamiento local** — Todos los datos del proyecto también se reflejan en el `localStorage` para que el trabajo nunca se pierda sin conexión.
@@ -207,6 +210,7 @@ La aplicación es altamente personalizable a través del modal de Configuración
 ### Autenticación
 
 - **Registro de cuenta e inicio de sesión** — Autenticación por correo/contraseña.
+- **Modo Invitado** — Pruebe el editor con todas sus capacidades sin iniciar sesión; la transición fluida de la cuenta mantiene su borrador intacto.
 - **Spotify OAuth** — Conecta/desconecta cuenta de Spotify para hacer streaming de pistas.
 - **Página de perfil** — Ve y actualiza nombre a mostrar, avatar y detalles de cuenta. Solo para futura implementación.
 - **Tablero de administración** — Administra usuarios y contenido (solo rol de administrador). Solo para futura implementación.
@@ -249,6 +253,8 @@ Esto hará lo siguiente:
 4. Conectar todo en conjunto
 
 La aplicación estará disponible en [http://localhost](http://localhost).
+
+Para la configuración avanzada de Docker, implementación en producción y solución de problemas, consulta la [Guía de Containerización Docker](../../docs/translations/DOCKER.es.md).
 
 ---
 
@@ -318,6 +324,80 @@ La aplicación estará disponible en [http://localhost](http://localhost).
 | `npm run build` | Compila el paquete de producción |
 | `npm run preview` | Previsualiza la compilación de producción localmente |
 | `npm run lint` | Ejecuta ESLint |
+
+---
+
+## Consideraciones de Implementación en Docker
+
+### Con Docker Compose (Valores por Defecto)
+
+Cuando ejecutas `docker-compose up` sin proporcionar variables de entorno personalizadas, las siguientes características están **inmediatamente disponibles**:
+
+✅ **Funcionando con valores por defecto:**
+
+- Autenticación de usuarios (registro, inicio de sesión, cierre de sesión)
+- Gestión de perfil
+- Operaciones CRUD de proyectos
+- Edición y gestión de letras
+- Carga de audio (archivos locales, arrastrar y soltar)
+- Características principales del editor (modos LRC/SRT/Words)
+- Todos los atajos de teclado y configuraciones
+- Todos los temas y opciones de personalización de UI
+
+⚠️ **Limitadas con valores por defecto (claves API ficticias):**
+
+- **Correos de restablecimiento de contraseña** — El flujo funciona, pero los correos no se enviarán (usa credenciales SMTP ficticias)
+- **Carga en Cloudinary** — Usa cuenta demo con limitaciones de almacenamiento/ancho de banda
+- **Integración de Spotify** — No se conectará sin credenciales reales
+- **Integración de YouTube** — No obtendrá metadatos de video con clave API ficticia
+- **Letras de Genius** — La búsqueda y la importación con un solo clic no funcionarán (requiere un Token de acceso de cliente de Genius)
+- **reCAPTCHA** — Usa la clave pública de prueba de Google (siempre pasa la validación)
+
+### Habilitando Características Completas
+
+Para usar todas las características incluido correo electrónico, carga de archivos e integraciones de terceros, necesitarás proporcionar credenciales reales de API:
+
+1. **Crea un archivo `.env.local`** basado en `.env.docker`:
+
+   ```bash
+   cp .env.docker .env.local
+   ```
+
+2. **Añade tus credenciales reales:**
+
+   ```bash
+   # Correo electrónico (para restablecimiento de contraseña)
+   EMAIL_SMTP_HOST=smtp.gmail.com
+   EMAIL_SMTP_USER=tu-correo@gmail.com
+   EMAIL_SMTP_PASS=tu-contraseña-de-aplicación
+
+   # Cloudinary (para carga de archivos)
+   CLOUDINARY_CLOUD_NAME=tu-nombre-de-nube
+   CLOUDINARY_API_KEY=tu-clave-api
+   CLOUDINARY_API_SECRET=tu-secreto-api
+
+   # Spotify (para streaming de música)
+   SPOTIFY_CLIENT_ID=tu-id-cliente
+   SPOTIFY_CLIENT_SECRET=tu-secreto-cliente
+
+    # YouTube (para metadatos de video)
+    YOUTUBE_API_KEY=tu-clave-api-youtube
+
+    # Genius API (para búsqueda de letras)
+    GENIUS_CLIENT_ACCESS_TOKEN=tu-token-de-acceso-de-cliente-de-genius
+
+    # reCAPTCHA (para protección contra bots)
+    RECAPTCHA_SECRET_KEY=tu-clave-secreta
+    VITE_RECAPTCHA_KEY=tu-clave-publica
+   ```
+
+3. **Ejecuta con tu configuración:**
+
+   ```bash
+   docker-compose --env-file .env.local up -d --build
+   ```
+
+Para instrucciones completas de configuración de Docker, consulta la [Guía de Containerización Docker](../../DOCKER.md).
 
 ---
 
