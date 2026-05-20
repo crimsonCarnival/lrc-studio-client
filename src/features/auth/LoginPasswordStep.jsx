@@ -1,8 +1,10 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { translateAuthError } from '@/shared/utils/auth-errors';
+import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { FieldError, AvatarBadge, GoogleButton } from './auth-shared';
 
 // ─── Login Step 2 — Password ───────────────────────────────────────────────
@@ -13,6 +15,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
+  const { trigger: haptic } = useHapticFeedback();
 
   useEffect(() => {
     // autoFocus removed as requested
@@ -82,23 +85,41 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                 onChange={(e) => { setPassword(e.target.value); setError(''); }}
                 autoComplete="current-password"
                 error={!!error}
-                className="pr-11"
+                className="pr-11 focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
               />
               {password && (
-                <button
+                <motion.button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-zinc-300 transition-colors rounded-lg z-10"
+                  onClick={() => {
+                    haptic('light');
+                    setShowPassword(!showPassword);
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 flex items-center justify-center text-zinc-400 hover:text-zinc-300 transition-colors rounded-lg z-10 lg:h-9 lg:w-9 focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
+                  aria-label={showPassword ? t('auth.hidePassword', 'Hide password') : t('auth.showPassword', 'Show password')}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </button>
+                </motion.button>
               )}
             </div>
-            <FieldError message={error} />
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-400"
+                >
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {!error && <FieldError message={error} />}
             <button
               type="button"
               onClick={onSwitchToForgotPassword}
-              className="text-xs text-primary hover:text-primary-dim hover:underline font-semibold transition-colors text-right mt-1"
+              className="text-xs lg:text-xs text-primary hover:text-primary-dim hover:underline font-semibold transition-colors text-right mt-1"
             >
               {t('auth.forgotPassword', 'Forgot password?')}
             </button>
@@ -106,16 +127,17 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
         )}
 
         {identifierData.hasPassword !== false ? (
-          <Button
+          <motion.button
             type="submit"
             disabled={loading || !password}
-            className="h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-bold text-sm rounded-xl disabled:opacity-40 transition-all duration-200 mt-1"
+            whileTap={{ scale: 0.98 }}
+            className="h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-bold text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 mt-1 disabled:cursor-not-allowed focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
           >
             {loading
               ? <Loader2 className="size-4 animate-spin" />
               : t('auth.loginAction')
             }
-          </Button>
+          </motion.button>
         ) : null}
 
         {(identifierData.hasGoogle || identifierData.hasPassword === false) && (

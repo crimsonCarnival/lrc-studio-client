@@ -9,6 +9,8 @@ import { projects } from '@/app/api';
 import Player from '@features/player/components/Player';
 import Preview from '@features/preview/components/Preview';
 import SharedProjectError from './SharedProjectError';
+import { SharedProjectViewerLayout } from './SharedProjectViewerLayout';
+import useInputMethod from '@/shared/hooks/useInputMethod';
 import { LogIn, UserPlus, Music2, Copy, Check, ExternalLink } from 'lucide-react';
 import { Tip } from '@ui/tip';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -26,6 +28,8 @@ import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
 function SharedProjectViewerInner({ projectId }) {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
+  const inputMethod = useInputMethod();
+  const isMobile = inputMethod === 'touch';
   const getStartTime = () => {
     const s = searchParams.get('s') || searchParams.get('t');
     if (s) return parseInt(s);
@@ -153,8 +157,103 @@ function SharedProjectViewerInner({ projectId }) {
   }
 
   // ── Viewer ──
+  // Create metadata section component for mobile optimization
+  const MetadataSection = (
+    <div className={`px-2 sm:px-4 lg:px-6 mb-4 sm:mb-6 animate-fade-in flex flex-col ${isMobile ? 'gap-4' : 'sm:flex-row sm:items-start justify-between gap-6'}`}>
+      <div className="flex-1 min-w-0">
+        <div className={`flex flex-wrap items-center ${isMobile ? 'gap-2' : 'gap-3'} mb-3`}>
+          <h1 className={`${isMobile ? 'text-xl' : 'text-2xl sm:text-3xl'} font-semibold text-zinc-100 tracking-tight leading-tight`}>
+            {projectData?.title || t('library.untitled')}
+          </h1>
+          {/* Author info inline */}
+          <div className={`flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-zinc-900/50 border border-zinc-800/80 ${isMobile ? 'text-[9px]' : 'text-[10px] sm:text-xs'} font-medium text-zinc-400 shrink-0`}>
+            <Music2 className={isMobile ? 'size-3' : 'size-3.5'} style={{ color: 'currentColor' }} />
+            <span>{t('share.by')} <span className="text-zinc-200">{projectData?.user?.username || t('share.guest')}</span></span>
+            {projectData?.createdAt && (
+              <>
+                <span className="size-1 h-1 rounded-full bg-zinc-700 mx-1" />
+                <span><ClientOnlyDate date={projectData.createdAt} /></span>
+              </>
+            )}
+          </div>
+          {projectData?.forkedFrom?.projectId && (
+            <Tip content={projectData.forkedFrom.username ? t('share.forkedFrom', { username: projectData.forkedFrom.username, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
+              <div className={`flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-accent-blue/10 border border-accent-blue/20 ${isMobile ? 'text-[9px]' : 'text-[10px] sm:text-xs'} font-bold text-accent-blue uppercase shrink-0`}>
+                <ExternalLink className={isMobile ? 'size-2.5' : 'size-3'} />
+                <span>{t('share.forkedBadge', 'Forked')}</span>
+              </div>
+            </Tip>
+          )}
+        </div>
+        {/* Description */}
+        <p className={`${isMobile ? 'text-xs' : 'text-sm sm:text-base'} text-zinc-400 max-w-3xl leading-relaxed whitespace-pre-wrap text-left`}>
+          {projectData?.metadata?.description || t('share.noDescription')}
+        </p>
+      </div>
+
+      {/* Tags on the right */}
+      <div className={`flex flex-wrap ${isMobile ? 'gap-1.5' : 'gap-2 sm:justify-end sm:max-w-[40%]'}`}>
+        {projectData?.metadata?.tags?.length > 0 ? (
+          projectData.metadata.tags.map((tag, i) => (
+            <span key={i} className={`px-2 py-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50 ${isMobile ? 'text-[9px]' : 'text-[10px] sm:text-xs'} text-zinc-300 font-medium tracking-wide`}>
+              {tag}
+            </span>
+          ))
+        ) : (
+          <span className={`${isMobile ? 'text-[9px]' : 'text-xs'} text-zinc-600 italic`}>{t('share.noTags')}</span>
+        )}
+      </div>
+    </div>
+  );
+
+  // Create CTA banner component
+  const CTABanner = (
+    <div className={`max-w-7xl mx-auto ${isMobile ? 'px-3 py-3' : 'px-4 sm:px-6 py-4'} flex flex-col ${isMobile ? 'gap-3' : 'sm:flex-row'} items-start ${!isMobile && 'sm:items-center'} justify-between`}>
+      {/* Callout Box */}
+      <div className="flex items-start gap-3 min-w-0 flex-1">
+        <div className="size-8 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <img
+            src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png"
+            alt="LRC Studio"
+            className="size-full object-contain"
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className={`${isMobile ? 'text-xs' : 'text-sm'} font-semibold text-zinc-100 truncate`}>
+            {t('share.likeThisProject', "Like this project?")}
+          </p>
+          <p className={`${isMobile ? 'text-[11px]' : 'text-xs'} text-zinc-400 mt-0.5`}>
+            {t('share.createCopyDesc', "Create your own editable copy and customize it")}
+          </p>
+        </div>
+      </div>
+      {/* Action Buttons */}
+      <div className={`flex items-center ${isMobile ? 'gap-2 w-full' : 'gap-2'} ${isMobile ? 'flex-shrink-0' : 'flex-shrink-0'}`}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleCopyLink}
+          disabled={copied}
+          className={`${isMobile ? 'h-11 px-3 flex-1 text-[11px]' : 'h-9 px-2.5 text-xs'} bg-zinc-800 border-zinc-700/60 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-700 font-semibold gap-1.5 rounded-lg transition-all`}
+        >
+          {copied ? <Check className={isMobile ? 'size-3' : 'size-3.5'} /> : <Copy className={isMobile ? 'size-3' : 'size-3.5'} />}
+          {copied ? t('share.copied', 'Copied') : t('share.copyLink', 'Copy Link')}
+        </Button>
+        <Button
+          size="sm"
+          onClick={handleClone}
+          className={`${isMobile ? 'h-11 px-3 flex-1 text-[11px]' : 'h-9 px-2.5 text-xs'} bg-primary hover:bg-primary-dim text-zinc-950 font-semibold gap-1.5 rounded-lg disabled:opacity-50`}
+        >
+          <Copy className={isMobile ? 'size-3' : 'size-3.5'} />
+          {t('share.createCopy', 'Create Copy')}
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Render using responsive layout
   return (
-    <div className={`min-h-screen lg:h-screen bg-zinc-950 relative overflow-x-hidden flex flex-col ${user ? 'pt-[60px] sm:pt-[72px] lg:pt-[88px]' : ''}`}>
+    <>
       {user && (
         <AppHeader
           user={user}
@@ -175,90 +274,38 @@ function SharedProjectViewerInner({ projectId }) {
           setUnsavedModalTarget={() => {}}
         />
       )}
-      {/* Background blobs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
-        <div className="absolute -top-40 -left-40 size-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 -right-40 size-80 bg-accent-purple/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 left-1/3 size-96 bg-accent-blue/5 rounded-full blur-3xl" />
-      </div>
 
-      {/* ── Preview (flex-1) ── */}
-      <div className="relative z-base flex-1 min-h-0 px-2 sm:px-4 lg:px-6 py-4 lg:pb-0 flex flex-col">
-        {/* Project Metadata Section */}
-        <div className="px-2 mb-6 animate-fade-in flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-3 mb-3">
-              <h1 className="text-2xl sm:text-3xl font-semibold text-zinc-100 tracking-tight leading-tight">
-                {projectData?.title || t('library.untitled')}
-              </h1>
-              {/* Author info inline */}
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900/50 border border-zinc-800/80 text-[10px] sm:text-xs font-medium text-zinc-400 shrink-0">
-                <Music2 className="size-3.5 text-primary" />
-                <span>{t('share.by')} <span className="text-zinc-200">{projectData?.user?.username || t('share.guest')}</span></span>
-                {projectData?.createdAt && (
-                  <>
-                    <span className="size-1 h-1 rounded-full bg-zinc-700 mx-1" />
-                    <span><ClientOnlyDate date={projectData.createdAt} /></span>
-                  </>
-                )}
-              </div>
-              {projectData?.forkedFrom?.projectId && (
-                <Tip content={projectData.forkedFrom.username ? t('share.forkedFrom', { username: projectData.forkedFrom.username, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent-blue/10 border border-accent-blue/20 text-[10px] sm:text-xs font-bold text-accent-blue uppercase shrink-0">
-                    <ExternalLink className="size-3" />
-                    <span>{t('share.forkedBadge', 'Forked')}</span>
-                  </div>
-                </Tip>
-              )}
-            </div>
-            {/* Description */}
-            <p className="text-sm sm:text-base text-zinc-400 max-w-3xl leading-relaxed whitespace-pre-wrap text-left">
-              {projectData?.metadata?.description || t('share.noDescription')}
-            </p>
-          </div>
-
-          {/* Tags on the right */}
-          <div className="flex flex-wrap gap-2 sm:justify-end sm:max-w-[40%]">
-            {projectData?.metadata?.tags?.length > 0 ? (
-              projectData.metadata.tags.map((tag, i) => (
-                <span key={i} className="px-2.5 py-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50 text-[10px] sm:text-xs text-zinc-300 font-medium tracking-wide">
-                  {tag}
-                </span>
-              ))
-            ) : (
-              <span className="text-xs text-zinc-600 italic">{t('share.noTags')}</span>
-            )}
-          </div>
-        </div>
-
-        <Preview
-          lines={lines}
-          setLines={() => { }} // read-only — no edits
-          playbackPosition={playbackPosition}
-          mediaTitle={mediaTitle}
-          playerRef={playerRef}
-          duration={0}
-          editorMode={editorMode}
-          exportToUrl={() => { }}
-          isSharedProject={true}
-          sharedReadOnly={true}
-          setSharedReadOnly={() => { }}
-          shareModal={null}
-          setShareModal={() => { }}
-          hasMedia={hasMedia}
-          isPlaying={isPlaying}
-          playbackSpeed={playbackSpeed}
-          activeProjectId={projectId}
-          project={projectData}
-          projectMetadata={projectData?.metadata}
-          viewerMode={true}
-        />
-      </div>
-
-      {/* ── Player (viewer mode) ── */}
-      <div className="relative z-raised w-full border-t border-zinc-700/50 bg-zinc-900/80 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.3)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+      <SharedProjectViewerLayout
+        isMobile={isMobile}
+        hasHeader={!!user}
+        preview={
+          <>
+            {MetadataSection}
+            <Preview
+              lines={lines}
+              setLines={() => { }} // read-only — no edits
+              playbackPosition={playbackPosition}
+              mediaTitle={mediaTitle}
+              playerRef={playerRef}
+              duration={0}
+              editorMode={editorMode}
+              exportToUrl={() => { }}
+              isSharedProject={true}
+              sharedReadOnly={true}
+              setSharedReadOnly={() => { }}
+              shareModal={null}
+              setShareModal={() => { }}
+              hasMedia={hasMedia}
+              isPlaying={isPlaying}
+              playbackSpeed={playbackSpeed}
+              activeProjectId={projectId}
+              project={projectData}
+              projectMetadata={projectData?.metadata}
+              viewerMode={true}
+            />
+          </>
+        }
+        player={
           <Player
             ref={playerRef}
             mediaTitle={mediaTitle}
@@ -280,54 +327,10 @@ function SharedProjectViewerInner({ projectId }) {
             projectMetadata={projectData?.metadata}
             viewerMode={true}
           />
-        </div>
-      </div>
-
-      {/* ── Create Copy CTA banner ── */}
-      <div className="relative z-sticky w-full bg-gradient-to-r from-zinc-900/95 via-zinc-900 to-zinc-900/95 border-t border-zinc-700/50 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          {/* Callout Box */}
-          <div className="flex items-start gap-3 min-w-0 flex-1">
-            <div className="size-8 flex items-center justify-center flex-shrink-0 mt-0.5">
-              <img 
-                src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png" 
-                alt="LRC Studio" 
-                className="size-full object-contain"
-              />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-zinc-100 truncate">
-                {t('share.likeThisProject', "Like this project?")}
-              </p>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                {t('share.createCopyDesc', "Create your own editable copy and customize it")}
-              </p>
-            </div>
-          </div>
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleCopyLink}
-              disabled={copied}
-              className="h-8 px-3 bg-zinc-800 border-zinc-700/60 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-700 text-xs font-semibold gap-1.5 rounded-lg transition-all"
-            >
-              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-              {copied ? t('share.copied', 'Copied') : t('share.copyLink', 'Copy Link')}
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleClone}
-              className="h-8 px-3 bg-primary hover:bg-primary-dim text-zinc-950 text-xs font-semibold gap-1.5 rounded-lg disabled:opacity-50"
-            >
-              <Copy className="size-3.5" />
-              {t('share.createCopy', 'Create Copy')}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+        }
+        ctaBanner={CTABanner}
+      />
+    </>
   );
 }
 

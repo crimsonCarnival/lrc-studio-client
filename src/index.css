@@ -20,6 +20,26 @@
   }
 }
 
+/* Safe-area and reduced-motion utilities */
+@layer utilities {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0);
+  }
+  .px-safe {
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+  }
+}
+
 /* Autofill Overrides */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -710,11 +730,6 @@ audio::-webkit-media-controls-panel {
   background-size: 200% 100%;
   animation: skeleton-shimmer 2s ease-in-out infinite;
   border-radius: 8px;
-}
-
-/* ── Mobile tab bar safe-area support ── */
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Speed menu scroll */

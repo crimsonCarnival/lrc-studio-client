@@ -73,8 +73,8 @@ export default function Home() {
             <Plus className="size-6 text-primary" />
           </div>
           <div className="flex flex-col">
-            <h3 className="text-lg font-semibold text-zinc-100 mb-0.5">{t('home.createNew')}</h3>
-            <p className="text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors">{t('home.createNewDesc')}</p>
+            <h3 className="text-base sm:text-lg font-semibold text-zinc-100 mb-0.5">{t('home.createNew')}</h3>
+            <p className="text-sm sm:text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors">{t('home.createNewDesc')}</p>
           </div>
         </button>
 
@@ -130,10 +130,10 @@ export default function Home() {
           {/* LEFT COLUMN: Welcome & Actions */}
           <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left gap-8 overflow-y-auto scrollbar-none pb-10 px-4 -mx-4">
             <div className="flex flex-col items-center lg:items-start animate-fade-in shrink-0 w-full">
-              <h1 className="text-3xl sm:text-4xl font-semibold text-zinc-100 tracking-tight mb-3">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-zinc-100 tracking-tight mb-3">
                 {dt('home.welcome', { name: username, context: user?.id })}
               </h1>
-              <p className="text-zinc-400 text-base sm:text-lg max-w-xl leading-relaxed mb-8">
+              <p className="text-zinc-400 text-sm sm:text-base lg:text-lg max-w-xl leading-relaxed mb-8">
                 {dt('home.welcomeSub')}
               </p>
               <div className="flex flex-col items-center lg:items-start w-full">
@@ -144,7 +144,7 @@ export default function Home() {
             {/* Featured / Resume Section (Main Area) */}
             {!loading && lastProject && (
               <section className="w-full max-w-md flex flex-col gap-4 animate-fade-in mt-4">
-                <h2 className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">{t('home.resumeLast')}</h2>
+                <h2 className="text-xs sm:text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.2em]">{t('home.resumeLast')}</h2>
                 <button
                   type="button"
                   onClick={() => navigate(`/project/${lastProject.projectId}`)}
@@ -159,7 +159,7 @@ export default function Home() {
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-zinc-100 truncate group-hover:text-primary transition-colors">
+                      <h3 className="text-base sm:text-sm font-semibold text-zinc-100 truncate group-hover:text-primary transition-colors">
                         {lastProject.title || t('library.untitled') || 'Untitled'}
                       </h3>
                       <p className="text-[10px] text-zinc-500 mt-0.5">{formatRelativeTime(lastProject.updatedAt, t, i18n.resolvedLanguage || i18n.language)}</p>
@@ -186,7 +186,7 @@ export default function Home() {
           <div className="w-full lg:w-[360px] flex flex-col gap-6 glass border border-white/10 shadow-elevated rounded-2xl p-6 h-[400px] lg:h-full animate-slide-in-right relative overflow-hidden">
             <ThemedShineBorder />
             <div className="flex items-center justify-between shrink-0">
-              <h2 className="text-sm font-semibold text-zinc-100 uppercase tracking-widest">{t('home.recentProjects')}</h2>
+              <h2 className="text-xs sm:text-sm font-semibold text-zinc-100 uppercase tracking-widest">{t('home.recentProjects')}</h2>
               {!loading && items.length > 0 && (
                 <span className="text-[10px] font-bold text-zinc-500 bg-zinc-800/50 px-2 py-0.5 rounded-full">{items.length}</span>
               )}
@@ -216,7 +216,7 @@ export default function Home() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={dt('home.searchProjects')}
-                    className="w-full pl-9 pr-4 py-2 bg-zinc-950/50 border border-zinc-800/60 rounded-xl text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/30 transition-all"
+                    className="w-full pl-9 pr-4 py-2 sm:py-2 bg-zinc-950/50 border border-zinc-800/60 rounded-xl text-xs sm:text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/30 transition-all"
                   />
                 </div>
 
@@ -242,7 +242,7 @@ export default function Home() {
                           <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-xs font-semibold text-zinc-200 truncate group-hover:text-primary transition-colors">
+                          <h3 className="text-sm sm:text-xs font-semibold text-zinc-200 truncate group-hover:text-primary transition-colors">
                             {project.title || t('library.untitled')}
                           </h3>
                           <div className="flex items-center gap-2 mt-0.5">

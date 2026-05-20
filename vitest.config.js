@@ -13,7 +13,7 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
       '@features': resolve(__dirname, 'src/features'),
       '@services': resolve(__dirname, 'src/services'),
-      '@ui': resolve(__dirname, 'src/ui'),
+      '@ui': resolve(__dirname, 'src/shared/ui'),
       '@shared': resolve(__dirname, 'src/shared'),
     },
   },

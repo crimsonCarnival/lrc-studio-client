@@ -17,6 +17,11 @@ export default {
         '8': 'var(--space-8)',
         '10': 'var(--space-10)',
         '12': 'var(--space-12)',
+        'touch-lg': '2.75rem',   // 44px
+        'touch-xl': '3rem',      // 48px
+      },
+      size: {
+        'touch-target': '2.75rem', // 44px minimum
       },
       zIndex: {
         'base': 'var(--z-base)',
@@ -58,5 +63,12 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    ({ addVariant }) => {
+      addVariant('hover-capable', '@media (hover: hover)');
+      addVariant('touch-device', '@media (pointer: coarse)');
+      addVariant('motion-safe', '@media (prefers-reduced-motion: no-preference)');
+      addVariant('motion-reduce', '@media (prefers-reduced-motion: reduce)');
+    }
+  ],
 }

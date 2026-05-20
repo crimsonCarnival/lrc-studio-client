@@ -108,7 +108,7 @@ export default function GuestLanding() {
             <motion.h2 variants={fadeUp} className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
               {t('landing.featuresLabel')}
             </motion.h2>
-            <motion.p variants={fadeUp} className="text-2xl sm:text-3xl font-semibold text-zinc-100 tracking-tight">
+            <motion.p variants={fadeUp} className="text-xl sm:text-2xl lg:text-3xl font-semibold text-zinc-100 tracking-tight">
               {t('landing.featuresTitle')}
             </motion.p>
           </motion.div>
@@ -124,15 +124,15 @@ export default function GuestLanding() {
               <motion.div
                 key={titleKey}
                 variants={fadeUp}
-                className="glass rounded-2xl p-6 flex gap-4 hover:border-zinc-600/50 transition-colors relative overflow-hidden"
+                className="glass rounded-2xl p-6 sm:p-5 flex gap-4 hover:border-zinc-600/50 transition-colors relative overflow-hidden"
               >
                 <ThemedShineBorder />
                 <div className={`size-10 rounded-xl ${bg} flex items-center justify-center shrink-0 mt-0.5`}>
                   <Icon className={`size-5 ${color}`} />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <h3 className="text-sm font-semibold text-zinc-100">{t(titleKey)}</h3>
-                  <p className="text-xs text-zinc-400 leading-relaxed">{t(descKey)}</p>
+                  <h3 className="text-sm sm:text-xs font-semibold text-zinc-100">{t(titleKey)}</h3>
+                  <p className="text-xs sm:text-[11px] text-zinc-400 leading-relaxed">{t(descKey)}</p>
                 </div>
               </motion.div>
             ))}
@@ -154,14 +154,14 @@ export default function GuestLanding() {
             <motion.h2 variants={fadeUp} className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
               {t('landing.howLabel')}
             </motion.h2>
-            <motion.p variants={fadeUp} className="text-2xl sm:text-3xl font-semibold text-zinc-100 tracking-tight">
+            <motion.p variants={fadeUp} className="text-xl sm:text-2xl lg:text-3xl font-semibold text-zinc-100 tracking-tight">
               {t('landing.howTitle')}
             </motion.p>
           </div>
 
           {/* 2×2 step grid */}
           <motion.div
-            className="grid grid-cols-2 gap-4 w-full"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full"
             variants={stagger}
           >
             {STEPS.map(({ step, icon: Icon, titleKey, descKey }) => (
@@ -178,8 +178,8 @@ export default function GuestLanding() {
                   </span>
                 </div>
                 <div className="flex flex-col gap-0.5 text-left">
-                  <h3 className="text-xs font-semibold text-zinc-100">{t(titleKey)}</h3>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">{t(descKey)}</p>
+                  <h3 className="text-sm sm:text-xs font-semibold text-zinc-100">{t(titleKey)}</h3>
+                  <p className="text-sm sm:text-[11px] text-zinc-400 leading-relaxed">{t(descKey)}</p>
                 </div>
               </motion.div>
             ))}

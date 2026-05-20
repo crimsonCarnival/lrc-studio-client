@@ -9,7 +9,7 @@ import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
 
-const EditorLazy = lazy(() => import('@features/editor/components/core/Editor'));
+const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
 const PreviewLazy = lazy(() => import('@features/preview/components/Preview'));
 
 // Memo wrappers prevent Editor/Preview from re-rendering when AppRouter

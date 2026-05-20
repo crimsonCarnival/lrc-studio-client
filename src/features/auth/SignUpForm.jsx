@@ -2,9 +2,11 @@
 import { Trans } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, Zap } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { translateAuthError } from '@/shared/utils/auth-errors';
+import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import RegistrationBlockedModal from './RegistrationBlockedModal';
 import { FieldError, ErrorBanner, ContextBanner, GoogleButton } from './auth-shared';
@@ -13,6 +15,7 @@ import { FieldError, ErrorBanner, ContextBanner, GoogleButton } from './auth-sha
 
 export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSuccess, redirect }) {
   const navigate = useNavigate();
+  const { trigger: haptic } = useHapticFeedback();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -71,8 +74,21 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
-        <ErrorBanner message={error} />
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-400"
+            >
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {!error && <ErrorBanner message={error} />}
 
         {/* Username */}
         <div className="flex flex-col gap-1.5">
@@ -85,6 +101,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             autoComplete="username"
             maxLength={30}
             error={!!fieldErrors.username}
+            className="focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
           />
           <FieldError message={fieldErrors.username} />
         </div>
@@ -99,6 +116,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             onChange={(e) => { setEmail(e.target.value); setFieldErrors(p => ({ ...p, email: undefined })); }}
             autoComplete="email"
             error={!!fieldErrors.email}
+            className="focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
           />
           <FieldError message={fieldErrors.email} />
         </div>
@@ -120,32 +138,47 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
               onChange={(e) => { setPassword(e.target.value); setFieldErrors(p => ({ ...p, password: undefined })); }}
               autoComplete="new-password"
               error={!!fieldErrors.password}
-              className="pr-11"
+              className="pr-11 focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
             />
             {password && (
-              <button
+              <motion.button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-zinc-300 transition-colors rounded-lg z-10"
+                onClick={() => {
+                  haptic('light');
+                  setShowPassword(!showPassword);
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 flex items-center justify-center text-zinc-400 hover:text-zinc-300 transition-colors rounded-lg z-10 lg:h-9 lg:w-9 focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
+                aria-label={showPassword ? t('auth.hidePassword', 'Hide password') : t('auth.showPassword', 'Show password')}
               >
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
+              </motion.button>
             )}
           </div>
           <PasswordStrength password={password} />
           <FieldError message={fieldErrors.password} />
         </div>
 
-        <Button
+        <motion.button
           type="submit"
           disabled={loading}
-          className="h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-bold text-sm rounded-xl disabled:opacity-40 transition-all duration-200 mt-2"
+          whileTap={{ scale: 0.98 }}
+          className="h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-bold text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 mt-2 disabled:cursor-not-allowed focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
         >
           {loading
-            ? <Loader2 className="size-4 animate-spin" />
+            ? (
+              <div className="flex items-center gap-2 justify-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className="size-4 border-2 border-white/30 border-t-white rounded-full"
+                />
+                <span>{t('auth.registerActionLoading', 'Creating account...')}</span>
+              </div>
+            )
             : t('auth.registerAction')
           }
-        </Button>
+        </motion.button>
 
         <div className="flex flex-col gap-4 mt-4">
           <p className="text-xs text-zinc-500 text-center">

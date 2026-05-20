@@ -30,7 +30,10 @@ function PopoverContent({
         sideOffset={sideOffset}
         align={align}
         className={cn(
-          "z-popover max-h-(--radix-popover-content-available-height) min-w-72 origin-(--radix-popover-content-transform-origin) overflow-y-auto rounded-lg bg-zinc-900 border border-zinc-700/80 p-1.5 text-zinc-300 shadow-md duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:overflow-hidden data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "z-popover max-h-(--radix-popover-content-available-height) origin-(--radix-popover-content-transform-origin) overflow-y-auto rounded-lg bg-zinc-900 border border-zinc-700/80 p-1.5 text-zinc-300 shadow-md duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[state=closed]:overflow-hidden data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          // Responsive sizing
+          "w-full max-w-xs lg:min-w-72",
+          "max-lg:mx-4",
           className
         )}
         {...props}

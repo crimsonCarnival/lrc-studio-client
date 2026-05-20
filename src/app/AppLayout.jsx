@@ -8,6 +8,7 @@ import { AppHeader } from './layout/AppHeader';
 import { AppPlayer } from './layout/AppPlayer';
 import { AppMobileNav } from './layout/AppMobileNav';
 import { AppModals } from './layout/AppModals';
+import { SafeAreaContainer } from '../shared/ui/SafeAreaContainer.jsx';
 
 export function AppLayout({ children, user, logout, appState, settingsState, layoutState }) {
   const { t, i18n } = useTranslation();
@@ -49,121 +50,123 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   }, [mediaTitle, setMediaTitle, setProjectMetadata, navigate, handleManualSave, setShowNamingModal]);
 
   return (
-    <div className="min-h-screen lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col">
-      <AppBackground />
+    <SafeAreaContainer padding="bottom">
+      <div className="min-h-screen lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col">
+        <AppBackground />
 
-      {/* Drag overlay */}
-      {isDraggingFile && (
-        <div className="fixed inset-0 z-overlay flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none transition-all">
-          <div className="flex flex-col items-center gap-4 text-primary animate-bounce">
-            <UploadCloud className="size-20" />
-            <h2 className="text-3xl font-semibold tracking-tight text-center px-4">
-              {t('player.dropAudio') || 'Drop your audio or lyrics file here'}
-            </h2>
+        {/* Drag overlay */}
+        {isDraggingFile && (
+          <div className="fixed inset-0 z-overlay flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none transition-all">
+            <div className="flex flex-col items-center gap-4 text-primary animate-bounce">
+              <UploadCloud className="size-20" />
+              <h2 className="text-3xl font-semibold tracking-tight text-center px-4">
+                {t('player.dropAudio') || 'Drop your audio or lyrics file here'}
+              </h2>
+            </div>
+          </div>
+        )}
+
+        <AppHeader
+          user={user}
+          logout={logout}
+          isReady={isReady}
+          lines={lines}
+          mediaTitle={mediaTitle}
+          setMediaTitle={setMediaTitle}
+          triggerImportSave={triggerImportSave}
+          buildProjectPayload={buildProjectPayload}
+          hasUnsavedChanges={hasUnsavedChanges}
+          activeProjectId={activeProjectId}
+          forkedFrom={forkedFrom}
+          setShowSettings={setShowSettings}
+          setShowKeyboardHelp={setShowKeyboardHelp}
+          focusMode={focusMode}
+          setFocusMode={setFocusMode}
+          hideEditor={hideEditor}
+          setHideEditor={setHideEditor}
+          setUnsavedModalTarget={setUnsavedModalTarget}
+          settings={settings}
+          updateSetting={updateSetting}
+          i18n={i18n}
+        />
+
+        <div className={`relative z-base flex-1 min-h-0 ${isSetupPage ? 'px-0' : 'px-0 lg:px-6'} flex flex-col transition-[padding] duration-500 ease-in-out
+          ${location.pathname === '/' ? 'pt-16'
+            : (playerTop && isReady && isPlayerMounted) ? 'max-lg:pt-24 lg:pt-[216px]'
+              : 'pt-24 lg:pt-[104px]'
+          }
+          ${isPlayerMounted && isReady
+            ? playerTop
+              ? 'max-lg:pb-[80px] lg:pb-6'
+              : 'max-lg:pb-[240px] lg:pb-[160px]'
+            : 'pb-20 lg:pb-6'
+          }
+        `}
+        >
+          <div className={`${isSetupPage ? 'w-full' : 'max-w-[1600px] mx-auto w-full'} flex-1 flex flex-col min-h-0`}>
+            {children}
           </div>
         </div>
-      )}
 
-      <AppHeader
-        user={user}
-        logout={logout}
-        isReady={isReady}
-        lines={lines}
-        mediaTitle={mediaTitle}
-        setMediaTitle={setMediaTitle}
-        triggerImportSave={triggerImportSave}
-        buildProjectPayload={buildProjectPayload}
-        hasUnsavedChanges={hasUnsavedChanges}
-        activeProjectId={activeProjectId}
-        forkedFrom={forkedFrom}
-        setShowSettings={setShowSettings}
-        setShowKeyboardHelp={setShowKeyboardHelp}
-        focusMode={focusMode}
-        setFocusMode={setFocusMode}
-        hideEditor={hideEditor}
-        setHideEditor={setHideEditor}
-        setUnsavedModalTarget={setUnsavedModalTarget}
-        settings={settings}
-        updateSetting={updateSetting}
-        i18n={i18n}
-      />
+        <AppPlayer
+          isReady={isReady}
+          isPlayerMounted={isPlayerMounted}
+          isProjectLoading={isProjectLoading}
+          playerRef={playerRef}
+          mediaTitle={mediaTitle}
+          setMediaTitle={setMediaTitle}
+          setIsPlaying={setIsPlaying}
+          setPlaybackSpeed={setPlaybackSpeed}
+          handleTimeUpdate={handleTimeUpdate}
+          handleDurationChange={handleDurationChange}
+          handleMediaChange={handleMediaChange}
+          handleYtUrlChange={handleYtUrlChange}
+          handleCloudinaryUpload={handleCloudinaryUpload}
+          restoredYtUrl={restoredYtUrl}
+          restoredCloudinaryUpload={restoredCloudinaryUpload}
+          restoredPosition={restoredPosition}
+          restoredSpeed={restoredSpeed}
+          projectMetadata={projectMetadata}
+          lines={lines}
+          activeLineIndex={activeLineIndex}
+          playbackPosition={playbackPosition}
+          syncMode={syncMode}
+          playerTop={playerTop}
+          hasMedia={hasMedia}
+          setProjectSpotifyTrackId={setProjectSpotifyTrackId}
+        />
 
-      <div className={`relative z-base flex-1 min-h-0 ${isSetupPage ? 'px-0' : 'px-0 lg:px-6'} flex flex-col transition-[padding] duration-500 ease-in-out
-        ${location.pathname === '/' ? 'pt-16'
-          : (playerTop && isReady && isPlayerMounted) ? 'max-lg:pt-24 lg:pt-[216px]'
-            : 'pt-24 lg:pt-[104px]'
-        }
-        ${isPlayerMounted && isReady
-          ? playerTop
-            ? 'max-lg:pb-[80px] lg:pb-6'
-            : 'max-lg:pb-[240px] lg:pb-[160px]'
-          : 'pb-20 lg:pb-6'
-        }
-      `}
-      >
-        <div className={`${isSetupPage ? 'w-full' : 'max-w-[1600px] mx-auto w-full'} flex-1 flex flex-col min-h-0`}>
-          {children}
-        </div>
+        <AppMobileNav
+          isReady={isReady}
+          mobileTab={mobileTab}
+          setMobileTab={setMobileTab}
+          activeProjectId={activeProjectId}
+        />
+
+        <AppModals
+          showKeyboardHelp={showKeyboardHelp}
+          setShowKeyboardHelp={setShowKeyboardHelp}
+          showSettings={showSettings}
+          setShowSettings={setShowSettings}
+          handleManualSave={handleManualSave}
+          showNamingModal={showNamingModal}
+          setShowNamingModal={setShowNamingModal}
+          handleProjectConfirm={handleProjectConfirm}
+          mediaTitle={mediaTitle}
+          projectMetadata={projectMetadata}
+          pendingProject={pendingProject}
+          handleDiscardProject={handleDiscardProject}
+          handleRestoreProject={handleRestoreProject}
+          unsavedModalTarget={layoutState.unsavedModalTarget}
+          setUnsavedModalTarget={layoutState.setUnsavedModalTarget}
+          sourceInfo={{
+            ytUrl: appState.projectYtUrl || restoredYtUrl,
+            cloudinary: appState.cloudinaryAudio || restoredCloudinaryUpload,
+            spotifyId: appState.projectSpotifyTrackId,
+            title: mediaTitle || appState.projectYtUrl || restoredYtUrl || ''
+          }}
+        />
       </div>
-
-      <AppPlayer
-        isReady={isReady}
-        isPlayerMounted={isPlayerMounted}
-        isProjectLoading={isProjectLoading}
-        playerRef={playerRef}
-        mediaTitle={mediaTitle}
-        setMediaTitle={setMediaTitle}
-        setIsPlaying={setIsPlaying}
-        setPlaybackSpeed={setPlaybackSpeed}
-        handleTimeUpdate={handleTimeUpdate}
-        handleDurationChange={handleDurationChange}
-        handleMediaChange={handleMediaChange}
-        handleYtUrlChange={handleYtUrlChange}
-        handleCloudinaryUpload={handleCloudinaryUpload}
-        restoredYtUrl={restoredYtUrl}
-        restoredCloudinaryUpload={restoredCloudinaryUpload}
-        restoredPosition={restoredPosition}
-        restoredSpeed={restoredSpeed}
-        projectMetadata={projectMetadata}
-        lines={lines}
-        activeLineIndex={activeLineIndex}
-        playbackPosition={playbackPosition}
-        syncMode={syncMode}
-        playerTop={playerTop}
-        hasMedia={hasMedia}
-        setProjectSpotifyTrackId={setProjectSpotifyTrackId}
-      />
-
-      <AppMobileNav
-        isReady={isReady}
-        mobileTab={mobileTab}
-        setMobileTab={setMobileTab}
-        activeProjectId={activeProjectId}
-      />
-
-      <AppModals
-        showKeyboardHelp={showKeyboardHelp}
-        setShowKeyboardHelp={setShowKeyboardHelp}
-        showSettings={showSettings}
-        setShowSettings={setShowSettings}
-        handleManualSave={handleManualSave}
-        showNamingModal={showNamingModal}
-        setShowNamingModal={setShowNamingModal}
-        handleProjectConfirm={handleProjectConfirm}
-        mediaTitle={mediaTitle}
-        projectMetadata={projectMetadata}
-        pendingProject={pendingProject}
-        handleDiscardProject={handleDiscardProject}
-        handleRestoreProject={handleRestoreProject}
-        unsavedModalTarget={layoutState.unsavedModalTarget}
-        setUnsavedModalTarget={layoutState.setUnsavedModalTarget}
-        sourceInfo={{
-          ytUrl: appState.projectYtUrl || restoredYtUrl,
-          cloudinary: appState.cloudinaryAudio || restoredCloudinaryUpload,
-          spotifyId: appState.projectSpotifyTrackId,
-          title: mediaTitle || appState.projectYtUrl || restoredYtUrl || ''
-        }}
-      />
-    </div>
+    </SafeAreaContainer>
   );
 }

@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import { authService } from '@/features/auth/services/auth.service';
@@ -131,16 +132,16 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen px-4">
-      <div className="max-w-md w-full p-8 bg-zinc-900 rounded-lg border border-zinc-800 space-y-6">
-        <h1 className="text-2xl font-semibold text-center text-zinc-100">{t('auth.resetPassword.title', 'Reset Password')}</h1>
+      <div className="max-w-md w-full p-6 lg:p-8 bg-zinc-900 rounded-lg border border-zinc-800 space-y-6">
+        <h1 className="text-2xl lg:text-xl font-semibold text-center text-zinc-100">{t('auth.resetPassword.title', 'Reset Password')}</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <input
               type="email"
               value={email}
               disabled
-              className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-400 placeholder-zinc-600 disabled:opacity-50 focus:outline-none"
+              className="w-full h-12 lg:h-10 px-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-400 placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 text-base lg:text-sm"
             />
           </div>
           <div>
@@ -151,7 +152,7 @@ export default function ResetPasswordPage() {
               onChange={(e) => setNewPassword(e.target.value)}
               required
               disabled={submitting}
-              className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:border-primary/50"
+              className="w-full h-12 lg:h-10 px-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 text-base lg:text-sm"
             />
             <PasswordStrength password={newPassword} />
           </div>
@@ -164,27 +165,61 @@ export default function ResetPasswordPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               disabled={submitting}
-              className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:border-primary/50"
+              className="w-full h-12 lg:h-10 px-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 text-base lg:text-sm"
             />
-            {confirmPassword && newPassword !== confirmPassword && (
-              <p className="text-destructive text-xs font-medium mt-1">{t('auth.resetPassword.passwordMismatch', 'Passwords do not match')}</p>
-            )}
+            <AnimatePresence>
+              {confirmPassword && newPassword !== confirmPassword && (
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-destructive text-xs font-medium mt-1"
+                >
+                  {t('auth.resetPassword.passwordMismatch', 'Passwords do not match')}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </div>
 
-          {error && <p className="text-destructive text-xs font-medium">{error}</p>}
+          <AnimatePresence>
+            {error && (
+              <motion.p
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                className="text-destructive text-xs font-medium p-3 rounded-lg bg-red-500/10 border border-red-500/30"
+              >
+                {error}
+              </motion.p>
+            )}
+          </AnimatePresence>
 
-          <button
+          <motion.button
             type="submit"
             disabled={submitting || !newPassword || newPassword.length < 8}
-            className="w-full h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-semibold text-sm rounded-xl disabled:opacity-40 transition-all duration-200"
+            whileTap={{ scale: 0.98 }}
+            className="w-full h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-semibold text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 disabled:cursor-not-allowed focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
           >
-            {submitting ? t('auth.resetPassword.resetting', 'Resetting...') : t('auth.resetPassword.button', 'Reset Password')}
-          </button>
+            {submitting ? (
+              <div className="flex items-center gap-2 justify-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className="size-4 border-2 border-white/30 border-t-white rounded-full"
+                />
+                <span>{t('auth.resetPassword.sendingLink', 'Sending reset link...')}</span>
+              </div>
+            ) : (
+              t('auth.resetPassword.button', 'Reset Password')
+            )}
+          </motion.button>
         </form>
 
         <button
           onClick={() => navigate('/login')}
-          className="w-full text-center text-zinc-400 hover:text-zinc-300 text-sm"
+          className="w-full text-center text-zinc-400 hover:text-zinc-300 text-sm lg:text-xs"
         >
           {t('auth.resetPassword.backToLogin', 'Back to login')}
         </button>

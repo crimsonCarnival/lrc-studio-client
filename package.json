@@ -66,6 +66,7 @@
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.4",
     "vite": "^8.0.1",
     "vitest": "^4.1.6",
     "vitest-dom": "^0.1.1"
