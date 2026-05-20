@@ -16,7 +16,7 @@ import SpeedControl from './SpeedControl';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/popover';
-import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, Video, ChevronDown, Link2, PanelTop, PanelBottom, Bookmark, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, Video, ChevronDown, Link2, PanelTop, PanelBottom, Bookmark, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Tip } from '@ui/tip';
 import { uploads as uploadsApi, spotify as spotifyApi, getAccessToken } from '@/app/api';
 import SpotifyIcon from '@features/player/components/SpotifyIcon';
@@ -324,6 +324,7 @@ const Player = forwardRef(function Player(
   // ——— Unified controls ———
 
   const togglePlay = useCallback(() => {
+    console.log('[togglePlay] source:', source, '| isPlaying:', isPlaying, '| audioRef.current:', audioRef.current, '| audio.error:', audioRef.current?.error, '| audio.readyState:', audioRef.current?.readyState, '| audio.src:', audioRef.current?.src?.slice(0, 60));
     if (source === 'local' && audioRef.current) {
       if (isPlaying) local.pause();
       else local.play();
@@ -334,6 +335,8 @@ const Player = forwardRef(function Player(
     } else if (source === 'spotify' && sp.ready) {
       if (isPlaying) sp.pause();
       else sp.play();
+    } else {
+      console.warn('[togglePlay] No branch matched — source:', source, 'audioRef.current:', audioRef.current, 'ytReady:', yt.ytReady, 'spReady:', sp.ready);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, isPlaying, local, yt, sp]);
@@ -450,8 +453,9 @@ const Player = forwardRef(function Player(
           onTimeUpdate={local.handleTimeUpdate}
           onLoadedMetadata={local.handleLoadedMetadata}
           onPause={local.handlePause}
+          onEnded={() => setIsPlaying(false)}
+          onError={(e) => console.error('[audio] load error:', e.target.error, '| src:', e.target.src?.slice(0, 80))}
           className="hidden"
-          crossOrigin="anonymous"
         />
       )}
       <div

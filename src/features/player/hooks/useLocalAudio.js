@@ -158,7 +158,17 @@ export default function useLocalAudio({
     setIsUploading(false);
   }, [audioRef, blobRef, localUrl]);
 
-  const play = useCallback(() => { audioRef.current?.play(); }, [audioRef]);
+  const play = useCallback(() => {
+    console.log('[local.play] audioRef.current:', audioRef.current, '| readyState:', audioRef.current?.readyState, '| error:', audioRef.current?.error);
+    const promise = audioRef.current?.play();
+    console.log('[local.play] play() returned:', promise);
+    promise?.catch((err) => {
+      console.error('[local.play] play() rejected:', err.name, err.message);
+      if (err.name !== 'AbortError') {
+        setIsPlaying(false);
+      }
+    });
+  }, [audioRef, setIsPlaying]);
   const pause = useCallback(() => { audioRef.current?.pause(); }, [audioRef]);
 
   const seek = useCallback((time) => {
