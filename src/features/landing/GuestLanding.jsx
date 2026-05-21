@@ -1,8 +1,7 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-// eslint-disable-next-line no-unused-vars
-import { motion } from 'framer-motion';
+import { LazyMotion, domAnimation, m as M } from 'framer-motion';
 import {
   Music2, FileText, Zap, Download, Mic2, Globe,
   ArrowRight, Sparkles, Play, Tag
@@ -44,36 +43,37 @@ export default function GuestLanding() {
   const scrollRef = useRef(null);
 
   return (
+    <LazyMotion features={domAnimation}>
     <div ref={scrollRef} className="h-full overflow-y-auto scroll-smooth scrollbar-none">
       <SmoothWavyCanvas />
 
       {/* ── Hero ───────────────────────────────────────── */}
       <section className="relative min-h-screen flex flex-col items-center justify-center px-4 text-center">
-        <motion.div
+        <M.div
           className="flex flex-col items-center gap-8 max-w-3xl w-full"
           initial="hidden"
           animate="visible"
           variants={stagger}
         >
-          <motion.div
+          <M.div
             variants={fadeUp}
             className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-xs font-semibold tracking-wide"
           >
             <Sparkles className="size-3.5" />
             {t('landing.badge')}
-          </motion.div>
+          </M.div>
 
-          <motion.div variants={fadeUp} className="flex flex-col items-center gap-4">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-zinc-100 leading-[1.1]">
+          <M.div variants={fadeUp} className="flex flex-col items-center gap-4">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-zinc-100 leading-[1.1]">
               {t('landing.headline')}{' '}
               <span className="text-primary">{t('landing.headlineAccent')}</span>
             </h1>
             <p className="text-zinc-300 text-base sm:text-lg max-w-xl leading-relaxed">
               {t('landing.sub')}
             </p>
-          </motion.div>
+          </M.div>
 
-          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center gap-3">
+          <M.div variants={fadeUp} className="flex flex-col sm:flex-row items-center gap-3">
             <Button
               size="lg"
               onClick={() => navigate('/project/new')}
@@ -91,29 +91,29 @@ export default function GuestLanding() {
               {t('landing.ctaSignIn')}
               <ArrowRight className="size-4" />
             </Button>
-          </motion.div>
-        </motion.div>
+          </M.div>
+        </M.div>
       </section>
 
       {/* ── Features ───────────────────────────────────── */}
       <section className="relative min-h-screen flex flex-col items-center justify-center px-4">
         <div className="flex flex-col items-center gap-10 max-w-5xl w-full">
-          <motion.div
+          <M.div
             className="flex flex-col items-center gap-2 text-center"
             initial="hidden"
             whileInView="visible"
             viewport={{ root: scrollRef, once: true, margin: '-80px' }}
             variants={stagger}
           >
-            <motion.h2 variants={fadeUp} className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
+            <M.h2 variants={fadeUp} className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">
               {t('landing.featuresLabel')}
-            </motion.h2>
-            <motion.p variants={fadeUp} className="text-xl sm:text-2xl lg:text-3xl font-semibold text-zinc-100 tracking-tight">
+            </M.h2>
+            <M.p variants={fadeUp} className="text-xl sm:text-2xl lg:text-3xl font-semibold text-zinc-100 tracking-tight">
               {t('landing.featuresTitle')}
-            </motion.p>
-          </motion.div>
+            </M.p>
+          </M.div>
 
-          <motion.div
+          <M.div
             className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full"
             initial="hidden"
             whileInView="visible"
@@ -121,7 +121,7 @@ export default function GuestLanding() {
             variants={stagger}
           >
             {FEATURES.map(({ icon: Icon, color, bg, titleKey, descKey }) => (
-              <motion.div
+              <M.div
                 key={titleKey}
                 variants={fadeUp}
                 className="glass rounded-2xl p-6 sm:p-5 flex gap-4 hover:border-zinc-600/50 transition-colors relative overflow-hidden"
@@ -134,15 +134,15 @@ export default function GuestLanding() {
                   <h3 className="text-sm sm:text-xs font-semibold text-zinc-100">{t(titleKey)}</h3>
                   <p className="text-xs sm:text-[11px] text-zinc-400 leading-relaxed">{t(descKey)}</p>
                 </div>
-              </motion.div>
+              </M.div>
             ))}
-          </motion.div>
+          </M.div>
         </div>
       </section>
 
       {/* ── How it works + CTA ─────────────────────────── */}
       <section className="relative min-h-screen flex flex-col items-center justify-center px-4 py-16">
-        <motion.div
+        <M.div
           className="flex flex-col items-center gap-10 max-w-5xl w-full"
           initial="hidden"
           whileInView="visible"
@@ -151,21 +151,21 @@ export default function GuestLanding() {
         >
           {/* Section header */}
           <div className="flex flex-col items-center gap-2 text-center">
-            <motion.h2 variants={fadeUp} className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-400">
+            <M.h2 variants={fadeUp} className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">
               {t('landing.howLabel')}
-            </motion.h2>
-            <motion.p variants={fadeUp} className="text-xl sm:text-2xl lg:text-3xl font-semibold text-zinc-100 tracking-tight">
+            </M.h2>
+            <M.p variants={fadeUp} className="text-xl sm:text-2xl lg:text-3xl font-semibold text-zinc-100 tracking-tight">
               {t('landing.howTitle')}
-            </motion.p>
+            </M.p>
           </div>
 
           {/* 2×2 step grid */}
-          <motion.div
+          <M.div
             className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full"
             variants={stagger}
           >
             {STEPS.map(({ step, icon: Icon, titleKey, descKey }) => (
-              <motion.div
+              <M.div
                 key={step}
                 variants={fadeUp}
                 className="flex items-center gap-3 p-4 glass rounded-xl relative overflow-hidden"
@@ -173,7 +173,7 @@ export default function GuestLanding() {
                 <ThemedShineBorder />
                 <div className="flex items-center justify-center size-9 rounded-xl bg-zinc-800/80 border border-zinc-700/50 relative shrink-0">
                   <Icon className="size-4 text-zinc-400" />
-                  <span className="absolute -top-1.5 -right-1.5 text-[8px] font-black text-primary bg-zinc-900 border border-primary/30 rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                  <span className="absolute -top-1.5 -right-1.5 text-[8px] font-black text-primary bg-zinc-900 border border-primary/30 rounded-full size-4 flex items-center justify-center leading-none">
                     {step}
                   </span>
                 </div>
@@ -181,12 +181,12 @@ export default function GuestLanding() {
                   <h3 className="text-sm sm:text-xs font-semibold text-zinc-100">{t(titleKey)}</h3>
                   <p className="text-sm sm:text-[11px] text-zinc-400 leading-relaxed">{t(descKey)}</p>
                 </div>
-              </motion.div>
+              </M.div>
             ))}
-          </motion.div>
+          </M.div>
 
           {/* CTA */}
-          <motion.div variants={fadeUp} className="flex flex-col items-center gap-5 text-center w-full max-w-lg pt-2">
+          <M.div variants={fadeUp} className="flex flex-col items-center gap-5 text-center w-full max-w-lg pt-2">
             <div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-400/50 dark:via-zinc-700/50 to-transparent" />
             <h2 className="text-xl sm:text-2xl font-semibold text-zinc-100">
               {t('landing.ctaFooterTitle')}
@@ -210,10 +210,11 @@ export default function GuestLanding() {
               </Button>
             </div>
             <p className="text-xs text-zinc-400">{t('landing.ctaFooterSub')}</p>
-          </motion.div>
-        </motion.div>
+          </M.div>
+        </M.div>
       </section>
 
     </div>
+    </LazyMotion>
   );
 }

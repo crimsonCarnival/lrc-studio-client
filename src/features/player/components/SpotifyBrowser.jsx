@@ -580,9 +580,9 @@ export default function SpotifyBrowser({ onSelectTrack }) {
             {tab === 'search' ? t('spotify.searchHint') : t('spotify.noTracks')}
           </p>
         ) : (
-          tracks.map((track, i) => (
+          tracks.map((track) => (
             <TrackRow
-              key={`${track.trackId}-${i}`}
+              key={track.trackId}
               track={track}
               onSelect={handleSelectTrack}
               onQueue={handleAddToQueue}

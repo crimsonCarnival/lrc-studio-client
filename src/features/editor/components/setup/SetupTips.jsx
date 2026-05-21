@@ -1,7 +1,9 @@
 import { Lightbulb } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-export default function SetupTips({ tips = [] }) {
+const EMPTY_TIPS = [];
+
+export default function SetupTips({ tips = EMPTY_TIPS }) {
   const [tipIndex, setTipIndex] = useState(0);
   const hasTips = Array.isArray(tips) && tips.length > 0;
 

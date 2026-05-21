@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import useHapticFeedback from '../../../shared/hooks/useHapticFeedback';
 
 /**
@@ -72,7 +71,7 @@ export const CollapsibleSection = ({
         onKeyDown={handleKeyDown}
         disabled={disabled}
         aria-expanded={open}
-        className="w-full px-4 py-4 h-12 flex items-center justify-between text-left text-sm font-medium text-zinc-100 bg-zinc-800/50 hover-capable:hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1 focus-visible:ring-offset-zinc-900"
+        className="w-full p-4 h-12 flex items-center justify-between text-left text-sm font-medium text-zinc-100 bg-zinc-800/50 hover-capable:hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1 focus-visible:ring-offset-zinc-900"
       >
         <span className="font-semibold">{title}</span>
         <motion.span

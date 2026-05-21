@@ -241,8 +241,8 @@ describe('useMediaQuery', () => {
   });
 
   it('should update when query prop changes', () => {
-    let callback1024;
-    let callback768;
+    let _callback1024;
+    let _callback768;
 
     matchMediaMock.mockImplementation((query) => {
       const isMin1024 = query === '(min-width: 1024px)';
@@ -255,9 +255,9 @@ describe('useMediaQuery', () => {
         addEventListener: vi.fn((event, cb) => {
           if (event === 'change') {
             if (isMin1024) {
-              callback1024 = cb;
+              _callback1024 = cb;
             } else {
-              callback768 = cb;
+              _callback768 = cb;
             }
           }
         }),

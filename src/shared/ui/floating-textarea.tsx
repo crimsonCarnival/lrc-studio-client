@@ -1,15 +1,12 @@
-﻿import * as React from "react"
+import * as React from "react"
 import { cn } from "@/shared/utils/utils"
 import { Textarea } from "./textarea"
 
-const FloatingTextarea = React.forwardRef<
-  HTMLTextAreaElement,
-  React.ComponentProps<"textarea"> & { label: string; error?: boolean }
->(({ className, label, value, error, onFocus, onBlur, ...props }, ref) => {
+function FloatingTextarea({ className, label, value, error, onFocus, onBlur, ref, ...props }: React.ComponentProps<"textarea"> & { label: string; error?: boolean }) {
   const [isFocused, setIsFocused] = React.useState(false)
 
   const internalRef = React.useRef<HTMLTextAreaElement>(null)
-  const combinedRef = (ref as React.MutableRefObject<HTMLTextAreaElement>) || internalRef
+  const combinedRef = (ref as React.RefObject<HTMLTextAreaElement>) || internalRef
 
   const [hasValue, setHasValue] = React.useState(false)
 
@@ -57,7 +54,6 @@ const FloatingTextarea = React.forwardRef<
       </label>
     </div>
   )
-})
-FloatingTextarea.displayName = "FloatingTextarea"
+}
 
 export { FloatingTextarea }

@@ -1,61 +1,33 @@
 import { useState, useEffect } from 'react';
 
-/**
- * Hook for detecting device input method capability
- * Detects whether device supports hover (mouse) or is touch-only
- *
- * @returns {string} 'touch', 'mouse', 'hybrid', or 'unknown'
- */
+function detectFromQueries(hoverQuery, coarseQuery) {
+  if (coarseQuery.matches && !hoverQuery.matches) return 'touch';
+  if (hoverQuery.matches && !coarseQuery.matches) return 'mouse';
+  if (hoverQuery.matches && coarseQuery.matches) return 'hybrid';
+  return 'unknown';
+}
+
 export default function useInputMethod() {
-  const [inputMethod, setInputMethod] = useState('unknown');
+  const [inputMethod, setInputMethod] = useState(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return 'unknown';
+    return detectFromQueries(
+      window.matchMedia('(hover: hover)'),
+      window.matchMedia('(pointer: coarse)')
+    );
+  });
 
   useEffect(() => {
-    // Check if media queries are supported
-    if (!window.matchMedia) {
-      setInputMethod('unknown');
-      return;
-    }
-
-    // Media query checks
+    if (!window.matchMedia) return;
     const hoverQuery = window.matchMedia('(hover: hover)');
     const coarsePointerQuery = window.matchMedia('(pointer: coarse)');
 
-    // Determine input method based on media query results
-    const detectInputMethod = () => {
-      const supportsHover = hoverQuery.matches;
-      const supportsCoarsePointer = coarsePointerQuery.matches;
+    const handleChange = () => setInputMethod(detectFromQueries(hoverQuery, coarsePointerQuery));
+    const handleOrientationChange = () => setInputMethod(detectFromQueries(hoverQuery, coarsePointerQuery));
 
-      if (supportsCoarsePointer && !supportsHover) {
-        return 'touch';
-      } else if (supportsHover && !supportsCoarsePointer) {
-        return 'mouse';
-      } else if (supportsHover && supportsCoarsePointer) {
-        return 'hybrid';
-      }
-      return 'unknown';
-    };
-
-    // Initial detection
-    setInputMethod(detectInputMethod());
-
-    // Handle orientation change
-    const handleOrientationChange = () => {
-      setInputMethod(detectInputMethod());
-    };
-
-    // Handle device connection changes (e.g., keyboard/mouse connected)
-    const handleChange = () => {
-      setInputMethod(detectInputMethod());
-    };
-
-    // Listen to media query changes
     hoverQuery.addEventListener('change', handleChange);
     coarsePointerQuery.addEventListener('change', handleChange);
-
-    // Listen to orientation change
     window.addEventListener('orientationchange', handleOrientationChange);
 
-    // Cleanup listeners on unmount
     return () => {
       hoverQuery.removeEventListener('change', handleChange);
       coarsePointerQuery.removeEventListener('change', handleChange);

@@ -1,4 +1,4 @@
-﻿import { useState, useCallback, useMemo, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
+﻿import { useState, useCallback, useMemo, useRef, useImperativeHandle, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useSettings } from '@/features/settings/useSettings';
@@ -28,9 +28,8 @@ const FOCUS_RING = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus
 
 const ALL_SPEED_PRESETS = [0.25, 0.5, 0.75, 1, 1.25, 1.5];
 
-const Player = forwardRef(function Player(
-  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef, mediaTitle, onTitleChange, initialYtUrl, initialCloudinaryUpload, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onCloudinaryUpload, playerTop = false, onDockToggle, onSpotifyTrackIdChange },
-  ref,
+function Player(
+  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef, mediaTitle, onTitleChange, initialYtUrl, initialCloudinaryUpload, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onCloudinaryUpload, playerTop = false, onDockToggle, onSpotifyTrackIdChange, ref },
 ) {
   const { t, dt } = useDynamicTranslation();
   const { settings, updateSetting } = useSettings();
@@ -1126,6 +1125,6 @@ const Player = forwardRef(function Player(
       )}
     </>
   );
-});
+}
 
 export default Player;

@@ -97,11 +97,13 @@ export default function PreviewLine({
         <>
           <div className="flex-1 min-w-0 flex flex-col">
             {/* Main Track (furigana renders as ruby on kanji) */}
-            {renderMainTrack({
-              line, isActive, isPast, hasWordTimestamps, playbackPosition,
-              activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview,
-              isPlaying, playbackSpeed, hasReadings
-            })}
+            <MainTrack
+              line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={hasWordTimestamps}
+              playbackPosition={playbackPosition} activeFontSizes={activeFontSizes}
+              inactiveFontSizes={inactiveFontSizes} sizeOption={sizeOption} spacingOption={spacingOption}
+              settings={settings} showFuriganaInPreview={showFuriganaInPreview}
+              isPlaying={isPlaying} playbackSpeed={playbackSpeed} hasReadings={hasReadings}
+            />
             {/* Secondary/Romaji Track — below main */}
             {line.secondary && renderSecondaryTrack({
               line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings,
@@ -128,11 +130,13 @@ export default function PreviewLine({
       ) : (
         <>
           {/* Main Track (furigana renders as ruby on kanji) */}
-          {renderMainTrack({
-            line, isActive, isPast, hasWordTimestamps, playbackPosition,
-            activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview,
-            isPlaying, playbackSpeed, hasReadings
-          })}
+          <MainTrack
+            line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={hasWordTimestamps}
+            playbackPosition={playbackPosition} activeFontSizes={activeFontSizes}
+            inactiveFontSizes={inactiveFontSizes} sizeOption={sizeOption} spacingOption={spacingOption}
+            settings={settings} showFuriganaInPreview={showFuriganaInPreview}
+            isPlaying={isPlaying} playbackSpeed={playbackSpeed} hasReadings={hasReadings}
+          />
 
           {/* Secondary/Romaji Track — below main */}
           {line.secondary && renderSecondaryTrack({
@@ -184,7 +188,7 @@ function needsSpaceAfter(currentWord, nextWord) {
 
 // ——— Render main text track with karaoke fill ———
 // Fill effect is ONLY applied when word-level timestamps exist.
-function renderMainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying, playbackSpeed, hasReadings }) {
+function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying, playbackSpeed, hasReadings }) {
   const fillTrack = settings.editor?.display?.karaokeFillTrack ?? 'main';
   const fillEasing = settings.editor?.display?.karaokeFillEasing ?? 'linear';
   const skipMainFill = isActive && fillTrack === 'secondary';
@@ -220,7 +224,7 @@ function renderMainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPo
   const words = line.words || [];
 
   return (
-    <p className={`transition-colors duration-100 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass}`} style={{ lineHeight: hasReadings ? '2' : undefined, willChange: 'opacity, transform' }}>
+    <p className={`transition-colors duration-100 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass}`} style={{ lineHeight: hasReadings ? '2' : undefined, willChange: isActive ? 'opacity, transform' : undefined }}>
       {effectiveHasWordTimestamps
         ? words.map((w, wi) => {
           // Calculate effective start and end times for this word (interpolate if untimed)
@@ -271,7 +275,7 @@ function renderMainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPo
                       animationFillMode: 'both',
                       animationDelay: `${(startTime - playbackPosition) / playbackSpeed}s`,
                       animationPlayState: isPlaying ? 'running' : 'paused',
-                      willChange: 'width'
+                      willChange: isPlaying ? 'width' : undefined
                     }}
                   >
                     {wordContent}
@@ -302,7 +306,7 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
     }`;
 
   if (!doFill) {
-    return <p className={baseClass}>{renderParsedSecondary(line.secondary)}</p>;
+    return <p className={baseClass}><ParsedSecondary text={line.secondary} /></p>;
   }
 
   // Estimate fill end time for the last timed secondary word
@@ -362,7 +366,7 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
                   animationFillMode: 'both',
                   animationDelay: `${(startTime - playbackPosition) / playbackSpeed}s`,
                   animationPlayState: isPlaying ? 'running' : 'paused',
-                  willChange: 'width'
+                  willChange: isPlaying ? 'width' : undefined
                 }}
               >
                 {w.word}
@@ -377,16 +381,14 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
 }
 
 // ——— Parse {word|reading} markup in secondary text into rendered ruby elements ———
-function renderParsedSecondary(text) {
+function ParsedSecondary({ text }) {
   if (!text) return null;
   const { segments } = parseRubyMarkup(text);
   return segments.map((seg, i) =>
     seg.reading ? (
-
-      <ruby key={i}>{seg.text}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{seg.reading}</rt><rp>)</rp></ruby>
+      <ruby key={`seg-${i}`}>{seg.text}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{seg.reading}</rt><rp>)</rp></ruby>
     ) : (
-
-      <React.Fragment key={i}>{seg.text}</React.Fragment>
+      <React.Fragment key={`seg-${i}`}>{seg.text}</React.Fragment>
     )
   );
 }
@@ -407,13 +409,13 @@ function renderLineWithReadings(line, fmtReading, showFurigana = true) {
     if (w.reading && isKanjiWord(w.word) && showFurigana) {
       return (
 
-        <React.Fragment key={i}>
+        <React.Fragment key={`word-${i}`}>
           <ruby>{w.word}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{fmtReading(w.reading)}</rt><rp>)</rp></ruby>
           {addSpace ? ' ' : null}
         </React.Fragment>
       );
     }
 
-    return <React.Fragment key={i}>{w.word}{addSpace ? ' ' : null}</React.Fragment>;
+    return <React.Fragment key={`word-${i}`}>{w.word}{addSpace ? ' ' : null}</React.Fragment>;
   });
 }

@@ -1,17 +1,13 @@
-﻿import * as React from "react"
+import * as React from "react"
 import { cn } from "@/shared/utils/utils"
 import { Input } from "./input"
 
-const FloatingInput = React.forwardRef<
-  HTMLInputElement,
-  React.ComponentProps<"input"> & { label: string; error?: boolean }
->(({ className, label, value, error, hasIcon, onFocus, onBlur, ...props }, ref) => {
+function FloatingInput({ className, label, value, error, hasIcon, onFocus, onBlur, ref, ...props }: React.ComponentProps<"input"> & { label: string; error?: boolean; hasIcon?: boolean }) {
   const [isFocused, setIsFocused] = React.useState(false)
-  
-  // Handle both controlled and uncontrolled scenarios
+
   const internalRef = React.useRef<HTMLInputElement>(null)
-  const combinedRef = (ref as React.MutableRefObject<HTMLInputElement>) || internalRef
-  
+  const combinedRef = (ref as React.RefObject<HTMLInputElement>) || internalRef
+
   const [hasValue, setHasValue] = React.useState(false)
 
   React.useEffect(() => {
@@ -40,7 +36,7 @@ const FloatingInput = React.forwardRef<
           setHasValue(!!e.target.value)
           props.onChange?.(e)
         }}
-        placeholder=" " 
+        placeholder=" "
         className={cn(
           "h-12 w-full bg-transparent border-zinc-700/50 text-zinc-100 focus:border-primary/60 focus:ring-0 rounded-xl transition-all px-4 pt-2",
           error && "border-destructive/50 focus:border-destructive/80",
@@ -62,7 +58,6 @@ const FloatingInput = React.forwardRef<
       </label>
     </div>
   )
-})
-FloatingInput.displayName = "FloatingInput"
+}
 
 export { FloatingInput }

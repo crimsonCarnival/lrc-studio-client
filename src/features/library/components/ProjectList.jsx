@@ -12,7 +12,7 @@ import ProjectCard from './ProjectCard.jsx';
  */
 export default function ProjectList({ projects, onDelete, onFavorite, onSelect }) {
   return (
-    <div className="flex flex-col gap-3 px-4 py-4">
+    <div className="flex flex-col gap-3 p-4">
       {projects?.length ? (
         projects.map((project) => (
           <ProjectCard

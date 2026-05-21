@@ -24,7 +24,7 @@ export default function AdminDevicesTab({
           <Input
             placeholder="dv_..."
             value={deviceForm.deviceId}
-            onChange={(e) => setDeviceForm({ ...deviceForm, deviceId: e.target.value })}
+            onChange={(e) => setDeviceForm(prev => ({ ...prev, deviceId: e.target.value }))}
             className="bg-zinc-900 border-zinc-800 h-10"
           />
         </div>
@@ -33,7 +33,7 @@ export default function AdminDevicesTab({
           <Input
             placeholder={t('admin.table.reasonPlaceholder')}
             value={deviceForm.reason}
-            onChange={(e) => setDeviceForm({ ...deviceForm, reason: e.target.value })}
+            onChange={(e) => setDeviceForm(prev => ({ ...prev, reason: e.target.value }))}
             className="bg-zinc-900 border-zinc-800 h-10"
           />
         </div>

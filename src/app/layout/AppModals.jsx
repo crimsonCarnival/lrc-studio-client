@@ -3,18 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { useTranslation } from 'react-i18next';
 
-const Settings = lazy(() => import('@features/settings/components/SettingsModal'));
 const KeyboardHelp = lazy(() => import('@features/settings/components/KeyboardHelp'));
 import ProjectSetupModal from '@features/editor/components/setup/ProjectSetupModal';
 
 /**
- * All floating global modals: keyboard help, settings, project naming, restore prompt.
+ * All floating global modals: keyboard help, project naming, restore prompt.
+ * Settings is now a page at /settings.
  */
 export function AppModals({
   showKeyboardHelp,
   setShowKeyboardHelp,
-  showSettings,
-  setShowSettings,
   handleManualSave,
   showNamingModal,
   setShowNamingModal,
@@ -36,16 +34,6 @@ export function AppModals({
       <Suspense fallback={null}>
         {showKeyboardHelp && (
           <KeyboardHelp isOpen={showKeyboardHelp} onClose={() => setShowKeyboardHelp(false)} />
-        )}
-      </Suspense>
-
-      <Suspense fallback={null}>
-        {showSettings && (
-          <Settings
-            isOpen={showSettings}
-            onClose={() => setShowSettings(false)}
-            onManualSave={handleManualSave}
-          />
         )}
       </Suspense>
 

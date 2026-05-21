@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -19,6 +19,61 @@ function formatRelativeTime(dateStr, t, locale = 'en') {
   const days = Math.floor(hours / 24);
   if (days < 30) return t('library.daysAgo', { count: days }) || `${days}d ago`;
   return new Date(dateStr).toLocaleDateString(locale);
+}
+
+function HomeActionCards({ navigate, t, user, onSpotifyLogin }) {
+  return (
+    <div className="flex flex-col sm:flex-row gap-4 w-full max-w-2xl animate-fade-in">
+      <div className="flex flex-col gap-4 flex-1 isolate">
+        <button
+          type="button"
+          onClick={() => navigate('/project/new')}
+          className="group cursor-pointer glass rounded-2xl p-5 text-left hover:border-primary/50 transition-all shadow-elevated flex items-center gap-5 w-full focus:ring-2 focus:ring-primary/50 outline-none relative overflow-hidden"
+        >
+          <ThemedShineBorder />
+          <div className="size-12 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Plus className="size-6 text-primary" />
+          </div>
+          <div className="flex flex-col">
+            <h3 className="text-base sm:text-lg font-semibold text-zinc-100 mb-0.5">{t('home.createNew')}</h3>
+            <p className="text-sm sm:text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors">{t('home.createNewDesc')}</p>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate('/library')}
+          className="group cursor-pointer glass rounded-2xl p-5 text-left hover:border-accent-purple/40 transition-all shadow-elevated flex items-center gap-5 w-full focus:ring-2 focus:ring-accent-purple/50 outline-none relative overflow-hidden"
+        >
+          <ThemedShineBorder />
+          <div className="size-12 shrink-0 rounded-xl bg-accent-purple/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <LibraryIcon className="size-6 text-accent-purple" />
+          </div>
+          <div className="flex flex-col">
+            <h3 className="text-lg font-semibold text-zinc-100 mb-0.5">{t('home.viewLibrary')}</h3>
+            <p className="text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors">{t('home.viewLibraryDesc')}</p>
+          </div>
+        </button>
+      </div>
+
+      {!user?.spotify?.spotifyId && (
+        <button
+          type="button"
+          onClick={onSpotifyLogin}
+          className="group cursor-pointer glass rounded-2xl p-5 hover:border-green-500/40 transition-all shadow-elevated w-full sm:w-48 flex flex-row sm:flex-col items-center justify-start sm:justify-center gap-4 sm:gap-3 sm:shrink-0 isolate focus:ring-2 focus:ring-green-500/50 outline-none relative overflow-hidden text-left sm:text-center"
+        >
+          <ThemedShineBorder />
+          <div className="size-14 sm:size-16 rounded-2xl bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform shrink-0 sm:mb-2">
+            <SpotifyIcon className="size-8 sm:size-10 text-green-500" />
+          </div>
+          <div className="flex flex-col">
+            <h3 className="text-base font-semibold text-zinc-100 mb-1">{t('home.connectSpotify')}</h3>
+            <p className="text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors leading-relaxed">{t('home.connectSpotifyDesc')}</p>
+          </div>
+        </button>
+      )}
+    </div>
+  );
 }
 
 export default function Home() {
@@ -58,60 +113,7 @@ export default function Home() {
   });
 
   const lastProject = items.length > 0 ? items[0] : null;
-  const username = user?.username || 'Creator';
-
-  const renderActionCards = () => (
-    <div className="flex flex-row gap-4 w-full max-w-2xl animate-fade-in">
-      <div className="flex flex-col gap-4 flex-1 isolate">
-        <button
-          type="button"
-          onClick={() => navigate('/project/new')}
-          className="group cursor-pointer glass rounded-2xl p-5 text-left hover:border-primary/50 transition-all shadow-elevated flex items-center gap-5 w-full focus:ring-2 focus:ring-primary/50 outline-none relative overflow-hidden"
-        >
-          <ThemedShineBorder />
-          <div className="size-12 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Plus className="size-6 text-primary" />
-          </div>
-          <div className="flex flex-col">
-            <h3 className="text-base sm:text-lg font-semibold text-zinc-100 mb-0.5">{t('home.createNew')}</h3>
-            <p className="text-sm sm:text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors">{t('home.createNewDesc')}</p>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => navigate('/library')}
-          className="group cursor-pointer glass rounded-2xl p-5 text-left hover:border-accent-purple/40 transition-all shadow-elevated flex items-center gap-5 w-full focus:ring-2 focus:ring-accent-purple/50 outline-none relative overflow-hidden"
-        >
-          <ThemedShineBorder />
-          <div className="size-12 shrink-0 rounded-xl bg-accent-purple/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <LibraryIcon className="size-6 text-accent-purple" />
-          </div>
-          <div className="flex flex-col">
-            <h3 className="text-lg font-semibold text-zinc-100 mb-0.5">{t('home.viewLibrary')}</h3>
-            <p className="text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors">{t('home.viewLibraryDesc')}</p>
-          </div>
-        </button>
-      </div>
-
-      {!user?.spotify?.spotifyId && (
-        <button
-          type="button"
-          onClick={handleSpotifyLogin}
-          className="group cursor-pointer glass rounded-2xl p-5 text-center hover:border-green-500/40 transition-all shadow-elevated w-48 flex flex-col items-center justify-center gap-3 shrink-0 isolate focus:ring-2 focus:ring-green-500/50 outline-none relative overflow-hidden"
-        >
-          <ThemedShineBorder />
-          <div className="size-16 rounded-2xl bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform mb-2">
-            <SpotifyIcon className="size-10 text-green-500" />
-          </div>
-          <div className="flex flex-col">
-            <h3 className="text-base font-semibold text-zinc-100 mb-1">{t('home.connectSpotify')}</h3>
-            <p className="text-xs text-zinc-500 group-hover:text-zinc-400 transition-colors leading-relaxed">{t('home.connectSpotifyDesc')}</p>
-          </div>
-        </button>
-      )}
-    </div>
-  );
+  const username = user?.displayName || user?.accountName || 'Creator';
 
   return (
     <div className="h-full flex flex-col">
@@ -137,7 +139,7 @@ export default function Home() {
                 {dt('home.welcomeSub')}
               </p>
               <div className="flex flex-col items-center lg:items-start w-full">
-                {renderActionCards()}
+                <HomeActionCards navigate={navigate} t={t} user={user} onSpotifyLogin={handleSpotifyLogin} />
               </div>
             </div>
 
@@ -194,9 +196,8 @@ export default function Home() {
 
             {loading ? (
               <div className="flex flex-col gap-3 animate-pulse">
-                {[1, 2, 3, 4].map(i => (
-
-                  <div key={i} className="h-16 bg-zinc-800/50 rounded-2xl w-full" />
+                {[1, 2, 3, 4].map(n => (
+                  <div key={n} className="h-16 bg-zinc-800/50 rounded-2xl w-full" />
                 ))}
               </div>
             ) : items.length === 0 ? (

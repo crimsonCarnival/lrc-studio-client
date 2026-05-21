@@ -81,7 +81,7 @@ describe('useInputMethod', () => {
 
   it('should detect touch device (coarse pointer, no hover)', () => {
     matchMediaMock.mockImplementation((query) => {
-      const isHover = query === '(hover: hover)';
+      const _isHover = query === '(hover: hover)';
       const isCoarse = query === '(pointer: coarse)';
 
       return {
@@ -100,7 +100,7 @@ describe('useInputMethod', () => {
   it('should detect mouse device (hover, no coarse pointer)', () => {
     matchMediaMock.mockImplementation((query) => {
       const isHover = query === '(hover: hover)';
-      const isCoarse = query === '(pointer: coarse)';
+      const _isCoarse = query === '(pointer: coarse)';
 
       return {
         matches: isHover, // hover: true, coarse: false
@@ -159,7 +159,7 @@ describe('useInputMethod', () => {
   });
 
   it('should update state when media query changes', () => {
-    let hoverCallback;
+    let _hoverCallback;
     let coarseCallback;
     let currentMatches = {
       hover: true,
@@ -177,7 +177,7 @@ describe('useInputMethod', () => {
         addEventListener: vi.fn((event, callback) => {
           if (event === 'change') {
             if (isHover) {
-              hoverCallback = callback;
+              _hoverCallback = callback;
             } else {
               coarseCallback = callback;
             }

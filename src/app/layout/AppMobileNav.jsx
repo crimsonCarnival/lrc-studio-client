@@ -57,7 +57,7 @@ export function AppMobileNav({ mobileTab, setMobileTab, activeProjectId, isReady
             <Icon className="size-6" strokeWidth={active ? 2.5 : 1.8} />
             <span>{label}</span>
             {active && (
-              <div className="absolute bottom-1 w-1 h-1 rounded-full bg-primary" />
+              <div className="absolute bottom-1 size-1 rounded-full bg-primary" />
             )}
           </button>
         );

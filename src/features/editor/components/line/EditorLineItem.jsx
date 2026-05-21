@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { serializeToRubyMarkup, parseRubyMarkup, isKanji, hasKanji } from '@/shared/utils/furigana';
 import { Checkbox } from '@ui/checkbox';
@@ -196,9 +196,7 @@ const EditorLineItem = React.memo(({
   const [prevIsSynced, setPrevIsSynced] = useState(isSynced);
   if (isSynced !== prevIsSynced) {
     setPrevIsSynced(isSynced);
-    if (isSynced && !prevIsSynced) {
-      setJustSynced(true);
-    }
+    if (isSynced && !prevIsSynced) setJustSynced(true);
   }
 
   useEffect(() => {

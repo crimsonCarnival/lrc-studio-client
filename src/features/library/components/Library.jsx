@@ -9,7 +9,6 @@ import useConfirm from '@/shared/hooks/useConfirm';
 import { useSettings } from '@/features/settings/useSettings';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { FileText } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import ProjectCard from './ProjectCard.jsx';
 import ProjectList from './ProjectList.jsx';
@@ -40,7 +39,6 @@ export default function Library({ onOpenProject, onBack }) {
 
   const handleDelete = useCallback((projectId) => {
     setDeletingId(projectId);
-    const project = items.find(p => p.projectId === projectId);
     try {
       projects.remove(projectId);
       setItems((prev) => prev.filter((s) => s.projectId !== projectId));
@@ -49,7 +47,7 @@ export default function Library({ onOpenProject, onBack }) {
     } finally {
       setDeletingId(null);
     }
-  }, [items]);
+  }, []);
 
   const handleFavorite = useCallback((projectId) => {
     // Placeholder for favorite functionality

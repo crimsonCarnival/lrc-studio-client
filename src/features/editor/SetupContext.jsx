@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, use, useState } from 'react';
 
 const SetupContext = createContext({ step: 1, setStep: () => {} });
 
@@ -9,5 +9,5 @@ export function SetupProvider({ children }) {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useSetupContext() {
-  return useContext(SetupContext);
+  return use(SetupContext);
 }

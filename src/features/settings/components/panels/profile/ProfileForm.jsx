@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Save } from 'lucide-react';
 import { Button } from '@ui/button';
@@ -14,23 +14,18 @@ export default function ProfileForm() {
   const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
-    username: user?.username || '',
-    email: user?.email || '',
+    displayName: user?.displayName || '',
     bio: user?.bio || '',
   });
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updatedUser = await authService.updateProfile(formData);
+      const updatedUser = await authService.updateProfile({ displayName: formData.displayName, bio: formData.bio });
       setUser(prev => ({ ...prev, ...updatedUser }));
       toast.success(t('profile.saveSuccess'));
-    } catch (err) {
-      if (err.status === 409 || err.message === 'Username already taken') {
-        toast.error(t('auth.errors.username_taken') || t('auth.usernameTaken'));
-      } else {
-        toast.error(t('profile.saveError'));
-      }
+    } catch {
+      toast.error(t('profile.saveError'));
     } finally {
       setSaving(false);
     }
@@ -38,29 +33,19 @@ export default function ProfileForm() {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
-            {t('profile.username')}
+      <div className="space-y-1.5">
+        <div className="flex items-center ml-1 h-[18px]">
+          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+            {t('profile.displayName', 'Display name')}
           </label>
-          <Input
-            value={formData.username}
-            onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
-            placeholder={t('profile.username')}
-            className="bg-secondary/30 border-border rounded-xl h-10 text-sm"
-          />
         </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
-            {t('profile.email')}
-          </label>
-          <Input
-            value={formData.email}
-            onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-            placeholder={t('profile.email')}
-            className="bg-secondary/30 border-border rounded-xl h-10 text-sm"
-          />
-        </div>
+        <Input
+          value={formData.displayName}
+          onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
+          placeholder={t('profile.displayNamePlaceholder', 'Optional public name')}
+          className="bg-secondary/30 border-border rounded-xl h-10 text-sm"
+          maxLength={50}
+        />
       </div>
 
       <div className="space-y-1.5">
@@ -82,8 +67,7 @@ export default function ProfileForm() {
         <Button
           onClick={handleSave}
           disabled={saving || (
-            formData.username === user?.username &&
-            formData.email === user?.email &&
+            formData.displayName === (user?.displayName || '') &&
             formData.bio === (user?.bio || '')
           )}
           className="w-full sm:w-auto min-w-[140px] h-10 rounded-xl font-bold gap-2"

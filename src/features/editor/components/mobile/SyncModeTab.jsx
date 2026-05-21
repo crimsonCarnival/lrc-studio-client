@@ -1,5 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useCallback, useMemo } from 'react';
 import { formatTime } from '@/shared/utils/format-time';
 
 export default function SyncModeTab({
@@ -40,16 +39,17 @@ export default function SyncModeTab({
       ) : (
         <>
           {/* Waveform area - placeholder for wavesurfer.js */}
-          <div
+          <button
+            type="button"
             data-testid="waveform-area"
             onClick={handleWaveformTap}
-            className="min-h-44 h-40 bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-lg border border-zinc-700/50 flex items-center justify-center cursor-pointer hover:border-zinc-600/50 transition-colors"
+            className="w-full min-h-44 h-40 bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-lg border border-zinc-700/50 flex items-center justify-center cursor-pointer hover:border-zinc-600/50 transition-colors"
           >
             <div className="text-center text-zinc-400">
               <div className="text-sm font-medium mb-2">Waveform Preview</div>
               <div className="text-xs text-zinc-500">Tap to mark timestamp</div>
             </div>
-          </div>
+          </button>
 
           {/* Current timestamp display with duration */}
           <div className="flex flex-col items-center justify-center gap-2">
@@ -73,12 +73,12 @@ export default function SyncModeTab({
               Lines ({lines.filter((l) => l.timestamp != null).length}/{lines.length})
             </h3>
             <div className="space-y-1.5 px-2">
-              {lines.map((line, index) => (
+              {lines.map((line, lineIndex) => (
                 <button
-                  key={index}
-                  onClick={() => handleLineClick(index)}
+                  key={lineIndex}
+                  onClick={() => handleLineClick(lineIndex)}
                   className={`w-full text-left p-2 rounded-lg transition-colors text-sm ${
-                    index === activeLineIndex
+                    lineIndex === activeLineIndex
                       ? 'bg-primary/10 border border-primary text-primary'
                       : line.timestamp != null
                         ? 'bg-zinc-900/50 border border-zinc-800 text-zinc-300 hover:border-zinc-700'

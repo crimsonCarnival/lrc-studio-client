@@ -32,7 +32,7 @@ export function AdminDataTable({
             renderRow ? (
               renderRow(row, idx, isMobile)
             ) : (
-              <div key={idx} className="bg-zinc-800/30 rounded-lg p-4 flex flex-col gap-3 border border-zinc-700/50">
+              <div key={row._id || row.id || `row-${idx}`} className="bg-zinc-800/30 rounded-lg p-4 flex flex-col gap-3 border border-zinc-700/50">
                 {columns.map((col) => (
                   <div key={col.key} className="flex justify-between items-start gap-2">
                     <span className="text-xs font-semibold text-zinc-400 flex-shrink-0">
@@ -79,7 +79,7 @@ export function AdminDataTable({
             renderRow ? (
               renderRow(row, idx, isMobile)
             ) : (
-              <tr key={idx} className="hover:bg-zinc-800/20 transition-colors">
+              <tr key={row._id || row.id || `row-${idx}`} className="hover:bg-zinc-800/20 transition-colors">
                 {columns.map((col) => (
                   <td key={col.key} className="px-4 py-3 text-zinc-200">
                     {renderCell ? renderCell(row, col.key) : row[col.key]}

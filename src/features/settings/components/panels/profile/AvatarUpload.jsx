@@ -35,11 +35,11 @@ export default function AvatarUpload() {
     try {
       const recaptchaToken = executeRecaptcha ? await executeRecaptcha('upload_avatar') : undefined;
       const { url, publicId } = await uploadsService.uploadAvatar(file, recaptchaToken);
-      const { user: updatedUser } = await authService.updateProfile({ 
-        avatarUrl: url, 
-        avatarPublicId: publicId 
+      const updatedUser = await authService.updateProfile({
+        avatarUrl: url,
+        avatarPublicId: publicId
       });
-      setUser(updatedUser);
+      setUser(prev => ({ ...prev, ...updatedUser }));
       toast.success(t('profile.avatarUpdated'));
     } catch {
       toast.error(t('profile.avatarUploadFailed'));
@@ -52,11 +52,11 @@ export default function AvatarUpload() {
   const handleRemoveAvatar = async () => {
     setUploading(true);
     try {
-      const { user: updatedUser } = await authService.updateProfile({ 
-        avatarUrl: null, 
-        avatarPublicId: null 
+      const updatedUser = await authService.updateProfile({
+        avatarUrl: null,
+        avatarPublicId: null
       });
-      setUser(updatedUser);
+      setUser(prev => ({ ...prev, ...updatedUser }));
       toast.success(t('profile.avatarRemoved'));
     } catch {
       toast.error(t('profile.avatarRemoveFailed'));
@@ -76,10 +76,12 @@ export default function AvatarUpload() {
         >
           {uploading ? (
             <Loader2 className="size-8 animate-spin text-primary" />
-          ) : user?.avatarUrl ? (
+          ) : user?.avatarUrl?.length > 0 ? (
             <img src={user.avatarUrl} alt="Avatar" className="size-full object-cover" />
           ) : (
-            <User className="size-10 text-muted-foreground" />
+            <div className="size-full flex items-center justify-center bg-gradient-to-br from-primary/80 to-accent-purple font-bold text-zinc-950 text-3xl select-none">
+              {(user?.displayName || user?.accountName || '?')[0].toUpperCase()}
+            </div>
           )}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
             <Upload className="size-6 text-white" />
@@ -97,9 +99,9 @@ export default function AvatarUpload() {
             disabled={uploading}
             className="rounded-xl h-8 text-[11px] font-bold"
           >
-            {user?.avatarUrl ? t('profile.changeAvatar') : t('profile.uploadAvatar')}
+            {user?.avatarUrl?.length > 0 ? t('profile.changeAvatar') : t('profile.uploadAvatar')}
           </Button>
-          {user?.avatarUrl && (
+          {user?.avatarUrl?.length > 0 && (
             <Button 
               size="sm" 
               variant="ghost" 

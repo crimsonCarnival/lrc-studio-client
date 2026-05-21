@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { LazyMotion, domAnimation, m as M } from 'framer-motion';
 import { useSearchParams, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
@@ -59,18 +59,15 @@ export default function AuthPage() {
   }, [mode, searchParams, navigate]);
 
   const [prevLocationSearch, setPrevLocationSearch] = useState(location.search);
-  if (location.search !== prevLocationSearch) {
+  if (prevLocationSearch !== location.search) {
     setPrevLocationSearch(location.search);
     const params = new URLSearchParams(location.search);
-    const actionParam = params.get('action');
-    if (actionParam === 'forgot-password') {
-      setView('forgot-password');
-    }
+    if (params.get('action') === 'forgot-password') setView('forgot-password');
   }
 
   // 2. Sync view state when action changes (e.g. browser back button or direct link)
   const [prevAction, setPrevAction] = useState(action);
-  if (action !== prevAction) {
+  if (prevAction !== action) {
     setPrevAction(action);
     if (action === 'signup' || action === 'register') {
       setView('register');
@@ -202,7 +199,7 @@ export default function AuthPage() {
         </div>
 
         {/* Footer */}
-        <p className="relative text-[9px] text-zinc-700 mt-8 shrink-0">
+        <p className="relative text-[9px] text-zinc-700 mt-8 shrink-0" suppressHydrationWarning>
           &copy; {new Date().getFullYear()} LRC Studio
         </p>
       </div>

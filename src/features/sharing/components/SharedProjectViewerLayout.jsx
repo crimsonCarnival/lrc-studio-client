@@ -1,4 +1,3 @@
-import useInputMethod from '@/shared/hooks/useInputMethod';
 
 /**
  * Responsive layout wrapper for SharedProjectViewer

@@ -732,63 +732,17 @@ audio::-webkit-media-controls-panel {
   border-radius: 8px;
 }
 
-/* Speed menu scroll */
-.speed-menu-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-}
-
-.speed-menu-scroll::-webkit-scrollbar {
-  display: block;
-  width: 4px;
-}
-
-.speed-menu-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.speed-menu-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 9999px;
-}
-
-/* Thin scrollbar utility */
-.scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-  display: block;
-  width: 4px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 9999px;
-}
-
+/* speed-menu-scroll, scrollbar-thin, settings-scroll — all hidden globally */
+.speed-menu-scroll,
+.scrollbar-thin,
 .settings-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-width: none;
 }
 
+.speed-menu-scroll::-webkit-scrollbar,
+.scrollbar-thin::-webkit-scrollbar,
 .settings-scroll::-webkit-scrollbar {
-  display: block;
-  width: 4px;
-}
-
-.settings-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.settings-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 9999px;
+  display: none;
 }
 
 @theme inline {

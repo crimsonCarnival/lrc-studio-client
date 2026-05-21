@@ -11,7 +11,7 @@ import Preview from '@features/preview/components/Preview';
 import SharedProjectError from './SharedProjectError';
 import { SharedProjectViewerLayout } from './SharedProjectViewerLayout';
 import useInputMethod from '@/shared/hooks/useInputMethod';
-import { LogIn, UserPlus, Music2, Copy, Check, ExternalLink } from 'lucide-react';
+import { LogIn, UserPlus, Music2, Copy, Check, ExternalLink, Star, GitFork } from 'lucide-react';
 import { Tip } from '@ui/tip';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { AppHeader } from '@/app/layout/AppHeader';
@@ -65,6 +65,10 @@ function SharedProjectViewerInner({ projectId }) {
   const [loadStatus, setLoadStatus] = useState('loading'); // 'loading' | 'ok' | 403 | 404
   const [projectData, setProjectData] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [isStarred, setIsStarred] = useState(false);
+  const [starCount, setStarCount] = useState(0);
+  const [forkCount, setForkCount] = useState(0);
+  const [starLoading, setStarLoading] = useState(false);
   const playerRef = useRef(null);
 
   usePageTitle(mediaTitle);
@@ -97,6 +101,9 @@ function SharedProjectViewerInner({ projectId }) {
         setEditorMode(project.lyrics?.editorMode || 'lrc');
         setMediaTitle(project.upload?.title || project.title || '');
         setProjectData(project);
+        setIsStarred(project.isStarredByMe ?? false);
+        setStarCount(project.starCount ?? 0);
+        setForkCount(project.forkCount ?? 0);
         if (project.upload?.source === 'youtube' && project.upload?.youtubeUrl) {
           setInitialYtUrl(project.upload.youtubeUrl);
         } else if (project.upload) {
@@ -142,6 +149,27 @@ function SharedProjectViewerInner({ projectId }) {
     setTimeout(() => setCopied(false), 2000);
   }, []);
 
+  const handleStar = useCallback(async () => {
+    if (!user) { window.location.href = '/auth?redirect=' + encodeURIComponent(window.location.pathname); return; }
+    if (starLoading) return;
+    setStarLoading(true);
+    const wasStarred = isStarred;
+    setIsStarred(!wasStarred);
+    setStarCount((c) => c + (wasStarred ? -1 : 1));
+    try {
+      if (wasStarred) {
+        await projects.unstar(projectId);
+      } else {
+        await projects.star(projectId);
+      }
+    } catch {
+      setIsStarred(wasStarred);
+      setStarCount((c) => c + (wasStarred ? 1 : -1));
+    } finally {
+      setStarLoading(false);
+    }
+  }, [user, starLoading, isStarred, projectId]);
+
   // ── Loading ──
   if (loadStatus === 'loading') {
     return (
@@ -168,7 +196,7 @@ function SharedProjectViewerInner({ projectId }) {
           {/* Author info inline */}
           <div className={`flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-zinc-900/50 border border-zinc-800/80 ${isMobile ? 'text-[9px]' : 'text-[10px] sm:text-xs'} font-medium text-zinc-400 shrink-0`}>
             <Music2 className={isMobile ? 'size-3' : 'size-3.5'} style={{ color: 'currentColor' }} />
-            <span>{t('share.by')} <span className="text-zinc-200">{projectData?.user?.username || t('share.guest')}</span></span>
+            <span>{t('share.by')} <span className="text-zinc-200">{projectData?.user?.displayName || projectData?.user?.accountName || t('share.guest')}</span></span>
             {projectData?.createdAt && (
               <>
                 <span className="size-1 h-1 rounded-full bg-zinc-700 mx-1" />
@@ -177,13 +205,37 @@ function SharedProjectViewerInner({ projectId }) {
             )}
           </div>
           {projectData?.forkedFrom?.projectId && (
-            <Tip content={projectData.forkedFrom.username ? t('share.forkedFrom', { username: projectData.forkedFrom.username, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
+            <Tip content={projectData.forkedFrom.accountName ? t('share.forkedFrom', { username: projectData.forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
               <div className={`flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-accent-blue/10 border border-accent-blue/20 ${isMobile ? 'text-[9px]' : 'text-[10px] sm:text-xs'} font-bold text-accent-blue uppercase shrink-0`}>
                 <ExternalLink className={isMobile ? 'size-2.5' : 'size-3'} />
                 <span>{t('share.forkedBadge', 'Forked')}</span>
               </div>
             </Tip>
           )}
+
+          {/* Fork count */}
+          {forkCount > 0 && (
+            <div className={`flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-zinc-800/60 border border-zinc-700/40 ${isMobile ? 'text-[9px]' : 'text-[10px] sm:text-xs'} text-zinc-400 shrink-0`}>
+              <GitFork className={isMobile ? 'size-2.5' : 'size-3'} />
+              <span>{forkCount}</span>
+            </div>
+          )}
+
+          {/* Star button */}
+          <Tip content={user ? (isStarred ? t('share.unstar', 'Unstar') : t('share.star', 'Star')) : t('share.starLoginRequired', 'Log in to star')}>
+            <button
+              onClick={handleStar}
+              disabled={starLoading}
+              className={`flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border transition-all shrink-0 ${
+                isStarred
+                  ? 'bg-yellow-400/10 border-yellow-400/30 text-yellow-400'
+                  : 'bg-zinc-800/60 border-zinc-700/40 text-zinc-400 hover:text-yellow-400 hover:border-yellow-400/30 hover:bg-yellow-400/10'
+              } ${isMobile ? 'text-[9px]' : 'text-[10px] sm:text-xs'}`}
+            >
+              <Star className={`${isMobile ? 'size-2.5' : 'size-3'} ${isStarred ? 'fill-yellow-400' : ''}`} />
+              <span>{starCount}</span>
+            </button>
+          </Tip>
         </div>
         {/* Description */}
         <p className={`${isMobile ? 'text-xs' : 'text-sm sm:text-base'} text-zinc-400 max-w-3xl leading-relaxed whitespace-pre-wrap text-left`}>
@@ -195,7 +247,7 @@ function SharedProjectViewerInner({ projectId }) {
       <div className={`flex flex-wrap ${isMobile ? 'gap-1.5' : 'gap-2 sm:justify-end sm:max-w-[40%]'}`}>
         {projectData?.metadata?.tags?.length > 0 ? (
           projectData.metadata.tags.map((tag, i) => (
-            <span key={i} className={`px-2 py-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50 ${isMobile ? 'text-[9px]' : 'text-[10px] sm:text-xs'} text-zinc-300 font-medium tracking-wide`}>
+            <span key={`${tag}-${i}`} className={`px-2 py-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50 ${isMobile ? 'text-[9px]' : 'text-[10px] sm:text-xs'} text-zinc-300 font-medium tracking-wide`}>
               {tag}
             </span>
           ))
@@ -216,6 +268,8 @@ function SharedProjectViewerInner({ projectId }) {
             src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png"
             alt="LRC Studio"
             className="size-full object-contain"
+            loading="lazy"
+            decoding="async"
           />
         </div>
         <div className="min-w-0 flex-1">

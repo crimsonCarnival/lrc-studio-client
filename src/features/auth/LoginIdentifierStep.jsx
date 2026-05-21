@@ -1,15 +1,32 @@
-﻿import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useRef } from 'react';
 import { Trans } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Loader2, Zap } from 'lucide-react';
+import { ArrowRight, Loader2, Zap, Lightbulb } from 'lucide-react';
 import { Button } from '@ui/button';
 import { Checkbox } from '@ui/checkbox';
 import { Label } from '@ui/label';
 import { FloatingInput } from '@ui/floating-input';
+import { Tip } from '@ui/tip';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import { auth } from '@/app/api';
 import { FieldError, RedirectMessage, ContextBanner, GoogleButton } from './auth-shared';
 import { REMEMBER_ME_KEY } from './auth-constants';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const HANDLE_RE = /^[a-z0-9_-]{3,30}$/;
+
+function normaliseIdentifier(raw) {
+  const trimmed = raw.trim();
+  // Strip leading @ so users can type @handle
+  return trimmed.startsWith('@') ? trimmed.slice(1).toLowerCase() : trimmed;
+}
+
+function validateIdentifier(value) {
+  if (!value) return 'required';
+  if (EMAIL_RE.test(value)) return null;
+  if (HANDLE_RE.test(value.toLowerCase())) return null;
+  return 'invalid';
+}
 
 // ─── Login Step 1 — Identifier ─────────────────────────────────────────────
 
@@ -29,28 +46,35 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    // autoFocus removed as requested
-  }, []);
+  const handleIdentifierChange = (e) => {
+    setIdentifier(e.target.value);
+    setError('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!identifier.trim()) {
+    const normalised = normaliseIdentifier(identifier);
+    const validationResult = validateIdentifier(normalised);
+    if (validationResult === 'required') {
       setError(t('auth.validation.fieldRequired'));
+      return;
+    }
+    if (validationResult === 'invalid') {
+      setError(t('auth.validation.identifierInvalid', 'Enter a valid email or handle (e.g. @yourhandle)'));
       return;
     }
     setError('');
     setLoading(true);
     try {
-      const result = await auth.checkIdentifier(identifier.trim());
+      const result = await auth.checkIdentifier(normalised);
       if (rememberMe) {
-        localStorage.setItem(REMEMBER_ME_KEY, identifier.trim());
+        localStorage.setItem(REMEMBER_ME_KEY, normalised);
       } else {
         localStorage.removeItem(REMEMBER_ME_KEY);
       }
-      onNext({ identifier: identifier.trim(), ...result });
+      onNext({ identifier: normalised, ...result });
     } catch (err) {
-      setError(translateAuthError(t, err, 'login', identifier.trim()));
+      setError(translateAuthError(t, err, 'login', normalised));
     } finally {
       setLoading(false);
     }
@@ -76,22 +100,30 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
           )}
         </h1>
         <p className="text-sm text-zinc-500 mt-1.5 font-sans">
-          {t('auth.loginSubtitle', 'Enter your username or email to continue.')}
+          {t('auth.loginSubtitle', 'Enter your handle or email to continue.')}
         </p>
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <FloatingInput
-            ref={inputRef}
-            id="auth-identifier"
-            type="text"
-            label={t('auth.usernameOrEmail')}
-            value={identifier}
-            onChange={(e) => { setIdentifier(e.target.value); setError(''); }}
-            autoComplete="username"
-            error={!!error}
-          />
+          <div className="relative">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
+              <Tip content={t('auth.tips.identifier', 'Enter your handle (e.g. @yourhandle) or your email address. You can type @ before the handle — it will be stripped automatically.')}>
+                <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
+              </Tip>
+            </div>
+            <FloatingInput
+              ref={inputRef}
+              id="auth-identifier"
+              type="text"
+              label={t('auth.handleOrEmail', 'Handle or email')}
+              value={identifier}
+              onChange={handleIdentifierChange}
+              autoComplete="username"
+              error={!!error}
+              className="pr-10"
+            />
+          </div>
           <FieldError message={error} />
         </div>
 
@@ -112,7 +144,7 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
 
         <Button
           type="submit"
-          disabled={loading || !identifier.trim()}
+          disabled={loading || !normaliseIdentifier(identifier)}
           className="h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-bold text-sm rounded-xl gap-2 disabled:opacity-40 transition-all duration-200 mt-1"
         >
           {loading

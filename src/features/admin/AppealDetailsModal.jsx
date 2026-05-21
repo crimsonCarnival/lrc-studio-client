@@ -28,7 +28,7 @@ export default function AppealDetailsModal({ isOpen, user, onApprove, onReject, 
                 {t('admin.appeal.modalTitle') || 'Review Appeal'}
               </DialogTitle>
               <DialogDescription className="text-xs text-zinc-500 font-medium uppercase tracking-wider">
-                {user.username} • {user.email}
+                {user.displayName || user.accountName} • {user.email}
               </DialogDescription>
             </div>
           </div>
@@ -41,15 +41,15 @@ export default function AppealDetailsModal({ isOpen, user, onApprove, onReject, 
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">
                 {t('admin.table.reasonLabel') || 'Original Reason'}
               </span>
-              <p className="text-xs text-zinc-300 italic">"{user.banReason || 'No reason provided'}"</p>
+              <p className="text-xs text-zinc-300 italic">"{user.ban?.reason || 'No reason provided'}"</p>
             </div>
             <div className="bg-zinc-950/50 border border-zinc-800 rounded-xl p-3">
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">
                 {t('admin.appeal.submittedAt') || 'Submitted At'}
               </span>
-              <div className="flex items-center gap-1.5 text-zinc-300 text-xs">
+              <div className="flex items-center gap-1.5 text-zinc-300 text-xs" suppressHydrationWarning>
                 <Clock className="size-3.5 text-zinc-500" />
-                {user.appealAt ? new Date(user.appealAt).toLocaleString() : '-'}
+                {user.appeal?.submittedAt ? new Date(user.appeal.submittedAt).toLocaleString() : '-'}
               </div>
             </div>
           </div>
@@ -63,7 +63,7 @@ export default function AppealDetailsModal({ isOpen, user, onApprove, onReject, 
               {t('admin.banned.yourAppealLabel') || 'User Appeal'}
             </span>
             <div className="text-sm text-zinc-200 leading-relaxed max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
-              {user.banAppeal}
+              {user.appeal?.text}
             </div>
           </div>
         </div>

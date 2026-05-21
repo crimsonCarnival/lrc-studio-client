@@ -1,8 +1,9 @@
 ﻿import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Eye, EyeOff, Loader2, Lightbulb } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
+import { Tip } from '@ui/tip';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { FieldError, AvatarBadge, GoogleButton } from './auth-shared';
@@ -51,10 +52,10 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
         onClick={onBack}
         className="flex items-center gap-3 mb-8 group w-full text-left"
       >
-        <AvatarBadge username={identifierData.username} avatarUrl={identifierData.avatarUrl} size="md" />
+        <AvatarBadge username={identifierData.accountName} avatarUrl={identifierData.avatarUrl} size="md" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-zinc-200 truncate">
-            {identifierData.username || identifierData.identifier}
+            {identifierData.accountName || identifierData.identifier}
           </p>
           <p className="text-xs text-zinc-500 flex items-center gap-1 group-hover:text-primary transition-colors">
             <ArrowLeft className="size-3" />
@@ -76,6 +77,11 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
         {identifierData.hasPassword !== false && (
           <div className="flex flex-col gap-1.5">
             <div className="relative">
+              <div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
+                <Tip content={t('auth.tips.loginPassword', 'Your account password. Use "Forgot password?" if you can\'t remember it.')}>
+                  <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
+                </Tip>
+              </div>
               <FloatingInput
                 ref={inputRef}
                 id="auth-password"
@@ -85,7 +91,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                 onChange={(e) => { setPassword(e.target.value); setError(''); }}
                 autoComplete="current-password"
                 error={!!error}
-                className="pr-11 focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
+                className="pr-20 focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
               />
               {password && (
                 <motion.button
@@ -95,7 +101,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                     setShowPassword(!showPassword);
                   }}
                   whileTap={{ scale: 0.95 }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 flex items-center justify-center text-zinc-400 hover:text-zinc-300 transition-colors rounded-lg z-10 lg:h-9 lg:w-9 focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center text-zinc-400 hover:text-zinc-300 transition-colors rounded-lg z-10 focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
                   aria-label={showPassword ? t('auth.hidePassword', 'Hide password') : t('auth.showPassword', 'Show password')}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}

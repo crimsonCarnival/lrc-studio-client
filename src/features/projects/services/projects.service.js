@@ -15,8 +15,10 @@ const GET_PROJECTS = `
       forkedFrom {
         projectId
         userId
-        username
+        accountName
       }
+      forkCount
+      starCount
       lineCount
       syncedLineCount
       metadata {
@@ -52,7 +54,7 @@ const GET_PROJECT = `
       forkedFrom {
         projectId
         userId
-        username
+        accountName
       }
       state {
         syncMode
@@ -186,6 +188,9 @@ export const projectsService = {
               userId
               username
             }
+            forkCount
+            starCount
+            isStarredByMe
             metadata {
               description
               tags
@@ -222,10 +227,6 @@ export const projectsService = {
                 secondaryWords { word time }
               }
             }
-            metadata {
-              description
-              tags
-            }
           }
         }
       `, { id });
@@ -253,5 +254,31 @@ export const projectsService = {
       }
     `, { id });
     return data.cloneProject;
+  },
+
+  async star(id) {
+    const data = await gqlRequest(`
+      mutation StarProject($id: ID!) {
+        starProject(id: $id) {
+          projectId
+          starCount
+          isStarredByMe
+        }
+      }
+    `, { id });
+    return data.starProject;
+  },
+
+  async unstar(id) {
+    const data = await gqlRequest(`
+      mutation UnstarProject($id: ID!) {
+        unstarProject(id: $id) {
+          projectId
+          starCount
+          isStarredByMe
+        }
+      }
+    `, { id });
+    return data.unstarProject;
   },
 };

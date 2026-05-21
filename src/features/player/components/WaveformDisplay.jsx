@@ -122,7 +122,7 @@ const WaveformDisplay = ({
     regionsRef.current = regions;
     wavesurferRef.current = ws;
 
-    ws.on('ready', () => {
+    const offReady = ws.on('ready', () => {
       setIsReady(true);
       if (audioRef.current) ws.setTime(audioRef.current.currentTime);
     });
@@ -131,7 +131,7 @@ const WaveformDisplay = ({
 
     return () => {
       try {
-        ws.un('ready');
+        offReady?.();
         ws.destroy();
       } catch { /* ignore abort errors on unmount */ }
       setIsReady(false);
@@ -200,8 +200,8 @@ const WaveformDisplay = ({
         {!isReady && (
           <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/60 backdrop-blur-[2px]">
             <div className="flex gap-1">
-              {[0, 1, 2].map(i => (
-                <div key={i} className="w-1 h-3 bg-primary/40 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.1}s` }} />
+              {[0, 1, 2].map(n => (
+                <div key={n} className="w-1 h-3 bg-primary/40 rounded-full animate-pulse" style={{ animationDelay: `${n * 0.1}s` }} />
               ))}
             </div>
           </div>

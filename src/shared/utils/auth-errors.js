@@ -16,10 +16,10 @@ export function translateAuthError(t, err, context = 'generic', value = '') {
   if (code) {
     let key = `auth.errors.${code}`;
 
-    // Specialize identifier_not_found based on input format
+    // Specialize identifier_not_found based on whether the identifier looks like an email
     if (code === 'identifier_not_found' && value) {
       const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-      key = isEmail ? 'auth.errors.email_not_found' : 'auth.errors.username_not_found';
+      key = isEmail ? 'auth.errors.email_not_found' : 'auth.errors.accountName_not_found';
     }
 
     const translated = t(key);
@@ -30,7 +30,7 @@ export function translateAuthError(t, err, context = 'generic', value = '') {
   // Status-based fallbacks
   const status = err?.status ?? err?.body?.status;
   if (status === 429) return t('auth.tooManyAttempts');
-  if (status === 409) return t('auth.errors.username_taken');
+  if (status === 409) return t('auth.errors.accountName_taken');
   if (status === 401) return t('auth.errors.invalid_credentials');
   if (status === 403) return t('auth.errors.account_banned');
   if (status === 400) return t('auth.validationError');

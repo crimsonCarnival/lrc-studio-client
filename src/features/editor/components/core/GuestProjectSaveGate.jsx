@@ -45,11 +45,12 @@ export default function GuestProjectSaveGate() {
     // from run #1 cannot interfere with run #2 (which is what React StrictMode
     // does in development: mount → cleanup → mount).
     let cancelled = false;
+    let retryTimer = null;
     attemptRef.current = 0;
 
     const run = async () => {
-      const record = await getPendingProject();
       if (cancelled) return;
+      const record = await getPendingProject();
       setDisplayAttempt(0);
 
       if (!record) {
@@ -67,15 +68,12 @@ export default function GuestProjectSaveGate() {
             ? await executeRecaptchaRef.current('create_project').catch(() => undefined)
             : undefined;
 
-          if (cancelled) return;
-
           const { savedAt: _savedAt, ...payload } = record;
+          if (cancelled) return;
           const result = await request('/projects', {
             method: 'POST',
             body: JSON.stringify({ ...payload, recaptchaToken }),
           });
-
-          if (cancelled) return;
           await clearPendingProject();
           navigateRef.current(`/project/${result.projectId}`, { replace: true });
         } catch {
@@ -83,7 +81,7 @@ export default function GuestProjectSaveGate() {
           const delay = getBackoffDelay(attemptRef.current);
           attemptRef.current += 1;
           setDisplayAttempt(attemptRef.current);
-          setTimeout(attempt, delay);
+          retryTimer = setTimeout(attempt, delay);
         }
       };
 
@@ -91,7 +89,10 @@ export default function GuestProjectSaveGate() {
     };
 
     run();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
   }, [isActive]); // isActive only — callback changes must not re-trigger a save
 
   if (!isActive) return null;

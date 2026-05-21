@@ -1,5 +1,5 @@
 export default {
-  title: "Perfil de Usuario",
+  title: "Cuenta",
   manageDesc: "Gestiona los ajustes de tu cuenta y servicios conectados",
   adminBadge: "Admin",
   securedBadge: "Cuenta LRC Studio • Conexión Segura",
@@ -8,6 +8,11 @@ export default {
   verified: "Verificado",
   unverified: "Sin verificar",
   username: "Nombre de usuario",
+  accountName: "Identificador",
+  accountNamePlaceholder: "tu_identificador",
+  displayName: "Nombre visible",
+  displayNamePlaceholder: "Nombre público opcional",
+  accountNameCooldown: "Cambia en {{days}} día(s)",
   email: "Correo electrónico",
   bio: "Biografía",
   bioPlaceholder: "Cuéntanos algo sobre ti...",
@@ -30,7 +35,17 @@ export default {
   spotifyConnected: "Conectado",
   spotifyNotConnected: "No conectado",
   sections: {
+    public: "Datos públicos",
     account: "Detalles de la cuenta",
-    connections: "Conexiones"
-  }
+    connections: "Conexiones",
+    handleHistory: "Historial de identificadores",
+    emailHistory: "Historial de correos",
+  },
+  handleChangedBadge: "Cambió el identificador {{count}} vez/veces",
+  accountNameSection: "Identificador",
+  emailSection: "Correo electrónico",
+  accountNameHistory: "Historial de identificadores",
+  emailHistory: "Historial de correos",
+  noHistory: "Sin cambios todavía.",
+  changedFrom: "{{from}} → {{to}}",
 };

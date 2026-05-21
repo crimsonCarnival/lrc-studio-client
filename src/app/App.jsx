@@ -271,7 +271,7 @@ function AppInner() {
 
   useUrlParamsSync(enhancedAppState, layoutState);
 
-  if (user?.isBanned) return <BannedScreen />;
+  if (user?.ban?.active) return <BannedScreen />;
 
   return (
     <>

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Music, Mic2, Eye } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import SyncModeTab from './SyncModeTab';
 import LyricsModeTab from './LyricsModeTab';
 import PreviewModeTab from './PreviewModeTab';
+import { applyMark } from '@features/editor/services/editor.service';
 
 const TAB_TRANSITION = {
   duration: 0.15, // 150ms
@@ -26,6 +27,8 @@ export default function MobileEditorLayout({
   playerRef,
   duration,
   isPlaying,
+  syncMode,
+  editorMode,
 }) {
   const { t } = useTranslation();
   const [activeMode, setActiveMode] = useState('sync');
@@ -40,19 +43,39 @@ export default function MobileEditorLayout({
     setActiveMode(modeId);
   };
 
-  const handleMark = () => {
-    // Mark will be handled by sync mode tab
-  };
+  // Stable refs so the event handler always sees current values without re-registering
+  const linesRef = useRef(lines);
+  const activeLineIndexRef = useRef(activeLineIndex);
+  const editorModeRef = useRef(editorMode);
+  useEffect(() => { linesRef.current = lines; }, [lines]);
+  useEffect(() => { activeLineIndexRef.current = activeLineIndex; }, [activeLineIndex]);
+  useEffect(() => { editorModeRef.current = editorMode; }, [editorMode]);
+
+  // Handle editor:mark events from the mobile mark button and the player's mark button
+  useEffect(() => {
+    if (!syncMode) return;
+    const handler = () => {
+      const time = playerRef?.current?.getCurrentTime?.() ?? 0;
+      const result = applyMark({
+        lines: linesRef.current,
+        activeLineIndex: activeLineIndexRef.current,
+        time,
+        editorMode: editorModeRef.current || 'lrc',
+        settings: {},
+        forceAdvance: true,
+      });
+      setLines(result.nextLines);
+      if (result.nextActiveLineIndex != null) {
+        setActiveLineIndex(result.nextActiveLineIndex);
+      }
+    };
+    window.addEventListener('editor:mark', handler);
+    return () => window.removeEventListener('editor:mark', handler);
+  }, [syncMode, playerRef, setLines, setActiveLineIndex]);
 
   const handleEditLine = (lineIndex, newText) => {
     const updatedLines = [...lines];
     updatedLines[lineIndex] = { ...updatedLines[lineIndex], text: newText };
-    setLines(updatedLines);
-  };
-
-  const handleUpdateTimestamp = (lineIndex, newTimestamp) => {
-    const updatedLines = [...lines];
-    updatedLines[lineIndex] = { ...updatedLines[lineIndex], timestamp: newTimestamp };
     setLines(updatedLines);
   };
 
@@ -69,7 +92,6 @@ export default function MobileEditorLayout({
                 ? 'text-primary border-primary'
                 : 'text-zinc-400 border-transparent hover:text-zinc-300'
             }`}
-            role="button"
             aria-selected={activeMode === id}
           >
             <Icon className="size-4 flex-shrink-0" />
@@ -97,7 +119,6 @@ export default function MobileEditorLayout({
                 activeLineIndex={activeLineIndex}
                 setActiveLineIndex={setActiveLineIndex}
                 playerRef={playerRef}
-                onMark={handleMark}
                 duration={duration}
               />
             </div>
@@ -110,7 +131,6 @@ export default function MobileEditorLayout({
                 activeLineIndex={activeLineIndex}
                 setActiveLineIndex={setActiveLineIndex}
                 onEditLine={handleEditLine}
-                onUpdateTimestamp={handleUpdateTimestamp}
               />
             </div>
           )}

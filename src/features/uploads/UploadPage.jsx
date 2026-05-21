@@ -4,7 +4,7 @@ import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import UploadForm from './UploadForm';
 import toast from 'react-hot-toast';
@@ -17,7 +17,7 @@ import { uploadsService } from '@/features/projects/services/uploads.service';
  * - Desktop: Drag-drop zone, horizontal layout
  */
 export const UploadPage = () => {
-  const { t, dt } = useDynamicTranslation();
+  const { t } = useDynamicTranslation();
   const navigate = useNavigate();
   const inputMethod = useInputMethod();
   const isMobile = inputMethod === 'touch';
@@ -70,21 +70,10 @@ export const UploadPage = () => {
       // Get reCAPTCHA token (if needed for your setup)
       // const recaptchaToken = await getRecaptchaToken();
 
-      for (const file of files) {
+      await Promise.all(Array.from(files).map(async (file) => {
+        setUploadProgress(prev => ({ ...prev, [file.name]: 25 }));
         try {
-          // Update progress
-          setUploadProgress(prev => ({
-            ...prev,
-            [file.name]: 25 // Simulating upload start
-          }));
-
-          // Upload file to Cloudinary
-          const result = await uploadsService.uploadToCloudinary(
-            file,
-            null // recaptchaToken if needed
-          );
-
-          // Save metadata to database
+          const result = await uploadsService.uploadToCloudinary(file, null);
           await uploadsService.saveMedia({
             source: 'cloudinary',
             cloudinaryUrl: result.secure_url,
@@ -92,24 +81,15 @@ export const UploadPage = () => {
             fileName: file.name,
             duration: result.duration || 0,
           });
-
-          // Mark as completed
-          setUploadProgress(prev => ({
-            ...prev,
-            [file.name]: 100
-          }));
-
+          setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
           toast.success(t('uploads.uploadSuccess') || `${file.name} uploaded successfully`);
         } catch (error) {
           const errorMsg = error.message || 'Unknown error';
           toast.error(t('uploads.uploadError') || `Failed to upload ${file.name}: ${errorMsg}`);
           setUploadError(errorMsg);
-          setUploadProgress(prev => ({
-            ...prev,
-            [file.name]: 0
-          }));
+          setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
         }
-      }
+      }));
 
       // Clear files after successful upload
       setFiles([]);
@@ -130,7 +110,7 @@ export const UploadPage = () => {
   return (
     <div className="flex flex-col h-screen max-lg:max-h-[calc(100vh-60px)] bg-zinc-950">
       {/* Header */}
-      <div className="px-4 py-4 border-b border-zinc-800 flex-shrink-0">
+      <div className="p-4 border-b border-zinc-800 flex-shrink-0">
         <div className="flex items-center gap-3 mb-3">
           <Button
             variant="outline"
@@ -141,7 +121,7 @@ export const UploadPage = () => {
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <h1 className="text-2xl font-bold text-zinc-100">{t('uploads.uploadAudio', 'Upload Audio')}</h1>
+          <h1 className="text-2xl font-semibold text-zinc-100">{t('uploads.uploadAudio', 'Upload Audio')}</h1>
         </div>
         <p className="text-sm text-zinc-400 px-10">
           {isMobile

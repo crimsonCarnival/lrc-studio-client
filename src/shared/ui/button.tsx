@@ -60,7 +60,7 @@ function Button({
   const Comp = asChild ? Slot.Root : "button"
   const { trigger: haptic } = useHapticFeedback()
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const triggerWithHaptic = (e: React.MouseEvent<HTMLButtonElement>) => {
     haptic("light")
     onClick?.(e)
   }
@@ -71,7 +71,7 @@ function Button({
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
-      onClick={handleClick}
+      onClick={triggerWithHaptic}
       {...props}
     />
   )

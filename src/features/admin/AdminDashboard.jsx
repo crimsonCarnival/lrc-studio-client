@@ -144,10 +144,10 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (user.isBanned) {
+    if (user.ban?.active) {
       try {
         await admin.unbanUser(user.id || user._id);
-        toast.success(t('admin.toast.unbannedSuccess', { name: user.username }));
+        toast.success(t('admin.toast.unbannedSuccess', { name: user.displayName || user.accountName }));
         setAppealModal({ isOpen: false, user: null });
         fetchUsers();
       } catch {
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
   const handleRejectAppeal = async (user) => {
     try {
       await admin.rejectAppeal(user.id || user._id);
-      toast.success(t('admin.toast.appealRejectedSuccess', { name: user.username }));
+      toast.success(t('admin.toast.appealRejectedSuccess', { name: user.displayName || user.accountName }));
       setAppealModal({ isOpen: false, user: null });
       fetchUsers();
     } catch {
@@ -172,7 +172,7 @@ export default function AdminDashboard() {
   const handleReactivate = async (user) => {
     try {
       await admin.reactivateUser(user.id || user._id);
-      toast.success(t('admin.toast.reactivateSuccess', { name: user.username }));
+      toast.success(t('admin.toast.reactivateSuccess', { name: user.displayName || user.accountName }));
       fetchUsers();
     } catch {
       toast.error(t('admin.toast.statusError'));
@@ -184,7 +184,7 @@ export default function AdminDashboard() {
     setBanModal({ isOpen: false, user: null });
     try {
       await admin.banUser(user.id || user._id, { reason, bannedUntil, banIp, banDevice });
-      toast.success(t('admin.toast.bannedSuccess', { name: user.username }));
+      toast.success(t('admin.toast.bannedSuccess', { name: user.displayName || user.accountName }));
       fetchUsers();
       fetchStats();
     } catch {
@@ -252,10 +252,10 @@ export default function AdminDashboard() {
       if (type === 'role') {
         const newRole = user.role === 'admin' ? 'user' : 'admin';
         await admin.changeRole(user.id || user._id, newRole);
-        toast.success(t('admin.toast.roleSuccess', { name: user.username, role: newRole }));
+        toast.success(t('admin.toast.roleSuccess', { name: user.displayName || user.accountName, role: newRole }));
       } else if (type === 'delete') {
         await admin.deleteUser(user.id || user._id);
-        toast.success(t('admin.toast.deleteSuccess', { name: user.username }));
+        toast.success(t('admin.toast.deleteSuccess', { name: user.displayName || user.accountName }));
       } else if (type === 'unblock_ip') {
         await admin.unblockIp(ipId);
         toast.success(t('admin.toast.ipUnblocked'));
@@ -374,12 +374,12 @@ export default function AdminDashboard() {
         }
         message={
           confirmModal.type === 'role'
-            ? t('admin.table.confirmRoleChange', { name: confirmModal.user?.username, role: confirmModal.user?.role === 'admin' ? 'user' : 'admin' })
+            ? t('admin.table.confirmRoleChange', { name: confirmModal.user?.displayName || confirmModal.user?.accountName, role: confirmModal.user?.role === 'admin' ? 'user' : 'admin' })
             : confirmModal.type === 'unblock_ip'
               ? t('admin.table.confirmUnblockIp')
               : confirmModal.type === 'unblock_device'
                 ? t('admin.table.confirmUnblockDevice')
-                : t('admin.table.confirmDelete', { name: confirmModal.user?.username })
+                : t('admin.table.confirmDelete', { name: confirmModal.user?.displayName || confirmModal.user?.accountName })
         }
         onConfirm={onConfirmAction}
         onCancel={() => setConfirmModal({ isOpen: false, type: '', user: null, ipId: null, deviceId: null })}

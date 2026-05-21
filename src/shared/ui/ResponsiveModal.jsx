@@ -23,14 +23,17 @@ import ActionDrawer from './ActionDrawer.jsx';
  *   <form>...</form>
  * </ResponsiveModal>
  */
+const EMPTY_DIALOG_PROPS = {};
+const EMPTY_DRAWER_PROPS = {};
+
 export const ResponsiveModal = ({
   children,
   open,
   onOpenChange,
   title,
   description,
-  dialogProps = {},
-  drawerProps = {},
+  dialogProps = EMPTY_DIALOG_PROPS,
+  drawerProps = EMPTY_DRAWER_PROPS,
   ...props
 }) => {
   const inputMethod = useInputMethod();
@@ -44,7 +47,7 @@ export const ResponsiveModal = ({
         title={title}
         {...drawerProps}
       >
-        <div className="px-4 py-4">
+        <div className="p-4">
           {description && (
             <p className="text-sm text-zinc-400 mb-4">{description}</p>
           )}

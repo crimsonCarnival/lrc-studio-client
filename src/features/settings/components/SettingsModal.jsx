@@ -1,6 +1,5 @@
 ﻿import { useRef } from 'react';
-// eslint-disable-next-line no-unused-vars
-import { motion, useScroll, useSpring } from 'framer-motion';
+import { LazyMotion, domAnimation, m as M, useScroll, useSpring } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
 import { useSettingsModal } from '@features/settings/hooks/useSettingsModal';
@@ -25,10 +24,12 @@ function ModalScrollProgress({ container }) {
     const { scrollYProgress } = useScroll({ container });
     const scaleX = useSpring(scrollYProgress, { stiffness: 200, damping: 50, restDelta: 0.001 });
     return (
-        <motion.div
-            className="h-[2px] w-full flex-shrink-0 origin-left bg-gradient-to-r from-primary to-accent-blue"
-            style={{ scaleX }}
-        />
+        <LazyMotion features={domAnimation}>
+            <M.div
+                className="h-[2px] w-full flex-shrink-0 origin-left bg-gradient-to-r from-primary to-accent-blue"
+                style={{ scaleX }}
+            />
+        </LazyMotion>
     );
 }
 
@@ -70,7 +71,7 @@ function SettingsPanel({
     setActiveTab,
     searchTerm,
     setSearchTerm,
-    position,
+    _position,
     handleMouseDown,
     updateSetting,
     validateShortcut,
@@ -86,9 +87,11 @@ function SettingsPanel({
     const outerScrollRef = useRef(null);
     const contentScrollRefs = useRef({});
 
+    /* eslint-disable react-hooks/refs */
     const activeContainerRef = searchTerm
         ? outerScrollRef
         : { current: contentScrollRefs.current[activeTab] ?? null };
+    /* eslint-enable react-hooks/refs */
 
     // Render mobile content
     const renderMobileContent = () => {
@@ -108,7 +111,7 @@ function SettingsPanel({
             )}
 
             {/* Collapsible Sections Content */}
-            <div ref={outerScrollRef} className="flex-1 min-h-0 overflow-y-auto settings-scroll px-4 py-4">
+            <div ref={outerScrollRef} className="flex-1 min-h-0 overflow-y-auto settings-scroll p-4">
                 <div className="flex flex-col gap-3">
                     {/* Profile Section */}
                     {!isGuest && (
@@ -211,7 +214,7 @@ function SettingsPanel({
             </div>
 
             {/* Footer — Reset & Apply */}
-            <div className="px-4 py-4 border-t border-zinc-800/60 flex-shrink-0 flex gap-2">
+            <div className="p-4 border-t border-zinc-800/60 flex-shrink-0 flex gap-2">
                 <Button
                     variant="outline"
                     onClick={handleReset}

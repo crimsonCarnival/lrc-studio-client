@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import { formatTime } from '@/shared/utils/format-time';
@@ -8,24 +8,22 @@ export default function LyricsModeTab({
   activeLineIndex,
   setActiveLineIndex,
   onEditLine,
-  onUpdateTimestamp,
 }) {
   const [editText, setEditText] = useState(lines[activeLineIndex]?.text || '');
-  const [editTimestamp, setEditTimestamp] = useState(lines[activeLineIndex]?.timestamp ?? '');
+
+  const currentTimestamp = lines[activeLineIndex]?.timestamp ?? null;
 
   const handlePreviousLine = useCallback(() => {
     if (activeLineIndex > 0) {
-      setActiveLineIndex(activeLineIndex - 1);
+      setActiveLineIndex(prev => prev - 1);
       setEditText(lines[activeLineIndex - 1]?.text || '');
-      setEditTimestamp(lines[activeLineIndex - 1]?.timestamp ?? '');
     }
   }, [activeLineIndex, setActiveLineIndex, lines]);
 
   const handleNextLine = useCallback(() => {
     if (activeLineIndex < lines.length - 1) {
-      setActiveLineIndex(activeLineIndex + 1);
+      setActiveLineIndex(prev => prev + 1);
       setEditText(lines[activeLineIndex + 1]?.text || '');
-      setEditTimestamp(lines[activeLineIndex + 1]?.timestamp ?? '');
     }
   }, [activeLineIndex, setActiveLineIndex, lines]);
 
@@ -38,20 +36,12 @@ export default function LyricsModeTab({
     [activeLineIndex, onEditLine]
   );
 
-  const handleTimestampChange = useCallback(
-    (e) => {
-      const value = e.target.value;
-      const timestamp = value === '' ? null : parseInt(value, 10);
-      setEditTimestamp(timestamp ?? '');
-      onUpdateTimestamp?.(activeLineIndex, timestamp);
-    },
-    [activeLineIndex, onUpdateTimestamp]
-  );
+  const handleMark = useCallback((e) => {
+    e.preventDefault();
+    window.dispatchEvent(new CustomEvent('editor:mark'));
+  }, []);
 
-  const lineProgressText = useMemo(
-    () => `${activeLineIndex + 1} / ${lines.length}`,
-    [activeLineIndex, lines.length]
-  );
+  const lineProgressText = `${activeLineIndex + 1} / ${lines.length}`;
 
   return (
     <div className="flex flex-col h-full gap-4 p-4">
@@ -76,19 +66,18 @@ export default function LyricsModeTab({
           className="w-full h-11 px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded-lg text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-primary/50 focus:bg-zinc-900"
         />
 
-        {/* Timestamp input */}
+        {/* Mark button + current timestamp display */}
         <div className="flex gap-2">
-          <input
-            data-testid="timestamp-input"
-            type="number"
-            value={editTimestamp === '' ? '' : editTimestamp}
-            onChange={handleTimestampChange}
-            placeholder="Timestamp (ms)"
-            className="flex-1 h-11 px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded-lg text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-primary/50 focus:bg-zinc-900"
-          />
-          {editTimestamp !== '' && (
-            <div className="h-11 flex items-center px-3 bg-zinc-900/50 border border-zinc-800 rounded-lg text-xs font-mono text-zinc-400">
-              {formatTime(editTimestamp)}
+          <button
+            onPointerDown={handleMark}
+            className="flex-1 h-11 flex items-center justify-center gap-2.5 bg-primary/10 border border-primary/40 text-primary rounded-lg font-semibold text-sm active:bg-primary/25 active:scale-95 transition-all"
+          >
+            <div className="size-3 rounded-full bg-primary shadow-[0_0_12px_rgba(29,185,84,0.6)]" />
+            Mark
+          </button>
+          {currentTimestamp != null && (
+            <div className="h-11 flex items-center px-3 bg-zinc-900/50 border border-zinc-800 rounded-lg text-xs font-mono text-zinc-400 shrink-0">
+              {formatTime(currentTimestamp)}
             </div>
           )}
         </div>
@@ -126,20 +115,20 @@ export default function LyricsModeTab({
           All Lines
         </h3>
         <div className="flex-1 overflow-y-auto space-y-1.5">
-          {lines.map((line, index) => (
+          {lines.map((line, lineIndex) => (
             <button
-              key={index}
-              data-line-index={index}
-              onClick={() => setActiveLineIndex(index)}
+              key={lineIndex}
+              data-line-index={lineIndex}
+              onClick={() => setActiveLineIndex(lineIndex)}
               className={`w-full text-left p-2.5 rounded-lg transition-colors text-sm ${
-                index === activeLineIndex
+                lineIndex === activeLineIndex
                   ? 'bg-primary/10 border border-primary text-primary font-medium'
                   : 'bg-zinc-900/50 border border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900/70'
               }`}
             >
               <div className="flex items-start justify-between gap-2 min-w-0">
                 <span className="text-xs text-zinc-500 flex-shrink-0">
-                  {String(index + 1).padStart(2, '0')}
+                  {String(lineIndex + 1).padStart(2, '0')}
                 </span>
                 <span className="flex-1 truncate">{line.text || '(empty)'}</span>
                 {line.timestamp != null && (

@@ -25,7 +25,9 @@ const Home = lazy(() => import('@features/projects/components/Home'));
 const GuestLanding = lazy(() => import('@features/landing/GuestLanding'));
 const AdminDashboard = lazy(() => import('@features/admin/AdminDashboard'));
 const ProfilePage = lazy(() => import('@features/profile/ProfilePage'));
+const SettingsPage = lazy(() => import('@features/settings/components/SettingsPage'));
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
+const VerifyEmailPage = lazy(() => import('@features/auth/VerifyEmailPage'));
 
 function EditorContainer({ loadProject, activeProjectId, children }) {
   const { id } = useParams();
@@ -131,7 +133,6 @@ export function AppRouter({
     projectMetadata,
     loadError,
     handleSetupComplete,
-    setShowSettings,
     setShowKeyboardHelp,
     buildProjectPayload,
   } = appState;
@@ -158,6 +159,11 @@ export function AppRouter({
     const isSwapped = newOrder[0] === 'preview';
     if (isSwapped !== layoutSwap) setLayoutSwap(isSwapped);
   }, [layoutSwap, setLayoutSwap]);
+
+  const handleNewProject = useCallback(() => navigate('/project/new'), [navigate]);
+  const handleToggleKeyboardHelp = useCallback(() => {
+    setShowKeyboardHelp?.(p => !p);
+  }, [setShowKeyboardHelp]);
 
   const borderClasses = useMemo(() => {
     const base = (item) => {
@@ -227,7 +233,7 @@ export function AppRouter({
             onComplete={handleSetupComplete}
             playerRef={playerRef}
             onShowAllUploads={() => navigate('/uploads')}
-            onOpenSettings={() => setShowSettings(true)}
+            onOpenSettings={() => navigate('/settings')}
           />
         </Suspense>
       } />
@@ -311,8 +317,8 @@ export function AppRouter({
                                 buildProjectPayload={buildProjectPayload}
                                 handleRemoveAllLyrics={handleRemoveAllLyrics} isAutosaving={isAutosaving}
                                 isSaving={isSaving}
-                                onNewProject={() => navigate('/project/new')}
-                                onShowKeyboardHelp={setShowKeyboardHelp ? () => setShowKeyboardHelp(p => !p) : undefined}
+                                onNewProject={handleNewProject}
+                                onShowKeyboardHelp={setShowKeyboardHelp ? handleToggleKeyboardHelp : undefined}
                                 registerAfterSave={registerAfterSave}
                               />
                             ) : (
@@ -358,14 +364,24 @@ export function AppRouter({
           <Home />
         </Suspense>
       } />
-      <Route path="profile" element={
+      <Route path="profile/:accountName?" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
           <ProfilePage />
+        </Suspense>
+      } />
+      <Route path="settings/:tab?" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+          <SettingsPage />
         </Suspense>
       } />
       <Route index element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>}>
           <GuestLanding />
+        </Suspense>
+      } />
+      <Route path="verify-email" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+          <VerifyEmailPage />
         </Suspense>
       } />
       <Route path="*" element={<NotFoundPage type="general" />} />

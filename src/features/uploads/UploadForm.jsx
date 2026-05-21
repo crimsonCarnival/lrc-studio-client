@@ -3,6 +3,9 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import { Button } from '@ui/button';
 import FileItem from './components/FileItem';
 
+const EMPTY_FILES = [];
+const EMPTY_PROGRESS = {};
+
 /**
  * UploadForm component
  * Provides responsive file upload interface:
@@ -14,8 +17,8 @@ export const UploadForm = ({
   onFileSelect,
   onSubmit,
   onDelete,
-  files = [],
-  uploadProgress = {}
+  files = EMPTY_FILES,
+  uploadProgress = EMPTY_PROGRESS
 }) => {
   const inputMethod = useInputMethod();
   const isMobile = inputMethod === 'touch';
@@ -66,7 +69,7 @@ export const UploadForm = ({
   };
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4 px-4 py-4">
+    <form onSubmit={onSubmit} className="flex flex-col gap-4 p-4">
       {/* Desktop: Drag-drop zone (hidden on mobile) */}
       {!isMobile && (
         <div
@@ -109,9 +112,9 @@ export const UploadForm = ({
           </div>
 
           <div className="flex flex-col">
-            {Array.from(files).map((file, idx) => (
+            {Array.from(files).map((file) => (
               <FileItem
-                key={idx}
+                key={file.name}
                 file={file}
                 progress={uploadProgress[file.name]}
                 onDelete={() => onDelete?.(file.name)}

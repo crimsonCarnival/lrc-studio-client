@@ -1,5 +1,5 @@
 export default {
-  title: "ユーザープロフィール",
+  title: "アカウント",
   manageDesc: "アカウント設定と接続サービスの管理",
   adminBadge: "管理者",
   securedBadge: "LRC Studioアカウント • 安全な接続",
@@ -8,6 +8,11 @@ export default {
   verified: "確認済み",
   unverified: "未確認",
   username: "ユーザー名",
+  accountName: "ハンドル",
+  accountNamePlaceholder: "your_handle",
+  displayName: "表示名",
+  displayNamePlaceholder: "任意の公開名",
+  accountNameCooldown: "{{days}}日後に変更可能",
   email: "メール",
   bio: "自己紹介",
   bioPlaceholder: "あなたについて少し教えてください…",
@@ -30,7 +35,17 @@ export default {
   spotifyConnected: "接続済み",
   spotifyNotConnected: "未接続",
   sections: {
+    public: "公開情報",
     account: "アカウント詳細",
-    connections: "接続"
-  }
+    connections: "接続",
+    handleHistory: "ハンドル履歴",
+    emailHistory: "メール履歴",
+  },
+  handleChangedBadge: "ハンドルを{{count}}回変更しました",
+  accountNameSection: "ハンドル",
+  emailSection: "メールアドレス",
+  accountNameHistory: "ハンドル変更履歴",
+  emailHistory: "メール変更履歴",
+  noHistory: "まだ変更はありません。",
+  changedFrom: "{{from}} → {{to}}",
 };

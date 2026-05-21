@@ -27,9 +27,9 @@ export default function PasswordStrength({ password }) {
   return (
     <div className="mt-1 space-y-1">
       <div className="flex gap-1">
-        {LEVELS.map((_, i) => (
+        {LEVELS.map((lvl, i) => (
           <div
-            key={i}
+            key={lvl.min}
             className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i < filled ? level.color : 'bg-zinc-700'}`}
           />
         ))}

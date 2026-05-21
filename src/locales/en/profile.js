@@ -1,5 +1,5 @@
 export default {
-  title: "User Profile",
+  title: "Account",
   manageDesc: "Manage your account settings and connected services",
   adminBadge: "Admin",
   securedBadge: "LRC Studio Account • Secure Connection",
@@ -8,6 +8,11 @@ export default {
   verified: "Verified",
   unverified: "Unverified",
   username: "Username",
+  accountName: "Handle",
+  accountNamePlaceholder: "your_handle",
+  displayName: "Display name",
+  displayNamePlaceholder: "Optional public name",
+  accountNameCooldown: "Change in {{days}} day(s)",
   email: "Email",
   bio: "Bio",
   bioPlaceholder: "Tell us a bit about yourself...",
@@ -30,7 +35,17 @@ export default {
   spotifyConnected: "Connected",
   spotifyNotConnected: "Not connected",
   sections: {
+    public: "Public Details",
     account: "Account Details",
-    connections: "Connections"
-  }
+    connections: "Connections",
+    handleHistory: "Handle History",
+    emailHistory: "Email History",
+  },
+  handleChangedBadge: "Changed handle {{count}} time(s)",
+  accountNameSection: "Handle",
+  emailSection: "Email Address",
+  accountNameHistory: "Handle history",
+  emailHistory: "Email history",
+  noHistory: "No changes yet.",
+  changedFrom: "{{from}} → {{to}}",
 };

@@ -54,8 +54,7 @@ export function SkeletonList({ count = 3, className }) {
       </div>
       <div className="flex-1 space-y-2">
         {Array.from({ length: count }, (_, i) => (
-
-          <SkeletonCard key={i} />
+          <SkeletonCard key={`card-${i}`} />
         ))}
       </div>
     </div>
@@ -163,9 +162,8 @@ export function SkeletonEditor({ className }) {
       </div>
       {/* Line items */}
       <div className="flex-1 space-y-1.5">
-        {[85, 100, 70, 90, 60, 95, 75, 80].map((w, i) => (
-
-          <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/30">
+        {[85, 100, 70, 90, 60, 95, 75, 80].map((w) => (
+          <div key={w} className="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/30">
             <Skeleton className="h-4 w-12 flex-shrink-0" />
             <Skeleton className="h-4 flex-1" style={{ maxWidth: `${w}%` }} />
           </div>

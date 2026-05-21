@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { Button } from '@ui/button';
 

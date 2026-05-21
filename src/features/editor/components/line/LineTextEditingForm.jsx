@@ -1,21 +1,18 @@
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@ui/input';
 
-const LineTextEditingForm = React.forwardRef(function LineTextEditingForm(
-  {
-    lineIndex,
-    editingText,
-    setEditingText,
-    editingSecondary,
-    setEditingSecondary,
-    editingTranslation,
-    setEditingTranslation,
-    handleSaveLineText,
-    setEditingLineIndex,
-  },
-  ref
-) {
+function LineTextEditingForm({
+  lineIndex,
+  editingText,
+  setEditingText,
+  editingSecondary,
+  setEditingSecondary,
+  editingTranslation,
+  setEditingTranslation,
+  handleSaveLineText,
+  setEditingLineIndex,
+  ref,
+}) {
   const { t } = useTranslation();
 
   return (
@@ -61,6 +58,6 @@ const LineTextEditingForm = React.forwardRef(function LineTextEditingForm(
       />
     </div>
   );
-});
+}
 
 export default LineTextEditingForm;

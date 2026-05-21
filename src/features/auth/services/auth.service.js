@@ -3,10 +3,10 @@ import { gqlRequest } from '@/app/graphql.client.js';
 
 export const authService = {
   // ── Kept as REST — involves token issuance, cookies, reCAPTCHA ──
-  async register({ username, email, password, recaptchaToken, claimToken, projectId }) {
+  async register({ accountName, email, password, recaptchaToken, claimToken, projectId }) {
     return request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ username, email, password, recaptchaToken, claimToken, projectId }),
+      body: JSON.stringify({ accountName, email, password, recaptchaToken, claimToken, projectId }),
     });
   },
 
@@ -78,12 +78,20 @@ export const authService = {
       query Me {
         me {
           id
-          username
+          accountName
+          displayName
           email
+          pendingEmail
           avatarUrl
           bio
           isVerified
-          isBanned
+          lastAccountNameChangedAt
+          accountNameChangeCount
+          previousAccountNames { from to changedAt }
+          emailHistory { from to changedAt }
+          ban { active reason until }
+          appeal { text status submittedAt resolvedAt }
+          showUnbanMessage
           role
           createdAt
           passwordChangedAt
@@ -101,13 +109,24 @@ export const authService = {
       mutation UpdateProfile($input: UpdateProfileInput!) {
         updateProfile(input: $input) {
           id
-          username
+          accountName
+          displayName
           email
+          pendingEmail
           avatarUrl
           bio
+          lastAccountNameChangedAt
         }
       }
     `, { input });
     return data.updateProfile;
+  },
+
+  async sendVerificationEmail() {
+    await gqlRequest(`
+      mutation SendVerificationEmail {
+        sendVerificationEmail
+      }
+    `);
   },
 };

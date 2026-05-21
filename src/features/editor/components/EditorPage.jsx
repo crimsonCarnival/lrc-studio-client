@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import Editor from './core/Editor';
 import MobileEditorLayout from './mobile/MobileEditorLayout';
@@ -10,10 +9,7 @@ export default function EditorPage(props) {
   const inputMethod = useInputMethod();
 
   // Mobile layout when touch input (touch-only device)
-  const isMobileLayout = useMemo(
-    () => inputMethod === 'touch',
-    [inputMethod]
-  );
+  const isMobileLayout = inputMethod === 'touch';
 
   // For mobile, use simplified layout; for desktop/hybrid, use full editor
   if (isMobileLayout) {

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import {
@@ -28,21 +28,10 @@ export default function BanUserModal({ isOpen, user, onConfirm, onCancel }) {
   const inputRef = useRef(null);
 
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
-  if (isOpen && !prevIsOpen) {
-    setPrevIsOpen(true);
-    setForm({
-      reason: '',
-      bannedUntil: '',
-      banIp: false,
-      banDevice: false
-    });
-  } else if (!isOpen && prevIsOpen) {
-    setPrevIsOpen(false);
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) setForm({ reason: '', bannedUntil: '', banIp: false, banDevice: false });
   }
-
-  useEffect(() => {
-    // autoFocus removed as requested
-  }, [isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -64,7 +53,7 @@ export default function BanUserModal({ isOpen, user, onConfirm, onCancel }) {
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold text-zinc-100 flex items-center gap-2">
-              {t('admin.table.banTitle')}: {user?.username}
+              {t('admin.table.banTitle')}: {user?.displayName || user?.accountName}
             </DialogTitle>
             <DialogDescription className="text-sm text-zinc-400 leading-relaxed mt-2">
               {t('admin.table.promptBanReason')}

@@ -84,11 +84,11 @@ export default function EditorToolbar({
   const [geniusPopoverOpen, setGeniusPopoverOpen] = useState(false);
 
   const handleGeniusImport = useCallback((lyricsText) => {
-    const newLines = lyricsText
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0)
-      .map((text) => ({ text, timestamp: null }));
+    const newLines = lyricsText.split('\n').reduce((acc, line) => {
+      const text = line.trim();
+      if (text.length > 0) acc.push({ text, timestamp: null });
+      return acc;
+    }, []);
     setRawText(newLines.map((l) => l.text).join('\n'));
     setSyncMode(false);
     setGeniusPopoverOpen(false);

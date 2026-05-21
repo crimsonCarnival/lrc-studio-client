@@ -57,16 +57,18 @@ export function ErrorBanner({ message }) {
   );
 }
 
-export function AvatarBadge({ username, avatarUrl, size = 'md' }) {
+function AvatarBadgeInner({ username, avatarUrl, size = 'md' }) {
   const sizeClass = size === 'lg' ? 'size-16 text-xl' : 'size-10 text-sm';
   const initial = (username || '?')[0].toUpperCase();
+  const [imgError, setImgError] = useState(false);
 
-  if (avatarUrl) {
+  if (avatarUrl && !imgError) {
     return (
       <img
         src={avatarUrl}
         alt={username}
         className={`${sizeClass} rounded-full object-cover ring-2 ring-primary/30`}
+        onError={() => setImgError(true)}
       />
     );
   }
@@ -75,6 +77,10 @@ export function AvatarBadge({ username, avatarUrl, size = 'md' }) {
       {initial}
     </div>
   );
+}
+
+export function AvatarBadge(props) {
+  return <AvatarBadgeInner key={props.avatarUrl || ''} {...props} />;
 }
 
 // ─── Background ────────────────────────────────────────────────────────────

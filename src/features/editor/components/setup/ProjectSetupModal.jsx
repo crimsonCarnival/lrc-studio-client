@@ -8,6 +8,46 @@ import { Badge } from '@ui/badge';
 import { X, Sparkles, Image as ImageIcon, Upload, Loader2, Video, Music2 } from 'lucide-react';
 import { Tip } from '@ui/tip';
 
+const EMPTY_TAGS = [];
+
+function SourceInfoBadge({ sourceInfo, initialName, t }) {
+  if (!sourceInfo) return null;
+  const { ytUrl, cloudinary, spotifyId, title } = sourceInfo;
+
+  let sourceIcon = <Music2 className="size-4" />;
+  let sourceLabel = t('setup.audioSource');
+  let sourceValue = title || initialName;
+
+  if (ytUrl) {
+    sourceIcon = <Video className="size-4 text-red-500" />;
+    sourceLabel = t('setup.youtubeVideo');
+    sourceValue = title || initialName || ytUrl;
+  } else if (spotifyId) {
+    sourceIcon = <Music2 className="size-4 text-primary" />;
+    sourceLabel = t('setup.spotifyTrack');
+    sourceValue = title || initialName || spotifyId;
+  } else if (cloudinary) {
+    sourceIcon = <Upload className="size-4 text-blue-400" />;
+    sourceLabel = t('setup.cloudUpload');
+    sourceValue = cloudinary.title || cloudinary.fileName || title || initialName;
+  }
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/40 border border-zinc-700/50 mb-2">
+      <div className="size-8 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-700/60 shadow-sm">
+        {sourceIcon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider leading-none mb-1">
+          {sourceLabel}
+        </p>
+        <p className="text-sm font-medium text-zinc-200 truncate">
+          {sourceValue}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function ProjectSetupModal({
   isOpen,
@@ -15,7 +55,7 @@ export default function ProjectSetupModal({
   onConfirm,
   initialName = '',
   initialDescription = '',
-  initialTags = [],
+  initialTags = EMPTY_TAGS,
   initialSongName = '',
   initialSongArtist = '',
   initialSongAlbum = '',
@@ -36,20 +76,20 @@ export default function ProjectSetupModal({
   });
 
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
-  if (isOpen && !prevIsOpen) {
-    setPrevIsOpen(true);
-    setForm({
-      name: initialName || '',
-      description: initialDescription || '',
-      tags: initialTags || [],
-      tagInput: '',
-      songName: initialSongName || '',
-      songArtist: initialSongArtist || '',
-      songAlbum: initialSongAlbum || '',
-      songYear: initialSongYear || ''
-    });
-  } else if (!isOpen && prevIsOpen) {
-    setPrevIsOpen(false);
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setForm({
+        name: initialName || '',
+        description: initialDescription || '',
+        tags: initialTags || [],
+        tagInput: '',
+        songName: initialSongName || '',
+        songArtist: initialSongArtist || '',
+        songAlbum: initialSongAlbum || '',
+        songYear: initialSongYear || ''
+      });
+    }
   }
 
   if (!isOpen) return null;
@@ -90,44 +130,6 @@ export default function ProjectSetupModal({
     });
   };
 
-  const renderSourceInfo = () => {
-    if (!sourceInfo) return null;
-    const { ytUrl, cloudinary, spotifyId, title } = sourceInfo;
-
-    let sourceIcon = <Music2 className="size-4" />;
-    let sourceLabel = t('setup.audioSource');
-    let sourceValue = title || initialName;
-
-    if (ytUrl) {
-      sourceIcon = <Video className="size-4 text-red-500" />;
-      sourceLabel = t('setup.youtubeVideo');
-      sourceValue = title || initialName || ytUrl;
-    } else if (spotifyId) {
-      sourceIcon = <Music2 className="size-4 text-primary" />;
-      sourceLabel = t('setup.spotifyTrack');
-      sourceValue = title || initialName || spotifyId;
-    } else if (cloudinary) {
-      sourceIcon = <Upload className="size-4 text-blue-400" />;
-      sourceLabel = t('setup.cloudUpload');
-      sourceValue = cloudinary.title || cloudinary.fileName || title || initialName;
-    }
-
-    return (
-      <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/40 border border-zinc-700/50 mb-2">
-        <div className="size-8 rounded-lg bg-zinc-900 flex items-center justify-center border border-zinc-700/60 shadow-sm">
-          {sourceIcon}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider leading-none mb-1">
-            {sourceLabel}
-          </p>
-          <p className="text-sm font-medium text-zinc-200 truncate">
-            {sourceValue}
-          </p>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <>
@@ -166,7 +168,7 @@ export default function ProjectSetupModal({
 
           {/* Scrollable Form Content */}
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto scrollbar-thin p-6 pt-4 flex flex-col gap-5">
-            {renderSourceInfo()}
+            <SourceInfoBadge sourceInfo={sourceInfo} initialName={initialName} t={t} />
             
             <div className="space-y-4">
               <div className="flex flex-col gap-1.5">

@@ -78,11 +78,11 @@ export default function AdminUsersTab({
                     {/* User Info */}
                     <div className="flex items-center gap-3">
                       <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700 flex-shrink-0">
-                        {user.avatarUrl ? <img src={user.avatarUrl} alt={user.username} className="size-full object-cover" /> : user.username[0].toUpperCase()}
+                        {user.avatarUrl ? <img src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-zinc-200 truncate">{user.username}</span>
+                          <span className="font-medium text-zinc-200 truncate">{user.displayName || user.accountName}</span>
                           {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider flex-shrink-0">{t('admin.table.you')}</span>}
                         </div>
                         <div className="text-xs text-zinc-500 truncate">{user.email}</div>
@@ -105,8 +105,8 @@ export default function AdminUsersTab({
                       </div>
                       <div className="flex-1">
                         <p className="text-xs font-semibold text-zinc-400 mb-1">{t('admin.table.status')}</p>
-                        <div className="w-full px-2 py-2 rounded text-xs font-medium text-center">
-                          {user.isBanned ? (
+                        <div className="w-full p-2 rounded text-xs font-medium text-center">
+                          {user.ban?.active ? (
                             <span className="flex items-center justify-center gap-1 text-red-400">
                               <Ban className="size-3" /> {t('admin.table.banned')}
                             </span>
@@ -159,7 +159,7 @@ export default function AdminUsersTab({
                           </Button>
                         ) : (
                           <>
-                            {user.banAppeal ? (
+                            {user.appeal?.status === 'pending' ? (
                               <Button
                                 variant="secondary"
                                 onClick={() => setAppealModal({ isOpen: true, user })}
@@ -168,7 +168,7 @@ export default function AdminUsersTab({
                                 <Info className="size-4" /> {t('admin.table.reviewAppeal')}
                               </Button>
                             ) : (
-                              !user.isBanned && (
+                              !user.ban?.active && (
                                 <Button
                                   variant="ghost"
                                   onClick={() => handleToggleBan(user)}
@@ -178,7 +178,7 @@ export default function AdminUsersTab({
                                 </Button>
                               )
                             )}
-                            {user.isBanned && !user.banAppeal && (
+                            {user.ban?.active && user.appeal?.status !== 'pending' && (
                               <Button
                                 variant="ghost"
                                 onClick={() => handleToggleBan(user)}
@@ -224,11 +224,11 @@ export default function AdminUsersTab({
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
-                          {user.avatarUrl ? <img src={user.avatarUrl} alt={user.username} className="size-full object-cover" /> : user.username[0].toUpperCase()}
+                          {user.avatarUrl ? <img src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-zinc-200">{user.username}</span>
+                            <span className="font-medium text-zinc-200">{user.displayName || user.accountName}</span>
                             {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider">{t('admin.table.you')}</span>}
                           </div>
                           <div className="text-xs text-zinc-500">{user.email}</div>
@@ -246,10 +246,10 @@ export default function AdminUsersTab({
                       </button>
                     </td>
                     <td className="p-4">
-                      {user.isBanned ? (
+                      {user.ban?.active ? (
                         <div className="flex flex-col">
                           <span className="flex items-center gap-1.5 text-xs text-red-400 font-medium"><Ban className="size-3" /> {t('admin.table.banned')}</span>
-                          <span className="text-[10px] text-zinc-600 line-clamp-1 italic" title={user.banReason}>{user.banReason}</span>
+                          <span className="text-[10px] text-zinc-600 line-clamp-1 italic" title={user.ban?.reason}>{user.ban?.reason}</span>
                         </div>
                       ) : (
                         <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium"><CheckCircle2 className="size-3" /> {t('admin.table.active')}</span>
@@ -285,18 +285,18 @@ export default function AdminUsersTab({
                               </Button>
                             ) : (
                               <>
-                                {user.banAppeal ? (
+                                {user.appeal?.status === 'pending' ? (
                                   <Button variant="secondary" size="sm" onClick={() => setAppealModal({ isOpen: true, user })} className="h-8 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/30 gap-1.5">
                                     <Info className="size-3.5" /> {t('admin.table.reviewAppeal')}
                                   </Button>
                                 ) : (
-                                  !user.isBanned && (
+                                  !user.ban?.active && (
                                     <Button variant="ghost" size="sm" onClick={() => handleToggleBan(user)} className="h-8 text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-1.5">
                                       <Ban className="size-3.5" /> {t('admin.table.ban')}
                                     </Button>
                                   )
                                 )}
-                                {user.isBanned && !user.banAppeal && (
+                                {user.ban?.active && user.appeal?.status !== 'pending' && (
                                   <Button variant="ghost" size="sm" onClick={() => handleToggleBan(user)} className="h-8 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10">
                                     {t('admin.table.unban')}
                                   </Button>

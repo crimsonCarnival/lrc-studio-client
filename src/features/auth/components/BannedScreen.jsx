@@ -56,14 +56,14 @@ export default function BannedScreen() {
   const [formattedDate, setFormattedDate] = useState('');
 
   useEffect(() => {
-    if (user?.bannedUntil) {
-      setFormattedDate(new Date(user.bannedUntil).toLocaleString());
+    if (user?.ban?.until) {
+      setFormattedDate(new Date(user.ban.until).toLocaleString());
     }
-  }, [user?.bannedUntil]);
+  }, [user?.ban?.until]);
 
-  if (!user || !user.isBanned) return null;
+  if (!user || !user.ban?.active) return null;
 
-  const currentStatus = localSubmitted ? 'pending' : (user.appealStatus || 'none');
+  const currentStatus = localSubmitted ? 'pending' : (user.appeal?.status || 'none');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,16 +92,16 @@ export default function BannedScreen() {
         
         <h2 className="text-2xl font-semibold text-zinc-100 mb-2">{t('admin.banned.title')}</h2>
         
-        {user.banReason && (
+        {user.ban?.reason && (
           <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-3 mb-4 text-left">
             <span className="text-[10px] font-bold text-red-500/70 uppercase tracking-widest mb-1 block">
               {t('admin.banned.reasonLabel') || 'Reason'}
             </span>
-            <p className="text-sm text-zinc-300 italic">"{user.banReason}"</p>
+            <p className="text-sm text-zinc-300 italic">"{user.ban.reason}"</p>
           </div>
         )}
 
-        {user.bannedUntil && (
+        {user.ban?.until && (
           <div className="bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 mb-4">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">
               {t('admin.banned.untilLabel')}
@@ -110,13 +110,13 @@ export default function BannedScreen() {
               <span className="text-zinc-200 font-semibold text-sm">
                 {formattedDate || '...'}
               </span>
-              <Countdown targetDate={user.bannedUntil} />
+              <Countdown targetDate={user.ban.until} />
             </div>
           </div>
         )}
 
         <p className="text-zinc-400 text-sm mb-6 px-2 leading-relaxed">
-          {user.bannedUntil ? t('admin.banned.descriptionTemp') : t('admin.banned.descriptionPerm')}
+          {user.ban?.until ? t('admin.banned.descriptionTemp') : t('admin.banned.descriptionPerm')}
         </p>
 
         {currentStatus === 'pending' ? (
@@ -127,12 +127,12 @@ export default function BannedScreen() {
             <p className="text-emerald-400 text-sm font-bold uppercase tracking-widest mb-1">{t('admin.banned.underReview')}</p>
             <p className="text-zinc-500 text-xs">{t('admin.banned.reviewSoon')}</p>
             
-            {user.banAppeal && (
+            {user.appeal?.text && (
               <div className="mt-4 pt-4 border-t border-emerald-500/10 text-left">
                 <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">
                   {t('admin.banned.yourAppealLabel')}:
                 </span>
-                <p className="text-xs text-zinc-400 italic">"{user.banAppeal}"</p>
+                <p className="text-xs text-zinc-400 italic">"{user.appeal?.text}"</p>
               </div>
             )}
           </div>
@@ -144,12 +144,12 @@ export default function BannedScreen() {
             <p className="text-red-400 text-sm font-bold uppercase tracking-widest mb-1">{t('admin.banned.appealRejected')}</p>
             <p className="text-zinc-500 text-xs leading-relaxed">{t('admin.banned.appealRejectedSub')}</p>
             
-            {user.banAppeal && (
+            {user.appeal?.text && (
               <div className="mt-4 pt-4 border-t border-red-500/10 text-left">
                 <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">
                   {t('admin.banned.yourAppealLabel')}:
                 </span>
-                <p className="text-xs text-zinc-400 italic">"{user.banAppeal}"</p>
+                <p className="text-xs text-zinc-400 italic">"{user.appeal?.text}"</p>
               </div>
             )}
           </div>

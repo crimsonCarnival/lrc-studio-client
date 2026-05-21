@@ -1,5 +1,4 @@
-﻿import { useState, useEffect, useRef } from 'react';
-import { flushSync } from 'react-dom';
+﻿import { useState, useEffect, useRef, startTransition } from 'react';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -67,7 +66,6 @@ export function AppHeader({
   hasUnsavedChanges,
   activeProjectId,
   forkedFrom,
-  setShowSettings,
   setShowKeyboardHelp,
   focusMode,
   setFocusMode,
@@ -243,8 +241,8 @@ export function AppHeader({
                 ) : (
                   <button
                     onClick={() => {
-                      flushSync(() => setEditingProjectName(true));
-                      projectNameInputRef.current?.focus();
+                      startTransition(() => setEditingProjectName(true));
+                      requestAnimationFrame(() => projectNameInputRef.current?.focus());
                     }}
                     className="flex items-center gap-1 min-w-0 group py-1 -my-1"
                     aria-label={t('setup.projectNamePlaceholder')}
@@ -256,7 +254,7 @@ export function AppHeader({
                   </button>
                 )}
                 {forkedFrom?.projectId && (
-                  <Tip content={forkedFrom.username ? t('share.forkedFrom', { username: forkedFrom.username, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
+                  <Tip content={forkedFrom.accountName ? t('share.forkedFrom', { username: forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
                     <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-accent-blue/10 border border-accent-blue/20 text-[9px] font-bold text-accent-blue uppercase shrink-0 cursor-help transition-colors hover:bg-accent-blue/20">
                       <ExternalLink className="size-2.5" />
                       <span className="hidden xs:inline">{t('share.forkedBadge', 'Forked')}</span>
@@ -277,8 +275,20 @@ export function AppHeader({
             ) : location.pathname !== '/home' && location.pathname !== '/' && (
               <>
                 <span className="text-zinc-700 shrink-0 hidden sm:inline">/</span>
-                <span className="text-xs font-medium text-zinc-400 truncate capitalize hidden sm:block">
-                  {location.pathname.split('/')[1].replace(/-/g, ' ')}
+                <span className="text-xs font-medium text-zinc-400 truncate hidden sm:block">
+                  {(() => {
+                    const seg = location.pathname.split('/')[1];
+                    const map = {
+                      profile: t('profile.title'),
+                      settings: t('settings.title'),
+                      library: t('library.title'),
+                      uploads: t('uploads.title'),
+                      admin: t('admin.dashboard.title'),
+                      'change-password': t('auth.changePassword.title'),
+                      'verify-email': t('auth.verification.pageTitle'),
+                    };
+                    return map[seg] || seg.replace(/-/g, ' ');
+                  })()}
                 </span>
               </>
             )}
@@ -439,21 +449,28 @@ export function AppHeader({
             </div>
           ) : (
             <Popover onOpenChange={(open) => { if (open) fetchCounts(); }}>
-              <PopoverTrigger className="relative z-[110] size-8 rounded-full overflow-hidden bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 flex-shrink-0 transition-all focus:ring-2 focus:ring-primary/50 cursor-pointer outline-none">
-                {user?.avatarUrl
-                  ? <img src={user.avatarUrl} alt={user?.username || user?.email} className="size-full object-cover" />
-                  : <div className="size-full flex items-center justify-center bg-gradient-to-br from-primary/50 to-accent-purple/50 text-white font-bold text-sm">
-                    {(user?.username || user?.email || '?').charAt(0).toUpperCase()}
-                  </div>}
-              </PopoverTrigger>
+              <div className="relative flex-shrink-0">
+                <PopoverTrigger className="relative z-[110] size-8 rounded-full overflow-hidden bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-all focus:ring-2 focus:ring-primary/50 cursor-pointer outline-none block">
+                  {user?.avatarUrl
+                    ? <img src={user.avatarUrl} alt={user?.displayName || user?.accountName || user?.email} className="size-full object-cover" />
+                    : <div className="size-full flex items-center justify-center bg-gradient-to-br from-primary/50 to-accent-purple/50 text-white font-bold text-sm">
+                      {(user?.displayName || user?.accountName || user?.email || '?').charAt(0).toUpperCase()}
+                    </div>}
+                </PopoverTrigger>
+                {user?.email && !user?.isVerified && (
+                  <Tip content={t('auth.verification.avatarBadge')}>
+                    <span className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-amber-400 border-2 border-zinc-950 pointer-events-none z-[111]" />
+                  </Tip>
+                )}
+              </div>
               <PopoverContent className="w-[calc(100vw-32px)] sm:w-64 p-0" align="end" sideOffset={8}>
                 <div className="p-3 border-b border-zinc-800/60 flex flex-col">
-                  <span className="text-sm font-bold text-zinc-100 truncate">{user?.username || t('auth.user')}</span>
+                  <span className="text-sm font-bold text-zinc-100 truncate">{user?.displayName || user?.accountName || t('auth.user')}</span>
                   <span className="text-xs text-zinc-400 truncate">{user?.email || ''}</span>
                 </div>
 
                 <div className="p-1 border-b border-zinc-800/60">
-                  <PopoverItem onClick={() => { navigate('/profile'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+                  <PopoverItem onClick={() => { navigate(user?.accountName ? `/profile/${user.accountName}` : '/profile'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <User className="size-4 text-zinc-400" />{t('profile.title')}
                   </PopoverItem>
                   <PopoverItem onClick={() => navTo('/library')} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">
@@ -472,7 +489,7 @@ export function AppHeader({
                       <ShieldAlert className="size-4" />{t('admin.dashboard.title')}
                     </PopoverItem>
                   )}
-                  <PopoverItem onClick={() => { setShowSettings(true); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+                  <PopoverItem onClick={() => { navigate('/settings'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <SettingsIcon className="size-4 text-zinc-400" />{t('settings.title')}
                   </PopoverItem>
                   <PopoverItem onClick={() => { setShowKeyboardHelp(p => !p); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">

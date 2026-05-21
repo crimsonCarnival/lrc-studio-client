@@ -128,11 +128,11 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   const setMetadataState = useCallback((val) => setMetadata(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
 
   const handleGeniusImport = useCallback((lyricsText) => {
-    const parsedLines = lyricsText
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0)
-      .map((text) => ({ text, timestamp: null }));
+    const parsedLines = lyricsText.split('\n').reduce((acc, line) => {
+      const text = line.trim();
+      if (text.length > 0) acc.push({ text, timestamp: null });
+      return acc;
+    }, []);
     setLyricsState({ parsedLines, text: '', fileName: '' });
     setLyricsTab('write');
     setGeniusUrl('');
@@ -185,9 +185,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   }, [initialPendingYtUrl]);
 
   // Sync project name to audio name if empty when reaching step 2
-  const [prevStep, setPrevStep] = useState(step);
-  if (step !== prevStep) {
-    setPrevStep(step);
+  const prevStepRef = useRef(step);
+  if (step !== prevStepRef.current) {
+    prevStepRef.current = step;
     if (step === 2 && !projectName && audioName && !audioName.includes('://') && audioName !== t('setup.youtubeVideo')) {
       setMetadataState({ name: audioName });
     }
@@ -251,13 +251,16 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     setAudioState({ ready: true, name: t('setup.youtubeVideo'), source: 'youtube', selectedUpload: null, ytLoading: false, ytUrl: '' });
   }, [ytUrl, detectedUrlType, playerRef, setAudioState, saveUploadRecord, t]);
 
+  const handleLoadUrlRef = useRef(null);
+  handleLoadUrlRef.current = handleLoadUrl;
+
   useEffect(() => {
     if (autoLoadPendingRef.current && ytUrl) {
       autoLoadPendingRef.current = false;
-      const timer = setTimeout(() => handleLoadUrl(), 0);
+      const timer = setTimeout(() => handleLoadUrlRef.current(), 0);
       return () => clearTimeout(timer);
     }
-  }, [ytUrl, handleLoadUrl]);
+  }, [ytUrl]);
 
   const handleSelectUpload = (upload) => {
     setAudioState({

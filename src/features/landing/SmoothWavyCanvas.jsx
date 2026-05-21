@@ -141,7 +141,7 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }) => {
     rafRef.current = requestAnimationFrame(animateRef.current);
   }, [animationSpeed, lineOpacity]);
 
-  animateRef.current = animate;
+  useEffect(() => { animateRef.current = animate; }, [animate]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

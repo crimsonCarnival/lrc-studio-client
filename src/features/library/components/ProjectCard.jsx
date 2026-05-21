@@ -1,12 +1,11 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, memo } from 'react';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
-import { Music, Video, Upload, FileText, Trash2, ExternalLink, Clock, Pencil, Loader2 } from 'lucide-react';
+import { Music, Video, Upload, FileText, Trash2, ExternalLink, Clock, Pencil, Loader2, Star, GitFork } from 'lucide-react';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { useTranslation } from 'react-i18next';
 import useConfirm from '@/shared/hooks/useConfirm';
 import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
-import { useSettings } from '@/features/settings/useSettings';
 
 const SWIPE_THRESHOLD = 60;
 
@@ -30,7 +29,7 @@ function SourceIcon({ source }) {
  * @param {Object} i18n - Internationalization object
  * @param {String} timezone - Timezone for date formatting
  */
-export default function ProjectCard({
+function ProjectCard({
   project,
   onDelete,
   onFavorite,
@@ -44,7 +43,6 @@ export default function ProjectCard({
   const { t } = useTranslation();
   const { trigger: haptic } = useHapticFeedback();
   const [requestConfirm, confirmModal] = useConfirm();
-  const { settings } = useSettings();
   const cardRef = useRef(null);
   const touchState = useRef({
     startX: 0,
@@ -126,7 +124,7 @@ export default function ProjectCard({
     onEdit?.(project);
   }, [project, onEdit]);
 
-  const handleClick = useCallback(() => {
+  const openProject = useCallback(() => {
     if (!touchState.current.isSwiping) {
       onSelect?.(project.projectId);
     }
@@ -147,7 +145,7 @@ export default function ProjectCard({
           ref={cardRef}
           role="button"
           tabIndex={0}
-          onClick={handleClick}
+          onClick={openProject}
           onKeyDown={handleKeyDown}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -169,7 +167,7 @@ export default function ProjectCard({
                 {project.editorMode}
               </span>
               {project.forkedFrom?.projectId && (
-                <Tip content={project.forkedFrom.username ? t('share.forkedFrom', { username: project.forkedFrom.username, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
+                <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { username: project.forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
                   <span className="text-[10px] font-bold uppercase text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-1.5 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
                     <ExternalLink className="size-2.5" />
                     {t('share.forkedBadge', 'Forked')}
@@ -193,6 +191,18 @@ export default function ProjectCard({
                 <span className="text-xs text-zinc-500 flex items-center gap-1">
                   <Video className="size-3" />
                   {t('uploads.youtube')}
+                </span>
+              )}
+              {project.starCount > 0 && (
+                <span className="text-xs text-zinc-500 flex items-center gap-1">
+                  <Star className="size-3" />
+                  {project.starCount}
+                </span>
+              )}
+              {project.forkCount > 0 && (
+                <span className="text-xs text-zinc-500 flex items-center gap-1">
+                  <GitFork className="size-3" />
+                  {project.forkCount}
                 </span>
               )}
             </div>
@@ -244,7 +254,7 @@ export default function ProjectCard({
         ref={cardRef}
         role="button"
         tabIndex={0}
-        onClick={handleClick}
+        onClick={openProject}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -266,7 +276,7 @@ export default function ProjectCard({
               {project.editorMode}
             </span>
             {project.forkedFrom?.projectId && (
-              <Tip content={project.forkedFrom.username ? t('share.forkedFrom', { username: project.forkedFrom.username, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
+              <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { username: project.forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
                 <span className="text-[10px] font-bold uppercase text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-1.5 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
                   <ExternalLink className="size-2.5" />
                   {t('share.forkedBadge', 'Forked')}
@@ -333,3 +343,5 @@ export default function ProjectCard({
     </>
   );
 }
+
+export default memo(ProjectCard);

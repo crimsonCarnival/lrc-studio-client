@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import { authService } from '@/features/auth/services/auth.service';
@@ -140,6 +140,7 @@ export default function ResetPasswordPage() {
             <input
               type="email"
               value={email}
+              readOnly
               disabled
               className="w-full h-12 lg:h-10 px-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-400 placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 text-base lg:text-sm"
             />

@@ -14,8 +14,8 @@ export default function AdminStatsCards({ stats }) {
         { label: t('admin.dashboard.stats.appeals'), value: stats?.pendingAppeals, icon: FileText, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
         { label: t('admin.dashboard.stats.banned'), value: stats?.bannedUsers, icon: Ban, color: 'text-red-400', bg: 'bg-red-400/10' },
         { label: t('admin.dashboard.stats.deleted'), value: stats?.deletedUsers, icon: Trash2, color: 'text-zinc-500', bg: 'bg-zinc-500/10' },
-      ].map((s, i) => (
-        <div key={i} className="bg-zinc-900 border border-zinc-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 hover:border-zinc-700 transition-colors">
+      ].map((s) => (
+        <div key={s.color} className="bg-zinc-900 border border-zinc-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 hover:border-zinc-700 transition-colors">
           <div className={`p-2 sm:p-3 rounded-lg sm:rounded-xl ${s.bg} shrink-0`}>
             <s.icon className={`size-5 sm:size-6 ${s.color}`} />
           </div>

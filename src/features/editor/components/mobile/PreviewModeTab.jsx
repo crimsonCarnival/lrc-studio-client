@@ -43,7 +43,7 @@ export default function PreviewModeTab({
       {/* Current line - Large display */}
       <div className="w-full text-center space-y-4">
         <h2
-          className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary leading-tight break-words"
+          className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-primary leading-tight break-words"
         >
           {currentLine?.text || ''}
         </h2>

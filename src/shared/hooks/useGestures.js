@@ -73,7 +73,7 @@ export default function useGestures() {
   /**
    * Handle touch move
    */
-  const onTouchMove = useCallback((event, element) => {
+  const onTouchMove = useCallback((event, _element) => {
     if (event.touches.length === 0) return;
 
     const touch = event.touches[0];
@@ -110,7 +110,7 @@ export default function useGestures() {
   const onTouchEnd = useCallback((event, element) => {
     if (event.changedTouches.length === 0) return;
 
-    const touch = event.changedTouches[0];
+    const _touch = event.changedTouches[0];
     const {
       startX,
       startY,

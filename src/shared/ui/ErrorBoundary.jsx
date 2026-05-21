@@ -28,59 +28,22 @@ export default class ErrorBoundary extends Component {
   render() {
     if (this.state.error) {
       return (
-        <div style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#09090b',
-          color: '#f4f4f5',
-          fontFamily: 'Inter Variable, system-ui, sans-serif',
-          padding: '2rem',
-        }}>
-          <div style={{
-            maxWidth: '28rem',
-            width: '100%',
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '1rem',
-            padding: '2rem',
-            textAlign: 'center',
-          }}>
-            <div style={{
-              width: '3rem',
-              height: '3rem',
-              borderRadius: '0.75rem',
-              background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 1.5rem',
-              fontSize: '1.5rem',
-            }}>
+        <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-100 font-sans p-8">
+          <div className="max-w-md w-full bg-white/[0.04] border border-white/10 rounded-2xl p-8 text-center">
+            <div className="size-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center mx-auto mb-6 text-2xl">
               ⚠
             </div>
-            <h1 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+            <h1 className="text-lg font-semibold mb-2">
               Something went wrong
             </h1>
-            <p style={{ fontSize: '0.875rem', color: '#a1a1aa', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+            <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
               The app encountered an unexpected error. You can try reloading, or reset all data to recover.
             </p>
 
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div className="flex gap-3">
               <button
                 onClick={() => window.location.reload()}
-                style={{
-                  flex: 1,
-                  padding: '0.625rem',
-                  background: '#27272a',
-                  border: '1px solid #3f3f46',
-                  borderRadius: '0.75rem',
-                  color: '#d4d4d8',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                }}
+                className="flex-1 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-zinc-300 font-semibold text-sm cursor-pointer"
               >
                 Reload
               </button>
@@ -89,17 +52,7 @@ export default class ErrorBoundary extends Component {
                   localStorage.clear();
                   window.location.reload();
                 }}
-                style={{
-                  flex: 1,
-                  padding: '0.625rem',
-                  background: '#dc2626',
-                  border: 'none',
-                  borderRadius: '0.75rem',
-                  color: '#fff',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  cursor: 'pointer',
-                }}
+                className="flex-1 py-2.5 bg-red-600 rounded-xl text-white font-semibold text-sm cursor-pointer"
               >
                 Reset &amp; Reload
               </button>

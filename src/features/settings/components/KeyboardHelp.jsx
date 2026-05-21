@@ -159,8 +159,7 @@ export default function KeyboardHelp({ isOpen, onClose }) {
                       <span className="text-sm text-zinc-300">{s.desc}</span>
                       <KbdGroup>
                         {s.keys.map((k, i) => (
-
-                          <span key={i} className="inline-flex items-center gap-1">
+                          <span key={k} className="inline-flex items-center gap-1">
                             {i > 0 && <span className="text-zinc-600 text-[10px]">+</span>}
                             <Kbd>{k}</Kbd>
                           </span>

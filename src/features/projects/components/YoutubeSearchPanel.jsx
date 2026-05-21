@@ -140,7 +140,6 @@ export default function YoutubeSearchPanel({ onSelect, onClose }) {
         {loading && (
           <div className="flex flex-col gap-3">
             {[1, 2, 3, 4].map((i) => (
-
               <div key={i} className="flex gap-3">
                 <Skeleton className="w-32 h-[72px] rounded-lg shrink-0" />
                 <div className="flex-1 flex flex-col gap-2 pt-1">

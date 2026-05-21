@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
 import { DEFAULT_SETTINGS } from './settings-defaults.js';
 import { SettingsContext } from './settings-context-value.js';
 import { settings as settingsApi, getAccessToken } from '@/app/api';
@@ -129,6 +129,7 @@ export function SettingsProvider({ children }) {
   const lastSavedToServerRef = useRef(null);
   const isSyncingRef = useRef(false);
   const isFirstRender = useRef(true);
+  const computeChangesRef = useRef(null);
 
   // Compute deep diff between two objects, returning only changed paths
   const computeChanges = useCallback((original, current) => {
@@ -173,6 +174,7 @@ export function SettingsProvider({ children }) {
     findDiffs(original, current, []);
     return changes;
   }, []);
+  useLayoutEffect(() => { computeChangesRef.current = computeChanges; }, [computeChanges]);
 
   // Debounced localStorage + server persistence — skips the initial render
   // and skips when changes came from a server fetch (isSyncingRef).
@@ -192,7 +194,7 @@ export function SettingsProvider({ children }) {
 
       // Push to server if authenticated (only changed fields)
       if (getAccessToken()) {
-        const changes = computeChanges(lastSavedToServerRef.current, settings);
+        const changes = computeChangesRef.current(lastSavedToServerRef.current, settings);
         
         // Only send if there are actual changes
         if (Object.keys(changes).length > 0) {
@@ -207,7 +209,7 @@ export function SettingsProvider({ children }) {
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [settings, computeChanges]);
+  }, [settings]);
 
   const updateSetting = useCallback((keyPath, value) => {
     setSettings((prev) => {
@@ -274,8 +276,13 @@ export function SettingsProvider({ children }) {
     });
   }, []);
 
+  const contextValue = useMemo(
+    () => ({ settings, updateSetting, updateSettings, updateAllSettings, resetSettings, syncFromServer }),
+    [settings, updateSetting, updateSettings, updateAllSettings, resetSettings, syncFromServer]
+  );
+
   return (
-    <SettingsContext.Provider value={{ settings, updateSetting, updateSettings, updateAllSettings, resetSettings, syncFromServer }}>
+    <SettingsContext.Provider value={contextValue}>
       {children}
     </SettingsContext.Provider>
   );

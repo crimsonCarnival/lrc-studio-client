@@ -17,7 +17,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
 
   const {
     mediaTitle, setMediaTitle, showKeyboardHelp, setShowKeyboardHelp,
-    showSettings, setShowSettings, isDraggingFile, playerRef,
+    isDraggingFile, playerRef,
     handleManualSave, triggerImportSave, handleDiscardProject, handleRestoreProject, buildProjectPayload,
     handleTimeUpdate, handleDurationChange, handleMediaChange, handleYtUrlChange,
     handleCloudinaryUpload, restoredYtUrl, restoredCloudinaryUpload, restoredPosition,
@@ -57,7 +57,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         {/* Drag overlay */}
         {isDraggingFile && (
           <div className="fixed inset-0 z-overlay flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none transition-all">
-            <div className="flex flex-col items-center gap-4 text-primary animate-bounce">
+            <div className="flex flex-col items-center gap-4 text-primary animate-pulse">
               <UploadCloud className="size-20" />
               <h2 className="text-3xl font-semibold tracking-tight text-center px-4">
                 {t('player.dropAudio') || 'Drop your audio or lyrics file here'}
@@ -78,7 +78,6 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           hasUnsavedChanges={hasUnsavedChanges}
           activeProjectId={activeProjectId}
           forkedFrom={forkedFrom}
-          setShowSettings={setShowSettings}
           setShowKeyboardHelp={setShowKeyboardHelp}
           focusMode={focusMode}
           setFocusMode={setFocusMode}
@@ -146,8 +145,6 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         <AppModals
           showKeyboardHelp={showKeyboardHelp}
           setShowKeyboardHelp={setShowKeyboardHelp}
-          showSettings={showSettings}
-          setShowSettings={setShowSettings}
           handleManualSave={handleManualSave}
           showNamingModal={showNamingModal}
           setShowNamingModal={setShowNamingModal}
