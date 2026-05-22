@@ -1,4 +1,4 @@
-﻿import { useMemo, useCallback, useRef } from 'react';
+import { useMemo, useCallback, useRef } from 'react';
 import { formatTime } from '@/shared/utils/format-time';
 
 /**
@@ -82,17 +82,20 @@ export default function PlaybackProgress({
   return (
     <div className="w-full flex flex-col gap-0 mt-2 animate-fade-in">
       {/* Main progress bar container */}
-      <button
-        type="button"
+      <div
         ref={containerRef}
         onMouseDown={handleMouseDown}
+        role="slider"
         aria-label="Seek playback"
+        aria-valuemin={0}
+        aria-valuemax={duration || 0}
+        aria-valuenow={playbackPosition}
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'ArrowRight') onSeek?.(Math.min(duration, playbackPosition + 5));
           else if (e.key === 'ArrowLeft') onSeek?.(Math.max(0, playbackPosition - 5));
         }}
-        className="w-full h-8 relative rounded-xl overflow-hidden bg-zinc-900/60 border border-zinc-800/60 cursor-pointer group shadow-inner"
+        className="w-full h-8 relative rounded-xl overflow-hidden bg-zinc-950/40 border border-zinc-800/50 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1 focus-visible:ring-offset-zinc-950"
       >
         {/* Subtle background gradient */}
         <div className="absolute inset-0 bg-gradient-to-r from-zinc-900/50 to-zinc-800/20" />
@@ -146,7 +149,7 @@ export default function PlaybackProgress({
           className="absolute top-0 bottom-0 w-24 -translate-x-1/2 pointer-events-none z-0 opacity-10 bg-gradient-to-r from-transparent via-primary to-transparent"
           style={{ left: `${playbackPct}%` }}
         />
-      </button>
+      </div>
 
       {/* Ruler with time labels */}
       <div className="w-full h-5 relative select-none mt-1.5 px-0.5">
