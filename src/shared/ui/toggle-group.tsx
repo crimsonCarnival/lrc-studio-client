@@ -1,4 +1,5 @@
 ﻿import * as React from "react"
+import { useMemo } from "react"
 import { type VariantProps } from "class-variance-authority"
 import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui"
 
@@ -45,7 +46,7 @@ function ToggleGroup({
       {...props}
     >
       <ToggleGroupContext.Provider
-        value={{ variant, size, spacing, orientation }}
+        value={useMemo(() => ({ variant, size, spacing, orientation }), [variant, size, spacing, orientation])}
       >
         {children}
       </ToggleGroupContext.Provider>

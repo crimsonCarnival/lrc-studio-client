@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
@@ -75,9 +75,9 @@ export default function ProjectSetupModal({
     songYear: ''
   });
 
-  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
-  if (prevIsOpen !== isOpen) {
-    setPrevIsOpen(isOpen);
+  const prevIsOpenRef = useRef(isOpen);
+  if (prevIsOpenRef.current !== isOpen) {
+    prevIsOpenRef.current = isOpen;
     if (isOpen) {
       setForm({
         name: initialName || '',

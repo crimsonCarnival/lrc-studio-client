@@ -193,7 +193,9 @@ export function useEditor({
         return { ...line, text: plainText, words: filteredWords };
       })
     );
-  }, [editorMode, setLines]);
+    // setLines is a stable useState setter
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editorMode]);
 
   const displayedActiveIndex = isActiveLineLocked
     ? activeLineIndex

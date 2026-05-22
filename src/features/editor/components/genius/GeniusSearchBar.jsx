@@ -16,6 +16,7 @@ export default function GeniusSearchBar({ onImport, autoSearch }) {
   const [lyrics, setLyrics] = useState(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState(null);
+  const [keepTimestamps, setKeepTimestamps] = useState(false);
   const debounceRef = useRef(null);
 
   const doSearch = useCallback(async (term) => {
@@ -79,35 +80,39 @@ export default function GeniusSearchBar({ onImport, autoSearch }) {
   }, [t]);
 
   const handleConfirm = useCallback((lyricsText) => {
-    onImport(lyricsText);
+    onImport(lyricsText, keepTimestamps);
     setSelectedSong(null);
     setLyrics(null);
     setQuery('');
     setResults(null);
-  }, [onImport]);
+    setKeepTimestamps(false);
+  }, [onImport, keepTimestamps]);
 
   const handleCloseModal = useCallback(() => {
     setSelectedSong(null);
     setLyrics(null);
     setExtractError(null);
+    setKeepTimestamps(false);
   }, []);
 
   return (
     <div className="flex flex-col gap-2 w-full">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none" />
-        <Input
-          value={query}
-          onChange={handleQueryChange}
-          placeholder={t('genius.searchPlaceholder')}
-          className="pl-8 pr-8 bg-zinc-900 border-zinc-700"
-        />
-        {isSearching && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 animate-spin pointer-events-none" />
-        )}
-      </div>
+      {!selectedSong && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none" />
+          <Input
+            value={query}
+            onChange={handleQueryChange}
+            placeholder={t('genius.searchPlaceholder')}
+            className="pl-8 lg:pl-8 pr-8 lg:pr-8 bg-zinc-900 border-zinc-700"
+          />
+          {isSearching && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 animate-spin pointer-events-none" />
+          )}
+        </div>
+      )}
 
-      {results !== null && (
+      {results !== null && !selectedSong && (
         <div className="flex flex-col gap-0.5 max-h-64 overflow-y-auto">
           {results.length === 0 ? (
             <p className="text-xs text-zinc-500 text-center py-4">{t('genius.noResults')}</p>
@@ -132,6 +137,8 @@ export default function GeniusSearchBar({ onImport, autoSearch }) {
           error={extractError}
           onConfirm={handleConfirm}
           onClose={handleCloseModal}
+          keepTimestamps={keepTimestamps}
+          onKeepTimestampsChange={setKeepTimestamps}
         />
       )}
     </div>

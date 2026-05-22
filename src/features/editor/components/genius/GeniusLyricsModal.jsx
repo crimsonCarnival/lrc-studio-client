@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@ui/dialog';
 import { Button } from '@ui/button';
+import { Checkbox } from '@ui/checkbox';
 import { Loader2 } from 'lucide-react';
 
-export default function GeniusLyricsModal({ song, lyrics, isLoading, error, onConfirm, onClose }) {
+export default function GeniusLyricsModal({ song, lyrics, isLoading, error, onConfirm, onClose, keepTimestamps, onKeepTimestampsChange }) {
   const { t } = useTranslation();
 
   return (
@@ -37,16 +38,26 @@ export default function GeniusLyricsModal({ song, lyrics, isLoading, error, onCo
           )}
         </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-zinc-800">
-          <Button variant="ghost" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            onClick={() => onConfirm(lyrics)}
-            disabled={!lyrics || isLoading}
-          >
-            {t('genius.useLyrics')}
-          </Button>
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-800">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <Checkbox
+              checked={keepTimestamps}
+              onCheckedChange={onKeepTimestampsChange}
+              className="size-3.5 border-zinc-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            />
+            <span className="text-xs text-zinc-400">{t('genius.keepTimestamps')}</span>
+          </label>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={onClose}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={() => onConfirm(lyrics)}
+              disabled={!lyrics || isLoading}
+            >
+              {t('genius.useLyrics')}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

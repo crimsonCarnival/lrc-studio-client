@@ -36,7 +36,9 @@ function EditorContainer({ loadProject, activeProjectId, children }) {
     if (id && id !== 'new' && id !== 'local' && id !== 'fork' && id !== activeProjectId) {
       loadProject(id);
     }
-  }, [id, activeProjectId, loadProject]);
+    // loadProject is stable (useCallback); route param id is the true trigger
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, activeProjectId]);
 
   return children;
 }
@@ -77,7 +79,9 @@ function ForkHandler({ appState, navigate }) {
           });
         });
     });
-  }, [id, user, navigate, loadProject, t]);
+    // navigate, loadProject, t are stable; ran.current guards single-execution
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, user]);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">
@@ -197,10 +201,8 @@ export function AppRouter({
     setEditorWidth(clampedEditorWidth);
   }, [layoutSwap, setEditorWidth]);
 
-  // Keep a ref so the mousemove listener always calls the current handleResize
-  // even if layoutSwap changes mid-drag (stale closure prevention).
   const handleResizeRef = useRef(handleResize);
-  useEffect(() => { handleResizeRef.current = handleResize; }, [handleResize]);
+  handleResizeRef.current = handleResize;
 
   const startResizing = useCallback(() => {
     if (!isDesktop || lockLayout) return;

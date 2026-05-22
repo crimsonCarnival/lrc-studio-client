@@ -61,7 +61,7 @@ export default function useYouTubePlayer({
   const rafIdRef = useRef(null);
   const apiLoadedRef = useRef(false);
   const onYtUrlChangeRef = useRef(onYtUrlChange);
-  useEffect(() => { onYtUrlChangeRef.current = onYtUrlChange; }, [onYtUrlChange]);
+  onYtUrlChangeRef.current = onYtUrlChange;
 
   const [ytUrl, setYtUrl] = useState(initialYtUrl || '');
   const [ytReady, setYtReady] = useState(false);

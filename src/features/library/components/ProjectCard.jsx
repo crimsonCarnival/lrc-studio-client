@@ -145,6 +145,7 @@ function ProjectCard({
           ref={cardRef}
           role="button"
           tabIndex={0}
+          aria-label={project.title || project.upload?.fileName || t('library.untitled')}
           onClick={openProject}
           onKeyDown={handleKeyDown}
           onTouchStart={handleTouchStart}
@@ -254,6 +255,7 @@ function ProjectCard({
         ref={cardRef}
         role="button"
         tabIndex={0}
+        aria-label={project.title || project.upload?.fileName || t('library.untitled')}
         onClick={openProject}
         onKeyDown={handleKeyDown}
         onTouchStart={handleTouchStart}

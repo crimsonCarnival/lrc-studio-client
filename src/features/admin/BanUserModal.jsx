@@ -27,9 +27,9 @@ export default function BanUserModal({ isOpen, user, onConfirm, onCancel }) {
 
   const inputRef = useRef(null);
 
-  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
-  if (prevIsOpen !== isOpen) {
-    setPrevIsOpen(isOpen);
+  const prevIsOpenRef = useRef(isOpen);
+  if (prevIsOpenRef.current !== isOpen) {
+    prevIsOpenRef.current = isOpen;
     if (isOpen) setForm({ reason: '', bannedUntil: '', banIp: false, banDevice: false });
   }
 

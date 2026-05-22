@@ -81,8 +81,8 @@ export function useSharedProject({
   const isSharedProjectRef = useRef(false);
   const sharedReadOnlyRef = useRef(true);
 
-  useEffect(() => { isSharedProjectRef.current = isSharedProject; }, [isSharedProject]);
-  useEffect(() => { sharedReadOnlyRef.current = sharedReadOnly; }, [sharedReadOnly]);
+  isSharedProjectRef.current = isSharedProject;
+  sharedReadOnlyRef.current = sharedReadOnly;
 
   // Expose shareModal setter so exportToUrl can call it
   const setShareModalState = setShareModal ?? _setShareModal;

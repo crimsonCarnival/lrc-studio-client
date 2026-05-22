@@ -50,9 +50,10 @@ export default function useLocalAudio({
       const performUpload = async () => {
         if (uploadAbortRef.current) return;
         try {
-          const recaptchaToken = executeRecaptcha ? await executeRecaptcha('upload_audio') : undefined;
-          const result = await uploads.uploadToCloudinary(file, recaptchaToken);
-          if (uploadAbortRef.current) return;
+          const result = await uploads.uploadToCloudinary(
+            file,
+            executeRecaptcha ? await executeRecaptcha('upload_audio') : undefined
+          );
           try {
             // Immediately persist to database before considering it successful
             const { upload } = await uploads.saveMedia({

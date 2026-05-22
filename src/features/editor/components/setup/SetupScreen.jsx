@@ -111,7 +111,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     description: prefill?.description || '',
     tags: prefill?.tags || [],
     tagInput: '',
-    isPublic: false,
+    isPublic: true,
     songName: prefill?.songName || '',
     songArtist: prefill?.songArtist || '',
     songAlbum: prefill?.songAlbum || '',
@@ -447,6 +447,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                     {audioTab === 'youtube' && (
                       <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-zinc-800/50">
                         <YoutubeSearchPanel
+                          initialQuery={[songName, songArtist].filter(Boolean).join(' ').trim()}
                           onSelect={({ url }) => {
                             setAudioState({ ytUrl: url });
                             autoLoadPendingRef.current = true;
@@ -847,7 +848,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                       {projectTags.map((tag, i) => (
                         <Badge key={tag} variant="secondary" className="gap-1 pl-2.5 pr-1 py-1 text-xs bg-zinc-800 text-zinc-200 border-zinc-700 animate-fade-in rounded-lg">
                           {tag}
-                          <button type="button" onClick={(e) => { e.stopPropagation(); removeTag(i); }} className="ml-0.5 rounded-full p-0.5 hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-zinc-100">
+                          <button type="button" aria-label={t('setup.removeTag', { tag })} onClick={(e) => { e.stopPropagation(); removeTag(i); }} className="ml-0.5 rounded-full p-0.5 hover:bg-zinc-700 transition-colors text-zinc-400 hover:text-zinc-100">
                             <X className="size-3" />
                           </button>
                         </Badge>

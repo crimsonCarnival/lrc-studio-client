@@ -220,6 +220,7 @@ const EditorLineItem = React.memo(({
     <div
       ref={isActive ? activeLineRef : null}
       role="button"
+      aria-label={line.text || `Line ${i + 1}`}
       onClick={(e) => {
         if (!selection.range) {
           setSelection({ start: null, end: null, range: null });

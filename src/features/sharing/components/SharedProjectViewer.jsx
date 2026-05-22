@@ -1,4 +1,4 @@
-﻿import { useRef, useState, useCallback, useEffect } from 'react';
+﻿import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { SettingsProvider } from '@/features/settings/SettingsContext';
@@ -137,11 +137,10 @@ function SharedProjectViewerInner({ projectId }) {
 
   useEffect(() => {
     if (loading) return;
-    
     if (searchParams.get('clone') === '1') {
-      handleClone();
+      window.location.href = `/project/fork/${projectId}`;
     }
-  }, [loading, searchParams, handleClone]);
+  }, [loading, searchParams, projectId]);
 
   const handleCopyLink = useCallback(() => {
     navigator.clipboard.writeText(window.location.href);
@@ -186,7 +185,7 @@ function SharedProjectViewerInner({ projectId }) {
 
   // ── Viewer ──
   // Create metadata section component for mobile optimization
-  const MetadataSection = (
+  const MetadataSection = useMemo(() => (
     <div className={`px-2 sm:px-4 lg:px-6 mb-4 sm:mb-6 animate-fade-in flex flex-col ${isMobile ? 'gap-4' : 'sm:flex-row sm:items-start justify-between gap-6'}`}>
       <div className="flex-1 min-w-0">
         <div className={`flex flex-wrap items-center ${isMobile ? 'gap-2' : 'gap-3'} mb-3`}>
@@ -256,10 +255,10 @@ function SharedProjectViewerInner({ projectId }) {
         )}
       </div>
     </div>
-  );
+  ), [isMobile, projectData, forkCount, isStarred, starLoading, starCount, handleStar, user, t]);
 
   // Create CTA banner component
-  const CTABanner = (
+  const CTABanner = useMemo(() => (
     <div className={`max-w-7xl mx-auto ${isMobile ? 'px-3 py-3' : 'px-4 sm:px-6 py-4'} flex flex-col ${isMobile ? 'gap-3' : 'sm:flex-row'} items-start ${!isMobile && 'sm:items-center'} justify-between`}>
       {/* Callout Box */}
       <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -303,7 +302,59 @@ function SharedProjectViewerInner({ projectId }) {
         </Button>
       </div>
     </div>
-  );
+  ), [isMobile, handleCopyLink, copied, handleClone, t]);
+
+  const PreviewSlot = useMemo(() => (
+    <>
+      {MetadataSection}
+      <Preview
+        lines={lines}
+        setLines={() => { }} // read-only — no edits
+        playbackPosition={playbackPosition}
+        mediaTitle={mediaTitle}
+        playerRef={playerRef}
+        duration={0}
+        editorMode={editorMode}
+        exportToUrl={() => { }}
+        isSharedProject={true}
+        sharedReadOnly={true}
+        setSharedReadOnly={() => { }}
+        shareModal={null}
+        setShareModal={() => { }}
+        hasMedia={hasMedia}
+        isPlaying={isPlaying}
+        playbackSpeed={playbackSpeed}
+        activeProjectId={projectId}
+        project={projectData}
+        projectMetadata={projectData?.metadata}
+        viewerMode={true}
+      />
+    </>
+  ), [MetadataSection, lines, playbackPosition, mediaTitle, playerRef, editorMode, hasMedia, isPlaying, playbackSpeed, projectId, projectData]);
+
+  const PlayerSlot = useMemo(() => (
+    <Player
+      ref={playerRef}
+      mediaTitle={mediaTitle}
+      onTimeUpdate={handleTimeUpdate}
+      onPlayingChange={setIsPlaying}
+      onSpeedChange={setPlaybackSpeed}
+      onDurationChange={() => { }}
+      onMediaChange={handleMediaChange}
+      onYtUrlChange={() => { }}
+      onTitleChange={setMediaTitle}
+      initialYtUrl={initialYtUrl}
+      initialCloudinaryUpload={initialCloudinaryUpload}
+      initialSeek={startTime}
+      initialSpeed={1}
+      lines={lines}
+      playbackPosition={playbackPosition}
+      syncMode={false}
+      onCloudinaryUpload={() => { }}
+      projectMetadata={projectData?.metadata}
+      viewerMode={true}
+    />
+  ), [playerRef, mediaTitle, handleTimeUpdate, setIsPlaying, setPlaybackSpeed, handleMediaChange, setMediaTitle, initialYtUrl, initialCloudinaryUpload, startTime, lines, playbackPosition, projectData]);
 
   // Render using responsive layout
   return (
@@ -332,56 +383,8 @@ function SharedProjectViewerInner({ projectId }) {
       <SharedProjectViewerLayout
         isMobile={isMobile}
         hasHeader={!!user}
-        preview={
-          <>
-            {MetadataSection}
-            <Preview
-              lines={lines}
-              setLines={() => { }} // read-only — no edits
-              playbackPosition={playbackPosition}
-              mediaTitle={mediaTitle}
-              playerRef={playerRef}
-              duration={0}
-              editorMode={editorMode}
-              exportToUrl={() => { }}
-              isSharedProject={true}
-              sharedReadOnly={true}
-              setSharedReadOnly={() => { }}
-              shareModal={null}
-              setShareModal={() => { }}
-              hasMedia={hasMedia}
-              isPlaying={isPlaying}
-              playbackSpeed={playbackSpeed}
-              activeProjectId={projectId}
-              project={projectData}
-              projectMetadata={projectData?.metadata}
-              viewerMode={true}
-            />
-          </>
-        }
-        player={
-          <Player
-            ref={playerRef}
-            mediaTitle={mediaTitle}
-            onTimeUpdate={handleTimeUpdate}
-            onPlayingChange={setIsPlaying}
-            onSpeedChange={setPlaybackSpeed}
-            onDurationChange={() => { }}
-            onMediaChange={handleMediaChange}
-            onYtUrlChange={() => { }}
-            onTitleChange={setMediaTitle}
-            initialYtUrl={initialYtUrl}
-            initialCloudinaryUpload={initialCloudinaryUpload}
-            initialSeek={startTime}
-            initialSpeed={1}
-            lines={lines}
-            playbackPosition={playbackPosition}
-            syncMode={false}
-            onCloudinaryUpload={() => { }}
-            projectMetadata={projectData?.metadata}
-            viewerMode={true}
-          />
-        }
+        preview={PreviewSlot}
+        player={PlayerSlot}
         ctaBanner={CTABanner}
       />
     </>

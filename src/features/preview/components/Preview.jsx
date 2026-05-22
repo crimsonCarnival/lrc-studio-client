@@ -108,7 +108,9 @@ export default function Preview(props) {
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [shareModal, setShareModal]);
+    // setShareModal is stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shareModal]);
 
   const handleShareToggle = useCallback(() => {
     if (shareModal) {

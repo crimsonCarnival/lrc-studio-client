@@ -39,7 +39,11 @@ const LineTextContent = React.memo(({
             : { lineHeight: '1.6' }}
         >
           {line.words?.length > 0
-            ? line.words.map((w, wi) => {
+            ? (() => {
+              let wordCharStart = 0;
+              return line.words.map((w, wi) => {
+              const wKey = wordCharStart;
+              wordCharStart += w.word.length;
               const canHaveReading = hasKanji(w.word || '');
               const isEditing = editingReadingWordIndex === wi;
               const rubyFmt = settings?.editor?.display?.readingFormat || 'hiragana';
@@ -63,7 +67,7 @@ const LineTextContent = React.memo(({
 
               if (isEditing) {
                 return (
-                  <React.Fragment key={wi}>
+                  <React.Fragment key={wKey}>
                     <ruby>
                       {content}
                       <rt>
@@ -118,6 +122,7 @@ const LineTextContent = React.memo(({
                     {canHaveReading && (editorMode !== 'words' || w.reading) && (
                       <rt
                         role="button"
+                        aria-label={w.reading || 'Add reading'}
                         className={`select-none transition-colors ${w.reading ? 'text-[10px] font-mono text-zinc-400 group-hover/ruby:text-primary' : 'border-b-2 border-zinc-700/30 border-dashed min-h-[4px] group-hover/ruby:border-primary/40'}`}
                         tabIndex={editorMode !== 'words' ? 0 : undefined}
                         onClick={editorMode !== 'words' ? (e) => {
@@ -138,7 +143,8 @@ const LineTextContent = React.memo(({
                   {trailingSpace}
                 </React.Fragment>
               );
-            })
+            });
+            })()
             : (() => {
               const { plainText, segments } = parseRubyMarkup(line.text || '♪');
               const textChars = [...plainText];
@@ -153,9 +159,10 @@ const LineTextContent = React.memo(({
                 if (seg.reading) {
                   return (
                     <ruby
-                      key={`seg-${si}`}
+                      key={startCi}
                       className="text-primary font-medium cursor-pointer group/ruby relative"
                       role="button"
+                      aria-label={seg.reading || seg.text}
                       tabIndex={0}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -186,16 +193,7 @@ const LineTextContent = React.memo(({
                   };
 
                   if (isNonCJK) return (
-                    <span
-                      key={ci}
-                      onClick={handleCharClick}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleCharClick(e); }}
-                      role="button"
-                      tabIndex={0}
-                      className="text-zinc-300/90 cursor-pointer outline-none focus:text-primary"
-                    >
-                      {ch}
-                    </span>
+                    <span key={ci} className="text-zinc-300/90">{ch}</span>
                   );
 
                   if (selection.range) {

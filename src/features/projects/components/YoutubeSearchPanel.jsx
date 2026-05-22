@@ -22,19 +22,15 @@ function extractVideoId(url) {
   return match?.[1] ?? null;
 }
 
-export default function YoutubeSearchPanel({ onSelect, onClose }) {
+export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '' }) {
   const { t } = useTranslation();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
   const inputRef = useRef(null);
   const debounceRef = useRef(null);
-
-  useEffect(() => {
-    // autoFocus removed as requested
-  }, []);
 
   const runSearch = useCallback(async (q) => {
     const term = q.trim();
@@ -101,12 +97,13 @@ export default function YoutubeSearchPanel({ onSelect, onClose }) {
             className="flex-1 bg-transparent text-sm text-zinc-200 placeholder:text-zinc-500 outline-none focus:ring-0 focus-visible:ring-0"
           />
           {query && (
-            <button onClick={() => { if (debounceRef.current) clearTimeout(debounceRef.current); setQuery(''); setResults([]); setSearched(false); }} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+            <button aria-label={t('common.clear')} onClick={() => { if (debounceRef.current) clearTimeout(debounceRef.current); setQuery(''); setResults([]); setSearched(false); }} className="text-zinc-500 hover:text-zinc-300 transition-colors">
               <X className="size-4" />
             </button>
           )}
         </div>
         <button
+          aria-label={t('home.searchYoutube')}
           onClick={() => runSearch(query)}
           disabled={!query.trim() || loading}
           className="h-9 px-4 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold flex items-center gap-2 transition-colors shrink-0"
@@ -114,7 +111,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose }) {
           {loading ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
         </button>
         {onClose && (
-          <button onClick={onClose} className="size-9 rounded-xl flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors shrink-0">
+          <button aria-label={t('common.close')} onClick={onClose} className="size-9 rounded-xl flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors shrink-0">
             <X className="size-4" />
           </button>
         )}

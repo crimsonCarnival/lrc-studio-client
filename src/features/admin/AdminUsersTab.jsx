@@ -39,6 +39,7 @@ export default function AdminUsersTab({
         <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-row gap-2 sm:gap-4'}`}>
           <select
             value={roleFilter}
+            aria-label={t('admin.dashboard.filters.filterByRole')}
             onChange={(e) => setRoleFilter(e.target.value)}
             className={`bg-zinc-950 border border-zinc-800 rounded-lg px-3 text-sm text-zinc-300 outline-none focus:border-primary ${isMobile ? 'h-10 flex-1' : ''}`}
           >
@@ -48,6 +49,7 @@ export default function AdminUsersTab({
           </select>
           <select
             value={statusFilter}
+            aria-label={t('admin.dashboard.filters.filterByStatus')}
             onChange={(e) => setStatusFilter(e.target.value)}
             className={`bg-zinc-950 border border-zinc-800 rounded-lg px-3 text-sm text-zinc-300 outline-none focus:border-primary ${isMobile ? 'h-10 flex-1' : ''}`}
           >

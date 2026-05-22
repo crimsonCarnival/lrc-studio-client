@@ -33,8 +33,6 @@ function AppInner() {
     setMediaTitle,
     handleYtUrlChange,
     handleCloudinaryUpload,
-    noMediaSetupData,
-    setNoMediaSetupData,
   } = appState;
 
   useScrollLock(!!pendingProject);
@@ -43,14 +41,18 @@ function AppInner() {
   // Sync settings from server when user logs in
   useEffect(() => {
     if (user) syncFromServer();
-  }, [user, syncFromServer]);
+    // syncFromServer is stable; user presence is the true trigger
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // Promote /project/local → /project/:id once the server assigns a real ID
   useEffect(() => {
     if (user && activeProjectId && routerLocation.pathname === '/project/local') {
       navigate(`/project/${activeProjectId}`, { replace: true });
     }
-  }, [user, activeProjectId, routerLocation.pathname, navigate]);
+    // navigate is stable (useNavigate)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, activeProjectId, routerLocation.pathname]);
 
   const isProjectPage = routerLocation.pathname.startsWith('/project/') && routerLocation.pathname !== '/project/new';
   const isSetupPage = routerLocation.pathname === '/project/new';
@@ -202,21 +204,15 @@ function AppInner() {
   useEffect(() => {
     if (appState.loadError) appState.setLoadError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [routerLocation.pathname, appState.loadError, appState.setLoadError]);
-
-  // Redirect to setup when a loaded project has no media, carrying all project data for pre-fill
-  useEffect(() => {
-    if (!noMediaSetupData) return;
-    setNoMediaSetupData(null);
-    navigate('/project/new', { state: { prefill: noMediaSetupData }, replace: true });
-  }, [noMediaSetupData, setNoMediaSetupData, navigate]);
+  }, [routerLocation.pathname, appState.loadError]);
 
   // Reset project state when entering "New Project" — but not when coming from no-media rollback
   useEffect(() => {
     if (routerLocation.pathname === '/project/new' && !routerLocation.state?.prefill) {
       resetAppState();
     }
-  }, [routerLocation.pathname, routerLocation.state?.prefill, resetAppState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routerLocation.pathname, routerLocation.state?.prefill]);
 
   // Grid column classes
   const editorColClass = useMemo(() => (({

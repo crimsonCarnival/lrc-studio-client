@@ -117,7 +117,7 @@ export default function LyricsModeTab({
         <div className="flex-1 overflow-y-auto space-y-1.5">
           {lines.map((line, lineIndex) => (
             <button
-              key={lineIndex}
+              key={line.id ?? lineIndex}
               data-line-index={lineIndex}
               onClick={() => setActiveLineIndex(lineIndex)}
               className={`w-full text-left p-2.5 rounded-lg transition-colors text-sm ${

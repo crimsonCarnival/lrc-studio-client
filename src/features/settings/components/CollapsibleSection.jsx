@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import useHapticFeedback from '../../../shared/hooks/useHapticFeedback';
 
 /**

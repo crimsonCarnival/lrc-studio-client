@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { LazyMotion, domAnimation, m as M } from 'framer-motion';
 import { useSearchParams, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
@@ -58,17 +58,17 @@ export default function AuthPage() {
     }
   }, [mode, searchParams, navigate]);
 
-  const [prevLocationSearch, setPrevLocationSearch] = useState(location.search);
-  if (prevLocationSearch !== location.search) {
-    setPrevLocationSearch(location.search);
+  const prevLocationSearchRef = useRef(location.search);
+  if (prevLocationSearchRef.current !== location.search) {
+    prevLocationSearchRef.current = location.search;
     const params = new URLSearchParams(location.search);
     if (params.get('action') === 'forgot-password') setView('forgot-password');
   }
 
   // 2. Sync view state when action changes (e.g. browser back button or direct link)
-  const [prevAction, setPrevAction] = useState(action);
-  if (prevAction !== action) {
-    setPrevAction(action);
+  const prevActionRef = useRef(action);
+  if (prevActionRef.current !== action) {
+    prevActionRef.current = action;
     if (action === 'signup' || action === 'register') {
       setView('register');
     } else if (action === 'forgot-password') {

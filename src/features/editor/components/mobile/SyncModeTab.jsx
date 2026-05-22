@@ -75,7 +75,7 @@ export default function SyncModeTab({
             <div className="space-y-1.5 px-2">
               {lines.map((line, lineIndex) => (
                 <button
-                  key={lineIndex}
+                  key={line.id ?? lineIndex}
                   onClick={() => handleLineClick(lineIndex)}
                   className={`w-full text-left p-2 rounded-lg transition-colors text-sm ${
                     lineIndex === activeLineIndex

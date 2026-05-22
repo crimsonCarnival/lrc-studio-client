@@ -141,7 +141,10 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }) => {
     rafRef.current = requestAnimationFrame(animateRef.current);
   }, [animationSpeed, lineOpacity]);
 
-  useEffect(() => { animateRef.current = animate; }, [animate]);
+  animateRef.current = animate;
+
+  const handleMouseMoveRef = useRef(handleMouseMove);
+  handleMouseMoveRef.current = handleMouseMove;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -155,19 +158,20 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }) => {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
     const handleResize = () => resizeCanvas();
+    const onMouseMove = (e) => handleMouseMoveRef.current(e);
     window.addEventListener('resize', handleResize);
-    canvas.addEventListener('mousemove', handleMouseMove);
+    canvas.addEventListener('mousemove', onMouseMove);
 
     animateRef.current();
 
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', handleResize);
-      canvas.removeEventListener('mousemove', handleMouseMove);
+      canvas.removeEventListener('mousemove', onMouseMove);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       timeRef.current = 0;
     };
-  }, [animate, resizeCanvas, handleMouseMove]);
+  }, [animate, resizeCanvas]);
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden">

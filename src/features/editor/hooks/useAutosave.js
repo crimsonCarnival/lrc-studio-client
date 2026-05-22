@@ -279,11 +279,8 @@ export function useAutosave({
     setForkedFrom,
   ]);
 
-  // Keep a stable ref to doAutoSave so the action-count effect depends only on
-  // [lines] — not on doAutoSave identity — preventing false edit-count increments
-  // when doAutoSave is recreated by non-edit dep changes.
   const doAutoSaveRef = useRef(doAutoSave);
-  useEffect(() => { doAutoSaveRef.current = doAutoSave; }, [doAutoSave]);
+  doAutoSaveRef.current = doAutoSave;
 
   // ——— Action-based trigger (every 5 line edits) ———
   const isFirstLinesRender = useRef(true);
@@ -303,9 +300,11 @@ export function useAutosave({
   useEffect(() => {
     if (!settings.advanced?.autoSave?.enabled) return;
     const intervalMs = Math.max(10, settings.advanced.autoSave.timeInterval ?? 30) * 1000;
-    const id = setInterval(() => { doAutoSave(); }, intervalMs);
+    const id = setInterval(() => { doAutoSaveRef.current(); }, intervalMs);
     return () => clearInterval(id);
-  }, [settings.advanced?.autoSave?.enabled, settings.advanced?.autoSave?.timeInterval, doAutoSave]);
+    // doAutoSave read via ref to avoid restarting the interval on every save cycle
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings.advanced?.autoSave?.enabled, settings.advanced?.autoSave?.timeInterval]);
 
   return { doAutoSave };
 }

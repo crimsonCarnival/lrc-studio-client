@@ -125,12 +125,12 @@ export default function Home() {
       </div>
 
       {/* Main Content Area */}
-      <div className="relative flex-1 flex flex-col h-full overflow-hidden p-6 sm:px-10 lg:px-16">
+      <div className="relative flex-1 flex flex-col overflow-y-auto lg:overflow-hidden lg:h-full p-6 sm:px-10 lg:px-16">
 
-        <div className="max-w-7xl mx-auto size-full flex flex-col lg:flex-row gap-10">
+        <div className="max-w-7xl mx-auto w-full lg:h-full flex flex-col lg:flex-row gap-10">
 
           {/* LEFT COLUMN: Welcome & Actions */}
-          <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left gap-8 overflow-y-auto scrollbar-none pb-10 px-4 -mx-4">
+          <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left gap-8 lg:overflow-y-auto scrollbar-none pb-10 px-4 -mx-4">
             <div className="flex flex-col items-center lg:items-start animate-fade-in shrink-0 w-full">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-zinc-100 tracking-tight mb-3">
                 {dt('home.welcome', { name: username, context: user?.id })}

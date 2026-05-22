@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Globe, Check, Lightbulb, Music2, X, ArrowRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
@@ -118,10 +118,10 @@ export function TipFooter({ t, seed }) {
 
 export function RedirectMessage({ from, t }) {
   const [visible, setVisible] = useState(!!from);
-  const [prevFrom, setPrevFrom] = useState(from);
+  const prevFromRef = useRef(from);
 
-  if (from !== prevFrom) {
-    setPrevFrom(from);
+  if (from !== prevFromRef.current) {
+    prevFromRef.current = from;
     if (from) {
       setVisible(true);
     }
@@ -170,6 +170,7 @@ export function RedirectMessage({ from, t }) {
       <div className="flex-1">{message}</div>
       <button
         onClick={() => setVisible(false)}
+        aria-label={t('common.dismiss')}
         className="p-1 hover:bg-white/5 rounded-md transition-colors opacity-60 hover:opacity-100"
       >
         <X className="size-3.5" />

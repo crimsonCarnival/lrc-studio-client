@@ -105,7 +105,7 @@ export default function AccountNameSection() {
         {user?.previousAccountNames?.length > 0 ? (
           <ul className="space-y-1">
             {user.previousAccountNames.map((entry, i) => (
-              <li key={i} className="text-[11px] text-muted-foreground ml-1 flex items-center gap-1">
+              <li key={entry.changedAt} className="text-[11px] text-muted-foreground ml-1 flex items-center gap-1">
                 <span>{t('profile.changedFrom', { from: entry.from, to: entry.to })}</span>
                 <span className="text-muted-foreground/50">•</span>
                 <span>{new Date(entry.changedAt).toLocaleDateString()}</span>

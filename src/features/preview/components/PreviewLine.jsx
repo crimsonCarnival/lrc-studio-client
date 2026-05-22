@@ -224,7 +224,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
   const words = line.words || [];
 
   return (
-    <p className={`transition-colors duration-100 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass}`} style={{ lineHeight: hasReadings ? '2' : undefined, willChange: isActive ? 'opacity, transform' : undefined }}>
+    <p className={`transition-colors duration-100 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass}`} style={{ lineHeight: hasReadings ? '2' : undefined }}>
       {effectiveHasWordTimestamps
         ? words.map((w, wi) => {
           // Calculate effective start and end times for this word (interpolate if untimed)
@@ -275,8 +275,9 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
                       animationFillMode: 'both',
                       animationDelay: `${(startTime - playbackPosition) / playbackSpeed}s`,
                       animationPlayState: isPlaying ? 'running' : 'paused',
-                      willChange: isPlaying ? 'width' : undefined
                     }}
+                    onAnimationStart={(e) => { e.currentTarget.style.willChange = 'width'; }}
+                    onAnimationEnd={(e) => { e.currentTarget.style.willChange = ''; }}
                   >
                     {wordContent}
                   </span>
@@ -366,8 +367,9 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
                   animationFillMode: 'both',
                   animationDelay: `${(startTime - playbackPosition) / playbackSpeed}s`,
                   animationPlayState: isPlaying ? 'running' : 'paused',
-                  willChange: isPlaying ? 'width' : undefined
                 }}
+                onAnimationStart={(e) => { e.currentTarget.style.willChange = 'width'; }}
+                onAnimationEnd={(e) => { e.currentTarget.style.willChange = ''; }}
               >
                 {w.word}
               </span>
@@ -384,13 +386,16 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
 function ParsedSecondary({ text }) {
   if (!text) return null;
   const { segments } = parseRubyMarkup(text);
-  return segments.map((seg, i) =>
-    seg.reading ? (
-      <ruby key={`seg-${i}`}>{seg.text}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{seg.reading}</rt><rp>)</rp></ruby>
+  let charOffset = 0;
+  return segments.map((seg) => {
+    const key = charOffset;
+    charOffset += seg.text.length;
+    return seg.reading ? (
+      <ruby key={key}>{seg.text}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{seg.reading}</rt><rp>)</rp></ruby>
     ) : (
-      <React.Fragment key={`seg-${i}`}>{seg.text}</React.Fragment>
-    )
-  );
+      <React.Fragment key={key}>{seg.text}</React.Fragment>
+    );
+  });
 }
 
 // ——— Kanji detection: only kanji get ruby annotations, not hiragana/katakana ———

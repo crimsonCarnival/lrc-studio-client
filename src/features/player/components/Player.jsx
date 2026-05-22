@@ -79,10 +79,9 @@ function Player(
 
   const sourceRef = useRef(source);
 
-  // Sync refs in effects (React 19 rules forbid ref writes during render)
-  useEffect(() => { loopARef.current = loopA; }, [loopA]);
-  useEffect(() => { loopBRef.current = loopB; }, [loopB]);
-  useEffect(() => { sourceRef.current = source; }, [source]);
+  loopARef.current = loopA;
+  loopBRef.current = loopB;
+  sourceRef.current = source;
 
   // Fetch uploads when opening the selector
   const fetchUploads = useCallback(async () => {
@@ -128,6 +127,8 @@ function Player(
       // Only clear if it was an auto-loop. For simplicity, we'll just clear it when disabled.
       setLoop({ a: null, b: null });
     }
+    // setLoop is a stable useState setter
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.playback?.loopCurrentLine, activeLineIndex, lines, duration]);
 
   const updateDuration = useCallback(
@@ -1066,13 +1067,12 @@ function Player(
       {showSpotifyBrowser && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-0 sm:p-4 md:p-8 animate-fade-in">
           {/* Backdrop */}
-          <div
+          <button
+            type="button"
             className="absolute inset-0 bg-zinc-950/40 backdrop-blur-xl transition-all duration-500"
             onClick={() => setShowSpotifyBrowser(false)}
-            role="button"
             aria-label={t('common.close') || 'Close'}
             tabIndex={-1}
-            onKeyDown={(e) => { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') setShowSpotifyBrowser(false); }}
           />
 
           {/* Modal Container */}

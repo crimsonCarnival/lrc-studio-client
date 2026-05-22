@@ -34,8 +34,8 @@ export default function GuestProjectSaveGate() {
   // listing them as dependencies (which would re-fire the effect on every render).
   const navigateRef = useRef(navigate);
   const executeRecaptchaRef = useRef(executeRecaptcha);
-  useEffect(() => { navigateRef.current = navigate; }, [navigate]);
-  useEffect(() => { executeRecaptchaRef.current = executeRecaptcha; }, [executeRecaptcha]);
+  navigateRef.current = navigate;
+  executeRecaptchaRef.current = executeRecaptcha;
 
   useEffect(() => {
     if (!isActive) return;

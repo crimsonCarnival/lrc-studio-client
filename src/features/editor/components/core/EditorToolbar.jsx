@@ -47,6 +47,7 @@ export default function EditorToolbar({
   handleClearTimestamps,
   handleClearAllWordTimestamps,
   requestConfirm,
+  setLines,
   setRawText,
   setSyncMode,
   handleManualSave,
@@ -83,16 +84,20 @@ export default function EditorToolbar({
 
   const [geniusPopoverOpen, setGeniusPopoverOpen] = useState(false);
 
-  const handleGeniusImport = useCallback((lyricsText) => {
+  const handleGeniusImport = useCallback((lyricsText, keepTimestamps) => {
     const newLines = lyricsText.split('\n').reduce((acc, line) => {
       const text = line.trim();
       if (text.length > 0) acc.push({ text, timestamp: null });
       return acc;
     }, []);
-    setRawText(newLines.map((l) => l.text).join('\n'));
-    setSyncMode(false);
+    if (keepTimestamps) {
+      setLines(newLines.map((l, idx) => ({ ...l, timestamp: lines[idx]?.timestamp ?? null })));
+    } else {
+      setRawText(newLines.map((l) => l.text).join('\n'));
+      setSyncMode(false);
+    }
     setGeniusPopoverOpen(false);
-  }, [setRawText, setSyncMode]);
+  }, [lines, setLines, setRawText, setSyncMode]);
 
   if (!syncMode) return null;
 

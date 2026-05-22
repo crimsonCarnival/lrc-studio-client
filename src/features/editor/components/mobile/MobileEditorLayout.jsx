@@ -43,13 +43,12 @@ export default function MobileEditorLayout({
     setActiveMode(modeId);
   };
 
-  // Stable refs so the event handler always sees current values without re-registering
   const linesRef = useRef(lines);
   const activeLineIndexRef = useRef(activeLineIndex);
   const editorModeRef = useRef(editorMode);
-  useEffect(() => { linesRef.current = lines; }, [lines]);
-  useEffect(() => { activeLineIndexRef.current = activeLineIndex; }, [activeLineIndex]);
-  useEffect(() => { editorModeRef.current = editorMode; }, [editorMode]);
+  linesRef.current = lines;
+  activeLineIndexRef.current = activeLineIndex;
+  editorModeRef.current = editorMode;
 
   // Handle editor:mark events from the mobile mark button and the player's mark button
   useEffect(() => {

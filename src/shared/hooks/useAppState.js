@@ -1,7 +1,7 @@
 ﻿import { useState, useRef, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSettings } from '@/features/settings/useSettings';
 import useHistory from '@/features/editor/hooks/useHistory';
 import useConfirm from './useConfirm';
@@ -22,6 +22,7 @@ export function useAppState(user) {
   const { t, i18n } = useTranslation();
   const { settings, updateSetting } = useSettings();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   useThemeSync();
 
@@ -97,8 +98,6 @@ export function useAppState(user) {
   const [cloudinaryAudio, setCloudinaryAudio] = useState(null);
   const [projectSpotifyTrackId, setProjectSpotifyTrackId] = useState('');
   const [loadError, setLoadError] = useState(null); // 'project', 'upload', 'user', etc.
-  // Set when a loaded project has no media — caller redirects to setup with this pre-fill data
-  const [noMediaSetupData, setNoMediaSetupData] = useState(null);
   // Refs for stale-closure-safe reads inside save callbacks and guarded setLines
   const lastServerSnapshotRef = useRef(null);
   // Guard: prevents two concurrent project.create() calls (manual + autosave race)
@@ -255,16 +254,21 @@ export function useAppState(user) {
             (project.upload?.source === 'spotify' && project.upload?.spotifyTrackId)
           );
           if (!hasServerMedia && serverLines.length > 0) {
-            setNoMediaSetupData({
-              lines: serverLines,
-              editorMode: project.lyrics?.editorMode || 'lrc',
-              name: project.title || '',
-              description: project.metadata?.description || '',
-              tags: project.metadata?.tags || [],
-              songName: project.metadata?.songName || '',
-              songArtist: project.metadata?.songArtist || '',
-              songAlbum: project.metadata?.songAlbum || '',
-              songYear: project.metadata?.songYear || '',
+            navigate('/project/new', {
+              state: {
+                prefill: {
+                  lines: serverLines,
+                  editorMode: project.lyrics?.editorMode || 'lrc',
+                  name: project.title || '',
+                  description: project.metadata?.description || '',
+                  tags: project.metadata?.tags || [],
+                  songName: project.metadata?.songName || '',
+                  songArtist: project.metadata?.songArtist || '',
+                  songAlbum: project.metadata?.songAlbum || '',
+                  songYear: project.metadata?.songYear || '',
+                }
+              },
+              replace: true,
             });
           }
           saveServerSnapshot({
@@ -305,10 +309,8 @@ export function useAppState(user) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Keep activeProjectIdRef in sync with state so save callbacks can read it synchronously
-  useEffect(() => { activeProjectIdRef.current = activeProjectId; }, [activeProjectId]);
-  // Keep isProjectLoadingRef in sync for the beforeunload guard
-  useEffect(() => { isProjectLoadingRef.current = isProjectLoading; }, [isProjectLoading]);
+  activeProjectIdRef.current = activeProjectId;
+  isProjectLoadingRef.current = isProjectLoading;
 
   // ——— Guest silent restore (no activeProjectId, no auth) ———
   // When a guest visits /project/local or refreshes, restore their last session from localStorage.
@@ -798,8 +800,6 @@ export function useAppState(user) {
     setLoadError,
     setHasMedia,
     registerAfterSave,
-    noMediaSetupData,
-    setNoMediaSetupData,
     buildProjectPayload,
   };
 }

@@ -157,12 +157,10 @@ export default function UploadsLibrary({ onSelect, onBack }) {
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1 settings-scroll">
           {items.map((upload) => (
-            <div
+            <button
               key={upload.id}
-              role="button"
-              tabIndex={0}
+              type="button"
               onClick={() => onSelect?.(upload)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect?.(upload); } }}
               className="w-full group relative flex items-start gap-3 p-3 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/80 border border-zinc-700/40 hover:border-zinc-600/60 transition-all duration-150 text-left cursor-pointer"
             >
               {/* Thumbnail or source icon */}
@@ -270,7 +268,7 @@ export default function UploadsLibrary({ onSelect, onBack }) {
                   </>
                 )}
               </div>
-            </div>
+            </button>
           ))}
         </div>
       )}

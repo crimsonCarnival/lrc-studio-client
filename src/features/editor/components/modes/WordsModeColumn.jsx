@@ -83,13 +83,17 @@ export default function WordsModeColumn({
       {/* Word chips */}
       {stampTarget !== 'secondary' && (
         <div className="flex flex-wrap gap-x-1 gap-y-1 w-full pr-2 min-h-[22px] items-end content-start">
-          {line.words?.map((w, wi) => {
+          {(() => {
+            let wcs = 0;
+            return line.words?.map((w, wi) => {
+            const wKey = wcs;
+            wcs += w.word.length;
             const displayWord = w.word.replace(/^[()'"]+|[,;.!?()'"]+$/g, '');
             // In Words mode, only show the automatic "next word" cursor if no word is manually focused anywhere
             const isFocusedWord = focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'word' && focusedTimestamp?.wordIndex === wi;
             const isActiveWord = wi === activeWordIndex && !focusedTimestamp;
             return (
-              <div key={wi} className="flex flex-col items-center gap-1">
+              <div key={wKey} className="flex flex-col items-center gap-1">
                 {/* Word chip */}
                 {w.time != null ? (
                   <div className="group/word flex items-center gap-0.5">
@@ -152,23 +156,28 @@ export default function WordsModeColumn({
                 )}
               </div>
             );
-          })}
+          });
+          })()}
         </div>
       )}
       {/* Secondary word chips — shown only when stampTarget is 'secondary' */}
       {stampTarget === 'secondary' && hasCJK(line.text || '') && line.secondary && (
         <div className="flex flex-wrap gap-x-1 gap-y-1 w-full pr-2 min-h-[22px] items-end content-start">
-          {(line.secondaryWords?.length
-            ? line.secondaryWords
-            : line.secondary.trim().split(/\s+/).reduce((acc, word) => {
-              if (word) acc.push({ word, time: null });
-              return acc;
-            }, [])
-          ).map((w, wi) => {
+          {(() => {
+            const secondaryWords = line.secondaryWords?.length
+              ? line.secondaryWords
+              : line.secondary.trim().split(/\s+/).reduce((acc, word) => {
+                if (word) acc.push({ word, time: null });
+                return acc;
+              }, []);
+            let swcs = 0;
+            return secondaryWords.map((w, wi) => {
+            const wKey = swcs;
+            swcs += w.word.length;
             const isFocusedSecondaryWord = focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'secondaryWord' && focusedTimestamp?.wordIndex === wi;
             const isActiveSecondaryWord = wi === activeWordIndex && !focusedTimestamp;
             return w.time != null ? (
-              <div key={wi} className="group/sword flex items-center gap-0.5">
+              <div key={wKey} className="group/sword flex items-center gap-0.5">
                 <Tip content={`${w.word} @ ${formatTime(w.time)}`}>
                   <StampedWordChip
                     time={w.time}
@@ -205,7 +214,7 @@ export default function WordsModeColumn({
                 )}
               </div>
             ) : (
-              <div key={wi} className="flex items-center gap-0.5">
+              <div key={wKey} className="flex items-center gap-0.5">
                 <button
                   type="button"
                   onClick={(e) => handleWordClick(e, w, wi, true)}
@@ -227,7 +236,8 @@ export default function WordsModeColumn({
                 )}
               </div>
             );
-          })}
+          });
+          })()}
         </div>
       )}
     </div>

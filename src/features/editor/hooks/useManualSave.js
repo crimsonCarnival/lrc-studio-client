@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useCallback, useEffect } from 'react';
+﻿import { useRef, useCallback } from 'react';
 const DateTimeFormat = Intl.DateTimeFormat;
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -296,17 +296,11 @@ export function useManualSave({
     }
   }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, cloudinaryAudio, duration, t, isSharedProjectRef, activeProjectIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setActiveProjectId, setCloudinaryAudio, executeRecaptcha, onSaveSuccess, setForkedFrom]);
 
-  const [importTick, setImportTick] = useState(0);
-  const importPayloadRef = useRef(null);
   const manualSaveRef = useRef(null);
-  useEffect(() => { manualSaveRef.current = handleManualSave; });
-  useEffect(() => {
-    if (importTick > 0) { manualSaveRef.current?.(importPayloadRef.current || {}); importPayloadRef.current = null; }
-  }, [importTick]);
+  manualSaveRef.current = handleManualSave;
 
   const triggerImportSave = useCallback((payload = null) => {
-    if (payload) importPayloadRef.current = payload;
-    setImportTick((n) => n + 1);
+    manualSaveRef.current?.(payload || {});
   }, []);
 
   return { handleManualSave, triggerImportSave, buildProjectPayload };

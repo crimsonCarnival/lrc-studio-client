@@ -40,6 +40,7 @@ export default function MediaLibrary({
               key={upload.id}
               role="button"
               tabIndex={0}
+              aria-label={upload.title || upload.fileName || upload.youtubeUrl || 'Untitled'}
               onClick={() => onSelect(upload)}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(upload); } }}
               className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border transition-all group cursor-pointer ${

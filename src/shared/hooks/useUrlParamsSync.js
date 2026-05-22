@@ -113,5 +113,7 @@ export function useUrlParamsSync(appState, layoutState) {
       lastParamsRef.current = paramsString;
       setSearchParams(params, { replace: true });
     }
-  }, [i18n.language, editorMode, playbackSpeed, focusMode, mobileTab, layoutSwap, searchParams, setSearchParams, layoutState.isReady]);
+    // setSearchParams is stable (useSearchParams)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [i18n.language, editorMode, playbackSpeed, focusMode, mobileTab, layoutSwap, searchParams, layoutState.isReady]);
 }

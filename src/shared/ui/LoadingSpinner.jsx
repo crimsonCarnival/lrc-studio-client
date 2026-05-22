@@ -1,10 +1,5 @@
+import { motion } from 'framer-motion';
 
-/**
- * Unified loading spinner component
- * Provides consistent loading state across all pages (Library, Settings, Upload)
- *
- * @param {string} size - Size variant: 'sm', 'md', 'lg' (default: 'md')
- */
 export function LoadingSpinner({ size = 'md' }) {
   const sizes = {
     sm: 'size-6 border border-primary/30',

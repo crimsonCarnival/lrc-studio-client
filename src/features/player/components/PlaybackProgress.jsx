@@ -82,10 +82,10 @@ export default function PlaybackProgress({
   return (
     <div className="w-full flex flex-col gap-0 mt-2 animate-fade-in">
       {/* Main progress bar container */}
-      <div
+      <button
+        type="button"
         ref={containerRef}
         onMouseDown={handleMouseDown}
-        role="button"
         aria-label="Seek playback"
         tabIndex={0}
         onKeyDown={(e) => {
@@ -146,7 +146,7 @@ export default function PlaybackProgress({
           className="absolute top-0 bottom-0 w-24 -translate-x-1/2 pointer-events-none z-0 opacity-10 bg-gradient-to-r from-transparent via-primary to-transparent"
           style={{ left: `${playbackPct}%` }}
         />
-      </div>
+      </button>
 
       {/* Ruler with time labels */}
       <div className="w-full h-5 relative select-none mt-1.5 px-0.5">
