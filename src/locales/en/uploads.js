@@ -46,5 +46,9 @@ export default {
   youtube: "YouTube",
   audioFile: "Audio File",
   cloudinary: "Cloud Audio",
-  spotify: "Spotify"
+  spotify: "Spotify",
+  noFiles: "No files selected",
+  uploadSuccess: "Uploaded successfully",
+  uploadError: "Upload failed",
+  allComplete: "All uploads complete!"
 };

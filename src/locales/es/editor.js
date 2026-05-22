@@ -1,6 +1,12 @@
 export default {
   title: "Editor",
   syncMode: "Editor",
+  sync: "Sincronizar",
+  lyrics: "Letras",
+  preview: "Vista previa",
+  toast: {
+    allRemoved: "Todas las letras eliminadas"
+  },
   removeAll: "Eliminar todas las letras",
   pastePlaceholder: "Las letras pegadas aparecerán aquí, una línea por línea...",
   startSyncing: "Empezar ",

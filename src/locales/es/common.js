@@ -17,5 +17,10 @@ export default {
   "language.en": "English",
   "language.es": "Español",
   "language.ja": "日本語",
-  or: "O"
+  or: "O",
+  save: "Guardar",
+  create: "Crear",
+  networkError: "Error de red",
+  backToHome: "Volver al inicio",
+  goBack: "Volver"
 };

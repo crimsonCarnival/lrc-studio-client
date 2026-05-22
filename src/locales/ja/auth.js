@@ -41,6 +41,7 @@ export default {
   usernameTaken: "ユーザー名またはメールは既に使用されています",
   signedInAs: "<0>{{name}}</0>としてサインイン中",
   account: "アカウント",
+  user: "ユーザー",
   signUpToSave: "プロジェクトをクラウドに保存するには登録してください",
   tagline: "思い通りに歌詞を音楽にシンクロ",
   featureSync: "リアルタイムで歌詞をタイムスタンプ",

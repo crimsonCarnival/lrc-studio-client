@@ -21,6 +21,8 @@ export default {
   deleteUpload: "¿Eliminar \"{{title}}\" de tu biblioteca? No se puede deshacer.",
   deleteUploadTitle: "Eliminar archivo",
   replaceTitle: "Reemplazar letras",
+  removeLyrics: "¿Estás seguro de que quieres eliminar todas las letras?",
+  removeLyricsTitle: "Eliminar letras",
   unsavedChangesTitle: "Cambios sin guardar",
   unsavedChangesMessage: "Tienes cambios sin guardar. ¿Qué deseas hacer antes de salir?"
 };

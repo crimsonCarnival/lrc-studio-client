@@ -1,6 +1,12 @@
 export default {
   title: "Editor",
   syncMode: "Editor",
+  sync: "Sync",
+  lyrics: "Lyrics",
+  preview: "Preview",
+  toast: {
+    allRemoved: "All lyrics removed"
+  },
   removeAll: "Remove all lyrics",
   pastePlaceholder: "Pasted lyrics will appear here, one line per line...",
   startSyncing: "Start Syncing",

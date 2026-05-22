@@ -21,6 +21,8 @@ export default {
   deleteUpload: "メディアライブラリから\"{{title}}\"を削除しますか？この操作は元に戻せません。",
   deleteUploadTitle: "メディアを削除",
   replaceTitle: "歌詞を置換",
+  removeLyrics: "すべての歌詞を削除してもよろしいですか？",
+  removeLyricsTitle: "歌詞を削除",
   unsavedChangesTitle: "未保存の変更",
   unsavedChangesMessage: "保存されていない変更があります。退出前にどうしますか？"
 };

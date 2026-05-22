@@ -41,6 +41,7 @@ export default {
   usernameTaken: "El usuario o correo ya está en uso",
   signedInAs: "Sesión iniciada como {{name}}",
   account: "Cuenta",
+  user: "Usuario",
   signUpToSave: "Regístrate para guardar tu proyecto en la nube",
   tagline: "Sincroniza letras con música, a tu manera",
   featureSync: "Sincroniza letras en tiempo real",

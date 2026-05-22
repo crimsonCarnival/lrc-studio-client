@@ -21,5 +21,6 @@ export default {
   includeOptions: "Incluir en la exportación",
   includeWords: "Marcas de tiempo palabra por palabra",
   includeSecondary: "Letra secundaria",
-  noExtraContent: "No hay texto secundario, traducciones ni marcas de tiempo de palabras para incluir."
+  noExtraContent: "No hay texto secundario, traducciones ni marcas de tiempo de palabras para incluir.",
+  failed: "Error al exportar"
 };

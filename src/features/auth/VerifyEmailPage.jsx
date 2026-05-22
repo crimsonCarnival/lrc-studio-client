@@ -14,11 +14,16 @@ export default function VerifyEmailPage() {
   const code = searchParams.get('code');       // 'invalid_token' | 'missing_token' | 'token_expired' | 'server_error' | null
 
   useEffect(() => {
-    if (token && !status) {
-      const apiBase = import.meta.env.VITE_API_URL || '/api';
-      window.location.href = `${apiBase}/auth/verify-email?token=${encodeURIComponent(token)}`;
-    }
-  }, [token, status]);
+    if (!token || status) return;
+    const apiBase = import.meta.env.VITE_API_URL || '/api';
+    fetch(`${apiBase}/auth/verify-email?token=${encodeURIComponent(token)}`, { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) navigate('/verify-email?status=success', { replace: true });
+        else navigate(`/verify-email?status=error&code=${data.error || 'server_error'}`, { replace: true });
+      })
+      .catch(() => navigate('/verify-email?status=error&code=server_error', { replace: true }));
+  }, [token, status, navigate]);
 
   // Verifying — either have a token (redirecting to server) or no params at all
   if (!status) {

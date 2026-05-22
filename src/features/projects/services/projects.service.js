@@ -98,7 +98,7 @@ const GET_PROJECT = `
       }
       user {
         id
-        username
+        accountName
         avatarUrl
       }
     }
@@ -150,8 +150,7 @@ export const projectsService = {
       return { project: data.project };
     } catch (err) {
       if (err.graphqlErrors?.some(e => e.message.includes('Cannot query field'))) {
-        const restData = await request(`/projects/${id}`);
-        return restData.project;
+        return request(`/projects/${id}`);
       }
       throw err;
     }
@@ -186,7 +185,7 @@ export const projectsService = {
             forkedFrom {
               projectId
               userId
-              username
+              accountName
             }
             forkCount
             starCount
@@ -197,7 +196,7 @@ export const projectsService = {
             }
             user {
               id
-              username
+              accountName
               avatarUrl
             }
             upload {

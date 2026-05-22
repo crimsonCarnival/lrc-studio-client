@@ -40,5 +40,9 @@ export default {
   youtube: "YouTube",
   audioFile: "音声ファイル",
   cloudinary: "クラウド",
-  spotify: "Spotify"
+  spotify: "Spotify",
+  noFiles: "ファイルが選択されていません",
+  uploadSuccess: "アップロードしました",
+  uploadError: "アップロードに失敗しました",
+  allComplete: "すべてのアップロードが完了しました！"
 };

@@ -19,6 +19,12 @@ export default {
   editCopy: "Edit your copy",
   cloneSuccess: "Project copied!",
   cloneFailed: "Failed to copy project",
+  cloning: "Cloning project...",
+  titlePlaceholder: "e.g. Bohemian Rhapsody — Queen",
+  description: "Description",
+  descriptionPlaceholder: "Optional notes about this project...",
+  tags: "Tags",
+  tagsPlaceholder: "Add tags separated by commas...",
   notFoundTitle: [
     "Project Not Found",
     "Link Expired",

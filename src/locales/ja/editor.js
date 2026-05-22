@@ -1,6 +1,12 @@
 export default {
   title: "エディター",
   syncMode: "エディター",
+  sync: "同期",
+  lyrics: "歌詞",
+  preview: "プレビュー",
+  toast: {
+    allRemoved: "すべての歌詞を削除しました"
+  },
   removeAll: "すべての歌詞を削除",
   pastePlaceholder: "貼り付けた歌詞がここに表示されます（1行につき1行）…",
   startSyncing: "同期を開始",

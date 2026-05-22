@@ -41,6 +41,7 @@ export default {
   usernameTaken: "Username or email already taken",
   signedInAs: "Signed in as {{name}}",
   account: "Account",
+  user: "User",
   signUpToSave: "Sign up to save your project to the cloud",
   tagline: "Sync lyrics to music, your way",
   featureSync: "Timestamp lyrics in real time",

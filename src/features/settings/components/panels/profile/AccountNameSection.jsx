@@ -45,12 +45,13 @@ export default function AccountNameSection() {
     try {
       const result = await authService.updateProfile({ accountName: value });
       setUser(prev => ({ ...prev, ...result }));
-      toast.success(t('profile.saved'));
+      toast.success(t('profile.saveSuccess'));
     } catch (err) {
-      const code = err?.gqlExt?.code;
+      const ext = err?.graphqlErrors?.[0]?.extensions;
+      const code = ext?.code;
       if (code === 'accountName_change_cooldown') {
-        setError(t('profile.accountNameCooldownError'));
-      } else if (err?.message?.includes('Account name already taken')) {
+        setError(t('profile.accountNameCooldownError', { days: ext?.daysLeft ?? accountNameCooldownDaysLeft ?? COOLDOWN_DAYS }));
+      } else if (code === 'accountName_taken' || err?.message?.includes('already taken')) {
         setError(t('profile.accountNameTaken'));
       } else {
         setError(err?.message || t('profile.saveError'));

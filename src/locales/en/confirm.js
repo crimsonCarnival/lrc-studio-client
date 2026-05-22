@@ -21,6 +21,8 @@ export default {
   deleteUpload: "Remove \"{{title}}\" from your media library? This cannot be undone.",
   deleteUploadTitle: "Remove Media",
   replaceTitle: "Replace Lyrics",
+  removeLyrics: "Are you sure you want to remove all lyrics?",
+  removeLyricsTitle: "Remove Lyrics",
   unsavedChangesTitle: "Unsaved Changes",
   unsavedChangesMessage: "You have unsaved changes. What would you like to do before leaving?"
 };

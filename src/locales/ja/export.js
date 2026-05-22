@@ -21,5 +21,6 @@ export default {
   includeOptions: "エクスポートに含める項目",
   includeWords: "単語ごとのタイムスタンプ",
   includeSecondary: "セカンダリ歌詞",
-  noExtraContent: "含めるセカンダリテキスト、翻訳、または単語のタイムスタンプはありません。"
+  noExtraContent: "含めるセカンダリテキスト、翻訳、または単語のタイムスタンプはありません。",
+  failed: "エクスポートに失敗しました"
 };
