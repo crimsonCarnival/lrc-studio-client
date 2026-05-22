@@ -24,6 +24,7 @@ export default {
   projectTags: "Etiquetas",
   projectTagsPlaceholder: "Añade etiquetas separadas por comas...",
   projectTagsDesc: "Organiza tu proyecto con etiquetas que se pueden buscar",
+  removeTag: "Eliminar etiqueta {{tag}}",
   startProject: "Empezar a sincronizar",
   lyricsReady: "Letras cargadas",
   audioReady: "Audio cargado",

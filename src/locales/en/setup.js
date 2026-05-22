@@ -24,6 +24,7 @@ export default {
   projectTags: "Tags",
   projectTagsPlaceholder: "Add tags separated by commas...",
   projectTagsDesc: "Organize your project with searchable tags",
+  removeTag: "Remove tag {{tag}}",
   startProject: "Start syncing",
   lyricsReady: "Lyrics loaded",
   audioReady: "Audio loaded",

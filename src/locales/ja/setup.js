@@ -24,6 +24,7 @@ export default {
   projectTags: "タグ",
   projectTagsPlaceholder: "カンマ区切りでタグを追加…",
   projectTagsDesc: "検索可能なタグでプロジェクトを整理する",
+  removeTag: "タグ「{{tag}}」を削除",
   startProject: "同期を開始",
   lyricsReady: "歌詞を読み込みました",
   audioReady: "音声を読み込みました",

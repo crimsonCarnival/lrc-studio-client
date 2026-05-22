@@ -22,5 +22,7 @@ export default {
   create: "Crear",
   networkError: "Error de red",
   backToHome: "Volver al inicio",
-  goBack: "Volver"
+  goBack: "Volver",
+  dismiss: "Cerrar",
+  clear: "Limpiar"
 };

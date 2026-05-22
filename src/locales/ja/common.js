@@ -22,5 +22,7 @@ export default {
   create: "作成",
   networkError: "ネットワークエラー",
   backToHome: "ホームへ戻る",
-  goBack: "戻る"
+  goBack: "戻る",
+  dismiss: "閉じる",
+  clear: "クリア"
 };

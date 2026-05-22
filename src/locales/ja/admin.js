@@ -19,6 +19,8 @@ export default {
       auditLogs: '監査履歴',
     },
     filters: {
+      filterByRole: 'ロールで絞り込む',
+      filterByStatus: 'ステータスで絞り込む',
       allRoles: 'すべてのロール',
       allStatuses: 'すべてのステータス',
       active: 'アクティブのみ',

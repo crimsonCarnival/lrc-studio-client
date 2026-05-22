@@ -19,6 +19,8 @@ export default {
       auditLogs: 'Historial de Auditoría',
     },
     filters: {
+      filterByRole: 'Filtrar por rol',
+      filterByStatus: 'Filtrar por estado',
       allRoles: 'Todos los Roles',
       allStatuses: 'Todos los Estados',
       active: 'Solo Activos',

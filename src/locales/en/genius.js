@@ -11,6 +11,7 @@ export default {
   orPasteUrl: 'Or paste a Genius URL',
   extractUrl: 'Extract',
   urlPlaceholder: 'https://genius.com/…',
+  keepTimestamps: 'Keep timestamps',
   error: {
     rateLimited: 'Too many requests — please wait a moment',
     lyricsUnavailable: "Couldn't extract lyrics for this song. The page structure may have changed.",

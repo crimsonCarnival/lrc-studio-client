@@ -11,6 +11,7 @@ export default {
   orPasteUrl: 'またはGenius URLを貼り付け',
   extractUrl: '抽出',
   urlPlaceholder: 'https://genius.com/…',
+  keepTimestamps: 'タイムスタンプを保持',
   error: {
     rateLimited: 'リクエストが多すぎます — しばらく待ってください',
     lyricsUnavailable: 'この曲の歌詞を取得できませんでした。ページ構造が変更された可能性があります。',
