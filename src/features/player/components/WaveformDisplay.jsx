@@ -138,32 +138,73 @@ const WaveformDisplay = ({
     };
   }, [showWaveform, localUrl, audioRef]);
 
-  // ─── Draw line markers on the waveform ───────────────────────────────────
+  // ─── Draw static line markers on the waveform ─────────────────────────────
   useEffect(() => {
     if (!wavesurferRef.current || !isReady || !lines?.length || !duration) return;
     const regions = regionsRef.current;
-    regions.clearRegions();
+    
+    // Clear only non-active static regions to avoid flickering the active highlight
+    regions.getRegions().forEach(r => {
+      if (r.id !== 'active-line-span') r.remove();
+    });
 
-    lines.forEach((line, idx) => {
+    lines.forEach((line) => {
       if (line.timestamp != null) {
-        const nextTs = lines[idx + 1]?.timestamp || duration;
         regions.addRegion({
           start: line.timestamp,
           end: line.timestamp + 0.06,
           color: 'rgba(255,255,255,0.2)',
-          drag: false, resize: false,
+          drag: false,
+          resize: false,
         });
-        if (playbackPosition >= line.timestamp && playbackPosition < nextTs) {
-          regions.addRegion({
-            start: line.timestamp,
-            end: nextTs,
-            color: 'rgba(29,185,84,0.10)',
-            drag: false, resize: false,
-            id: 'active-line-span',
-          });
-        }
       }
     });
+  }, [isReady, lines, duration]);
+
+  // ─── Update active region only when playbackPosition changes ─────────────
+  useEffect(() => {
+    if (!wavesurferRef.current || !isReady || !lines?.length || !duration) return;
+    const regions = regionsRef.current;
+    
+    let activeLine = null;
+    let nextTs = duration;
+    
+    for (let idx = 0; idx < lines.length; idx++) {
+      const line = lines[idx];
+      if (line.timestamp != null) {
+        const next = lines[idx + 1]?.timestamp || duration;
+        if (playbackPosition >= line.timestamp && playbackPosition < next) {
+          activeLine = line;
+          nextTs = next;
+          break;
+        }
+      }
+    }
+
+    const existingActive = regions.getRegions().find(r => r.id === 'active-line-span');
+    
+    if (activeLine) {
+      if (existingActive) {
+        // Only update if boundary values have changed to save CPU cycles
+        if (existingActive.start !== activeLine.timestamp || existingActive.end !== nextTs) {
+          existingActive.update({
+            start: activeLine.timestamp,
+            end: nextTs,
+          });
+        }
+      } else {
+        regions.addRegion({
+          id: 'active-line-span',
+          start: activeLine.timestamp,
+          end: nextTs,
+          color: 'rgba(29,185,84,0.10)',
+          drag: false,
+          resize: false,
+        });
+      }
+    } else if (existingActive) {
+      existingActive.remove();
+    }
   }, [isReady, lines, duration, playbackPosition]);
 
   // ─── Ruler tick logic ─────────────────────────────────────────────────────

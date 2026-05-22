@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@ui/button';
@@ -641,7 +641,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                           </span>
                         </button>
                       )}
-                      <GeniusSearchBar onImport={handleGeniusImport} autoSearch={geniusAutoSearch} />
+                      <GeniusSearchBar onImport={handleGeniusImport} autoSearch={geniusAutoSearch} showKeepTimestamps={false} />
                       <div className="flex items-center gap-2 shrink-0">
                         <div className="h-px flex-1 bg-zinc-800" />
                         <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{t('genius.orPasteUrl')}</span>

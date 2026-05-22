@@ -15,6 +15,7 @@ import LineActionToolbar from './LineActionToolbar';
 
 const EditorLineItem = React.memo(({
   line,
+  nextTimestamp,
   i,
   displayedActiveIndex,
   isActive,
@@ -208,7 +209,7 @@ const EditorLineItem = React.memo(({
   }, [justSynced]);
 
   // Segment progress for active synced line
-  const segmentEnd = line.endTime ?? line.nextTimestamp;
+  const segmentEnd = line.endTime ?? nextTimestamp;
   const segmentProgress = isActive && isSynced && segmentEnd != null && playbackPosition != null
     ? Math.min(1, Math.max(0, (playbackPosition - line.timestamp) / (segmentEnd - line.timestamp)))
     : null;
@@ -300,13 +301,10 @@ const EditorLineItem = React.memo(({
             )}
           </div>
         )}
-        {isModified && !isActive && (
-          <div className="absolute left-1 top-1/2 -translate-y-1/2 size-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.5)] animate-in fade-in zoom-in duration-300" />
-        )}
       </div>
 
       <span
-        className={`text-xs font-mono tabular-nums shrink-0 transition-colors ${editorMode === 'words' ? 'self-start pt-0.5' : ''} ${isSynced
+        className={`text-xs font-mono tabular-nums shrink-0 transition-colors relative ${editorMode === 'words' ? 'self-start pt-0.5' : ''} ${isSynced
           ? 'text-primary'
           : isActive
             ? 'text-zinc-400 animate-pulse-glow'
@@ -366,6 +364,13 @@ const EditorLineItem = React.memo(({
             handleSetTimestamp={handleSetTimestamp}
             handleTimestampWheel={handleTimestampWheel}
             nudgeIndicator={nudgeIndicator}
+          />
+        )}
+        {isModified && (
+          <div
+            className={`absolute -right-2 size-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.5)] animate-in fade-in zoom-in duration-300 z-10 ${
+              editorMode === 'words' ? 'top-3' : 'top-1/2 -translate-y-1/2'
+            }`}
           />
         )}
       </span>

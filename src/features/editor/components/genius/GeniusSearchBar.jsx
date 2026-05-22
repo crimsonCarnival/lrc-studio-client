@@ -7,7 +7,7 @@ import { genius } from '@features/editor/services/genius.service';
 import GeniusResultCard from './GeniusResultCard';
 import GeniusLyricsModal from './GeniusLyricsModal';
 
-export default function GeniusSearchBar({ onImport, autoSearch }) {
+export default function GeniusSearchBar({ onImport, autoSearch, showKeepTimestamps }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(null);
@@ -139,6 +139,7 @@ export default function GeniusSearchBar({ onImport, autoSearch }) {
           onClose={handleCloseModal}
           keepTimestamps={keepTimestamps}
           onKeepTimestampsChange={setKeepTimestamps}
+          showKeepTimestamps={showKeepTimestamps}
         />
       )}
     </div>

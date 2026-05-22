@@ -1,4 +1,4 @@
-﻿import { useMemo, useCallback, useState, useEffect } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '@features/editor/hooks/useEditor';
@@ -565,7 +565,8 @@ function VirtualizedLineList({
                 }}
               >
                 <EditorLineItem
-                  line={{ ...line, nextTimestamp: nextTimestamps[i] }}
+                  line={line}
+                  nextTimestamp={nextTimestamps[i]}
                   i={i}
                   displayedActiveIndex={displayedActiveIndex}
                   isActive={isActive}
