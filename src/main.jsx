@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useEffect } from 'react';
 import App from '@/app/App.jsx'
 import ErrorBoundary from '@shared/ui/ErrorBoundary'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 
 // eslint-disable-next-line react-refresh/only-export-components
 function LanguageSync() {
@@ -178,6 +179,7 @@ window.__reactRoot.render(
       <GoogleReCaptchaProvider reCaptchaKey={import.meta.env.VITE_RECAPTCHA_KEY}>
         <AuthProvider>
           <LanguageSync />
+          <SpeedInsights />
           <AppProviders>
             <BrowserRouter>
               <RootRoutes />
