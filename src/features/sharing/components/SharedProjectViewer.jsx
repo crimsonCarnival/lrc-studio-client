@@ -169,22 +169,7 @@ function SharedProjectViewerInner({ projectId }) {
     }
   }, [user, starLoading, isStarred, projectId]);
 
-  // ── Loading ──
-  if (loadStatus === 'loading') {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <Spinner size={28} className="text-primary" />
-      </div>
-    );
-  }
-
-  // ── Error ──
-  if (loadStatus !== 'ok') {
-    return <SharedProjectError status={loadStatus} projectId={projectId} />;
-  }
-
-  // ── Viewer ──
-  // Create metadata section component for mobile optimization
+  // ── Memoized slots (must be before early returns to satisfy Rules of Hooks) ──
   const MetadataSection = useMemo(() => (
     <div className={`px-2 sm:px-4 lg:px-6 mb-4 sm:mb-6 animate-fade-in flex flex-col ${isMobile ? 'gap-4' : 'sm:flex-row sm:items-start justify-between gap-6'}`}>
       <div className="flex-1 min-w-0">
@@ -356,7 +341,21 @@ function SharedProjectViewerInner({ projectId }) {
     />
   ), [playerRef, mediaTitle, handleTimeUpdate, setIsPlaying, setPlaybackSpeed, handleMediaChange, setMediaTitle, initialYtUrl, initialCloudinaryUpload, startTime, lines, playbackPosition, projectData]);
 
-  // Render using responsive layout
+  // ── Loading ──
+  if (loadStatus === 'loading') {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <Spinner size={28} className="text-primary" />
+      </div>
+    );
+  }
+
+  // ── Error ──
+  if (loadStatus !== 'ok') {
+    return <SharedProjectError status={loadStatus} projectId={projectId} />;
+  }
+
+  // ── Viewer ──
   return (
     <>
       {user && (
