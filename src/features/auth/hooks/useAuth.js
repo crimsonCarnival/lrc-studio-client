@@ -1,12 +1,12 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { auth, spotify as spotifyApi, google as googleApi, setAuthFlag } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-
-// Real server origin (not the Vite/Vercel proxy path) for OAuth postMessage validation
-const API_ORIGIN = import.meta.env.VITE_SERVER_ORIGIN || window.location.origin;
 import toast from 'react-hot-toast';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
+
+// Real server origin (not the Vite/Vercel proxy path) for OAuth postMessage validation
+const API_ORIGIN = import.meta.env.VITE_SERVER_ORIGIN || window.location.origin;
 
 export function useAuth() {
   const [state, setState] = useState({ user: null, loading: true });
