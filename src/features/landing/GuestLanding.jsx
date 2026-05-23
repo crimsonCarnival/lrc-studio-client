@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LazyMotion, domAnimation, m as M } from 'framer-motion';
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import {
   Music2, FileText, Zap, Download, Mic2, Globe,
   ArrowRight, Sparkles, Play, Tag
@@ -41,6 +42,7 @@ export default function GuestLanding() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const scrollRef = useRef(null);
+  const reducedMotion = useReducedMotion();
 
   return (
     <LazyMotion features={domAnimation}>
@@ -51,19 +53,19 @@ export default function GuestLanding() {
       <section className="relative min-h-screen flex flex-col items-center justify-center px-4 text-center">
         <M.div
           className="flex flex-col items-center gap-8 max-w-3xl w-full"
-          initial="hidden"
+          initial={reducedMotion ? false : "hidden"}
           animate="visible"
-          variants={stagger}
+          variants={reducedMotion ? {} : stagger}
         >
           <M.div
-            variants={fadeUp}
+            variants={reducedMotion ? {} : fadeUp}
             className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-primary text-xs font-semibold tracking-wide"
           >
             <Sparkles className="size-3.5" />
             {t('landing.badge')}
           </M.div>
 
-          <M.div variants={fadeUp} className="flex flex-col items-center gap-4">
+          <M.div variants={reducedMotion ? {} : fadeUp} className="flex flex-col items-center gap-4">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-zinc-100 leading-[1.1]">
               {t('landing.headline')}{' '}
               <span className="text-primary">{t('landing.headlineAccent')}</span>
@@ -73,7 +75,7 @@ export default function GuestLanding() {
             </p>
           </M.div>
 
-          <M.div variants={fadeUp} className="flex flex-col sm:flex-row items-center gap-3">
+          <M.div variants={reducedMotion ? {} : fadeUp} className="flex flex-col sm:flex-row items-center gap-3">
             <Button
               size="lg"
               onClick={() => navigate('/project/new')}
@@ -100,30 +102,30 @@ export default function GuestLanding() {
         <div className="flex flex-col items-center gap-10 max-w-5xl w-full">
           <M.div
             className="flex flex-col items-center gap-2 text-center"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ root: scrollRef, once: true, margin: '-80px' }}
-            variants={stagger}
+            initial={reducedMotion ? false : "hidden"}
+            whileInView={reducedMotion ? undefined : "visible"}
+            viewport={reducedMotion ? undefined : { root: scrollRef, once: true, margin: '-80px' }}
+            variants={reducedMotion ? {} : stagger}
           >
-            <M.h2 variants={fadeUp} className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">
+            <M.h2 variants={reducedMotion ? {} : fadeUp} className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">
               {t('landing.featuresLabel')}
             </M.h2>
-            <M.p variants={fadeUp} className="text-xl sm:text-2xl lg:text-3xl font-semibold text-zinc-100 tracking-tight">
+            <M.p variants={reducedMotion ? {} : fadeUp} className="text-xl sm:text-2xl lg:text-3xl font-semibold text-zinc-100 tracking-tight">
               {t('landing.featuresTitle')}
             </M.p>
           </M.div>
 
           <M.div
             className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ root: scrollRef, once: true, margin: '-80px' }}
-            variants={stagger}
+            initial={reducedMotion ? false : "hidden"}
+            whileInView={reducedMotion ? undefined : "visible"}
+            viewport={reducedMotion ? undefined : { root: scrollRef, once: true, margin: '-80px' }}
+            variants={reducedMotion ? {} : stagger}
           >
             {FEATURES.map(({ icon: Icon, color, bg, titleKey, descKey }) => (
               <M.div
                 key={titleKey}
-                variants={fadeUp}
+                variants={reducedMotion ? {} : fadeUp}
                 className="glass rounded-2xl p-6 sm:p-5 flex gap-4 hover:border-zinc-600/50 transition-colors relative overflow-hidden"
               >
                 <ThemedShineBorder />
@@ -144,17 +146,17 @@ export default function GuestLanding() {
       <section className="relative min-h-screen flex flex-col items-center justify-center px-4 py-16">
         <M.div
           className="flex flex-col items-center gap-10 max-w-5xl w-full"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ root: scrollRef, once: true, margin: '-80px' }}
-          variants={stagger}
+          initial={reducedMotion ? false : "hidden"}
+          whileInView={reducedMotion ? undefined : "visible"}
+          viewport={reducedMotion ? undefined : { root: scrollRef, once: true, margin: '-80px' }}
+          variants={reducedMotion ? {} : stagger}
         >
           {/* Section header */}
           <div className="flex flex-col items-center gap-2 text-center">
-            <M.h2 variants={fadeUp} className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">
+            <M.h2 variants={reducedMotion ? {} : fadeUp} className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">
               {t('landing.howLabel')}
             </M.h2>
-            <M.p variants={fadeUp} className="text-xl sm:text-2xl lg:text-3xl font-semibold text-zinc-100 tracking-tight">
+            <M.p variants={reducedMotion ? {} : fadeUp} className="text-xl sm:text-2xl lg:text-3xl font-semibold text-zinc-100 tracking-tight">
               {t('landing.howTitle')}
             </M.p>
           </div>
@@ -162,12 +164,12 @@ export default function GuestLanding() {
           {/* 2×2 step grid */}
           <M.div
             className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full"
-            variants={stagger}
+            variants={reducedMotion ? {} : stagger}
           >
             {STEPS.map(({ step, icon: Icon, titleKey, descKey }) => (
               <M.div
                 key={step}
-                variants={fadeUp}
+                variants={reducedMotion ? {} : fadeUp}
                 className="flex items-center gap-3 p-4 glass rounded-xl relative overflow-hidden"
               >
                 <ThemedShineBorder />
@@ -186,7 +188,7 @@ export default function GuestLanding() {
           </M.div>
 
           {/* CTA */}
-          <M.div variants={fadeUp} className="flex flex-col items-center gap-5 text-center w-full max-w-lg pt-2">
+          <M.div variants={reducedMotion ? {} : fadeUp} className="flex flex-col items-center gap-5 text-center w-full max-w-lg pt-2">
             <div className="w-full h-px bg-gradient-to-r from-transparent via-zinc-400/50 dark:via-zinc-700/50 to-transparent" />
             <h2 className="text-xl sm:text-2xl font-semibold text-zinc-100">
               {t('landing.ctaFooterTitle')}
