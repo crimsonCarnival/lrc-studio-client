@@ -49,6 +49,12 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // Isolate heavy 3D libs — only used on guest landing page
+          if (id.includes('node_modules/three') ||
+              id.includes('node_modules/@react-three') ||
+              id.includes('node_modules/troika')) {
+            return 'vendor-3d';
+          }
           // Core React runtime — loaded first
           if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
             return 'vendor-react';
