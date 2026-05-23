@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { useSetupContext } from '@/features/editor/SetupContext';
 import { lyrics as lyricsApi, uploads as uploadsApi, spotify as spotifyApi, getAccessToken } from '@/app/api';
-import { genius as geniusApi } from '@features/editor/services/genius.service';
 import { SkeletonMediaItem } from '@ui/skeleton';
 import SpotifyBrowser from '@features/player/components/SpotifyBrowser';
 import SpotifyIcon from '@features/player/components/SpotifyIcon';
@@ -102,9 +101,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
   const [lyricsTab, setLyricsTab] = useState('write');
   const [geniusAutoSearch, setGeniusAutoSearch] = useState(null);
-  const [geniusUrl, setGeniusUrl] = useState('');
-  const [geniusUrlLoading, setGeniusUrlLoading] = useState(false);
-  const [geniusUrlError, setGeniusUrlError] = useState(null);
+
 
   const [metadata, setMetadata] = useState(() => ({
     name: prefill?.name || '',
@@ -135,35 +132,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     }, []);
     setLyricsState({ parsedLines, text: '', fileName: '' });
     setLyricsTab('write');
-    setGeniusUrl('');
-    setGeniusUrlError(null);
   }, [setLyricsState]);
-
-  const handleExtractUrl = useCallback(async () => {
-    const url = geniusUrl.trim();
-    if (!url) return;
-    setGeniusUrlLoading(true);
-    setGeniusUrlError(null);
-    try {
-      // Parse slug from Genius URL: /Drake-gods-plan-lyrics → "Drake gods plan"
-      let track = url;
-      try {
-        const slug = new URL(url).pathname.replace(/^\//, '').replace(/-lyrics$/i, '');
-        track = slug.replace(/-/g, ' ');
-      } catch { /* not a valid URL, use as-is as a search query */ }
-      const data = await geniusApi.extract(track, '');
-    } catch (err) {
-      if (err.status === 422) {
-        setGeniusUrlError(t('genius.error.lyricsUnavailable'));
-      } else if (err.status === 400) {
-        setGeniusUrlError(t('genius.error.invalidUrl', 'Invalid Genius URL'));
-      } else {
-        setGeniusUrlError(t('genius.error.generic'));
-      }
-    } finally {
-      setGeniusUrlLoading(false);
-    }
-  }, [geniusUrl, handleGeniusImport, t]);
 
   // Media library state
   const [mediaUploads, setMediaUploads] = useState([]);
@@ -593,7 +562,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                   <div className="flex items-center gap-1 bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-1 shrink-0">
                     {[
                       { id: 'write', label: t('setup.pasteLyrics') },
-                      { id: 'genius', label: 'Genius' },
+                      { id: 'genius', label: t('genius.tabLabel') },
                     ].map(tab => (
                       <button
                         key={tab.id}
@@ -647,29 +616,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                         </button>
                       )}
                       <GeniusSearchBar onImport={handleGeniusImport} autoSearch={geniusAutoSearch} showKeepTimestamps={false} />
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div className="h-px flex-1 bg-zinc-800" />
-                        <span className="text-[10px] text-zinc-600 uppercase tracking-widest">{t('genius.orPasteUrl')}</span>
-                        <div className="h-px flex-1 bg-zinc-800" />
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        <Input
-                          value={geniusUrl}
-                          onChange={(e) => { setGeniusUrl(e.target.value); setGeniusUrlError(null); }}
-                          onKeyDown={(e) => e.key === 'Enter' && handleExtractUrl()}
-                          placeholder={t('genius.urlPlaceholder')}
-                          className="flex-1 bg-zinc-900 border-zinc-700 text-sm h-8"
-                        />
-                        <Button
-                          size="sm"
-                          onClick={handleExtractUrl}
-                          disabled={!geniusUrl.trim() || geniusUrlLoading}
-                          className="shrink-0 h-8 px-3"
-                        >
-                          {geniusUrlLoading ? <Loader2 className="size-3.5 animate-spin" /> : t('genius.extractUrl')}
-                        </Button>
-                      </div>
-                      {geniusUrlError && <p className="text-xs text-red-400 shrink-0">{geniusUrlError}</p>}
                     </div>
                   )}
                 </div>
