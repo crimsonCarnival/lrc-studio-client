@@ -64,7 +64,7 @@ export default function GeniusSearchBar({ onImport, autoSearch, showKeepTimestam
     setIsExtracting(true);
 
     try {
-      const data = await genius.extract(song.url, song.title, song.artist);
+      const data = await genius.extract(song.title, song.artist);
       setLyrics(data.lyrics);
     } catch (err) {
       if (err.status === 429) {

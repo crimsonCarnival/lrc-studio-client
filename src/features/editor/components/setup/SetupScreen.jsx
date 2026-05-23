@@ -145,8 +145,13 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     setGeniusUrlLoading(true);
     setGeniusUrlError(null);
     try {
-      const data = await geniusApi.extract(url);
-      handleGeniusImport(data.lyrics);
+      // Parse slug from Genius URL: /Drake-gods-plan-lyrics → "Drake gods plan"
+      let track = url;
+      try {
+        const slug = new URL(url).pathname.replace(/^\//, '').replace(/-lyrics$/i, '');
+        track = slug.replace(/-/g, ' ');
+      } catch { /* not a valid URL, use as-is as a search query */ }
+      const data = await geniusApi.extract(track, '');
     } catch (err) {
       if (err.status === 422) {
         setGeniusUrlError(t('genius.error.lyricsUnavailable'));
@@ -448,9 +453,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                       <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-zinc-800/50">
                         <YoutubeSearchPanel
                           initialQuery={[songName, songArtist].filter(Boolean).join(' ').trim()}
-                          onSelect={({ url }) => {
-                            setAudioState({ ytUrl: url });
-                            autoLoadPendingRef.current = true;
+                          onSelect={({ url, title }) => {
+                            setAudioState({ ytUrl: url, source: 'youtube', ready: true, name: title || t('setup.youtubeVideo'), selectedUpload: null });
+                            playerRef.current?.loadYouTube?.(url);
                           }}
                         />
                       </div>
