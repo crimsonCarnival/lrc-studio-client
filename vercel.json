@@ -6,6 +6,10 @@
         {
           "key": "Permissions-Policy",
           "value": "compute-pressure=*"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
         }
       ]
     }
