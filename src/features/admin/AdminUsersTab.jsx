@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
+import { LazyImage } from '@ui/LazyImage';
 import { Filter, Ban, CheckCircle2, BarChart3, Music, Trash2, Undo2, Info, Activity } from 'lucide-react';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 
@@ -18,7 +19,12 @@ export default function AdminUsersTab({
   handleToggleBan,
   handleReactivate,
   handleDelete,
-  setAppealModal
+  setAppealModal,
+  hasMore,
+  hasPrev,
+  totalUsers,
+  onNextPage,
+  onPrevPage,
 }) {
   const { t } = useTranslation();
   const inputMethod = useInputMethod();
@@ -80,7 +86,7 @@ export default function AdminUsersTab({
                     {/* User Info */}
                     <div className="flex items-center gap-3">
                       <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700 flex-shrink-0">
-                        {user.avatarUrl ? <img src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
+                        {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -226,7 +232,7 @@ export default function AdminUsersTab({
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
-                          {user.avatarUrl ? <img src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
+                          {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -319,6 +325,34 @@ export default function AdminUsersTab({
           </table>
         )}
       </div>
+
+      {(hasPrev || hasMore) && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-800/50 bg-zinc-900/50">
+          <div className="text-xs text-zinc-500">
+            {totalUsers != null ? t('admin.dashboard.totalUsers', { count: totalUsers }) : null}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={!hasPrev}
+              onClick={onPrevPage}
+              className="h-8 text-zinc-400 hover:text-zinc-200 disabled:opacity-30"
+            >
+              {t('common.pagination.previous')}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={!hasMore}
+              onClick={onNextPage}
+              className="h-8 text-zinc-400 hover:text-zinc-200 disabled:opacity-30"
+            >
+              {t('common.pagination.next')}
+            </Button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

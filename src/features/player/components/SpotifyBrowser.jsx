@@ -5,6 +5,7 @@ import { formatTime } from '@/shared/utils/format-time';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
+import { LazyImage } from '@ui/LazyImage';
 import toast from 'react-hot-toast';
 import {
   Search, Clock, TrendingUp, Heart, ListMusic, Music2,
@@ -40,7 +41,7 @@ function TrackRow({ track, onSelect, onQueue, onSaveToggle, isSaved }) {
       onDoubleClick={() => onSelect(track)}
     >
       {track.albumArt ? (
-        <img src={track.albumArt} alt="" className="size-9 rounded object-cover flex-shrink-0" />
+        <LazyImage src={track.albumArt} alt="" className="size-9 rounded object-cover flex-shrink-0" />
       ) : (
         <div className="size-9 rounded bg-zinc-800 flex items-center justify-center flex-shrink-0">
           <Music2 className="size-4 text-zinc-600" />

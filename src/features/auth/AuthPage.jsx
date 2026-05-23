@@ -8,6 +8,7 @@ import { Music2, FileText, Zap } from 'lucide-react';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { useThemeSync } from '@/shared/hooks/useThemeSync';
+import { LazyImage } from '@ui/LazyImage';
 import LoginIdentifierStep from './LoginIdentifierStep';
 import LoginPasswordStep from './LoginPasswordStep';
 import SignUpForm from './SignUpForm';
@@ -215,7 +216,7 @@ export default function AuthPage() {
           className="flex flex-col items-center mb-4 shrink-0"
         >
           <div className="size-8 mb-1.5">
-            <img
+            <LazyImage
               src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png"
               alt="LRC Studio"
               className="size-full object-contain drop-shadow-[0_0_12px_rgba(29,185,84,0.3)]"

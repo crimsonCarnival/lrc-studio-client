@@ -1,3 +1,5 @@
+import { LazyImage } from '@ui/LazyImage';
+
 export default function GeniusResultCard({ song, onClick, isLoading }) {
   return (
     <button
@@ -7,7 +9,7 @@ export default function GeniusResultCard({ song, onClick, isLoading }) {
       className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-left transition-colors hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-wait"
     >
       {song.thumbnail ? (
-        <img
+        <LazyImage
           src={song.thumbnail}
           alt=""
           className="size-10 rounded object-cover flex-shrink-0 bg-zinc-800"

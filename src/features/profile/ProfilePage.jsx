@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@ui/button';
+import { LazyImage } from '@ui/LazyImage';
 import { ArrowLeft, User } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
@@ -51,7 +52,7 @@ export default function ProfilePage() {
             <ThemedShineBorder />
             <div className="relative mb-6">
               {user?.avatarUrl ? (
-                <img
+                <LazyImage
                   src={user.avatarUrl}
                   alt={user?.displayName || user?.accountName}
                   className="size-32 rounded-[2rem] object-cover border-4 border-border shadow-2xl shadow-primary/20"

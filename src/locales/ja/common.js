@@ -24,5 +24,9 @@ export default {
   backToHome: "ホームへ戻る",
   goBack: "戻る",
   dismiss: "閉じる",
-  clear: "クリア"
+  clear: "クリア",
+  pagination: {
+    previous: "前へ",
+    next: "次へ"
+  }
 };

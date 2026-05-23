@@ -13,6 +13,7 @@ import { Input } from '@ui/input';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
 import { Kbd } from '@ui/kbd';
+import { LazyImage } from '@ui/LazyImage';
 import { projects, uploads } from '@/app/api';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
 
@@ -210,7 +211,7 @@ export function AppHeader({
             onClick={goHomeOrWarn}
             className="size-7 sm:size-8 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
           >
-            <img
+            <LazyImage
               src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png"
               alt="LRC Studio"
               className="size-full object-contain"
@@ -452,7 +453,7 @@ export function AppHeader({
               <div className="relative flex-shrink-0">
                 <PopoverTrigger className="relative z-[110] size-8 rounded-full overflow-hidden bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-all focus:ring-2 focus:ring-primary/50 cursor-pointer outline-none block">
                   {user?.avatarUrl
-                    ? <img src={user.avatarUrl} alt={user?.displayName || user?.accountName || user?.email} className="size-full object-cover" />
+                    ? <LazyImage src={user.avatarUrl} alt={user?.displayName || user?.accountName || user?.email} className="size-full object-cover" />
                     : <div className="size-full flex items-center justify-center bg-gradient-to-br from-primary/50 to-accent-purple/50 text-white font-bold text-sm">
                       {(user?.displayName || user?.accountName || user?.email || '?').charAt(0).toUpperCase()}
                     </div>}

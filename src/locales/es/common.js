@@ -24,5 +24,9 @@ export default {
   backToHome: "Volver al inicio",
   goBack: "Volver",
   dismiss: "Cerrar",
-  clear: "Limpiar"
+  clear: "Limpiar",
+  pagination: {
+    previous: "Anterior",
+    next: "Siguiente"
+  }
 };

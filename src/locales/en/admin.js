@@ -28,7 +28,8 @@ export default {
       deleted: 'Deleted Only',
       verified: 'Verified Only',
       premium: 'Premium Only'
-    }
+    },
+    totalUsers: 'Total: {{count}} users'
   },
   table: {
     user: 'User',

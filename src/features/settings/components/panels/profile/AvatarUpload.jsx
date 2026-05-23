@@ -2,6 +2,7 @@
 import { useTranslation } from 'react-i18next';
 import { User, Upload, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@ui/button';
+import { LazyImage } from '@ui/LazyImage';
 import toast from 'react-hot-toast';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { authService } from '@/features/auth/services/auth.service';
@@ -77,7 +78,7 @@ export default function AvatarUpload() {
           {uploading ? (
             <Loader2 className="size-8 animate-spin text-primary" />
           ) : user?.avatarUrl?.length > 0 ? (
-            <img src={user.avatarUrl} alt="Avatar" className="size-full object-cover" />
+            <LazyImage src={user.avatarUrl} alt="Avatar" className="size-full object-cover" />
           ) : (
             <div className="size-full flex items-center justify-center bg-gradient-to-br from-primary/80 to-accent-purple font-bold text-zinc-950 text-3xl select-none">
               {(user?.displayName || user?.accountName || '?')[0].toUpperCase()}

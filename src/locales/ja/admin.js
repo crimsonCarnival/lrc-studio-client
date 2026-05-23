@@ -28,7 +28,8 @@ export default {
       deleted: '削除済みのみ',
       verified: '確認済みのみ',
       premium: 'プレミアムのみ'
-    }
+    },
+    totalUsers: '合計: {{count}}人のユーザー'
   },
   table: {
     user: 'ユーザー',

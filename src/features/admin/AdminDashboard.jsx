@@ -35,6 +35,12 @@ export default function AdminDashboard() {
   const [ipForm, setIpForm] = useState({ ip: '', reason: '' });
   const [deviceForm, setDeviceForm] = useState({ deviceId: '', reason: '' });
 
+  // Cursor-based pagination state
+  const [cursor, setCursor] = useState(null);
+  const [cursorStack, setCursorStack] = useState([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalUsers, setTotalUsers] = useState(null);
+
   // Modal States
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: '', user: null, ipId: null, deviceId: null });
   const [banModal, setBanModal] = useState({ isOpen: false, user: null });
@@ -52,15 +58,15 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (fetchCursor = cursor) => {
     setLoading(true);
     try {
-      const { users: fetchedUsers } = await admin.getUsers({
-        search,
-        role: roleFilter,
-        status: statusFilter
-      });
-      setUsers(fetchedUsers);
+      const params = { search, role: roleFilter, status: statusFilter };
+      if (fetchCursor) params.cursor = fetchCursor;
+      const data = await admin.getUsers(params);
+      setUsers(data.users);
+      setHasMore(data.hasMore ?? false);
+      if (data.total !== null && data.total !== undefined) setTotalUsers(data.total);
     } catch {
       toast.error(t('admin.toast.fetchError'));
     } finally {
@@ -132,11 +138,35 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (activeTab !== 'users') return;
     const timer = setTimeout(() => {
-      fetchUsers();
+      // Reset to first page when filters change
+      setCursor(null);
+      setCursorStack([]);
+      fetchUsers(null);
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, roleFilter, statusFilter]);
+
+  const handleNextPage = () => {
+    const nextCursor = users[users.length - 1]?._id?.toString() || users[users.length - 1]?.id;
+    if (!nextCursor) return;
+    setCursorStack(prev => [...prev, cursor]);
+    setCursor(nextCursor);
+    fetchUsers(nextCursor);
+  };
+
+  const handlePrevPage = () => {
+    const prevCursor = cursorStack[cursorStack.length - 1] ?? null;
+    setCursorStack(prev => prev.slice(0, -1));
+    setCursor(prevCursor);
+    fetchUsers(prevCursor);
+  };
+
+  const refreshUsersFromStart = () => {
+    setCursor(null);
+    setCursorStack([]);
+    fetchUsers(null);
+  };
 
   const handleToggleBan = async (user) => {
     if (user.id === currentUser?.id || user._id === currentUser?._id) {
@@ -149,7 +179,7 @@ export default function AdminDashboard() {
         await admin.unbanUser(user.id || user._id);
         toast.success(t('admin.toast.unbannedSuccess', { name: user.displayName || user.accountName }));
         setAppealModal({ isOpen: false, user: null });
-        fetchUsers();
+        refreshUsersFromStart();
       } catch {
         toast.error(t('admin.toast.statusError'));
       }
@@ -163,7 +193,7 @@ export default function AdminDashboard() {
       await admin.rejectAppeal(user.id || user._id);
       toast.success(t('admin.toast.appealRejectedSuccess', { name: user.displayName || user.accountName }));
       setAppealModal({ isOpen: false, user: null });
-      fetchUsers();
+      refreshUsersFromStart();
     } catch {
       toast.error(t('admin.toast.statusError'));
     }
@@ -173,7 +203,7 @@ export default function AdminDashboard() {
     try {
       await admin.reactivateUser(user.id || user._id);
       toast.success(t('admin.toast.reactivateSuccess', { name: user.displayName || user.accountName }));
-      fetchUsers();
+      refreshUsersFromStart();
     } catch {
       toast.error(t('admin.toast.statusError'));
     }
@@ -185,7 +215,7 @@ export default function AdminDashboard() {
     try {
       await admin.banUser(user.id || user._id, { reason, bannedUntil, banIp, banDevice });
       toast.success(t('admin.toast.bannedSuccess', { name: user.displayName || user.accountName }));
-      fetchUsers();
+      refreshUsersFromStart();
       fetchStats();
     } catch {
       toast.error(t('admin.toast.statusError'));
@@ -267,7 +297,7 @@ export default function AdminDashboard() {
         fetchDevices();
         fetchStats();
       }
-      fetchUsers();
+      refreshUsersFromStart();
     } catch {
       toast.error(t('admin.toast.statusError'));
     }
@@ -334,6 +364,11 @@ export default function AdminDashboard() {
             handleReactivate={handleReactivate}
             handleDelete={handleDelete}
             setAppealModal={setAppealModal}
+            hasMore={hasMore}
+            hasPrev={cursorStack.length > 0}
+            totalUsers={totalUsers}
+            onNextPage={handleNextPage}
+            onPrevPage={handlePrevPage}
           />
         )}
 

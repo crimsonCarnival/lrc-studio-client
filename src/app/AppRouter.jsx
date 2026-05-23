@@ -1,6 +1,7 @@
 ﻿import {
   Suspense, lazy, useEffect, useState, useRef, useCallback, useMemo, Fragment, memo
 } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { SkeletonList, SkeletonEditor, SkeletonPreview, SkeletonSetup } from '@ui/skeleton';
 import { Loader2, GripVertical } from 'lucide-react';
@@ -28,6 +29,95 @@ const ProfilePage = lazy(() => import('@features/profile/ProfilePage'));
 const SettingsPage = lazy(() => import('@features/settings/components/SettingsPage'));
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 const VerifyEmailPage = lazy(() => import('@features/auth/VerifyEmailPage'));
+
+const PanelReorderGroup = React.memo(function PanelReorderGroup({
+  items,
+  onReorder,
+  isMobile,
+  isDesktop,
+  lockLayout,
+  showEditor,
+  showPreview,
+  mobileTab,
+  editorWidth,
+  borderClasses,
+  draggingItem,
+  setDraggingItem,
+  isResizing,
+  isHoveringDivider,
+  setIsHoveringDivider,
+  startResizing,
+  user,
+  editorProps,
+  previewProps,
+}) {
+  return (
+    <Reorder.Group
+      axis="x"
+      values={items}
+      onReorder={onReorder}
+      className="flex-1 min-h-0 flex flex-col lg:flex-row lg:gap-6 gap-0 pt-0 px-0 pb-0 w-full"
+    >
+      {items.map((item, index) => {
+        const isEditor = item === 'editor';
+        const isVisible = isEditor ? showEditor : showPreview;
+        if (!isVisible) return null;
+
+        const bothVisible = showEditor && showPreview;
+        const widthStyle = isDesktop && bothVisible ? {
+          flex: `0 0 calc(${isEditor ? editorWidth : (100 - editorWidth)}% - 12px)`,
+        } : {
+          flex: '1 1 auto'
+        };
+
+        return (
+          <Fragment key={item}>
+            <div className="flex items-stretch min-h-0 min-w-0" style={widthStyle}>
+              <Reorder.Item
+                value={item}
+                layout={!isMobile}
+                dragListener={isDesktop && !lockLayout}
+                whileDrag={{ scale: 1.01, zIndex: 50, boxShadow: "0px 20px 40px rgba(0,0,0,0.4)", opacity: 0.8 }}
+                className={`flex-1 flex flex-col min-h-0 ${isEditor ? 'gap-4' : ''} ${mobileTab !== item ? 'max-lg:hidden' : ''} relative group/reorder lg:border-2 lg:rounded-2xl border-0 rounded-none ${isEditor ? borderClasses.editor : borderClasses.preview} transition-colors duration-200 overflow-hidden lg:bg-zinc-900/50 lg:backdrop-blur-sm bg-zinc-950`}
+                onDragStart={() => setDraggingItem(item)}
+                onDragEnd={() => setDraggingItem(null)}
+              >
+                {/* Drag Handle - Hidden visually but functional */}
+                <div className={`absolute -top-4 left-1/2 -translate-x-1/2 opacity-0 transition-all duration-300 z-50 cursor-grab active:cursor-grabbing bg-zinc-800 backdrop-blur-xl border border-zinc-600/50 rounded-xl p-2 shadow-2xl pointer-events-auto max-lg:hidden hover:scale-110 hover:border-primary/50 group/handle ${draggingItem === item || lockLayout ? 'hidden' : ''}`}>
+                  <GripVertical className="size-5 text-zinc-400 group-hover/handle:text-primary transition-colors" />
+                </div>
+
+                <Suspense fallback={isEditor ? <SkeletonEditor /> : <SkeletonPreview />}>
+                  {isEditor ? (
+                    <Editor user={user} {...editorProps} />
+                  ) : (
+                    <Preview {...previewProps} />
+                  )}
+                </Suspense>
+              </Reorder.Item>
+            </div>
+
+            {/* Resize Handle — overlays the center of the gap-6 (24px) gap */}
+            {isDesktop && !lockLayout && index === 0 && items.length > 1 && (
+              <div
+                role="separator"
+                onMouseDown={startResizing}
+                onMouseEnter={() => setIsHoveringDivider(true)}
+                onMouseLeave={() => setIsHoveringDivider(false)}
+                className="w-0 relative cursor-col-resize self-stretch flex items-center justify-center z-[100] group/resizer -mx-3"
+              >
+                {/* Invisible hit area perfectly centered in the gap */}
+                <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center w-12 h-full">
+                  <div className={`w-1 h-32 rounded-full transition-all duration-300 ${isResizing ? 'bg-primary scale-y-110 shadow-[0_0_15px_rgba(29,185,84,0.5)]' : isHoveringDivider ? 'bg-zinc-500 scale-y-105' : 'bg-zinc-800/50'}`} />
+                </div>
+              </div>
+            )}
+          </Fragment>
+        );
+      })}
+    </Reorder.Group>
+  );
+});
 
 function EditorContainer({ loadProject, activeProjectId, children }) {
   const { id } = useParams();
@@ -149,6 +239,7 @@ export function AppRouter({
   const [isResizing, setIsResizing] = useState(false);
   const [isHoveringDivider, setIsHoveringDivider] = useState(false);
   const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
+  const isMobile = !isDesktop;
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -182,6 +273,52 @@ export function AppRouter({
     };
     return { editor: base('editor'), preview: base('preview') };
   }, [draggingItem, isResizing, isHoveringDivider, focusMode, lockLayout]);
+
+  const editorProps = useMemo(() => ({
+    lines, setLines, syncMode, setSyncMode,
+    activeLineIndex, setActiveLineIndex,
+    playbackPosition, playerRef,
+    undo, redo, canUndo, canRedo,
+    editorMode, setEditorMode, duration,
+    onImport: triggerImportSave, handleManualSave,
+    buildProjectPayload,
+    handleRemoveAllLyrics, isAutosaving,
+    isSaving,
+    onNewProject: handleNewProject,
+    onShowKeyboardHelp: setShowKeyboardHelp ? handleToggleKeyboardHelp : undefined,
+    registerAfterSave,
+  }), [
+    lines, setLines, syncMode, setSyncMode,
+    activeLineIndex, setActiveLineIndex,
+    playbackPosition, playerRef,
+    undo, redo, canUndo, canRedo,
+    editorMode, setEditorMode, duration,
+    triggerImportSave, handleManualSave,
+    buildProjectPayload,
+    handleRemoveAllLyrics, isAutosaving,
+    isSaving,
+    handleNewProject,
+    setShowKeyboardHelp, handleToggleKeyboardHelp,
+    registerAfterSave,
+  ]);
+
+  const previewProps = useMemo(() => ({
+    lines, setLines, playbackPosition,
+    mediaTitle, playerRef, duration,
+    editorMode, exportToUrl, isSharedProject,
+    sharedReadOnly, setSharedReadOnly,
+    shareModal, setShareModal, hasMedia,
+    isPlaying, playbackSpeed, activeProjectId,
+    project: pendingProject, projectMetadata,
+  }), [
+    lines, setLines, playbackPosition,
+    mediaTitle, playerRef, duration,
+    editorMode, exportToUrl, isSharedProject,
+    sharedReadOnly, setSharedReadOnly,
+    shareModal, setShareModal, hasMedia,
+    isPlaying, playbackSpeed, activeProjectId,
+    pendingProject, projectMetadata,
+  ]);
 
   const handleResize = useCallback((e) => {
     if (!containerRef.current) return;
@@ -267,96 +404,27 @@ export function AppRouter({
             </div>
           ) : (
             <div ref={containerRef} className="flex-1 flex flex-col min-h-0 w-full overflow-x-hidden max-lg:pb-4">
-              <Reorder.Group
-                axis="x"
-                values={items}
+              <PanelReorderGroup
+                items={items}
                 onReorder={handleReorder}
-                className="flex-1 min-h-0 flex flex-col lg:flex-row lg:gap-6 gap-0 pt-0 px-0 pb-0 w-full"
-              >
-                {items.map((item, index) => {
-                  const isEditor = item === 'editor';
-                  const isVisible = isEditor ? showEditor : showPreview;
-                  if (!isVisible) return null;
-
-                  // On desktop with both panels visible: use percentage-based widths with gap accounting.
-                  // When only one panel is visible: fill the full container (flex:1 1 auto).
-                  // editorWidth is preserved in state so toggling editor back reverts the split.
-                  // minWidth is intentionally omitted — handleResize already clamps percentages to safe minimums.
-                  const bothVisible = showEditor && showPreview;
-                  const widthStyle = isDesktop && bothVisible ? {
-                    flex: `0 0 calc(${isEditor ? editorWidth : (100 - editorWidth)}% - 12px)`,
-                  } : {
-                    flex: '1 1 auto'
-                  };
-
-                  return (
-                    <Fragment key={item}>
-                      <div className="flex items-stretch min-h-0 min-w-0" style={widthStyle}>
-                        <Reorder.Item
-                          value={item}
-                          layout={false}
-                          dragListener={isDesktop && !lockLayout}
-                          whileDrag={{ scale: 1.01, zIndex: 50, boxShadow: "0px 20px 40px rgba(0,0,0,0.4)", opacity: 0.8 }}
-                          className={`flex-1 flex flex-col min-h-0 ${isEditor ? 'gap-4' : ''} ${mobileTab !== item ? 'max-lg:hidden' : ''} relative group/reorder lg:border-2 lg:rounded-2xl border-0 rounded-none ${isEditor ? borderClasses.editor : borderClasses.preview} transition-colors duration-200 overflow-hidden lg:bg-zinc-900/50 lg:backdrop-blur-sm bg-zinc-950`}
-                          onDragStart={() => setDraggingItem(item)}
-                          onDragEnd={() => setDraggingItem(null)}
-                        >
-                          {/* Drag Handle - Hidden visually but functional */}
-                          <div className={`absolute -top-4 left-1/2 -translate-x-1/2 opacity-0 transition-all duration-300 z-50 cursor-grab active:cursor-grabbing bg-zinc-800 backdrop-blur-xl border border-zinc-600/50 rounded-xl p-2 shadow-2xl pointer-events-auto max-lg:hidden hover:scale-110 hover:border-primary/50 group/handle ${draggingItem === item || lockLayout ? 'hidden' : ''}`}>
-                            <GripVertical className="size-5 text-zinc-400 group-hover/handle:text-primary transition-colors" />
-                          </div>
-
-                          <Suspense fallback={isEditor ? <SkeletonEditor /> : <SkeletonPreview />}>
-                            {isEditor ? (
-                              <Editor
-                                user={user}
-                                lines={lines} setLines={setLines} syncMode={syncMode} setSyncMode={setSyncMode}
-                                activeLineIndex={activeLineIndex} setActiveLineIndex={setActiveLineIndex}
-                                playbackPosition={playbackPosition} playerRef={playerRef}
-                                undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo}
-                                editorMode={editorMode} setEditorMode={setEditorMode} duration={duration}
-                                onImport={triggerImportSave} handleManualSave={handleManualSave}
-                                buildProjectPayload={buildProjectPayload}
-                                handleRemoveAllLyrics={handleRemoveAllLyrics} isAutosaving={isAutosaving}
-                                isSaving={isSaving}
-                                onNewProject={handleNewProject}
-                                onShowKeyboardHelp={setShowKeyboardHelp ? handleToggleKeyboardHelp : undefined}
-                                registerAfterSave={registerAfterSave}
-                              />
-                            ) : (
-                              <Preview
-                                lines={lines} setLines={setLines} playbackPosition={playbackPosition}
-                                mediaTitle={mediaTitle} playerRef={playerRef} duration={duration}
-                                editorMode={editorMode} exportToUrl={exportToUrl} isSharedProject={isSharedProject}
-                                sharedReadOnly={sharedReadOnly} setSharedReadOnly={setSharedReadOnly}
-                                shareModal={shareModal} setShareModal={setShareModal} hasMedia={hasMedia}
-                                isPlaying={isPlaying} playbackSpeed={playbackSpeed} activeProjectId={activeProjectId}
-                                project={pendingProject} projectMetadata={projectMetadata}
-                              />
-                            )}
-                          </Suspense>
-                        </Reorder.Item>
-                      </div>
-
-                      {/* Resize Handle — overlays the center of the gap-6 (24px) gap */}
-                      {isDesktop && !lockLayout && index === 0 && items.length > 1 && (
-                        <div
-                          role="separator"
-                          onMouseDown={startResizing}
-                          onMouseEnter={() => setIsHoveringDivider(true)}
-                          onMouseLeave={() => setIsHoveringDivider(false)}
-                          className="w-0 relative cursor-col-resize self-stretch flex items-center justify-center z-[100] group/resizer -mx-3"
-                        >
-                          {/* Invisible hit area perfectly centered in the gap */}
-                          <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center w-12 h-full">
-                            <div className={`w-1 h-32 rounded-full transition-all duration-300 ${isResizing ? 'bg-primary scale-y-110 shadow-[0_0_15px_rgba(29,185,84,0.5)]' : isHoveringDivider ? 'bg-zinc-500 scale-y-105' : 'bg-zinc-800/50'}`} />
-                          </div>
-                        </div>
-                      )}
-                    </Fragment>
-                  );
-                })}
-              </Reorder.Group>
+                isMobile={isMobile}
+                isDesktop={isDesktop}
+                lockLayout={lockLayout}
+                showEditor={showEditor}
+                showPreview={showPreview}
+                mobileTab={mobileTab}
+                editorWidth={editorWidth}
+                borderClasses={borderClasses}
+                draggingItem={draggingItem}
+                setDraggingItem={setDraggingItem}
+                isResizing={isResizing}
+                isHoveringDivider={isHoveringDivider}
+                setIsHoveringDivider={setIsHoveringDivider}
+                startResizing={startResizing}
+                user={user}
+                editorProps={editorProps}
+                previewProps={previewProps}
+              />
             </div>
           )}
         </EditorContainer>

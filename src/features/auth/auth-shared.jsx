@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Globe, Check, Lightbulb, Music2, X, ArrowRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
+import { LazyImage } from '@ui/LazyImage';
 
 import { LANGUAGES, getLangLabel } from './auth-constants';
 
@@ -64,7 +65,7 @@ function AvatarBadgeInner({ username, avatarUrl, size = 'md' }) {
 
   if (avatarUrl && !imgError) {
     return (
-      <img
+      <LazyImage
         src={avatarUrl}
         alt={username}
         className={`${sizeClass} rounded-full object-cover ring-2 ring-primary/30`}

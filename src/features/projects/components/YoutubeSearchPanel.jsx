@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Search, X, Loader2, ExternalLink } from 'lucide-react';
 import { youtube } from '@/features/player/services/youtube.service';
 import { Skeleton } from '@ui/skeleton';
+import { LazyImage } from '@ui/LazyImage';
 
 function YtIcon({ className }) {
   return (
@@ -158,7 +159,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
               >
                 <div className="relative w-32 h-[72px] shrink-0 rounded-lg overflow-hidden bg-zinc-800">
                   {item.thumbnail && (
-                    <img
+                    <LazyImage
                       src={item.thumbnail}
                       alt={item.title}
                       className="size-full object-cover group-hover:scale-105 transition-transform duration-200"
