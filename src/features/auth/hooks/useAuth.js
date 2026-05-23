@@ -1,6 +1,9 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import { auth, spotify as spotifyApi, google as googleApi, setAuthFlag } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+
+// Real server origin (not the Vite/Vercel proxy path) for OAuth postMessage validation
+const API_ORIGIN = import.meta.env.VITE_SERVER_ORIGIN || window.location.origin;
 import toast from 'react-hot-toast';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
@@ -171,12 +174,13 @@ export function useAuth() {
   // ——— Spotify connect / disconnect ———
 
   const connectSpotify = useCallback(async () => {
-    const { url } = await spotifyApi.getAuthUrl();
-    // Open Spotify auth in a popup — backend callback returns HTML that posts message back
+    // Open synchronously so browsers don't block it as a non-gesture popup
     const width = 500, height = 700;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
-    window.open(url, 'spotify-auth', `width=${width},height=${height},left=${left},top=${top}`);
+    const popup = window.open('about:blank', 'spotify-auth', `width=${width},height=${height},left=${left},top=${top}`);
+    const { url } = await spotifyApi.getAuthUrl();
+    if (popup) popup.location.href = url; else window.open(url, 'spotify-auth', `width=${width},height=${height},left=${left},top=${top}`);
 
     return new Promise((resolve, reject) => {
       let cleaned = false;
@@ -188,6 +192,7 @@ export function useAuth() {
       };
 
       const onMessage = async (event) => {
+        if (event.origin !== API_ORIGIN) return;
         let data = event.data;
         if (typeof data === 'string') try { data = JSON.parse(data); } catch { return; }
         if (data?.type !== 'spotify-callback') return;
@@ -236,6 +241,7 @@ export function useAuth() {
       };
 
       const onMessage = async (event) => {
+        if (event.origin !== API_ORIGIN) return;
         let data = event.data;
         if (typeof data === 'string') try { data = JSON.parse(data); } catch { return; }
         if (data?.type !== 'google-callback') return;
@@ -292,14 +298,13 @@ export function useAuth() {
       };
 
       const onMessage = async (event) => {
-        console.log('[AUTH] Received message:', event.data?.type);
+        if (event.origin !== API_ORIGIN) return;
         let data = event.data;
         if (typeof data === 'string') try { data = JSON.parse(data); } catch { return; }
         if (data?.type !== 'google-callback') return;
         cleanup();
 
         if (!data.success) {
-          console.error('[AUTH] Google callback failed:', data.error);
           reject(new Error(data.error || 'Google login failed'));
           return;
         }
@@ -309,12 +314,10 @@ export function useAuth() {
         setAuthFlag(true);
         setState({ user: me, loading: false });
         scheduleRefresh();
-        console.log('[AUTH] Google login successful');
         resolve(me);
       };
 
       window.addEventListener('message', onMessage);
-      console.log('[AUTH] Message listener attached');
       const timeout = setTimeout(() => {
         console.warn('[AUTH] Google popup timeout after 60s - no message received');
         cleanup();
