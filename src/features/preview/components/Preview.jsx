@@ -1,6 +1,7 @@
 ﻿import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { projects } from '@/app/api';
 import { createPortal } from 'react-dom';
+import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { usePreview } from '../hooks/usePreview';
 import ExportPanel from './ExportPanel';
@@ -448,37 +449,35 @@ function PreviewViewport({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, isDualLine, scrollAlignment, scrollMode, settings.preview?.autoScroll]);
 
+  let content;
+
   if (!lines.length) {
-    return (
+    content = (
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 mask-edges rounded-lg flex items-center justify-center"
+        className="h-full overflow-y-auto overflow-x-hidden mask-edges rounded-lg flex items-center justify-center"
       >
         <p className="text-zinc-600 text-xs sm:text-sm italic text-center px-4">
           {t('editor.pastePlaceholder')}
         </p>
       </div>
     );
-  }
-
-  if (!hasSyncedLines) {
-    return (
+  } else if (!hasSyncedLines) {
+    content = (
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 mask-edges rounded-lg flex items-center justify-center"
+        className="h-full overflow-y-auto overflow-x-hidden mask-edges rounded-lg flex items-center justify-center"
       >
         <p className="text-zinc-600 text-xs sm:text-sm italic text-center px-4">
           {t('preview.placeholder')}
         </p>
       </div>
     );
-  }
-
-  if (isDualLine) {
-    return (
+  } else if (isDualLine) {
+    content = (
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 scroll-smooth mask-edges rounded-lg"
+        className="h-full overflow-y-auto overflow-x-hidden scroll-smooth mask-edges rounded-lg"
       >
         <div className="h-full flex flex-col justify-center items-center gap-4 sm:gap-8 overflow-x-hidden px-1 sm:px-0">
           {dualDisplayLines.map(({ line, originalIndex: i }) => (
@@ -516,67 +515,73 @@ function PreviewViewport({
         </div>
       </div>
     );
+  } else {
+    // Normal mode — virtualized
+    content = (
+      <div
+        ref={containerRef}
+        className="h-full overflow-y-auto overflow-x-hidden mask-edges rounded-lg"
+      >
+        <div
+          style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
+          className={`overflow-x-hidden px-1 sm:px-0`}
+        >
+          {virtualizer.getVirtualItems().map((vRow) => {
+            const i = vRow.index;
+            const line = lines[i];
+            return (
+              <div
+                key={i}
+                data-index={i}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${vRow.start}px)`,
+                }}
+              >
+                <PreviewLine
+                  line={{ ...line, nextTimestamp: nextTimestamps[i] ?? null }}
+                  originalIndex={i}
+                  displayedActiveIndex={currentIndex}
+                  lockedLineIndex={null}
+                  isDualLine={false}
+                  displayLines={null}
+                  playbackPosition={i === currentIndex ? playbackPosition : null}
+                  activeRef={i === currentIndex ? activeRef : null}
+                  handleLineClick={handleLineClick}
+                  handleLineHover={() => { }}
+                  handleLineHoverEnd={() => { }}
+                  showTranslationsInPreview={showTranslationsInPreview}
+                  showFuriganaInPreview={showFuriganaInPreview}
+                  isPlaying={isPlaying}
+                  playbackSpeed={playbackSpeed}
+                  sizeOption={sizeOption}
+                  spacingOption={spacingOption}
+                  activeSecondarySizes={activeSecondarySizes}
+                  inactiveSecondarySizes={inactiveSecondarySizes}
+                  activeFontSizes={activeFontSizes}
+                  inactiveFontSizes={inactiveFontSizes}
+                  activeMargin={activeMargin}
+                  distanceFromActive={currentIndex >= 0 ? Math.abs(i - currentIndex) : null}
+                  totalLines={lines.length}
+                  editorMode={editorMode}
+                  hasMedia={hasMedia}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   }
 
-  // Normal mode — virtualized
   return (
-    <div
-      ref={containerRef}
-      className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 mask-edges rounded-lg"
-    >
-      <div
-        style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
-        className={`overflow-x-hidden px-1 sm:px-0`}
-      >
-        {virtualizer.getVirtualItems().map((vRow) => {
-          const i = vRow.index;
-          const line = lines[i];
-          return (
-            <div
-
-              key={i}
-              data-index={i}
-              ref={virtualizer.measureElement}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                transform: `translateY(${vRow.start}px)`,
-              }}
-            >
-              <PreviewLine
-                line={{ ...line, nextTimestamp: nextTimestamps[i] ?? null }}
-                originalIndex={i}
-                displayedActiveIndex={currentIndex}
-                lockedLineIndex={null}
-                isDualLine={false}
-                displayLines={null}
-                playbackPosition={i === currentIndex ? playbackPosition : null}
-                activeRef={i === currentIndex ? activeRef : null}
-                handleLineClick={handleLineClick}
-                handleLineHover={() => { }}
-                handleLineHoverEnd={() => { }}
-                showTranslationsInPreview={showTranslationsInPreview}
-                showFuriganaInPreview={showFuriganaInPreview}
-                isPlaying={isPlaying}
-                playbackSpeed={playbackSpeed}
-                sizeOption={sizeOption}
-                spacingOption={spacingOption}
-                activeSecondarySizes={activeSecondarySizes}
-                inactiveSecondarySizes={inactiveSecondarySizes}
-                activeFontSizes={activeFontSizes}
-                inactiveFontSizes={inactiveFontSizes}
-                activeMargin={activeMargin}
-                distanceFromActive={currentIndex >= 0 ? Math.abs(i - currentIndex) : null}
-                totalLines={lines.length}
-                editorMode={editorMode}
-                hasMedia={hasMedia}
-              />
-            </div>
-          );
-        })}
-      </div>
+    <div className="relative flex-1 min-h-0">
+      {content}
+      <ScrollProgress containerRef={containerRef} className="absolute bottom-0 inset-x-0 h-[2px]" />
     </div>
   );
 }

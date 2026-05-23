@@ -3,6 +3,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '@features/editor/hooks/useEditor';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
+import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import EditorToolbar from './EditorToolbar';
 import EditorPasteArea from '../setup/EditorPasteArea';
 import EditorLineItem from '../line/EditorLineItem';
@@ -529,10 +530,11 @@ function VirtualizedLineList({
 
   return (
     <div className="flex flex-col flex-1 gap-3 animate-fade-in min-h-0">
+      <div className="relative flex-1 min-h-0">
       <div
         ref={listRef}
         onMouseLeave={handleLineHoverEnd}
-        className="flex-1 overflow-y-auto pr-1 min-h-0 mask-edges"
+        className="h-full overflow-y-auto pr-1 mask-edges"
       >
         <div
           style={{
@@ -626,8 +628,10 @@ function VirtualizedLineList({
           })}
         </div>
       </div>
+        <ScrollProgress containerRef={listRef} className="absolute bottom-0 inset-x-0 h-[2px]" />
+      </div>
 
-        <div className="hidden xl:block">
+      <div className="hidden xl:block">
           <SelectionActionBar
             selectedLines={selectedLines}
             settings={settings}

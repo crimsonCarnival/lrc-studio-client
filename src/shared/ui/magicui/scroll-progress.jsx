@@ -3,7 +3,7 @@ import { LazyMotion, domAnimation, m as M, useMotionValue, useSpring } from 'fra
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
-export function ScrollProgress({ className, springOptions }) {
+export function ScrollProgress({ className, springOptions, containerRef }) {
   const motionValue = useMotionValue(0);
   const scaleX = useSpring(motionValue, {
     stiffness: 200,
@@ -19,20 +19,29 @@ export function ScrollProgress({ className, springOptions }) {
   }, [pathname, motionValue]);
 
   useEffect(() => {
-    const handleScroll = (e) => {
-      const el = e.target;
-      if (!(el instanceof HTMLElement)) return;
-      const scrollMax = el.scrollHeight - el.clientHeight;
-      if (scrollMax <= 0) return;
-      // Don't let modal content drive the header bar
-      if (el.closest('.z-modal')) return;
-      motionValue.set(el.scrollTop / scrollMax);
-    };
+    const el = containerRef?.current;
+    if (el) {
+      const handleScroll = () => {
+        const scrollMax = el.scrollHeight - el.clientHeight;
+        if (scrollMax <= 0) { motionValue.set(0); return; }
+        motionValue.set(el.scrollTop / scrollMax);
+      };
+      el.addEventListener('scroll', handleScroll, { passive: true });
+      return () => el.removeEventListener('scroll', handleScroll);
+    }
 
-    // capture: true — scroll doesn't bubble, but fires on capture phase for any element
+    // No containerRef: listen for any scrollable element (used by guest landing page header)
+    const handleScroll = (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      const scrollMax = target.scrollHeight - target.clientHeight;
+      if (scrollMax <= 0) return;
+      if (target.closest('.z-modal')) return;
+      motionValue.set(target.scrollTop / scrollMax);
+    };
     document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
     return () => document.removeEventListener('scroll', handleScroll, { capture: true, passive: true });
-  }, [motionValue]);
+  }, [motionValue, containerRef]);
 
   return (
     <LazyMotion features={domAnimation}>

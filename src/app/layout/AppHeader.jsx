@@ -89,6 +89,7 @@ export function AppHeader({
 
   const isSetupPage = location.pathname === '/project/new';
   const isHomePage = location.pathname === '/home' || location.pathname === '/';
+  const isGuestLanding = location.pathname === '/';
 
   const currentTheme = settings?.interface?.theme || 'dark';
   const currentLang = (i18n?.language || 'en').slice(0, 2).toUpperCase();
@@ -512,8 +513,8 @@ export function AppHeader({
         </div>
       </div>
 
-      {/* Scroll progress — absolute so it anchors to the fixed header's bottom edge */}
-      <ScrollProgress className="absolute top-auto bottom-0 h-[2px]" />
+      {/* Scroll progress — only shown on guest landing page */}
+      {isGuestLanding && <ScrollProgress className="absolute top-auto bottom-0 h-[2px]" />}
 
     </header>
 
