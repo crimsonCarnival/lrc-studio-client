@@ -59,8 +59,8 @@ export default {
     "Haz doble clic en una palabra para editar su lectura (furigana) o acento.",
     "Puedes importar LRC, SRT o pegar letras directamente.",
     "Usa el menú 'Más acciones' en el editor para alternar entre Hiragana y Katakana para las lecturas.",
-    "Usa la pestaña Genius en la sección de letras para buscar canciones por título o artista — sin copiar ni pegar.",
-    "¿Tienes una URL de Genius? Pégala directamente en la pestaña Genius para extraer la letra con un solo clic."
+    "Usa la pestaña de búsqueda de letras en el editor para buscar canciones por título o artista — sin copiar ni pegar.",
+    "¿Tienes la URL de una canción? Pégala directamente en la pestaña de letras para extraerla con un solo clic."
   ],
   newProject: "Nuevo Proyecto",
   resumeLast: "Reanudar Última Sesión",

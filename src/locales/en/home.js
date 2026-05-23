@@ -51,8 +51,8 @@ export default {
     "Use Tab to iterate between words when using Words Mode.",
     "Keep your projects organized with tags and descriptions.",
     "Use the 'More actions' menu in the editor to toggle between Hiragana and Katakana for readings.",
-    "Use the Genius tab in the lyrics section to search for song lyrics by title or artist — no copying and pasting needed.",
-    "Got a Genius song URL? Paste it directly in the Genius tab to extract lyrics in one click."
+    "Use the lyrics search tab in the editor to find song lyrics by title or artist — no copying and pasting needed.",
+    "Got a song URL? Paste it directly in the lyrics tab to extract lyrics in one click."
   ],
   newProject: "New Project",
   resumeLast: "Resume Last Session",
