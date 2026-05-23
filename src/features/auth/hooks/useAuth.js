@@ -218,11 +218,13 @@ export function useAuth() {
   // ——— Google connect / disconnect / login ———
 
   const connectGoogle = useCallback(async () => {
-    const url = await googleApi.getAuthUrl();
     const width = 500, height = 700;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
-    window.open(url, 'google-auth', `width=${width},height=${height},left=${left},top=${top}`);
+    // Open synchronously so browsers don't block it as a non-gesture popup
+    const popup = window.open('about:blank', 'google-auth', `width=${width},height=${height},left=${left},top=${top}`);
+    const url = await googleApi.getAuthUrl();
+    if (popup) popup.location.href = url; else window.open(url, 'google-auth', `width=${width},height=${height},left=${left},top=${top}`);
 
     return new Promise((resolve, reject) => {
       let cleaned = false;
@@ -271,11 +273,13 @@ export function useAuth() {
   }, []);
 
   const loginWithGoogle = useCallback(async () => {
-    const url = await googleApi.getLoginUrl();
     const width = 500, height = 700;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
-    const popup = window.open(url, 'google-login', `width=${width},height=${height},left=${left},top=${top}`);
+    // Open synchronously so browsers don't block it as a non-gesture popup
+    const popup = window.open('about:blank', 'google-login', `width=${width},height=${height},left=${left},top=${top}`);
+    const url = await googleApi.getLoginUrl();
+    if (popup) { popup.location.href = url; } else { window.open(url, 'google-login', `width=${width},height=${height},left=${left},top=${top}`); }
     console.log('[AUTH] Google popup opened:', popup !== null, url);
 
     return new Promise((resolve, reject) => {
