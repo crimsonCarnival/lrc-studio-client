@@ -5,7 +5,6 @@ export default {
   loginSubtitle: "ハンドルまたはメールを入力して続けてください。",
   enterPassword: "パスワードを入力してください",
   notYou: "別のアカウントに切り替える",
-  rememberMe: "ログイン情報を保存する",
   continue: "次へ",
   registerWelcome: "アカウントを作成します",
   registerSubtitle: "表示名を入力して始めましょう。",
@@ -63,11 +62,11 @@ export default {
     passwordMismatch: "パスワードが一致しません"
   },
   tips: {
-    identifier: "ハンドル（例: @yourhandle）またはメールアドレスを入力してください。@から始めても自動的に除去されます。",
+    identifier: "ユーザー名またはメールアドレスでログインできます。",
     loginPassword: "アカウントのパスワード。覚えていない場合は「パスワードをお忘れですか？」をご利用ください。",
-    displayName: "公開名 — クレジットやプロフィールに表示されます。スペース、絵文字、Unicodeを含めることができます。",
-    accountName: "固有のハンドル — プロフィールURLや@メンションに使用されます。小文字・数字・_・-のみ。表示名から自動生成されますが、カスタマイズできます。",
-    email: "ログインとアカウント復旧に使用されます。ハンドルを設定している場合は任意ですが、強く推奨します。",
+    displayName: "公開名 — クレジットやプロフィールに表示されます。スペースや絵文字も使えます。",
+    accountName: "あなたのユーザー名 — プロフィールや@メンションに表示されます。表示名から自動生成されますが、変更できます。",
+    email: "ログインとアカウント復旧に使用されます。設定を強くおすすめします。",
     password: "最低8文字。文字、数字、記号を組み合わせるとより安全なパスワードになります。",
     confirmPassword: "パスワードが一致していることを確認するために、もう一度入力してください。"
   },
@@ -198,6 +197,17 @@ export default {
     errorMismatch: "パスワードが一致しません",
     errorMinLength: "パスワードは8文字以上である必要があります",
     errorSamePassword: "新しいパスワードは現在のパスワードと異なる必要があります"
+  },
+  savedAccount: {
+    prompt: "ログイン情報を保存しますか？",
+    promptSub: "次回からこの画面にプロフィールが表示され、すばやくサインインできます。",
+    save: "保存して続ける",
+    skip: "今はしない",
+    logIn: "{{name}}としてログイン",
+    switchAccount: "別のアカウントを使用",
+    continueAs: "アカウントを選択",
+    addAccount: "別のアカウントを追加",
+    removeAccount: "このアカウントを削除",
   },
   passwordManagement: {
     title: "パスワード管理",
