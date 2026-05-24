@@ -415,7 +415,7 @@ export function AppHeader({
                       navigate('/auth?action=signin');
                     }
                   }}
-                  className="h-8 px-3 text-xs font-semibold text-zinc-300 hover:text-zinc-100 bg-zinc-800/70 hover:bg-zinc-700/80 border border-zinc-800/50 rounded-xl transition-colors"
+                  className="h-8 px-3 text-xs font-normal text-zinc-300 hover:text-zinc-100 bg-zinc-800/70 hover:bg-zinc-700/80 border border-zinc-800/50 rounded-xl transition-colors"
                 >
                   {t('auth.signIn', 'Sign in')}
                 </button>
@@ -436,7 +436,7 @@ export function AppHeader({
                       navigate('/auth/signup');
                     }
                   }}
-                  className="h-8 px-3 text-xs font-semibold text-zinc-950 bg-primary hover:bg-primary/90 rounded-xl transition-colors"
+                  className="h-8 px-3 text-xs font-normal text-zinc-950 bg-primary hover:bg-primary/90 rounded-xl transition-colors"
                 >
                   {t('auth.signUp', 'Sign up')}
                 </button>
