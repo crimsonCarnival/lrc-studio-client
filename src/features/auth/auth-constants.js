@@ -17,4 +17,4 @@ export function getLangLabel(code, currentLang) {
   return `${native} (${translated})`;
 }
 
-export const REMEMBER_ME_KEY = 'lrc-studio-remember-me';
+export const SAVED_ACCOUNT_KEY = 'lrc-studio-saved-account';
