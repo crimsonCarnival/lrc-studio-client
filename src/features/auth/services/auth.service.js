@@ -129,4 +129,21 @@ export const authService = {
       }
     `);
   },
+
+  // ── Session Management ──
+  getSessions() {
+    return request('/auth/sessions');
+  },
+
+  revokeSession(sessionId) {
+    return request(`/auth/sessions/${sessionId}`, { method: 'DELETE' });
+  },
+
+  logoutAll(keepCurrent = false) {
+    return request('/auth/logout-all', {
+      method: 'POST',
+      body: JSON.stringify({ keepCurrent }),
+    });
+  },
 };
+

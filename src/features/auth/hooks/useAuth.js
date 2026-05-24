@@ -1,9 +1,13 @@
-﻿import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { auth, spotify as spotifyApi, google as googleApi, setAuthFlag } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import toast from 'react-hot-toast';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
+import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
+
+// Migrate legacy single-account format to multi-account array on first load
+rememberedAccounts.migrate();
 
 // Real server origin (not the Vite/Vercel proxy path) for OAuth postMessage validation
 const API_ORIGIN = import.meta.env.VITE_SERVER_ORIGIN || window.location.origin;
@@ -29,6 +33,9 @@ export function useAuth() {
     storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
     storage.remove(STORAGE_KEYS.HAS_SESSION);
     setAuthFlag(false);
+    // Intentionally keep remembered accounts — they are UI metadata only.
+    // The server cleared the refresh token cookie via POST /auth/logout.
+    // On next visit, the user sees the account picker and re-enters their password.
     setState({ user: null, loading: false });
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
   }, []);
@@ -58,10 +65,11 @@ export function useAuth() {
     restoringRef.current = true;
 
     const restore = async () => {
-      // Skip the round-trip entirely when no session was previously established.
-      // The httpOnly cookie is still the auth authority — this is only a hint to
-      // avoid a guaranteed-null GraphQL request on cold load for guests.
-      if (!storage.get(STORAGE_KEYS.HAS_SESSION)) {
+      const hasSession = storage.get(STORAGE_KEYS.HAS_SESSION);
+      const hasRememberedAccounts = rememberedAccounts.getAll().length > 0;
+
+      // Skip round-trip entirely when there's no reason to expect a valid session
+      if (!hasSession && !hasRememberedAccounts) {
         setState({ user: null, loading: false });
         return;
       }
@@ -72,6 +80,14 @@ export function useAuth() {
         setAuthFlag(true);
         setState({ user, loading: false });
         scheduleRefresh();
+        // Keep remembered account data fresh
+        rememberedAccounts.upsert({
+          userId: user.id,
+          accountName: user.accountName,
+          displayName: user.displayName,
+          avatarUrl: user.avatarUrl,
+          identifier: user.email || user.accountName,
+        });
       } catch (err) {
         if (err?.status === 401) {
           // Access token might be expired, try refreshing
@@ -82,8 +98,15 @@ export function useAuth() {
             setAuthFlag(true);
             setState({ user, loading: false });
             scheduleRefresh();
+            rememberedAccounts.upsert({
+              userId: user.id,
+              accountName: user.accountName,
+              displayName: user.displayName,
+              avatarUrl: user.avatarUrl,
+              identifier: user.email || user.accountName,
+            });
           } catch {
-            // Both tokens invalid or missing
+            // Both tokens invalid — clear session hint but keep remembered accounts
             storage.remove(STORAGE_KEYS.HAS_SESSION);
             setAuthFlag(false);
             setState({ user: null, loading: false });
@@ -152,6 +175,32 @@ export function useAuth() {
     return result;
   }, [scheduleRefresh, executeRecaptcha, handlePostAuthClone]);
 
+  // Variant of login that holds the user state — caller must call commitLogin() to finalise.
+  // Used by the password login flow so AuthPage can show the "save info?" prompt first.
+  const [heldLoginResult, setHeldLoginResult] = useState(null);
+
+  const loginAndHold = useCallback(async ({ identifier, password }) => {
+    let recaptchaToken = undefined;
+    if (executeRecaptcha) {
+      recaptchaToken = await executeRecaptcha('login');
+    }
+
+    const result = await auth.login({ identifier, password, recaptchaToken });
+    storage.set(STORAGE_KEYS.HAS_SESSION, '1');
+    setAuthFlag(true);
+    scheduleRefresh();
+    handlePostAuthClone();
+    setHeldLoginResult(result);
+    return result;
+  }, [scheduleRefresh, executeRecaptcha, handlePostAuthClone]);
+
+  const commitLogin = useCallback(() => {
+    if (heldLoginResult) {
+      setState({ user: heldLoginResult.user, loading: false });
+      setHeldLoginResult(null);
+    }
+  }, [heldLoginResult]);
+
   const register = useCallback(async ({ username, email, password }) => {
     let recaptchaToken = undefined;
     if (executeRecaptcha) {
@@ -168,6 +217,21 @@ export function useAuth() {
     // Handle post-auth continuation (e.g., after cloning a project)
     handlePostAuthClone();
 
+    return result;
+  }, [scheduleRefresh, executeRecaptcha, handlePostAuthClone]);
+
+  const registerAndHold = useCallback(async ({ username, email, password, displayName, accountName }) => {
+    let recaptchaToken = undefined;
+    if (executeRecaptcha) {
+      recaptchaToken = await executeRecaptcha('register');
+    }
+
+    const result = await auth.register({ username, email, password, displayName, accountName, recaptchaToken });
+    storage.set(STORAGE_KEYS.HAS_SESSION, '1');
+    setAuthFlag(true);
+    scheduleRefresh();
+    handlePostAuthClone();
+    setHeldLoginResult(result);
     return result;
   }, [scheduleRefresh, executeRecaptcha, handlePostAuthClone]);
 
@@ -331,13 +395,33 @@ export function useAuth() {
     setState(prev => ({ ...prev, user: prev.user ? { ...prev.user, showUnbanMessage: false } : null }));
   }, []);
 
+  const logoutAllDevices = useCallback(async () => {
+    try {
+      await auth.logoutAll(false); // keepCurrent=false → clears all sessions + server cookie
+    } catch (err) {
+      console.error('Logout all failed:', err);
+    }
+    storage.remove(STORAGE_KEYS.PROJECT);
+    storage.remove(STORAGE_KEYS.SHARED_PROJECT);
+    storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
+    storage.remove(STORAGE_KEYS.HAS_SESSION);
+    setAuthFlag(false);
+    setState({ user: null, loading: false });
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+  }, []);
+
   return {
     user,
     setUser,
     loading,
     login,
+    loginAndHold,
+    commitLogin,
+    heldLoginResult,
     register,
+    registerAndHold,
     logout: doLogout,
+    logoutAllDevices,
     connectSpotify,
     disconnectSpotify,
     connectGoogle,
