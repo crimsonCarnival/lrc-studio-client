@@ -960,6 +960,7 @@ audio::-webkit-media-controls-panel {
 
   body {
     @apply bg-background text-foreground select-none;
+    font-weight: 300;
   }
 
   html {
@@ -982,6 +983,7 @@ audio::-webkit-media-controls-panel {
   textarea,
   [contenteditable] {
     @apply select-text;
+    font-weight: 400;
   }
 
   button:not(:disabled),
@@ -992,8 +994,8 @@ audio::-webkit-media-controls-panel {
 }
 
 ::selection {
-  background-color: rgba(29, 185, 84, 0.2);
-  color: #1DB954;
+  background-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  color: var(--color-primary);
 }
 
 @keyframes shake {
