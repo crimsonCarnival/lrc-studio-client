@@ -28,7 +28,7 @@ const FEATURES = [
   { icon: Zap,      color: 'text-primary',       bg: 'bg-primary/10',       titleKey: 'landing.feat1Title', descKey: 'landing.feat1Desc' },
   { icon: Mic2,     color: 'text-accent-purple',  bg: 'bg-accent-purple/10', titleKey: 'landing.feat2Title', descKey: 'landing.feat2Desc' },
   { icon: Globe,    color: 'text-accent-blue',    bg: 'bg-accent-blue/10',   titleKey: 'landing.feat3Title', descKey: 'landing.feat3Desc' },
-  { icon: Download, color: 'text-green-400',      bg: 'bg-green-400/10',     titleKey: 'landing.feat4Title', descKey: 'landing.feat4Desc' },
+  { icon: Download, color: 'text-warning',         bg: 'bg-warning/10',       titleKey: 'landing.feat4Title', descKey: 'landing.feat4Desc' },
 ];
 
 const STEPS = [
@@ -79,7 +79,7 @@ export default function GuestLanding() {
             <Button
               size="lg"
               onClick={() => navigate('/project/new')}
-              className="gap-2 px-6 h-11 text-sm font-semibold shadow-lg shadow-primary/20"
+              className="gap-2 px-6 h-11 text-sm font-normal shadow-lg shadow-primary/20"
             >
               <Play className="size-4" />
               {t('landing.ctaStart')}
@@ -88,7 +88,7 @@ export default function GuestLanding() {
               variant="ghost"
               size="lg"
               onClick={() => navigate('/auth/signin')}
-              className="gap-2 px-6 h-11 text-sm font-medium text-zinc-400 hover:text-zinc-100"
+              className="gap-2 px-6 h-11 text-sm font-normal text-zinc-400 hover:text-zinc-100"
             >
               {t('landing.ctaSignIn')}
               <ArrowRight className="size-4" />
@@ -197,7 +197,7 @@ export default function GuestLanding() {
               <Button
                 size="lg"
                 onClick={() => navigate('/project/new')}
-                className="gap-2 px-8 h-11 text-sm font-semibold"
+                className="gap-2 px-8 h-11 text-sm font-normal"
               >
                 {t('landing.ctaStart')}
                 <ArrowRight className="size-4" />
@@ -206,7 +206,7 @@ export default function GuestLanding() {
                 variant="outline"
                 size="lg"
                 onClick={() => navigate('/auth/signup')}
-                className="px-8 h-11 text-sm font-medium"
+                className="px-8 h-11 text-sm font-normal"
               >
                 {t('landing.ctaSignUp')}
               </Button>

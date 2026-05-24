@@ -128,7 +128,7 @@ const LineActionToolbar = React.memo(({
                     variant="ghost"
                     size="icon-xs"
                     onClick={(e) => { e.stopPropagation(); handleAddLine(lineIndex); }}
-                    className="text-green-400/70 hover:text-green-400 hover:bg-green-500/10"
+                    className="text-primary/70 hover:text-primary hover:bg-primary/10"
                   >
                     <Plus className="size-3" />
                   </Button>

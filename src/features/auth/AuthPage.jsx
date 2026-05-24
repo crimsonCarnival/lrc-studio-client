@@ -11,16 +11,19 @@ import { useThemeSync } from '@/shared/hooks/useThemeSync';
 import { LazyImage } from '@ui/LazyImage';
 import LoginIdentifierStep from './LoginIdentifierStep';
 import LoginPasswordStep from './LoginPasswordStep';
+import SavedAccountStep from './SavedAccountStep';
+import LoginPromptStep from './LoginPromptStep';
 import SignUpForm from './SignUpForm';
 import ForgotPasswordTab from './ForgotPasswordTab.jsx';
 import { LangSwitcher } from './auth-shared';
+import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
 import SmoothWavyCanvas from '@features/landing/SmoothWavyCanvas';
 
 // ─── Main AuthPage ──────────────────────────────────────────────────────────
 
 export default function AuthPage() {
   const { t, i18n } = useTranslation();
-  const { login, register, loginWithGoogle } = useAuthContext();
+  const { login, loginAndHold, commitLogin, heldLoginResult, register, registerAndHold, loginWithGoogle } = useAuthContext();
   const [searchParams] = useSearchParams();
   const { mode } = useParams();
   const navigate = useNavigate();
@@ -31,12 +34,17 @@ export default function AuthPage() {
   const redirect = searchParams.get('redirect') || '';
   usePageTitle();
 
+  const [savedAccounts, setSavedAccounts] = useState(() => rememberedAccounts.getAll());
+
   const [view, setView] = useState(() => {
     if (action === 'forgot-password') return 'forgot-password';
-    return (action === 'signup' || action === 'register') ? 'register' : 'login-identifier';
+    if (action === 'signup' || action === 'register') return 'register';
+    if (rememberedAccounts.getAll().length > 0) return 'login-saved-account';
+    return 'login-identifier';
   });
 
   const [identifierData, setIdentifierData] = useState(null);
+  const [fromSavedAccount, setFromSavedAccount] = useState(false);
   // 1. Force pretty URLs if legacy query params are used
   useEffect(() => {
     if (!mode && searchParams.has('action')) {
@@ -75,7 +83,11 @@ export default function AuthPage() {
     } else if (action === 'forgot-password') {
       setView('forgot-password');
     } else {
-      setView(prev => prev === 'register' || prev === 'forgot-password' ? 'login-identifier' : prev);
+      setView(prev => {
+        if (prev !== 'register' && prev !== 'forgot-password') return prev;
+        if (rememberedAccounts.getAll().length > 0) return 'login-saved-account';
+        return 'login-identifier';
+      });
     }
   }
 
@@ -103,8 +115,114 @@ export default function AuthPage() {
 
   const handleBack = useCallback(() => {
     setIdentifierData(null);
+    if (fromSavedAccount) {
+      setFromSavedAccount(false);
+      setView('login-saved-account');
+    } else {
+      setView('login-identifier');
+    }
+  }, [fromSavedAccount]);
+
+  const handleAuthSuccess = useCallback(() => {
+    commitLogin();
+    const redirectTo = searchParams.get('redirect');
+    if (redirectTo) {
+      if (redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {
+        navigate(redirectTo, { replace: true });
+      } else {
+        window.location.href = redirectTo;
+      }
+    } else {
+      navigate('/home');
+    }
+  }, [commitLogin, searchParams, navigate]);
+
+  const handleSavedAccountProceed = useCallback((data) => {
+    setIdentifierData(data);
+    setFromSavedAccount(true);
+    setView('login-password');
+  }, []);
+
+  const handleSwitchAccount = useCallback(() => {
+    setFromSavedAccount(false);
     setView('login-identifier');
   }, []);
+
+  const handleAddAccount = useCallback(() => {
+    setFromSavedAccount(false);
+    setView('login-identifier');
+  }, []);
+
+  const handleRemoveAccount = useCallback((userId) => {
+    rememberedAccounts.remove(userId);
+    const updated = rememberedAccounts.getAll();
+    setSavedAccounts(updated);
+    if (updated.length === 0) {
+      setView('login-identifier');
+    }
+  }, []);
+
+  const handlePasswordSuccess = useCallback(() => {
+    const u = heldLoginResult?.user;
+    const toUpsert = identifierData && u?.id ? {
+      userId: u.id,
+      identifier: identifierData.identifier,
+      accountName: u?.accountName ?? identifierData.accountName,
+      displayName: u?.displayName ?? identifierData.displayName,
+      avatarUrl: u?.avatarUrl ?? identifierData.avatarUrl,
+    } : null;
+
+    if (fromSavedAccount) {
+      // User logged in via account picker — silently refresh their stored data
+      if (toUpsert) {
+        rememberedAccounts.upsert(toUpsert);
+        setSavedAccounts(rememberedAccounts.getAll());
+      }
+      handleAuthSuccess();
+    } else {
+      const alreadySaved = u?.id && rememberedAccounts.getAll().some((a) => a.userId === u.id);
+      if (alreadySaved && toUpsert) {
+        // Silently update existing entry, no re-prompt
+        rememberedAccounts.upsert(toUpsert);
+        setSavedAccounts(rememberedAccounts.getAll());
+        handleAuthSuccess();
+      } else {
+        // First time — show the save prompt
+        setView('login-prompt');
+      }
+    }
+  }, [fromSavedAccount, identifierData, heldLoginResult, handleAuthSuccess]);
+
+  const handleSaveAndContinue = useCallback(() => {
+    if (identifierData) {
+      const u = heldLoginResult?.user;
+      if (u?.id) {
+        rememberedAccounts.upsert({
+          userId: u.id,
+          identifier: identifierData.identifier,
+          accountName: u?.accountName ?? identifierData.accountName,
+          displayName: u?.displayName ?? identifierData.displayName,
+          avatarUrl: u?.avatarUrl ?? identifierData.avatarUrl,
+        });
+        setSavedAccounts(rememberedAccounts.getAll());
+      }
+    }
+    handleAuthSuccess();
+  }, [identifierData, heldLoginResult, handleAuthSuccess]);
+
+  const handleRegisterSuccess = useCallback((result) => {
+    const u = result?.user;
+    if (!u) { handleAuthSuccess(); return; }
+    // New accounts never have a saved profile — always show the prompt.
+    const data = {
+      identifier: u.email || u.accountName,
+      accountName: u.accountName,
+      displayName: u.displayName,
+      avatarUrl: u.avatarUrl || null,
+    };
+    setIdentifierData(data);
+    setView('login-prompt');
+  }, [handleAuthSuccess]);
 
   const switchView = useCallback((newView) => {
     setView(newView);
@@ -120,22 +238,6 @@ export default function AuthPage() {
     const redirectSuffix = currentRedirect ? `?redirect=${encodeURIComponent(currentRedirect)}` : '';
     navigate(`/auth/${targetAction}${redirectSuffix}`, { replace: true });
   }, [navigate, searchParams]);
-
-  const handleAuthSuccess = useCallback(() => {
-    const redirectTo = searchParams.get('redirect');
-    if (redirectTo) {
-      // Use smooth SPA navigation for local redirects to keep the claiming flow robust.
-      // Falls back to window.location.href for any external/absolute redirection URLs.
-      if (redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {
-        navigate(redirectTo, { replace: true });
-      } else {
-        window.location.href = redirectTo;
-      }
-    } else {
-      // If no explicit redirect, go to home
-      navigate('/home');
-    }
-  }, [searchParams, navigate]);
 
   const features = [
     { icon: Music2, key: 'featureSync', descKey: 'featureSyncDesc' },
@@ -234,6 +336,16 @@ export default function AuthPage() {
           {/* Card */}
           <div className="bg-zinc-900/80 backdrop-blur-2xl border border-zinc-800/50 rounded-[2.5rem] shadow-card p-7 sm:p-8 relative overflow-hidden">
             <ThemedShineBorder />
+            {view === 'login-saved-account' && savedAccounts.length > 0 && (
+              <SavedAccountStep
+                t={t}
+                savedAccounts={savedAccounts}
+                onProceedToPassword={handleSavedAccountProceed}
+                onAddAccount={handleAddAccount}
+                onRemoveAccount={handleRemoveAccount}
+              />
+            )}
+
             {view === 'login-identifier' && (
               <LoginIdentifierStep
                 t={t}
@@ -257,7 +369,7 @@ export default function AuthPage() {
                 t={t}
                 identifierData={identifierData}
                 onBack={handleBack}
-                onLogin={login}
+                onLogin={loginAndHold}
                 onGoogleLogin={async () => {
                   try {
                     await loginWithGoogle();
@@ -266,8 +378,17 @@ export default function AuthPage() {
                     toast.error(t('auth.errors.googleLoginFailed'));
                   }
                 }}
-                onSuccess={handleAuthSuccess}
+                onSuccess={handlePasswordSuccess}
                 onSwitchToForgotPassword={() => switchView('forgot-password')}
+              />
+            )}
+
+            {view === 'login-prompt' && identifierData && (
+              <LoginPromptStep
+                t={t}
+                identifierData={identifierData}
+                onSave={handleSaveAndContinue}
+                onSkip={handleAuthSuccess}
               />
             )}
 
@@ -275,7 +396,7 @@ export default function AuthPage() {
               <SignUpForm
                 t={t}
                 onSwitchToLogin={() => switchView('login-identifier')}
-                onRegister={register}
+                onRegister={registerAndHold}
                 onGoogleLogin={async () => {
                   try {
                     await loginWithGoogle();
@@ -284,7 +405,7 @@ export default function AuthPage() {
                     toast.error(t('auth.errors.googleLoginFailed'));
                   }
                 }}
-                onSuccess={handleAuthSuccess}
+                onSuccess={handleRegisterSuccess}
                 redirect={redirect}
               />
             )}

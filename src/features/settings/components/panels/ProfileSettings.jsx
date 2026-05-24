@@ -1,18 +1,15 @@
 import { useTranslation } from 'react-i18next';
+import { Mailbox, History } from 'lucide-react';
 import PasswordSection from '../PasswordSection.jsx';
 import AvatarUpload from './profile/AvatarUpload';
 import ProfileForm from './profile/ProfileForm';
 import AccountNameSection from './profile/AccountNameSection';
 import EmailSection from './profile/EmailSection';
 import ConnectedAccounts from './profile/ConnectedAccounts';
-
-function SectionHeading({ children }) {
-  return (
-    <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-4 px-0.5">
-      {children}
-    </h2>
-  );
-}
+import SessionsSettings from './SessionsSettings';
+import SettingsCard from './profile/SettingsCard';
+import EmailHistory from './profile/EmailHistory';
+import AccountNameHistory from './profile/AccountNameHistory';
 
 export default function ProfileSettings({ searchTerm }) {
   const { t } = useTranslation();
@@ -25,36 +22,47 @@ export default function ProfileSettings({ searchTerm }) {
   if (!matchesSearch) return null;
 
   return (
-    <div className="space-y-10">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start pb-10">
+      
+      {/* ── Left Column ─────────────────────────────────── */}
+      <div className="flex flex-col gap-6">
+        <SettingsCard title={t('profile.sections.public', 'Datos públicos')}>
+          <div className="space-y-6">
+            <AvatarUpload />
+            <ProfileForm />
+          </div>
+        </SettingsCard>
 
-      {/* ── Public Details ─────────────────────────────────── */}
-      <section id="section-public" className="scroll-mt-4">
-        <SectionHeading>{t('profile.sections.public')}</SectionHeading>
-        <div className="space-y-6">
-          <AvatarUpload />
-          <ProfileForm />
-        </div>
-      </section>
+        <SettingsCard title={t('profile.sections.account', 'Detalles de la cuenta')}>
+          <div className="space-y-6">
+            <EmailSection />
+            <AccountNameSection />
+          </div>
+        </SettingsCard>
 
-      <div className="border-t border-border/50" />
+        <SettingsCard title={t('profile.sections.emailHistory', 'Historial de correos')} icon={Mailbox}>
+          <EmailHistory />
+        </SettingsCard>
+      </div>
 
-      {/* ── Account Details ────────────────────────────────── */}
-      <section id="section-account" className="scroll-mt-4">
-        <SectionHeading>{t('profile.sections.account')}</SectionHeading>
-        <div className="space-y-8">
-          <EmailSection />
-          <AccountNameSection />
+      {/* ── Right Column ────────────────────────────────── */}
+      <div className="flex flex-col gap-6">
+        <SettingsCard title={t('profile.sections.password', 'Gestión de contraseña')}>
           <PasswordSection />
-        </div>
-      </section>
+        </SettingsCard>
 
-      <div className="border-t border-border/50" />
+        <SettingsCard title={t('profile.sections.connections', 'Conexiones')}>
+          <ConnectedAccounts />
+        </SettingsCard>
 
-      {/* ── Connections ────────────────────────────────────── */}
-      <section id="section-connections" className="scroll-mt-4">
-        <SectionHeading>{t('profile.sections.connections')}</SectionHeading>
-        <ConnectedAccounts />
-      </section>
+        <SettingsCard title={t('profile.sections.handleHistory', 'Historial de identificadores')} icon={History}>
+          <AccountNameHistory />
+        </SettingsCard>
+
+        <SettingsCard title={t('profile.sections.security', 'Seguridad')}>
+          <SessionsSettings />
+        </SettingsCard>
+      </div>
 
     </div>
   );

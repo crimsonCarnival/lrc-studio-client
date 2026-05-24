@@ -4,6 +4,7 @@ import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useSettings } from '@/features/settings/useSettings';
 import { useSpotifyAuth } from '../hooks/useSpotifyAuth';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 
 import { formatTime } from '@/shared/utils/format-time';
 import useLocalAudio from '../hooks/useLocalAudio';
@@ -17,7 +18,7 @@ import SpeedControl from './SpeedControl';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/popover';
-import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, Video, ChevronDown, Link2, PanelTop, PanelBottom, Bookmark, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, Video, ChevronDown, Link2, PanelTop, PanelBottom, Bookmark, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { Tip } from '@ui/tip';
 import { uploads as uploadsApi, spotify as spotifyApi, getAccessToken } from '@/app/api';
 import SpotifyIcon from '@features/player/components/SpotifyIcon';
@@ -34,6 +35,8 @@ function Player(
   const { t, dt } = useDynamicTranslation();
   const { settings, updateSetting } = useSettings();
   const haptic = useHapticFeedback();
+  const { user } = useAuthContext();
+  const spotifyConnected = !!user?.spotify?.connected;
 
   const MIN_SPEED = settings.playback?.speedBounds?.min ?? 0.25;
   const MAX_SPEED = settings.playback?.speedBounds?.max ?? 3;
@@ -325,6 +328,17 @@ function Player(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [local, yt, sp, onTitleChange]);
 
+  const handleClearMedia = useCallback(() => {
+    local.remove();
+    yt.remove();
+    sp.remove();
+    setSource('local');
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    onMediaChange?.(null);
+  }, [local, yt, sp, setIsPlaying, setCurrentTime, setDuration, onMediaChange]);
+
   // ——— Unified controls ———
   // Player controls are integrated into the Player component with responsive layouts:
   // - Desktop: Horizontal layout with full controls bar (hidden on mobile, shown on lg:)
@@ -451,6 +465,83 @@ function Player(
   }, [initialCloudinaryUpload, local, sp, onCloudinaryUpload, onSpotifyTrackIdChange, onTitleChange]);
 
 
+  const changeMediaPopoverContent = (fileInputId) => (
+    <div className="flex flex-col gap-1 p-1">
+      {/* Load file */}
+      <label
+        htmlFor={fileInputId}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-colors"
+      >
+        <FolderOpen className="size-4 shrink-0 text-zinc-500" />
+        {t('player.dropAudio')}
+        <input
+          id={fileInputId}
+          type="file"
+          accept="audio/*"
+          onChange={local.handleFileChange}
+          className="hidden"
+        />
+      </label>
+
+      {/* URL input */}
+      <div className="flex gap-1.5 px-1 py-1">
+        <div className="relative flex-1">
+          <Link2 className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-zinc-500 pointer-events-none" />
+          <Input
+            value={yt.ytUrl}
+            onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); setSpotifyError(''); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') { if (yt.ytUrl.includes('spotify')) handleSpotifyLoad(); else handleUrlLoad(); } }}
+            placeholder={t('player.pasteCdnUrl')}
+            className="h-8 pl-6 text-xs bg-zinc-800/60 border-zinc-700"
+          />
+        </div>
+        <Button
+          size="sm"
+          onClick={() => { if (yt.ytUrl.includes('spotify')) handleSpotifyLoad(); else handleUrlLoad(); }}
+          disabled={!yt.ytUrl.trim() || cdnLoading}
+          className="h-8 px-3 text-xs shrink-0 bg-zinc-700 hover:bg-zinc-600 border-zinc-600"
+        >
+          {cdnLoading ? <Loader2 className="size-3 animate-spin" /> : t('player.load')}
+        </Button>
+      </div>
+
+      {/* Uploads */}
+      {getAccessToken() && mediaUploads.length > 0 && (
+        <div className="max-h-32 overflow-y-auto border-t border-zinc-800/60 pt-1 mt-0.5">
+          {mediaUploads.map((upload) => (
+            <button
+              key={upload.id}
+              onClick={() => handleSelectUpload(upload)}
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-left hover:bg-zinc-800 transition-colors group"
+            >
+              <div className="size-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
+                {upload.source === 'youtube'
+                  ? <Video className="size-3 text-red-400" />
+                  : upload.source === 'spotify'
+                    ? <SpotifyIcon className="size-3 text-green-400" />
+                    : <Cloud className="size-3 text-blue-400" />}
+              </div>
+              <span className="text-xs text-zinc-300 truncate group-hover:text-white transition-colors">
+                {upload.title || upload.fileName || t('uploads.untitled')}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Remove */}
+      <div className="border-t border-zinc-800/60 mt-0.5 pt-1">
+        <button
+          onClick={handleClearMedia}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+        >
+          <Trash2 className="size-4 shrink-0" />
+          {t('player.remove')}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <>
       {/* Always-rendered media elements – audio context must survive layout switches */}
@@ -550,29 +641,31 @@ function Player(
                 />
 
                 {/* Spotify Quick Actions */}
-                <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-                  <Tip content={getAccessToken() ? t('spotify.browse') : t('spotify.authRequired')}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => getAccessToken() ? setShowSpotifyBrowser(true) : handleSpotifyLogin()}
-                      className="size-8 rounded-lg text-green-400/70 hover:text-green-500 hover:bg-green-500/10"
-                    >
-                      <SpotifyIcon className={`size-4 ${!getAccessToken() ? 'opacity-40 grayscale' : ''}`} />
-                    </Button>
-                  </Tip>
-                  <Tip content={getAccessToken() ? t('spotify.syncNowPlaying') : t('spotify.authRequired')}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      disabled={!getAccessToken() || syncingNowPlaying}
-                      onClick={handleSyncNowPlaying}
-                      className="size-8 rounded-lg text-green-400/70 hover:text-green-500 hover:bg-green-500/10 disabled:opacity-30"
-                    >
-                      <Headphones className={`size-3.5 ${syncingNowPlaying ? 'animate-pulse text-green-500' : ''}`} />
-                    </Button>
-                  </Tip>
-                </div>
+                {spotifyConnected && (
+                  <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                    <Tip content={t('spotify.browse')}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowSpotifyBrowser(true)}
+                        className="size-8 rounded-lg text-green-400/70 hover:text-green-500 hover:bg-green-500/10"
+                      >
+                        <SpotifyIcon className="size-4" />
+                      </Button>
+                    </Tip>
+                    <Tip content={t('spotify.syncNowPlaying')}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled={syncingNowPlaying}
+                        onClick={handleSyncNowPlaying}
+                        className="size-8 rounded-lg text-green-400/70 hover:text-green-500 hover:bg-green-500/10 disabled:opacity-30"
+                      >
+                        <Headphones className={`size-3.5 ${syncingNowPlaying ? 'animate-pulse text-green-500' : ''}`} />
+                      </Button>
+                    </Tip>
+                  </div>
+                )}
               </div>
               <Button
                 onClick={() => {
@@ -785,6 +878,23 @@ function Player(
               {/* ── Right Section: Actions, Loop ── */}
               <div className="flex items-center gap-2 sm:gap-3 z-10">
 
+                {/* Change Media */}
+                {hasMedia && (
+                  <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
+                      >
+                        <RefreshCw className="size-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72 p-0 bg-zinc-900 border-zinc-800 shadow-xl" align="end" sideOffset={8}>
+                      {changeMediaPopoverContent('change-media-file-desktop')}
+                    </PopoverContent>
+                  </Popover>
+                )}
 
                 {syncMode && (
                   <Tip content={t('player.mark') || 'Mark'}>
@@ -918,7 +1028,7 @@ function Player(
                     </PopoverContent>
                   </Popover>
                 )}
-                {getAccessToken() && (
+                {spotifyConnected && (
                   <div className="flex gap-2 w-full">
                     <Button
                       variant="outline"
@@ -1056,6 +1166,22 @@ function Player(
                   >
                     <div className="size-4 rounded-full bg-current shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.6)]" />
                   </button>
+                )}
+
+                {hasMedia && (
+                  <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
+                    <PopoverTrigger asChild>
+                      <button className="flex flex-col items-center justify-center size-14 rounded-2xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800 active:scale-95 transition-all duration-100 shrink-0">
+                        <RefreshCw className="size-6" />
+                        <span className="text-[9px] font-bold mt-1 opacity-60 uppercase tracking-tight">
+                          {t('player.changeSong')}
+                        </span>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[280px] p-0 bg-zinc-900 border-zinc-800 shadow-xl" side="top" align="center" sideOffset={8}>
+                      {changeMediaPopoverContent('change-media-file-mobile')}
+                    </PopoverContent>
+                  </Popover>
                 )}
               </div>
             </div>

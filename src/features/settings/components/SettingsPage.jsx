@@ -156,26 +156,6 @@ export default function SettingsPage() {
                   <tab.icon className={`size-4 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-500'}`} />
                   {label}
                 </button>
-
-                {isActive && tab.id === 'profile' && !isGuest && (
-                  <div className="mt-1 ml-4 pl-3 border-l border-zinc-800/60 space-y-0.5">
-                    {[
-                      { anchor: 'section-public',         labelKey: 'profile.sections.public' },
-                      { anchor: 'section-account',        labelKey: 'profile.sections.account' },
-                      { anchor: 'section-connections',    labelKey: 'profile.sections.connections' },
-                      { anchor: 'section-handle-history', labelKey: 'profile.sections.handleHistory' },
-                      { anchor: 'section-email-history',  labelKey: 'profile.sections.emailHistory' },
-                    ].map(({ anchor, labelKey }) => (
-                      <button
-                        key={anchor}
-                        onClick={() => document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                        className="block w-full text-left px-2 py-1.5 text-[11px] text-zinc-500 hover:text-zinc-200 rounded-lg hover:bg-zinc-800/40 transition-colors"
-                      >
-                        {t(labelKey)}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             );
           })}

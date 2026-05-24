@@ -226,7 +226,7 @@ export default function UploadsLibrary({ onSelect, onBack }) {
                       size="icon"
                       onClick={(e) => handleSaveTitle(e, upload.id)}
                       disabled={savingTitle}
-                      className="text-green-400/70 hover:text-green-400 hover:bg-green-500/10 size-7"
+                      className="text-primary/70 hover:text-primary hover:bg-primary/10 size-7"
                     >
                       {savingTitle ? (
                         <Loader2 className="size-3.5 animate-spin" />

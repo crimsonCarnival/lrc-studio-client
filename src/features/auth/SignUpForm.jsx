@@ -130,13 +130,13 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
     setError('');
     setLoading(true);
     try {
-      await onRegister({
+      const result = await onRegister({
         displayName: displayName.trim() || undefined,
         accountName: accountName || undefined,
         email: email || undefined,
         password,
       });
-      onSuccess?.();
+      onSuccess?.(result);
     } catch (err) {
       if (err.status === 403) {
         setBlockedMessage(translateAuthError(t, err, 'register', accountName || email));
@@ -248,7 +248,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             <M.button
               type="submit"
               whileTap={{ scale: 0.98 }}
-              className={`h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-bold text-base lg:text-sm rounded-xl transition-all duration-200 mt-2 flex items-center justify-center gap-2 ${focusRingCls}`}
+              className={`h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-base lg:text-sm rounded-xl transition-all duration-200 mt-2 flex items-center justify-center gap-2 ${focusRingCls}`}
             >
               {t('auth.continue', 'Continue')}
               <ArrowRight className="size-4" />
@@ -389,7 +389,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                 type="submit"
                 disabled={loading}
                 whileTap={{ scale: 0.98 }}
-                className={`flex-1 h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-bold text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 disabled:cursor-not-allowed ${focusRingCls}`}
+                className={`flex-1 h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 disabled:cursor-not-allowed ${focusRingCls}`}
               >
                 {loading
                   ? (

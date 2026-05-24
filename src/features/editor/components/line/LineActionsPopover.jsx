@@ -36,7 +36,7 @@ function LineActionsPopover({ lineIndex, line, handleAddLine, handleClearLine, h
         </PopoverItem>
         <PopoverItem
           onClick={() => handleAddLine(lineIndex)}
-          className="hover:bg-green-500/10 hover:text-green-400"
+          className="hover:bg-primary/10 hover:text-primary"
         >
           <ArrowDownToLine className="size-3.5" />
           {t('editor.insertLineBelow', 'Insert Below')}

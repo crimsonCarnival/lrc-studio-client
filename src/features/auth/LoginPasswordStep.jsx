@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Eye, EyeOff, Loader2, Lightbulb } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { Tip } from '@ui/tip';
@@ -35,8 +35,8 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
     setError('');
     setLoading(true);
     try {
-      await onLogin({ identifier: identifierData.identifier, password });
-      onSuccess?.();
+      const result = await onLogin({ identifier: identifierData.identifier, password });
+      onSuccess?.(result);
     } catch (err) {
       setError(translateAuthError(t, err, 'login', identifierData.identifier));
     } finally {
@@ -94,7 +94,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                 className="pr-20 focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
               />
               {password && (
-                <motion.button
+                <m.button
                   type="button"
                   onClick={() => {
                     haptic('light');
@@ -105,12 +105,12 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                   aria-label={showPassword ? t('auth.hidePassword', 'Hide password') : t('auth.showPassword', 'Show password')}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                </motion.button>
+                </m.button>
               )}
             </div>
             <AnimatePresence>
               {error && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
@@ -118,7 +118,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                   className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-400"
                 >
                   {error}
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
             {!error && <FieldError message={error} />}
@@ -133,17 +133,17 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
         )}
 
         {identifierData.hasPassword !== false ? (
-          <motion.button
+          <m.button
             type="submit"
             disabled={loading || !password}
             whileTap={{ scale: 0.98 }}
-            className="h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-bold text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 mt-1 disabled:cursor-not-allowed focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
+            className="h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 mt-1 disabled:cursor-not-allowed focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
           >
             {loading
               ? <Loader2 className="size-4 animate-spin" />
               : t('auth.loginAction')
             }
-          </motion.button>
+          </m.button>
         ) : null}
 
         {(identifierData.hasGoogle || identifierData.hasPassword === false) && (
