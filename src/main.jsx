@@ -91,7 +91,7 @@ function AuthRedirect({ defaultTo = '/home' }) {
 
 // eslint-disable-next-line react-refresh/only-export-components
 function RootRoutes() {
-  const { user, loading } = useAuthContext();
+  const { user, loading, heldLoginResult } = useAuthContext();
 
   if (loading) {
     return (
@@ -100,6 +100,9 @@ function RootRoutes() {
       </div>
     );
   }
+
+  // Keep AuthPage mounted while heldLoginResult is set so the save-login prompt can show.
+  const showAuthPage = !user || heldLoginResult;
 
   return (
     <Suspense fallback={
@@ -115,8 +118,8 @@ function RootRoutes() {
         <Route path="/register" element={<Navigate to="/auth/signup" replace />} />
 
         {/* Auth routes */}
-        <Route path="/auth" element={user ? <AuthRedirect /> : <AuthPage />} />
-        <Route path="/auth/:mode" element={user ? <AuthRedirect /> : <AuthPage />} />
+        <Route path="/auth" element={showAuthPage ? <AuthPage /> : <AuthRedirect />} />
+        <Route path="/auth/:mode" element={showAuthPage ? <AuthPage /> : <AuthRedirect />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/change-password" element={
           <ProtectedRoute>
