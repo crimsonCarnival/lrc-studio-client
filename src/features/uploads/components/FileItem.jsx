@@ -83,7 +83,7 @@ export const FileItem = ({ file, progress, onDelete }) => {
               className="mt-2 w-full bg-zinc-700 rounded-full h-1 overflow-hidden"
             >
               <motion.div
-                className="bg-green-500 h-1 rounded-full"
+                className="bg-primary h-1 rounded-full"
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
                 aria-label={`Upload progress: ${progress}%`}

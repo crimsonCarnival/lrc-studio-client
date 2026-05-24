@@ -98,24 +98,6 @@ export default function EmailSection() {
         {t('profile.save')}
       </Button>
 
-      <div id="section-email-history" className="space-y-1.5 pt-2 border-t border-border scroll-mt-4">
-        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
-          {t('profile.sections.emailHistory')}
-        </p>
-        {user?.emailHistory?.length > 0 ? (
-          <ul className="space-y-1">
-            {user.emailHistory.map((entry, i) => (
-              <li key={entry.changedAt} className="text-[11px] text-muted-foreground ml-1 flex items-center gap-1">
-                <span>{t('profile.changedFrom', { from: entry.from, to: entry.to })}</span>
-                <span className="text-muted-foreground/50">•</span>
-                <span>{new Date(entry.changedAt).toLocaleDateString()}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-[11px] text-muted-foreground/50 ml-1">{t('profile.noHistory')}</p>
-        )}
-      </div>
     </div>
   );
 }
