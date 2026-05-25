@@ -1,11 +1,12 @@
-﻿import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Eye, EyeOff, Loader2, Lightbulb } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Eye, EyeOff, Loader2, Lightbulb, Fingerprint } from 'lucide-react';
 import { AnimatePresence, m } from 'framer-motion';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { Tip } from '@ui/tip';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 import { FieldError, AvatarBadge, GoogleButton } from './auth-shared';
 
 // ─── Login Step 2 — Password ───────────────────────────────────────────────
@@ -15,12 +16,29 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
   const inputRef = useRef(null);
   const { trigger: haptic } = useHapticFeedback();
+  const { loginWithPasskey } = useAuthContext();
 
   useEffect(() => {
     // autoFocus removed as requested
   }, []);
+
+  const handlePasskey = async () => {
+    setPasskeyLoading(true);
+    setError('');
+    try {
+      const user = await loginWithPasskey(identifierData.identifier || identifierData.accountName);
+      if (user) {
+        onSuccess?.({ user });
+      }
+    } catch (err) {
+      setError(translateAuthError(t, err, 'login', identifierData.identifier));
+    } finally {
+      setPasskeyLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -135,7 +153,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
         {identifierData.hasPassword !== false ? (
           <m.button
             type="submit"
-            disabled={loading || !password}
+            disabled={loading || passkeyLoading || !password}
             whileTap={{ scale: 0.98 }}
             className="h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 mt-1 disabled:cursor-not-allowed focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
           >
@@ -145,6 +163,25 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
             }
           </m.button>
         ) : null}
+
+        {identifierData.hasPasskey && (
+          <m.button
+            type="button"
+            onClick={handlePasskey}
+            disabled={loading || passkeyLoading}
+            whileTap={{ scale: 0.98 }}
+            className="flex items-center justify-center gap-2 h-12 lg:h-10 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-normal text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 disabled:cursor-not-allowed focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none border border-zinc-700"
+          >
+            {passkeyLoading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <>
+                <Fingerprint className="size-4 text-primary" />
+                {t('auth.passkeyManagement.tryPasskey', 'Sign in with Passkey or QR Code')}
+              </>
+            )}
+          </m.button>
+        )}
 
         {(identifierData.hasGoogle || identifierData.hasPassword === false) && (
           <div className="flex flex-col gap-4 mt-2">

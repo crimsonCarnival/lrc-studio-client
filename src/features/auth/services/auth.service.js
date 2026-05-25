@@ -145,5 +145,41 @@ export const authService = {
       body: JSON.stringify({ keepCurrent }),
     });
   },
+
+  // ── WebAuthn Passkeys ──
+  async getPasskeyRegistrationOptions() {
+    return request('/auth/passkey/register/options', { method: 'GET' });
+  },
+
+  async verifyPasskeyRegistration(response) {
+    return request('/auth/passkey/register/verify', {
+      method: 'POST',
+      body: JSON.stringify(response),
+    });
+  },
+
+  async getPasskeyLoginOptions(identifier) {
+    return request('/auth/passkey/login/options', {
+      method: 'POST',
+      body: JSON.stringify({ identifier }),
+    });
+  },
+
+  async verifyPasskeyLogin(identifier, response) {
+    return request('/auth/passkey/login/verify', {
+      method: 'POST',
+      body: JSON.stringify({ identifier, response }),
+    });
+  },
+
+  async getPasskeys() {
+    return request('/auth/passkeys');
+  },
+
+  async deletePasskey(id) {
+    return request(`/auth/passkeys/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 

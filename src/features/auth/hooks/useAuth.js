@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
+import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 
 // Migrate legacy single-account format to multi-account array on first load
 rememberedAccounts.migrate();
@@ -13,10 +14,10 @@ rememberedAccounts.migrate();
 const API_ORIGIN = import.meta.env.VITE_SERVER_ORIGIN || window.location.origin;
 
 export function useAuth() {
-  const [state, setState] = useState({ user: null, loading: true });
+  const [state, setState] = useState({ user: null, loading: true, heldLoginResult: null });
   const user = state.user;
   const loading = state.loading;
-  const setUser = useCallback((u) => setState(s => ({ ...s, user: typeof u === 'function' ? u(state.user) : u })), [state.user]);
+  const setUser = useCallback((u) => setState(s => ({ ...s, user: typeof u === 'function' ? u(s.user) : u })), []);
   
   const refreshTimerRef = useRef(null);
   const { executeRecaptcha } = useGoogleReCaptcha();
@@ -177,7 +178,8 @@ export function useAuth() {
 
   // Variant of login that holds the user state — caller must call commitLogin() to finalise.
   // Used by the password login flow so AuthPage can show the "save info?" prompt first.
-  const [heldLoginResult, setHeldLoginResult] = useState(null);
+  // heldLoginResult lives inside the same state atom so commitLogin() is a single atomic update.
+  const heldLoginResult = state.heldLoginResult;
 
   const loginAndHold = useCallback(async ({ identifier, password }) => {
     let recaptchaToken = undefined;
@@ -190,16 +192,18 @@ export function useAuth() {
     setAuthFlag(true);
     scheduleRefresh();
     handlePostAuthClone();
-    setHeldLoginResult(result);
+    // Single setState: atomically sets heldLoginResult without changing user yet
+    setState(s => ({ ...s, heldLoginResult: result }));
     return result;
   }, [scheduleRefresh, executeRecaptcha, handlePostAuthClone]);
 
   const commitLogin = useCallback(() => {
-    if (heldLoginResult) {
-      setState({ user: heldLoginResult.user, loading: false });
-      setHeldLoginResult(null);
-    }
-  }, [heldLoginResult]);
+    setState(s => {
+      if (!s.heldLoginResult) return s;
+      // Single atomic update: set user + clear heldLoginResult in one render cycle
+      return { user: s.heldLoginResult.user, loading: false, heldLoginResult: null };
+    });
+  }, []);
 
   const register = useCallback(async ({ username, email, password }) => {
     let recaptchaToken = undefined;
@@ -231,7 +235,7 @@ export function useAuth() {
     setAuthFlag(true);
     scheduleRefresh();
     handlePostAuthClone();
-    setHeldLoginResult(result);
+    setState(s => ({ ...s, heldLoginResult: result }));
     return result;
   }, [scheduleRefresh, executeRecaptcha, handlePostAuthClone]);
 
@@ -410,6 +414,59 @@ export function useAuth() {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
   }, []);
 
+  // ——— WebAuthn / Passkeys ———
+
+  const registerPasskey = useCallback(async () => {
+    try {
+      const { options } = await auth.getPasskeyRegistrationOptions();
+      const attResp = await startRegistration({ optionsJSON: options });
+      await auth.verifyPasskeyRegistration(attResp);
+      
+      // Update remembered accounts to reflect passkey support
+      if (state.user) {
+        rememberedAccounts.upsert({
+          userId: state.user.id,
+          accountName: state.user.accountName,
+          displayName: state.user.displayName,
+          avatarUrl: state.user.avatarUrl,
+          identifier: state.user.email || state.user.accountName,
+          hasPasskey: true,
+        });
+      }
+      return true;
+    } catch (err) {
+      if (err.name === 'NotAllowedError') {
+        console.log('User cancelled passkey registration.');
+        return false;
+      }
+      console.error('Passkey registration failed:', err);
+      throw err;
+    }
+  }, [state.user]);
+
+  const loginWithPasskey = useCallback(async (identifier) => {
+    try {
+      const { options } = await auth.getPasskeyLoginOptions(identifier);
+      const asseResp = await startAuthentication({ optionsJSON: options });
+      const result = await auth.verifyPasskeyLogin(identifier, asseResp);
+      
+      storage.set(STORAGE_KEYS.HAS_SESSION, '1');
+      setAuthFlag(true);
+      setState({ user: result.user, loading: false });
+      scheduleRefresh();
+      handlePostAuthClone();
+      
+      return result.user;
+    } catch (err) {
+      if (err.name === 'NotAllowedError') {
+        console.log('User cancelled passkey login.');
+        return null;
+      }
+      console.error('Passkey login failed:', err);
+      throw err;
+    }
+  }, [scheduleRefresh, handlePostAuthClone]);
+
   return {
     user,
     setUser,
@@ -428,5 +485,7 @@ export function useAuth() {
     disconnectGoogle,
     loginWithGoogle,
     clearUnbanMessage,
+    registerPasskey,
+    loginWithPasskey,
   };
 }

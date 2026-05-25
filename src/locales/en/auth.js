@@ -199,9 +199,10 @@ export default {
     errorSamePassword: "New password must be different from current password"
   },
   savedAccount: {
-    prompt: "Save login information?",
-    promptSub: "Your profile will appear here next time for faster sign-in.",
-    save: "Save & Continue",
+    prompt: "Create a Passkey",
+    promptSub: "Sign in securely with your device's fingerprint, face, or screen lock.",
+    createPasskey: "Create Passkey",
+    save: "Save login info only",
     skip: "Skip for now",
     logIn: "Log in as {{name}}",
     switchAccount: "Use a different account",
@@ -222,5 +223,22 @@ export default {
     setSuccess: "Password set successfully.",
     setSuccessMessage: "Your password has been set successfully.",
     setting: "Setting..."
+  },
+  passkey: {
+    created: "Passkey created successfully!",
+    createFailed: "Failed to create passkey."
+  },
+  passkeyManagement: {
+    title: "Passkeys",
+    add: "Add Passkey",
+    none: "No passkeys registered",
+    passkeyLabel: "Passkey",
+    added: "Added: {{date}}",
+    delete: "Delete Passkey",
+    created: "Passkey created successfully!",
+    createFailed: "Failed to create passkey.",
+    deleted: "Passkey deleted.",
+    deleteFailed: "Failed to delete passkey.",
+    tryPasskey: "Sign in with Passkey or QR Code"
   }
 };

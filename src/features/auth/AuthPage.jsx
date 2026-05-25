@@ -124,8 +124,11 @@ export default function AuthPage() {
   }, [fromSavedAccount]);
 
   const handleAuthSuccess = useCallback(() => {
-    commitLogin();
     const redirectTo = searchParams.get('redirect');
+    // Navigate FIRST before committing login state.
+    // If we commitLogin() first, it clears heldLoginResult and sets user — causing
+    // showAuthPage to flip to false, which replaces <AuthPage> with <AuthRedirect>
+    // mid-render, causing a second navigation that competes with this one.
     if (redirectTo) {
       if (redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {
         navigate(redirectTo, { replace: true });
@@ -133,8 +136,10 @@ export default function AuthPage() {
         window.location.href = redirectTo;
       }
     } else {
-      navigate('/home');
+      navigate('/home', { replace: true });
     }
+    // Commit login state after navigation is queued.
+    commitLogin();
   }, [commitLogin, searchParams, navigate]);
 
   const handleSavedAccountProceed = useCallback((data) => {
@@ -343,6 +348,7 @@ export default function AuthPage() {
                 onProceedToPassword={handleSavedAccountProceed}
                 onAddAccount={handleAddAccount}
                 onRemoveAccount={handleRemoveAccount}
+                onPasskeySuccess={handleAuthSuccess}
               />
             )}
 
@@ -389,6 +395,7 @@ export default function AuthPage() {
                 identifierData={identifierData}
                 onSave={handleSaveAndContinue}
                 onSkip={handleAuthSuccess}
+                onPasskeySuccess={handleSaveAndContinue}
               />
             )}
 

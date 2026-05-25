@@ -199,9 +199,10 @@ export default {
     errorSamePassword: "La nueva contraseña debe ser diferente a la actual"
   },
   savedAccount: {
-    prompt: "¿Guardar información de sesión?",
-    promptSub: "Tu perfil aparecerá aquí la próxima vez para iniciar sesión más rápido.",
-    save: "Guardar y continuar",
+    prompt: "Crear una Passkey",
+    promptSub: "Inicia sesión de forma segura con tu huella, rostro o bloqueo de pantalla.",
+    createPasskey: "Crear Passkey",
+    save: "Solo guardar información",
     skip: "Ahora no",
     logIn: "Iniciar sesión como {{name}}",
     switchAccount: "Usar una cuenta diferente",
@@ -222,5 +223,22 @@ export default {
     setSuccess: "Contraseña establecida exitosamente.",
     setSuccessMessage: "Tu contraseña ha sido establecida exitosamente.",
     setting: "Estableciendo..."
+  },
+  passkey: {
+    created: "¡Passkey creada exitosamente!",
+    createFailed: "Error al crear la passkey."
+  },
+  passkeyManagement: {
+    title: "Passkeys",
+    add: "Añadir Passkey",
+    none: "No hay passkeys registradas",
+    passkeyLabel: "Passkey",
+    added: "Añadido: {{date}}",
+    delete: "Eliminar Passkey",
+    created: "¡Passkey creada exitosamente!",
+    createFailed: "Error al crear la passkey.",
+    deleted: "Passkey eliminada.",
+    deleteFailed: "Error al eliminar la passkey.",
+    tryPasskey: "Iniciar sesión con Passkey o código QR"
   }
 };

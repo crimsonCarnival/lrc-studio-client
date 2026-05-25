@@ -199,9 +199,10 @@ export default {
     errorSamePassword: "新しいパスワードは現在のパスワードと異なる必要があります"
   },
   savedAccount: {
-    prompt: "ログイン情報を保存しますか？",
-    promptSub: "次回からこの画面にプロフィールが表示され、すばやくサインインできます。",
-    save: "保存して続ける",
+    prompt: "パスキーを作成",
+    promptSub: "指紋、顔認証、または画面ロックを使用して安全にサインインします。",
+    createPasskey: "パスキーを作成",
+    save: "ログイン情報のみ保存",
     skip: "今はしない",
     logIn: "{{name}}としてログイン",
     switchAccount: "別のアカウントを使用",
@@ -222,5 +223,22 @@ export default {
     setSuccess: "パスワードが正常に設定されました。",
     setSuccessMessage: "パスワードが正常に設定されました。",
     setting: "設定中..."
+  },
+  passkey: {
+    created: "パスキーを作成しました！",
+    createFailed: "パスキーの作成に失敗しました。"
+  },
+  passkeyManagement: {
+    title: "パスキー",
+    add: "パスキーを追加",
+    none: "登録されているパスキーはありません",
+    passkeyLabel: "パスキー",
+    added: "追加日: {{date}}",
+    delete: "パスキーを削除",
+    created: "パスキーを作成しました！",
+    createFailed: "パスキーの作成に失敗しました。",
+    deleted: "パスキーを削除しました。",
+    deleteFailed: "パスキーの削除に失敗しました。",
+    tryPasskey: "パスキーまたはQRコードでログイン"
   }
 };

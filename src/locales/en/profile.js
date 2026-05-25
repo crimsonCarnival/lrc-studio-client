@@ -44,6 +44,23 @@ export default {
     security: "Security",
     handleHistory: "Handle History",
     emailHistory: "Email History",
+    password: "Password",
+    passkeys: "Passkeys",
+  },
+  tabs: {
+    account: "Account Details",
+    privacy: "Privacy",
+    history: "Changes History",
+    connections: "Connections",
+    passkeys: "Passkeys",
+    passwords: "Passwords",
+  },
+  privacy: {
+    passkeysDesc: "Passkeys let you sign in using biometrics or a device PIN — no password needed.",
+    passwordDesc: "Change your account password. You'll remain signed in on this device.",
+  },
+  connections: {
+    desc: "Link external accounts to sign in faster and unlock additional features.",
   },
   handleChangedBadge: "Changed handle {{count}} time(s)",
   accountNameSection: "Handle",

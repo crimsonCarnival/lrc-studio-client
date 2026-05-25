@@ -1,19 +1,34 @@
 import { useState } from 'react';
-import { LogIn, Loader2, Plus, X } from 'lucide-react';
+import { LogIn, Loader2, Plus, X, Fingerprint } from 'lucide-react';
 import { auth } from '@/app/api';
 import { translateAuthError } from '@/shared/utils/auth-errors';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 import { AvatarBadge } from './auth-shared';
 
 // ─── Account Picker — shown on return visits when remembered accounts exist ──
 
-export default function SavedAccountStep({ t, savedAccounts, onProceedToPassword, onAddAccount, onRemoveAccount }) {
+export default function SavedAccountStep({ t, savedAccounts, onProceedToPassword, onAddAccount, onRemoveAccount, onPasskeySuccess }) {
   const [loadingKey, setLoadingKey] = useState(null);
   const [errors, setErrors] = useState({});
+  const { loginWithPasskey } = useAuthContext();
 
   const handleLogin = async (account) => {
     const key = account.userId || account.identifier;
     setLoadingKey(key);
     setErrors((prev) => ({ ...prev, [key]: '' }));
+    
+    if (account.hasPasskey) {
+      try {
+        const user = await loginWithPasskey(account.identifier || account.accountName);
+        if (user) {
+          onPasskeySuccess();
+          return;
+        }
+      } catch (err) {
+        console.warn('Passkey login failed, falling back to password', err);
+      }
+    }
+
     try {
       const result = await auth.checkIdentifier(account.identifier || account.accountName);
       onProceedToPassword({ identifier: account.identifier || account.accountName, ...result });
@@ -80,7 +95,11 @@ export default function SavedAccountStep({ t, savedAccounts, onProceedToPassword
                       >
                         <X className="size-3.5" />
                       </button>
-                      <LogIn className="size-4 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                      {account.hasPasskey ? (
+                        <Fingerprint className="size-4 text-zinc-600 group-hover:text-primary transition-colors" />
+                      ) : (
+                        <LogIn className="size-4 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                      )}
                     </>
                   )}
                 </div>

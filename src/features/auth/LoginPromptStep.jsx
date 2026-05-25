@@ -1,11 +1,31 @@
-import { Check, X } from 'lucide-react';
+import { useState } from 'react';
+import { Check, X, Fingerprint, Loader2 } from 'lucide-react';
 import { Button } from '@ui/button';
 import { AvatarBadge } from './auth-shared';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { toast } from 'react-hot-toast';
 
 // ─── Save Login Info Prompt — shown after first successful password login ───
 
-export default function LoginPromptStep({ t, identifierData, onSave, onSkip }) {
+export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onPasskeySuccess }) {
   const displayName = identifierData.displayName || identifierData.accountName || identifierData.identifier;
+  const { registerPasskey } = useAuthContext();
+  const [loading, setLoading] = useState(false);
+
+  const handleCreatePasskey = async () => {
+    setLoading(true);
+    try {
+      const success = await registerPasskey();
+      if (success) {
+        toast.success(t('auth.passkey.created', 'Passkey created successfully!'));
+        onPasskeySuccess(); // Save info and proceed
+      }
+    } catch (err) {
+      toast.error(t('auth.passkey.createFailed', 'Failed to create passkey.'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="animate-fade-in flex flex-col items-center gap-7">
@@ -24,25 +44,36 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip }) {
       </div>
 
       <div className="flex flex-col items-center gap-1.5 text-center">
-        <p className="text-base font-semibold text-zinc-100">{t('auth.savedAccount.prompt')}</p>
-        <p className="text-xs text-zinc-500 leading-relaxed max-w-[240px]">{t('auth.savedAccount.promptSub')}</p>
+        <p className="text-base font-semibold text-zinc-100">{t('auth.savedAccount.prompt', 'Create a Passkey')}</p>
+        <p className="text-xs text-zinc-500 leading-relaxed max-w-[240px]">{t('auth.savedAccount.promptSub', 'Sign in securely with your device\'s fingerprint, face, or screen lock.')}</p>
       </div>
 
       <div className="w-full flex flex-col gap-2">
         <Button
-          onClick={onSave}
+          onClick={handleCreatePasskey}
+          disabled={loading}
           className="h-11 w-full bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-sm rounded-xl gap-2"
         >
+          {loading ? <Loader2 className="size-4 animate-spin" /> : <Fingerprint className="size-4" />}
+          {t('auth.savedAccount.createPasskey', 'Create Passkey')}
+        </Button>
+        <Button
+          onClick={onSave}
+          disabled={loading}
+          variant="outline"
+          className="h-11 w-full border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800/50 font-normal text-sm rounded-xl gap-2"
+        >
           <Check className="size-4" />
-          {t('auth.savedAccount.save')}
+          {t('auth.savedAccount.save', 'Save login info only')}
         </Button>
         <Button
           variant="ghost"
           onClick={onSkip}
-          className="h-11 w-full text-zinc-400 hover:text-zinc-100 font-normal text-sm rounded-xl gap-2"
+          disabled={loading}
+          className="h-11 w-full text-zinc-500 hover:text-zinc-300 font-normal text-sm rounded-xl gap-2 mt-1"
         >
           <X className="size-4" />
-          {t('auth.savedAccount.skip')}
+          {t('auth.savedAccount.skip', 'Not now')}
         </Button>
       </div>
     </div>

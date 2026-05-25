@@ -46,12 +46,13 @@ function saveAll(accounts) {
 }
 
 // Inserts or updates an account entry; most recently used is always first.
-// account shape: { userId, displayName, accountName, avatarUrl, identifier }
+// account shape: { userId, displayName, accountName, avatarUrl, identifier, hasPasskey }
 function upsert(account) {
   if (!account || !account.userId) return;
   const accounts = getAll();
+  const existing = accounts.find((a) => a.userId === account.userId) || {};
   const filtered = accounts.filter((a) => a.userId !== account.userId);
-  const updated = { ...account, lastUsedAt: Date.now() };
+  const updated = { ...existing, ...account, lastUsedAt: Date.now() };
   // Keep newest first, cap at MAX_ACCOUNTS
   saveAll([updated, ...filtered].slice(0, MAX_ACCOUNTS));
 }

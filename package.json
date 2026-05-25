@@ -17,6 +17,7 @@
     "@fontsource-variable/noto-serif-jp": "^5.2.9",
     "@react-three/fiber": "^9.6.1",
     "@react-three/postprocessing": "^3.0.4",
+    "@simplewebauthn/browser": "^13.3.0",
     "@tanstack/react-virtual": "^3.13.23",
     "@vercel/speed-insights": "^2.0.0",
     "class-variance-authority": "^0.7.1",
