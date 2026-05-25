@@ -1,19 +1,26 @@
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { LazyImage } from '@ui/LazyImage';
 import { useNotificationsContext } from '../NotificationsContext';
 
-function formatActors(actors, actorCount, t) {
-  const first = actors[0]?.accountName ?? 'Someone';
-  if (actorCount <= 1) return first;
-  if (actorCount === 2) return t('notifications.actorAndOther', { name: first });
-  return t('notifications.actorAndOthers', { name: first, count: actorCount - 1 });
-}
-
 function NotificationText({ notification, t }) {
   const { type, actors, actorCount, projectTitle, body } = notification;
-  const actorStr = formatActors(actors || [], actorCount || 0, t);
-  const actorNode = <strong key="a">{actorStr}</strong>;
+  const first = actors?.[0];
+  const firstName = first?.accountName ?? 'Someone';
+
+  let actorStr;
+  if (!actorCount || actorCount <= 1) actorStr = firstName;
+  else if (actorCount === 2) actorStr = t('notifications.actorAndOther', { name: firstName });
+  else actorStr = t('notifications.actorAndOthers', { name: firstName, count: actorCount - 1 });
+
+  const actorNode = first?.accountName ? (
+    <Link key="a" to={`/profile/${first.accountName}`} className="font-semibold hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
+      {actorStr}
+    </Link>
+  ) : (
+    <strong key="a">{actorStr}</strong>
+  );
 
   if (type === 'star') {
     return projectTitle

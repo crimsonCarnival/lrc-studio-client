@@ -1,6 +1,6 @@
 ﻿import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { SettingsProvider } from '@/features/settings/SettingsContext';
 import { TooltipProvider } from '@ui/tooltip';
 import { Spinner } from '@ui/skeleton';
@@ -180,7 +180,19 @@ function SharedProjectViewerInner({ projectId }) {
           {/* Author info inline */}
           <div className={`flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-zinc-900/50 border border-zinc-800/80 ${isMobile ? 'text-[9px]' : 'text-[10px] sm:text-xs'} font-medium text-zinc-400 shrink-0`}>
             <Music2 className={isMobile ? 'size-3' : 'size-3.5'} style={{ color: 'currentColor' }} />
-            <span>{t('share.by')} <span className="text-zinc-200">{projectData?.user?.displayName || projectData?.user?.accountName || t('share.guest')}</span></span>
+            <span>
+              {t('share.by')}{' '}
+              {projectData?.user?.accountName ? (
+                <Link
+                  to={`/profile/${projectData.user.accountName}`}
+                  className="text-zinc-200 hover:text-primary transition-colors"
+                >
+                  {projectData.user.displayName || projectData.user.accountName}
+                </Link>
+              ) : (
+                <span className="text-zinc-200">{t('share.guest')}</span>
+              )}
+            </span>
             {projectData?.createdAt && (
               <>
                 <span className="size-1 h-1 rounded-full bg-zinc-700 mx-1" />
