@@ -16,6 +16,7 @@ import { Kbd } from '@ui/kbd';
 import { LazyImage } from '@ui/LazyImage';
 import { projects, uploads } from '@/app/api';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
+import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 
 const THEMES = [
   { id: 'system',  label: 'System', Icon: Monitor, swatch: 'bg-zinc-500' },
@@ -450,6 +451,8 @@ export function AppHeader({
               </div>
             </div>
           ) : (
+            <>
+            {user && <NotificationBell />}
             <Popover onOpenChange={(open) => { if (open) fetchCounts(); }}>
               <div className="relative flex-shrink-0">
                 <PopoverTrigger className="relative z-[110] size-8 rounded-full overflow-hidden bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-all focus:ring-2 focus:ring-primary/50 cursor-pointer outline-none block">
@@ -509,6 +512,7 @@ export function AppHeader({
                 </div>
               </PopoverContent>
             </Popover>
+            </>
           )}
         </div>
       </div>
