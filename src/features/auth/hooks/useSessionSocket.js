@@ -11,6 +11,10 @@ export function useSessionSocket() {
 
     socket.emit('join:user', user.id);
 
+    function onConnect() {
+      socket.emit('join:user', user.id);
+    }
+
     function onBanned() {
       logout();
     }
@@ -19,10 +23,12 @@ export function useSessionSocket() {
       logout();
     }
 
+    socket.on('connect', onConnect);
     socket.on('user:banned', onBanned);
     socket.on('session:revoked', onRevoked);
 
     return () => {
+      socket.off('connect', onConnect);
       socket.off('user:banned', onBanned);
       socket.off('session:revoked', onRevoked);
     };

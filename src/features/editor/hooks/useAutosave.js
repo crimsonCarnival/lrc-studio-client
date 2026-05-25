@@ -314,8 +314,8 @@ export function useAutosave({
     const socket = getSocket();
     if (!socket) return;
 
-    function onAck({ savedAt }) {
-      console.log('autosave:ack', savedAt);
+    function onAck() {
+      // ack received — future: update lastSaved UI here
     }
 
     socket.on('autosave:ack', onAck);

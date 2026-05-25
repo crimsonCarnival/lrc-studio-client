@@ -18,6 +18,10 @@ export function useProjectSocket(projectId, setters) {
 
     socket.emit('join:project', projectId);
 
+    function onConnect() {
+      socket.emit('join:project', projectId);
+    }
+
     function onProjectUpdated(data) {
       const s = settersRef.current;
       if (data.lyrics?.lines) s.setLines(data.lyrics.lines);
@@ -27,9 +31,11 @@ export function useProjectSocket(projectId, setters) {
       if (typeof data.state?.playbackSpeed === 'number') s.setRestoredSpeed(data.state.playbackSpeed);
     }
 
+    socket.on('connect', onConnect);
     socket.on('project:updated', onProjectUpdated);
 
     return () => {
+      socket.off('connect', onConnect);
       socket.off('project:updated', onProjectUpdated);
       socket.emit('leave:project', projectId);
     };
