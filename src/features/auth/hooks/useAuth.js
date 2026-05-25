@@ -11,7 +11,8 @@ import { startRegistration, startAuthentication } from '@simplewebauthn/browser'
 rememberedAccounts.migrate();
 
 // Real server origin (not the Vite/Vercel proxy path) for OAuth postMessage validation
-const API_ORIGIN = import.meta.env.VITE_SERVER_ORIGIN || window.location.origin;
+const apiUrl = import.meta.env.VITE_API_URL || '';
+const API_ORIGIN = import.meta.env.VITE_SERVER_ORIGIN || (apiUrl ? new URL(apiUrl).origin : window.location.origin);
 
 export function useAuth() {
   const [state, setState] = useState({ user: null, loading: true, heldLoginResult: null });

@@ -1,4 +1,4 @@
-﻿import { useCallback } from 'react';
+import { useCallback } from 'react';
 import { spotify as spotifyApi } from '@/app/api';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +28,10 @@ export const useSpotifyAuth = () => {
       }
 
       const handleMessage = (e) => {
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const validOrigin = import.meta.env.VITE_SERVER_ORIGIN || (apiUrl ? new URL(apiUrl).origin : window.location.origin);
+        if (e.origin !== validOrigin) return;
+
         if (e.data?.type === 'spotify-callback') {
           window.removeEventListener('message', handleMessage);
           if (e.data.success) {
