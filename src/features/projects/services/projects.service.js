@@ -156,14 +156,14 @@ export const projectsService = {
     }
   },
 
-  async update(id, input, { signal } = {}) {
-    const data = await gqlRequest(UPDATE_PROJECT, { id, input }, { signal });
+  async update(id, input, { signal, headers } = {}) {
+    const data = await gqlRequest(UPDATE_PROJECT, { id, input }, { signal, headers });
     return { project: data.updateProject };
   },
 
   // patch maps to update for GQL
-  async patch(id, input, { signal } = {}) {
-    return this.update(id, input, { signal });
+  async patch(id, input, { signal, headers } = {}) {
+    return this.update(id, input, { signal, headers });
   },
 
   async remove(id) {

@@ -3,6 +3,7 @@ import { uploads, projects, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
+import { getSocket } from '@/app/socket.client';
 
 /**
  * Dual-condition autosave: fires when either the time interval elapses
@@ -150,8 +151,10 @@ export function useAutosave({
         saveControllerRef.current?.abort();
         saveControllerRef.current = new AbortController();
         const { signal } = saveControllerRef.current;
+        const socketId = getSocket()?.id;
+        const extraHeaders = socketId ? { 'x-socket-id': socketId } : {};
         try {
-          await projects.patch(activeProjectIdRef.current, patchData, { signal });
+          await projects.patch(activeProjectIdRef.current, patchData, { signal, headers: extraHeaders });
           updateServerSnapshot({
             title,
             metadata,
@@ -305,6 +308,19 @@ export function useAutosave({
     // doAutoSave read via ref to avoid restarting the interval on every save cycle
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.advanced?.autoSave?.enabled, settings.advanced?.autoSave?.timeInterval]);
+
+  // ——— Autosave server acknowledgment ———
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    function onAck({ savedAt }) {
+      console.log('autosave:ack', savedAt);
+    }
+
+    socket.on('autosave:ack', onAck);
+    return () => socket.off('autosave:ack', onAck);
+  }, []);
 
   return { doAutoSave };
 }
