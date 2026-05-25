@@ -22,6 +22,7 @@ import landing from './landing.js';
 import admin from './admin.js';
 import profile from './profile.js';
 import errorLocale from './error.js';
+import notifications from './notifications.js';
 
 export default {
   translation: {
@@ -48,6 +49,7 @@ export default {
     landing,
     admin,
     profile,
-    error: errorLocale
+    error: errorLocale,
+    notifications
   }
 };

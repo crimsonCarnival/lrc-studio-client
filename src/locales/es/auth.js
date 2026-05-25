@@ -226,7 +226,8 @@ export default {
   },
   passkey: {
     created: "¡Passkey creada exitosamente!",
-    createFailed: "Error al crear la passkey."
+    createFailed: "Error al crear la passkey.",
+    emailNotVerified: "Por favor verifica tu correo electrónico antes de agregar una passkey."
   },
   passkeyManagement: {
     title: "Passkeys",
@@ -237,6 +238,7 @@ export default {
     delete: "Eliminar Passkey",
     created: "¡Passkey creada exitosamente!",
     createFailed: "Error al crear la passkey.",
+    emailNotVerified: "Por favor verifica tu correo electrónico antes de agregar una passkey.",
     deleted: "Passkey eliminada.",
     deleteFailed: "Error al eliminar la passkey.",
     tryPasskey: "Iniciar sesión con Passkey o código QR"

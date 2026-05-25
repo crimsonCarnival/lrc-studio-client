@@ -226,7 +226,8 @@ export default {
   },
   passkey: {
     created: "Passkey created successfully!",
-    createFailed: "Failed to create passkey."
+    createFailed: "Failed to create passkey.",
+    emailNotVerified: "Please verify your email before adding a passkey."
   },
   passkeyManagement: {
     title: "Passkeys",
@@ -237,6 +238,7 @@ export default {
     delete: "Delete Passkey",
     created: "Passkey created successfully!",
     createFailed: "Failed to create passkey.",
+    emailNotVerified: "Please verify your email before adding a passkey.",
     deleted: "Passkey deleted.",
     deleteFailed: "Failed to delete passkey.",
     tryPasskey: "Sign in with Passkey or QR Code"

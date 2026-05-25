@@ -226,7 +226,8 @@ export default {
   },
   passkey: {
     created: "パスキーを作成しました！",
-    createFailed: "パスキーの作成に失敗しました。"
+    createFailed: "パスキーの作成に失敗しました。",
+    emailNotVerified: "パスキーを追加する前にメールアドレスを確認してください。"
   },
   passkeyManagement: {
     title: "パスキー",
@@ -237,6 +238,7 @@ export default {
     delete: "パスキーを削除",
     created: "パスキーを作成しました！",
     createFailed: "パスキーの作成に失敗しました。",
+    emailNotVerified: "パスキーを追加する前にメールアドレスを確認してください。",
     deleted: "パスキーを削除しました。",
     deleteFailed: "パスキーの削除に失敗しました。",
     tryPasskey: "パスキーまたはQRコードでログイン"
