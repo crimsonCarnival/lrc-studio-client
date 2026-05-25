@@ -5,6 +5,7 @@ import { projects, uploads, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { useSettings } from '@/features/settings/useSettings';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
+import { useProjectSocket } from './useProjectSocket';
 
 // Legacy URL-encoded share fallbacks
 async function decompressFromBase64(str) {
@@ -83,6 +84,15 @@ export function useSharedProject({
 
   isSharedProjectRef.current = isSharedProject;
   sharedReadOnlyRef.current = sharedReadOnly;
+
+  // Live updates from the server when viewing a shared project
+  useProjectSocket(isSharedProject ? activeProjectIdRef.current : null, {
+    setLines,
+    setSyncMode,
+    setActiveLineIndex,
+    setRestoredPosition,
+    setRestoredSpeed,
+  });
 
   // Expose shareModal setter so exportToUrl can call it
   const setShareModalState = setShareModal ?? _setShareModal;
