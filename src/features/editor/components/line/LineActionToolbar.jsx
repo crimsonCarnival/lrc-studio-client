@@ -50,7 +50,7 @@ const LineActionToolbar = React.memo(({
         })()}>
           <Button
             size="icon-sm"
-            onClick={(e) => { e.stopPropagation(); handleMark(); }}
+            onClick={(e) => { e.stopPropagation(); handleMark({ forceAdvance: true }); }}
             className={`justify-center border font-semibold rounded-lg flex-shrink-0 text-xs shadow-md animate-in fade-in zoom-in-90 duration-200 ${editorMode === 'words' && line.timestamp != null
               ? stampTarget === 'secondary'
                 ? 'bg-accent-blue/15 hover:bg-accent-blue/25 border-accent-blue/40 text-accent-blue'

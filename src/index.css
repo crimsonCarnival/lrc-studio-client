@@ -140,12 +140,12 @@ input:-webkit-autofill:active {
   --color-zinc-900: #fffaf3;
   --color-zinc-800: #f2e9e1;
   --color-zinc-700: #dfdad9;
-  --color-zinc-600: #cecacd;
-  --color-zinc-500: #9893a5;
-  --color-zinc-400: #797593;
-  --color-zinc-300: #575279;
-  --color-zinc-200: #3d3953;
-  --color-zinc-100: #2a283e;
+  --color-zinc-600: #1a1826;
+  --color-zinc-500: #1a1826;
+  --color-zinc-400: #1a1826;
+  --color-zinc-300: #1a1826;
+  --color-zinc-200: #1a1826;
+  --color-zinc-100: #1a1826;
   --color-zinc-50: #1a1826;
   --color-primary: #b4637a;
   --color-primary-dim: #9a4f66;
@@ -167,11 +167,11 @@ input:-webkit-autofill:active {
   --color-zinc-900: #0F0D28;
   --color-zinc-800: #1A1953;
   --color-zinc-700: #21206A;
-  --color-zinc-600: #2B2A88;
-  --color-zinc-500: #4A49A8;
-  --color-zinc-400: #8B8BD0;
-  --color-zinc-300: #C4C4F0;
-  --color-zinc-200: #E4E4FF;
+  --color-zinc-600: #F4F4FF;
+  --color-zinc-500: #F4F4FF;
+  --color-zinc-400: #F4F4FF;
+  --color-zinc-300: #F4F4FF;
+  --color-zinc-200: #F4F4FF;
   --color-zinc-100: #F4F4FF;
   --color-zinc-50: #ffffff;
   /* Primary = electric blue */
@@ -193,19 +193,19 @@ input:-webkit-autofill:active {
 
   /* Shadcn standard variables */
   --background: #0F0D28;
-  --foreground: #E4E4FF;
+  --foreground: #F4F4FF;
   --card: #080616;
-  --card-foreground: #E4E4FF;
+  --card-foreground: #F4F4FF;
   --popover: #0F0D28;
-  --popover-foreground: #E4E4FF;
+  --popover-foreground: #F4F4FF;
   --primary: #2F2FE4;
   --primary-foreground: #ffffff;
   --secondary: #1A1953;
-  --secondary-foreground: #E4E4FF;
+  --secondary-foreground: #F4F4FF;
   --muted: #1A1953;
-  --muted-foreground: #4A49A8;
+  --muted-foreground: #F4F4FF;
   --accent: #1A1953;
-  --accent-foreground: #E4E4FF;
+  --accent-foreground: #F4F4FF;
   --destructive: #FF5555;
   --border: #21206A;
   --input: #1A1953;
@@ -226,11 +226,11 @@ input:-webkit-autofill:active {
   --color-zinc-900: #261424;
   --color-zinc-800: #3B1C32;
   --color-zinc-700: #4E1A40;
-  --color-zinc-600: #6A1E55;
-  --color-zinc-500: #8B3D6C;
-  --color-zinc-400: #C080A0;
-  --color-zinc-300: #E8C0D8;
-  --color-zinc-200: #F5E8F2;
+  --color-zinc-600: #FFF0F8;
+  --color-zinc-500: #FFF0F8;
+  --color-zinc-400: #FFF0F8;
+  --color-zinc-300: #FFF0F8;
+  --color-zinc-200: #FFF0F8;
   --color-zinc-100: #FFF0F8;
   --color-zinc-50: #ffffff;
   /* Primary = raspberry pink */
@@ -252,19 +252,19 @@ input:-webkit-autofill:active {
 
   /* Shadcn standard variables */
   --background: #261424;
-  --foreground: #F5E8F2;
+  --foreground: #FFF0F8;
   --card: #1A1A1D;
-  --card-foreground: #F5E8F2;
+  --card-foreground: #FFF0F8;
   --popover: #261424;
-  --popover-foreground: #F5E8F2;
+  --popover-foreground: #FFF0F8;
   --primary: #A64D79;
   --primary-foreground: #ffffff;
   --secondary: #3B1C32;
-  --secondary-foreground: #F5E8F2;
+  --secondary-foreground: #FFF0F8;
   --muted: #3B1C32;
-  --muted-foreground: #8B3D6C;
+  --muted-foreground: #FFF0F8;
   --accent: #3B1C32;
-  --accent-foreground: #F5E8F2;
+  --accent-foreground: #FFF0F8;
   --destructive: #FF5555;
   --border: #4E1A40;
   --input: #3B1C32;
@@ -285,11 +285,11 @@ input:-webkit-autofill:active {
   --color-zinc-900: #0A1E20;
   --color-zinc-800: #183D3D;
   --color-zinc-700: #1E4A4A;
-  --color-zinc-600: #2D5C58;
-  --color-zinc-500: #5C8374;
-  --color-zinc-400: #7A9E94;
-  --color-zinc-300: #93B1A6;
-  --color-zinc-200: #C4D8D2;
+  --color-zinc-600: #E0EEE9;
+  --color-zinc-500: #E0EEE9;
+  --color-zinc-400: #E0EEE9;
+  --color-zinc-300: #E0EEE9;
+  --color-zinc-200: #E0EEE9;
   --color-zinc-100: #E0EEE9;
   --color-zinc-50: #ffffff;
   /* Primary = sage green */
@@ -311,19 +311,19 @@ input:-webkit-autofill:active {
 
   /* Shadcn standard variables */
   --background: #0A1E20;
-  --foreground: #C4D8D2;
+  --foreground: #E0EEE9;
   --card: #040D12;
-  --card-foreground: #C4D8D2;
+  --card-foreground: #E0EEE9;
   --popover: #0A1E20;
-  --popover-foreground: #C4D8D2;
+  --popover-foreground: #E0EEE9;
   --primary: #5C8374;
   --primary-foreground: #040D12;
   --secondary: #183D3D;
-  --secondary-foreground: #C4D8D2;
+  --secondary-foreground: #E0EEE9;
   --muted: #183D3D;
-  --muted-foreground: #5C8374;
+  --muted-foreground: #E0EEE9;
   --accent: #183D3D;
-  --accent-foreground: #C4D8D2;
+  --accent-foreground: #E0EEE9;
   --destructive: #EF4444;
   --border: #1E4A4A;
   --input: #183D3D;
@@ -393,22 +393,22 @@ body,
 }
 
 .glow-line {
-  text-shadow: 0 0 20px rgba(29, 185, 84, 0.5);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 50%, transparent);
 }
 
 /* Imperative karaoke CJK fill — driven by data-filled attribute via rAF */
 [data-slot="karaoke-cjk"] {
-  color: var(--color-zinc-500);
+  color: color-mix(in srgb, var(--foreground) 30%, transparent);
   transition: color 150ms ease-out;
 }
 
 [data-slot="karaoke-cjk"][data-filled] {
   color: var(--color-primary);
-  text-shadow: 0 0 12px rgba(29, 185, 84, 0.4);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
 [data-slot="karaoke-cjk-rt"] {
-  color: var(--color-zinc-600);
+  color: color-mix(in srgb, var(--foreground) 20%, transparent);
   transition: color 150ms ease-out;
 }
 
@@ -418,7 +418,7 @@ body,
 
 /* Seamless karaoke fill overlay */
 .karaoke-fill-glow {
-  text-shadow: 0 0 10px rgba(29, 185, 84, 0.6), 0 0 20px rgba(29, 185, 84, 0.2);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--color-primary) 60%, transparent), 0 0 20px color-mix(in srgb, var(--color-primary) 20%, transparent);
 }
 
 .karaoke-fill-mask {
@@ -497,15 +497,15 @@ body,
 /* Just-synced flash */
 @keyframes just-synced {
   0% {
-    box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.5);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 50%, transparent);
   }
 
   50% {
-    box-shadow: 0 0 12px 2px rgba(29, 185, 84, 0.3);
+    box-shadow: 0 0 12px 2px color-mix(in srgb, var(--color-primary) 30%, transparent);
   }
 
   100% {
-    box-shadow: 0 0 0 0 rgba(29, 185, 84, 0);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 0%, transparent);
   }
 }
 
@@ -549,16 +549,16 @@ ruby rt {
 /* Editor line: active-state sweep highlight */
 @keyframes line-become-active {
   0% {
-    box-shadow: inset 3px 0 0 rgba(29, 185, 84, 0);
+    box-shadow: inset 3px 0 0 color-mix(in srgb, var(--color-primary) 0%, transparent);
     background-color: transparent;
   }
 
   40% {
-    box-shadow: inset 3px 0 0 rgba(29, 185, 84, 0.8);
+    box-shadow: inset 3px 0 0 color-mix(in srgb, var(--color-primary) 80%, transparent);
   }
 
   100% {
-    box-shadow: inset 3px 0 0 rgba(29, 185, 84, 0.3);
+    box-shadow: inset 3px 0 0 color-mix(in srgb, var(--color-primary) 30%, transparent);
   }
 }
 
@@ -799,32 +799,32 @@ audio::-webkit-media-controls-panel {
 /* Rosé Pine Dawn — light theme shadcn variables */
 :root {
   --background: #faf4ed;
-  --foreground: #575279;
+  --foreground: #1a1826;
   --card: #fffaf3;
-  --card-foreground: #575279;
+  --card-foreground: #1a1826;
   --popover: #fffaf3;
-  --popover-foreground: #575279;
+  --popover-foreground: #1a1826;
   --primary: #b4637a;
   --primary-foreground: #fffaf3;
   --secondary: #f2e9e1;
-  --secondary-foreground: #575279;
+  --secondary-foreground: #1a1826;
   --muted: #f2e9e1;
-  --muted-foreground: #9893a5;
+  --muted-foreground: #1a1826;
   --accent: #f2e9e1;
-  --accent-foreground: #575279;
+  --accent-foreground: #1a1826;
   --destructive: #b4637a;
   --border: #dfdad9;
   --input: #dfdad9;
   --ring: #b4637a;
   --radius: 0.625rem;
   --sidebar: #f2e9e1;
-  --sidebar-foreground: #575279;
-  --sidebar-primary: #575279;
+  --sidebar-foreground: #1a1826;
+  --sidebar-primary: #1a1826;
   --sidebar-primary-foreground: #faf4ed;
   --sidebar-accent: #dfdad9;
-  --sidebar-accent-foreground: #575279;
+  --sidebar-accent-foreground: #1a1826;
   --sidebar-border: #dfdad9;
-  --sidebar-ring: #9893a5;
+  --sidebar-ring: #1a1826;
 }
 
 /* Rosé Pine Moon — dark theme zinc overrides + shadcn variables */
@@ -833,27 +833,27 @@ audio::-webkit-media-controls-panel {
   --color-zinc-900: #232136;
   --color-zinc-800: #2a273f;
   --color-zinc-700: #393552;
-  --color-zinc-600: #44415a;
-  --color-zinc-500: #6e6a86;
-  --color-zinc-400: #908caa;
-  --color-zinc-300: #c4a7e7;
-  --color-zinc-200: #e0def4;
+  --color-zinc-600: #f0eeff;
+  --color-zinc-500: #f0eeff;
+  --color-zinc-400: #f0eeff;
+  --color-zinc-300: #f0eeff;
+  --color-zinc-200: #f0eeff;
   --color-zinc-100: #f0eeff;
   --color-zinc-50: #ffffff;
   --background: #232136;
-  --foreground: #e0def4;
+  --foreground: #f0eeff;
   --card: #1a1826;
-  --card-foreground: #e0def4;
+  --card-foreground: #f0eeff;
   --popover: #2a273f;
-  --popover-foreground: #e0def4;
+  --popover-foreground: #f0eeff;
   --primary: #c4a7e7;
   --primary-foreground: #1a1826;
   --secondary: #393552;
-  --secondary-foreground: #e0def4;
+  --secondary-foreground: #f0eeff;
   --muted: #393552;
-  --muted-foreground: #6e6a86;
+  --muted-foreground: #f0eeff;
   --accent: #393552;
-  --accent-foreground: #e0def4;
+  --accent-foreground: #f0eeff;
   --destructive: #eb6f92;
   --border: rgba(224, 222, 244, 0.12);
   --input: rgba(224, 222, 244, 0.08);
@@ -867,13 +867,13 @@ audio::-webkit-media-controls-panel {
   --spotify: #1DB954;
   --spotify-foreground: #FFFFFF;
   --sidebar: #2a273f;
-  --sidebar-foreground: #e0def4;
+  --sidebar-foreground: #f0eeff;
   --sidebar-primary: #c4a7e7;
   --sidebar-primary-foreground: #1a1826;
   --sidebar-accent: #393552;
-  --sidebar-accent-foreground: #e0def4;
+  --sidebar-accent-foreground: #f0eeff;
   --sidebar-border: rgba(224, 222, 244, 0.1);
-  --sidebar-ring: #6e6a86;
+  --sidebar-ring: #f0eeff;
 }
 
 /* ── Design System Utilities ── */
@@ -920,8 +920,8 @@ audio::-webkit-media-controls-panel {
 }
 
 .focus-ring:focus-visible {
-  box-shadow: 0 0 0 2px rgba(29, 185, 84, 0.5);
-  border-color: rgba(29, 185, 84, 0.5);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 50%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 50%, transparent);
 }
 
 /* Transition presets */

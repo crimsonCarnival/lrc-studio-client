@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { projects } from '@/app/api';
@@ -130,12 +130,21 @@ export default function Library({ onOpenProject, onBack }) {
 
       {editingProject && (
         <ProjectSetupModal
+          key={editingProject?.projectId || 'none'}
           isOpen={!!editingProject}
           onClose={() => setEditingProject(null)}
           onConfirm={async (data) => {
             try {
-              const { title, description, tags } = data;
-              const updatedMetadata = { ...editingProject.metadata, description, tags };
+              const { name: title, description, tags, songName, songArtist, songAlbum, songYear } = data;
+              const updatedMetadata = { 
+                ...editingProject.metadata, 
+                description, 
+                tags,
+                songName,
+                songArtist,
+                songAlbum,
+                songYear
+              };
               await projects.patch(editingProject.projectId, {
                 title,
                 metadata: updatedMetadata
@@ -154,6 +163,10 @@ export default function Library({ onOpenProject, onBack }) {
           initialName={editingProject?.title || ''}
           initialDescription={editingProject?.metadata?.description || ''}
           initialTags={editingProject?.metadata?.tags || []}
+          initialSongName={editingProject?.metadata?.songName || ''}
+          initialSongArtist={editingProject?.metadata?.songArtist || ''}
+          initialSongAlbum={editingProject?.metadata?.songAlbum || ''}
+          initialSongYear={editingProject?.metadata?.songYear || ''}
           isEditing={true}
         />
       )}

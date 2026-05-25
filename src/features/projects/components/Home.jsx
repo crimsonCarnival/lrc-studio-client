@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -253,11 +253,12 @@ export default function Home() {
       </div>
 
       <ProjectSetupModal
+        key={editingProject?.projectId || 'none'}
         isOpen={!!editingProject}
         onClose={() => setEditingProject(null)}
         onConfirm={async (data) => {
           try {
-            const { title, description, tags, songName, songArtist, songAlbum, songYear } = data;
+            const { name: title, description, tags, songName, songArtist, songAlbum, songYear } = data;
             const updatedMetadata = { 
               ...editingProject.metadata, 
               description, 

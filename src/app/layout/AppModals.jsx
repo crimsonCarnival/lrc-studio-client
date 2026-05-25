@@ -1,4 +1,4 @@
-﻿import { Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { useTranslation } from 'react-i18next';
@@ -38,6 +38,7 @@ export function AppModals({
       </Suspense>
 
       <ProjectSetupModal
+        key={showNamingModal ? (mediaTitle || 'editing') : 'closed'}
         isOpen={showNamingModal}
         onClose={() => setShowNamingModal(false)}
         onConfirm={handleProjectConfirm}

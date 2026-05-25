@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
@@ -64,20 +64,20 @@ export default function ProjectSetupModal({
   sourceInfo = null
 }) {
   const { t } = useTranslation();
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-    tags: [],
+  const [form, setForm] = useState(() => ({
+    name: initialName || '',
+    description: initialDescription || '',
+    tags: initialTags || [],
     tagInput: '',
-    songName: '',
-    songArtist: '',
-    songAlbum: '',
-    songYear: ''
-  });
+    songName: initialSongName || '',
+    songArtist: initialSongArtist || '',
+    songAlbum: initialSongAlbum || '',
+    songYear: initialSongYear || ''
+  }));
 
-  const prevIsOpenRef = useRef(isOpen);
-  if (prevIsOpenRef.current !== isOpen) {
-    prevIsOpenRef.current = isOpen;
+  // Sync form when the modal is opened or when the underlying data changes
+  // (e.g. switching between projects without unmounting the component)
+  useEffect(() => {
     if (isOpen) {
       setForm({
         name: initialName || '',
@@ -90,7 +90,8 @@ export default function ProjectSetupModal({
         songYear: initialSongYear || ''
       });
     }
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear]);
 
   if (!isOpen) return null;
 
@@ -121,6 +122,7 @@ export default function ProjectSetupModal({
     const finalTags = form.tagInput.trim() ? [...form.tags, form.tagInput.trim()] : form.tags;
     onConfirm({
       name: form.name.trim(),
+      title: form.name.trim(),
       description: form.description.trim(),
       tags: finalTags,
       songName: form.songName.trim(),
@@ -195,7 +197,6 @@ export default function ProjectSetupModal({
                     id="song-name"
                     value={form.songName}
                     onChange={(e) => setForm(f => ({ ...f, songName: e.target.value }))}
-                    placeholder="e.g. Bohemian Rhapsody"
                     className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
                   />
                 </div>
@@ -207,7 +208,6 @@ export default function ProjectSetupModal({
                     id="song-artist"
                     value={form.songArtist}
                     onChange={(e) => setForm(f => ({ ...f, songArtist: e.target.value }))}
-                    placeholder="e.g. Queen"
                     className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
                   />
                 </div>
@@ -222,7 +222,6 @@ export default function ProjectSetupModal({
                     id="song-album"
                     value={form.songAlbum}
                     onChange={(e) => setForm(f => ({ ...f, songAlbum: e.target.value }))}
-                    placeholder="e.g. A Night at the Opera"
                     className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
                   />
                 </div>
@@ -242,7 +241,6 @@ export default function ProjectSetupModal({
                         setForm(f => ({ ...f, songYear: val }));
                       }
                     }}
-                    placeholder="e.g. 1975"
                     className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
                     maxLength={4}
                   />

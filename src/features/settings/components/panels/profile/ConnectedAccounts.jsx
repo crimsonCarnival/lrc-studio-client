@@ -1,4 +1,4 @@
-﻿import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { Unplug } from 'lucide-react';
 import SpotifyIcon from "@features/player/components/SpotifyIcon";
 import { Button } from '@ui/button';
@@ -12,7 +12,7 @@ export default function ConnectedAccounts() {
   return (
     <>
       {/* Google Section */}
-      <div className="pt-4 animate-fade-in border-t border-border mt-8">
+      <div className="animate-fade-in">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           {t('settings.google.label') || 'Google'}
         </h3>
@@ -76,7 +76,7 @@ export default function ConnectedAccounts() {
       </div>
 
       {/* Spotify Section */}
-      <div className="pt-4 animate-fade-in border-t border-border mt-8">
+      <div className="animate-fade-in mt-6 pt-6 border-t border-border/50">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           {t('settings.spotify.label') || 'Spotify'}
         </h3>
