@@ -2,13 +2,11 @@ import { request } from '@/app/api.client.js';
 
 export const googleService = {
   getAuthUrl: async () => {
-    const response = await request(`/google/auth/url?appOrigin=${encodeURIComponent(window.location.origin)}`);
-    return response.url;
+    return `${import.meta.env.VITE_API_URL || '/api'}/google/auth/url?appOrigin=${encodeURIComponent(window.location.origin)}`;
   },
 
   getLoginUrl: async () => {
-    const response = await request(`/google/login/url?appOrigin=${encodeURIComponent(window.location.origin)}`);
-    return response.url;
+    return `${import.meta.env.VITE_API_URL || '/api'}/google/login/url?appOrigin=${encodeURIComponent(window.location.origin)}`;
   },
 
   disconnect: async () => {

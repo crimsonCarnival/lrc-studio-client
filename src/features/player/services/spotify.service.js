@@ -9,7 +9,7 @@ export const spotifyService = {
   },
 
   async getAuthUrl() {
-    return request('/spotify/auth/url');
+    return `${import.meta.env.VITE_API_URL || '/api'}/spotify/auth/url`;
   },
 
   async getToken() {
