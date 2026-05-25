@@ -84,4 +84,18 @@ export default {
     revokeAllOthersSuccess: "Sesiones cerradas en todos los demás dispositivos.",
     noSessions: "No se encontraron sesiones activas.",
   },
+  publicTitle: "Perfil de {{name}}",
+  editProfile: "Editar perfil",
+  statsProjects_one: "{{count}} proyecto",
+  statsProjects_other: "{{count}} proyectos",
+  statsStars_one: "{{count}} estrella",
+  statsStars_other: "{{count}} estrellas",
+  noPublicProjects: "Aún no hay proyectos públicos.",
+  albumsComingSoon: "Álbumes próximamente.",
+  publicTabs: {
+    projects: "Proyectos",
+    albums: "Álbumes",
+  },
+  notFound: "Usuario no encontrado.",
+  notFoundSub: "Este perfil no existe o puede haber sido eliminado.",
 };

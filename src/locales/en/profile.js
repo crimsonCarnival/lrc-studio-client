@@ -84,4 +84,18 @@ export default {
     revokeAllOthersSuccess: "All other devices signed out.",
     noSessions: "No active sessions found.",
   },
+  publicTitle: "{{name}}'s Profile",
+  editProfile: "Edit Profile",
+  statsProjects_one: "{{count}} project",
+  statsProjects_other: "{{count}} projects",
+  statsStars_one: "{{count}} star",
+  statsStars_other: "{{count}} stars",
+  noPublicProjects: "No public projects yet.",
+  albumsComingSoon: "Albums coming soon.",
+  publicTabs: {
+    projects: "Projects",
+    albums: "Albums",
+  },
+  notFound: "User not found.",
+  notFoundSub: "This profile doesn't exist or may have been removed.",
 };

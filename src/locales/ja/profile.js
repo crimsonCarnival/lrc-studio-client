@@ -84,4 +84,18 @@ export default {
     revokeAllOthersSuccess: "他のすべてのデバイスからサインアウトしました。",
     noSessions: "アクティブなセッションが見つかりません。",
   },
+  publicTitle: "{{name}}のプロフィール",
+  editProfile: "プロフィールを編集",
+  statsProjects_one: "{{count}}件のプロジェクト",
+  statsProjects_other: "{{count}}件のプロジェクト",
+  statsStars_one: "{{count}}個のスター",
+  statsStars_other: "{{count}}個のスター",
+  noPublicProjects: "まだ公開プロジェクトはありません。",
+  albumsComingSoon: "アルバムは近日公開予定です。",
+  publicTabs: {
+    projects: "プロジェクト",
+    albums: "アルバム",
+  },
+  notFound: "ユーザーが見つかりません。",
+  notFoundSub: "このプロフィールは存在しないか、削除された可能性があります。",
 };
