@@ -84,7 +84,6 @@ export default {
     revokeAllOthersSuccess: "Sesiones cerradas en todos los demás dispositivos.",
     noSessions: "No se encontraron sesiones activas.",
   },
-  publicTitle: "Perfil de {{name}}",
   editProfile: "Editar perfil",
   statsProjects_one: "{{count}} proyecto",
   statsProjects_other: "{{count}} proyectos",

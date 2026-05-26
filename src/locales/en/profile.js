@@ -84,7 +84,6 @@ export default {
     revokeAllOthersSuccess: "All other devices signed out.",
     noSessions: "No active sessions found.",
   },
-  publicTitle: "{{name}}'s Profile",
   editProfile: "Edit Profile",
   statsProjects_one: "{{count}} project",
   statsProjects_other: "{{count}} projects",

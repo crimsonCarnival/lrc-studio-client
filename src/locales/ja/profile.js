@@ -84,7 +84,6 @@ export default {
     revokeAllOthersSuccess: "他のすべてのデバイスからサインアウトしました。",
     noSessions: "アクティブなセッションが見つかりません。",
   },
-  publicTitle: "{{name}}のプロフィール",
   editProfile: "プロフィールを編集",
   statsProjects_one: "{{count}}件のプロジェクト",
   statsProjects_other: "{{count}}件のプロジェクト",

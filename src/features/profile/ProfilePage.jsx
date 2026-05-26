@@ -137,7 +137,7 @@ export default function ProfilePage() {
                   {t('profile.verified')}
                 </span>
               )}
-              {profile.role === 'admin' && (
+              {profile.isAdmin && (
                 <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest">
                   {t('profile.adminBadge')}
                 </span>
