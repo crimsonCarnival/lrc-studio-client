@@ -1,8 +1,12 @@
 {
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
+    "ignoreDeprecations": "5.0",
     "jsx": "react",
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "bundler",
     "baseUrl": ".",
+    "types": ["vite/client"],
     "paths": {
       "@/*": ["./src/*"],
       "@features/*": ["./src/features/*"],
@@ -10,5 +14,6 @@
       "@ui/*": ["./src/ui/*"],
       "@shared/*": ["./src/shared/*"]
     }
-  }
+  },
+  "include": ["src"]
 }
