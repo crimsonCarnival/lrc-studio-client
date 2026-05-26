@@ -16,12 +16,13 @@ export default function ProfileForm() {
   const [formData, setFormData] = useState({
     displayName: user?.displayName || '',
     bio: user?.bio || '',
+    showFollowers: user?.showFollowers ?? true,
   });
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updatedUser = await authService.updateProfile({ displayName: formData.displayName, bio: formData.bio });
+      const updatedUser = await authService.updateProfile({ displayName: formData.displayName, bio: formData.bio, showFollowers: formData.showFollowers });
       setUser(prev => ({ ...prev, ...updatedUser }));
       toast.success(t('profile.saveSuccess'));
     } catch {
@@ -63,12 +64,40 @@ export default function ProfileForm() {
         />
       </div>
 
+      {/* Show followers toggle */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm text-foreground font-medium">
+            {t('profile.settings.showFollowers')}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {t('profile.settings.showFollowersSub')}
+          </p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={formData.showFollowers}
+          onClick={() => setFormData(prev => ({ ...prev, showFollowers: !prev.showFollowers }))}
+          className={`relative shrink-0 w-10 h-6 rounded-full transition-colors ${
+            formData.showFollowers ? 'bg-primary' : 'bg-border'
+          }`}
+        >
+          <span
+            className={`absolute top-1 left-1 size-4 rounded-full bg-white shadow transition-transform ${
+              formData.showFollowers ? 'translate-x-4' : 'translate-x-0'
+            }`}
+          />
+        </button>
+      </div>
+
       <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-border pb-8">
         <Button
           onClick={handleSave}
           disabled={saving || (
             formData.displayName === (user?.displayName || '') &&
-            formData.bio === (user?.bio || '')
+            formData.bio === (user?.bio || '') &&
+            formData.showFollowers === (user?.showFollowers ?? true)
           )}
           className="w-full sm:w-auto min-w-[140px] h-10 rounded-xl font-bold gap-2"
         >
