@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { Star, GitFork, Music, Youtube, Settings } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
-import { getPublicProfile } from './profile.service';
+import { getPublicProfile, followUser, unfollowUser } from './profile.service';
+import { FollowModal } from './FollowModal';
 
 function AvatarBadge({ avatarUrl, name, size = 'lg' }) {
   const sizeClass = size === 'lg' ? 'size-24 text-4xl rounded-[1.5rem]' : 'size-16 text-2xl rounded-xl';
@@ -74,6 +75,12 @@ export default function ProfilePage() {
   const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState('projects');
 
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [confirmingUnfollow, setConfirmingUnfollow] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [followModal, setFollowModal] = useState(null); // 'FOLLOWERS' | 'FOLLOWING' | null
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const isOwner = !!user && !!accountName && user.accountName === accountName;
 
   useEffect(() => {
@@ -95,11 +102,49 @@ export default function ProfilePage() {
           setNotFound(true);
         } else {
           setProfile(data);
+          setIsFollowing(data.isFollowedByMe);
         }
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [accountName, user?.accountName, navigate]);
+
+  useEffect(() => {
+    if (!profile || !user || isOwner || isFollowing) return;
+    if (searchParams.get('intent') !== 'follow') return;
+
+    setSearchParams({}, { replace: true });
+    setFollowLoading(true);
+    followUser(profile.accountName)
+      .then(() => setIsFollowing(true))
+      .catch(() => {})
+      .finally(() => setFollowLoading(false));
+  }, [profile, user, isOwner, isFollowing, searchParams, setSearchParams]);
+
+  const handleFollow = useCallback(async () => {
+    if (!user) {
+      navigate(`/signin?redirect=/profile/${accountName}&intent=follow`);
+      return;
+    }
+    setFollowLoading(true);
+    try {
+      await followUser(accountName);
+      setIsFollowing(true);
+      setProfile(prev => prev ? { ...prev, followerCount: prev.followerCount + 1 } : prev);
+    } catch {}
+    setFollowLoading(false);
+  }, [user, accountName, navigate]);
+
+  const handleUnfollow = useCallback(async () => {
+    setFollowLoading(true);
+    try {
+      await unfollowUser(accountName);
+      setIsFollowing(false);
+      setConfirmingUnfollow(false);
+      setProfile(prev => prev ? { ...prev, followerCount: Math.max(0, prev.followerCount - 1) } : prev);
+    } catch {}
+    setFollowLoading(false);
+  }, [accountName]);
 
   if (loading) {
     return (
@@ -151,14 +196,42 @@ export default function ProfilePage() {
             {profile.bio || <span className="italic opacity-50">{t('profile.noBio')}</span>}
           </p>
 
-          <div className="flex items-center justify-center sm:justify-start gap-4 mt-4 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 mt-4 text-sm text-muted-foreground">
+            {profile.showFollowers ? (
+              <button
+                onClick={() => setFollowModal('FOLLOWERS')}
+                className="hover:text-foreground transition-colors"
+              >
+                {t('profile.statsFollowers', { count: profile.followerCount })}
+              </button>
+            ) : (
+              <span>{t('profile.statsFollowers', { count: profile.followerCount })}</span>
+            )}
+            <span className="opacity-30">·</span>
+            {profile.showFollowers ? (
+              <button
+                onClick={() => setFollowModal('FOLLOWING')}
+                className="hover:text-foreground transition-colors"
+              >
+                {t('profile.statsFollowing', { count: profile.followingCount })}
+              </button>
+            ) : (
+              <span>{t('profile.statsFollowing', { count: profile.followingCount })}</span>
+            )}
+            <span className="opacity-30">·</span>
             <span>{t('profile.statsProjects', { count: profile.projectCount })}</span>
             <span className="opacity-30">·</span>
             <span>{t('profile.statsStars', { count: profile.totalStarsReceived })}</span>
           </div>
+
+          {profile.totalForksReceived > 0 && (
+            <p className="text-xs text-muted-foreground mt-2 opacity-70">
+              {t('profile.forkBadge', { count: profile.totalForksReceived })}
+            </p>
+          )}
         </div>
 
-        {isOwner && (
+        {isOwner ? (
           <Button
             variant="outline"
             size="sm"
@@ -168,6 +241,39 @@ export default function ProfilePage() {
             <Settings className="size-4" />
             {t('profile.editProfile')}
           </Button>
+        ) : (
+          <div className="absolute top-4 right-4">
+            {isFollowing ? (
+              confirmingUnfollow ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUnfollow}
+                  disabled={followLoading}
+                  className="text-muted-foreground border-border"
+                >
+                  {t('profile.confirmUnfollow')}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmingUnfollow(true)}
+                  disabled={followLoading}
+                >
+                  {t('profile.following')}
+                </Button>
+              )
+            ) : (
+              <Button
+                size="sm"
+                onClick={handleFollow}
+                disabled={followLoading}
+              >
+                {t('profile.follow')}
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
@@ -207,6 +313,14 @@ export default function ProfilePage() {
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <p className="text-sm">{t('profile.albumsComingSoon')}</p>
         </div>
+      )}
+
+      {followModal && profile.showFollowers && (
+        <FollowModal
+          accountName={profile.accountName}
+          type={followModal}
+          onClose={() => setFollowModal(null)}
+        />
       )}
     </div>
   );
