@@ -16,10 +16,10 @@ export function FollowModal({ accountName, type, onClose }) {
   useEffect(() => {
     setLoading(true);
     getFollowList(accountName, type, 0)
-      .then(({ users: initial, total: t }) => {
+      .then(({ users: initial, total: totalCount }) => {
         setUsers(initial);
-        setTotal(t);
-        setOffset(50);
+        setTotal(totalCount);
+        setOffset(initial.length);
       })
       .finally(() => setLoading(false));
   }, [accountName, type]);
@@ -29,7 +29,7 @@ export function FollowModal({ accountName, type, onClose }) {
     getFollowList(accountName, type, offset)
       .then(({ users: more }) => {
         setUsers(prev => [...prev, ...more]);
-        setOffset(prev => prev + 50);
+        setOffset(prev => prev + more.length);
       })
       .finally(() => setLoadingMore(false));
   };
