@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { Input } from '@ui/input';
 import { Loader2, Search, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { genius } from '@features/editor/services/genius.service';
-import GeniusResultCard from './GeniusResultCard';
-import GeniusLyricsModal from './GeniusLyricsModal';
+import { lyricsSearch } from '@features/editor/services/lyricsSearch.service';
+import LyricsResultCard from './LyricsResultCard';
+import LyricsModal from './LyricsModal';
+import { useSettings } from '@/features/settings/useSettings';
 
-export default function GeniusSearchBar({ onImport, autoSearch, showKeepTimestamps }) {
+export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestamps }) {
   const { t } = useTranslation();
+  const { settings } = useSettings();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -24,7 +26,7 @@ export default function GeniusSearchBar({ onImport, autoSearch, showKeepTimestam
     clearTimeout(debounceRef.current);
     setIsSearching(true);
     try {
-      const data = await genius.search(term.trim());
+      const data = await lyricsSearch.search(term.trim());
       setResults(data.results);
     } catch (err) {
       if (err.status === 429) {
@@ -54,8 +56,11 @@ export default function GeniusSearchBar({ onImport, autoSearch, showKeepTimestam
       return;
     }
 
-    debounceRef.current = setTimeout(() => doSearch(value), 300);
-  }, [doSearch]);
+    const speed = settings.editor?.lyricsSearchSpeed ?? 'normal';
+    const debounceMs = { fast: 150, normal: 300, slow: 500 }[speed] || 300;
+
+    debounceRef.current = setTimeout(() => doSearch(value), debounceMs);
+  }, [doSearch, settings.editor?.lyricsSearchSpeed]);
 
   const handleSelectSong = useCallback(async (song) => {
     setSelectedSong(song);
@@ -64,7 +69,7 @@ export default function GeniusSearchBar({ onImport, autoSearch, showKeepTimestam
     setIsExtracting(true);
 
     try {
-      const data = await genius.extract(song.title, song.artist);
+      const data = await lyricsSearch.extract(song.title, song.artist);
       setLyrics(data.lyrics);
     } catch (err) {
       if (err.status === 429) {
@@ -118,7 +123,7 @@ export default function GeniusSearchBar({ onImport, autoSearch, showKeepTimestam
             <p className="text-xs text-zinc-500 text-center py-4">{t('genius.noResults')}</p>
           ) : (
             results.map((song) => (
-              <GeniusResultCard
+              <LyricsResultCard
                 key={song.id}
                 song={song}
                 onClick={handleSelectSong}
@@ -130,7 +135,7 @@ export default function GeniusSearchBar({ onImport, autoSearch, showKeepTimestam
       )}
 
       {selectedSong && (
-        <GeniusLyricsModal
+        <LyricsModal
           song={selectedSong}
           lyrics={lyrics}
           isLoading={isExtracting}

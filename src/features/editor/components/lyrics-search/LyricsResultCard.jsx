@@ -1,6 +1,6 @@
 import { LazyImage } from '@ui/LazyImage';
 
-export default function GeniusResultCard({ song, onClick, isLoading }) {
+export default function LyricsResultCard({ song, onClick, isLoading }) {
   return (
     <button
       type="button"

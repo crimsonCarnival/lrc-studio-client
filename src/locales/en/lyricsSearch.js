@@ -11,7 +11,7 @@ export default {
   noResults: 'No results found',
   orPasteUrl: 'Or paste a song URL',
   extractUrl: 'Extract',
-  urlPlaceholder: 'https://genius.com/song-title…',
+  urlPlaceholder: 'https://example.com/song-title…',
   keepTimestamps: 'Keep timestamps',
   error: {
     rateLimited: 'Too many requests — please wait a moment',

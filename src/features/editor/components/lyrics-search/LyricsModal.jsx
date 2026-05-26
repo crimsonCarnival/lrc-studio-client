@@ -4,7 +4,7 @@ import { Button } from '@ui/button';
 import { Checkbox } from '@ui/checkbox';
 import { Loader2 } from 'lucide-react';
 
-export default function GeniusLyricsModal({ song, lyrics, isLoading, error, onConfirm, onClose, keepTimestamps, onKeepTimestampsChange, showKeepTimestamps = true }) {
+export default function LyricsModal({ song, lyrics, isLoading, error, onConfirm, onClose, keepTimestamps, onKeepTimestampsChange, showKeepTimestamps = true }) {
   const { t } = useTranslation();
 
   return (

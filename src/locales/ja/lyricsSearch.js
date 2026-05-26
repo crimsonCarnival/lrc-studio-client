@@ -11,7 +11,7 @@ export default {
   noResults: '結果が見つかりませんでした',
   orPasteUrl: '曲のURLを貼り付け',
   extractUrl: '抽出',
-  urlPlaceholder: 'https://genius.com/曲タイトル…',
+  urlPlaceholder: 'https://example.com/曲タイトル…',
   keepTimestamps: 'タイムスタンプを保持',
   error: {
     rateLimited: 'リクエストが多すぎます — しばらく待ってください',

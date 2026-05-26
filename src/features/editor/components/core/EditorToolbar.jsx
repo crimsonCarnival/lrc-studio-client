@@ -1,4 +1,4 @@
-﻿import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
@@ -12,7 +12,7 @@ import {
   Repeat, EyeOff, MoreHorizontal, Plus, X, Loader2, HelpCircle, Languages, Music
 } from 'lucide-react';
 import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
-import GeniusSearchBar from '../genius/GeniusSearchBar';
+import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
 
 // Mobile-friendly dropdown for actions that overflow
@@ -82,9 +82,9 @@ export default function EditorToolbar({
     return { synced, total: lines.length, wordCount, charCount, totalWordsInLine, currentWordNum };
   }, [lines, activeLineIndex, activeWordIndex, stampTarget]);
 
-  const [geniusPopoverOpen, setGeniusPopoverOpen] = useState(false);
+  const [lyricsSearchPopoverOpen, setLyricsSearchPopoverOpen] = useState(false);
 
-  const handleGeniusImport = useCallback((lyricsText, keepTimestamps) => {
+  const handleLyricsSearchImport = useCallback((lyricsText, keepTimestamps) => {
     const newLines = lyricsText.split('\n').reduce((acc, line) => {
       const text = line.trim();
       if (text.length > 0) acc.push({ text, timestamp: null });
@@ -96,7 +96,7 @@ export default function EditorToolbar({
       setRawText(newLines.map((l) => l.text).join('\n'));
       setSyncMode(false);
     }
-    setGeniusPopoverOpen(false);
+    setLyricsSearchPopoverOpen(false);
   }, [lines, setLines, setRawText, setSyncMode]);
 
   if (!syncMode) return null;
@@ -326,8 +326,8 @@ export default function EditorToolbar({
           </div>
 
         <div className="flex items-center gap-1">
-          <Popover open={geniusPopoverOpen} onOpenChange={setGeniusPopoverOpen}>
-            <Tip content={t('genius.findLyrics')}>
+          <Popover open={lyricsSearchPopoverOpen} onOpenChange={setLyricsSearchPopoverOpen}>
+            <Tip content={t('lyricsSearch.findLyrics')}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="size-9 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800">
                   <Music className="size-4" />
@@ -335,7 +335,7 @@ export default function EditorToolbar({
               </PopoverTrigger>
             </Tip>
             <PopoverContent className="w-80 p-3 bg-zinc-900 border-zinc-800 shadow-xl" align="end">
-              <GeniusSearchBar onImport={handleGeniusImport} />
+              <LyricsSearchBar onImport={handleLyricsSearchImport} />
             </PopoverContent>
           </Popover>
 
