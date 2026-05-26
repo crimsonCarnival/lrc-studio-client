@@ -505,6 +505,7 @@ export function useAuth() {
     loginWithGoogle,
     clearUnbanMessage,
     loginWithPasskey,
+    registerPasskey,
     deactivateAccount,
   };
 }
