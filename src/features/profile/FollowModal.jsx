@@ -14,14 +14,22 @@ export function FollowModal({ accountName, type, onClose }) {
   const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
+    let ignore = false;
     setLoading(true);
+    setUsers([]);
+    setTotal(0);
+    setOffset(0);
     getFollowList(accountName, type, 0)
       .then(({ users: initial, total: totalCount }) => {
+        if (ignore) return;
         setUsers(initial);
         setTotal(totalCount);
         setOffset(initial.length);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+    return () => { ignore = true; };
   }, [accountName, type]);
 
   const loadMore = () => {
