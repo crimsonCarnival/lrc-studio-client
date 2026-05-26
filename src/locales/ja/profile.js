@@ -89,6 +89,19 @@ export default {
   statsProjects_other: "{{count}}件のプロジェクト",
   statsStars_one: "{{count}}個のスター",
   statsStars_other: "{{count}}個のスター",
+  statsFollowers_one: "{{count}}人のフォロワー",
+  statsFollowers_other: "{{count}}人のフォロワー",
+  statsFollowing: "{{count}}人をフォロー中",
+  forkBadge_one: "✦ そのプロジェクトは{{count}}回フォークされました",
+  forkBadge_other: "✦ そのプロジェクトは{{count}}回フォークされました",
+  follow: "フォロー",
+  following: "フォロー中 ✓",
+  confirmUnfollow: "フォロー解除を確認",
+  followersTitle: "フォロワー",
+  followingTitle: "フォロー中",
+  loadMore: "もっと読み込む",
+  noFollowers: "まだフォロワーがいません。",
+  noFollowing: "まだ誰もフォローしていません。",
   noPublicProjects: "まだ公開プロジェクトはありません。",
   albumsComingSoon: "アルバムは近日公開予定です。",
   publicTabs: {
@@ -97,4 +110,8 @@ export default {
   },
   notFound: "ユーザーが見つかりません。",
   notFoundSub: "このプロフィールは存在しないか、削除された可能性があります。",
+  settings: {
+    showFollowers: "フォロワーとフォロー中を公開する",
+    showFollowersSub: "オフにしても件数は表示されますが、リストは非公開になります",
+  },
 };

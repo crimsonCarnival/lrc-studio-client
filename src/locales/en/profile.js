@@ -89,6 +89,19 @@ export default {
   statsProjects_other: "{{count}} projects",
   statsStars_one: "{{count}} star",
   statsStars_other: "{{count}} stars",
+  statsFollowers_one: "{{count}} follower",
+  statsFollowers_other: "{{count}} followers",
+  statsFollowing: "{{count}} following",
+  forkBadge_one: "✦ Their projects inspired {{count}} fork",
+  forkBadge_other: "✦ Their projects inspired {{count}} forks",
+  follow: "Follow",
+  following: "Following ✓",
+  confirmUnfollow: "Confirm unfollow",
+  followersTitle: "Followers",
+  followingTitle: "Following",
+  loadMore: "Load more",
+  noFollowers: "No followers yet.",
+  noFollowing: "Not following anyone yet.",
   noPublicProjects: "No public projects yet.",
   albumsComingSoon: "Albums coming soon.",
   publicTabs: {
@@ -97,4 +110,8 @@ export default {
   },
   notFound: "User not found.",
   notFoundSub: "This profile doesn't exist or may have been removed.",
+  settings: {
+    showFollowers: "Show followers & following publicly",
+    showFollowersSub: "When off, counts still appear but the list stays private",
+  },
 };

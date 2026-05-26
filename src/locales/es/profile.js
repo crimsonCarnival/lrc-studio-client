@@ -89,6 +89,19 @@ export default {
   statsProjects_other: "{{count}} proyectos",
   statsStars_one: "{{count}} estrella",
   statsStars_other: "{{count}} estrellas",
+  statsFollowers_one: "{{count}} seguidor",
+  statsFollowers_other: "{{count}} seguidores",
+  statsFollowing: "{{count}} siguiendo",
+  forkBadge_one: "✦ Sus proyectos inspiraron {{count}} bifurcación",
+  forkBadge_other: "✦ Sus proyectos inspiraron {{count}} bifurcaciones",
+  follow: "Seguir",
+  following: "Siguiendo ✓",
+  confirmUnfollow: "Confirmar dejar de seguir",
+  followersTitle: "Seguidores",
+  followingTitle: "Siguiendo",
+  loadMore: "Cargar más",
+  noFollowers: "Aún no hay seguidores.",
+  noFollowing: "Aún no sigue a nadie.",
   noPublicProjects: "Aún no hay proyectos públicos.",
   albumsComingSoon: "Álbumes próximamente.",
   publicTabs: {
@@ -97,4 +110,8 @@ export default {
   },
   notFound: "Usuario no encontrado.",
   notFoundSub: "Este perfil no existe o puede haber sido eliminado.",
+  settings: {
+    showFollowers: "Mostrar seguidores y seguidos públicamente",
+    showFollowersSub: "Si está desactivado, los conteos se muestran pero la lista permanece privada",
+  },
 };
