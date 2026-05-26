@@ -436,9 +436,11 @@ export function useAuth() {
   const registerPasskey = useCallback(async () => {
     try {
       const { options } = await auth.getPasskeyRegistrationOptions();
+      console.log('[Passkey] registration options received:', { rpId: options.rp?.id, origin: window.location.origin });
       const attResp = await startRegistration({ optionsJSON: options });
+      console.log('[Passkey] startRegistration succeeded, verifying with server...');
       await auth.verifyPasskeyRegistration(attResp);
-      
+
       // Update remembered accounts to reflect passkey support
       if (state.user) {
         rememberedAccounts.upsert({
@@ -453,10 +455,10 @@ export function useAuth() {
       return true;
     } catch (err) {
       if (err.name === 'NotAllowedError') {
-        console.log('User cancelled passkey registration.');
+        console.log('[Passkey] user cancelled registration.');
         return false;
       }
-      console.error('Passkey registration failed:', err);
+      console.error('[Passkey] registration failed:', err.name, err.message, err);
       throw err;
     }
   }, [state.user]);
