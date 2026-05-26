@@ -7,9 +7,11 @@ const SOCIAL_TYPES = new Set(['star', 'fork', 'follow']);
 const SYSTEM_TYPES = new Set(['system', 'admin', 'ban', 'password_changed', 'admin_granted']);
 const STICKY_TYPES = new Set(['verify_email', 'set_password']);
 
-function SectionLabel({ label }) {
+function SectionLabel({ label, variant = 'default' }) {
   return (
-    <p className="px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+    <p className={`px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest ${
+      variant === 'action' ? 'text-primary' : 'text-zinc-500'
+    }`}>
       {label}
     </p>
   );
@@ -25,12 +27,12 @@ export function NotificationPanel() {
   const hasAny  = sticky.length + social.length + system.length > 0;
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-white/10 bg-[#18181b] shadow-2xl z-50 overflow-hidden">
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-        <span className="text-sm font-semibold text-white">{t('notifications.bell')}</span>
+    <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-zinc-800/60 bg-zinc-900 shadow-2xl z-50 overflow-hidden">
+      <div className="flex items-center justify-between border-b border-zinc-800/60 px-4 py-3">
+        <span className="text-sm font-semibold text-zinc-100">{t('notifications.bell')}</span>
         <button
           onClick={markAllRead}
-          className="text-xs text-white/40 hover:text-white/70 transition-colors"
+          className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
         >
           {t('notifications.markAllRead')}
         </button>
@@ -38,12 +40,12 @@ export function NotificationPanel() {
 
       <div className="max-h-96 overflow-y-auto">
         {!hasAny && (
-          <p className="px-4 py-8 text-center text-sm text-white/30">{t('notifications.empty')}</p>
+          <p className="px-4 py-8 text-center text-sm text-zinc-500">{t('notifications.empty')}</p>
         )}
 
         {sticky.length > 0 && (
           <>
-            <SectionLabel label={t('notifications.sectionActionRequired')} />
+            <SectionLabel label={t('notifications.sectionActionRequired')} variant="action" />
             <NotificationStickySection notifications={sticky} />
           </>
         )}

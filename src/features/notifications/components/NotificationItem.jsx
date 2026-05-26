@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { LazyImage } from '@ui/LazyImage';
 import { useNotificationsContext } from '../NotificationsContext';
+import { formatTimeAgo } from '../timeAgo';
 
 function NotificationText({ notification, t }) {
   const { type, actors, actorCount, projectTitle, body } = notification;
@@ -49,28 +50,28 @@ export function NotificationItem({ notification }) {
   return (
     <div
       onClick={() => { if (!read) markRead([_id]); }}
-      className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors ${!read ? 'bg-white/[0.03]' : ''}`}
+      className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-zinc-800/50 transition-colors ${!read ? 'bg-zinc-800/30' : ''}`}
     >
       {avatarUrl ? (
         <LazyImage src={avatarUrl} alt="" className="w-8 h-8 rounded-full shrink-0 mt-0.5" />
       ) : (
-        <div className="w-8 h-8 rounded-full bg-white/10 shrink-0 mt-0.5 flex items-center justify-center text-xs text-white/40">
+        <div className="w-8 h-8 rounded-full bg-zinc-700 shrink-0 mt-0.5 flex items-center justify-center text-xs text-zinc-400">
           {initial}
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-white/90 leading-snug">
+        <p className="text-sm text-zinc-200 leading-snug">
           <NotificationText notification={notification} t={t} />
         </p>
         {createdAt && (
-          <p className="text-xs text-white/40 mt-1">{new Date(createdAt).toLocaleDateString()}</p>
+          <p className="text-xs text-zinc-500 mt-1">{formatTimeAgo(createdAt, t)}</p>
         )}
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        {!read && <span className="w-2 h-2 rounded-full bg-indigo-500" />}
+        {!read && <span className="w-2 h-2 rounded-full bg-primary" />}
         <button
           onClick={(e) => { e.stopPropagation(); dismiss(_id); }}
-          className="p-1 rounded hover:bg-white/10 text-white/40 hover:text-white/80 transition-colors"
+          className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors"
           aria-label={t('notifications.dismiss')}
         >
           <X size={14} />
