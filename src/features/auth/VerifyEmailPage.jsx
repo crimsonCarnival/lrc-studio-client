@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@ui/button';
@@ -16,7 +16,12 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     if (!token || status) return;
     const apiBase = import.meta.env.VITE_API_URL || '/api';
-    fetch(`${apiBase}/auth/verify-email?token=${encodeURIComponent(token)}`, { credentials: 'include' })
+    fetch(`${apiBase}/auth/verify-email`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    })
       .then((res) => res.json())
       .then((data) => {
         if (data.success) navigate('/verify-email?status=success', { replace: true });
@@ -25,7 +30,12 @@ export default function VerifyEmailPage() {
       .catch(() => navigate('/verify-email?status=error&code=server_error', { replace: true }));
   }, [token, status, navigate]);
 
-  // Verifying — either have a token (redirecting to server) or no params at all
+  // No token and no status — navigated here without a link, nothing to do
+  if (!token && !status) {
+    return <Navigate to="/" replace />;
+  }
+
+  // Token present — waiting for the POST to resolve and redirect
   if (!status) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">

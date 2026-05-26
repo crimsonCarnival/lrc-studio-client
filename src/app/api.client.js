@@ -43,6 +43,7 @@ export async function request(path, options = {}) {
     const body = await res.json().catch(() => ({}));
     const err = new Error(body.error || `Request failed: ${res.status}`);
     err.status = res.status;
+    err.code = body.error;
     err.body = body;
     // 401 means the access token cookie expired or is missing — signal the auth layer
     if (res.status === 401) {
