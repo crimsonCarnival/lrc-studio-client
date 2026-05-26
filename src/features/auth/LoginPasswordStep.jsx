@@ -85,8 +85,8 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight font-heading">
           {identifierData.hasPassword === false
-            ? t('auth.signInWithGoogle', 'Sign in with Google to continue.')
-            : t('auth.enterPassword', 'Enter your password.')
+            ? t('auth.signInWithGoogle')
+            : t('auth.enterPassword')
           }
         </h1>
       </div>

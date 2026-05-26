@@ -4,6 +4,7 @@ export default {
   loginWelcomeBack: "¡Bienvenido de nuevo, <0>{{name}}</0>!",
   loginSubtitle: "Ingresa tu usuario o correo para continuar.",
   enterPassword: "Ingresa tu contraseña",
+  signInWithGoogle: "Inicia sesión con Google para continuar.",
   notYou: "¿No eres tú? Cambiar cuenta",
   continue: "Continuar",
   registerWelcome: "<0>Crea tu cuenta</0>",

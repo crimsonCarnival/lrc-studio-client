@@ -4,6 +4,7 @@ export default {
   loginWelcomeBack: "おかえりなさい、<0>{{name}}</0>さん！",
   loginSubtitle: "ハンドルまたはメールを入力して続けてください。",
   enterPassword: "パスワードを入力してください",
+  signInWithGoogle: "Googleでサインインして続行してください。",
   notYou: "別のアカウントに切り替える",
   continue: "次へ",
   registerWelcome: "アカウントを作成します",
