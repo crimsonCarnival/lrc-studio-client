@@ -1,6 +1,6 @@
-﻿import { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { User, Upload, Trash2, Loader2 } from 'lucide-react';
+import { User, Upload, Trash2, Loader2, Link2, X } from 'lucide-react';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import toast from 'react-hot-toast';
@@ -14,6 +14,9 @@ export default function AvatarUpload() {
   const { user, setUser } = useAuthContext();
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [uploading, setUploading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [urlMode, setUrlMode] = useState(false);
+  const [urlValue, setUrlValue] = useState('');
   const fileInputRef = useRef(null);
 
   const handleAvatarClick = () => fileInputRef.current?.click();
@@ -35,13 +38,11 @@ export default function AvatarUpload() {
     setUploading(true);
     try {
       const recaptchaToken = executeRecaptcha ? await executeRecaptcha('upload_avatar') : undefined;
-      const { url, publicId } = await uploadsService.uploadAvatar(file, recaptchaToken);
-      const updatedUser = await authService.updateProfile({
-        avatarUrl: url,
-        avatarPublicId: publicId
-      });
+      const { url } = await uploadsService.uploadAvatar(file, recaptchaToken);
+      const updatedUser = await authService.updateProfile({ avatarUrl: url });
       setUser(prev => ({ ...prev, ...updatedUser }));
       toast.success(t('profile.avatarUpdated'));
+      setExpanded(false);
     } catch {
       toast.error(t('profile.avatarUploadFailed'));
     } finally {
@@ -50,15 +51,31 @@ export default function AvatarUpload() {
     }
   };
 
+  const handleApplyUrl = async () => {
+    const url = urlValue.trim();
+    if (!url.startsWith('http')) return;
+    setUploading(true);
+    try {
+      const updatedUser = await authService.updateProfile({ avatarUrl: url });
+      setUser(prev => ({ ...prev, ...updatedUser }));
+      toast.success(t('profile.avatarUpdated'));
+      setUrlMode(false);
+      setUrlValue('');
+      setExpanded(false);
+    } catch {
+      toast.error(t('profile.avatarUploadFailed'));
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleRemoveAvatar = async () => {
     setUploading(true);
     try {
-      const updatedUser = await authService.updateProfile({
-        avatarUrl: null,
-        avatarPublicId: null
-      });
+      const updatedUser = await authService.updateProfile({ avatarUrl: null });
       setUser(prev => ({ ...prev, ...updatedUser }));
       toast.success(t('profile.avatarRemoved'));
+      setExpanded(false);
     } catch {
       toast.error(t('profile.avatarRemoveFailed'));
     } finally {
@@ -67,54 +84,120 @@ export default function AvatarUpload() {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-6 pb-8 border-b border-border">
+    <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-border/40">
       <div className="relative group">
         <button
           type="button"
           onClick={handleAvatarClick}
-          className="size-24 rounded-3xl bg-secondary flex items-center justify-center overflow-hidden cursor-pointer border-2 border-border group-hover:border-primary/50 transition-all duration-300 outline-none focus:ring-2 focus:ring-primary/50"
+          className="size-20 rounded-3xl bg-secondary/40 flex items-center justify-center overflow-hidden cursor-pointer border-2 border-zinc-800 hover:border-primary/50 transition-all duration-300 outline-none focus:ring-2 focus:ring-primary/50 shrink-0"
           aria-label={t('profile.changeAvatar')}
         >
           {uploading ? (
-            <Loader2 className="size-8 animate-spin text-primary" />
+            <Loader2 className="size-6 animate-spin text-primary" />
           ) : user?.avatarUrl?.length > 0 ? (
             <LazyImage src={user.avatarUrl} alt="Avatar" className="size-full object-cover" />
           ) : (
-            <div className="size-full flex items-center justify-center bg-gradient-to-br from-primary/80 to-accent-purple font-bold text-zinc-950 text-3xl select-none">
+            <div className="size-full flex items-center justify-center bg-gradient-to-br from-primary/80 to-accent-purple font-bold text-zinc-950 text-2xl select-none">
               {(user?.displayName || user?.accountName || '?')[0].toUpperCase()}
             </div>
           )}
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-            <Upload className="size-6 text-white" />
+            <Upload className="size-5 text-white" />
           </div>
         </button>
       </div>
 
-      <div className="flex-1 text-center sm:text-left">
-        <h4 className="text-sm font-semibold text-foreground mb-1">{t('profile.avatar')}</h4>
-        <p className="text-xs text-muted-foreground mb-4">{t('profile.avatarHint')}</p>
-        <div className="flex flex-wrap justify-center sm:justify-start gap-2">
-          <Button 
-            size="sm" 
-            onClick={handleAvatarClick} 
-            disabled={uploading}
-            className="rounded-xl h-8 text-[11px] font-bold"
+      <div className="flex-1 text-center sm:text-left min-w-0">
+        <h4 className="text-sm font-semibold text-zinc-200 mb-0.5">{t('profile.avatar') || 'Avatar'}</h4>
+        <p className="text-xs text-zinc-500 mb-3">{t('profile.avatarHint') || 'JPG, PNG or GIF. Max 5MB.'}</p>
+        
+        {!expanded ? (
+          <Button
+            size="sm"
+            onClick={() => setExpanded(true)}
+            className="rounded-xl h-8 text-[11px] font-bold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/60"
           >
-            {user?.avatarUrl?.length > 0 ? t('profile.changeAvatar') : t('profile.uploadAvatar')}
+            Change photo
           </Button>
-          {user?.avatarUrl?.length > 0 && (
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              onClick={handleRemoveAvatar}
-              disabled={uploading}
-              className="rounded-xl h-8 text-[11px] font-bold text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="size-3.5 mr-1.5" />
-              {t('profile.removeAvatar')}
-            </Button>
-          )}
-        </div>
+        ) : (
+          <div className="flex flex-col gap-2.5 max-w-sm border border-border/50 bg-secondary/15 rounded-2xl p-3 animate-fade-in">
+            {urlMode ? (
+              <div className="flex flex-col gap-2">
+                <input
+                  type="text"
+                  value={urlValue}
+                  onChange={e => setUrlValue(e.target.value)}
+                  placeholder={t('profile.avatarUrlPlaceholder')}
+                  className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 outline-none focus:border-primary/60 w-full"
+                  disabled={uploading}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleApplyUrl}
+                    disabled={uploading || !urlValue.trim().startsWith('http')}
+                    className="rounded-xl h-8 text-[11px] font-bold"
+                  >
+                    {uploading ? <Loader2 className="size-3.5 animate-spin" /> : t('common.apply') || 'Apply'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => { setUrlMode(false); setUrlValue(''); }}
+                    disabled={uploading}
+                    className="rounded-xl h-8 text-[11px] font-bold text-zinc-400 hover:text-zinc-200"
+                  >
+                    {t('common.cancel') || 'Cancel'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleAvatarClick}
+                  disabled={uploading}
+                  className="rounded-xl h-8 text-[11px] font-bold bg-primary hover:bg-primary-dim text-zinc-950"
+                >
+                  <Upload className="size-3 mr-1.5 shrink-0" />
+                  {t('profile.uploadAvatar') || 'Upload file'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setUrlMode(true); setUrlValue(user?.avatarUrl || ''); }}
+                  disabled={uploading}
+                  className="rounded-xl h-8 text-[11px] font-bold border-zinc-700 bg-zinc-800 text-zinc-200"
+                >
+                  <Link2 className="size-3 mr-1.5 shrink-0" />
+                  {t('profile.setAvatarUrl') || 'Set URL'}
+                </Button>
+                {user?.avatarUrl?.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleRemoveAvatar}
+                    disabled={uploading}
+                    className="rounded-xl h-8 text-[11px] font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                  >
+                    <Trash2 className="size-3.5 mr-1.5 shrink-0" />
+                    {t('profile.removeAvatar')}
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setExpanded(false)}
+                  disabled={uploading}
+                  className="rounded-xl size-8 p-0 shrink-0 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800"
+                  title="Close"
+                >
+                  <X className="size-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
         <input 
           type="file" 
           ref={fileInputRef} 

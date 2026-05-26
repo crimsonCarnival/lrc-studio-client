@@ -19,28 +19,13 @@ export default function PasswordSection() {
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between ml-1">
-        <div className="flex items-center gap-1.5">
-          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            {t('auth.passwordManagement.title')}
-          </label>
+      <div className="flex items-center justify-between ml-1 mb-3">
+        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+          {t('profile.sections.password', 'Password')}
           {!user?.hasPassword && (
             <span className="size-2 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
           )}
-        </div>
-        {user?.hasPassword && lastChanged && (
-          <span className="text-[10px] text-muted-foreground/70">
-            {t('auth.passwordManagement.lastChanged', { date: lastChanged })}
-          </span>
-        )}
-      </div>
-
-      <div className={`flex items-center justify-between gap-3 bg-secondary/30 border border-border rounded-xl px-3 h-11`}>
-        <span className="text-sm text-foreground truncate">
-          {user?.hasPassword
-            ? t('auth.passwordManagement.button')
-            : t('auth.passwordManagement.noPasswordSet')}
-        </span>
+        </label>
         <Button
           size="sm"
           onClick={() => navigate(user?.hasPassword ? '/change-password?from=password-reset' : '/change-password?mode=set')}
@@ -52,15 +37,24 @@ export default function PasswordSection() {
         </Button>
       </div>
 
-      {user?.hasPassword && (
-        <button
-          type="button"
-          onClick={() => navigate('/auth?tab=forgot')}
-          className="text-[11px] text-primary hover:underline ml-1"
-        >
-          {t('auth.passwordManagement.forgotPasswordLink')}
-        </button>
-      )}
+      <div className="flex items-center justify-between bg-secondary/30 border border-border rounded-xl px-3 h-11">
+        <span className="text-sm text-muted-foreground truncate">
+          {user?.hasPassword
+            ? lastChanged
+              ? t('auth.passwordManagement.lastChanged', { date: lastChanged })
+              : t('auth.passwordManagement.button')
+            : t('auth.passwordManagement.noPasswordSet')}
+        </span>
+        {user?.hasPassword && (
+          <button
+            type="button"
+            onClick={() => navigate('/auth?tab=forgot')}
+            className="text-[11px] text-primary hover:underline shrink-0 ml-3"
+          >
+            {t('auth.passwordManagement.forgotPasswordLink')}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

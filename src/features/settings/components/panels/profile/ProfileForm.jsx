@@ -34,20 +34,24 @@ export default function ProfileForm() {
 
   return (
     <>
-      <div className="space-y-1.5">
-        <div className="flex items-center ml-1 h-[18px]">
-          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            {t('profile.displayName', 'Display name')}
-          </label>
+      <section className="space-y-4">
+        <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+          {t('profile.displayName', 'Display name') + ' & ' + t('profile.bio', 'Bio')}
+        </h4>
+        <div className="space-y-1.5">
+          <div className="flex items-center ml-1 h-[18px]">
+            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              {t('profile.displayName', 'Display name')}
+            </label>
+          </div>
+          <Input
+            value={formData.displayName}
+            onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
+            placeholder={t('profile.displayNamePlaceholder', 'Optional public name')}
+            className="bg-secondary/30 border-border rounded-xl h-10 text-sm"
+            maxLength={50}
+          />
         </div>
-        <Input
-          value={formData.displayName}
-          onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
-          placeholder={t('profile.displayNamePlaceholder', 'Optional public name')}
-          className="bg-secondary/30 border-border rounded-xl h-10 text-sm"
-          maxLength={50}
-        />
-      </div>
 
       <div className="space-y-1.5">
         <div className="flex justify-between items-end">
@@ -63,9 +67,16 @@ export default function ProfileForm() {
           className="bg-secondary/30 border-border rounded-2xl min-h-[100px] text-sm resize-none"
         />
       </div>
+      </section>
 
-      {/* Show followers toggle */}
-      <div className="flex items-start justify-between gap-4">
+      <hr className="border-border/50" />
+
+      <section className="space-y-4">
+        <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+          {t('profile.sections.visibility', 'Visibility')}
+        </h4>
+        {/* Show followers toggle */}
+        <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm text-foreground font-medium">
             {t('profile.settings.showFollowers')}
@@ -90,6 +101,7 @@ export default function ProfileForm() {
           />
         </button>
       </div>
+      </section>
 
       <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-border pb-8">
         <Button

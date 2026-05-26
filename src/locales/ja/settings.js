@@ -2,9 +2,11 @@ export default {
   title: "設定",
   search: "設定を検索…",
   searchTitle: "名前または説明で設定を検索…",
+  searchNoResults: "検索に一致する設定がありません",
   reset: "デフォルトにリセット",
   manualSave: "プロジェクトを保存",
   applyChanges: "変更を適用",
+  unsavedChanges: "未保存の変更",
 
   connections: {
     label: "接続"
@@ -19,6 +21,8 @@ export default {
     free: "無料アカウント",
     notConnected: "未接続",
     connectDesc: "Spotifyアカウントをリンクしてアプリ内で直接トラックを再生",
+    connectedDesc: "サインインとSpotifyライブラリの同期に使用",
+    lastUsed: "最終使用: {{when}}",
     premiumRequired: "再生統合にはSpotify Premiumが必要です",
     connectSuccess: "Spotifyに接続しました",
     connectFailed: "Spotifyへの接続に失敗しました",
@@ -33,6 +37,8 @@ export default {
     disconnect: "Googleを切断",
     connected: "Google接続済み",
     connectDesc: "Googleアカウントをリンクして簡単にサインイン",
+    connectedDesc: "サインインとアカウント回復に使用",
+    lastUsed: "最終使用: {{when}}",
     connectFailed: "Googleへの接続に失敗しました",
     disconnected: "Googleアカウントを切断しました",
     accountInUse: "このGoogleアカウントは既に別のアカウントにリンクされています",
@@ -60,7 +66,12 @@ export default {
     seekPlays: "シーク時に自動再生",
     seekPlaysDesc: "新しい位置にシークした後に自動的に再生を開始",
     autoPauseOnMark: "マーク時に自動一時停止",
-    autoPauseOnMarkDesc: "行タイムスタンプをマークするときに自動的に再生を一時停止"
+    autoPauseOnMarkDesc: "行タイムスタンプをマークするときに自動的に再生を一時停止",
+    speedPresets: "再生速度プリセット",
+    speedPresetsDesc: "カンマ区切りの再生速度リスト（最大6つ）",
+    speedSection: "速度",
+    seekSection: "シークとナビゲーション",
+    waveformSection: "波形"
   },
 
   editor: {
@@ -91,7 +102,14 @@ export default {
     srtGap: "最小間隔",
     srtGapDesc: "連続する字幕間の最小時間（秒）",
     srtSnap: "次にスナップ",
-    srtSnapDesc: "字幕の終了を次の開始に自動スナップ"
+    srtSnapDesc: "字幕の終了を次の開始に自動スナップ",
+    shiftAllAmount: "一括シフト量",
+    shiftAllAmountDesc: "一括シフトボタンを押すたびに適用される秒数",
+    syncFlashDuration: "同期フラッシュの表示時間",
+    syncFlashDurationDesc: "同期済み行のフラッシュとナッジインジケーターの表示時間",
+    lyricsSearchSpeed: "歌詞検索の速度",
+    lyricsSearchSpeedDesc: "入力後に歌詞検索が起動するまでの速さ",
+    editorSection: "エディター"
   },
 
   export: {
@@ -115,7 +133,10 @@ export default {
     normalizeTimestamps: "タイムスタンプを正規化",
     normalizeTimestampsDesc: "タイムスタンプが厳密に時系列順であることを保証",
     includeMetadata: "メタデータを含める",
-    includeMetadataDesc: "エクスポートファイルにIDタグ（アーティスト、タイトルなど）を追加"
+    includeMetadataDesc: "エクスポートファイルにIDタグ（アーティスト、タイトルなど）を追加",
+    formatSection: "形式とエンコード",
+    processingSection: "タイムスタンプと処理",
+    outputSection: "出力オプション"
   },
 
   interface: {
@@ -167,7 +188,14 @@ export default {
     lockLayout: "ワークスペースレイアウトをロック",
     lockLayoutDesc: "パネルとプレイヤーバーを固定し、誤った並べ替えやサイズ変更を防止",
     toastPosition: "通知の表示位置",
-    toastPositionDesc: "画面上の通知が表示される場所を制御します"
+    toastPositionDesc: "画面上の通知が表示される場所を制御します",
+    focusContrast: "フォーカスコントラスト",
+    focusContrastDesc: "プレビューパネルで非アクティブな行のフェード強度",
+    generalSection: "一般",
+    displaySection: "エディター表示",
+    scrollSection: "スクロールと配置",
+    lyricsSection: "歌詞と翻訳",
+    previewSection: "プレビュー"
   },
 
   shortcuts: {
@@ -235,7 +263,18 @@ export default {
     confirmDestructiveDesc: "データの削除やクリア前に確認を求める",
     timezone: "タイムゾーン",
     timezoneDesc: "保存タイムスタンプの検出タイムゾーンを上書き",
-    timezoneAuto: "自動検出"
+    timezoneAuto: "自動検出",
+    autoSaveIndicatorDuration: "自動保存インジケーターの表示時間",
+    autoSaveIndicatorDurationDesc: "保存完了インジケーターが表示される時間",
+    uploadRedirectDelay: "アップロード後のリダイレクト遅延",
+    uploadRedirectDelayDesc: "アップロード成功後にライブラリに戻るまでの遅延",
+    deactivate: "アカウントを無効化",
+    deactivateDesc: "アカウントを永続的に無効化します。この操作は取り消せません。",
+    deactivateConfirm: "本当にアカウントを無効化しますか？ログアウトされ、個人データが削除されます。共有されているプロジェクトは残りますが、それ以外は削除されます。",
+    deactivateSuccess: "アカウントを無効化しました。",
+    deactivateError: "アカウントの無効化に失敗しました。",
+    deactivateBtn: "無効化",
+    dangerZone: "危険ゾーン"
   },
 
   options: {
@@ -280,6 +319,22 @@ export default {
       bottomLeft: "左下",
       bottomCenter: "下部中央",
       bottomRight: "右下"
+    },
+    speeds: {
+      fast: "速い",
+      normal: "標準",
+      slow: "遅い"
+    },
+    durations: {
+      short: "短い",
+      normal: "標準",
+      long: "長い"
+    },
+    contrasts: {
+      off: "オフ（フェードなし）",
+      low: "低",
+      medium: "中",
+      high: "高"
     }
   }
 };

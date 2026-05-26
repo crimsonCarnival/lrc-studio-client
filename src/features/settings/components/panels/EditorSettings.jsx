@@ -1,9 +1,9 @@
-﻿import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import NumberInput from "@shared/ui/NumberInput";
 import { Section, SettingRow, Toggle } from '../shared';
 import { useEditorSettings } from '../../hooks/useEditorSettings';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { FileText, PauseCircle, SlidersHorizontal, ChevronDown, SkipForward, MoveHorizontal, Hash, Clock, Film, Magnet } from 'lucide-react';
+import { FileText, PauseCircle, SlidersHorizontal, ChevronDown, SkipForward, MoveHorizontal, Hash, Clock, Film, Magnet, Zap, Search } from 'lucide-react';
 
 export default function EditorSettings({ settings, updateSetting, searchTerm }) {
   const { t } = useTranslation();
@@ -116,6 +116,44 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }) 
           <SelectContent className="bg-zinc-900 border-zinc-700">
             <SelectItem value="hundredths">{t('settings.options.precision.hundredths')}</SelectItem>
             <SelectItem value="thousandths">{t('settings.options.precision.thousandths')}</SelectItem>
+          </SelectContent>
+        </Select>
+      </SettingRow>
+      <SettingRow
+        icon={Zap}
+        label={t('settings.editor.syncFlashDuration')}
+        description={t('settings.editor.syncFlashDurationDesc')}
+      >
+        <Select
+          value={settings.editor?.syncFlashDuration ?? 'normal'}
+          onValueChange={(val) => updateSetting('editor.syncFlashDuration', val)}
+        >
+          <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-900 border-zinc-700">
+            <SelectItem value="short">{t('settings.options.durations.short')}</SelectItem>
+            <SelectItem value="normal">{t('settings.options.durations.normal')}</SelectItem>
+            <SelectItem value="long">{t('settings.options.durations.long')}</SelectItem>
+          </SelectContent>
+        </Select>
+      </SettingRow>
+      <SettingRow
+        icon={Search}
+        label={t('settings.editor.lyricsSearchSpeed')}
+        description={t('settings.editor.lyricsSearchSpeedDesc')}
+      >
+        <Select
+          value={settings.editor?.lyricsSearchSpeed ?? 'normal'}
+          onValueChange={(val) => updateSetting('editor.lyricsSearchSpeed', val)}
+        >
+          <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-zinc-900 border-zinc-700">
+            <SelectItem value="fast">{t('settings.options.speeds.fast')}</SelectItem>
+            <SelectItem value="normal">{t('settings.options.speeds.normal')}</SelectItem>
+            <SelectItem value="slow">{t('settings.options.speeds.slow')}</SelectItem>
           </SelectContent>
         </Select>
       </SettingRow>

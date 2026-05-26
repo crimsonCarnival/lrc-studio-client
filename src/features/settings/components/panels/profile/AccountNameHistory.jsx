@@ -3,7 +3,7 @@ import { History } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 
 export default function AccountNameHistory() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuthContext();
 
   if (!user?.previousAccountNames?.length) {
@@ -23,7 +23,7 @@ export default function AccountNameHistory() {
             {t('profile.changedFrom', { from: entry.from, to: entry.to })}
           </span>
           <span className="text-zinc-500">
-            {new Date(entry.changedAt).toLocaleDateString(undefined, {
+            {new Date(entry.changedAt).toLocaleDateString(i18n.language, {
               year: 'numeric', month: 'short', day: 'numeric'
             })}
           </span>

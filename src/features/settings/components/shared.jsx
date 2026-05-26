@@ -17,15 +17,17 @@ export function Toggle({ checked, onChange, id }) {
 
 export function SettingRow({ label, description, icon: Icon, children }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-2.5">
+    <div className="flex flex-col justify-between gap-4 p-5 rounded-2xl border border-border/50 bg-secondary/10 hover:border-border transition-all group">
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-zinc-200 flex items-center gap-1.5">
-          {Icon && <Icon className="size-3.5 text-zinc-500 shrink-0" />}
+        <p className="text-sm font-semibold text-zinc-200 flex items-center gap-2 mb-2">
+          {Icon && <Icon className="size-4 text-zinc-400 shrink-0 group-hover:text-primary transition-colors" />}
           {label}
         </p>
-        {description && <p className="text-xs text-zinc-500 mt-0.5">{description}</p>}
+        {description && <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>}
       </div>
-      <div className="flex-shrink-0">{children}</div>
+      <div className="flex justify-end items-end mt-auto pt-2">
+        {children}
+      </div>
     </div>
   );
 }
@@ -63,12 +65,12 @@ export function Section({ title, icon: Icon, children, searchTerm }) {
   if (searchTerm && !filteredChildren?.some(Boolean)) return null;
 
   return (
-    <div className={`flex flex-col min-h-0 mb-5 ${searchTerm ? 'animate-fade-in' : ''}`}>
-      <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 px-1 flex items-center gap-1.5 flex-shrink-0">
-        {Icon && <Icon className="size-3.5" />}
+    <div className={`settings-section flex flex-col min-h-0 mb-8 ${searchTerm ? 'animate-fade-in' : ''}`}>
+      <h4 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4 px-1 flex items-center gap-2 flex-shrink-0">
+        {Icon && <Icon className="size-4" />}
         {title}
       </h4>
-      <div className="bg-zinc-800/40 rounded-xl px-4 divide-y divide-zinc-700/40">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredChildren}
       </div>
     </div>

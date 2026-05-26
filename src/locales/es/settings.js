@@ -2,9 +2,11 @@ export default {
   title: "Ajustes",
   search: "Buscar ajustes...",
   searchTitle: "Buscar ajustes por nombre o descripción...",
+  searchNoResults: "Ningún ajuste coincide con tu búsqueda",
   reset: "Restablecer valores predeterminados",
   manualSave: "Guardar Proyecto",
   applyChanges: "Aplicar Cambios",
+  unsavedChanges: "Cambios sin guardar",
 
   connections: {
     label: "Conexiones"
@@ -19,6 +21,8 @@ export default {
     free: "Cuenta Gratuita",
     notConnected: "No conectado",
     connectDesc: "Vincula tu cuenta de Spotify para reproducir canciones directamente",
+    connectedDesc: "Usado para iniciar sesión y sincronizar tu biblioteca de Spotify",
+    lastUsed: "Usado: {{when}}",
     premiumRequired: "Se requiere Spotify Premium para la integración",
     connectSuccess: "Spotify conectado correctamente",
     connectFailed: "Error al conectar Spotify",
@@ -33,6 +37,8 @@ export default {
     disconnect: "Desconectar Google",
     connected: "Google Conectado",
     connectDesc: "Vincula tu cuenta de Google para iniciar sesión fácilmente",
+    connectedDesc: "Usado para iniciar sesión y recuperación de cuenta",
+    lastUsed: "Usado: {{when}}",
     connectFailed: "Error al conectar Google",
     disconnected: "Cuenta de Google desconectada",
     accountInUse: "Esta cuenta de Google ya está vinculada a otra cuenta",
@@ -60,7 +66,12 @@ export default {
     seekPlays: "Reproducción automática al buscar",
     seekPlaysDesc: "Inicia la reproducción automáticamente tras saltar a una posición",
     autoPauseOnMark: "Pausa automática al marcar",
-    autoPauseOnMarkDesc: "Pausa la reproducción automáticamente al marcar un tiempo"
+    autoPauseOnMarkDesc: "Pausa la reproducción automáticamente al marcar un tiempo",
+    speedPresets: "Velocidades de reproducción",
+    speedPresetsDesc: "Lista separada por comas de velocidades (hasta 6)",
+    speedSection: "Velocidad",
+    seekSection: "Navegación y búsqueda",
+    waveformSection: "Forma de onda"
   },
 
   editor: {
@@ -91,7 +102,14 @@ export default {
     srtGap: "Espacio mínimo",
     srtGapDesc: "Tiempo mínimo entre subtítulos consecutivos (segundos)",
     srtSnap: "Ajustar al siguiente",
-    srtSnapDesc: "Ajusta automáticamente el final de un subtítulo al inicio del siguiente"
+    srtSnapDesc: "Ajusta automáticamente el final de un subtítulo al inicio del siguiente",
+    shiftAllAmount: "Cantidad de desplazamiento global",
+    shiftAllAmountDesc: "Segundos aplicados al pulsar 'Desplazar todo'",
+    syncFlashDuration: "Duración del destello de sincronización",
+    syncFlashDurationDesc: "Duración del destello al sincronizar una línea",
+    lyricsSearchSpeed: "Velocidad de búsqueda de letra",
+    lyricsSearchSpeedDesc: "Rapidez con la que se activa la búsqueda al escribir",
+    editorSection: "Editor"
   },
 
   export: {
@@ -115,7 +133,10 @@ export default {
     normalizeTimestamps: "Normalizar tiempos",
     normalizeTimestampsDesc: "Asegura que los tiempos sean estrictamente cronológicos",
     includeMetadata: "Incluir metadatos",
-    includeMetadataDesc: "Añade etiquetas ID (artista, título, etc.) al archivo"
+    includeMetadataDesc: "Añade etiquetas ID (artista, título, etc.) al archivo",
+    formatSection: "Formato y codificación",
+    processingSection: "Tiempos y procesamiento",
+    outputSection: "Opciones de salida"
   },
 
   interface: {
@@ -167,7 +188,14 @@ export default {
     lockLayout: "Bloquear diseño",
     lockLayoutDesc: "Fija los paneles y el reproductor para evitar reordenamientos o cambios de tamaño accidentales",
     toastPosition: "Posición de notificaciones",
-    toastPositionDesc: "Controla dónde aparecen las notificaciones en pantalla"
+    toastPositionDesc: "Controla dónde aparecen las notificaciones en pantalla",
+    focusContrast: "Contraste de enfoque",
+    focusContrastDesc: "Intensidad del desvanecimiento de las líneas inactivas en el panel de vista previa",
+    generalSection: "General",
+    displaySection: "Visualización del editor",
+    scrollSection: "Desplazamiento y alineación",
+    lyricsSection: "Letra y traducciones",
+    previewSection: "Vista previa"
   },
 
   shortcuts: {
@@ -235,7 +263,18 @@ export default {
     confirmDestructiveDesc: "Pedir confirmación antes de borrar datos",
     timezone: "Zona horaria",
     timezoneDesc: "Anular la zona horaria detectada",
-    timezoneAuto: "Auto-detectar"
+    timezoneAuto: "Auto-detectar",
+    autoSaveIndicatorDuration: "Duración del indicador de guardado",
+    autoSaveIndicatorDurationDesc: "Tiempo que el indicador de guardado permanece visible",
+    uploadRedirectDelay: "Retardo de redirección al subir",
+    uploadRedirectDelayDesc: "Tiempo antes de volver a la biblioteca tras una carga exitosa",
+    deactivate: "Desactivar cuenta",
+    deactivateDesc: "Desactiva tu cuenta de forma permanente. Esta acción no se puede deshacer.",
+    deactivateConfirm: "¿Estás completamente seguro de que quieres desactivar tu cuenta? Esto cerrará tu sesión y eliminará tus datos personales. Los proyectos permanecen si están compartidos, de lo contrario se eliminan.",
+    deactivateSuccess: "Cuenta desactivada correctamente.",
+    deactivateError: "Error al desactivar la cuenta.",
+    deactivateBtn: "Desactivar",
+    dangerZone: "Zona de peligro"
   },
 
   options: {
@@ -280,6 +319,22 @@ export default {
       bottomLeft: "Abajo a la izquierda",
       bottomCenter: "Abajo al centro",
       bottomRight: "Abajo a la derecha"
+    },
+    speeds: {
+      fast: "Rápido",
+      normal: "Normal",
+      slow: "Lento"
+    },
+    durations: {
+      short: "Corta",
+      normal: "Normal",
+      long: "Larga"
+    },
+    contrasts: {
+      off: "Desactivado (sin desvanecimiento)",
+      low: "Bajo",
+      medium: "Medio",
+      high: "Alto"
     }
   }
 };

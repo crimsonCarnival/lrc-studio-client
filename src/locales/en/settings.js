@@ -2,9 +2,11 @@ export default {
   title: "Settings",
   search: "Search settings...",
   searchTitle: "Search settings by name or description...",
+  searchNoResults: "No settings match your search",
   reset: "Reset to defaults",
   manualSave: "Save Project",
   applyChanges: "Apply Changes",
+  unsavedChanges: "Unsaved changes",
 
   connections: {
     label: "Connections"
@@ -19,6 +21,8 @@ export default {
     free: "Free Account",
     notConnected: "Not connected",
     connectDesc: "Link your Spotify account to play tracks directly in the app",
+    connectedDesc: "Used for sign-in and syncing your Spotify library",
+    lastUsed: "Last used: {{when}}",
     premiumRequired: "Spotify Premium is required for playback integration",
     connectSuccess: "Spotify connected successfully",
     connectFailed: "Failed to connect Spotify",
@@ -33,6 +37,8 @@ export default {
     disconnect: "Disconnect Google",
     connected: "Google Connected",
     connectDesc: "Link your Google account for easy sign-in",
+    connectedDesc: "Used for sign-in and account recovery",
+    lastUsed: "Last used: {{when}}",
     connectFailed: "Failed to connect Google",
     disconnected: "Google account disconnected",
     accountInUse: "This Google account is already linked to another account",
@@ -60,7 +66,12 @@ export default {
     seekPlays: "Auto-play on Seek",
     seekPlaysDesc: "Automatically start playback after seeking to a new position",
     autoPauseOnMark: "Auto-Pause on Mark",
-    autoPauseOnMarkDesc: "Automatically pause playback when marking a line timestamp"
+    autoPauseOnMarkDesc: "Automatically pause playback when marking a line timestamp",
+    speedPresets: "Playback speed presets",
+    speedPresetsDesc: "Comma-separated list of playback speeds (up to 6)",
+    speedSection: "Speed",
+    seekSection: "Seeking & Navigation",
+    waveformSection: "Waveform"
   },
 
   editor: {
@@ -91,7 +102,12 @@ export default {
     srtGap: "Minimum Gap",
     srtGapDesc: "Minimum time between consecutive subtitles (seconds)",
     srtSnap: "Snap to Next",
-    srtSnapDesc: "Automatically snap the end of a subtitle to the start of the next"
+    srtSnapDesc: "Automatically snap the end of a subtitle to the start of the next",
+    syncFlashDuration: "Sync flash duration",
+    syncFlashDurationDesc: "Duration of the 'just synced' line flash and nudge indicator",
+    lyricsSearchSpeed: "Lyrics search speed",
+    lyricsSearchSpeedDesc: "How quickly the lyrics search triggers after typing",
+    editorSection: "Editor"
   },
 
   export: {
@@ -115,7 +131,10 @@ export default {
     normalizeTimestamps: "Normalize Timestamps",
     normalizeTimestampsDesc: "Ensure timestamps are strictly chronological",
     includeMetadata: "Include Metadata",
-    includeMetadataDesc: "Add ID tags (artist, title, etc.) to exported files"
+    includeMetadataDesc: "Add ID tags (artist, title, etc.) to exported files",
+    formatSection: "Format & Encoding",
+    processingSection: "Timestamps & Processing",
+    outputSection: "Output Options"
   },
 
   interface: {
@@ -141,6 +160,8 @@ export default {
     alignLeft: "Align Left",
     alignCenter: "Align Center",
     alignRight: "Align Right",
+    focusContrast: "Focus contrast",
+    focusContrastDesc: "Opacity fade intensity for inactive lines in the preview panel",
     fontSize: "Editor Font Size",
     fontSizeDesc: "Scale of the text in the editor workspace",
     spacing: "Line Spacing",
@@ -167,7 +188,12 @@ export default {
     lockLayout: "Lock Workspace Layout",
     lockLayoutDesc: "Freeze panels and the player bar in place to prevent accidental reordering or resizing",
     toastPosition: "Notification Position",
-    toastPositionDesc: "Controls where on-screen notifications appear"
+    toastPositionDesc: "Controls where on-screen notifications appear",
+    generalSection: "General",
+    displaySection: "Editor Display",
+    scrollSection: "Scrolling & Alignment",
+    lyricsSection: "Lyrics & Translations",
+    previewSection: "Preview"
   },
 
   shortcuts: {
@@ -235,7 +261,18 @@ export default {
     confirmDestructiveDesc: "Ask for confirmation before deleting or clearing data",
     timezone: "Timezone",
     timezoneDesc: "Override detected timezone for saved timestamps",
-    timezoneAuto: "Auto-detect"
+    timezoneAuto: "Auto-detect",
+    autoSaveIndicatorDuration: "Auto-save indicator duration",
+    autoSaveIndicatorDurationDesc: "How long the save completion indicator remains visible",
+    uploadRedirectDelay: "Upload redirect delay",
+    uploadRedirectDelayDesc: "Delay before returning to the library after a successful upload",
+    deactivate: "Deactivate Account",
+    deactivateDesc: "Permanently deactivate your account. This action cannot be undone.",
+    deactivateConfirm: "Are you absolutely sure you want to deactivate your account? This will log you out and delete your personal data. Projects remain if shared but otherwise are deleted.",
+    deactivateSuccess: "Account deactivated successfully.",
+    deactivateError: "Failed to deactivate account.",
+    deactivateBtn: "Deactivate",
+    dangerZone: "Danger Zone"
   },
 
   options: {
@@ -280,6 +317,22 @@ export default {
       bottomLeft: "Bottom Left",
       bottomCenter: "Bottom Center",
       bottomRight: "Bottom Right"
+    },
+    speeds: {
+      fast: "Fast",
+      normal: "Normal",
+      slow: "Slow"
+    },
+    durations: {
+      short: "Short",
+      normal: "Normal",
+      long: "Long"
+    },
+    contrasts: {
+      off: "Off (No fading)",
+      low: "Low",
+      medium: "Medium",
+      high: "High"
     }
   }
 };
