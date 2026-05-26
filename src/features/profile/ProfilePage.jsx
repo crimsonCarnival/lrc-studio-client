@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
-import { Star, GitFork, Music, Youtube, Settings } from 'lucide-react';
+import { Star, GitFork, Music, PlayCircle, Settings } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { getPublicProfile, followUser, unfollowUser } from './profile.service';
 import { FollowModal } from './FollowModal';
@@ -40,7 +40,7 @@ function ProjectCard({ project }) {
           {title}
         </h3>
         {isYoutube ? (
-          <Youtube className="size-4 text-red-400 shrink-0" />
+          <PlayCircle className="size-4 text-red-400 shrink-0" />
         ) : (
           <Music className="size-4 text-muted-foreground shrink-0" />
         )}
