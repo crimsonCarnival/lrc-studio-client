@@ -6,10 +6,14 @@ export function connectSocket(): Socket {
   if (_socket) return _socket;
 
   // In dev, Vite proxies /socket.io → localhost:3000, so use same origin.
-  // In prod, socket server is on a different origin.
+  // In prod, VITE_SERVER_ORIGIN must be set to the backend URL (e.g. https://lrc-editor-server.onrender.com).
   const serverUrl = import.meta.env.PROD
-    ? import.meta.env.VITE_SERVER_ORIGIN
+    ? (import.meta.env.VITE_SERVER_ORIGIN as string)
     : window.location.origin;
+
+  if (import.meta.env.PROD && !serverUrl) {
+    console.error('[socket] VITE_SERVER_ORIGIN is not set — socket will not connect');
+  }
 
   _socket = io(serverUrl, {
     withCredentials: true,
