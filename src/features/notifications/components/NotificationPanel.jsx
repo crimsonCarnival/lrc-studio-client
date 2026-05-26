@@ -3,8 +3,8 @@ import { useNotificationsContext } from '../NotificationsContext';
 import { NotificationStickySection } from './NotificationStickySection';
 import { NotificationItem } from './NotificationItem';
 
-const SOCIAL_TYPES = new Set(['star', 'fork']);
-const SYSTEM_TYPES = new Set(['system', 'admin', 'ban', 'password_changed']);
+const SOCIAL_TYPES = new Set(['star', 'fork', 'follow']);
+const SYSTEM_TYPES = new Set(['system', 'admin', 'ban', 'password_changed', 'admin_granted']);
 const STICKY_TYPES = new Set(['verify_email', 'set_password']);
 
 function SectionLabel({ label }) {

@@ -14,6 +14,8 @@ export default {
   starred: '{{actors}}があなたのプロジェクトにスターをつけました',
   forkedProject: '{{actors}}が{{title}}をフォークしました',
   forked: '{{actors}}があなたのプロジェクトをフォークしました',
+  followed: 'があなたをフォローしました',
+  adminGranted: '管理者アクセスが付与されました',
   banned: 'アカウントが停止されました。',
   passwordChanged: 'パスワードが変更されました。',
   actorAndOther: '{{name}}と他1人',

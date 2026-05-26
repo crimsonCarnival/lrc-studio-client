@@ -14,6 +14,8 @@ export default {
   starred: '{{actors}} starred your project',
   forkedProject: '{{actors}} forked {{title}}',
   forked: '{{actors}} forked your project',
+  followed: 'followed you',
+  adminGranted: "You've been granted admin access",
   banned: 'Your account has been suspended.',
   passwordChanged: 'Your password was changed.',
   actorAndOther: '{{name}} and 1 other',

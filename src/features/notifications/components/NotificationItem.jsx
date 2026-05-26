@@ -32,6 +32,8 @@ function NotificationText({ notification, t }) {
       ? <span>{actorNode} forked <strong>{projectTitle}</strong></span>
       : <span>{actorNode} forked your project</span>;
   }
+  if (type === 'follow') return <span>{actorNode} {t('notifications.followed')}</span>;
+  if (type === 'admin_granted') return <span>{t('notifications.adminGranted')}</span>;
   if (type === 'ban') return <span>{t('notifications.banned')}</span>;
   if (type === 'password_changed') return <span>{t('notifications.passwordChanged')}</span>;
   return <span>{body || ''}</span>;

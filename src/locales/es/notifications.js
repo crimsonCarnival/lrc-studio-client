@@ -14,6 +14,8 @@ export default {
   starred: '{{actors}} marcó tu proyecto con estrella',
   forkedProject: '{{actors}} bifurcó {{title}}',
   forked: '{{actors}} bifurcó tu proyecto',
+  followed: 'te siguió',
+  adminGranted: 'Se te ha concedido acceso de administrador',
   banned: 'Tu cuenta ha sido suspendida.',
   passwordChanged: 'Tu contraseña fue cambiada.',
   actorAndOther: '{{name}} y 1 otro',
