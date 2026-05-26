@@ -95,6 +95,30 @@ export default defineConfig({
           if (id.includes('node_modules/react-router')) {
             return 'vendor-router';
           }
+          // Animation — heavy, imported for drag-reorder in editor layout
+          if (id.includes('node_modules/framer-motion')) {
+            return 'vendor-framer';
+          }
+          // Socket.io client
+          if (id.includes('node_modules/socket.io-client') || id.includes('node_modules/engine.io-client') || id.includes('node_modules/@socket.io')) {
+            return 'vendor-socket';
+          }
+          // GraphQL client
+          if (id.includes('node_modules/graphql-request') || id.includes('node_modules/graphql')) {
+            return 'vendor-graphql';
+          }
+          // WebAuthn — only needed on passkey flows
+          if (id.includes('node_modules/@simplewebauthn')) {
+            return 'vendor-webauthn';
+          }
+          // OGL — 3D library used on landing page
+          if (id.includes('node_modules/ogl')) {
+            return 'vendor-ogl';
+          }
+          // Fingerprinting — loaded once at session start
+          if (id.includes('node_modules/@fingerprintjs')) {
+            return 'vendor-fingerprint';
+          }
         },
       },
     },
