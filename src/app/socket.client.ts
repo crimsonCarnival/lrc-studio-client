@@ -5,8 +5,13 @@ let _socket: Socket | null = null;
 export function connectSocket(): Socket {
   if (_socket) return _socket;
 
-  const apiUrl = (import.meta).env.VITE_API_URL || '/api';
-  _socket = io(apiUrl, {
+  // In dev, Vite proxies /socket.io → localhost:3000, so use same origin.
+  // In prod, socket server is on a different origin.
+  const serverUrl = import.meta.env.PROD
+    ? import.meta.env.VITE_SERVER_ORIGIN
+    : window.location.origin;
+
+  _socket = io(serverUrl, {
     withCredentials: true,
     transports: ['websocket', 'polling'],
     autoConnect: true,
