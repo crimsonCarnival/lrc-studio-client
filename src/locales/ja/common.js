@@ -20,6 +20,7 @@ export default {
   or: "または",
   save: "保存",
   create: "作成",
+  next: "次へ",
   networkError: "ネットワークエラー",
   backToHome: "ホームへ戻る",
   goBack: "戻る",

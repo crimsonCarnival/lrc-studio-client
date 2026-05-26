@@ -258,24 +258,26 @@ export default function Home() {
         onClose={() => setEditingProject(null)}
         onConfirm={async (data) => {
           try {
-            const { name: title, description, tags, songName, songArtist, songAlbum, songYear } = data;
-            const updatedMetadata = { 
-              ...editingProject.metadata, 
-              description, 
+            const { name: title, description, tags, songName, songArtist, songAlbum, songYear, coverImage, albumArt } = data;
+            const updatedMetadata = {
+              ...editingProject.metadata,
+              description,
               tags,
               songName,
               songArtist,
               songAlbum,
-              songYear
+              songYear,
+              albumArt
             };
             await projects.patch(editingProject.projectId, {
               title,
+              coverImage,
               metadata: updatedMetadata
             });
             // Update local state
             setItems(prev => prev.map(p =>
               p.projectId === editingProject.projectId
-                ? { ...p, title, metadata: updatedMetadata }
+                ? { ...p, title, coverImage, metadata: updatedMetadata }
                 : p
             ));
             setEditingProject(null);
@@ -290,6 +292,8 @@ export default function Home() {
         initialSongArtist={editingProject?.metadata?.songArtist || ''}
         initialSongAlbum={editingProject?.metadata?.songAlbum || ''}
         initialSongYear={editingProject?.metadata?.songYear || ''}
+        initialCoverImage={editingProject?.coverImage || ''}
+        initialAlbumArt={editingProject?.metadata?.albumArt || ''}
         isEditing={true}
       />
     </div>

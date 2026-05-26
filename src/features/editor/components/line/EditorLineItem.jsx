@@ -159,8 +159,9 @@ const EditorLineItem = React.memo(({
     const sign = delta > 0 ? '+' : '';
     setNudgeIndicator(`${sign}${delta.toFixed(2)}s`);
     clearTimeout(nudgeTimerRef.current);
-    nudgeTimerRef.current = setTimeout(() => setNudgeIndicator(null), 600);
-  }, []);
+    const duration = { short: 300, normal: 600, long: 1200 }[settings.editor?.syncFlashDuration] || 600;
+    nudgeTimerRef.current = setTimeout(() => setNudgeIndicator(null), duration);
+  }, [settings.editor?.syncFlashDuration]);
 
   const { handleTouchStart, handleTouchEnd, handleTouchMove } = useLineGestures({
     lineIndex: i,
@@ -203,10 +204,11 @@ const EditorLineItem = React.memo(({
   useEffect(() => {
     if (justSynced) {
       clearTimeout(justSyncedTimerRef.current);
-      justSyncedTimerRef.current = setTimeout(() => setJustSynced(false), 600);
+      const duration = { short: 300, normal: 600, long: 1200 }[settings.editor?.syncFlashDuration] || 600;
+      justSyncedTimerRef.current = setTimeout(() => setJustSynced(false), duration);
     }
     return () => clearTimeout(justSyncedTimerRef.current);
-  }, [justSynced]);
+  }, [justSynced, settings.editor?.syncFlashDuration]);
 
   // Segment progress for active synced line
   const segmentEnd = line.endTime ?? nextTimestamp;

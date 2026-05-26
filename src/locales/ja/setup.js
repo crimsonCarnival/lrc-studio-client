@@ -95,4 +95,8 @@ export default {
   projectInformationDesc: "公開設定を構成し、プロジェクトの詳細を追加",
   noMediaTitle: "メディアソースが見つかりません",
   noMediaDesc: "プロジェクトは読み込まれましたが、オーディオが級付けられていません。続けるには新しいオーディオソースを選んでください。",
+  coverImage: "カバー画像",
+  coverImagePlaceholder: "https://example.com/cover.jpg",
+  albumArt: "アルバムアート",
+  albumArtPlaceholder: "https://example.com/album.jpg",
 };

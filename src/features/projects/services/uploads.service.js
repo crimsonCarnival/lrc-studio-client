@@ -59,6 +59,16 @@ export const uploadsService = {
     };
   },
 
+  async uploadCoverImage(file, recaptchaToken) {
+    const result = await this.uploadImage(file, () =>
+      request('/uploads/cover-signature', {
+        method: 'POST',
+        body: JSON.stringify({ fileSize: file.size, fileName: file.name, recaptchaToken }),
+      })
+    );
+    return result.secure_url;
+  },
+
   async uploadImage(file, signatureGetter) {
     const { signature, timestamp, cloudName, apiKey, folder, resourceType, transformation } =
       await signatureGetter();

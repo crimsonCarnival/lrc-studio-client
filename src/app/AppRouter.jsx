@@ -26,6 +26,7 @@ const Home = lazy(() => import('@features/projects/components/Home'));
 const GuestLanding = lazy(() => import('@features/landing/GuestLanding'));
 const AdminDashboard = lazy(() => import('@features/admin/AdminDashboard'));
 const ProfilePage = lazy(() => import('@features/profile/ProfilePage'));
+const PlaylistPage = lazy(() => import('@features/playlists/PlaylistPage'));
 const SettingsPage = lazy(() => import('@features/settings/components/SettingsPage'));
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 const VerifyEmailPage = lazy(() => import('@features/auth/VerifyEmailPage'));
@@ -432,6 +433,11 @@ export function AppRouter({
       <Route path="home" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>}>
           <Home />
+        </Suspense>
+      } />
+      <Route path="profile/:accountName/playlists/:playlistId" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+          <PlaylistPage />
         </Suspense>
       } />
       <Route path="profile/:accountName?" element={

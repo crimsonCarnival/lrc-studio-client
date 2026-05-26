@@ -21,9 +21,11 @@ const GET_PROJECTS = `
       starCount
       lineCount
       syncedLineCount
+      coverImage
       metadata {
         description
         tags
+        albumArt
       }
       upload {
         id
@@ -65,9 +67,11 @@ const GET_PROJECT = `
         timezone
         utcOffset
       }
+      coverImage
       metadata {
         description
         tags
+        albumArt
       }
       upload {
         id

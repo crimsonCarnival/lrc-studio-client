@@ -1,4 +1,4 @@
-﻿import { useRef, useCallback } from 'react';
+import { useRef, useCallback } from 'react';
 const DateTimeFormat = Intl.DateTimeFormat;
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -166,7 +166,8 @@ export function useManualSave({
       localStorage.setItem(key, JSON.stringify(payload));
     }
     setIsAutosaving(true);
-    setTimeout(() => setIsAutosaving(false), 1200);
+    const indicatorDuration = { short: 800, normal: 1500, long: 3000 }[settings?.advanced?.autoSaveIndicatorDuration] || 1500;
+    setTimeout(() => setIsAutosaving(false), indicatorDuration);
 
     if (getAccessToken() && activeProjectIdRef.current && !isSharedProjectRef.current) {
       setIsSaving?.(true);
@@ -213,6 +214,7 @@ export function useManualSave({
         if (overrides.title !== undefined) patchData.title = overrides.title;
         if (overrides.metadata !== undefined) patchData.metadata = overrides.metadata;
         if (overrides.isPublic !== undefined) patchData.public = overrides.isPublic;
+        if (overrides.coverImage !== undefined) patchData.coverImage = overrides.coverImage;
 
         if (Object.keys(patchData).length > 0) {
           try {

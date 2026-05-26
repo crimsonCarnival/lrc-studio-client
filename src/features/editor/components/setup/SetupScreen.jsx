@@ -27,7 +27,7 @@ import { useSpotifyAuth } from '@/features/player/hooks/useSpotifyAuth';
 import MediaLibrary from './MediaLibrary';
 import SetupTips from './SetupTips';
 import AudioSourceBadge from './AudioSourceBadge';
-import GeniusSearchBar from '../genius/GeniusSearchBar';
+import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 
 const MAX_IMPORT_FILE_SIZE = 2 * 1024 * 1024;
 
@@ -100,7 +100,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   });
 
   const [lyricsTab, setLyricsTab] = useState('write');
-  const [geniusAutoSearch, setGeniusAutoSearch] = useState(null);
+  const [lyricsAutoSearch, setLyricsAutoSearch] = useState(null);
 
 
   const [metadata, setMetadata] = useState(() => ({
@@ -124,7 +124,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   const setLyricsState = useCallback((val) => setLyrics(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
   const setMetadataState = useCallback((val) => setMetadata(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
 
-  const handleGeniusImport = useCallback((lyricsText) => {
+  const handleLyricsSearchImport = useCallback((lyricsText) => {
     const parsedLines = lyricsText.split('\n').reduce((acc, line) => {
       const text = line.trim();
       if (text.length > 0) acc.push({ text, timestamp: null });
@@ -562,7 +562,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                   <div className="flex items-center gap-1 bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-1 shrink-0">
                     {[
                       { id: 'write', label: t('setup.pasteLyrics') },
-                      { id: 'genius', label: t('genius.tabLabel') },
+                      { id: 'search', label: t('lyricsSearch.tabLabel') },
                     ].map(tab => (
                       <button
                         key={tab.id}
@@ -598,24 +598,24 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                     </>
                   )}
 
-                  {lyricsTab === 'genius' && (
+                  {lyricsTab === 'search' && (
                     <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto scrollbar-thin">
                       {(songName || songArtist) && (
                         <button
                           type="button"
                           onClick={() => {
                             const q = [songName, songArtist].filter(Boolean).join(' ').trim();
-                            setGeniusAutoSearch(prev => ({ q, v: (prev?.v ?? 0) + 1 }));
+                            setLyricsAutoSearch(prev => ({ q, v: (prev?.v ?? 0) + 1 }));
                           }}
                           className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors text-xs font-medium shrink-0 w-full"
                         >
                           <Search className="size-3.5 shrink-0 text-zinc-500" />
                           <span className="truncate">
-                            {t('genius.searchFor', 'Search for')} &ldquo;{[songName, songArtist].filter(Boolean).join(' — ')}&rdquo;
+                            {t('lyricsSearch.searchFor', 'Search for')} &ldquo;{[songName, songArtist].filter(Boolean).join(' - ')}&rdquo;
                           </span>
                         </button>
                       )}
-                      <GeniusSearchBar onImport={handleGeniusImport} autoSearch={geniusAutoSearch} showKeepTimestamps={false} />
+                      <LyricsSearchBar onImport={handleLyricsSearchImport} autoSearch={lyricsAutoSearch} showKeepTimestamps={false} />
                     </div>
                   )}
                 </div>

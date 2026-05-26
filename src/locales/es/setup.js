@@ -94,4 +94,8 @@ export default {
   projectInformationDesc: "Configura la visibilidad y agrega detalles del proyecto",
   noMediaTitle: "Fuente de audio no encontrada",
   noMediaDesc: "Tu proyecto se cargó pero no tiene audio asociado. Por favor elige una nueva fuente de audio para continuar.",
+  coverImage: "Imagen de portada",
+  coverImagePlaceholder: "https://ejemplo.com/portada.jpg",
+  albumArt: "Arte del álbum",
+  albumArtPlaceholder: "https://ejemplo.com/album.jpg",
 };

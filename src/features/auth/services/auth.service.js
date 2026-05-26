@@ -182,5 +182,11 @@ export const authService = {
       method: 'DELETE',
     });
   },
+  
+  async deactivateAccount() {
+    return request('/auth/deactivate', {
+      method: 'POST',
+    });
+  },
 };
 

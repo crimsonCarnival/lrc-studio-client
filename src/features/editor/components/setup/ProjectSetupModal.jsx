@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
@@ -7,6 +7,8 @@ import { Label } from '@ui/label';
 import { Badge } from '@ui/badge';
 import { X, Sparkles, Image as ImageIcon, Upload, Loader2, Video, Music2 } from 'lucide-react';
 import { Tip } from '@ui/tip';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { uploadsService } from '@/features/projects/services/uploads.service';
 
 const EMPTY_TAGS = [];
 
@@ -60,10 +62,16 @@ export default function ProjectSetupModal({
   initialSongArtist = '',
   initialSongAlbum = '',
   initialSongYear = '',
+  initialCoverImage = '',
+  initialAlbumArt = '',
   isEditing = false,
   sourceInfo = null
 }) {
   const { t } = useTranslation();
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [imageUploading, setImageUploading] = useState(false);
+  const coverImageInputRef = useRef(null);
+  const albumArtInputRef = useRef(null);
   const [form, setForm] = useState(() => ({
     name: initialName || '',
     description: initialDescription || '',
@@ -72,7 +80,9 @@ export default function ProjectSetupModal({
     songName: initialSongName || '',
     songArtist: initialSongArtist || '',
     songAlbum: initialSongAlbum || '',
-    songYear: initialSongYear || ''
+    songYear: initialSongYear || '',
+    coverImage: initialCoverImage || '',
+    albumArt: initialAlbumArt || '',
   }));
 
   // Sync form when the modal is opened or when the underlying data changes
@@ -87,11 +97,13 @@ export default function ProjectSetupModal({
         songName: initialSongName || '',
         songArtist: initialSongArtist || '',
         songAlbum: initialSongAlbum || '',
-        songYear: initialSongYear || ''
+        songYear: initialSongYear || '',
+        coverImage: initialCoverImage || '',
+        albumArt: initialAlbumArt || '',
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear]);
+  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialCoverImage, initialAlbumArt]);
 
   if (!isOpen) return null;
 
@@ -117,6 +129,23 @@ export default function ProjectSetupModal({
     }
   };
 
+  const handleImageUpload = async (field, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 5 * 1024 * 1024) return;
+    setImageUploading(true);
+    try {
+      const token = executeRecaptcha ? await executeRecaptcha('upload_cover') : undefined;
+      const url = await uploadsService.uploadCoverImage(file, token);
+      setForm(f => ({ ...f, [field]: url }));
+    } catch {}
+    finally {
+      setImageUploading(false);
+      e.target.value = '';
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const finalTags = form.tagInput.trim() ? [...form.tags, form.tagInput.trim()] : form.tags;
@@ -129,6 +158,8 @@ export default function ProjectSetupModal({
       songArtist: form.songArtist.trim(),
       songAlbum: form.songAlbum.trim(),
       songYear: form.songYear.trim(),
+      coverImage: form.coverImage.trim(),
+      albumArt: form.albumArt.trim(),
     });
   };
 
@@ -293,6 +324,76 @@ export default function ProjectSetupModal({
                       className="flex-1 bg-transparent border-none text-xs text-zinc-200 focus:outline-none min-w-[120px] placeholder:text-zinc-600"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Cover Image */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="cover-image" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  {t('setup.coverImage')}
+                </Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    id="cover-image"
+                    value={form.coverImage}
+                    onChange={(e) => setForm(f => ({ ...f, coverImage: e.target.value }))}
+                    placeholder={t('setup.coverImagePlaceholder')}
+                    className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9 placeholder:text-zinc-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => coverImageInputRef.current?.click()}
+                    disabled={imageUploading}
+                    className="shrink-0 size-9 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
+                  >
+                    {imageUploading ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Upload className="size-4" />
+                    )}
+                  </button>
+                  <input
+                    type="file"
+                    ref={coverImageInputRef}
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload('coverImage', e)}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
+              {/* Album Art */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="album-art" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  {t('setup.albumArt')}
+                </Label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    id="album-art"
+                    value={form.albumArt}
+                    onChange={(e) => setForm(f => ({ ...f, albumArt: e.target.value }))}
+                    placeholder={t('setup.albumArtPlaceholder')}
+                    className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9 placeholder:text-zinc-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => albumArtInputRef.current?.click()}
+                    disabled={imageUploading}
+                    className="shrink-0 size-9 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
+                  >
+                    {imageUploading ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Upload className="size-4" />
+                    )}
+                  </button>
+                  <input
+                    type="file"
+                    ref={albumArtInputRef}
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload('albumArt', e)}
+                    className="hidden"
+                  />
                 </div>
               </div>
             </div>

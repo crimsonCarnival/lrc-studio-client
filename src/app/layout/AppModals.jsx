@@ -19,6 +19,7 @@ export function AppModals({
   handleProjectConfirm,
   mediaTitle,
   projectMetadata,
+  projectCoverImage,
   pendingProject,
   handleDiscardProject,
   handleRestoreProject,
@@ -49,6 +50,8 @@ export function AppModals({
         initialSongArtist={projectMetadata?.songArtist}
         initialSongAlbum={projectMetadata?.songAlbum}
         initialSongYear={projectMetadata?.songYear}
+        initialCoverImage={projectCoverImage || ''}
+        initialAlbumArt={projectMetadata?.albumArt || ''}
         isEditing={true}
         sourceInfo={sourceInfo}
       />

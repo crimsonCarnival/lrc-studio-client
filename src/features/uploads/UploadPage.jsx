@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import useInputMethod from '@/shared/hooks/useInputMethod';
+import { useSettings } from '@/features/settings/useSettings';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@ui/button';
 import { AnimatePresence } from 'framer-motion';
@@ -18,6 +19,7 @@ import { uploadsService } from '@/features/projects/services/uploads.service';
  */
 export const UploadPage = () => {
   const { t } = useDynamicTranslation();
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const inputMethod = useInputMethod();
   const isMobile = inputMethod === 'touch';
@@ -98,14 +100,16 @@ export const UploadPage = () => {
 
       // Optionally navigate to library or stay on page
       toast.success(t('uploads.allComplete') || 'All uploads complete!');
-      // Navigate back after short delay
+      // Navigate back after configured delay
+      const delayMode = settings?.advanced?.uploadRedirectDelay ?? 'normal';
+      const delayMs = { fast: 500, normal: 1500, slow: 3000 }[delayMode] || 1500;
       setTimeout(() => {
         navigate('/library?tab=uploads');
-      }, 1500);
+      }, delayMs);
     } finally {
       setIsUploading(false);
     }
-  }, [files, t, navigate]);
+  }, [files, t, navigate, settings?.advanced?.uploadRedirectDelay]);
 
   return (
     <div className="flex flex-col h-screen max-lg:max-h-[calc(100vh-60px)] bg-zinc-950">

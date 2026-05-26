@@ -248,7 +248,7 @@ export function useAuth() {
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
     const popup = window.open('about:blank', 'spotify-auth', `width=${width},height=${height},left=${left},top=${top}`);
-    const { url } = await spotifyApi.getAuthUrl();
+    const url = await spotifyApi.getAuthUrl();
     if (popup) popup.location.href = url; else window.open(url, 'spotify-auth', `width=${width},height=${height},left=${left},top=${top}`);
 
     return new Promise((resolve, reject) => {
@@ -415,6 +415,22 @@ export function useAuth() {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
   }, []);
 
+  const deactivateAccount = useCallback(async () => {
+    try {
+      await auth.deactivateAccount();
+    } catch (err) {
+      console.error('Deactivate failed:', err);
+      throw err;
+    }
+    storage.remove(STORAGE_KEYS.PROJECT);
+    storage.remove(STORAGE_KEYS.SHARED_PROJECT);
+    storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
+    storage.remove(STORAGE_KEYS.HAS_SESSION);
+    setAuthFlag(false);
+    setState({ user: null, loading: false });
+    if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+  }, []);
+
   // ——— WebAuthn / Passkeys ———
 
   const registerPasskey = useCallback(async () => {
@@ -486,7 +502,7 @@ export function useAuth() {
     disconnectGoogle,
     loginWithGoogle,
     clearUnbanMessage,
-    registerPasskey,
     loginWithPasskey,
+    deactivateAccount,
   };
 }

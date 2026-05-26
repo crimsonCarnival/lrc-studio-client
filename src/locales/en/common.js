@@ -20,6 +20,7 @@ export default {
   or: "OR",
   save: "Save",
   create: "Create",
+  next: "Next",
   networkError: "Network error",
   backToHome: "Back to home",
   goBack: "Go back",

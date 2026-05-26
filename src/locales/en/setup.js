@@ -94,4 +94,8 @@ export default {
   projectInformationDesc: "Configure visibility and add project details",
   noMediaTitle: "Media source missing",
   noMediaDesc: "Your project was loaded but had no audio attached. Please choose a new audio source to continue.",
+  coverImage: "Cover Image",
+  coverImagePlaceholder: "https://example.com/cover.jpg",
+  albumArt: "Album Art",
+  albumArtPlaceholder: "https://example.com/album.jpg",
 };

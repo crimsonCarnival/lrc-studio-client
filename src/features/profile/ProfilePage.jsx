@@ -7,6 +7,7 @@ import { Star, GitFork, Music, PlayCircle, Settings } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { getPublicProfile, followUser, unfollowUser } from './profile.service';
 import { FollowModal } from './FollowModal';
+import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
 
 function AvatarBadge({ avatarUrl, name, size = 'lg' }) {
   const sizeClass = size === 'lg' ? 'size-24 text-4xl rounded-[1.5rem]' : 'size-16 text-2xl rounded-xl';
@@ -279,7 +280,7 @@ export default function ProfilePage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-border">
-        {['projects', 'albums'].map((tab) => (
+        {['projects', 'playlists'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -309,10 +310,8 @@ export default function ProfilePage() {
         )
       )}
 
-      {activeTab === 'albums' && (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-          <p className="text-sm">{t('profile.albumsComingSoon')}</p>
-        </div>
+      {activeTab === 'playlists' && (
+        <PlaylistGrid accountName={profile.accountName} isOwner={isOwner} />
       )}
 
       {followModal && profile.showFollowers && (

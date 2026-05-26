@@ -32,20 +32,21 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
 
   const isSetupPage = location.pathname === '/project/new';
 
-  const handleProjectConfirm = useCallback(({ name, description, tags, songName, songArtist, songAlbum, songYear }) => {
+  const handleProjectConfirm = useCallback(({ name, description, tags, songName, songArtist, songAlbum, songYear, coverImage, albumArt }) => {
     const newTitle = name || mediaTitle || '';
-    const newMetadata = { 
-      description: description || '', 
+    const newMetadata = {
+      description: description || '',
       tags: tags || [],
       songName: songName || '',
       songArtist: songArtist || '',
       songAlbum: songAlbum || '',
-      songYear: songYear || ''
+      songYear: songYear || '',
+      albumArt: albumArt || ''
     };
     setMediaTitle(newTitle);
     setProjectMetadata(newMetadata);
     setShowNamingModal(false);
-    handleManualSave({ title: newTitle, metadata: newMetadata });
+    handleManualSave({ title: newTitle, metadata: newMetadata, ...(coverImage ? { coverImage } : {}) });
     navigate('/project/local');
   }, [mediaTitle, setMediaTitle, setProjectMetadata, navigate, handleManualSave, setShowNamingModal]);
 
@@ -151,6 +152,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           handleProjectConfirm={handleProjectConfirm}
           mediaTitle={mediaTitle}
           projectMetadata={projectMetadata}
+          projectCoverImage={appState.projectCoverImage || ''}
           pendingProject={pendingProject}
           handleDiscardProject={handleDiscardProject}
           handleRestoreProject={handleRestoreProject}

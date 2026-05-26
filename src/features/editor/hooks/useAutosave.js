@@ -1,4 +1,4 @@
-﻿import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 import { uploads, projects, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { authEvents } from '@/shared/utils/auth-events';
@@ -261,7 +261,8 @@ export function useAutosave({
     lastSaveTimeRef.current = Date.now();
     changeCountRef.current = 0;
     setIsAutosaving(true);
-    setTimeout(() => setIsAutosaving(false), 1200);
+    const indicatorDuration = { short: 800, normal: 1500, long: 3000 }[settings.advanced?.autoSaveIndicatorDuration] || 1500;
+    setTimeout(() => setIsAutosaving(false), indicatorDuration);
   // Volatile editing values (mediaTitle, projectMetadata, editorMode, syncMode,
   // activeLineIndex, cloudinaryAudio, duration) are intentionally NOT listed here.
   // They are read from autoSaveRef.current which is updated every render,

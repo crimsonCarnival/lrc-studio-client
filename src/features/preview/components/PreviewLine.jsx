@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useSettings } from '@/features/settings/useSettings';
 import { toHiragana, toKatakana, parseRubyMarkup } from '@/shared/utils/furigana';
 import { Tip } from '@ui/tip';
@@ -35,12 +35,21 @@ export default function PreviewLine({
   const isPast = line.timestamp != null && line.timestamp < playbackPosition && !isActive;
   const isLocked = lockedLineIndex === i;
 
-  // Parallax opacity: active = 1.0, gradient to 0.3 for distant lines
-  const parallaxOpacity = isActive
-    ? 1.0
-    : distanceFromActive != null
-      ? Math.max(0.3, 1.0 - distanceFromActive * 0.15)
-      : isPast ? 0.5 : 0.7;
+  const focusContrast = settings.interface?.focusContrast ?? 'medium';
+  let parallaxOpacity = 1.0;
+
+  if (!isActive) {
+    if (focusContrast === 'off') {
+      parallaxOpacity = 1.0;
+    } else if (focusContrast === 'low') {
+      parallaxOpacity = distanceFromActive != null ? Math.max(0.6, 1.0 - distanceFromActive * 0.08) : (isPast ? 0.8 : 0.9);
+    } else if (focusContrast === 'high') {
+      parallaxOpacity = distanceFromActive != null ? Math.max(0.15, 1.0 - distanceFromActive * 0.3) : (isPast ? 0.3 : 0.4);
+    } else {
+      // medium (default)
+      parallaxOpacity = distanceFromActive != null ? Math.max(0.3, 1.0 - distanceFromActive * 0.15) : (isPast ? 0.5 : 0.7);
+    }
+  }
 
   // Stagger delay for entrance animation (lines close to active appear first)
   const staggerDelay = distanceFromActive != null
