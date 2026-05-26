@@ -206,13 +206,13 @@ export function useAuth() {
     });
   }, []);
 
-  const register = useCallback(async ({ username, email, password }) => {
+  const register = useCallback(async ({ accountName, email, password }) => {
     let recaptchaToken = undefined;
     if (executeRecaptcha) {
       recaptchaToken = await executeRecaptcha('register');
     }
 
-    const result = await auth.register({ username, email, password, recaptchaToken });
+    const result = await auth.register({ accountName, email, password, recaptchaToken });
     // Cookies are automatically set by the server. Just update user state.
     storage.set(STORAGE_KEYS.HAS_SESSION, '1');
     setAuthFlag(true);
@@ -225,13 +225,13 @@ export function useAuth() {
     return result;
   }, [scheduleRefresh, executeRecaptcha, handlePostAuthClone]);
 
-  const registerAndHold = useCallback(async ({ username, email, password, displayName, accountName }) => {
+  const registerAndHold = useCallback(async ({ accountName, email, password, displayName }) => {
     let recaptchaToken = undefined;
     if (executeRecaptcha) {
       recaptchaToken = await executeRecaptcha('register');
     }
 
-    const result = await auth.register({ username, email, password, displayName, accountName, recaptchaToken });
+    const result = await auth.register({ accountName, email, password, displayName, recaptchaToken });
     storage.set(STORAGE_KEYS.HAS_SESSION, '1');
     setAuthFlag(true);
     scheduleRefresh();
