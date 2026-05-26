@@ -199,9 +199,9 @@ export default {
     errorSamePassword: "La nueva contraseña debe ser diferente a la actual"
   },
   savedAccount: {
-    prompt: "Crear una Passkey",
+    prompt: "Crear una clave de acceso",
     promptSub: "Inicia sesión de forma segura con tu huella, rostro o bloqueo de pantalla.",
-    createPasskey: "Crear Passkey",
+    createPasskey: "Crear clave de acceso",
     save: "Solo guardar información",
     skip: "Ahora no",
     logIn: "Iniciar sesión como {{name}}",
@@ -225,22 +225,22 @@ export default {
     setting: "Estableciendo..."
   },
   passkey: {
-    created: "¡Passkey creada exitosamente!",
-    createFailed: "Error al crear la passkey.",
-    emailNotVerified: "Por favor verifica tu correo electrónico antes de agregar una passkey."
+    created: "¡Clave de acceso creada exitosamente!",
+    createFailed: "Error al crear la clave de acceso.",
+    emailNotVerified: "Por favor verifica tu correo electrónico antes de agregar una clave de acceso."
   },
   passkeyManagement: {
-    title: "Passkeys",
-    add: "Añadir Passkey",
-    none: "No hay passkeys registradas",
-    passkeyLabel: "Passkey",
+    title: "Claves de acceso",
+    add: "Añadir clave de acceso",
+    none: "No hay claves de acceso registradas",
+    passkeyLabel: "Clave de acceso",
     added: "Añadido: {{date}}",
-    delete: "Eliminar Passkey",
-    created: "¡Passkey creada exitosamente!",
-    createFailed: "Error al crear la passkey.",
-    emailNotVerified: "Por favor verifica tu correo electrónico antes de agregar una passkey.",
-    deleted: "Passkey eliminada.",
-    deleteFailed: "Error al eliminar la passkey.",
-    tryPasskey: "Iniciar sesión con Passkey o código QR"
+    delete: "Eliminar clave de acceso",
+    created: "¡Clave de acceso creada exitosamente!",
+    createFailed: "Error al crear la clave de acceso.",
+    emailNotVerified: "Por favor verifica tu correo electrónico antes de agregar una clave de acceso.",
+    deleted: "Clave de acceso eliminada.",
+    deleteFailed: "Error al eliminar la clave de acceso.",
+    tryPasskey: "Iniciar sesión con clave de acceso o código QR"
   }
 };

@@ -47,18 +47,18 @@ export default {
     handleHistory: "Historial de identificador",
     emailHistory: "Historial de correo",
     password: "Contraseña",
-    passkeys: "Passkeys",
+    passkeys: "Claves de acceso",
   },
   tabs: {
     account: "Detalles de la cuenta",
     privacy: "Privacidad",
     history: "Historial de cambios",
     connections: "Conexiones",
-    passkeys: "Passkeys",
+    passkeys: "Claves de acceso",
     passwords: "Contraseñas",
   },
   privacy: {
-    passkeysDesc: "Las passkeys te permiten iniciar sesión con datos biométricos o el PIN del dispositivo, sin contraseña.",
+    passkeysDesc: "Las claves de acceso te permiten iniciar sesión con datos biométricos o el PIN del dispositivo, sin contraseña.",
     passwordDesc: "Cambia la contraseña de tu cuenta. Seguirás con la sesión iniciada en este dispositivo.",
   },
   connections: {
