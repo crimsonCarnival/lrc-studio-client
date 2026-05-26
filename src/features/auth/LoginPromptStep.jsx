@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, X, Fingerprint, Loader2 } from 'lucide-react';
 import { Button } from '@ui/button';
 import { AvatarBadge } from './auth-shared';
@@ -10,6 +11,7 @@ import { toast } from 'react-hot-toast';
 export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onPasskeySuccess }) {
   const displayName = identifierData.displayName || identifierData.accountName || identifierData.identifier;
   const { registerPasskey } = useAuthContext();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const handleCreatePasskey = async () => {
@@ -21,7 +23,13 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
         onPasskeySuccess(); // Save info and proceed
       }
     } catch (err) {
-      toast.error(t('auth.passkey.createFailed', 'Failed to create passkey.'));
+      if (err.code === 'email_not_verified') {
+        toast.error(t('auth.passkey.emailNotVerified', 'Please verify your email before adding a passkey.'));
+        onSkip();
+        navigate('/settings');
+      } else {
+        toast.error(t('auth.passkey.createFailed', 'Failed to create passkey.'));
+      }
     } finally {
       setLoading(false);
     }

@@ -40,7 +40,11 @@ export default function PasskeySection() {
         await fetchPasskeys();
       }
     } catch (err) {
-      toast.error(t('auth.passkeyManagement.createFailed', 'Failed to create passkey.'));
+      if (err.code === 'email_not_verified') {
+        toast.error(t('auth.passkeyManagement.emailNotVerified', 'Please verify your email before adding a passkey.'));
+      } else {
+        toast.error(t('auth.passkeyManagement.createFailed', 'Failed to create passkey.'));
+      }
     } finally {
       setRegistering(false);
     }
