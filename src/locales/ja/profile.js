@@ -99,6 +99,8 @@ export default {
   follow: "フォロー",
   following: "フォロー中 ✓",
   confirmUnfollow: "フォロー解除を確認",
+  followError: "フォローできませんでした。もう一度お試しください。",
+  unfollowError: "フォロー解除できませんでした。もう一度お試しください。",
   followersTitle: "フォロワー",
   followingTitle: "フォロー中",
   loadMore: "もっと読み込む",

@@ -24,6 +24,8 @@ import profile from './profile.js';
 import errorLocale from './error.js';
 import notifications from './notifications.js';
 import playlists from './playlists.js';
+import feed from './feed.js';
+import search from './search.js';
 
 export default {
   translation: {
@@ -52,6 +54,8 @@ export default {
     profile,
     error: errorLocale,
     notifications,
-    playlists
+    playlists,
+    feed,
+    search
   }
 };

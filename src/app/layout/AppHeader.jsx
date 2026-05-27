@@ -1,12 +1,13 @@
-﻿import { useState, useEffect, useRef, startTransition } from 'react';
+﻿import { useState, useRef, startTransition } from 'react';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   UploadCloud, Settings as SettingsIcon, LogOut, BookOpen, Pencil,
-  ShieldAlert, Eye, EyeOff, User, HelpCircle, Lightbulb, ArrowLeft, Check,
-  Sun, Moon, Monitor, Palette, Globe, ExternalLink
+  ShieldAlert, Eye, EyeOff, User, HelpCircle, ArrowLeft, Check,
+  Sun, Moon, Monitor, Palette, Globe, ExternalLink, Search,
 } from 'lucide-react';
+import { HeaderSearchBar } from '@/features/search/components/HeaderSearchBar';
 import { useSetupContext } from '@/features/editor/SetupContext';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
@@ -91,6 +92,7 @@ export function AppHeader({
   const isSetupPage = location.pathname === '/project/new';
   const isHomePage = location.pathname === '/home' || location.pathname === '/';
   const isGuestLanding = location.pathname === '/';
+  const isSettingsPage = location.pathname.startsWith('/settings');
 
   const currentTheme = settings?.interface?.theme || 'dark';
   const currentLang = (i18n?.language || 'en').slice(0, 2).toUpperCase();
@@ -102,18 +104,6 @@ export function AppHeader({
       setCounts({ library: pRes?.length || 0, uploads: uRes?.length || 0 });
     } catch (err) { console.error('Failed to fetch counts for menu:', err); }
   };
-
-  const [tipIndex, setTipIndex] = useState(0);
-  const tips = t('home.tips', { returnObjects: true });
-  const hasTips = Array.isArray(tips) && tips.length > 0;
-
-  useEffect(() => {
-    if (!hasTips) return;
-    const interval = setInterval(() => {
-      setTipIndex(prev => (prev + 1) % tips.length);
-    }, 20000);
-    return () => clearInterval(interval);
-  }, [hasTips, tips.length]);
 
   const goHomeOrWarn = () => {
     if (location.pathname.startsWith('/project/') && hasUnsavedChanges()) {
@@ -289,6 +279,8 @@ export function AppHeader({
                       admin: t('admin.dashboard.title'),
                       'change-password': t('auth.changePassword.title'),
                       'verify-email': t('auth.verification.pageTitle'),
+                      feed: t('feed.title'),
+                      search: t('search.title'),
                     };
                     return map[seg] || seg.replace(/-/g, ' ');
                   })()}
@@ -298,15 +290,10 @@ export function AppHeader({
           </div>
         </div>
 
-        {/* ── Center: Tips pill ── */}
-        {!isHomePage && !isSetupPage && hasTips && (
-          <div className="hidden lg:flex flex-1 items-center justify-center px-8 pointer-events-none">
-            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-zinc-900/40 border border-zinc-800/50 rounded-full group pointer-events-auto cursor-help transition-all hover:bg-zinc-800/40 hover:border-zinc-700/60">
-              <Lightbulb className="size-3 text-amber-400/70 group-hover:text-amber-400 transition-colors shrink-0" />
-              <p className="text-[11px] font-medium text-zinc-500 group-hover:text-zinc-300 transition-colors whitespace-nowrap">
-                {tips[tipIndex]}
-              </p>
-            </div>
+        {/* ── Center: Search bar ── */}
+        {!isSettingsPage && (
+          <div className="hidden lg:flex flex-1 items-center justify-center px-8">
+            <HeaderSearchBar />
           </div>
         )}
 
@@ -485,6 +472,12 @@ export function AppHeader({
                   <PopoverItem onClick={() => navTo('/uploads')} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <span className="flex items-center gap-2"><UploadCloud className="size-4 text-zinc-400" />{t('uploads.title')}</span>
                     {counts.uploads > 0 && <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.uploads}</span>}
+                  </PopoverItem>
+                  <PopoverItem onClick={() => navTo('/feed')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+                    <span className="flex items-center gap-2"><Globe className="size-4 text-zinc-400" />{t('feed.title')}</span>
+                  </PopoverItem>
+                  <PopoverItem onClick={() => navigate('/search')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+                    <span className="flex items-center gap-2"><Search className="size-4 text-zinc-400" />{t('search.title')}</span>
                   </PopoverItem>
                 </div>
 

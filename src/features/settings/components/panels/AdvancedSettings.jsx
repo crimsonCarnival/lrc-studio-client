@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Section, SettingRow, Toggle } from '../shared';
 import { useAdvancedSettings } from '../../hooks/useAdvancedSettings';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { SlidersHorizontal, Save, Timer, ShieldAlert, Globe, Lock, AlertTriangle, UserX, Zap, FastForward } from 'lucide-react';
+import { SlidersHorizontal, Save, Timer, ShieldAlert, Globe, Lock, AlertTriangle, UserX, Zap } from 'lucide-react';
 import { Button } from '@ui/button';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useState } from 'react';
@@ -108,26 +108,6 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
               <SelectItem value="short">{t('settings.options.durations.short') || 'Short'}</SelectItem>
               <SelectItem value="normal">{t('settings.options.durations.normal') || 'Normal'}</SelectItem>
               <SelectItem value="long">{t('settings.options.durations.long') || 'Long'}</SelectItem>
-            </SelectContent>
-          </Select>
-        </SettingRow>
-
-        <SettingRow
-          icon={FastForward}
-          label={t('settings.advanced.uploadRedirectDelay') || 'Upload Redirect Delay'}
-          description={t('settings.advanced.uploadRedirectDelayDesc') || 'How fast you are redirected to the editor after uploading'}
-        >
-          <Select
-            value={settings.advanced?.uploadRedirectDelay ?? 'normal'}
-            onValueChange={(val) => updateSetting('advanced.uploadRedirectDelay', val)}
-          >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-700">
-              <SelectItem value="fast">{t('settings.options.speeds.fast') || 'Fast'}</SelectItem>
-              <SelectItem value="normal">{t('settings.options.speeds.normal') || 'Normal'}</SelectItem>
-              <SelectItem value="slow">{t('settings.options.speeds.slow') || 'Slow'}</SelectItem>
             </SelectContent>
           </Select>
         </SettingRow>

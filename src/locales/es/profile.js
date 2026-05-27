@@ -99,6 +99,8 @@ export default {
   follow: "Seguir",
   following: "Siguiendo ✓",
   confirmUnfollow: "Confirmar dejar de seguir",
+  followError: "No se pudo seguir. Inténtalo de nuevo.",
+  unfollowError: "No se pudo dejar de seguir. Inténtalo de nuevo.",
   followersTitle: "Seguidores",
   followingTitle: "Siguiendo",
   loadMore: "Cargar más",

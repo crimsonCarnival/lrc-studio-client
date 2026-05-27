@@ -80,9 +80,6 @@ function SharedProjectViewerInner({ projectId }) {
       .then((result) => {
         if (cancelled) return;
         const project = result?.project;
-        console.log('[SharedProjectViewer] getShare result:', result);
-        console.log('[SharedProjectViewer] project.upload:', project?.upload);
-        console.log('[SharedProjectViewer] project.uploadId:', project?.uploadId);
         if (!project) {
           setLoadStatus(404);
           return;
@@ -187,7 +184,7 @@ function SharedProjectViewerInner({ projectId }) {
                   to={`/profile/${projectData.user.accountName}`}
                   className="text-zinc-200 hover:text-primary transition-colors"
                 >
-                  {projectData.user.displayName || projectData.user.accountName}
+                  {projectData.user.displayName || `@${projectData.user.accountName}`}
                 </Link>
               ) : (
                 <span className="text-zinc-200">{t('share.guest')}</span>
@@ -233,6 +230,23 @@ function SharedProjectViewerInner({ projectId }) {
             </button>
           </Tip>
         </div>
+        {/* Song info */}
+        {(projectData?.metadata?.songName || projectData?.metadata?.songArtist) && (
+          <div className={`flex flex-wrap items-center gap-2 mb-2 ${isMobile ? 'text-xs' : 'text-sm'} text-zinc-400`}>
+            {projectData.metadata.songName && (
+              <span className="font-medium text-zinc-300">{projectData.metadata.songName}</span>
+            )}
+            {projectData.metadata.songArtist && (
+              <span className="before:content-['·'] before:mr-2">{projectData.metadata.songArtist}</span>
+            )}
+            {projectData.metadata.songAlbum && (
+              <span className="before:content-['·'] before:mr-2 italic">{projectData.metadata.songAlbum}</span>
+            )}
+            {projectData.metadata.songYear && (
+              <span className="before:content-['·'] before:mr-2 text-zinc-500">{projectData.metadata.songYear}</span>
+            )}
+          </div>
+        )}
         {/* Description */}
         <p className={`${isMobile ? 'text-xs' : 'text-sm sm:text-base'} text-zinc-400 max-w-3xl leading-relaxed whitespace-pre-wrap text-left`}>
           {projectData?.metadata?.description || t('share.noDescription')}
@@ -254,52 +268,43 @@ function SharedProjectViewerInner({ projectId }) {
     </div>
   ), [isMobile, projectData, forkCount, isStarred, starLoading, starCount, handleStar, user, t]);
 
-  // Create CTA banner component
+  // Compact top CTA bar
   const CTABanner = useMemo(() => (
-    <div className={`max-w-7xl mx-auto ${isMobile ? 'px-3 py-3' : 'px-4 sm:px-6 py-4'} flex flex-col ${isMobile ? 'gap-3' : 'sm:flex-row'} items-start ${!isMobile && 'sm:items-center'} justify-between`}>
-      {/* Callout Box */}
-      <div className="flex items-start gap-3 min-w-0 flex-1">
-        <div className="size-8 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <img
-            src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png"
-            alt="LRC Studio"
-            className="size-full object-contain"
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className={`${isMobile ? 'text-xs' : 'text-sm'} font-semibold text-zinc-100 truncate`}>
-            {t('share.likeThisProject', "Like this project?")}
-          </p>
-          <p className={`${isMobile ? 'text-[11px]' : 'text-xs'} text-zinc-400 mt-0.5`}>
-            {t('share.createCopyDesc', "Create your own editable copy and customize it")}
-          </p>
-        </div>
-      </div>
-      {/* Action Buttons */}
-      <div className={`flex items-center ${isMobile ? 'gap-2 w-full' : 'gap-2'} ${isMobile ? 'flex-shrink-0' : 'flex-shrink-0'}`}>
+    <div className="flex items-center gap-3 px-4 py-2 max-w-7xl mx-auto w-full">
+      <img
+        src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png"
+        alt="LRC Studio"
+        className="size-5 object-contain shrink-0"
+        loading="lazy"
+        decoding="async"
+      />
+      <p className="text-xs text-zinc-400 flex-1 truncate">
+        <span className="text-zinc-200 font-medium">{t('share.likeThisProject', 'Like this project?')}</span>
+        {' '}
+        <span className="hidden sm:inline">{t('share.createCopyDesc', 'Create your own editable copy and customize it')}</span>
+      </p>
+      <div className="flex items-center gap-1.5 shrink-0">
         <Button
           size="sm"
           variant="outline"
           onClick={handleCopyLink}
           disabled={copied}
-          className={`${isMobile ? 'h-11 px-3 flex-1 text-[11px]' : 'h-9 px-2.5 text-xs'} bg-zinc-800 border-zinc-700/60 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-700 font-semibold gap-1.5 rounded-lg transition-all`}
+          className="h-7 px-2.5 text-[11px] bg-zinc-800 border-zinc-700/60 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-700 font-medium gap-1 rounded-lg transition-all"
         >
-          {copied ? <Check className={isMobile ? 'size-3' : 'size-3.5'} /> : <Copy className={isMobile ? 'size-3' : 'size-3.5'} />}
+          {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
           {copied ? t('share.copied', 'Copied') : t('share.copyLink', 'Copy Link')}
         </Button>
         <Button
           size="sm"
           onClick={handleClone}
-          className={`${isMobile ? 'h-11 px-3 flex-1 text-[11px]' : 'h-9 px-2.5 text-xs'} bg-primary hover:bg-primary-dim text-zinc-950 font-semibold gap-1.5 rounded-lg disabled:opacity-50`}
+          className="h-7 px-2.5 text-[11px] bg-primary hover:bg-primary-dim text-zinc-950 font-medium gap-1 rounded-lg"
         >
-          <Copy className={isMobile ? 'size-3' : 'size-3.5'} />
+          <Copy className="size-3" />
           {t('share.createCopy', 'Create Copy')}
         </Button>
       </div>
     </div>
-  ), [isMobile, handleCopyLink, copied, handleClone, t]);
+  ), [handleCopyLink, copied, handleClone, t]);
 
   const PreviewSlot = useMemo(() => (
     <>
