@@ -7,21 +7,19 @@ function StickyCard({ labelKey, to, createdAt }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   return (
-    <div className="mx-3 my-2 flex items-center justify-between gap-3 rounded-lg border-l-4 border-primary bg-primary/10 px-4 py-3">
+    <button
+      onClick={() => navigate(to)}
+      className="w-full mx-3 my-2 flex items-center gap-3 rounded-lg border-l-4 border-primary bg-primary/10 px-4 py-3 hover:bg-primary/15 transition-colors text-left"
+      style={{ width: 'calc(100% - 1.5rem)' }}
+    >
+      <Settings size={15} className="shrink-0 text-primary" aria-hidden="true" />
       <div className="flex flex-col gap-0.5 min-w-0">
         <p className="text-sm text-primary">{t(labelKey)}</p>
         {createdAt && (
           <p className="text-xs text-primary/60">{formatTimeAgo(createdAt, t)}</p>
         )}
       </div>
-      <button
-        onClick={() => navigate(to)}
-        aria-label={t('notifications.goToSettings')}
-        className="shrink-0 p-1.5 rounded-lg text-primary hover:text-primary-dim hover:bg-primary/20 transition-colors"
-      >
-        <Settings size={15} />
-      </button>
-    </div>
+    </button>
   );
 }
 

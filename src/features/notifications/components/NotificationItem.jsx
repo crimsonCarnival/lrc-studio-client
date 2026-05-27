@@ -1,9 +1,30 @@
-import { X } from 'lucide-react';
+import { X, Star, GitFork, UserPlus, ShieldCheck, Lock, KeyRound, Ban } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { LazyImage } from '@ui/LazyImage';
 import { useNotificationsContext } from '../NotificationsContext';
 import { formatTimeAgo } from '../timeAgo';
+
+const TYPE_ICON = {
+  star: Star,
+  fork: GitFork,
+  follow: UserPlus,
+  admin_granted: ShieldCheck,
+  password_changed: Lock,
+  set_password: KeyRound,
+  verify_email: KeyRound,
+  ban: Ban,
+};
+
+function notificationDestination(notification) {
+  const { type, actors, projectId } = notification;
+  if ((type === 'star' || type === 'fork') && projectId) return `/projects/${projectId}`;
+  if (type === 'follow' && actors?.[0]?.accountName) return `/profile/${actors[0].accountName}`;
+  if (type === 'admin_granted') return '/admin';
+  if (type === 'password_changed' || type === 'set_password') return '/settings/security';
+  if (type === 'verify_email') return '/settings/profile';
+  return null;
+}
 
 function NotificationText({ notification, t }) {
   const { type, actors, actorCount, projectTitle, body } = notification;
@@ -15,50 +36,69 @@ function NotificationText({ notification, t }) {
   else if (actorCount === 2) actorStr = t('notifications.actorAndOther', { name: firstName });
   else actorStr = t('notifications.actorAndOthers', { name: firstName, count: actorCount - 1 });
 
-  const actorNode = first?.accountName ? (
-    <Link key="a" to={`/profile/${first.accountName}`} className="font-semibold hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
-      {actorStr}
-    </Link>
-  ) : (
-    <strong key="a">{actorStr}</strong>
-  );
-
   if (type === 'star') {
     return projectTitle
-      ? <span>{actorNode} starred <strong>{projectTitle}</strong></span>
-      : <span>{actorNode} starred your project</span>;
+      ? <span><strong>{actorStr}</strong> starred <strong>{projectTitle}</strong></span>
+      : <span><strong>{actorStr}</strong> starred your project</span>;
   }
   if (type === 'fork') {
     return projectTitle
-      ? <span>{actorNode} forked <strong>{projectTitle}</strong></span>
-      : <span>{actorNode} forked your project</span>;
+      ? <span><strong>{actorStr}</strong> forked <strong>{projectTitle}</strong></span>
+      : <span><strong>{actorStr}</strong> forked your project</span>;
   }
-  if (type === 'follow') return <span>{actorNode} {t('notifications.followed')}</span>;
+  if (type === 'follow') return <span><strong>{actorStr}</strong> {t('notifications.followed')}</span>;
   if (type === 'admin_granted') return <span>{t('notifications.adminGranted')}</span>;
   if (type === 'ban') return <span>{t('notifications.banned')}</span>;
   if (type === 'password_changed') return <span>{t('notifications.passwordChanged')}</span>;
   return <span>{body || ''}</span>;
 }
 
+function NotificationAvatar({ notification }) {
+  const { type, actors } = notification;
+  const first = actors?.[0];
+  const hasActor = !!first;
+
+  if (hasActor) {
+    return first.avatarUrl
+      ? <LazyImage src={first.avatarUrl} alt="" className="w-8 h-8 rounded-full shrink-0" />
+      : (
+        <div className="w-8 h-8 rounded-full bg-zinc-700 shrink-0 flex items-center justify-center text-xs text-zinc-400">
+          {first.accountName?.[0]?.toUpperCase() ?? '?'}
+        </div>
+      );
+  }
+
+  const Icon = TYPE_ICON[type];
+  if (!Icon) return null;
+  return (
+    <div className="w-8 h-8 rounded-full bg-primary/10 shrink-0 flex items-center justify-center">
+      <Icon size={14} className="text-primary" aria-hidden="true" />
+    </div>
+  );
+}
+
 export function NotificationItem({ notification }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { markRead, dismiss } = useNotificationsContext();
-  const { _id, read, actors, createdAt } = notification;
-  const avatarUrl = actors?.[0]?.avatarUrl || null;
-  const initial = actors?.[0]?.accountName?.[0]?.toUpperCase() || '?';
+  const { _id, read, createdAt } = notification;
+
+  const dest = notificationDestination(notification);
+
+  const handleClick = () => {
+    if (!read) markRead([_id]);
+    if (dest) navigate(dest);
+  };
 
   return (
     <div
-      onClick={() => { if (!read) markRead([_id]); }}
-      className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-zinc-800/50 transition-colors ${!read ? 'bg-zinc-800/30' : ''}`}
+      role="button"
+      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } }}
+      className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-zinc-800/50 transition-colors ${!read ? 'bg-zinc-800/30' : ''}`}
     >
-      {avatarUrl ? (
-        <LazyImage src={avatarUrl} alt="" className="w-8 h-8 rounded-full shrink-0 mt-0.5" />
-      ) : (
-        <div className="w-8 h-8 rounded-full bg-zinc-700 shrink-0 mt-0.5 flex items-center justify-center text-xs text-zinc-400">
-          {initial}
-        </div>
-      )}
+      <NotificationAvatar notification={notification} />
       <div className="flex-1 min-w-0">
         <p className="text-sm text-zinc-200 leading-snug">
           <NotificationText notification={notification} t={t} />
@@ -68,7 +108,7 @@ export function NotificationItem({ notification }) {
         )}
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        {!read && <span className="w-2 h-2 rounded-full bg-primary" />}
+        {!read && <span className="w-2 h-2 rounded-full bg-primary" aria-hidden="true" />}
         <button
           onClick={(e) => { e.stopPropagation(); dismiss(_id); }}
           className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors"
