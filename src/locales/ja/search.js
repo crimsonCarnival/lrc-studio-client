@@ -14,6 +14,12 @@ export default {
   resultCount_one: '{{count}}件',
   resultCount_other: '{{count}}件',
   noResults: '"{{query}}" に一致する公開プロジェクトは見つかりませんでした。',
+  noUsers: '"{{query}}" に一致するユーザーは見つかりませんでした。',
   forkedFrom: '@{{accountName}} からフォーク',
   error: '検索に失敗しました。後でもう一度お試しください。',
+  allResults: 'すべての結果を見る',
+  tabs: {
+    projects: 'プロジェクト',
+    users: 'ユーザー',
+  },
 };
