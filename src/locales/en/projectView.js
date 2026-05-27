@@ -1,0 +1,16 @@
+export default {
+  notFound: "Project not found",
+  notFoundSub: "This project may be private or may not exist.",
+  editButton: "Edit",
+  forkButton: "Fork",
+  signUpButton: "Sign Up Free",
+  ctaGuest: "Fork and edit this project by signing up for free.",
+  ctaAuth: "Like this project? Fork it to make your own version.",
+  forkedFrom: "Forked from",
+  showMore: "Show more",
+  showLess: "Show less",
+  upNext: "Up next",
+  noAudio: "No audio attached to this project.",
+  prevTrack: "Previous",
+  nextTrack: "Next",
+};
