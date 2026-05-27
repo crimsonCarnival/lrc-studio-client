@@ -403,7 +403,7 @@ export default function Editor({
   );
 }
 
-const ESTIMATED_LINE_HEIGHT = 44;
+const ESTIMATED_LINE_HEIGHT = 52;
 const LINE_GAP = 4;
 
 function VirtualizedLineList({
@@ -476,6 +476,23 @@ function VirtualizedLineList({
     gap: LINE_GAP,
     overscan: 8,
   });
+
+  // Re-measure all items when the scroll container is resized (e.g. window/panel resize
+  // changes available width, causing text to wrap differently — items don't self-measure
+  // because their *height* hasn't changed yet from ResizeObserver's perspective).
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    let lastWidth = el.offsetWidth;
+    const ro = new ResizeObserver(() => {
+      if (el.offsetWidth !== lastWidth) {
+        lastWidth = el.offsetWidth;
+        virtualizer.measure();
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [virtualizer]);
 
   // Auto-scroll to active line via virtualizer
   const prevActiveRef = useCallback((idx) => {
