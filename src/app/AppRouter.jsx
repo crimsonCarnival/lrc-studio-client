@@ -31,6 +31,9 @@ const SettingsPage = lazy(() => import('@features/settings/components/SettingsPa
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 const VerifyEmailPage = lazy(() => import('@features/auth/VerifyEmailPage'));
 
+const FeedPage   = lazy(() => import('@features/feed/FeedPage'));
+const SearchPage = lazy(() => import('@features/search/SearchPage'));
+
 const PanelReorderGroup = React.memo(function PanelReorderGroup({
   items,
   onReorder,
@@ -458,6 +461,16 @@ export function AppRouter({
       <Route path="verify-email" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
           <VerifyEmailPage />
+        </Suspense>
+      } />
+      <Route path="feed" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+          <FeedPage />
+        </Suspense>
+      } />
+      <Route path="search" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>}>
+          <SearchPage />
         </Suspense>
       } />
       <Route path="*" element={<NotFoundPage type="general" />} />

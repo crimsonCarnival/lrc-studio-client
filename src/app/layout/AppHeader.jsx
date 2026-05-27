@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   UploadCloud, Settings as SettingsIcon, LogOut, BookOpen, Pencil,
   ShieldAlert, Eye, EyeOff, User, HelpCircle, Lightbulb, ArrowLeft, Check,
-  Sun, Moon, Monitor, Palette, Globe, ExternalLink
+  Sun, Moon, Monitor, Palette, Globe, ExternalLink, Search,
 } from 'lucide-react';
 import { useSetupContext } from '@/features/editor/SetupContext';
 import { Button } from '@ui/button';
@@ -289,6 +289,8 @@ export function AppHeader({
                       admin: t('admin.dashboard.title'),
                       'change-password': t('auth.changePassword.title'),
                       'verify-email': t('auth.verification.pageTitle'),
+                      feed: t('feed.title'),
+                      search: t('search.title'),
                     };
                     return map[seg] || seg.replace(/-/g, ' ');
                   })()}
@@ -485,6 +487,12 @@ export function AppHeader({
                   <PopoverItem onClick={() => navTo('/uploads')} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <span className="flex items-center gap-2"><UploadCloud className="size-4 text-zinc-400" />{t('uploads.title')}</span>
                     {counts.uploads > 0 && <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.uploads}</span>}
+                  </PopoverItem>
+                  <PopoverItem onClick={() => navTo('/feed')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+                    <span className="flex items-center gap-2"><Globe className="size-4 text-zinc-400" />{t('feed.title')}</span>
+                  </PopoverItem>
+                  <PopoverItem onClick={() => navigate('/search')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+                    <span className="flex items-center gap-2"><Search className="size-4 text-zinc-400" />{t('search.title')}</span>
                   </PopoverItem>
                 </div>
 
