@@ -22,15 +22,15 @@ function pick(arr, seed) {
   return arr[hash % arr.length];
 }
 
-function relativeTime(isoString) {
+function relativeTime(isoString, t) {
   const diff  = Date.now() - new Date(isoString).getTime();
   const mins  = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days  = Math.floor(diff / 86400000);
-  if (mins  < 1)  return 'just now';
-  if (mins  < 60) return `${mins}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  return `${days}d ago`;
+  if (mins  < 1)  return t('library.justNow');
+  if (mins  < 60) return t('library.minutesAgo', { count: mins });
+  if (hours < 24) return t('library.hoursAgo',   { count: hours });
+  return t('library.daysAgo', { count: days });
 }
 
 export function ActivityCard({ activity }) {
@@ -87,7 +87,7 @@ export function ActivityCard({ activity }) {
         </Link>
 
         <p className="text-xs text-zinc-500 mt-1.5">
-          {relativeTime(createdAt)}
+          {relativeTime(createdAt, t)}
         </p>
       </div>
 
