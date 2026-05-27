@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Star, GitFork } from 'lucide-react';
 
 export function SearchProjectCard({ project }) {
+  const { t } = useTranslation();
   const { projectId, title, coverImage, starCount, forkCount, metadata, forkedFrom } = project;
   const displayTitle = metadata?.songName || title || 'Untitled';
   const artist = metadata?.songArtist;
@@ -27,7 +29,7 @@ export function SearchProjectCard({ project }) {
         )}
         {forkedFrom?.accountName && (
           <p className="text-[10px] text-zinc-600 mt-0.5">
-            forked from @{forkedFrom.accountName}
+            {t('search.forkedFrom', { accountName: forkedFrom.accountName })}
           </p>
         )}
       </div>
