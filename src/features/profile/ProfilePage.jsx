@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { Star, GitFork, Music, PlayCircle, Settings } from 'lucide-react';
@@ -124,7 +125,7 @@ export default function ProfilePage() {
 
   const handleFollow = useCallback(async () => {
     if (!user) {
-      navigate(`/signin?redirect=/profile/${accountName}&intent=follow`);
+      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/profile/${accountName}`)}&intent=follow`);
       return;
     }
     setFollowLoading(true);
@@ -132,9 +133,11 @@ export default function ProfilePage() {
       await followUser(accountName);
       setIsFollowing(true);
       setProfile(prev => prev ? { ...prev, followerCount: prev.followerCount + 1 } : prev);
-    } catch {}
+    } catch {
+      toast.error(t('profile.followError') || 'Could not follow. Try again.');
+    }
     setFollowLoading(false);
-  }, [user, accountName, navigate]);
+  }, [user, accountName, navigate, t]);
 
   const handleUnfollow = useCallback(async () => {
     setFollowLoading(true);
@@ -143,9 +146,12 @@ export default function ProfilePage() {
       setIsFollowing(false);
       setConfirmingUnfollow(false);
       setProfile(prev => prev ? { ...prev, followerCount: Math.max(0, prev.followerCount - 1) } : prev);
-    } catch {}
+    } catch {
+      toast.error(t('profile.unfollowError') || 'Could not unfollow. Try again.');
+      setConfirmingUnfollow(false);
+    }
     setFollowLoading(false);
-  }, [accountName]);
+  }, [accountName, t]);
 
   if (loading) {
     return (

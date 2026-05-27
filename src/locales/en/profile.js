@@ -100,6 +100,8 @@ export default {
   follow: "Follow",
   following: "Following ✓",
   confirmUnfollow: "Confirm unfollow",
+  followError: "Could not follow. Try again.",
+  unfollowError: "Could not unfollow. Try again.",
   followersTitle: "Followers",
   followingTitle: "Following",
   loadMore: "Load more",
