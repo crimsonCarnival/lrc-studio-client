@@ -197,10 +197,16 @@ export const projectsService = {
             metadata {
               description
               tags
+              songName
+              songArtist
+              songAlbum
+              songYear
+              albumArt
             }
             user {
               id
               accountName
+              displayName
               avatarUrl
             }
             upload {
