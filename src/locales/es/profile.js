@@ -14,7 +14,7 @@ export default {
   displayNamePlaceholder: "Nombre público opcional",
   accountNameCooldown: "Cambia en {{days}} día(s)",
   accountNameCooldownError: "Puedes cambiar tu identificador en {{days}} día(s).",
-  accountNameInvalid: "El identificador debe tener entre 3 y 30 caracteres: letras minúsculas, números, _ o -",
+  accountNameInvalid: "El nombre de usuario debe tener 3–30 caracteres: letras minúsculas, números, _ - . o :",
   accountNameTaken: "Este identificador ya está en uso.",
   email: "Correo electrónico",
   bio: "Biografía",

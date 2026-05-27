@@ -14,7 +14,7 @@ export default {
   displayNamePlaceholder: "任意の公開名",
   accountNameCooldown: "{{days}}日後に変更可能",
   accountNameCooldownError: "ハンドルは{{days}}日後に変更できます。",
-  accountNameInvalid: "ハンドルは3〜30文字で、小文字・数字・_ または - のみ使用できます",
+  accountNameInvalid: "ハンドルは3〜30文字で、小文字・数字・_ - . または : のみ使用できます",
   accountNameTaken: "このハンドルはすでに使用されています。",
   email: "メール",
   bio: "自己紹介",

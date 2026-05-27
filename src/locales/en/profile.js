@@ -14,7 +14,7 @@ export default {
   displayNamePlaceholder: "Optional public name",
   accountNameCooldown: "Change in {{days}} day(s)",
   accountNameCooldownError: "You can change your username in {{days}} day(s).",
-  accountNameInvalid: "Username must be 3–30 characters: lowercase letters, numbers, _ or -",
+  accountNameInvalid: "Username must be 3–30 characters: lowercase letters, numbers, _ - . or :",
   accountNameTaken: "This username is already taken.",
   email: "Email",
   bio: "Bio",
