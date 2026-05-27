@@ -12,10 +12,10 @@ export default function LyricsModal({ song, lyrics, isLoading, error, onConfirm,
       <DialogContent className="max-w-lg flex flex-col max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="text-base">
-            {t('genius.preview')}
+            {t('lyricsSearch.preview')}
           </DialogTitle>
           <DialogDescription className="text-xs text-zinc-400 mt-0.5">
-            {song ? `${song.title} — ${song.artist}` : t('genius.previewDesc')}
+            {song ? `${song.title} — ${song.artist}` : t('lyricsSearch.previewDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -23,7 +23,7 @@ export default function LyricsModal({ song, lyrics, isLoading, error, onConfirm,
           {isLoading && (
             <div className="flex items-center justify-center py-12 gap-2 text-zinc-400">
               <Loader2 className="size-4 animate-spin" />
-              <span className="text-sm">{t('genius.extracting')}</span>
+              <span className="text-sm">{t('lyricsSearch.extracting')}</span>
             </div>
           )}
 
@@ -46,7 +46,7 @@ export default function LyricsModal({ song, lyrics, isLoading, error, onConfirm,
                 onCheckedChange={onKeepTimestampsChange}
                 className="size-3.5 border-zinc-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
-              <span className="text-xs text-zinc-400">{t('genius.keepTimestamps')}</span>
+              <span className="text-xs text-zinc-400">{t('lyricsSearch.keepTimestamps')}</span>
             </label>
           ) : <span />}
           <div className="flex gap-2">
@@ -57,7 +57,7 @@ export default function LyricsModal({ song, lyrics, isLoading, error, onConfirm,
               onClick={() => onConfirm(lyrics)}
               disabled={!lyrics || isLoading}
             >
-              {t('genius.useLyrics')}
+              {t('lyricsSearch.useLyrics')}
             </Button>
           </div>
         </div>

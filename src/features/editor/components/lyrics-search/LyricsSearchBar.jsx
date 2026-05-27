@@ -30,9 +30,9 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
       setResults(data.results);
     } catch (err) {
       if (err.status === 429) {
-        toast.error(t('genius.error.rateLimited'));
+        toast.error(t('lyricsSearch.error.rateLimited'));
       } else {
-        toast.error(t('genius.error.generic'));
+        toast.error(t('lyricsSearch.error.generic'));
       }
       setResults(null);
     } finally {
@@ -73,11 +73,11 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
       setLyrics(data.lyrics);
     } catch (err) {
       if (err.status === 429) {
-        setExtractError(t('genius.error.rateLimited'));
+        setExtractError(t('lyricsSearch.error.rateLimited'));
       } else if (err.status === 422) {
-        setExtractError(t('genius.error.lyricsUnavailable'));
+        setExtractError(t('lyricsSearch.error.lyricsUnavailable'));
       } else {
-        setExtractError(t('genius.error.generic'));
+        setExtractError(t('lyricsSearch.error.generic'));
       }
     } finally {
       setIsExtracting(false);
@@ -108,7 +108,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
           <Input
             value={query}
             onChange={handleQueryChange}
-            placeholder={t('genius.searchPlaceholder')}
+            placeholder={t('lyricsSearch.searchPlaceholder')}
             className="pl-8 lg:pl-8 pr-8 lg:pr-8 bg-zinc-900 border-zinc-700"
           />
           {isSearching && (
@@ -120,7 +120,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
       {results !== null && !selectedSong && (
         <div className="flex flex-col gap-0.5 max-h-64 overflow-y-auto">
           {results.length === 0 ? (
-            <p className="text-xs text-zinc-500 text-center py-4">{t('genius.noResults')}</p>
+            <p className="text-xs text-zinc-500 text-center py-4">{t('lyricsSearch.noResults')}</p>
           ) : (
             results.map((song) => (
               <LyricsResultCard
