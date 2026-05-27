@@ -93,7 +93,7 @@ export default {
     username_taken: "El nombre de usuario o correo ya está en uso.",
     accountName_taken: "Este nombre de usuario ya está en uso.",
     accountName_not_found: "No encontramos una cuenta con ese nombre de usuario.",
-    accountName_invalid: "El usuario debe tener 3–30 caracteres: minúsculas, números, _ o -",
+    accountName_invalid: "El nombre de usuario debe tener 3–30 caracteres: letras minúsculas, números, _ - . o :",
     accountName_change_cooldown: "Puedes cambiar tu usuario en {{days}} día(s).",
     token_expired: "Tu sesión ha expirado. Por favor inicia sesión de nuevo.",
     user_not_found: "Cuenta no encontrada.",
