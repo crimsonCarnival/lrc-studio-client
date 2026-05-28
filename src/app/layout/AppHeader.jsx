@@ -118,7 +118,7 @@ export function AppHeader({
     if (inProject && hasUnsavedChanges()) {
       setUnsavedModalTarget(path);
     } else if (location.pathname.startsWith(path)) {
-      navigate(activeProjectId ? `/project/${activeProjectId}` : '/project/new');
+      navigate(activeProjectId ? `/project/${activeProjectId}/edit` : '/project/new');
     } else {
       navigate(path);
     }

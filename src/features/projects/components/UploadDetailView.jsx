@@ -136,7 +136,7 @@ export default function UploadDetailView({ onBack }) {
                     key={project.projectId}
                     type="button"
                     className="group relative bg-zinc-900/60 border border-zinc-800 hover:border-primary/50 hover:bg-zinc-800/60 rounded-xl p-4 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer overflow-hidden flex flex-col text-left focus:ring-2 focus:ring-primary/50 outline-none"
-                    onClick={() => navigate(`/project/${project.projectId}`)}
+                    onClick={() => navigate(`/project/${project.projectId}/edit`)}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="flex items-start gap-3 relative z-10">

@@ -35,7 +35,7 @@ export function AppMobileNav({ mobileTab, setMobileTab, activeProjectId, isReady
       navigate('/uploads');
     } else {
       if (!location.pathname.startsWith('/project/')) {
-        navigate(activeProjectId ? `/project/${activeProjectId}` : '/project/new');
+        navigate(activeProjectId ? `/project/${activeProjectId}/edit` : '/project/new');
       }
       setMobileTab(id);
     }
