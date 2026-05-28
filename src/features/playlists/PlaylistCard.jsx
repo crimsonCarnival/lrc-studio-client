@@ -7,7 +7,7 @@ export function PlaylistCard({ playlist, accountName }) {
 
   return (
     <Link
-      to={`/profile/${accountName}/playlists/${playlist.id}`}
+      to={`/${accountName}/lists/${playlist.id}`}
       className="glass rounded-2xl overflow-hidden flex flex-col hover:bg-white/5 transition-colors group"
     >
       {/* Cover */}

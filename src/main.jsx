@@ -46,9 +46,6 @@ function SharedProjectRoute() {
   return <SharedProjectViewer projectId={id} />;
 }
 
-// Guest-accessible paths — these work without an account.
-const GUEST_ACCESSIBLE_PATHS = ['/', '/project/new', '/project/local'];
-
 // Protected Route Wrapper
 // eslint-disable-next-line react-refresh/only-export-components
 function ProtectedRoute({ children }) {
@@ -68,8 +65,12 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/home" replace />;
   }
 
-  // Guests can access the setup / local project page without signing in.
-  const isGuestAllowed = GUEST_ACCESSIBLE_PATHS.includes(location.pathname);
+  // Guests can access certain paths without signing in.
+  const isGuestAllowed =
+    ['/', '/project/new', '/project/local'].includes(location.pathname) ||
+    /^\/project\/[^/]+$/.test(location.pathname) ||          // public project view
+    /^\/[a-z0-9_.:-]+$/.test(location.pathname) ||           // public profile
+    /^\/[a-z0-9_.:-]+\/lists\/[^/]+$/.test(location.pathname); // public list page
   if (!user && !isGuestAllowed) {
     let redirectUrl = location.pathname + location.search;
     if (location.pathname === '/change-password') {

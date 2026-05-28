@@ -105,7 +105,7 @@ export default function PlaylistPage() {
 
   const handleSave = useCallback(async () => {
     if (!user) {
-      navigate(`/auth/signin?redirect=${encodeURIComponent(`/profile/${accountName}/playlists/${playlistId}`)}`);
+      navigate(`/auth/signin?redirect=${encodeURIComponent(`/${accountName}/lists/${playlistId}`)}`);
       return;
     }
     setSaveLoading(true);
@@ -138,7 +138,7 @@ export default function PlaylistPage() {
     setDeleting(true);
     try {
       await deletePlaylist(playlistId);
-      navigate(`/profile/${accountName}`, { replace: true });
+      navigate(`/${accountName}`, { replace: true });
     } catch {
       setConfirmDelete(false);
     } finally {
@@ -183,7 +183,7 @@ export default function PlaylistPage() {
     <div className="flex-1 flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-4xl mx-auto w-full">
       {/* Back */}
       <Link
-        to={`/profile/${accountName}`}
+        to={`/${accountName}`}
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 w-fit"
       >
         <ArrowLeft className="size-4" />
