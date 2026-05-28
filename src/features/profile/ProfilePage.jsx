@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, Link, useSearchParams, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
@@ -69,6 +69,7 @@ function ProjectCard({ project }) {
 export default function ProfilePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { accountName } = useParams();
   const { user } = useAuthContext();
 
@@ -85,10 +86,17 @@ export default function ProfilePage() {
 
   const isOwner = !!user && !!accountName && user.accountName === accountName;
 
+  // Silently rewrite legacy /profile/:accountName → /:accountName
+  useEffect(() => {
+    if (location.pathname.startsWith('/profile/') && accountName) {
+      navigate(`/${accountName}`, { replace: true });
+    }
+  }, [location.pathname, accountName, navigate]);
+
   useEffect(() => {
     if (!accountName) {
       if (user?.accountName) {
-        navigate(`/profile/${user.accountName}`, { replace: true });
+        navigate(`/${user.accountName}`, { replace: true });
       } else {
         navigate('/', { replace: true });
       }
@@ -170,7 +178,13 @@ export default function ProfilePage() {
     );
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
 
   const displayName = profile.displayName || profile.accountName;
 

@@ -1,4 +1,4 @@
-﻿import {
+import {
   Suspense, lazy, useEffect, useState, useRef, useCallback, useMemo, Fragment, memo
 } from 'react';
 import React from 'react';
@@ -34,11 +34,6 @@ const FeedPage   = lazy(() => import('@features/feed/FeedPage'));
 const SearchPage = lazy(() => import('@features/search/SearchPage'));
 const PublicProjectViewPage = lazy(() => import('@features/projects/components/PublicProjectViewPage'));
 const ListPage = lazy(() => import('@features/playlists/ListPage'));
-
-function LegacyProfileRedirect() {
-  const { accountName } = useParams();
-  return <Navigate to={`/${accountName}`} replace />;
-}
 
 function LegacyListRedirect() {
   const { accountName, listId } = useParams();
@@ -464,7 +459,11 @@ export function AppRouter({
           <ProfilePage />
         </Suspense>
       } />
-      <Route path="profile/:accountName" element={<LegacyProfileRedirect />} />
+      <Route path="profile/:accountName" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+          <ProfilePage />
+        </Suspense>
+      } />
       <Route path="profile/:accountName/playlists/:listId" element={<LegacyListRedirect />} />
       <Route path="settings/:tab?" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
