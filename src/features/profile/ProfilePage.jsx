@@ -133,7 +133,7 @@ export default function ProfilePage() {
 
   const handleFollow = useCallback(async () => {
     if (!user) {
-      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/profile/${accountName}`)}&intent=follow`);
+      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/${accountName}`)}&intent=follow`);
       return;
     }
     setFollowLoading(true);

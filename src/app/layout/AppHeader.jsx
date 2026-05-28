@@ -462,7 +462,7 @@ export function AppHeader({
                 </div>
 
                 <div className="p-1 border-b border-zinc-800/60">
-                  <PopoverItem onClick={() => { navigate(user?.accountName ? `/profile/${user.accountName}` : '/profile'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+                  <PopoverItem onClick={() => { navigate(user?.accountName ? `/${user.accountName}` : '/'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <User className="size-4 text-zinc-400" />{t('profile.title')}
                   </PopoverItem>
                   <PopoverItem onClick={() => navTo('/library')} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">

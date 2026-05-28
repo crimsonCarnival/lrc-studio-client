@@ -19,7 +19,7 @@ const TYPE_ICON = {
 function notificationDestination(notification) {
   const { type, actors, projectId } = notification;
   if ((type === 'star' || type === 'fork') && projectId) return `/projects/${projectId}`;
-  if (type === 'follow' && actors?.[0]?.accountName) return `/profile/${actors[0].accountName}`;
+  if (type === 'follow' && actors?.[0]?.accountName) return `/${actors[0].accountName}`;
   if (type === 'admin_granted') return '/admin';
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';
   if (type === 'verify_email') return '/settings/profile';

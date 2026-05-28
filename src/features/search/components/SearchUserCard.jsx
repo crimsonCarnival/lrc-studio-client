@@ -8,7 +8,7 @@ export function SearchUserCard({ user, compact = false }) {
   if (compact) {
     return (
       <Link
-        to={`/profile/${accountName}`}
+        to={`/${accountName}`}
         className="flex items-center gap-2.5 px-3 py-2 hover:bg-zinc-800/60 rounded-lg transition-colors"
       >
         <div className="size-7 rounded-full overflow-hidden bg-zinc-800 shrink-0">
@@ -26,7 +26,7 @@ export function SearchUserCard({ user, compact = false }) {
 
   return (
     <Link
-      to={`/profile/${accountName}`}
+      to={`/${accountName}`}
       className="flex items-center gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 hover:bg-zinc-800/50 transition-all"
     >
       <div className="size-10 rounded-full overflow-hidden bg-zinc-800 shrink-0">
