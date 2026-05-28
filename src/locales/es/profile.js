@@ -97,6 +97,7 @@ export default {
   forkBadge_one: "✦ Sus proyectos inspiraron {{count}} bifurcación",
   forkBadge_other: "✦ Sus proyectos inspiraron {{count}} bifurcaciones",
   follow: "Seguir",
+  followBack: "Seguir de vuelta",
   following: "Siguiendo ✓",
   confirmUnfollow: "Confirmar dejar de seguir",
   followError: "No se pudo seguir. Inténtalo de nuevo.",

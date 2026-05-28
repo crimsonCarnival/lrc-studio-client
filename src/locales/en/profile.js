@@ -98,6 +98,7 @@ export default {
   forkBadge_one: "✦ Their projects inspired {{count}} fork",
   forkBadge_other: "✦ Their projects inspired {{count}} forks",
   follow: "Follow",
+  followBack: "Follow Back",
   following: "Following ✓",
   confirmUnfollow: "Confirm unfollow",
   followError: "Could not follow. Try again.",

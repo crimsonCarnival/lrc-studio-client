@@ -97,6 +97,7 @@ export default {
   forkBadge_one: "✦ そのプロジェクトは{{count}}回フォークされました",
   forkBadge_other: "✦ そのプロジェクトは{{count}}回フォークされました",
   follow: "フォロー",
+  followBack: "フォローバック",
   following: "フォロー中 ✓",
   confirmUnfollow: "フォロー解除を確認",
   followError: "フォローできませんでした。もう一度お試しください。",

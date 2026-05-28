@@ -291,7 +291,7 @@ export function AppHeader({
         </div>
 
         {/* ── Center: Search bar ── */}
-        {!isSettingsPage && (
+        {!isSettingsPage && !isGuestLanding && (
           <div className="hidden lg:flex flex-1 items-center justify-center px-8">
             <HeaderSearchBar />
           </div>
