@@ -1,0 +1,16 @@
+export default {
+  notFound: "Proyecto no encontrado",
+  notFoundSub: "Este proyecto puede ser privado o no existir.",
+  editButton: "Editar",
+  forkButton: "Bifurcar",
+  signUpButton: "Regístrate gratis",
+  ctaGuest: "Bifurca y edita este proyecto registrándote gratis.",
+  ctaAuth: "¿Te gusta este proyecto? Bifúrcalo para hacer tu propia versión.",
+  forkedFrom: "Bifurcado de",
+  showMore: "Mostrar más",
+  showLess: "Mostrar menos",
+  upNext: "A continuación",
+  noAudio: "Este proyecto no tiene audio adjunto.",
+  prevTrack: "Anterior",
+  nextTrack: "Siguiente",
+};

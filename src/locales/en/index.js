@@ -26,6 +26,7 @@ import notifications from './notifications.js';
 import playlists from './playlists.js';
 import feed from './feed.js';
 import search from './search.js';
+import projectView from './projectView.js';
 
 export default {
   translation: {
@@ -56,6 +57,7 @@ export default {
     notifications,
     playlists,
     feed,
-    search
+    search,
+    projectView
   }
 };

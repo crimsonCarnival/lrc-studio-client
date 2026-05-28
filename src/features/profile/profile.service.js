@@ -31,7 +31,7 @@ const UNFOLLOW_USER = `
 const GET_FOLLOW_LIST = `
   query GetFollowList($accountName: String!, $type: FollowListType!, $offset: Int) {
     followList(accountName: $accountName, type: $type, offset: $offset) {
-      users { id accountName displayName avatarUrl }
+      users { id accountName displayName avatarUrl isFollowedByMe }
       total
     }
   }

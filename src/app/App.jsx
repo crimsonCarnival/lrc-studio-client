@@ -49,7 +49,7 @@ function AppInner() {
   // Promote /project/local → /project/:id once the server assigns a real ID
   useEffect(() => {
     if (user && activeProjectId && routerLocation.pathname === '/project/local') {
-      navigate(`/project/${activeProjectId}`, { replace: true });
+      navigate(`/project/${activeProjectId}/edit`, { replace: true });
     }
     // navigate is stable (useNavigate)
     // eslint-disable-next-line react-hooks/exhaustive-deps

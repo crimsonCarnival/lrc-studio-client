@@ -93,7 +93,7 @@ export default {
     username_taken: "Username or email is already taken.",
     accountName_taken: "This username is already taken.",
     accountName_not_found: "We couldn't find an account with that username.",
-    accountName_invalid: "Username must be 3–30 characters: lowercase letters, numbers, _ or -",
+    accountName_invalid: "Username must be 3–30 characters: lowercase letters, numbers, _ - . or :",
     accountName_change_cooldown: "You can change your username in {{days}} day(s).",
     token_expired: "Your session has expired. Please sign in again.",
     user_not_found: "Account not found.",

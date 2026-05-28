@@ -129,7 +129,7 @@ export default function Home() {
             {!loading && lastProject && (
               <button
                 type="button"
-                onClick={() => navigate(`/project/${lastProject.projectId}`)}
+                onClick={() => navigate(`/project/${lastProject.projectId}/edit`)}
                 className="group relative glass rounded-xl px-4 py-3 text-left hover:border-primary/30 transition-all flex items-center gap-3 w-full focus:ring-2 focus:ring-primary/30 outline-none overflow-hidden"
               >
                 <ThemedShineBorder />
@@ -215,7 +215,7 @@ export default function Home() {
                   <button
                     key={project.projectId}
                     type="button"
-                    onClick={() => navigate(`/project/${project.projectId}`)}
+                    onClick={() => navigate(`/project/${project.projectId}/edit`)}
                     className="group relative glass rounded-2xl p-4 text-left hover:border-primary/40 transition-all cursor-pointer focus:ring-1 focus:ring-primary/30 outline-none overflow-hidden animate-fade-in"
                   >
                     <ThemedShineBorder />

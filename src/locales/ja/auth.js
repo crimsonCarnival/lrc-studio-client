@@ -93,7 +93,7 @@ export default {
     username_taken: "ユーザー名またはメールはすでに使用中です。",
     accountName_taken: "このハンドルはすでに使用されています。",
     accountName_not_found: "そのハンドルのアカウントが見つかりませんでした。",
-    accountName_invalid: "ハンドルは3〜30文字、小文字・数字・_・-のみ使用できます",
+    accountName_invalid: "ハンドルは3〜30文字で、小文字・数字・_ - . または : のみ使用できます",
     accountName_change_cooldown: "ハンドルは{{days}}日後に変更できます。",
     token_expired: "セッションが切れました。再度サインインしてください。",
     user_not_found: "アカウントが見つかりません。",

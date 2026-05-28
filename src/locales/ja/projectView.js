@@ -1,0 +1,16 @@
+export default {
+  notFound: "プロジェクトが見つかりません",
+  notFoundSub: "このプロジェクトは非公開か、存在しない可能性があります。",
+  editButton: "編集",
+  forkButton: "フォーク",
+  signUpButton: "無料で登録",
+  ctaGuest: "無料登録してこのプロジェクトをフォーク・編集しよう。",
+  ctaAuth: "このプロジェクトが気に入りましたか？フォークして自分のバージョンを作ろう。",
+  forkedFrom: "フォーク元",
+  showMore: "もっと見る",
+  showLess: "閉じる",
+  upNext: "次のトラック",
+  noAudio: "このプロジェクトには音声が添付されていません。",
+  prevTrack: "前へ",
+  nextTrack: "次へ",
+};

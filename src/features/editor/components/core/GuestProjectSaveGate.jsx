@@ -75,7 +75,7 @@ export default function GuestProjectSaveGate() {
             body: JSON.stringify({ ...payload, recaptchaToken }),
           });
           await clearPendingProject();
-          navigateRef.current(`/project/${result.projectId}`, { replace: true });
+          navigateRef.current(`/project/${result.projectId}/edit`, { replace: true });
         } catch {
           if (cancelled) return;
           const delay = getBackoffDelay(attemptRef.current);

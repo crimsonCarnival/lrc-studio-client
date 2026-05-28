@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { authService } from '@/features/auth/services/auth.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 
-const ACCOUNT_NAME_RE = /^[a-z0-9_-]{3,30}$/;
+const ACCOUNT_NAME_RE = /^[a-z0-9_.:-]{3,30}$/;
 const COOLDOWN_DAYS = 7;
 
 export default function AccountNameSection() {
@@ -26,7 +26,7 @@ export default function AccountNameSection() {
   }, [user?.lastAccountNameChangedAt]);
 
   function handleChange(e) {
-    const val = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    const val = e.target.value.toLowerCase().replace(/[^a-z0-9_.:-]/g, '');
     setValue(val);
     if (val && !ACCOUNT_NAME_RE.test(val)) {
       setError(t('profile.accountNameInvalid'));

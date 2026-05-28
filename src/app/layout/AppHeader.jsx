@@ -118,7 +118,7 @@ export function AppHeader({
     if (inProject && hasUnsavedChanges()) {
       setUnsavedModalTarget(path);
     } else if (location.pathname.startsWith(path)) {
-      navigate(activeProjectId ? `/project/${activeProjectId}` : '/project/new');
+      navigate(activeProjectId ? `/project/${activeProjectId}/edit` : '/project/new');
     } else {
       navigate(path);
     }
@@ -291,7 +291,7 @@ export function AppHeader({
         </div>
 
         {/* ── Center: Search bar ── */}
-        {!isSettingsPage && (
+        {!isSettingsPage && !isGuestLanding && (
           <div className="hidden lg:flex flex-1 items-center justify-center px-8">
             <HeaderSearchBar />
           </div>

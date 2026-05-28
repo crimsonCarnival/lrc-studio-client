@@ -26,13 +26,24 @@ const Home = lazy(() => import('@features/projects/components/Home'));
 const GuestLanding = lazy(() => import('@features/landing/GuestLanding'));
 const AdminDashboard = lazy(() => import('@features/admin/AdminDashboard'));
 const ProfilePage = lazy(() => import('@features/profile/ProfilePage'));
-const PlaylistPage = lazy(() => import('@features/playlists/PlaylistPage'));
 const SettingsPage = lazy(() => import('@features/settings/components/SettingsPage'));
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 const VerifyEmailPage = lazy(() => import('@features/auth/VerifyEmailPage'));
 
 const FeedPage   = lazy(() => import('@features/feed/FeedPage'));
 const SearchPage = lazy(() => import('@features/search/SearchPage'));
+const PublicProjectViewPage = lazy(() => import('@features/projects/components/PublicProjectViewPage'));
+const ListPage = lazy(() => import('@features/playlists/ListPage'));
+
+function LegacyProfileRedirect() {
+  const { accountName } = useParams();
+  return <Navigate to={`/${accountName}`} replace />;
+}
+
+function LegacyListRedirect() {
+  const { accountName, listId } = useParams();
+  return <Navigate to={`/${accountName}/lists/${listId}`} replace />;
+}
 
 const PanelReorderGroup = React.memo(function PanelReorderGroup({
   items,
@@ -160,7 +171,7 @@ function ForkHandler({ appState, navigate }) {
       projects.clone(id)
         .then((res) => {
           loadProject(res.projectId);
-          navigate(`/project/${res.projectId}`);
+          navigate(`/project/${res.projectId}/edit`);
           import('react-hot-toast').then(({ default: toast }) => {
             toast.success(t('project.cloneSuccess') || 'Project copied successfully!');
           });
@@ -385,7 +396,7 @@ export function AppRouter({
           <Library
             onOpenProject={(projectId) => {
               loadProject(projectId);
-              navigate(`/project/${projectId}`);
+              navigate(`/project/${projectId}/edit`);
             }}
             onBack={() => navigate(-1)}
           />
@@ -397,7 +408,7 @@ export function AppRouter({
         </Suspense>
       } />
       <Route path="project/fork/:id" element={<ForkHandler appState={appState} navigate={navigate} />} />
-      <Route path="project/:id" element={
+      <Route path="project/:id/edit" element={
         <EditorContainer loadProject={loadProject} activeProjectId={activeProjectId}>
           {loadError === 'project' ? (
             <NotFoundPage type="project" />
@@ -438,16 +449,23 @@ export function AppRouter({
           <Home />
         </Suspense>
       } />
-      <Route path="profile/:accountName/playlists/:playlistId" element={
+      <Route path="project/:projectId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
-          <PlaylistPage />
+          <PublicProjectViewPage />
         </Suspense>
       } />
-      <Route path="profile/:accountName?" element={
+      <Route path=":accountName/lists/:listId" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+          <ListPage />
+        </Suspense>
+      } />
+      <Route path=":accountName" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
           <ProfilePage />
         </Suspense>
       } />
+      <Route path="profile/:accountName" element={<LegacyProfileRedirect />} />
+      <Route path="profile/:accountName/playlists/:listId" element={<LegacyListRedirect />} />
       <Route path="settings/:tab?" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
           <SettingsPage />
