@@ -96,9 +96,10 @@ function ProtectedRoute({ children }) {
   // Guests can access certain paths without signing in.
   const isGuestAllowed =
     ['/', '/project/new', '/project/local'].includes(location.pathname) ||
-    /^\/project\/[^/]+$/.test(location.pathname) ||          // public project view
-    /^\/[a-z0-9_.:-]+$/.test(location.pathname) ||           // public profile
-    /^\/[a-z0-9_.:-]+\/lists\/[^/]+$/.test(location.pathname); // public list page
+    /^\/project\/[^/]+$/.test(location.pathname) ||                   // public project view
+    /^\/[a-z0-9_.:-]+$/.test(location.pathname) ||                    // public profile /:accountName
+    /^\/profile\/[a-z0-9_.:-]+$/.test(location.pathname) ||           // legacy public profile /profile/:accountName
+    /^\/[a-z0-9_.:-]+\/lists\/[^/]+$/.test(location.pathname);        // public list page
   if (!user && !isGuestAllowed) {
     let redirectUrl = location.pathname + location.search;
     if (location.pathname === '/change-password') {
