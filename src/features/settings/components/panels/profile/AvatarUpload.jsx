@@ -117,7 +117,7 @@ export default function AvatarUpload() {
             onClick={() => setExpanded(true)}
             className="rounded-xl h-8 text-[11px] font-bold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/60"
           >
-            Change photo
+            {t('profile.changeAvatar')}
           </Button>
         ) : (
           <div className="flex flex-col gap-2.5 max-w-sm border border-border/50 bg-secondary/15 rounded-2xl p-3 animate-fade-in">
