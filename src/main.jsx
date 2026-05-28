@@ -1,4 +1,4 @@
-import { StrictMode, lazy, Suspense } from 'react'
+import { StrictMode, lazy, Suspense, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 
@@ -29,21 +29,49 @@ import { Spinner } from '@ui/skeleton'
 import { AppProviders } from './app/AppProviders';
 import { useSettings } from '@/features/settings/useSettings';
 import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
+import { gqlRequest } from '@/app/graphql.client.js';
+
+const GET_SHARE_PROJECT_ID = `
+  query GetShareProjectId($id: ID!) {
+    getShare(id: $id) { projectId }
+  }
+`;
 
 // eslint-disable-next-line react-refresh/only-export-components
 const AuthPage = lazy(() => import('@features/auth/AuthPage.jsx'));
-// eslint-disable-next-line react-refresh/only-export-components
-const SharedProjectViewer = lazy(() => import('@features/sharing/components/SharedProjectViewer.jsx'));
 // eslint-disable-next-line react-refresh/only-export-components
 const ResetPasswordPage = lazy(() => import('@features/auth/ResetPasswordPage.jsx'));
 // eslint-disable-next-line react-refresh/only-export-components
 const ChangePasswordPage = lazy(() => import('@features/auth/ChangePasswordPage.jsx'));
 
-// Wrapper for SharedProjectViewer to get the id param
+// Resolves a share token to a projectId and redirects to /project/:projectId
 // eslint-disable-next-line react-refresh/only-export-components
 function SharedProjectRoute() {
   const { id } = useParams();
-  return <SharedProjectViewer projectId={id} />;
+  const [projectId, setProjectId] = useState(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    gqlRequest(GET_SHARE_PROJECT_ID, { id })
+      .then(data => {
+        const pid = data?.getShare?.projectId;
+        if (pid) setProjectId(pid);
+        else setFailed(true);
+      })
+      .catch(() => setFailed(true));
+  }, [id]);
+
+  if (failed) return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <p className="text-sm text-zinc-400">Share link not found.</p>
+    </div>
+  );
+  if (!projectId) return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="size-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+    </div>
+  );
+  return <Navigate to={`/project/${projectId}`} replace />;
 }
 
 // Protected Route Wrapper
