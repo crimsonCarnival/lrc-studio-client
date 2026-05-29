@@ -5,8 +5,8 @@ const PLAYLIST_FIELDS = `
   projectCount savedCount isSavedByMe createdAt updatedAt
   owner { id accountName displayName avatarUrl }
   projects {
-    id projectId title starCount forkCount
-    metadata { songName songArtist }
+    id projectId title starCount forkCount coverImage
+    metadata { songName songArtist albumArt }
     upload { source youtubeUrl coverImage }
   }
 `;

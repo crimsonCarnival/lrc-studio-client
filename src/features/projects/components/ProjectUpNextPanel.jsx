@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Music } from 'lucide-react';
-import { resolveUploadCover } from '@/shared/utils/cover-image';
+import { resolveCoverImage } from '@/shared/utils/cover-image';
 
 export function ProjectUpNextPanel({ playlist, currentProjectId, listId, accountName }) {
   const { t } = useTranslation();
@@ -24,7 +24,7 @@ export function ProjectUpNextPanel({ playlist, currentProjectId, listId, account
       <div className="flex flex-col gap-1 max-h-[60vh] lg:max-h-none overflow-y-auto">
         {playlist.projects.map((project) => {
           const isCurrent = project.projectId === currentProjectId;
-          const thumb = resolveUploadCover(project.upload);
+          const thumb = resolveCoverImage(project);
           return (
             <Link
               key={project.projectId}

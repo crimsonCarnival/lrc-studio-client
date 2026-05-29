@@ -51,7 +51,7 @@ export default function LyricsStage({
   };
 
   return (
-    <div className="relative h-full px-3 sm:px-6">
+    <div className="relative h-full flex flex-col px-3 sm:px-6">
       <StageControls
         t={t}
         hasFurigana={hasFurigana}

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Music, Star, Pencil, Lock, Play } from 'lucide-react';
 import { Button } from '@ui/button';
-import { resolveUploadCover } from '@/shared/utils/cover-image';
+import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import {
   getPlaylist,
@@ -202,7 +202,9 @@ export default function ListPage() {
           </div>
         ) : (
           <div className="flex flex-col divide-y divide-border rounded-2xl overflow-hidden border border-border">
-            {playlist.projects.map((project, index) => (
+            {playlist.projects.map((project, index) => {
+              const thumb = resolveCoverImage(project);
+              return (
               <Link
                 key={project.id}
                 to={`/project/${project.projectId}?list=${listId}`}
@@ -214,8 +216,8 @@ export default function ListPage() {
                 <span className="w-6 text-center text-sm hidden group-hover:block">▶</span>
 
                 <div className="w-16 h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
-                  {resolveUploadCover(project.upload) ? (
-                    <img src={resolveUploadCover(project.upload)} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                  {thumb ? (
+                    <img src={thumb} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   ) : (
                     <Music className="size-4 text-muted-foreground" />
                   )}
@@ -237,7 +239,7 @@ export default function ListPage() {
                   {project.starCount ?? 0}
                 </span>
               </Link>
-            ))}
+              ); })}
           </div>
         )}
       </div>
