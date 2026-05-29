@@ -1,16 +1,19 @@
 import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
-import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Music2, GitFork, Star, ExternalLink, Pencil } from 'lucide-react';
+import { Music2, GitFork, Pencil } from 'lucide-react';
 import { SettingsProvider } from '@/features/settings/SettingsContext';
 import { TooltipProvider } from '@ui/tooltip';
 import { Spinner } from '@ui/skeleton';
 import { Button } from '@ui/button';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
-import useInputMethod from '@/shared/hooks/useInputMethod';
 import Player from '@features/player/components/Player';
-import Preview from '@features/preview/components/Preview';
+import { resolveCoverImage } from '@/shared/utils/cover-image';
+import WatchLayout from './WatchLayout';
+import MediaStage from './MediaStage';
+import LyricsStage from './LyricsStage';
+import ProjectMetaBlock from './ProjectMetaBlock';
 import { ProjectUpNextPanel } from './ProjectUpNextPanel';
 import { usePublicProject } from '../hooks/usePublicProject';
 import { getPlaylist } from '@features/playlists/playlist.service';
@@ -18,7 +21,7 @@ import { getPlaylist } from '@features/playlists/playlist.service';
 /**
  * Public, read-only project view at /project/:projectId.
  *
- * Three columns: sidebar (metadata) | lyrics (Preview) | up-next panel (when ?list= present).
+ * Watch layout: MediaStage (blurred cover + LyricsStage) | ProjectMetaBlock | optional ProjectUpNextPanel rail.
  * Fixed player bar at the bottom; CTA strip below the AppHeader (rendered by the app shell).
  *
  * Player wiring mirrors SharedProjectViewer: the project upload is passed as
@@ -31,8 +34,6 @@ function PublicProjectViewPageInner() {
   const { projectId } = useParams();
   const [searchParams] = useSearchParams();
   const listId = searchParams.get('list');
-  const inputMethod = useInputMethod();
-  const isMobile = inputMethod === 'touch';
 
   const { user } = useAuthContext();
   const { project, loading, notFound } = usePublicProject(projectId);
@@ -43,9 +44,6 @@ function PublicProjectViewPageInner() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [playbackPosition, setPlaybackPosition] = useState(0);
   const [hasMedia, setHasMedia] = useState(false);
-
-  // ── Description collapse ──
-  const [descExpanded, setDescExpanded] = useState(false);
 
   // ── Up-next playlist ──
   const [playlist, setPlaylist] = useState(null);
@@ -149,9 +147,7 @@ function PublicProjectViewPageInner() {
   }
 
   const meta = project.metadata || {};
-  const coverImage = project.coverImage || meta.albumArt;
-  const description = meta.description || '';
-  const isLongDescription = description.length > 220;
+  const cover = resolveCoverImage(project);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-background">
@@ -200,141 +196,47 @@ function PublicProjectViewPageInner() {
         </div>
       )}
 
-      {/* Content area: sidebar | lyrics | up-next */}
-      <div className={`flex-1 min-h-0 flex ${!isOwner ? 'pt-[36px]' : ''} ${isMobile ? 'flex-col overflow-y-auto' : 'flex-row overflow-hidden'}`}>
-
-        {/* ── Sidebar: metadata ── */}
-        <aside className={`${isMobile ? 'w-full border-b' : 'w-72 flex-shrink-0 border-r overflow-y-auto'} border-border bg-card/40 p-4 flex flex-col gap-4`}>
-          {coverImage && (
-            <img
-              src={coverImage}
-              alt={project.title || ''}
-              className="w-full aspect-square object-cover rounded-xl border border-border"
-              loading="lazy"
-              decoding="async"
+      {/* Content area: watch layout */}
+      <div className={`flex-1 min-h-0 overflow-y-auto ${!isOwner ? 'pt-[36px]' : ''}`}>
+        <WatchLayout
+          stage={
+            <MediaStage cover={cover}>
+              <LyricsStage
+                lines={lines}
+                playbackPosition={playbackPosition}
+                editorMode={editorMode}
+                playerRef={playerRef}
+                hasMedia={hasMedia}
+                isPlaying={isPlaying}
+                playbackSpeed={playbackSpeed}
+              />
+            </MediaStage>
+          }
+          meta={
+            <ProjectMetaBlock
+              project={project}
+              cover={cover}
+              ctaSlot={
+                !isOwner ? (
+                  <Button size="sm" onClick={handleFork} className="h-8 px-3 text-xs font-medium gap-1 rounded-full shrink-0">
+                    <GitFork className="size-3.5" />
+                    {t('projectView.forkButton')}
+                  </Button>
+                ) : null
+              }
             />
-          )}
-
-          <div className="flex flex-col gap-1">
-            <h1 className="text-xl font-semibold text-foreground tracking-tight leading-tight">
-              {project.title || t('projectView.notFound')}
-            </h1>
-            {(meta.songName || meta.songArtist) && (
-              <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
-                {meta.songName && <span className="font-medium text-foreground/90">{meta.songName}</span>}
-                {meta.songArtist && <span className="before:content-['·'] before:mr-1.5">{meta.songArtist}</span>}
-                {meta.songAlbum && <span className="before:content-['·'] before:mr-1.5 italic">{meta.songAlbum}</span>}
-                {meta.songYear && <span className="before:content-['·'] before:mr-1.5">{meta.songYear}</span>}
-              </div>
-            )}
-          </div>
-
-          {/* Star / fork counts */}
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <Star className="size-3.5" />
-              {project.starCount ?? 0}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <GitFork className="size-3.5" />
-              {project.forkCount ?? 0}
-            </span>
-          </div>
-
-          {/* Forked-from badge */}
-          {project.forkedFrom?.projectId && (
-            <Link
-              to={`/project/${project.forkedFrom.projectId}`}
-              className="inline-flex items-center gap-1 text-xs text-accent-blue hover:underline w-fit"
-            >
-              <ExternalLink className="size-3" />
-              {t('projectView.forkedFrom')}
-              {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
-            </Link>
-          )}
-
-          {/* Description (collapsible) */}
-          {description && (
-            <div className="flex flex-col gap-1">
-              <p className={`text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap ${(!descExpanded && isLongDescription) ? 'line-clamp-4' : ''}`}>
-                {description}
-              </p>
-              {isLongDescription && (
-                <button
-                  onClick={() => setDescExpanded((v) => !v)}
-                  className="text-xs text-primary hover:underline w-fit"
-                >
-                  {descExpanded ? t('projectView.showLess') : t('projectView.showMore')}
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Tags */}
-          {meta.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {meta.tags.map((tag, i) => (
-                <span
-                  key={`${tag}-${i}`}
-                  className="px-2 py-0.5 rounded-md bg-muted border border-border text-[11px] text-muted-foreground font-medium"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Author link */}
-          {accountName && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-auto pt-2">
-              <Music2 className="size-3.5" />
-              <span>
-                <Link
-                  to={`/${accountName}`}
-                  className="text-foreground hover:text-primary transition-colors"
-                >
-                  {project.user.displayName || `@${accountName}`}
-                </Link>
-              </span>
-            </div>
-          )}
-        </aside>
-
-        {/* ── Lyrics panel ── */}
-        <main className={`${isMobile ? 'w-full' : 'flex-1 min-w-0 overflow-y-auto'} p-4`}>
-          <Preview
-            lines={lines}
-            setLines={() => {}}
-            playbackPosition={playbackPosition}
-            mediaTitle={mediaTitle}
-            playerRef={playerRef}
-            duration={0}
-            editorMode={editorMode}
-            exportToUrl={() => {}}
-            isSharedProject={true}
-            sharedReadOnly={true}
-            setSharedReadOnly={() => {}}
-            shareModal={null}
-            setShareModal={() => {}}
-            hasMedia={hasMedia}
-            isPlaying={isPlaying}
-            playbackSpeed={playbackSpeed}
-            activeProjectId={projectId}
-            project={project}
-            projectMetadata={meta}
-            viewerMode={true}
-          />
-        </main>
-
-        {/* ── Up-next panel (only when ?list= present) ── */}
-        {listId && playlist && (
-          <ProjectUpNextPanel
-            playlist={playlist}
-            currentProjectId={projectId}
-            listId={listId}
-            accountName={playlist.owner?.accountName || accountName}
-          />
-        )}
+          }
+          upNext={
+            listId && playlist ? (
+              <ProjectUpNextPanel
+                playlist={playlist}
+                currentProjectId={projectId}
+                listId={listId}
+                accountName={playlist.owner?.accountName || accountName}
+              />
+            ) : null
+          }
+        />
       </div>
 
       {/* ── Fixed player bar ── */}
