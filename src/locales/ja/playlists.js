@@ -45,6 +45,7 @@ export default {
     noProjects: "まだプロジェクトがありません。",
     untitled: "タイトルなし",
     notFound: "プレイリストが見つかりません",
+    playAll: "すべて再生",
   },
   savedSection: {
     title: "保存済みプレイリスト",

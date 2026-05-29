@@ -45,6 +45,7 @@ export default {
     noProjects: "No projects in this playlist yet.",
     untitled: "Untitled",
     notFound: "Playlist not found",
+    playAll: "Play all",
   },
   savedSection: {
     title: "Saved Playlists",

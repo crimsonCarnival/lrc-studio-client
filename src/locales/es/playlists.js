@@ -45,6 +45,7 @@ export default {
     noProjects: "Aún no hay proyectos en esta lista.",
     untitled: "Sin título",
     notFound: "Lista no encontrada",
+    playAll: "Reproducir todo",
   },
   savedSection: {
     title: "Listas guardadas",
