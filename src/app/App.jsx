@@ -55,7 +55,12 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, activeProjectId, routerLocation.pathname]);
 
-  const isProjectPage = routerLocation.pathname.startsWith('/project/') && routerLocation.pathname !== '/project/new';
+  // Public project view (/project/:id without /edit) has its own embedded player
+  const isPublicProjectView = /^\/project\/[^/]+$/.test(routerLocation.pathname) &&
+    !['new', 'local'].includes(routerLocation.pathname.split('/')[2] ?? '');
+  const isProjectPage = routerLocation.pathname.startsWith('/project/') &&
+    routerLocation.pathname !== '/project/new' &&
+    !isPublicProjectView;
   const isSetupPage = routerLocation.pathname === '/project/new';
   const isReady = isProjectPage;
   const isPlayerMounted = isProjectPage || isSetupPage;
