@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Music, Star, Pencil, Lock } from 'lucide-react';
+import { Music, Star, Pencil, Lock, Play } from 'lucide-react';
 import { Button } from '@ui/button';
+import { resolveUploadCover } from '@/shared/utils/cover-image';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import {
   getPlaylist,
@@ -157,6 +158,16 @@ export default function ListPage() {
             </div>
 
             <div className="flex items-center gap-2">
+              {playlist.projects?.length > 0 && (
+                <Button
+                  size="sm"
+                  onClick={() => navigate(`/project/${playlist.projects[0].projectId}?list=${listId}`)}
+                  className="gap-1.5 rounded-full"
+                >
+                  <Play className="size-4" fill="currentColor" />
+                  {t('playlists.detail.playAll')}
+                </Button>
+              )}
               {isOwner ? (
                 <Button size="sm" variant="outline" onClick={() => setShowEdit(true)} className="gap-1.5">
                   <Pencil className="size-4" />
@@ -202,13 +213,9 @@ export default function ListPage() {
                 </span>
                 <span className="w-6 text-center text-sm hidden group-hover:block">▶</span>
 
-                <div className="size-10 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
-                  {project.upload?.youtubeUrl ? (
-                    <img
-                      src={`https://img.youtube.com/vi/${extractYoutubeId(project.upload.youtubeUrl)}/default.jpg`}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
+                <div className="w-16 h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
+                  {resolveUploadCover(project.upload) ? (
+                    <img src={resolveUploadCover(project.upload)} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   ) : (
                     <Music className="size-4 text-muted-foreground" />
                   )}
@@ -244,14 +251,4 @@ export default function ListPage() {
       )}
     </div>
   );
-}
-
-function extractYoutubeId(url) {
-  if (!url) return '';
-  try {
-    const u = new URL(url);
-    return u.searchParams.get('v') || u.pathname.split('/').pop() || '';
-  } catch {
-    return '';
-  }
 }
