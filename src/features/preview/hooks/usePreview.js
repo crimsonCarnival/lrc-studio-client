@@ -5,6 +5,11 @@ import { useSettings } from '@/features/settings/useSettings';
 import { downloadLRC } from '@/shared/utils/lrc';
 import { lyrics } from '@/app/api';
 import { matchKey } from '@/shared/utils/keyboard';
+import {
+  ACTIVE_FONT_SIZES, INACTIVE_FONT_SIZES,
+  ACTIVE_SECONDARY_SIZES, INACTIVE_SECONDARY_SIZES,
+  WRAPPER_SPACING, ACTIVE_MARGIN,
+} from '../preview.styles';
 
 export function usePreview({ lines, setLines, playbackPosition, playerRef, duration, mediaTitle, editorMode }) {
   const { t } = useTranslation();
@@ -46,41 +51,6 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
 
   const sizeOption = settings.interface?.fontSize || 'normal';
   const spacingOption = settings.interface?.spacing || 'normal';
-
-  const activeFontSizes = {
-    small: 'text-lg sm:text-xl lg:text-2xl',
-    normal: 'text-2xl sm:text-3xl lg:text-4xl',
-    large: 'text-3xl sm:text-4xl lg:text-5xl',
-    xlarge: 'text-4xl sm:text-5xl lg:text-6xl'
-  };
-  const inactiveFontSizes = {
-    small: 'text-sm sm:text-base lg:text-lg',
-    normal: 'text-base sm:text-xl lg:text-2xl',
-    large: 'text-lg sm:text-2xl lg:text-3xl',
-    xlarge: 'text-xl sm:text-3xl lg:text-4xl'
-  };
-  const activeSecondarySizes = {
-    small: 'text-[10px] sm:text-xs',
-    normal: 'text-xs sm:text-sm',
-    large: 'text-sm sm:text-base',
-    xlarge: 'text-base sm:text-lg'
-  };
-  const inactiveSecondarySizes = {
-    small: 'text-[9px] sm:text-[10px]',
-    normal: 'text-xs',
-    large: 'text-sm',
-    xlarge: 'text-sm sm:text-base'
-  };
-  const wrapperSpacing = {
-    compact: 'space-y-0',
-    normal: 'space-y-1',
-    relaxed: 'space-y-3'
-  };
-  const activeMargin = {
-    compact: 'my-0.5 sm:my-1',
-    normal: 'my-1 sm:my-2',
-    relaxed: 'my-2 sm:my-4'
-  };
 
   const syncedIndices = useMemo(() => {
     const indices = [];
@@ -315,12 +285,12 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
     setMetadata,
     sizeOption,
     spacingOption,
-    activeFontSizes,
-    inactiveFontSizes,
-    activeSecondarySizes,
-    inactiveSecondarySizes,
-    wrapperSpacing,
-    activeMargin,
+    activeFontSizes: ACTIVE_FONT_SIZES,
+    inactiveFontSizes: INACTIVE_FONT_SIZES,
+    activeSecondarySizes: ACTIVE_SECONDARY_SIZES,
+    inactiveSecondarySizes: INACTIVE_SECONDARY_SIZES,
+    wrapperSpacing: WRAPPER_SPACING,
+    activeMargin: ACTIVE_MARGIN,
     currentIndex,
     hasSyncedLines,
     hasTranslations,
