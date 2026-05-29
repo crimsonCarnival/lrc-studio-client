@@ -95,19 +95,27 @@ export function useAutosave({
       let uploadIdToSave = sessionUploadIdRef.current || null;
 
       if (!uploadIdToSave && cloudinaryAudio) {
-        try {
-          const upload = await uploads.saveMedia({
-            source: 'cloudinary',
-            cloudinaryUrl: cloudinaryAudio.cloudinaryUrl,
-            publicId: cloudinaryAudio.publicId,
-            fileName: cloudinaryAudio.fileName,
-            title: cloudinaryAudio.fileName?.replace(/\.[^/.]+$/, '') || '',
-            duration: cloudinaryAudio.duration,
-          });
-          uploadIdToSave = upload.id;
-          sessionUploadIdRef.current = upload.id;
-        } catch (err) {
-          console.error('Failed to save upload:', err);
+        const hasRealId = cloudinaryAudio.id && !String(cloudinaryAudio.id).startsWith('local:');
+        if (hasRealId) {
+          uploadIdToSave = cloudinaryAudio.id;
+          sessionUploadIdRef.current = cloudinaryAudio.id;
+        } else {
+          try {
+            const { upload } = await uploads.saveMedia({
+              source: 'cloudinary',
+              cloudinaryUrl: cloudinaryAudio.cloudinaryUrl,
+              publicId: cloudinaryAudio.publicId,
+              fileName: cloudinaryAudio.fileName,
+              title: cloudinaryAudio.fileName?.replace(/\.[^/.]+$/, '') || '',
+              duration: cloudinaryAudio.duration,
+            });
+            if (upload?.id) {
+              uploadIdToSave = upload.id;
+              sessionUploadIdRef.current = upload.id;
+            }
+          } catch (err) {
+            console.error('Failed to save upload:', err);
+          }
         }
       } else if (!uploadIdToSave && payload.ytUrl) {
         try {
@@ -186,18 +194,23 @@ export function useAutosave({
 
       let uploadIdToSave = null;
       if (cloudinaryAudio) {
-        try {
-          const upload = await uploads.saveMedia({
-            source: 'cloudinary',
-            cloudinaryUrl: cloudinaryAudio.cloudinaryUrl,
-            publicId: cloudinaryAudio.publicId,
-            fileName: cloudinaryAudio.fileName,
-            title: cloudinaryAudio.fileName?.replace(/\.[^/.]+$/, '') || '',
-            duration: cloudinaryAudio.duration,
-          });
-          uploadIdToSave = upload.id;
-        } catch (err) {
-          console.error('Failed to save upload:', err);
+        const hasRealId = cloudinaryAudio.id && !String(cloudinaryAudio.id).startsWith('local:');
+        if (hasRealId) {
+          uploadIdToSave = cloudinaryAudio.id;
+        } else {
+          try {
+            const { upload } = await uploads.saveMedia({
+              source: 'cloudinary',
+              cloudinaryUrl: cloudinaryAudio.cloudinaryUrl,
+              publicId: cloudinaryAudio.publicId,
+              fileName: cloudinaryAudio.fileName,
+              title: cloudinaryAudio.fileName?.replace(/\.[^/.]+$/, '') || '',
+              duration: cloudinaryAudio.duration,
+            });
+            if (upload?.id) uploadIdToSave = upload.id;
+          } catch (err) {
+            console.error('Failed to save upload:', err);
+          }
         }
       } else if (payload.ytUrl) {
         try {

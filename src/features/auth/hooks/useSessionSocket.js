@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { getSocket } from '@/app/socket.client';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useAuthContext } from '@/features/auth/AuthContext.jsx';
 
 export function useSessionSocket() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuthContext();
 
   useEffect(() => {
     const socket = getSocket();

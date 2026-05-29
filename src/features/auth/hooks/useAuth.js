@@ -21,6 +21,7 @@ export function useAuth() {
   const setUser = useCallback((u) => setState(s => ({ ...s, user: typeof u === 'function' ? u(s.user) : u })), []);
   
   const refreshTimerRef = useRef(null);
+  const isRefreshingRef = useRef(false);
   const { executeRecaptcha } = useGoogleReCaptcha();
 
   const doLogout = useCallback(async () => {
@@ -42,10 +43,14 @@ export function useAuth() {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
   }, []);
 
-  // Schedule a token refresh before the access token expires (default: 14 min for 15 min expiry)
+  // Schedule a token refresh before the access token expires (default: 14 min for 15 min expiry).
+  // isRefreshingRef is shared with the token:expired handler to prevent concurrent refresh calls,
+  // which would trigger the server's breach-detection path and invalidate all sessions.
   const scheduleRefresh = useCallback((expiresIn = 14 * 60 * 1000) => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
     refreshTimerRef.current = setTimeout(async () => {
+      if (isRefreshingRef.current) return;
+      isRefreshingRef.current = true;
       try {
         await auth.refresh();
         scheduleRefresh();
@@ -56,6 +61,8 @@ export function useAuth() {
           id: 'session-expired',
           duration: 6000,
         });
+      } finally {
+        isRefreshingRef.current = false;
       }
     }, expiresIn);
   }, [doLogout]);
@@ -128,7 +135,6 @@ export function useAuth() {
   }, [scheduleRefresh]);
 
   // ——— Global token-expiry handler ———
-  const isRefreshingRef = useRef(false);
   useEffect(() => {
     const unsub = authEvents.on('token:expired', async () => {
       if (isRefreshingRef.current) return; // de-duplicate concurrent events

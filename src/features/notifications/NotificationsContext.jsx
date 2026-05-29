@@ -48,7 +48,11 @@ export function NotificationsProvider({ children }) {
     }
 
     function onDismissed({ id }) {
-      setNotifications(prev => prev.filter(n => n._id !== id));
+      setNotifications(prev => {
+        const target = prev.find(n => n._id === id);
+        if (target && !target.read) setUnreadCount(c => Math.max(0, c - 1));
+        return prev.filter(n => n._id !== id);
+      });
     }
 
     socket.on('notification:push', onPush);
@@ -60,8 +64,11 @@ export function NotificationsProvider({ children }) {
   }, [user]);
 
   const markRead = useCallback((ids) => {
-    setNotifications(prev => prev.map(n => ids.includes(n._id) ? { ...n, read: true } : n));
-    setUnreadCount(prev => Math.max(0, prev - ids.length));
+    setNotifications(prev => {
+      const unreadInBatch = prev.filter(n => ids.includes(n._id) && !n.read).length;
+      if (unreadInBatch > 0) setUnreadCount(c => Math.max(0, c - unreadInBatch));
+      return prev.map(n => ids.includes(n._id) ? { ...n, read: true } : n);
+    });
     request('/notifications/read', { method: 'POST', body: JSON.stringify({ ids }) }).catch(() => {});
   }, []);
 
@@ -72,7 +79,11 @@ export function NotificationsProvider({ children }) {
   }, []);
 
   const dismiss = useCallback((id) => {
-    setNotifications(prev => prev.filter(n => n._id !== id));
+    setNotifications(prev => {
+      const target = prev.find(n => n._id === id);
+      if (target && !target.read) setUnreadCount(c => Math.max(0, c - 1));
+      return prev.filter(n => n._id !== id);
+    });
     request(`/notifications/${id}`, { method: 'DELETE' }).catch(() => {});
   }, []);
 
