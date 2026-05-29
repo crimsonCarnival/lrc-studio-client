@@ -30,7 +30,7 @@ const FOCUS_RING = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus
 const ALL_SPEED_PRESETS = [0.25, 0.5, 0.75, 1, 1.25, 1.5];
 
 function Player(
-  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef, mediaTitle, onTitleChange, initialYtUrl, initialCloudinaryUpload, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onCloudinaryUpload, playerTop = false, onDockToggle, onSpotifyTrackIdChange, ref },
+  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef, mediaTitle, onTitleChange, initialYtUrl, initialCloudinaryUpload, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onCloudinaryUpload, playerTop = false, onDockToggle, onSpotifyTrackIdChange, viewerMode = false, ref },
 ) {
   const { t, dt } = useDynamicTranslation();
   const { settings, updateSetting } = useSettings();
@@ -565,7 +565,7 @@ function Player(
       {/* ─────────────── Desktop full bar content (hidden on mobile) ─────────────── */}
       <div className="max-lg:hidden animate-fade-in overflow-visible flex flex-col items-center w-full">
         {/* Header */}
-        {!hasMedia && (
+        {!hasMedia && !viewerMode && (
           <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 mb-2">
             <h2 className="text-xs sm:text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2 overflow-hidden pb-0.5 min-w-0">
               <span className="uppercase shrink-0 text-xs sm:text-sm flex items-center gap-1.5"><Headphones className="size-3.5" />{t('player.title')}</span>
@@ -592,7 +592,7 @@ function Player(
 
         {/* Unified media loader — shown when no media is loaded */}
         {/* Compact unified media loader for docked bar */}
-        {!hasMedia && !yt.ytLoading && !sp.loading && (
+        {!hasMedia && !yt.ytLoading && !sp.loading && !viewerMode && (
           <div className="animate-fade-in w-full max-w-[1000px] mx-auto flex items-center justify-center gap-3">
             {/* Local Audio */}
             <label
@@ -879,7 +879,7 @@ function Player(
               <div className="flex items-center gap-2 sm:gap-3 z-10">
 
                 {/* Change Media */}
-                {hasMedia && (
+                {hasMedia && !viewerMode && (
                   <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
                     <PopoverTrigger asChild>
                       <Button
@@ -910,24 +910,26 @@ function Player(
                   </Tip>
                 )}
 
-                <Tip content={settings.playback?.loopCurrentLine
-                  ? (loopA != null && loopB != null)
-                    ? `${t('player.loopActive')}: ${formatTime(loopA)} – ${formatTime(loopB)} · ${t('player.clickToDisable')}`
-                    : t('player.setLoop')
-                  : t('player.setLoop') || 'Loop current line'
-                }>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => updateSetting('playback.loopCurrentLine', !settings.playback?.loopCurrentLine)}
-                    className={`rounded-full shrink-0 ${FOCUS_RING} ${settings.playback?.loopCurrentLine
-                      ? 'bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 border border-violet-500/30'
-                      : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'
-                      }`}
-                  >
-                    <Repeat className="size-4" />
-                  </Button>
-                </Tip>
+                {!viewerMode && (
+                  <Tip content={settings.playback?.loopCurrentLine
+                    ? (loopA != null && loopB != null)
+                      ? `${t('player.loopActive')}: ${formatTime(loopA)} – ${formatTime(loopB)} · ${t('player.clickToDisable')}`
+                      : t('player.setLoop')
+                    : t('player.setLoop') || 'Loop current line'
+                  }>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => updateSetting('playback.loopCurrentLine', !settings.playback?.loopCurrentLine)}
+                      className={`rounded-full shrink-0 ${FOCUS_RING} ${settings.playback?.loopCurrentLine
+                        ? 'bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 border border-violet-500/30'
+                        : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'
+                        }`}
+                    >
+                      <Repeat className="size-4" />
+                    </Button>
+                  </Tip>
+                )}
               </div>
             </div>
           </div>
@@ -937,7 +939,7 @@ function Player(
       {/* ─────────────── Compact mobile bar (hidden on desktop) ─────────────── */}
       <div className="lg:hidden w-full overflow-hidden">
         {/* No media */}
-        {!hasMedia && (
+        {!hasMedia && !viewerMode && (
           <div className="flex flex-col gap-1 px-3 py-2">
             {(yt.ytLoading || sp.loading) ? (
               <div className="flex items-center gap-3 flex-1 py-2">
@@ -1116,36 +1118,38 @@ function Player(
                   <span className="text-[10px] font-bold mt-1 text-zinc-500">{settings.playback?.seekTime ?? 5}</span>
                 </button>
 
-                <button
-                  onClick={() => {
-                    if (loopA != null && loopB != null) {
-                      clearLoop();
-                    } else {
-                      const now = currentTime;
-                      if (lines?.length) {
-                        let activeIdx = -1;
-                        for (let i = 0; i < lines.length; i++) {
-                          if (lines[i].timestamp != null && lines[i].timestamp <= now) activeIdx = i;
-                        }
-                        if (activeIdx >= 0) {
-                          const a = lines[activeIdx].timestamp;
-                          let b = lines[activeIdx].endTime ?? null;
-                          if (b == null) {
-                            b = duration;
-                            for (let i = activeIdx + 1; i < lines.length; i++) {
-                              if (lines[i].timestamp != null) { b = lines[i].timestamp; break; }
-                            }
+                {!viewerMode && (
+                  <button
+                    onClick={() => {
+                      if (loopA != null && loopB != null) {
+                        clearLoop();
+                      } else {
+                        const now = currentTime;
+                        if (lines?.length) {
+                          let activeIdx = -1;
+                          for (let i = 0; i < lines.length; i++) {
+                            if (lines[i].timestamp != null && lines[i].timestamp <= now) activeIdx = i;
                           }
-                          setLoop({ a, b });
+                          if (activeIdx >= 0) {
+                            const a = lines[activeIdx].timestamp;
+                            let b = lines[activeIdx].endTime ?? null;
+                            if (b == null) {
+                              b = duration;
+                              for (let i = activeIdx + 1; i < lines.length; i++) {
+                                if (lines[i].timestamp != null) { b = lines[i].timestamp; break; }
+                              }
+                            }
+                            setLoop({ a, b });
+                          }
                         }
                       }
-                    }
-                  }}
-                  className={`flex flex-col items-center justify-center size-14 rounded-2xl transition-all duration-100 shrink-0 active:scale-95 ${loopA != null && loopB != null ? 'text-accent-purple bg-accent-purple/10' : 'text-zinc-400 active:bg-zinc-800'}`}
-                >
-                  <Repeat className="size-6" />
-                  <span className="text-[9px] font-bold mt-1 opacity-60 uppercase tracking-tight">{t('player.loop') || 'Loop'}</span>
-                </button>
+                    }}
+                    className={`flex flex-col items-center justify-center size-14 rounded-2xl transition-all duration-100 shrink-0 active:scale-95 ${loopA != null && loopB != null ? 'text-accent-purple bg-accent-purple/10' : 'text-zinc-400 active:bg-zinc-800'}`}
+                  >
+                    <Repeat className="size-6" />
+                    <span className="text-[9px] font-bold mt-1 opacity-60 uppercase tracking-tight">{t('player.loop') || 'Loop'}</span>
+                  </button>
+                )}
 
                 <div className="size-14 flex items-center justify-center shrink-0">
                   <VolumeControl />
@@ -1168,7 +1172,7 @@ function Player(
                   </button>
                 )}
 
-                {hasMedia && (
+                {hasMedia && !viewerMode && (
                   <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
                     <PopoverTrigger asChild>
                       <button className="flex flex-col items-center justify-center size-14 rounded-2xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800 active:scale-95 transition-all duration-100 shrink-0">
