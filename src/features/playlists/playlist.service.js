@@ -7,7 +7,7 @@ const PLAYLIST_FIELDS = `
   projects {
     id projectId title starCount forkCount
     metadata { songName songArtist }
-    upload { source youtubeUrl }
+    upload { source youtubeUrl coverImage }
   }
 `;
 
