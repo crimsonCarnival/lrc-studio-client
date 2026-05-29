@@ -5,6 +5,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { downloadLRC } from '@/shared/utils/lrc';
 import { lyrics } from '@/app/api';
 import { matchKey } from '@/shared/utils/keyboard';
+import { computeCurrentIndex } from '../lyrics-position';
 import {
   ACTIVE_FONT_SIZES, INACTIVE_FONT_SIZES,
   ACTIVE_SECONDARY_SIZES, INACTIVE_SECONDARY_SIZES,
@@ -62,26 +63,10 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
     return indices;
   }, [lines]);
 
-  const currentIndex = useMemo(() => {
-    if (editorMode === 'srt' && !playbackPosition && !duration) return -1;
-
-    let bestIdx = -1;
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (line.timestamp == null) continue;
-
-      if (line.timestamp <= playbackPosition) {
-        if (editorMode === 'srt') {
-          if (line.endTime != null && playbackPosition >= line.endTime) continue;
-        }
-        bestIdx = i;
-      } else {
-        break;
-      }
-    }
-    return bestIdx;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lines, playbackPosition, editorMode]);
+  const currentIndex = useMemo(
+    () => computeCurrentIndex(lines, playbackPosition, editorMode),
+    [lines, playbackPosition, editorMode],
+  );
 
   const hasSyncedLines = syncedIndices.length > 0;
   const hasTranslations = lines.some(l => l.translation);
