@@ -34,7 +34,7 @@ export default function UploadsLibrary({ onSelect, onBack }) {
   const timezone = settings.advanced?.timezone;
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { confirmModal, requestConfirm } = useConfirm();
+  const [requestConfirm, confirmModal] = useConfirm();
   const { dt } = useDynamicTranslation();
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState('');

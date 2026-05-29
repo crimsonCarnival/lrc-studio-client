@@ -23,7 +23,7 @@ export default function UploadDetailView({ onBack }) {
         setLoading(true);
         setError('');
         const data = await uploads.getMedia(id);
-        setMedia(data);
+        setMedia(data.upload ?? data);
       } catch (err) {
         setError(err.message || 'Failed to load media details');
       } finally {
