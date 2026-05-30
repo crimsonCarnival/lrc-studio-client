@@ -396,7 +396,9 @@ export function useAuth() {
     // The server callback will redirect to /auth/signin?gcb=success|error.
     if (!popup || popup.closed) {
       window.location.href = url;
-      return new Promise(() => {}); // Never resolves; navigation takes over
+      return new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('redirect_timeout')), 3000);
+      });
     }
 
     popup.location.href = url;
