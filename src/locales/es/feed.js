@@ -34,5 +34,20 @@ export default {
       'hizo una copia de',
       'tomó como base',
     ],
+    project_boosted: [
+      'amplificó',
+      'compartió',
+      'impulsó',
+    ],
+    playlist_created: [
+      'creó una lista',
+      'publicó una lista',
+      'armó una lista',
+    ],
+    user_followed: [
+      'ahora sigue a',
+      'comenzó a seguir a',
+      'siguió a',
+    ],
   },
 };

@@ -34,5 +34,20 @@ export default {
       'made a copy of',
       'branched off from',
     ],
+    project_boosted: [
+      'boosted',
+      'shared',
+      'amplified',
+    ],
+    playlist_created: [
+      'created a playlist',
+      'made a new playlist',
+      'dropped a playlist',
+    ],
+    user_followed: [
+      'is now following',
+      'started following',
+      'followed',
+    ],
   },
 };

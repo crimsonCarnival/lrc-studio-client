@@ -11,6 +11,7 @@ const FEED_QUERY = `
         projectId
         projectTitle
         coverImage
+        targetPath
         createdAt
         actor {
           id
