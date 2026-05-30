@@ -32,6 +32,7 @@ export function PlaylistModal({ playlist, onClose, onSave }) {
   );
   const [projectSearch, setProjectSearch] = useState('');
   const [tagInput, setTagInput] = useState('');
+  const [togglingIds, setTogglingIds] = useState(new Set());
 
   const [form, setForm] = useState({
     name: playlist?.name ?? '',
@@ -91,7 +92,9 @@ export function PlaylistModal({ playlist, onClose, onSave }) {
       );
       return;
     }
+    if (togglingIds.has(id)) return;
     const isSelected = selectedIds.includes(id);
+    setTogglingIds(prev => new Set([...prev, id]));
     setSelectedIds(prev =>
       isSelected ? prev.filter(x => x !== id) : [...prev, id]
     );
@@ -104,6 +107,12 @@ export function PlaylistModal({ playlist, onClose, onSave }) {
       setSelectedIds(prev =>
         isSelected ? [...prev, id] : prev.filter(x => x !== id)
       );
+    } finally {
+      setTogglingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   }
 
@@ -299,13 +308,14 @@ export function PlaylistModal({ playlist, onClose, onSave }) {
                     <button
                       key={p.id}
                       onClick={() => toggleProject(p.id)}
+                      disabled={togglingIds.has(p.id)}
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${selected ? 'bg-primary/10' : 'hover:bg-white/5'}`}
                     >
                       <span className={`size-4 rounded border flex items-center justify-center shrink-0 ${selected ? 'bg-primary border-primary' : 'border-border'}`}>
                         {selected && <Check className="size-3 text-zinc-950" />}
                       </span>
                       <span className="flex-1 min-w-0">
-                        <span className="text-sm text-foreground line-clamp-1">{p.title || 'Untitled'}</span>
+                        <span className="text-sm text-foreground line-clamp-1">{p.title || t('playlists.modal.untitled')}</span>
                         {(p.metadata?.songName || p.metadata?.songArtist) && (
                           <span className="text-xs text-muted-foreground line-clamp-1">
                             {[p.metadata.songName, p.metadata.songArtist].filter(Boolean).join(' · ')}
