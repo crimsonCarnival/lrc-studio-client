@@ -523,11 +523,8 @@ export function useAuth() {
       return result.user;
     } catch (err) {
       if (err.name === 'NotAllowedError') {
-        console.log('User cancelled passkey login.');
         return null;
       }
-      // Server rejected the passkey (404 = credential not found, 400 = verification failed).
-      // Clear the stale hasPasskey flag so the fingerprint icon no longer shows.
       if (err.status === 404 || err.status === 400) {
         const existing = rememberedAccounts.getAll().find(
           (a) => a.identifier === identifier || a.accountName === identifier
@@ -536,7 +533,6 @@ export function useAuth() {
           rememberedAccounts.upsert({ userId: existing.userId, hasPasskey: false });
         }
       }
-      console.error('Passkey login failed:', err);
       throw err;
     }
   }, [scheduleRefresh, handlePostAuthClone]);
