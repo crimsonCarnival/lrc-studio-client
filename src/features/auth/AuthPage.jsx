@@ -67,6 +67,27 @@ export default function AuthPage() {
     }
   }, [mode, searchParams, navigate]);
 
+  // Handle redirect-based Google OAuth callback (popup-blocked fallback).
+  // The server redirects to /auth/signin?gcb=success|error after the OAuth dance.
+  useEffect(() => {
+    const gcb = searchParams.get('gcb');
+    if (!gcb) return;
+
+    // Clean the URL immediately so back-navigation doesn't re-trigger
+    const cleanParams = new URLSearchParams(searchParams);
+    cleanParams.delete('gcb');
+    cleanParams.delete('gcb_msg');
+    navigate(`/auth/signin${cleanParams.toString() ? `?${cleanParams}` : ''}`, { replace: true });
+
+    if (gcb === 'success') {
+      // Cookies are set by the server callback; navigate home and let useAuth.restore() pick them up
+      const redirectTo = searchParams.get('redirect');
+      navigate(redirectTo || '/home', { replace: true });
+    } else {
+      toast.error(searchParams.get('gcb_msg') || t('auth.errors.googleLoginFailed'));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const prevLocationSearchRef = useRef(location.search);
   if (prevLocationSearchRef.current !== location.search) {
     prevLocationSearchRef.current = location.search;
@@ -378,7 +399,8 @@ export default function AuthPage() {
                 onLogin={loginAndHold}
                 onGoogleLogin={async () => {
                   try {
-                    await loginWithGoogle();
+                    // Reuse the selected account so Google skips the chooser (#12)
+                    await loginWithGoogle(identifierData?.identifier);
                     handleAuthSuccess();
                   } catch {
                     toast.error(t('auth.errors.googleLoginFailed'));
