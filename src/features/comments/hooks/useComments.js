@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getSocket } from '@/app/socket.client';
+import { connectSocket } from '@/app/socket.client';
 import { fetchComments, fetchCommentReplies, submitComment, removeComment } from '../comments.service.js';
 
 export function useComments(projectId) {
@@ -47,9 +47,7 @@ export function useComments(projectId) {
   }, [fetchPage]);
 
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket) return;
-
+    const socket = connectSocket();
     socket.emit('join:project', projectId);
 
     const onCommentNew = (comment) => {
@@ -122,8 +120,7 @@ export function useCommentReplies(commentId) {
   useEffect(() => {
     if (!loaded) return;
 
-    const socket = getSocket();
-    if (!socket) return;
+    const socket = connectSocket();
 
     const onCommentNew = (comment) => {
       if (comment.parentId === commentId) {

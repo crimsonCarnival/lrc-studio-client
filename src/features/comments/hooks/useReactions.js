@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSocket } from '@/app/socket.client';
+import { connectSocket } from '@/app/socket.client';
 import { fetchProjectReactions, reactProject } from '../comments.service.js';
 
 export function useProjectReactions(projectId) {
@@ -23,8 +23,7 @@ export function useProjectReactions(projectId) {
   }, [projectId]);
 
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket) return;
+    const socket = connectSocket();
 
     const onReactionUpdate = ({ targetType, targetId, reactions: updated }) => {
       if (targetType === 'project' && targetId === projectId) {
