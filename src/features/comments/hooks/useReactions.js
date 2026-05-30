@@ -26,6 +26,10 @@ export function useProjectReactions(projectId) {
   useEffect(() => {
     const socket = connectSocket();
 
+    if (projectId) {
+      socket.emit('join:project', projectId);
+    }
+
     const onReactionUpdate = ({ targetType, targetId, reactions: updated }) => {
       if (targetType === 'project' && targetId === projectId) {
         setReactions(updated);
@@ -33,7 +37,10 @@ export function useProjectReactions(projectId) {
     };
 
     socket.on('reaction:update', onReactionUpdate);
-    return () => socket.off('reaction:update', onReactionUpdate);
+    return () => {
+      socket.off('reaction:update', onReactionUpdate);
+      if (projectId) socket.emit('leave:project', projectId);
+    };
   }, [projectId]);
 
   const react = useCallback(async (emoji) => {

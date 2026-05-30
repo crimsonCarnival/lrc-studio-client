@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Music2, GitFork, Pencil } from 'lucide-react';
+import { Music2, GitFork, Pencil, Star, Check } from 'lucide-react';
 import { SettingsProvider } from '@/features/settings/SettingsContext';
 import { TooltipProvider } from '@ui/tooltip';
 import { Spinner } from '@ui/skeleton';
@@ -19,6 +19,7 @@ import { usePublicProject } from '../hooks/usePublicProject';
 import { getPlaylist } from '@features/playlists/playlist.service';
 import { ReactionBar } from '@features/comments/components/ReactionBar';
 import { useProjectReactions } from '@features/comments/hooks/useReactions';
+import { projects as projectsApi } from '@/app/api';
 
 /**
  * Public, read-only project view at /project/:projectId.
@@ -40,6 +41,15 @@ function PublicProjectViewPageInner() {
   const { user } = useAuthContext();
   const { project, loading, notFound } = usePublicProject(projectId);
   const { reactions: projectReactions, myReaction: myProjectReaction, react: reactToProject } = useProjectReactions(project?.projectId ?? null);
+
+  // ── Star state ──
+  const [isStarred, setIsStarred] = useState(false);
+  const [starCount, setStarCount] = useState(0);
+  const [starring, setStarring] = useState(false);
+  useEffect(() => {
+    setIsStarred(project?.isStarredByMe ?? false);
+    setStarCount(project?.starCount ?? 0);
+  }, [project?.isStarredByMe, project?.starCount]);
 
   // ── Player / preview state ──
   const playerRef = useRef(null);
@@ -104,6 +114,23 @@ function PublicProjectViewPageInner() {
   const handleFork = useCallback(() => {
     window.location.href = `/project/fork/${projectId}`;
   }, [projectId]);
+
+  const handleStar = useCallback(async () => {
+    if (!user || starring) return;
+    setStarring(true);
+    const wasStarred = isStarred;
+    setIsStarred(!wasStarred);
+    setStarCount(c => wasStarred ? Math.max(0, c - 1) : c + 1);
+    try {
+      if (wasStarred) await projectsApi.unstar(project.id);
+      else await projectsApi.star(project.id);
+    } catch {
+      setIsStarred(wasStarred);
+      setStarCount(c => wasStarred ? c + 1 : Math.max(0, c - 1));
+    } finally {
+      setStarring(false);
+    }
+  }, [user, starring, isStarred, project?.id]);
 
   const handleSignUp = useCallback(() => {
     navigate(`/auth/signup?redirect=${encodeURIComponent(`/project/${projectId}`)}`);
@@ -172,23 +199,36 @@ function PublicProjectViewPageInner() {
                   {t('projectView.signUpButton')}
                 </Button>
               )}
-              {project.forksEnabled !== false && (
+              {user && (
                 <Button
                   size="sm"
-                  onClick={handleFork}
-                  className="h-7 px-2.5 text-[11px] font-medium gap-1 rounded-lg"
+                  variant="ghost"
+                  onClick={handleStar}
+                  disabled={starring}
+                  className={`h-7 px-2.5 text-[11px] font-medium gap-1 rounded-lg ${isStarred ? 'text-yellow-400 hover:text-yellow-300' : 'text-muted-foreground'}`}
                 >
-                  <GitFork className="size-3" />
-                  {t('projectView.forkButton')}
+                  <Star className={`size-3 ${isStarred ? 'fill-yellow-400' : ''}`} />
+                  {isStarred ? t('projectView.unstarButton') : t('projectView.starButton')}
                 </Button>
               )}
+              {project.forksEnabled !== false && (
+                project.isForkedByMe ? (
+                  <span className="inline-flex items-center gap-1 h-7 px-2.5 text-[11px] font-medium rounded-lg bg-primary/10 text-primary border border-primary/20">
+                    <Check className="size-3" />
+                    {t('projectView.forkedBadge')}
+                  </span>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={handleFork}
+                    className="h-7 px-2.5 text-[11px] font-medium gap-1 rounded-lg"
+                  >
+                    <GitFork className="size-3" />
+                    {t('projectView.forkButton')}
+                  </Button>
+                )
+              )}
             </div>
-            <ReactionBar
-              reactions={projectReactions}
-              myReaction={myProjectReaction}
-              onReact={user && !user.isGuest ? reactToProject : undefined}
-              disabled={!user || !!user.isGuest}
-            />
           </div>
         </div>
       )}
@@ -227,13 +267,29 @@ function PublicProjectViewPageInner() {
             <ProjectMetaBlock
               project={project}
               cover={cover}
+              starCount={starCount}
+              reactionsSlot={
+                <ReactionBar
+                  reactions={projectReactions}
+                  myReaction={myProjectReaction}
+                  onReact={user ? reactToProject : undefined}
+                  disabled={!user}
+                />
+              }
               ctaSlot={
                 !isOwner ? (
                   project.forksEnabled !== false ? (
-                    <Button size="sm" onClick={handleFork} className="h-8 px-3 text-xs font-medium gap-1 rounded-full shrink-0">
-                      <GitFork className="size-3.5" />
-                      {t('projectView.forkButton')}
-                    </Button>
+                    project.isForkedByMe ? (
+                      <span className="inline-flex items-center gap-1 h-8 px-3 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
+                        <Check className="size-3.5" />
+                        {t('projectView.forkedBadge')}
+                      </span>
+                    ) : (
+                      <Button size="sm" onClick={handleFork} className="h-8 px-3 text-xs font-medium gap-1 rounded-full shrink-0">
+                        <GitFork className="size-3.5" />
+                        {t('projectView.forkButton')}
+                      </Button>
+                    )
                   ) : null
                 ) : null
               }

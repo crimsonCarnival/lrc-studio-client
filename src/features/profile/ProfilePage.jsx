@@ -139,7 +139,7 @@ export default function ProfilePage() {
           setNotFound(true);
         } else {
           setProfile(data);
-          setIsFollowing(data.isFollowedByMe);
+          setIsFollowing(data.isFollowedByMe ?? false);
         }
       })
       .catch(() => setNotFound(true))

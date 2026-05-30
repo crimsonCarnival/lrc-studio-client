@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Music2, GitFork, Star, ExternalLink } from 'lucide-react';
 
-export default function ProjectMetaBlock({ project, cover, ctaSlot }) {
+export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, reactionsSlot }) {
   const { t } = useTranslation();
   const [descExpanded, setDescExpanded] = useState(false);
 
@@ -42,10 +42,13 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot }) {
         {ctaSlot}
       </div>
 
-      {/* Stats */}
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1"><Star className="size-3.5" />{project.starCount ?? 0}</span>
-        <span className="inline-flex items-center gap-1"><GitFork className="size-3.5" />{project.forkCount ?? 0}</span>
+      {/* Stats + reactions */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1"><Star className="size-3.5" />{starCount ?? project.starCount ?? 0}</span>
+          <span className="inline-flex items-center gap-1"><GitFork className="size-3.5" />{project.forkCount ?? 0}</span>
+        </div>
+        {reactionsSlot}
       </div>
 
       {/* Forked-from */}
