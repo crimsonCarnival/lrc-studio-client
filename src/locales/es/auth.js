@@ -210,6 +210,7 @@ export default {
     continueAs: "Continuar como",
     addAccount: "Agregar otra cuenta",
     removeAccount: "Olvidar esta cuenta",
+    forgetAll: "Olvidar todas las cuentas",
   },
   passwordManagement: {
     title: "Gestión de Contraseña",

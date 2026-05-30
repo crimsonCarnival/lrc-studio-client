@@ -210,6 +210,7 @@ export default {
     continueAs: "Continue as",
     addAccount: "Add another account",
     removeAccount: "Forget this account",
+    forgetAll: "Forget all accounts",
   },
   passwordManagement: {
     title: "Password Management",

@@ -210,6 +210,7 @@ export default {
     continueAs: "アカウントを選択",
     addAccount: "別のアカウントを追加",
     removeAccount: "このアカウントを削除",
+    forgetAll: "すべてのアカウントを削除",
   },
   passwordManagement: {
     title: "パスワード管理",
