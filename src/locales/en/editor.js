@@ -107,5 +107,8 @@ export default {
     evenlyDistribute: "Evenly distribute",
     interpolate: "Interpolate timestamps",
     copyTimestamps: "Copy timestamps"
-  }
+  },
+  nudgeLine: "Nudge Line ({{delta}}s)",
+  nudgeWord: "Nudge Word ({{delta}}s)",
+  nudgeEndTime: "Nudge End Time ({{delta}}s)"
 };

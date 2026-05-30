@@ -107,5 +107,8 @@ export default {
     evenlyDistribute: "Distribuir uniformemente",
     interpolate: "Interpolar marcas de tiempo",
     copyTimestamps: "Copiar marcas de tiempo"
-  }
+  },
+  nudgeLine: "Ajustar línea ({{delta}}s)",
+  nudgeWord: "Ajustar palabra ({{delta}}s)",
+  nudgeEndTime: "Ajustar tiempo final ({{delta}}s)"
 };

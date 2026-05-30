@@ -107,5 +107,8 @@ export default {
     evenlyDistribute: "均等に分配",
     interpolate: "タイムスタンプを補間",
     copyTimestamps: "タイムスタンプをコピー"
-  }
+  },
+  nudgeLine: "ラインを調整 ({{delta}}s)",
+  nudgeWord: "単語を調整 ({{delta}}s)",
+  nudgeEndTime: "終了時間を調整 ({{delta}}s)"
 };

@@ -91,10 +91,10 @@ const LineActionToolbar = React.memo(({
                 <Tip content={(() => {
                   const nudgeVal = settings.editor?.nudge?.default || 0.1;
                   if (focusedTimestamp?.lineIndex === lineIndex) {
-                    if (editorMode === 'words' && (focusedTimestamp.type === 'word' || focusedTimestamp.type === 'secondaryWord')) return `Nudge Word (-${nudgeVal}s)`;
-                    if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return `Nudge End Time (-${nudgeVal}s)`;
+                    if (editorMode === 'words' && (focusedTimestamp.type === 'word' || focusedTimestamp.type === 'secondaryWord')) return t('editor.nudgeWord', { delta: `-${nudgeVal}` });
+                    if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return t('editor.nudgeEndTime', { delta: `-${nudgeVal}` });
                   }
-                  return `Nudge Line (-${nudgeVal}s)`;
+                  return t('editor.nudgeLine', { delta: `-${nudgeVal}` });
                 })()}>
                   <Button
                     variant="ghost"
@@ -108,10 +108,10 @@ const LineActionToolbar = React.memo(({
                 <Tip content={(() => {
                   const nudgeVal = settings.editor?.nudge?.default || 0.1;
                   if (focusedTimestamp?.lineIndex === lineIndex) {
-                    if (editorMode === 'words' && (focusedTimestamp.type === 'word' || focusedTimestamp.type === 'secondaryWord')) return `Nudge Word (+${nudgeVal}s)`;
-                    if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return `Nudge End Time (+${nudgeVal}s)`;
+                    if (editorMode === 'words' && (focusedTimestamp.type === 'word' || focusedTimestamp.type === 'secondaryWord')) return t('editor.nudgeWord', { delta: `+${nudgeVal}` });
+                    if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return t('editor.nudgeEndTime', { delta: `+${nudgeVal}` });
                   }
-                  return `Nudge Line (+${nudgeVal}s)`;
+                  return t('editor.nudgeLine', { delta: `+${nudgeVal}` });
                 })()}>
                   <Button
                     variant="ghost"
