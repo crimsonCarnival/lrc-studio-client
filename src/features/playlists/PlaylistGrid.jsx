@@ -4,13 +4,17 @@ import { Plus } from 'lucide-react';
 import { Button } from '@ui/button';
 import { PlaylistCard } from './PlaylistCard';
 import { PlaylistModal } from './PlaylistModal';
-import { getPlaylists } from './playlist.service';
+import { getPlaylists, deletePlaylist } from './playlist.service';
+import useConfirm from '@/shared/hooks/useConfirm';
+import toast from 'react-hot-toast';
 
 export function PlaylistGrid({ accountName, isOwner }) {
   const { t } = useTranslation();
   const [playlists, setPlaylists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingPlaylist, setEditingPlaylist] = useState(null);
+  const [requestConfirm, confirmModal] = useConfirm();
 
   useEffect(() => {
     let cancelled = false;
@@ -22,10 +26,37 @@ export function PlaylistGrid({ accountName, isOwner }) {
     return () => { cancelled = true; };
   }, [accountName]);
 
-  function handleCreated(playlist) {
-    setPlaylists(prev => [playlist, ...prev]);
+  function handleSaved(playlist) {
+    setPlaylists(prev => {
+      const exists = prev.find(p => p.id === playlist.id);
+      if (exists) {
+        return prev.map(p => p.id === playlist.id ? playlist : p);
+      }
+      return [playlist, ...prev];
+    });
     setShowModal(false);
+    setEditingPlaylist(null);
   }
+
+  const handleDelete = (playlist) => {
+    requestConfirm(
+      t('playlists.deleteConfirm', { name: playlist.name, defaultValue: `Delete "${playlist.name}"?` }),
+      async () => {
+        try {
+          await deletePlaylist(playlist.id);
+          setPlaylists(prev => prev.filter(p => p.id !== playlist.id));
+          toast.success(t('playlists.deleteSuccess', 'Playlist deleted'));
+        } catch {
+          toast.error(t('playlists.deleteError', 'Failed to delete playlist'));
+        }
+      },
+      { title: t('playlists.deleteTitle', 'Delete Playlist'), variant: 'danger' }
+    );
+  };
+
+  const handleEdit = (playlist) => {
+    setEditingPlaylist(playlist);
+  };
 
   if (loading) {
     return (
@@ -55,17 +86,29 @@ export function PlaylistGrid({ accountName, isOwner }) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {playlists.map(playlist => (
-            <PlaylistCard key={playlist.id} playlist={playlist} accountName={accountName} />
+            <PlaylistCard 
+              key={playlist.id} 
+              playlist={playlist} 
+              accountName={accountName}
+              isOwner={isOwner}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
           ))}
         </div>
       )}
 
-      {showModal && (
+      {(showModal || editingPlaylist) && (
         <PlaylistModal
-          onClose={() => setShowModal(false)}
-          onSave={handleCreated}
+          playlist={editingPlaylist}
+          onClose={() => {
+            setShowModal(false);
+            setEditingPlaylist(null);
+          }}
+          onSave={handleSaved}
         />
       )}
+      {confirmModal}
     </>
   );
 }

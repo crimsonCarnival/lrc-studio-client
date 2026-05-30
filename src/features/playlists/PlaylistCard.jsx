@@ -1,15 +1,37 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Lock, Music } from 'lucide-react';
+import { Lock, Music, Pencil, Trash2 } from 'lucide-react';
 
-export function PlaylistCard({ playlist, accountName }) {
+export function PlaylistCard({ playlist, accountName, isOwner, onEdit, onDelete }) {
   const { t } = useTranslation();
+
+  const handleEdit = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onEdit(playlist);
+  };
+
+  const handleDelete = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete(playlist);
+  };
 
   return (
     <Link
       to={`/${accountName}/lists/${playlist.id}`}
-      className="glass rounded-2xl overflow-hidden flex flex-col hover:bg-white/5 transition-colors group"
+      className="glass rounded-2xl overflow-hidden flex flex-col hover:bg-white/5 transition-colors group relative"
     >
+      {isOwner && (
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10 bg-black/40 backdrop-blur-sm rounded-lg p-1">
+          <button onClick={handleEdit} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" aria-label="Edit playlist">
+            <Pencil className="size-3.5" />
+          </button>
+          <button onClick={handleDelete} className="p-1.5 hover:bg-red-500/20 rounded-md text-zinc-400 hover:text-red-400 transition-colors" aria-label="Delete playlist">
+            <Trash2 className="size-3.5" />
+          </button>
+        </div>
+      )}
       {/* Cover */}
       <div className="aspect-video w-full bg-gradient-to-br from-primary/30 to-accent-purple/30 flex items-center justify-center relative shrink-0">
         {playlist.coverImage ? (
