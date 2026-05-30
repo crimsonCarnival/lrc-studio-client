@@ -27,6 +27,7 @@ import playlists from './playlists.js';
 import feed from './feed.js';
 import search from './search.js';
 import projectView from './projectView.js';
+import explore from './explore.js';
 
 export default {
   translation: {
@@ -58,6 +59,7 @@ export default {
     playlists,
     feed,
     search,
-    projectView
+    projectView,
+    explore
   }
 };
