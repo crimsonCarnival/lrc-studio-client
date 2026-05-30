@@ -169,14 +169,16 @@ function PublicProjectViewPageInner() {
                   {t('projectView.signUpButton')}
                 </Button>
               )}
-              <Button
-                size="sm"
-                onClick={handleFork}
-                className="h-7 px-2.5 text-[11px] font-medium gap-1 rounded-lg"
-              >
-                <GitFork className="size-3" />
-                {t('projectView.forkButton')}
-              </Button>
+              {project.forksEnabled !== false && (
+                <Button
+                  size="sm"
+                  onClick={handleFork}
+                  className="h-7 px-2.5 text-[11px] font-medium gap-1 rounded-lg"
+                >
+                  <GitFork className="size-3" />
+                  {t('projectView.forkButton')}
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -218,10 +220,12 @@ function PublicProjectViewPageInner() {
               cover={cover}
               ctaSlot={
                 !isOwner ? (
-                  <Button size="sm" onClick={handleFork} className="h-8 px-3 text-xs font-medium gap-1 rounded-full shrink-0">
-                    <GitFork className="size-3.5" />
-                    {t('projectView.forkButton')}
-                  </Button>
+                  project.forksEnabled !== false ? (
+                    <Button size="sm" onClick={handleFork} className="h-8 px-3 text-xs font-medium gap-1 rounded-full shrink-0">
+                      <GitFork className="size-3.5" />
+                      {t('projectView.forkButton')}
+                    </Button>
+                  ) : null
                 ) : null
               }
             />

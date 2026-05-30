@@ -21,16 +21,18 @@ function shareReducer(state, action) {
   }
 }
 
-export function SharePanel({ 
-  url: baseUrl, 
+export function SharePanel({
+  url: baseUrl,
   mediaSource = 'none',
-  linesCount, 
-  hasSynced, 
-  isPublic = true, 
-  onPrivacyChange, 
+  linesCount,
+  hasSynced,
+  isPublic = true,
+  onPrivacyChange,
   playbackPosition = 0,
   duration = 0,
   loading = false,
+  forksEnabled,
+  onForksEnabledChange,
 }) {
   const { t } = useTranslation();
   const [state, dispatch] = useReducer(shareReducer, {
@@ -152,6 +154,23 @@ export function SharePanel({
           )}
         </Button>
       </div>
+
+      {onForksEnabledChange !== undefined && (
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">
+            {t('share.forksEnabled')}
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={forksEnabled !== false}
+            onClick={() => onForksEnabledChange(forksEnabled === false)}
+            className={`size-8 h-4 rounded-full p-0.5 transition-all duration-300 outline-none focus:ring-2 focus:ring-primary/50 ${forksEnabled !== false ? 'bg-primary' : 'bg-zinc-700'}`}
+          >
+            <div className={`size-3 h-3 rounded-full bg-white shadow-sm transition-transform duration-300 ${forksEnabled !== false ? 'translate-x-4' : 'translate-x-0'}`} />
+          </button>
+        </div>
+      )}
 
       {/* Badges */}
       <div className="flex flex-wrap gap-2">

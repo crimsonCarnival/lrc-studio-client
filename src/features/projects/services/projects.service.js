@@ -290,4 +290,17 @@ export const projectsService = {
     `, { id });
     return data.unstarProject;
   },
+
+  async setForksEnabled(projectId, enabled) {
+    const data = await gqlRequest(`
+      mutation SetForksEnabled($projectId: ID!, $enabled: Boolean!) {
+        setForksEnabled(projectId: $projectId, enabled: $enabled) {
+          id
+          projectId
+          forksEnabled
+        }
+      }
+    `, { projectId, enabled });
+    return data.setForksEnabled;
+  },
 };
