@@ -28,7 +28,7 @@ function LineActionsPopover({ lineIndex, line, handleAddLine, handleClearLine, h
         onClick={(e) => e.stopPropagation()}
       >
         <PopoverItem
-          onClick={() => handleAddLine(lineIndex - 1 >= 0 ? lineIndex - 1 : lineIndex)}
+          onClick={() => handleAddLine(lineIndex, null, { before: true })}
           className="hover:bg-sky-500/10 hover:text-sky-400"
         >
           <ArrowUpToLine className="size-3.5" />
