@@ -27,7 +27,6 @@ import { ThemedShineBorder } from '@ui/themed-shine-border';
 import toast from 'react-hot-toast';
 import { useSpotifyAuth } from '@/features/player/hooks/useSpotifyAuth';
 import MediaLibrary from './MediaLibrary';
-import SetupTips from './SetupTips';
 import AudioSourceBadge from './AudioSourceBadge';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 
@@ -59,8 +58,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   useEffect(() => {
     return () => setStep(1);
   }, [setStep]);
-
-  const tips = t('home.tips', { returnObjects: true });
 
   const audioInputRef = useRef(null);
   const lyricsInputRef = useRef(null);
@@ -924,8 +921,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       )}
 
     </div>
-
-    <SetupTips tips={tips} />
     </>
   );
 }

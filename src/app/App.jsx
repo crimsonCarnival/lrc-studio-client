@@ -10,7 +10,6 @@ import { matchKey } from '@/shared/utils/keyboard';
 import { useUrlParamsSync } from '@/shared/hooks/useUrlParamsSync';
 import BannedScreen from '@features/auth/components/BannedScreen';
 import GuestProjectSaveGate from '@features/editor/components/core/GuestProjectSaveGate';
-import { FloatingTipsPill } from '@features/editor/components/FloatingTipsPill';
 
 import { AppLayout } from './AppLayout';
 import { AppRouter } from './AppRouter';
@@ -278,7 +277,6 @@ function AppInner() {
   return (
     <>
       <GuestProjectSaveGate />
-      <FloatingTipsPill />
       <AppLayout
         user={user}
         logout={logout}
