@@ -22,7 +22,30 @@ export function useAuth() {
   
   const refreshTimerRef = useRef(null);
   const isRefreshingRef = useRef(false);
+  // Holds the single in-flight refresh promise so concurrent callers coalesce.
+  const refreshPromiseRef = useRef(null);
+  // True once a real user has been present this session. Gates the "session
+  // expired" toast + hard redirect so a logged-out visitor's cold restore
+  // (remembered accounts, no live session) fails silently instead of looping.
+  const wasAuthedRef = useRef(false);
   const { executeRecaptcha } = useGoogleReCaptcha();
+
+  // Coalesce refresh into ONE network request. Two refreshes racing the same
+  // rotating refresh token poison the server's token rotation — breach detection
+  // then invalidates ALL sessions, which is the root of premature logouts.
+  const doRefresh = useCallback(() => {
+    if (!refreshPromiseRef.current) {
+      refreshPromiseRef.current = auth.refresh().finally(() => {
+        refreshPromiseRef.current = null;
+      });
+    }
+    return refreshPromiseRef.current;
+  }, []);
+
+  // Mark that the user was authenticated at some point this session.
+  useEffect(() => {
+    if (state.user) wasAuthedRef.current = true;
+  }, [state.user]);
 
   const doLogout = useCallback(async () => {
     try {
@@ -52,7 +75,7 @@ export function useAuth() {
       if (isRefreshingRef.current) return;
       isRefreshingRef.current = true;
       try {
-        await auth.refresh();
+        await doRefresh();
         scheduleRefresh();
       } catch {
         // Refresh failed — session fully expired, force logout with feedback
@@ -65,7 +88,7 @@ export function useAuth() {
         isRefreshingRef.current = false;
       }
     }, expiresIn);
-  }, [doLogout]);
+  }, [doLogout, doRefresh]);
 
   // Restore project on mount — guarded against StrictMode double-fire
   const restoringRef = useRef(false);
@@ -101,7 +124,7 @@ export function useAuth() {
         if (err?.status === 401) {
           // Access token might be expired, try refreshing
           try {
-            await auth.refresh();
+            await doRefresh();
             const user = await auth.me();
             storage.set(STORAGE_KEYS.HAS_SESSION, '1');
             setAuthFlag(true);
@@ -132,7 +155,7 @@ export function useAuth() {
     return () => {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
     };
-  }, [scheduleRefresh]);
+  }, [scheduleRefresh, doRefresh]);
 
   // ——— Global token-expiry handler ———
   useEffect(() => {
@@ -140,22 +163,29 @@ export function useAuth() {
       if (isRefreshingRef.current) return; // de-duplicate concurrent events
       isRefreshingRef.current = true;
       try {
-        await auth.refresh();
+        await doRefresh();
         scheduleRefresh();
       } catch {
         // Both tokens are dead — force logout
         await doLogout();
-        toast.error('Your session has expired. Please sign in again.', {
-          id: 'session-expired',
-          duration: 6000,
-        });
-        window.location.href = '/auth?action=signin&from=session-expiration';
+        // Only surface the expiry + hard redirect for a user who was actually
+        // authenticated this session, and never when already on /auth. During
+        // a logged-out visitor's cold restore (remembered accounts, no live
+        // session) refresh legitimately fails — redirecting here caused a reload
+        // loop that broke saved-account/passkey login (#10).
+        if (wasAuthedRef.current && !window.location.pathname.startsWith('/auth')) {
+          toast.error('Your session has expired. Please sign in again.', {
+            id: 'session-expired',
+            duration: 6000,
+          });
+          window.location.href = '/auth?action=signin&from=session-expiration';
+        }
       } finally {
         isRefreshingRef.current = false;
       }
     });
     return unsub;
-  }, [doLogout, scheduleRefresh]);
+  }, [doLogout, scheduleRefresh, doRefresh]);
 
   const handlePostAuthClone = useCallback(() => {
     const cloneProjectId = storage.get(STORAGE_KEYS.CLONE_AFTER_AUTH);
@@ -353,14 +383,23 @@ export function useAuth() {
     }
   }, []);
 
-  const loginWithGoogle = useCallback(async () => {
+  const loginWithGoogle = useCallback(async (loginHint) => {
     const width = 500, height = 700;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
     // Open synchronously so browsers don't block it as a non-gesture popup
     const popup = window.open('about:blank', 'google-login', `width=${width},height=${height},left=${left},top=${top}`);
-    const url = await googleApi.getLoginUrl();
-    if (popup) { popup.location.href = url; } else { window.open(url, 'google-login', `width=${width},height=${height},left=${left},top=${top}`); }
+    // loginHint (a saved account's email) lets Google skip the chooser (#12)
+    const url = await googleApi.getLoginUrl(loginHint);
+
+    // Popup blocked (Brave, strict Edge) — fall back to redirect-based flow.
+    // The server callback will redirect to /auth/signin?gcb=success|error.
+    if (!popup || popup.closed) {
+      window.location.href = url;
+      return new Promise(() => {}); // Never resolves; navigation takes over
+    }
+
+    popup.location.href = url;
     console.log('[AUTH] Google popup opened:', popup !== null, url);
 
     return new Promise((resolve, reject) => {
@@ -487,10 +526,39 @@ export function useAuth() {
         console.log('User cancelled passkey login.');
         return null;
       }
+      // Server rejected the passkey (404 = credential not found, 400 = verification failed).
+      // Clear the stale hasPasskey flag so the fingerprint icon no longer shows.
+      if (err.status === 404 || err.status === 400) {
+        const existing = rememberedAccounts.getAll().find(
+          (a) => a.identifier === identifier || a.accountName === identifier
+        );
+        if (existing?.userId) {
+          rememberedAccounts.upsert({ userId: existing.userId, hasPasskey: false });
+        }
+      }
       console.error('Passkey login failed:', err);
       throw err;
     }
   }, [scheduleRefresh, handlePostAuthClone]);
+
+  // Re-attempt a silent refresh whenever the tab becomes visible again.
+  // The setTimeout-based scheduleRefresh can fire late (or not at all) if
+  // the device slept or the tab was backgrounded, leaving the access token
+  // expired by the time the user returns.
+  useEffect(() => {
+    const handleVisibility = async () => {
+      if (document.visibilityState !== 'visible') return;
+      if (!user) return;
+      try {
+        await doRefresh();
+        scheduleRefresh();
+      } catch {
+        // Refresh failed — the token:expired path handles logout
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [user, doRefresh, scheduleRefresh]);
 
   return {
     user,
