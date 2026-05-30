@@ -881,15 +881,17 @@ function Player(
                 {/* Change Media */}
                 {hasMedia && !viewerMode && (
                   <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
-                      >
-                        <RefreshCw className="size-4" />
-                      </Button>
-                    </PopoverTrigger>
+                    <Tip content={t('player.changeSong')}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
+                        >
+                          <RefreshCw className="size-4" />
+                        </Button>
+                      </PopoverTrigger>
+                    </Tip>
                     <PopoverContent className="w-72 p-0 bg-zinc-900 border-zinc-800 shadow-xl" align="end" sideOffset={8}>
                       {changeMediaPopoverContent('change-media-file-desktop')}
                     </PopoverContent>
@@ -1174,14 +1176,16 @@ function Player(
 
                 {hasMedia && !viewerMode && (
                   <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
-                    <PopoverTrigger asChild>
-                      <button className="flex flex-col items-center justify-center size-14 rounded-2xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800 active:scale-95 transition-all duration-100 shrink-0">
-                        <RefreshCw className="size-6" />
-                        <span className="text-[9px] font-bold mt-1 opacity-60 uppercase tracking-tight">
-                          {t('player.changeSong')}
-                        </span>
-                      </button>
-                    </PopoverTrigger>
+                    <Tip content={t('player.changeSong')}>
+                      <PopoverTrigger asChild>
+                        <button className="flex flex-col items-center justify-center size-14 rounded-2xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800 active:scale-95 transition-all duration-100 shrink-0">
+                          <RefreshCw className="size-6" />
+                          <span className="text-[9px] font-bold mt-1 opacity-60 uppercase tracking-tight">
+                            {t('player.changeSong')}
+                          </span>
+                        </button>
+                      </PopoverTrigger>
+                    </Tip>
                     <PopoverContent className="w-[280px] p-0 bg-zinc-900 border-zinc-800 shadow-xl" side="top" align="center" sideOffset={8}>
                       {changeMediaPopoverContent('change-media-file-mobile')}
                     </PopoverContent>
