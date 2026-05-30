@@ -29,6 +29,7 @@ export default {
   signUpAction: "アカウント作成",
   loginAction: "サインイン",
   registerAction: "アカウント作成",
+  registerActionLoading: "アカウントを作成中...",
   login: "サインイン",
   register: "アカウントを作成",
   guestMode: "ゲストとして続ける",

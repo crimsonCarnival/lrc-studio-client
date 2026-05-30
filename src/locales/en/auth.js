@@ -29,6 +29,7 @@ export default {
   signUpAction: "Create account",
   loginAction: "Sign in",
   registerAction: "Create account",
+  registerActionLoading: "Creating account...",
   login: "Sign in",
   register: "Create an account",
   guestMode: "Continue as Guest",

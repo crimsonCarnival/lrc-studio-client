@@ -41,6 +41,7 @@ export default {
   spotifyNotConnected: "未接続",
   sections: {
     public: "公開情報",
+    visibility: "公開設定",
     account: "アカウント情報",
     connections: "接続",
     security: "セキュリティ",

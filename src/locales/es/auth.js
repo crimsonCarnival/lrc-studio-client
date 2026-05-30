@@ -29,6 +29,7 @@ export default {
   signUpAction: "Crear cuenta",
   loginAction: "Iniciar sesión",
   registerAction: "Crear cuenta",
+  registerActionLoading: "Creando cuenta...",
   login: "Iniciar sesión",
   register: "Crear una cuenta",
   guestMode: "Continuar como invitado",

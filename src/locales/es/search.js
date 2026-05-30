@@ -15,7 +15,7 @@ export default {
   resultCount_other: '{{count}} resultados',
   noResults: 'No se encontraron proyectos públicos para "{{query}}".',
   noUsers: 'No se encontraron usuarios para "{{query}}".',
-  forkedFrom: 'bifurcado de @{{accountName}}',
+  forkedFrom: 'copiado de @{{accountName}}',
   error: 'La búsqueda falló. Intenta más tarde.',
   allResults: 'Ver todos los resultados',
   tabs: {

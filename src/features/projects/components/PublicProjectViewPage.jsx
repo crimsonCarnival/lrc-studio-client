@@ -233,20 +233,6 @@ function PublicProjectViewPageInner() {
         </div>
       )}
 
-      {/* Edit button for owner — fixed top-right below header */}
-      {isOwner && (
-        <div className="fixed right-4 top-[60px] sm:top-[72px] lg:top-[88px] z-[60]">
-          <Button
-            size="sm"
-            onClick={handleEdit}
-            className="h-7 px-2.5 text-[11px] font-medium gap-1 rounded-lg"
-          >
-            <Pencil className="size-3" />
-            {t('projectView.editButton')}
-          </Button>
-        </div>
-      )}
-
       {/* Content area: watch layout */}
       <div className={`flex-1 min-h-0 overflow-y-auto ${!isOwner ? 'pt-[36px]' : ''}`}>
         <WatchLayout
@@ -277,20 +263,23 @@ function PublicProjectViewPageInner() {
                 />
               }
               ctaSlot={
-                !isOwner ? (
-                  project.forksEnabled !== false ? (
-                    project.isForkedByMe ? (
-                      <span className="inline-flex items-center gap-1 h-8 px-3 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
-                        <Check className="size-3.5" />
-                        {t('projectView.forkedBadge')}
-                      </span>
-                    ) : (
-                      <Button size="sm" onClick={handleFork} className="h-8 px-3 text-xs font-medium gap-1 rounded-full shrink-0">
-                        <GitFork className="size-3.5" />
-                        {t('projectView.forkButton')}
-                      </Button>
-                    )
-                  ) : null
+                isOwner ? (
+                  <Button size="sm" onClick={handleEdit} className="h-8 px-3 text-xs font-medium gap-1 rounded-full shrink-0">
+                    <Pencil className="size-3.5" />
+                    {t('projectView.editButton')}
+                  </Button>
+                ) : project.forksEnabled !== false ? (
+                  project.isForkedByMe ? (
+                    <span className="inline-flex items-center gap-1 h-8 px-3 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
+                      <Check className="size-3.5" />
+                      {t('projectView.forkedBadge')}
+                    </span>
+                  ) : (
+                    <Button size="sm" onClick={handleFork} className="h-8 px-3 text-xs font-medium gap-1 rounded-full shrink-0">
+                      <GitFork className="size-3.5" />
+                      {t('projectView.forkButton')}
+                    </Button>
+                  )
                 ) : null
               }
             />

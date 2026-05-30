@@ -41,6 +41,7 @@ export default {
   spotifyNotConnected: "No conectado",
   sections: {
     public: "Datos públicos",
+    visibility: "Privacidad",
     account: "Detalles de la cuenta",
     connections: "Conexiones",
     security: "Seguridad",
@@ -94,8 +95,8 @@ export default {
   statsFollowers_one: "{{count}} seguidor",
   statsFollowers_other: "{{count}} seguidores",
   statsFollowing: "{{count}} siguiendo",
-  forkBadge_one: "✦ Sus proyectos inspiraron {{count}} bifurcación",
-  forkBadge_other: "✦ Sus proyectos inspiraron {{count}} bifurcaciones",
+  forkBadge_one: "✦ Sus proyectos inspiraron {{count}} copia",
+  forkBadge_other: "✦ Sus proyectos inspiraron {{count}} copias",
   follow: "Seguir",
   followBack: "Seguir de vuelta",
   following: "Siguiendo ✓",
