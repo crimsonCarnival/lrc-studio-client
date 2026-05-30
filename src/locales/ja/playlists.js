@@ -28,6 +28,7 @@ export default {
     sortMode: "並び順",
     projects: "プロジェクト",
     projectSearch: "プロジェクトを検索…",
+    untitled: "無題",
     save: "保存",
     create: "作成",
     cancel: "キャンセル",
