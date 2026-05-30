@@ -32,6 +32,9 @@ const VerifyEmailPage = lazy(() => import('@features/auth/VerifyEmailPage'));
 
 const FeedPage   = lazy(() => import('@features/feed/FeedPage'));
 const SearchPage = lazy(() => import('@features/search/SearchPage'));
+const ExplorePage = lazy(() => import('@features/explore/ExplorePage'));
+const ExploreProjectsPage = lazy(() => import('@features/explore/ExploreProjectsPage'));
+const ExplorePlaylistsPage = lazy(() => import('@features/explore/ExplorePlaylistsPage'));
 const PublicProjectViewPage = lazy(() => import('@features/projects/components/PublicProjectViewPage'));
 const ListPage = lazy(() => import('@features/playlists/ListPage'));
 
@@ -488,6 +491,21 @@ export function AppRouter({
       <Route path="search" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>}>
           <SearchPage />
+        </Suspense>
+      } />
+      <Route path="explore" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+          <ExplorePage />
+        </Suspense>
+      } />
+      <Route path="explore/projects" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+          <ExploreProjectsPage />
+        </Suspense>
+      } />
+      <Route path="explore/playlists" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+          <ExplorePlaylistsPage />
         </Suspense>
       } />
       <Route path="*" element={<NotFoundPage type="general" />} />
