@@ -17,6 +17,9 @@ import ProjectMetaBlock from './ProjectMetaBlock';
 import { ProjectUpNextPanel } from './ProjectUpNextPanel';
 import { usePublicProject } from '../hooks/usePublicProject';
 import { getPlaylist } from '@features/playlists/playlist.service';
+import { CommentSection } from '@features/comments/components/CommentSection';
+import { ReactionBar } from '@features/comments/components/ReactionBar';
+import { useProjectReactions } from '@features/comments/hooks/useReactions';
 
 /**
  * Public, read-only project view at /project/:projectId.
@@ -37,6 +40,7 @@ function PublicProjectViewPageInner() {
 
   const { user } = useAuthContext();
   const { project, loading, notFound } = usePublicProject(projectId);
+  const { reactions: projectReactions, myReaction: myProjectReaction, react: reactToProject } = useProjectReactions(project?.projectId ?? null);
 
   // ── Player / preview state ──
   const playerRef = useRef(null);
@@ -180,6 +184,12 @@ function PublicProjectViewPageInner() {
                 </Button>
               )}
             </div>
+            <ReactionBar
+              reactions={projectReactions}
+              myReaction={myProjectReaction}
+              onReact={user && !user.isGuest ? reactToProject : undefined}
+              disabled={!user || !!user.isGuest}
+            />
           </div>
         </div>
       )}
@@ -294,6 +304,11 @@ function PublicProjectViewPageInner() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Comment section */}
+      <div className="max-w-3xl mx-auto w-full px-4 sm:px-6 py-8">
+        {project && <CommentSection projectId={project.projectId} />}
       </div>
     </div>
   );
