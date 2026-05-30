@@ -5,8 +5,9 @@ export const googleService = {
     return `${import.meta.env.VITE_API_URL || '/api'}/google/auth/url?appOrigin=${encodeURIComponent(window.location.origin)}`;
   },
 
-  getLoginUrl: async () => {
-    return `${import.meta.env.VITE_API_URL || '/api'}/google/login/url?appOrigin=${encodeURIComponent(window.location.origin)}`;
+  getLoginUrl: async (loginHint) => {
+    const base = `${import.meta.env.VITE_API_URL || '/api'}/google/login/url?appOrigin=${encodeURIComponent(window.location.origin)}`;
+    return loginHint ? `${base}&loginHint=${encodeURIComponent(loginHint)}` : base;
   },
 
   disconnect: async () => {

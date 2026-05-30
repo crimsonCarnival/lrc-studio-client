@@ -28,6 +28,7 @@ export default {
     sortMode: "Sort order",
     projects: "Projects",
     projectSearch: "Search your projects…",
+    untitled: "Untitled",
     save: "Save",
     create: "Create",
     cancel: "Cancel",

@@ -535,7 +535,7 @@ export function useEditor({
   // Listen for touch-driven mark events dispatched by MiniPlayer / gesture handler
   useEffect(() => {
     if (!syncMode) return;
-    const handler = () => handleMark();
+    const handler = () => handleMark({ forceAdvance: true });
     window.addEventListener('editor:mark', handler);
     return () => window.removeEventListener('editor:mark', handler);
   }, [syncMode, handleMark]);
@@ -690,15 +690,16 @@ export function useEditor({
   };
 
   const handleAddLine = useCallback(
-    (index, lineData = null) => {
+    (index, lineData = null, { before = false } = {}) => {
       setLines((prev) => {
         const updated = [...prev];
+        const insertAt = before ? Math.max(0, index) : index + 1;
         const newLine = lineData || {
           text: '',
           timestamp: prev[index]?.timestamp ?? null,
           id: crypto.randomUUID(),
         };
-        updated.splice(index + 1, 0, newLine);
+        updated.splice(insertAt, 0, newLine);
         return updated;
       });
     },

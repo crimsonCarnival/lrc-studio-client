@@ -28,6 +28,7 @@ export default {
     sortMode: "Orden",
     projects: "Proyectos",
     projectSearch: "Buscar tus proyectos…",
+    untitled: "Sin título",
     save: "Guardar",
     create: "Crear",
     cancel: "Cancelar",

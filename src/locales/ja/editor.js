@@ -65,6 +65,8 @@ export default {
   syncProgress: "{{synced}}/{{total}}",
   wordBadgeHint: "{{count}}個の単語タイムスタンプ — ワードモードに切り替えて同期",
   wordCharCount: "{{words}}語 · {{chars}}文字",
+  wordCount_one: "{{count}}語",
+  wordCount_other: "{{count}}語",
   markInstructionWords: "Spaceを押して次の単語をスタンプ",
   overlapWarning: "重複するタイムスタンプ",
   actions: "アクション",
@@ -105,5 +107,8 @@ export default {
     evenlyDistribute: "均等に分配",
     interpolate: "タイムスタンプを補間",
     copyTimestamps: "タイムスタンプをコピー"
-  }
+  },
+  nudgeLine: "ラインを調整 ({{delta}}s)",
+  nudgeWord: "単語を調整 ({{delta}}s)",
+  nudgeEndTime: "終了時間を調整 ({{delta}}s)"
 };

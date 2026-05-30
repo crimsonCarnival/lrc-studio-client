@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Check, Upload as UploadIcon, Loader2 } from 'lucide-react';
 import { Button } from '@ui/button';
-import { createPlaylist, updatePlaylist } from './playlist.service';
+import { createPlaylist, updatePlaylist, addProjectToPlaylist, removeProjectFromPlaylist } from './playlist.service';
 import { gqlRequest } from '@/app/graphql.client';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
@@ -28,7 +28,7 @@ export function PlaylistModal({ playlist, onClose, onSave }) {
   const imageInputRef = useRef(null);
   const [myProjects, setMyProjects] = useState([]);
   const [selectedIds, setSelectedIds] = useState(
-    playlist?.projects?.map(p => p.id) ?? []
+    () => playlist?.projects?.map(p => p.projectId ?? p.id) ?? []
   );
   const [projectSearch, setProjectSearch] = useState('');
   const [tagInput, setTagInput] = useState('');
@@ -43,11 +43,10 @@ export function PlaylistModal({ playlist, onClose, onSave }) {
   });
 
   useEffect(() => {
-    if (isEdit) return;
     gqlRequest(GET_MY_PROJECTS)
       .then(d => setMyProjects(d?.projects ?? []))
       .catch(() => {});
-  }, [isEdit]);
+  }, []);
 
   function handleField(key, value) {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -85,10 +84,27 @@ export function PlaylistModal({ playlist, onClose, onSave }) {
     setForm(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tag) }));
   }
 
-  function toggleProject(id) {
+  async function toggleProject(id) {
+    if (!isEdit) {
+      setSelectedIds(prev =>
+        prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+      );
+      return;
+    }
+    const isSelected = selectedIds.includes(id);
     setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+      isSelected ? prev.filter(x => x !== id) : [...prev, id]
     );
+    try {
+      const result = isSelected
+        ? await removeProjectFromPlaylist(playlist.id, id)
+        : await addProjectToPlaylist(playlist.id, id);
+      if (result && onSave) onSave(result);
+    } catch {
+      setSelectedIds(prev =>
+        isSelected ? [...prev, id] : prev.filter(x => x !== id)
+      );
+    }
   }
 
   async function handleSave() {
@@ -265,8 +281,8 @@ export function PlaylistModal({ playlist, onClose, onSave }) {
             </>
           )}
 
-          {/* Step 2: project picker (create only) */}
-          {!isEdit && step === 2 && (
+          {/* Project picker */}
+          {(step === 2 || isEdit) && (
             <>
               <p className="text-xs text-muted-foreground">{t('playlists.modal.projects')}</p>
               <input

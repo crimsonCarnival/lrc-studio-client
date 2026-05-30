@@ -4,6 +4,7 @@ import { auth } from '@/app/api';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { AvatarBadge } from './auth-shared';
+import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
 
 // ─── Account Picker — shown on return visits when remembered accounts exist ──
 
@@ -24,7 +25,13 @@ export default function SavedAccountStep({ t, savedAccounts, onProceedToPassword
           onPasskeySuccess();
           return;
         }
+        // loginWithPasskey returned null = user cancelled (NotAllowedError)
+        // Don't fall through to password in that case
+        setLoadingKey(null);
+        return;
       } catch (err) {
+        // NotAllowedError is handled inside loginWithPasskey (returns null)
+        // Any other error: fall through to password step
         console.warn('Passkey login failed, falling back to password', err);
       }
     }
@@ -117,6 +124,19 @@ export default function SavedAccountStep({ t, savedAccounts, onProceedToPassword
         <Plus className="size-3.5" />
         {t('auth.savedAccount.addAccount', 'Add another account')}
       </button>
+
+      {savedAccounts.length > 1 && (
+        <button
+          type="button"
+          onClick={() => {
+            rememberedAccounts.clear();
+            savedAccounts.forEach((a) => onRemoveAccount(a.userId));
+          }}
+          className="flex items-center justify-center gap-1.5 text-xs text-zinc-600 hover:text-red-400 transition-colors py-1"
+        >
+          {t('auth.savedAccount.forgetAll', 'Forget all accounts')}
+        </button>
+      )}
     </div>
   );
 }

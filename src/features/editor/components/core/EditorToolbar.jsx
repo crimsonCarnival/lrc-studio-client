@@ -159,7 +159,7 @@ export default function EditorToolbar({
                   <span>{syncProgress.synced}/{syncProgress.total}</span>
                 )}
                 <span className="text-zinc-600 hidden sm:inline">·</span>
-                <span className="text-zinc-600 hidden sm:inline">{syncProgress.wordCount}w</span>
+                <span className="text-zinc-600 hidden sm:inline">{t('editor.wordCount', { count: syncProgress.wordCount })}</span>
               </div>
             </Tip>
           )}
