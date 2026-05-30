@@ -17,7 +17,6 @@ import ProjectMetaBlock from './ProjectMetaBlock';
 import { ProjectUpNextPanel } from './ProjectUpNextPanel';
 import { usePublicProject } from '../hooks/usePublicProject';
 import { getPlaylist } from '@features/playlists/playlist.service';
-import { CommentSection } from '@features/comments/components/CommentSection';
 import { ReactionBar } from '@features/comments/components/ReactionBar';
 import { useProjectReactions } from '@features/comments/hooks/useReactions';
 
@@ -306,10 +305,6 @@ function PublicProjectViewPageInner() {
         </div>
       </div>
 
-      {/* Comment section */}
-      <div className="max-w-3xl mx-auto w-full px-4 sm:px-6 py-8">
-        {project && <CommentSection projectId={project.projectId} />}
-      </div>
     </div>
   );
 }
