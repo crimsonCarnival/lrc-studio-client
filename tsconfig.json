@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "ignoreDeprecations": "5.0",
+    "allowJs": true,
     "jsx": "react",
     "module": "esnext",
     "target": "esnext",
