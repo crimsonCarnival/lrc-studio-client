@@ -18,6 +18,7 @@ export default {
   lines_other: "lines",
   description: "Anyone with this link can watch and listen to your synced lyrics.",
   noYoutubeWarning: "Load a media source before sharing so viewers can listen along.",
+  forksEnabled: "Allow forking",
   recipientEditing: "Recipient can edit",
   readOnly: "No — read-only",
   allowEditing: "Yes — allow editing",

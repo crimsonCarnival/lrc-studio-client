@@ -18,6 +18,7 @@ export default {
   lines_other: "líneas",
   description: "Cualquiera con este enlace puede abrir la aplicación, ver la letra sincronizada en tiempo real y escuchar el audio.",
   noYoutubeWarning: "Carga un video o audio antes de compartir para que otros puedan escucharlo.",
+  forksEnabled: "Permitir bifurcaciones",
   recipientEditing: "El receptor puede editar",
   readOnly: "No — solo lectura",
   allowEditing: "Sí — permitir edición",

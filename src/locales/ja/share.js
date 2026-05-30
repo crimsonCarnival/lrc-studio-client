@@ -18,6 +18,7 @@ export default {
   lines_other: "行",
   description: "このリンクを知っている人は誰でもアプリを開き、歌詞の同期をリアルタイムで見ながらメディアを聴くことができます。",
   noYoutubeWarning: "共有前にメディアソースを読み込んで、視聴者が一緒に聴けるようにしてください。",
+  forksEnabled: "フォークを許可",
   recipientEditing: "受信者が編集可能",
   readOnly: "いいえ — 読み取り専用",
   allowEditing: "はい — 編集を許可",
