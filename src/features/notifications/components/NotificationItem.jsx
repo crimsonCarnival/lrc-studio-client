@@ -1,4 +1,4 @@
-import { X, Star, GitFork, UserPlus, ShieldCheck, Lock, KeyRound, Ban } from 'lucide-react';
+import { X, Star, GitFork, UserPlus, ShieldCheck, Lock, KeyRound, Ban, Smile } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { LazyImage } from '@ui/LazyImage';
@@ -9,6 +9,7 @@ const TYPE_ICON = {
   star: Star,
   fork: GitFork,
   follow: UserPlus,
+  reaction: Smile,
   admin_granted: ShieldCheck,
   password_changed: Lock,
   set_password: KeyRound,
@@ -18,7 +19,7 @@ const TYPE_ICON = {
 
 function notificationDestination(notification) {
   const { type, actors, projectId } = notification;
-  if ((type === 'star' || type === 'fork') && projectId) return `/projects/${projectId}`;
+  if ((type === 'star' || type === 'fork' || type === 'reaction') && projectId) return `/project/${projectId}`;
   if (type === 'follow' && actors?.[0]?.accountName) return `/${actors[0].accountName}`;
   if (type === 'admin_granted') return '/admin';
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';
@@ -45,6 +46,12 @@ function NotificationText({ notification, t }) {
     return projectTitle
       ? <span><strong>{actorStr}</strong> forked <strong>{projectTitle}</strong></span>
       : <span><strong>{actorStr}</strong> forked your project</span>;
+  }
+  if (type === 'reaction') {
+    const emojiChar = body || '❤️';
+    return projectTitle
+      ? <span><strong>{actorStr}</strong> reacted {emojiChar} to <strong>{projectTitle}</strong></span>
+      : <span><strong>{actorStr}</strong> reacted {emojiChar} to your project</span>;
   }
   if (type === 'follow') return <span><strong>{actorStr}</strong> {t('notifications.followed')}</span>;
   if (type === 'admin_granted') return <span>{t('notifications.adminGranted')}</span>;
