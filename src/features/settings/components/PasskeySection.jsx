@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Fingerprint, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@ui/button';
@@ -13,6 +13,7 @@ export default function PasskeySection() {
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const registeringRef = useRef(false);
 
   const fetchPasskeys = useCallback(async () => {
     try {
@@ -32,6 +33,8 @@ export default function PasskeySection() {
   }, [fetchPasskeys]);
 
   const handleRegister = async () => {
+    if (registeringRef.current) return;
+    registeringRef.current = true;
     setRegistering(true);
     try {
       const success = await registerPasskey();
@@ -42,10 +45,15 @@ export default function PasskeySection() {
     } catch (err) {
       if (err.code === 'email_not_verified') {
         toast.error(t('auth.passkeyManagement.emailNotVerified', 'Please verify your email before adding a passkey.'));
+      } else if (err.message?.includes('challenge')) {
+        toast.error(t('auth.passkeyManagement.sessionExpired', 'Session expired. Please try again.'));
+      } else if (err.code === 'credential_already_in_use') {
+        toast.error(t('auth.passkeyManagement.alreadyRegistered', 'This authenticator is already registered.'));
       } else {
         toast.error(t('auth.passkeyManagement.createFailed', 'Failed to create passkey.'));
       }
     } finally {
+      registeringRef.current = false;
       setRegistering(false);
     }
   };

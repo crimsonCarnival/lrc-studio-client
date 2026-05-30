@@ -6,7 +6,6 @@ import { projects } from '@/app/api';
 import { Music2, Video, Plus, Search, Play, FileText, ChevronRight, Activity, Lightbulb, Library as LibraryIcon } from 'lucide-react';
 import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import ProjectSetupModal from '@features/editor/components/setup/ProjectSetupModal';
-import { useSpotifyAuth } from '@/features/player/hooks/useSpotifyAuth';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 
 function formatRelativeTime(dateStr, t, locale = 'en') {
@@ -25,8 +24,18 @@ function formatRelativeTime(dateStr, t, locale = 'en') {
 export default function Home() {
   const { t, dt, i18n } = useDynamicTranslation();
   const navigate = useNavigate();
-  const { user } = useAuthContext();
-  const { login: handleSpotifyLogin } = useSpotifyAuth();
+  const { user, connectSpotify } = useAuthContext();
+
+  const handleSpotifyLogin = useCallback(async () => {
+    try {
+      await connectSpotify();
+    } catch (err) {
+      if (err?.message !== 'Spotify auth popup was closed') {
+        const { default: toast } = await import('react-hot-toast');
+        toast.error(t('settings.spotify.connectFailed') || 'Failed to connect Spotify');
+      }
+    }
+  }, [connectSpotify, t]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

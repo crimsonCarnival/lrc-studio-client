@@ -8,7 +8,7 @@ export const useSpotifyAuth = () => {
 
   const login = useCallback(async (onSuccess) => {
     try {
-      const { url } = await spotifyApi.getAuthUrl();
+      const url = await spotifyApi.getAuthUrl();
       if (!url) return;
 
       const width = 600;
