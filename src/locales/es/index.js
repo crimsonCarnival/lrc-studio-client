@@ -28,6 +28,7 @@ import feed from './feed.js';
 import search from './search.js';
 import projectView from './projectView.js';
 import explore from './explore.js';
+import comments from './comments.js';
 
 export default {
   translation: {
@@ -60,6 +61,7 @@ export default {
     feed,
     search,
     projectView,
-    explore
+    explore,
+    comments
   }
 };
