@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { useSetupContext } from '@/features/editor/SetupContext';
 import { lyrics as lyricsApi, uploads as uploadsApi, spotify as spotifyApi, getAccessToken } from '@/app/api';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { uploadsService } from '@/features/projects/services/uploads.service';
 import { SkeletonMediaItem } from '@ui/skeleton';
 import SpotifyBrowser from '@features/player/components/SpotifyBrowser';
 import SpotifyIcon from '@features/player/components/SpotifyIcon';
@@ -43,6 +45,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   const prefill = location.state?.prefill || null;
   const { login: handleSpotifyLogin } = useSpotifyAuth();
   const { step, setStep } = useSetupContext();
+  const { executeRecaptcha } = useGoogleReCaptcha();
+  const [imageUploading, setImageUploading] = useState(false);
+  const coverImageInputRef = useRef(null);
 
   // If arriving with prefill data (rollback from no-media project), start at the media step
   useEffect(() => {
@@ -113,11 +118,12 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     songArtist: prefill?.songArtist || '',
     songAlbum: prefill?.songAlbum || '',
     songYear: prefill?.songYear || '',
+    coverImage: prefill?.coverImage || '',
   }));
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, ytLoading, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
-  const { name: projectName, description: projectDescription, tags: projectTags, tagInput, isPublic, songName, songArtist, songAlbum, songYear } = metadata;
+  const { name: projectName, description: projectDescription, tags: projectTags, tagInput, isPublic, songName, songArtist, songAlbum, songYear, coverImage } = metadata;
 
   // State setters
   const setAudioState = useCallback((val) => setAudio(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
@@ -324,7 +330,24 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       }));
     }
     const finalTags = tagInput.trim() ? [...projectTags, tagInput.trim()] : projectTags;
-    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: finalTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim() });
+    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: finalTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim(), coverImage: coverImage.trim() });
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 5 * 1024 * 1024) return;
+    setImageUploading(true);
+    try {
+      const token = executeRecaptcha ? await executeRecaptcha('upload_cover') : undefined;
+      const url = await uploadsService.uploadCoverImage(file, token);
+      setMetadataState({ coverImage: url });
+    } catch {}
+    finally {
+      setImageUploading(false);
+      e.target.value = '';
+    }
   };
 
   // ── Audio source badge ──
@@ -828,6 +851,45 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                         placeholder=""
                         maxLength={100}
                         className="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm text-zinc-200 placeholder:text-zinc-600 focus:ring-0 p-1.5"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Cover Image */}
+                  <div className="relative">
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+                      <Tip content={t('setup.coverImageDesc', 'Add a cover image for your project')}>
+                        <Lightbulb className="size-4 text-zinc-500 cursor-help" />
+                      </Tip>
+                    </div>
+                    <div className="flex gap-2">
+                      <FloatingInput
+                        id="cover-image"
+                        type="text"
+                        label={t('setup.coverImage')}
+                        value={coverImage}
+                        onChange={(e) => setMetadataState({ coverImage: e.target.value })}
+                        placeholder={t('setup.coverImagePlaceholder')}
+                        className="flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => coverImageInputRef.current?.click()}
+                        disabled={imageUploading}
+                        className="shrink-0 w-12 flex items-center justify-center rounded-xl border border-zinc-700/50 bg-transparent text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
+                      >
+                        {imageUploading ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Upload className="size-4" />
+                        )}
+                      </button>
+                      <input
+                        type="file"
+                        ref={coverImageInputRef}
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
                       />
                     </div>
                   </div>
