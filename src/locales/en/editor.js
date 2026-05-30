@@ -65,6 +65,8 @@ export default {
   syncProgress: "{{synced}}/{{total}}",
   wordBadgeHint: "{{count}} word timestamps — switch to Words mode to sync",
   wordCharCount: "{{words}} words · {{chars}} chars",
+  wordCount_one: "{{count}} word",
+  wordCount_other: "{{count}} words",
   markInstructionWords: "Press Space to stamp the next word",
   overlapWarning: "Overlapping timestamp",
   actions: "Actions",

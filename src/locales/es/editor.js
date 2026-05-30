@@ -65,6 +65,8 @@ export default {
   syncProgress: "{{synced}}/{{total}}",
   wordBadgeHint: "{{count}} marcas de tiempo de palabras — cambia al modo Palabras para sincronizar",
   wordCharCount: "{{words}} palabras · {{chars}} caracteres",
+  wordCount_one: "{{count}} palabra",
+  wordCount_other: "{{count}} palabras",
   markInstructionWords: "Presiona Espacio para marcar la siguiente palabra",
   overlapWarning: "Marca de tiempo superpuesta",
   actions: "Acciones",
