@@ -24,24 +24,37 @@ export default function Preview(props) {
 
   // Privacy state for sharing (default public)
   const [isPublic, setIsPublic] = useState(project?.public ?? true);
-  // Sync privacy state with project prop
+  const [forksEnabled, setForksEnabled] = useState(project?.forksEnabled !== false);
   useEffect(() => {
     if (project && typeof project.public === 'boolean') {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsPublic(project.public);
     }
+    if (project) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setForksEnabled(project.forksEnabled !== false);
+    }
   }, [project]);
 
-  // Handler for privacy toggle in SharePanel
   const handlePrivacyChange = async (newPrivacy) => {
     const newIsPublic = newPrivacy === 'public';
     setIsPublic(newIsPublic);
-    // Persist to server if projectId present
     if (activeProjectId) {
       try {
         await projects.patch(activeProjectId, { public: newIsPublic });
       } catch {
-        // Optionally show error/toast
+        setIsPublic(!newIsPublic);
+      }
+    }
+  };
+
+  const handleForksEnabledChange = async (enabled) => {
+    setForksEnabled(enabled);
+    if (activeProjectId) {
+      try {
+        await projects.setForksEnabled(activeProjectId, enabled);
+      } catch {
+        setForksEnabled(!enabled);
       }
     }
   };
@@ -339,6 +352,8 @@ export default function Preview(props) {
             {...shareModal}
             isPublic={isPublic}
             onPrivacyChange={handlePrivacyChange}
+            forksEnabled={forksEnabled}
+            onForksEnabledChange={activeProjectId ? handleForksEnabledChange : undefined}
             playbackPosition={playbackPosition}
             duration={duration}
           />
