@@ -8,6 +8,7 @@ export function useProjectReactions(projectId) {
   const [loading, setLoading]       = useState(true);
 
   useEffect(() => {
+    if (!projectId) { setLoading(false); return; }
     let cancelled = false;
     setLoading(true);
     fetchProjectReactions(projectId)
