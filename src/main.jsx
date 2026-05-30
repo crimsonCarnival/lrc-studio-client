@@ -93,13 +93,24 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/home" replace />;
   }
 
+  // Routes that share /:segment shape with public profiles but require auth.
+  const AUTH_ONLY_SEGMENTS = new Set([
+    'admin', 'settings', 'home', 'library', 'uploads', 'feed',
+  ]);
+  const seg1 = location.pathname.split('/')[1] || '';
+
   // Guests can access certain paths without signing in.
   const isGuestAllowed =
     ['/', '/project/new', '/project/local'].includes(location.pathname) ||
     /^\/project\/[^/]+$/.test(location.pathname) ||                   // public project view
-    /^\/[a-z0-9_.:-]+$/.test(location.pathname) ||                    // public profile /:accountName
-    /^\/profile\/[a-z0-9_.:-]+$/.test(location.pathname) ||           // legacy public profile /profile/:accountName
-    /^\/[a-z0-9_.:-]+\/lists\/[^/]+$/.test(location.pathname);        // public list page
+    /^\/verify-email/.test(location.pathname) ||                      // email verification
+    /^\/search/.test(location.pathname) ||                            // public search
+    /^\/explore(\/.*)?$/.test(location.pathname) ||                   // public explore
+    (!AUTH_ONLY_SEGMENTS.has(seg1) && (
+      /^\/[a-z0-9_.:-]+$/.test(location.pathname) ||                  // public profile /:accountName
+      /^\/profile\/[a-z0-9_.:-]+$/.test(location.pathname) ||         // legacy public profile
+      /^\/[a-z0-9_.:-]+\/lists\/[^/]+$/.test(location.pathname)       // public list page
+    ));
   if (!user && !isGuestAllowed) {
     let redirectUrl = location.pathname + location.search;
     if (location.pathname === '/change-password') {
