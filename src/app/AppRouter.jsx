@@ -2,7 +2,7 @@ import {
   Suspense, lazy, useEffect, useState, useRef, useCallback, useMemo, Fragment, memo
 } from 'react';
 import React from 'react';
-import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { SkeletonList, SkeletonEditor, SkeletonPreview, SkeletonSetup } from '@ui/skeleton';
 import { Loader2, GripVertical } from 'lucide-react';
 import { Reorder } from 'framer-motion';
@@ -37,14 +37,6 @@ const ExploreProjectsPage = lazy(() => import('@features/explore/ExploreProjects
 const ExplorePlaylistsPage = lazy(() => import('@features/explore/ExplorePlaylistsPage'));
 const PublicProjectViewPage = lazy(() => import('@features/projects/components/PublicProjectViewPage'));
 const ListPage = lazy(() => import('@features/playlists/ListPage'));
-
-function RequireAuth({ children }) {
-  const { user, loading } = useAuthContext();
-  const location = useLocation();
-  if (loading) return <div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>;
-  if (!user) return <Navigate to={`/auth/signin?redirect=${encodeURIComponent(location.pathname)}`} replace />;
-  return children;
-}
 
 function RequireAdmin({ children }) {
   const { user, loading } = useAuthContext();
@@ -487,11 +479,9 @@ export function AppRouter({
       } />
       <Route path="profile/:accountName/playlists/:listId" element={<LegacyListRedirect />} />
       <Route path="settings/:tab?" element={
-        <RequireAuth>
-          <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
-            <SettingsPage />
-          </Suspense>
-        </RequireAuth>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+          <SettingsPage />
+        </Suspense>
       } />
       <Route index element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>}>
