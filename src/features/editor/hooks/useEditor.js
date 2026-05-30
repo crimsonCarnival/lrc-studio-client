@@ -535,7 +535,7 @@ export function useEditor({
   // Listen for touch-driven mark events dispatched by MiniPlayer / gesture handler
   useEffect(() => {
     if (!syncMode) return;
-    const handler = () => handleMark();
+    const handler = () => handleMark({ forceAdvance: true });
     window.addEventListener('editor:mark', handler);
     return () => window.removeEventListener('editor:mark', handler);
   }, [syncMode, handleMark]);
