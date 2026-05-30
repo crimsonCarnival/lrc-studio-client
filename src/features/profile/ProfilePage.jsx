@@ -4,11 +4,14 @@ import { useNavigate, useParams, Link, useSearchParams, useLocation } from 'reac
 import toast from 'react-hot-toast';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
-import { Star, GitFork, Music, PlayCircle, Settings } from 'lucide-react';
+import { Star, GitFork, Music, PlayCircle, Settings, Pencil, Trash2 } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { getPublicProfile, followUser, unfollowUser } from './profile.service';
 import { FollowModal } from './FollowModal';
 import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
+import { projects } from '@/app/api';
+import ProjectSetupModal from '@/features/editor/components/setup/ProjectSetupModal';
+import useConfirm from '@/shared/hooks/useConfirm';
 
 function AvatarBadge({ avatarUrl, name, size = 'lg' }) {
   const sizeClass = size === 'lg' ? 'size-24 text-4xl rounded-[1.5rem]' : 'size-16 text-2xl rounded-xl';
@@ -28,15 +31,37 @@ function AvatarBadge({ avatarUrl, name, size = 'lg' }) {
   );
 }
 
-function ProjectCard({ project }) {
+function ProjectCard({ project, isOwner, onEdit, onDelete }) {
   const { title, projectId, starCount, forkCount, metadata, upload } = project;
   const isYoutube = upload?.source === 'youtube' || !!upload?.youtubeUrl;
+
+  const handleEdit = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onEdit(project);
+  };
+
+  const handleDelete = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete(project);
+  };
 
   return (
     <Link
       to={`/project/${projectId}`}
-      className="glass rounded-2xl p-4 flex flex-col gap-2 hover:bg-white/5 transition-colors group"
+      className="glass rounded-2xl p-4 flex flex-col gap-2 hover:bg-white/5 transition-colors group relative"
     >
+      {isOwner && (
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10 bg-black/40 backdrop-blur-sm rounded-lg p-1">
+          <button onClick={handleEdit} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" aria-label="Edit project">
+            <Pencil className="size-3.5" />
+          </button>
+          <button onClick={handleDelete} className="p-1.5 hover:bg-red-500/20 rounded-md text-zinc-400 hover:text-red-400 transition-colors" aria-label="Delete project">
+            <Trash2 className="size-3.5" />
+          </button>
+        </div>
+      )}
       <div className="flex items-start justify-between gap-2">
         <h3 className="text-sm font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
           {title}
@@ -83,6 +108,8 @@ export default function ProfilePage() {
   const [followLoading, setFollowLoading] = useState(false);
   const [followModal, setFollowModal] = useState(null); // 'FOLLOWERS' | 'FOLLOWING' | null
   const [searchParams, setSearchParams] = useSearchParams();
+  const [editingProject, setEditingProject] = useState(null);
+  const [requestConfirm, confirmModal] = useConfirm();
 
   const isOwner = !!user && !!accountName && user.accountName === accountName;
 
@@ -160,6 +187,30 @@ export default function ProfilePage() {
     }
     setFollowLoading(false);
   }, [accountName, t]);
+
+  const handleDeleteProject = useCallback((project) => {
+    requestConfirm(
+      t('confirm.deleteProject', { title: project.title || t('library.untitled') }),
+      async () => {
+        try {
+          await projects.remove(project.projectId);
+          setProfile(prev => prev ? { 
+            ...prev, 
+            projects: prev.projects.filter(p => p.projectId !== project.projectId), 
+            projectCount: Math.max(0, prev.projectCount - 1) 
+          } : prev);
+          toast.success(t('project.deleteSuccess', 'Project deleted'));
+        } catch {
+          toast.error(t('project.deleteError', 'Failed to delete project'));
+        }
+      },
+      { title: t('confirm.deleteProjectTitle', 'Delete Project'), variant: 'danger' }
+    );
+  }, [requestConfirm, t]);
+
+  const handleEditProject = useCallback((project) => {
+    setEditingProject(project);
+  }, []);
 
   if (loading) {
     return (
@@ -324,7 +375,13 @@ export default function ProfilePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {profile.projects.map((project) => (
-              <ProjectCard key={project.projectId} project={project} />
+              <ProjectCard 
+                key={project.projectId} 
+                project={project} 
+                isOwner={isOwner} 
+                onEdit={handleEditProject} 
+                onDelete={handleDeleteProject} 
+              />
             ))}
           </div>
         )
@@ -341,6 +398,57 @@ export default function ProfilePage() {
           onClose={() => setFollowModal(null)}
         />
       )}
+
+      {editingProject && (
+        <ProjectSetupModal
+          key={editingProject.projectId}
+          isOpen={!!editingProject}
+          onClose={() => setEditingProject(null)}
+          onConfirm={async (data) => {
+            try {
+              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, coverImage, albumArt } = data;
+              const updatedMetadata = {
+                ...editingProject.metadata,
+                description,
+                tags,
+                songName,
+                songArtist,
+                songAlbum,
+                songYear,
+                albumArt
+              };
+              await projects.patch(editingProject.projectId, {
+                title,
+                coverImage,
+                metadata: updatedMetadata
+              });
+              setProfile(prev => prev ? {
+                ...prev,
+                projects: prev.projects.map(p =>
+                  p.projectId === editingProject.projectId
+                    ? { ...p, title, coverImage, metadata: updatedMetadata }
+                    : p
+                )
+              } : prev);
+              setEditingProject(null);
+              toast.success(t('project.updateSuccess', 'Project updated'));
+            } catch (err) {
+              toast.error(t('project.updateError', 'Failed to update project'));
+            }
+          }}
+          initialName={editingProject.title || ''}
+          initialDescription={editingProject.metadata?.description || ''}
+          initialTags={editingProject.metadata?.tags || []}
+          initialSongName={editingProject.metadata?.songName || ''}
+          initialSongArtist={editingProject.metadata?.songArtist || ''}
+          initialSongAlbum={editingProject.metadata?.songAlbum || ''}
+          initialSongYear={editingProject.metadata?.songYear || ''}
+          initialCoverImage={editingProject.coverImage || ''}
+          initialAlbumArt={editingProject.metadata?.albumArt || ''}
+          isEditing={true}
+        />
+      )}
+      {confirmModal}
     </div>
   );
 }
