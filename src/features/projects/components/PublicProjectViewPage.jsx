@@ -20,6 +20,8 @@ import { getPlaylist } from '@features/playlists/playlist.service';
 import { ReactionBar } from '@features/comments/components/ReactionBar';
 import { useProjectReactions } from '@features/comments/hooks/useReactions';
 import { projects as projectsApi } from '@/app/api';
+import { BoostButton } from './BoostButton';
+import { ShareOgButton } from './ShareOgButton';
 
 /**
  * Public, read-only project view at /project/:projectId.
@@ -228,6 +230,13 @@ function PublicProjectViewPageInner() {
                   </Button>
                 )
               )}
+              {user && !user.isGuest && project?.user?.id !== user?.id && (
+                <BoostButton projectId={project.projectId} />
+              )}
+              <ShareOgButton
+                projectId={project.projectId}
+                title={project.metadata?.songName || project.title}
+              />
             </div>
           </div>
         </div>
