@@ -32,6 +32,16 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
   const [searched, setSearched] = useState(false);
   const inputRef = useRef(null);
   const debounceRef = useRef(null);
+  const userEditedRef = useRef(false);
+
+  // Seed the search box from initialQuery (song name + artist) until the user
+  // takes over the input. This component now mounts before those fields are
+  // filled, so we mirror the prop instead of only reading it once at mount.
+  useEffect(() => {
+    if (!userEditedRef.current) {
+      setQuery(initialQuery);
+    }
+  }, [initialQuery]);
 
   const runSearch = useCallback(async (q) => {
     const term = q.trim();
@@ -59,6 +69,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
 
   const handleQueryChange = (e) => {
     const value = e.target.value;
+    userEditedRef.current = true;
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!value.trim()) { setResults([]); setSearched(false); return; }
@@ -98,7 +109,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
             className="flex-1 bg-transparent text-sm text-zinc-200 placeholder:text-zinc-500 outline-none focus:ring-0 focus-visible:ring-0"
           />
           {query && (
-            <button aria-label={t('common.clear')} onClick={() => { if (debounceRef.current) clearTimeout(debounceRef.current); setQuery(''); setResults([]); setSearched(false); }} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+            <button aria-label={t('common.clear')} onClick={() => { if (debounceRef.current) clearTimeout(debounceRef.current); userEditedRef.current = true; setQuery(''); setResults([]); setSearched(false); }} className="text-zinc-500 hover:text-zinc-300 transition-colors">
               <X className="size-4" />
             </button>
           )}
