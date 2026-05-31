@@ -49,5 +49,7 @@ export default {
   generating: "生成中...",
   noDescription: "説明がありません",
   noTags: "タグなし",
-  recaptchaNotice: "reCAPTCHA 保護。 <0>プライバシー</0> と <1>規約</1> が適用されます。"
+  recaptchaNotice: "reCAPTCHA 保護。 <0>プライバシー</0> と <1>規約</1> が適用されます。",
+  shareLink: "シェア",
+  linkCopied: "コピーしました！",
 };

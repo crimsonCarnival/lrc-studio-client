@@ -16,4 +16,7 @@ export default {
   noAudio: "No audio attached to this project.",
   prevTrack: "Previous",
   nextTrack: "Next",
+  boost: 'Boost',
+  boosted: 'Boosted!',
+  boostFailed: 'Could not boost',
 };

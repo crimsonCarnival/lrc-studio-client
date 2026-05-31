@@ -49,5 +49,7 @@ export default {
   generating: "Generating...",
   noDescription: "No description",
   noTags: "No tags",
-  recaptchaNotice: "Protected by reCAPTCHA. <0>Privacy</0> & <1>Terms</1> apply."
+  recaptchaNotice: "Protected by reCAPTCHA. <0>Privacy</0> & <1>Terms</1> apply.",
+  shareLink: "Share",
+  linkCopied: "Copied!",
 }

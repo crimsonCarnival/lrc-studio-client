@@ -16,4 +16,7 @@ export default {
   noAudio: "このプロジェクトには音声が添付されていません。",
   prevTrack: "前へ",
   nextTrack: "次へ",
+  boost: 'ブースト',
+  boosted: 'ブースト済み！',
+  boostFailed: 'ブーストできませんでした',
 };

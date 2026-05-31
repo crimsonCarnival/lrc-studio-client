@@ -16,4 +16,7 @@ export default {
   noAudio: "Este proyecto no tiene audio adjunto.",
   prevTrack: "Anterior",
   nextTrack: "Siguiente",
+  boost: 'Impulsar',
+  boosted: '¡Impulsado!',
+  boostFailed: 'No se pudo impulsar',
 };

@@ -303,4 +303,13 @@ export const projectsService = {
     `, { projectId, enabled });
     return data.setForksEnabled;
   },
+
+  async boostProject(projectId) {
+    const data = await gqlRequest(`
+      mutation BoostProject($projectId: ID!) {
+        boostProject(projectId: $projectId)
+      }
+    `, { projectId });
+    return data.boostProject;
+  },
 };
