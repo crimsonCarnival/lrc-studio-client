@@ -454,8 +454,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
               </div>
             </div>
 
-            {/* Cover Image */}
-            <div className="flex gap-2 shrink-0">
+            {/* Cover Image + Privacy toggle — same row */}
+            <div className="flex items-center gap-2 shrink-0 mt-auto">
               <FloatingInput
                 id="cover-image"
                 type="text"
@@ -469,7 +469,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                 type="button"
                 onClick={() => coverImageInputRef.current?.click()}
                 disabled={imageUploading}
-                className="shrink-0 w-12 flex items-center justify-center rounded-xl border border-zinc-700/50 bg-transparent text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
+                className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-zinc-700/50 bg-transparent text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
               >
                 {imageUploading ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -484,23 +484,16 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                 onChange={handleImageUpload}
                 className="hidden"
               />
-            </div>
-
-            {/* Privacy toggle — pushed to bottom */}
-            <div className="mt-auto pt-2 flex items-center justify-between shrink-0">
-              <div>
-                <p className="text-sm font-semibold text-zinc-200">
+              <div className="flex flex-col items-center gap-1 shrink-0 pl-1">
+                <Switch
+                  checked={isPublic}
+                  onCheckedChange={(checked) => setMetadataState({ isPublic: checked })}
+                  disabled={!user}
+                />
+                <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-700">
                   {isPublic ? t('setup.public', 'Public') : t('setup.private', 'Private')}
-                </p>
-                <p className="text-[10px] text-zinc-600 mt-0.5">
-                  {isPublic ? t('setup.publicDesc', 'Visible on Explore') : t('setup.privateDesc', 'Only you can see this')}
-                </p>
+                </span>
               </div>
-              <Switch
-                checked={isPublic}
-                onCheckedChange={(checked) => setMetadataState({ isPublic: checked })}
-                disabled={!user}
-              />
             </div>
           </div>
 
