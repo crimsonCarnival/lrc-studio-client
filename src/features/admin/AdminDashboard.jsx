@@ -13,7 +13,6 @@ import AdminUsersTab from './AdminUsersTab';
 import AdminIpsTab from './AdminIpsTab';
 import AdminDevicesTab from './AdminDevicesTab';
 import AdminAuditTab from './AdminAuditTab';
-import { ThemedShineBorder } from '@ui/themed-shine-border';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
@@ -306,49 +305,53 @@ export default function AdminDashboard() {
   return (
     <div className="flex flex-col h-full pt-0 p-6 overflow-y-auto custom-scrollbar">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
-        <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-semibold text-zinc-100 flex items-center gap-2 sm:gap-3">
-            <ShieldAlert className="text-primary size-6 sm:size-8 flex-shrink-0" />
-            <span className="truncate">{t('admin.dashboard.title')}</span>
+      <div className="flex items-end justify-between mb-6">
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-700 mb-1">
+            Control Surface
+          </p>
+          <h1 className="font-heading text-zinc-100 flex items-center gap-2.5 leading-none"
+              style={{ fontSize: 'clamp(1.4rem, 2.5vw, 2rem)' }}>
+            <ShieldAlert className="size-5 text-primary shrink-0" />
+            {t('admin.dashboard.title')}
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 mt-1">{t('admin.dashboard.subtitle')}</p>
+          <p className="text-xs text-zinc-600 contrast-more:text-zinc-400 mt-1.5">
+            {t('admin.dashboard.subtitle')}
+          </p>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-          <Button variant="ghost" size="icon" onClick={() => fetchData(true)} className="h-10 w-10 sm:h-9 sm:w-9">
-            <RefreshCw className={`size-4 sm:size-5 text-zinc-400 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
+        <Button variant="ghost" size="icon" onClick={() => fetchData(true)} className="h-9 w-9 shrink-0">
+          <RefreshCw className={`size-4 text-zinc-500 ${loading ? 'animate-spin' : ''}`} />
+        </Button>
       </div>
 
       {/* Stats Cards */}
       <AdminStatsCards stats={stats} />
 
-      {/* Tab Switcher */}
-      <div className="flex items-center gap-1 bg-zinc-900/50 p-1 rounded-xl border border-zinc-800 mb-4 sm:mb-6 overflow-x-auto">
+      {/* Tab bar — underline style */}
+      <div className="flex items-center gap-0 border-b border-zinc-800/60 contrast-more:border-zinc-600 mb-4 overflow-x-auto">
         {[
-          { id: 'users', icon: Users, label: t('admin.dashboard.tabs.users') },
-          { id: 'ips', icon: Globe, label: t('admin.dashboard.tabs.ipBlocklist') },
+          { id: 'users',   icon: Users,       label: t('admin.dashboard.tabs.users') },
+          { id: 'ips',     icon: Globe,       label: t('admin.dashboard.tabs.ipBlocklist') },
           { id: 'devices', icon: ShieldAlert, label: t('admin.dashboard.tabs.deviceBlocklist') },
-          { id: 'audit', icon: History, label: t('admin.dashboard.tabs.auditLogs') },
+          { id: 'audit',   icon: History,     label: t('admin.dashboard.tabs.auditLogs') },
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id
-                ? 'bg-zinc-800 text-zinc-100 shadow-lg ring-1 ring-zinc-700'
-                : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
-              }`}
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
+              activeTab === tab.id
+                ? 'border-primary text-primary'
+                : 'border-transparent text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
+            }`}
           >
-            <tab.icon className="size-3.5 sm:size-4 flex-shrink-0" />
-            <span className="hidden sm:inline">{tab.label}</span>
+            <tab.icon className="size-3.5 shrink-0" />
+            {tab.label}
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
-      <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl flex-1 flex flex-col min-h-[400px] overflow-hidden">
-        <ThemedShineBorder />
+      <div className="flex-1 flex flex-col min-h-[400px]">
         {activeTab === 'users' && (
           <AdminUsersTab
             users={users}
