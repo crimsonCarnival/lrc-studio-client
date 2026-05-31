@@ -69,6 +69,8 @@ export default {
       addVariant('touch-device', '@media (pointer: coarse)');
       addVariant('motion-safe', '@media (prefers-reduced-motion: no-preference)');
       addVariant('motion-reduce', '@media (prefers-reduced-motion: reduce)');
+      addVariant('contrast-more', '@media (prefers-contrast: more)');
+      addVariant('data-saver', '@media (prefers-reduced-data: reduce)');
     }
   ],
 }

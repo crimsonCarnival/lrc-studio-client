@@ -40,6 +40,35 @@
   }
 }
 
+@layer utilities {
+  /* Waveform bar animation used in visual companion panels */
+  @keyframes waveBar {
+    0%, 100% { transform: scaleY(0.3); opacity: 0.4; }
+    50%       { transform: scaleY(1);   opacity: 0.8; }
+  }
+
+  /* High-contrast mode overrides */
+  @media (prefers-contrast: more) {
+    .glass {
+      border-color: rgba(196, 167, 231, 0.5) !important;
+      background-color: rgba(26, 24, 38, 0.95) !important;
+    }
+    .text-zinc-500, .text-zinc-600 {
+      color: var(--color-zinc-300) !important;
+    }
+    .border-zinc-800 {
+      border-color: var(--color-zinc-600) !important;
+    }
+  }
+
+  /* Reduced data: hide decorative canvas backgrounds */
+  @media (prefers-reduced-data: reduce) {
+    .wavy-canvas-container {
+      display: none !important;
+    }
+  }
+}
+
 /* Autofill Overrides */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
