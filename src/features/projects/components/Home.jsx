@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projects } from '@/app/api';
-import { Music2, Video, Plus, Search, Play, FileText, ChevronRight, Activity, Lightbulb, Library as LibraryIcon } from 'lucide-react';
+import { Music2, Video, Plus, Search, Play, ChevronRight, Activity, Library as LibraryIcon } from 'lucide-react';
 import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import ProjectSetupModal from '@features/editor/components/setup/ProjectSetupModal';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 
 function formatRelativeTime(dateStr, t, locale = 'en') {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -69,69 +70,70 @@ export default function Home() {
 
   const lastProject = items.length > 0 ? items[0] : null;
   const username = user?.displayName || user?.accountName || 'Creator';
+  const reducedMotion = useReducedMotion();
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      {/* Background aesthetics */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
-        <div className="absolute -top-40 -right-40 size-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/4 -left-20 size-80 bg-accent-purple/5 rounded-full blur-3xl" />
+
+      {/* Decorative background — hidden for data-saver */}
+      <div className="wavy-canvas-container fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-32 -right-32 size-80 bg-primary/4 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -left-24 size-72 bg-accent-purple/3 rounded-full blur-3xl" />
       </div>
 
-      {/* Layout: sidebar + main — desktop fills viewport, mobile scrolls */}
-      <div className="relative flex-1 flex flex-col lg:flex-row gap-0 overflow-y-auto lg:overflow-hidden p-4 sm:p-6 lg:p-8 min-h-0">
+      <div className="relative flex-1 flex flex-col lg:flex-row gap-0 overflow-y-auto lg:overflow-hidden p-4 sm:p-5 lg:p-6 min-h-0">
 
-        {/* ── LEFT SIDEBAR: greeting + actions + tip ── */}
-        <div className="lg:w-56 xl:w-64 flex flex-col gap-5 shrink-0 lg:pr-6 lg:border-r lg:border-zinc-800/50 pb-6 lg:pb-0">
+        {/* ── SIDEBAR ── */}
+        <div className="lg:w-52 xl:w-60 flex flex-col gap-4 shrink-0 lg:pr-5 lg:border-r lg:border-zinc-800/60 pb-5 lg:pb-0">
 
           {/* Greeting */}
           <div className="animate-fade-in">
-            <h1 className="text-xl xl:text-2xl font-semibold text-zinc-100 tracking-tight leading-snug mb-1.5">
+            <h1 className="font-heading text-zinc-100 leading-tight mb-1"
+                style={{ fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)' }}>
               {dt('home.welcome', { name: username, context: user?.id })}
             </h1>
-            <p className="text-zinc-500 text-xs xl:text-sm leading-relaxed">
+            <p className="text-zinc-600 text-xs leading-relaxed">
               {dt('home.welcomeSub')}
             </p>
           </div>
 
           {/* Action buttons */}
-          <div className="flex flex-col gap-2 animate-fade-in">
+          <div className="flex flex-col gap-1.5 animate-fade-in">
             <button
               type="button"
               onClick={() => navigate('/project/new')}
-              className="group relative glass rounded-xl px-4 py-3 text-left hover:border-primary/50 transition-all flex items-center gap-3 w-full focus:ring-2 focus:ring-primary/50 outline-none overflow-hidden"
+              className="group relative glass rounded-xl px-3.5 py-3 text-left hover:border-primary/50 transition-all flex items-center gap-3 w-full focus:ring-2 focus:ring-primary/50 outline-none overflow-hidden contrast-more:border-zinc-600"
             >
               <ThemedShineBorder />
-              <div className="size-7 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="size-7 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
                 <Plus className="size-4 text-primary" />
               </div>
-              <span className="text-sm font-semibold text-zinc-200 group-hover:text-zinc-100 transition-colors">{t('home.createNew')}</span>
+              <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('home.createNew')}</span>
             </button>
 
             <button
               type="button"
               onClick={() => navigate('/library')}
-              className="group relative glass rounded-xl px-4 py-3 text-left hover:border-accent-purple/40 transition-all flex items-center gap-3 w-full focus:ring-2 focus:ring-accent-purple/50 outline-none overflow-hidden"
+              className="group relative glass rounded-xl px-3.5 py-3 text-left hover:border-accent-purple/40 transition-all flex items-center gap-3 w-full focus:ring-2 focus:ring-accent-purple/50 outline-none overflow-hidden contrast-more:border-zinc-600"
             >
               <ThemedShineBorder />
-              <div className="size-7 shrink-0 rounded-lg bg-accent-purple/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="size-7 shrink-0 rounded-lg bg-accent-purple/10 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
                 <LibraryIcon className="size-4 text-accent-purple" />
               </div>
-              <span className="text-sm font-semibold text-zinc-200 group-hover:text-zinc-100 transition-colors">{t('home.viewLibrary')}</span>
+              <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('home.viewLibrary')}</span>
             </button>
 
             {!user?.spotify?.spotifyId && (
               <button
                 type="button"
                 onClick={handleSpotifyLogin}
-                className="group relative glass rounded-xl px-4 py-3 text-left hover:border-green-500/40 transition-all flex items-center gap-3 w-full focus:ring-2 focus:ring-green-500/50 outline-none overflow-hidden"
+                className="group relative glass rounded-xl px-3.5 py-3 text-left hover:border-green-500/30 transition-all flex items-center gap-3 w-full focus:ring-2 focus:ring-green-500/40 outline-none overflow-hidden contrast-more:border-zinc-600"
               >
                 <ThemedShineBorder />
-                <div className="size-7 shrink-0 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="size-7 shrink-0 rounded-lg bg-green-500/8 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
                   <SpotifyIcon className="size-4 text-green-500" />
                 </div>
-                <span className="text-sm font-semibold text-zinc-200 group-hover:text-zinc-100 transition-colors">{t('home.connectSpotify')}</span>
+                <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('home.connectSpotify')}</span>
               </button>
             )}
 
@@ -139,14 +141,14 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => navigate(`/project/${lastProject.projectId}/edit`)}
-                className="group relative glass rounded-xl px-4 py-3 text-left hover:border-primary/30 transition-all flex items-center gap-3 w-full focus:ring-2 focus:ring-primary/30 outline-none overflow-hidden"
+                className="group relative glass rounded-xl px-3.5 py-3 text-left hover:border-zinc-600/50 transition-all flex items-center gap-3 w-full focus:ring-2 focus:ring-zinc-600/50 outline-none overflow-hidden contrast-more:border-zinc-600"
               >
                 <ThemedShineBorder />
-                <div className="size-7 shrink-0 rounded-lg bg-zinc-800 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="size-7 shrink-0 rounded-lg bg-zinc-800 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
                   <Play className="size-3.5 text-zinc-400 ml-0.5" />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">{t('home.resumeLast')}</span>
+                  <span className="text-[9px] font-bold text-zinc-700 uppercase tracking-widest">{t('home.resumeLast')}</span>
                   <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 truncate transition-colors">
                     {lastProject.title || t('library.untitled')}
                   </span>
@@ -155,38 +157,38 @@ export default function Home() {
             )}
           </div>
 
-          {/* Tip — pushed to bottom on desktop */}
-          <div className="mt-auto pt-4 border-t border-zinc-800/50 hidden lg:block">
-            <div className="flex items-center gap-1.5 mb-1.5 text-zinc-600">
-              <Lightbulb className="size-3" />
-              <span className="text-[9px] font-bold uppercase tracking-wider">{t('home.proTip')}</span>
+          {/* Pro Tip — ambient, pushed to bottom on desktop */}
+          <div className="mt-auto pt-4 border-t border-zinc-800/40 hidden lg:block">
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`size-1.5 rounded-full bg-primary ${reducedMotion ? '' : 'animate-pulse'}`} />
+              <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-700">{t('home.proTip')}</span>
             </div>
-            <p className="text-[11px] text-zinc-500 italic leading-relaxed">
+            <p className="text-[11px] text-zinc-600 contrast-more:text-zinc-400 italic leading-relaxed">
               "{dt('home.tips')}"
             </p>
           </div>
         </div>
 
-        {/* ── MAIN AREA: project grid ── */}
-        <div className="flex-1 flex flex-col gap-4 min-w-0 lg:pl-6 lg:overflow-hidden">
+        {/* ── MAIN: project grid ── */}
+        <div className="flex-1 flex flex-col gap-4 min-w-0 lg:pl-5 lg:overflow-hidden">
 
           {/* Header row */}
           <div className="flex items-center justify-between gap-3 shrink-0 animate-fade-in">
             <div className="flex items-center gap-2">
-              <h2 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">{t('home.recentProjects')}</h2>
+              <h2 className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{t('home.recentProjects')}</h2>
               {!loading && items.length > 0 && (
-                <span className="text-[10px] font-bold text-zinc-600 bg-zinc-800/50 px-2 py-0.5 rounded-full">{items.length}</span>
+                <span className="text-[9px] font-bold text-zinc-700 bg-zinc-800/50 px-1.5 py-0.5 rounded-full">{items.length}</span>
               )}
             </div>
             {items.length > 0 && (
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-600 pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={dt('home.searchProjects')}
-                  className="pl-9 pr-4 py-2 bg-zinc-950/50 border border-zinc-800/60 rounded-xl text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/30 transition-all w-48 xl:w-64"
+                  className="pl-9 pr-4 py-1.5 bg-zinc-950/60 border border-zinc-800/60 contrast-more:border-zinc-600 rounded-xl text-xs text-zinc-300 placeholder:text-zinc-700 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/30 transition-all w-44 xl:w-56"
                 />
               </div>
             )}
@@ -196,69 +198,98 @@ export default function Home() {
           {loading ? (
             <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 animate-pulse">
               {[1, 2, 3, 4, 5, 6].map(n => (
-                <div key={n} className="h-24 bg-zinc-800/40 rounded-2xl" />
+                <div key={n} className="h-28 bg-zinc-800/30 rounded-2xl" />
               ))}
             </div>
           ) : items.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center gap-3">
-              <div className="size-14 rounded-full bg-zinc-800/50 flex items-center justify-center text-zinc-600">
-                <FileText className="size-6" />
+            <div className="flex-1 flex flex-col items-center justify-center text-center gap-4">
+              {/* Ambient waveform empty state */}
+              <div className="flex items-end gap-0.5 h-12 opacity-20">
+                {Array.from({ length: 24 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="w-1 rounded-full bg-primary"
+                    style={{
+                      height: `${25 + 65 * Math.abs(Math.sin(i * 0.6))}%`,
+                      animation: reducedMotion ? 'none' : `waveBar ${1 + (i % 4) * 0.2}s ease-in-out ${i * 0.04}s infinite`,
+                    }}
+                  />
+                ))}
               </div>
-              <p className="text-sm text-zinc-500">{t('home.noProjects') || 'No projects yet'}</p>
+              <p className="text-sm text-zinc-500 contrast-more:text-zinc-300">{t('home.noProjects')}</p>
               <button
                 type="button"
                 onClick={() => navigate('/project/new')}
-                className="text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+                className="text-xs text-primary hover:text-primary/70 contrast-more:text-primary transition-colors font-medium"
               >
                 {t('home.createNew')} →
               </button>
             </div>
           ) : filteredProjects.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
-              <p className="text-xs text-zinc-600">{t('home.noResultsFound') || 'No results found'}</p>
+              <p className="text-xs text-zinc-600 contrast-more:text-zinc-400">{t('home.noResultsFound')}</p>
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto scrollbar-thin min-h-0 pr-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 pb-2">
-                {filteredProjects.map((project) => (
-                  <button
-                    key={project.projectId}
-                    type="button"
-                    onClick={() => navigate(`/project/${project.projectId}/edit`)}
-                    className="group relative glass rounded-2xl p-4 text-left hover:border-primary/40 transition-all cursor-pointer focus:ring-1 focus:ring-primary/30 outline-none overflow-hidden animate-fade-in"
-                  >
-                    <ThemedShineBorder />
-                    <div className="flex items-start gap-3">
-                      <div className="size-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shrink-0 group-hover:border-primary/30 transition-colors relative overflow-hidden">
-                        {project.upload?.source === 'youtube' ? (
-                          <Video className="size-4 text-red-500/60" />
-                        ) : (
-                          <Music2 className="size-4 text-primary/60" />
-                        )}
-                        <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-semibold text-zinc-200 truncate group-hover:text-primary transition-colors leading-snug">
-                          {project.title || t('library.untitled')}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] text-zinc-600">{formatRelativeTime(project.updatedAt, t, i18n.resolvedLanguage || i18n.language)}</span>
-                          <span className="size-0.5 rounded-full bg-zinc-700 shrink-0" />
-                          <span className="text-[10px] text-zinc-600 flex items-center gap-0.5">
-                            <Activity className="size-2.5" />
-                            {(project.syncedLineCount || 0)}/{(project.lineCount || 0)}
-                          </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 pb-2">
+                {filteredProjects.map((project) => {
+                  const hasCover = !!(project.coverImage || project.metadata?.albumArt);
+                  const coverSrc = project.coverImage || project.metadata?.albumArt;
+                  return (
+                    <button
+                      key={project.projectId}
+                      type="button"
+                      onClick={() => navigate(`/project/${project.projectId}/edit`)}
+                      className="group relative glass rounded-2xl overflow-hidden text-left hover:border-primary/30 transition-all cursor-pointer focus:ring-1 focus:ring-primary/30 outline-none animate-fade-in contrast-more:border-zinc-600"
+                    >
+                      <ThemedShineBorder />
+                      {/* Cover image strip */}
+                      {hasCover ? (
+                        <div className="relative h-20 overflow-hidden">
+                          <img
+                            src={coverSrc}
+                            alt=""
+                            className="w-full h-full object-cover group-hover:scale-105 motion-reduce:group-hover:scale-100 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
+                          {/* Source indicator */}
+                          <div className="absolute top-2 right-2">
+                            {project.upload?.source === 'youtube'
+                              ? <Video className="size-3 text-red-400/70" />
+                              : <Music2 className="size-3 text-primary/60" />}
+                          </div>
                         </div>
+                      ) : (
+                        <div className="h-12 bg-gradient-to-br from-zinc-900 to-zinc-800/50 flex items-center justify-center">
+                          {project.upload?.source === 'youtube'
+                            ? <Video className="size-4 text-red-500/30" />
+                            : <Music2 className="size-4 text-primary/20" />}
+                        </div>
+                      )}
+                      {/* Info */}
+                      <div className="p-3 flex items-start gap-2.5">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-xs font-semibold text-zinc-200 truncate group-hover:text-primary transition-colors leading-snug">
+                            {project.title || t('library.untitled')}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-zinc-700">{formatRelativeTime(project.updatedAt, t, i18n.resolvedLanguage || i18n.language)}</span>
+                            <span className="size-0.5 rounded-full bg-zinc-800 shrink-0" />
+                            <span className="text-[10px] text-zinc-700 flex items-center gap-0.5">
+                              <Activity className="size-2.5" />
+                              {(project.syncedLineCount || 0)}/{(project.lineCount || 0)}
+                            </span>
+                          </div>
+                        </div>
+                        <ChevronRight className="size-3.5 text-zinc-800 group-hover:text-primary group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
                       </div>
-                      <ChevronRight className="size-3.5 text-zinc-700 group-hover:text-primary group-hover:translate-x-0.5 transition-all mt-1 shrink-0" />
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
         </div>
-
       </div>
 
       <ProjectSetupModal
