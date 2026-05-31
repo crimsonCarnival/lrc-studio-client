@@ -4,7 +4,6 @@ import { useSearchParams, useParams, useNavigate, useLocation } from 'react-rout
 import { useTranslation, Trans } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { toast } from 'react-hot-toast';
-import { Music2, FileText, Zap } from 'lucide-react';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { useThemeSync } from '@/shared/hooks/useThemeSync';
@@ -265,16 +264,12 @@ export default function AuthPage() {
     navigate(`/auth/${targetAction}${redirectSuffix}`, { replace: true });
   }, [navigate, searchParams]);
 
-  const features = [
-    { icon: Music2, key: 'featureSync', descKey: 'featureSyncDesc' },
-    { icon: FileText, key: 'featureExport', descKey: 'featureExportDesc' },
-    { icon: Zap, key: 'featureConnect', descKey: 'featureConnectDesc' },
-  ];
-
   return (
     <LazyMotion features={domAnimation}>
       <div className="size-screen flex relative overflow-hidden font-sans">
-      <SmoothWavyCanvas />
+      <div className="wavy-canvas-container absolute inset-0">
+        <SmoothWavyCanvas />
+      </div>
 
       {/* Language switcher — top right */}
       <div className="fixed top-4 right-4 z-raised">
@@ -286,51 +281,87 @@ export default function AuthPage() {
         {/* Subtle left-side glow */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/4 via-transparent to-accent-purple/3 pointer-events-none" />
 
-        {/* Hero content */}
-        <div className="relative flex-1 flex flex-col justify-center">
-          <M.h2
-            initial={{ opacity: 0, x: -40 }}
+        <div className="relative flex-1 flex flex-col justify-between">
+          {/* Top: headline */}
+          <M.div
+            initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="text-3xl xl:text-4xl font-semibold text-zinc-100 leading-tight tracking-tight font-heading mb-8"
           >
-            {t('auth.tagline', 'Sync lyrics to music, your way')}
-          </M.h2>
+            <h2 className="font-heading text-zinc-100 leading-[0.9] contrast-more:text-white"
+                style={{ fontSize: 'clamp(2rem, 3.5vw, 3rem)' }}>
+              {t('auth.tagline', 'Sync lyrics to music, your way')}
+            </h2>
+          </M.div>
 
-          <M.ul
-            initial="hidden"
-            animate="visible"
-            variants={{
-              visible: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } }
-            }}
-            className="flex flex-col gap-4"
+          {/* Center: lyric companion */}
+          <M.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
+            className="flex flex-col gap-2"
           >
-            {features.map(({ icon: Icon, key, descKey }) => (
-              <M.li
-                key={key}
-                variants={{
-                  hidden: { opacity: 0, x: -30 },
-                  visible: { opacity: 1, x: 0 }
-                }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="flex items-start gap-3"
-              >
-                <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5 shadow-lg shadow-primary/5">
-                  <Icon className="size-4 text-primary" />
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-700 mb-1">
+              Live preview
+            </p>
+            <div className="rounded-xl border border-zinc-800/50 overflow-hidden bg-zinc-950/50 backdrop-blur-sm">
+              <div className="flex items-center gap-2 px-3 py-2 bg-zinc-900/60 border-b border-zinc-800/40">
+                <div className="flex gap-1">
+                  <div className="size-2 rounded-full bg-zinc-800" />
+                  <div className="size-2 rounded-full bg-zinc-800" />
+                  <div className="size-2 rounded-full bg-zinc-800" />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-zinc-100 tracking-tight">{t(`auth.${key}`)}</p>
-                  <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed max-w-[260px]">{t(`auth.${descKey}`)}</p>
-                </div>
-              </M.li>
-            ))}
-          </M.ul>
+                <span className="text-[9px] font-mono text-zinc-700">untitled.lrc</span>
+              </div>
+              <div className="p-2.5 space-y-0.5">
+                {[
+                  { ts: '[00:00.00]', text: 'The stars align above the city', active: false },
+                  { ts: '[00:14.20]', text: 'Midnight echoes through the halls', active: true },
+                  { ts: '[00:28.80]', text: 'She sang a melody that broke', active: false },
+                ].map((line, i) => (
+                  <div
+                    key={i}
+                    className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs ${
+                      line.active ? 'bg-primary/8 border border-primary/20' : ''
+                    }`}
+                  >
+                    <span className={`font-mono text-[8px] shrink-0 ${line.active ? 'text-primary' : 'text-zinc-800'}`}>
+                      {line.ts}
+                    </span>
+                    <span className={`truncate ${line.active ? 'text-zinc-200' : 'text-zinc-600'}`}>
+                      {line.text}
+                    </span>
+                    {line.active && (
+                      <span className="size-1 rounded-full bg-primary ml-auto shrink-0 animate-pulse" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Waveform */}
+            <div className="px-3 py-2 rounded-xl border border-zinc-800/30 bg-zinc-950/40 backdrop-blur-sm">
+              <div className="flex items-end gap-0.5 h-6">
+                {Array.from({ length: 36 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 rounded-full bg-primary/20"
+                    style={{
+                      height: `${20 + 70 * Math.abs(Math.sin(i * 0.5))}%`,
+                      transformOrigin: 'bottom',
+                      animation: `waveBar ${0.8 + (i % 5) * 0.14}s ease-in-out ${i * 0.022}s infinite`,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </M.div>
+
+          {/* Bottom footer */}
+          <p className="text-[9px] text-zinc-800 shrink-0" suppressHydrationWarning>
+            &copy; {new Date().getFullYear()} LRC Studio
+          </p>
         </div>
-
-        {/* Footer */}
-        <p className="relative text-[9px] text-zinc-700 mt-8 shrink-0" suppressHydrationWarning>
-          &copy; {new Date().getFullYear()} LRC Studio
-        </p>
       </div>
 
       {/* ── Right form panel ────────────────────────────────────────────── */}
@@ -360,7 +391,7 @@ export default function AuthPage() {
           className="w-full max-w-[400px] flex-shrink"
         >
           {/* Card */}
-          <div className="bg-zinc-900/80 backdrop-blur-2xl border border-zinc-800/50 rounded-[2.5rem] shadow-card p-7 sm:p-8 relative overflow-hidden">
+          <div className="bg-zinc-900/80 backdrop-blur-2xl border border-zinc-800/50 contrast-more:border-zinc-600 rounded-2xl shadow-card p-7 sm:p-8 relative overflow-hidden">
             <ThemedShineBorder />
             {view === 'login-saved-account' && savedAccounts.length > 0 && (
               <SavedAccountStep
