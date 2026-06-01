@@ -1,23 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Monitor, Smartphone, Loader2, ShieldOff } from 'lucide-react';
+import { Monitor, Smartphone, Tablet, Loader2, ShieldOff } from 'lucide-react';
 import { Button } from '@ui/button';
 import { auth } from '@/app/api';
 import { formatInTimezone } from '@/shared/utils/date';
 import toast from 'react-hot-toast';
 import useConfirm from '@/shared/hooks/useConfirm';
 
-function DeviceIcon({ deviceName }) {
-  const name = (deviceName || '').toLowerCase();
-  if (
-    name.includes('android') ||
-    name.includes('ios') ||
-    name.includes('iphone') ||
-    name.includes('ipad')
-  ) {
-    return <Smartphone className="size-4 text-zinc-400" />;
-  }
-  return <Monitor className="size-4 text-zinc-400" />;
+function DeviceIcon({ deviceType, className = 'size-4 text-zinc-400' }) {
+  if (deviceType === 'mobile') return <Smartphone className={className} />;
+  if (deviceType === 'tablet') return <Tablet className={className} />;
+  return <Monitor className={className} />;
 }
 
 export default function SessionsSettings() {
@@ -66,7 +59,7 @@ export default function SessionsSettings() {
       async () => {
         setRevokingAll(true);
         try {
-          await auth.logoutAll(true); // keepCurrent=true
+          await auth.logoutAll(true);
           setSessions((prev) => prev.filter((s) => s.isCurrent));
           toast.success(t('profile.sessions.revokeAllOthersSuccess', 'All other devices signed out.'));
         } catch {
@@ -97,10 +90,10 @@ export default function SessionsSettings() {
 
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-sm font-semibold text-zinc-200">
+          <h3 className="font-heading text-sm font-semibold text-zinc-100 contrast-more:text-white">
             {t('profile.sessions.title', 'Active Sessions')}
           </h3>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-zinc-500 mt-0.5 contrast-more:text-zinc-300">
             {t('profile.sessions.subtitle', 'Devices currently signed in to your account.')}
           </p>
         </div>
@@ -133,13 +126,13 @@ export default function SessionsSettings() {
               className="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/40 border border-zinc-700/40"
             >
               <div className="size-9 rounded-lg bg-zinc-700/50 flex items-center justify-center flex-shrink-0">
-                <DeviceIcon deviceName={session.deviceName} />
+                <DeviceIcon deviceType={session.deviceType} />
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-medium text-zinc-200 truncate">
-                    {session.deviceName || t('profile.sessions.unknownDevice', 'Unknown Device')}
+                    {session.browser || session.deviceName || t('profile.sessions.unknownDevice', 'Unknown Device')}
                   </span>
                   {session.isCurrent && (
                     <span className="text-[10px] font-bold uppercase text-primary bg-primary/10 px-1.5 py-0.5 rounded flex-shrink-0">
@@ -149,16 +142,19 @@ export default function SessionsSettings() {
                 </div>
 
                 <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                  {session.os && (
+                    <span className="text-[11px] text-zinc-500">{session.os}</span>
+                  )}
                   {session.ip && (
-                    <span className="text-[11px] text-zinc-500">{session.ip}</span>
+                    <span className="text-[11px] text-zinc-600">· {session.ip}</span>
                   )}
                   {session.lastUsedAt && (
-                    <span className="text-[11px] text-zinc-500">
-                      {t('profile.sessions.lastActive', 'Last active')}:{' '}
+                    <span className="text-[11px] text-zinc-600">
+                      · {t('profile.sessions.lastActive', 'Active')}{' '}
                       {formatInTimezone(
                         session.lastUsedAt,
                         'auto',
-                        { year: 'numeric', month: 'short', day: 'numeric' },
+                        { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
                         locale
                       )}
                     </span>

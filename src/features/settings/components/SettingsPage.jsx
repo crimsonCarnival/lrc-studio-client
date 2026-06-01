@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Headphones, FileText, Download, Monitor, Keyboard, SlidersHorizontal, User, ShieldCheck, Link2, History, Search, X } from 'lucide-react';
+import { ArrowLeft, Headphones, FileText, Download, Monitor, Keyboard, SlidersHorizontal, User, ShieldCheck, Link2, History, Search, X, Layers } from 'lucide-react';
 import { useSettings } from '@/features/settings/useSettings';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { DEFAULT_SETTINGS } from '@/features/settings/settings-defaults';
@@ -15,7 +15,9 @@ import ProfileSettings from './panels/ProfileSettings';
 import SecuritySettings from './panels/SecuritySettings';
 import ConnectionsSettings from './panels/ConnectionsSettings';
 import ChangesHistorySettings from './panels/ChangesHistorySettings';
+import SessionsSettings from './panels/SessionsSettings';
 import { Button } from '@ui/button';
+import { LazyImage } from '@ui/LazyImage';
 
 function SettingsPanelContent({ activeTab, settings, updateSetting, validateShortcut, isGuest, userId, focusCard, searchTerm }) {
   switch (activeTab) {
@@ -23,6 +25,7 @@ function SettingsPanelContent({ activeTab, settings, updateSetting, validateShor
     case 'security':    return <SecuritySettings focusCard={focusCard} searchTerm={searchTerm} />;
     case 'connections': return <ConnectionsSettings searchTerm={searchTerm} />;
     case 'history':     return <ChangesHistorySettings searchTerm={searchTerm} />;
+    case 'sessions':    return <SessionsSettings />;
     case 'playback':    return <PlaybackSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
     case 'editor':      return <EditorSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
     case 'export':      return <ExportSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
@@ -39,6 +42,7 @@ const TABS = [
   { id: 'security', labelKey: 'profile.sections.security', icon: ShieldCheck, authOnly: true, group: 'account', searchable: true },
   { id: 'connections', labelKey: 'profile.tabs.connections', icon: Link2, authOnly: true, group: 'account', searchable: true },
   { id: 'history', labelKey: 'profile.tabs.history', icon: History, authOnly: true, group: 'account', searchable: true },
+  { id: 'sessions', labelKey: 'profile.sessions.title', fallback: 'Sessions', icon: Layers, authOnly: true, group: 'account', searchable: false },
 
   // App Preferences
   { id: 'playback', labelKey: 'settings.playback.label', icon: Headphones, group: 'preferences', searchable: true },
@@ -94,7 +98,7 @@ export default function SettingsPage() {
   const updateSetting = useCallback((key, value) => {
     setSettings(prev => {
       const keys = key.split('.');
-      const next = JSON.parse(JSON.stringify(prev));
+      const next = structuredClone(prev);
       let cur = next;
       for (let i = 0; i < keys.length - 1; i++) {
         if (!cur[keys[i]]) cur[keys[i]] = {};
@@ -172,7 +176,7 @@ export default function SettingsPage() {
 
       {/* Page-level bar — keeps the guarded back button (preserves the unsaved-changes
           prompt) + search. The page title now lives in the app header. */}
-      <div className="flex items-center gap-3 px-4 h-13 py-2.5 border-b border-zinc-800/60 flex-shrink-0 bg-background/95 backdrop-blur-sm z-20">
+      <div className="flex items-center gap-3 px-4 h-13 py-2.5 border-b border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0 bg-background/95 backdrop-blur-sm z-20">
         <Button
           variant="ghost"
           size="icon"
@@ -189,7 +193,7 @@ export default function SettingsPage() {
               placeholder={t('settings.search')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-8 bg-zinc-900/60 border border-zinc-800 rounded-full pl-8 pr-7 text-sm text-zinc-200 placeholder:text-zinc-500 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-colors"
+              className="w-full h-8 bg-zinc-900/60 border border-zinc-800 contrast-more:border-zinc-600 rounded-full pl-8 pr-7 text-sm text-zinc-200 placeholder:text-zinc-500 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-colors"
             />
             {searchTerm && (
               <button
@@ -206,33 +210,68 @@ export default function SettingsPage() {
 
       <div className="flex flex-1 min-h-0">
         {/* Desktop sidebar */}
-        <aside className="hidden lg:flex flex-col w-52 border-r border-zinc-800/60 flex-shrink-0 py-5 px-3 gap-1">
-          {visibleTabs.map((tab, idx) => {
-            const label = t(tab.labelKey) || tab.fallback || tab.id;
-            const isActive = activeTab === tab.id;
-            const showDivider = idx > 0 && visibleTabs[idx - 1].group !== tab.group;
-            return (
-              <div key={tab.id}>
-                {showDivider && <hr className="my-2 border-zinc-800/60" />}
-                <button
-                  onClick={() => setTab(tab.id)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 text-left w-full ${
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
-                  }`}
-                >
-                  <tab.icon className={`size-4 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-500'}`} />
-                  {label}
-                </button>
+        <aside className="hidden lg:flex flex-col w-52 border-r border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0 overflow-y-auto">
+          {/* User identity block */}
+          {user && !isGuest && (
+            <div className="flex items-center gap-3 px-4 py-4 border-b border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0">
+              <div className="size-10 rounded-xl flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/80 to-accent-blue flex items-center justify-center font-bold text-zinc-950 text-sm select-none">
+                {user.avatarUrl
+                  ? <LazyImage src={user.avatarUrl} alt="" className="size-full object-cover" />
+                  : (user.displayName || user.accountName || '?')[0].toUpperCase()
+                }
               </div>
-            );
-          })}
+              <div className="min-w-0">
+                <p className="font-heading text-[14px] font-semibold text-zinc-100 truncate leading-tight contrast-more:text-white">
+                  {user.displayName || user.accountName}
+                </p>
+                <p className="text-[11px] text-zinc-500 font-mono truncate mt-0.5 contrast-more:text-zinc-400">
+                  @{user.accountName}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Nav */}
+          <nav className="px-2 py-3 flex flex-col gap-0.5">
+            {visibleTabs.map((tab, idx) => {
+              const GROUP_LABELS = {
+                account: t('settings.groups.account', 'Account'),
+                preferences: t('settings.groups.preferences', 'Preferences'),
+                advanced: t('settings.groups.advanced', 'Advanced'),
+              };
+              const label = t(tab.labelKey) || tab.fallback || tab.id;
+              const isActive = activeTab === tab.id;
+              const showGroupLabel = idx === 0 || visibleTabs[idx - 1].group !== tab.group;
+              return (
+                <div key={tab.id}>
+                  {showGroupLabel && (
+                    <p className="text-[9px] font-bold uppercase tracking-[.13em] text-zinc-600 contrast-more:text-zinc-400 px-2.5 pt-3 pb-1.5">
+                      {GROUP_LABELS[tab.group] || tab.group}
+                    </p>
+                  )}
+                  <button
+                    onClick={() => setTab(tab.id)}
+                    className={`relative flex items-center gap-2.5 px-2.5 py-[7px] rounded-xl text-[13px] font-medium transition-all duration-150 text-left w-full border ${
+                      isActive
+                        ? 'text-primary bg-gradient-to-r from-primary/[.13] to-primary/[.04] border-primary/[.14]'
+                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'
+                    }`}
+                  >
+                    {isActive && (
+                      <span className="absolute left-0 top-[22%] h-[56%] w-[3px] bg-primary rounded-r-full shadow-[0_0_8px_rgba(196,167,231,.6)]" aria-hidden="true" />
+                    )}
+                    <tab.icon className={`size-3.5 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-500'}`} />
+                    {label}
+                  </button>
+                </div>
+              );
+            })}
+          </nav>
         </aside>
 
         {/* Mobile/tablet: horizontal scrollable tab bar + content */}
         <div className="flex flex-col flex-1 min-h-0 min-w-0">
-          <div className="lg:hidden flex overflow-x-auto no-scrollbar border-b border-zinc-800/60 flex-shrink-0 px-2 pt-1 items-center">
+          <div className="lg:hidden flex overflow-x-auto no-scrollbar border-b border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0 px-2 pt-1 items-center">
             {visibleTabs.map((tab, idx) => {
               const label = t(tab.labelKey) || tab.fallback || tab.id;
               const isActive = activeTab === tab.id;
@@ -276,20 +315,25 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Sticky footer actions — only shown when there are unsaved changes */}
+            {/* Floating centered save pill — only shown when there are unsaved changes */}
             {isDirty && !settings.advanced?.autoSave?.enabled && (
-              <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
-                <div className="max-w-md mx-auto bg-zinc-900/90 backdrop-blur border border-zinc-800/60 rounded-2xl shadow-xl p-3 flex gap-3 pointer-events-auto items-center justify-end animate-fade-in-up">
+              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 pointer-events-none z-20">
+                <div className="flex items-center gap-2 bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/60 rounded-2xl shadow-2xl px-4 py-2.5 pointer-events-auto animate-slide-up-fade">
+                  <span className="text-xs text-zinc-400 mr-1">
+                    <span className="font-semibold text-zinc-200">{t('settings.unsavedChanges', 'Unsaved changes')}</span>
+                  </span>
                   <Button
                     variant="ghost"
+                    size="sm"
                     onClick={handleReset}
-                    className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 font-medium text-sm rounded-xl h-9 px-4"
+                    className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 h-8 px-3 rounded-lg text-xs"
                   >
                     {t('settings.reset')}
                   </Button>
                   <Button
+                    size="sm"
                     onClick={handleApply}
-                    className="bg-primary hover:bg-primary-dim text-zinc-950 font-semibold text-sm rounded-xl h-9 px-6"
+                    className="bg-primary hover:bg-primary-dim text-zinc-950 font-semibold rounded-lg h-8 px-4 text-xs"
                   >
                     {t('settings.applyChanges')}
                   </Button>

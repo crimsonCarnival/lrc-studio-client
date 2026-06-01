@@ -15,24 +15,34 @@ export function Toggle({ checked, onChange, id }) {
   );
 }
 
+const ICON_COLORS = {
+  default: 'bg-primary/10 text-primary',
+  teal:    'bg-accent-blue/10 text-accent-blue',
+  amber:   'bg-warning/10 text-warning',
+  rose:    'bg-rose-400/10 text-rose-400',
+  green:   'bg-emerald-400/10 text-emerald-400',
+};
+
 export function SettingRow({ label, description, icon: Icon, children }) {
   return (
-    <div className="flex flex-col justify-between gap-4 p-5 rounded-2xl border border-border/50 bg-secondary/10 hover:border-border transition-all group">
+    <div className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-white/[0.018] group [&+&]:border-t [&+&]:border-border/40">
+      {Icon && (
+        <div className="size-8 rounded-lg bg-white/[0.03] flex items-center justify-center flex-shrink-0">
+          <Icon className="size-3.5 text-zinc-500 group-hover:text-zinc-400 transition-colors" />
+        </div>
+      )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-zinc-200 flex items-center gap-2 mb-2">
-          {Icon && <Icon className="size-4 text-zinc-400 shrink-0 group-hover:text-primary transition-colors" />}
-          {label}
-        </p>
-        {description && <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>}
+        <p className="text-[13px] font-medium text-zinc-200 leading-snug contrast-more:text-white">{label}</p>
+        {description && (
+          <p className="text-[11.5px] text-muted-foreground mt-0.5 leading-relaxed contrast-more:text-zinc-300">{description}</p>
+        )}
       </div>
-      <div className="flex justify-end items-end mt-auto pt-2">
-        {children}
-      </div>
+      <div className="flex-shrink-0 ml-4">{children}</div>
     </div>
   );
 }
 
-export function Section({ title, icon: Icon, children, searchTerm }) {
+export function Section({ title, icon: Icon, children, searchTerm, color = 'default' }) {
   const filteredChildren = React.Children.map(children, (child) => {
     if (!React.isValidElement(child)) return child;
 
@@ -50,7 +60,7 @@ export function Section({ title, icon: Icon, children, searchTerm }) {
       const normalizedLabel = normalize(label);
       const normalizedDesc = normalize(desc);
       const searchTokens = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
-      
+
       const match = searchTokens.every(token => {
         const normalizedToken = normalize(token);
         return normalizedLabel.includes(normalizedToken) || normalizedDesc.includes(normalizedToken);
@@ -64,14 +74,24 @@ export function Section({ title, icon: Icon, children, searchTerm }) {
 
   if (searchTerm && !filteredChildren?.some(Boolean)) return null;
 
+  const iconCls = ICON_COLORS[color] ?? ICON_COLORS.default;
+
   return (
-    <div className={`settings-section flex flex-col min-h-0 mb-8 ${searchTerm ? 'animate-fade-in' : ''}`}>
-      <h4 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mb-4 px-1 flex items-center gap-2 flex-shrink-0">
-        {Icon && <Icon className="size-4" />}
-        {title}
-      </h4>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredChildren}
+    <div className={`settings-section mb-4 ${searchTerm ? 'animate-fade-in' : ''}`}>
+      <div className="rounded-2xl border border-border/60 overflow-hidden hover:border-border/80 transition-colors bg-secondary/5 contrast-more:border-zinc-600">
+        <div className="flex items-center gap-2.5 px-5 py-3 border-b border-border/40 contrast-more:border-zinc-600">
+          {Icon && (
+            <div className={`size-[22px] rounded-md flex items-center justify-center flex-shrink-0 ${iconCls}`}>
+              <Icon className="size-3" />
+            </div>
+          )}
+          <h4 className="font-heading text-[13px] font-semibold tracking-tight text-zinc-200 contrast-more:text-white">
+            {title}
+          </h4>
+        </div>
+        <div className="flex flex-col">
+          {filteredChildren}
+        </div>
       </div>
     </div>
   );

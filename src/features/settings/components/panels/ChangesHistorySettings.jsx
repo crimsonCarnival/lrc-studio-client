@@ -29,23 +29,23 @@ export default function ChangesHistorySettings({ searchTerm }) {
     <div className="settings-section space-y-6 animate-fade-in">
       <div className="flex items-center gap-2 px-1">
         <History className="size-4 text-zinc-400" />
-        <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
+        <h3 className="font-heading text-[13px] font-semibold tracking-tight text-zinc-200 contrast-more:text-white">
           {t('profile.tabs.history') || 'Changes History'}
         </h3>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {usernameMatches && (
-          <div className="rounded-2xl border border-border/50 bg-secondary/10 p-5 lg:p-6 hover:border-border transition-all">
-            <h4 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider mb-4 border-b border-border/50 pb-2">
+          <div className="rounded-2xl border border-border/50 contrast-more:border-zinc-600 bg-secondary/10 p-5 lg:p-6 hover:border-border transition-all">
+            <h4 className="font-heading text-sm font-semibold text-zinc-100 contrast-more:text-white mb-4 border-b border-border/50 contrast-more:border-zinc-600 pb-2">
               {t('profile.sections.handleHistory') || 'Username history'}
             </h4>
             <AccountNameHistory />
           </div>
         )}
         {emailMatches && (
-          <div className="rounded-2xl border border-border/50 bg-secondary/10 p-5 lg:p-6 hover:border-border transition-all">
-            <h4 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider mb-4 border-b border-border/50 pb-2">
+          <div className="rounded-2xl border border-border/50 contrast-more:border-zinc-600 bg-secondary/10 p-5 lg:p-6 hover:border-border transition-all">
+            <h4 className="font-heading text-sm font-semibold text-zinc-100 contrast-more:text-white mb-4 border-b border-border/50 contrast-more:border-zinc-600 pb-2">
               {t('profile.sections.emailHistory') || 'Email history'}
             </h4>
             <EmailHistory />
