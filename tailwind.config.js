@@ -71,6 +71,8 @@ export default {
       addVariant('motion-reduce', '@media (prefers-reduced-motion: reduce)');
       addVariant('contrast-more', '@media (prefers-contrast: more)');
       addVariant('data-saver', '@media (prefers-reduced-data: reduce)');
+      addVariant('reduce-transparency', '@media (prefers-reduced-transparency: reduce)');
+      addVariant('forced-colors', '@media (forced-colors: active)');
     }
   ],
 }

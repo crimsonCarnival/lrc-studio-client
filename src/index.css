@@ -67,6 +67,39 @@
       display: none !important;
     }
   }
+
+  /* Reduced transparency: drop all backdrop blur and make glass surfaces opaque
+     so translucency never hurts legibility for users who disable it (Windows
+     "Transparency effects" off, macOS "Reduce transparency"). */
+  @media (prefers-reduced-transparency: reduce) {
+    *, *::before, *::after {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    .glass {
+      background: var(--color-zinc-900) !important;
+      border-color: var(--color-zinc-700) !important;
+    }
+    /* Decorative ambient canvas adds visual noise without transparency context */
+    .wavy-canvas-container {
+      opacity: 0.4;
+    }
+  }
+
+  /* Forced colors (Windows High Contrast Mode): the OS overrides the palette, so
+     ensure bounded surfaces and a visible focus ring using system color keywords. */
+  @media (forced-colors: active) {
+    .glass {
+      background: Canvas;
+      border: 1px solid CanvasText;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    *:focus-visible {
+      outline: 2px solid Highlight !important;
+      outline-offset: 2px;
+    }
+  }
 }
 
 /* Autofill Overrides */

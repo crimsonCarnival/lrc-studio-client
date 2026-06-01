@@ -10,6 +10,33 @@
     <title>LRC Studio — Professional Lyric Synchronization &amp; Editing</title>
     <meta name="description" content="LRC Studio is a professional tool to sync lyrics to any song (MP3 or YouTube) and export as high-quality .lrc files. Features tap-to-timestamp and live karaoke preview." />
     <script src="https://unpkg.com/wanakana@5.3.1/wanakana.min.js"></script>
+    <!-- First-paint theme seed: mirrors useThemeSync so there's no dark→light flash.
+         New users (no stored theme) are seeded from the OS color scheme; the in-app
+         theme switcher still wins once it loads. Falls back to the html `dark` class. -->
+    <script>
+      (function () {
+        try {
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var theme = null;
+          var raw = localStorage.getItem('lrc-syncer-settings');
+          if (raw) {
+            var s = JSON.parse(raw);
+            theme = (s && s.interface && s.interface.theme) || (s && s.theme) || null;
+          }
+          if (!theme) theme = prefersDark ? 'dark' : 'light'; // brand-new user → follow OS
+          var root = document.documentElement;
+          root.classList.remove('dark', 'theme-cobalt', 'theme-velvet', 'theme-sage');
+          if (theme === 'light') { /* no classes */ }
+          else if (theme === 'cobalt') root.classList.add('dark', 'theme-cobalt');
+          else if (theme === 'velvet') root.classList.add('dark', 'theme-velvet');
+          else if (theme === 'sage') root.classList.add('dark', 'theme-sage');
+          else if (theme === 'system') { if (prefersDark) root.classList.add('dark'); }
+          else root.classList.add('dark');
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
 
     <body class="bg-zinc-950 text-zinc-100 antialiased">
