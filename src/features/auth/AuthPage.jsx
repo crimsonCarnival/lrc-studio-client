@@ -398,6 +398,15 @@ export default function AuthPage() {
                 t={t}
                 savedAccounts={savedAccounts}
                 onProceedToPassword={handleSavedAccountProceed}
+                onGoogleLogin={async (identifier) => {
+                  try {
+                    // Google-only saved account: sign in directly, pre-selecting it (#12)
+                    await loginWithGoogle(identifier);
+                    handleAuthSuccess();
+                  } catch {
+                    toast.error(t('auth.errors.googleLoginFailed'));
+                  }
+                }}
                 onAddAccount={handleAddAccount}
                 onRemoveAccount={handleRemoveAccount}
                 onPasskeySuccess={handleAuthSuccess}

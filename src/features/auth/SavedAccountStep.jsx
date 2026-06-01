@@ -8,7 +8,7 @@ import { rememberedAccounts } from '@/features/auth/services/remembered-accounts
 
 // ─── Account Picker — shown on return visits when remembered accounts exist ──
 
-export default function SavedAccountStep({ t, savedAccounts, onProceedToPassword, onAddAccount, onRemoveAccount, onPasskeySuccess }) {
+export default function SavedAccountStep({ t, savedAccounts, onProceedToPassword, onGoogleLogin, onAddAccount, onRemoveAccount, onPasskeySuccess }) {
   const [loadingKey, setLoadingKey] = useState(null);
   const [errors, setErrors] = useState({});
   const { loginWithPasskey } = useAuthContext();
@@ -37,8 +37,15 @@ export default function SavedAccountStep({ t, savedAccounts, onProceedToPassword
     }
 
     try {
-      const result = await auth.checkIdentifier(account.identifier || account.accountName);
-      onProceedToPassword({ identifier: account.identifier || account.accountName, ...result });
+      const identifier = account.identifier || account.accountName;
+      const result = await auth.checkIdentifier(identifier);
+      // Google-only account (no password): skip the intermediate step and
+      // trigger Google sign-in directly, pre-selecting this account.
+      if (result.hasPassword === false && onGoogleLogin) {
+        await onGoogleLogin(identifier);
+        return;
+      }
+      onProceedToPassword({ identifier, ...result });
     } catch (err) {
       setErrors((prev) => ({
         ...prev,
