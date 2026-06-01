@@ -58,8 +58,8 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
           return;
         }
       }
-      const { results: items } = await youtube.search(term);
-      setResults(items || []);
+      const data = await youtube.search(term);
+      setResults(data?.results || []);
     } catch (err) {
       setError(err?.response?.data?.error || t('home.ytSearchFailed'));
     } finally {

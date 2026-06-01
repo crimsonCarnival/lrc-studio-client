@@ -53,5 +53,13 @@ export async function request(path, options = {}) {
   }
 
   if (res.status === 204) return null;
-  return res.json();
+  // Tolerate empty/non-JSON success bodies (e.g. a 200 with no content from an
+  // upstream that failed silently) instead of throwing "Unexpected end of JSON input".
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
 }
