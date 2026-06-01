@@ -14,6 +14,33 @@ rememberedAccounts.migrate();
 const apiUrl = import.meta.env.VITE_API_URL || '';
 const API_ORIGIN = import.meta.env.VITE_SERVER_ORIGIN || (apiUrl ? new URL(apiUrl).origin : window.location.origin);
 
+// Paints a themed spinner into a freshly opened OAuth popup so it doesn't flash a
+// blank white window while we fetch the provider URL. The popup is an isolated
+// about:blank document with no access to the app's CSS variables, so the theme
+// colors (zinc-950 bg, primary lavender) are inlined here on purpose.
+function renderPopupLoading(popup) {
+  if (!popup) return;
+  try {
+    const doc = popup.document;
+    // Built with DOM APIs + textContent (no innerHTML / document.write) — the
+    // content is static but this keeps it XSS-proof by construction.
+    const style = doc.createElement('style');
+    style.textContent =
+      'html,body{height:100%;margin:0;background:#1a1826;display:flex;' +
+      'align-items:center;justify-content:center}.s{width:38px;height:38px;' +
+      'border-radius:50%;border:3px solid rgba(196,167,231,.18);' +
+      'border-top-color:#c4a7e7;animation:lrcspin .8s linear infinite}' +
+      '@keyframes lrcspin{to{transform:rotate(360deg)}}' +
+      '@media(prefers-reduced-motion:reduce){.s{animation:none;opacity:.6}}';
+    doc.head.appendChild(style);
+    const spinner = doc.createElement('div');
+    spinner.className = 's';
+    doc.body.appendChild(spinner);
+  } catch {
+    // Popup already navigated / cross-origin — nothing to paint.
+  }
+}
+
 export function useAuth() {
   const [state, setState] = useState({ user: null, loading: true, heldLoginResult: null });
   const user = state.user;
@@ -284,6 +311,7 @@ export function useAuth() {
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
     const popup = window.open('about:blank', 'spotify-auth', `width=${width},height=${height},left=${left},top=${top}`);
+    renderPopupLoading(popup);
     const url = await spotifyApi.getAuthUrl();
     if (popup) popup.location.href = url; else window.open(url, 'spotify-auth', `width=${width},height=${height},left=${left},top=${top}`);
 
@@ -333,6 +361,7 @@ export function useAuth() {
     const top = window.screenY + (window.outerHeight - height) / 2;
     // Open synchronously so browsers don't block it as a non-gesture popup
     const popup = window.open('about:blank', 'google-auth', `width=${width},height=${height},left=${left},top=${top}`);
+    renderPopupLoading(popup);
     const url = await googleApi.getAuthUrl();
     if (popup) popup.location.href = url; else window.open(url, 'google-auth', `width=${width},height=${height},left=${left},top=${top}`);
 
@@ -389,6 +418,7 @@ export function useAuth() {
     const top = window.screenY + (window.outerHeight - height) / 2;
     // Open synchronously so browsers don't block it as a non-gesture popup
     const popup = window.open('about:blank', 'google-login', `width=${width},height=${height},left=${left},top=${top}`);
+    renderPopupLoading(popup);
     // loginHint (a saved account's email) lets Google skip the chooser (#12)
     const url = await googleApi.getLoginUrl(loginHint);
 
