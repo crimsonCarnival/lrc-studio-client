@@ -66,5 +66,10 @@ export default {
   libraryTitle: "Spotify Library",
   popupBlocked: "Popup blocked. Please allow popups for this site and try again.",
   connectSuccess: "Spotify connected successfully!",
-  connectInitFailed: "Failed to open the Spotify connection window."
+  connectInitFailed: "Failed to open the Spotify connection window.",
+
+  // Connect banner (dismissable, app-wide)
+  bannerText: "Connect your Spotify account to browse your playlists and library while you sync.",
+  bannerCta: "Connect",
+  bannerDismiss: "Dismiss"
 };

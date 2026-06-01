@@ -45,5 +45,10 @@ export default {
   libraryTitle: "Spotify音楽ライブラリ",
   popupBlocked: "ポップアップがブロックされました。このサイトのポップアップを許可して、もう一度お試しください。",
   connectSuccess: "Spotifyに正常に接続しました！",
-  connectInitFailed: "Spotifyの接続ウィンドウを開けませんでした。"
+  connectInitFailed: "Spotifyの接続ウィンドウを開けませんでした。",
+
+  // 接続バナー（閉じられる、アプリ全体）
+  bannerText: "Spotifyアカウントを接続して、同期しながらプレイリストやライブラリを閲覧しましょう。",
+  bannerCta: "接続",
+  bannerDismiss: "閉じる"
 };

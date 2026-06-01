@@ -9,6 +9,7 @@ import { AppPlayer } from './layout/AppPlayer';
 import { AppMobileNav } from './layout/AppMobileNav';
 import { AppModals } from './layout/AppModals';
 import { SafeAreaContainer } from '../shared/ui/SafeAreaContainer.jsx';
+import { SpotifyConnectBanner } from '@features/player/components/SpotifyConnectBanner';
 
 export function AppLayout({ children, user, logout, appState, settingsState, layoutState }) {
   const { t, i18n } = useTranslation();
@@ -104,6 +105,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         `}
         >
           <div className={`${isSetupPage ? 'w-full' : 'max-w-[1600px] mx-auto w-full'} flex-1 flex flex-col min-h-0`}>
+            <SpotifyConnectBanner />
             {children}
           </div>
         </div>

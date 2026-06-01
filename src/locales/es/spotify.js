@@ -45,5 +45,10 @@ export default {
   libraryTitle: "Biblioteca de Música de Spotify",
   popupBlocked: "Ventana emergente bloqueada. Por favor, permite las ventanas emergentes para este sitio e inténtalo de nuevo.",
   connectSuccess: "¡Spotify conectado con éxito!",
-  connectInitFailed: "No se pudo abrir la ventana de conexión de Spotify."
+  connectInitFailed: "No se pudo abrir la ventana de conexión de Spotify.",
+
+  // Banner de conexión (descartable, en toda la app)
+  bannerText: "Conecta tu cuenta de Spotify para explorar tus listas y biblioteca mientras sincronizas.",
+  bannerCta: "Conectar",
+  bannerDismiss: "Descartar"
 };

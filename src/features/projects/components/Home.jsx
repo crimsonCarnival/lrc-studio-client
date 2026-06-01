@@ -4,7 +4,6 @@ import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projects } from '@/app/api';
 import { Music2, Video, Plus, Search, Play, ChevronRight, Activity, Library as LibraryIcon } from 'lucide-react';
-import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import ProjectSetupModal from '@features/editor/components/setup/ProjectSetupModal';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
@@ -25,18 +24,8 @@ function formatRelativeTime(dateStr, t, locale = 'en') {
 export default function Home() {
   const { t, dt, i18n } = useDynamicTranslation();
   const navigate = useNavigate();
-  const { user, connectSpotify } = useAuthContext();
+  const { user } = useAuthContext();
 
-  const handleSpotifyLogin = useCallback(async () => {
-    try {
-      await connectSpotify();
-    } catch (err) {
-      if (err?.message !== 'Spotify auth popup was closed') {
-        const { default: toast } = await import('react-hot-toast');
-        toast.error(t('settings.spotify.connectFailed') || 'Failed to connect Spotify');
-      }
-    }
-  }, [connectSpotify, t]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -122,20 +111,6 @@ export default function Home() {
               </div>
               <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('home.viewLibrary')}</span>
             </button>
-
-            {!user?.spotify?.spotifyId && (
-              <button
-                type="button"
-                onClick={handleSpotifyLogin}
-                className="group relative glass rounded-xl px-3.5 py-3 text-left hover:border-green-500/30 transition-all flex items-center gap-3 w-full focus:ring-2 focus:ring-green-500/40 outline-none overflow-hidden contrast-more:border-zinc-600"
-              >
-                <ThemedShineBorder />
-                <div className="size-7 shrink-0 rounded-lg bg-green-500/8 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
-                  <SpotifyIcon className="size-4 text-green-500" />
-                </div>
-                <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('home.connectSpotify')}</span>
-              </button>
-            )}
 
             {!loading && lastProject && (
               <button
