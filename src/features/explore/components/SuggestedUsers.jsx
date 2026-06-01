@@ -62,6 +62,7 @@ export function SuggestedUsers({ limit = 8 }) {
                     <img
                       src={u.avatarUrl}
                       alt={u.displayName || u.accountName}
+                      referrerPolicy="no-referrer"
                       className="size-9 rounded-full object-cover shrink-0"
                     />
                   ) : (

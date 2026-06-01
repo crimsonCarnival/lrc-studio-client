@@ -135,7 +135,7 @@ export default function ListPage() {
               className="flex items-center gap-2 w-fit hover:opacity-80 transition-opacity mb-3"
             >
               {playlist.owner?.avatarUrl ? (
-                <img src={playlist.owner.avatarUrl} alt="" className="size-5 rounded-full object-cover" />
+                <img src={playlist.owner.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-5 rounded-full object-cover" />
               ) : (
                 <div className="size-5 rounded-full bg-muted" />
               )}

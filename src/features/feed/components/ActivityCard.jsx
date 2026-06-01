@@ -53,7 +53,7 @@ export function ActivityCard({ activity }) {
     <div className="flex gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors">
       <Link to={`/${actor.accountName}`} className="shrink-0">
         {actor.avatarUrl ? (
-          <img src={actor.avatarUrl} alt={actor.displayName || actor.accountName} className="w-9 h-9 rounded-full object-cover" />
+          <img src={actor.avatarUrl} alt={actor.displayName || actor.accountName} referrerPolicy="no-referrer" className="w-9 h-9 rounded-full object-cover" />
         ) : (
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/50 to-violet-500/50 flex items-center justify-center text-sm font-bold text-white">
             {(actor.displayName || actor.accountName || '?').charAt(0).toUpperCase()}
