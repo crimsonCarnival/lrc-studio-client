@@ -4,11 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   UploadCloud, Settings as SettingsIcon, LogOut, BookOpen, Pencil,
-  ShieldAlert, Eye, EyeOff, User, HelpCircle, ArrowLeft, Check,
+  ShieldAlert, Eye, EyeOff, User, HelpCircle, Check,
   Sun, Moon, Monitor, Palette, Globe, ExternalLink, Search, Compass,
 } from 'lucide-react';
 import { HeaderSearchBar } from '@/features/search/components/HeaderSearchBar';
-import { useSetupContext } from '@/features/editor/SetupContext';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
@@ -82,7 +81,6 @@ export function AppHeader({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { step, setStep } = useSetupContext();
   const [editingProjectName, setEditingProjectName] = useState(false);
   const [counts, setCounts] = useState({ library: 0, uploads: 0 });
   const projectNameInputRef = useRef(null);
@@ -126,12 +124,7 @@ export function AppHeader({
 
   const NAV_ACTIVE = `bg-primary text-zinc-950 border-primary hover:bg-primary-dim hover:text-zinc-950`;
 
-  const stepLabels = [
-    t('setup.stepDetails', 'Details'),
-    t('setup.stepSetup', 'Setup'),
-  ];
-
-  const iconBtn = 'size-8 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors rounded-lg flex-shrink-0 cursor-pointer';
+  const iconBtn ='size-8 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors rounded-lg flex-shrink-0 cursor-pointer';
 
   const saveToIdb = async () => {
     const payload = buildProjectPayload ? buildProjectPayload() : { title: mediaTitle || '', lines: lines ?? [] };
@@ -162,38 +155,6 @@ export function AppHeader({
   return (
     <>
     <header className="fixed top-0 left-0 right-0 z-nav animate-fade-in bg-zinc-950/60 backdrop-blur-2xl pointer-events-none">
-
-      {/* Step indicator — absolutely centered */}
-      {isSetupPage && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="flex items-center gap-1 bg-zinc-900/60 border border-zinc-800/60 rounded-full px-3 py-1.5 backdrop-blur-sm pointer-events-auto">
-            {stepLabels.map((label, i) => {
-              const n = i + 1;
-              return (
-                <div key={n} className="flex items-center">
-                  {i > 0 && (
-                    <div className={`w-5 h-px mx-1 transition-colors ${step > i ? 'bg-primary/50' : 'bg-zinc-700/60'}`} />
-                  )}
-                  <div className="flex items-center gap-1">
-                    <div className={`size-4 rounded-full flex items-center justify-center text-[9px] font-bold transition-all ${
-                      step === n ? 'bg-primary text-zinc-950 scale-110 shadow-sm shadow-primary/30'
-                      : step > n ? 'bg-primary/20 border border-primary/40 text-primary'
-                      : 'bg-zinc-800 border border-zinc-700/60 text-zinc-500'
-                    }`}>
-                      {step > n ? <Check className="size-2.5" /> : n}
-                    </div>
-                    <span className={`text-[9px] font-semibold uppercase tracking-wide hidden sm:block transition-colors ${
-                      step === n ? 'text-primary' : step > n ? 'text-zinc-500' : 'text-zinc-600'
-                    }`}>
-                      {label}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       <div className="max-w-[1600px] mx-auto w-full px-4 lg:px-6 py-2 sm:py-2.5 flex flex-row items-center justify-between gap-2 pointer-events-auto">
 
@@ -255,17 +216,7 @@ export function AppHeader({
                   </Tip>
                 )}
               </>
-            ) : isSetupPage ? (
-              step > 1 && (
-                <button
-                  onClick={() => setStep(prev => prev - 1)}
-                  className="flex items-center gap-1 h-7 px-2 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 rounded-lg transition-all text-xs font-medium"
-                >
-                  <ArrowLeft className="size-3.5" />
-                  <span className="hidden sm:inline">{t('common.back') || 'Back'}</span>
-                </button>
-              )
-            ) : location.pathname !== '/home' && location.pathname !== '/' && (
+            ) : isSetupPage ? null : location.pathname !== '/home' && location.pathname !== '/' && (
               <>
                 <span className="text-zinc-700 shrink-0 hidden sm:inline">/</span>
                 <span className="text-xs font-medium text-zinc-400 truncate hidden sm:block">
