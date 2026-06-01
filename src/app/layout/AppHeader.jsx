@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   UploadCloud, Settings as SettingsIcon, LogOut, BookOpen, Pencil,
-  ShieldAlert, Eye, EyeOff, User, HelpCircle, Check,
+  ShieldAlert, Eye, EyeOff, User, HelpCircle, Check, ArrowLeft,
   Sun, Moon, Monitor, Palette, Globe, ExternalLink, Search, Compass,
 } from 'lucide-react';
 import { HeaderSearchBar } from '@/features/search/components/HeaderSearchBar';
@@ -88,9 +88,27 @@ export function AppHeader({
 
 
   const isSetupPage = location.pathname === '/project/new';
-  const isHomePage = location.pathname === '/home' || location.pathname === '/';
   const isGuestLanding = location.pathname === '/';
   const isSettingsPage = location.pathname.startsWith('/settings');
+
+  // Page title shown in the header breadcrumb (single source of truth — pages no
+  // longer render their own title row).
+  const breadcrumbTitle = (() => {
+    const seg = location.pathname.split('/')[1];
+    const map = {
+      profile: t('profile.title'),
+      settings: t('settings.title'),
+      library: t('library.title'),
+      uploads: t('uploads.title'),
+      admin: t('admin.dashboard.title'),
+      'change-password': t('auth.changePassword.title'),
+      'verify-email': t('auth.verification.pageTitle'),
+      feed: t('feed.title'),
+      search: t('search.title'),
+      explore: t('explore.nav'),
+    };
+    return map[seg] || seg.replace(/-/g, ' ');
+  })();
 
   const currentTheme = settings?.interface?.theme || 'dark';
   const currentLang = (i18n?.language || 'en').slice(0, 2).toUpperCase();
@@ -219,24 +237,24 @@ export function AppHeader({
             ) : isSetupPage ? null : location.pathname !== '/home' && location.pathname !== '/' && (
               <>
                 <span className="text-zinc-700 shrink-0 hidden sm:inline">/</span>
-                <span className="text-xs font-medium text-zinc-400 truncate hidden sm:block">
-                  {(() => {
-                    const seg = location.pathname.split('/')[1];
-                    const map = {
-                      profile: t('profile.title'),
-                      settings: t('settings.title'),
-                      library: t('library.title'),
-                      uploads: t('uploads.title'),
-                      admin: t('admin.dashboard.title'),
-                      'change-password': t('auth.changePassword.title'),
-                      'verify-email': t('auth.verification.pageTitle'),
-                      feed: t('feed.title'),
-                      search: t('search.title'),
-                      explore: t('explore.nav'),
-                    };
-                    return map[seg] || seg.replace(/-/g, ' ');
-                  })()}
-                </span>
+                {isSettingsPage ? (
+                  // Settings keeps its own guarded back button in-page, so the header shows the title only.
+                  <span className="text-xs font-semibold text-zinc-200 truncate uppercase tracking-wide">
+                    {breadcrumbTitle}
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    className="flex items-center gap-1.5 min-w-0 group py-1 -my-1"
+                    aria-label={t('common.back', 'Back')}
+                  >
+                    <ArrowLeft className="size-3.5 text-zinc-500 group-hover:text-zinc-200 transition-colors shrink-0" />
+                    <span className="text-xs font-semibold text-zinc-200 group-hover:text-zinc-100 truncate uppercase tracking-wide transition-colors">
+                      {breadcrumbTitle}
+                    </span>
+                  </button>
+                )}
               </>
             )}
           </div>

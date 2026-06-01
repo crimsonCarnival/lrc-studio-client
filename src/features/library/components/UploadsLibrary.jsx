@@ -8,7 +8,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
-import { Cloud, Video, Trash2, ArrowLeft, Loader2, Music2, Clock, Edit2, Check, X } from 'lucide-react';
+import { Cloud, Video, Trash2, Loader2, Music2, Clock, Edit2, Check, X } from 'lucide-react';
 import { SkeletonCard } from '@ui/skeleton';
 import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import toast from 'react-hot-toast';
@@ -28,7 +28,7 @@ function SourceLabel({ source, t }) {
   return source;
 }
 
-export default function UploadsLibrary({ onSelect, onBack }) {
+export default function UploadsLibrary({ onSelect }) {
   const { t, i18n } = useTranslation();
   const { settings } = useSettings();
   const timezone = settings.advanced?.timezone;
@@ -121,20 +121,9 @@ export default function UploadsLibrary({ onSelect, onBack }) {
 
   return (
     <div className="flex flex-col h-full pt-0 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-5">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onBack}
-          className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0"
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
-        <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-widest">
-          {t('uploads.title')}
-        </h2>
-        <span className="text-xs text-zinc-500 ml-auto">
+      {/* Count */}
+      <div className="flex items-center mb-5">
+        <span className="text-xs text-zinc-500">
           {!loading && t('uploads.count', { count: items.length })}
         </span>
       </div>

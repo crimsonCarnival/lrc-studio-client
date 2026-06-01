@@ -44,8 +44,6 @@ export default function FeedPage() {
 
   return (
     <div className="flex-1 max-w-2xl mx-auto w-full py-6 px-4">
-      <h1 className="text-xl font-semibold text-white mb-6">{t('feed.title')}</h1>
-
       {activities.length === 0 ? (
         <div className="text-center py-20 text-zinc-400">
           <p className="font-medium mb-1">{emptyTitle}</p>

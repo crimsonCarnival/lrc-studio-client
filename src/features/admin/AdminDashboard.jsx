@@ -304,21 +304,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex flex-col h-full pt-0 p-6 overflow-y-auto custom-scrollbar">
-      {/* Header */}
-      <div className="flex items-end justify-between mb-6">
-        <div>
-          <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-700 mb-1">
-            Control Surface
-          </p>
-          <h1 className="font-heading text-zinc-100 flex items-center gap-2.5 leading-none"
-              style={{ fontSize: 'clamp(1.4rem, 2.5vw, 2rem)' }}>
-            <ShieldAlert className="size-5 text-primary shrink-0" />
-            {t('admin.dashboard.title')}
-          </h1>
-          <p className="text-xs text-zinc-600 contrast-more:text-zinc-400 mt-1.5">
-            {t('admin.dashboard.subtitle')}
-          </p>
-        </div>
+      {/* Refresh — the page title now lives in the app header */}
+      <div className="flex items-center justify-end mb-4">
         <Button variant="ghost" size="icon" onClick={() => fetchData(true)} className="h-9 w-9 shrink-0">
           <RefreshCw className={`size-4 text-zinc-500 ${loading ? 'animate-spin' : ''}`} />
         </Button>

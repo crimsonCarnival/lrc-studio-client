@@ -170,7 +170,8 @@ export default function SettingsPage() {
   return (
     <div className="flex-1 flex flex-col min-h-0 animate-fade-in">
 
-      {/* Page-level header — spans full width above sidebar and content */}
+      {/* Page-level bar — keeps the guarded back button (preserves the unsaved-changes
+          prompt) + search. The page title now lives in the app header. */}
       <div className="flex items-center gap-3 px-4 h-13 py-2.5 border-b border-zinc-800/60 flex-shrink-0 bg-background/95 backdrop-blur-sm z-20">
         <Button
           variant="ghost"
@@ -180,11 +181,8 @@ export default function SettingsPage() {
         >
           <ArrowLeft className="size-4" />
         </Button>
-        <h1 className="text-xs font-semibold uppercase tracking-widest text-zinc-400 mr-auto">
-          {t('settings.title')}
-        </h1>
         {isSearchable && (
-          <div className="relative w-48 sm:w-64 md:w-72">
+          <div className="relative w-48 sm:w-64 md:w-72 ml-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none z-10" />
             <input
               type="text"

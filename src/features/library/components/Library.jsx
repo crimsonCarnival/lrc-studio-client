@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { projects } from '@/app/api';
-import { Button } from '@ui/button';
-import { ArrowLeft, Loader2, Search } from 'lucide-react';
 import { SkeletonCard } from '@ui/skeleton';
 import ProjectSetupModal from '@features/editor/components/setup/ProjectSetupModal';
 import useConfirm from '@/shared/hooks/useConfirm';
@@ -14,7 +12,7 @@ import { LoadingSpinner } from '@ui/LoadingSpinner';
 import ProjectCard from './ProjectCard.jsx';
 import ProjectList from './ProjectList.jsx';
 
-export default function Library({ onOpenProject, onBack }) {
+export default function Library({ onOpenProject }) {
   const { t, i18n } = useTranslation();
   const { settings } = useSettings();
   const timezone = settings.advanced?.timezone;
@@ -62,20 +60,9 @@ export default function Library({ onOpenProject, onBack }) {
 
   return (
     <div className="flex flex-col h-full pt-0 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-5">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onBack}
-          className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0"
-        >
-          <ArrowLeft className="size-4" />
-        </Button>
-        <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-widest">
-          {t('library.title')}
-        </h2>
-        <span className="text-xs text-zinc-500 ml-auto">
+      {/* Count */}
+      <div className="flex items-center mb-5">
+        <span className="text-xs text-zinc-500">
           {!loading && t('library.count', { count: items.length })}
         </span>
       </div>

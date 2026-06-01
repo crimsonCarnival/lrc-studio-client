@@ -70,8 +70,6 @@ export default function SearchPage() {
 
   return (
     <div className="flex-1 max-w-3xl mx-auto w-full py-6 px-4">
-      <h1 className="text-xl font-semibold text-white mb-4">{t('search.title')}</h1>
-
       {/* Search input */}
       <div className="relative mb-4">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-zinc-400 pointer-events-none" />
