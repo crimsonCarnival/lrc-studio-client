@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { admin } from '@/app/api';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Button } from '@ui/button';
-import { ShieldAlert, RefreshCw, Users, Globe, History } from 'lucide-react';
+import { ShieldAlert, RefreshCw, Users, Globe, History, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import BanUserModal from './BanUserModal';
@@ -13,11 +13,12 @@ import AdminUsersTab from './AdminUsersTab';
 import AdminIpsTab from './AdminIpsTab';
 import AdminDevicesTab from './AdminDevicesTab';
 import AdminAuditTab from './AdminAuditTab';
+import AdminBadgesTab from './AdminBadgesTab';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
   const { user: currentUser } = useAuthContext();
-  const [activeTab, setActiveTab] = useState('users'); // users, ips, audit, monitor
+  const [activeTab, setActiveTab] = useState('users'); // users, ips, devices, audit, badges
 
   // Data States
   const [users, setUsers] = useState([]);
@@ -131,6 +132,7 @@ export default function AdminDashboard() {
     else if (activeTab === 'ips') fetchIps();
     else if (activeTab === 'devices') fetchDevices();
     else if (activeTab === 'audit') fetchAuditLogs();
+    // badges tab manages its own data fetching
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
@@ -321,6 +323,7 @@ export default function AdminDashboard() {
           { id: 'ips',     icon: Globe,       label: t('admin.dashboard.tabs.ipBlocklist') },
           { id: 'devices', icon: ShieldAlert, label: t('admin.dashboard.tabs.deviceBlocklist') },
           { id: 'audit',   icon: History,     label: t('admin.dashboard.tabs.auditLogs') },
+          { id: 'badges',  icon: Award,       label: t('admin.dashboard.tabs.badges') },
         ].map(tab => (
           <button
             key={tab.id}
@@ -384,6 +387,10 @@ export default function AdminDashboard() {
 
         {activeTab === 'audit' && (
           <AdminAuditTab auditLogs={auditLogs} />
+        )}
+
+        {activeTab === 'badges' && (
+          <AdminBadgesTab />
         )}
 
       </div>
