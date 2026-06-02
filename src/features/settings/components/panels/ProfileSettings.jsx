@@ -1,9 +1,73 @@
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { UserCircle2 } from 'lucide-react';
+import { UserCircle2, Award } from 'lucide-react';
 import AvatarUpload from './profile/AvatarUpload';
 import ProfileForm from './profile/ProfileForm';
 import AccountNameSection from './profile/AccountNameSection';
 import EmailSection from './profile/EmailSection';
+import { ShowcaseEditor } from '@/features/badges/ShowcaseEditor';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { gqlRequest } from '@/app/graphql.client';
+
+const GET_BADGE_DEFS = `
+  query { badgeDefinitions { id holderCount } }
+`;
+
+function ShowcaseSection() {
+  const { t } = useTranslation();
+  const { user, setUser } = useAuthContext();
+  const [enrichedBadges, setEnrichedBadges] = useState(null);
+
+  useEffect(() => {
+    if (!user?.badges?.length) {
+      setEnrichedBadges([]);
+      return;
+    }
+    gqlRequest(GET_BADGE_DEFS)
+      .then(({ badgeDefinitions }) => {
+        // Total users is not returned here — estimate rarity from holderCount relative to holder list
+        // We use a safe default: show badges without rarity percentage if defs unavailable
+        const defMap = new Map(badgeDefinitions.map(d => [d.id, d]));
+        const maxHolders = Math.max(...badgeDefinitions.map(d => d.holderCount), 1);
+        setEnrichedBadges(
+          user.badges.map(b => ({
+            ...b,
+            // holderCount / maxHolders gives relative rarity (good enough for filter ordering)
+            rarityPct: defMap.has(b.id)
+              ? (defMap.get(b.id).holderCount / Math.max(maxHolders, 1)) * 100
+              : 100,
+          }))
+        );
+      })
+      .catch(() => setEnrichedBadges(user.badges));
+  }, [user?.badges]);
+
+  if (!enrichedBadges) return null;
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Award className="size-3.5 text-zinc-500" />
+        <SectionHeading>{t('badges.showcase.editorTitle', 'Achievement Showcase')}</SectionHeading>
+      </div>
+      <ShowcaseEditor
+        userBadges={enrichedBadges}
+        initialShowcase={user?.showcasedBadges ?? []}
+        showcaseSlots={getShowcaseSlots(user?.level ?? 0)}
+        level={user?.level ?? 0}
+        onSaved={(ids) => setUser(prev => ({ ...prev, showcasedBadges: ids }))}
+      />
+    </section>
+  );
+}
+
+function getShowcaseSlots(level) {
+  if (level >= 100) return 8;
+  if (level >= 75)  return 6;
+  if (level >= 50)  return 5;
+  if (level >= 25)  return 4;
+  return 3;
+}
 
 function SectionHeading({ children }) {
   return (
@@ -74,6 +138,11 @@ export default function ProfileSettings({ searchTerm }) {
           <SectionHeading>{t('profile.accountNameSection', 'Username')}</SectionHeading>
           <AccountNameSection />
         </section>
+
+        <Divider />
+
+        {/* Achievement Showcase */}
+        <ShowcaseSection />
       </div>
     </div>
   );
