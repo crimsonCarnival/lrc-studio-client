@@ -185,10 +185,10 @@ export default function GuestLanding() {
           <div className="max-w-7xl mx-auto flex flex-col gap-12">
             <M.div
               className="flex flex-col gap-1"
-              initial={reducedMotion ? false : { opacity: 0, y: 20 }}
-              whileInView={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+              initial={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ root: scrollRef, once: true, margin: '-80px' }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
+              transition={{ duration: reducedMotion ? 0 : 0.6, ease: 'easeOut' }}
             >
               <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-600">
                 {t('landing.featuresLabel')}
@@ -204,10 +204,10 @@ export default function GuestLanding() {
                 <M.div
                   key={titleKey}
                   className="flex flex-col gap-4 p-6 bg-zinc-950/80 hover:bg-zinc-900/60 transition-colors"
-                  initial={reducedMotion ? false : { opacity: 0, y: 16 }}
-                  whileInView={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+                  initial={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ root: scrollRef, once: true, margin: '-60px' }}
-                  transition={{ duration: 0.5, delay: i * 0.08, ease: 'easeOut' }}
+                  transition={{ duration: reducedMotion ? 0 : 0.5, delay: reducedMotion ? 0 : i * 0.08, ease: 'easeOut' }}
                 >
                   <div className={`size-10 rounded-xl ${bg} flex items-center justify-center`}>
                     <Icon className={`size-5 ${color}`} />
@@ -227,10 +227,10 @@ export default function GuestLanding() {
           <div className="max-w-3xl mx-auto flex flex-col gap-12">
             <M.div
               className="flex flex-col gap-1"
-              initial={reducedMotion ? false : { opacity: 0, y: 20 }}
-              whileInView={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+              initial={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ root: scrollRef, once: true, margin: '-80px' }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
+              transition={{ duration: reducedMotion ? 0 : 0.6, ease: 'easeOut' }}
             >
               <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-600">
                 {t('landing.howLabel')}
@@ -246,10 +246,10 @@ export default function GuestLanding() {
                 <M.div
                   key={n}
                   className="flex gap-5 relative"
-                  initial={reducedMotion ? false : { opacity: 0, x: -20 }}
-                  whileInView={reducedMotion ? undefined : { opacity: 1, x: 0 }}
+                  initial={reducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ root: scrollRef, once: true, margin: '-40px' }}
-                  transition={{ duration: 0.55, delay: i * 0.1, ease: 'easeOut' }}
+                  transition={{ duration: reducedMotion ? 0 : 0.55, delay: reducedMotion ? 0 : i * 0.1, ease: 'easeOut' }}
                 >
                   {/* Left: step indicator column */}
                   <div className="flex flex-col items-center shrink-0">
@@ -275,10 +275,10 @@ export default function GuestLanding() {
             {/* Footer CTA */}
             <M.div
               className="flex flex-col items-start gap-5 pt-4 border-t border-zinc-800/50"
-              initial={reducedMotion ? false : { opacity: 0, y: 16 }}
-              whileInView={reducedMotion ? undefined : { opacity: 1, y: 0 }}
+              initial={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ root: scrollRef, once: true, margin: '-40px' }}
-              transition={{ duration: 0.55, ease: 'easeOut' }}
+              transition={{ duration: reducedMotion ? 0 : 0.55, ease: 'easeOut' }}
             >
               <h2 className="font-heading text-zinc-100 contrast-more:text-white"
                   style={{ fontSize: 'clamp(1.25rem, 3vw, 2rem)' }}>
