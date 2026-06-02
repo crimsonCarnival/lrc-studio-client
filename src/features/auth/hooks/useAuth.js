@@ -455,12 +455,18 @@ export function useAuth() {
           return;
         }
 
-        const me = await auth.me();
-        storage.set(STORAGE_KEYS.HAS_SESSION, '1');
-        setAuthFlag(true);
-        setState({ user: me, loading: false });
-        scheduleRefresh();
-        resolve(me);
+        try {
+          const me = await auth.me();
+          storage.set(STORAGE_KEYS.HAS_SESSION, '1');
+          setAuthFlag(true);
+          setState({ user: me, loading: false });
+          scheduleRefresh();
+          resolve(me);
+        } catch (err) {
+          // auth.me() failed after OAuth succeeded — cookies are set but we couldn't
+          // fetch the user profile. Reject so the caller can do a hard redirect instead.
+          reject(err);
+        }
       };
 
       window.addEventListener('message', onMessage);

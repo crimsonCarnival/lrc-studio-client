@@ -3,6 +3,7 @@ import { Trans } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, Zap, ArrowRight, ArrowLeft, Lightbulb } from 'lucide-react';
 import { AnimatePresence, m as M } from 'framer-motion';
+import { z } from 'zod';
 import { FloatingInput } from '@ui/floating-input';
 import { Tip } from '@ui/tip';
 import { translateAuthError } from '@/shared/utils/auth-errors';
@@ -11,7 +12,37 @@ import PasswordStrength from './components/PasswordStrength.jsx';
 import RegistrationBlockedModal from './RegistrationBlockedModal';
 import { FieldError, ErrorBanner, ContextBanner, GoogleButton } from './auth-shared';
 
-const ACCOUNT_NAME_RE = /^[a-z0-9_-]{3,30}$/;
+const step1Schema = z.object({
+  displayName: z.string().min(1, 'auth.validation.fieldRequired'),
+  accountName: z.string()
+    .regex(/^[a-z0-9_-]{3,30}$/, 'auth.validation.accountNamePattern')
+    .optional()
+    .or(z.literal('')),
+});
+
+const step2Schema = z.object({
+  email: z.string().email('auth.validation.emailInvalid').optional().or(z.literal('')),
+  accountName: z.string().optional().or(z.literal('')),
+  password: z.string()
+    .min(1, 'auth.validation.fieldRequired')
+    .min(8, 'auth.validation.passwordMinLength'),
+  confirmPassword: z.string().min(1, 'auth.validation.fieldRequired'),
+}).refine(
+  (d) => !d.email || d.accountName || d.email,
+  { message: 'auth.validation.emailOrHandleRequired', path: ['email'] }
+).refine(
+  (d) => d.password === d.confirmPassword,
+  { message: 'auth.validation.passwordMismatch', path: ['confirmPassword'] }
+);
+
+function zodErrors(result, t) {
+  const errs = {};
+  for (const issue of result.error?.issues ?? []) {
+    const key = issue.path[0];
+    if (key && !errs[key]) errs[key] = t(issue.message, issue.message);
+  }
+  return errs;
+}
 
 function generateHandle(displayName) {
   const base = displayName
@@ -86,25 +117,13 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
   }, []);
 
   const validateStep1 = () => {
-    const errs = {};
-    if (!displayName.trim()) errs.displayName = t('auth.validation.fieldRequired');
-    if (accountName && !ACCOUNT_NAME_RE.test(accountName)) {
-      errs.accountName = t('auth.validation.accountNamePattern');
-    }
-    return errs;
+    const result = step1Schema.safeParse({ displayName: displayName.trim(), accountName });
+    return result.success ? {} : zodErrors(result, t);
   };
 
   const validateStep2 = () => {
-    const errs = {};
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = t('auth.validation.emailInvalid');
-    if (!accountName && !email) errs.email = t('auth.validation.emailOrHandleRequired');
-    if (!password) errs.password = t('auth.validation.fieldRequired');
-    else if (password.length < 8) errs.password = t('auth.validation.passwordMinLength');
-    if (password && confirmPassword && password !== confirmPassword) {
-      errs.confirmPassword = t('auth.validation.passwordMismatch', 'Passwords do not match');
-    }
-    if (password && !confirmPassword) errs.confirmPassword = t('auth.validation.fieldRequired');
-    return errs;
+    const result = step2Schema.safeParse({ email, accountName, password, confirmPassword });
+    return result.success ? {} : zodErrors(result, t);
   };
 
   const handleNext = (e) => {

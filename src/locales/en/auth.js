@@ -140,9 +140,11 @@ export default {
   },
   forgotPassword: "Forgot password?",
   passwordStrength: {
+    veryWeak: "Very weak",
     weak: "Weak",
     fair: "Fair",
     strong: "Strong",
+    veryStrong: "Very strong",
     feedback: {
       minLength: "At least 8 characters",
       lowercase: "Add lowercase letters",
@@ -245,5 +247,21 @@ export default {
     deleted: "Passkey deleted.",
     deleteFailed: "Failed to delete passkey.",
     tryPasskey: "Sign in with Passkey or QR Code"
-  }
+  },
+  passwordWarnings: {
+    keyboardRow:     "Straight rows of keys are easy to guess",
+    keyboardShort:   "Short keyboard patterns are easy to guess",
+    repeatSingle:    "Repeats like \"aaa\" are easy to guess",
+    repeatGroup:     "Repeated patterns are only slightly harder to guess",
+    sequence:        "Sequences like abc or 6543 are easy to guess",
+    recentYear:      "Recent years are easy to guess",
+    date:            "Dates are often easy to guess",
+    commonTop10:     "This is a top-10 common password",
+    commonTop100:    "This is a top-100 common password",
+    veryCommon:      "This is a very common password",
+    similarCommon:   "This is similar to a commonly used password",
+    wordOnly:        "A word by itself is easy to guess",
+    nameOrSurname:   "Names and surnames by themselves are easy to guess",
+    commonName:      "Common names and surnames are easy to guess",
+  },
 };

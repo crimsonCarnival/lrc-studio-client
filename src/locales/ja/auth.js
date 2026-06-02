@@ -140,9 +140,11 @@ export default {
   },
   forgotPassword: "パスワードをお忘れですか？",
   passwordStrength: {
+    veryWeak: "非常に弱い",
     weak: "弱い",
     fair: "普通",
     strong: "強い",
+    veryStrong: "非常に強い",
     feedback: {
       minLength: "8文字以上",
       lowercase: "小文字を追加",
@@ -245,5 +247,21 @@ export default {
     deleted: "パスキーを削除しました。",
     deleteFailed: "パスキーの削除に失敗しました。",
     tryPasskey: "パスキーまたはQRコードでログイン"
-  }
+  },
+  passwordWarnings: {
+    keyboardRow:     "キーボードの一直線は推測されやすいです",
+    keyboardShort:   "短いキーボードパターンは推測されやすいです",
+    repeatSingle:    "「aaa」のような繰り返しは推測されやすいです",
+    repeatGroup:     "繰り返しパターンは少ししか難しくなりません",
+    sequence:        "abcや6543のような連続した文字は推測されやすいです",
+    recentYear:      "最近の年号は推測されやすいです",
+    date:            "日付はよく推測されやすいです",
+    commonTop10:     "よく使われるパスワードトップ10の一つです",
+    commonTop100:    "よく使われるパスワードトップ100の一つです",
+    veryCommon:      "非常によく使われるパスワードです",
+    similarCommon:   "よく使われるパスワードに似ています",
+    wordOnly:        "単語一つだけでは推測されやすいです",
+    nameOrSurname:   "名前や苗字だけでは推測されやすいです",
+    commonName:      "よくある名前や苗字は推測されやすいです",
+  },
 };

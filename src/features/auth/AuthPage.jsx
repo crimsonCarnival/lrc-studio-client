@@ -16,6 +16,7 @@ import SignUpForm from './SignUpForm';
 import ForgotPasswordTab from './ForgotPasswordTab.jsx';
 import { LangSwitcher } from './auth-shared';
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
+import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
 import SmoothWavyCanvas from '@features/landing/SmoothWavyCanvas';
 
 // ─── Main AuthPage ──────────────────────────────────────────────────────────
@@ -161,6 +162,26 @@ export default function AuthPage() {
     // Commit login state after navigation is queued.
     commitLogin();
   }, [commitLogin, searchParams, navigate]);
+
+  // Wraps loginWithGoogle with a hard-redirect fallback: if auth.me() fails after
+  // the OAuth popup completes, the server cookies are already set, so we can still
+  // get the user to /home via a full page reload (useAuth.restore() picks it up).
+  const handleGoogleLogin = useCallback(async (loginHint) => {
+    try {
+      await loginWithGoogle(loginHint);
+      handleAuthSuccess();
+    } catch {
+      const hasSession = storage.get(STORAGE_KEYS.HAS_SESSION);
+      if (hasSession) {
+        const redirectTo = searchParams.get('redirect');
+        window.location.href = (redirectTo?.startsWith('/') && !redirectTo.startsWith('//'))
+          ? redirectTo
+          : '/home';
+      } else {
+        toast.error(t('auth.errors.googleLoginFailed'));
+      }
+    }
+  }, [loginWithGoogle, handleAuthSuccess, searchParams, t]);
 
   const handleSavedAccountProceed = useCallback((data) => {
     setIdentifierData(data);
@@ -398,15 +419,7 @@ export default function AuthPage() {
                 t={t}
                 savedAccounts={savedAccounts}
                 onProceedToPassword={handleSavedAccountProceed}
-                onGoogleLogin={async (identifier) => {
-                  try {
-                    // Google-only saved account: sign in directly, pre-selecting it (#12)
-                    await loginWithGoogle(identifier);
-                    handleAuthSuccess();
-                  } catch {
-                    toast.error(t('auth.errors.googleLoginFailed'));
-                  }
-                }}
+                onGoogleLogin={handleGoogleLogin}
                 onAddAccount={handleAddAccount}
                 onRemoveAccount={handleRemoveAccount}
                 onPasskeySuccess={handleAuthSuccess}
@@ -418,14 +431,7 @@ export default function AuthPage() {
                 t={t}
                 onNext={handleIdentifierNext}
                 onSwitchToRegister={() => switchView('register')}
-                onGoogleLogin={async () => {
-                  try {
-                    await loginWithGoogle();
-                    handleAuthSuccess();
-                  } catch {
-                    toast.error(t('auth.errors.googleLoginFailed'));
-                  }
-                }}
+                onGoogleLogin={() => handleGoogleLogin()}
                 from={searchParams.get('from')}
                 redirect={redirect}
               />
@@ -437,15 +443,7 @@ export default function AuthPage() {
                 identifierData={identifierData}
                 onBack={handleBack}
                 onLogin={loginAndHold}
-                onGoogleLogin={async () => {
-                  try {
-                    // Reuse the selected account so Google skips the chooser (#12)
-                    await loginWithGoogle(identifierData?.identifier);
-                    handleAuthSuccess();
-                  } catch {
-                    toast.error(t('auth.errors.googleLoginFailed'));
-                  }
-                }}
+                onGoogleLogin={() => handleGoogleLogin(identifierData?.identifier)}
                 onSuccess={handlePasswordSuccess}
                 onSwitchToForgotPassword={() => switchView('forgot-password')}
               />
@@ -466,14 +464,7 @@ export default function AuthPage() {
                 t={t}
                 onSwitchToLogin={() => switchView('login-identifier')}
                 onRegister={registerAndHold}
-                onGoogleLogin={async () => {
-                  try {
-                    await loginWithGoogle();
-                    handleAuthSuccess();
-                  } catch {
-                    toast.error(t('auth.errors.googleLoginFailed'));
-                  }
-                }}
+                onGoogleLogin={() => handleGoogleLogin()}
                 onSuccess={handleRegisterSuccess}
                 redirect={redirect}
               />

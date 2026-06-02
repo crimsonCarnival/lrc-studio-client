@@ -1,40 +1,71 @@
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import zxcvbn from 'zxcvbn';
+
+// score 0–4 → i18n key + bar colour
 const LEVELS = [
-  { min: 0,  label: 'Very weak', color: 'bg-red-500' },
-  { min: 1,  label: 'Weak',      color: 'bg-orange-500' },
-  { min: 2,  label: 'Fair',      color: 'bg-yellow-500' },
-  { min: 3,  label: 'Strong',    color: 'bg-lime-500' },
-  { min: 4,  label: 'Very strong', color: 'bg-green-500' },
+  { key: 'veryWeak', color: 'bg-red-500' },
+  { key: 'weak',     color: 'bg-orange-500' },
+  { key: 'fair',     color: 'bg-yellow-500' },
+  { key: 'strong',   color: 'bg-lime-500' },
+  { key: 'veryStrong', color: 'bg-green-500' },
 ];
 
-function score(password) {
-  if (!password) return 0;
-  let s = 0;
-  if (password.length >= 8)  s++;
-  if (password.length >= 12) s++;
-  if (/[A-Z]/.test(password)) s++;
-  if (/[0-9]/.test(password)) s++;
-  if (/[^A-Za-z0-9]/.test(password)) s++;
-  return Math.min(s, 4);
-}
+// Maps zxcvbn's fixed English warning strings → auth.passwordWarnings.<key>
+const WARNING_KEY_MAP = {
+  'Straight rows of keys are easy to guess':                              'keyboardRow',
+  'Short keyboard patterns are easy to guess':                           'keyboardShort',
+  'Repeats like "aaa" are easy to guess':                                'repeatSingle',
+  'Repeats like "abcabc" are only slightly harder to guess than "abc"':  'repeatGroup',
+  'Sequences like abc or 6543 are easy to guess':                        'sequence',
+  'Recent years are easy to guess':                                      'recentYear',
+  'Dates are often easy to guess':                                       'date',
+  'This is a top-10 common password':                                    'commonTop10',
+  'This is a top-100 common password':                                   'commonTop100',
+  'This is a very common password':                                      'veryCommon',
+  'This is similar to a commonly used password':                         'similarCommon',
+  'A word by itself is easy to guess':                                   'wordOnly',
+  'Names and surnames by themselves are easy to guess':                  'nameOrSurname',
+  'Common names and surnames are easy to guess':                         'commonName',
+};
 
 export default function PasswordStrength({ password }) {
-  const s = score(password);
-  const level = LEVELS[s];
-  const filled = s + 1;
+  const { t } = useTranslation();
 
-  if (!password) return null;
+  const result = useMemo(() => (password ? zxcvbn(password) : null), [password]);
+
+  if (!result) return null;
+
+  const score = result.score; // 0–4
+  const level = LEVELS[score];
+  const filled = score + 1;
+
+  const rawWarning = result.feedback.warning;
+  const warningKey = rawWarning ? WARNING_KEY_MAP[rawWarning] : null;
+  const warning = warningKey
+    ? t(`auth.passwordWarnings.${warningKey}`)
+    : rawWarning; // unmapped warning — keep English as fallback
 
   return (
     <div className="mt-1 space-y-1">
       <div className="flex gap-1">
         {LEVELS.map((lvl, i) => (
           <div
-            key={lvl.min}
-            className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i < filled ? level.color : 'bg-zinc-700'}`}
+            key={i}
+            className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+              i < filled ? level.color : 'bg-zinc-700'
+            }`}
           />
         ))}
       </div>
-      <p className="text-xs text-zinc-400">{level.label}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-zinc-400">
+          {t(`auth.passwordStrength.${level.key}`)}
+        </p>
+        {warning && (
+          <p className="text-xs text-zinc-500 truncate">{warning}</p>
+        )}
+      </div>
     </div>
   );
 }

@@ -140,9 +140,11 @@ export default {
   },
   forgotPassword: "¿Olvidaste la contraseña?",
   passwordStrength: {
+    veryWeak: "Muy débil",
     weak: "Débil",
     fair: "Regular",
     strong: "Fuerte",
+    veryStrong: "Muy fuerte",
     feedback: {
       minLength: "Al menos 8 caracteres",
       lowercase: "Añade letras minúsculas",
@@ -245,5 +247,21 @@ export default {
     deleted: "Clave de acceso eliminada.",
     deleteFailed: "Error al eliminar la clave de acceso.",
     tryPasskey: "Iniciar sesión con clave de acceso o código QR"
-  }
+  },
+  passwordWarnings: {
+    keyboardRow:     "Las filas de teclas son fáciles de adivinar",
+    keyboardShort:   "Los patrones de teclado cortos son fáciles de adivinar",
+    repeatSingle:    "Las repeticiones como \"aaa\" son fáciles de adivinar",
+    repeatGroup:     "Los patrones repetidos son solo ligeramente más difíciles de adivinar",
+    sequence:        "Las secuencias como abc o 6543 son fáciles de adivinar",
+    recentYear:      "Los años recientes son fáciles de adivinar",
+    date:            "Las fechas suelen ser fáciles de adivinar",
+    commonTop10:     "Esta es una de las 10 contraseñas más comunes",
+    commonTop100:    "Esta es una de las 100 contraseñas más comunes",
+    veryCommon:      "Esta es una contraseña muy común",
+    similarCommon:   "Es similar a una contraseña de uso común",
+    wordOnly:        "Una sola palabra es fácil de adivinar",
+    nameOrSurname:   "Los nombres y apellidos solos son fáciles de adivinar",
+    commonName:      "Los nombres y apellidos comunes son fáciles de adivinar",
+  },
 };

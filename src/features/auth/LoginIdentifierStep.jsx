@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Trans } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Loader2, Zap, Lightbulb } from 'lucide-react';
+import { z } from 'zod';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { Tip } from '@ui/tip';
@@ -9,8 +10,10 @@ import { translateAuthError } from '@/shared/utils/auth-errors';
 import { auth } from '@/app/api';
 import { FieldError, RedirectMessage, ContextBanner, GoogleButton } from './auth-shared';
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const HANDLE_RE = /^[a-z0-9_-]{3,30}$/;
+const identifierSchema = z.string().refine(
+  (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || /^[a-z0-9_-]{3,30}$/.test(v.toLowerCase()),
+  { message: 'invalid' }
+);
 
 function normaliseIdentifier(raw) {
   const trimmed = raw.trim();
@@ -19,9 +22,7 @@ function normaliseIdentifier(raw) {
 
 function validateIdentifier(value) {
   if (!value) return 'required';
-  if (EMAIL_RE.test(value)) return null;
-  if (HANDLE_RE.test(value.toLowerCase())) return null;
-  return 'invalid';
+  return identifierSchema.safeParse(value).success ? null : 'invalid';
 }
 
 // ─── Login Step 1 — Identifier ─────────────────────────────────────────────
