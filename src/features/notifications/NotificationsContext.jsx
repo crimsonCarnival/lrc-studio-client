@@ -59,7 +59,6 @@ export function NotificationsProvider({ children }) {
 
     function onBadgeAwarded({ badgeId }) {
       const def = BADGE_REGISTRY[badgeId];
-      const icon = def?.icon ?? '🏅';
       const label = def?.label ?? badgeId;
       toast(
         (t) => (
@@ -67,7 +66,6 @@ export function NotificationsProvider({ children }) {
             className="flex items-center gap-3 cursor-pointer select-none"
             onClick={() => toast.dismiss(t.id)}
           >
-            <span className="text-2xl leading-none">{icon}</span>
             <div>
               <p className="text-xs font-bold text-zinc-100 leading-tight">Badge unlocked!</p>
               <p className="text-xs text-zinc-400 leading-tight">{label}</p>

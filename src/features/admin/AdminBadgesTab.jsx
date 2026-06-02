@@ -67,7 +67,7 @@ const needsValue = (ct) => !['is_verified', 'role_admin', 'manual'].includes(ct)
 // ─── Badge preview chip ───────────────────────────────────────────────────────
 
 function LivePreview({ form }) {
-  if (!form.icon || !form.label) {
+  if (!form.label) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-full border border-zinc-800 text-zinc-700 text-xs">
         <span>—</span>
@@ -85,7 +85,6 @@ function LivePreview({ form }) {
         ? 'border-amber-400/30 bg-gradient-to-r from-warning/10 via-primary/10 to-accent-blue/10'
         : `${colorConf.text} bg-zinc-900 ${colorConf.border}`
     }`}>
-      <span>{form.icon}</span>
       {isShimmer ? (
         <span className="badge-shimmer-txt">{form.label}</span>
       ) : (
@@ -98,7 +97,7 @@ function LivePreview({ form }) {
 // ─── Badge form modal ─────────────────────────────────────────────────────────
 
 const BLANK_FORM = {
-  id: '', label: '', description: '', icon: '🏅',
+  id: '', label: '', description: '', icon: '',
   color: 'primary', conditionType: 'manual', conditionValue: null, autoGrant: false,
 };
 
@@ -317,7 +316,6 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
-          <span className="text-2xl">{def.icon}</span>
           <div>
             <div className="flex items-center gap-2">
               <BadgeChip id={def.id} />
@@ -416,7 +414,6 @@ function GrantModal({ badge, onClose }) {
         className="w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl p-5 flex flex-col gap-4"
       >
         <div className="flex items-center gap-3">
-          <span className="text-xl">{badge.icon}</span>
           <h3 className="text-sm font-semibold text-zinc-200">Grant "{badge.label}"</h3>
         </div>
         <form onSubmit={grant} className="flex flex-col gap-3">

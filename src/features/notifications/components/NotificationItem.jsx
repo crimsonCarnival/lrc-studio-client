@@ -63,8 +63,7 @@ function NotificationText({ notification, t }) {
   if (type === 'badge_awarded') {
     const def = body ? BADGE_REGISTRY[body] : null;
     const label = def ? t(`badges.${body}.label`, def.label) : (body ?? '');
-    const icon = def?.icon ?? '🏅';
-    return <span>{icon} {t('notifications.badgeUnlocked')} <strong>{label}</strong></span>;
+    return <span>{t('notifications.badgeUnlocked')} <strong>{label}</strong></span>;
   }
   return <span>{body || ''}</span>;
 }

@@ -44,7 +44,6 @@ function EarnedBadgeItem({ badge, isInShowcase, onToggle }) {
           : 'bg-zinc-900/60 border border-zinc-800/50 hover:border-zinc-700/70 hover:bg-zinc-800/60'
         }`}
     >
-      <span className="text-xl shrink-0 leading-none">{def.icon}</span>
       <div className="flex-1 min-w-0">
         <p className={`text-xs font-semibold truncate ${isInShowcase ? 'text-primary' : colorConf.text}`}>
           {def.label}
@@ -95,7 +94,6 @@ function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop 
       <div className="size-7 rounded-lg bg-zinc-700 flex items-center justify-center shrink-0">
         <span className="text-xs font-bold text-zinc-400">{index + 1}</span>
       </div>
-      <span className="text-xl leading-none shrink-0">{def.icon}</span>
       <span className={`text-sm font-semibold flex-1 truncate ${colorConf.text}`}>{t(`badges.${badge.id}.label`, def.label)}</span>
       <button
         type="button"

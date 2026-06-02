@@ -100,9 +100,6 @@ function ShowcaseCard({ badge, locale = 'en' }) {
           style={{ background: `radial-gradient(circle at 50% 0%, ${isShimmer ? 'rgba(196,167,231,0.08)' : `color-mix(in srgb, currentColor 8%, transparent)`}, transparent 70%)` }}
         />
 
-        {/* Icon */}
-        <span className="text-3xl leading-none mt-1 drop-shadow-lg">{def.icon}</span>
-
         {/* Badge name */}
         {isShimmer ? (
           <span className="badge-shimmer-txt text-[11px] font-semibold text-center leading-tight">
