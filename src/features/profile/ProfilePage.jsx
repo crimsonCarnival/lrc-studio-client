@@ -243,13 +243,16 @@ export default function ProfilePage() {
 
   const displayName = profile.displayName || profile.accountName;
 
-  // Synthesize badge IDs: server-stored achievements + role flags as fallback
+  // All earned badge IDs (used in showcase tab only)
   const serverBadgeIds = (profile.badges ?? []).map(b => b.id);
-  const badgeIds = [
+  const allBadgeIds = [
     ...serverBadgeIds,
     ...(profile.isVerified && !serverBadgeIds.includes('verified') ? ['verified'] : []),
     ...(profile.isAdmin   && !serverBadgeIds.includes('admin')    ? ['admin']    : []),
   ];
+  // Header shows only showcased badges; fall back to all if none showcased
+  const showcasedIds = (profile.showcasedBadges ?? []).map(b => b.id ?? b);
+  const badgeIds = showcasedIds.length > 0 ? showcasedIds : allBadgeIds.slice(0, 3);
 
   const minutesSynced = profile.minutesSynced ?? 0;
   const minutesLabel = minutesSynced > 0
@@ -458,11 +461,11 @@ export default function ProfilePage() {
               )}
             </div>
           )}
-          {badgeIds.length > 0 && (
+          {allBadgeIds.length > 0 && (
             <div>
               <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600 mb-3">{t('badges.showcase.allBadges', 'All Badges')}</p>
               <div className="flex flex-wrap gap-2">
-                {badgeIds.map(id => <BadgeChip key={id} id={id} />)}
+                {allBadgeIds.map(id => <BadgeChip key={id} id={id} />)}
               </div>
             </div>
           )}

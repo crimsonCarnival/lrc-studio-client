@@ -92,22 +92,22 @@ function ShowcaseCard({ badge, locale = 'en' }) {
 
   const isShimmer = def.color === 'shimmer';
 
+  const badgeLabel = t(`badges.${badge.id}.label`, def.label);
+
   return (
     <TiltCard className={`rounded-xl overflow-hidden ${RARITY_BORDER_STYLE[rarity]} ${RARITY_GLOW[rarity]}`}>
-      <div className={`relative flex flex-col items-center gap-1.5 p-4 bg-zinc-950/90 backdrop-blur-sm rounded-xl group cursor-default select-none min-w-[88px]`}>
-        {/* Color tint layer */}
-        <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-          style={{ background: `radial-gradient(circle at 50% 0%, ${isShimmer ? 'rgba(196,167,231,0.08)' : `color-mix(in srgb, currentColor 8%, transparent)`}, transparent 70%)` }}
-        />
+      <div className="relative flex flex-col items-center gap-2 px-4 pt-4 pb-3 bg-zinc-900 rounded-xl group cursor-default select-none min-w-[96px] min-h-[96px] justify-center">
+        {/* Color accent bar at top */}
+        <div className={`absolute top-0 inset-x-0 h-0.5 rounded-t-xl ${colorConf.border.replace('border-', 'bg-').replace('/40', '/70')}`} />
 
         {/* Badge name */}
         {isShimmer ? (
-          <span className="badge-shimmer-txt text-[11px] font-semibold text-center leading-tight">
-            {def.label}
+          <span className="badge-shimmer-txt text-xs font-bold text-center leading-snug">
+            {badgeLabel}
           </span>
         ) : (
-          <span className={`text-[11px] font-semibold text-center leading-tight ${colorConf.text}`}>
-            {def.label}
+          <span className={`text-xs font-bold text-center leading-snug ${colorConf.text}`}>
+            {badgeLabel}
           </span>
         )}
 
@@ -118,14 +118,14 @@ function ShowcaseCard({ badge, locale = 'en' }) {
 
         {/* Unlock date */}
         {grantedStr && (
-          <span className="text-[9px] text-zinc-600 text-center leading-tight">{grantedStr}</span>
+          <span className="text-[9px] text-zinc-500 text-center leading-tight">{grantedStr}</span>
         )}
 
-        {/* Holder % tooltip on hover */}
+        {/* Holder % on hover */}
         {badge.rarityPct !== undefined && (
-          <div className="absolute inset-x-0 -bottom-8 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+          <div className="absolute inset-x-0 -bottom-9 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
             <div className="mx-auto w-max bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-[9px] text-zinc-400 whitespace-nowrap shadow-xl">
-              {badge.holderCount?.toLocaleString()} holders · {badge.rarityPct.toFixed(1)}% of users
+              {badge.holderCount?.toLocaleString()} holders · {badge.rarityPct.toFixed(1)}%
             </div>
           </div>
         )}
