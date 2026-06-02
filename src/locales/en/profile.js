@@ -111,7 +111,7 @@ export default {
   noPublicProjects: "No public projects yet.",
   publicTabs: {
     projects: "Projects",
-    playlists: "Playlists",
+    playlists: "Playlists",\n    showcase:  "Showcase",
   },
   notFound: "User not found.",
   notFoundSub: "This profile doesn't exist or may have been removed.",

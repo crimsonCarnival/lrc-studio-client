@@ -4,13 +4,14 @@ import { useNavigate, useParams, Link, useSearchParams, useLocation } from 'reac
 import toast from 'react-hot-toast';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
-import { Star, GitFork, Music, PlayCircle, Settings, Pencil, Trash2, Timer, FolderOpen } from 'lucide-react';
+import { Star, GitFork, Music, PlayCircle, Settings, Pencil, Trash2, Timer, FolderOpen, Trophy } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { getPublicProfile, followUser, unfollowUser } from './profile.service';
 import { FollowModal } from './FollowModal';
 import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
 import { BadgeList } from '@/features/badges/BadgeList';
+import { BadgeChip } from '@/features/badges/BadgeChip';
 import { ShowcasedBadges } from '@/features/badges/ShowcasedBadges';
 import { projects } from '@/app/api';
 import ProjectSetupModal from '@/features/editor/components/setup/ProjectSetupModal';
@@ -250,7 +251,7 @@ export default function ProfilePage() {
     ...(profile.isAdmin   && !serverBadgeIds.includes('admin')    ? ['admin']    : []),
   ];
 
-  const minutesSynced = profile.stats?.minutesSynced ?? 0;
+  const minutesSynced = profile.minutesSynced ?? 0;
   const minutesLabel = minutesSynced > 0
     ? (() => {
         const h = Math.floor(minutesSynced / 60);
@@ -260,6 +261,7 @@ export default function ProfilePage() {
         return `${h}h ${m}m`;
       })()
     : null;
+  const level = profile.level ?? 0;
 
   return (
     <div className="flex-1 flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-4xl mx-auto w-full">
@@ -270,7 +272,15 @@ export default function ProfilePage() {
         <div className="flex-1 text-center sm:text-left">
           <div className="flex flex-col sm:flex-row sm:items-start gap-2">
             <div>
-              <h1 className="text-2xl font-semibold text-foreground">{displayName}</h1>
+              <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+                <h1 className="text-2xl font-semibold text-foreground">{displayName}</h1>
+                {level > 0 && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-zinc-800/80 border border-zinc-700/50 text-[11px] font-bold text-zinc-400">
+                    <Trophy className="size-3 text-warning" />
+                    Lv.{level}
+                  </span>
+                )}
+              </div>
               {badgeIds.length > 0 && (
                 <BadgeList ids={badgeIds} max={3} className="mt-1.5 justify-center sm:justify-start" />
               )}
@@ -380,19 +390,9 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Achievement Showcase */}
-      {(profile.showcasedBadges?.length > 0) && (
-        <ShowcasedBadges
-          badges={profile.showcasedBadges}
-          maxSlots={profile.showcasedBadges?.length ?? 0}
-          locale={undefined}
-          className="mb-6"
-        />
-      )}
-
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-border">
-        {['projects', 'playlists'].map((tab) => (
+        {['projects', 'playlists', 'showcase'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -433,6 +433,40 @@ export default function ProfilePage() {
 
       {activeTab === 'playlists' && (
         <PlaylistGrid accountName={profile.accountName} isOwner={isOwner} />
+      )}
+
+      {activeTab === 'showcase' && (
+        <div className="flex flex-col gap-6">
+          {(profile.showcasedBadges?.length > 0) ? (
+            <ShowcasedBadges
+              badges={profile.showcasedBadges}
+              maxSlots={profile.showcasedBadges.length}
+              className=""
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <Trophy className="size-10 text-zinc-700" />
+              <p className="text-sm text-zinc-500">{t('badges.showcase.noShowcase', 'No badges showcased yet')}</p>
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/settings/profile')}
+                  className="text-xs text-primary hover:text-primary/70 transition-colors"
+                >
+                  {t('badges.showcase.goSetup', 'Set up your showcase →')}
+                </button>
+              )}
+            </div>
+          )}
+          {badgeIds.length > 0 && (
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600 mb-3">{t('badges.showcase.allBadges', 'All Badges')}</p>
+              <div className="flex flex-wrap gap-2">
+                {badgeIds.map(id => <BadgeChip key={id} id={id} />)}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {followModal && profile.showFollowers && (
