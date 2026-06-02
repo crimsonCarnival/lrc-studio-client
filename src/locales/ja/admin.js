@@ -17,6 +17,7 @@ export default {
       ipBlocklist: 'IP管理',
       deviceBlocklist: 'デバイス管理',
       auditLogs: '監査履歴',
+      badges: 'バッジ',
     },
     filters: {
       filterByRole: 'ロールで絞り込む',

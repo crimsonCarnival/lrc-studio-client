@@ -17,6 +17,7 @@ export default {
       ipBlocklist: 'Control de IP',
       deviceBlocklist: 'Control de Dispositivo',
       auditLogs: 'Historial de Auditoría',
+      badges: 'Insignias',
     },
     filters: {
       filterByRole: 'Filtrar por rol',

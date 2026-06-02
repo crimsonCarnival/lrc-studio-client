@@ -17,6 +17,7 @@ export default {
       ipBlocklist: 'IP Manager',
       deviceBlocklist: 'Device Manager',
       auditLogs: 'Audit History',
+      badges: 'Badges',
     },
     filters: {
       filterByRole: 'Filter by role',
