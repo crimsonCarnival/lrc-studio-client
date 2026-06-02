@@ -39,7 +39,7 @@ export function useSettingsModal(isOpen, onClose, globalSettings, updateAllSetti
     (key, value) => {
       setSettings((prev) => {
         const keys = key.split('.');
-        const nextSettings = JSON.parse(JSON.stringify(prev));
+        const nextSettings = structuredClone(prev);
         let current = nextSettings;
         for (let i = 0; i < keys.length - 1; i++) {
           if (!current[keys[i]]) current[keys[i]] = {};

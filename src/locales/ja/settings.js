@@ -8,6 +8,12 @@ export default {
   applyChanges: "変更を適用",
   unsavedChanges: "未保存の変更",
 
+  groups: {
+    account: 'アカウント',
+    preferences: '設定',
+    advanced: '詳細',
+  },
+
   connections: {
     label: "接続"
   },

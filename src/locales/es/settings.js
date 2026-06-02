@@ -8,6 +8,12 @@ export default {
   applyChanges: "Aplicar Cambios",
   unsavedChanges: "Cambios sin guardar",
 
+  groups: {
+    account: 'Cuenta',
+    preferences: 'Preferencias',
+    advanced: 'Avanzado',
+  },
+
   connections: {
     label: "Conexiones"
   },

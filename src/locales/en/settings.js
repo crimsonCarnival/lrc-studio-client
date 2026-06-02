@@ -8,6 +8,12 @@ export default {
   applyChanges: "Apply Changes",
   unsavedChanges: "Unsaved changes",
 
+  groups: {
+    account: 'Account',
+    preferences: 'Preferences',
+    advanced: 'Advanced',
+  },
+
   connections: {
     label: "Connections"
   },

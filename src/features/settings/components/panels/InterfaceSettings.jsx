@@ -2,7 +2,58 @@ import { useTranslation } from 'react-i18next';
 import { Section, SettingRow, Toggle } from '../shared';
 import { useInterfaceSettings } from '../../hooks/useInterfaceSettings';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { Monitor, Moon, Sparkles, Globe, ScrollText, AlignCenter, AlignLeft, Type, Rows2, LayoutList, ChevronDown, Columns, BookOpen, Lock, Bell, Palette, Music, Contrast } from 'lucide-react';
+import { Monitor, Moon, Sparkles, Globe, ScrollText, AlignCenter, AlignLeft, Type, Rows2, LayoutList, ChevronDown, Columns, BookOpen, Lock, Bell, Palette, Music, Contrast, Check } from 'lucide-react';
+
+const THEMES = [
+  { id: 'dark',   name: 'Moon',   bars: ['#232136','#c4a7e7','#9ccfd8'], bg: '#1a1826' },
+  { id: 'light',  name: 'Dawn',   bars: ['#fffaf3','#b4637a','#286983'], bg: '#faf4ed', light: true },
+  { id: 'cobalt', name: 'Cobalt', bars: ['#0F0D28','#2F2FE4','#4F9FFF'], bg: '#080616' },
+  { id: 'velvet', name: 'Velvet', bars: ['#280a30','#A64D79','#dea0c0'], bg: '#180a1e' },
+  { id: 'sage',   name: 'Sage',   bars: ['#182d1d','#5C8374','#9dc8bb'], bg: '#0c1710' },
+  { id: 'system', name: 'System', bars: null, bg: null },
+];
+
+function ThemeSwatch({ theme, active, onSelect }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(theme.id)}
+      className={`relative rounded-xl overflow-hidden border-2 transition-all duration-150 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+        active ? 'border-primary shadow-[0_0_0_1px_rgba(196,167,231,.2)]' : 'border-transparent hover:border-zinc-600/50'
+      }`}
+    >
+      {/* Preview */}
+      <div
+        className="h-[48px] flex items-end gap-[3px] p-[7px]"
+        style={{ background: theme.bg ?? 'transparent' }}
+      >
+        {theme.bars ? (
+          theme.bars.map((c, i) => (
+            <div key={i} className="flex-1 rounded-[3px]" style={{ background: c, height: `${65 + i * 15}%` }} />
+          ))
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <Monitor className="size-4 text-zinc-500" />
+          </div>
+        )}
+      </div>
+      {/* Label */}
+      <div
+        className={`text-[10.5px] font-medium text-center py-[5px] ${
+          theme.light ? 'bg-black/[0.06] text-[#575279]' : 'bg-black/25 text-zinc-400'
+        } ${active ? 'text-primary' : ''}`}
+      >
+        {theme.name}
+      </div>
+      {/* Active checkmark */}
+      {active && (
+        <div className="absolute top-[5px] right-[5px] size-4 rounded-full bg-primary flex items-center justify-center">
+          <Check className="size-2.5 text-zinc-950" strokeWidth={3} />
+        </div>
+      )}
+    </button>
+  );
+}
 
 export default function InterfaceSettings({ settings, updateSetting, searchTerm }) {
   const { t } = useTranslation();
@@ -22,24 +73,20 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
   return (
     <>
       <Section title={t('settings.interface.generalSection') || 'General'} icon={Monitor} searchTerm={searchTerm}>
-        <SettingRow icon={Moon} label={t('settings.interface.theme')} description={t('settings.interface.themeDesc')}>
-          <Select
-            value={settings.interface?.theme ?? 'dark'}
-            onValueChange={(val) => handleThemeChange({ target: { value: val } })}
-          >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-700">
-              <SelectItem value="dark">{t('settings.options.themes.dark')}</SelectItem>
-              <SelectItem value="light">{t('settings.options.themes.light')}</SelectItem>
-              <SelectItem value="cobalt">{t('settings.options.themes.cobalt')}</SelectItem>
-              <SelectItem value="velvet">{t('settings.options.themes.velvet')}</SelectItem>
-              <SelectItem value="sage">{t('settings.options.themes.sage')}</SelectItem>
-              <SelectItem value="system">{t('settings.options.themes.system')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </SettingRow>
+        {/* Theme — full-width swatch grid, not a SettingRow */}
+        <div className="px-5 py-4 [&+*]:border-t [&+*]:border-border/40">
+          <p className="text-[11.5px] font-semibold text-zinc-400 mb-3">{t('settings.interface.theme')}</p>
+          <div className="grid grid-cols-3 gap-2.5">
+            {THEMES.map(theme => (
+              <ThemeSwatch
+                key={theme.id}
+                theme={theme}
+                active={(settings.interface?.theme ?? 'dark') === theme.id}
+                onSelect={(val) => handleThemeChange({ target: { value: val } })}
+              />
+            ))}
+          </div>
+        </div>
         <SettingRow icon={Globe} label={t('settings.interface.language')} description={t('settings.interface.languageDesc')}>
           <Select
             value={settings.interface?.defaultLanguage ?? 'en'}
