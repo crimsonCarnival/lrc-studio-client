@@ -73,9 +73,9 @@ function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop 
         onDrop={() => onDrop(index)}
       >
         <div className="size-7 rounded-lg bg-zinc-800/60 flex items-center justify-center">
-          <span className="text-zinc-700 text-xs font-bold">{index + 1}</span>
+          <span className="text-zinc-500 text-xs font-bold">{index + 1}</span>
         </div>
-        <span className="text-[10px] text-zinc-700 uppercase tracking-widest">{t('badges.showcase.emptySlot', 'Empty')}</span>
+        <span className="text-[10px] text-zinc-500 uppercase tracking-widest">{t('badges.showcase.emptySlot', 'Empty')}</span>
       </div>
     );
   }
@@ -206,7 +206,7 @@ export function ShowcaseEditor({ userBadges = [], initialShowcase = [], initialP
         {/* Left: Earned badges */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 mr-1">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mr-1">
               {t('badges.showcase.earned', 'Earned')} ({userBadges.length})
             </p>
             {['all', 'legendary', 'epic', 'rare', 'uncommon', 'common'].map(r => (
@@ -254,7 +254,7 @@ export function ShowcaseEditor({ userBadges = [], initialShowcase = [], initialP
 
         {/* Right: Showcase slots */}
         <div className="flex flex-col gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
             {t('badges.showcase.displayedOn', 'Displayed on profile')}
           </p>
           <div className="flex flex-col gap-1.5">
@@ -274,8 +274,8 @@ export function ShowcaseEditor({ userBadges = [], initialShowcase = [], initialP
           {/* Locked slots */}
           {nextUnlock && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-zinc-800/50 opacity-40">
-              <Lock className="size-3 text-zinc-700" />
-              <span className="text-[10px] text-zinc-700">
+              <Lock className="size-3 text-zinc-500" />
+              <span className="text-[10px] text-zinc-500">
                 {t('badges.showcase.lockedSlot', { level: nextUnlock.level, slots: nextUnlock.slots })}
               </span>
             </div>
