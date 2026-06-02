@@ -98,6 +98,12 @@ export const authService = {
           hasPassword
           spotify { connected spotifyId isPremium profilePictureUrl }
           google { connected googleId email name pictureUrl }
+          showFollowers
+          badges { id grantedAt grantedBy }
+          showcasedBadges
+          minutesSynced wordsSynced karaokeLines
+          currentStreak longestStreak
+          level xp showcaseSlots
         }
       }
     `);
