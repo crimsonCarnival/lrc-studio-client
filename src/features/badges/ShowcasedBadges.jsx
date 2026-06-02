@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { m as M, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import { enUS, es, ja } from 'date-fns/locale';
 import { BADGE_REGISTRY, RARITY_CONFIG, BADGE_COLORS } from './badge-registry';
@@ -158,25 +157,11 @@ export function ShowcasedBadges({ badges = [], maxSlots = 3, locale = 'en', clas
         {t('badges.showcase.title', 'Showcase')}
       </p>
       <div className="flex gap-2 flex-wrap pb-2">
-        <AnimatePresence>
-          {slots.map((badge, i) =>
-            badge ? (
-              <M.div
-                key={badge.id}
-                initial={{ opacity: 0, y: 8, scale: 0.92 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.88 }}
-                transition={{ duration: 0.2, delay: i * 0.06 }}
-              >
-                <ShowcaseCard badge={badge} locale={locale} />
-              </M.div>
-            ) : (
-              <M.div key={`empty-${i}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}>
-                <EmptySlot slotIndex={i} />
-              </M.div>
-            )
-          )}
-        </AnimatePresence>
+        {slots.map((badge, i) =>
+          badge
+            ? <ShowcaseCard key={badge.id} badge={badge} locale={locale} />
+            : <EmptySlot key={`empty-${i}`} slotIndex={i} />
+        )}
       </div>
     </section>
   );
