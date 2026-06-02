@@ -48,6 +48,10 @@ export default {
   claimAlreadyClaimed: "Project is already linked to your account.",
   claimFailed: "Could not link draft to your account. Please save again.",
   claimNetworkError: "Network error while saving. Check your connection.",
+  updateSuccess: "Project updated",
+  updateError: "Failed to update project",
+  deleteSuccess: "Project deleted",
+  deleteError: "Failed to delete project",
   transactions: {
     saveFailure: "Save failed. Retrying...",
     rollbackError: "Error occurred; changes rolled back.",

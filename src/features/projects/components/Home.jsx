@@ -1,23 +1,27 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, es, ja } from 'date-fns/locale';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projects } from '@/app/api';
-import { Music2, Video, Plus, Search, Play, ChevronRight, Activity, Library as LibraryIcon } from 'lucide-react';
+import { Music2, Video, Plus, Search, Play, ChevronRight, Activity, Library as LibraryIcon, Compass, Trophy, Rss } from 'lucide-react';
 import ProjectSetupModal from '@features/editor/components/setup/ProjectSetupModal';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 
-function formatRelativeTime(dateStr, t, locale = 'en') {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return t('library.justNow') || 'Just now';
-  if (mins < 60) return t('library.minutesAgo', { count: mins }) || `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return t('library.hoursAgo', { count: hours }) || `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return t('library.daysAgo', { count: days }) || `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString(locale);
+const DATE_FNS_LOCALES = { en: enUS, es, ja };
+
+function formatRelativeTime(dateStr, locale = 'en') {
+  try {
+    return formatDistanceToNow(new Date(dateStr), {
+      addSuffix: true,
+      locale: DATE_FNS_LOCALES[locale] ?? enUS,
+    });
+  } catch {
+    return '';
+  }
 }
 
 
@@ -177,28 +181,81 @@ export default function Home() {
               ))}
             </div>
           ) : items.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center gap-4">
-              {/* Ambient waveform empty state */}
-              <div className="flex items-end gap-0.5 h-12 opacity-20">
-                {Array.from({ length: 24 }, (_, i) => (
-                  <div
-                    key={i}
-                    className="w-1 rounded-full bg-primary"
-                    style={{
-                      height: `${25 + 65 * Math.abs(Math.sin(i * 0.6))}%`,
-                      animation: reducedMotion ? 'none' : `waveBar ${1 + (i % 4) * 0.2}s ease-in-out ${i * 0.04}s infinite`,
-                    }}
-                  />
-                ))}
+            <div className="flex-1 flex flex-col gap-5 py-2 overflow-y-auto">
+              {/* Waveform + CTA */}
+              <div className="flex flex-col items-center justify-center text-center gap-3 py-6 glass rounded-2xl">
+                <div className="flex items-end gap-0.5 h-10 opacity-25">
+                  {Array.from({ length: 20 }, (_, i) => (
+                    <div
+                      key={i}
+                      className="w-1 rounded-full bg-primary"
+                      style={{
+                        height: `${25 + 65 * Math.abs(Math.sin(i * 0.6))}%`,
+                        animation: reducedMotion ? 'none' : `waveBar ${1 + (i % 4) * 0.2}s ease-in-out ${i * 0.04}s infinite`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <p className="text-sm text-zinc-500 contrast-more:text-zinc-300">{t('home.noProjects')}</p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/project/new')}
+                  className="text-xs text-primary hover:text-primary/70 transition-colors font-medium"
+                >
+                  {t('home.createNew')} →
+                </button>
               </div>
-              <p className="text-sm text-zinc-500 contrast-more:text-zinc-300">{t('home.noProjects')}</p>
-              <button
-                type="button"
-                onClick={() => navigate('/project/new')}
-                className="text-xs text-primary hover:text-primary/70 contrast-more:text-primary transition-colors font-medium"
-              >
-                {t('home.createNew')} →
-              </button>
+
+              {/* Discovery shortcuts */}
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-2 px-0.5">{t('home.discover')}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/explore')}
+                    className="group glass rounded-xl p-3.5 text-left hover:border-primary/40 transition-all flex items-center gap-3 focus:ring-1 focus:ring-primary/30 outline-none overflow-hidden"
+                  >
+                    <ThemedShineBorder />
+                    <div className="size-8 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
+                      <Compass className="size-4 text-primary" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('explore.nav')}</span>
+                      <span className="text-[10px] text-zinc-600 leading-snug">{t('home.exploreSub')}</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/leaderboard')}
+                    className="group glass rounded-xl p-3.5 text-left hover:border-warning/30 transition-all flex items-center gap-3 focus:ring-1 focus:ring-warning/20 outline-none overflow-hidden"
+                  >
+                    <ThemedShineBorder />
+                    <div className="size-8 shrink-0 rounded-lg bg-warning/10 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
+                      <Trophy className="size-4 text-warning" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('badges.leaderboard.title')}</span>
+                      <span className="text-[10px] text-zinc-600 leading-snug">{t('home.leaderboardSub')}</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/feed')}
+                    className="group glass rounded-xl p-3.5 text-left hover:border-accent-blue/30 transition-all flex items-center gap-3 focus:ring-1 focus:ring-accent-blue/20 outline-none overflow-hidden"
+                  >
+                    <ThemedShineBorder />
+                    <div className="size-8 shrink-0 rounded-lg bg-accent-blue/10 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
+                      <Rss className="size-4 text-accent-blue" />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('feed.title')}</span>
+                      <span className="text-[10px] text-zinc-600 leading-snug">{t('home.feedSub')}</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
             </div>
           ) : filteredProjects.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
@@ -248,7 +305,7 @@ export default function Home() {
                             {project.title || t('library.untitled')}
                           </h3>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-zinc-700">{formatRelativeTime(project.updatedAt, t, i18n.resolvedLanguage || i18n.language)}</span>
+                            <span className="text-[10px] text-zinc-700">{formatRelativeTime(project.updatedAt, (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
                             <span className="size-0.5 rounded-full bg-zinc-800 shrink-0" />
                             <span className="text-[10px] text-zinc-700 flex items-center gap-0.5">
                               <Activity className="size-2.5" />
@@ -296,8 +353,8 @@ export default function Home() {
                 : p
             ));
             setEditingProject(null);
-          } catch (err) {
-            console.error('Failed to update project metadata:', err);
+          } catch {
+            toast.error(t('project.updateError'));
           }
         }}
         initialName={editingProject?.title || ''}

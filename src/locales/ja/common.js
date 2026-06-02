@@ -29,5 +29,8 @@ export default {
   pagination: {
     previous: "前へ",
     next: "次へ"
-  }
+  },
+  loadMore: "さらに読み込む",
+  retry: "再試行",
+  loadError: "読み込みに失敗しました。もう一度お試しください。"
 };

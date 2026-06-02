@@ -29,5 +29,8 @@ export default {
   pagination: {
     previous: "Previous",
     next: "Next"
-  }
+  },
+  loadMore: "Load more",
+  retry: "Retry",
+  loadError: "Failed to load. Please try again."
 };

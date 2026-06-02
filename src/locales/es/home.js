@@ -77,5 +77,9 @@ export default {
   ytNoResults: "No se encontraron resultados. Intenta con una búsqueda diferente.",
   ytSearchPrompt: "Busca una canción o pega una URL de YouTube arriba",
   viewLibrary: "Biblioteca de Proyectos",
-  viewLibraryDesc: "Administra y organiza todos tus proyectos de sincronización guardados."
+  viewLibraryDesc: "Administra y organiza todos tus proyectos de sincronización guardados.",
+  discover: "Descubrir",
+  exploreSub: "Proyectos y listas en tendencia",
+  leaderboardSub: "Los mejores creadores del leaderboard",
+  feedSub: "Actividad de personas que sigues",
 };

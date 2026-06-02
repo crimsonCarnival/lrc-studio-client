@@ -40,6 +40,10 @@ export default {
   claimAlreadyClaimed: "プロジェクトはすでにアカウントに保存されています。",
   claimFailed: "下書きをアカウントに紐付けできませんでした。もう一度保存してください。",
   claimNetworkError: "下書きの保存中にネットワークエラーが発生しました。接続を確認してもう一度お試しください。",
+  updateSuccess: "プロジェクトを更新しました",
+  updateError: "プロジェクトの更新に失敗しました",
+  deleteSuccess: "プロジェクトを削除しました",
+  deleteError: "プロジェクトの削除に失敗しました",
   transactions: {
     saveFailure: "プロジェクトの保存に失敗しました。もう一度お試しください。",
     rollbackError: "エラーが発生し、変更がロールバックされました。",

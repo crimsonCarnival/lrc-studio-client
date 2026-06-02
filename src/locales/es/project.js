@@ -40,6 +40,10 @@ export default {
   claimAlreadyClaimed: "Proyecto ya guardado en tu cuenta.",
   claimFailed: "No se pudo vincular tu borrador a tu cuenta. Por favor, guarda de nuevo.",
   claimNetworkError: "Error de red al guardar tu borrador. Comprueba tu conexión e inténtalo de nuevo.",
+  updateSuccess: "Proyecto actualizado",
+  updateError: "Error al actualizar el proyecto",
+  deleteSuccess: "Proyecto eliminado",
+  deleteError: "Error al eliminar el proyecto",
   transactions: {
     saveFailure: "Error al guardar el proyecto. Por favor, inténtalo de nuevo.",
     rollbackError: "Se produjo un error y tus cambios fueron revertidos.",

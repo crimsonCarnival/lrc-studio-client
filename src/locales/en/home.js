@@ -69,5 +69,9 @@ export default {
   ytNoResults: "No results found. Try a different query.",
   ytSearchPrompt: "Search for a song or paste a YouTube URL above",
   viewLibrary: "Project Library",
-  viewLibraryDesc: "Manage and organize all your saved synchronization projects."
+  viewLibraryDesc: "Manage and organize all your saved synchronization projects.",
+  discover: "Discover",
+  exploreSub: "Trending projects & playlists",
+  leaderboardSub: "Top creators by sync time",
+  feedSub: "Activity from people you follow",
 };

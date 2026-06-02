@@ -77,5 +77,9 @@ export default {
   ytNoResults: "結果が見つかりません。別のキーワードで検索してください。",
   ytSearchPrompt: "曲を検索するか、上にYouTubeのURLを貼り付けてください",
   viewLibrary: "プロジェクトライブラリ",
-  viewLibraryDesc: "保存されたすべての同期プロジェクトを管理および整理します。"
+  viewLibraryDesc: "保存されたすべての同期プロジェクトを管理および整理します。",
+  discover: "発見",
+  exploreSub: "トレンドのプロジェクト＆プレイリスト",
+  leaderboardSub: "同期時間トップクリエイター",
+  feedSub: "フォロー中のユーザーのアクティビティ",
 };
