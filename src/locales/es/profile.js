@@ -112,6 +112,7 @@ export default {
   publicTabs: {
     projects: "Proyectos",
     playlists: "Listas",
+    showcase:  "Vitrina",
   },
   notFound: "Usuario no encontrado.",
   notFoundSub: "Este perfil no existe o puede haber sido eliminado.",
