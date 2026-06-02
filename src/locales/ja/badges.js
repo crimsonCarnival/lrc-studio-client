@@ -38,6 +38,8 @@ export default {
     saveError:       'ショーケースの保存に失敗しました',
     noBadgesYet:     'バッジを獲得してショーケースに表示しましょう',
     noBadgesFilter:  'このフィルターに一致するバッジがありません',
+    emptySlot:       '空きスロット',
+    filterAll:       'すべて',
     slots:           '{{count}} / {{max}} スロット使用中',
     slotsFull:       '{{slots}} スロットすべて使用済みです',
     nextSlot:        'レベル {{level}} でスロット4を解除',

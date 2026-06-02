@@ -81,6 +81,7 @@ function TiltCard({ children, className = '' }) {
 }
 
 function ShowcaseCard({ badge, locale = 'en' }) {
+  const { t } = useTranslation();
   const def = BADGE_REGISTRY[badge.id] ?? { label: badge.label, icon: badge.icon, color: badge.color };
   const rarity = badge.rarity ?? 'common';
   const rarityConf = RARITY_CONFIG[rarity] ?? RARITY_CONFIG.common;
@@ -115,7 +116,7 @@ function ShowcaseCard({ badge, locale = 'en' }) {
 
         {/* Rarity pill */}
         <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${rarityConf.className}`}>
-          {rarityConf.label}
+          {t(`badges.rarity.${rarity}`, rarityConf.label)}
         </span>
 
         {/* Unlock date */}

@@ -37,6 +37,8 @@ export default {
     saveError:       'Error al guardar la vitrina',
     noBadgesYet:     'Gana insignias para mostrarlas',
     noBadgesFilter:  'No hay insignias con este filtro',
+    emptySlot:       'Vacío',
+    filterAll:       'Todas',
     slots_one:       '{{count}} / {{max}} espacio usado',
     slots_other:     '{{count}} / {{max}} espacios usados',
     slotsFull_one:   'Usaste el {{slots}} espacio disponible',

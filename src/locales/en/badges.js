@@ -40,6 +40,8 @@ export default {
     saveError:   'Failed to save showcase',
     noBadgesYet: 'Earn badges to showcase them',
     noBadgesFilter: 'No badges match this filter',
+    emptySlot:  'Empty',
+    filterAll:  'All',
     // Pluralized: "3 / 5 slots used"
     slots_one:   '{{count}} / {{max}} slot used',
     slots_other: '{{count}} / {{max}} slots used',

@@ -28,6 +28,7 @@ function rarityOf(pct) {
 }
 
 function EarnedBadgeItem({ badge, isInShowcase, onToggle }) {
+  const { t } = useTranslation();
   const def = BADGE_REGISTRY[badge.id] ?? { label: badge.id, icon: '?', color: 'primary' };
   const colorConf = BADGE_COLORS[def.color] ?? BADGE_COLORS.primary;
   const rarity = badge.rarity ?? rarityOf(badge.rarityPct ?? 100);
@@ -51,7 +52,7 @@ function EarnedBadgeItem({ badge, isInShowcase, onToggle }) {
         <p className="text-[10px] text-zinc-600 truncate">{def.condition}</p>
       </div>
       <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full border shrink-0 ${rarityConf.className}`}>
-        {rarityConf.label}
+        {t(`badges.rarity.${rarity}`, rarityConf.label)}
       </span>
       {isInShowcase && (
         <div className="size-4 rounded-full bg-primary flex items-center justify-center shrink-0">
@@ -63,6 +64,7 @@ function EarnedBadgeItem({ badge, isInShowcase, onToggle }) {
 }
 
 function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop }) {
+  const { t } = useTranslation();
   if (!badge) {
     return (
       <div
@@ -73,7 +75,7 @@ function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop 
         <div className="size-7 rounded-lg bg-zinc-800/60 flex items-center justify-center">
           <span className="text-zinc-700 text-xs font-bold">{index + 1}</span>
         </div>
-        <span className="text-[10px] text-zinc-700 uppercase tracking-widest">Empty slot</span>
+        <span className="text-[10px] text-zinc-700 uppercase tracking-widest">{t('badges.showcase.emptySlot', 'Empty')}</span>
       </div>
     );
   }
@@ -225,7 +227,7 @@ export function ShowcaseEditor({ userBadges = [], initialShowcase = [], showcase
                     : 'border-zinc-800 text-zinc-700 hover:text-zinc-500 hover:border-zinc-700'
                   }`}
               >
-                {r === 'all' ? 'All' : RARITY_CONFIG[r]?.label ?? r}
+                {r === 'all' ? t('badges.showcase.filterAll', 'All') : t(`badges.rarity.${r}`, RARITY_CONFIG[r]?.label ?? r)}
               </button>
             ))}
           </div>
