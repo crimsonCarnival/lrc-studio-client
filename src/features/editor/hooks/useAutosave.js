@@ -227,8 +227,15 @@ export function useAutosave({
         }
       }
 
+      const GENERIC_TITLES = ['Sin título', 'Untitled', '無題'];
+      const derivedTitle = (() => {
+        if (mediaTitle && !GENERIC_TITLES.includes(mediaTitle)) return mediaTitle;
+        const { songName, songArtist } = projectMetadata || {};
+        if (songName) return songArtist ? `${songName} - ${songArtist}` : songName;
+        return mediaTitle || '';
+      })();
       const createData = {
-        title: mediaTitle || '',
+        title: derivedTitle,
         metadata: projectMetadata,
         lyrics: { editorMode, lines: payload.lines },
         state: {

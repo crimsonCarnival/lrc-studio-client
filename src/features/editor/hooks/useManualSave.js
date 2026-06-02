@@ -25,8 +25,8 @@ function toLocalISOString(date, utcOffset) {
   return local.toISOString().replace('Z', utcOffset);
 }
 
-const deepEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-const cloneValue = (v) => JSON.parse(JSON.stringify(v));
+import deepEqual from 'fast-deep-equal';
+const cloneValue = (v) => structuredClone(v);
 
 function buildLyricsPatch(prev, nextMode, nextLines) {
   if (!prev) return { editorMode: nextMode, lines: nextLines };
@@ -154,6 +154,11 @@ export function useManualSave({
     const payload = buildProjectPayload();
     const finalMetadata = overrides.metadata !== undefined ? overrides.metadata : projectMetadata;
     let finalTitle = overrides.title !== undefined ? overrides.title : (mediaTitle || '');
+    const GENERIC_TITLES = ['Sin título', 'Untitled', '無題'];
+    if (!finalTitle || GENERIC_TITLES.includes(finalTitle)) {
+      const { songName, songArtist } = finalMetadata || {};
+      if (songName) finalTitle = songArtist ? `${songName} - ${songArtist}` : songName;
+    }
     if (overrides.isPublic !== undefined) payload.public = overrides.isPublic;
     if (overrides.lines !== undefined) payload.lines = overrides.lines;
     if (overrides.editorMode !== undefined) payload.editorMode = overrides.editorMode;
