@@ -2,7 +2,9 @@
   "compilerOptions": {
     "ignoreDeprecations": "5.0",
     "allowJs": true,
-    "jsx": "react",
+    "checkJs": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "bundler",
@@ -14,7 +16,11 @@
       "@services/*": ["./src/services/*"],
       "@ui/*": ["./src/ui/*"],
       "@shared/*": ["./src/shared/*"]
-    }
+    },
+    "strict": false,
+    "strictNullChecks": true,
+    "noImplicitAny": false,
+    "skipLibCheck": true
   },
   "include": ["src"]
 }

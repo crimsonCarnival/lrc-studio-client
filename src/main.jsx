@@ -26,6 +26,7 @@ function LanguageSync() {
 }
 import { AuthProvider, useAuthContext } from '@/features/auth/AuthContext.jsx'
 import { Spinner } from '@ui/skeleton'
+import { LoadingSpinner } from '@ui/LoadingSpinner'
 import { AppProviders } from './app/AppProviders';
 import { useSettings } from '@/features/settings/useSettings';
 import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
@@ -68,7 +69,7 @@ function SharedProjectRoute() {
   );
   if (!projectId) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="size-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      <LoadingSpinner size="sm" />
     </div>
   );
   return <Navigate to={`/project/${projectId}`} replace />;
