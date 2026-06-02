@@ -1,20 +1,22 @@
-import { X, Star, GitFork, UserPlus, ShieldCheck, Lock, KeyRound, Ban, Smile } from 'lucide-react';
+import { X, Star, GitFork, UserPlus, ShieldCheck, Lock, KeyRound, Ban, Smile, Award } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { LazyImage } from '@ui/LazyImage';
 import { useNotificationsContext } from '../NotificationsContext';
 import { formatTimeAgo } from '../timeAgo';
+import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
 
 const TYPE_ICON = {
-  star: Star,
-  fork: GitFork,
-  follow: UserPlus,
-  reaction: Smile,
-  admin_granted: ShieldCheck,
+  star:             Star,
+  fork:             GitFork,
+  follow:           UserPlus,
+  reaction:         Smile,
+  admin_granted:    ShieldCheck,
   password_changed: Lock,
-  set_password: KeyRound,
-  verify_email: KeyRound,
-  ban: Ban,
+  set_password:     KeyRound,
+  verify_email:     KeyRound,
+  ban:              Ban,
+  badge_awarded:    Award,
 };
 
 function notificationDestination(notification) {
@@ -24,6 +26,7 @@ function notificationDestination(notification) {
   if (type === 'admin_granted') return '/admin';
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';
   if (type === 'verify_email') return '/settings/profile';
+  if (type === 'badge_awarded') return '/settings/profile';
   return null;
 }
 
@@ -57,6 +60,12 @@ function NotificationText({ notification, t }) {
   if (type === 'admin_granted') return <span>{t('notifications.adminGranted')}</span>;
   if (type === 'ban') return <span>{t('notifications.banned')}</span>;
   if (type === 'password_changed') return <span>{t('notifications.passwordChanged')}</span>;
+  if (type === 'badge_awarded') {
+    const def = body ? BADGE_REGISTRY[body] : null;
+    const label = def ? t(`badges.${body}.label`, def.label) : (body ?? '');
+    const icon = def?.icon ?? '🏅';
+    return <span>{icon} {t('notifications.badgeUnlocked')} <strong>{label}</strong></span>;
+  }
   return <span>{body || ''}</span>;
 }
 
@@ -77,9 +86,10 @@ function NotificationAvatar({ notification }) {
 
   const Icon = TYPE_ICON[type];
   if (!Icon) return null;
+  const isBadge = type === 'badge_awarded';
   return (
-    <div className="w-8 h-8 rounded-full bg-primary/10 shrink-0 flex items-center justify-center">
-      <Icon size={14} className="text-primary" aria-hidden="true" />
+    <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center ${isBadge ? 'bg-amber-400/10' : 'bg-primary/10'}`}>
+      <Icon size={14} className={isBadge ? 'text-amber-400' : 'text-primary'} aria-hidden="true" />
     </div>
   );
 }

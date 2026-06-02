@@ -3,15 +3,18 @@ import { useNotificationsContext } from '../NotificationsContext';
 import { NotificationStickySection } from './NotificationStickySection';
 import { NotificationItem } from './NotificationItem';
 
-const SOCIAL_TYPES = new Set(['star', 'fork', 'follow']);
-const SYSTEM_TYPES = new Set(['system', 'admin', 'ban', 'password_changed', 'admin_granted']);
-const STICKY_TYPES = new Set(['verify_email', 'set_password']);
+const SOCIAL_TYPES  = new Set(['star', 'fork', 'follow', 'reaction']);
+const BADGE_TYPES   = new Set(['badge_awarded']);
+const SYSTEM_TYPES  = new Set(['system', 'admin', 'ban', 'password_changed', 'admin_granted']);
+const STICKY_TYPES  = new Set(['verify_email', 'set_password']);
 
 function SectionLabel({ label, variant = 'default' }) {
+  const color =
+    variant === 'action' ? 'text-primary' :
+    variant === 'badge'  ? 'text-amber-400' :
+    'text-zinc-500';
   return (
-    <p className={`px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest ${
-      variant === 'action' ? 'text-primary' : 'text-zinc-500'
-    }`}>
+    <p className={`px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest ${color}`}>
       {label}
     </p>
   );
@@ -21,10 +24,11 @@ export function NotificationPanel() {
   const { t } = useTranslation();
   const { notifications, markAllRead } = useNotificationsContext();
 
-  const sticky = notifications.filter(n => STICKY_TYPES.has(n.type));
+  const sticky  = notifications.filter(n => STICKY_TYPES.has(n.type));
+  const badges  = notifications.filter(n => BADGE_TYPES.has(n.type));
   const social  = notifications.filter(n => SOCIAL_TYPES.has(n.type));
   const system  = notifications.filter(n => SYSTEM_TYPES.has(n.type));
-  const hasAny  = sticky.length + social.length + system.length > 0;
+  const hasAny  = sticky.length + badges.length + social.length + system.length > 0;
 
   return (
     <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-zinc-800/60 bg-zinc-900 shadow-2xl z-50 overflow-hidden">
@@ -47,6 +51,13 @@ export function NotificationPanel() {
           <>
             <SectionLabel label={t('notifications.sectionActionRequired')} variant="action" />
             <NotificationStickySection notifications={sticky} />
+          </>
+        )}
+
+        {badges.length > 0 && (
+          <>
+            <SectionLabel label={t('notifications.sectionBadges')} variant="badge" />
+            {badges.map(n => <NotificationItem key={n._id} notification={n} />)}
           </>
         )}
 
