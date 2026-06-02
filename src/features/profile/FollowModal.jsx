@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { LazyImage } from '@ui/LazyImage';
+import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { getFollowList, followUser, unfollowUser } from './profile.service';
 
@@ -96,7 +97,7 @@ export function FollowModal({ accountName, type, onClose }) {
 
         {loading ? (
           <div className="flex justify-center py-8">
-            <div className="size-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            <LoadingSpinner size="sm" />
           </div>
         ) : users.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">

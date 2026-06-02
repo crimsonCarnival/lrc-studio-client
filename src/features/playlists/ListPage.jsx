@@ -11,6 +11,7 @@ import {
   unsavePlaylist,
 } from './playlist.service';
 import { PlaylistModal } from './PlaylistModal';
+import { LoadingSpinner } from '@ui/LoadingSpinner';
 
 export default function ListPage() {
   const { accountName, listId } = useParams();
@@ -79,7 +80,7 @@ export default function ListPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <LoadingSpinner size="md" />
       </div>
     );
   }

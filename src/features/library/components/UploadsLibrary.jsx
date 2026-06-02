@@ -8,8 +8,8 @@ import { useSettings } from '@/features/settings/useSettings';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
-import { Cloud, Video, Trash2, Loader2, Music2, Clock, Edit2, Check, X } from 'lucide-react';
-import { SkeletonCard } from '@ui/skeleton';
+import { Cloud, Video, Trash2, Loader2, Music2, Clock, Edit2, Check, X, AlertCircle } from 'lucide-react';
+import { LoadingSpinner } from '@ui/LoadingSpinner';
 import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import toast from 'react-hot-toast';
 import useConfirm from '@/shared/hooks/useConfirm';
@@ -34,6 +34,7 @@ export default function UploadsLibrary({ onSelect }) {
   const timezone = settings.advanced?.timezone;
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [requestConfirm, confirmModal] = useConfirm();
   const { dt } = useDynamicTranslation();
   const [editingId, setEditingId] = useState(null);
@@ -43,11 +44,12 @@ export default function UploadsLibrary({ onSelect }) {
   const [deletingId, setDeletingId] = useState(null);
 
   const fetchUploads = useCallback(async () => {
+    setError(false);
     try {
       const uploads = await uploadsApi.listMedia();
       setItems(uploads || []);
     } catch {
-      setItems([]);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -130,10 +132,18 @@ export default function UploadsLibrary({ onSelect }) {
 
       {/* Content */}
       {loading ? (
-        <div className="flex-1 space-y-2 animate-fade-in">
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
+        <div className="flex-1 flex items-center justify-center">
+          <LoadingSpinner size="md" />
+        </div>
+      ) : error ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
+          <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
+            <AlertCircle className="size-7 text-zinc-500" />
+          </div>
+          <p className="text-sm text-zinc-400 font-medium">{t('common.loadError')}</p>
+          <button onClick={fetchUploads} className="text-xs text-primary hover:text-primary/70 transition-colors font-medium">
+            {t('common.retry')}
+          </button>
         </div>
       ) : items.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">

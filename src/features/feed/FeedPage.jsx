@@ -1,8 +1,9 @@
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Rss } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { useFeed } from './hooks/useFeed';
 import { ActivityCard } from './components/ActivityCard';
 
@@ -29,7 +30,7 @@ export default function FeedPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <LoadingSpinner size="md" />
       </div>
     );
   }
@@ -45,9 +46,12 @@ export default function FeedPage() {
   return (
     <div className="flex-1 max-w-2xl mx-auto w-full py-6 px-4">
       {activities.length === 0 ? (
-        <div className="text-center py-20 text-zinc-400">
-          <p className="font-medium mb-1">{emptyTitle}</p>
-          <p className="text-sm">{emptyCta}</p>
+        <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+          <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
+            <Rss className="size-7 text-zinc-500" />
+          </div>
+          <p className="text-sm text-zinc-400 font-medium">{emptyTitle}</p>
+          <p className="text-xs text-zinc-500">{emptyCta}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">

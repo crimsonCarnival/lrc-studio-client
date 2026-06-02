@@ -13,6 +13,7 @@ import {
   removeProjectFromPlaylist,
 } from './playlist.service';
 import { PlaylistModal } from './PlaylistModal';
+import { LoadingSpinner } from '@ui/LoadingSpinner';
 
 function ProjectRow({ project, isOwner, playlistId, onRemoved, showDragHandle }) {
   const { t } = useTranslation();
@@ -166,7 +167,7 @@ export default function PlaylistPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <LoadingSpinner size="md" />
       </div>
     );
   }

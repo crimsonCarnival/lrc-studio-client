@@ -2,12 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { projects } from '@/app/api';
-import { SkeletonCard } from '@ui/skeleton';
 import ProjectSetupModal from '@features/editor/components/setup/ProjectSetupModal';
 import useConfirm from '@/shared/hooks/useConfirm';
 import { useSettings } from '@/features/settings/useSettings';
 import useInputMethod from '@/shared/hooks/useInputMethod';
-import { FileText } from 'lucide-react';
+import { FileText, AlertCircle } from 'lucide-react';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import ProjectCard from './ProjectCard.jsx';
 import ProjectList from './ProjectList.jsx';
@@ -19,16 +18,18 @@ export default function Library({ onOpenProject }) {
   const inputMethod = useInputMethod();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [editingProject, setEditingProject] = useState(null);
   const [, confirmModal] = useConfirm();
 
   const fetchProjects = useCallback(async () => {
+    setError(false);
     try {
       const list = await projects.list() || [];
       setItems(list);
     } catch {
-      setItems([]);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -71,6 +72,16 @@ export default function Library({ onOpenProject }) {
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner size="md" />
+        </div>
+      ) : error ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
+          <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
+            <AlertCircle className="size-7 text-zinc-500" />
+          </div>
+          <p className="text-sm text-zinc-400 font-medium">{t('common.loadError')}</p>
+          <button onClick={fetchProjects} className="text-xs text-primary hover:text-primary/70 transition-colors font-medium">
+            {t('common.retry')}
+          </button>
         </div>
       ) : items.length === 0 ? (
         <motion.div

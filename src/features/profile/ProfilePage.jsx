@@ -4,11 +4,13 @@ import { useNavigate, useParams, Link, useSearchParams, useLocation } from 'reac
 import toast from 'react-hot-toast';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
-import { Star, GitFork, Music, PlayCircle, Settings, Pencil, Trash2 } from 'lucide-react';
+import { Star, GitFork, Music, PlayCircle, Settings, Pencil, Trash2, Timer, FolderOpen } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { getPublicProfile, followUser, unfollowUser } from './profile.service';
 import { FollowModal } from './FollowModal';
 import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
+import { BadgeList } from '@/features/badges/BadgeList';
 import { projects } from '@/app/api';
 import ProjectSetupModal from '@/features/editor/components/setup/ProjectSetupModal';
 import useConfirm from '@/shared/hooks/useConfirm';
@@ -169,7 +171,7 @@ export default function ProfilePage() {
       setIsFollowing(true);
       setProfile(prev => prev ? { ...prev, followerCount: prev.followerCount + 1 } : prev);
     } catch {
-      toast.error(t('profile.followError') || 'Could not follow. Try again.');
+      toast.error(t('profile.followError'));
     }
     setFollowLoading(false);
   }, [user, accountName, navigate, t]);
@@ -182,7 +184,7 @@ export default function ProfilePage() {
       setConfirmingUnfollow(false);
       setProfile(prev => prev ? { ...prev, followerCount: Math.max(0, prev.followerCount - 1) } : prev);
     } catch {
-      toast.error(t('profile.unfollowError') || 'Could not unfollow. Try again.');
+      toast.error(t('profile.unfollowError'));
       setConfirmingUnfollow(false);
     }
     setFollowLoading(false);
@@ -199,9 +201,9 @@ export default function ProfilePage() {
             projects: prev.projects.filter(p => p.projectId !== project.projectId), 
             projectCount: Math.max(0, prev.projectCount - 1) 
           } : prev);
-          toast.success(t('project.deleteSuccess', 'Project deleted'));
+          toast.success(t('project.deleteSuccess'));
         } catch {
-          toast.error(t('project.deleteError', 'Failed to delete project'));
+          toast.error(t('project.deleteError'));
         }
       },
       { title: t('confirm.deleteProjectTitle', 'Delete Project'), variant: 'danger' }
@@ -215,7 +217,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <LoadingSpinner size="md" />
       </div>
     );
   }
@@ -232,12 +234,31 @@ export default function ProfilePage() {
   if (!profile) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <LoadingSpinner size="md" />
       </div>
     );
   }
 
   const displayName = profile.displayName || profile.accountName;
+
+  // Synthesize badge IDs: server-stored achievements + role flags as fallback
+  const serverBadgeIds = (profile.badges ?? []).map(b => b.id);
+  const badgeIds = [
+    ...serverBadgeIds,
+    ...(profile.isVerified && !serverBadgeIds.includes('verified') ? ['verified'] : []),
+    ...(profile.isAdmin   && !serverBadgeIds.includes('admin')    ? ['admin']    : []),
+  ];
+
+  const minutesSynced = profile.stats?.minutesSynced ?? 0;
+  const minutesLabel = minutesSynced > 0
+    ? (() => {
+        const h = Math.floor(minutesSynced / 60);
+        const m = minutesSynced % 60;
+        if (h === 0) return `${m}m`;
+        if (m === 0) return `${h}h`;
+        return `${h}h ${m}m`;
+      })()
+    : null;
 
   return (
     <div className="flex-1 flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-4xl mx-auto w-full">
@@ -246,23 +267,16 @@ export default function ProfilePage() {
         <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} />
 
         <div className="flex-1 text-center sm:text-left">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <h1 className="text-2xl font-semibold text-foreground">{displayName}</h1>
-            <div className="flex items-center justify-center sm:justify-start gap-2">
-              {profile.isVerified && (
-                <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-widest">
-                  {t('profile.verified')}
-                </span>
-              )}
-              {profile.isAdmin && (
-                <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest">
-                  {t('profile.adminBadge')}
-                </span>
+          <div className="flex flex-col sm:flex-row sm:items-start gap-2">
+            <div>
+              <h1 className="text-2xl font-semibold text-foreground">{displayName}</h1>
+              {badgeIds.length > 0 && (
+                <BadgeList ids={badgeIds} max={3} className="mt-1.5 justify-center sm:justify-start" />
               )}
             </div>
           </div>
 
-          <p className="text-muted-foreground text-sm font-mono mt-0.5">@{profile.accountName}</p>
+          <p className="text-muted-foreground text-sm font-mono mt-1.5">@{profile.accountName}</p>
 
           <p className="text-muted-foreground text-sm mt-3 max-w-md">
             {profile.bio || <span className="italic opacity-50">{t('profile.noBio')}</span>}
@@ -294,7 +308,23 @@ export default function ProfilePage() {
             <span>{t('profile.statsProjects', { count: profile.projectCount })}</span>
             <span className="opacity-30">·</span>
             <span>{t('profile.statsStars', { count: profile.totalStarsReceived })}</span>
+            {minutesLabel && (
+              <>
+                <span className="opacity-30">·</span>
+                <span className="flex items-center gap-1">
+                  <Timer className="size-3.5 text-accent-blue" />
+                  {minutesLabel}
+                  <span className="text-xs opacity-50">¹</span>
+                </span>
+              </>
+            )}
           </div>
+
+          {minutesLabel && (
+            <p className="text-[10.5px] text-muted-foreground mt-1 opacity-50">
+              ¹ {t('badges.leaderboard.minutesSyncedNote', 'Own projects only — forks excluded')}
+            </p>
+          )}
 
           {profile.totalForksReceived > 0 && (
             <p className="text-xs text-muted-foreground mt-2 opacity-70">
@@ -369,8 +399,11 @@ export default function ProfilePage() {
       {/* Tab Content */}
       {activeTab === 'projects' && (
         profile.projects.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-            <p className="text-sm">{t('profile.noPublicProjects')}</p>
+          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
+              <FolderOpen className="size-7 text-zinc-500" />
+            </div>
+            <p className="text-sm text-zinc-400 font-medium">{t('profile.noPublicProjects')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -431,9 +464,9 @@ export default function ProfilePage() {
                 )
               } : prev);
               setEditingProject(null);
-              toast.success(t('project.updateSuccess', 'Project updated'));
+              toast.success(t('project.updateSuccess'));
             } catch (err) {
-              toast.error(t('project.updateError', 'Failed to update project'));
+              toast.error(t('project.updateError'));
             }
           }}
           initialName={editingProject.title || ''}
