@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { m as M, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { X, Lock, Sparkles, GripVertical } from 'lucide-react';
 import { gqlRequest } from '@/app/graphql.client';
@@ -49,7 +49,7 @@ function EarnedBadgeItem({ badge, isInShowcase, onToggle }) {
         <p className={`text-xs font-semibold truncate ${isInShowcase ? 'text-primary' : colorConf.text}`}>
           {def.label}
         </p>
-        <p className="text-[10px] text-zinc-600 truncate">{def.condition}</p>
+        <p className="text-[10px] text-zinc-600 truncate">{t(`badges.${badge.id}.tip`, def.condition ?? '')}</p>
       </div>
       <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full border shrink-0 ${rarityConf.className}`}>
         {t(rarityConf.labelKey)}
@@ -84,32 +84,27 @@ function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop 
   const colorConf = BADGE_COLORS[def.color] ?? BADGE_COLORS.primary;
 
   return (
-    <M.div
-      layout
-      initial={{ opacity: 0, scale: 0.92 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.88, x: 20 }}
-      transition={{ duration: 0.18 }}
+    <div
       draggable
       onDragStart={() => onDragStart(index)}
       onDragOver={(e) => { e.preventDefault(); onDragOver(index); }}
       onDrop={() => onDrop(index)}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-zinc-700/50 bg-zinc-900/70 group"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-zinc-600 bg-zinc-800 group"
     >
-      <GripVertical className="size-3.5 text-zinc-700 cursor-grab active:cursor-grabbing shrink-0" />
-      <div className="size-7 rounded-lg bg-zinc-800/60 flex items-center justify-center">
-        <span className="text-xs font-bold text-zinc-500">{index + 1}</span>
+      <GripVertical className="size-3.5 text-zinc-600 cursor-grab active:cursor-grabbing shrink-0" />
+      <div className="size-7 rounded-lg bg-zinc-700 flex items-center justify-center shrink-0">
+        <span className="text-xs font-bold text-zinc-400">{index + 1}</span>
       </div>
-      <span className="text-xl leading-none">{def.icon}</span>
-      <span className={`text-xs font-semibold flex-1 truncate ${colorConf.text}`}>{def.label}</span>
+      <span className="text-xl leading-none shrink-0">{def.icon}</span>
+      <span className={`text-sm font-semibold flex-1 truncate ${colorConf.text}`}>{t(`badges.${badge.id}.label`, def.label)}</span>
       <button
         type="button"
         onClick={() => onRemove(badge.id)}
-        className="size-5 rounded-full bg-zinc-800 hover:bg-red-500/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all text-zinc-500 hover:text-red-400"
+        className="size-6 rounded-full hover:bg-red-500/20 flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors"
       >
-        <X className="size-3" />
+        <X className="size-3.5" />
       </button>
-    </M.div>
+    </div>
   );
 }
 
@@ -263,19 +258,17 @@ export function ShowcaseEditor({ userBadges = [], initialShowcase = [], showcase
             {t('badges.showcase.displayedOn', 'Displayed on profile')}
           </p>
           <div className="flex flex-col gap-1.5">
-            <AnimatePresence mode="popLayout">
-              {slots.map((badge, i) => (
-                <ShowcaseSlot
-                  key={badge?.id ?? `empty-${i}`}
-                  badge={badge}
-                  index={i}
-                  onRemove={removeFromShowcase}
-                  onDragStart={setDragFrom}
-                  onDragOver={setDragOver}
-                  onDrop={handleDrop}
-                />
-              ))}
-            </AnimatePresence>
+            {slots.map((badge, i) => (
+              <ShowcaseSlot
+                key={i}
+                badge={badge}
+                index={i}
+                onRemove={removeFromShowcase}
+                onDragStart={setDragFrom}
+                onDragOver={setDragOver}
+                onDrop={handleDrop}
+              />
+            ))}
           </div>
 
           {/* Locked slots */}
