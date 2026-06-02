@@ -53,9 +53,10 @@ function ShowcaseSection() {
       <ShowcaseEditor
         userBadges={enrichedBadges}
         initialShowcase={user?.showcasedBadges ?? []}
+        initialPublic={user?.showcasePublic ?? true}
         showcaseSlots={getShowcaseSlots(user?.level ?? 0)}
         level={user?.level ?? 0}
-        onSaved={(ids) => setUser(prev => ({ ...prev, showcasedBadges: ids }))}
+        onSaved={(ids, pub) => setUser(prev => ({ ...prev, showcasedBadges: ids, showcasePublic: pub }))}
       />
     </section>
   );

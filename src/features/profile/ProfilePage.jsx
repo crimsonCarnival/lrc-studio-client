@@ -266,8 +266,10 @@ export default function ProfilePage() {
     : null;
   const level = profile.level ?? 0;
 
+  const hasVisibleShowcase = profile.showcasePublic !== false && (profile.showcasedBadges?.length ?? 0) > 0;
+
   return (
-    <div className="flex-1 flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-4xl mx-auto w-full">
+    <div className="flex-1 flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-5xl mx-auto w-full">
       {/* Profile Header */}
       <div className="glass rounded-[2rem] p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden mb-6">
         <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} />
@@ -393,84 +395,89 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 border-b border-border">
-        {['projects', 'playlists', 'showcase'].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-              activeTab === tab
-                ? 'border-primary text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t(`profile.publicTabs.${tab}`)}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === 'projects' && (
-        profile.projects.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-            <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
-              <FolderOpen className="size-7 text-zinc-500" />
-            </div>
-            <p className="text-sm text-zinc-400 font-medium">{t('profile.noPublicProjects')}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {profile.projects.map((project) => (
-              <ProjectCard 
-                key={project.projectId} 
-                project={project} 
-                isOwner={isOwner} 
-                onEdit={handleEditProject} 
-                onDelete={handleDeleteProject} 
-              />
+      {/* Two-column layout: main content + showcase sidebar */}
+      <div className={`flex gap-6 items-start ${hasVisibleShowcase || isOwner ? 'flex-col lg:flex-row' : ''}`}>
+        {/* Main content */}
+        <div className="flex-1 min-w-0">
+          {/* Tabs */}
+          <div className="flex gap-1 mb-6 border-b border-border">
+            {['projects', 'playlists'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                  activeTab === tab
+                    ? 'border-primary text-foreground'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {t(`profile.publicTabs.${tab}`)}
+              </button>
             ))}
           </div>
-        )
-      )}
 
-      {activeTab === 'playlists' && (
-        <PlaylistGrid accountName={profile.accountName} isOwner={isOwner} />
-      )}
+          {activeTab === 'projects' && (
+            profile.projects.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+                <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
+                  <FolderOpen className="size-7 text-zinc-500" />
+                </div>
+                <p className="text-sm text-zinc-400 font-medium">{t('profile.noPublicProjects')}</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {profile.projects.map((project) => (
+                  <ProjectCard
+                    key={project.projectId}
+                    project={project}
+                    isOwner={isOwner}
+                    onEdit={handleEditProject}
+                    onDelete={handleDeleteProject}
+                  />
+                ))}
+              </div>
+            )
+          )}
 
-      {activeTab === 'showcase' && (
-        <div className="flex flex-col gap-6">
-          {(profile.showcasedBadges?.length > 0) ? (
-            <ShowcasedBadges
-              badges={profile.showcasedBadges}
-              maxSlots={profile.showcasedBadges.length}
-              className=""
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-3 py-12 text-center">
-              <Trophy className="size-10 text-zinc-700" />
-              <p className="text-sm text-zinc-500">{t('badges.showcase.noShowcase', 'No badges showcased yet')}</p>
-              {isOwner && (
+          {activeTab === 'playlists' && (
+            <PlaylistGrid accountName={profile.accountName} isOwner={isOwner} />
+          )}
+        </div>
+
+        {/* Showcase sidebar */}
+        {(hasVisibleShowcase || isOwner) && (
+          <aside className="w-full lg:w-56 shrink-0 flex flex-col gap-4">
+            {hasVisibleShowcase ? (
+              <ShowcasedBadges
+                badges={profile.showcasedBadges}
+                maxSlots={profile.showcasedBadges.length}
+                className=""
+              />
+            ) : isOwner ? (
+              <div className="flex flex-col gap-2 p-4 rounded-xl border border-dashed border-zinc-800">
+                <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600">{t('badges.showcase.title')}</p>
+                <p className="text-xs text-zinc-600">{t('badges.showcase.noShowcase')}</p>
                 <button
                   type="button"
                   onClick={() => navigate('/settings/profile')}
-                  className="text-xs text-primary hover:text-primary/70 transition-colors"
+                  className="text-xs text-primary hover:text-primary/70 transition-colors text-left"
                 >
-                  {t('badges.showcase.goSetup', 'Set up your showcase →')}
+                  {t('badges.showcase.goSetup')}
                 </button>
-              )}
-            </div>
-          )}
-          {allBadgeIds.length > 0 && (
-            <div>
-              <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600 mb-3">{t('badges.showcase.allBadges', 'All Badges')}</p>
-              <div className="flex flex-wrap gap-2">
-                {allBadgeIds.map(id => <BadgeChip key={id} id={id} />)}
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            ) : null}
+
+            {allBadgeIds.length > 0 && (
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600 mb-2">{t('badges.showcase.allBadges')}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {allBadgeIds.map(id => <BadgeChip key={id} id={id} />)}
+                </div>
+              </div>
+            )}
+          </aside>
+        )}
+      </div>
 
       {followModal && profile.showFollowers && (
         <FollowModal

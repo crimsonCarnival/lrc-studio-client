@@ -7,12 +7,13 @@ import { gqlRequest } from '@/app/graphql.client';
 import { BADGE_REGISTRY, RARITY_CONFIG, BADGE_COLORS } from './badge-registry';
 
 const UPDATE_SHOWCASE = `
-  mutation UpdateShowcase($badgeIds: [String!]!) {
-    updateShowcase(badgeIds: $badgeIds) {
+  mutation UpdateShowcase($badgeIds: [String!]!, $showcasePublic: Boolean) {
+    updateShowcase(badgeIds: $badgeIds, showcasePublic: $showcasePublic) {
       success
       error
       showcaseSlots
       level
+      showcasePublic
     }
   }
 `;
@@ -106,9 +107,10 @@ function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop 
   );
 }
 
-export function ShowcaseEditor({ userBadges = [], initialShowcase = [], showcaseSlots = 3, level = 0, onSaved }) {
+export function ShowcaseEditor({ userBadges = [], initialShowcase = [], initialPublic = true, showcaseSlots = 3, level = 0, onSaved }) {
   const { t } = useTranslation();
   const [showcase, setShowcase] = useState(initialShowcase.slice(0, showcaseSlots));
+  const [showcasePublic, setShowcasePublic] = useState(initialPublic);
   const [saving, setSaving] = useState(false);
   const [dragFrom, setDragFrom] = useState(null);
   const [dragOver, setDragOver] = useState(null);
@@ -157,10 +159,10 @@ export function ShowcaseEditor({ userBadges = [], initialShowcase = [], showcase
   const save = async () => {
     setSaving(true);
     try {
-      const { updateShowcase: result } = await gqlRequest(UPDATE_SHOWCASE, { badgeIds: showcase });
+      const { updateShowcase: result } = await gqlRequest(UPDATE_SHOWCASE, { badgeIds: showcase, showcasePublic });
       if (!result.success) throw new Error(result.error ?? 'Failed');
       toast.success(t('badges.showcase.saved'));
-      onSaved?.(showcase);
+      onSaved?.(showcase, showcasePublic);
     } catch (e) {
       toast.error(e.message || t('badges.showcase.saveError'));
     } finally {
@@ -281,8 +283,18 @@ export function ShowcaseEditor({ userBadges = [], initialShowcase = [], showcase
         </div>
       </div>
 
-      {/* Save */}
-      <div className="flex justify-end pt-1 border-t border-zinc-800/50">
+      {/* Visibility toggle */}
+      <div className="flex items-center justify-between pt-3 border-t border-zinc-800/50">
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <div
+            className={`relative w-9 h-5 rounded-full transition-colors ${showcasePublic ? 'bg-primary' : 'bg-zinc-700'}`}
+            onClick={() => setShowcasePublic(v => !v)}
+          >
+            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${showcasePublic ? 'translate-x-4' : 'translate-x-0.5'}`} />
+          </div>
+          <span className="text-xs text-zinc-400">{t('badges.showcase.publicToggle', 'Show on profile')}</span>
+        </label>
+
         <button
           type="button"
           onClick={save}

@@ -40,6 +40,7 @@ export default {
     emptySlot:       'Vacío',
     filterAll:       'Todas',
     noShowcase:      'Aún no hay insignias en la vitrina',
+    publicToggle:    'Mostrar en el perfil',
     goSetup:         'Configura tu vitrina →',
     allBadges:       'Todas las insignias',
     slots_one:       '{{count}} / {{max}} espacio usado',

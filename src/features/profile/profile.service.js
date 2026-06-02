@@ -8,6 +8,7 @@ const GET_PUBLIC_PROFILE = `
       followerCount followingCount isFollowedByMe showFollowers
       badges { id grantedAt }
       level xp minutesSynced currentStreak
+      showcasePublic
       showcasedBadges {
         id label icon color rarity rarityPct holderCount grantedAt
       }

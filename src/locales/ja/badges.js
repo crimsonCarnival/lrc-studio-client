@@ -41,6 +41,7 @@ export default {
     emptySlot:       '空きスロット',
     filterAll:       'すべて',
     noShowcase:      'まだバッジをショーケースに追加していません',
+    publicToggle:    'プロフィールに表示する',
     goSetup:         'ショーケースを設定する →',
     allBadges:       'すべてのバッジ',
     slots:           '{{count}} / {{max}} スロット使用中',

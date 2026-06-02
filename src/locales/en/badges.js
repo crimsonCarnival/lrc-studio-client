@@ -42,7 +42,8 @@ export default {
     noBadgesFilter: 'No badges match this filter',
     emptySlot:   'Empty',
     filterAll:   'All',
-    noShowcase:  'No badges showcased yet',
+    noShowcase:   'No badges showcased yet',
+    publicToggle: 'Show on profile',
     goSetup:     'Set up your showcase →',
     allBadges:   'All Badges',
     // Pluralized: "3 / 5 slots used"
