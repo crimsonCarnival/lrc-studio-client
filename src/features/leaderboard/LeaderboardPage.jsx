@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Trophy, Timer, Music, Star, Loader2, ChevronDown } from 'lucide-react';
+import { Trophy, Timer, Music, Star, Loader2, ChevronDown, Flame, Zap } from 'lucide-react';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
@@ -80,8 +80,6 @@ function UserAvatar({ avatarUrl, name, rankStyle }) {
 function LeaderboardRow({ entry, rank }) {
   const rs = RANK_STYLES[rank];
   const badgeIds = (entry.badges ?? []).map(b => b.id);
-  const minutes = entry.stats?.minutesSynced ?? 0;
-  const projects = entry.stats?.projectCount ?? 0;
 
   return (
     <Link
@@ -101,26 +99,35 @@ function LeaderboardRow({ entry, rank }) {
           <span className="text-sm font-semibold text-zinc-100 group-hover:text-primary transition-colors truncate">
             {entry.displayName || entry.accountName}
           </span>
-          {badgeIds.length > 0 && (
-            <BadgeList ids={badgeIds} max={2} />
+          {entry.level > 0 && (
+            <span className="text-[9px] font-bold text-zinc-600 border border-zinc-800 px-1 py-0.5 rounded tabular-nums">
+              Lv.{entry.level}
+            </span>
           )}
+          {badgeIds.length > 0 && <BadgeList ids={badgeIds} max={2} />}
         </div>
         <span className="text-xs text-zinc-500 font-mono">@{entry.accountName}</span>
       </div>
 
-      <div className="flex items-center gap-4 flex-shrink-0 text-right">
+      <div className="flex items-center gap-3 flex-shrink-0 text-right">
+        {entry.currentStreak > 0 && (
+          <div className="hidden lg:flex items-center gap-1 text-xs text-orange-500/80">
+            <Flame className="size-3" />
+            <span className="tabular-nums">{entry.currentStreak}d</span>
+          </div>
+        )}
         <div className="hidden sm:flex items-center gap-1 text-xs text-zinc-500">
           <Music className="size-3" />
-          <span>{projects.toLocaleString()}</span>
+          <span className="tabular-nums">{(entry.projectCount ?? 0).toLocaleString()}</span>
         </div>
         <div className="hidden sm:flex items-center gap-1 text-xs text-zinc-500">
           <Star className="size-3" />
-          <span>{(entry.totalStarsReceived ?? 0).toLocaleString()}</span>
+          <span className="tabular-nums">{(entry.totalStarsReceived ?? 0).toLocaleString()}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Timer className="size-3.5 text-accent-blue" />
           <span className={`font-semibold tabular-nums text-sm ${rs ? rs.rank : 'text-zinc-200'}`}>
-            {formatMinutes(minutes)}
+            {formatMinutes(entry.minutesSynced ?? 0)}
           </span>
         </div>
       </div>
@@ -243,7 +250,7 @@ export default function LeaderboardPage() {
           )}
 
           <p className="text-center text-[10.5px] text-zinc-600 mt-6">
-            ¹ {t('badges.leaderboard.minutesSyncedNote')}
+            {t('badges.leaderboard.subtitle')}
           </p>
         </>
       )}

@@ -4,16 +4,13 @@ const LEADERBOARD_QUERY = `
   query Leaderboard($limit: Int, $offset: Int) {
     leaderboard(limit: $limit, offset: $offset) {
       users {
-        id
-        accountName
-        displayName
-        avatarUrl
+        id accountName displayName avatarUrl
         badges { id grantedAt }
-        stats { minutesSynced projectCount }
-        totalStarsReceived
+        minutesSynced wordsSynced karaokeLines
+        level xp currentStreak
+        projectCount totalStarsReceived
       }
-      total
-      hasMore
+      total hasMore
     }
   }
 `;
