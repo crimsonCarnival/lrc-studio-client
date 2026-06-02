@@ -11,6 +11,7 @@ import { getPublicProfile, followUser, unfollowUser } from './profile.service';
 import { FollowModal } from './FollowModal';
 import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
 import { BadgeList } from '@/features/badges/BadgeList';
+import { ShowcasedBadges } from '@/features/badges/ShowcasedBadges';
 import { projects } from '@/app/api';
 import ProjectSetupModal from '@/features/editor/components/setup/ProjectSetupModal';
 import useConfirm from '@/shared/hooks/useConfirm';
@@ -378,6 +379,16 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Achievement Showcase */}
+      {(profile.showcasedBadges?.length > 0) && (
+        <ShowcasedBadges
+          badges={profile.showcasedBadges}
+          maxSlots={profile.showcasedBadges?.length ?? 0}
+          locale={undefined}
+          className="mb-6"
+        />
+      )}
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-border">

@@ -6,6 +6,11 @@ const GET_PUBLIC_PROFILE = `
       id accountName displayName avatarUrl bio isVerified isAdmin createdAt
       projectCount totalStarsReceived totalForksReceived
       followerCount followingCount isFollowedByMe showFollowers
+      badges { id grantedAt }
+      level xp minutesSynced currentStreak
+      showcasedBadges {
+        id label icon color rarity rarityPct holderCount grantedAt
+      }
       projects {
         id projectId title starCount forkCount
         metadata { songName songArtist description tags }
