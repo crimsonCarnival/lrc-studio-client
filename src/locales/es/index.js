@@ -29,6 +29,7 @@ import search from './search.js';
 import projectView from './projectView.js';
 import explore from './explore.js';
 import comments from './comments.js';
+import badges from './badges.js';
 
 export default {
   translation: {
@@ -62,6 +63,7 @@ export default {
     search,
     projectView,
     explore,
-    comments
+    comments,
+    badges,
   }
 };

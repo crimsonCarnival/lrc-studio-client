@@ -37,6 +37,7 @@ const ExploreProjectsPage = lazy(() => import('@features/explore/ExploreProjects
 const ExplorePlaylistsPage = lazy(() => import('@features/explore/ExplorePlaylistsPage'));
 const PublicProjectViewPage = lazy(() => import('@features/projects/components/PublicProjectViewPage'));
 const ListPage = lazy(() => import('@features/playlists/ListPage'));
+const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage'));
 
 function RequireAdmin({ children }) {
   const { user, loading } = useAuthContext();
@@ -516,6 +517,11 @@ export function AppRouter({
       <Route path="explore/playlists" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
           <ExplorePlaylistsPage />
+        </Suspense>
+      } />
+      <Route path="leaderboard" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+          <LeaderboardPage />
         </Suspense>
       } />
       <Route path="*" element={<NotFoundPage type="general" />} />

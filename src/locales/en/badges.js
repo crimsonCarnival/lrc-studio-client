@@ -1,0 +1,21 @@
+export default {
+  og:        { label: 'OG',          tip: 'Among the first 1 000 users' },
+  pioneer:   { label: 'Pioneer',     tip: 'Among the first 10 000 users' },
+  syncer10h: { label: 'Synced 10h',  tip: '600+ min synced across own projects' },
+  syncer100h:{ label: 'Synced 100h', tip: '6 000+ min synced across own projects' },
+  century:   { label: 'Century',     tip: '100 or more projects created' },
+  verified:  { label: 'Verified',    tip: 'Verified by the LRC Studio team' },
+  admin:     { label: 'Staff',       tip: 'LRC Studio staff member' },
+  leaderboard: {
+    title:             'Leaderboard',
+    subtitle:          'Top creators ranked by minutes synced across their own projects',
+    user:              'User',
+    synced:            'Synced',
+    projects:          'Projects',
+    stars:             'Stars',
+    empty:             'No data yet — start syncing!',
+    error:             'Could not load the leaderboard. Try again later.',
+    minutesSynced:     'Min synced¹',
+    minutesSyncedNote: 'Own projects only — forks excluded',
+  },
+};

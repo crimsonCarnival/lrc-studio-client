@@ -1,0 +1,21 @@
+export default {
+  og:        { label: 'OG',             tip: '最初の1,000ユーザーの一人' },
+  pioneer:   { label: 'パイオニア',     tip: '最初の10,000ユーザーの一人' },
+  syncer10h: { label: '10h同期',        tip: '自分のプロジェクトで600分以上同期済み' },
+  syncer100h:{ label: '100h同期',       tip: '自分のプロジェクトで6,000分以上同期済み' },
+  century:   { label: 'センチュリー',   tip: '100件以上のプロジェクトを作成' },
+  verified:  { label: '認証済み',       tip: 'LRC Studioチームによって認証済み' },
+  admin:     { label: 'スタッフ',       tip: 'LRC Studioスタッフメンバー' },
+  leaderboard: {
+    title:             'リーダーボード',
+    subtitle:          '自分のプロジェクトの同期時間でランク付けされたトップクリエイター',
+    user:              'ユーザー',
+    synced:            '同期時間',
+    projects:          'プロジェクト',
+    stars:             'スター',
+    empty:             'まだデータがありません — 同期を始めましょう！',
+    error:             'ランキングを読み込めませんでした。後でもう一度お試しください。',
+    minutesSynced:     '同期分数¹',
+    minutesSyncedNote: '自分のプロジェクトのみ — フォークを除く',
+  },
+};

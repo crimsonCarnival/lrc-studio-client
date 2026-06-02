@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   UploadCloud, Settings as SettingsIcon, LogOut, BookOpen, Pencil,
   ShieldAlert, Eye, EyeOff, User, HelpCircle, Check, ArrowLeft,
-  Sun, Moon, Monitor, Palette, Globe, ExternalLink, Search, Compass,
+  Sun, Moon, Monitor, Palette, Globe, ExternalLink, Search, Compass, Trophy,
 } from 'lucide-react';
 import { HeaderSearchBar } from '@/features/search/components/HeaderSearchBar';
 import { Button } from '@ui/button';
@@ -106,6 +106,7 @@ export function AppHeader({
       feed: t('feed.title'),
       search: t('search.title'),
       explore: t('explore.nav'),
+      leaderboard: t('badges.leaderboard.title', 'Leaderboard'),
     };
     return map[seg] || seg.replace(/-/g, ' ');
   })();
@@ -451,6 +452,9 @@ export function AppHeader({
                   </PopoverItem>
                   <PopoverItem onClick={() => navTo('/explore')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <span className="flex items-center gap-2"><Compass className="size-4 text-zinc-400" />{t('explore.nav')}</span>
+                  </PopoverItem>
+                  <PopoverItem onClick={() => navigate('/leaderboard')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+                    <span className="flex items-center gap-2"><Trophy className="size-4 text-warning" />{t('badges.leaderboard.title', 'Leaderboard')}</span>
                   </PopoverItem>
                 </div>
 

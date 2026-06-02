@@ -1,0 +1,21 @@
+export default {
+  og:        { label: 'OG',           tip: 'Entre los primeros 1 000 usuarios' },
+  pioneer:   { label: 'Pionero',      tip: 'Entre los primeros 10 000 usuarios' },
+  syncer10h: { label: 'Sincronizado 10h',  tip: '600+ min sincronizados en proyectos propios' },
+  syncer100h:{ label: 'Sincronizado 100h', tip: '6 000+ min sincronizados en proyectos propios' },
+  century:   { label: 'Centenario',   tip: '100 o más proyectos creados' },
+  verified:  { label: 'Verificado',   tip: 'Verificado por el equipo de LRC Studio' },
+  admin:     { label: 'Staff',        tip: 'Miembro del equipo de LRC Studio' },
+  leaderboard: {
+    title:             'Leaderboard',
+    subtitle:          'Creadores clasificados por minutos sincronizados en sus propios proyectos',
+    user:              'Usuario',
+    synced:            'Sincronizado',
+    projects:          'Proyectos',
+    stars:             'Estrellas',
+    empty:             '¡Aún no hay datos — empieza a sincronizar!',
+    error:             'No se pudo cargar la tabla. Intenta de nuevo más tarde.',
+    minutesSynced:     'Min sincronizados¹',
+    minutesSyncedNote: 'Solo proyectos propios — forks excluidos',
+  },
+};
