@@ -52,7 +52,7 @@ function EarnedBadgeItem({ badge, isInShowcase, onToggle }) {
         <p className="text-[10px] text-zinc-600 truncate">{def.condition}</p>
       </div>
       <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full border shrink-0 ${rarityConf.className}`}>
-        {t(`badges.rarity.${rarity}`, rarityConf.label)}
+        {t(rarityConf.labelKey)}
       </span>
       {isInShowcase && (
         <div className="size-4 rounded-full bg-primary flex items-center justify-center shrink-0">
@@ -227,7 +227,7 @@ export function ShowcaseEditor({ userBadges = [], initialShowcase = [], showcase
                     : 'border-zinc-800 text-zinc-700 hover:text-zinc-500 hover:border-zinc-700'
                   }`}
               >
-                {r === 'all' ? t('badges.showcase.filterAll', 'All') : t(`badges.rarity.${r}`, RARITY_CONFIG[r]?.label ?? r)}
+                {r === 'all' ? t('badges.showcase.filterAll') : t(RARITY_CONFIG[r]?.labelKey ?? `badges.rarity.${r}`)}
               </button>
             ))}
           </div>

@@ -21,11 +21,11 @@ export const BADGE_REGISTRY = {
 };
 
 export const RARITY_CONFIG = {
-  common:    { label: 'Common',    className: 'text-zinc-400   border-zinc-600/50  bg-zinc-800/50'   },
-  uncommon:  { label: 'Uncommon',  className: 'text-emerald-400 border-emerald-500/40 bg-emerald-950/50' },
-  rare:      { label: 'Rare',      className: 'text-blue-400   border-blue-500/40  bg-blue-950/50'   },
-  epic:      { label: 'Epic',      className: 'text-purple-400  border-purple-500/40 bg-purple-950/50' },
-  legendary: { label: 'Legendary', className: 'text-amber-400  border-amber-500/40 bg-amber-950/50'  },
+  common:    { labelKey: 'badges.rarity.common',    className: 'text-zinc-400    border-zinc-600/50    bg-zinc-800/50'       },
+  uncommon:  { labelKey: 'badges.rarity.uncommon',  className: 'text-emerald-400 border-emerald-500/40 bg-emerald-950/50'   },
+  rare:      { labelKey: 'badges.rarity.rare',      className: 'text-blue-400    border-blue-500/40    bg-blue-950/50'      },
+  epic:      { labelKey: 'badges.rarity.epic',      className: 'text-purple-400  border-purple-500/40  bg-purple-950/50'   },
+  legendary: { labelKey: 'badges.rarity.legendary', className: 'text-amber-400   border-amber-500/40   bg-amber-950/50'    },
 };
 
 export const BADGE_COLORS = {

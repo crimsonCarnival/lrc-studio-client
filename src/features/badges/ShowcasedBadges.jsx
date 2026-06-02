@@ -116,7 +116,7 @@ function ShowcaseCard({ badge, locale = 'en' }) {
 
         {/* Rarity pill */}
         <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full border ${rarityConf.className}`}>
-          {t(`badges.rarity.${rarity}`, rarityConf.label)}
+          {t(rarityConf.labelKey)}
         </span>
 
         {/* Unlock date */}
