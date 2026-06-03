@@ -127,7 +127,7 @@ export default function Home() {
                   <Play className="size-3.5 text-zinc-400 ml-0.5" />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-[9px] font-bold text-zinc-700 uppercase tracking-widest">{t('home.resumeLast')}</span>
+                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">{t('home.resumeLast')}</span>
                   <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 truncate transition-colors">
                     {lastProject.title || t('library.untitled')}
                   </span>
@@ -140,7 +140,7 @@ export default function Home() {
           <div className="mt-auto pt-4 border-t border-zinc-800/40 hidden lg:block">
             <div className="flex items-center gap-2 mb-2">
               <span className={`size-1.5 rounded-full bg-primary ${reducedMotion ? '' : 'animate-pulse'}`} />
-              <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-700">{t('home.proTip')}</span>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">{t('home.proTip')}</span>
             </div>
             <p className="text-[11px] text-zinc-600 contrast-more:text-zinc-400 italic leading-relaxed">
               "{dt('home.tips')}"
@@ -156,7 +156,7 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <h2 className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">{t('home.recentProjects')}</h2>
               {!loading && items.length > 0 && (
-                <span className="text-[9px] font-bold text-zinc-700 bg-zinc-800/50 px-1.5 py-0.5 rounded-full">{items.length}</span>
+                <span className="text-[9px] font-bold text-zinc-500 bg-zinc-800/50 px-1.5 py-0.5 rounded-full">{items.length}</span>
               )}
             </div>
             {items.length > 0 && (
@@ -305,9 +305,9 @@ export default function Home() {
                             {project.title || t('library.untitled')}
                           </h3>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-zinc-700">{formatRelativeTime(project.updatedAt, (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
-                            <span className="size-0.5 rounded-full bg-zinc-800 shrink-0" />
-                            <span className="text-[10px] text-zinc-700 flex items-center gap-0.5">
+                            <span className="text-[10px] text-zinc-500">{formatRelativeTime(project.updatedAt, (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
+                            <span className="size-0.5 rounded-full bg-zinc-700 shrink-0" />
+                            <span className="text-[10px] text-zinc-500 flex items-center gap-0.5">
                               <Activity className="size-2.5" />
                               {(project.syncedLineCount || 0)}/{(project.lineCount || 0)}
                             </span>
