@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
+import { FloatingCombobox } from '@ui/floating-combobox';
 import { FloatingTextarea } from '@ui/floating-textarea';
 import { Textarea } from '@ui/textarea';
 import { Input } from '@ui/input';
@@ -10,6 +11,7 @@ import { Label } from '@ui/label';
 import { Badge } from '@ui/badge';
 import { Switch } from '@ui/switch';
 import { Tip } from '@ui/tip';
+import { getMyMusicLibrary } from '@/features/editor/music-library.service';
 import {
   FolderOpen, Music2, FileText, Upload, Check, ArrowRight, Trash2,
   Video, Cloud, Link2, Loader2, Lock, Globe, Sparkles, X, LockKeyhole, Lightbulb, Search
@@ -118,12 +120,17 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     songArtist: prefill?.songArtist || '',
     songAlbum: prefill?.songAlbum || '',
     songYear: prefill?.songYear || '',
+    songGenre: prefill?.songGenre || '',
+    songLanguage: prefill?.songLanguage || '',
+    trackCount: prefill?.trackCount ?? '',
     coverImage: prefill?.coverImage || '',
   }));
 
+  const [musicLibrary, setMusicLibrary] = useState([]);
+
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, ytLoading, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
-  const { name: projectName, description: projectDescription, tags: projectTags, tagInput, isPublic, songName, songArtist, songAlbum, songYear, coverImage } = metadata;
+  const { name: projectName, description: projectDescription, tags: projectTags, tagInput, isPublic, songName, songArtist, songAlbum, songYear, songGenre, songLanguage, trackCount, coverImage } = metadata;
 
   // State setters
   const setAudioState = useCallback((val) => setAudio(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
@@ -154,6 +161,12 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       .then((uploads) => setMediaUploads(uploads || []))
       .catch(() => { })
       .finally(() => setMediaLoading(false));
+  }, []);
+
+  // Fetch music library for artist/album autofill suggestions
+  useEffect(() => {
+    if (!getAccessToken()) return;
+    getMyMusicLibrary().then(setMusicLibrary).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -322,6 +335,43 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     else if (e.key === 'Backspace' && !tagInput && projectTags.length > 0) removeTag(projectTags.length - 1);
   };
 
+  const GENRE_KEYS = ['pop','rock','jazz','classical','hip_hop','rnb','electronic','folk','country','metal','indie','soul','reggae','latin','k_pop','anime','soundtrack','alternative','blues','funk'];
+  const LANG_KEYS = ['english','spanish','japanese','korean','mandarin','portuguese','french','german','italian','arabic','hindi','russian','tagalog','thai','vietnamese','indonesian','dutch','swedish','turkish','hebrew'];
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const genreOptions = useMemo(() => GENRE_KEYS.map((k) => ({ value: t(`setup.genre.${k}`), label: t(`setup.genre.${k}`) })), [t]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const languageOptions = useMemo(() => LANG_KEYS.map((k) => ({ value: t(`setup.lang.${k}`), label: t(`setup.lang.${k}`) })), [t]);
+
+  const artistOptions = useMemo(() => {
+    const seen = new Set();
+    return musicLibrary
+      .filter((e) => e.artist && !seen.has(e.artist.toLowerCase()) && seen.add(e.artist.toLowerCase()))
+      .map((e) => ({ value: e.artist }));
+  }, [musicLibrary]);
+
+  const albumOptions = useMemo(() => {
+    const seen = new Set();
+    const base = songArtist
+      ? musicLibrary.filter((e) => e.artist?.toLowerCase() === songArtist.toLowerCase())
+      : musicLibrary;
+    return base
+      .filter((e) => e.album && !seen.has(e.album.toLowerCase()) && seen.add(e.album.toLowerCase()))
+      .map((e) => ({ value: e.album }));
+  }, [musicLibrary, songArtist]);
+
+  const handleAlbumSelect = useCallback((albumName) => {
+    const match = musicLibrary.find(
+      (e) => e.album?.toLowerCase() === albumName.toLowerCase()
+    );
+    if (!match) return;
+    setMetadataState({
+      ...(match.genre ? { songGenre: match.genre } : {}),
+      ...(match.language ? { songLanguage: match.language } : {}),
+      ...(match.trackCount != null ? { trackCount: String(match.trackCount) } : {}),
+    });
+  }, [musicLibrary, setMetadataState]);
+
   const handleProceed = () => {
     let finalLines = parsedLines;
     if (!finalLines) {
@@ -330,7 +380,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       }));
     }
     const finalTags = tagInput.trim() ? [...projectTags, tagInput.trim()] : projectTags;
-    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: finalTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim(), coverImage: coverImage.trim() });
+    const parsedTrackCount = parseInt(trackCount, 10);
+    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: finalTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim(), songGenre: songGenre.trim(), songLanguage: songLanguage.trim(), trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim() });
   };
 
   const handleImageUpload = async (e) => {
@@ -395,7 +446,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
             </h3>
             <div className="grid grid-cols-2 gap-3 shrink-0">
               <div className="relative">
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
+                <div className="absolute right-8 top-1/2 -translate-y-1/2 z-10">
                   <Tip content={t('setup.songNameDesc')}>
                     <Lightbulb className="size-3.5 text-zinc-600 cursor-help" />
                   </Tip>
@@ -404,12 +455,23 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                   onChange={(e) => setMetadataState({ songName: e.target.value })}
                   placeholder={t('setup.songNamePlaceholder')} maxLength={500} />
               </div>
-              <FloatingInput id="song-artist" type="text" label={t('setup.songArtist')} value={songArtist}
-                onChange={(e) => setMetadataState({ songArtist: e.target.value })}
-                placeholder={t('setup.songArtistPlaceholder')} maxLength={300} />
-              <FloatingInput id="song-album" type="text" label={t('setup.songAlbum')} value={songAlbum}
-                onChange={(e) => setMetadataState({ songAlbum: e.target.value })}
-                placeholder={t('setup.songAlbumPlaceholder')} maxLength={300} />
+              <FloatingCombobox
+                id="song-artist"
+                label={t('setup.songArtist')}
+                value={songArtist}
+                onChange={(v) => setMetadataState({ songArtist: v })}
+                options={artistOptions}
+                maxLength={300}
+              />
+              <FloatingCombobox
+                id="song-album"
+                label={t('setup.songAlbum')}
+                value={songAlbum}
+                onChange={(v) => setMetadataState({ songAlbum: v })}
+                onSelect={handleAlbumSelect}
+                options={albumOptions}
+                maxLength={300}
+              />
               <FloatingInput id="song-year" type="text" label={t('setup.songYear')} value={songYear}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '').slice(0, 4);
@@ -421,6 +483,35 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                   }
                 }}
                 placeholder={t('setup.songYearPlaceholder')} maxLength={4} />
+              <FloatingCombobox
+                id="song-genre"
+                label={t('setup.songGenre')}
+                value={songGenre}
+                onChange={(v) => setMetadataState({ songGenre: v })}
+                options={genreOptions}
+                maxLength={100}
+                strict
+              />
+              <FloatingCombobox
+                id="song-language"
+                label={t('setup.songLanguage')}
+                value={songLanguage}
+                onChange={(v) => setMetadataState({ songLanguage: v })}
+                options={languageOptions}
+                maxLength={100}
+                strict
+              />
+              <FloatingCombobox
+                id="track-count"
+                label={t('setup.trackCount')}
+                value={String(trackCount ?? '')}
+                onChange={(v) => {
+                  const cleaned = v.replace(/\D/g, '').slice(0, 3);
+                  setMetadataState({ trackCount: cleaned });
+                }}
+                options={Array.from({ length: 30 }, (_, i) => ({ value: String(i + 1) }))}
+                maxLength={3}
+              />
             </div>
 
             <div className="w-full h-px bg-zinc-800/60 shrink-0" />
