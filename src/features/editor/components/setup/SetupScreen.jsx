@@ -489,10 +489,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
       {/* Two-column body */}
       <div className="flex-1 min-h-0 px-6 pb-0 overflow-y-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-5xl mx-auto h-full pb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-5xl mx-auto pb-6">
 
           {/* LEFT: project info */}
-          <div className="glass rounded-2xl flex flex-col p-5 gap-4 overflow-y-auto relative">
+          <div className="glass rounded-2xl flex flex-col p-5 gap-4 self-start relative">
             <ThemedShineBorder />
 
             {/* Project name */}
