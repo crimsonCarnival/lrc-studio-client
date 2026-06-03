@@ -8,7 +8,7 @@ const LEADERBOARD_QUERY = `
         badges { id grantedAt }
         minutesSynced wordsSynced karaokeLines
         level xp currentStreak
-        projectCount totalStarsReceived
+        projectCount totalStarsReceived totalForksReceived
       }
       total hasMore
     }

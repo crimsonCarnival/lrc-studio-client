@@ -69,5 +69,7 @@ export default {
     project:  '{{count}} プロジェクト',
     star:     '{{count}} スター',
     day:      '{{count}} 日連続',
+    syncedLines: '同期済みライン',
+    forks:    '獲得フォーク数',
   },
 };

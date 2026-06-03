@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Trophy, Timer, Music, Star, Loader2, ChevronDown, Flame, Zap } from 'lucide-react';
+import { Trophy, Timer, Music2, Star, GitFork, Loader2, ChevronDown, Flame, Music } from 'lucide-react';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
 import { BadgeList } from '@/features/badges/BadgeList';
+import { Tip } from '@ui/tip';
 import { getLeaderboard } from './leaderboard.service';
 
 function formatMinutes(min) {
@@ -17,116 +18,141 @@ function formatMinutes(min) {
   return `${h}h ${m}m`;
 }
 
-const RANK_STYLES = {
-  1: {
-    border:  'border-l-2 border-l-warning',
-    rank:    'text-warning',
-    ring:    'ring-2 ring-warning/50',
-    medal:   '🥇',
-  },
-  2: {
-    border:  'border-l-2 border-l-zinc-400',
-    rank:    'text-zinc-300',
-    ring:    'ring-2 ring-zinc-400/40',
-    medal:   '🥈',
-  },
-  3: {
-    border:  'border-l-2 border-l-orange-600',
-    rank:    'text-orange-400',
-    ring:    'ring-2 ring-orange-600/40',
-    medal:   '🥉',
-  },
+function formatCount(n) {
+  if (!n || n <= 0) return '0';
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+
+const PODIUM = {
+  1: { accent: 'border-l-warning', medal: '🥇', glow: 'bg-warning/8', ring: 'ring-1 ring-warning/30', label: 'text-warning' },
+  2: { accent: 'border-l-zinc-400', medal: '🥈', glow: 'bg-zinc-400/5', ring: 'ring-1 ring-zinc-400/20', label: 'text-zinc-300' },
+  3: { accent: 'border-l-orange-500', medal: '🥉', glow: 'bg-orange-500/5', ring: 'ring-1 ring-orange-500/20', label: 'text-orange-400' },
 };
 
-function RankNumber({ pos }) {
-  const s = RANK_STYLES[pos];
-  if (s) {
+function StatChip({ icon: Icon, value, tooltip, color = 'text-zinc-500' }) {
+  return (
+    <Tip content={tooltip} side="top">
+      <div className="flex items-center gap-1">
+        <Icon className={`size-3 shrink-0 ${color}`} />
+        <span className={`text-[11px] tabular-nums font-medium ${color}`}>{value}</span>
+      </div>
+    </Tip>
+  );
+}
+
+function RankBadge({ pos }) {
+  const p = PODIUM[pos];
+  if (p) {
     return (
-      <span
-        className={`text-lg font-bold font-heading tabular-nums w-8 text-center ${s.rank}`}
-        aria-label={`Rank ${pos}`}
-      >
-        {s.medal}
+      <span className="text-base leading-none w-7 text-center select-none" aria-label={`Rank ${pos}`}>
+        {p.medal}
       </span>
     );
   }
   return (
-    <span className="text-sm tabular-nums w-8 text-center text-zinc-500 font-mono">
+    <span className="text-xs tabular-nums w-7 text-center text-zinc-600 font-mono font-semibold" aria-label={`Rank ${pos}`}>
       {pos}
     </span>
   );
 }
 
-function UserAvatar({ avatarUrl, name, rankStyle }) {
-  const ringCls = rankStyle?.ring ?? '';
+function UserAvatar({ avatarUrl, name, ring }) {
   if (avatarUrl) {
     return (
       <LazyImage
         src={avatarUrl}
         alt={name}
-        className={`size-10 rounded-xl object-cover flex-shrink-0 ${ringCls}`}
+        className={`size-9 rounded-xl object-cover flex-shrink-0 ${ring ?? ''}`}
       />
     );
   }
   return (
-    <div
-      className={`size-10 rounded-xl bg-gradient-to-br from-primary/80 to-accent-blue flex items-center justify-center flex-shrink-0 font-bold text-zinc-950 text-sm select-none ${ringCls}`}
-    >
+    <div className={`size-9 rounded-xl bg-gradient-to-br from-primary/70 to-accent-blue flex items-center justify-center flex-shrink-0 font-bold text-zinc-950 text-sm select-none ${ring ?? ''}`}>
       {(name || '?')[0].toUpperCase()}
     </div>
   );
 }
 
 function LeaderboardRow({ entry, rank }) {
-  const rs = RANK_STYLES[rank];
+  const { t } = useTranslation();
+  const p = PODIUM[rank];
+  const name = entry.displayName || entry.accountName;
   const badgeIds = (entry.badges ?? []).map(b => b.id);
 
   return (
     <Link
       to={`/${entry.accountName}`}
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/70 border border-zinc-700/40 hover:border-zinc-600/50 transition-all duration-150 group ${rs ? rs.border : ''}`}
+      className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-150
+        ${p
+          ? `border-l-2 ${p.accent} border-t border-r border-b border-zinc-700/30 ${p.glow} hover:border-zinc-600/40`
+          : 'border border-zinc-800/50 bg-zinc-800/20 hover:bg-zinc-800/50 hover:border-zinc-700/40'
+        }`}
     >
-      <RankNumber pos={rank} />
+      {/* Rank */}
+      <RankBadge pos={rank} />
 
-      <UserAvatar
-        avatarUrl={entry.avatarUrl}
-        name={entry.displayName || entry.accountName}
-        rankStyle={rs}
-      />
+      {/* Avatar */}
+      <UserAvatar avatarUrl={entry.avatarUrl} name={name} ring={p?.ring} />
 
+      {/* Identity */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-sm font-semibold text-zinc-100 group-hover:text-primary transition-colors truncate">
-            {entry.displayName || entry.accountName}
+          <span className={`text-sm font-semibold truncate transition-colors group-hover:text-primary ${p ? p.label : 'text-zinc-200'}`}>
+            {name}
           </span>
           {entry.level > 0 && (
-            <span className="text-[9px] font-bold text-zinc-600 border border-zinc-800 px-1 py-0.5 rounded tabular-nums">
+            <span className="text-[9px] font-bold text-zinc-600 border border-zinc-800 px-1 py-0.5 rounded tabular-nums shrink-0">
               Lv.{entry.level}
             </span>
           )}
           {badgeIds.length > 0 && <BadgeList ids={badgeIds} max={2} />}
         </div>
-        <span className="text-xs text-zinc-500 font-mono">@{entry.accountName}</span>
+        <span className="text-[11px] text-zinc-600 font-mono">@{entry.accountName}</span>
       </div>
 
-      <div className="flex items-center gap-3 flex-shrink-0 text-right">
+      {/* Inline stats — icon+value chips, no text labels = no locale overflow */}
+      <div className="flex items-center gap-3 shrink-0">
         {entry.currentStreak > 0 && (
-          <div className="hidden lg:flex items-center gap-1 text-xs text-orange-500/80">
-            <Flame className="size-3" />
-            <span className="tabular-nums">{entry.currentStreak}d</span>
-          </div>
+          <Tip content={t('badges.leaderboard.streak', 'Day streak')} side="top">
+            <div className="hidden lg:flex items-center gap-1">
+              <Flame className="size-3 text-orange-500/70" />
+              <span className="text-[11px] tabular-nums font-medium text-orange-500/70">{entry.currentStreak}d</span>
+            </div>
+          </Tip>
         )}
-        <div className="hidden sm:flex items-center gap-1 text-xs text-zinc-500">
-          <Music className="size-3" />
-          <span className="tabular-nums">{(entry.projectCount ?? 0).toLocaleString()}</span>
+
+        <div className="hidden sm:flex items-center gap-3">
+          <StatChip
+            icon={Music2}
+            value={formatCount(entry.karaokeLines ?? 0)}
+            tooltip={t('badges.leaderboard.syncedLines', 'Synced lines')}
+            color="text-zinc-500"
+          />
+          <StatChip
+            icon={Star}
+            value={formatCount(entry.totalStarsReceived ?? 0)}
+            tooltip={t('badges.leaderboard.stars', 'Stars received')}
+            color="text-zinc-500"
+          />
+          <StatChip
+            icon={GitFork}
+            value={formatCount(entry.totalForksReceived ?? 0)}
+            tooltip={t('badges.leaderboard.forks', 'Forks received')}
+            color="text-zinc-500"
+          />
+          <StatChip
+            icon={Music}
+            value={formatCount(entry.projectCount ?? 0)}
+            tooltip={t('badges.leaderboard.projects', 'Projects')}
+            color="text-zinc-500"
+          />
         </div>
-        <div className="hidden sm:flex items-center gap-1 text-xs text-zinc-500">
-          <Star className="size-3" />
-          <span className="tabular-nums">{(entry.totalStarsReceived ?? 0).toLocaleString()}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Timer className="size-3.5 text-accent-blue" />
-          <span className={`font-semibold tabular-nums text-sm ${rs ? rs.rank : 'text-zinc-200'}`}>
+
+        {/* Primary metric — always visible */}
+        <div className="flex items-center gap-1.5 min-w-[52px] justify-end">
+          <Timer className="size-3.5 text-accent-blue shrink-0" />
+          <span className={`font-semibold tabular-nums text-sm ${p ? p.label : 'text-zinc-300'}`}>
             {formatMinutes(entry.minutesSynced ?? 0)}
           </span>
         </div>
@@ -169,11 +195,11 @@ export default function LeaderboardPage() {
 
   return (
     <div className="flex-1 flex flex-col px-4 pt-6 pb-16 max-w-3xl mx-auto w-full animate-fade-in">
-      {/* Header */}
-      <div className="glass rounded-[2rem] p-6 sm:p-8 mb-6 relative overflow-hidden">
-        {/* Decorative glow */}
-        <div className="absolute -top-16 -right-16 size-48 rounded-full bg-warning/5 blur-3xl pointer-events-none" aria-hidden="true" />
-        <div className="absolute -bottom-12 -left-12 size-36 rounded-full bg-primary/5 blur-3xl pointer-events-none" aria-hidden="true" />
+
+      {/* Header card */}
+      <div className="glass rounded-[2rem] p-6 sm:p-8 mb-4 relative overflow-hidden">
+        <div className="absolute -top-16 -right-16 size-48 rounded-full bg-warning/5 blur-3xl pointer-events-none" aria-hidden />
+        <div className="absolute -bottom-12 -left-12 size-36 rounded-full bg-primary/5 blur-3xl pointer-events-none" aria-hidden />
 
         <div className="relative flex items-start gap-4">
           <div className="size-12 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center flex-shrink-0">
@@ -189,17 +215,28 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
-        {/* Column headers */}
+        {/* Stats legend — icons only, no translated column headers */}
         {!loading && !error && users.length > 0 && (
-          <div className="flex items-center gap-3 mt-6 px-4 text-[10.5px] font-semibold uppercase tracking-widest text-zinc-500">
-            <span className="w-8 text-center">#</span>
-            <span className="size-10 flex-shrink-0" />
-            <span className="flex-1">{t('badges.leaderboard.user')}</span>
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <span className="hidden sm:block w-10 text-right">{t('badges.leaderboard.projects')}</span>
-              <span className="hidden sm:block w-8 text-right">{t('badges.leaderboard.stars')}</span>
-              <span className="w-16 text-right">{t('badges.leaderboard.synced')}</span>
-            </div>
+          <div className="hidden sm:flex items-center justify-end gap-3 mt-5 pt-4 border-t border-zinc-800/40">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 mr-auto">
+              {t('badges.leaderboard.user')}
+            </span>
+            <Tip content={t('badges.leaderboard.syncedLines', 'Synced lines')} side="top">
+              <Music2 className="size-3.5 text-zinc-600" />
+            </Tip>
+            <Tip content={t('badges.leaderboard.stars', 'Stars received')} side="top">
+              <Star className="size-3.5 text-zinc-600" />
+            </Tip>
+            <Tip content={t('badges.leaderboard.forks', 'Forks received')} side="top">
+              <GitFork className="size-3.5 text-zinc-600" />
+            </Tip>
+            <Tip content={t('badges.leaderboard.projects', 'Projects')} side="top">
+              <Music className="size-3.5 text-zinc-600" />
+            </Tip>
+            <div className="w-px h-3 bg-zinc-700/60 mx-1" />
+            <Tip content={t('badges.leaderboard.synced', 'Minutes synced')} side="top">
+              <Timer className="size-3.5 text-zinc-600" />
+            </Tip>
           </div>
         )}
       </div>
@@ -211,20 +248,16 @@ export default function LeaderboardPage() {
         </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
-          <p className="text-sm font-medium text-muted-foreground">
-            {t('badges.leaderboard.error')}
-          </p>
+          <p className="text-sm font-medium text-muted-foreground">{t('badges.leaderboard.error')}</p>
         </div>
       ) : users.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
-          <Timer className="size-10 text-zinc-600" />
-          <p className="text-sm text-muted-foreground">
-            {t('badges.leaderboard.empty')}
-          </p>
+        <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+          <Timer className="size-10 text-zinc-700" />
+          <p className="text-sm text-muted-foreground">{t('badges.leaderboard.empty')}</p>
         </div>
       ) : (
         <>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             {users.map((entry, i) => (
               <LeaderboardRow key={entry.id ?? entry.accountName} entry={entry} rank={i + 1} />
             ))}
@@ -239,17 +272,13 @@ export default function LeaderboardPage() {
                 disabled={loadingMore}
                 className="gap-1.5"
               >
-                {loadingMore ? (
-                  <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                  <ChevronDown className="size-3.5" />
-                )}
+                {loadingMore ? <Loader2 className="size-3.5 animate-spin" /> : <ChevronDown className="size-3.5" />}
                 {t('common.loadMore')}
               </Button>
             </div>
           )}
 
-          <p className="text-center text-[10.5px] text-zinc-600 mt-6">
+          <p className="text-center text-[10px] text-zinc-700 mt-6">
             {t('badges.leaderboard.subtitle')}
           </p>
         </>

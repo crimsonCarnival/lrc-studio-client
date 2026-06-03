@@ -73,5 +73,7 @@ export default {
     star_other:    '{{count}} estrellas',
     day_one:       'Racha de {{count}} día',
     day_other:     'Racha de {{count}} días',
+    syncedLines:   'Líneas sincronizadas',
+    forks:         'Bifurcaciones recibidas',
   },
 };

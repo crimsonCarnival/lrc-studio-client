@@ -80,5 +80,7 @@ export default {
     star_other:       '{{count}} stars',
     day_one:          '{{count}} day streak',
     day_other:        '{{count}} day streak',
+    syncedLines:      'Synced lines',
+    forks:            'Forks received',
   },
 };
