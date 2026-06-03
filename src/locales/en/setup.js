@@ -97,6 +97,9 @@ export default {
   trackCount: "Album Tracks",
   trackCountPlaceholder: "e.g. 12",
   trackCountDesc: "Total number of tracks in this album",
+  fetchInfo: "Fetch",
+  fetchSongInfo: "Auto-fill from Spotify",
+  metaSearchFailed: "No results found",
   genre: {
     pop: "Pop",
     rock: "Rock",

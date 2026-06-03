@@ -97,6 +97,9 @@ export default {
   trackCount: "Pistas del álbum",
   trackCountPlaceholder: "ej. 12",
   trackCountDesc: "Número total de pistas en este álbum",
+  fetchInfo: "Buscar",
+  fetchSongInfo: "Autocompletar desde Spotify",
+  metaSearchFailed: "No se encontraron resultados",
   genre: {
     pop: "Pop",
     rock: "Rock",

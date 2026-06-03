@@ -98,6 +98,9 @@ export default {
   trackCount: "収録曲数",
   trackCountPlaceholder: "例：12",
   trackCountDesc: "このアルバムの総収録曲数",
+  fetchInfo: "取得",
+  fetchSongInfo: "Spotifyから自動入力",
+  metaSearchFailed: "結果が見つかりませんでした",
   genre: {
     pop: "ポップ",
     rock: "ロック",
