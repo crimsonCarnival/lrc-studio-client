@@ -29,13 +29,20 @@ function DropdownProjectRow({ project }) {
   );
 }
 
-export function HeaderSearchBar() {
+export function HeaderSearchBar({ autoFocus = false, onClose }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { query, projects, users, total, loading, hasResults, handleQueryChange, clear } = useHeaderSearch();
   const [open, setOpen] = useState(false);
-  const containerRef = useRef(null);
-  const inputRef = useRef(null);
+  const containerRef = useRef(/** @type {HTMLDivElement|null} */ (null));
+  const inputRef = useRef(/** @type {HTMLInputElement|null} */ (null));
+
+  useEffect(() => {
+    if (autoFocus) {
+      const id = requestAnimationFrame(() => inputRef.current?.focus());
+      return () => cancelAnimationFrame(id);
+    }
+  }, [autoFocus]);
 
   const showDropdown = open && (query.trim().length > 0);
 
@@ -54,11 +61,13 @@ export function HeaderSearchBar() {
     if (e.key === 'Escape') {
       setOpen(false);
       inputRef.current?.blur();
+      onClose?.();
     }
     if (e.key === 'Enter' && query.trim()) {
       navigate(`/search?q=${encodeURIComponent(query.trim())}`);
       setOpen(false);
       inputRef.current?.blur();
+      onClose?.();
     }
   };
 
@@ -67,6 +76,7 @@ export function HeaderSearchBar() {
     navigate(`/search?q=${encodeURIComponent(query.trim())}`);
     setOpen(false);
     clear();
+    onClose?.();
   };
 
   return (
