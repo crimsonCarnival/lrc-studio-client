@@ -273,20 +273,22 @@ export function AppHeader({
 
           {/* Hide editor toggle — desktop, project pages, when lines exist */}
           {isReady && lines.length > 0 && (
-            <button
-              aria-label={t('app.hideEditor')}
-              onClick={() => {
-                if (focusMode === 'playback') { setFocusMode('default'); setHideEditor(false); }
-                else { setHideEditor(h => !h); }
-              }}
-              className={`hidden lg:flex size-8 items-center justify-center rounded-xl transition-colors flex-shrink-0 border text-xs font-bold ${
-                (hideEditor || focusMode === 'playback')
-                  ? NAV_ACTIVE
-                  : 'bg-zinc-800/60 border-zinc-800/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-              }`}
-            >
-              {(hideEditor || focusMode === 'playback') ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-            </button>
+            <Tip content={t('app.hideEditor')} side="bottom">
+              <button
+                aria-label={t('app.hideEditor')}
+                onClick={() => {
+                  if (focusMode === 'playback') { setFocusMode('default'); setHideEditor(false); }
+                  else { setHideEditor(h => !h); }
+                }}
+                className={`hidden lg:flex size-8 items-center justify-center rounded-xl transition-colors flex-shrink-0 border text-xs font-bold ${
+                  (hideEditor || focusMode === 'playback')
+                    ? NAV_ACTIVE
+                    : 'bg-zinc-800/60 border-zinc-800/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                }`}
+              >
+                {(hideEditor || focusMode === 'playback') ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+              </button>
+            </Tip>
           )}
 
           {/* Grouped icon controls: theme | lang | shortcuts */}
@@ -294,11 +296,13 @@ export function AppHeader({
 
             {/* Theme switcher — hidden on mobile (accessible via Settings) */}
             <Popover>
-              <PopoverTrigger asChild>
-                <button className={`${iconBtn} hidden sm:flex`} aria-label={t('settings.theme', 'Theme')}>
-                  {(() => { const TI = THEME_ICONS[currentTheme] || Moon; return <TI className="size-3.5" />; })()}
-                </button>
-              </PopoverTrigger>
+              <Tip content={t('settings.theme', 'Theme')} side="bottom">
+                <PopoverTrigger asChild>
+                  <button className={`${iconBtn} hidden sm:flex`} aria-label={t('settings.theme', 'Theme')}>
+                    {(() => { const TI = THEME_ICONS[currentTheme] || Moon; return <TI className="size-3.5" />; })()}
+                  </button>
+                </PopoverTrigger>
+              </Tip>
               <PopoverContent className="w-44 p-1" align="end" sideOffset={8}>
                 {THEMES.map(({ id, label, swatch }) => (
                   <PopoverItem
@@ -318,12 +322,14 @@ export function AppHeader({
 
             {/* Language switcher */}
             <Popover>
-              <PopoverTrigger asChild>
-                <button className={`${iconBtn} gap-0.5 w-auto px-2`} aria-label={t('settings.language', 'Language')}>
-                  <Globe className="size-3.5 shrink-0" />
-                  <span className="text-[10px] font-bold tracking-wide">{currentLang}</span>
-                </button>
-              </PopoverTrigger>
+              <Tip content={t('settings.language', 'Language')} side="bottom">
+                <PopoverTrigger asChild>
+                  <button className={`${iconBtn} gap-0.5 w-auto px-2`} aria-label={t('settings.language', 'Language')}>
+                    <Globe className="size-3.5 shrink-0" />
+                    <span className="text-[10px] font-bold tracking-wide">{currentLang}</span>
+                  </button>
+                </PopoverTrigger>
+              </Tip>
               <PopoverContent className="w-48 p-1" align="end" sideOffset={8}>
                 {LANGUAGES.map(({ code }) => {
                   const currentLang = (i18n?.language || 'en').split('-')[0];
@@ -346,13 +352,15 @@ export function AppHeader({
             <div className="w-px h-4 bg-zinc-800/80 shrink-0" />
 
             {/* Keyboard shortcuts */}
-            <button
-              onClick={() => setShowKeyboardHelp(p => !p)}
-              aria-label={t('shortcuts.title') || 'Keyboard Shortcuts'}
-              className={iconBtn}
-            >
-              <HelpCircle className="size-3.5" />
-            </button>
+            <Tip content={t('shortcuts.title', 'Keyboard Shortcuts')} side="bottom">
+              <button
+                onClick={() => setShowKeyboardHelp(p => !p)}
+                aria-label={t('shortcuts.title') || 'Keyboard Shortcuts'}
+                className={iconBtn}
+              >
+                <HelpCircle className="size-3.5" />
+              </button>
+            </Tip>
           </div>
 
           {/* Auth section */}
@@ -433,6 +441,9 @@ export function AppHeader({
                 </div>
 
                 <div className="p-1 border-b border-zinc-800/60">
+                  <PopoverItem onClick={() => navigate('/search')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+                    <span className="flex items-center gap-2"><Search className="size-4 text-zinc-400" />{t('search.title')}</span>
+                  </PopoverItem>
                   <PopoverItem onClick={() => { navigate(user?.accountName ? `/${user.accountName}` : '/'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <User className="size-4 text-zinc-400" />{t('profile.title')}
                   </PopoverItem>
@@ -446,9 +457,6 @@ export function AppHeader({
                   </PopoverItem>
                   <PopoverItem onClick={() => navTo('/feed')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <span className="flex items-center gap-2"><Globe className="size-4 text-zinc-400" />{t('feed.title')}</span>
-                  </PopoverItem>
-                  <PopoverItem onClick={() => navigate('/search')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-                    <span className="flex items-center gap-2"><Search className="size-4 text-zinc-400" />{t('search.title')}</span>
                   </PopoverItem>
                   <PopoverItem onClick={() => navTo('/explore')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <span className="flex items-center gap-2"><Compass className="size-4 text-zinc-400" />{t('explore.nav')}</span>

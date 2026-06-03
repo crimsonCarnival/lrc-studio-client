@@ -248,15 +248,17 @@ export default function Preview(props) {
               {/* Menu */}
               {!viewerMode && !sharedReadOnly && (
                 <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0"
-                    >
-                      <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
-                    </Button>
-                  </PopoverTrigger>
+                  <Tip content={t('preview.addTrack', 'Add track')} side="bottom">
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0"
+                      >
+                        <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
+                      </Button>
+                    </PopoverTrigger>
+                  </Tip>
                   <PopoverContent className="w-36 sm:w-48" align="end">
                     <PopoverItem
                       onClick={() => { setPastingType('secondary'); setPasteText(lines.map(l => l.secondary || '').join('\n')); }}

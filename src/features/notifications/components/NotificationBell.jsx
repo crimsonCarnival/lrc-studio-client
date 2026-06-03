@@ -3,6 +3,7 @@ import { Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNotificationsContext } from '../NotificationsContext';
 import { NotificationPanel } from './NotificationPanel';
+import { Tip } from '@ui/tip';
 
 export function NotificationBell() {
   const { t } = useTranslation();
@@ -25,18 +26,20 @@ export function NotificationBell() {
 
   return (
     <div ref={containerRef} className="relative">
-      <button
-        onClick={() => setOpen(o => !o)}
-        aria-label={t('notifications.bell')}
-        className="relative p-2 rounded-lg hover:bg-zinc-800/60 transition-colors text-zinc-400 hover:text-zinc-200"
-      >
-        <Bell size={18} />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-zinc-950 leading-none">
-            {displayCount}
-          </span>
-        )}
-      </button>
+      <Tip content={t('notifications.bell')} side="bottom">
+        <button
+          onClick={() => setOpen(o => !o)}
+          aria-label={t('notifications.bell')}
+          className="relative p-2 rounded-lg hover:bg-zinc-800/60 transition-colors text-zinc-400 hover:text-zinc-200"
+        >
+          <Bell size={18} />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-zinc-950 leading-none">
+              {displayCount}
+            </span>
+          )}
+        </button>
+      </Tip>
       {open && <NotificationPanel />}
     </div>
   );
