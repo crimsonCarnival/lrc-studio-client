@@ -1,10 +1,10 @@
-﻿import { useState, useRef, startTransition } from 'react';
+﻿import { useState, useRef, useEffect, startTransition } from 'react';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   UploadCloud, Settings as SettingsIcon, LogOut, BookOpen, Pencil,
-  ShieldAlert, Eye, EyeOff, User, HelpCircle, Check, ArrowLeft,
+  ShieldAlert, Eye, EyeOff, User, Check, ArrowLeft,
   Sun, Moon, Monitor, Palette, Globe, ExternalLink, Search, Compass, Trophy,
 } from 'lucide-react';
 import { HeaderSearchBar } from '@/features/search/components/HeaderSearchBar';
@@ -12,7 +12,6 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
-import { Kbd } from '@ui/kbd';
 import { LazyImage } from '@ui/LazyImage';
 import { projects, uploads } from '@/app/api';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
@@ -68,7 +67,6 @@ export function AppHeader({
   hasUnsavedChanges,
   activeProjectId,
   forkedFrom,
-  setShowKeyboardHelp,
   focusMode,
   setFocusMode,
   hideEditor,
@@ -83,7 +81,25 @@ export function AppHeader({
   const location = useLocation();
   const [editingProjectName, setEditingProjectName] = useState(false);
   const [counts, setCounts] = useState({ library: 0, uploads: 0 });
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchOverlayRef = useRef(null);
   const projectNameInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    function onPointerDown(e) {
+      if (searchOverlayRef.current && !searchOverlayRef.current.contains(e.target)) {
+        setSearchOpen(false);
+      }
+    }
+    function onKeyDown(e) { if (e.key === 'Escape') setSearchOpen(false); }
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [searchOpen]);
 
 
 
@@ -107,6 +123,7 @@ export function AppHeader({
       search: t('search.title'),
       explore: t('explore.nav'),
       leaderboard: t('badges.leaderboard.title', 'Leaderboard'),
+      notifications: t('notifications.bell'),
     };
     return map[seg] || seg.replace(/-/g, ' ');
   })();
@@ -261,12 +278,8 @@ export function AppHeader({
           </div>
         </div>
 
-        {/* ── Center: Search bar ── */}
-        {!isSettingsPage && !isGuestLanding && (
-          <div className="hidden lg:flex flex-1 items-center justify-center px-8">
-            <HeaderSearchBar />
-          </div>
-        )}
+        {/* ── Center: spacer ── */}
+        <div className="flex-1" />
 
         {/* ── Right: Controls ── */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -289,6 +302,26 @@ export function AppHeader({
                 {(hideEditor || focusMode === 'playback') ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
               </button>
             </Tip>
+          )}
+
+          {/* Search — inline in header next to button */}
+          {!isGuestLanding && (
+            <div ref={searchOverlayRef} className="flex items-center gap-1">
+              {searchOpen && (
+                <div className="w-52 sm:w-64">
+                  <HeaderSearchBar autoFocus onClose={() => setSearchOpen(false)} />
+                </div>
+              )}
+              <Tip content={t('search.title')} side="bottom">
+                <button
+                  onClick={() => setSearchOpen(o => !o)}
+                  aria-label={t('search.title')}
+                  className={`${iconBtn} ${searchOpen ? 'text-primary bg-primary/10' : ''}`}
+                >
+                  <Search className="size-3.5" />
+                </button>
+              </Tip>
+            </div>
           )}
 
           {/* Grouped icon controls: theme | lang | shortcuts */}
@@ -349,18 +382,6 @@ export function AppHeader({
               </PopoverContent>
             </Popover>
 
-            <div className="w-px h-4 bg-zinc-800/80 shrink-0" />
-
-            {/* Keyboard shortcuts */}
-            <Tip content={t('shortcuts.title', 'Keyboard Shortcuts')} side="bottom">
-              <button
-                onClick={() => setShowKeyboardHelp(p => !p)}
-                aria-label={t('shortcuts.title') || 'Keyboard Shortcuts'}
-                className={iconBtn}
-              >
-                <HelpCircle className="size-3.5" />
-              </button>
-            </Tip>
           </div>
 
           {/* Auth section */}
@@ -444,6 +465,15 @@ export function AppHeader({
                   <PopoverItem onClick={() => navigate('/search')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <span className="flex items-center gap-2"><Search className="size-4 text-zinc-400" />{t('search.title')}</span>
                   </PopoverItem>
+                  <PopoverItem onClick={() => navTo('/explore')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+                    <span className="flex items-center gap-2"><Compass className="size-4 text-zinc-400" />{t('explore.nav')}</span>
+                  </PopoverItem>
+                  <PopoverItem onClick={() => navTo('/feed')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+                    <span className="flex items-center gap-2"><Globe className="size-4 text-zinc-400" />{t('feed.title')}</span>
+                  </PopoverItem>
+                </div>
+
+                <div className="p-1 border-b border-zinc-800/60">
                   <PopoverItem onClick={() => { navigate(user?.accountName ? `/${user.accountName}` : '/'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <User className="size-4 text-zinc-400" />{t('profile.title')}
                   </PopoverItem>
@@ -454,12 +484,6 @@ export function AppHeader({
                   <PopoverItem onClick={() => navTo('/uploads')} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <span className="flex items-center gap-2"><UploadCloud className="size-4 text-zinc-400" />{t('uploads.title')}</span>
                     {counts.uploads > 0 && <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.uploads}</span>}
-                  </PopoverItem>
-                  <PopoverItem onClick={() => navTo('/feed')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-                    <span className="flex items-center gap-2"><Globe className="size-4 text-zinc-400" />{t('feed.title')}</span>
-                  </PopoverItem>
-                  <PopoverItem onClick={() => navTo('/explore')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-                    <span className="flex items-center gap-2"><Compass className="size-4 text-zinc-400" />{t('explore.nav')}</span>
                   </PopoverItem>
                   <PopoverItem onClick={() => navigate('/leaderboard')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <span className="flex items-center gap-2"><Trophy className="size-4 text-warning" />{t('badges.leaderboard.title', 'Leaderboard')}</span>
@@ -474,9 +498,6 @@ export function AppHeader({
                   )}
                   <PopoverItem onClick={() => { navigate('/settings'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <SettingsIcon className="size-4 text-zinc-400" />{t('settings.title')}
-                  </PopoverItem>
-                  <PopoverItem onClick={() => { setShowKeyboardHelp(p => !p); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-                    <Kbd>?</Kbd><span className="ml-1">{t('shortcuts.title')}</span>
                   </PopoverItem>
                 </div>
 
@@ -498,20 +519,9 @@ export function AppHeader({
       {/* Scroll progress — only shown on guest landing page */}
       {isGuestLanding && <ScrollProgress className="absolute top-auto bottom-0 h-[2px]" />}
 
+
     </header>
 
-    {/* Feather — sibling to <header> so it's outside its stacking context and not clipped */}
-    <div
-      className="fixed left-0 right-0 h-12 pointer-events-none animate-fade-in"
-      style={{
-        top: '3.25rem',
-        zIndex: 49,
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
-      }}
-    />
     </>
   );
 }
