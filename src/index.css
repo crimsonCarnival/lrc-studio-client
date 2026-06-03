@@ -854,8 +854,10 @@ audio::-webkit-media-controls-panel {
   100% { background-position: 0% 0%; }
 }
 
-.animate-shine {
-  animation: shine var(--duration, 14s) infinite linear;
+@media (prefers-reduced-motion: no-preference) {
+  .animate-shine {
+    animation: shine var(--duration, 14s) infinite linear;
+  }
 }
 
 /* Rosé Pine Dawn — light theme shadcn variables */
