@@ -357,7 +357,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
         <div className="flex items-center gap-3 max-w-5xl mx-auto">
           <div className={`size-2 rounded-full bg-primary shrink-0 ${reducedMotion ? '' : 'animate-pulse'}`} />
           <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-700">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">
               {t('app.name')} · {t('setup.newProject', 'New Project')}
             </p>
             <h2 className="font-heading text-zinc-100" style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)' }}>
@@ -490,7 +490,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                   onCheckedChange={(checked) => setMetadataState({ isPublic: checked })}
                   disabled={!user}
                 />
-                <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-700">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">
                   {isPublic ? t('setup.public', 'Public') : t('setup.private', 'Private')}
                 </span>
               </div>
