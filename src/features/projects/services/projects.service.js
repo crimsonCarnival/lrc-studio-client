@@ -24,8 +24,16 @@ const GET_PROJECTS = `
       coverImage
       metadata {
         description
+        genre
         tags
+        songName
+        songArtist
+        songAlbum
+        songYear
         albumArt
+        songLanguage
+        trackNumber
+        trackCount
       }
       upload {
         id
@@ -70,8 +78,16 @@ const GET_PROJECT = `
       coverImage
       metadata {
         description
+        genre
         tags
+        songName
+        songArtist
+        songAlbum
+        songYear
         albumArt
+        songLanguage
+        trackNumber
+        trackCount
       }
       upload {
         id
