@@ -153,6 +153,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     songYear: prefill?.songYear || '',
     songGenre: prefill?.songGenre || '',
     songLanguage: prefill?.songLanguage || '',
+    trackNumber: prefill?.trackNumber ?? '',
     trackCount: prefill?.trackCount ?? '',
     coverImage: prefill?.coverImage || '',
   }));
@@ -162,7 +163,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, ytLoading, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
-  const { name: projectName, description: projectDescription, tags: projectTags, tagInput, isPublic, songName, songArtist, songAlbum, songYear, songGenre, songLanguage, trackCount, coverImage } = metadata;
+  const { name: projectName, description: projectDescription, tags: projectTags, tagInput, isPublic, songName, songArtist, songAlbum, songYear, songGenre, songLanguage, trackNumber, trackCount, coverImage } = metadata;
 
   // State setters
   const setAudioState = useCallback((val) => setAudio(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
@@ -328,9 +329,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       songArtist: meta.artist || '',
       songAlbum: meta.album || '',
       songYear: meta.releaseYear || '',
-      ...(mappedGenre ? { songGenre: mappedGenre } : {}),
-      ...(meta.totalTracks ? { trackCount: String(meta.totalTracks) } : {}),
-      ...(meta.albumArt ? { coverImage: meta.albumArt } : {}),
+      ...(mappedGenre              ? { songGenre:    mappedGenre              } : {}),
+      ...(meta.trackNumber != null ? { trackNumber: String(meta.trackNumber) } : {}),
+      ...(meta.totalTracks != null ? { trackCount:  String(meta.totalTracks) } : {}),
+      ...(meta.albumArt            ? { coverImage:  meta.albumArt            } : {}),
     });
 
     if (getAccessToken()) {
@@ -449,8 +451,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       }));
     }
     const finalTags = tagInput.trim() ? [...projectTags, tagInput.trim()] : projectTags;
+    const parsedTrackNumber = parseInt(trackNumber, 10);
     const parsedTrackCount = parseInt(trackCount, 10);
-    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: finalTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim(), songGenre: songGenre.trim(), songLanguage: songLanguage.trim(), trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim() });
+    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: finalTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim(), songGenre: songGenre.trim(), songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim() });
   };
 
   const handleImageUpload = async (e) => {
@@ -531,7 +534,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
               )}
             </div>
 
-            {/* Row 1: Song name + Year */}
+            {/* Row 1: Song Name + Year */}
             <div className="grid gap-3 shrink-0" style={{ gridTemplateColumns: '3fr 1fr' }}>
               <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
                 onChange={(e) => setMetadataState({ songName: e.target.value })}
@@ -549,7 +552,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                 maxLength={4} />
             </div>
 
-            {/* Row 2: Artist (full width, combobox) */}
+            {/* Row 2: Artist — full width combobox */}
             <FloatingCombobox
               id="song-artist"
               label={t('setup.songArtist')}
@@ -560,8 +563,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
               className="shrink-0"
             />
 
-            {/* Row 3: Album + Track count */}
-            <div className="grid gap-3 shrink-0" style={{ gridTemplateColumns: '3fr 1fr' }}>
+            {/* Row 3: Album + Track # + Track Count */}
+            <div className="grid gap-3 shrink-0" style={{ gridTemplateColumns: '2fr 1fr 1fr' }}>
               <FloatingCombobox
                 id="song-album"
                 label={t('setup.songAlbum')}
@@ -571,17 +574,17 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                 options={albumOptions}
                 maxLength={300}
               />
-              <FloatingCombobox
-                id="track-count"
-                label={t('setup.trackCount')}
+              <FloatingInput id="track-number" type="text" label={t('setup.trackNumber')}
+                value={String(trackNumber ?? '')}
+                onChange={(e) => setMetadataState({ trackNumber: e.target.value.replace(/\D/g, '').slice(0, 3) })}
+                maxLength={3} />
+              <FloatingInput id="track-count" type="text" label={t('setup.trackCount')}
                 value={String(trackCount ?? '')}
-                onChange={(v) => setMetadataState({ trackCount: v.replace(/\D/g, '').slice(0, 3) })}
-                options={Array.from({ length: 30 }, (_, i) => ({ value: String(i + 1) }))}
-                maxLength={3}
-              />
+                onChange={(e) => setMetadataState({ trackCount: e.target.value.replace(/\D/g, '').slice(0, 3) })}
+                maxLength={3} />
             </div>
 
-            {/* Row 4: Genre + Language (strict preset-only) */}
+            {/* Row 4: Genre + Language — strict preset-only */}
             <div className="grid grid-cols-2 gap-3 shrink-0">
               <FloatingCombobox
                 id="song-genre"
