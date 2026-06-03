@@ -158,15 +158,17 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     songYear: prefill?.songYear || '',
     songGenre: prefill?.songGenre || '',
     songLanguage: prefill?.songLanguage || '',
+    trackNumber: prefill?.trackNumber ?? '',
     trackCount: prefill?.trackCount ?? '',
     coverImage: prefill?.coverImage || '',
   }));
 
   const [musicLibrary, setMusicLibrary] = useState([]);
+  const [metaSearching, setMetaSearching] = useState(false);
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, ytLoading, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
-  const { name: projectName, description: projectDescription, tags: projectTags, tagInput, isPublic, songName, songArtist, songAlbum, songYear, songGenre, songLanguage, trackCount, coverImage } = metadata;
+  const { name: projectName, description: projectDescription, tags: projectTags, tagInput, isPublic, songName, songArtist, songAlbum, songYear, songGenre, songLanguage, trackNumber, trackCount, coverImage } = metadata;
 
   // State setters
   const setAudioState = useCallback((val) => setAudio(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
@@ -333,9 +335,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       songArtist: meta.artist || '',
       songAlbum: meta.album || '',
       songYear: meta.releaseYear || '',
-      ...(mappedGenre ? { songGenre: mappedGenre } : {}),
-      ...(meta.totalTracks ? { trackCount: String(meta.totalTracks) } : {}),
-      ...(meta.albumArt ? { coverImage: meta.albumArt } : {}),
+      ...(mappedGenre              ? { songGenre:    mappedGenre              } : {}),
+      ...(meta.trackNumber != null ? { trackNumber: String(meta.trackNumber) } : {}),
+      ...(meta.totalTracks != null ? { trackCount:  String(meta.totalTracks) } : {}),
+      ...(meta.albumArt            ? { coverImage:  meta.albumArt            } : {}),
     });
 
     if (getAccessToken()) {
@@ -399,9 +402,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
           songArtist: meta.artist || songArtist,
           songAlbum: meta.album || songAlbum,
           songYear: meta.releaseYear || songYear,
-          ...(mappedGenre ? { songGenre: mappedGenre } : {}),
-          ...(meta.totalTracks ? { trackCount: String(meta.totalTracks) } : {}),
-          ...(meta.albumArt && !coverImage ? { coverImage: meta.albumArt } : {}),
+          ...(mappedGenre              ? { songGenre:   mappedGenre              } : {}),
+          ...(meta.trackNumber != null ? { trackNumber: String(meta.trackNumber) } : {}),
+          ...(meta.totalTracks != null ? { trackCount:  String(meta.totalTracks) } : {}),
+          ...(!coverImage && meta.albumArt ? { coverImage: meta.albumArt }         : {}),
         });
       } else {
         toast.error(t('setup.metaSearchFailed', 'No results found'));
@@ -458,8 +462,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       }));
     }
     const finalTags = tagInput.trim() ? [...projectTags, tagInput.trim()] : projectTags;
+    const parsedTrackNumber = parseInt(trackNumber, 10);
     const parsedTrackCount = parseInt(trackCount, 10);
-    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: finalTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim(), songGenre: songGenre.trim(), songLanguage: songLanguage.trim(), trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim() });
+    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: finalTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim(), songGenre: songGenre.trim(), songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim() });
   };
 
   const handleImageUpload = async (e) => {
@@ -523,7 +528,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
               <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                 {t('setup.songInformation', 'Song Information')}
               </h3>
-              {songName.trim() && (
+              {songName.trim() && songArtist.trim() && (
                 <Tip content={t('setup.fetchSongInfo', 'Auto-fill from Spotify')} side="left">
                   <button
                     type="button"
@@ -539,34 +544,12 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                 </Tip>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-3 shrink-0">
-              <div className="relative">
-                <div className="absolute right-8 top-1/2 -translate-y-1/2 z-10">
-                  <Tip content={t('setup.songNameDesc')}>
-                    <Lightbulb className="size-3.5 text-zinc-600 cursor-help" />
-                  </Tip>
-                </div>
-                <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
-                  onChange={(e) => setMetadataState({ songName: e.target.value })}
-                  placeholder={t('setup.songNamePlaceholder')} maxLength={500} />
-              </div>
-              <FloatingCombobox
-                id="song-artist"
-                label={t('setup.songArtist')}
-                value={songArtist}
-                onChange={(v) => setMetadataState({ songArtist: v })}
-                options={artistOptions}
-                maxLength={300}
-              />
-              <FloatingCombobox
-                id="song-album"
-                label={t('setup.songAlbum')}
-                value={songAlbum}
-                onChange={(v) => setMetadataState({ songAlbum: v })}
-                onSelect={handleAlbumSelect}
-                options={albumOptions}
-                maxLength={300}
-              />
+
+            {/* Row 1: Song Name + Year */}
+            <div className="grid gap-3 shrink-0" style={{ gridTemplateColumns: '3fr 1fr' }}>
+              <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
+                onChange={(e) => setMetadataState({ songName: e.target.value })}
+                maxLength={500} />
               <FloatingInput id="song-year" type="text" label={t('setup.songYear')} value={songYear}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '').slice(0, 4);
@@ -577,7 +560,43 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                     setMetadataState({ songYear: val });
                   }
                 }}
-                placeholder={t('setup.songYearPlaceholder')} maxLength={4} />
+                maxLength={4} />
+            </div>
+
+            {/* Row 2: Artist — full width combobox */}
+            <FloatingCombobox
+              id="song-artist"
+              label={t('setup.songArtist')}
+              value={songArtist}
+              onChange={(v) => setMetadataState({ songArtist: v })}
+              options={artistOptions}
+              maxLength={300}
+              className="shrink-0"
+            />
+
+            {/* Row 3: Album + Track # + Track Count */}
+            <div className="grid gap-3 shrink-0" style={{ gridTemplateColumns: '2fr 1fr 1fr' }}>
+              <FloatingCombobox
+                id="song-album"
+                label={t('setup.songAlbum')}
+                value={songAlbum}
+                onChange={(v) => setMetadataState({ songAlbum: v })}
+                onSelect={handleAlbumSelect}
+                options={albumOptions}
+                maxLength={300}
+              />
+              <FloatingInput id="track-number" type="text" label={t('setup.trackNumber')}
+                value={String(trackNumber ?? '')}
+                onChange={(e) => setMetadataState({ trackNumber: e.target.value.replace(/\D/g, '').slice(0, 3) })}
+                maxLength={3} />
+              <FloatingInput id="track-count" type="text" label={t('setup.trackCount')}
+                value={String(trackCount ?? '')}
+                onChange={(e) => setMetadataState({ trackCount: e.target.value.replace(/\D/g, '').slice(0, 3) })}
+                maxLength={3} />
+            </div>
+
+            {/* Row 4: Genre + Language — strict preset-only */}
+            <div className="grid grid-cols-2 gap-3 shrink-0">
               <FloatingCombobox
                 id="song-genre"
                 label={t('setup.songGenre')}
@@ -595,17 +614,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                 options={languageOptions}
                 maxLength={100}
                 strict
-              />
-              <FloatingCombobox
-                id="track-count"
-                label={t('setup.trackCount')}
-                value={String(trackCount ?? '')}
-                onChange={(v) => {
-                  const cleaned = v.replace(/\D/g, '').slice(0, 3);
-                  setMetadataState({ trackCount: cleaned });
-                }}
-                options={Array.from({ length: 30 }, (_, i) => ({ value: String(i + 1) }))}
-                maxLength={3}
               />
             </div>
 
