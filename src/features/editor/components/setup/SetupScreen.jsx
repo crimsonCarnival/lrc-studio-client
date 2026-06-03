@@ -382,35 +382,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     else if (e.key === 'Backspace' && !tagInput && projectTags.length > 0) removeTag(projectTags.length - 1);
   };
 
-  const [metaSearching, setMetaSearching] = useState(false);
-
-  const handleFetchSongInfo = useCallback(async () => {
-    if (!songName.trim() || metaSearching) return;
-    setMetaSearching(true);
-    try {
-      const meta = await spotifyApi.lookupTrack(songName.trim(), songArtist.trim());
-      if (meta && !meta.error) {
-        const mappedGenre = matchSpotifyGenre(meta.genres, t);
-        setMetadataState({
-          songName: meta.name || songName,
-          songArtist: meta.artist || songArtist,
-          songAlbum: meta.album || songAlbum,
-          songYear: meta.releaseYear || songYear,
-          ...(mappedGenre              ? { songGenre:   mappedGenre              } : {}),
-          ...(meta.trackNumber != null ? { trackNumber: String(meta.trackNumber) } : {}),
-          ...(meta.totalTracks != null ? { trackCount:  String(meta.totalTracks) } : {}),
-          ...(!coverImage && meta.albumArt ? { coverImage: meta.albumArt }         : {}),
-        });
-      } else {
-        toast.error(t('setup.metaSearchFailed', 'No results found'));
-      }
-    } catch {
-      toast.error(t('setup.metaSearchFailed', 'No results found'));
-    } finally {
-      setMetaSearching(false);
-    }
-  }, [songName, songArtist, songAlbum, songYear, coverImage, metaSearching, setMetadataState, t]);
-
   const GENRE_KEYS = ['pop','rock','jazz','classical','hip_hop','rnb','electronic','folk','country','metal','indie','soul','reggae','latin','k_pop','anime','soundtrack','alternative','blues','funk'];
   const LANG_KEYS  = ['english','spanish','japanese','korean','mandarin','portuguese','french','german','italian','arabic','hindi','russian','tagalog','thai','vietnamese','indonesian','dutch','swedish','turkish','hebrew'];
 
