@@ -296,9 +296,9 @@ export function AppHeader({
 
             {/* Theme switcher — hidden on mobile (accessible via Settings) */}
             <Popover>
-              <Tip content={t('settings.theme', 'Theme')} side="bottom">
+              <Tip content={t('settings.interface.theme')} side="bottom">
                 <PopoverTrigger asChild>
-                  <button className={`${iconBtn} hidden sm:flex`} aria-label={t('settings.theme', 'Theme')}>
+                  <button className={`${iconBtn} hidden sm:flex`} aria-label={t('settings.interface.theme')}>
                     {(() => { const TI = THEME_ICONS[currentTheme] || Moon; return <TI className="size-3.5" />; })()}
                   </button>
                 </PopoverTrigger>
@@ -322,9 +322,9 @@ export function AppHeader({
 
             {/* Language switcher */}
             <Popover>
-              <Tip content={t('settings.language', 'Language')} side="bottom">
+              <Tip content={t('settings.interface.language')} side="bottom">
                 <PopoverTrigger asChild>
-                  <button className={`${iconBtn} gap-0.5 w-auto px-2`} aria-label={t('settings.language', 'Language')}>
+                  <button className={`${iconBtn} gap-0.5 w-auto px-2`} aria-label={t('settings.interface.language')}>
                     <Globe className="size-3.5 shrink-0" />
                     <span className="text-[10px] font-bold tracking-wide">{currentLang}</span>
                   </button>
