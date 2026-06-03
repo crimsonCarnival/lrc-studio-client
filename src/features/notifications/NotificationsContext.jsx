@@ -5,11 +5,12 @@ import { getSocket } from '@/app/socket.client';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
 
+/** @type {import('react').Context<any>} */
 const NotificationsContext = createContext(null);
 
 export function NotificationsProvider({ children }) {
   const { user } = useAuthContext();
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState(/** @type {any[]} */ ([]));
   const [unreadCount, setUnreadCount] = useState(0);
   const fetchedRef = useRef(false);
 
@@ -26,6 +27,7 @@ export function NotificationsProvider({ children }) {
 
   useEffect(() => {
     if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNotifications([]);
       setUnreadCount(0);
       fetchedRef.current = false;
@@ -67,18 +69,19 @@ export function NotificationsProvider({ children }) {
             onClick={() => toast.dismiss(t.id)}
           >
             <div>
-              <p className="text-xs font-bold text-zinc-100 leading-tight">Badge unlocked!</p>
-              <p className="text-xs text-zinc-400 leading-tight">{label}</p>
+              <p className="text-xs font-bold text-foreground leading-tight">Badge unlocked!</p>
+              <p className="text-xs text-muted-foreground leading-tight">{label}</p>
             </div>
           </div>
         ),
         {
           duration: 5000,
           style: {
-            background: 'rgb(24 24 27)',
-            border: '1px solid rgb(63 63 70 / 0.8)',
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
             borderRadius: '1rem',
             padding: '12px 16px',
+            color: 'var(--card-foreground)',
           },
         }
       );
@@ -125,6 +128,7 @@ export function NotificationsProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useNotificationsContext() {
   const ctx = use(NotificationsContext);
   if (!ctx) throw new Error('useNotificationsContext must be used inside NotificationsProvider');

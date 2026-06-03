@@ -1,7 +1,10 @@
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useNotificationsContext } from '../NotificationsContext';
 import { NotificationStickySection } from './NotificationStickySection';
 import { NotificationItem } from './NotificationItem';
+
+const PANEL_CAP = 8;
 
 const SOCIAL_TYPES  = new Set(['star', 'fork', 'follow', 'reaction']);
 const BADGE_TYPES   = new Set(['badge_awarded']);
@@ -22,13 +25,23 @@ function SectionLabel({ label, variant = 'default' }) {
 
 export function NotificationPanel() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { notifications, markAllRead } = useNotificationsContext();
 
   const sticky  = notifications.filter(n => STICKY_TYPES.has(n.type));
   const badges  = notifications.filter(n => BADGE_TYPES.has(n.type));
   const social  = notifications.filter(n => SOCIAL_TYPES.has(n.type));
   const system  = notifications.filter(n => SYSTEM_TYPES.has(n.type));
-  const hasAny  = sticky.length + badges.length + social.length + system.length > 0;
+  const total   = sticky.length + badges.length + social.length + system.length;
+  const hasAny  = total > 0;
+  const hasMore = total > PANEL_CAP;
+
+  // Cap each section proportionally — simpler: just slice the rendered list
+  let remaining = PANEL_CAP;
+  const stickySlice  = sticky.slice(0, remaining); remaining -= stickySlice.length;
+  const badgesSlice  = badges.slice(0, remaining);  remaining -= badgesSlice.length;
+  const socialSlice  = social.slice(0, remaining);  remaining -= socialSlice.length;
+  const systemSlice  = system.slice(0, remaining);
 
   return (
     <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-zinc-800/60 bg-zinc-900 shadow-2xl z-50 overflow-hidden">
@@ -42,39 +55,48 @@ export function NotificationPanel() {
         </button>
       </div>
 
-      <div className="max-h-96 overflow-y-auto">
+      <div className="max-h-[560px] overflow-y-auto">
         {!hasAny && (
           <p className="px-4 py-8 text-center text-sm text-zinc-500">{t('notifications.empty')}</p>
         )}
 
-        {sticky.length > 0 && (
+        {stickySlice.length > 0 && (
           <>
             <SectionLabel label={t('notifications.sectionActionRequired')} variant="action" />
-            <NotificationStickySection notifications={sticky} />
+            <NotificationStickySection notifications={stickySlice} />
           </>
         )}
 
-        {badges.length > 0 && (
+        {badgesSlice.length > 0 && (
           <>
             <SectionLabel label={t('notifications.sectionBadges')} variant="badge" />
-            {badges.map(n => <NotificationItem key={n._id} notification={n} />)}
+            {badgesSlice.map(n => <NotificationItem key={n._id} notification={n} />)}
           </>
         )}
 
-        {social.length > 0 && (
+        {socialSlice.length > 0 && (
           <>
             <SectionLabel label={t('notifications.sectionSocial')} />
-            {social.map(n => <NotificationItem key={n._id} notification={n} />)}
+            {socialSlice.map(n => <NotificationItem key={n._id} notification={n} />)}
           </>
         )}
 
-        {system.length > 0 && (
+        {systemSlice.length > 0 && (
           <>
             <SectionLabel label={t('notifications.sectionSystem')} />
-            {system.map(n => <NotificationItem key={n._id} notification={n} />)}
+            {systemSlice.map(n => <NotificationItem key={n._id} notification={n} />)}
           </>
         )}
       </div>
+
+      {hasMore && (
+        <button
+          onClick={() => navigate('/notifications')}
+          className="w-full px-4 py-2.5 border-t border-zinc-800/60 text-xs font-medium text-primary hover:text-primary/80 hover:bg-zinc-800/40 transition-colors text-center"
+        >
+          {t('notifications.viewAll', 'View all notifications')}
+        </button>
+      )}
     </div>
   );
 }
