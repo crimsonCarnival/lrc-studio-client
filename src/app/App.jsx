@@ -105,7 +105,7 @@ function AppInner() {
     songArtist,
     songAlbum,
     songYear,
-    songGenre,
+    genre,
     songLanguage,
     trackNumber,
     trackCount,
@@ -139,7 +139,7 @@ function AppInner() {
 
     setMediaTitle(finalTitle);
 
-    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songAlbum: songAlbum || '', songYear: songYear || '', songGenre: songGenre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}) };
+    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}) };
     appState.setProjectMetadata(newMetadata);
 
     if (!user) {
