@@ -17,7 +17,7 @@ export function useUserSearch() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
-  const debounceRef           = useRef(null);
+  const debounceRef           = useRef(/** @type {ReturnType<typeof setTimeout> | undefined} */ (undefined));
 
   const search = useCallback(async (q) => {
     if (!q.trim()) { setResults([]); return; }

@@ -27,11 +27,11 @@ const HEADER_SEARCH_QUERY = `
 
 export function useHeaderSearch({ projectLimit = 5, userLimit = 3 } = {}) {
   const [query, setQuery]       = useState('');
-  const [projects, setProjects] = useState([]);
-  const [users, setUsers]       = useState([]);
+  const [projects, setProjects] = useState(/** @type {any[]} */ ([]));
+  const [users, setUsers]       = useState(/** @type {any[]} */ ([]));
   const [total, setTotal]       = useState(0);
   const [loading, setLoading]   = useState(false);
-  const debounceRef             = useRef(null);
+  const debounceRef             = useRef(/** @type {ReturnType<typeof setTimeout> | undefined} */ (undefined));
 
   const search = useCallback(async (q) => {
     if (!q.trim()) {
