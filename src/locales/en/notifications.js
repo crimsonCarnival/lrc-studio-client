@@ -28,4 +28,5 @@ export default {
   timeMinutes: '{{n}}m ago',
   timeHours: '{{n}}h ago',
   timeDays: '{{n}}d ago',
+  viewAll: 'View all notifications',
 };

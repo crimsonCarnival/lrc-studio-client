@@ -28,4 +28,5 @@ export default {
   timeMinutes: 'hace {{n}}m',
   timeHours: 'hace {{n}}h',
   timeDays: 'hace {{n}}d',
+  viewAll: 'Ver todas las notificaciones',
 };

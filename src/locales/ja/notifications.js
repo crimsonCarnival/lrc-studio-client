@@ -28,4 +28,5 @@ export default {
   timeMinutes: '{{n}}分前',
   timeHours: '{{n}}時間前',
   timeDays: '{{n}}日前',
+  viewAll: 'すべての通知を表示',
 };
