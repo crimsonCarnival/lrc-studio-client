@@ -92,9 +92,9 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         />
 
         <div className={`relative z-base flex-1 min-h-0 ${isSetupPage ? 'px-0' : 'px-0 lg:px-6'} flex flex-col transition-[padding] duration-500 ease-in-out
-          ${location.pathname === '/' ? 'pt-16'
-            : (playerTop && isReady && isPlayerMounted) ? 'max-lg:pt-24 lg:pt-[216px]'
-              : 'pt-24 lg:pt-[104px]'
+          ${location.pathname === '/' ? 'pt-14'
+            : (playerTop && isReady && isPlayerMounted) ? 'max-lg:pt-14 lg:pt-[216px]'
+              : 'pt-14 lg:pt-16'
           }
           ${isPlayerMounted && isReady
             ? playerTop
