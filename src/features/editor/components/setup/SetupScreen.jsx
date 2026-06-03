@@ -35,6 +35,42 @@ import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 
 const MAX_IMPORT_FILE_SIZE = 2 * 1024 * 1024;
 
+// Priority-ordered mapping from Spotify genre strings to our preset keys.
+// More specific entries come first to avoid e.g. "indie pop" matching "pop" before "indie".
+const SPOTIFY_GENRE_MAP = [
+  ['k_pop',       ['k-pop', 'kpop']],
+  ['hip_hop',     ['hip hop', 'hip-hop', 'rap', 'trap', 'drill']],
+  ['rnb',         ['r&b', 'rnb', 'rhythm and blues']],
+  ['electronic',  ['electronic', 'edm', 'techno', 'house', 'dubstep', 'electro', 'synth', 'trance', 'drum and bass']],
+  ['alternative', ['alternative', 'alt rock', 'alt-rock']],
+  ['soundtrack',  ['soundtrack', 'score', 'film', 'cinema', 'game music']],
+  ['classical',   ['classical', 'orchestra', 'chamber', 'baroque', 'opera', 'symphon']],
+  ['indie',       ['indie']],
+  ['metal',       ['metal', 'hardcore', 'deathcore', 'doom']],
+  ['folk',        ['folk', 'acoustic', 'singer-songwriter', 'bluegrass', 'americana']],
+  ['country',     ['country', 'honky']],
+  ['latin',       ['latin', 'salsa', 'bossa nova', 'samba', 'reggaeton', 'cumbia']],
+  ['reggae',      ['reggae', 'dancehall', 'ska', 'dub']],
+  ['soul',        ['soul', 'gospel', 'motown', 'neo soul']],
+  ['funk',        ['funk', 'disco', 'groove']],
+  ['blues',       ['blues']],
+  ['anime',       ['anime', 'j-pop', 'jpop', 'j pop']],
+  ['jazz',        ['jazz', 'bebop', 'swing']],
+  ['pop',         ['pop']],
+  ['rock',        ['rock']],
+];
+
+function matchSpotifyGenre(genres, t) {
+  if (!genres?.length) return '';
+  const combined = genres.join(' ').toLowerCase();
+  for (const [key, keywords] of SPOTIFY_GENRE_MAP) {
+    if (keywords.some((kw) => combined.includes(kw))) {
+      return t(`setup.genre.${key}`);
+    }
+  }
+  return '';
+}
+
 const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\//;
 const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
 const YT_PATTERN = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|watch\?.+&v=)|youtu\.be\/)([^&?/\s]{11})/;
@@ -288,6 +324,20 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     if (playerRef.current?.loadSpotify) playerRef.current.loadSpotify(track.trackId, track.title || track.name || '', false);
     else if (playerRef.current?.playTrack) playerRef.current.playTrack(track.trackId, track.title || track.name || '', false);
     setAudioState({ ready: true, name: track.title || track.name || 'Spotify track', source: 'spotify', selectedUpload: null });
+
+    // trackMeta comes from SpotifyBrowser's createUpload call (already in the track object)
+    const meta = track.trackMeta || track;
+    const mappedGenre = matchSpotifyGenre(meta.genres, t);
+    setMetadataState({
+      songName: meta.name || '',
+      songArtist: meta.artist || '',
+      songAlbum: meta.album || '',
+      songYear: meta.releaseYear || '',
+      ...(mappedGenre ? { songGenre: mappedGenre } : {}),
+      ...(meta.totalTracks ? { trackCount: String(meta.totalTracks) } : {}),
+      ...(meta.albumArt ? { coverImage: meta.albumArt } : {}),
+    });
+
     if (getAccessToken()) {
       try {
         await spotifyApi.createUpload(`spotify:track:${track.trackId}`);
@@ -295,7 +345,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
         setMediaUploads(uploads || []);
       } catch { /* ignore */ }
     }
-  }, [playerRef, setAudioState]);
+  }, [playerRef, setAudioState, setMetadataState, t]);
 
   // ── Lyrics handlers ──
 
