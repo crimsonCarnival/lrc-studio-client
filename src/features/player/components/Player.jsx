@@ -7,6 +7,7 @@ import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 
 import { formatTime } from '@/shared/utils/format-time';
+import { matchKey } from '@/shared/utils/keyboard';
 import useLocalAudio from '../hooks/useLocalAudio';
 import useYouTubePlayer from '../hooks/useYouTubePlayer';
 import useSpotifyPlayer from '../hooks/useSpotifyPlayer';
@@ -391,6 +392,39 @@ function Player(
   const clearLoop = useCallback(() => {
     setLoop({ a: null, b: null });
   }, [setLoop]);
+
+  // ——— Player keyboard shortcuts ———
+  useEffect(() => {
+    const handler = (e) => {
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
+
+      const seekTime = settings.playback?.seekTime ?? 5;
+      const speedStep = 0.25;
+
+      if (matchKey(e, settings.shortcuts?.playPause?.[0] || 'Enter')) {
+        e.preventDefault();
+        togglePlay();
+      } else if (matchKey(e, settings.shortcuts?.seekBackward?.[0] || 'ArrowLeft')) {
+        e.preventDefault();
+        seek(Math.max(0, currentTime - seekTime));
+      } else if (matchKey(e, settings.shortcuts?.seekForward?.[0] || 'ArrowRight')) {
+        e.preventDefault();
+        seek(Math.min(duration, currentTime + seekTime));
+      } else if (matchKey(e, settings.shortcuts?.mute?.[0] || 'm')) {
+        e.preventDefault();
+        updateSetting('playback.muted', !settings.playback.muted);
+      } else if (matchKey(e, settings.shortcuts?.speedUp?.[0] || '+')) {
+        e.preventDefault();
+        applySpeed(playbackSpeed + speedStep);
+      } else if (matchKey(e, settings.shortcuts?.speedDown?.[0] || '-')) {
+        e.preventDefault();
+        applySpeed(playbackSpeed - speedStep);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [togglePlay, seek, applySpeed, currentTime, duration, playbackSpeed, settings.shortcuts, settings.playback, updateSetting]);
 
   // ——— Expose player API via ref ———
 
