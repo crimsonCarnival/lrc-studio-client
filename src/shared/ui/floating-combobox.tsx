@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '@/shared/utils/utils'
 import { Input } from './input'
 import { ChevronDown } from 'lucide-react'
@@ -38,9 +39,11 @@ export function FloatingCombobox({
   error,
   strict = false,
 }: FloatingComboboxProps) {
+  const wrapperRef = React.useRef<HTMLDivElement>(null)
   const [focused, setFocused] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   const [activeIndex, setActiveIndex] = React.useState(-1)
+  const [dropdownStyle, setDropdownStyle] = React.useState<React.CSSProperties>({})
   // localText: what is shown in the input (may differ from value in strict mode while searching)
   const [localText, setLocalText] = React.useState(value)
 
@@ -49,14 +52,28 @@ export function FloatingCombobox({
     if (!focused) setLocalText(value)
   }, [value, focused])
 
+  // Calculate portal position when dropdown opens
+  React.useEffect(() => {
+    if (open && wrapperRef.current) {
+      const rect = wrapperRef.current.getBoundingClientRect()
+      setDropdownStyle({
+        position: 'fixed',
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+        zIndex: 9999,
+      })
+    }
+  }, [open])
+
   const displayText = strict ? localText : value
 
   const filtered = React.useMemo(() => {
     const q = displayText.toLowerCase().trim()
-    if (!q) return options.slice(0, 8)
+    if (!q) return options
     return options.filter((o) =>
       (o.label || o.value).toLowerCase().includes(q)
-    ).slice(0, 8)
+    )
   }, [displayText, options])
 
   const showDropdown = open && filtered.length > 0
@@ -126,8 +143,38 @@ export function FloatingCombobox({
     }
   }
 
+  const dropdown = showDropdown ? (
+    <div
+      role="listbox"
+      style={{ ...dropdownStyle, maxHeight: '240px' }}
+      className="bg-zinc-900 border border-zinc-700/60 rounded-xl shadow-xl overflow-y-auto"
+    >
+      {filtered.map((opt, i) => (
+        <button
+          key={opt.value}
+          type="button"
+          role="option"
+          aria-selected={i === activeIndex}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            commitSelect(opt)
+          }}
+          className={cn(
+            'w-full text-left px-4 py-2.5 text-sm transition-colors',
+            i === activeIndex
+              ? 'bg-primary/20 text-primary'
+              : 'text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100',
+            i < filtered.length - 1 && 'border-b border-zinc-800/60'
+          )}
+        >
+          {opt.label || opt.value}
+        </button>
+      ))}
+    </div>
+  ) : null
+
   return (
-    <div className={cn('relative group/floating w-full', className)}>
+    <div ref={wrapperRef} className={cn('relative group/floating w-full', className)}>
       <Input
         id={id}
         value={displayText}
@@ -159,34 +206,9 @@ export function FloatingCombobox({
       </label>
       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-600 pointer-events-none" />
 
-      {showDropdown && (
-        <div
-          role="listbox"
-          className="absolute z-50 top-[calc(100%+4px)] w-full bg-zinc-900 border border-zinc-700/60 rounded-xl shadow-xl overflow-hidden"
-        >
-          {filtered.map((opt, i) => (
-            <button
-              key={opt.value}
-              type="button"
-              role="option"
-              aria-selected={i === activeIndex}
-              onMouseDown={(e) => {
-                e.preventDefault()
-                commitSelect(opt)
-              }}
-              className={cn(
-                'w-full text-left px-4 py-2.5 text-sm transition-colors',
-                i === activeIndex
-                  ? 'bg-primary/20 text-primary'
-                  : 'text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100',
-                i < filtered.length - 1 && 'border-b border-zinc-800/60'
-              )}
-            >
-              {opt.label || opt.value}
-            </button>
-          ))}
-        </div>
-      )}
+      {showDropdown && typeof document !== 'undefined'
+        ? createPortal(dropdown, document.body)
+        : null}
     </div>
   )
 }
