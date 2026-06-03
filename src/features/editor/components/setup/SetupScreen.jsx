@@ -385,6 +385,34 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     else if (e.key === 'Backspace' && !tagInput && projectTags.length > 0) removeTag(projectTags.length - 1);
   };
 
+  const [metaSearching, setMetaSearching] = useState(false);
+
+  const handleFetchSongInfo = useCallback(async () => {
+    if (!songName.trim() || metaSearching) return;
+    setMetaSearching(true);
+    try {
+      const meta = await spotifyApi.lookupTrack(songName.trim(), songArtist.trim());
+      if (meta && !meta.error) {
+        const mappedGenre = matchSpotifyGenre(meta.genres, t);
+        setMetadataState({
+          songName: meta.name || songName,
+          songArtist: meta.artist || songArtist,
+          songAlbum: meta.album || songAlbum,
+          songYear: meta.releaseYear || songYear,
+          ...(mappedGenre ? { songGenre: mappedGenre } : {}),
+          ...(meta.totalTracks ? { trackCount: String(meta.totalTracks) } : {}),
+          ...(meta.albumArt && !coverImage ? { coverImage: meta.albumArt } : {}),
+        });
+      } else {
+        toast.error(t('setup.metaSearchFailed', 'No results found'));
+      }
+    } catch {
+      toast.error(t('setup.metaSearchFailed', 'No results found'));
+    } finally {
+      setMetaSearching(false);
+    }
+  }, [songName, songArtist, songAlbum, songYear, coverImage, metaSearching, setMetadataState, t]);
+
   const GENRE_KEYS = ['pop','rock','jazz','classical','hip_hop','rnb','electronic','folk','country','metal','indie','soul','reggae','latin','k_pop','anime','soundtrack','alternative','blues','funk'];
   const LANG_KEYS = ['english','spanish','japanese','korean','mandarin','portuguese','french','german','italian','arabic','hindi','russian','tagalog','thai','vietnamese','indonesian','dutch','swedish','turkish','hebrew'];
 
@@ -491,9 +519,26 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
             <div className="w-full h-px bg-zinc-800/60 shrink-0" />
 
             {/* Song info */}
-            <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider shrink-0">
-              {t('setup.songInformation', 'Song Information')}
-            </h3>
+            <div className="flex items-center justify-between shrink-0">
+              <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                {t('setup.songInformation', 'Song Information')}
+              </h3>
+              {songName.trim() && (
+                <Tip content={t('setup.fetchSongInfo', 'Auto-fill from Spotify')} side="left">
+                  <button
+                    type="button"
+                    onClick={handleFetchSongInfo}
+                    disabled={metaSearching}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {metaSearching
+                      ? <Loader2 className="size-3 animate-spin" />
+                      : <Sparkles className="size-3" />}
+                    {t('setup.fetchInfo', 'Fetch')}
+                  </button>
+                </Tip>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-3 shrink-0">
               <div className="relative">
                 <div className="absolute right-8 top-1/2 -translate-y-1/2 z-10">
