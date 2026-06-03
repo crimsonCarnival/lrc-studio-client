@@ -44,13 +44,19 @@ export function FloatingCombobox({
   const [open, setOpen] = React.useState(false)
   const [activeIndex, setActiveIndex] = React.useState(-1)
   const [dropdownStyle, setDropdownStyle] = React.useState<React.CSSProperties>({})
-  // localText: what is shown in the input (may differ from value in strict mode while searching)
-  const [localText, setLocalText] = React.useState(value)
+  const labelForValue = React.useCallback((v: string) => {
+    const match = options.find((o) => o.value === v)
+    return match ? (match.label || match.value) : v
+  }, [options])
 
-  // Keep localText in sync when value changes externally
+  // localText: what is shown in the input (may differ from value in strict mode while searching)
+  const [localText, setLocalText] = React.useState(() => labelForValue(value))
+
+  // Keep localText in sync when value changes externally (e.g. Spotify autofill)
   React.useEffect(() => {
-    if (!focused) setLocalText(value)
-  }, [value, focused])
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!focused) setLocalText(labelForValue(value))
+  }, [value, focused, labelForValue])
 
   // Calculate portal position when dropdown opens
   React.useEffect(() => {
@@ -81,7 +87,7 @@ export function FloatingCombobox({
 
   function commitSelect(opt: ComboboxOption) {
     onChange(opt.value)
-    setLocalText(opt.value)
+    setLocalText(opt.label || opt.value)
     onSelect?.(opt.value)
     setOpen(false)
     setActiveIndex(-1)
@@ -104,10 +110,7 @@ export function FloatingCombobox({
     setFocused(false)
     setTimeout(() => {
       setOpen(false)
-      if (strict) {
-        // Revert display text to the committed value if the user didn't pick anything
-        setLocalText(value)
-      }
+      if (strict) setLocalText(labelForValue(value))
     }, 150)
   }
 
@@ -138,7 +141,7 @@ export function FloatingCombobox({
       case 'Escape':
         setOpen(false)
         setActiveIndex(-1)
-        if (strict) setLocalText(value)
+        if (strict) setLocalText(labelForValue(value))
         break
     }
   }
