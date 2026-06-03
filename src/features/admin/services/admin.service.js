@@ -86,4 +86,11 @@ export const adminService = {
     const query = new URLSearchParams(params).toString();
     return request(`/admin/audit-logs?${query}`);
   },
+
+  async adjustXP({ action, amount, target, userId, userIds }) {
+    return request('/admin/xp', {
+      method: 'POST',
+      body: JSON.stringify({ action, amount, target, userId, userIds }),
+    });
+  },
 };

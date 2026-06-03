@@ -3,8 +3,9 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
-import { Filter, Ban, CheckCircle2, BarChart3, Music, Trash2, Undo2, Info, Activity } from 'lucide-react';
+import { Filter, Ban, CheckCircle2, BarChart3, Music, Trash2, Undo2, Info, Activity, Zap } from 'lucide-react';
 import useInputMethod from '@/shared/hooks/useInputMethod';
+import { useState as useLocalState } from 'react';
 
 export default function AdminUsersTab({
   users,
@@ -20,6 +21,7 @@ export default function AdminUsersTab({
   handleReactivate,
   handleDelete,
   setAppealModal,
+  handleAdjustXP,
   hasMore,
   hasPrev,
   totalUsers,
@@ -29,6 +31,8 @@ export default function AdminUsersTab({
   const { t } = useTranslation();
   const inputMethod = useInputMethod();
   const isMobile = inputMethod === 'touch';
+  const [xpPopover, setXpPopover] = useLocalState(null); // userId | null
+  const [xpAmount, setXpAmount] = useLocalState('100');
 
   return (
     <>
@@ -38,9 +42,9 @@ export default function AdminUsersTab({
             placeholder={t('admin.dashboard.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-zinc-950 border-zinc-800 focus:border-primary pl-10 h-10 text-sm"
+            className="bg-zinc-950 border-zinc-800 focus:border-primary !pl-10 h-10 text-sm"
           />
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-600" />
+          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-600 pointer-events-none" />
         </div>
         <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-row gap-2 sm:gap-4'}`}>
           <select
@@ -285,8 +289,34 @@ export default function AdminUsersTab({
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {/* XP popover */}
+                        {xpPopover === (user.id || user._id) && (
+                          <div className="flex items-center gap-1 mr-1">
+                            <input
+                              type="number"
+                              min={1}
+                              value={xpAmount}
+                              onChange={e => setXpAmount(e.target.value)}
+                              className="w-16 h-7 px-2 text-xs rounded bg-zinc-800 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-primary"
+                            />
+                            <button
+                              onClick={() => { handleAdjustXP('grant', Number(xpAmount), 'user', user.id || user._id); setXpPopover(null); }}
+                              className="h-7 px-2 text-[10px] font-bold rounded bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors"
+                            >+XP</button>
+                            <button
+                              onClick={() => { handleAdjustXP('revoke', Number(xpAmount), 'user', user.id || user._id); setXpPopover(null); }}
+                              className="h-7 px-2 text-[10px] font-bold rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors"
+                            >−XP</button>
+                            <button onClick={() => setXpPopover(null)} className="h-7 px-1.5 text-zinc-600 hover:text-zinc-400 text-xs">✕</button>
+                          </div>
+                        )}
                         {!isSelf && (
                           <>
+                            <Tip content="Adjust XP" side="top">
+                              <Button variant="ghost" size="icon" onClick={() => { setXpPopover(p => p === (user.id || user._id) ? null : (user.id || user._id)); }} className="size-8 text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg">
+                                <Zap className="size-3.5" />
+                              </Button>
+                            </Tip>
                             {user.isDeleted ? (
                               <Button variant="ghost" size="sm" onClick={() => handleReactivate(user)} className="h-8 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 gap-1.5">
                                 <Undo2 className="size-3.5" /> {t('admin.table.reactivate')}

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { admin } from '@/app/api';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Button } from '@ui/button';
-import { ShieldAlert, RefreshCw, Users, Globe, History, Award } from 'lucide-react';
+import { ShieldAlert, RefreshCw, Users, Globe, History, Award, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import BanUserModal from './BanUserModal';
@@ -47,6 +47,13 @@ export default function AdminDashboard() {
   const [appealModal, setAppealModal] = useState({ isOpen: false, user: null });
   // Track whether stats have been fetched at least once (avoid re-fetching on tab switch)
   const statsFetchedRef = useRef(false);
+
+  // Bulk XP state
+  const [xpPanel, setXpPanel] = useState(false);
+  const [xpBulkAmount, setXpBulkAmount] = useState('500');
+  const [xpBulkTarget, setXpBulkTarget] = useState('all'); // 'all' | 'ids'
+  const [xpBulkIds, setXpBulkIds] = useState(''); // comma-separated usernames/ids
+  const [xpBulkSaving, setXpBulkSaving] = useState(false);
 
   const fetchStats = async () => {
     try {
@@ -161,6 +168,34 @@ export default function AdminDashboard() {
     setCursorStack(prev => prev.slice(0, -1));
     setCursor(prevCursor);
     fetchUsers(prevCursor);
+  };
+
+  const handleAdjustXP = async (action, amount, target, userId, userIds) => {
+    try {
+      const result = await admin.adjustXP({ action, amount, target, userId, userIds });
+      toast.success(`${action === 'grant' ? 'Granted' : 'Revoked'} ${amount} XP to ${result.affected} user${result.affected !== 1 ? 's' : ''}`);
+      refreshUsersFromStart();
+    } catch (err) {
+      toast.error(err?.message || 'Failed to adjust XP');
+    }
+  };
+
+  const handleBulkXP = async (action) => {
+    const amount = Number(xpBulkAmount);
+    if (!amount || amount <= 0) { toast.error('Enter a valid XP amount'); return; }
+    setXpBulkSaving(true);
+    try {
+      if (xpBulkTarget === 'all') {
+        await handleAdjustXP(action, amount, 'all');
+      } else {
+        const ids = xpBulkIds.split(/[\s,]+/).map(s => s.trim()).filter(Boolean);
+        if (!ids.length) { toast.error('Enter at least one user ID'); setXpBulkSaving(false); return; }
+        await handleAdjustXP(action, amount, 'users', undefined, ids);
+      }
+      setXpPanel(false);
+    } finally {
+      setXpBulkSaving(false);
+    }
   };
 
   const refreshUsersFromStart = () => {
@@ -316,6 +351,70 @@ export default function AdminDashboard() {
       {/* Stats Cards */}
       <AdminStatsCards stats={stats} />
 
+      {/* Bulk XP panel */}
+      <div className="mb-4">
+        <button
+          onClick={() => setXpPanel(p => !p)}
+          className="flex items-center gap-2 text-xs font-semibold text-amber-500/80 hover:text-amber-400 transition-colors"
+        >
+          <Zap className="size-3.5" />
+          {xpPanel ? 'Hide XP Manager' : 'Manage XP'}
+        </button>
+        {xpPanel && (
+          <div className="mt-2 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+            <label className="flex flex-col gap-1 shrink-0">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Amount</span>
+              <input
+                type="number"
+                min={1}
+                value={xpBulkAmount}
+                onChange={e => setXpBulkAmount(e.target.value)}
+                className="w-24 h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500/50"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Target</span>
+              <select
+                value={xpBulkTarget}
+                onChange={e => setXpBulkTarget(e.target.value)}
+                className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 focus:outline-none focus:border-amber-500/50"
+              >
+                <option value="all">All users</option>
+                <option value="ids">Specific users</option>
+              </select>
+            </label>
+            {xpBulkTarget === 'ids' && (
+              <label className="flex flex-col gap-1 flex-1 min-w-[180px]">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">User IDs (comma-separated)</span>
+                <input
+                  type="text"
+                  value={xpBulkIds}
+                  onChange={e => setXpBulkIds(e.target.value)}
+                  placeholder="id1, id2, id3…"
+                  className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50 w-full"
+                />
+              </label>
+            )}
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => handleBulkXP('grant')}
+                disabled={xpBulkSaving}
+                className="h-9 px-4 text-sm font-semibold rounded-lg bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors disabled:opacity-50"
+              >
+                + Grant XP
+              </button>
+              <button
+                onClick={() => handleBulkXP('revoke')}
+                disabled={xpBulkSaving}
+                className="h-9 px-4 text-sm font-semibold rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors disabled:opacity-50"
+              >
+                − Revoke XP
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Tab bar — underline style */}
       <div className="flex items-center gap-0 border-b border-zinc-800/60 contrast-more:border-zinc-600 mb-4 overflow-x-auto">
         {[
@@ -357,6 +456,7 @@ export default function AdminDashboard() {
             handleReactivate={handleReactivate}
             handleDelete={handleDelete}
             setAppealModal={setAppealModal}
+            handleAdjustXP={handleAdjustXP}
             hasMore={hasMore}
             hasPrev={cursorStack.length > 0}
             totalUsers={totalUsers}

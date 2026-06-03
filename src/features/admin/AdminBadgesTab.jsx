@@ -12,7 +12,7 @@ import { BADGE_COLORS, RARITY_CONFIG } from '@/features/badges/badge-registry';
 const GET_BADGE_DEFS = `
   query {
     badgeDefinitions {
-      id label description icon color conditionType conditionValue autoGrant isBuiltin holderCount
+      id label description icon color conditionType conditionValue autoGrant isBuiltin holderCount xpReward
     }
   }
 `;
@@ -26,7 +26,7 @@ const CREATE_BADGE = `
 const UPDATE_BADGE = `
   mutation UpdateBadge($id: String!, $input: BadgeDefInput!) {
     adminUpdateBadge(id: $id, input: $input) {
-      id label description icon color conditionType conditionValue autoGrant isBuiltin holderCount
+      id label description icon color conditionType conditionValue autoGrant isBuiltin holderCount xpReward
     }
   }
 `;
@@ -98,7 +98,7 @@ function LivePreview({ form }) {
 
 const BLANK_FORM = {
   id: '', label: '', description: '', icon: '',
-  color: 'primary', conditionType: 'manual', conditionValue: null, autoGrant: false,
+  color: 'primary', conditionType: 'manual', conditionValue: null, autoGrant: false, xpReward: 50,
 };
 
 function BadgeFormModal({ editing, onClose, onSaved }) {
@@ -120,6 +120,7 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
         conditionType: form.conditionType,
         conditionValue: needsValue(form.conditionType) ? Number(form.conditionValue) : null,
         autoGrant: form.autoGrant,
+        xpReward: Math.max(0, Number(form.xpReward) || 0),
         ...(editing ? {} : { id: form.id.trim().toLowerCase().replace(/\s+/g, '_') }),
       };
 
@@ -268,6 +269,19 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
             </label>
           )}
 
+          {/* XP Reward */}
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] text-zinc-500 uppercase tracking-widest">XP Reward</span>
+            <input
+              type="number"
+              min={0}
+              step={25}
+              className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none"
+              value={form.xpReward ?? 50}
+              onChange={e => set('xpReward', e.target.value)}
+            />
+          </label>
+
           {/* Auto-grant toggle */}
           <label className="flex items-center gap-3 cursor-pointer select-none">
             <div
@@ -339,10 +353,14 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
           <Users className="size-3" />
           <span>{def.holderCount.toLocaleString()} holders</span>
+        </div>
+        <div className="flex items-center gap-1 text-[10px] text-amber-600">
+          <span>⚡</span>
+          <span>{(def.xpReward ?? 50).toLocaleString()} XP</span>
         </div>
         <div className={`flex items-center gap-1 text-[10px] ${def.autoGrant ? 'text-emerald-600' : 'text-zinc-700'}`}>
           <div className={`size-1.5 rounded-full ${def.autoGrant ? 'bg-emerald-500' : 'bg-zinc-700'}`} />
