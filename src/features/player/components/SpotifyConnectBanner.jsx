@@ -24,10 +24,11 @@ export function SpotifyConnectBanner() {
 
   const inWorkspace = location.pathname.startsWith('/project/');
   const isLanding = location.pathname === '/';
+  const isAdmin = location.pathname.startsWith('/admin');
 
   const shouldShow =
     !!user && !user.isGuest && !user.spotify?.spotifyId &&
-    !dismissed && !inWorkspace && !isLanding;
+    !dismissed && !inWorkspace && !isLanding && !isAdmin;
 
   const handleConnect = useCallback(async () => {
     if (connecting) return;
