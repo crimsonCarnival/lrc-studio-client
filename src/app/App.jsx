@@ -104,7 +104,11 @@ function AppInner() {
     songName,
     songArtist,
     songAlbum,
-    songYear
+    songYear,
+    songGenre,
+    songLanguage,
+    trackCount,
+    coverImage,
   }) => {
     setLines(lines);
     setEditorMode(editorMode);
@@ -134,7 +138,7 @@ function AppInner() {
 
     setMediaTitle(finalTitle);
 
-    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songAlbum: songAlbum || '', songYear: songYear || '' };
+    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songAlbum: songAlbum || '', songYear: songYear || '', songGenre: songGenre || '', songLanguage: songLanguage || '', ...(trackCount != null ? { trackCount } : {}) };
     appState.setProjectMetadata(newMetadata);
 
     if (!user) {

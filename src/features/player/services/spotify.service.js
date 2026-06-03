@@ -27,6 +27,13 @@ export const spotifyService = {
     });
   },
 
+  // ——— Metadata lookup (public, no auth required) ———
+  async lookupTrack(songName, artistName = '') {
+    const params = new URLSearchParams({ songName });
+    if (artistName) params.set('artistName', artistName);
+    return request(`/spotify/lookup?${params}`);
+  },
+
   // ——— Search ———
   async search(q, { limit = 5, offset = 0 } = {}) {
     const params = new URLSearchParams({ q, limit: String(limit), offset: String(offset) });
