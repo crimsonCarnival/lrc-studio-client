@@ -28,6 +28,7 @@ export default {
   startProject: "同期を開始",
   lyricsReady: "歌詞を読み込みました",
   audioReady: "音声を読み込みました",
+  nextLyrics: "次へ：歌詞",
   linesCount: "{{count}}行",
   linesCount_one: "{{count}}行",
   linesCount_other: "{{count}}行",

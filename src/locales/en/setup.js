@@ -28,6 +28,7 @@ export default {
   startProject: "Start syncing",
   lyricsReady: "Lyrics loaded",
   audioReady: "Audio loaded",
+  nextLyrics: "Next: Lyrics",
   linesCount_one: "{{count}} line",
   linesCount_other: "{{count}} lines",
   changeAudio: "Change",

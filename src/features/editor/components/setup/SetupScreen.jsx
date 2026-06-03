@@ -779,7 +779,19 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
       {/* Footer */}
       <div className="shrink-0 px-6 py-4 border-t border-zinc-800/50">
-        <div className="flex justify-end max-w-5xl mx-auto">
+        <div className="flex items-center justify-between max-w-5xl mx-auto gap-3">
+          {rightTab === 'media' && audioReady ? (
+            <Button
+              onClick={() => setRightTab('lyrics')}
+              variant="outline"
+              className="h-10 px-5 text-sm font-semibold gap-2 rounded-xl border-zinc-700 text-zinc-300 hover:text-zinc-100 hover:border-primary/50 hover:bg-zinc-800/60"
+            >
+              {t('setup.nextLyrics')}
+              <ArrowRight className="size-4" />
+            </Button>
+          ) : (
+            <div />
+          )}
           <Button
             onClick={handleProceed}
             disabled={!canContinue}
