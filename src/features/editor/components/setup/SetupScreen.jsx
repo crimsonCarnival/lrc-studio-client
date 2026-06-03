@@ -11,6 +11,7 @@ import { Label } from '@ui/label';
 import { Badge } from '@ui/badge';
 import { Switch } from '@ui/switch';
 import { Tip } from '@ui/tip';
+import { getMyMusicLibrary } from '@/features/editor/music-library.service';
 import {
   FolderOpen, Music2, FileText, Upload, Check, ArrowRight, Trash2,
   Video, Cloud, Link2, Loader2, Lock, Globe, Sparkles, X, LockKeyhole, Lightbulb, Search
@@ -31,10 +32,8 @@ import { useSpotifyAuth } from '@/features/player/hooks/useSpotifyAuth';
 import MediaLibrary from './MediaLibrary';
 import AudioSourceBadge from './AudioSourceBadge';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
-import { getMyMusicLibrary } from '@/features/editor/music-library.service';
 
 const MAX_IMPORT_FILE_SIZE = 2 * 1024 * 1024;
-
 const SPOTIFY_GENRE_MAP = [
   ['k_pop',       ['k-pop', 'kpop']],
   ['hip_hop',     ['hip hop', 'hip-hop', 'rap', 'trap', 'drill']],
