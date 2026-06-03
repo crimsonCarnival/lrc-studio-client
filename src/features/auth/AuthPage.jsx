@@ -322,7 +322,7 @@ export default function AuthPage() {
             transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
             className="flex flex-col gap-2"
           >
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-700 mb-1">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-1">
               Live preview
             </p>
             <div className="rounded-xl border border-zinc-800/50 overflow-hidden bg-zinc-950/50 backdrop-blur-sm">
@@ -332,7 +332,7 @@ export default function AuthPage() {
                   <div className="size-2 rounded-full bg-zinc-800" />
                   <div className="size-2 rounded-full bg-zinc-800" />
                 </div>
-                <span className="text-[9px] font-mono text-zinc-700">untitled.lrc</span>
+                <span className="text-[9px] font-mono text-zinc-500">untitled.lrc</span>
               </div>
               <div className="p-2.5 space-y-0.5">
                 {[
