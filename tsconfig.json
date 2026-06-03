@@ -14,7 +14,7 @@
       "@/*": ["./src/*"],
       "@features/*": ["./src/features/*"],
       "@services/*": ["./src/services/*"],
-      "@ui/*": ["./src/ui/*"],
+      "@ui/*": ["./src/shared/ui/*"],
       "@shared/*": ["./src/shared/*"]
     },
     "strict": false,
