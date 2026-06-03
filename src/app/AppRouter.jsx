@@ -38,6 +38,7 @@ const ExplorePlaylistsPage = lazy(() => import('@features/explore/ExplorePlaylis
 const PublicProjectViewPage = lazy(() => import('@features/projects/components/PublicProjectViewPage'));
 const ListPage = lazy(() => import('@features/playlists/ListPage'));
 const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage'));
+const NotificationsPage = lazy(() => import('@features/notifications/NotificationsPage'));
 
 function RequireAdmin({ children }) {
   const { user, loading } = useAuthContext();
@@ -458,6 +459,31 @@ export function AppRouter({
           <Home />
         </Suspense>
       } />
+      <Route path="project/local" element={
+        <div ref={containerRef} className="flex-1 flex flex-col min-h-0 w-full overflow-x-hidden max-lg:pb-4">
+          <PanelReorderGroup
+            items={items}
+            onReorder={handleReorder}
+            isMobile={isMobile}
+            isDesktop={isDesktop}
+            lockLayout={lockLayout}
+            showEditor={showEditor}
+            showPreview={showPreview}
+            mobileTab={mobileTab}
+            editorWidth={editorWidth}
+            borderClasses={borderClasses}
+            draggingItem={draggingItem}
+            setDraggingItem={setDraggingItem}
+            isResizing={isResizing}
+            isHoveringDivider={isHoveringDivider}
+            setIsHoveringDivider={setIsHoveringDivider}
+            startResizing={startResizing}
+            user={user}
+            editorProps={editorProps}
+            previewProps={previewProps}
+          />
+        </div>
+      } />
       <Route path="project/:projectId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
           <PublicProjectViewPage />
@@ -522,6 +548,11 @@ export function AppRouter({
       <Route path="leaderboard" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
           <LeaderboardPage />
+        </Suspense>
+      } />
+      <Route path="notifications" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+          <NotificationsPage />
         </Suspense>
       } />
       <Route path="*" element={<NotFoundPage type="general" />} />
