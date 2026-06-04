@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { auth, spotify as spotifyApi, google as googleApi, setAuthFlag } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import toast from 'react-hot-toast';
@@ -93,19 +93,26 @@ export function useAuth() {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
   }, []);
 
-  // Schedule a token refresh before the access token expires (default: 14 min for 15 min expiry).
+  // Schedule a token refresh at 75% of the access token lifetime (22.5 min for 30 min token).
   // isRefreshingRef is shared with the token:expired handler to prevent concurrent refresh calls,
   // which would trigger the server's breach-detection path and invalidate all sessions.
-  const scheduleRefresh = useCallback((expiresIn = 14 * 60 * 1000) => {
+  const scheduleRefreshRef = useRef(null);
+  const scheduleRefresh = useCallback((expiresIn = 22.5 * 60 * 1000) => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
     refreshTimerRef.current = setTimeout(async () => {
       if (isRefreshingRef.current) return;
       isRefreshingRef.current = true;
       try {
         await doRefresh();
-        scheduleRefresh();
-      } catch {
-        // Refresh failed — session fully expired, force logout with feedback
+        scheduleRefreshRef.current?.();
+      } catch (err) {
+        // Network error or 5xx — server temporarily unreachable, retry in 2 min
+        if (!err?.status || err.status >= 500) {
+          isRefreshingRef.current = false;
+          scheduleRefreshRef.current?.(2 * 60 * 1000);
+          return;
+        }
+        // 401/403 — refresh token is actually dead, force logout
         await doLogout();
         toast.error('Your session has expired. Please sign in again.', {
           id: 'session-expired',
@@ -116,6 +123,7 @@ export function useAuth() {
       }
     }, expiresIn);
   }, [doLogout, doRefresh]);
+  useLayoutEffect(() => { scheduleRefreshRef.current = scheduleRefresh; }, [scheduleRefresh]);
 
   // Restore project on mount — guarded against StrictMode double-fire
   const restoringRef = useRef(false);
@@ -170,6 +178,9 @@ export function useAuth() {
             setAuthFlag(false);
             setState({ user: null, loading: false });
           }
+        } else if (!err?.status || err.status >= 500) {
+          // Network error or server down — don't clear session, just stop loading
+          setState(s => ({ ...s, loading: false }));
         } else {
           storage.remove(STORAGE_KEYS.HAS_SESSION);
           setAuthFlag(false);
@@ -192,14 +203,15 @@ export function useAuth() {
       try {
         await doRefresh();
         scheduleRefresh();
-      } catch {
-        // Both tokens are dead — force logout
+      } catch (err) {
+        // Network error or 5xx — server temporarily unreachable, schedule a retry
+        if (!err?.status || err.status >= 500) {
+          isRefreshingRef.current = false;
+          scheduleRefreshRef.current?.(30 * 1000); // retry in 30s
+          return;
+        }
+        // 401/403 — refresh token is actually dead, force logout
         await doLogout();
-        // Only surface the expiry + hard redirect for a user who was actually
-        // authenticated this session, and never when already on /auth. During
-        // a logged-out visitor's cold restore (remembered accounts, no live
-        // session) refresh legitimately fails — redirecting here caused a reload
-        // loop that broke saved-account/passkey login (#10).
         if (wasAuthedRef.current && !window.location.pathname.startsWith('/auth')) {
           toast.error('Your session has expired. Please sign in again.', {
             id: 'session-expired',
