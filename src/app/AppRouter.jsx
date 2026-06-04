@@ -1,5 +1,5 @@
 import {
-  Suspense, lazy, useEffect, useState, useRef, useCallback, useMemo, Fragment, memo
+  Suspense, lazy, useEffect, useLayoutEffect, useState, useRef, useCallback, useMemo, Fragment, memo
 } from 'react';
 import React from 'react';
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
@@ -227,6 +227,8 @@ export function AppRouter({
     redo,
     canUndo,
     canRedo,
+    clearHistory,
+    editorReady,
     editorMode,
     setEditorMode,
     duration,
@@ -301,7 +303,7 @@ export function AppRouter({
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
     playbackPosition, playerRef,
-    undo, redo, canUndo, canRedo,
+    undo, redo, canUndo, canRedo, clearHistory,
     editorMode, setEditorMode, duration,
     onImport: triggerImportSave, handleManualSave,
     buildProjectPayload,
@@ -310,11 +312,12 @@ export function AppRouter({
     onNewProject: handleNewProject,
     onShowKeyboardHelp: setShowKeyboardHelp ? handleToggleKeyboardHelp : undefined,
     registerAfterSave,
+    songArtists: projectMetadata?.songArtists || [],
   }), [
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
     playbackPosition, playerRef,
-    undo, redo, canUndo, canRedo,
+    undo, redo, canUndo, canRedo, clearHistory,
     editorMode, setEditorMode, duration,
     triggerImportSave, handleManualSave,
     buildProjectPayload,
@@ -323,6 +326,7 @@ export function AppRouter({
     handleNewProject,
     setShowKeyboardHelp, handleToggleKeyboardHelp,
     registerAfterSave,
+    projectMetadata,
   ]);
 
   const previewProps = useMemo(() => ({
@@ -362,7 +366,7 @@ export function AppRouter({
   }, [layoutSwap, setEditorWidth]);
 
   const handleResizeRef = useRef(handleResize);
-  handleResizeRef.current = handleResize;
+  useLayoutEffect(() => { handleResizeRef.current = handleResize; });
 
   const startResizing = useCallback(() => {
     if (!isDesktop || lockLayout) return;
@@ -460,7 +464,9 @@ export function AppRouter({
         </Suspense>
       } />
       <Route path="project/local" element={
-        <div ref={containerRef} className="flex-1 flex flex-col min-h-0 w-full overflow-x-hidden max-lg:pb-4">
+        editorReady && lines.length === 0 && !hasMedia && !pendingProject
+          ? <Navigate to="/project/new" replace />
+          : <div ref={containerRef} className="flex-1 flex flex-col min-h-0 w-full overflow-x-hidden max-lg:pb-4">
           <PanelReorderGroup
             items={items}
             onReorder={handleReorder}

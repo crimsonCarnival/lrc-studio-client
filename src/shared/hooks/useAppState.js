@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useCallback, useEffect } from 'react';
+﻿import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -15,6 +15,7 @@ import { useSharedProject } from '@/features/sharing/hooks/useSharedProject';
 import { useProjectActions } from '@/features/projects/hooks/useProjectActions';
 import { lyrics, projects, getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
+import { migrateLines } from '@/shared/utils/lrc';
 
 const MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -37,7 +38,7 @@ export function useAppState(user) {
     }
   });
 
-  const [lines, setLines, undo, redo, canUndo, canRedo] = useHistory([], {
+  const [lines, setLines, undo, redo, canUndo, canRedo, clearHistory] = useHistory([], {
     limit: settings.advanced?.history?.limit || 50,
     groupingThresholdMs: settings.advanced?.history?.groupingThresholdMs || 500,
     getCompanion: () => editorMode,
@@ -46,6 +47,7 @@ export function useAppState(user) {
 
   const [syncMode, setSyncMode] = useState(false);
   const [activeLineIndex, setActiveLineIndex] = useState(0);
+  const [activeTranslationIndex, setActiveTranslationIndex] = useState(0);
   const [playbackPosition, setPlaybackPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [mediaTitle, setMediaTitle] = useState('');
@@ -134,6 +136,7 @@ export function useAppState(user) {
   useEffect(() => {
     if (silentRestoreRan.current) return;
     if (!activeProjectId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsProjectLoading(false);
       return;
     }
@@ -151,14 +154,20 @@ export function useAppState(user) {
         if (!saved) return;
         const parsed = JSON.parse(saved);
         // \u2705 FIX: Allow restoring even if lines are empty (user may have deleted all lyrics)
-        const validLines = (parsed.lines || []).flatMap((l) => {
-          if (!(l && typeof l === 'object' && typeof l.text === 'string')) return [];
+        const validLines = migrateLines((parsed.lines || []).flatMap((l) => {
+          if (!(l && typeof l === 'object')) return [];
+          // Section marker
+          if (l.type === 'section') {
+            return [{ type: 'section', label: l.label || '', singer: l.singer || undefined, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
+          }
+          if (typeof l.text !== 'string') return [];
           return [{
             text: l.text,
             timestamp: typeof l.timestamp === 'number' && isFinite(l.timestamp) ? l.timestamp : null,
             endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
             secondary: typeof l.secondary === 'string' ? l.secondary : '',
-            translation: typeof l.translation === 'string' ? l.translation : '',
+            translations: Array.isArray(l.translations) ? l.translations : undefined,
+            singer: typeof l.singer === 'string' ? l.singer : undefined,
             id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
             words: Array.isArray(l.words) ? l.words.flatMap((w) => {
               const word = typeof w.word === 'string' ? w.word : '';
@@ -176,8 +185,9 @@ export function useAppState(user) {
               }] : [];
             }) : undefined,
           }];
-        });
+        }));
         setLines(validLines);
+        clearHistory();
         setSyncMode(validLines.length > 0 ? true : (parsed.syncMode ?? true));
         const idx = parsed.activeLineIndex;
         if (typeof idx === 'number' && idx >= 0 && idx < validLines.length) {
@@ -207,17 +217,24 @@ export function useAppState(user) {
       projects.get(activeProjectId)
         .then(({ project }) => {
           // Server data found - use it as source of truth
-          const serverLines = (project.lyrics?.lines || []).map((l) => ({
-            text: l.text || '',
-            timestamp: l.timestamp ?? null,
-            endTime: l.endTime ?? undefined,
-            secondary: l.secondary || '',
-            translation: l.translation || '',
-            id: crypto.randomUUID(),
-            words: l.words,
-            secondaryWords: l.secondaryWords,
+          const serverLines = migrateLines((project.lyrics?.lines || []).map((l) => {
+            if (l.type === 'section') {
+              return { type: 'section', label: l.label || '', singer: l.singer || undefined, timestamp: l.timestamp ?? null, id: crypto.randomUUID() };
+            }
+            return {
+              text: l.text || '',
+              timestamp: l.timestamp ?? null,
+              endTime: l.endTime ?? undefined,
+              secondary: l.secondary || '',
+              translations: Array.isArray(l.translations) ? l.translations : undefined,
+              singer: l.singer || undefined,
+              id: crypto.randomUUID(),
+              words: l.words,
+              secondaryWords: l.secondaryWords,
+            };
           }));
           setLines(serverLines);
+          clearHistory();
           setSyncMode(serverLines.length > 0 ? true : (project.state?.syncMode ?? true));
           setActiveLineIndex(project.state?.activeLineIndex || 0);
           setEditorModeRaw(project.lyrics?.editorMode || 'lrc');
@@ -228,21 +245,16 @@ export function useAppState(user) {
           if (project.state?.playbackPosition) setRestoredPosition(project.state.playbackPosition);
           if (project.state?.playbackSpeed) setRestoredSpeed(project.state.playbackSpeed);
           if (project.title) setMediaTitle(project.title);
-          if (project.metadata) {
-            setProjectMetadata({
-              description: project.metadata.description || '',
-              tags: project.metadata.tags || [],
-            });
-          }
           setForkedFrom(project.forkedFrom || null);
           if (project.metadata) {
+            const m = project.metadata;
             setProjectMetadata({
-              description: project.metadata.description || '',
-              tags: project.metadata.tags || [],
-              songName: project.metadata.songName || '',
-              songArtist: project.metadata.songArtist || '',
-              songAlbum: project.metadata.songAlbum || '',
-              songYear: project.metadata.songYear || '',
+              description: m.description || '',
+              tags: m.tags || [],
+              songName: m.songName || '',
+              songArtists: Array.isArray(m.songArtists) ? m.songArtists : [],
+              songAlbum: m.songAlbum || '',
+              songYear: m.songYear || '',
             });
           }
           // ── Rollback to setup if the project has lyrics but no media ──
@@ -309,8 +321,10 @@ export function useAppState(user) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  activeProjectIdRef.current = activeProjectId;
-  isProjectLoadingRef.current = isProjectLoading;
+  useLayoutEffect(() => {
+    activeProjectIdRef.current = activeProjectId;
+    isProjectLoadingRef.current = isProjectLoading;
+  });
 
   // ——— Guest silent restore (no activeProjectId, no auth) ———
   // When a guest visits /project/local or refreshes, restore their last session from localStorage.
@@ -326,13 +340,16 @@ export function useAppState(user) {
       if (!saved) return;
       const parsed = JSON.parse(saved);
       const validLines = (parsed.lines || []).flatMap((l) => {
-        if (!(l && typeof l === 'object' && typeof l.text === 'string')) return [];
+        if (!(l && typeof l === 'object')) return [];
+        if (l.type === 'section') return [{ type: 'section', label: l.label || '', singer: l.singer || undefined, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
+        if (typeof l.text !== 'string') return [];
         return [{
           text: l.text,
           timestamp: typeof l.timestamp === 'number' && isFinite(l.timestamp) ? l.timestamp : null,
           endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
           secondary: typeof l.secondary === 'string' ? l.secondary : '',
-          translation: typeof l.translation === 'string' ? l.translation : '',
+          translations: Array.isArray(l.translations) ? l.translations : undefined,
+          singer: typeof l.singer === 'string' ? l.singer : undefined,
           id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
           words: Array.isArray(l.words) ? l.words.flatMap((w) => {
             const word = typeof w.word === 'string' ? w.word : '';
@@ -346,6 +363,8 @@ export function useAppState(user) {
       });
       if (validLines.length === 0) return;
       setLines(validLines);
+      clearHistory();
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSyncMode(parsed.syncMode ?? true);
       const idx = parsed.activeLineIndex;
       if (typeof idx === 'number' && idx >= 0 && idx < validLines.length) {
@@ -393,6 +412,7 @@ export function useAppState(user) {
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed.lines?.length > 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setPendingProject(parsed);
           }
         }
@@ -438,6 +458,7 @@ export function useAppState(user) {
   useEffect(() => {
     const sParam = searchParams.get('s');
     if (sParam && !isNaN(Number(sParam))) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRestoredPosition(Number(sParam));
     }
     
@@ -578,6 +599,33 @@ export function useAppState(user) {
     setForkedFrom,
     onSaveSuccess: callAfterSave,
   });
+
+  // ——— Editor ready signal ———
+  // Fires after all restore effects (localStorage / server) have completed.
+  // setTimeout(0) lets React commit any state updates from restore effects first.
+  const [editorReady, setEditorReady] = useState(false);
+  useEffect(() => {
+    if (isProjectLoading) return;
+    const id = setTimeout(() => setEditorReady(true), 0);
+    return () => clearTimeout(id);
+  }, [isProjectLoading]);
+
+  // ——— Guest auto-save ———
+  // Always save to localStorage for unauthenticated users so sessions survive reloads.
+  // This is intentionally independent of the autosave setting.
+  const guestSavePayloadRef = useRef(null);
+  useEffect(() => { guestSavePayloadRef.current = buildProjectPayload; });
+  useEffect(() => {
+    if (getAccessToken() || activeProjectId) return;
+    if (lines.length === 0) return;
+    const id = setTimeout(() => {
+      try {
+        const payload = guestSavePayloadRef.current?.();
+        if (payload) localStorage.setItem(STORAGE_KEYS.PROJECT, JSON.stringify(payload));
+      } catch { /* ignore quota errors */ }
+    }, 1500);
+    return () => clearTimeout(id);
+  }, [lines, activeProjectId]);
 
   // ——— Global keyboard shortcuts ———
   useGlobalShortcuts({
@@ -741,10 +789,14 @@ export function useAppState(user) {
     redo,
     canUndo,
     canRedo,
+    clearHistory,
+    editorReady,
     syncMode,
     setSyncMode,
     activeLineIndex,
     setActiveLineIndex,
+    activeTranslationIndex,
+    setActiveTranslationIndex,
     playbackPosition,
     duration,
     mediaTitle,
