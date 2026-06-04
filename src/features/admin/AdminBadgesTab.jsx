@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { m as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Plus, RefreshCw, Scan, Pencil, Trash2, Award, Users, ChevronDown, X, Search, UserPlus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Plus, RefreshCw, Scan, Pencil, Trash2, Award, Users, X, Search, UserPlus } from 'lucide-react';
 import { gqlRequest } from '@/app/graphql.client';
 import { BadgeChip } from '@/features/badges/BadgeChip';
 import { BADGE_COLORS, RARITY_CONFIG } from '@/features/badges/badge-registry';
@@ -38,7 +39,7 @@ const RETROACTIVE = `
   }
 `;
 const GRANT_BADGE = `
-  mutation Grant($userId: ID!, $badgeId: String!) { adminGrantBadge(userId: $userId, badgeId: $badgeId) }
+  mutation Grant($userIdentifier: String!, $badgeId: String!) { adminGrantBadge(userIdentifier: $userIdentifier, badgeId: $badgeId) }
 `;
 
 const CONDITION_TYPES = [
@@ -101,6 +102,7 @@ const BLANK_FORM = {
 };
 
 function BadgeFormModal({ editing, onClose, onSaved }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState(editing ?? BLANK_FORM);
   const [saving, setSaving] = useState(false);
 
@@ -131,7 +133,7 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
       }
       onClose();
     } catch (e) {
-      toast.error(e.message || 'Failed to save badge');
+      toast.error(e.message || t('admin.badges.saveError'));
     } finally {
       setSaving(false);
     }
@@ -150,7 +152,7 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
           <div className="flex items-center gap-3">
             <Award className="size-4 text-primary" />
             <h3 className="text-sm font-semibold text-zinc-200">
-              {editing ? `Edit "${editing.label}"` : 'New Badge'}
+              {editing ? t('admin.badges.editTitle', { name: editing.label }) : t('admin.badges.newTitle')}
             </h3>
           </div>
           <button type="button" onClick={onClose} className="text-zinc-600 hover:text-zinc-400 transition-colors">
@@ -161,17 +163,17 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
         <form onSubmit={submit} className="p-5 flex flex-col gap-4 max-h-[80vh] overflow-y-auto">
           {/* Live preview */}
           <div className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/50">
-            <span className="text-[11px] text-zinc-600 uppercase tracking-widest">Preview</span>
+            <span className="text-[11px] text-zinc-600 uppercase tracking-widest">{t('admin.badges.preview')}</span>
             <LivePreview form={form} />
           </div>
 
           {/* ID — only for new badges */}
           {!editing && (
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] text-zinc-500 uppercase tracking-widest">Badge ID</span>
+              <span className="text-[11px] text-zinc-500 uppercase tracking-widest">{t('admin.badges.badgeId')}</span>
               <input
                 className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-700 focus:border-primary/50 focus:outline-none"
-                placeholder="e.g. early_bird"
+                placeholder={t('admin.badges.badgeIdPlaceholder')}
                 value={form.id}
                 onChange={e => set('id', e.target.value)}
                 required
@@ -183,7 +185,7 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
           <div className="grid grid-cols-2 gap-3">
             {/* Icon */}
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] text-zinc-500 uppercase tracking-widest">Icon</span>
+              <span className="text-[11px] text-zinc-500 uppercase tracking-widest">{t('admin.badges.icon')}</span>
               <input
                 className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-lg focus:border-primary/50 focus:outline-none text-center"
                 value={form.icon}
@@ -194,10 +196,10 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
             </label>
             {/* Label */}
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] text-zinc-500 uppercase tracking-widest">Label</span>
+              <span className="text-[11px] text-zinc-500 uppercase tracking-widest">{t('admin.badges.label')}</span>
               <input
                 className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-700 focus:border-primary/50 focus:outline-none"
-                placeholder="Badge Name"
+                placeholder={t('admin.badges.labelPlaceholder')}
                 value={form.label}
                 onChange={e => set('label', e.target.value)}
                 required
@@ -208,10 +210,10 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
 
           {/* Description */}
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] text-zinc-500 uppercase tracking-widest">Description</span>
+            <span className="text-[11px] text-zinc-500 uppercase tracking-widest">{t('admin.badges.description')}</span>
             <input
               className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-700 focus:border-primary/50 focus:outline-none"
-              placeholder="What did the user do to earn this?"
+              placeholder={t('admin.badges.descriptionPlaceholder')}
               value={form.description}
               onChange={e => set('description', e.target.value)}
               maxLength={200}
@@ -220,7 +222,7 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
 
           {/* Color swatches */}
           <div className="flex flex-col gap-2">
-            <span className="text-[11px] text-zinc-500 uppercase tracking-widest">Color</span>
+            <span className="text-[11px] text-zinc-500 uppercase tracking-widest">{t('admin.badges.color')}</span>
             <div className="flex gap-2 flex-wrap">
               {COLORS.map(c => {
                 const cc = BADGE_COLORS[c] ?? BADGE_COLORS.primary;
@@ -241,7 +243,7 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
 
           {/* Condition */}
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] text-zinc-500 uppercase tracking-widest">Condition</span>
+            <span className="text-[11px] text-zinc-500 uppercase tracking-widest">{t('admin.badges.condition_label')}</span>
             <select
               className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:border-primary/50 focus:outline-none"
               value={form.conditionType}
@@ -255,7 +257,7 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
 
           {needsValue(form.conditionType) && (
             <label className="flex flex-col gap-1">
-              <span className="text-[11px] text-zinc-500 uppercase tracking-widest">Threshold Value</span>
+              <span className="text-[11px] text-zinc-500 uppercase tracking-widest">{t('admin.badges.thresholdValue')}</span>
               <input
                 type="number"
                 min={1}
@@ -269,7 +271,7 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
 
           {/* XP Reward */}
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] text-zinc-500 uppercase tracking-widest">XP Reward</span>
+            <span className="text-[11px] text-zinc-500 uppercase tracking-widest">{t('admin.badges.xpReward')}</span>
             <input
               type="number"
               min={0}
@@ -288,12 +290,12 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
             >
               <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.autoGrant ? 'translate-x-4' : 'translate-x-0.5'}`} />
             </div>
-            <span className="text-xs text-zinc-400">Auto-grant when condition is met</span>
+            <span className="text-xs text-zinc-400">{t('admin.badges.autoGrantToggle')}</span>
           </label>
 
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border border-zinc-700 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
-              Cancel
+              {t('admin.badges.cancel')}
             </button>
             <button
               type="submit"
@@ -301,7 +303,7 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
               className="flex-1 px-4 py-2 rounded-lg bg-primary text-zinc-950 text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
               {saving && <span className="size-3.5 rounded-full border-2 border-zinc-950 border-t-transparent animate-spin" />}
-              {editing ? 'Update' : 'Create Badge'}
+              {editing ? t('admin.badges.update') : t('admin.badges.create')}
             </button>
           </div>
         </form>
@@ -313,6 +315,7 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
 // ─── Badge card ───────────────────────────────────────────────────────────────
 
 function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading }) {
+  const { t } = useTranslation();
   const colorConf = BADGE_COLORS[def.color] ?? BADGE_COLORS.primary;
   const conditionLabel = CONDITION_TYPES.find(c => c.value === def.conditionType)?.label ?? def.conditionType;
 
@@ -354,7 +357,7 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
       <div className="grid grid-cols-3 gap-2">
         <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
           <Users className="size-3" />
-          <span>{def.holderCount.toLocaleString()} holders</span>
+          <span>{t('admin.badges.holders', { count: def.holderCount.toLocaleString() })}</span>
         </div>
         <div className="flex items-center gap-1 text-[10px] text-amber-600">
           <span>⚡</span>
@@ -362,13 +365,13 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
         </div>
         <div className={`flex items-center gap-1 text-[10px] ${def.autoGrant ? 'text-emerald-600' : 'text-zinc-700'}`}>
           <div className={`size-1.5 rounded-full ${def.autoGrant ? 'bg-emerald-500' : 'bg-zinc-700'}`} />
-          <span>{def.autoGrant ? 'Auto-grant' : 'Manual only'}</span>
+          <span>{def.autoGrant ? t('admin.badges.autoGrant') : t('admin.badges.manualOnly')}</span>
         </div>
       </div>
 
       {/* Condition */}
       <div className="text-[10px] text-zinc-700 bg-zinc-950/60 rounded-lg px-2 py-1.5 border border-zinc-800/40">
-        <span className="text-zinc-600">Condition: </span>
+        <span className="text-zinc-600">{t('admin.badges.condition')}: </span>
         {conditionLabel}{def.conditionValue != null ? ` (${def.conditionValue.toLocaleString()})` : ''}
       </div>
 
@@ -380,7 +383,7 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
           className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-all border border-zinc-700/50"
         >
           <UserPlus className="size-3" />
-          Grant to user
+          {t('admin.badges.grantToUser')}
         </button>
         <button
           type="button"
@@ -393,7 +396,7 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
           ) : (
             <Scan className="size-3" />
           )}
-          Retroactive scan
+          {t('admin.badges.retroactiveScan')}
         </button>
       </div>
     </M.div>
@@ -403,18 +406,19 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
 // ─── Grant modal ──────────────────────────────────────────────────────────────
 
 function GrantModal({ badge, onClose }) {
-  const [userId, setUserId] = useState('');
+  const { t } = useTranslation();
+  const [identifier, setIdentifier] = useState('');
   const [loading, setLoading] = useState(false);
 
   const grant = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await gqlRequest(GRANT_BADGE, { userId: userId.trim(), badgeId: badge.id });
-      toast.success(`Granted "${badge.label}" to user`);
+      await gqlRequest(GRANT_BADGE, { userIdentifier: identifier.trim(), badgeId: badge.id });
+      toast.success(t('admin.badges.grantSuccess', { label: badge.label }));
       onClose();
     } catch (e) {
-      toast.error(e.message || 'Failed to grant badge');
+      toast.error(e.message || t('admin.badges.grantError'));
     } finally {
       setLoading(false);
     }
@@ -430,23 +434,25 @@ function GrantModal({ badge, onClose }) {
         className="w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl p-5 flex flex-col gap-4"
       >
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-semibold text-zinc-200">Grant "{badge.label}"</h3>
+          <h3 className="text-sm font-semibold text-zinc-200">{t('admin.badges.grantTitle', { name: badge.label })}</h3>
         </div>
         <form onSubmit={grant} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] text-zinc-500 uppercase tracking-widest">User ID (MongoDB _id)</span>
+            <span className="text-[11px] text-zinc-500 uppercase tracking-widest">{t('admin.badges.usernameLabel')}</span>
             <input
-              className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-700 focus:border-primary/50 focus:outline-none font-mono"
-              placeholder="507f1f77bcf86cd799439011"
-              value={userId}
-              onChange={e => setUserId(e.target.value)}
+              className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-700 focus:border-primary/50 focus:outline-none"
+              placeholder={t('admin.badges.usernamePlaceholder')}
+              value={identifier}
+              onChange={e => setIdentifier(e.target.value)}
               required
             />
           </label>
           <div className="flex gap-2">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border border-zinc-700 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border border-zinc-700 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
+              {t('admin.badges.cancel')}
+            </button>
             <button type="submit" disabled={loading} className="flex-1 px-4 py-2 rounded-lg bg-primary text-zinc-950 text-sm font-semibold disabled:opacity-50">
-              {loading ? 'Granting…' : 'Grant'}
+              {loading ? t('admin.badges.granting') : t('admin.badges.grant')}
             </button>
           </div>
         </form>
@@ -458,6 +464,7 @@ function GrantModal({ badge, onClose }) {
 // ─── Main tab ─────────────────────────────────────────────────────────────────
 
 export default function AdminBadgesTab() {
+  const { t } = useTranslation();
   const [defs, setDefs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -471,7 +478,7 @@ export default function AdminBadgesTab() {
       const { badgeDefinitions } = await gqlRequest(GET_BADGE_DEFS);
       setDefs(badgeDefinitions);
     } catch {
-      toast.error('Failed to fetch badge definitions');
+      toast.error(t('admin.badges.fetchError'));
     } finally {
       setLoading(false);
     }
@@ -488,17 +495,17 @@ export default function AdminBadgesTab() {
     } else {
       setDefs(prev => prev.map(d => d.id === def.id ? def : d));
     }
-    toast.success(type === 'create' ? `Badge "${def.label}" created` : `Badge "${def.label}" updated`);
+    toast.success(type === 'create' ? t('admin.badges.createSuccess', { label: def.label }) : t('admin.badges.updateSuccess', { label: def.label }));
   };
 
   const handleDelete = async (def) => {
-    if (!window.confirm(`Delete badge "${def.label}"? This cannot be undone.`)) return;
+    if (!window.confirm(t('admin.badges.confirmDelete', { label: def.label }))) return;
     try {
       await gqlRequest(DELETE_BADGE, { id: def.id });
       setDefs(prev => prev.filter(d => d.id !== def.id));
-      toast.success(`Deleted "${def.label}"`);
+      toast.success(t('admin.badges.deleteSuccess', { label: def.label }));
     } catch (e) {
-      toast.error(e.message || 'Failed to delete badge');
+      toast.error(e.message || t('admin.badges.deleteError'));
     }
   };
 
@@ -507,10 +514,10 @@ export default function AdminBadgesTab() {
     try {
       const { adminRetroactiveScan: result } = await gqlRequest(RETROACTIVE, { badgeId });
       if (result.error) throw new Error(result.error);
-      toast.success(`Scan complete: granted to ${result.granted.toLocaleString()} / ${result.scanned.toLocaleString()} users`);
+      toast.success(t('admin.badges.retroSuccess', { granted: result.granted.toLocaleString(), scanned: result.scanned.toLocaleString() }));
       fetchDefs(); // refresh holder counts
     } catch (e) {
-      toast.error(e.message || 'Retroactive scan failed');
+      toast.error(e.message || t('admin.badges.scanFailed'));
     } finally {
       setRetroLoading(null);
     }
@@ -535,7 +542,7 @@ export default function AdminBadgesTab() {
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-600 pointer-events-none" />
           <input
             className="w-full pl-8 pr-3 py-2 text-xs bg-zinc-900 border border-zinc-800 rounded-xl placeholder:text-zinc-700 focus:border-primary/40 focus:outline-none text-zinc-300"
-            placeholder="Search badges..."
+            placeholder={t('admin.badges.searchPlaceholder')}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -553,16 +560,16 @@ export default function AdminBadgesTab() {
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-zinc-950 text-xs font-semibold hover:bg-primary/90 transition-colors"
         >
           <Plus className="size-3.5" />
-          New Badge
+          {t('admin.badges.newBadge')}
         </button>
       </div>
 
       {/* Stats bar */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Total Badges', value: defs.length },
-          { label: 'Built-in',     value: defs.filter(d => d.isBuiltin).length },
-          { label: 'Custom',       value: defs.filter(d => !d.isBuiltin).length },
+          { label: t('admin.badges.totalBadges'), value: defs.length },
+          { label: t('admin.badges.builtIn'),     value: defs.filter(d => d.isBuiltin).length },
+          { label: t('admin.badges.custom'),      value: defs.filter(d => !d.isBuiltin).length },
         ].map(stat => (
           <div key={stat.label} className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/50 text-center">
             <p className="text-lg font-bold text-zinc-200">{stat.value}</p>
@@ -580,7 +587,7 @@ export default function AdminBadgesTab() {
           {/* Custom badges first */}
           {custom.length > 0 && (
             <section>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-3">Custom Badges</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-3">{t('admin.badges.customSection')}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                 <AnimatePresence>
                   {custom.map(def => (
@@ -602,7 +609,7 @@ export default function AdminBadgesTab() {
           {/* Built-in badges */}
           {builtins.length > 0 && (
             <section>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-3">Built-in Badges</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 mb-3">{t('admin.badges.builtinSection')}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                 <AnimatePresence>
                   {builtins.map(def => (
@@ -624,7 +631,7 @@ export default function AdminBadgesTab() {
           {filtered.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <span className="text-4xl opacity-20">🏅</span>
-              <p className="text-sm text-zinc-500">{search ? 'No badges match your search' : 'No badge definitions yet'}</p>
+              <p className="text-sm text-zinc-500">{search ? t('admin.badges.noResults') : t('admin.badges.noDefinitions')}</p>
             </div>
           )}
         </div>
