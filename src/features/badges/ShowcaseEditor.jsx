@@ -113,7 +113,7 @@ export function ShowcaseEditor({ userBadges = [], initialShowcase = [], initialP
   const [showcasePublic, setShowcasePublic] = useState(initialPublic);
   const [saving, setSaving] = useState(false);
   const [dragFrom, setDragFrom] = useState(null);
-  const [dragOver, setDragOver] = useState(null);
+  const [, setDragOver] = useState(null);
   const [rarityFilter, setRarityFilter] = useState('all');
 
   const showcaseSet = new Set(showcase);

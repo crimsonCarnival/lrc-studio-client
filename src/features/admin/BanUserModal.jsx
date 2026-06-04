@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import {
@@ -28,10 +28,13 @@ export default function BanUserModal({ isOpen, user, onConfirm, onCancel }) {
   const inputRef = useRef(null);
 
   const prevIsOpenRef = useRef(isOpen);
-  if (prevIsOpenRef.current !== isOpen) {
-    prevIsOpenRef.current = isOpen;
-    if (isOpen) setForm({ reason: '', bannedUntil: '', banIp: false, banDevice: false });
-  }
+  useLayoutEffect(() => {
+    if (prevIsOpenRef.current !== isOpen) {
+      prevIsOpenRef.current = isOpen;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (isOpen) setForm({ reason: '', bannedUntil: '', banIp: false, banDevice: false });
+    }
+  }, [isOpen]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

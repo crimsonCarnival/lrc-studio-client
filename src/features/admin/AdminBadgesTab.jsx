@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { m as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Plus, RefreshCw, Scan, Pencil, Trash2, Award, Users, ChevronDown, X, Search, UserPlus } from 'lucide-react';
@@ -102,7 +101,6 @@ const BLANK_FORM = {
 };
 
 function BadgeFormModal({ editing, onClose, onSaved }) {
-  const { t } = useTranslation();
   const [form, setForm] = useState(editing ?? BLANK_FORM);
   const [saving, setSaving] = useState(false);
 
@@ -460,13 +458,11 @@ function GrantModal({ badge, onClose }) {
 // ─── Main tab ─────────────────────────────────────────────────────────────────
 
 export default function AdminBadgesTab() {
-  const { t } = useTranslation();
   const [defs, setDefs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [formModal, setFormModal] = useState(null); // null | 'new' | badge def (for edit)
   const [grantModal, setGrantModal] = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
   const [retroLoading, setRetroLoading] = useState(null);
 
   const fetchDefs = async () => {
@@ -481,7 +477,10 @@ export default function AdminBadgesTab() {
     }
   };
 
-  useEffect(() => { fetchDefs(); }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchDefs();
+  }, []);
 
   const handleSaved = (def, type) => {
     if (type === 'create') {
@@ -501,7 +500,6 @@ export default function AdminBadgesTab() {
     } catch (e) {
       toast.error(e.message || 'Failed to delete badge');
     }
-    setDeleteTarget(null);
   };
 
   const handleRetroactive = async (badgeId) => {

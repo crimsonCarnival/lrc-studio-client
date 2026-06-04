@@ -135,6 +135,7 @@ export default function AdminDashboard() {
       fetchStats();
     }
     // Tab content always refreshes on tab switch
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (activeTab === 'users') fetchUsers();
     else if (activeTab === 'ips') fetchIps();
     else if (activeTab === 'devices') fetchDevices();

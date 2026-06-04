@@ -133,7 +133,7 @@ function ShowcaseCard({ badge, locale = 'en' }) {
   );
 }
 
-function EmptySlot({ slotIndex }) {
+function EmptySlot({ slotIndex: _slotIndex }) {
   return (
     <div className="rounded-xl border border-dashed border-zinc-800 flex flex-col items-center justify-center gap-2 p-4 min-w-[88px] min-h-[120px] opacity-40">
       <div className="size-8 rounded-full border border-zinc-700 flex items-center justify-center">
