@@ -773,6 +773,7 @@ function Player(
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
             <WaveformDisplay
               showWaveform={settings.playback?.showWaveform}
+              waveformSnap={settings.playback?.waveformSnap}
               audioRef={audioRef}
               localUrl={local.localUrl}
               lines={lines}
