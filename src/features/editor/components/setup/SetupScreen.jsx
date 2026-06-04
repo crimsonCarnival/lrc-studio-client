@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@ui/button';
@@ -182,12 +182,15 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
   // Sync project name to audio name if empty when reaching step 2
   const prevStepRef = useRef(step);
-  if (step !== prevStepRef.current) {
-    prevStepRef.current = step;
-    if (step === 2 && !projectName && audioName && !audioName.includes('://') && audioName !== t('setup.youtubeVideo')) {
-      setMetadataState({ name: audioName });
+  useLayoutEffect(() => {
+    if (step !== prevStepRef.current) {
+      prevStepRef.current = step;
+      if (step === 2 && !projectName && audioName && !audioName.includes('://') && audioName !== t('setup.youtubeVideo')) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setMetadataState({ name: audioName });
+      }
     }
-  }
+  }, [step, projectName, audioName, t, setMetadataState]);
 
   const saveUploadRecord = useCallback(async (data) => {
     if (!getAccessToken()) return;
@@ -248,7 +251,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   }, [ytUrl, detectedUrlType, playerRef, setAudioState, saveUploadRecord, t]);
 
   const handleLoadUrlRef = useRef(null);
-  handleLoadUrlRef.current = handleLoadUrl;
+  useLayoutEffect(() => { handleLoadUrlRef.current = handleLoadUrl; });
 
   useEffect(() => {
     if (autoLoadPendingRef.current && ytUrl) {
@@ -312,7 +315,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
         setMediaUploads(uploads || []);
       } catch { /* ignore */ }
     }
-  }, [playerRef, setAudioState, setMetadataState, t]);
+  }, [playerRef, setAudioState, setMetadataState]);
 
   // ── Lyrics handlers ──
 
@@ -411,7 +414,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       const token = executeRecaptcha ? await executeRecaptcha('upload_cover') : undefined;
       const url = await uploadsService.uploadCoverImage(file, token);
       setMetadataState({ coverImage: url });
-    } catch {}
+    } catch { /* ignore */ }
     finally {
       setImageUploading(false);
       e.target.value = '';
@@ -421,26 +424,36 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Page header */}
-      <div className="shrink-0 px-6 pt-5 pb-4">
-        <div className="flex items-center gap-3 max-w-5xl mx-auto">
-          <div className={`size-2 rounded-full bg-primary shrink-0 ${reducedMotion ? '' : 'animate-pulse'}`} />
-          <div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">
-              {t('app.name')} · {t('setup.newProject', 'New Project')}
-            </p>
-            <h2 className="font-heading text-zinc-100" style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)' }}>
-              {t('setup.newProjectTitle', 'New Project')}
-            </h2>
+      <div className="shrink-0 px-6 pt-4 pb-3">
+        <div className="flex items-center justify-between gap-3 max-w-7xl mx-auto">
+          <div className="flex items-center gap-3">
+            <div className={`size-2 rounded-full bg-primary shrink-0 ${reducedMotion ? '' : 'animate-pulse'}`} />
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">
+                {t('app.name')} · {t('setup.newProject', 'New Project')}
+              </p>
+              <h2 className="font-heading text-zinc-100" style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)' }}>
+                {t('setup.newProjectTitle', 'New Project')}
+              </h2>
+            </div>
           </div>
+          <Button
+            onClick={handleProceed}
+            disabled={!canContinue}
+            className="h-9 px-5 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 shadow-glow transition-all text-sm disabled:shadow-none shrink-0"
+          >
+            {t('setup.startToSync')}
+            <Sparkles className="size-3.5" />
+          </Button>
         </div>
       </div>
 
       {/* Two-column body */}
-      <div className="flex-1 min-h-0 px-6 pb-0 overflow-y-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-5xl mx-auto pb-6">
+      <div className="flex-1 min-h-0 px-6 overflow-y-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-7xl mx-auto pb-3 lg:min-h-[calc(100%-1rem)] lg:pb-0">
 
           {/* LEFT: project info */}
-          <div className="glass rounded-2xl flex flex-col p-5 gap-4 self-start relative">
+          <div className="glass rounded-2xl flex flex-col p-5 gap-4 self-start lg:self-auto relative">
             <ThemedShineBorder />
 
             {/* Project name */}
@@ -894,19 +907,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="shrink-0 px-6 py-4 border-t border-zinc-800/50">
-        <div className="flex items-center justify-end max-w-5xl mx-auto">
-          <Button
-            onClick={handleProceed}
-            disabled={!canContinue}
-            className="h-12 px-10 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2.5 shadow-glow transition-all text-sm disabled:shadow-none"
-          >
-            {t('setup.startToSync')}
-            <Sparkles className="size-4" />
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }

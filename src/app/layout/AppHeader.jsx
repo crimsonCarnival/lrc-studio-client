@@ -75,6 +75,7 @@ export function AppHeader({
   settings,
   updateSetting,
   i18n,
+  syncMode,
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -278,7 +279,15 @@ export function AppHeader({
           </div>
         </div>
 
-        {/* ── Center: spacer ── */}
+        {/* ── Center: Start Syncing (edit mode only) ── */}
+        {!syncMode && isReady && (
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('editor:start-syncing'))}
+            className="py-1 px-3 h-7 text-xs font-semibold text-zinc-950 bg-primary hover:bg-primary-dim rounded-lg transition-colors shrink-0"
+          >
+            {t('editor.startSyncing')}
+          </button>
+        )}
         <div className="flex-1" />
 
         {/* ── Right: Controls ── */}

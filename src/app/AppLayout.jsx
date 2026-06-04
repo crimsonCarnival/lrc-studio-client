@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { splitArtists } from '@/shared/utils/lrc';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { UploadCloud } from 'lucide-react';
@@ -35,11 +36,12 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
 
   const handleProjectConfirm = useCallback(({ name, description, tags, songName, songArtist, songAlbum, songYear, coverImage, albumArt }) => {
     const newTitle = name || mediaTitle || '';
+    const songArtists = splitArtists(songArtist);
     const newMetadata = {
       description: description || '',
       tags: tags || [],
       songName: songName || '',
-      songArtist: songArtist || '',
+      songArtists,
       songAlbum: songAlbum || '',
       songYear: songYear || '',
       albumArt: albumArt || ''
@@ -89,6 +91,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           settings={settings}
           updateSetting={updateSetting}
           i18n={i18n}
+          syncMode={syncMode}
         />
 
         <div className={`relative z-base flex-1 min-h-0 ${isSetupPage ? 'px-0' : 'px-0 lg:px-6'} flex flex-col transition-[padding] duration-500 ease-in-out
@@ -96,11 +99,13 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             : (playerTop && isReady && isPlayerMounted) ? 'max-lg:pt-14 lg:pt-[216px]'
               : 'pt-14 lg:pt-16'
           }
-          ${isPlayerMounted && isReady
-            ? playerTop
-              ? 'max-lg:pb-[80px] lg:pb-6'
-              : 'max-lg:pb-[240px] lg:pb-[160px]'
-            : 'pb-20 lg:pb-6'
+          ${isSetupPage
+            ? 'pb-0'
+            : isPlayerMounted && isReady
+              ? playerTop
+                ? 'max-lg:pb-[80px] lg:pb-6'
+                : 'max-lg:pb-[240px] lg:pb-[160px]'
+              : 'pb-20 lg:pb-6'
           }
         `}
         >
