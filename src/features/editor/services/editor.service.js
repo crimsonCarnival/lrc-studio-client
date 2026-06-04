@@ -29,16 +29,17 @@ export function detectDuplicateTimestamps(lines, threshold = 0.05) {
 }
 
 /**
- * Computes the next active line index after marking, respecting skipBlank.
+ * Computes the next active line index after marking.
+ * Skips blank lines when skipBlank is true, skips already-timestamped lines when mode is 'next-unsynced'.
  */
-function computeNextIndex(lines, fromIndex, skipBlank) {
+function computeNextIndex(lines, fromIndex, skipBlank, mode) {
   let nextIndex = fromIndex + 1;
-  if (skipBlank) {
-    while (nextIndex < lines.length) {
-      const text = lines[nextIndex]?.text?.trim();
-      if (text && text !== '♪') break;
-      nextIndex++;
-    }
+  while (nextIndex < lines.length) {
+    const line = lines[nextIndex];
+    const text = line?.text?.trim();
+    if (skipBlank && (!text || text === '♪')) { nextIndex++; continue; }
+    if (mode === 'next-unsynced' && line?.timestamp != null) { nextIndex++; continue; }
+    break;
   }
   return Math.min(nextIndex, lines.length - 1);
 }
@@ -146,6 +147,7 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
 
   const skipBlank = settings.autoAdvance?.skipBlank;
   const autoAdvance = settings.autoAdvance?.enabled;
+  const advanceMode = settings.autoAdvance?.mode;
   const isSrt = editorMode === 'srt';
 
   // Focused timestamp takes priority
@@ -176,7 +178,7 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
       updated[activeLineIndex] = { ...line, timestamp: time };
       // If no words to stamp, immediately advance
       if (!words.length) {
-        const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank) : null;
+        const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
         return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
       }
       return { nextLines: updated, nextActiveLineIndex: null, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
@@ -191,14 +193,14 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
       const nextWordIdx = clampedIdx + 1;
       if (nextWordIdx >= words.length) {
         // All words stamped — advance line
-        const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank) : null;
+        const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
         return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
       }
       return { nextLines: updated, nextActiveLineIndex: null, nextAwaitingEndMark: null, nextActiveWordIndex: nextWordIdx };
     }
 
     // Safety: advance if out of bounds
-    const nextIdx = autoAdvance ? computeNextIndex(lines, activeLineIndex, skipBlank) : null;
+    const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
     return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
   }
 
@@ -228,8 +230,8 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
         updated = result.lines;
       }
 
-      const nextIdx = autoAdvance
-        ? computeNextIndex(lines, activeLineIndex, skipBlank)
+      const nextIdx = (autoAdvance || forceAdvance)
+        ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode)
         : null;
 
       return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null };
@@ -248,8 +250,8 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
         updated = result.lines;
       }
 
-      const nextIdx = autoAdvance
-        ? computeNextIndex(lines, activeLineIndex, skipBlank)
+      const nextIdx = (autoAdvance || forceAdvance)
+        ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode)
         : null;
 
       return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null };
@@ -274,8 +276,8 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
     updated = result.lines;
   }
 
-  const nextIdx = autoAdvance
-    ? computeNextIndex(lines, activeLineIndex, skipBlank)
+  const nextIdx = (autoAdvance || forceAdvance)
+    ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode)
     : null;
 
   return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null };
