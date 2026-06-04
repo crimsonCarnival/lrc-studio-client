@@ -2,7 +2,6 @@
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
 import { Button } from '@ui/button';
-import { Input } from '@ui/input';
 import { FloatingInput } from '@ui/floating-input';
 import { Checkbox } from '@ui/checkbox';
 import { Label } from '@ui/label';
@@ -13,8 +12,6 @@ export default function ExportPanel({
   setShowExportPanel,
   exportFilename,
   setExportFilename,
-  metadata,
-  setMetadata,
   includeTranslations,
   setIncludeTranslations,
   includeSecondary,
@@ -79,53 +76,16 @@ export default function ExportPanel({
         </div>
 
         {/* Metadata Section */}
-        <div className="space-y-2 pt-2 border-t border-zinc-700/50">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-400 font-medium">
-              {t('export.metadata', 'LRC Metadata')}
-            </span>
-            <div className="flex items-center gap-1.5">
-              <Checkbox
-                id="include-metadata"
-                checked={includeMetadata}
-                onCheckedChange={setIncludeMetadata}
-                className="border-zinc-600 bg-zinc-900 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-              />
-              <Label htmlFor="include-metadata" className="text-[10px] text-zinc-500 cursor-pointer">
-                {t('export.includeInExport', 'Include')}
-              </Label>
-            </div>
-          </div>
-
-          {includeMetadata && ['ti', 'ar', 'al', 'au', 'by', 'lg', 're', 've'].map((key) => {
-            const labels = {
-              ti: t('export.metaTitle', 'Title'),
-              ar: t('export.metaArtist', 'Artist'),
-              al: t('export.metaAlbum', 'Album'),
-              au: t('export.metaAuthor', 'Author'),
-              by: t('export.metaCreator', 'LRC Creator'),
-              lg: t('export.metaLanguage', 'Language'),
-              re: t('export.metaResource', 'Resource'),
-              ve: t('export.metaVersion', 'Version')
-            };
-
-            return (
-              <div key={key} className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500 w-16">
-                  {labels[key]}
-                </span>
-                <Input
-                  type="text"
-                  value={metadata[key] || ''}
-                  onChange={(e) =>
-                    setMetadata((prev) => ({ ...prev, [key]: e.target.value }))
-                  }
-                  placeholder={labels[key]}
-                  className="flex-1 bg-zinc-900 border-zinc-700 text-xs text-zinc-100 placeholder-zinc-600 h-7 focus-visible:border-primary/50"
-                />
-              </div>
-            );
-          })}
+        <div className="flex items-center gap-2 pt-2 border-t border-zinc-700/50">
+          <Checkbox
+            id="include-metadata"
+            checked={includeMetadata}
+            onCheckedChange={setIncludeMetadata}
+            className="border-zinc-600 bg-zinc-900 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+          />
+          <Label htmlFor="include-metadata" className="text-xs text-zinc-400 cursor-pointer">
+            {t('export.includeMetadata', 'Include song metadata (title, artist, album)')}
+          </Label>
         </div>
 
         {/* Format Specific Options */}

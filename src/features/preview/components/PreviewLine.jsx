@@ -17,6 +17,7 @@ export default function PreviewLine({
   handleLineHoverEnd,
   showTranslationsInPreview,
   showFuriganaInPreview,
+  activeTranslationIndex = 0,
   sizeOption,
   spacingOption,
   activeSecondarySizes,
@@ -30,6 +31,19 @@ export default function PreviewLine({
   playbackSpeed = 1,
 }) {
   const { settings } = useSettings();
+
+  // Section marker — render as a divider chip
+  if (line.type === 'section') {
+    return (
+      <div className="flex items-center gap-3 px-2 sm:px-4 py-2 my-1">
+        <div className="flex-1 h-px bg-zinc-800/60" />
+        <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-800/60 bg-zinc-900/40 whitespace-nowrap">
+          {line.label}{line.singer ? ` · ${line.singer}` : ''}
+        </span>
+        <div className="flex-1 h-px bg-zinc-800/60" />
+      </div>
+    );
+  }
 
   const isActive = i === displayedActiveIndex || (isDualLine && i === displayLines[0].originalIndex);
   const isPast = line.timestamp != null && line.timestamp < playbackPosition && !isActive;
@@ -62,6 +76,9 @@ export default function PreviewLine({
 
   const hasReadings = showFuriganaInPreview && line.words?.some((w) => w.reading);
 
+  // Active translation text for this line
+  const activeTranslationText = line.translations?.[activeTranslationIndex]?.text ?? null;
+
   const inner = (
     <button
       type="button"
@@ -74,7 +91,7 @@ export default function PreviewLine({
         animationDelay: staggerDelay,
       }}
       className={`w-full group px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition-opacity duration-100 ease-out flex select-none relative overflow-hidden animate-preview-line-in text-left ${hasMedia ? 'cursor-pointer' : 'cursor-default'
-        } ${translationLayout === 'side-by-side' && line.translation && showTranslationsInPreview
+        } ${translationLayout === 'side-by-side' && activeTranslationText && showTranslationsInPreview
           ? 'flex-row items-baseline gap-3 sm:gap-6'
           : 'flex-col'
         } ${settings.interface?.previewAlignment === 'right' ? 'items-end text-right' :
@@ -101,11 +118,17 @@ export default function PreviewLine({
         </div>
       )}
 
+      {/* Singer badge — shown above main content when assigned */}
+      {line.singer && (
+        <span className="absolute top-0.5 right-2 text-[9px] font-semibold text-zinc-600 tracking-wide truncate max-w-[40%]">
+          {line.singer}
+        </span>
+      )}
+
       {/* Left column for side-by-side: main + secondary */}
-      {translationLayout === 'side-by-side' && line.translation && showTranslationsInPreview ? (
+      {translationLayout === 'side-by-side' && activeTranslationText && showTranslationsInPreview ? (
         <>
           <div className="flex-1 min-w-0 flex flex-col">
-            {/* Main Track (furigana renders as ruby on kanji) */}
             <MainTrack
               line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={hasWordTimestamps}
               playbackPosition={playbackPosition} activeFontSizes={activeFontSizes}
@@ -113,17 +136,14 @@ export default function PreviewLine({
               settings={settings} showFuriganaInPreview={showFuriganaInPreview}
               isPlaying={isPlaying} playbackSpeed={playbackSpeed} hasReadings={hasReadings}
             />
-            {/* Secondary/Romaji Track — below main */}
             {line.secondary && renderSecondaryTrack({
               line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings,
               isPlaying, playbackSpeed
             })}
           </div>
 
-          {/* Vertical Divider — spans full height while allowing baseline alignment for content columns */}
           <div className="w-px self-stretch bg-zinc-700/40 mx-3 sm:mx-6" />
 
-          {/* Right column: translation */}
           <div className="flex-1 min-w-0">
             <p
               className={`transition-colors duration-100 w-full font-lyrics break-words overflow-wrap-anywhere hyphens-auto ${isActive
@@ -132,13 +152,12 @@ export default function PreviewLine({
                 }`}
               style={{ lineHeight: hasReadings ? '2' : undefined }}
             >
-              {line.translation}
+              {activeTranslationText}
             </p>
           </div>
         </>
       ) : (
         <>
-          {/* Main Track (furigana renders as ruby on kanji) */}
           <MainTrack
             line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={hasWordTimestamps}
             playbackPosition={playbackPosition} activeFontSizes={activeFontSizes}
@@ -147,14 +166,12 @@ export default function PreviewLine({
             isPlaying={isPlaying} playbackSpeed={playbackSpeed} hasReadings={hasReadings}
           />
 
-          {/* Secondary/Romaji Track — below main */}
           {line.secondary && renderSecondaryTrack({
             line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings,
             isPlaying, playbackSpeed
           })}
 
-          {/* Translation Track — below secondary */}
-          {(line.translation && showTranslationsInPreview) && (
+          {(activeTranslationText && showTranslationsInPreview) && (
             <p
               className={`transition-colors duration-100 w-full font-lyrics break-words overflow-wrap-anywhere hyphens-auto ${isActive
                 ? `${activeFontSizes[sizeOption]} text-zinc-500 font-medium ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`
@@ -162,7 +179,7 @@ export default function PreviewLine({
                 }`}
               style={{ lineHeight: hasReadings ? '2' : undefined }}
             >
-              {line.translation}
+              {activeTranslationText}
             </p>
           )}
         </>

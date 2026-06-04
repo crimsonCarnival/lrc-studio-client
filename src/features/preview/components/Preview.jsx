@@ -31,7 +31,6 @@ export default function Preview(props) {
       setIsPublic(project.public);
     }
     if (project) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForksEnabled(project.forksEnabled !== false);
     }
   }, [project]);
@@ -82,8 +81,9 @@ export default function Preview(props) {
     showFuriganaInPreview,
     setShowFuriganaInPreview,
     wasCopied,
-    metadata,
-    setMetadata,
+    translationLanguages,
+    activeTranslationIndex,
+    setActiveTranslationIndex,
     sizeOption,
     spacingOption,
     activeFontSizes,
@@ -212,18 +212,29 @@ export default function Preview(props) {
                 </Tip>
               )}
               {hasTranslations && (
-                <Tip content={t('preview.toggleTranslations') || 'Toggle Translations'}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowTranslationsInPreview(!showTranslationsInPreview)}
-                    className={`flex-shrink-0 ${showTranslationsInPreview ? 'text-primary hover:text-primary-dim bg-zinc-800/50 hover:bg-zinc-800' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'}`}
-                  >
-                    <svg className="w-4 sm:w-5 h-4 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                    </svg>
-                  </Button>
-                </Tip>
+                <div className="flex items-center gap-1">
+                  {translationLanguages.map((lang, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        if (activeTranslationIndex === idx && showTranslationsInPreview) {
+                          setShowTranslationsInPreview(false);
+                        } else {
+                          setActiveTranslationIndex(idx);
+                          setShowTranslationsInPreview(true);
+                        }
+                      }}
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide transition-colors ${
+                        showTranslationsInPreview && activeTranslationIndex === idx
+                          ? 'bg-primary/20 text-primary border border-primary/40'
+                          : 'bg-zinc-800/60 text-zinc-500 border border-zinc-700/40 hover:text-zinc-300'
+                      }`}
+                    >
+                      {lang || `T${idx + 1}`}
+                    </button>
+                  ))}
+                </div>
               )}
               <div className="relative">
                 <Tip content={t('export.title') || 'Export File'}>
@@ -267,7 +278,7 @@ export default function Preview(props) {
                       {t('preview.secondaryLyrics')}
                     </PopoverItem>
                     <PopoverItem
-                      onClick={() => { setPastingType('translation'); setPasteText(lines.map(l => l.translation || '').join('\n')); }}
+                      onClick={() => { setPastingType('translation'); setPasteText(lines.map(l => l.translations?.[activeTranslationIndex]?.text || '').join('\n')); }}
                       className="sm:text-sm"
                     >
                       {t('preview.translation')}
@@ -286,8 +297,6 @@ export default function Preview(props) {
             setShowExportPanel={setShowExportPanel}
             exportFilename={exportFilename}
             setExportFilename={setExportFilename}
-            metadata={metadata}
-            setMetadata={setMetadata}
             includeTranslations={includeTranslations}
             setIncludeTranslations={setIncludeTranslations}
             includeSecondary={includeSecondary}
@@ -321,6 +330,7 @@ export default function Preview(props) {
             handleLineClick={handleLineClick}
             showTranslationsInPreview={showTranslationsInPreview}
             showFuriganaInPreview={showFuriganaInPreview}
+            activeTranslationIndex={activeTranslationIndex}
             sizeOption={sizeOption}
             spacingOption={spacingOption}
             activeSecondarySizes={activeSecondarySizes}

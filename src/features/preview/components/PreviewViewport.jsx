@@ -29,6 +29,7 @@ export default function PreviewViewport({
   hasMedia,
   isPlaying,
   playbackSpeed,
+  activeTranslationIndex = 0,
 }) {
   // Own the refs here — the virtualizer needs getScrollElement to return
   // a non-null element on mount for its ResizeObserver to attach properly.
@@ -78,6 +79,7 @@ export default function PreviewViewport({
     return result;
   }, [isDualLine, lines, currentIndex, showNextLine]);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: isDualLine ? 0 : lines.length,
     getScrollElement: () => containerRef.current,
@@ -149,6 +151,7 @@ export default function PreviewViewport({
               handleLineHoverEnd={() => { }}
               showTranslationsInPreview={showTranslationsInPreview}
               showFuriganaInPreview={showFuriganaInPreview}
+              activeTranslationIndex={activeTranslationIndex}
               isPlaying={isPlaying}
               playbackSpeed={playbackSpeed}
               sizeOption={sizeOption}

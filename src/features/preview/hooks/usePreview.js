@@ -12,7 +12,7 @@ import {
   WRAPPER_SPACING, ACTIVE_MARGIN,
 } from '../preview.styles';
 
-export function usePreview({ lines, setLines, playbackPosition, playerRef, duration, mediaTitle, editorMode }) {
+export function usePreview({ lines, setLines, playbackPosition, playerRef, duration, mediaTitle, editorMode, projectMetadata }) {
   const { t } = useTranslation();
   const { settings } = useSettings();
 
@@ -29,25 +29,28 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
   const [includeWordTimestamps, setIncludeWordTimestamps] = useState(true);
   const [includeMetadata, setIncludeMetadata] = useState(true);
   const [showTranslationsInPreview, setShowTranslationsInPreview] = useState(true);
+  const [activeTranslationIndex, setActiveTranslationIndex] = useState(0);
   const [showFuriganaInPreview, setShowFuriganaInPreview] = useState(true);
   const [wasCopied, setWasCopied] = useState(false);
-  const [metadata, setMetadata] = useState({ 
-    ti: '', // Title
-    ar: '', // Artist
-    al: '', // Album
-    au: '', // Author/Composer
-    by: '', // LRC Creator
-    lg: '', // Language
-    re: '', // Resource/Player
-    ve: ''  // Version
-  });
+
+  // Build LRC metadata automatically from projectMetadata
+  const metadata = useMemo(() => {
+    if (!projectMetadata) return {};
+    const artists = Array.isArray(projectMetadata.songArtists) && projectMetadata.songArtists.length > 0
+      ? projectMetadata.songArtists.join(', ')
+      : (projectMetadata.songArtist || '');
+    return {
+      ti: projectMetadata.songName || '',
+      ar: artists,
+      al: projectMetadata.songAlbum || '',
+      lg: projectMetadata.songLanguage || '',
+    };
+  }, [projectMetadata]);
 
   useEffect(() => {
-    if (settings.export?.defaultFilenamePattern === 'media' && mediaTitle) {
-      setExportFilename(mediaTitle);
-    } else if (settings.export?.defaultFilenamePattern === 'fixed') {
-      setExportFilename('lyrics');
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (settings.export?.defaultFilenamePattern === 'media' && mediaTitle) { setExportFilename(mediaTitle); }
+    else if (settings.export?.defaultFilenamePattern === 'fixed') { setExportFilename('lyrics'); }
   }, [settings.export?.defaultFilenamePattern, mediaTitle]);
 
   const sizeOption = settings.interface?.fontSize || 'normal';
@@ -69,7 +72,17 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
   );
 
   const hasSyncedLines = syncedIndices.length > 0;
-  const hasTranslations = lines.some(l => l.translation);
+  const hasTranslations = lines.some(l => l.translations?.length > 0);
+  // Collect unique translation languages from the lines
+  const translationLanguages = useMemo(() => {
+    const langs = [];
+    const maxSlots = Math.max(0, ...lines.map(l => l.translations?.length ?? 0));
+    for (let i = 0; i < maxSlots; i++) {
+      const lang = lines.find(l => l.translations?.[i]?.language)?.translations?.[i]?.language || null;
+      langs.push(lang);
+    }
+    return langs;
+  }, [lines]);
   const hasSecondary = lines.some(l => l.secondary);
   const hasWords = lines.some(l => l.words?.length);
   const hasFurigana = lines.some(l => l.furigana || l.words?.some(w => w.reading));
@@ -89,22 +102,34 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
       } else if (matchKey(e, settings.shortcuts?.addTranslation?.[0] || 'Shift+T')) {
         e.preventDefault();
         setPastingType('translation');
-        setPasteText(lines.map((l) => l.translation || '').join('\n'));
+        setPasteText(lines.map((l) => l.translations?.[activeTranslationIndex]?.text || '').join('\n'));
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [settings.shortcuts, lines, pastingType]);
+  }, [settings.shortcuts, lines, pastingType, activeTranslationIndex]);
 
   const handleSavePaste = () => {
     if (!pastingType) return;
     const newTexts = pasteText.split('\n');
-    setLines((prev) =>
-      prev.map((l, i) => ({
-        ...l,
-        [pastingType]: newTexts[i] !== undefined ? newTexts[i].trim() : l[pastingType],
-      }))
-    );
+    if (pastingType === 'translation') {
+      setLines((prev) =>
+        prev.map((l, i) => {
+          const newText = newTexts[i]?.trim() ?? '';
+          const existing = l.translations ? [...l.translations] : [];
+          const slot = existing[activeTranslationIndex] ?? {};
+          existing[activeTranslationIndex] = { ...slot, text: newText };
+          return { ...l, translations: existing.filter(t => t.text?.trim()) };
+        })
+      );
+    } else {
+      setLines((prev) =>
+        prev.map((l, i) => ({
+          ...l,
+          [pastingType]: newTexts[i] !== undefined ? newTexts[i].trim() : l[pastingType],
+        }))
+      );
+    }
     setPastingType(null);
     setPasteText('');
     setShowMenu(false);
@@ -120,7 +145,7 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
   const prepareExportLines = useCallback((inputLines) => {
     let result = inputLines;
     if (settings.export?.stripEmptyLines) {
-      result = result.filter(l => l.text.trim() !== '');
+      result = result.filter(l => l.type === 'section' || l.text?.trim() !== '');
     }
     if (settings.export?.normalizeTimestamps) {
       result = result.toSorted((a, b) => {
@@ -164,17 +189,14 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
         content = result.output;
         downloadLRC(content, `${name}.srt`);
       } else {
-        const filteredMetadata = includeMetadata
-          ? Object.fromEntries(
-            Object.entries(metadata).filter(([, v]) => typeof v === 'string' && v.trim() !== '')
-          )
-          : {};
+        const filteredMetadata = includeMetadata ? metadata : {};
         const result = await lyrics.compileLrc({
           lines: exportLines,
           includeTranslations,
           precision: settings.export?.timestampPrecision,
           metadata: filteredMetadata,
           lineEndings: settings.export?.lineEndings,
+          exportTranslationIndex: activeTranslationIndex,
           includeSecondary,
           wordPrecision: settings.export?.wordTimestampPrecision,
         });
@@ -191,7 +213,7 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
   }, [
     exportFilename, lines, settings, duration, includeTranslations,
     includeSecondary, includeMetadata, metadata, t, setShowExportPanel,
-    applyIncludeFlags, prepareExportLines
+    applyIncludeFlags, prepareExportLines, activeTranslationIndex
   ]);
 
   const handleCopy = useCallback(async () => {
@@ -210,17 +232,14 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
         });
         content = result.output;
       } else {
-        const filteredMetadata = includeMetadata
-          ? Object.fromEntries(
-            Object.entries(metadata).filter(([, v]) => typeof v === 'string' && v.trim() !== '')
-          )
-          : {};
+        const filteredMetadata = includeMetadata ? metadata : {};
         const result = await lyrics.compileLrc({
           lines: exportLines,
           includeTranslations,
           precision: settings.export?.timestampPrecision,
           metadata: filteredMetadata,
           lineEndings: settings.export?.lineEndings,
+          exportTranslationIndex: activeTranslationIndex,
           includeSecondary,
           wordPrecision: settings.export?.wordTimestampPrecision,
         });
@@ -237,7 +256,7 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
   }, [
     lines, settings, duration, includeTranslations,
     includeSecondary, includeMetadata, metadata, t,
-    applyIncludeFlags, prepareExportLines
+    applyIncludeFlags, prepareExportLines, activeTranslationIndex
   ]);
 
   return {
@@ -266,8 +285,6 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
     showFuriganaInPreview,
     setShowFuriganaInPreview,
     wasCopied,
-    metadata,
-    setMetadata,
     sizeOption,
     spacingOption,
     activeFontSizes: ACTIVE_FONT_SIZES,
@@ -282,6 +299,9 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
     hasSecondary,
     hasWords,
     hasFurigana,
+    translationLanguages,
+    activeTranslationIndex,
+    setActiveTranslationIndex,
     handleSavePaste,
     handleLineClick,
     handleExport,
