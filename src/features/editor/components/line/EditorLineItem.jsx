@@ -43,9 +43,14 @@ const EditorLineItem = React.memo(({
   setEditingText,
   editingSecondary,
   setEditingSecondary,
-  editingTranslation,
-  setEditingTranslation,
+  editingTranslations,
+  setEditingTranslations,
+  editingSinger,
+  setEditingSinger,
   handleSaveLineText,
+  handleInsertSection,
+  handleAssignSinger,
+  songArtists,
   playerRef,
   shiftTime,
   handleAddLine,
@@ -129,7 +134,6 @@ const EditorLineItem = React.memo(({
 
   useEffect(() => {
     if (!isActive) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelection({ start: null, end: null, range: null });
     } else {
       activeLineRef?.current?.focus();
@@ -218,6 +222,50 @@ const EditorLineItem = React.memo(({
 
   const distanceFromActive = displayedActiveIndex != null ? Math.abs(i - displayedActiveIndex) : 0;
   const staggerDelay = `${Math.min(distanceFromActive * 20, 150)}ms`;
+
+  // Section marker — full-width divider with editable label
+  if (line.type === 'section') {
+    const isEditing = editingLineIndex === i;
+    return (
+      <div
+        ref={isActive ? activeLineRef : null}
+        onClick={(e) => handleLineClick(i, e)}
+        onDoubleClick={() => {
+          setEditingLineIndex(i);
+          setEditingText(line.label || '');
+          setEditingSinger(line.singer || '');
+        }}
+        style={{ animationDelay: staggerDelay }}
+        className={`flex items-center gap-2 px-4 py-1.5 rounded-lg cursor-pointer group animate-preview-line-in ${selectedLines.has(i) ? 'bg-primary/10 border border-primary/30' : 'hover:bg-zinc-800/30 border border-transparent'}`}
+      >
+        <div className="flex-1 h-px bg-zinc-800/50" />
+        {isEditing ? (
+          <div className="flex items-center gap-1.5" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { handleSaveLineText(i, editingText, undefined, undefined, editingSinger); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSinger); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
+            <input autoFocus value={editingText} onChange={(e) => setEditingText(e.target.value)} placeholder="Section label" className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-200 rounded px-2 py-0.5 w-28 focus:outline-none focus:border-primary/60" />
+            <input value={editingSinger} onChange={(e) => setEditingSinger(e.target.value)} placeholder="Singer (opt.)" list={`section-singers-${i}`} className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-400 rounded px-2 py-0.5 w-28 focus:outline-none focus:border-primary/60" />
+            {songArtists?.length > 0 && (
+              <datalist id={`section-singers-${i}`}>
+                {songArtists.map((a) => <option key={a} value={a} />)}
+              </datalist>
+            )}
+          </div>
+        ) : (
+          <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-800 bg-zinc-900/40 whitespace-nowrap group-hover:text-zinc-400 group-hover:border-zinc-700 transition-colors">
+            {line.label || 'Section'}{line.singer ? ` · ${line.singer}` : ''}
+          </span>
+        )}
+        <div className="flex-1 h-px bg-zinc-800/50" />
+        {selectedLines.size === 0 && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); handleDeleteLine(i); }}
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-600 hover:text-zinc-400 text-xs px-1"
+            aria-label="Delete section"
+          >✕</button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -377,6 +425,13 @@ const EditorLineItem = React.memo(({
         )}
       </span>
 
+      {/* Singer badge */}
+      {line.singer && (
+        <span className="shrink-0 text-[9px] font-semibold text-zinc-600 bg-zinc-800/60 px-1.5 py-0.5 rounded-full border border-zinc-700/40 max-w-[72px] truncate">
+          {line.singer}
+        </span>
+      )}
+
       {/* Lyrics text container */}
       <div
         className="flex-1 min-w-0 flex items-start gap-2 overflow-x-hidden pb-0.5 mt-0.5 select-text"
@@ -385,7 +440,8 @@ const EditorLineItem = React.memo(({
           setEditingLineIndex(i);
           setEditingText(serializeToRubyMarkup(line.words) || line.text);
           setEditingSecondary(line.secondary || '');
-          setEditingTranslation(line.translation || '');
+          setEditingTranslations(line.translations ? [...line.translations] : []);
+          setEditingSinger(line.singer || '');
         }}>
         {editingLineIndex === i ? (
           <LineTextEditingForm
@@ -395,10 +451,13 @@ const EditorLineItem = React.memo(({
             setEditingText={setEditingText}
             editingSecondary={editingSecondary}
             setEditingSecondary={setEditingSecondary}
-            editingTranslation={editingTranslation}
-            setEditingTranslation={setEditingTranslation}
+            editingTranslations={editingTranslations}
+            setEditingTranslations={setEditingTranslations}
+            editingSinger={editingSinger}
+            setEditingSinger={setEditingSinger}
             handleSaveLineText={handleSaveLineText}
             setEditingLineIndex={setEditingLineIndex}
+            songArtists={songArtists}
           />
         ) : (
           <LineTextContent
@@ -432,8 +491,12 @@ const EditorLineItem = React.memo(({
         setEditingLineIndex={setEditingLineIndex}
         setEditingText={setEditingText}
         setEditingSecondary={setEditingSecondary}
-        setEditingTranslation={setEditingTranslation}
+        setEditingTranslations={setEditingTranslations}
+        setEditingSinger={setEditingSinger}
         serializeToRubyMarkup={serializeToRubyMarkup}
+        handleInsertSection={handleInsertSection}
+        handleAssignSinger={handleAssignSinger}
+        songArtists={songArtists}
         handleMark={handleMark}
         playerRef={playerRef}
         shiftTime={shiftTime}

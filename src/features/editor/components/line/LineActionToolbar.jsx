@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
-import { Pencil, Play, ChevronLeft, ChevronRight, Plus, MoreHorizontal } from 'lucide-react';
+import { Pencil, Play, ChevronLeft, ChevronRight, Plus, MoreHorizontal, User, Layers } from 'lucide-react';
 import LineActionsPopover from './LineActionsPopover';
 
 const LineActionToolbar = React.memo(({
@@ -16,7 +16,8 @@ const LineActionToolbar = React.memo(({
   setEditingLineIndex,
   setEditingText,
   setEditingSecondary,
-  setEditingTranslation,
+  setEditingTranslations,
+  setEditingSinger,
   serializeToRubyMarkup,
   handleMark,
   playerRef,
@@ -30,6 +31,9 @@ const LineActionToolbar = React.memo(({
   stampTarget,
   activeWordIndex,
   focusedTimestamp,
+  handleInsertSection,
+  handleAssignSinger,
+  songArtists,
 }) => {
   const { t } = useTranslation();
 
@@ -143,7 +147,8 @@ const LineActionToolbar = React.memo(({
                       setEditingLineIndex(lineIndex);
                       setEditingText(serializeToRubyMarkup(line.words) || line.text);
                       setEditingSecondary(line.secondary || '');
-                      setEditingTranslation(line.translation || '');
+                      setEditingTranslations(line.translations ? [...line.translations] : []);
+                      setEditingSinger(line.singer || '');
                     }}
                     className="text-sky-400/70 hover:text-sky-400 hover:bg-sky-500/10"
                   >
@@ -164,7 +169,8 @@ const LineActionToolbar = React.memo(({
                 setEditingLineIndex(lineIndex);
                 setEditingText(serializeToRubyMarkup(line.words) || line.text);
                 setEditingSecondary(line.secondary || '');
-                setEditingTranslation(line.translation || '');
+                setEditingTranslations(line.translations ? [...line.translations] : []);
+                setEditingSinger(line.singer || '');
               }}
               className="text-sky-400/70 hover:text-sky-400 hover:bg-sky-500/10"
             >
@@ -174,6 +180,16 @@ const LineActionToolbar = React.memo(({
         )}
         {selectedLines.size === 0 && (
           <>
+            <Tip content="Insert section above">
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={(e) => { e.stopPropagation(); handleInsertSection?.(lineIndex - 1); }}
+                className="text-zinc-500 hover:text-primary hover:bg-primary/10"
+              >
+                <Layers className="size-3" />
+              </Button>
+            </Tip>
             {!isMobile ? (
               <LineActionsPopover
                 lineIndex={lineIndex}
@@ -194,9 +210,59 @@ const LineActionToolbar = React.memo(({
             )}
           </>
         )}
+        {selectedLines.size > 1 && selectedLines.has(lineIndex) && (
+          <SingerAssignButton
+            selectedLines={selectedLines}
+            handleAssignSinger={handleAssignSinger}
+            songArtists={songArtists}
+          />
+        )}
       </div>
     </div>
   );
 });
+
+function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }) {
+  const [open, setOpen] = useState(false);
+  const [custom, setCustom] = useState('');
+  const indices = [...selectedLines];
+
+  if (!handleAssignSinger) return null;
+
+  return (
+    <div className="relative">
+      <Tip content={`Assign singer to ${indices.length} lines`}>
+        <Button variant="ghost" size="icon-xs" onClick={(e) => { e.stopPropagation(); setOpen(p => !p); }} className="text-zinc-500 hover:text-primary hover:bg-primary/10">
+          <User className="size-3" />
+        </Button>
+      </Tip>
+      {open && (
+        <div
+          className="absolute bottom-full right-0 mb-1 w-44 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 py-1 text-xs"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {(songArtists?.length > 0 ? songArtists : []).map((a) => (
+            <button key={a} type="button" onClick={() => { handleAssignSinger(a, indices); setOpen(false); }} className="w-full text-left px-3 py-1.5 text-zinc-300 hover:bg-zinc-800 hover:text-primary truncate">
+              {a}
+            </button>
+          ))}
+          <div className="border-t border-zinc-800 mt-1 pt-1 px-2 flex gap-1">
+            <input
+              value={custom}
+              onChange={(e) => setCustom(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { handleAssignSinger(custom, indices); setOpen(false); setCustom(''); } }}
+              placeholder="Custom…"
+              className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-1 text-zinc-200 text-xs focus:outline-none focus:border-primary/60"
+            />
+            <button type="button" onClick={() => { handleAssignSinger(custom, indices); setOpen(false); setCustom(''); }} className="px-2 py-1 rounded bg-primary/20 text-primary text-xs hover:bg-primary/30">✓</button>
+          </div>
+          <button type="button" onClick={() => { handleAssignSinger('', indices); setOpen(false); }} className="w-full text-left px-3 py-1.5 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400 text-[10px]">
+            Clear singer
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default LineActionToolbar;

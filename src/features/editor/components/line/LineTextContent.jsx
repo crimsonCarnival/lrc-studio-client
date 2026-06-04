@@ -151,7 +151,7 @@ const LineTextContent = React.memo(({
               const rubyFmt = settings?.editor?.display?.readingFormat || 'hiragana';
 
               let currentCi = 0;
-              return segments.map((seg, si) => {
+              return segments.map((seg) => {
                 const segmentChars = [...seg.text];
                 const startCi = currentCi;
                 currentCi += segmentChars.length;
@@ -234,7 +234,7 @@ const LineTextContent = React.memo(({
                                   }
                                 }
 
-                                handleSaveLineText?.(lineIndex, resultText, line.secondary, line.translation);
+                                handleSaveLineText?.(lineIndex, resultText, line.secondary, line.translations, line.singer);
                                 setSelection({ start: null, end: null, range: null });
                               }}
                               onCancel={() => setSelection({ start: null, end: null, range: null })}
@@ -309,9 +309,11 @@ const LineTextContent = React.memo(({
       {line.secondary && (
         <p className="text-[10px] text-zinc-500 leading-tight pl-0.5 truncate">{line.secondary}</p>
       )}
-      {line.translation && (
-        <p className="text-[10px] text-zinc-500/70 italic leading-tight pl-0.5 truncate">{line.translation}</p>
-      )}
+      {line.translations?.map((tr, idx) => tr.text ? (
+        <p key={idx} className="text-[10px] text-zinc-500/70 italic leading-tight pl-0.5 truncate">
+          {tr.language ? <span className="text-zinc-600 not-italic">{tr.language}: </span> : null}{tr.text}
+        </p>
+      ) : null)}
     </div>
   );
 });

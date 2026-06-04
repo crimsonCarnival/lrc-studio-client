@@ -4,6 +4,33 @@
 
 import { serializeToRubyMarkup, parseRubyMarkup } from './furigana';
 
+const KNOWN_LRC_META_KEYS = new Set(['ti','ar','al','au','by','lg','re','ve','length','offset','tool','id','hash','album']);
+
+/** No-op kept for call-site compatibility; DB is clean, no migration needed. */
+export function migrateLine(line) { return line; }
+export function migrateLines(lines) { return lines; }
+
+/**
+ * Splits an artist string on commas, feat./ft./featuring, ×, &, "and", "vs", "/".
+ * Preserves original casing. Returns deduplicated, non-empty names.
+ */
+export function splitArtists(raw) {
+  if (!raw?.trim()) return [];
+  return raw
+    .split(/\s*(?:,|feat\.?|ft\.?|featuring|×|\bx\b|&|\band\b|\/|vs\.?)\s*/i)
+    .map(s => s.trim())
+    .filter(Boolean)
+    .filter((v, i, a) => a.indexOf(v) === i);
+}
+
+function parseSectionText(raw) {
+  const colonIdx = raw.indexOf(':');
+  if (colonIdx !== -1) {
+    return { label: raw.slice(0, colonIdx).trim(), singer: raw.slice(colonIdx + 1).trim() || undefined };
+  }
+  return { label: raw.trim(), singer: undefined };
+}
+
 /**
  * Build the secondary (furigana/romaji) text for a line.
  * If the line has words with readings, serialize to {word|reading} markup.
@@ -90,7 +117,7 @@ function sanitizeLrcTag(s) {
  * @returns {string}
  */
 
-export function compileLRC(lines, includeTranslations = false, precision = 'hundredths', metadata = {}, lineEndings = 'lf', includeSecondary = false, wordPrecision) {
+export function compileLRC(lines, includeTranslations = false, precision = 'hundredths', metadata = {}, lineEndings = 'lf', includeSecondary = false, wordPrecision, exportTranslationIndex = 0, includeSections = true) {
   const wp = wordPrecision || precision;
   let header = '';
   if (metadata.ti) header += `[ti:${sanitizeLrcTag(metadata.ti)}]\n`;
@@ -104,10 +131,17 @@ export function compileLRC(lines, includeTranslations = false, precision = 'hund
 
   const body = lines
     .flatMap((line) => {
+      // Section marker
+      if (line.type === 'section') {
+        if (!includeSections) return [];
+        const comment = `# ${line.label}${line.singer ? ': ' + line.singer : ''}`;
+        if (line.timestamp != null) return [`[${formatTimestamp(line.timestamp, precision)}] ${comment}`];
+        return [comment];
+      }
+
       if (line.timestamp != null) {
         const ts = line.timestamp;
         const result = [];
-        // Main lyric: furigana/kanji if present, else main text
         let mainLyric = null;
         if (line.words?.some(w => w.reading)) {
           mainLyric = serializeToRubyMarkup(line.words);
@@ -118,18 +152,18 @@ export function compileLRC(lines, includeTranslations = false, precision = 'hund
         }
         result.push(`[${formatTimestamp(ts, precision)}] ${mainLyric}`);
 
-        // Secondary lyric: romaji (line.secondary)
         if (includeSecondary && line.secondary) {
           result.push(`[${formatTimestamp(ts, precision)}] ${line.secondary}`);
         }
 
-        // Translation
-        if (includeTranslations && line.translation) {
-          result.push(`[${formatTimestamp(ts, precision)}] ${line.translation}`);
+        // Translation: use translations array, fall back to legacy translation field
+        if (includeTranslations) {
+          const translationText = line.translations?.[exportTranslationIndex]?.text ?? null;
+          if (translationText) result.push(`[${formatTimestamp(ts, precision)}] ${translationText}`);
         }
         return result;
       }
-      return [line.text];
+      return [line.text || ''];
     })
     .join('\n');
 
@@ -247,11 +281,12 @@ function formatSrtTimestamp(seconds) {
  * @returns {string}
  */
 
-export function compileSRT(lines, duration, includeTranslations = false, lineEndings = 'lf', srtConfig = {}, includeSecondary = false) {
+export function compileSRT(lines, duration, includeTranslations = false, lineEndings = 'lf', srtConfig = {}, includeSecondary = false, exportTranslationIndex = 0) {
   const minGap = srtConfig.minSubtitleGap || 0.05;
   const defaultDur = srtConfig.defaultSubtitleDuration || 5;
 
-  const synced = lines.filter((l) => l.timestamp != null);
+  // Section markers are skipped in SRT
+  const synced = lines.filter((l) => l.timestamp != null && l.type !== 'section');
   if (synced.length === 0) return '';
 
   const body = synced.map((line, i) => {
@@ -280,8 +315,9 @@ export function compileSRT(lines, duration, includeTranslations = false, lineEnd
       if (sec) linesForThisTimestamp.push(sec);
     }
     // Translation
-    if (includeTranslations && line.translation) {
-      linesForThisTimestamp.push(line.translation);
+    if (includeTranslations) {
+      const translationText = line.translations?.[exportTranslationIndex]?.text ?? null;
+      if (translationText) linesForThisTimestamp.push(translationText);
     }
 
     return `${i + 1}\n${formatSrtTimestamp(start)} --> ${formatSrtTimestamp(end)}\n${linesForThisTimestamp.join('\n')}\n`;
@@ -338,7 +374,6 @@ export function parseLrcSrtFile(content, filename) {
   } else {
     const lrcLines = content.replace(/\r\n/g, '\n').split('\n');
     lrcLines.forEach(line => {
-      // Greedily collect all consecutive leading [mm:ss.xx] timestamp brackets
       let remaining = line.trim();
       const tsStepRe = /^\[(\d{1,2}):(\d{2}\.\d{2,3})\]/;
       const collectedTs = [];
@@ -349,18 +384,46 @@ export function parseLrcSrtFile(content, filename) {
       }
       if (collectedTs.length > 0) {
         const rawText = remaining.trim();
-        // Parse word-level timestamps embedded in the line text
-        const words = parseWordTimestamps(rawText);
-        // Strip <mm:ss.xx> tokens to get clean display text
-        const text = rawText.replace(/<\d{1,2}:\d{2}\.\d{2,3}>/g, '').trim();
         collectedTs.sort((a, b) => a - b);
-
         const [primary] = collectedTs;
+
+        // Section marker: [timestamp] # Label or [timestamp] # Label: Singer
+        if (rawText.startsWith('#')) {
+          const inner = rawText.slice(1).trim();
+          const { label, singer } = parseSectionText(inner);
+          if (label) {
+            parsedLines.push({ type: 'section', label, singer, timestamp: primary, id: generateId() });
+            return;
+          }
+        }
+
+        const words = parseWordTimestamps(rawText);
+        const text = rawText.replace(/<\d{1,2}:\d{2}\.\d{2,3}>/g, '').trim();
         const entry = { text, timestamp: primary, id: generateId() };
         if (words.length > 0) entry.words = words;
         parsedLines.push(entry);
-      } else if (remaining !== '' && !/^\[[^\]]*:[^\]]*\]/.test(remaining)) {
-        parsedLines.push({ text: remaining.trim(), timestamp: null, id: generateId() });
+      } else if (remaining !== '') {
+        // No timestamp: check for section markers
+        if (remaining.startsWith('#')) {
+          const inner = remaining.slice(1).trim();
+          const { label, singer } = parseSectionText(inner);
+          if (label) {
+            parsedLines.push({ type: 'section', label, singer, timestamp: null, id: generateId() });
+            return;
+          }
+        }
+        // [Label] or [Label: Singer] with non-metadata key
+        const bracketSection = remaining.match(/^\[([^:[\]\n]+?)(?::\s*([^\]\n]*))?\]$/);
+        if (bracketSection && !KNOWN_LRC_META_KEYS.has(bracketSection[1].trim().toLowerCase())) {
+          const label = bracketSection[1].trim();
+          const singer = bracketSection[2]?.trim() || undefined;
+          parsedLines.push({ type: 'section', label, singer, timestamp: null, id: generateId() });
+          return;
+        }
+        // Plain text line (skip known LRC metadata tags)
+        if (!/^\[[^\]]*:[^\]]*\]/.test(remaining)) {
+          parsedLines.push({ text: remaining.trim(), timestamp: null, id: generateId() });
+        }
       }
     });
   }
@@ -370,7 +433,8 @@ export function parseLrcSrtFile(content, filename) {
   const timestampMap = new Map();
 
   for (const line of parsedLines) {
-    if (line.timestamp == null) {
+    // Section markers are never merged — push directly
+    if (line.type === 'section' || line.timestamp == null) {
       mergedLines.push(line);
       continue;
     }
@@ -379,66 +443,52 @@ export function parseLrcSrtFile(content, filename) {
     if (timestampMap.has(key)) {
       const existingIndex = timestampMap.get(key);
       const existing = mergedLines[existingIndex];
-      if (!existing.secondary && !existing.translation) {
+      // Skip merge if existing is a section marker
+      if (existing.type === 'section') {
+        mergedLines.push({ ...line });
+        continue;
+      }
+      if (!existing.secondary) {
         // 2nd same-ts line: treat as secondary (romaji / furigana markup)
         const secWords = parseWordTimestamps(line.text);
         if (secWords.length > 0) {
           existing.secondaryWords = secWords;
           existing.secondary = line.text.replace(/<\d{1,2}:\d{2}\.\d{2,3}>/g, '').trim();
         } else if (/\{[^|{]+\|[^}]+\}/.test(line.text)) {
-          // Ruby markup like {持|も}ち{上|あ}げて — strip to plain text and merge readings into words
           const { plainText, segments } = parseRubyMarkup(line.text);
           existing.secondary = plainText;
-          
           if (!existing.words?.length) {
-            // Case 1: No word timestamps on primary line — use segments directly as words
             existing.words = segments.flatMap(s => {
               if (!s.text.trim()) return [];
-              return [{
-                word: s.text,
-                reading: s.reading || undefined,
-                time: null
-              }];
+              return [{ word: s.text, reading: s.reading || undefined, time: null }];
             });
           } else {
-            // Case 2: Primary line has word timestamps — align segments with existing words
             const oldWords = [...existing.words];
             const newWords = [];
             let oldIdx = 0;
-            
             for (const seg of segments) {
               const segText = seg.text;
               if (!segText) continue;
-              
-              // Find which old words (or characters) correspond to this segment
               let consumed = '';
               let firstTime = null;
-              
               while (oldIdx < oldWords.length && consumed.length < segText.length) {
                 const w = oldWords[oldIdx];
                 if (firstTime === null) firstTime = w.time;
                 consumed += w.word;
                 oldIdx++;
               }
-              
-              newWords.push({
-                word: segText,
-                reading: seg.reading || undefined,
-                time: firstTime
-              });
+              newWords.push({ word: segText, reading: seg.reading || undefined, time: firstTime });
             }
-            // Append any leftover words
-            if (oldIdx < oldWords.length) {
-              newWords.push(...oldWords.slice(oldIdx));
-            }
+            if (oldIdx < oldWords.length) newWords.push(...oldWords.slice(oldIdx));
             existing.words = newWords;
           }
         } else {
           existing.secondary = line.text;
         }
-      } else if (!existing.translation) {
-        // 3rd same-ts line: treat as translation; keep text+secondary intact
-        existing.translation = line.text;
+      } else {
+        // 3rd+ same-ts line: push to translations array
+        if (!existing.translations) existing.translations = [];
+        existing.translations.push({ text: line.text });
       }
     } else {
       const idx = mergedLines.length;

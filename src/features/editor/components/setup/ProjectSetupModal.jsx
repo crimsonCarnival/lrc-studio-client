@@ -89,6 +89,7 @@ export default function ProjectSetupModal({
   // (e.g. switching between projects without unmounting the component)
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForm({
         name: initialName || '',
         description: initialDescription || '',
@@ -102,7 +103,6 @@ export default function ProjectSetupModal({
         albumArt: initialAlbumArt || '',
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialCoverImage, initialAlbumArt]);
 
   if (!isOpen) return null;
@@ -139,7 +139,7 @@ export default function ProjectSetupModal({
       const token = executeRecaptcha ? await executeRecaptcha('upload_cover') : undefined;
       const url = await uploadsService.uploadCoverImage(file, token);
       setForm(f => ({ ...f, [field]: url }));
-    } catch {}
+    } catch { /* ignore */ }
     finally {
       setImageUploading(false);
       e.target.value = '';
