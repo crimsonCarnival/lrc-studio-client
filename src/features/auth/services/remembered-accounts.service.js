@@ -22,7 +22,7 @@ function migrate() {
     localStorage.removeItem(LEGACY_KEY);
   } catch {
     // Corrupted storage — just remove the legacy key silently
-    try { localStorage.removeItem(LEGACY_KEY); } catch {}
+    try { localStorage.removeItem(LEGACY_KEY); } catch { /* ignore */ }
   }
 }
 
@@ -70,7 +70,7 @@ function getMostRecent() {
 function clear() {
   try {
     localStorage.removeItem(ACCOUNTS_KEY);
-  } catch {}
+  } catch { /* ignore */ }
 }
 
 export const rememberedAccounts = {

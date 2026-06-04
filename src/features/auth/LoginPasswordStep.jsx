@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { ArrowLeft, Eye, EyeOff, Loader2, Lightbulb, Fingerprint } from 'lucide-react';
+// eslint-disable-next-line no-unused-vars -- m used as JSX namespace: <m.button>, <m.div>
 import { AnimatePresence, m } from 'framer-motion';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
@@ -20,10 +21,6 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
   const inputRef = useRef(null);
   const { trigger: haptic } = useHapticFeedback();
   const { loginWithPasskey } = useAuthContext();
-
-  useEffect(() => {
-    // autoFocus removed as requested
-  }, []);
 
   const handlePasskey = async () => {
     setPasskeyLoading(true);

@@ -53,13 +53,7 @@ export default function BannedScreen() {
   const [appealText, setAppealText] = useState('');
   const [loading, setLoading] = useState(false);
   const [localSubmitted, setLocalSubmitted] = useState(false);
-  const [formattedDate, setFormattedDate] = useState('');
-
-  useEffect(() => {
-    if (user?.ban?.until) {
-      setFormattedDate(new Date(user.ban.until).toLocaleString());
-    }
-  }, [user?.ban?.until]);
+  const formattedDate = user?.ban?.until ? new Date(user.ban.until).toLocaleString() : '';
 
   if (!user || !user.ban?.active) return null;
 

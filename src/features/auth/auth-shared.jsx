@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Globe, Check, Lightbulb, Music2, X, ArrowRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
@@ -121,12 +121,13 @@ export function RedirectMessage({ from, t }) {
   const [visible, setVisible] = useState(!!from);
   const prevFromRef = useRef(from);
 
-  if (from !== prevFromRef.current) {
-    prevFromRef.current = from;
-    if (from) {
-      setVisible(true);
+  useLayoutEffect(() => {
+    if (from !== prevFromRef.current) {
+      prevFromRef.current = from;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (from) setVisible(true);
     }
-  }
+  }, [from]);
 
   useEffect(() => {
     if (from && visible) {

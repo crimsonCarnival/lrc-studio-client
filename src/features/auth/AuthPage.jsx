@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { LazyMotion, domAnimation, m as M } from 'framer-motion';
 import { useSearchParams, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
@@ -23,7 +23,7 @@ import SmoothWavyCanvas from '@features/landing/SmoothWavyCanvas';
 
 export default function AuthPage() {
   const { t, i18n } = useTranslation();
-  const { login, loginAndHold, commitLogin, heldLoginResult, register, registerAndHold, loginWithGoogle } = useAuthContext();
+  const { loginAndHold, commitLogin, heldLoginResult, registerAndHold, loginWithGoogle } = useAuthContext();
   const [searchParams] = useSearchParams();
   const { mode } = useParams();
   const navigate = useNavigate();
@@ -89,28 +89,35 @@ export default function AuthPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const prevLocationSearchRef = useRef(location.search);
-  if (prevLocationSearchRef.current !== location.search) {
-    prevLocationSearchRef.current = location.search;
-    const params = new URLSearchParams(location.search);
-    if (params.get('action') === 'forgot-password') setView('forgot-password');
-  }
+  useLayoutEffect(() => {
+    if (prevLocationSearchRef.current !== location.search) {
+      prevLocationSearchRef.current = location.search;
+      const params = new URLSearchParams(location.search);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (params.get('action') === 'forgot-password') setView('forgot-password');
+    }
+  }, [location.search]);
 
   // 2. Sync view state when action changes (e.g. browser back button or direct link)
   const prevActionRef = useRef(action);
-  if (prevActionRef.current !== action) {
-    prevActionRef.current = action;
-    if (action === 'signup' || action === 'register') {
-      setView('register');
-    } else if (action === 'forgot-password') {
-      setView('forgot-password');
-    } else {
-      setView(prev => {
-        if (prev !== 'register' && prev !== 'forgot-password') return prev;
-        if (rememberedAccounts.getAll().length > 0) return 'login-saved-account';
-        return 'login-identifier';
-      });
+  useLayoutEffect(() => {
+    if (prevActionRef.current !== action) {
+      prevActionRef.current = action;
+      /* eslint-disable react-hooks/set-state-in-effect */
+      if (action === 'signup' || action === 'register') {
+        setView('register');
+      } else if (action === 'forgot-password') {
+        setView('forgot-password');
+      } else {
+        setView(prev => {
+          if (prev !== 'register' && prev !== 'forgot-password') return prev;
+          if (rememberedAccounts.getAll().length > 0) return 'login-saved-account';
+          return 'login-identifier';
+        });
+      }
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
-  }
+  }, [action]);
 
   // 2. Sync URL when view state changes manually (e.g. switchView calls)
   useEffect(() => {
@@ -187,11 +194,6 @@ export default function AuthPage() {
     setIdentifierData(data);
     setFromSavedAccount(true);
     setView('login-password');
-  }, []);
-
-  const handleSwitchAccount = useCallback(() => {
-    setFromSavedAccount(false);
-    setView('login-identifier');
   }, []);
 
   const handleAddAccount = useCallback(() => {
