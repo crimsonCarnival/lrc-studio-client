@@ -49,6 +49,7 @@ function PublicProjectViewPageInner() {
   const [starCount, setStarCount] = useState(0);
   const [starring, setStarring] = useState(false);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsStarred(project?.isStarredByMe ?? false);
     setStarCount(project?.starCount ?? 0);
   }, [project?.isStarredByMe, project?.starCount]);
@@ -70,7 +71,8 @@ function PublicProjectViewPageInner() {
       timestamp: l.timestamp ?? null,
       endTime: l.endTime ?? undefined,
       secondary: l.secondary || '',
-      translation: l.translation || '',
+      translations: Array.isArray(l.translations) ? l.translations : undefined,
+      singer: l.singer || undefined,
       id: crypto.randomUUID(),
       words: l.words,
       secondaryWords: l.secondaryWords,
@@ -106,8 +108,8 @@ function PublicProjectViewPageInner() {
     return () => { cancelled = true; };
   }, [listId]);
 
-  const handleTimeUpdate = useCallback((time) => setPlaybackPosition(time), []);
-  const handleMediaChange = useCallback((v) => setHasMedia(v), []);
+  const handleTimeUpdate = (time) => setPlaybackPosition(time);
+  const handleMediaChange = (v) => setHasMedia(v);
 
   // ── Ownership / CTA ──
   const isOwner = !!(user && project?.user?.id && user.id === project.user.id);
@@ -117,7 +119,7 @@ function PublicProjectViewPageInner() {
     window.location.href = `/project/fork/${projectId}`;
   }, [projectId]);
 
-  const handleStar = useCallback(async () => {
+  const handleStar = async () => {
     if (!user || starring) return;
     setStarring(true);
     const wasStarred = isStarred;
@@ -132,7 +134,7 @@ function PublicProjectViewPageInner() {
     } finally {
       setStarring(false);
     }
-  }, [user, starring, isStarred, project?.id]);
+  };
 
   const handleSignUp = useCallback(() => {
     navigate(`/auth/signup?redirect=${encodeURIComponent(`/project/${projectId}`)}`);

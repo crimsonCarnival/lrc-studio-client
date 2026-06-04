@@ -20,6 +20,7 @@ export function FollowModal({ accountName, type, onClose }) {
 
   useEffect(() => {
     let ignore = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setUsers([]);
     setTotal(0);

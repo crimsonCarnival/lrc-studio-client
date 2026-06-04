@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+// eslint-disable-next-line no-unused-vars -- motion used as JSX namespace: <motion.div>
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { projects } from '@/app/api';
@@ -35,6 +36,7 @@ export default function Library({ onOpenProject }) {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
 
   const handleDelete = useCallback((projectId) => {

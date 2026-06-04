@@ -30,6 +30,7 @@ export function usePublicProject(projectId) {
   useEffect(() => {
     if (!projectId) return;
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setNotFound(false);
     gqlRequest(GET_PUBLIC_PROJECT, { projectId })

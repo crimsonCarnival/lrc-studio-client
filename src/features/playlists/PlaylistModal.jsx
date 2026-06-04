@@ -46,7 +46,7 @@ export function PlaylistModal({ playlist, onClose, onSave }) {
   useEffect(() => {
     gqlRequest(GET_MY_PROJECTS)
       .then(d => setMyProjects(d?.projects ?? []))
-      .catch(() => {});
+      .catch(() => { /* ignore */ });
   }, []);
 
   function handleField(key, value) {
@@ -63,7 +63,7 @@ export function PlaylistModal({ playlist, onClose, onSave }) {
       const token = executeRecaptcha ? await executeRecaptcha('upload_cover') : undefined;
       const url = await uploadsService.uploadCoverImage(file, token);
       handleField('coverImage', url);
-    } catch {}
+    } catch { /* ignore */ }
     finally {
       setImageUploading(false);
       e.target.value = '';

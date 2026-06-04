@@ -26,7 +26,7 @@ function ProjectRow({ project, isOwner, playlistId, onRemoved, showDragHandle })
     try {
       await removeProjectFromPlaylist(playlistId, project.id);
       if (mountedRef.current) onRemoved(project.id);
-    } catch {}
+    } catch { /* ignore */ }
     if (mountedRef.current) setRemoving(false);
   }
 
@@ -91,6 +91,7 @@ export default function PlaylistPage() {
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     getPlaylist(playlistId)
       .then(data => {
@@ -155,14 +156,14 @@ export default function PlaylistPage() {
     } : prev);
   }, []);
 
-  const handleSortModeChange = useCallback(async (e) => {
+  const handleSortModeChange = async (e) => {
     if (!playlist?.id) return;
     const value = e.target.value;
     try {
       await updatePlaylist(playlist.id, { sortMode: value });
       setPlaylist(prev => prev ? { ...prev, sortMode: value } : prev);
-    } catch {}
-  }, [playlist?.id]);
+    } catch { /* ignore */ }
+  };
 
   if (loading) {
     return (

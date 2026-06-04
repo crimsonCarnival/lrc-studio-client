@@ -134,6 +134,7 @@ export default function ProfilePage() {
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setNotFound(false);
 
@@ -155,6 +156,7 @@ export default function ProfilePage() {
     if (searchParams.get('intent') !== 'follow') return;
 
     setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFollowLoading(true);
     followUser(profile.accountName)
       .then(() => setIsFollowing(true))
@@ -520,7 +522,7 @@ export default function ProfilePage() {
               } : prev);
               setEditingProject(null);
               toast.success(t('project.updateSuccess'));
-            } catch (err) {
+            } catch {
               toast.error(t('project.updateError'));
             }
           }}

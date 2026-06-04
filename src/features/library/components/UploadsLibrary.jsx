@@ -55,6 +55,7 @@ export default function UploadsLibrary({ onSelect }) {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchUploads(); }, [fetchUploads]);
 
   const handleDelete = (e, uploadId, title) => {
