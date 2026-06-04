@@ -172,6 +172,7 @@ export default function LeaderboardPage() {
   const PAGE_SIZE = 25;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     getLeaderboard(PAGE_SIZE, 0)
       .then(data => {

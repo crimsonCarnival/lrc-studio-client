@@ -7,6 +7,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
 import { matchKey } from '@/shared/utils/keyboard';
+import { splitArtists } from '@/shared/utils/lrc';
 import { useUrlParamsSync } from '@/shared/hooks/useUrlParamsSync';
 import BannedScreen from '@features/auth/components/BannedScreen';
 import GuestProjectSaveGate from '@features/editor/components/core/GuestProjectSaveGate';
@@ -109,7 +110,7 @@ function AppInner() {
     songLanguage,
     trackNumber,
     trackCount,
-    coverImage,
+    coverImage: _coverImage,
   }) => {
     setLines(lines);
     setEditorMode(editorMode);
@@ -139,7 +140,8 @@ function AppInner() {
 
     setMediaTitle(finalTitle);
 
-    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}) };
+    const songArtists = splitArtists(songArtist);
+    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtists, songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}) };
     appState.setProjectMetadata(newMetadata);
 
     if (!user) {

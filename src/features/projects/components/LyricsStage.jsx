@@ -34,7 +34,7 @@ export default function LyricsStage({
     [lines, playbackPosition, editorMode],
   );
   const hasSyncedLines = useMemo(() => lines.some((l) => l.timestamp != null), [lines]);
-  const hasTranslations = useMemo(() => lines.some((l) => l.translation), [lines]);
+  const hasTranslations = useMemo(() => lines.some((l) => l.translations?.length > 0), [lines]);
   const hasFurigana = useMemo(
     () => lines.some((l) => l.furigana || l.words?.some((w) => w.reading)),
     [lines],

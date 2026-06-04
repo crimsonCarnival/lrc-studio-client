@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { getSocket } from '@/app/socket.client';
 
 /**
@@ -9,7 +9,7 @@ import { getSocket } from '@/app/socket.client';
  */
 export function useProjectSocket(projectId, setters) {
   const settersRef = useRef(setters);
-  settersRef.current = setters;
+  useLayoutEffect(() => { settersRef.current = setters; });
 
   useEffect(() => {
     if (!projectId) return;

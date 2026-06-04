@@ -13,6 +13,7 @@ export function useTrendingProjects(limit = 6) {
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     getTrendingProjects(0, limit)
       .then(({ projects: items }) => { if (!cancelled) setProjects(items); })
@@ -31,6 +32,7 @@ export function usePopularPlaylists(limit = 6) {
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     getPopularPlaylists(0, limit)
       .then(({ playlists: items }) => { if (!cancelled) setPlaylists(items); })
@@ -49,6 +51,7 @@ export function useSuggestedUsers(limit = 8) {
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     getSuggestedUsers(limit)
       .then(items => { if (!cancelled) setUsers(items); })
@@ -67,6 +70,7 @@ export function useExploreStats() {
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     getExploreStats()
       .then(data => { if (!cancelled) setStats(data); })
@@ -104,6 +108,7 @@ export function usePaginatedProjects(limit = 12) {
     }
   }, [limit]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchPage(0, false); }, [fetchPage]);
 
   const loadMore = useCallback(() => {
@@ -140,6 +145,7 @@ export function usePaginatedPlaylists(limit = 12) {
     }
   }, [limit]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchPage(0, false); }, [fetchPage]);
 
   const loadMore = useCallback(() => {

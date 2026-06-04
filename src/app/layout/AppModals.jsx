@@ -47,7 +47,7 @@ export function AppModals({
         initialDescription={projectMetadata?.description}
         initialTags={projectMetadata?.tags}
         initialSongName={projectMetadata?.songName}
-        initialSongArtist={projectMetadata?.songArtist}
+        initialSongArtist={(projectMetadata?.songArtists || []).join(', ') || projectMetadata?.songArtist || ''}
         initialSongAlbum={projectMetadata?.songAlbum}
         initialSongYear={projectMetadata?.songYear}
         initialCoverImage={projectCoverImage || ''}

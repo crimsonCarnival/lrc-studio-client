@@ -42,6 +42,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
 
   useEffect(() => {
     if (!autoSearch?.q) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuery(autoSearch.q);
     doSearch(autoSearch.q);
   }, [autoSearch, doSearch]); // new object reference on each button click

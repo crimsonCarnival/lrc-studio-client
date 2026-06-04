@@ -6,13 +6,18 @@ import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 
 function sanitizeLines(raw) {
   return (raw || []).flatMap((l) => {
-    if (!(l && typeof l === 'object' && typeof l.text === 'string')) return [];
+    if (!(l && typeof l === 'object')) return [];
+    if (l.type === 'section') {
+      return [{ type: 'section', label: l.label || '', singer: l.singer || undefined, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
+    }
+    if (typeof l.text !== 'string') return [];
     return [{
       text: l.text,
       timestamp: typeof l.timestamp === 'number' && isFinite(l.timestamp) ? l.timestamp : null,
       endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
       secondary: typeof l.secondary === 'string' ? l.secondary : '',
-      translation: typeof l.translation === 'string' ? l.translation : '',
+      translations: Array.isArray(l.translations) ? l.translations : undefined,
+      singer: typeof l.singer === 'string' ? l.singer : undefined,
       id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
       words: Array.isArray(l.words)
         ? l.words.flatMap((w) => {
@@ -74,16 +79,20 @@ export function useProjectActions({
     try {
       const { project } = await projects.get(projectId);
       if (!project) throw new Error('Project not found');
-      const projectLines = (project?.lyrics?.lines || []).map((l) => ({
+      const projectLines = (project?.lyrics?.lines || []).flatMap((l) => {
+        if (l.type === 'section') return [{ type: 'section', label: l.label || '', singer: l.singer || undefined, timestamp: l.timestamp ?? null, id: crypto.randomUUID() }];
+        return [{
         text: l.text || '',
         timestamp: l.timestamp ?? null,
         endTime: l.endTime ?? undefined,
         secondary: l.secondary || '',
-        translation: l.translation || '',
+        translations: Array.isArray(l.translations) ? l.translations : undefined,
+        singer: l.singer || undefined,
         id: crypto.randomUUID(),
         words: l.words,
         secondaryWords: l.secondaryWords,
-      }));
+        }];
+      });
       // Always restore all project state
       setLines(projectLines);
       setSyncMode(project.state?.syncMode ?? true);

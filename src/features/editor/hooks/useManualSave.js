@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useLayoutEffect } from 'react';
 const DateTimeFormat = Intl.DateTimeFormat;
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -156,8 +156,9 @@ export function useManualSave({
     let finalTitle = overrides.title !== undefined ? overrides.title : (mediaTitle || '');
     const GENERIC_TITLES = ['Sin título', 'Untitled', '無題'];
     if (!finalTitle || GENERIC_TITLES.includes(finalTitle)) {
-      const { songName, songArtist } = finalMetadata || {};
-      if (songName) finalTitle = songArtist ? `${songName} - ${songArtist}` : songName;
+      const { songName, songArtists, songArtist } = finalMetadata || {};
+      const artistStr = Array.isArray(songArtists) && songArtists.length > 0 ? songArtists.join(', ') : (songArtist || '');
+      if (songName) finalTitle = artistStr ? `${songName} - ${artistStr}` : songName;
     }
     if (overrides.isPublic !== undefined) payload.public = overrides.isPublic;
     if (overrides.lines !== undefined) payload.lines = overrides.lines;
@@ -301,10 +302,10 @@ export function useManualSave({
       };
       performCreate();
     }
-  }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, cloudinaryAudio, duration, t, isSharedProjectRef, activeProjectIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setActiveProjectId, setCloudinaryAudio, executeRecaptcha, onSaveSuccess, setForkedFrom]);
+  }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, cloudinaryAudio, duration, t, isSharedProjectRef, activeProjectIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setActiveProjectId, setCloudinaryAudio, executeRecaptcha, onSaveSuccess, setForkedFrom, settings?.advanced?.autoSaveIndicatorDuration]);
 
   const manualSaveRef = useRef(null);
-  manualSaveRef.current = handleManualSave;
+  useLayoutEffect(() => { manualSaveRef.current = handleManualSave; });
 
   const triggerImportSave = useCallback((payload = null) => {
     manualSaveRef.current?.(payload || {});

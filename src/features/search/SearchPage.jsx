@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, Loader2 } from 'lucide-react';
@@ -47,11 +47,11 @@ export default function SearchPage() {
   }, []);
 
   const placeholders = t('search.placeholder', { returnObjects: true });
-  const placeholder  = useRef(
+  const [placeholder] = useState(() =>
     Array.isArray(placeholders)
       ? placeholders[Math.floor(Math.random() * placeholders.length)]
       : placeholders
-  ).current;
+  );
 
   const handleInput = (q) => {
     setParam('q', q);

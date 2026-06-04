@@ -28,28 +28,26 @@ export const lyricsService = {
     }
   },
 
-  async compileLrc({ lines, includeTranslations, precision, metadata, lineEndings, includeSecondary, wordPrecision }) {
+  async compileLrc({ lines, includeTranslations, precision, metadata, lineEndings, includeSecondary, wordPrecision, exportTranslationIndex = 0 }) {
     try {
       return await request('/lyrics/compile/lrc', {
         method: 'POST',
-        body: JSON.stringify({ lines, includeTranslations, precision, metadata, lineEndings, includeSecondary, wordPrecision }),
+        body: JSON.stringify({ lines, includeTranslations, precision, metadata, lineEndings, includeSecondary, wordPrecision, exportTranslationIndex }),
       });
     } catch {
-      // Fallback to local compilation if server fails (e.g. 404, 500, or network error)
-      const output = localCompileLRC(lines, includeTranslations, precision, metadata, lineEndings, includeSecondary, wordPrecision);
+      const output = localCompileLRC(lines, includeTranslations, precision, metadata, lineEndings, includeSecondary, wordPrecision, exportTranslationIndex);
       return { output, format: 'lrc' };
     }
   },
 
-  async compileSrt({ lines, duration, includeTranslations, lineEndings, srtConfig, includeSecondary }) {
+  async compileSrt({ lines, duration, includeTranslations, lineEndings, srtConfig, includeSecondary, exportTranslationIndex = 0 }) {
     try {
       return await request('/lyrics/compile/srt', {
         method: 'POST',
-        body: JSON.stringify({ lines, duration, includeTranslations, lineEndings, srtConfig, includeSecondary }),
+        body: JSON.stringify({ lines, duration, includeTranslations, lineEndings, srtConfig, includeSecondary, exportTranslationIndex }),
       });
     } catch {
-      // Fallback to local compilation if server fails
-      const output = localCompileSRT(lines, duration, includeTranslations, lineEndings, srtConfig, includeSecondary);
+      const output = localCompileSRT(lines, duration, includeTranslations, lineEndings, srtConfig, includeSecondary, exportTranslationIndex);
       return { output, format: 'srt' };
     }
   },

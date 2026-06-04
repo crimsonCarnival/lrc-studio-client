@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 
 function hexToRgb(hex) {
@@ -172,10 +172,10 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }) => {
     rafRef.current = requestAnimationFrame(animateRef.current);
   }, [animationSpeed, lineOpacity, reducedMotion]);
 
-  animateRef.current = animate;
+  useLayoutEffect(() => { animateRef.current = animate; });
 
   const handleMouseMoveRef = useRef(handleMouseMove);
-  handleMouseMoveRef.current = handleMouseMove;
+  useLayoutEffect(() => { handleMouseMoveRef.current = handleMouseMove; });
 
   useEffect(() => {
     const canvas = canvasRef.current;

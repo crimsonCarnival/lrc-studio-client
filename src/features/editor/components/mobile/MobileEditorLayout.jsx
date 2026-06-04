@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Music, Mic2, Eye } from 'lucide-react';
-import { AnimatePresence } from 'framer-motion';
+// eslint-disable-next-line no-unused-vars -- motion used as JSX namespace: <motion.div>
+import { AnimatePresence, motion } from 'framer-motion';
 import SyncModeTab from './SyncModeTab';
 import LyricsModeTab from './LyricsModeTab';
 import PreviewModeTab from './PreviewModeTab';
@@ -46,9 +47,9 @@ export default function MobileEditorLayout({
   const linesRef = useRef(lines);
   const activeLineIndexRef = useRef(activeLineIndex);
   const editorModeRef = useRef(editorMode);
-  linesRef.current = lines;
-  activeLineIndexRef.current = activeLineIndex;
-  editorModeRef.current = editorMode;
+  useLayoutEffect(() => { linesRef.current = lines; }, [lines]);
+  useLayoutEffect(() => { activeLineIndexRef.current = activeLineIndex; }, [activeLineIndex]);
+  useLayoutEffect(() => { editorModeRef.current = editorMode; }, [editorMode]);
 
   // Handle editor:mark events from the mobile mark button and the player's mark button
   useEffect(() => {

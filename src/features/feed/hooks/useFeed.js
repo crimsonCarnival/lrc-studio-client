@@ -53,6 +53,7 @@ export function useFeed() {
   }, []);
 
   // Initial fetch
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchPage(0, false); }, [fetchPage]);
 
   // Real-time: prepend new items pushed from the server

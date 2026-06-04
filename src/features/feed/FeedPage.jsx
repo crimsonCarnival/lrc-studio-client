@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate } from 'react-router-dom';
 import { Loader2, Rss } from 'lucide-react';
@@ -19,8 +19,8 @@ export default function FeedPage() {
   const { activities, hasMore, loading, loadingMore, error, loadMore } = useFeed();
 
   // Pick empty-state text once per mount
-  const emptyTitle = useRef(pickRandom(t('feed.empty.title', { returnObjects: true }))).current;
-  const emptyCta   = useRef(pickRandom(t('feed.empty.cta',   { returnObjects: true }))).current;
+  const [emptyTitle] = useState(() => pickRandom(t('feed.empty.title', { returnObjects: true })));
+  const [emptyCta]   = useState(() => pickRandom(t('feed.empty.cta',   { returnObjects: true })));
 
   // Guests cannot view the feed — redirect to login
   if (!user || user.isGuest) {

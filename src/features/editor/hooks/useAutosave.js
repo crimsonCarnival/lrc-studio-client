@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { uploads, projects, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { authEvents } from '@/shared/utils/auth-events';
@@ -63,7 +63,8 @@ export function useAutosave({
     };
   });
 
-  const lastSaveTimeRef = useRef(Date.now());
+  const [initialTime] = useState(() => Date.now());
+  const lastSaveTimeRef = useRef(initialTime);
   const changeCountRef = useRef(0);
   const saveControllerRef = useRef(null);
 
@@ -230,8 +231,9 @@ export function useAutosave({
       const GENERIC_TITLES = ['Sin título', 'Untitled', '無題'];
       const derivedTitle = (() => {
         if (mediaTitle && !GENERIC_TITLES.includes(mediaTitle)) return mediaTitle;
-        const { songName, songArtist } = projectMetadata || {};
-        if (songName) return songArtist ? `${songName} - ${songArtist}` : songName;
+        const { songName, songArtists, songArtist } = projectMetadata || {};
+        const artistStr = Array.isArray(songArtists) && songArtists.length > 0 ? songArtists.join(', ') : (songArtist || '');
+        if (songName) return artistStr ? `${songName} - ${artistStr}` : songName;
         return mediaTitle || '';
       })();
       const createData = {
@@ -301,10 +303,11 @@ export function useAutosave({
     onSaveSuccess,
     isProjectLoadingRef,
     setForkedFrom,
+    settings.advanced?.autoSaveIndicatorDuration,
   ]);
 
   const doAutoSaveRef = useRef(doAutoSave);
-  doAutoSaveRef.current = doAutoSave;
+  useLayoutEffect(() => { doAutoSaveRef.current = doAutoSave; });
 
   // ——— Action-based trigger (every 5 line edits) ———
   const isFirstLinesRender = useRef(true);
@@ -327,7 +330,6 @@ export function useAutosave({
     const id = setInterval(() => { doAutoSaveRef.current(); }, intervalMs);
     return () => clearInterval(id);
     // doAutoSave read via ref to avoid restarting the interval on every save cycle
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.advanced?.autoSave?.enabled, settings.advanced?.autoSave?.timeInterval]);
 
   // ——— Autosave server acknowledgment ———

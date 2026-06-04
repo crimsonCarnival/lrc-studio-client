@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useCallback, useEffect } from 'react';
+﻿import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { projects, uploads, getAccessToken } from '@/app/api';
@@ -17,13 +17,18 @@ function expandSharePayload(raw) { return raw; } // v1 format passthrough
 
 function sanitizeLines(raw) {
   return (raw || []).flatMap((l) => {
-    if (!(l && typeof l === 'object' && typeof l.text === 'string')) return [];
+    if (!(l && typeof l === 'object')) return [];
+    if (l.type === 'section') {
+      return [{ type: 'section', label: l.label || '', singer: l.singer || undefined, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
+    }
+    if (typeof l.text !== 'string') return [];
     return [{
       text: l.text,
       timestamp: typeof l.timestamp === 'number' && isFinite(l.timestamp) ? l.timestamp : null,
       endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
       secondary: typeof l.secondary === 'string' ? l.secondary : '',
-      translation: typeof l.translation === 'string' ? l.translation : '',
+      translations: Array.isArray(l.translations) ? l.translations : undefined,
+      singer: typeof l.singer === 'string' ? l.singer : undefined,
       id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
       words: Array.isArray(l.words)
         ? l.words.flatMap((w) => {
@@ -82,11 +87,15 @@ export function useSharedProject({
   const isSharedProjectRef = useRef(false);
   const sharedReadOnlyRef = useRef(true);
 
-  isSharedProjectRef.current = isSharedProject;
-  sharedReadOnlyRef.current = sharedReadOnly;
+  useLayoutEffect(() => {
+    isSharedProjectRef.current = isSharedProject;
+    sharedReadOnlyRef.current = sharedReadOnly;
+  });
 
   // Live updates from the server when viewing a shared project
-  useProjectSocket(isSharedProject ? activeProjectIdRef.current : null, {
+  // eslint-disable-next-line react-hooks/refs
+  const socketProjectId = isSharedProject ? activeProjectIdRef.current : null;
+  useProjectSocket(socketProjectId, {
     setLines,
     setSyncMode,
     setActiveLineIndex,
