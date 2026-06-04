@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+// eslint-disable-next-line no-unused-vars -- motion used as JSX namespace: <motion.span>, <motion.div>
 import { motion } from 'framer-motion';
 import useHapticFeedback from '../../../shared/hooks/useHapticFeedback';
 

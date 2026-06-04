@@ -29,6 +29,7 @@ export default function PasskeySection() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchPasskeys();
   }, [fetchPasskeys]);
 
@@ -64,7 +65,7 @@ export default function PasskeySection() {
       await auth.deletePasskey(id);
       toast.success(t('auth.passkeyManagement.deleted', 'Passkey deleted.'));
       await fetchPasskeys();
-    } catch (err) {
+    } catch {
       toast.error(t('auth.passkeyManagement.deleteFailed', 'Failed to delete passkey.'));
     } finally {
       setDeletingId(null);

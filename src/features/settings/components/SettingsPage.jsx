@@ -88,6 +88,7 @@ export default function SettingsPage() {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const pendingNavRef = useRef(null);
 
+  // eslint-disable-next-line react-hooks/refs -- intentional: savedSettingsRef holds server-committed state for dirty check
   const isDirty = JSON.stringify(settings) !== JSON.stringify(savedSettingsRef.current);
 
   const setTab = (id) => {
@@ -131,12 +132,13 @@ export default function SettingsPage() {
 
   useLayoutEffect(() => {
     if (!searchTerm) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasResults(true);
       return;
     }
     const sections = panelRef.current?.querySelectorAll('.settings-section');
     setHasResults(sections ? sections.length > 0 : true);
-  });
+  }, [searchTerm]);
 
   const validateShortcut = useCallback((newKey, currentKeyName) => {
     const reserved = ['Ctrl+Z', 'Ctrl+Y', 'Ctrl+Shift+Z'];
@@ -153,19 +155,19 @@ export default function SettingsPage() {
     updateAllSettings(DEFAULT_SETTINGS);
   }, [updateAllSettings]);
 
-  const handleApply = useCallback(() => {
+  const handleApply = () => {
     updateAllSettings(settings);
     savedSettingsRef.current = settings;
-  }, [settings, updateAllSettings]);
+  };
 
-  const guardedNavigate = useCallback((target) => {
+  const guardedNavigate = (target) => {
     if (isDirty && !settings.advanced?.autoSave?.enabled) {
       pendingNavRef.current = target;
       setShowLeaveModal(true);
     } else {
       navigate(target);
     }
-  }, [isDirty, settings.advanced?.autoSave?.enabled, navigate]);
+  };
 
   const activeTabMeta = visibleTabs.find(entry => entry.id === activeTab);
 

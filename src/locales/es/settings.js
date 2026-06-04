@@ -109,8 +109,6 @@ export default {
     srtGapDesc: "Tiempo mínimo entre subtítulos consecutivos (segundos)",
     srtSnap: "Ajustar al siguiente",
     srtSnapDesc: "Ajusta automáticamente el final de un subtítulo al inicio del siguiente",
-    shiftAllAmount: "Cantidad de desplazamiento global",
-    shiftAllAmountDesc: "Segundos aplicados al pulsar 'Desplazar todo'",
     syncFlashDuration: "Duración del destello de sincronización",
     syncFlashDurationDesc: "Duración del destello al sincronizar una línea",
     lyricsSearchSpeed: "Velocidad de búsqueda de letra",

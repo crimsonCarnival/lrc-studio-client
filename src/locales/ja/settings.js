@@ -109,8 +109,6 @@ export default {
     srtGapDesc: "連続する字幕間の最小時間（秒）",
     srtSnap: "次にスナップ",
     srtSnapDesc: "字幕の終了を次の開始に自動スナップ",
-    shiftAllAmount: "一括シフト量",
-    shiftAllAmountDesc: "一括シフトボタンを押すたびに適用される秒数",
     syncFlashDuration: "同期フラッシュの表示時間",
     syncFlashDurationDesc: "同期済み行のフラッシュとナッジインジケーターの表示時間",
     lyricsSearchSpeed: "歌詞検索の速度",

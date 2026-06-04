@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Save, Clock } from 'lucide-react';
 import { Button } from '@ui/button';
@@ -18,12 +18,14 @@ export default function AccountNameSection() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const accountNameCooldownDaysLeft = useMemo(() => {
+  // Capture mount time once — cooldown accuracy at day granularity, mount time is sufficient
+  const [mountNow] = useState(() => Date.now()); // eslint-disable-line react-hooks/purity
+  const accountNameCooldownDaysLeft = (() => {
     if (!user?.lastAccountNameChangedAt) return 0;
-    const elapsed = (Date.now() - new Date(user.lastAccountNameChangedAt).getTime()) / (1000 * 60 * 60 * 24);
+    const elapsed = (mountNow - new Date(user.lastAccountNameChangedAt).getTime()) / (1000 * 60 * 60 * 24);
     const remaining = COOLDOWN_DAYS - elapsed;
     return remaining > 0 ? Math.ceil(remaining) : 0;
-  }, [user?.lastAccountNameChangedAt]);
+  })();
 
   function handleChange(e) {
     const val = e.target.value.toLowerCase().replace(/[^a-z0-9_.:-]/g, '');

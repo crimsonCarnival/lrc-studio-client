@@ -32,6 +32,7 @@ export default function SessionsSettings() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchSessions(); }, [fetchSessions]);
 
   const handleRevoke = (sessionId) => {
