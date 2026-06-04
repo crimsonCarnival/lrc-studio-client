@@ -12,6 +12,7 @@ import { formatTime } from '@/shared/utils/format-time';
  */
 const WaveformDisplay = ({
   showWaveform,
+  waveformSnap,
   audioRef,
   localUrl,
   lines,
@@ -34,6 +35,23 @@ const WaveformDisplay = ({
     return Math.max(0, Math.min(duration, pct * duration));
   }, [duration]);
 
+  const snapTime = useCallback((time) => {
+    if (!waveformSnap || !lines?.length) return time;
+    const threshold = Math.max(0.5, duration * 0.02);
+    let closest = null;
+    let minDist = Infinity;
+    for (const line of lines) {
+      if (line.timestamp != null) {
+        const dist = Math.abs(line.timestamp - time);
+        if (dist < minDist && dist <= threshold) {
+          minDist = dist;
+          closest = line.timestamp;
+        }
+      }
+    }
+    return closest ?? time;
+  }, [waveformSnap, lines, duration]);
+
   const clientXToPct = useCallback((clientX, rect) => {
     return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
   }, []);
@@ -43,12 +61,12 @@ const WaveformDisplay = ({
     isDraggingPlayhead.current = true;
     const rect = waveContainerRef.current.getBoundingClientRect();
     const pct = clientXToPct(e.clientX, rect);
-    onSeek?.(pctToTime(pct));
+    onSeek?.(snapTime(pctToTime(pct)));
 
     const onMove = (me) => {
       const r = waveContainerRef.current?.getBoundingClientRect();
       if (!r) return;
-      onSeek?.(pctToTime(clientXToPct(me.clientX, r)));
+      onSeek?.(snapTime(pctToTime(clientXToPct(me.clientX, r))));
     };
     const onUp = () => {
       isDraggingPlayhead.current = false;
@@ -57,7 +75,7 @@ const WaveformDisplay = ({
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
-  }, [isReady, duration, onSeek, pctToTime, clientXToPct]);
+  }, [isReady, duration, onSeek, pctToTime, clientXToPct, snapTime]);
 
   // ─── Loop handle drag ─────────────────────────────────────────────────────
   const handleLoopHandleDrag = useCallback((which, e) => {
