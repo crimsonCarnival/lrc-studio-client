@@ -8,6 +8,7 @@ export function useProjectReactions(projectId) {
   const [loading, setLoading]       = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!projectId) { setLoading(false); return; }
     let cancelled = false;
     setLoading(true);

@@ -2,15 +2,9 @@ import { useState, useRef } from 'react';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ReactionPicker } from './ReactionPicker';
+import { EMOJI_MAP } from './reaction-constants';
 
-export const EMOJI_MAP = {
-  heart: '❤️',
-  fire: '🔥',
-  wow: '😮',
-  laugh: '😂',
-  clap: '👏',
-  music: '🎵',
-};
+export { EMOJI_MAP };
 
 export function ReactionBar({
   reactions = [],

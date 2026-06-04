@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { EMOJI_MAP } from './ReactionBar';
+import { EMOJI_MAP } from './reaction-constants';
 
 export function ReactionPicker({ myReaction, onReact, onClose }) {
   const ref = useRef(null);
