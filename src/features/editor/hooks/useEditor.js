@@ -29,6 +29,7 @@ export function useEditor({
   editorMode,
   setEditorMode,
   onImport,
+  clearHistory,
 }) {
   const { t } = useTranslation();
   const { settings, updateSetting, updateSettings } = useSettings();
@@ -36,7 +37,8 @@ export function useEditor({
   const [editingLineIndex, setEditingLineIndex] = useState(null);
   const [editingText, setEditingText] = useState('');
   const [editingSecondary, setEditingSecondary] = useState('');
-  const [editingTranslation, setEditingTranslation] = useState('');
+  const [editingTranslations, setEditingTranslations] = useState([]);
+  const [editingSinger, setEditingSinger] = useState('');
   const [selectedLines, setSelectedLines] = useState(new Set());
   // awaitingEndMark is derived: only non-null when the stored context still matches
   const [awaitingEndMarkFor, setAwaitingEndMarkFor] = useState(null); // null | { lineIndex, mode }
@@ -221,6 +223,7 @@ export function useEditor({
         const { lines: parsed } = await lyrics.parse(rawText, filename);
         if (parsed.length > 0) {
           setLines(parsed);
+          clearHistory?.();
           if (looksLikeSrt) setEditorMode('srt');
           else if (looksLikeWordLrc) setEditorMode('words');
           else setEditorMode('lrc');
@@ -306,6 +309,7 @@ export function useEditor({
       return line;
     });
     setLines(updated);
+    clearHistory?.();
     setActiveLineIndex(Math.max(0, updated.findIndex((l) => l.timestamp == null)));
     setSyncMode(true);
   };
@@ -540,6 +544,14 @@ export function useEditor({
     return () => window.removeEventListener('editor:mark', handler);
   }, [syncMode, handleMark]);
 
+  // Listen for Start Syncing button dispatched from AppHeader
+  useEffect(() => {
+    if (syncMode) return;
+    const handler = () => handleConfirmLyrics();
+    window.addEventListener('editor:start-syncing', handler);
+    return () => window.removeEventListener('editor:start-syncing', handler);
+  }, [syncMode, handleConfirmLyrics]);
+
   // ——— Line operations ———
 
   const handleClearLine = useCallback(
@@ -574,17 +586,28 @@ export function useEditor({
     });
   };
 
-  const handleSaveLineText = (index, newText, newSecondary, newTranslation) => {
+  const handleSaveLineText = (index, newText, newSecondary, newTranslations, newSinger) => {
     setModifiedLines(prev => new Set(prev).add(index));
     setLines((prev) => {
       const updated = [...prev];
       if (index < 0 || index >= updated.length) return prev;
       const prevLine = updated[index];
+
+      // Section marker — just update label and singer
+      if (prevLine.type === 'section') {
+        updated[index] = { ...prevLine, label: newText?.trim() || prevLine.label, singer: newSinger?.trim() || undefined };
+        return updated;
+      }
+
       const { plainText, segments } = parseRubyMarkup(newText || '');
       const hasMarkup = segments.some(s => s.reading);
       const line = { ...prevLine, text: plainText };
       if (newSecondary !== undefined) line.secondary = newSecondary || undefined;
-      if (newTranslation !== undefined) line.translation = newTranslation || undefined;
+      if (newTranslations !== undefined) {
+        const filtered = newTranslations.filter(t => t.text?.trim());
+        line.translations = filtered.length > 0 ? filtered : undefined;
+      }
+      if (newSinger !== undefined) line.singer = newSinger?.trim() || undefined;
       // Always re-tokenize when text or markup changed
       const textChanged = plainText !== (prevLine.text || '');
       // Always generate words if they are missing or text changed
@@ -926,6 +949,27 @@ export function useEditor({
     [lines, settings.editor?.overlapThreshold],
   );
 
+  const handleInsertSection = useCallback((afterIndex, label = 'Section') => {
+    setLines((prev) => {
+      const updated = [...prev];
+      const section = { type: 'section', label, timestamp: null, id: crypto.randomUUID() };
+      updated.splice(afterIndex + 1, 0, section);
+      return updated;
+    });
+  }, [setLines]);
+
+  const handleAssignSinger = useCallback((singer, lineIndices) => {
+    setLines((prev) => {
+      const updated = [...prev];
+      for (const i of lineIndices) {
+        if (i >= 0 && i < updated.length) {
+          updated[i] = { ...updated[i], singer: singer?.trim() || undefined };
+        }
+      }
+      return updated;
+    });
+  }, [setLines]);
+
   return {
     // state
     rawText,
@@ -936,8 +980,10 @@ export function useEditor({
     setEditingText,
     editingSecondary,
     setEditingSecondary,
-    editingTranslation,
-    setEditingTranslation,
+    editingTranslations,
+    setEditingTranslations,
+    editingSinger,
+    setEditingSinger,
     dragIndex,
     dragOverIndex,
     selectedLines,
@@ -985,6 +1031,8 @@ export function useEditor({
     activeWordIndex,
     overlappingLines,
     modifiedLines,
+    handleInsertSection,
+    handleAssignSinger,
     clearModifiedLines: () => setModifiedLines(new Set()),
     // extras
     requestConfirm,

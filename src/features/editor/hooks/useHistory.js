@@ -95,6 +95,14 @@ export default function useHistory(initial, options = {}) {
     });
   }, []);
 
+  const clearHistory = useCallback(() => {
+    pastRef.current.clear();
+    futureRef.current.clear();
+    lastUpdateRef.current = 0;
+    setCanUndo(false);
+    setCanRedo(false);
+  }, []);
+
   useEffect(() => {
     if (pendingRestoreRef.current !== null) {
       const companion = pendingRestoreRef.current;
@@ -103,5 +111,5 @@ export default function useHistory(initial, options = {}) {
     }
   });
 
-  return [state, setState, undo, redo, canUndo, canRedo];
+  return [state, setState, undo, redo, canUndo, canRedo, clearHistory];
 }

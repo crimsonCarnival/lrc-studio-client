@@ -28,6 +28,7 @@ export default function Editor({
   redo,
   canUndo,
   canRedo,
+  clearHistory,
   editorMode,
   setEditorMode,
   onImport,
@@ -40,6 +41,7 @@ export default function Editor({
   onNewProject,
   onShowKeyboardHelp,
   registerAfterSave,
+  songArtists = [],
 }) {
   "use no memo";
   const { t } = useTranslation();
@@ -52,8 +54,12 @@ export default function Editor({
     setEditingText,
     editingSecondary,
     setEditingSecondary,
-    editingTranslation,
-    setEditingTranslation,
+    editingTranslations,
+    setEditingTranslations,
+    editingSinger,
+    setEditingSinger,
+    handleInsertSection,
+    handleAssignSinger,
     dragIndex,
     dragOverIndex,
     selectedLines,
@@ -67,7 +73,6 @@ export default function Editor({
     handleLineHoverEnd,
     listRef,
     fileInputRef,
-    handleConfirmLyrics,
     handleFileUpload,
     handleUrlImport,
     shiftTime,
@@ -118,6 +123,7 @@ export default function Editor({
     editorMode,
     setEditorMode,
     onImport,
+    clearHistory,
   });
 
   // Register teardown / post-save hooks
@@ -202,11 +208,9 @@ export default function Editor({
         <EditorPasteArea
           rawText={rawText}
           setRawText={setRawText}
-          handleConfirmLyrics={handleConfirmLyrics}
           fileInputRef={fileInputRef}
           handleFileUpload={handleFileUpload}
           handleUrlImport={handleUrlImport}
-          onCancel={lines.length > 0 ? () => setSyncMode(true) : null}
         />
       )}
 
@@ -239,9 +243,14 @@ export default function Editor({
           setEditingText={setEditingText}
           editingSecondary={editingSecondary}
           setEditingSecondary={setEditingSecondary}
-          editingTranslation={editingTranslation}
-          setEditingTranslation={setEditingTranslation}
+          editingTranslations={editingTranslations}
+          setEditingTranslations={setEditingTranslations}
+          editingSinger={editingSinger}
+          setEditingSinger={setEditingSinger}
           handleSaveLineText={handleSaveLineText}
+          handleInsertSection={handleInsertSection}
+          handleAssignSinger={handleAssignSinger}
+          songArtists={songArtists}
           playerRef={playerRef}
           shiftTime={shiftTime}
           handleAddLine={handleAddLine}
@@ -432,9 +441,14 @@ function VirtualizedLineList({
   setEditingText,
   editingSecondary,
   setEditingSecondary,
-  editingTranslation,
-  setEditingTranslation,
+  editingTranslations,
+  setEditingTranslations,
+  editingSinger,
+  setEditingSinger,
   handleSaveLineText,
+  handleInsertSection,
+  handleAssignSinger,
+  songArtists,
   playerRef,
   shiftTime,
   handleAddLine,
@@ -492,7 +506,7 @@ function VirtualizedLineList({
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [virtualizer]);
+  }, [virtualizer, listRef]);
 
   // Auto-scroll to active line via virtualizer
   const prevActiveRef = useCallback((idx) => {
@@ -613,9 +627,14 @@ function VirtualizedLineList({
                   setEditingText={setEditingText}
                   editingSecondary={editingSecondary}
                   setEditingSecondary={setEditingSecondary}
-                  editingTranslation={editingTranslation}
-                  setEditingTranslation={setEditingTranslation}
+                  editingTranslations={editingTranslations}
+                  setEditingTranslations={setEditingTranslations}
+                  editingSinger={editingSinger}
+                  setEditingSinger={setEditingSinger}
                   handleSaveLineText={handleSaveLineText}
+                  handleInsertSection={handleInsertSection}
+                  handleAssignSinger={handleAssignSinger}
+                  songArtists={songArtists}
                   playerRef={playerRef}
                   shiftTime={shiftTime}
                   handleAddLine={handleAddLine}

@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger 
 import {
   FileText, Pencil, Save, Check, Eraser,
   Trash2, ListChecks,
-  Repeat, EyeOff, MoreHorizontal, Plus, X, Loader2, HelpCircle, Languages, Music
+  Repeat, EyeOff, MoreHorizontal, Plus, X, Loader2, HelpCircle, Languages, Music, Undo2, Redo2
 } from 'lucide-react';
 import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
@@ -61,6 +61,10 @@ export default function EditorToolbar({
   activeLineIndex,
   activeWordIndex,
   stampTarget,
+  undo,
+  redo,
+  canUndo,
+  canRedo,
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -164,60 +168,6 @@ export default function EditorToolbar({
             </Tip>
           )}
 
-          {handleManualSave && (!settings.advanced?.autoSave?.enabled || !user) && (
-            <Tip content={isSaving ? (t('project.saving') || 'Saving…') : isAutosaving ? (t('project.saved') || 'Saved') : (t('project.save') || 'Save')}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={async () => {
-                  if (!user) {
-                    const payload = buildProjectPayload ? buildProjectPayload() : {};
-                    const idbPayload = {
-                      title: payload.title,
-                      lyrics: { editorMode: payload.editorMode, lines: payload.lines },
-                      state: {
-                        syncMode: payload.syncMode,
-                        activeLineIndex: payload.activeLineIndex,
-                        playbackPosition: payload.playbackPosition,
-                        playbackSpeed: payload.playbackSpeed,
-                        saveTime: payload.saveTime,
-                        timezone: payload.timezone,
-                        utcOffset: payload.utcOffset,
-                      },
-                      metadata: payload.metadata,
-                      ...(payload.ytUrl ? { ytUrl: payload.ytUrl } : {}),
-                      ...(payload.cloudinaryAudio ? {
-                        cloudinaryUrl: payload.cloudinaryAudio.cloudinaryUrl,
-                        cloudinaryPublicId: payload.cloudinaryAudio.publicId || null,
-                        fileName: payload.cloudinaryAudio.fileName || '',
-                        duration: payload.cloudinaryAudio.duration || null,
-                      } : {}),
-                    };
-                    try {
-                      await savePendingProject(idbPayload);
-                      navigate(`/auth?action=signin&redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
-                    } catch {
-                      import('react-hot-toast').then(({ default: toast }) => {
-                        toast.error("Couldn't save draft locally — try a different browser or disable private mode.");
-                      });
-                    }
-                  } else {
-                    handleManualSave();
-                  }
-                }}
-                disabled={isSaving}
-                className={`flex-shrink-0 size-8 transition-colors ${
-                  isSaving ? 'text-zinc-400' : isAutosaving ? 'text-primary' : 'text-zinc-400'
-                }`}
-              >
-                {isSaving
-                  ? <Loader2 className="size-4 animate-spin" />
-                  : isAutosaving
-                    ? <Check className="size-4" />
-                    : <Save className="size-4" />}
-              </Button>
-            </Tip>
-          )}
         </div>
       </div>
 
@@ -326,6 +276,83 @@ export default function EditorToolbar({
           </div>
 
         <div className="flex items-center gap-1">
+          <Tip content={t('editor.undoTitle') || 'Undo (Ctrl+Z)'}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={undo}
+              disabled={!canUndo}
+              className="size-9 text-zinc-400 hover:text-zinc-200 disabled:opacity-30"
+            >
+              <Undo2 className="size-4" />
+            </Button>
+          </Tip>
+          <Tip content={t('editor.redoTitle') || 'Redo (Ctrl+Y)'}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={redo}
+              disabled={!canRedo}
+              className="size-9 text-zinc-400 hover:text-zinc-200 disabled:opacity-30"
+            >
+              <Redo2 className="size-4" />
+            </Button>
+          </Tip>
+          {handleManualSave && (!settings.advanced?.autoSave?.enabled || !user) && (
+            <Tip content={isSaving ? (t('project.saving') || 'Saving…') : isAutosaving ? (t('project.saved') || 'Saved') : (t('project.save') || 'Save')}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={async () => {
+                  if (!user) {
+                    const payload = buildProjectPayload ? buildProjectPayload() : {};
+                    const idbPayload = {
+                      title: payload.title,
+                      lyrics: { editorMode: payload.editorMode, lines: payload.lines },
+                      state: {
+                        syncMode: payload.syncMode,
+                        activeLineIndex: payload.activeLineIndex,
+                        playbackPosition: payload.playbackPosition,
+                        playbackSpeed: payload.playbackSpeed,
+                        saveTime: payload.saveTime,
+                        timezone: payload.timezone,
+                        utcOffset: payload.utcOffset,
+                      },
+                      metadata: payload.metadata,
+                      ...(payload.ytUrl ? { ytUrl: payload.ytUrl } : {}),
+                      ...(payload.cloudinaryAudio ? {
+                        cloudinaryUrl: payload.cloudinaryAudio.cloudinaryUrl,
+                        cloudinaryPublicId: payload.cloudinaryAudio.publicId || null,
+                        fileName: payload.cloudinaryAudio.fileName || '',
+                        duration: payload.cloudinaryAudio.duration || null,
+                      } : {}),
+                    };
+                    try {
+                      await savePendingProject(idbPayload);
+                      navigate(`/auth?action=signin&redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
+                    } catch {
+                      import('react-hot-toast').then(({ default: toast }) => {
+                        toast.error("Couldn't save draft locally — try a different browser or disable private mode.");
+                      });
+                    }
+                  } else {
+                    handleManualSave();
+                  }
+                }}
+                disabled={isSaving}
+                className={`flex-shrink-0 size-9 transition-colors ${
+                  isSaving ? 'text-zinc-400' : isAutosaving ? 'text-primary' : 'text-zinc-400'
+                }`}
+              >
+                {isSaving
+                  ? <Loader2 className="size-4 animate-spin" />
+                  : isAutosaving
+                    ? <Check className="size-4" />
+                    : <Save className="size-4" />}
+              </Button>
+            </Tip>
+          )}
+          <div className="w-px h-4 bg-zinc-800 mx-0.5 shrink-0" />
           <Popover open={lyricsSearchPopoverOpen} onOpenChange={setLyricsSearchPopoverOpen}>
             <Tip content={t('lyricsSearch.findLyrics')}>
               <PopoverTrigger asChild>
