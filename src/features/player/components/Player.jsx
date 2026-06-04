@@ -1,4 +1,4 @@
-﻿import { useState, useCallback, useMemo, useRef, useImperativeHandle, useEffect } from 'react';
+﻿import { useState, useCallback, useMemo, useRef, useImperativeHandle, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useSettings } from '@/features/settings/useSettings';
@@ -83,9 +83,9 @@ function Player(
 
   const sourceRef = useRef(source);
 
-  loopARef.current = loopA;
-  loopBRef.current = loopB;
-  sourceRef.current = source;
+  useLayoutEffect(() => { loopARef.current = loopA; });
+  useLayoutEffect(() => { loopBRef.current = loopB; });
+  useLayoutEffect(() => { sourceRef.current = source; });
 
   // Fetch uploads when opening the selector
   const fetchUploads = useCallback(async () => {
@@ -126,13 +126,13 @@ function Player(
         const nextLine = lines.slice(activeLineIndex + 1).find(l => l.timestamp != null);
         b = nextLine ? nextLine.timestamp : duration;
       }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoop({ a, b });
     } else if (!settings.playback?.loopCurrentLine) {
       // Only clear if it was an auto-loop. For simplicity, we'll just clear it when disabled.
       setLoop({ a: null, b: null });
     }
     // setLoop is a stable useState setter
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings.playback?.loopCurrentLine, activeLineIndex, lines, duration]);
 
   const updateDuration = useCallback(
@@ -197,7 +197,7 @@ function Player(
     setShowSpotifyBrowser(false);
   }, [sp, onTitleChange]);
 
-  const { login: handleSpotifyLogin } = useSpotifyAuth();
+  useSpotifyAuth();
 
   const handleSpotifyLoad = () => {
     const trimmed = spotifyUrl.trim();
@@ -465,6 +465,7 @@ function Player(
         seek(initialSeek);
       }
       if (initialSpeed && initialSpeed !== 1) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         applySpeed(initialSpeed);
       }
       // Ensure the player doesn't autoplay after restoring position
@@ -759,8 +760,26 @@ function Player(
               </>
             )}
 
-            {/* Show error if any below the compact bar absolutely */}
-            {(yt.ytError || spotifyError) && (
+            {/* Embed-blocked overlay */}
+            {yt.ytEmbedBlocked && (
+              <div className="absolute inset-x-0 -top-24 mx-2 bg-zinc-900/95 border border-orange-500/30 rounded-xl px-4 py-3 flex items-start gap-3 animate-fade-in shadow-lg">
+                <AlertTriangle className="size-4 text-orange-400 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-zinc-100">Embedding disabled</p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">This video's owner blocks external playback. Use a direct audio file instead.</p>
+                </div>
+                <a
+                  href={yt.ytUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 text-[10px] font-semibold text-orange-400 hover:text-orange-300 transition-colors whitespace-nowrap mt-0.5"
+                >
+                  Watch on YouTube ↗
+                </a>
+              </div>
+            )}
+            {/* Generic error chip */}
+            {(yt.ytError && !yt.ytEmbedBlocked || spotifyError) && (
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded">
                 {yt.ytError || spotifyError}
               </div>

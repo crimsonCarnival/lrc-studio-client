@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import { extractVideoId } from '../services/player.service';
 
 // Module-level WeakMap: stores raw YouTube player objects outside React's
@@ -26,10 +26,11 @@ export default function useYouTubePlayer({
   // object (which would throw a cross-origin SecurityError).
   const ytPlayerRef = useRef(null);
   const _ytRefInitialized = useRef(false);
+  // eslint-disable-next-line react-hooks/refs -- one-time init guard: singleton ref property redefinition
   if (!_ytRefInitialized.current) {
     _ytRefInitialized.current = true;
     const _ref = ytPlayerRef; // capture stable reference for the closure
-    Object.defineProperty(ytPlayerRef, 'current', {
+    Object.defineProperty(ytPlayerRef, 'current', { // eslint-disable-line react-hooks/refs
       enumerable: false, // hidden from DevTools enumeration
       configurable: true,
       get: () => {
@@ -61,12 +62,13 @@ export default function useYouTubePlayer({
   const rafIdRef = useRef(null);
   const apiLoadedRef = useRef(false);
   const onYtUrlChangeRef = useRef(onYtUrlChange);
-  onYtUrlChangeRef.current = onYtUrlChange;
+  useLayoutEffect(() => { onYtUrlChangeRef.current = onYtUrlChange; });
 
   const [ytUrl, setYtUrl] = useState(initialYtUrl || '');
   const [ytReady, setYtReady] = useState(false);
   const [ytLoading, setYtLoading] = useState(false);
   const [ytError, setYtError] = useState('');
+  const [ytEmbedBlocked, setYtEmbedBlocked] = useState(false);
 
   // Load YouTube IFrame API
   useEffect(() => {
@@ -108,6 +110,7 @@ export default function useYouTubePlayer({
       return;
     }
     setYtError('');
+    setYtEmbedBlocked(false);
     setSource('youtube');
     setYtLoading(true);
     if (typeof urlOverride === 'string') setYtUrl(urlOverride);
@@ -175,6 +178,8 @@ export default function useYouTubePlayer({
               101: 'Video cannot be embedded',
               150: 'Video cannot be embedded',
             };
+            const isEmbedBlock = e.data === 101 || e.data === 150;
+            setYtEmbedBlocked(isEmbedBlock);
             setYtError(errorCodes[e.data] || `YouTube error (code ${e.data})`);
             setYtLoading(false);
             setYtReady(false);
@@ -275,6 +280,7 @@ export default function useYouTubePlayer({
     ytReady,
     ytLoading,
     ytError,
+    ytEmbedBlocked,
     setYtError,
     loadYouTube,
     remove,

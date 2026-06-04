@@ -1,6 +1,6 @@
 ﻿import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, X, Loader2, ExternalLink } from 'lucide-react';
+import { Search, X, Loader2, ExternalLink, AlertTriangle } from 'lucide-react';
 import { youtube } from '@/features/player/services/youtube.service';
 import { Skeleton } from '@ui/skeleton';
 import { LazyImage } from '@ui/LazyImage';
@@ -30,6 +30,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
+  const [unembeddableWarning, setUnembeddableWarning] = useState(null); // { videoId, url, title }
   const inputRef = useRef(null);
   const debounceRef = useRef(null);
   const userEditedRef = useRef(false);
@@ -50,10 +51,17 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
     setError('');
     setSearched(true);
     try {
-      // if it's a URL, extract video ID and create a synthetic result
       if (isYouTubeUrl(term)) {
         const videoId = extractVideoId(term);
         if (videoId) {
+          // Pre-flight embeddability check for pasted URLs
+          try {
+            const { embeddable } = await youtube.checkEmbed(videoId);
+            if (!embeddable) {
+              setUnembeddableWarning({ videoId, url: term, title: term });
+              return;
+            }
+          } catch { /* non-fatal — proceed */ }
           onSelect({ videoId, url: term, title: term });
           return;
         }
@@ -84,6 +92,14 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
   };
 
   const handleSelect = (item) => {
+    if (item.embeddable === false) {
+      setUnembeddableWarning({
+        videoId: item.videoId,
+        url: `https://www.youtube.com/watch?v=${item.videoId}`,
+        title: item.title,
+      });
+      return;
+    }
     onSelect({
       videoId: item.videoId,
       url: `https://www.youtube.com/watch?v=${item.videoId}`,
@@ -92,6 +108,39 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
       channelTitle: item.channelTitle,
     });
   };
+
+  if (unembeddableWarning) {
+    return (
+      <div className="flex flex-col h-full animate-fade-in items-center justify-center p-6 gap-5 text-center">
+        <div className="size-12 rounded-full bg-orange-500/15 flex items-center justify-center">
+          <AlertTriangle className="size-6 text-orange-400" />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <p className="text-sm font-semibold text-zinc-100">Embedding disabled</p>
+          <p className="text-xs text-zinc-400 max-w-xs leading-relaxed">
+            This video's owner has disabled playback on external sites. No audio will play in the editor.
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 w-full max-w-xs">
+          <a
+            href={`https://www.youtube.com/results?search_query=${encodeURIComponent(unembeddableWarning.title)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-2 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm font-medium text-zinc-200 transition-colors flex items-center justify-center gap-2"
+          >
+            <Search className="size-3.5" />
+            Find another version
+          </a>
+          <button
+            onClick={() => setUnembeddableWarning(null)}
+            className="w-full py-2 px-4 rounded-xl border border-zinc-700/50 text-sm text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-colors"
+          >
+            Go back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full animate-fade-in">
@@ -187,7 +236,15 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
                   <p className="text-sm font-medium text-zinc-200 line-clamp-2 group-hover:text-white transition-colors leading-snug">
                     {item.title}
                   </p>
-                  <p className="text-xs text-zinc-500 truncate">{item.channelTitle}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs text-zinc-500 truncate">{item.channelTitle}</p>
+                    {item.embeddable === false && (
+                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-orange-400 bg-orange-500/10 border border-orange-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
+                        <AlertTriangle className="size-2.5" />
+                        No embed
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center pr-1">
