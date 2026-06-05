@@ -152,10 +152,11 @@ export default function AuthPage() {
 
   const handleAuthSuccess = useCallback(() => {
     const redirectTo = searchParams.get('redirect');
-    // Navigate FIRST before committing login state.
-    // If we commitLogin() first, it clears heldLoginResult and sets user — causing
-    // showAuthPage to flip to false, which replaces <AuthPage> with <AuthRedirect>
-    // mid-render, causing a second navigation that competes with this one.
+    // Commit first: user + heldLoginResult update atomically before navigation so
+    // ProtectedRoute never sees a null user at the destination.
+    // AuthRedirect (shown when showAuthPage=false) reads the same redirect param and
+    // navigates to the same target, so there is no competing navigation.
+    commitLogin();
     if (redirectTo) {
       if (redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {
         navigate(redirectTo, { replace: true });
@@ -165,8 +166,6 @@ export default function AuthPage() {
     } else {
       navigate('/home', { replace: true });
     }
-    // Commit login state after navigation is queued.
-    commitLogin();
   }, [commitLogin, searchParams, navigate]);
 
   // Wraps loginWithGoogle with a hard-redirect fallback: if auth.me() fails after

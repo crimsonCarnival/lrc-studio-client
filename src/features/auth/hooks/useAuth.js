@@ -437,6 +437,9 @@ export function useAuth() {
     // Popup blocked (Brave, strict Edge) — fall back to redirect-based flow.
     // The server callback will redirect to /auth/signin?gcb=success|error.
     if (!popup || popup.closed) {
+      // Prime the session hint so restore() tries auth.me() after the OAuth redirect
+      // instead of short-circuiting (new users have no HAS_SESSION or remembered accounts).
+      storage.set(STORAGE_KEYS.HAS_SESSION, '1');
       window.location.href = url;
       return new Promise((_, reject) => {
         setTimeout(() => reject(new Error('redirect_timeout')), 3000);
