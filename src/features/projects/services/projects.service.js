@@ -153,9 +153,23 @@ const DELETE_PROJECT = `
   }
 `;
 
+function normalizeMetadata(metadata) {
+  if (!metadata) return metadata;
+  const { songArtists, ...rest } = metadata;
+  const songArtist = Array.isArray(songArtists) && songArtists.length > 0
+    ? songArtists.join(', ')
+    : (rest.songArtist ?? '');
+  return { ...rest, songArtist };
+}
+
+function normalizeInput(input) {
+  if (!input?.metadata) return input;
+  return { ...input, metadata: normalizeMetadata(input.metadata) };
+}
+
 export const projectsService = {
   async create(input) {
-    const data = await gqlRequest(CREATE_PROJECT, { input });
+    const data = await gqlRequest(CREATE_PROJECT, { input: normalizeInput(input) });
     return data.createProject;
   },
 
@@ -177,7 +191,7 @@ export const projectsService = {
   },
 
   async update(id, input, { signal, headers } = {}) {
-    const data = await gqlRequest(UPDATE_PROJECT, { id, input }, { signal, headers });
+    const data = await gqlRequest(UPDATE_PROJECT, { id, input: normalizeInput(input) }, { signal, headers });
     return { project: data.updateProject };
   },
 

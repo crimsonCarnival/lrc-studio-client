@@ -71,6 +71,13 @@ export default function GuestProjectSaveGate() {
             : undefined;
 
           const { savedAt: _savedAt, ...payload } = record;
+          if (payload.metadata) {
+            const { songArtists, ...restMeta } = payload.metadata;
+            const songArtist = Array.isArray(songArtists) && songArtists.length > 0
+              ? songArtists.join(', ')
+              : (restMeta.songArtist ?? '');
+            payload.metadata = { ...restMeta, songArtist };
+          }
           if (cancelled) return;
           const result = await request('/projects', {
             method: 'POST',
