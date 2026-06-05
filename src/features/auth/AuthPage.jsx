@@ -4,7 +4,6 @@ import { useSearchParams, useParams, useNavigate, useLocation } from 'react-rout
 import { useTranslation, Trans } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { toast } from 'react-hot-toast';
-import { ThemedShineBorder } from '@ui/themed-shine-border';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { useThemeSync } from '@/shared/hooks/useThemeSync';
 import { LazyImage } from '@ui/LazyImage';
@@ -311,7 +310,7 @@ export default function AuthPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h2 className="font-heading text-zinc-100 leading-[0.9] contrast-more:text-white"
+            <h2 className="font-heading text-zinc-100 leading-tight contrast-more:text-white"
                 style={{ fontSize: 'clamp(2rem, 3.5vw, 3rem)' }}>
               {t('auth.tagline', 'Sync lyrics to music, your way')}
             </h2>
@@ -415,7 +414,7 @@ export default function AuthPage() {
         >
           {/* Card */}
           <div className="bg-zinc-900/80 backdrop-blur-2xl border border-zinc-800/50 contrast-more:border-zinc-600 rounded-2xl shadow-card p-7 sm:p-8 relative overflow-hidden">
-            <ThemedShineBorder />
+
             {view === 'login-saved-account' && savedAccounts.length > 0 && (
               <SavedAccountStep
                 t={t}

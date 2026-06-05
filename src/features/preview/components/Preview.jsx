@@ -16,7 +16,6 @@ import { Tip } from '@ui/tip';
 import { SharePanel } from '@features/sharing/components/ShareModal';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Eye, Share2, X, Lock, LockOpen, BookOpen, Plus } from 'lucide-react';
-import { ThemedShineBorder } from '@ui/themed-shine-border';
 
 export default function Preview(props) {
   // Accept activeProjectId and project as props
@@ -142,7 +141,7 @@ export default function Preview(props) {
   return (
     <>
       <div className="lg:glass relative lg:rounded-2xl lg:overflow-hidden rounded-none p-3 sm:p-5 flex flex-col flex-1 animate-fade-in min-h-0">
-        <ThemedShineBorder />
+
         {/* Header */}
         <div className={`flex items-center ${viewerMode ? 'justify-end' : 'justify-between'} mb-2 sm:mb-4 gap-2 sm:gap-4 relative z-raised`}>
           {!viewerMode && (

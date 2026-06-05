@@ -27,7 +27,6 @@ import SpotifyBrowser from '@features/player/components/SpotifyBrowser';
 import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import YoutubeSearchPanel from '@features/projects/components/YoutubeSearchPanel';
-import { ThemedShineBorder } from '@ui/themed-shine-border';
 import toast from 'react-hot-toast';
 import { useSpotifyAuth } from '@/features/player/hooks/useSpotifyAuth';
 import MediaLibrary from './MediaLibrary';
@@ -454,7 +453,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
           {/* LEFT: project info */}
           <div className="glass rounded-2xl flex flex-col p-5 gap-4 self-start lg:self-auto relative">
-            <ThemedShineBorder />
 
             {/* Project name */}
             <FloatingInput
@@ -620,7 +618,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
           {/* RIGHT: Media + Lyrics top-level tabs */}
           <div className="glass rounded-2xl flex flex-col p-5 gap-0 overflow-hidden relative">
-            <ThemedShineBorder />
 
             {/* Rollback notice — shown when project was missing media */}
             {prefill && (

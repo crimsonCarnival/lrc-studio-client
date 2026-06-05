@@ -6,7 +6,6 @@ import { uploads } from '@/app/api';
 import { Button } from '@ui/button';
 import NotFoundPage from '@/app/NotFoundPage';
 import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
-import { ThemedShineBorder } from '@ui/themed-shine-border';
 
 export default function UploadDetailView({ onBack }) {
   const { id } = useParams();
@@ -65,7 +64,7 @@ export default function UploadDetailView({ onBack }) {
   return (
     <div className="flex flex-col h-full pt-16 sm:pt-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
       <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 flex flex-col h-full overflow-hidden relative">
-        <ThemedShineBorder />
+    
         {/* Header */}
         <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-zinc-700/50 flex-shrink-0">
           <Button

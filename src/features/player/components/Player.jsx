@@ -24,7 +24,6 @@ import { Tip } from '@ui/tip';
 import { uploads as uploadsApi, spotify as spotifyApi, getAccessToken } from '@/app/api';
 import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import toast from 'react-hot-toast';
-import { ThemedShineBorder } from '@ui/themed-shine-border';
 
 const FOCUS_RING = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none';
 
@@ -1265,7 +1264,6 @@ function Player(
 
           {/* Modal Container */}
           <div className="relative size-full sm:h-auto sm:max-h-[85vh] sm:max-w-4xl bg-zinc-900 sm:border border-zinc-700/50 sm:rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden animate-scale-in">
-            <ThemedShineBorder />
             {/* Glossy Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-800/80 bg-zinc-900/80 backdrop-blur-md sticky top-0 z-10">
               <div className="flex items-center gap-3">
