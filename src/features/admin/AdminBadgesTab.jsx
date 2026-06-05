@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { m as M, AnimatePresence } from 'framer-motion';
+import { motion as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Plus, RefreshCw, Scan, Pencil, Trash2, Award, Users, X, Search, UserPlus } from 'lucide-react';
