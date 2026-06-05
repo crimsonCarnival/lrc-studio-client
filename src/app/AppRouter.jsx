@@ -2,7 +2,7 @@ import {
   Suspense, lazy, useEffect, useLayoutEffect, useState, useRef, useCallback, useMemo, Fragment, memo
 } from 'react';
 import React from 'react';
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import { SkeletonList, SkeletonEditor, SkeletonPreview, SkeletonSetup } from '@ui/skeleton';
 import { Loader2, GripVertical } from 'lucide-react';
 import { Reorder } from 'framer-motion';
@@ -211,6 +211,7 @@ export function AppRouter({
   layoutState,
   navigate
 }) {
+  const routerLocation = useLocation();
   const {
     loadProject,
     activeProjectId,
@@ -465,6 +466,7 @@ export function AppRouter({
       } />
       <Route path="project/local" element={
         editorReady && lines.length === 0 && !hasMedia && !pendingProject
+          && new URLSearchParams(routerLocation.search).get('fromGuest') !== '1'
           ? <Navigate to="/project/new" replace />
           : <div ref={containerRef} className="flex-1 flex flex-col min-h-0 w-full overflow-x-hidden max-lg:pb-4">
           <PanelReorderGroup

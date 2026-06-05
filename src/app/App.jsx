@@ -48,12 +48,13 @@ function AppInner() {
 
   // Promote /project/local → /project/:id once the server assigns a real ID
   useEffect(() => {
-    if (user && activeProjectId && routerLocation.pathname === '/project/local') {
+    if (
+      user && activeProjectId && routerLocation.pathname === '/project/local' &&
+      new URLSearchParams(routerLocation.search).get('fromGuest') !== '1'
+    ) {
       navigate(`/project/${activeProjectId}/edit`, { replace: true });
     }
-    // navigate is stable (useNavigate)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, activeProjectId, routerLocation.pathname]);
+  }, [user, activeProjectId, routerLocation.pathname, routerLocation.search, navigate]);
 
   // Public project view (/project/:id without /edit) has its own embedded player
   const isPublicProjectView = /^\/project\/[^/]+$/.test(routerLocation.pathname) &&
