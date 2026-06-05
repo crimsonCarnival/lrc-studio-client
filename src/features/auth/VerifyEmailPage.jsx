@@ -4,6 +4,23 @@ import { useTranslation } from 'react-i18next';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { Button } from '@ui/button';
 
+function SuccessScreen({ navigate, t }) {
+  useEffect(() => {
+    const timer = setTimeout(() => navigate('/', { replace: true }), 3000);
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 text-center">
+      <CheckCircle2 className="size-14 text-primary" />
+      <div className="space-y-1">
+        <h1 className="text-xl font-bold text-zinc-100">{t('auth.verification.landingSuccess')}</h1>
+        <p className="text-sm text-zinc-400">{t('auth.verification.landingSuccessDesc')}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function VerifyEmailPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
@@ -45,18 +62,7 @@ export default function VerifyEmailPage() {
   }
 
   if (status === 'success') {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 text-center">
-        <CheckCircle2 className="size-14 text-primary" />
-        <div className="space-y-1">
-          <h1 className="text-xl font-bold text-zinc-100">{t('auth.verification.landingSuccess')}</h1>
-          <p className="text-sm text-zinc-400">{t('auth.verification.landingSuccessDesc')}</p>
-        </div>
-        <Button onClick={() => navigate('/settings')} className="rounded-xl h-10 font-bold px-6">
-          {t('auth.verification.goToSettings')}
-        </Button>
-      </div>
-    );
+    return <SuccessScreen navigate={navigate} t={t} />;
   }
 
   // Error state — pick message by code

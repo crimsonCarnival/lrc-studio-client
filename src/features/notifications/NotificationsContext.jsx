@@ -1,5 +1,6 @@
 import { createContext, use, useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { request } from '@/app/api.client';
 import { getSocket } from '@/app/socket.client';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -10,6 +11,7 @@ const NotificationsContext = createContext(null);
 
 export function NotificationsProvider({ children }) {
   const { user } = useAuthContext();
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState(/** @type {any[]} */ ([]));
   const [unreadCount, setUnreadCount] = useState(0);
   const fetchedRef = useRef(false);
@@ -69,7 +71,7 @@ export function NotificationsProvider({ children }) {
             onClick={() => toast.dismiss(t.id)}
           >
             <div>
-              <p className="text-xs font-bold text-foreground leading-tight">Badge unlocked!</p>
+              <p className="text-xs font-bold text-foreground leading-tight">{t('notifications.badgeUnlocked')}</p>
               <p className="text-xs text-muted-foreground leading-tight">{label}</p>
             </div>
           </div>
