@@ -213,7 +213,7 @@ export function useEditor({
     setHoveredLineIndex(null);
   }, []);
 
-  const handleConfirmLyrics = async () => {
+  const handleConfirmLyrics = useCallback(async () => {
     const looksLikeLrc = /^\[(\d{1,2}):(\d{2}\.\d{2,3})\]/m.test(rawText);
     const looksLikeSrt = /^\d+\r?\n\d{2}:\d{2}:\d{2},\d{3}\s*-->/m.test(rawText);
     const looksLikeWordLrc = looksLikeLrc && /<\d{1,2}:\d{2}\.\d{2,3}>/.test(rawText);
@@ -312,7 +312,7 @@ export function useEditor({
     clearHistory?.();
     setActiveLineIndex(Math.max(0, updated.findIndex((l) => l.timestamp == null)));
     setSyncMode(true);
-  };
+  }, [rawText, lines, clearHistory, t, setLines, setEditorMode, setActiveLineIndex, setSyncMode]);
 
 
   // ——— Timestamp operations ———

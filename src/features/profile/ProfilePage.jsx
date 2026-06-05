@@ -36,6 +36,7 @@ function AvatarBadge({ avatarUrl, name, size = 'lg' }) {
 }
 
 function ProjectCard({ project, isOwner, onEdit, onDelete }) {
+  const { t } = useTranslation();
   const { title, projectId, starCount, forkCount, metadata, upload } = project;
   const isYoutube = upload?.source === 'youtube' || !!upload?.youtubeUrl;
 

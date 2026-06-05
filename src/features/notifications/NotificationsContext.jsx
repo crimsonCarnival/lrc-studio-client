@@ -65,10 +65,10 @@ export function NotificationsProvider({ children }) {
       const def = BADGE_REGISTRY[badgeId];
       const label = def?.label ?? badgeId;
       toast(
-        (t) => (
+        (item) => (
           <div
             className="flex items-center gap-3 cursor-pointer select-none"
-            onClick={() => toast.dismiss(t.id)}
+            onClick={() => toast.dismiss(item.id)}
           >
             <div>
               <p className="text-xs font-bold text-foreground leading-tight">{t('notifications.badgeUnlocked')}</p>
@@ -97,7 +97,7 @@ export function NotificationsProvider({ children }) {
       socket.off('notification:dismissed', onDismissed);
       socket.off('badge:awarded', onBadgeAwarded);
     };
-  }, [user]);
+  }, [user, t]);
 
   const markRead = useCallback((ids) => {
     setNotifications(prev => {

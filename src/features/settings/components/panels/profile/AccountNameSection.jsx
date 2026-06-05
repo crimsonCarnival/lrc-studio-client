@@ -19,7 +19,7 @@ export default function AccountNameSection() {
   const [error, setError] = useState('');
 
   // Capture mount time once — cooldown accuracy at day granularity, mount time is sufficient
-  const [mountNow] = useState(() => Date.now()); // eslint-disable-line react-hooks/purity
+  const [mountNow] = useState(() => Date.now());  
   const accountNameCooldownDaysLeft = (() => {
     if (!user?.lastAccountNameChangedAt) return 0;
     const elapsed = (mountNow - new Date(user.lastAccountNameChangedAt).getTime()) / (1000 * 60 * 60 * 24);

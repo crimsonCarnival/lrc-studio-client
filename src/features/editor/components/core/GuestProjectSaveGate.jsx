@@ -95,7 +95,7 @@ export default function GuestProjectSaveGate() {
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
     };
-  }, [isActive]); // isActive only — callback changes must not re-trigger a save
+  }, [isActive, t]); // t is stable; isActive is the true trigger
 
   if (!isActive) return null;
 

@@ -223,6 +223,7 @@ const LineActionToolbar = React.memo(({
 });
 
 function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [custom, setCustom] = useState('');
   const indices = [...selectedLines];

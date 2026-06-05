@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -472,7 +472,7 @@ export default function AdminBadgesTab() {
   const [grantModal, setGrantModal] = useState(null);
   const [retroLoading, setRetroLoading] = useState(null);
 
-  const fetchDefs = async () => {
+  const fetchDefs = useCallback(async () => {
     setLoading(true);
     try {
       const { badgeDefinitions } = await gqlRequest(GET_BADGE_DEFS);
@@ -482,12 +482,12 @@ export default function AdminBadgesTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDefs();
-  }, []);
+  }, [fetchDefs]);
 
   const handleSaved = (def, type) => {
     if (type === 'create') {
