@@ -101,7 +101,7 @@ export default {
   trackCountPlaceholder: "ej. 12",
   trackCountDesc: "Número total de pistas en este álbum",
   fetchInfo: "Buscar",
-  fetchSongInfo: "Autocompletar desde Spotify",
+  fetchSongInfo: "Buscar información de canción",
   metaSearchFailed: "No se encontraron resultados",
   tags: "Etiquetas",
   tagsSearch: "Buscar etiquetas…",
