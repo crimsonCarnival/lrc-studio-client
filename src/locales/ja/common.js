@@ -32,5 +32,6 @@ export default {
   },
   loadMore: "さらに読み込む",
   retry: "再試行",
-  loadError: "読み込みに失敗しました。もう一度お試しください。"
+  loadError: "読み込みに失敗しました。もう一度お試しください。",
+  shareLinkNotFound: "共有リンクが見つかりません。"
 };

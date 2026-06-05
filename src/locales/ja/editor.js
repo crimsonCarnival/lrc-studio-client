@@ -110,5 +110,20 @@ export default {
   },
   nudgeLine: "ラインを調整 ({{delta}}s)",
   nudgeWord: "単語を調整 ({{delta}}s)",
-  nudgeEndTime: "終了時間を調整 ({{delta}}s)"
+  nudgeEndTime: "終了時間を調整 ({{delta}}s)",
+  draftSaveFailed: "下書きをローカルに保存できませんでした — 別のブラウザを試すかプライベートモードを無効にしてください。",
+  draftExpired: "下書きの有効期限が切れました。編集内容はエディターに残っています — 保存し直してください。",
+  savingProject: "プロジェクトを保存中…",
+  savingRetrying: "接続に問題があります、再試行中…",
+  savingStillTrying: "まだ試みています — 接続を確認してください",
+  sectionDefault: "セクション",
+  sectionLabelPlaceholder: "セクションラベル",
+  singerOptPlaceholder: "歌手（任意）",
+  insertSectionAbove: "上にセクションを挿入",
+  assignSingerToLines: "{{count}}行に歌手を割り当て",
+  singerCustomPlaceholder: "カスタム…",
+  clearSinger: "歌手をクリア",
+  stampWordTip: "「{{word}}」をスタンプ ({{current}}/{{total}})",
+  langPlaceholder: "言語",
+  enterLyricsPlaceholder: "歌詞を入力..."
 };

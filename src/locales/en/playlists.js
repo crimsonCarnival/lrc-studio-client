@@ -52,4 +52,6 @@ export default {
     title: "Saved Playlists",
     empty: "No saved playlists yet.",
   },
+  editPlaylist: "Edit playlist",
+  deletePlaylist: "Delete playlist",
 };

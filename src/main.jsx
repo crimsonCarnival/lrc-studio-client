@@ -49,6 +49,7 @@ const ChangePasswordPage = lazy(() => import('@features/auth/ChangePasswordPage.
 // eslint-disable-next-line react-refresh/only-export-components
 function SharedProjectRoute() {
   const { id } = useParams();
+  const { t } = useTranslation();
   const [projectId, setProjectId] = useState(null);
   const [failed, setFailed] = useState(false);
 
@@ -64,7 +65,7 @@ function SharedProjectRoute() {
 
   if (failed) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <p className="text-sm text-zinc-400">Share link not found.</p>
+      <p className="text-sm text-zinc-400">{t('common.shareLinkNotFound')}</p>
     </div>
   );
   if (!projectId) return (

@@ -52,4 +52,6 @@ export default {
     title: "Listas guardadas",
     empty: "Aún no hay listas guardadas.",
   },
+  editPlaylist: "Editar lista",
+  deletePlaylist: "Eliminar lista",
 };

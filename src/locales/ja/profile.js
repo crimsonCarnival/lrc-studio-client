@@ -120,4 +120,7 @@ export default {
     showFollowers: "フォロワーとフォロー中を公開する",
     showFollowersSub: "オフにしても件数は表示されますが、リストは非公開になります",
   },
+  editProject: "プロジェクトを編集",
+  deleteProject: "プロジェクトを削除",
+  avatarAlt: "アバター",
 };

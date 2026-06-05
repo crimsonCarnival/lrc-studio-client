@@ -32,5 +32,6 @@ export default {
   },
   loadMore: "Cargar más",
   retry: "Reintentar",
-  loadError: "Error al cargar. Por favor, inténtalo de nuevo."
+  loadError: "Error al cargar. Por favor, inténtalo de nuevo.",
+  shareLinkNotFound: "Enlace no encontrado."
 };

@@ -24,10 +24,10 @@ export function PlaylistCard({ playlist, accountName, isOwner, onEdit, onDelete 
     >
       {isOwner && (
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10 bg-black/40 backdrop-blur-sm rounded-lg p-1">
-          <button onClick={handleEdit} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" aria-label="Edit playlist">
+          <button onClick={handleEdit} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" aria-label={t('playlists.editPlaylist')}>
             <Pencil className="size-3.5" />
           </button>
-          <button onClick={handleDelete} className="p-1.5 hover:bg-red-500/20 rounded-md text-zinc-400 hover:text-red-400 transition-colors" aria-label="Delete playlist">
+          <button onClick={handleDelete} className="p-1.5 hover:bg-red-500/20 rounded-md text-zinc-400 hover:text-red-400 transition-colors" aria-label={t('playlists.deletePlaylist')}>
             <Trash2 className="size-3.5" />
           </button>
         </div>

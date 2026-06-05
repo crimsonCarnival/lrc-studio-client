@@ -136,7 +136,7 @@ export default function EditorToolbar({
         <div className="flex items-center gap-2">
           {/* Keyboard shortcuts quick access */}
           {onShowKeyboardHelp && (
-            <Tip content={t('shortcuts.title') || 'Keyboard Shortcuts'}>
+            <Tip content={t('shortcuts.title')}>
               <Button
                 variant="ghost"
                 size="icon"
@@ -332,7 +332,7 @@ export default function EditorToolbar({
                       navigate(`/auth?action=signin&redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
                     } catch {
                       import('react-hot-toast').then(({ default: toast }) => {
-                        toast.error("Couldn't save draft locally — try a different browser or disable private mode.");
+                        toast.error(t('editor.draftSaveFailed'));
                       });
                     }
                   } else {

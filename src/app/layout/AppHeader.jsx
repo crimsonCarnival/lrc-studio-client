@@ -405,7 +405,7 @@ export function AppHeader({
                         navigate(`/auth?action=signin&redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
                       } catch {
                         import('react-hot-toast').then(({ default: toast }) => {
-                          toast.error("Couldn't save draft locally — try a different browser or disable private mode.");
+                          toast.error(t('editor.draftSaveFailed'));
                         });
                       }
                     } else {
@@ -426,7 +426,7 @@ export function AppHeader({
                         navigate(`/auth/signup?redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
                       } catch {
                         import('react-hot-toast').then(({ default: toast }) => {
-                          toast.error("Couldn't save draft locally — try a different browser or disable private mode.");
+                          toast.error(t('editor.draftSaveFailed'));
                         });
                       }
                     } else {

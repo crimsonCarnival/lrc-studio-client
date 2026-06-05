@@ -256,7 +256,7 @@ export function SharePanel({
                   value={customTime}
                   onChange={handleManualTimeChange}
                   className="h-8 pl-8 bg-zinc-950/50 border-zinc-800 text-[11px] font-mono focus:ring-primary/20"
-                  placeholder="Seconds..."
+                  placeholder={t('share.secondsPlaceholder')}
                 />
               </div>
               <Button

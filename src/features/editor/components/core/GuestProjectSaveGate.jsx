@@ -2,6 +2,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { getPendingProject, clearPendingProject } from '@/features/editor/services/guest-project-db';
@@ -17,6 +18,7 @@ function getBackoffDelay(attempt) {
 }
 
 export default function GuestProjectSaveGate() {
+  const { t } = useTranslation();
   const { user } = useAuthContext();
   const location = useLocation();
   const navigate = useNavigate();
@@ -55,7 +57,7 @@ export default function GuestProjectSaveGate() {
 
       if (!record) {
         await clearPendingProject();
-        toast.error('Your draft expired. Your edits are still in the editor — save again to keep them.');
+        toast.error(t('editor.draftExpired'));
         navigateRef.current('/', { replace: true });
         return;
       }
@@ -100,12 +102,12 @@ export default function GuestProjectSaveGate() {
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-zinc-950/95 backdrop-blur-sm gap-4">
       <Loader2 className="size-10 animate-spin text-primary" />
-      <p className="text-base font-medium text-zinc-200">Saving your project…</p>
+      <p className="text-base font-medium text-zinc-200">{t('editor.savingProject')}</p>
       {displayAttempt > 0 && (
         <p className="text-sm text-zinc-500">
           {displayAttempt > 5
-            ? 'Still trying — check your connection'
-            : 'Having trouble connecting, retrying…'}
+            ? t('editor.savingStillTrying')
+            : t('editor.savingRetrying')}
         </p>
       )}
     </div>

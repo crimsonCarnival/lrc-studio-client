@@ -241,8 +241,8 @@ const EditorLineItem = React.memo(({
         <div className="flex-1 h-px bg-zinc-800/50" />
         {isEditing ? (
           <div className="flex items-center gap-1.5" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { handleSaveLineText(i, editingText, undefined, undefined, editingSinger); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSinger); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
-            <input autoFocus value={editingText} onChange={(e) => setEditingText(e.target.value)} placeholder="Section label" className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-200 rounded px-2 py-0.5 w-28 focus:outline-none focus:border-primary/60" />
-            <input value={editingSinger} onChange={(e) => setEditingSinger(e.target.value)} placeholder="Singer (opt.)" list={`section-singers-${i}`} className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-400 rounded px-2 py-0.5 w-28 focus:outline-none focus:border-primary/60" />
+            <input autoFocus value={editingText} onChange={(e) => setEditingText(e.target.value)} placeholder={t('editor.sectionLabelPlaceholder')} className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-200 rounded px-2 py-0.5 w-28 focus:outline-none focus:border-primary/60" />
+            <input value={editingSinger} onChange={(e) => setEditingSinger(e.target.value)} placeholder={t('editor.singerOptPlaceholder')} list={`section-singers-${i}`} className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-400 rounded px-2 py-0.5 w-28 focus:outline-none focus:border-primary/60" />
             {songArtists?.length > 0 && (
               <datalist id={`section-singers-${i}`}>
                 {songArtists.map((a) => <option key={a} value={a} />)}
@@ -251,7 +251,7 @@ const EditorLineItem = React.memo(({
           </div>
         ) : (
           <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-800 bg-zinc-900/40 whitespace-nowrap group-hover:text-zinc-400 group-hover:border-zinc-700 transition-colors">
-            {line.label || 'Section'}{line.singer ? ` · ${line.singer}` : ''}
+            {line.label || t('editor.sectionDefault')}{line.singer ? ` · ${line.singer}` : ''}
           </span>
         )}
         <div className="flex-1 h-px bg-zinc-800/50" />

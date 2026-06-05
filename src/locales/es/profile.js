@@ -120,4 +120,7 @@ export default {
     showFollowers: "Mostrar seguidores y seguidos públicamente",
     showFollowersSub: "Si está desactivado, los conteos se muestran pero la lista permanece privada",
   },
+  editProject: "Editar proyecto",
+  deleteProject: "Eliminar proyecto",
+  avatarAlt: "Avatar",
 };

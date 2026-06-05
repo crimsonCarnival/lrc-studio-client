@@ -110,5 +110,20 @@ export default {
   },
   nudgeLine: "Ajustar línea ({{delta}}s)",
   nudgeWord: "Ajustar palabra ({{delta}}s)",
-  nudgeEndTime: "Ajustar tiempo final ({{delta}}s)"
+  nudgeEndTime: "Ajustar tiempo final ({{delta}}s)",
+  draftSaveFailed: "No se pudo guardar el borrador localmente — intenta con otro navegador o desactiva el modo privado.",
+  draftExpired: "Tu borrador expiró. Tus ediciones siguen en el editor — guarda nuevamente para conservarlos.",
+  savingProject: "Guardando tu proyecto…",
+  savingRetrying: "Problemas de conexión, reintentando…",
+  savingStillTrying: "Aún intentando — verifica tu conexión",
+  sectionDefault: "Sección",
+  sectionLabelPlaceholder: "Etiqueta de sección",
+  singerOptPlaceholder: "Cantante (opc.)",
+  insertSectionAbove: "Insertar sección arriba",
+  assignSingerToLines: "Asignar cantante a {{count}} líneas",
+  singerCustomPlaceholder: "Personalizado…",
+  clearSinger: "Quitar cantante",
+  stampWordTip: "Marcar \"{{word}}\" ({{current}}/{{total}})",
+  langPlaceholder: "Idioma",
+  enterLyricsPlaceholder: "Introduce la letra..."
 };

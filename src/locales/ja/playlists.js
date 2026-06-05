@@ -52,4 +52,6 @@ export default {
     title: "保存済みプレイリスト",
     empty: "保存済みプレイリストはありません。",
   },
+  editPlaylist: "プレイリストを編集",
+  deletePlaylist: "プレイリストを削除",
 };

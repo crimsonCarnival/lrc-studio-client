@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import { formatTime } from '@/shared/utils/format-time';
 
@@ -9,6 +10,7 @@ export default function LyricsModeTab({
   setActiveLineIndex,
   onEditLine,
 }) {
+  const { t } = useTranslation();
   const [editText, setEditText] = useState(lines[activeLineIndex]?.text || '');
 
   const currentTimestamp = lines[activeLineIndex]?.timestamp ?? null;
@@ -62,7 +64,7 @@ export default function LyricsModeTab({
           type="text"
           value={editText}
           onChange={handleTextChange}
-          placeholder="Enter lyrics..."
+          placeholder={t('editor.enterLyricsPlaceholder')}
           className="w-full h-11 px-3 py-2 bg-zinc-900/50 border border-zinc-800 rounded-lg text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-primary/50 focus:bg-zinc-900"
         />
 

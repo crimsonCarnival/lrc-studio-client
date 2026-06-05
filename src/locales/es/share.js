@@ -52,4 +52,5 @@ export default {
   recaptchaNotice: "Protegido por reCAPTCHA. Se aplican la <0>Privacidad</0> y los <1>Términos</1>.",
   shareLink: "Compartir",
   linkCopied: "¡Copiado!",
+  secondsPlaceholder: "Segundos...",
 };

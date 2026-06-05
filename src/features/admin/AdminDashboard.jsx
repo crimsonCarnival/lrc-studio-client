@@ -174,23 +174,23 @@ export default function AdminDashboard() {
   const handleAdjustXP = async (action, amount, target, userId, userIds) => {
     try {
       const result = await admin.adjustXP({ action, amount, target, userId, userIds });
-      toast.success(`${action === 'grant' ? 'Granted' : 'Revoked'} ${amount} XP to ${result.affected} user${result.affected !== 1 ? 's' : ''}`);
+      toast.success(t(action === 'grant' ? 'admin.xp.grantedXp' : 'admin.xp.revokedXp', { amount, count: result.affected }));
       refreshUsersFromStart();
     } catch (err) {
-      toast.error(err?.message || 'Failed to adjust XP');
+      toast.error(err?.message || t('admin.xp.failedAdjust'));
     }
   };
 
   const handleBulkXP = async (action) => {
     const amount = Number(xpBulkAmount);
-    if (!amount || amount <= 0) { toast.error('Enter a valid XP amount'); return; }
+    if (!amount || amount <= 0) { toast.error(t('admin.xp.enterValidAmount')); return; }
     setXpBulkSaving(true);
     try {
       if (xpBulkTarget === 'all') {
         await handleAdjustXP(action, amount, 'all');
       } else {
         const ids = xpBulkIds.split(/[\s,]+/).map(s => s.trim()).filter(Boolean);
-        if (!ids.length) { toast.error('Enter at least one user ID'); setXpBulkSaving(false); return; }
+        if (!ids.length) { toast.error(t('admin.xp.enterUserIds')); setXpBulkSaving(false); return; }
         await handleAdjustXP(action, amount, 'users', undefined, ids);
       }
       setXpPanel(false);
@@ -359,12 +359,12 @@ export default function AdminDashboard() {
           className="flex items-center gap-2 text-xs font-semibold text-amber-500/80 hover:text-amber-400 transition-colors"
         >
           <Zap className="size-3.5" />
-          {xpPanel ? 'Hide XP Manager' : 'Manage XP'}
+          {xpPanel ? t('admin.xp.hideManager') : t('admin.xp.manageXp')}
         </button>
         {xpPanel && (
           <div className="mt-2 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 flex flex-col sm:flex-row gap-3 items-start sm:items-end">
             <label className="flex flex-col gap-1 shrink-0">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Amount</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.amount')}</span>
               <input
                 type="number"
                 min={1}
@@ -374,19 +374,19 @@ export default function AdminDashboard() {
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Target</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.target')}</span>
               <select
                 value={xpBulkTarget}
                 onChange={e => setXpBulkTarget(e.target.value)}
                 className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 focus:outline-none focus:border-amber-500/50"
               >
-                <option value="all">All users</option>
-                <option value="ids">Specific users</option>
+                <option value="all">{t('admin.xp.allUsers')}</option>
+                <option value="ids">{t('admin.xp.specificUsers')}</option>
               </select>
             </label>
             {xpBulkTarget === 'ids' && (
               <label className="flex flex-col gap-1 flex-1 min-w-[180px]">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">User IDs (comma-separated)</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.userIds')}</span>
                 <input
                   type="text"
                   value={xpBulkIds}
@@ -402,14 +402,14 @@ export default function AdminDashboard() {
                 disabled={xpBulkSaving}
                 className="h-9 px-4 text-sm font-semibold rounded-lg bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors disabled:opacity-50"
               >
-                + Grant XP
+                {t('admin.xp.grantXp')}
               </button>
               <button
                 onClick={() => handleBulkXP('revoke')}
                 disabled={xpBulkSaving}
                 className="h-9 px-4 text-sm font-semibold rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors disabled:opacity-50"
               >
-                − Revoke XP
+                {t('admin.xp.revokeXp')}
               </button>
             </div>
           </div>

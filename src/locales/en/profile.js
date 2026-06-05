@@ -120,4 +120,7 @@ export default {
     showFollowers: "Show followers & following publicly",
     showFollowersSub: "When off, counts still appear but the list stays private",
   },
+  editProject: "Edit project",
+  deleteProject: "Delete project",
+  avatarAlt: "Avatar",
 };

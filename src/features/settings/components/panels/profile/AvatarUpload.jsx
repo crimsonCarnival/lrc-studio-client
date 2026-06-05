@@ -95,7 +95,7 @@ export default function AvatarUpload() {
           {uploading ? (
             <Loader2 className="size-6 animate-spin text-primary" />
           ) : user?.avatarUrl?.length > 0 ? (
-            <LazyImage src={user.avatarUrl} alt="Avatar" className="size-full object-cover" />
+            <LazyImage src={user.avatarUrl} alt={t('profile.avatarAlt')} className="size-full object-cover" />
           ) : (
             <div className="size-full flex items-center justify-center bg-gradient-to-br from-primary/80 to-accent-purple font-bold text-zinc-950 text-2xl select-none">
               {(user?.displayName || user?.accountName || '?')[0].toUpperCase()}
@@ -108,8 +108,8 @@ export default function AvatarUpload() {
       </div>
 
       <div className="flex-1 text-center sm:text-left min-w-0">
-        <h4 className="text-sm font-semibold text-zinc-200 mb-0.5">{t('profile.avatar') || 'Avatar'}</h4>
-        <p className="text-xs text-zinc-500 mb-3">{t('profile.avatarHint') || 'JPG, PNG or GIF. Max 5MB.'}</p>
+        <h4 className="text-sm font-semibold text-zinc-200 mb-0.5">{t('profile.avatar')}</h4>
+        <p className="text-xs text-zinc-500 mb-3">{t('profile.avatarHint')}</p>
         
         {!expanded ? (
           <Button
@@ -190,7 +190,7 @@ export default function AvatarUpload() {
                   onClick={() => setExpanded(false)}
                   disabled={uploading}
                   className="rounded-xl size-8 p-0 shrink-0 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800"
-                  title="Close"
+                  title={t('common.close')}
                 >
                   <X className="size-4" />
                 </Button>

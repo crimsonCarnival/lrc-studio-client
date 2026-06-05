@@ -46,11 +46,11 @@ const LineActionToolbar = React.memo(({
           if (stampTarget === 'secondary') {
             const secWords = line.secondaryWords ?? (line.secondary?.trim().split(/\s+/).flatMap(w => w ? [{ word: w }] : []) ?? []);
             const word = secWords[Math.max(0, Math.min(activeWordIndex, secWords.length - 1))]?.word || 'word';
-            return `Stamp "${word}" (${Math.max(0, activeWordIndex)}/${secWords.length})`;
+            return t('editor.stampWordTip', { word, current: Math.max(0, activeWordIndex), total: secWords.length });
           }
           const priWords = line.words ?? [];
           const word = priWords[Math.max(0, Math.min(activeWordIndex, priWords.length - 1))]?.word || 'word';
-          return `Stamp "${word}" (${Math.max(0, activeWordIndex)}/${priWords.length})`;
+          return t('editor.stampWordTip', { word, current: Math.max(0, activeWordIndex), total: priWords.length });
         })()}>
           <Button
             size="icon-sm"
@@ -180,7 +180,7 @@ const LineActionToolbar = React.memo(({
         )}
         {selectedLines.size === 0 && (
           <>
-            <Tip content="Insert section above">
+            <Tip content={t('editor.insertSectionAbove')}>
               <Button
                 variant="ghost"
                 size="icon-xs"
@@ -231,7 +231,7 @@ function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }) 
 
   return (
     <div className="relative">
-      <Tip content={`Assign singer to ${indices.length} lines`}>
+      <Tip content={t('editor.assignSingerToLines', { count: indices.length })}>
         <Button variant="ghost" size="icon-xs" onClick={(e) => { e.stopPropagation(); setOpen(p => !p); }} className="text-zinc-500 hover:text-primary hover:bg-primary/10">
           <User className="size-3" />
         </Button>
@@ -251,13 +251,13 @@ function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }) 
               value={custom}
               onChange={(e) => setCustom(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') { handleAssignSinger(custom, indices); setOpen(false); setCustom(''); } }}
-              placeholder="Custom…"
+              placeholder={t('editor.singerCustomPlaceholder')}
               className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-1 text-zinc-200 text-xs focus:outline-none focus:border-primary/60"
             />
             <button type="button" onClick={() => { handleAssignSinger(custom, indices); setOpen(false); setCustom(''); }} className="px-2 py-1 rounded bg-primary/20 text-primary text-xs hover:bg-primary/30">✓</button>
           </div>
           <button type="button" onClick={() => { handleAssignSinger('', indices); setOpen(false); }} className="w-full text-left px-3 py-1.5 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400 text-[10px]">
-            Clear singer
+            {t('editor.clearSinger')}
           </button>
         </div>
       )}

@@ -90,8 +90,8 @@ export function AppModals({
             aria-label={t('common.close') || 'Close'}
           />
           <div className="relative bg-zinc-900 border border-zinc-700/80 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-elevated animate-fade-in">
-            <h3 className="text-lg font-semibold text-zinc-100 mb-4">{t('confirm.unsavedChangesTitle') || 'Unsaved Changes'}</h3>
-            <p className="text-sm text-zinc-400 mb-6">{t('confirm.unsavedChangesMessage') || 'You have unsaved changes. Do you want to save them before leaving?'}</p>
+            <h3 className="text-lg font-semibold text-zinc-100 mb-4">{t('confirm.unsavedChangesTitle')}</h3>
+            <p className="text-sm text-zinc-400 mb-6">{t('confirm.unsavedChangesMessage')}</p>
             <div className="flex flex-col gap-2">
               <Button
                 onClick={async () => {
@@ -102,7 +102,7 @@ export function AppModals({
                 }}
                 className="w-full bg-primary text-zinc-950 hover:bg-primary-dim font-semibold"
               >
-                {t('common.saveAndLeave') || 'Save and Leave'}
+                {t('common.saveAndLeave')}
               </Button>
               <Button
                 variant="ghost"
@@ -113,14 +113,14 @@ export function AppModals({
                 }}
                 className="w-full text-red-400 hover:text-red-300 hover:bg-red-500/10"
               >
-                {t('common.discardAndLeave') || 'Discard and Leave'}
+                {t('common.discardAndLeave')}
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => setUnsavedModalTarget(null)}
                 className="w-full text-zinc-500"
               >
-                {t('common.cancel') || 'Cancel'}
+                {t('common.cancel')}
               </Button>
             </div>
           </div>

@@ -110,5 +110,20 @@ export default {
   },
   nudgeLine: "Nudge Line ({{delta}}s)",
   nudgeWord: "Nudge Word ({{delta}}s)",
-  nudgeEndTime: "Nudge End Time ({{delta}}s)"
+  nudgeEndTime: "Nudge End Time ({{delta}}s)",
+  draftSaveFailed: "Couldn't save draft locally — try a different browser or disable private mode.",
+  draftExpired: "Your draft expired. Your edits are still in the editor — save again to keep them.",
+  savingProject: "Saving your project…",
+  savingRetrying: "Having trouble connecting, retrying…",
+  savingStillTrying: "Still trying — check your connection",
+  sectionDefault: "Section",
+  sectionLabelPlaceholder: "Section label",
+  singerOptPlaceholder: "Singer (opt.)",
+  insertSectionAbove: "Insert section above",
+  assignSingerToLines: "Assign singer to {{count}} lines",
+  singerCustomPlaceholder: "Custom…",
+  clearSinger: "Clear singer",
+  stampWordTip: "Stamp \"{{word}}\" ({{current}}/{{total}})",
+  langPlaceholder: "Lang",
+  enterLyricsPlaceholder: "Enter lyrics..."
 };

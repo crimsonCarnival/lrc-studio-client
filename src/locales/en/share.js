@@ -52,4 +52,5 @@ export default {
   recaptchaNotice: "Protected by reCAPTCHA. <0>Privacy</0> & <1>Terms</1> apply.",
   shareLink: "Share",
   linkCopied: "Copied!",
+  secondsPlaceholder: "Seconds...",
 }

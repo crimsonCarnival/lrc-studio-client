@@ -79,7 +79,7 @@ function LineTextEditingForm({
             type="text"
             value={tr.language || ''}
             onChange={(e) => updateTranslation(idx, 'language', e.target.value)}
-            placeholder="Lang"
+            placeholder={t('editor.langPlaceholder')}
             className="w-16 shrink-0 bg-zinc-800 border-zinc-600/50 text-[10px] text-zinc-500 h-6 px-1.5"
           />
           <Input
