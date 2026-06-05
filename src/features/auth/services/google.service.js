@@ -1,4 +1,5 @@
 import { request } from '@/app/api.client.js';
+import { getDeviceId } from '@/shared/utils/device';
 
 export const googleService = {
   getAuthUrl: async () => {
@@ -6,7 +7,8 @@ export const googleService = {
   },
 
   getLoginUrl: async (loginHint) => {
-    const base = `${import.meta.env.VITE_API_URL || '/api'}/google/login/url?appOrigin=${encodeURIComponent(window.location.origin)}`;
+    const deviceId = await getDeviceId();
+    const base = `${import.meta.env.VITE_API_URL || '/api'}/google/login/url?appOrigin=${encodeURIComponent(window.location.origin)}&deviceId=${encodeURIComponent(deviceId)}`;
     return loginHint ? `${base}&loginHint=${encodeURIComponent(loginHint)}` : base;
   },
 
