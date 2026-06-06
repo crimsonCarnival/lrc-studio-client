@@ -132,7 +132,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, ytLoading, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
-  const { name: projectName, description: projectDescription, tags: projectTags, isPublic, songName, songArtist, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage } = metadata;
+  const { name: projectName, description: projectDescription, tags: projectTags, isPublic, songName, songArtist, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, albumArt } = metadata;
 
   // State setters
   const setAudioState = useCallback((val) => setAudio(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
@@ -304,7 +304,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       ...(mappedGenre              ? { genre:        mappedGenre              } : {}),
       ...(meta.trackNumber != null ? { trackNumber: String(meta.trackNumber) } : {}),
       ...(meta.totalTracks != null ? { trackCount:  String(meta.totalTracks) } : {}),
-      ...(meta.albumArt            ? { coverImage:  meta.albumArt            } : {}),
+      // Store API art as albumArt (fallback); only populate coverImage if the user hasn't set one
+      ...(meta.albumArt            ? { albumArt:    meta.albumArt            } : {}),
+      ...(!coverImage && meta.albumArt ? { coverImage: meta.albumArt }       : {}),
     });
 
     if (getAccessToken()) {
@@ -314,7 +316,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
         setMediaUploads(uploads || []);
       } catch { /* ignore */ }
     }
-  }, [playerRef, setAudioState, setMetadataState]);
+  }, [playerRef, setAudioState, setMetadataState, coverImage]);
 
   // ── Lyrics handlers ──
 
@@ -379,6 +381,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
           songYear:   meta.releaseYear || songYear,
           ...(mappedGenre           ? { genre:      mappedGenre              } : {}),
           ...(meta.totalTracks      ? { trackCount: String(meta.totalTracks) } : {}),
+          // Store API art as albumArt (fallback); only populate coverImage if user hasn't set one
+          ...(meta.albumArt         ? { albumArt:   meta.albumArt            } : {}),
           ...(!coverImage && meta.albumArt ? { coverImage: meta.albumArt }   : {}),
         });
       } else {
@@ -400,7 +404,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     }
     const parsedTrackNumber = parseInt(trackNumber, 10);
     const parsedTrackCount = parseInt(trackCount, 10);
-    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim() });
+    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), albumArt: albumArt?.trim() || '' });
   };
 
   const handleImageUpload = async (e) => {
