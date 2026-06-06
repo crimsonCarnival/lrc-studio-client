@@ -41,6 +41,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
       description: description || '',
       tags: tags || [],
       songName: songName || '',
+      songArtist: songArtist || '',
       songArtists,
       songAlbum: songAlbum || '',
       songYear: songYear || '',

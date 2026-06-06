@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -112,6 +112,7 @@ function AppInner() {
     trackNumber,
     trackCount,
     coverImage: _coverImage,
+    albumArt,
   }) => {
     setLines(lines);
     setEditorMode(editorMode);
@@ -142,7 +143,7 @@ function AppInner() {
     setMediaTitle(finalTitle);
 
     const songArtists = splitArtists(songArtist);
-    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtists, songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}) };
+    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songArtists, songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), ...(albumArt ? { albumArt } : {}) };
     appState.setProjectMetadata(newMetadata);
 
     if (!user) {
@@ -159,7 +160,8 @@ function AppInner() {
       isPublic,
       lines,
       editorMode,
-      syncMode: true
+      syncMode: true,
+      ...(_coverImage ? { coverImage: _coverImage } : {}),
     });
 
     navigate('/project/local');
