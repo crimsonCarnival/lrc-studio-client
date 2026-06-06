@@ -101,6 +101,7 @@ export default {
     appeal_already_pending: "You already have a pending appeal. Please wait for a response.",
     recaptchaNotice: "This site is protected by reCAPTCHA and the Google <0>Privacy Policy</0> and <1>Terms of Service</1> apply.",
     googleLoginFailed: "Google sign-in failed. Please try again.",
+    googleWrongAccount: "That Google account doesn't match your saved account. Please sign in with the correct account.",
     googleDisconnectFailed: "Failed to disconnect Google account. Please try again."
   },
   verification: {

@@ -101,6 +101,7 @@ export default {
     appeal_already_pending: "既に不服申し請が保留中です。回答をお待ちください。",
     recaptchaNotice: "このサイトは reCAPTCHA によって保護されており、Google の<0>プライバシーポリシー</0>と<1>利用規約</1>が適用されます。",
     googleLoginFailed: "Googleログインに失敗しました。もう一度お試しください。",
+    googleWrongAccount: "そのGoogleアカウントは保存済みアカウントと一致しません。正しいアカウントでサインインしてください。",
     googleDisconnectFailed: "Googleアカウントの切断に失敗しました。もう一度お試しください。"
   },
   verification: {

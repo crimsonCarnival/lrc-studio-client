@@ -101,6 +101,7 @@ export default {
     appeal_already_pending: "Ya tienes una apelación pendiente. Por favor espera una respuesta.",
     recaptchaNotice: "Este sitio está protegido por reCAPTCHA y se aplican la <0>Política de Privacidad</0> y los <1>Términos de Servicio</1> de Google.",
     googleLoginFailed: "Fallo al iniciar sesión con Google. Intenta de nuevo.",
+    googleWrongAccount: "Esa cuenta de Google no coincide con tu cuenta guardada. Inicia sesión con la cuenta correcta.",
     googleDisconnectFailed: "Fallo al desconectar la cuenta de Google. Intenta de nuevo."
   },
   verification: {
