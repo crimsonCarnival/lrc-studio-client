@@ -168,7 +168,7 @@ export default {
     manageXp: 'Gestionar XP',
     amount: 'Cantidad',
     target: 'Destino',
-    userIds: 'IDs de usuario (separados por coma)',
+    userIds: 'Nombres de usuario (separados por coma)',
     grantXp: '+ Otorgar XP',
     revokeXp: '− Revocar XP',
     allUsers: 'Todos los usuarios',
@@ -179,7 +179,8 @@ export default {
     revokedXp_other: 'Revocados {{amount}} XP de {{count}} usuarios',
     failedAdjust: 'Error al ajustar XP',
     enterValidAmount: 'Introduce una cantidad de XP válida',
-    enterUserIds: 'Introduce al menos un ID de usuario',
+    enterUserIds: 'Introduce al menos un nombre de usuario',
+    usernamePlaceholder: 'usuario1, usuario2, usuario3…',
   },
   appeal: {
     modalTitle: 'Revisar Apelación',

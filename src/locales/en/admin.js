@@ -168,7 +168,7 @@ export default {
     manageXp: 'Manage XP',
     amount: 'Amount',
     target: 'Target',
-    userIds: 'User IDs (comma-separated)',
+    userIds: 'Usernames (comma-separated)',
     grantXp: '+ Grant XP',
     revokeXp: '− Revoke XP',
     allUsers: 'All users',
@@ -179,7 +179,8 @@ export default {
     revokedXp_other: 'Revoked {{amount}} XP from {{count}} users',
     failedAdjust: 'Failed to adjust XP',
     enterValidAmount: 'Enter a valid XP amount',
-    enterUserIds: 'Enter at least one user ID',
+    enterUserIds: 'Enter at least one username',
+    usernamePlaceholder: 'user1, user2, user3…',
   },
   appeal: {
     modalTitle: 'Review Appeal',

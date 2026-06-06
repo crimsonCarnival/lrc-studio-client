@@ -168,7 +168,7 @@ export default {
     manageXp: 'XPを管理',
     amount: '数量',
     target: '対象',
-    userIds: 'ユーザーID（カンマ区切り）',
+    userIds: 'ユーザー名（カンマ区切り）',
     grantXp: '+ XPを付与',
     revokeXp: '− XPを剥奪',
     allUsers: '全ユーザー',
@@ -179,7 +179,8 @@ export default {
     revokedXp_other: '{{count}}人のユーザーから{{amount}} XPを剥奪しました',
     failedAdjust: 'XPの調整に失敗しました',
     enterValidAmount: '有効なXP数量を入力してください',
-    enterUserIds: '少なくとも1つのユーザーIDを入力してください',
+    enterUserIds: '少なくとも1つのユーザー名を入力してください',
+    usernamePlaceholder: 'ユーザー1, ユーザー2, ユーザー3…',
   },
   appeal: {
     modalTitle: '異議申立を審査',
