@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState, useEffect } from 'react';
+import { useMemo, useCallback, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranslation } from 'react-i18next';
 import { useEditor } from '@features/editor/hooks/useEditor';
@@ -57,6 +57,8 @@ export default function Editor({
     setEditingTranslations,
     editingSinger,
     setEditingSinger,
+    editingSinger2,
+    setEditingSinger2,
     handleInsertSection,
     handleAssignSinger,
     dragIndex,
@@ -246,6 +248,8 @@ export default function Editor({
           setEditingTranslations={setEditingTranslations}
           editingSinger={editingSinger}
           setEditingSinger={setEditingSinger}
+          editingSinger2={editingSinger2}
+          setEditingSinger2={setEditingSinger2}
           handleSaveLineText={handleSaveLineText}
           handleInsertSection={handleInsertSection}
           handleAssignSinger={handleAssignSinger}
@@ -444,6 +448,8 @@ function VirtualizedLineList({
   setEditingTranslations,
   editingSinger,
   setEditingSinger,
+  editingSinger2,
+  setEditingSinger2,
   handleSaveLineText,
   handleInsertSection,
   handleAssignSinger,
@@ -485,7 +491,9 @@ function VirtualizedLineList({
   const virtualizer = useVirtualizer({
     count: lines.length,
     getScrollElement: () => listRef.current,
-    estimateSize: () => ESTIMATED_LINE_HEIGHT,
+    // Words mode items are taller (word chips wrap); a larger estimate reduces
+    // first-render overlap while ResizeObserver corrects the true height.
+    estimateSize: () => editorMode === 'words' ? 96 : ESTIMATED_LINE_HEIGHT,
     gap: LINE_GAP,
     overscan: 8,
   });
@@ -506,6 +514,19 @@ function VirtualizedLineList({
     ro.observe(el);
     return () => ro.disconnect();
   }, [virtualizer, listRef]);
+
+  // Force-measure editing item synchronously before paint so subsequent items
+  // don't overlap during the one frame before ResizeObserver fires.
+  const prevEditingLineIndexRef = useRef(null);
+  useLayoutEffect(() => {
+    const prev = prevEditingLineIndexRef.current;
+    prevEditingLineIndexRef.current = editingLineIndex;
+    const toMeasure = new Set([editingLineIndex, prev].filter(x => x !== null));
+    toMeasure.forEach(idx => {
+      const el = listRef.current?.querySelector(`[data-index="${idx}"]`);
+      if (el) virtualizer.measureElement(el);
+    });
+  }, [editingLineIndex, virtualizer, listRef]);
 
   // Auto-scroll to active line via virtualizer
   const prevActiveRef = useCallback((idx) => {
@@ -630,6 +651,8 @@ function VirtualizedLineList({
                   setEditingTranslations={setEditingTranslations}
                   editingSinger={editingSinger}
                   setEditingSinger={setEditingSinger}
+                  editingSinger2={editingSinger2}
+                  setEditingSinger2={setEditingSinger2}
                   handleSaveLineText={handleSaveLineText}
                   handleInsertSection={handleInsertSection}
                   handleAssignSinger={handleAssignSinger}
