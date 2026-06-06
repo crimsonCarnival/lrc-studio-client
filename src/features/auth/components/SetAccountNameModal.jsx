@@ -149,7 +149,7 @@ export default function SetAccountNameModal() {
                   disabled={loading}
                   className="sm:w-1/3 h-11 text-zinc-400 hover:text-zinc-200"
                 >
-                  {t('common.keepGenerated', 'Keep This')}
+                  {t('auth.setAccountName.keepGenerated', 'Keep This')}
                 </Button>
                 <Button
                   type="submit"
@@ -160,7 +160,7 @@ export default function SetAccountNameModal() {
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
                     <>
-                      {t('common.save', 'Save Username')}
+                      {t('auth.setAccountName.saveUsername', 'Save Username')}
                       <ArrowRight className="size-4 ml-1.5" />
                     </>
                   )}
