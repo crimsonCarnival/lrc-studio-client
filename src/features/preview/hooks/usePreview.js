@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
@@ -17,7 +17,7 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
   const { settings } = useSettings();
 
   const [showMenu, setShowMenu] = useState(false);
-  const [pastingType, setPastingType] = useState(null);
+  const [pastingType, setPastingType] = useState(/** @type {string|null} */(null));
   const [pasteText, setPasteText] = useState('');
 
   const [exportFilename, setExportFilename] = useState(() =>
@@ -72,20 +72,44 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
   );
 
   const hasSyncedLines = syncedIndices.length > 0;
-  const hasTranslations = lines.some(l => l.translations?.length > 0);
+  const { hasTranslations, hasSecondary, hasWords, hasFurigana } = useMemo(() => {
+    let _hasTranslations = false;
+    let _hasSecondary = false;
+    let _hasWords = false;
+    let _hasFurigana = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i];
+      if (!_hasTranslations && l.translations?.length > 0) _hasTranslations = true;
+      if (!_hasSecondary && l.secondary) _hasSecondary = true;
+      if (!_hasWords && l.words?.length > 0) _hasWords = true;
+      if (!_hasFurigana && (l.furigana || l.words?.some(w => w.reading))) _hasFurigana = true;
+      
+      // Early exit if we found everything
+      if (_hasTranslations && _hasSecondary && _hasWords && _hasFurigana) break;
+    }
+    
+    return {
+      hasTranslations: _hasTranslations,
+      hasSecondary: _hasSecondary,
+      hasWords: _hasWords,
+      hasFurigana: _hasFurigana,
+    };
+  }, [lines]);
+
   // Collect unique translation languages from the lines
   const translationLanguages = useMemo(() => {
     const langs = [];
-    const maxSlots = Math.max(0, ...lines.map(l => l.translations?.length ?? 0));
-    for (let i = 0; i < maxSlots; i++) {
-      const lang = lines.find(l => l.translations?.[i]?.language)?.translations?.[i]?.language || null;
-      langs.push(lang);
+    for (const line of lines) {
+      const translations = line.translations || [];
+      for (let i = 0; i < translations.length; i++) {
+        if (!langs[i]) {
+          langs[i] = translations[i]?.language || null;
+        }
+      }
     }
     return langs;
   }, [lines]);
-  const hasSecondary = lines.some(l => l.secondary);
-  const hasWords = lines.some(l => l.words?.length);
-  const hasFurigana = lines.some(l => l.furigana || l.words?.some(w => w.reading));
 
   // ——— Preview keyboard shortcuts ———
   useEffect(() => {
@@ -185,6 +209,7 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
           lineEndings: settings.export?.lineEndings,
           srtConfig: settings.editor?.srt,
           includeSecondary,
+          exportTranslationIndex: activeTranslationIndex,
         });
         content = result.output;
         downloadLRC(content, `${name}.srt`);
@@ -229,6 +254,7 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
           lineEndings: settings.export?.lineEndings,
           srtConfig: settings.editor?.srt,
           includeSecondary,
+          exportTranslationIndex: activeTranslationIndex,
         });
         content = result.output;
       } else {

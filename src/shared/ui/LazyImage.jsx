@@ -1,3 +1,13 @@
+/**
+ * @param {object} props
+ * @param {string} props.src
+ * @param {string} props.alt
+ * @param {string|number} [props.width]
+ * @param {string|number} [props.height]
+ * @param {string} [props.className]
+ * @param {import('react').HTMLAttributeReferrerPolicy} [props.referrerPolicy]
+ * @param {import('react').ReactEventHandler<HTMLImageElement>} [props.onError]
+ */
 export function LazyImage({ src, alt, width, height, className, referrerPolicy = 'no-referrer', ...props }) {
   return (
     <img

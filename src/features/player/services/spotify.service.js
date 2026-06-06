@@ -1,4 +1,5 @@
 import { request } from '@/app/api.client.js';
+import { getDeviceId } from '@/shared/utils/device';
 
 export const spotifyService = {
   async resolve(url) {
@@ -10,6 +11,13 @@ export const spotifyService = {
 
   async getAuthUrl() {
     return `${import.meta.env.VITE_API_URL || '/api'}/spotify/auth/url`;
+  },
+
+  async getLoginUrl() {
+    const deviceId = await getDeviceId();
+    const base = `${import.meta.env.VITE_API_URL || '/api'}/spotify/auth/login/url`;
+    const params = new URLSearchParams({ appOrigin: window.location.origin, deviceId });
+    return `${base}?${params}`;
   },
 
   async getToken() {

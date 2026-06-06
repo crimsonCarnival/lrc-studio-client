@@ -3,6 +3,8 @@ import { BadgeChip } from './BadgeChip';
 import { Tip } from '@ui/tip';
 import { BADGE_REGISTRY } from './badge-registry';
 
+const EMPTY_BADGES = [];
+
 /**
  * Renders up to `max` badge chips inline, with a "+N more" pill that shows
  * the overflow badges in a tooltip on hover.
@@ -11,7 +13,7 @@ import { BADGE_REGISTRY } from './badge-registry';
  * @param {number}   max      - Max badges shown inline (default 3)
  * @param {string}   className
  */
-export function BadgeList({ ids = [], max = 3, className = '' }) {
+export function BadgeList({ ids = EMPTY_BADGES, max = 3, className = '' }) {
   const { t } = useTranslation();
 
   if (!ids.length) return null;

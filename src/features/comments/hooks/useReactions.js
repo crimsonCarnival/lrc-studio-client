@@ -52,15 +52,17 @@ export function useProjectReactions(projectId) {
     setMyReaction(isToggleOff ? null : emoji);
     setReactions(prev => {
       if (isToggleOff) {
-        return prev
-          .map(r => r.emoji === emoji ? { ...r, count: r.count - 1 } : r)
-          .filter(r => r.count > 0);
+        return prev.flatMap(r => {
+          const next = r.emoji === emoji ? { ...r, count: r.count - 1 } : r;
+          return next.count > 0 ? [next] : [];
+        });
       }
       const existing = prev.find(r => r.emoji === emoji);
       const removed = myReaction
-        ? prev
-            .map(r => r.emoji === myReaction ? { ...r, count: r.count - 1 } : r)
-            .filter(r => r.count > 0)
+        ? prev.flatMap(r => {
+            const next = r.emoji === myReaction ? { ...r, count: r.count - 1 } : r;
+            return next.count > 0 ? [next] : [];
+          })
         : prev;
       if (existing) {
         return removed.map(r => r.emoji === emoji ? { ...r, count: r.count + 1 } : r);

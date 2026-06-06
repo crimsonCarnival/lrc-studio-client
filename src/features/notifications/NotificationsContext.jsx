@@ -1,4 +1,4 @@
-import { createContext, use, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, use, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { request } from '@/app/api.client';
@@ -123,8 +123,16 @@ export function NotificationsProvider({ children }) {
     request(`/notifications/${id}`, { method: 'DELETE' }).catch(() => {});
   }, []);
 
+  const value = useMemo(() => ({
+    notifications,
+    unreadCount,
+    markRead,
+    markAllRead,
+    dismiss,
+  }), [notifications, unreadCount, markRead, markAllRead, dismiss]);
+
   return (
-    <NotificationsContext value={{ notifications, unreadCount, markRead, markAllRead, dismiss }}>
+    <NotificationsContext value={value}>
       {children}
     </NotificationsContext>
   );

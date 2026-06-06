@@ -19,6 +19,8 @@ const UPDATE_SHOWCASE = `
 `;
 
 const RARITY_ORDER = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4 };
+const EMPTY_BADGES = [];
+const EMPTY_SHOWCASE = [];
 
 function rarityOf(pct) {
   if (pct > 50) return 'common';
@@ -107,9 +109,9 @@ function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop 
   );
 }
 
-export function ShowcaseEditor({ userBadges = [], initialShowcase = [], initialPublic = true, showcaseSlots = 3, level = 0, onSaved }) {
+export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EMPTY_SHOWCASE, initialPublic = true, showcaseSlots = 3, level = 0, onSaved }) {
   const { t } = useTranslation();
-  const [showcase, setShowcase] = useState(initialShowcase.slice(0, showcaseSlots));
+  const [showcase, setShowcase] = useState(() => initialShowcase.slice(0, showcaseSlots));
   const [showcasePublic, setShowcasePublic] = useState(initialPublic);
   const [saving, setSaving] = useState(false);
   const [dragFrom, setDragFrom] = useState(null);
@@ -118,7 +120,7 @@ export function ShowcaseEditor({ userBadges = [], initialShowcase = [], initialP
 
   const showcaseSet = new Set(showcase);
 
-  const sortedBadges = [...userBadges].sort((a, b) => {
+  const sortedBadges = userBadges.toSorted((a, b) => {
     const ra = rarityOf(a.rarityPct ?? 100);
     const rb = rarityOf(b.rarityPct ?? 100);
     return (RARITY_ORDER[ra] ?? 4) - (RARITY_ORDER[rb] ?? 4);

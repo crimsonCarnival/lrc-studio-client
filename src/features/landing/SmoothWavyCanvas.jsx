@@ -33,7 +33,8 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }) => {
   const animateRef = useRef(null);
   const timeRef = useRef(0);
   const mouseRef = useRef({ x: 0, y: 0 });
-  const colorsRef = useRef(readThemeColors());
+  const colorsRef = useRef(null);
+  if (colorsRef.current === null) colorsRef.current = readThemeColors();
   const frameTimesRef = useRef([]);      // rolling window of last 10 frame durations (ms)
   const qualityRef = useRef(1);          // 1 = full, 0.5 = half lines, 0 = static
   const lastFrameTimeRef = useRef(0);    // timestamp of previous frame

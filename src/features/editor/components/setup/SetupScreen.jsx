@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
-import { FloatingCombobox } from '@ui/floating-combobox';
+import { FloatingCombobox } from '@/shared/ui/floating-combobox';
+import { useLanguageOptions } from '../../hooks/useLanguageOptions';
 import { FloatingTextarea } from '@ui/floating-textarea';
 import { Textarea } from '@ui/textarea';
 import { Input } from '@ui/input';
@@ -12,6 +13,7 @@ import { Switch } from '@ui/switch';
 import { Tip } from '@ui/tip';
 import { TagsSelector } from '@ui/tags-selector';
 import { PRIMARY_GENRES, matchSpotifyGenre } from '@features/editor/constants/genre-tags';
+import { LANG_KEYS } from '@features/editor/constants/languages';
 import { getMyMusicLibrary } from '@/features/editor/music-library.service';
 import {
   FolderOpen, Music2, FileText, Upload, Check, ArrowRight, Trash2,
@@ -34,8 +36,6 @@ import AudioSourceBadge from './AudioSourceBadge';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 
 const MAX_IMPORT_FILE_SIZE = 2 * 1024 * 1024;
-
-const LANG_KEYS = ['english','spanish','japanese','korean','mandarin','portuguese','french','german','italian','arabic','hindi','russian','tagalog','thai','vietnamese','indonesian','dutch','swedish','turkish','hebrew'];
 
 const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\//;
 const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
@@ -336,7 +336,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
 
   const genreOptions    = useMemo(() => PRIMARY_GENRES.map((k) => ({ value: k, label: t(`setup.genre.${k}`) })), [t]);
-  const languageOptions = useMemo(() => LANG_KEYS.map((k) => ({ value: t(`setup.lang.${k}`) })), [t]);
+  const languageOptions = useLanguageOptions();
 
   const artistOptions = useMemo(() => {
     const seen = new Set();

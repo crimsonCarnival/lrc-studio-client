@@ -10,7 +10,7 @@ import { translateAuthError } from '@/shared/utils/auth-errors';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import RegistrationBlockedModal from './RegistrationBlockedModal';
-import { FieldError, ErrorBanner, ContextBanner, GoogleButton } from './auth-shared';
+import { FieldError, ErrorBanner, ContextBanner, GoogleButton, SpotifyButton } from './auth-shared';
 
 const step1Schema = z.object({
   displayName: z.string().min(1, 'auth.validation.fieldRequired'),
@@ -76,7 +76,7 @@ function StepDots({ step }) {
 
 // ─── Register Form ─────────────────────────────────────────────────────────
 
-export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSuccess, redirect }) {
+export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSpotifyLogin, onSuccess, redirect }) {
   const navigate = useNavigate();
   const { trigger: haptic } = useHapticFeedback();
 
@@ -95,7 +95,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
   const [showConfirm, setShowConfirm] = useState(false);
 
   const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState({});
+  const [fieldErrors, setFieldErrors] = useState(/** @type {Record<string, string|undefined>} */({}));
   const [loading, setLoading] = useState(false);
   const [showBlockedModal, setShowBlockedModal] = useState(false);
   const [blockedMessage, setBlockedMessage] = useState('');
@@ -118,12 +118,12 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
 
   const validateStep1 = () => {
     const result = step1Schema.safeParse({ displayName: displayName.trim(), accountName });
-    return result.success ? {} : zodErrors(result, t);
+    return result.success ? /** @type {Record<string, string>} */ ({}) : zodErrors(result, t);
   };
 
   const validateStep2 = () => {
     const result = step2Schema.safeParse({ email, accountName, password, confirmPassword });
-    return result.success ? {} : zodErrors(result, t);
+    return result.success ? /** @type {Record<string, string>} */ ({}) : zodErrors(result, t);
   };
 
   const handleNext = (e) => {
@@ -137,7 +137,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
 
   const handleBack = () => {
     setError('');
-    setFieldErrors({});
+    setFieldErrors(/** @type {Record<string, string>} */ ({}));
     setStep(1);
   };
 
@@ -286,6 +286,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                 <div className="flex-1 h-px bg-zinc-800/40" />
               </div>
               <GoogleButton onClick={onGoogleLogin} t={t} />
+              <SpotifyButton onClick={onSpotifyLogin} t={t} />
               <button
                 type="button"
                 onClick={() => navigate('/project/new')}

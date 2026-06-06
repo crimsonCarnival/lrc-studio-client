@@ -6,8 +6,10 @@ import { EMOJI_MAP } from './reaction-constants';
 
 export { EMOJI_MAP };
 
+const EMPTY_REACTIONS = [];
+
 export function ReactionBar({
-  reactions = [],
+  reactions = EMPTY_REACTIONS,
   myReaction = null,
   onReact,
   disabled = false,

@@ -21,8 +21,10 @@ export default function useHistory(initial, options = {}) {
   const [state, setStateRaw] = useState(initial);
   
   // Using Deque from ds-js for past and future to support limit truncation
-  const pastRef = useRef(new Deque());
-  const futureRef = useRef(new Deque());
+  const pastRef = useRef(null);
+  const futureRef = useRef(null);
+  if (pastRef.current === null) pastRef.current = new Deque();
+  if (futureRef.current === null) futureRef.current = new Deque();
   
   const lastUpdateRef = useRef(0);
   const [canUndo, setCanUndo] = useState(false);

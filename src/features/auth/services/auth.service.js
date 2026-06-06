@@ -3,6 +3,16 @@ import { gqlRequest } from '@/app/graphql.client.js';
 
 export const authService = {
   // ── Kept as REST — involves token issuance, cookies, reCAPTCHA ──
+  /**
+   * @param {object} params
+   * @param {string} params.accountName
+   * @param {string} [params.displayName]
+   * @param {string} params.email
+   * @param {string} params.password
+   * @param {string} [params.recaptchaToken]
+   * @param {string} [params.claimToken]
+   * @param {string} [params.projectId]
+   */
   async register({ accountName, displayName, email, password, recaptchaToken, claimToken, projectId }) {
     return request('/auth/register', {
       method: 'POST',
@@ -17,6 +27,14 @@ export const authService = {
     });
   },
 
+  /**
+   * @param {object} params
+   * @param {string} params.identifier
+   * @param {string} params.password
+   * @param {string} [params.recaptchaToken]
+   * @param {string} [params.claimToken]
+   * @param {string} [params.projectId]
+   */
   async login({ identifier, password, recaptchaToken, claimToken, projectId }) {
     return request('/auth/login', {
       method: 'POST',

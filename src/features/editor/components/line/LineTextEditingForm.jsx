@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Input } from '@ui/input';
+import { FloatingCombobox } from '@ui/floating-combobox';
+import { useLanguageOptions } from '@features/editor/hooks/useLanguageOptions';
 import { Plus, X, User } from 'lucide-react';
 
 function LineTextEditingForm({
@@ -20,6 +22,7 @@ function LineTextEditingForm({
   ref,
 }) {
   const { t } = useTranslation();
+  const languageOptions = useLanguageOptions();
 
   const save = () => handleSaveLineText(lineIndex, editingText, editingSecondary, editingTranslations, editingSinger, editingSinger2);
 
@@ -77,12 +80,15 @@ function LineTextEditingForm({
       {/* Translation slots */}
       {editingTranslations.map((tr, idx) => (
         <div key={idx} className="flex items-center gap-1">
-          <Input
-            type="text"
+          <FloatingCombobox
+            label=""
             value={tr.language || ''}
-            onChange={(e) => updateTranslation(idx, 'language', e.target.value)}
+            onChange={(v) => updateTranslation(idx, 'language', v)}
+            options={languageOptions}
+            strict
+            size="sm"
             placeholder={t('editor.langPlaceholder')}
-            className="w-16 shrink-0 bg-zinc-800 border-zinc-600/50 text-[10px] text-zinc-500 h-6 px-1.5"
+            className="w-24 shrink-0"
           />
           <Input
             type="text"

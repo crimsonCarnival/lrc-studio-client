@@ -8,7 +8,7 @@ import { FloatingInput } from '@ui/floating-input';
 import { Tip } from '@ui/tip';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import { auth } from '@/app/api';
-import { FieldError, RedirectMessage, ContextBanner, GoogleButton } from './auth-shared';
+import { FieldError, RedirectMessage, ContextBanner, GoogleButton, SpotifyButton } from './auth-shared';
 
 const identifierSchema = z.string().refine(
   (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || /^[a-z0-9_-]{3,30}$/.test(v.toLowerCase()),
@@ -27,7 +27,7 @@ function validateIdentifier(value) {
 
 // ─── Login Step 1 — Identifier ─────────────────────────────────────────────
 
-export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onGoogleLogin, from, redirect }) {
+export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onGoogleLogin, onSpotifyLogin, from, redirect }) {
   const navigate = useNavigate();
   const [identifier, setIdentifier] = useState('');
   const [error, setError] = useState('');
@@ -123,6 +123,7 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
           </div>
 
           <GoogleButton onClick={onGoogleLogin} t={t} />
+          <SpotifyButton onClick={onSpotifyLogin} t={t} />
 
           <button
             type="button"

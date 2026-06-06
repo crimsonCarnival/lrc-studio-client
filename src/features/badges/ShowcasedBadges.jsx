@@ -5,6 +5,7 @@ import { enUS, es, ja } from 'date-fns/locale';
 import { BADGE_REGISTRY, RARITY_CONFIG, BADGE_COLORS } from './badge-registry';
 
 const DATE_LOCALES = { en: enUS, es, ja };
+const EMPTY_BADGES = [];
 
 const RARITY_BORDER_STYLE = {
   common:    'border border-zinc-700/60',
@@ -56,6 +57,7 @@ function TiltCard({ children, className = '' }) {
   const onMouseMove = (e) => {
     const el = ref.current;
     if (!el) return;
+    el.style.willChange = 'transform';
     const rect = el.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
     const y = (e.clientY - rect.top) / rect.height - 0.5;
@@ -63,7 +65,10 @@ function TiltCard({ children, className = '' }) {
   };
 
   const onMouseLeave = () => {
-    if (ref.current) ref.current.style.transform = '';
+    if (ref.current) {
+      ref.current.style.transform = '';
+      ref.current.style.willChange = '';
+    }
   };
 
   return (
@@ -72,7 +77,6 @@ function TiltCard({ children, className = '' }) {
       className={`transition-transform duration-100 ${className}`}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
-      style={{ willChange: 'transform' }}
     >
       {children}
     </div>
@@ -144,7 +148,7 @@ function EmptySlot({ slotIndex: _slotIndex }) {
   );
 }
 
-export function ShowcasedBadges({ badges = [], maxSlots = 3, locale = 'en', className = '' }) {
+export function ShowcasedBadges({ badges = EMPTY_BADGES, maxSlots = 3, locale = 'en', className = '' }) {
   const { t } = useTranslation();
 
   if (badges.length === 0 && maxSlots === 0) return null;

@@ -16,11 +16,15 @@ export function migrateLines(lines) { return lines; }
  */
 export function splitArtists(raw) {
   if (!raw?.trim()) return [];
-  return raw
-    .split(/\s*(?:,|feat\.?|ft\.?|featuring|×|\bx\b|&|\band\b|\/|vs\.?)\s*/i)
-    .map(s => s.trim())
-    .filter(Boolean)
-    .filter((v, i, a) => a.indexOf(v) === i);
+  const seen = new Set();
+  const result = [];
+  for (const part of raw.split(/\s*(?:,|feat\.?|ft\.?|featuring|×|\bx\b|&|\band\b|\/|vs\.?)\s*/i)) {
+    const value = part.trim();
+    if (!value || seen.has(value)) continue;
+    seen.add(value);
+    result.push(value);
+  }
+  return result;
 }
 
 function parseSectionText(raw) {

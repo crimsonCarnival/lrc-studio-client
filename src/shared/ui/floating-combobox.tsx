@@ -25,6 +25,8 @@ interface FloatingComboboxProps {
    * Use for fields where only preset options are valid (genre, language).
    */
   strict?: boolean
+  size?: 'default' | 'sm'
+  placeholder?: string
 }
 
 export function FloatingCombobox({
@@ -38,6 +40,8 @@ export function FloatingCombobox({
   className,
   error,
   strict = false,
+  size = 'default',
+  placeholder,
 }: FloatingComboboxProps) {
   const wrapperRef = React.useRef<HTMLDivElement>(null)
   const [focused, setFocused] = React.useState(false)
@@ -163,7 +167,8 @@ export function FloatingCombobox({
             commitSelect(opt)
           }}
           className={cn(
-            'w-full text-left px-4 py-2.5 text-sm transition-colors',
+            'w-full text-left transition-colors',
+            size === 'sm' ? 'px-2 py-1.5 text-[10px]' : 'px-4 py-2.5 text-sm',
             i === activeIndex
               ? 'bg-primary/20 text-primary'
               : 'text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100',
@@ -189,25 +194,32 @@ export function FloatingCombobox({
         }}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
-        placeholder=" "
+        placeholder={placeholder || " "}
         maxLength={maxLength}
         autoComplete="off"
         className={cn(
-          'h-12 w-full bg-transparent border-zinc-700/50 text-zinc-100 focus:border-primary/60 focus:ring-0 rounded-xl transition-all px-4 pt-2 pr-9',
+          'w-full focus:ring-0 transition-all',
+          size === 'default' && 'h-12 bg-transparent border-zinc-700/50 text-zinc-100 focus:border-primary/60 rounded-xl px-4 pt-2 pr-9',
+          size === 'sm' && 'h-6 bg-zinc-800 border-zinc-600/50 text-zinc-500 text-[10px] focus:border-primary/60 rounded px-1.5 pr-6',
           error && 'border-destructive/50 focus:border-destructive/80'
         )}
       />
-      <label
-        className={cn(
-          'absolute top-1/2 -translate-y-1/2 left-4 text-sm text-zinc-500 pointer-events-none transition-all duration-200 ease-out',
-          (focused || hasValue || value) &&
-            '-top-[2px] px-1.5 text-[10px] uppercase tracking-wider text-primary font-bold bg-zinc-900 rounded-sm leading-none py-0.5 left-3',
-          (focused || hasValue || value) && error && 'text-destructive'
-        )}
-      >
-        {label}
-      </label>
-      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-600 pointer-events-none" />
+      {size === 'default' && label && (
+        <label
+          className={cn(
+            'absolute top-1/2 -translate-y-1/2 left-4 text-sm text-zinc-500 pointer-events-none transition-all duration-200 ease-out',
+            (focused || hasValue || value) &&
+              '-top-[2px] px-1.5 text-[10px] uppercase tracking-wider text-primary font-bold bg-zinc-900 rounded-sm leading-none py-0.5 left-3',
+            (focused || hasValue || value) && error && 'text-destructive'
+          )}
+        >
+          {label}
+        </label>
+      )}
+      <ChevronDown className={cn(
+        "absolute top-1/2 -translate-y-1/2 pointer-events-none",
+        size === 'default' ? "right-3 size-3.5 text-zinc-600" : "right-1.5 size-3 text-zinc-500"
+      )} />
 
       {showDropdown && typeof document !== 'undefined'
         ? createPortal(dropdown, document.body)

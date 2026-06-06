@@ -13,6 +13,8 @@ import { Play, X, Pencil, Trash2, Eraser } from 'lucide-react';
 import { formatTime } from '@/shared/utils/format-time';
 import { hasKanji } from '@/shared/utils/furigana';
 
+const EMPTY_ARTISTS = [];
+
 export default function Editor({
   user,
   lines,
@@ -40,7 +42,7 @@ export default function Editor({
   onNewProject,
   onShowKeyboardHelp,
   registerAfterSave,
-  songArtists = [],
+  songArtists = EMPTY_ARTISTS,
 }) {
   "use no memo";
   const { t } = useTranslation();

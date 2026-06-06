@@ -42,15 +42,15 @@ function renderPopupLoading(popup) {
 }
 
 export function useAuth() {
-  const [state, setState] = useState({ user: null, loading: true, heldLoginResult: null });
+  const [state, setState] = useState(/** @type {{ user: any, loading: boolean, heldLoginResult: any }} */({ user: null, loading: true, heldLoginResult: null }));
   const user = state.user;
   const loading = state.loading;
   const setUser = useCallback((u) => setState(s => ({ ...s, user: typeof u === 'function' ? u(s.user) : u })), []);
   
-  const refreshTimerRef = useRef(null);
+  const refreshTimerRef = /** @type {import('react').MutableRefObject<ReturnType<typeof setTimeout>|null>} */(useRef(null));
   const isRefreshingRef = useRef(false);
   // Holds the single in-flight refresh promise so concurrent callers coalesce.
-  const refreshPromiseRef = useRef(null);
+  const refreshPromiseRef = /** @type {import('react').MutableRefObject<Promise<any>|null>} */(useRef(null));
   // True once a real user has been present this session. Gates the "session
   // expired" toast + hard redirect so a logged-out visitor's cold restore
   // (remembered accounts, no live session) fails silently instead of looping.
@@ -89,13 +89,14 @@ export function useAuth() {
     // Intentionally keep remembered accounts — they are UI metadata only.
     // The server cleared the refresh token cookie via POST /auth/logout.
     // On next visit, the user sees the account picker and re-enters their password.
-    setState({ user: null, loading: false });
+    setState({ user: null, loading: false, heldLoginResult: null });
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
   }, []);
 
   // Schedule a token refresh at 75% of the access token lifetime (22.5 min for 30 min token).
   // isRefreshingRef is shared with the token:expired handler to prevent concurrent refresh calls,
   // which would trigger the server's breach-detection path and invalidate all sessions.
+  /** @type {import('react').MutableRefObject<((expiresIn?: number) => void) | null>} */
   const scheduleRefreshRef = useRef(null);
   const scheduleRefresh = useCallback((expiresIn = 22.5 * 60 * 1000) => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
@@ -137,7 +138,7 @@ export function useAuth() {
 
       // Skip round-trip entirely when there's no reason to expect a valid session
       if (!hasSession && !hasRememberedAccounts) {
-        setState({ user: null, loading: false });
+        setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
         return;
       }
 
@@ -145,7 +146,7 @@ export function useAuth() {
         const user = await auth.me();
         storage.set(STORAGE_KEYS.HAS_SESSION, '1');
         setAuthFlag(true);
-        setState({ user, loading: false });
+        setState(s => ({ ...s, user, loading: false }));
         scheduleRefresh();
         // Keep remembered account data fresh
         rememberedAccounts.upsert({
@@ -163,7 +164,7 @@ export function useAuth() {
             const user = await auth.me();
             storage.set(STORAGE_KEYS.HAS_SESSION, '1');
             setAuthFlag(true);
-            setState({ user, loading: false });
+            setState(s => ({ ...s, user, loading: false }));
             scheduleRefresh();
             rememberedAccounts.upsert({
               userId: user.id,
@@ -176,7 +177,7 @@ export function useAuth() {
             // Both tokens invalid — clear session hint but keep remembered accounts
             storage.remove(STORAGE_KEYS.HAS_SESSION);
             setAuthFlag(false);
-            setState({ user: null, loading: false });
+            setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
           }
         } else if (!err?.status || err.status >= 500) {
           // Network error or server down — don't clear session, just stop loading
@@ -184,7 +185,7 @@ export function useAuth() {
         } else {
           storage.remove(STORAGE_KEYS.HAS_SESSION);
           setAuthFlag(false);
-          setState({ user: null, loading: false });
+          setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
         }
       }
     };
@@ -244,7 +245,7 @@ export function useAuth() {
     // Cookies are automatically set by the server. Just update user state.
     storage.set(STORAGE_KEYS.HAS_SESSION, '1');
     setAuthFlag(true);
-    setState({ user: result.user, loading: false });
+    setState(s => ({ ...s, user: result.user, loading: false }));
     scheduleRefresh();
 
     handlePostAuthClone();
@@ -291,7 +292,7 @@ export function useAuth() {
     // Cookies are automatically set by the server. Just update user state.
     storage.set(STORAGE_KEYS.HAS_SESSION, '1');
     setAuthFlag(true);
-    setState({ user: result.user, loading: false });
+    setState(s => ({ ...s, user: result.user, loading: false }));
     scheduleRefresh();
 
     // Handle post-auth continuation (e.g., after cloning a project)
@@ -474,7 +475,7 @@ export function useAuth() {
           const me = await auth.me();
           storage.set(STORAGE_KEYS.HAS_SESSION, '1');
           setAuthFlag(true);
-          setState({ user: me, loading: false });
+          setState(s => ({ ...s, user: me, loading: false }));
           scheduleRefresh();
           resolve(me);
         } catch (err) {
@@ -489,6 +490,67 @@ export function useAuth() {
         console.warn('[AUTH] Google popup timeout after 60s - no message received');
         cleanup();
         reject(new Error('Google login popup was closed'));
+      }, 60000);
+    });
+  }, [scheduleRefresh]);
+
+  const loginWithSpotify = useCallback(async () => {
+    const width = 500, height = 700;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    // Open synchronously so browsers don't block it as a non-gesture popup
+    const popup = window.open('about:blank', 'spotify-login', `width=${width},height=${height},left=${left},top=${top}`);
+    renderPopupLoading(popup);
+    const url = await spotifyApi.getLoginUrl();
+
+    // Popup blocked — fall back to redirect-based flow
+    if (!popup || popup.closed) {
+      storage.set(STORAGE_KEYS.HAS_SESSION, '1');
+      window.location.href = url;
+      return new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('redirect_timeout')), 3000);
+      });
+    }
+
+    popup.location.href = url;
+
+    return new Promise((resolve, reject) => {
+      let cleaned = false;
+      const cleanup = () => {
+        if (cleaned) return;
+        cleaned = true;
+        window.removeEventListener('message', onMessage);
+        clearTimeout(timeout);
+      };
+
+      const onMessage = async (event) => {
+        if (event.origin !== API_ORIGIN) return;
+        let data = event.data;
+        if (typeof data === 'string') try { data = JSON.parse(data); } catch { return; }
+        if (data?.type !== 'spotify-callback') return;
+        cleanup();
+
+        if (!data.success) {
+          reject(new Error(data.error || 'Spotify login failed'));
+          return;
+        }
+
+        try {
+          const me = await auth.me();
+          storage.set(STORAGE_KEYS.HAS_SESSION, '1');
+          setAuthFlag(true);
+          setState(s => ({ ...s, user: me, loading: false }));
+          scheduleRefresh();
+          resolve(me);
+        } catch (err) {
+          reject(err);
+        }
+      };
+
+      window.addEventListener('message', onMessage);
+      const timeout = setTimeout(() => {
+        cleanup();
+        reject(new Error('Spotify login popup was closed'));
       }, 60000);
     });
   }, [scheduleRefresh]);
@@ -509,7 +571,7 @@ export function useAuth() {
     storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
     storage.remove(STORAGE_KEYS.HAS_SESSION);
     setAuthFlag(false);
-    setState({ user: null, loading: false });
+    setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
   }, []);
 
@@ -525,7 +587,7 @@ export function useAuth() {
     storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
     storage.remove(STORAGE_KEYS.HAS_SESSION);
     setAuthFlag(false);
-    setState({ user: null, loading: false });
+    setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
   }, []);
 
@@ -569,7 +631,7 @@ export function useAuth() {
       
       storage.set(STORAGE_KEYS.HAS_SESSION, '1');
       setAuthFlag(true);
-      setState({ user: result.user, loading: false });
+      setState(s => ({ ...s, user: result.user, loading: false }));
       scheduleRefresh();
       handlePostAuthClone();
       
@@ -626,6 +688,7 @@ export function useAuth() {
     connectGoogle,
     disconnectGoogle,
     loginWithGoogle,
+    loginWithSpotify,
     clearUnbanMessage,
     loginWithPasskey,
     registerPasskey,

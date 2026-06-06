@@ -252,9 +252,11 @@ export function useAppState(user) {
               description: m.description || '',
               tags: m.tags || [],
               songName: m.songName || '',
-              songArtists: Array.isArray(m.songArtists) ? m.songArtists : [],
+              songArtist: m.songArtist || '',
+              songArtists: Array.isArray(m.songArtists) ? m.songArtists : (m.songArtist ? [m.songArtist] : []),
               songAlbum: m.songAlbum || '',
               songYear: m.songYear || '',
+              songLanguage: m.songLanguage || '',
             });
           }
           // ── Rollback to setup if the project has lyrics but no media ──
