@@ -107,11 +107,16 @@ const GET_PROJECT = `
         language
         version
         lines {
+          type
+          label
           text
           timestamp
           endTime
           secondary
+          singer
+          singer2
           translation
+          translations { language text }
           words { word time reading }
           secondaryWords { word time }
         }
@@ -257,11 +262,16 @@ export const projectsService = {
               projectId
               editorMode
               lines {
+                type
+                label
                 text
                 timestamp
                 endTime
                 secondary
+                singer
+                singer2
                 translation
+                translations { language text }
                 words { word time reading }
                 secondaryWords { word time }
               }
