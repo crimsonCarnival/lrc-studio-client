@@ -306,7 +306,7 @@ export default function Home() {
                             {project.title || t('library.untitled')}
                           </h3>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] text-zinc-500">{formatRelativeTime(project.updatedAt, (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
+                            <span className="text-[10px] text-zinc-500">{formatRelativeTime(project.createdAt, (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
                             <span className="size-0.5 rounded-full bg-zinc-700 shrink-0" />
                             <span className="text-[10px] text-zinc-500 flex items-center gap-0.5">
                               <Activity className="size-2.5" />
