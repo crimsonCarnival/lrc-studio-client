@@ -19,4 +19,5 @@ export default {
   boost: 'Impulsar',
   boosted: '¡Impulsado!',
   boostFailed: 'No se pudo impulsar',
+  publishedOn: 'Publicado',
 };

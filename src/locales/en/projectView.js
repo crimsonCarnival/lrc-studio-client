@@ -19,4 +19,5 @@ export default {
   boost: 'Boost',
   boosted: 'Boosted!',
   boostFailed: 'Could not boost',
+  publishedOn: 'Published',
 };

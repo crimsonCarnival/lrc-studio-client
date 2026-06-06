@@ -19,4 +19,5 @@ export default {
   boost: 'ブースト',
   boosted: 'ブースト済み！',
   boostFailed: 'ブーストできませんでした',
+  publishedOn: '公開日',
 };
