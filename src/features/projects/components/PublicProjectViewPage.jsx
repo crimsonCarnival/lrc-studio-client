@@ -39,6 +39,7 @@ function PublicProjectViewPageInner() {
   const { projectId } = useParams();
   const [searchParams] = useSearchParams();
   const listId = searchParams.get('list');
+  const initialSeek = parseInt(searchParams.get('s') || '0', 10) || 0;
 
   const { user } = useAuthContext();
   const { project, loading, notFound } = usePublicProject(projectId);
@@ -320,7 +321,7 @@ function PublicProjectViewPageInner() {
             onTitleChange={setMediaTitle}
             initialYtUrl={initialYtUrl}
             initialCloudinaryUpload={initialCloudinaryUpload}
-            initialSeek={0}
+            initialSeek={initialSeek}
             initialSpeed={1}
             lines={lines}
             playbackPosition={playbackPosition}
