@@ -106,8 +106,8 @@ export function useAuth() {
         await doRefresh();
         scheduleRefreshRef.current?.();
       } catch (err) {
-        // Network error or 5xx — server temporarily unreachable, retry in 2 min
-        if (!err?.status || err.status >= 500) {
+        // Network error, 5xx, or unexpected 4xx (e.g. infra 400) — retry in 2 min
+        if (!err?.status || err.status >= 500 || (err.status !== 401 && err.status !== 403)) {
           isRefreshingRef.current = false;
           scheduleRefreshRef.current?.(2 * 60 * 1000);
           return;
@@ -204,8 +204,8 @@ export function useAuth() {
         await doRefresh();
         scheduleRefresh();
       } catch (err) {
-        // Network error or 5xx — server temporarily unreachable, schedule a retry
-        if (!err?.status || err.status >= 500) {
+        // Network error, 5xx, or unexpected 4xx — schedule a retry
+        if (!err?.status || err.status >= 500 || (err.status !== 401 && err.status !== 403)) {
           isRefreshingRef.current = false;
           scheduleRefreshRef.current?.(30 * 1000); // retry in 30s
           return;

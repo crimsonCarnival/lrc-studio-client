@@ -175,7 +175,11 @@ export default function AuthPage() {
     try {
       await loginWithGoogle(loginHint);
       handleAuthSuccess();
-    } catch {
+    } catch (err) {
+      if (err?.message === 'wrong_account') {
+        toast.error(t('auth.errors.googleWrongAccount'));
+        return;
+      }
       const hasSession = storage.get(STORAGE_KEYS.HAS_SESSION);
       if (hasSession) {
         const redirectTo = searchParams.get('redirect');

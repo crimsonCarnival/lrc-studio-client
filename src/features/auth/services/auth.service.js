@@ -27,6 +27,7 @@ export const authService = {
   async refresh() {
     return request('/auth/refresh', {
       method: 'POST',
+      body: JSON.stringify({}),
     });
   },
 
