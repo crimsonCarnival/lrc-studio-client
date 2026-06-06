@@ -119,6 +119,7 @@ export default {
   sectionDefault: "Section",
   sectionLabelPlaceholder: "Section label",
   singerOptPlaceholder: "Singer (opt.)",
+  singer2: "Singer 2 (italic)",
   insertSectionAbove: "Insert section above",
   assignSingerToLines: "Assign singer to {{count}} lines",
   singerCustomPlaceholder: "Custom…",

@@ -119,6 +119,7 @@ export default {
   sectionDefault: "Sección",
   sectionLabelPlaceholder: "Etiqueta de sección",
   singerOptPlaceholder: "Cantante (opc.)",
+  singer2: "Cantante 2 (cursiva)",
   insertSectionAbove: "Insertar sección arriba",
   assignSingerToLines: "Asignar cantante a {{count}} líneas",
   singerCustomPlaceholder: "Personalizado…",

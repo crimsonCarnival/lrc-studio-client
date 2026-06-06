@@ -119,6 +119,7 @@ export default {
   sectionDefault: "セクション",
   sectionLabelPlaceholder: "セクションラベル",
   singerOptPlaceholder: "歌手（任意）",
+  singer2: "歌手2（斜体）",
   insertSectionAbove: "上にセクションを挿入",
   assignSingerToLines: "{{count}}行に歌手を割り当て",
   singerCustomPlaceholder: "カスタム…",
