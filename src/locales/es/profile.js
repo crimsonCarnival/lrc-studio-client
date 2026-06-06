@@ -123,4 +123,5 @@ export default {
   editProject: "Editar proyecto",
   deleteProject: "Eliminar proyecto",
   avatarAlt: "Avatar",
+  peopleYouMightKnow: "Personas que podrías conocer"
 };
