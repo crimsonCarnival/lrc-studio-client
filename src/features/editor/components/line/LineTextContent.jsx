@@ -28,7 +28,7 @@ const LineTextContent = React.memo(({
     <div className={`flex flex-col gap-1 group/text min-w-0 w-full ${editorMode === 'words' ? 'pt-0.5' : ''}`}>
       <div className="flex items-center gap-2">
         <p
-          className={`text-[13px] lg:text-xs transition-all duration-300 ease-out ${(line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null))) ? 'overflow-hidden' : 'break-words whitespace-pre-wrap'} ${isActive
+          className={`text-[13px] lg:text-xs transition-all duration-300 ease-out ${line.singer2 ? 'italic' : ''} ${(line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null))) ? 'overflow-hidden' : 'break-words whitespace-pre-wrap'} ${isActive
             ? 'text-zinc-100 font-medium'
             : isSynced
               ? line.words?.some(w => w.time != null) ? 'text-zinc-300' : 'text-zinc-100'

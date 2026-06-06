@@ -12,6 +12,8 @@ function LineTextEditingForm({
   setEditingTranslations,
   editingSinger,
   setEditingSinger,
+  editingSinger2,
+  setEditingSinger2,
   handleSaveLineText,
   setEditingLineIndex,
   songArtists,
@@ -19,7 +21,7 @@ function LineTextEditingForm({
 }) {
   const { t } = useTranslation();
 
-  const save = () => handleSaveLineText(lineIndex, editingText, editingSecondary, editingTranslations, editingSinger);
+  const save = () => handleSaveLineText(lineIndex, editingText, editingSecondary, editingTranslations, editingSinger, editingSinger2);
 
   const updateTranslation = (idx, field, value) => {
     setEditingTranslations((prev) => {
@@ -102,7 +104,7 @@ function LineTextEditingForm({
         <Plus className="size-2.5" /> {t('editor.addTranslation', 'Add translation')}
       </button>
 
-      {/* Singer field */}
+      {/* Singer fields */}
       <div className="flex items-center gap-1 mt-0.5">
         <User className="size-3 text-zinc-600 shrink-0" />
         <Input
@@ -112,6 +114,14 @@ function LineTextEditingForm({
           placeholder={t('editor.singer', 'Singer (optional)')}
           list={`singers-${lineIndex}`}
           className="flex-1 bg-zinc-800 border-zinc-700/40 text-xs text-zinc-500 h-6"
+        />
+        <Input
+          type="text"
+          value={editingSinger2}
+          onChange={(e) => setEditingSinger2(e.target.value)}
+          placeholder={t('editor.singer2', 'Singer 2 (italic)')}
+          list={`singers-${lineIndex}`}
+          className="flex-1 bg-zinc-800 border-zinc-700/40 text-xs text-zinc-500 h-6 italic"
         />
         {songArtists?.length > 0 && (
           <datalist id={`singers-${lineIndex}`}>

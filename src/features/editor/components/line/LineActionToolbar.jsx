@@ -18,6 +18,7 @@ const LineActionToolbar = React.memo(({
   setEditingSecondary,
   setEditingTranslations,
   setEditingSinger,
+  setEditingSinger2,
   serializeToRubyMarkup,
   handleMark,
   playerRef,
@@ -149,6 +150,7 @@ const LineActionToolbar = React.memo(({
                       setEditingSecondary(line.secondary || '');
                       setEditingTranslations(line.translations ? [...line.translations] : []);
                       setEditingSinger(line.singer || '');
+                      setEditingSinger2(line.singer2 || '');
                     }}
                     className="text-sky-400/70 hover:text-sky-400 hover:bg-sky-500/10"
                   >
@@ -171,6 +173,7 @@ const LineActionToolbar = React.memo(({
                 setEditingSecondary(line.secondary || '');
                 setEditingTranslations(line.translations ? [...line.translations] : []);
                 setEditingSinger(line.singer || '');
+                setEditingSinger2(line.singer2 || '');
               }}
               className="text-sky-400/70 hover:text-sky-400 hover:bg-sky-500/10"
             >
