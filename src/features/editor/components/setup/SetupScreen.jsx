@@ -474,7 +474,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                 {t('setup.songInformation', 'Song Information')}
               </h3>
               {songName.trim() && songArtist.trim() && (
-                <Tip content={t('setup.fetchSongInfo', 'Auto-fill from Spotify')} side="left">
+                <Tip content={t('setup.fetchSongInfo', 'Auto-fill song metadata (Spotify/Last.fm)')} side="left">
                   <button
                     type="button"
                     onClick={handleFetchSongInfo}
