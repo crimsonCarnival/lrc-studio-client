@@ -16,7 +16,7 @@ const GET_PUBLIC_PROJECT = `
           secondaryWords { word time }
         }
       }
-      starCount forkCount isStarredByMe isForkedByMe
+      starCount forkCount isStarredByMe isForkedByMe forksEnabled
       forkedFrom { projectId accountName }
     }
   }

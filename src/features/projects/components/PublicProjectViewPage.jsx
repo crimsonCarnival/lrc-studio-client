@@ -127,8 +127,8 @@ function PublicProjectViewPageInner() {
     setIsStarred(!wasStarred);
     setStarCount(c => wasStarred ? Math.max(0, c - 1) : c + 1);
     try {
-      if (wasStarred) await projectsApi.unstar(project.id);
-      else await projectsApi.star(project.id);
+      if (wasStarred) await projectsApi.unstar(project.projectId);
+      else await projectsApi.star(project.projectId);
     } catch {
       setIsStarred(wasStarred);
       setStarCount(c => wasStarred ? c + 1 : Math.max(0, c - 1));

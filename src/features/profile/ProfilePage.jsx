@@ -8,6 +8,7 @@ import { Star, GitFork, Music, PlayCircle, Settings, Pencil, Trash2, Timer, Fold
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { getPublicProfile, followUser, unfollowUser } from './profile.service';
+import { useSuggestedUsers } from '@/features/explore/hooks/useExplore';
 import { FollowModal } from './FollowModal';
 import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
 import { BadgeList } from '@/features/badges/BadgeList';
@@ -93,6 +94,42 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }) {
         </span>
       </div>
     </Link>
+  );
+}
+
+function PeopleYouMightKnow() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { users, loading } = useSuggestedUsers(5);
+
+  if (loading || users.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600">{t('profile.peopleYouMightKnow')}</p>
+      <div className="flex flex-col gap-1.5">
+        {users.map(u => (
+          <button
+            key={u.id}
+            type="button"
+            onClick={() => navigate(`/${u.accountName}`)}
+            className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors text-left w-full"
+          >
+            {u.avatarUrl ? (
+              <img src={u.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-7 rounded-full object-cover shrink-0" />
+            ) : (
+              <div className="size-7 rounded-full bg-gradient-to-br from-primary/50 to-violet-500/50 flex items-center justify-center text-xs font-bold text-white shrink-0 select-none">
+                {(u.displayName || u.accountName || '?').charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-foreground truncate">{u.displayName || u.accountName}</p>
+              <p className="text-[10px] text-zinc-500 truncate">@{u.accountName}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -272,7 +309,8 @@ export default function ProfilePage() {
   const hasVisibleShowcase = profile.showcasePublic !== false && (profile.showcasedBadges?.length ?? 0) > 0;
 
   return (
-    <div className="flex-1 flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-5xl mx-auto w-full">
+    <div className="flex-1 min-h-0 overflow-y-auto">
+    <div className="flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-5xl mx-auto w-full">
       {/* Profile Header */}
       <div className="glass rounded-[2rem] p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden mb-6">
         <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} />
@@ -399,7 +437,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Two-column layout: main content + showcase sidebar */}
-      <div className={`flex gap-6 items-start ${hasVisibleShowcase || isOwner ? 'flex-col lg:flex-row' : ''}`}>
+      <div className={`flex gap-6 items-start ${hasVisibleShowcase || isOwner || (!isOwner && !!user) ? 'flex-col lg:flex-row' : ''}`}>
         {/* Main content */}
         <div className="flex-1 min-w-0">
           {/* Tabs */}
@@ -448,7 +486,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Showcase sidebar */}
-        {(hasVisibleShowcase || isOwner) && (
+        {(hasVisibleShowcase || isOwner || (!isOwner && !!user)) && (
           <aside className="w-full lg:w-56 shrink-0 flex flex-col gap-4">
             {hasVisibleShowcase ? (
               <ShowcasedBadges
@@ -478,6 +516,8 @@ export default function ProfilePage() {
                 </div>
               </div>
             )}
+
+            {!isOwner && !!user && <PeopleYouMightKnow />}
           </aside>
         )}
       </div>
@@ -540,6 +580,7 @@ export default function ProfilePage() {
         />
       )}
       {confirmModal}
+    </div>
     </div>
   );
 }
