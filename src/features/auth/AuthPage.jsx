@@ -462,6 +462,7 @@ export default function AuthPage() {
                 savedAccounts={savedAccounts}
                 onProceedToPassword={handleSavedAccountProceed}
                 onGoogleLogin={handleGoogleLogin}
+                onSpotifyLogin={handleSpotifyLogin}
                 onAddAccount={handleAddAccount}
                 onRemoveAccount={handleRemoveAccount}
                 onPasskeySuccess={handleAuthSuccess}
