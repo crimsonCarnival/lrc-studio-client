@@ -97,7 +97,8 @@ export function NotificationItem({ notification }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { markRead, dismiss } = useNotificationsContext();
-  const { _id, read, createdAt } = notification;
+  const { _id, read, createdAt, updatedAt } = notification;
+  const displayTime = updatedAt ?? createdAt;
 
   const dest = notificationDestination(notification);
 
@@ -119,8 +120,8 @@ export function NotificationItem({ notification }) {
         <p className="text-sm text-zinc-200 leading-snug">
           <NotificationText notification={notification} t={t} />
         </p>
-        {createdAt && (
-          <p className="text-xs text-zinc-500 mt-1">{formatTimeAgo(createdAt, t)}</p>
+        {displayTime && (
+          <p className="text-xs text-zinc-500 mt-1">{formatTimeAgo(displayTime, t)}</p>
         )}
       </div>
       <div className="flex items-center gap-2 shrink-0">

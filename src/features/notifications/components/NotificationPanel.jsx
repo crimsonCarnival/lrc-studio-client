@@ -34,7 +34,6 @@ export function NotificationPanel() {
   const system  = notifications.filter(n => SYSTEM_TYPES.has(n.type));
   const total   = sticky.length + badges.length + social.length + system.length;
   const hasAny  = total > 0;
-  const hasMore = total > PANEL_CAP;
 
   // Cap each section proportionally — simpler: just slice the rendered list
   let remaining = PANEL_CAP;
@@ -44,7 +43,7 @@ export function NotificationPanel() {
   const systemSlice  = system.slice(0, remaining);
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-zinc-800/60 bg-zinc-900 shadow-2xl z-50 overflow-hidden">
+    <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-zinc-800/60 bg-zinc-900 shadow-2xl z-50">
       <div className="flex items-center justify-between border-b border-zinc-800/60 px-4 py-3">
         <span className="text-sm font-semibold text-zinc-100">{t('notifications.bell')}</span>
         <button
@@ -89,14 +88,12 @@ export function NotificationPanel() {
         )}
       </div>
 
-      {hasMore && (
-        <button
-          onClick={() => navigate('/notifications')}
-          className="w-full px-4 py-2.5 border-t border-zinc-800/60 text-xs font-medium text-primary hover:text-primary/80 hover:bg-zinc-800/40 transition-colors text-center"
-        >
-          {t('notifications.viewAll', 'View all notifications')}
-        </button>
-      )}
+      <button
+        onClick={() => navigate('/notifications')}
+        className="w-full px-4 py-2.5 border-t border-zinc-800/60 text-xs font-medium text-primary hover:text-primary/80 hover:bg-zinc-800/40 transition-colors text-center rounded-b-xl"
+      >
+        {t('notifications.viewAll', 'View all notifications')}
+      </button>
     </div>
   );
 }
