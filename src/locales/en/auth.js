@@ -250,6 +250,13 @@ export default {
     deleteFailed: "Failed to delete passkey.",
     tryPasskey: "Sign in with Passkey or QR Code"
   },
+  setAccountName: {
+    title: "Choose your username",
+    subtitle: "We generated a username for you, but you can change it now.",
+    hint: "Only letters, numbers, dashes, and underscores. 3-30 characters.",
+    keepGenerated: "Keep This",
+    saveUsername: "Save Username"
+  },
   passwordWarnings: {
     keyboardRow:     "Straight rows of keys are easy to guess",
     keyboardShort:   "Short keyboard patterns are easy to guess",

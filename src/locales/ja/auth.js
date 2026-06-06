@@ -250,6 +250,13 @@ export default {
     deleteFailed: "パスキーの削除に失敗しました。",
     tryPasskey: "パスキーまたはQRコードでログイン"
   },
+  setAccountName: {
+    title: "ユーザー名を選択",
+    subtitle: "ユーザー名を自動生成しましたが、今すぐ変更することもできます。",
+    hint: "半角英数字、ハイフン、アンダースコアのみ。3〜30文字。",
+    keepGenerated: "このままにする",
+    saveUsername: "ユーザー名を保存"
+  },
   passwordWarnings: {
     keyboardRow:     "キーボードの一直線は推測されやすいです",
     keyboardShort:   "短いキーボードパターンは推測されやすいです",

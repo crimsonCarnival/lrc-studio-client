@@ -250,6 +250,13 @@ export default {
     deleteFailed: "Error al eliminar la clave de acceso.",
     tryPasskey: "Iniciar sesión con clave de acceso o código QR"
   },
+  setAccountName: {
+    title: "Elige tu nombre de usuario",
+    subtitle: "Hemos generado un usuario para ti, pero puedes cambiarlo ahora.",
+    hint: "Solo letras, números, guiones y guiones bajos. 3-30 caracteres.",
+    keepGenerated: "Mantener este",
+    saveUsername: "Guardar usuario"
+  },
   passwordWarnings: {
     keyboardRow:     "Las filas de teclas son fáciles de adivinar",
     keyboardShort:   "Los patrones de teclado cortos son fáciles de adivinar",
