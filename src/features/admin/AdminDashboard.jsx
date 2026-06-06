@@ -391,7 +391,7 @@ export default function AdminDashboard() {
                   type="text"
                   value={xpBulkIds}
                   onChange={e => setXpBulkIds(e.target.value)}
-                  placeholder="id1, id2, id3…"
+                  placeholder={t('admin.xp.usernamePlaceholder')}
                   className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50 w-full"
                 />
               </label>
