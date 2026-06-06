@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { m as M, AnimatePresence } from 'framer-motion';
+import { m as M, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { z } from 'zod';
 import { AlertCircle, ArrowRight, Loader2, User } from 'lucide-react';
 import { Button } from '@ui/button';
@@ -76,14 +76,15 @@ export default function SetAccountNameModal() {
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <M.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-        >
+    <LazyMotion features={domAnimation}>
+      <AnimatePresence>
+        {isOpen && (
+          <M.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+          >
           {/* Backdrop */}
           <M.div
             initial={{ opacity: 0 }}
@@ -164,11 +165,12 @@ export default function SetAccountNameModal() {
                     </>
                   )}
                 </Button>
-              </div>
-            </form>
+                </div>
+              </form>
+            </M.div>
           </M.div>
-        </M.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </LazyMotion>
   );
 }
