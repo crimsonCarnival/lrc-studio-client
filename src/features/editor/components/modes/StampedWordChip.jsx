@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 
-export function StampedWordChip({ time, focusedTimestamp, lineIndex, wi, isSecondary, children, className, onClick, onDoubleClick }) {
+export function StampedWordChip({ time, focusedTimestamp, lineIndex, wi, isSecondary, children, className, onClick, onDoubleClick, ...rest }) {
   const prevTimeRef = useRef(null);
   const btnRef = useRef(null);
   const isFocused = (focusedTimestamp?.type === (isSecondary ? 'secondaryWord' : 'word')) && focusedTimestamp?.wordIndex === wi && focusedTimestamp?.lineIndex === lineIndex;
@@ -32,6 +32,7 @@ export function StampedWordChip({ time, focusedTimestamp, lineIndex, wi, isSecon
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={`${className} ${isFocused ? '!bg-primary !text-zinc-950 !border-primary ring-2 ring-primary/40 shadow-[0_0_12px_rgba(var(--primary-rgb),0.3)]' : ''}`}
+      {...rest}
     >
       {children}
     </button>
