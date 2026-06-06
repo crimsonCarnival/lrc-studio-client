@@ -1,11 +1,11 @@
 // client/src/features/projects/components/MediaStage.jsx
-// The "video slot": a fixed-height, borderless stage with the project cover
-// blurred behind the lyrics. Its bounded height makes the lyrics scroll
-// internally (restores auto-scroll). Children render over the ambient layer.
+// The "video slot": a fixed-height stage with the project cover blurred behind
+// the lyrics. Flush edges (no rounding) so it doesn't look like a card inside
+// the page. Children render over the ambient layer.
 export default function MediaStage({ cover, children }) {
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl"
+      className="relative w-full overflow-hidden"
       style={{ height: 'clamp(320px, 55vh, 640px)' }}
     >
       {/* Ambient cover or gradient fallback */}

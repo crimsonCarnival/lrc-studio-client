@@ -2,11 +2,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Music2, GitFork, Star, ExternalLink } from 'lucide-react';
+import { Music2, GitFork, Star, ExternalLink, CalendarDays } from 'lucide-react';
 
 export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, reactionsSlot }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [descExpanded, setDescExpanded] = useState(false);
+
+  const formattedDate = project.createdAt
+    ? new Date(project.createdAt).toLocaleDateString(i18n.resolvedLanguage || i18n.language, {
+        year: 'numeric', month: 'short', day: 'numeric',
+      })
+    : null;
 
   const meta = project.metadata || {};
   const description = meta.description || '';
@@ -88,15 +94,23 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
         </div>
       )}
 
-      {/* Author */}
-      {accountName && (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Music2 className="size-3.5" />
-          <Link to={`/${accountName}`} className="text-foreground hover:text-primary transition-colors">
-            {project.user.displayName || `@${accountName}`}
-          </Link>
-        </div>
-      )}
+      {/* Author + date */}
+      <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
+        {accountName && (
+          <div className="flex items-center gap-1.5">
+            <Music2 className="size-3.5" />
+            <Link to={`/${accountName}`} className="text-foreground hover:text-primary transition-colors">
+              {project.user.displayName || `@${accountName}`}
+            </Link>
+          </div>
+        )}
+        {formattedDate && (
+          <div className="flex items-center gap-1.5">
+            <CalendarDays className="size-3.5" />
+            <span>{t('projectView.publishedOn')} {formattedDate}</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

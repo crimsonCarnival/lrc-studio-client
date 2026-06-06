@@ -275,22 +275,16 @@ function PublicProjectViewPageInner() {
               }
               ctaSlot={
                 isOwner ? (
-                  <Button size="sm" onClick={handleEdit} className="h-8 px-3 text-xs font-medium gap-1 rounded-full shrink-0">
-                    <Pencil className="size-3.5" />
-                    {t('projectView.editButton')}
-                  </Button>
-                ) : project.forksEnabled !== false ? (
-                  project.isForkedByMe ? (
-                    <span className="inline-flex items-center gap-1 h-8 px-3 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
-                      <Check className="size-3.5" />
-                      {t('projectView.forkedBadge')}
-                    </span>
-                  ) : (
-                    <Button size="sm" onClick={handleFork} className="h-8 px-3 text-xs font-medium gap-1 rounded-full shrink-0">
-                      <GitFork className="size-3.5" />
-                      {t('projectView.forkButton')}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <ShareOgButton
+                      projectId={project.projectId}
+                      title={project.metadata?.songName || project.title}
+                    />
+                    <Button size="sm" onClick={handleEdit} className="h-8 px-3 text-xs font-medium gap-1 rounded-full">
+                      <Pencil className="size-3.5" />
+                      {t('projectView.editButton')}
                     </Button>
-                  )
+                  </div>
                 ) : null
               }
             />
