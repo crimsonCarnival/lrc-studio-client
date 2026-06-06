@@ -298,7 +298,7 @@ export default function EditorToolbar({
               <Redo2 className="size-4" />
             </Button>
           </Tip>
-          {handleManualSave && (!settings.advanced?.autoSave?.enabled || !user) && (
+          {handleManualSave && (
             <Tip content={isSaving ? (t('project.saving') || 'Saving…') : isAutosaving ? (t('project.saved') || 'Saved') : (t('project.save') || 'Save')}>
               <Button
                 variant="ghost"
