@@ -69,10 +69,20 @@ export default function SetAccountNameModal() {
     }
   };
 
-  const handleSkip = () => {
-    // If they skip, we still want to dismiss the modal, but how? We must set lastAccountNameChangedAt locally
-    // but the backend needs to know too. We can just send their existing accountName to the backend to set the timestamp.
-    handleSubmit({ preventDefault: () => {} });
+  const handleSkip = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await auth.updateProfile({ accountName: user.accountName });
+      setUser((prev) => ({ 
+        ...prev, 
+        lastAccountNameChangedAt: new Date().toISOString() 
+      }));
+    } catch (err) {
+      setError(translateAuthError(t, err, 'updateProfile'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
