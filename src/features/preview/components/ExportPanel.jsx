@@ -1,10 +1,12 @@
-﻿import { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useSettings } from '@/features/settings/useSettings';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { Checkbox } from '@ui/checkbox';
 import { Label } from '@ui/label';
+import { Tip } from '@ui/tip';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 
 export default function ExportPanel({
@@ -30,6 +32,7 @@ export default function ExportPanel({
 }) {
   const { t } = useTranslation();
   const { settings } = useSettings();
+  const navigate = useNavigate();
   const exportPanelRef = useRef(null);
 
   useEffect(() => {
@@ -47,19 +50,21 @@ export default function ExportPanel({
     return () => document.removeEventListener('mousedown', handler);
   }, [showExportPanel, setShowExportPanel]);
 
-
   if (!showExportPanel) return null;
+
+  const format = settings.export?.downloadFormat || 'lrc';
+  const hasExtras = hasSecondary || hasFurigana || hasTranslations || hasWords;
 
   return (
     <div
       ref={exportPanelRef}
       className="flex-1 min-h-0 flex flex-col animate-fade-in font-sans text-left"
     >
-      {/* Scrollable options */}
-      <div className="relative flex-1 min-h-0 overflow-y-auto space-y-3 p-3 sm:p-4 rounded-xl bg-zinc-900 border border-zinc-700">
+      <div className="relative flex-1 min-h-0 overflow-y-auto space-y-2 p-3 rounded-xl bg-zinc-900 border border-zinc-700">
         <ThemedShineBorder />
-        {/* Filename */}
-        <div className="flex items-center gap-2 mt-1 w-full">
+
+        {/* Filename + format */}
+        <div className="flex items-center gap-2">
           <div className="flex-1">
             <FloatingInput
               type="text"
@@ -70,13 +75,19 @@ export default function ExportPanel({
               className="bg-zinc-900 border-zinc-700 text-zinc-100 placeholder-zinc-500 focus-visible:ring-primary/25 focus-visible:border-primary/50"
             />
           </div>
-          <span className="text-sm text-zinc-500 font-mono bg-zinc-800 px-2 py-1.5 rounded-lg border border-zinc-700/50">
-            .{settings.export?.downloadFormat || 'lrc'}
-          </span>
+          <Tip content={t('export.formatTip')} side="top">
+            <button
+              type="button"
+              onClick={() => navigate('/settings/export')}
+              className="text-sm text-zinc-400 font-mono bg-zinc-800 px-2 py-1.5 rounded-lg border border-zinc-700/50 hover:border-zinc-500 hover:text-zinc-200 transition-colors"
+            >
+              .{format}
+            </button>
+          </Tip>
         </div>
 
-        {/* Metadata Section */}
-        <div className="flex items-center gap-2 pt-2 border-t border-zinc-700/50">
+        {/* Metadata toggle */}
+        <div className="flex items-center gap-2">
           <Checkbox
             id="include-metadata"
             checked={includeMetadata}
@@ -88,9 +99,9 @@ export default function ExportPanel({
           </Label>
         </div>
 
-        {/* Format Specific Options */}
-        {(hasSecondary || hasFurigana || hasTranslations) && (
-          <div className="space-y-1.5 pt-1 border-t border-zinc-700/30">
+        {/* Extra content options */}
+        {hasExtras ? (
+          <div className="flex flex-col gap-1.5 pt-1.5 border-t border-zinc-700/30">
             {(hasSecondary || hasFurigana) && (
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -120,50 +131,41 @@ export default function ExportPanel({
                 </Label>
               </div>
             )}
+            {hasWords && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="include-words"
+                  checked={includeWordTimestamps}
+                  onCheckedChange={setIncludeWordTimestamps}
+                  className="border-zinc-600 bg-zinc-900 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                />
+                <Label htmlFor="include-words" className="text-xs text-zinc-400 cursor-pointer">
+                  {t('export.includeWords', 'Word-by-word timestamps')}
+                </Label>
+              </div>
+            )}
           </div>
-        )}
-
-
-        {/* Word Timestamps */}
-        {hasWords && (
-          <div className="space-y-2 pt-2 border-t border-zinc-700/50">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="include-words"
-                checked={includeWordTimestamps}
-                onCheckedChange={setIncludeWordTimestamps}
-                className="border-zinc-600 bg-zinc-900 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-              />
-              <Label htmlFor="include-words" className="text-xs text-zinc-400 cursor-pointer">
-                {t('export.includeWords', 'Word-by-word timestamps')}
-              </Label>
-            </div>
-          </div>
-        )}
-
-        {!hasWords && (!hasSecondary && !hasFurigana && !hasTranslations) && (
+        ) : (
           <p className="text-xs text-zinc-600 italic px-1">
-            {t('export.noExtraContent', 'No secondary text, translations, or word timestamps to include.')}
+            {t('export.noExtraContent')}
           </p>
         )}
-
       </div>
 
-      {/* Sticky buttons at bottom */}
-      <div className="flex gap-2 w-full pt-3 flex-shrink-0">
+      {/* Buttons */}
+      <div className="flex gap-2 w-full pt-2 flex-shrink-0">
         <Button
           variant="outline"
           onClick={handleCopy}
-          className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border-zinc-700 font-semibold text-sm h-10"
+          className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border-zinc-700 font-semibold text-sm h-9"
         >
           {wasCopied
-            ? `${t('common.copied')} ${settings.export?.copyFormat.toUpperCase()}!`
+            ? `${t('common.copied')} ${settings.export?.copyFormat?.toUpperCase() ?? 'LRC'}!`
             : t('preview.copyToClipboard')}
         </Button>
-
         <Button
           onClick={handleExport}
-          className="flex-1 bg-primary hover:bg-primary-dim text-zinc-950 font-semibold text-sm h-10"
+          className="flex-1 bg-primary hover:bg-primary-dim text-zinc-950 font-semibold text-sm h-9"
         >
           {t('export.download')}
         </Button>
