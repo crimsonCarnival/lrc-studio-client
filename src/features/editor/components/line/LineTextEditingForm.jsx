@@ -101,7 +101,7 @@ function LineTextEditingForm({
         onClick={addTranslation}
         className="flex items-center gap-1 text-[10px] text-zinc-600 hover:text-zinc-400 self-start px-0.5 py-0.5"
       >
-        <Plus className="size-2.5" /> {t('editor.addTranslation', 'Add translation')}
+        <Plus className="size-2.5" /> {t('editor.addTranslation')}
       </button>
 
       {/* Singer fields */}
@@ -111,7 +111,7 @@ function LineTextEditingForm({
           type="text"
           value={editingSinger}
           onChange={(e) => setEditingSinger(e.target.value)}
-          placeholder={t('editor.singer', 'Singer (optional)')}
+          placeholder={t('editor.singer')}
           list={`singers-${lineIndex}`}
           className="flex-1 bg-zinc-800 border-zinc-700/40 text-xs text-zinc-500 h-6"
         />
@@ -119,7 +119,7 @@ function LineTextEditingForm({
           type="text"
           value={editingSinger2}
           onChange={(e) => setEditingSinger2(e.target.value)}
-          placeholder={t('editor.singer2', 'Singer 2 (italic)')}
+          placeholder={t('editor.singer2')}
           list={`singers-${lineIndex}`}
           className="flex-1 bg-zinc-800 border-zinc-700/40 text-xs text-zinc-500 h-6 italic"
         />
