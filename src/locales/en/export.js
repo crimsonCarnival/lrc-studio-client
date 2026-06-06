@@ -21,6 +21,7 @@ export default {
   includeOptions: "Include in export",
   includeWords: "Word-by-word timestamps",
   includeSecondary: "Secondary lyrics",
-  noExtraContent: "No advanced metadata available for this export.",
+  noExtraContent: "No secondary text, translations, or word timestamps to include.",
+  formatTip: "Change format in Settings → Export",
   failed: "Export failed"
 };

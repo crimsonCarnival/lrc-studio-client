@@ -22,5 +22,6 @@ export default {
   includeWords: "単語ごとのタイムスタンプ",
   includeSecondary: "セカンダリ歌詞",
   noExtraContent: "含めるセカンダリテキスト、翻訳、または単語のタイムスタンプはありません。",
+  formatTip: "設定 → エクスポート で形式を変更できます",
   failed: "エクスポートに失敗しました"
 };

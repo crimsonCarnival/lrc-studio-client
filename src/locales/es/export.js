@@ -22,5 +22,6 @@ export default {
   includeWords: "Marcas de tiempo palabra por palabra",
   includeSecondary: "Letra secundaria",
   noExtraContent: "No hay texto secundario, traducciones ni marcas de tiempo de palabras para incluir.",
+  formatTip: "Cambia el formato en Ajustes → Exportar",
   failed: "Error al exportar"
 };
