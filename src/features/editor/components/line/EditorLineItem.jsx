@@ -47,6 +47,8 @@ const EditorLineItem = React.memo(({
   setEditingTranslations,
   editingSinger,
   setEditingSinger,
+  editingSinger2,
+  setEditingSinger2,
   handleSaveLineText,
   handleInsertSection,
   handleAssignSinger,
@@ -234,15 +236,17 @@ const EditorLineItem = React.memo(({
           setEditingLineIndex(i);
           setEditingText(line.label || '');
           setEditingSinger(line.singer || '');
+          setEditingSinger2(line.singer2 || '');
         }}
         style={{ animationDelay: staggerDelay }}
         className={`flex items-center gap-2 px-4 py-1.5 rounded-lg cursor-pointer group animate-preview-line-in ${selectedLines.has(i) ? 'bg-primary/10 border border-primary/30' : 'hover:bg-zinc-800/30 border border-transparent'}`}
       >
         <div className="flex-1 h-px bg-zinc-800/50" />
         {isEditing ? (
-          <div className="flex items-center gap-1.5" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { handleSaveLineText(i, editingText, undefined, undefined, editingSinger); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSinger); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
+          <div className="flex items-center gap-1.5" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { handleSaveLineText(i, editingText, undefined, undefined, editingSinger, editingSinger2); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSinger, editingSinger2); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
             <input autoFocus value={editingText} onChange={(e) => setEditingText(e.target.value)} placeholder={t('editor.sectionLabelPlaceholder')} className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-200 rounded px-2 py-0.5 w-28 focus:outline-none focus:border-primary/60" />
-            <input value={editingSinger} onChange={(e) => setEditingSinger(e.target.value)} placeholder={t('editor.singerOptPlaceholder')} list={`section-singers-${i}`} className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-400 rounded px-2 py-0.5 w-28 focus:outline-none focus:border-primary/60" />
+            <input value={editingSinger} onChange={(e) => setEditingSinger(e.target.value)} placeholder={t('editor.singerOptPlaceholder')} list={`section-singers-${i}`} className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-400 rounded px-2 py-0.5 w-24 focus:outline-none focus:border-primary/60" />
+            <input value={editingSinger2} onChange={(e) => setEditingSinger2(e.target.value)} placeholder={t('editor.singer2')} list={`section-singers-${i}`} className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-400 italic rounded px-2 py-0.5 w-24 focus:outline-none focus:border-primary/60" />
             {songArtists?.length > 0 && (
               <datalist id={`section-singers-${i}`}>
                 {songArtists.map((a) => <option key={a} value={a} />)}
@@ -251,7 +255,12 @@ const EditorLineItem = React.memo(({
           </div>
         ) : (
           <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-800 bg-zinc-900/40 whitespace-nowrap group-hover:text-zinc-400 group-hover:border-zinc-700 transition-colors">
-            {line.label || t('editor.sectionDefault')}{line.singer ? ` · ${line.singer}` : ''}
+            {(() => {
+              const label = line.label || t('editor.sectionDefault');
+              const hasSingers = songArtists?.length > 1;
+              const singers = [line.singer, line.singer2].filter(Boolean).join(' · ');
+              return hasSingers && singers ? `[${label}: ${singers}]` : label;
+            })()}
           </span>
         )}
         <div className="flex-1 h-px bg-zinc-800/50" />
@@ -304,7 +313,7 @@ const EditorLineItem = React.memo(({
       onDragEnd={handleDragEnd}
       onDrop={(e) => handleDrop(e, i)}
       style={{ animationDelay: staggerDelay }}
-      className={`outline-none flex items-center gap-3 sm:gap-4 px-4 py-3 sm:px-3 sm:py-2 rounded-xl sm:rounded-lg transition-colors duration-300 ease-out cursor-pointer group relative overflow-hidden animate-preview-line-in ${selectedLines.has(i)
+      className={`outline-none flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-3 sm:gap-4 px-4 py-3 sm:px-3 sm:py-2 rounded-xl sm:rounded-lg transition-colors duration-300 ease-out cursor-pointer group relative overflow-hidden animate-preview-line-in ${selectedLines.has(i)
         ? `bg-primary/15 border border-${isModified ? 'warning' : 'primary'}/40 ring-1 ring-${isModified ? 'warning' : 'primary'}/20`
         : isActive
           ? isLocked
@@ -425,10 +434,15 @@ const EditorLineItem = React.memo(({
         )}
       </span>
 
-      {/* Singer badge */}
+      {/* Singer badges */}
       {line.singer && (
         <span className="shrink-0 text-[9px] font-semibold text-zinc-600 bg-zinc-800/60 px-1.5 py-0.5 rounded-full border border-zinc-700/40 max-w-[72px] truncate">
           {line.singer}
+        </span>
+      )}
+      {line.singer2 && (
+        <span className="shrink-0 text-[9px] font-semibold italic text-zinc-600 bg-zinc-800/60 px-1.5 py-0.5 rounded-full border border-zinc-700/40 max-w-[72px] truncate">
+          {line.singer2}
         </span>
       )}
 
@@ -442,6 +456,7 @@ const EditorLineItem = React.memo(({
           setEditingSecondary(line.secondary || '');
           setEditingTranslations(line.translations ? [...line.translations] : []);
           setEditingSinger(line.singer || '');
+          setEditingSinger2(line.singer2 || '');
         }}>
         {editingLineIndex === i ? (
           <LineTextEditingForm
@@ -455,6 +470,8 @@ const EditorLineItem = React.memo(({
             setEditingTranslations={setEditingTranslations}
             editingSinger={editingSinger}
             setEditingSinger={setEditingSinger}
+            editingSinger2={editingSinger2}
+            setEditingSinger2={setEditingSinger2}
             handleSaveLineText={handleSaveLineText}
             setEditingLineIndex={setEditingLineIndex}
             songArtists={songArtists}
@@ -493,6 +510,7 @@ const EditorLineItem = React.memo(({
         setEditingSecondary={setEditingSecondary}
         setEditingTranslations={setEditingTranslations}
         setEditingSinger={setEditingSinger}
+        setEditingSinger2={setEditingSinger2}
         serializeToRubyMarkup={serializeToRubyMarkup}
         handleInsertSection={handleInsertSection}
         handleAssignSinger={handleAssignSinger}
