@@ -185,11 +185,11 @@ function PublicProjectViewPageInner() {
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-background">
-      {/* CTA strip — non-owners only, fixed below the AppHeader */}
+      {/* CTA banner — non-owners only, in document flow (pushes content down, no overlap) */}
       {!isOwner && (
-        <div className="fixed left-0 right-0 top-[60px] sm:top-[72px] lg:top-[88px] z-[60] bg-background/95 border-b border-border backdrop-blur-md">
-          <div className="flex items-center gap-3 px-4 py-2 max-w-7xl mx-auto w-full">
-            <p className="text-xs text-muted-foreground flex-1 truncate">
+        <div className="w-full flex-shrink-0 bg-card/60 border-b border-border backdrop-blur-sm">
+          <div className="flex items-center gap-3 px-4 py-2.5 max-w-7xl mx-auto w-full">
+            <p className="text-xs text-muted-foreground flex-1 min-w-0 truncate">
               {user ? t('projectView.ctaAuth') : t('projectView.ctaGuest')}
             </p>
             <div className="flex items-center gap-1.5 shrink-0">
@@ -245,7 +245,7 @@ function PublicProjectViewPageInner() {
       )}
 
       {/* Content area: watch layout */}
-      <div className={`flex-1 min-h-0 overflow-y-auto ${!isOwner ? 'pt-[36px]' : ''}`}>
+      <div className="flex-1 min-h-0 overflow-y-auto">
         <WatchLayout
           stage={
             <MediaStage cover={cover}>
