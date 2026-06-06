@@ -1,6 +1,7 @@
 export default {
   loginWelcome: "<0>LRC Studio</0>へようこそ",
   googleContinue: "Googleで続行",
+  spotifyContinue: "Spotifyで続行",
   loginWelcomeBack: "おかえりなさい、<0>{{name}}</0>さん！",
   loginSubtitle: "ハンドルまたはメールを入力して続けてください。",
   enterPassword: "パスワードを入力してください",

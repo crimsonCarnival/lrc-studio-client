@@ -1,6 +1,7 @@
 export default {
   loginWelcome: "Bienvenido a <0>LRC Studio</0>",
   googleContinue: "Continuar con Google",
+  spotifyContinue: "Continuar con Spotify",
   loginWelcomeBack: "¡Bienvenido de nuevo, <0>{{name}}</0>!",
   loginSubtitle: "Ingresa tu usuario o correo para continuar.",
   enterPassword: "Ingresa tu contraseña",
