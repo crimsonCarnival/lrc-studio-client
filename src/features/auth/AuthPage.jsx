@@ -256,6 +256,7 @@ export default function AuthPage() {
       accountName: u?.accountName ?? identifierData.accountName,
       displayName: u?.displayName ?? identifierData.displayName,
       avatarUrl: u?.avatarUrl ?? identifierData.avatarUrl,
+      hasPasskey: u?.hasPasskey ?? identifierData.hasPasskey,
     } : null;
 
     if (fromSavedAccount) {
@@ -289,6 +290,7 @@ export default function AuthPage() {
           accountName: u?.accountName ?? identifierData.accountName,
           displayName: u?.displayName ?? identifierData.displayName,
           avatarUrl: u?.avatarUrl ?? identifierData.avatarUrl,
+          hasPasskey: u?.hasPasskey ?? identifierData.hasPasskey,
         });
         setSavedAccounts(rememberedAccounts.getAll());
       }

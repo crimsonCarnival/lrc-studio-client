@@ -30,7 +30,11 @@ export function translateAuthError(t, err, context = 'generic', value = '') {
   // Status-based fallbacks
   const status = err?.status ?? err?.body?.status;
   if (status === 429) return t('auth.tooManyAttempts');
-  if (status === 409) return t('auth.errors.accountName_taken');
+  if (status === 409) {
+    // The server distinguishes between accountName_taken and email_taken via code;
+    // if we reach the status fallback, default to accountName_taken.
+    return t('auth.errors.accountName_taken');
+  }
   if (status === 401) return t('auth.errors.invalid_credentials');
   if (status === 403) return t('auth.errors.account_banned');
   if (status === 400) return t('auth.validationError');

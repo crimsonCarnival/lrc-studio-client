@@ -8,6 +8,7 @@ import { FloatingInput } from '@ui/floating-input';
 import { Tip } from '@ui/tip';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
+import { auth } from '@/app/api';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import RegistrationBlockedModal from './RegistrationBlockedModal';
 import { FieldError, ErrorBanner, ContextBanner, GoogleButton, SpotifyButton } from './auth-shared';
@@ -126,11 +127,34 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
     return result.success ? /** @type {Record<string, string>} */ ({}) : zodErrors(result, t);
   };
 
-  const handleNext = (e) => {
+  const handleNext = async (e) => {
     e.preventDefault();
     const errs = validateStep1();
     setFieldErrors(errs);
     if (Object.keys(errs).length > 0) return;
+
+    // Verify the accountName isn't already taken before advancing
+    if (accountName) {
+      setLoading(true);
+      try {
+        await auth.checkIdentifier(accountName);
+        // If checkIdentifier resolves, the account already exists — block advance
+        setFieldErrors(p => ({ ...p, accountName: t('auth.errors.accountName_taken') }));
+        setLoading(false);
+        return;
+      } catch (err) {
+        // 404 means no account found — safe to proceed
+        if (err?.status !== 404) {
+          // Some other error (e.g. banned IP) — surface it
+          setError(translateAuthError(t, err, 'register', accountName));
+          setLoading(false);
+          return;
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
     setError('');
     setStep(2);
   };
