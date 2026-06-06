@@ -173,15 +173,24 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
     const wordField = stampTarget === 'secondary' ? 'secondaryWords' : 'words';
     const words = line[wordField] || [];
 
-    // First press on this line: stamp the line-level timestamp
+    // First press on this line with no prior timestamp: set line.timestamp AND stamp word[0]
+    // so that every Enter iterates through words directly (not a two-step line→words sequence).
     if (line.timestamp == null) {
-      updated[activeLineIndex] = { ...line, timestamp: time };
-      // If no words to stamp, immediately advance
       if (!words.length) {
+        // No words at all — stamp line only and advance
+        updated[activeLineIndex] = { ...line, timestamp: time };
         const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
         return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
       }
-      return { nextLines: updated, nextActiveLineIndex: null, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
+      // Stamp line.timestamp + words[0] in one press
+      const newWords = [...words];
+      newWords[0] = { ...newWords[0], time };
+      updated[activeLineIndex] = { ...line, timestamp: time, [wordField]: newWords };
+      if (newWords.length === 1) {
+        const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
+        return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
+      }
+      return { nextLines: updated, nextActiveLineIndex: null, nextAwaitingEndMark: null, nextActiveWordIndex: 1 };
     }
 
     // Subsequent presses: stamp words one by one
