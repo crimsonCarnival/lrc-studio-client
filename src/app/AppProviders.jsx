@@ -5,6 +5,7 @@ import { TooltipProvider } from '@ui/tooltip';
 import { NotificationsProvider } from '@/features/notifications/NotificationsContext';
 import { connectSocket, disconnectSocket } from '@/app/socket.client';
 import { useSessionSocket } from '@/features/auth/hooks/useSessionSocket';
+import SetAccountNameModal from '@/features/auth/components/SetAccountNameModal';
 
 export function AppProviders({ children }) {
   useEffect(() => {
@@ -19,6 +20,7 @@ export function AppProviders({ children }) {
       <SetupProvider>
         <TooltipProvider>
           <NotificationsProvider>
+            <SetAccountNameModal />
             {children}
           </NotificationsProvider>
         </TooltipProvider>

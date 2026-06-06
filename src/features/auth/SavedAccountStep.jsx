@@ -8,7 +8,7 @@ import { rememberedAccounts } from '@/features/auth/services/remembered-accounts
 
 // ─── Account Picker — shown on return visits when remembered accounts exist ──
 
-export default function SavedAccountStep({ t, savedAccounts, onProceedToPassword, onGoogleLogin, onSpotifyLogin, onAddAccount, onRemoveAccount, onPasskeySuccess }) {
+export default function SavedAccountStep({ t, savedAccounts, accountsChecked, onProceedToPassword, onGoogleLogin, onSpotifyLogin, onAddAccount, onRemoveAccount, onPasskeySuccess }) {
   const [loadingKey, setLoadingKey] = useState(null);
   const [errors, setErrors] = useState({});
   const { loginWithPasskey } = useAuthContext();
@@ -63,6 +63,34 @@ export default function SavedAccountStep({ t, savedAccounts, onProceedToPassword
       setLoadingKey(null);
     }
   };
+
+  // ── Skeleton — shown while we validate accounts against the server ─────────
+  if (!accountsChecked) {
+    // Guess how many rows to show from storage so the layout doesn't jump
+    const skeletonCount = Math.max(1, Math.min(rememberedAccounts.getAll().length, 3));
+    return (
+      <div className="animate-fade-in flex flex-col gap-5" aria-hidden="true">
+        <div>
+          <div className="h-3 w-24 rounded bg-zinc-800 mb-4 animate-pulse" />
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: skeletonCount }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/40 border border-zinc-700/30"
+              >
+                <div className="size-9 rounded-full bg-zinc-700/60 animate-pulse shrink-0" />
+                <div className="flex-1 flex flex-col gap-1.5">
+                  <div className="h-3 w-28 rounded bg-zinc-700/60 animate-pulse" />
+                  <div className="h-2.5 w-20 rounded bg-zinc-800/80 animate-pulse" />
+                </div>
+                <div className="size-4 rounded bg-zinc-700/40 animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in flex flex-col gap-5">

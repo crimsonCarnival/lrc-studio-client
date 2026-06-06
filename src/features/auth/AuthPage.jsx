@@ -16,6 +16,7 @@ import ForgotPasswordTab from './ForgotPasswordTab.jsx';
 import { LangSwitcher } from './auth-shared';
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
+import { auth } from '@/app/api';
 import SmoothWavyCanvas from '@features/landing/SmoothWavyCanvas';
 
 // ─── Main AuthPage ──────────────────────────────────────────────────────────
@@ -34,6 +35,8 @@ export default function AuthPage() {
   usePageTitle();
 
   const [savedAccounts, setSavedAccounts] = useState(() => rememberedAccounts.getAll());
+  // Skip validation entirely when there are no saved accounts (avoids a redundant setState in the effect)
+  const [accountsChecked, setAccountsChecked] = useState(() => rememberedAccounts.getAll().length === 0);
 
   const [view, setView] = useState(() => {
     if (action === 'forgot-password') return 'forgot-password';
@@ -45,7 +48,48 @@ export default function AuthPage() {
   /** @type {any} */
   const [identifierData, setIdentifierData] = useState(null);
   const [fromSavedAccount, setFromSavedAccount] = useState(false);
+
+  // Validate saved accounts against the server on mount. Accounts that no longer
+  // exist (deleted/renamed) are removed from storage and state immediately so the
+  // user never sees a ghost entry that would error out on click.
+  // NOTE: accountsChecked is initialised to `true` when there are no accounts,
+  //       so this effect only runs (and calls setState) when there's real work to do.
+  useEffect(() => {
+    const accounts = rememberedAccounts.getAll();
+    if (accounts.length === 0) return; // already checked via lazy initializer
+    let cancelled = false;
+    Promise.all(
+      accounts.map(async (account) => {
+        const identifier = account.identifier || account.accountName;
+        if (!identifier) return null; // malformed entry — drop it
+        try {
+          await auth.checkIdentifier(identifier);
+          return account; // still exists
+        } catch (err) {
+          // 404 = account no longer exists; any other error = keep the account
+          // (network blip / server error should not nuke the list)
+          if (err?.status === 404) {
+            rememberedAccounts.remove(account.userId);
+            return null;
+          }
+          return account;
+        }
+      })
+    ).then((results) => {
+      if (cancelled) return;
+      const valid = results.filter(Boolean);
+      setSavedAccounts(valid);
+      setAccountsChecked(true);
+      // If every saved account was pruned, fall back to the identifier step
+      if (valid.length === 0) {
+        setView((prev) => (prev === 'login-saved-account' ? 'login-identifier' : prev));
+      }
+    });
+    return () => { cancelled = true; };
+  }, []); // run once on mount
+
   // 1. Force pretty URLs if legacy query params are used
+
   useEffect(() => {
     if (!mode && searchParams.has('action')) {
       const legacyAction = searchParams.get('action');
@@ -456,10 +500,11 @@ export default function AuthPage() {
           {/* Card */}
           <div className="bg-zinc-900/80 backdrop-blur-2xl border border-zinc-800/50 contrast-more:border-zinc-600 rounded-2xl shadow-card p-7 sm:p-8 relative overflow-hidden">
 
-            {view === 'login-saved-account' && savedAccounts.length > 0 && (
+            {view === 'login-saved-account' && (savedAccounts.length > 0 || !accountsChecked) && (
               <SavedAccountStep
                 t={t}
                 savedAccounts={savedAccounts}
+                accountsChecked={accountsChecked}
                 onProceedToPassword={handleSavedAccountProceed}
                 onGoogleLogin={handleGoogleLogin}
                 onSpotifyLogin={handleSpotifyLogin}
