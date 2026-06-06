@@ -39,6 +39,7 @@ export function useEditor({
   const [editingSecondary, setEditingSecondary] = useState('');
   const [editingTranslations, setEditingTranslations] = useState([]);
   const [editingSinger, setEditingSinger] = useState('');
+  const [editingSinger2, setEditingSinger2] = useState('');
   const [selectedLines, setSelectedLines] = useState(new Set());
   // awaitingEndMark is derived: only non-null when the stored context still matches
   const [awaitingEndMarkFor, setAwaitingEndMarkFor] = useState(null); // null | { lineIndex, mode }
@@ -586,16 +587,16 @@ export function useEditor({
     });
   };
 
-  const handleSaveLineText = (index, newText, newSecondary, newTranslations, newSinger) => {
+  const handleSaveLineText = (index, newText, newSecondary, newTranslations, newSinger, newSinger2) => {
     setModifiedLines(prev => new Set(prev).add(index));
     setLines((prev) => {
       const updated = [...prev];
       if (index < 0 || index >= updated.length) return prev;
       const prevLine = updated[index];
 
-      // Section marker — just update label and singer
+      // Section marker — just update label and singer(s)
       if (prevLine.type === 'section') {
-        updated[index] = { ...prevLine, label: newText?.trim() || prevLine.label, singer: newSinger?.trim() || undefined };
+        updated[index] = { ...prevLine, label: newText?.trim() || prevLine.label, singer: newSinger?.trim() || undefined, singer2: newSinger2?.trim() || undefined };
         return updated;
       }
 
@@ -608,6 +609,7 @@ export function useEditor({
         line.translations = filtered.length > 0 ? filtered : undefined;
       }
       if (newSinger !== undefined) line.singer = newSinger?.trim() || undefined;
+      if (newSinger2 !== undefined) line.singer2 = newSinger2?.trim() || undefined;
       // Always re-tokenize when text or markup changed
       const textChanged = plainText !== (prevLine.text || '');
       // Always generate words if they are missing or text changed
@@ -984,6 +986,8 @@ export function useEditor({
     setEditingTranslations,
     editingSinger,
     setEditingSinger,
+    editingSinger2,
+    setEditingSinger2,
     dragIndex,
     dragOverIndex,
     selectedLines,
