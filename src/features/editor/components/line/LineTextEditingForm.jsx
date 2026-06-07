@@ -4,6 +4,14 @@ import { FloatingCombobox } from '@ui/floating-combobox';
 import { useLanguageOptions } from '@features/editor/hooks/useLanguageOptions';
 import { Plus, X, User } from 'lucide-react';
 
+/** Style class per singer role (0-indexed) */
+const SINGER_STYLE_CLASSES = [
+  '',               // 0: normal
+  'italic',         // 1: italic
+  'font-bold',      // 2: bold
+  'font-bold italic', // 3: bold+italic
+];
+
 function LineTextEditingForm({
   lineIndex,
   editingText,
@@ -12,10 +20,8 @@ function LineTextEditingForm({
   setEditingSecondary,
   editingTranslations,
   setEditingTranslations,
-  editingSinger,
-  setEditingSinger,
-  editingSinger2,
-  setEditingSinger2,
+  editingSingers,
+  setEditingSingers,
   handleSaveLineText,
   setEditingLineIndex,
   songArtists,
@@ -24,7 +30,29 @@ function LineTextEditingForm({
   const { t } = useTranslation();
   const languageOptions = useLanguageOptions();
 
-  const save = () => handleSaveLineText(lineIndex, editingText, editingSecondary, editingTranslations, editingSinger, editingSinger2);
+  // Ensure we always work with a 4-slot array (padded with '')
+  const singers = [...(editingSingers || []), '', '', '', ''].slice(0, 4);
+
+  const save = () =>
+    handleSaveLineText(lineIndex, editingText, editingSecondary, editingTranslations, singers);
+
+  const updateSinger = (idx, val) => {
+    setEditingSingers((prev) => {
+      const next = [...(prev || []), '', '', '', ''].slice(0, 4);
+      next[idx] = val;
+      return next;
+    });
+  };
+
+  const removeSinger = (idx) => {
+    setEditingSingers((prev) => {
+      const next = [...(prev || []), '', '', '', ''].slice(0, 4);
+      next[idx] = '';
+      // Collapse: shift remaining non-empty singers forward
+      const filled = next.filter(Boolean);
+      return [...filled, '', '', '', ''].slice(0, 4);
+    });
+  };
 
   const updateTranslation = (idx, field, value) => {
     setEditingTranslations((prev) => {
@@ -41,6 +69,11 @@ function LineTextEditingForm({
   const removeTranslation = (idx) => {
     setEditingTranslations((prev) => prev.filter((_, i) => i !== idx));
   };
+
+  // How many singer slots are actively filled
+  const activeSingerCount = singers.filter(Boolean).length;
+  // Next empty slot index (or -1 if all 4 filled)
+  const nextEmptySlot = singers.findIndex((s) => !s);
 
   return (
     <div
@@ -110,29 +143,49 @@ function LineTextEditingForm({
         <Plus className="size-2.5" /> {t('editor.addTranslation')}
       </button>
 
-      {/* Singer fields */}
-      <div className="flex items-center gap-1 mt-0.5">
-        <User className="size-3 text-zinc-600 shrink-0" />
-        <Input
-          type="text"
-          value={editingSinger}
-          onChange={(e) => setEditingSinger(e.target.value)}
-          placeholder={t('editor.singer')}
-          list={`singers-${lineIndex}`}
-          className="flex-1 bg-zinc-800 border-zinc-700/40 text-xs text-zinc-500 h-6"
-        />
-        <Input
-          type="text"
-          value={editingSinger2}
-          onChange={(e) => setEditingSinger2(e.target.value)}
-          placeholder={t('editor.singer2')}
-          list={`singers-${lineIndex}`}
-          className="flex-1 bg-zinc-800 border-zinc-700/40 text-xs text-zinc-500 h-6 italic"
-        />
+      {/* Singer slots — dynamic, up to 4 */}
+      <div className="flex flex-col gap-0.5 mt-0.5">
+        {singers.map((name, idx) => {
+          // Only show a row if this slot is filled OR it's the next empty slot after filled ones
+          const isFilled = !!name;
+          const isNextEmpty = idx === nextEmptySlot;
+          if (!isFilled && !isNextEmpty) return null;
+
+          const roleLabel = idx === 0
+            ? t('editor.singer', 'Singer 1')
+            : t('editor.singerN', 'Singer {{n}}', { n: idx + 1 });
+
+          return (
+            <div key={idx} className="flex items-center gap-1">
+              <User className="size-3 text-zinc-600 shrink-0" />
+              <Input
+                type="text"
+                value={name}
+                onChange={(e) => updateSinger(idx, e.target.value)}
+                placeholder={roleLabel}
+                list={`singers-${lineIndex}`}
+                className={`flex-1 bg-zinc-800 border-zinc-700/40 text-xs text-zinc-500 h-6 ${SINGER_STYLE_CLASSES[idx]}`}
+              />
+              {isFilled && (
+                <button
+                  type="button"
+                  onClick={() => removeSinger(idx)}
+                  className="text-zinc-700 hover:text-zinc-400 shrink-0 px-0.5"
+                  title={t('editor.removeSinger', 'Remove singer')}
+                >
+                  <X className="size-3" />
+                </button>
+              )}
+            </div>
+          );
+        })}
         {songArtists?.length > 0 && (
           <datalist id={`singers-${lineIndex}`}>
             {songArtists.map((a) => <option key={a} value={a} />)}
           </datalist>
+        )}
+        {activeSingerCount >= 4 && (
+          <p className="text-[9px] text-zinc-700 ml-4">Max 4 singers</p>
         )}
       </div>
     </div>
