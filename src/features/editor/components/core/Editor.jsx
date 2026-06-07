@@ -138,6 +138,18 @@ export default function Editor({
     };
   }, [registerAfterSave, clearModifiedLines]);
 
+  const combinedSingers = useMemo(() => {
+    const singersSet = new Set(songArtists || EMPTY_ARTISTS);
+    (lines || []).forEach(line => {
+      if (line.singers) {
+        line.singers.forEach(s => {
+          if (s && s.trim()) singersSet.add(s.trim());
+        });
+      }
+    });
+    return Array.from(singersSet);
+  }, [songArtists, lines]);
+
   const [activeDrawer, setActiveDrawer] = useState(null); // null | 'word' | 'bulk' | 'line'
   const [activeWordMenuData, setActiveWordMenuData] = useState({ lineIndex: null, wordIndex: null, word: null, isSecondary: false });
   const [activeLineMenuData, setActiveLineMenuData] = useState({ lineIndex: null, line: null });
@@ -253,7 +265,7 @@ export default function Editor({
           handleInsertSection={handleInsertSection}
           handleToggleSectionDepth={handleToggleSectionDepth}
           handleAssignSinger={handleAssignSinger}
-          songArtists={songArtists}
+          songArtists={combinedSingers}
           playerRef={playerRef}
           shiftTime={shiftTime}
           handleAddLine={handleAddLine}
