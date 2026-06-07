@@ -1,4 +1,4 @@
-﻿import { useState, useCallback, useMemo, useRef, useImperativeHandle, useEffect, useLayoutEffect } from 'react';
+import { useState, useCallback, useMemo, useRef, useImperativeHandle, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useSettings } from '@/features/settings/useSettings';
@@ -191,10 +191,13 @@ function Player(
   const [showSpotifyBrowser, setShowSpotifyBrowser] = useState(false);
 
   const handleSpotifyBrowserSelect = useCallback((track) => {
-    sp.playTrack(track.id, track.name, false);
-    onTitleChange?.(track.name);
+    const trackId = track.trackId || track.id;
+    const title = track.title || track.name || '';
+    sp.playTrack(trackId, title, false);
+    onTitleChange?.(title);
+    onSpotifyTrackIdChange?.(trackId);
     setShowSpotifyBrowser(false);
-  }, [sp, onTitleChange]);
+  }, [sp, onTitleChange, onSpotifyTrackIdChange]);
 
   useSpotifyAuth();
 
