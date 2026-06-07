@@ -14,9 +14,7 @@ const SINGER_CHIP_COLORS = [
 ];
 
 function getLineSingers(line) {
-  if (line.singers?.length) return line.singers;
-  const legacy = [line.singer, line.singer2].filter(Boolean);
-  return legacy;
+  return line.singers || [];
 }
 export default function PreviewLine({
   line,
@@ -51,13 +49,20 @@ export default function PreviewLine({
   // Section marker — render as a divider chip
   if (line.type === 'section') {
     const labelStr = formatSectionLabel(line.label, t);
+    const isRoot = line.depth === 0;
+    const singers = getLineSingers(line);
+    
     return (
-      <div className="flex items-center gap-3 px-2 sm:px-4 py-2 my-1">
-        <div className="flex-1 h-px bg-zinc-800/60" />
-        <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-800/60 bg-zinc-900/40 whitespace-nowrap">
-          {labelStr}{line.singer ? ` · ${line.singer}` : ''}
+      <div className={`flex items-center gap-3 px-2 sm:px-4 py-2 ${isRoot ? 'my-4' : 'my-1'}`}>
+        <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/60'}`} />
+        <span className={`px-2 py-0.5 rounded-full border whitespace-nowrap ${
+          isRoot
+            ? 'text-xs font-bold tracking-widest uppercase text-primary bg-primary/10 border-primary/30'
+            : 'text-[10px] font-semibold tracking-widest uppercase text-zinc-600 bg-zinc-900/40 border-zinc-800/60'
+        }`}>
+          {labelStr}{singers?.length > 0 ? ` · ${singers.join(' & ')}` : ''}
         </span>
-        <div className="flex-1 h-px bg-zinc-800/60" />
+        <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/60'}`} />
       </div>
     );
   }

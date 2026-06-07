@@ -73,7 +73,6 @@ function PublicProjectViewPageInner() {
       endTime: l.endTime ?? undefined,
       secondary: l.secondary || '',
       translations: Array.isArray(l.translations) ? l.translations : undefined,
-      singer: l.singer || undefined,
       id: crypto.randomUUID(),
       words: l.words,
       secondaryWords: l.secondaryWords,

@@ -148,7 +148,7 @@ const LineActionToolbar = React.memo(({
                       setEditingText(serializeToRubyMarkup(line.words) || line.text);
                       setEditingSecondary(line.secondary || '');
                       setEditingTranslations(line.translations ? [...line.translations] : []);
-                      const lineSingers = line.singers || [line.singer, line.singer2].filter(Boolean);
+                      const lineSingers = line.singers || [];
                       setEditingSingers([...lineSingers, '', '', '', ''].slice(0, 4));
                     }}
                     className="text-sky-400/70 hover:text-sky-400 hover:bg-sky-500/10"
@@ -171,7 +171,7 @@ const LineActionToolbar = React.memo(({
                 setEditingText(serializeToRubyMarkup(line.words) || line.text);
                 setEditingSecondary(line.secondary || '');
                 setEditingTranslations(line.translations ? [...line.translations] : []);
-                const lineSingers = line.singers || [line.singer, line.singer2].filter(Boolean);
+                const lineSingers = line.singers || [];
                 setEditingSingers([...lineSingers, '', '', '', ''].slice(0, 4));
               }}
               className="text-sky-400/70 hover:text-sky-400 hover:bg-sky-500/10"

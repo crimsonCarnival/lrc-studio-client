@@ -113,8 +113,6 @@ const GET_PROJECT = `
           timestamp
           endTime
           secondary
-          singer
-          singer2
           translation
           translations { language text }
           words { word time reading }
@@ -268,8 +266,6 @@ export const projectsService = {
                 timestamp
                 endTime
                 secondary
-                singer
-                singer2
                 translation
                 translations { language text }
                 words { word time reading }

@@ -14,6 +14,7 @@ import {
   applyMark,
   detectDuplicateTimestamps,
 } from '../services/editor.service';
+import { getDefaultDepthForLabel } from '../constants/sectionTypes';
 import { useFileImport } from './useFileImport';
 import { useDragReorder } from './useDragReorder';
 
@@ -603,9 +604,6 @@ export function useEditor({
           ...prevLine,
           label: newText?.trim() || prevLine.label,
           singers: cleanSingers.length ? cleanSingers : undefined,
-          // compat: remove old flat fields if present
-          singer: undefined,
-          singer2: undefined,
         };
         return updated;
       }
@@ -622,9 +620,6 @@ export function useEditor({
       if (singers !== undefined) {
         const cleanSingers = (singers || []).slice(0, 4).map(s => s?.trim() || '').filter(Boolean);
         line.singers = cleanSingers.length ? cleanSingers : undefined;
-        // Remove legacy flat fields
-        delete line.singer;
-        delete line.singer2;
       }
       // Always re-tokenize when text or markup changed
       const textChanged = plainText !== (prevLine.text || '');
@@ -993,8 +988,20 @@ export function useEditor({
       
       const finalLabel = maxNumber > 0 ? `${label} ${maxNumber + 1}` : label;
       
-      const section = { type: 'section', label: finalLabel, timestamp: null, id: crypto.randomUUID() };
+      const depth = getDefaultDepthForLabel(finalLabel);
+      const section = { type: 'section', label: finalLabel, depth, timestamp: null, id: crypto.randomUUID() };
       updated.splice(afterIndex + 1, 0, section);
+      return updated;
+    });
+  }, [setLines]);
+
+  const handleToggleSectionDepth = useCallback((index) => {
+    setLines((prev) => {
+      const updated = [...prev];
+      if (updated[index] && updated[index].type === 'section') {
+        const currentDepth = updated[index].depth ?? getDefaultDepthForLabel(updated[index].label);
+        updated[index] = { ...updated[index], depth: currentDepth === 0 ? 1 : 0 };
+      }
       return updated;
     });
   }, [setLines]);
@@ -1013,9 +1020,7 @@ export function useEditor({
         if (i < 0 || i >= updated.length) continue;
         const line = updated[i];
         // Migrate existing flat fields if needed
-        let current = line.singers
-          ? [...line.singers]
-          : [line.singer, line.singer2].filter(Boolean);
+        let current = line.singers ? [...line.singers] : [];
         // Ensure the array is big enough
         while (current.length <= slot) current.push('');
         current[slot] = name?.trim() || '';
@@ -1023,8 +1028,6 @@ export function useEditor({
         updated[i] = {
           ...line,
           singers: cleanSingers.length ? cleanSingers : undefined,
-          singer: undefined,
-          singer2: undefined,
         };
       }
       return updated;
@@ -1094,6 +1097,7 @@ export function useEditor({
     overlappingLines,
     modifiedLines,
     handleInsertSection,
+    handleToggleSectionDepth,
     handleAssignSinger,
     clearModifiedLines: () => setModifiedLines(new Set()),
     // extras

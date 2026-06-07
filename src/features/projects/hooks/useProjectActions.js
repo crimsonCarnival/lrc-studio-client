@@ -1,4 +1,4 @@
-﻿import { useCallback } from 'react';
+import { useCallback } from 'react';
 import { projects, uploads, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { updateServerSnapshot } from '@/features/editor/hooks/useManualSave';
@@ -8,7 +8,7 @@ function sanitizeLines(raw) {
   return (raw || []).flatMap((l) => {
     if (!(l && typeof l === 'object')) return [];
     if (l.type === 'section') {
-      return [{ type: 'section', label: l.label || '', singer: l.singer || undefined, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
+      return [{ type: 'section', label: l.label || '', timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
     }
     if (typeof l.text !== 'string') return [];
     return [{
@@ -17,7 +17,6 @@ function sanitizeLines(raw) {
       endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
       secondary: typeof l.secondary === 'string' ? l.secondary : '',
       translations: Array.isArray(l.translations) ? l.translations : undefined,
-      singer: typeof l.singer === 'string' ? l.singer : undefined,
       id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
       words: Array.isArray(l.words)
         ? l.words.flatMap((w) => {
@@ -80,14 +79,13 @@ export function useProjectActions({
       const { project } = await projects.get(projectId);
       if (!project) throw new Error('Project not found');
       const projectLines = (project?.lyrics?.lines || []).flatMap((l) => {
-        if (l.type === 'section') return [{ type: 'section', label: l.label || '', singer: l.singer || undefined, timestamp: l.timestamp ?? null, id: crypto.randomUUID() }];
+        if (l.type === 'section') return [{ type: 'section', label: l.label || '', timestamp: l.timestamp ?? null, id: crypto.randomUUID() }];
         return [{
         text: l.text || '',
         timestamp: l.timestamp ?? null,
         endTime: l.endTime ?? undefined,
         secondary: l.secondary || '',
         translations: Array.isArray(l.translations) ? l.translations : undefined,
-        singer: l.singer || undefined,
         id: crypto.randomUUID(),
         words: l.words,
         secondaryWords: l.secondaryWords,

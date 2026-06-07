@@ -138,7 +138,12 @@ export function compileLRC(lines, includeTranslations = false, precision = 'hund
       // Section marker
       if (line.type === 'section') {
         if (!includeSections) return [];
-        const comment = `# ${line.label}${line.singer ? ': ' + line.singer : ''}`;
+        const isRoot = line.depth === 0;
+        const prefix = isRoot ? '##' : '#';
+        const singerPart = line.singers?.length
+          ? ': ' + line.singers.join(' & ')
+          : line.singer ? ': ' + line.singer : '';
+        const comment = `${prefix} ${line.label}${singerPart}`;
         if (line.timestamp != null) return [`[${formatTimestamp(line.timestamp, precision)}] ${comment}`];
         return [comment];
       }
@@ -391,12 +396,24 @@ export function parseLrcSrtFile(content, filename) {
         collectedTs.sort((a, b) => a - b);
         const [primary] = collectedTs;
 
-        // Section marker: [timestamp] # Label or [timestamp] # Label: Singer
+        // Root section: ## Label or ## Label: Singer(s)
+        if (rawText.startsWith('##')) {
+          const inner = rawText.slice(2).trim();
+          const { label, singer } = parseSectionText(inner);
+          if (label) {
+            const singers = singer ? singer.split(/\s*[&,]\s*/).map(s => s.trim()).filter(Boolean) : undefined;
+            parsedLines.push({ type: 'section', depth: 0, label, singers, timestamp: primary, id: generateId() });
+            return;
+          }
+        }
+
+        // Child section: # Label or # Label: Singer
         if (rawText.startsWith('#')) {
           const inner = rawText.slice(1).trim();
           const { label, singer } = parseSectionText(inner);
           if (label) {
-            parsedLines.push({ type: 'section', label, singer, timestamp: primary, id: generateId() });
+            const singers = singer ? singer.split(/\s*[&,]\s*/).map(s => s.trim()).filter(Boolean) : undefined;
+            parsedLines.push({ type: 'section', depth: 1, label, singers, timestamp: primary, id: generateId() });
             return;
           }
         }
@@ -407,12 +424,22 @@ export function parseLrcSrtFile(content, filename) {
         if (words.length > 0) entry.words = words;
         parsedLines.push(entry);
       } else if (remaining !== '') {
-        // No timestamp: check for section markers
+        // No timestamp: root section ## or child section #
+        if (remaining.startsWith('##')) {
+          const inner = remaining.slice(2).trim();
+          const { label, singer } = parseSectionText(inner);
+          if (label) {
+            const singers = singer ? singer.split(/\s*[&,]\s*/).map(s => s.trim()).filter(Boolean) : undefined;
+            parsedLines.push({ type: 'section', depth: 0, label, singers, timestamp: null, id: generateId() });
+            return;
+          }
+        }
         if (remaining.startsWith('#')) {
           const inner = remaining.slice(1).trim();
           const { label, singer } = parseSectionText(inner);
           if (label) {
-            parsedLines.push({ type: 'section', label, singer, timestamp: null, id: generateId() });
+            const singers = singer ? singer.split(/\s*[&,]\s*/).map(s => s.trim()).filter(Boolean) : undefined;
+            parsedLines.push({ type: 'section', depth: 1, label, singers, timestamp: null, id: generateId() });
             return;
           }
         }
@@ -421,7 +448,7 @@ export function parseLrcSrtFile(content, filename) {
         if (bracketSection && !KNOWN_LRC_META_KEYS.has(bracketSection[1].trim().toLowerCase())) {
           const label = bracketSection[1].trim();
           const singer = bracketSection[2]?.trim() || undefined;
-          parsedLines.push({ type: 'section', label, singer, timestamp: null, id: generateId() });
+          parsedLines.push({ type: 'section', depth: 1, label, singers: singer ? [singer] : undefined, timestamp: null, id: generateId() });
           return;
         }
         // Plain text line (skip known LRC metadata tags)

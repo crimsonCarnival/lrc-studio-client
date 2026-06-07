@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { projects, uploads, getAccessToken } from '@/app/api';
@@ -19,7 +19,7 @@ function sanitizeLines(raw) {
   return (raw || []).flatMap((l) => {
     if (!(l && typeof l === 'object')) return [];
     if (l.type === 'section') {
-      return [{ type: 'section', label: l.label || '', singer: l.singer || undefined, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
+      return [{ type: 'section', label: l.label || '', timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
     }
     if (typeof l.text !== 'string') return [];
     return [{
@@ -28,7 +28,6 @@ function sanitizeLines(raw) {
       endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
       secondary: typeof l.secondary === 'string' ? l.secondary : '',
       translations: Array.isArray(l.translations) ? l.translations : undefined,
-      singer: typeof l.singer === 'string' ? l.singer : undefined,
       id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
       words: Array.isArray(l.words)
         ? l.words.flatMap((w) => {

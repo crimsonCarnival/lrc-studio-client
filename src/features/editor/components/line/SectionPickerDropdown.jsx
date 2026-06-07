@@ -46,11 +46,20 @@ export default function SectionPickerDropdown({ value, onChange }) {
         onChange={handleSelectChange}
         className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-200 rounded px-2 py-0.5 focus:outline-none focus:border-primary/60 cursor-pointer"
       >
-        {SECTION_TYPES.map((s) => (
-          <option key={s.id} value={s.id}>
-            {t(s.labelKey, s.id)}
-          </option>
-        ))}
+        <optgroup label={t('editor.sections.groupStructural', 'Structural')}>
+          {SECTION_TYPES.filter(s => s.depth === 0).map((s) => (
+            <option key={s.id} value={s.id}>
+              {t(s.labelKey, s.id)}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label={t('editor.sections.groupStandard', 'Standard')}>
+          {SECTION_TYPES.filter(s => s.depth !== 0).map((s) => (
+            <option key={s.id} value={s.id}>
+              {t(s.labelKey, s.id)}
+            </option>
+          ))}
+        </optgroup>
         <option value="__other__">{t('editor.sections.other', 'Other…')}</option>
       </select>
 

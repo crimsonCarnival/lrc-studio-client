@@ -60,6 +60,7 @@ export default function Editor({
     editingSingers,
     setEditingSingers,
     handleInsertSection,
+    handleToggleSectionDepth,
     handleAssignSinger,
     dragIndex,
     dragOverIndex,
@@ -250,6 +251,7 @@ export default function Editor({
           setEditingSingers={setEditingSingers}
           handleSaveLineText={handleSaveLineText}
           handleInsertSection={handleInsertSection}
+          handleToggleSectionDepth={handleToggleSectionDepth}
           handleAssignSinger={handleAssignSinger}
           songArtists={songArtists}
           playerRef={playerRef}
@@ -448,6 +450,7 @@ function VirtualizedLineList({
   setEditingSingers,
   handleSaveLineText,
   handleInsertSection,
+  handleToggleSectionDepth,
   handleAssignSinger,
   songArtists,
   playerRef,
@@ -649,6 +652,7 @@ function VirtualizedLineList({
                   setEditingSingers={setEditingSingers}
                   handleSaveLineText={handleSaveLineText}
                   handleInsertSection={handleInsertSection}
+                  onToggleDepth={handleToggleSectionDepth}
                   handleAssignSinger={handleAssignSinger}
                   songArtists={songArtists}
                   playerRef={playerRef}

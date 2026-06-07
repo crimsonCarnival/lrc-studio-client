@@ -29,11 +29,8 @@ const SINGER_BADGE_COLORS = [
   'bg-violet-500/10 border-violet-500/30 text-violet-400', // 2: third
   'bg-amber-500/10 border-amber-500/30 text-amber-400',   // 3: fourth
 ];
-/** Migrate old flat singer/singer2 fields to singers[] */
 function getSingers(line) {
-  if (line.singers) return line.singers;
-  const legacy = [line.singer, line.singer2].filter(Boolean);
-  return legacy.length ? legacy : [];
+  return line.singers || [];
 }
 
 const EditorLineItem = React.memo(({
@@ -72,6 +69,7 @@ const EditorLineItem = React.memo(({
   setEditingSingers,
   handleSaveLineText,
   handleInsertSection,
+  onToggleDepth,
   handleAssignSinger,
   songArtists,
   playerRef,
@@ -249,6 +247,8 @@ const EditorLineItem = React.memo(({
   // Section marker — full-width divider with editable label
   if (line.type === 'section') {
     const isEditing = editingLineIndex === i;
+    const isRoot = line.depth === 0;
+    
     return (
       <div
         ref={isActive ? activeLineRef : null}
@@ -260,9 +260,9 @@ const EditorLineItem = React.memo(({
           setEditingSingers([...singers, '', '', '', ''].slice(0, 4));
         }}
         style={{ animationDelay: staggerDelay }}
-        className={`flex items-center gap-2 px-4 py-1.5 rounded-lg cursor-pointer group animate-preview-line-in ${selectedLines.has(i) ? 'bg-primary/10 border border-primary/30' : 'hover:bg-zinc-800/30 border border-transparent'}`}
+        className={`flex items-center gap-2 px-4 py-1.5 rounded-lg cursor-pointer group animate-preview-line-in ${selectedLines.has(i) ? 'bg-primary/10 border border-primary/30' : 'hover:bg-zinc-800/30 border border-transparent'} ${isRoot ? 'mt-4 mb-2' : ''}`}
       >
-        <div className="flex-1 h-px bg-zinc-800/50" />
+        <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/50'}`} />
         {isEditing ? (
           <div className="flex items-center gap-1.5" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
             <SectionPickerDropdown
@@ -291,7 +291,11 @@ const EditorLineItem = React.memo(({
             )}
           </div>
         ) : (
-          <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-800 bg-zinc-900/40 whitespace-nowrap group-hover:text-zinc-400 group-hover:border-zinc-700 transition-colors">
+          <span className={`px-2 py-0.5 rounded-full border whitespace-nowrap transition-colors ${
+            isRoot
+              ? 'text-xs font-bold tracking-widest uppercase text-primary bg-primary/10 border-primary/30 group-hover:border-primary/50'
+              : 'text-[10px] font-semibold tracking-widest uppercase text-zinc-600 bg-zinc-900/40 border-zinc-800 group-hover:text-zinc-400 group-hover:border-zinc-700'
+          }`}>
             {(() => {
               const label = formatSectionLabel(line.label, t);
               const hasSingers = songArtists?.length > 1;
@@ -301,14 +305,22 @@ const EditorLineItem = React.memo(({
             })()}
           </span>
         )}
-        <div className="flex-1 h-px bg-zinc-800/50" />
+        <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/50'}`} />
         {selectedLines.size === 0 && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); handleDeleteLine(i); }}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-600 hover:text-zinc-400 text-xs px-1"
-            aria-label="Delete section"
-          >✕</button>
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggleDepth?.(i); }}
+              className="text-zinc-600 hover:text-primary text-xs px-1"
+              title={isRoot ? t('editor.sections.demote', 'Demote to regular section') : t('editor.sections.promote', 'Promote to Part')}
+            >{isRoot ? '⇲' : '⇱'}</button>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleDeleteLine(i); }}
+              className="text-zinc-600 hover:text-zinc-400 text-xs px-1"
+              aria-label="Delete section"
+            >✕</button>
+          </div>
         )}
       </div>
     );

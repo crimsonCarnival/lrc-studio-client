@@ -124,6 +124,16 @@ export default function useSpotifyPlayer({
         });
       }
 
+      let originalVolume = null;
+      if (!autoPlay) {
+        try {
+          originalVolume = await playerRef.current?.getVolume();
+          await playerRef.current?.setVolume(0);
+        } catch (e) {
+          console.warn('Failed to mute before loading:', e);
+        }
+      }
+
       // Transfer playback and start the track
       const { accessToken } = await spotifyApi.getToken();
       const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceIdRef.current)}`, {
@@ -139,7 +149,13 @@ export default function useSpotifyPlayer({
 
       // If autoPlay is false, pause immediately
       if (!autoPlay) {
-        // Wait for track to start loading, then pause
+        // Dispatch REST pause immediately (fire-and-forget) to preempt SDK delay
+        fetch(`https://api.spotify.com/v1/me/player/pause?device_id=${encodeURIComponent(deviceIdRef.current)}`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }).catch(() => {});
+
+        // Wait for track to start loading, then pause via SDK
         await new Promise(resolve => setTimeout(resolve, 800));
         try {
           await playerRef.current?.pause();
@@ -152,6 +168,10 @@ export default function useSpotifyPlayer({
           }
         } catch (err) {
           console.warn('Failed to pause after loading:', err);
+        } finally {
+          if (originalVolume !== null) {
+            await playerRef.current?.setVolume(originalVolume);
+          }
         }
       }
 
