@@ -119,6 +119,7 @@ export default {
   sectionDefault: "Section",
   sectionLabelPlaceholder: "Section label",
   sections: {
+    part: "Part",
     intro: "Intro",
     verse: "Verse",
     preChorus: "Pre-Chorus",
@@ -127,6 +128,8 @@ export default {
     interlude: "Interlude",
     outro: "Outro",
     other: "Other…",
+    groupStructural: "Structural",
+    groupStandard: "Standard"
   },
   singer: "Singer 1",
   singerN: "Singer {{n}}",

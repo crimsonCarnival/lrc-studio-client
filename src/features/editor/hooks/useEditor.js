@@ -1013,15 +1013,14 @@ export function useEditor({
    * @param {number[]} lineIndices
    * @param {number} [slot=0] - which role index (0-3) to assign to
    */
-  const handleAssignSinger = useCallback((name, lineIndices, slot = 0) => {
+  const handleAssignSinger = useCallback((name, lineIndices, slot = 0, onlyFirst = false) => {
     setLines((prev) => {
       const updated = [...prev];
-      for (const i of lineIndices) {
-        if (i < 0 || i >= updated.length) continue;
+      const targets = onlyFirst ? [lineIndices[0]] : lineIndices;
+      for (const i of targets) {
+        if (i == null || i < 0 || i >= updated.length) continue;
         const line = updated[i];
-        // Migrate existing flat fields if needed
         let current = line.singers ? [...line.singers] : [];
-        // Ensure the array is big enough
         while (current.length <= slot) current.push('');
         current[slot] = name?.trim() || '';
         const cleanSingers = current.slice(0, 4).filter(Boolean);
@@ -1033,6 +1032,31 @@ export function useEditor({
       return updated;
     });
   }, [setLines]);
+
+  /**
+   * Cycle the singerIndex of a single word within a line.
+   * Each right-click/alt-click advances: null → 0 → 1 → … → (singerCount-1) → null
+   */
+  const handleCycleWordSinger = useCallback((lineIndex, wordIndex) => {
+    setModifiedLines(prev => new Set(prev).add(lineIndex));
+    setLines((prev) => {
+      const updated = [...prev];
+      const line = { ...updated[lineIndex] };
+      const singers = line.singers || [];
+      if (singers.length < 2) return prev; // nothing to cycle if < 2 singers
+      const words = [...(line.words || [])];
+      const w = words[wordIndex];
+      if (!w) return prev;
+      const current = w.singerIndex ?? null;
+      const next = current === null ? 0 : current + 1 >= singers.length ? null : current + 1;
+      words[wordIndex] = next === null
+        ? (() => { const { singerIndex: _s, ...rest } = w; return rest; })()
+        : { ...w, singerIndex: next };
+      line.words = words;
+      updated[lineIndex] = line;
+      return updated;
+    });
+  }, [setLines, setModifiedLines]);
 
   return {
     // state
@@ -1099,6 +1123,7 @@ export function useEditor({
     handleInsertSection,
     handleToggleSectionDepth,
     handleAssignSinger,
+    handleCycleWordSinger,
     clearModifiedLines: () => setModifiedLines(new Set()),
     // extras
     requestConfirm,

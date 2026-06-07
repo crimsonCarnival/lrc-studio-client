@@ -4,6 +4,17 @@ import { ReadingInput } from './ReadingInput';
 import { Tip } from '@ui/tip';
 import { useTranslation } from 'react-i18next';
 
+const WORD_SINGER_COLORS = [
+  // singerIndex 0 → primary
+  'text-primary/90 [text-shadow:0_0_8px_hsl(var(--primary)/0.5)]',
+  // singerIndex 1 → sky
+  'text-sky-400/90 [text-shadow:0_0_8px_theme(colors.sky.400/0.5)]',
+  // singerIndex 2 → violet
+  'text-violet-400/90',
+  // singerIndex 3 → amber
+  'text-amber-400/90',
+];
+
 const LineTextContent = React.memo(({
   line,
   lineIndex,
@@ -21,6 +32,7 @@ const LineTextContent = React.memo(({
   handleWordClick,
   wordClickTimerRef,
   handleSaveLineText,
+  handleCycleWordSinger,
 }) => {
   const { t } = useTranslation();
 
@@ -50,12 +62,16 @@ const LineTextContent = React.memo(({
               const fmtR = (r) => r ? (rubyFmt === 'katakana' ? toKatakana(r) : toHiragana(r)) : r;
               const trailingSpace = /[a-zA-Z0-9]/.test(w.word) ? ' ' : null;
 
+              const hasSingerSplit = line.singers?.length >= 2 && handleCycleWordSinger;
+              const wordSingerIdx = w.singerIndex ?? null;
+              const singerColorClass = wordSingerIdx !== null ? (WORD_SINGER_COLORS[wordSingerIdx] || '') : '';
+
               const spanClass = editorMode === 'words'
-                ? `transition-all px-0.5 rounded ${isActive && wi === activeWordIndex
+                ? `transition-all px-0.5 rounded ${singerColorClass} ${isActive && wi === activeWordIndex
                   ? 'bg-primary/20 text-primary [text-shadow:0_0_0.8px_currentColor] underline decoration-dotted underline-offset-2'
                   : w.time != null
-                    ? 'text-primary/70 hover:bg-zinc-800'
-                    : isActive || isSynced ? 'text-zinc-100 hover:bg-zinc-800' : 'hover:bg-zinc-800'
+                    ? wordSingerIdx !== null ? '' : 'text-primary/70 hover:bg-zinc-800'
+                    : isActive || isSynced ? wordSingerIdx !== null ? '' : 'text-zinc-100 hover:bg-zinc-800' : 'hover:bg-zinc-800'
                 }`
                 : `transition-colors px-0.5 rounded ${canHaveReading ? 'hover:bg-white/5' : ''}`;
 
@@ -101,6 +117,11 @@ const LineTextContent = React.memo(({
                         setEditingReadingWordIndex(wi);
                       }
                     }}
+                    onContextMenu={editorMode === 'words' && hasSingerSplit ? (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleCycleWordSinger(lineIndex, wi);
+                    } : undefined}
                     onKeyDown={(e) => {
                       if (editorMode !== 'words' && !canHaveReading) return;
                       if (e.key === 'Enter' || e.key === ' ') {

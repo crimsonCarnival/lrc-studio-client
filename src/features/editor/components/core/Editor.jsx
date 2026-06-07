@@ -62,6 +62,7 @@ export default function Editor({
     handleInsertSection,
     handleToggleSectionDepth,
     handleAssignSinger,
+    handleCycleWordSinger,
     dragIndex,
     dragOverIndex,
     selectedLines,
@@ -287,6 +288,7 @@ export default function Editor({
           handleSetActiveWordIndex={handleSetActiveWordIndex}
           handleSetTimestamp={handleSetTimestamp}
           handleSetWordReading={handleSetWordReading}
+          handleCycleWordSinger={handleCycleWordSinger}
           stampTarget={stampTarget}
           handleStampTargetToggle={handleStampTargetToggle}
           playbackPosition={playbackPosition}
@@ -486,6 +488,7 @@ function VirtualizedLineList({
   handleSetActiveWordIndex,
   handleSetTimestamp,
   handleSetWordReading,
+  handleCycleWordSinger,
   stampTarget,
   handleStampTargetToggle,
   playbackPosition,
@@ -682,6 +685,7 @@ function VirtualizedLineList({
                   handleSetActiveWordIndex={handleSetActiveWordIndex}
                   handleSetTimestamp={handleSetTimestamp}
                   handleSetWordReading={handleSetWordReading}
+                  handleCycleWordSinger={handleCycleWordSinger}
                   stampTarget={i === activeLineIndex ? stampTarget : 'main'}
                   handleStampTargetToggle={handleStampTargetToggle}
                   playbackPosition={isActive ? playbackPosition : null}

@@ -79,11 +79,12 @@ const EditorLineItem = React.memo(({
   handleDeleteLine,
   handleToggleLine,
   handleMark,
+  handleSetWordReading,
+  handleCycleWordSinger,
   activeWordIndex,
   handleClearWordTimestamp,
   handleSetActiveWordIndex,
   handleSetTimestamp,
-  handleSetWordReading,
   stampTarget = 'main',
   handleStampTargetToggle,
   playbackPosition,
@@ -543,6 +544,7 @@ const EditorLineItem = React.memo(({
             handleWordClick={handleWordClick}
             wordClickTimerRef={wordClickTimerRef}
             handleSaveLineText={handleSaveLineText}
+            handleCycleWordSinger={handleCycleWordSinger}
           />
         )}
       </div>

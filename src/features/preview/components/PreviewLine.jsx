@@ -13,6 +13,14 @@ const SINGER_CHIP_COLORS = [
   'bg-amber-500/10 border-amber-500/30 text-amber-400',
 ];
 
+/** Inline text color classes for words attributed to a specific singer */
+const WORD_SINGER_PREVIEW_COLORS = [
+  'text-primary',       // singer 0
+  'text-sky-400',       // singer 1
+  'text-violet-400',    // singer 2
+  'text-amber-400',     // singer 3
+];
+
 function getLineSingers(line) {
   return line.singers || [];
 }
@@ -328,6 +336,9 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
           }
           const nextWord = words[wi + 1];
           const addSpace = needsSpaceAfter(w.word, nextWord?.word);
+          const wordSingerColor = (w.singerIndex != null && line.singers?.length >= 2)
+            ? (WORD_SINGER_PREVIEW_COLORS[w.singerIndex] || '')
+            : '';
 
           const wordContent = w.reading && isKanjiWord(w.word) && showFuriganaInPreview
             ? <ruby>{w.word}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{fmtReading(w.reading)}</rt><rp>)</rp></ruby>
@@ -335,11 +346,11 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
 
           return (
             <React.Fragment key={wi}>
-              <span className="relative inline-block">
-                <span className={isActive ? 'text-zinc-500 transition-colors duration-100' : ''}>{wordContent}</span>
+              <span className={`relative inline-block ${wordSingerColor}`}>
+                <span className={isActive ? (wordSingerColor ? 'opacity-50 transition-colors duration-100' : 'text-zinc-500 transition-colors duration-100') : ''}>{wordContent}</span>
                 {isActive && (
                   <span
-                    className="absolute left-0 top-0 h-full overflow-hidden text-primary whitespace-nowrap karaoke-fill-glow karaoke-fill-mask"
+                    className={`absolute left-0 top-0 h-full overflow-hidden whitespace-nowrap karaoke-fill-glow karaoke-fill-mask ${wordSingerColor || 'text-primary'}`}
                     style={{
                       animationName: 'karaoke-fill-anim',
                       animationDuration: `${(endTime - startTime) / playbackSpeed}s`,
