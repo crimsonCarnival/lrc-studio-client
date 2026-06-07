@@ -1,4 +1,4 @@
-﻿import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { Kbd } from "@ui/kbd";
 import { Button } from '@ui/button';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
@@ -20,7 +20,12 @@ export default function EditorSyncControls({
   const rangeKey = settings.shortcuts?.rangeSelect?.[0] || 'Shift';
   const toggleKey = settings.shortcuts?.toggleSelect?.[0] || 'Ctrl';
   const deselectKey = settings.shortcuts?.deselect?.[0] || 'Escape';
-  const selectionHintText = `${KEY_SYMBOLS[rangeKey] ?? rangeKey}+Click: range · ${KEY_SYMBOLS[toggleKey] ?? toggleKey}+Click: toggle · ${KEY_SYMBOLS[deselectKey] ?? deselectKey}: deselect`;
+  const selectionHintText = t('editor.selection.hint', {
+    defaultValue: '{{range}}+Click: range · {{toggle}}+Click: toggle · {{deselect}}: deselect',
+    range: KEY_SYMBOLS[rangeKey] ?? rangeKey,
+    toggle: KEY_SYMBOLS[toggleKey] ?? toggleKey,
+    deselect: KEY_SYMBOLS[deselectKey] ?? deselectKey
+  });
   const shiftAmount = settings.editor?.shiftAllAmount ?? 0.5;
 
   return (
