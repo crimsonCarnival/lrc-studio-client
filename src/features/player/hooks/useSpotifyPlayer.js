@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { spotify as spotifyApi } from '@/app/api';
 
 const SDK_URL = 'https://sdk.scdn.co/spotify-player.js';
@@ -37,6 +37,7 @@ export default function useSpotifyPlayer({
   const deviceIdRef = useRef(null);
   const pollRef = useRef(null);
   const durationRef = useRef(0);
+  const timeRef = useRef(0);
 
   // ——— Cleanup ———
   const cleanup = useCallback(() => {
@@ -90,6 +91,7 @@ export default function useSpotifyPlayer({
           if (!state) return;
           const { paused, position, duration } = state;
           setIsPlaying(!paused);
+          timeRef.current = position / 1000;
           setCurrentTime(position / 1000);
           updateTime(position / 1000);
           if (duration && duration !== durationRef.current) {
@@ -163,6 +165,7 @@ export default function useSpotifyPlayer({
       pollRef.current = setInterval(async () => {
         const state = await playerRef.current?.getCurrentState?.();
         if (state) {
+          timeRef.current = state.position / 1000;
           updateTime(state.position / 1000);
           if (state.duration && state.duration !== durationRef.current) {
             durationRef.current = state.duration;
@@ -183,6 +186,7 @@ export default function useSpotifyPlayer({
 
   const seek = useCallback((timeSeconds) => {
     playerRef.current?.seek(Math.round(timeSeconds * 1000));
+    timeRef.current = timeSeconds;
     setCurrentTime(timeSeconds);
     updateTime(timeSeconds);
   }, [setCurrentTime, updateTime]);
@@ -196,8 +200,7 @@ export default function useSpotifyPlayer({
   }, []);
 
   const getCurrentTime = useCallback(() => {
-    // Return last known position — for instant reads use the polled value
-    return 0; // will be overridden by state updates
+    return timeRef.current;
   }, []);
 
   const remove = useCallback(() => {
