@@ -298,10 +298,12 @@ const EditorLineItem = React.memo(({
           }`}>
             {(() => {
               const label = formatSectionLabel(line.label, t);
-              const hasSingers = songArtists?.length > 1;
               const lineSingers = getSingers(line);
               const singersStr = lineSingers.join(' · ');
-              return hasSingers && singersStr ? `[${label}: ${singersStr}]` : label;
+              if (singersStr) {
+                return isRoot ? `${label} · ${singersStr}` : `[${label}: ${singersStr}]`;
+              }
+              return label;
             })()}
           </span>
         )}
