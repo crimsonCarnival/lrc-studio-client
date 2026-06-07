@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import useDraggable from '@/shared/hooks/useDraggable';
 import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import { useTranslation } from 'react-i18next';
@@ -21,13 +21,17 @@ const resolveShortcut = (shortcut) => {
   return shortcut.split('+').map((k) => KEY_SYMBOLS[k] ?? k);
 };
 
+import { ListChecks, UserCircle } from 'lucide-react';
+
 const HELP_TABS = [
   { id: 'player', icon: Headphones, labelKey: 'shortcuts.tabs.player' },
   { id: 'editor', icon: FileText,   labelKey: 'shortcuts.tabs.editor' },
   { id: 'preview', icon: Eye,       labelKey: 'shortcuts.tabs.preview' },
+  { id: 'sections', icon: ListChecks, labelKey: 'editor.help.sectionsTab' },
+  { id: 'singers', icon: UserCircle, labelKey: 'editor.help.singersTab' },
 ];
 
-export default function KeyboardHelp({ isOpen, onClose }) {
+export default function EditorHelpModal({ isOpen, onClose }) {
   const { t } = useTranslation();
   const { settings } = useSettings();
   const { position, handleMouseDown } = useDraggable(isOpen);
@@ -147,29 +151,49 @@ export default function KeyboardHelp({ isOpen, onClose }) {
           </div>
 
           {/* Content */}
-          <div className="px-5 pt-4 pb-5 space-y-5">
-            {groups.map((group) => (
-              <div key={group.section}>
-                <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-2">
-                  {group.section}
-                </p>
-                <div className="space-y-2">
-                  {group.items.map((s) => (
-                    <div key={s.desc} className="flex items-center justify-between gap-3">
-                      <span className="text-sm text-zinc-300">{s.desc}</span>
-                      <KbdGroup>
-                        {s.keys.map((k, i) => (
-                          <span key={k} className="inline-flex items-center gap-1">
-                            {i > 0 && <span className="text-zinc-600 text-[10px]">+</span>}
-                            <Kbd>{k}</Kbd>
-                          </span>
-                        ))}
-                      </KbdGroup>
-                    </div>
-                  ))}
-                </div>
+          <div className="px-5 pt-4 pb-5 space-y-5 overflow-y-auto max-h-[60vh]">
+            {activeTab === 'sections' ? (
+              <div className="text-zinc-300 text-sm space-y-4 leading-relaxed">
+                <p>{t('editor.help.sectionsIntro')}</p>
+                <ul className="list-disc pl-4 space-y-2 text-zinc-400">
+                  <li>{t('editor.help.sectionsAuto')}</li>
+                  <li>{t('editor.help.sectionsManual')}</li>
+                  <li>{t('editor.help.sectionsDropdown')}</li>
+                </ul>
               </div>
-            ))}
+            ) : activeTab === 'singers' ? (
+              <div className="text-zinc-300 text-sm space-y-4 leading-relaxed">
+                <p>{t('editor.help.singersIntro')}</p>
+                <ul className="list-disc pl-4 space-y-2 text-zinc-400">
+                  <li>{t('editor.help.singersPaint')}</li>
+                  <li>{t('editor.help.singersShortcuts')}</li>
+                  <li>{t('editor.help.singersSplit')}</li>
+                </ul>
+              </div>
+            ) : (
+              groups.map((group) => (
+                <div key={group.section}>
+                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-2">
+                    {group.section}
+                  </p>
+                  <div className="space-y-2">
+                    {group.items.map((s) => (
+                      <div key={s.desc} className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-zinc-300">{s.desc}</span>
+                        <KbdGroup>
+                          {s.keys.map((k, i) => (
+                            <span key={k} className="inline-flex items-center gap-1">
+                              {i > 0 && <span className="text-zinc-600 text-[10px]">+</span>}
+                              <Kbd>{k}</Kbd>
+                            </span>
+                          ))}
+                        </KbdGroup>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </DialogContent>

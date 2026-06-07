@@ -1078,8 +1078,106 @@ export function useEditor({
     });
   }, [setLines, setModifiedLines]);
 
+  /**
+   * Directly set a word's singerIndex (used by paint mode, unlike cycle which rotates).
+   * Pass singerIndex=null to remove attribution.
+   */
+  const handleSetWordSinger = useCallback((lineIndex, wordIndex, singerIndex) => {
+    setModifiedLines(prev => new Set(prev).add(lineIndex));
+    setLines((prev) => {
+      const updated = [...prev];
+      const line = { ...updated[lineIndex] };
+      const singers = line.singers || [];
+      if (singers.length < 2) return prev;
+
+      let words = line.words ? [...line.words] : null;
+      if (!words || words.length === 0) {
+        if (!line.text) return prev;
+        const tokens = line.text.split(/(\s+)/);
+        const newWords = [];
+        for (const tok of tokens) {
+          if (!tok) continue;
+          if (/^\s+$/.test(tok)) {
+            if (newWords.length > 0) newWords[newWords.length - 1] = { ...newWords[newWords.length - 1], word: newWords[newWords.length - 1].word + tok };
+          } else {
+            newWords.push({ word: tok, time: null });
+          }
+        }
+        words = newWords;
+      }
+
+      const w = words[wordIndex];
+      if (!w) return prev;
+      words[wordIndex] = singerIndex === null
+        ? (() => { const { singerIndex: _s, ...rest } = w; return rest; })()
+        : { ...w, singerIndex };
+      line.words = words;
+      updated[lineIndex] = line;
+      return updated;
+    });
+  }, [setLines, setModifiedLines]);
+
+  // ── Number key shortcuts: 1-4 → assign singer, 0 → clear singers on active line ──
+  useEffect(() => {
+    const handleNumberKey = (e) => {
+      // Don't fire if typing in an input, textarea, or select
+      const tag = document.activeElement?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const idx = activeLineIndexRef.current;
+      if (idx == null || idx < 0) return;
+      const line = linesRef.current[idx];
+      if (!line || line.type === 'section') return;
+
+      if (e.key === '0') {
+        // Clear all singers from the active line
+        setModifiedLines(prev => new Set(prev).add(idx));
+        setLines(prev => {
+          const updated = [...prev];
+          updated[idx] = { ...updated[idx], singers: undefined };
+          return updated;
+        });
+      } else if (e.key >= '1' && e.key <= '4') {
+        const singerNum = parseInt(e.key, 10); // 1-indexed
+        // Only do anything if the line has enough singers
+        const singers = line.singers || [];
+        if (singers.length < singerNum) return;
+        const singerName = singers[singerNum - 1];
+        if (!singerName) return;
+        // Assign this singer to the whole line (adds to singers if not present)
+        setModifiedLines(prev => new Set(prev).add(idx));
+        setLines(prev => {
+          const updated = [...prev];
+          const existing = updated[idx].singers || [];
+          // If singer not yet in array, append it; otherwise line already has it
+          if (!existing.includes(singerName)) {
+            updated[idx] = { ...updated[idx], singers: [...existing, singerName].slice(0, 4) };
+          }
+          return updated;
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleNumberKey);
+    return () => window.removeEventListener('keydown', handleNumberKey);
+  }, [setLines, setModifiedLines]);
+
+  const projectSingers = useMemo(() => {
+    const s = new Set();
+    for (const line of lines) {
+      if (line.singers) {
+        for (const singer of line.singers) {
+          if (singer) s.add(singer);
+        }
+      }
+    }
+    return Array.from(s);
+  }, [lines]);
+
   return {
     // state
+    projectSingers,
     rawText,
     setRawText,
     editingLineIndex,
@@ -1144,6 +1242,7 @@ export function useEditor({
     handleToggleSectionDepth,
     handleAssignSinger,
     handleCycleWordSinger,
+    handleSetWordSinger,
     clearModifiedLines: () => setModifiedLines(new Set()),
     // extras
     requestConfirm,

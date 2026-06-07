@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { parseRubyMarkup, hasKanji, isKanji, hasCJK, toHiragana, toKatakana } from '@/shared/utils/furigana';
+import { Brush, Eraser } from 'lucide-react';
 import { ReadingInput } from './ReadingInput';
 import { Tip } from '@ui/tip';
 import { useTranslation } from 'react-i18next';
@@ -33,11 +34,40 @@ const LineTextContent = React.memo(({
   wordClickTimerRef,
   handleSaveLineText,
   handleCycleWordSinger,
+  handleSetWordSinger,
 }) => {
   const { t } = useTranslation();
+  const [activePaintSinger, setActivePaintSinger] = useState(null); // null = off, -1 = eraser, 0..3 = singer
+
+  const hasSingerSplit = line.singers?.length >= 2 && handleCycleWordSinger;
 
   return (
     <div className={`flex flex-col gap-1 group/text min-w-0 w-full ${editorMode === 'words' ? 'pt-0.5' : ''}`}>
+      {hasSingerSplit && (
+        <div className="flex items-center gap-1.5 mb-1 bg-zinc-900/50 p-1 rounded-md border border-zinc-800/50 self-start">
+          <Brush className="size-3 text-zinc-500 ml-1" />
+          <div className="w-px h-3 bg-zinc-700/50 mx-0.5" />
+          {line.singers.map((singer, idx) => (
+            <button
+              key={idx}
+              onClick={(e) => { e.stopPropagation(); setActivePaintSinger(activePaintSinger === idx ? null : idx); }}
+              className={`text-[10px] px-1.5 py-0.5 rounded transition-all select-none ${
+                activePaintSinger === idx ? 'bg-primary/20 ring-1 ring-primary/50' : 'hover:bg-zinc-800'
+              } ${WORD_SINGER_COLORS[idx]?.split(' ')[0]}`}
+            >
+              {singer}
+            </button>
+          ))}
+          <button
+            onClick={(e) => { e.stopPropagation(); setActivePaintSinger(activePaintSinger === -1 ? null : -1); }}
+            className={`text-[10px] px-1.5 py-0.5 rounded transition-all select-none flex items-center gap-1 ${
+              activePaintSinger === -1 ? 'bg-zinc-700 ring-1 ring-zinc-500' : 'hover:bg-zinc-800 text-zinc-500'
+            }`}
+          >
+            <Eraser className="size-3" />
+          </button>
+        </div>
+      )}
       <div className="flex items-center gap-2">
         <p
           className={`text-[13px] lg:text-xs transition-all duration-300 ease-out ${(line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null))) ? 'overflow-hidden' : 'break-words whitespace-pre-wrap'} ${isActive
@@ -62,7 +92,6 @@ const LineTextContent = React.memo(({
               const fmtR = (r) => r ? (rubyFmt === 'katakana' ? toKatakana(r) : toHiragana(r)) : r;
               const trailingSpace = /[a-zA-Z0-9]/.test(w.word) ? ' ' : null;
 
-              const hasSingerSplit = line.singers?.length >= 2 && handleCycleWordSinger;
               const wordSingerIdx = w.singerIndex ?? null;
               const singerColorClass = wordSingerIdx !== null ? (WORD_SINGER_COLORS[wordSingerIdx] || '') : '';
 
@@ -106,8 +135,13 @@ const LineTextContent = React.memo(({
                   <ruby
                     className={`group/ruby ${editorMode === 'words' || canHaveReading ? 'cursor-pointer' : 'cursor-default'} ${canHaveReading ? 'hover:text-primary' : ''}`}
                     role={editorMode === 'words' || canHaveReading ? 'button' : undefined}
-                    tabIndex={editorMode === 'words' || canHaveReading ? 0 : undefined}
+                    tabIndex={editorMode === 'words' || canHaveReading || activePaintSinger !== null ? 0 : undefined}
                     onClick={(e) => {
+                      if (activePaintSinger !== null) {
+                        e.stopPropagation();
+                        handleSetWordSinger(lineIndex, wi, activePaintSinger === -1 ? null : activePaintSinger);
+                        return;
+                      }
                       if (editorMode !== 'words' && !canHaveReading) return;
                       e.stopPropagation();
                       if (editorMode === 'words') {
@@ -175,7 +209,6 @@ const LineTextContent = React.memo(({
             });
             })()
             : (() => {
-              // Singer split mode in LRC/SRT: render word spans with right-click cycling
               const hasSingerSplit = line.singers?.length >= 2 && handleCycleWordSinger;
               if (hasSingerSplit) {
                 // Use existing words array or split from text
@@ -194,9 +227,15 @@ const LineTextContent = React.memo(({
                   const wordSingerIdx = w.singerIndex ?? null;
                   const singerColorClass = wordSingerIdx !== null ? (WORD_SINGER_COLORS[wordSingerIdx] || '') : '';
                   return (
-                    <Tip key={wi} content={t('editor.rightClickToAssignSinger')}>
+                    <Tip key={wi} content={activePaintSinger !== null ? t('editor.clickToPaintSinger') : t('editor.rightClickToAssignSinger')}>
                       <span
-                        className={`transition-colors px-0.5 rounded cursor-context-menu select-text ${singerColorClass} hover:bg-white/5`}
+                        className={`transition-colors px-0.5 rounded ${activePaintSinger !== null ? 'cursor-pointer' : 'cursor-context-menu'} select-text ${singerColorClass} hover:bg-white/5`}
+                        onClick={(e) => {
+                          if (activePaintSinger !== null) {
+                            e.stopPropagation();
+                            handleSetWordSinger(lineIndex, wi, activePaintSinger === -1 ? null : activePaintSinger);
+                          }
+                        }}
                         onContextMenu={(e) => {
                           e.preventDefault();
                           e.stopPropagation();

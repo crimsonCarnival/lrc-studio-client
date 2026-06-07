@@ -448,7 +448,8 @@ export function parseLrcSrtFile(content, filename) {
         if (bracketSection && !KNOWN_LRC_META_KEYS.has(bracketSection[1].trim().toLowerCase())) {
           const label = bracketSection[1].trim();
           const singer = bracketSection[2]?.trim() || undefined;
-          parsedLines.push({ type: 'section', depth: 1, label, singers: singer ? [singer] : undefined, timestamp: null, id: generateId() });
+          const singers = singer ? singer.split(/\s*(?:&|,|\band\b)\s*/i).map(s => s.trim()).filter(Boolean) : undefined;
+          parsedLines.push({ type: 'section', depth: 1, label, singers, timestamp: null, id: generateId() });
           return;
         }
         // Plain text line (skip known LRC metadata tags)

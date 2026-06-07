@@ -72,6 +72,7 @@ const EditorLineItem = React.memo(({
   onToggleDepth,
   handleAssignSinger,
   songArtists,
+  projectSingers,
   playerRef,
   shiftTime,
   handleAddLine,
@@ -81,6 +82,7 @@ const EditorLineItem = React.memo(({
   handleMark,
   handleSetWordReading,
   handleCycleWordSinger,
+  handleSetWordSinger,
   activeWordIndex,
   handleClearWordTimestamp,
   handleSetActiveWordIndex,
@@ -269,6 +271,7 @@ const EditorLineItem = React.memo(({
             <SectionPickerDropdown
               value={editingText}
               onChange={(v) => setEditingText(v)}
+              projectSingers={projectSingers}
             />
             {editingSingers.map((singerVal, idx) => {
               const isFilled = !!singerVal;
@@ -528,6 +531,7 @@ const EditorLineItem = React.memo(({
             handleSaveLineText={handleSaveLineText}
             setEditingLineIndex={setEditingLineIndex}
             songArtists={songArtists}
+            projectSingers={projectSingers}
           />
         ) : (
           <LineTextContent
@@ -548,6 +552,7 @@ const EditorLineItem = React.memo(({
             wordClickTimerRef={wordClickTimerRef}
             handleSaveLineText={handleSaveLineText}
             handleCycleWordSinger={handleCycleWordSinger}
+            handleSetWordSinger={handleSetWordSinger}
           />
         )}
       </div>

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { useTranslation } from 'react-i18next';
 
-const KeyboardHelp = lazy(() => import('@features/settings/components/KeyboardHelp'));
+const EditorHelpModal = lazy(() => import('@features/settings/components/EditorHelpModal'));
 import ProjectSetupModal from '@features/editor/components/setup/ProjectSetupModal';
 
 /**
@@ -34,7 +34,7 @@ export function AppModals({
     <>
       <Suspense fallback={null}>
         {showKeyboardHelp && (
-          <KeyboardHelp isOpen={showKeyboardHelp} onClose={() => setShowKeyboardHelp(false)} />
+          <EditorHelpModal isOpen={showKeyboardHelp} onClose={() => setShowKeyboardHelp(false)} />
         )}
       </Suspense>
 

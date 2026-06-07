@@ -134,19 +134,7 @@ export default function EditorToolbar({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Keyboard shortcuts quick access */}
-          {onShowKeyboardHelp && (
-            <Tip content={t('shortcuts.title')}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onShowKeyboardHelp}
-                className="size-7 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 hidden lg:flex"
-              >
-                <HelpCircle className="size-3.5" />
-              </Button>
-            </Tip>
-          )}
+          {/* Keyboard shortcuts quick access used to be here, moved to EditorHelpModal */}
 
           {/* Sync progress + word/char count badge */}
           {syncProgress && (
@@ -409,6 +397,13 @@ export default function EditorToolbar({
               )}
 
               <PopoverSeparator className="bg-zinc-800/50" />
+
+              {onShowKeyboardHelp && (
+                <PopoverItem onClick={onShowKeyboardHelp} className="text-xs">
+                  <HelpCircle className="size-4" />
+                  {t('shortcuts.title', 'Editor Help')}
+                </PopoverItem>
+              )}
 
               <PopoverItem onClick={onNewProject} className="text-xs">
                 <Plus className="size-4" />

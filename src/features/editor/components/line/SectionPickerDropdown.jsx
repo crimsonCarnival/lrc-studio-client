@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SECTION_TYPES, SECTION_TYPE_IDS } from '@features/editor/constants/sectionTypes';
+import { FloatingCombobox } from '@ui/floating-combobox';
 
 /**
  * Compact section-type dropdown for the section-marker inline editor.
@@ -8,8 +9,9 @@ import { SECTION_TYPES, SECTION_TYPE_IDS } from '@features/editor/constants/sect
  * Props:
  *   value      — current label string (a preset id or custom text)
  *   onChange   — (labelString) => void  called on every change
+ *   projectSingers - Array of unique singers used in the project
  */
-export default function SectionPickerDropdown({ value, onChange }) {
+export default function SectionPickerDropdown({ value, onChange, projectSingers }) {
   const { t } = useTranslation();
 
   // If the current value is not a known preset, start in "other" mode
@@ -32,9 +34,9 @@ export default function SectionPickerDropdown({ value, onChange }) {
     }
   };
 
-  const handleCustomChange = (e) => {
-    setCustomText(e.target.value);
-    onChange(e.target.value);
+  const handleCustomChange = (v) => {
+    setCustomText(v);
+    onChange(v);
   };
 
   const selectValue = isOther ? '__other__' : (value || 'verse');
@@ -64,12 +66,12 @@ export default function SectionPickerDropdown({ value, onChange }) {
       </select>
 
       {isOther && (
-        <input
-          autoFocus
+        <FloatingCombobox
           value={customText}
           onChange={handleCustomChange}
+          options={projectSingers || []}
           placeholder={t('editor.sectionLabelPlaceholder', 'Section label')}
-          className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-200 rounded px-2 py-0.5 w-28 focus:outline-none focus:border-primary/60"
+          className="w-28 text-xs h-6"
         />
       )}
     </div>

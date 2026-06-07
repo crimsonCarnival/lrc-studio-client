@@ -47,6 +47,7 @@ export default function Editor({
   "use no memo";
   const { t } = useTranslation();
   const {
+    projectSingers,
     rawText,
     setRawText,
     editingLineIndex,
@@ -63,6 +64,7 @@ export default function Editor({
     handleToggleSectionDepth,
     handleAssignSinger,
     handleCycleWordSinger,
+    handleSetWordSinger,
     dragIndex,
     dragOverIndex,
     selectedLines,
@@ -250,6 +252,7 @@ export default function Editor({
           handleDrop={handleDrop}
           dragOverIndex={dragOverIndex}
           dragIndex={dragIndex}
+          projectSingers={combinedSingers}
           selectedLines={selectedLines}
           settings={settings}
           editingLineIndex={editingLineIndex}
@@ -289,6 +292,7 @@ export default function Editor({
           handleSetTimestamp={handleSetTimestamp}
           handleSetWordReading={handleSetWordReading}
           handleCycleWordSinger={handleCycleWordSinger}
+          handleSetWordSinger={handleSetWordSinger}
           stampTarget={stampTarget}
           handleStampTargetToggle={handleStampTargetToggle}
           playbackPosition={playbackPosition}
@@ -375,7 +379,7 @@ export default function Editor({
                 label={t('editor.clearTimestamp')}
                 variant="danger"
                 onClick={() => {
-                  handleClearLine(activeLineMenuData.lineIndex);
+                  handleClearLine(activeLineMenuIndex);
                   setActiveDrawer(null);
                 }}
               />
@@ -450,6 +454,7 @@ function VirtualizedLineList({
   handleDrop,
   dragOverIndex,
   dragIndex,
+  projectSingers,
   selectedLines,
   settings,
   editingLineIndex,
@@ -489,6 +494,7 @@ function VirtualizedLineList({
   handleSetTimestamp,
   handleSetWordReading,
   handleCycleWordSinger,
+  handleSetWordSinger,
   stampTarget,
   handleStampTargetToggle,
   playbackPosition,
@@ -648,6 +654,7 @@ function VirtualizedLineList({
                   handleLineHover={handleLineHover}
                   handleLineHoverEnd={handleLineHoverEnd}
                   handleDragStart={handleDragStart}
+                  projectSingers={projectSingers}
                   handleDragOver={handleDragOver}
                   handleDragEnd={handleDragEnd}
                   handleDrop={handleDrop}
@@ -686,6 +693,7 @@ function VirtualizedLineList({
                   handleSetTimestamp={handleSetTimestamp}
                   handleSetWordReading={handleSetWordReading}
                   handleCycleWordSinger={handleCycleWordSinger}
+                  handleSetWordSinger={handleSetWordSinger}
                   stampTarget={i === activeLineIndex ? stampTarget : 'main'}
                   handleStampTargetToggle={handleStampTargetToggle}
                   playbackPosition={isActive ? playbackPosition : null}

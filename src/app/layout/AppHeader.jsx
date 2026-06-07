@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, startTransition } from 'react';
+import { useState, useRef, useEffect, startTransition } from 'react';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -508,6 +508,11 @@ export function AppHeader({
                   <PopoverItem onClick={() => { navigate('/settings'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                     <SettingsIcon className="size-4 text-zinc-400" />{t('settings.title')}
                   </PopoverItem>
+                  {setShowKeyboardHelp && (
+                    <PopoverItem onClick={() => { setShowKeyboardHelp(true); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+                      <BookOpen className="size-4 text-zinc-400" />{t('shortcuts.title', 'Editor Help')}
+                    </PopoverItem>
+                  )}
                 </div>
 
                 <div className="p-1">

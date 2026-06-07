@@ -3,7 +3,7 @@ import { Input } from '@ui/input';
 import { FloatingCombobox } from '@ui/floating-combobox';
 import { useLanguageOptions } from '@features/editor/hooks/useLanguageOptions';
 import { Tip } from '@ui/tip';
-import { Plus, X, User } from 'lucide-react';
+import { Plus, X, User, Scissors } from 'lucide-react';
 
 /** Style class per singer role (0-indexed) */
 const SINGER_STYLE_CLASSES = [
@@ -12,6 +12,20 @@ const SINGER_STYLE_CLASSES = [
   'font-bold',      // 2: bold
   'font-bold italic', // 3: bold+italic
 ];
+
+/**
+ * Try to parse "Name: Lyric text" from editingText.
+ * Returns { name, text } if colon found at start (not mid-sentence), else null.
+ */
+function tryParseSingerPrefix(text) {
+  const colonIdx = text.indexOf(':');
+  if (colonIdx <= 0 || colonIdx > 30) return null; // only short prefixes
+  const prefix = text.slice(0, colonIdx).trim();
+  const rest = text.slice(colonIdx + 1).trim();
+  // prefix should look like a name (no lowercase leading words like "e.g.")
+  if (!prefix || !rest || /\s{2,}/.test(prefix)) return null;
+  return { name: prefix, text: rest };
+}
 
 function LineTextEditingForm({
   lineIndex,
@@ -26,10 +40,14 @@ function LineTextEditingForm({
   handleSaveLineText,
   setEditingLineIndex,
   songArtists,
+  projectSingers,
   ref,
 }) {
   const { t } = useTranslation();
   const languageOptions = useLanguageOptions();
+
+  // Combined autocomplete options: project singers + song artists, deduped
+  const singerOptions = [...new Set([...(projectSingers || []), ...(songArtists || [])])].filter(Boolean);
 
   // Ensure we always work with a 4-slot array (padded with '')
   const singers = [...(editingSingers || []), '', '', '', ''].slice(0, 4);
@@ -71,10 +89,28 @@ function LineTextEditingForm({
     setEditingTranslations((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  // Split "Name: lyric text" into singer + text
+  const handleSplitAtColon = () => {
+    const parsed = tryParseSingerPrefix(editingText);
+    if (!parsed) return;
+    setEditingText(parsed.text);
+    setEditingSingers((prev) => {
+      const next = [...(prev || []), '', '', '', ''].slice(0, 4);
+      if (!next[0]) {
+        next[0] = parsed.name;
+      } else if (!next[1]) {
+        next[1] = parsed.name;
+      }
+      return next;
+    });
+  };
+
   // How many singer slots are actively filled
   const activeSingerCount = singers.filter(Boolean).length;
   // Next empty slot index (or -1 if all 4 filled)
   const nextEmptySlot = singers.findIndex((s) => !s);
+
+  const splitParsed = tryParseSingerPrefix(editingText);
 
   return (
     <div
@@ -95,14 +131,27 @@ function LineTextEditingForm({
         }
       }}
     >
-      <Input
-        type="text"
-        ref={ref}
-        value={editingText}
-        onChange={(e) => setEditingText(e.target.value)}
-        placeholder={`${t('editor.primaryText')} — {漢字|よみかた}`}
-        className="w-full bg-zinc-800 border-primary/50 text-xs text-zinc-100 h-7"
-      />
+      <div className="flex items-center gap-1">
+        <Input
+          type="text"
+          ref={ref}
+          value={editingText}
+          onChange={(e) => setEditingText(e.target.value)}
+          placeholder={`${t('editor.primaryText')} — {漢字|よみかた}`}
+          className="w-full bg-zinc-800 border-primary/50 text-xs text-zinc-100 h-7"
+        />
+        {splitParsed && (
+          <Tip content={t('editor.splitAtColon', 'Split "{{name}}" as singer', { name: splitParsed.name })}>
+            <button
+              type="button"
+              onClick={handleSplitAtColon}
+              className="shrink-0 text-zinc-500 hover:text-primary px-1"
+            >
+              <Scissors className="size-3" />
+            </button>
+          </Tip>
+        )}
+      </div>
       <Input
         type="text"
         value={editingSecondary}
@@ -144,7 +193,7 @@ function LineTextEditingForm({
         <Plus className="size-2.5" /> {t('editor.addTranslation')}
       </button>
 
-      {/* Singer slots — dynamic, up to 4 */}
+      {/* Singer slots — dynamic, up to 4 — now using FloatingCombobox */}
       <div className="flex flex-col gap-0.5 mt-0.5">
         {singers.map((name, idx) => {
           // Only show a row if this slot is filled OR it's the next empty slot after filled ones
@@ -159,13 +208,14 @@ function LineTextEditingForm({
           return (
             <div key={idx} className="flex items-center gap-1">
               <User className="size-3 text-zinc-600 shrink-0" />
-              <Input
-                type="text"
+              <FloatingCombobox
+                label=""
                 value={name}
-                onChange={(e) => updateSinger(idx, e.target.value)}
+                onChange={(v) => updateSinger(idx, v)}
+                options={singerOptions}
+                size="sm"
                 placeholder={roleLabel}
-                list={`singers-${lineIndex}`}
-                className={`flex-1 bg-zinc-800 border-zinc-700/40 text-xs text-zinc-500 h-6 ${SINGER_STYLE_CLASSES[idx]}`}
+                className={`flex-1 text-xs text-zinc-500 h-6 ${SINGER_STYLE_CLASSES[idx]}`}
               />
               {isFilled && (
                 <Tip content={t('editor.removeSinger', 'Remove singer')}>
@@ -181,13 +231,8 @@ function LineTextEditingForm({
             </div>
           );
         })}
-        {songArtists?.length > 0 && (
-          <datalist id={`singers-${lineIndex}`}>
-            {songArtists.map((a) => <option key={a} value={a} />)}
-          </datalist>
-        )}
         {activeSingerCount >= 4 && (
-          <p className="text-[9px] text-zinc-700 ml-4">Max 4 singers</p>
+          <p className="text-[9px] text-zinc-700 ml-4">{t('editor.maxSingers', 'Max 4 singers')}</p>
         )}
       </div>
     </div>
