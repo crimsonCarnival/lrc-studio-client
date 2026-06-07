@@ -370,8 +370,24 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
             </React.Fragment>
           );
         })
-        // No word timestamps: just render text with furigana if available, no fill
-        : hasReadings ? renderLineWithReadings(line, fmtReading, showFuriganaInPreview) : mainText
+        // No word timestamps: render with singer coloring if words have singerIndex
+        : (() => {
+          const hasSingerSplit = line.singers?.length >= 2 && line.words?.some(w => w.singerIndex != null);
+          if (hasSingerSplit) {
+            return line.words.map((w, wi) => {
+              const singerColor = w.singerIndex != null ? (WORD_SINGER_PREVIEW_COLORS[w.singerIndex] || '') : '';
+              const nextWord = line.words[wi + 1];
+              const addSpace = needsSpaceAfter(w.word, nextWord?.word);
+              return (
+                <React.Fragment key={wi}>
+                  <span className={singerColor}>{w.word}</span>
+                  {addSpace ? ' ' : null}
+                </React.Fragment>
+              );
+            });
+          }
+          return hasReadings ? renderLineWithReadings(line, fmtReading, showFuriganaInPreview) : mainText;
+        })()
       }
     </p>
   );

@@ -102,8 +102,7 @@ const LineTextContent = React.memo(({
                 );
               }
 
-              return (
-                <React.Fragment key={wi}>
+              const rubyElement = (
                   <ruby
                     className={`group/ruby ${editorMode === 'words' || canHaveReading ? 'cursor-pointer' : 'cursor-default'} ${canHaveReading ? 'hover:text-primary' : ''}`}
                     role={editorMode === 'words' || canHaveReading ? 'button' : undefined}
@@ -143,7 +142,7 @@ const LineTextContent = React.memo(({
                     {canHaveReading && (editorMode !== 'words' || w.reading) && (
                       <rt
                         role="button"
-                        aria-label={w.reading || 'Add reading'}
+                        aria-label={w.reading || t('editor.addReading')}
                         className={`select-none transition-colors ${w.reading ? 'text-[10px] font-mono text-zinc-400 group-hover/ruby:text-primary' : 'border-b-2 border-zinc-700/30 border-dashed min-h-[4px] group-hover/ruby:border-primary/40'}`}
                         tabIndex={editorMode !== 'words' ? 0 : undefined}
                         onClick={editorMode !== 'words' ? (e) => {
@@ -161,12 +160,56 @@ const LineTextContent = React.memo(({
                       </rt>
                     )}
                   </ruby>
+              );
+
+              return (
+                <React.Fragment key={wi}>
+                  {editorMode === 'words' && hasSingerSplit ? (
+                    <Tip content={t('editor.rightClickToAssignSinger')}>
+                      {rubyElement}
+                    </Tip>
+                  ) : rubyElement}
                   {trailingSpace}
                 </React.Fragment>
               );
             });
             })()
             : (() => {
+              // Singer split mode in LRC/SRT: render word spans with right-click cycling
+              const hasSingerSplit = line.singers?.length >= 2 && handleCycleWordSinger;
+              if (hasSingerSplit) {
+                // Use existing words array or split from text
+                const displayWords = line.words?.length > 0
+                  ? line.words
+                  : (line.text || '').split(/(\s+)/).filter(Boolean).reduce((acc, tok) => {
+                    if (/^\s+$/.test(tok) && acc.length > 0) {
+                      acc[acc.length - 1] = { ...acc[acc.length - 1], word: acc[acc.length - 1].word + tok };
+                    } else if (!/^\s+$/.test(tok)) {
+                      acc.push({ word: tok, time: null });
+                    }
+                    return acc;
+                  }, []);
+
+                return displayWords.map((w, wi) => {
+                  const wordSingerIdx = w.singerIndex ?? null;
+                  const singerColorClass = wordSingerIdx !== null ? (WORD_SINGER_COLORS[wordSingerIdx] || '') : '';
+                  return (
+                    <Tip key={wi} content={t('editor.rightClickToAssignSinger')}>
+                      <span
+                        className={`transition-colors px-0.5 rounded cursor-context-menu select-text ${singerColorClass} hover:bg-white/5`}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleCycleWordSinger(lineIndex, wi);
+                        }}
+                      >
+                        {w.word}
+                      </span>
+                    </Tip>
+                  );
+                });
+              }
+
               const { plainText, segments } = parseRubyMarkup(line.text || '♪');
               const textChars = [...plainText];
               const rubyFmt = settings?.editor?.display?.readingFormat || 'hiragana';

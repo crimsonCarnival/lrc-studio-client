@@ -67,16 +67,22 @@ function PublicProjectViewPageInner() {
 
   // Derive read-only data from the fetched project (no effect needed)
   const lines = useMemo(
-    () => (project?.lyrics?.lines || []).map((l) => ({
-      text: l.text || '',
-      timestamp: l.timestamp ?? null,
-      endTime: l.endTime ?? undefined,
-      secondary: l.secondary || '',
-      translations: Array.isArray(l.translations) ? l.translations : undefined,
-      id: crypto.randomUUID(),
-      words: l.words,
-      secondaryWords: l.secondaryWords,
-    })),
+    () => (project?.lyrics?.lines || []).flatMap((l) => {
+      if (l.type === 'section') {
+        return [{ type: 'section', label: l.label || '', timestamp: l.timestamp ?? null, id: crypto.randomUUID(), singers: l.singers || undefined, depth: l.depth ?? 1 }];
+      }
+      return [{
+        text: l.text || '',
+        timestamp: l.timestamp ?? null,
+        endTime: l.endTime ?? undefined,
+        secondary: l.secondary || '',
+        translations: Array.isArray(l.translations) ? l.translations : undefined,
+        singers: Array.isArray(l.singers) ? l.singers : undefined,
+        id: crypto.randomUUID(),
+        words: l.words,
+        secondaryWords: l.secondaryWords,
+      }];
+    }),
     [project],
   );
   const editorMode = project?.lyrics?.editorMode || 'lrc';

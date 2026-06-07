@@ -311,18 +311,21 @@ const EditorLineItem = React.memo(({
         <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/50'}`} />
         {selectedLines.size === 0 && (
           <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onToggleDepth?.(i); }}
-              className="text-zinc-600 hover:text-primary text-xs px-1"
-              title={isRoot ? t('editor.sections.demote', 'Demote to regular section') : t('editor.sections.promote', 'Promote to Part')}
-            >{isRoot ? '⇲' : '⇱'}</button>
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); handleDeleteLine(i); }}
-              className="text-zinc-600 hover:text-zinc-400 text-xs px-1"
-              aria-label="Delete section"
-            >✕</button>
+            <Tip content={isRoot ? t('editor.sections.demote', 'Demote to regular section') : t('editor.sections.promote', 'Promote to Part')}>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onToggleDepth?.(i); }}
+                className="text-zinc-600 hover:text-primary text-xs px-1"
+              >{isRoot ? '⇲' : '⇱'}</button>
+            </Tip>
+            <Tip content={t('editor.deleteSection', 'Delete section')}>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); handleDeleteLine(i); }}
+                className="text-zinc-600 hover:text-zinc-400 text-xs px-1"
+                aria-label={t('editor.deleteSection', 'Delete section')}
+              >✕</button>
+            </Tip>
           </div>
         )}
       </div>

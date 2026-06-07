@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Input } from '@ui/input';
 import { FloatingCombobox } from '@ui/floating-combobox';
 import { useLanguageOptions } from '@features/editor/hooks/useLanguageOptions';
+import { Tip } from '@ui/tip';
 import { Plus, X, User } from 'lucide-react';
 
 /** Style class per singer role (0-indexed) */
@@ -167,14 +168,15 @@ function LineTextEditingForm({
                 className={`flex-1 bg-zinc-800 border-zinc-700/40 text-xs text-zinc-500 h-6 ${SINGER_STYLE_CLASSES[idx]}`}
               />
               {isFilled && (
-                <button
-                  type="button"
-                  onClick={() => removeSinger(idx)}
-                  className="text-zinc-700 hover:text-zinc-400 shrink-0 px-0.5"
-                  title={t('editor.removeSinger', 'Remove singer')}
-                >
-                  <X className="size-3" />
-                </button>
+                <Tip content={t('editor.removeSinger', 'Remove singer')}>
+                  <button
+                    type="button"
+                    onClick={() => removeSinger(idx)}
+                    className="text-zinc-700 hover:text-zinc-400 shrink-0 px-0.5"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </Tip>
               )}
             </div>
           );

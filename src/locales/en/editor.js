@@ -129,7 +129,9 @@ export default {
     outro: "Outro",
     other: "Other…",
     groupStructural: "Structural",
-    groupStandard: "Standard"
+    groupStandard: "Standard",
+    demote: "Demote to regular section",
+    promote: "Promote to main section"
   },
   singer: "Singer 1",
   singerN: "Singer {{n}}",
@@ -144,5 +146,7 @@ export default {
   clearSingers: "Clear singers",
   stampWordTip: "Stamp \"{{word}}\" ({{current}}/{{total}})",
   langPlaceholder: "Lang",
-  enterLyricsPlaceholder: "Enter lyrics..."
+  enterLyricsPlaceholder: "Enter lyrics...",
+  rightClickToAssignSinger: "Right-click to assign singer",
+  deleteSection: "Delete section"
 };

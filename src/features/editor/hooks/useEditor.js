@@ -1035,7 +1035,8 @@ export function useEditor({
 
   /**
    * Cycle the singerIndex of a single word within a line.
-   * Each right-click/alt-click advances: null → 0 → 1 → … → (singerCount-1) → null
+   * Each right-click advances: null → 0 → 1 → … → (singerCount-1) → null.
+   * If no words array exists yet (LRC/SRT mode), auto-creates one by splitting line.text.
    */
   const handleCycleWordSinger = useCallback((lineIndex, wordIndex) => {
     setModifiedLines(prev => new Set(prev).add(lineIndex));
@@ -1043,8 +1044,27 @@ export function useEditor({
       const updated = [...prev];
       const line = { ...updated[lineIndex] };
       const singers = line.singers || [];
-      if (singers.length < 2) return prev; // nothing to cycle if < 2 singers
-      const words = [...(line.words || [])];
+      if (singers.length < 2) return prev;
+
+      // Auto-create words array from text when none exists yet (LRC/SRT mode)
+      let words = line.words ? [...line.words] : null;
+      if (!words || words.length === 0) {
+        if (!line.text) return prev;
+        // Split preserving spaces: tokenize into word+space chunks
+        const tokens = line.text.split(/(\s+)/);
+        const newWords = [];
+        for (const tok of tokens) {
+          if (!tok) continue;
+          if (/^\s+$/.test(tok)) {
+            // Append space to the last word rather than creating a space entry
+            if (newWords.length > 0) newWords[newWords.length - 1] = { ...newWords[newWords.length - 1], word: newWords[newWords.length - 1].word + tok };
+          } else {
+            newWords.push({ word: tok, time: null });
+          }
+        }
+        words = newWords;
+      }
+
       const w = words[wordIndex];
       if (!w) return prev;
       const current = w.singerIndex ?? null;
