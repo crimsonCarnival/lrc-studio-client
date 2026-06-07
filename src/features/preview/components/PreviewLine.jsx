@@ -3,6 +3,19 @@ import { useSettings } from '@/features/settings/useSettings';
 import { toHiragana, toKatakana, parseRubyMarkup } from '@/shared/utils/furigana';
 import { Tip } from '@ui/tip';
 
+/** Role chip color classes, matching the editor badges */
+const SINGER_CHIP_COLORS = [
+  'bg-primary/10 border-primary/30 text-primary',
+  'bg-sky-500/10 border-sky-500/30 text-sky-400',
+  'bg-violet-500/10 border-violet-500/30 text-violet-400',
+  'bg-amber-500/10 border-amber-500/30 text-amber-400',
+];
+
+function getLineSingers(line) {
+  if (line.singers?.length) return line.singers;
+  const legacy = [line.singer, line.singer2].filter(Boolean);
+  return legacy;
+}
 export default function PreviewLine({
   line,
   originalIndex: i,
@@ -118,17 +131,22 @@ export default function PreviewLine({
         </div>
       )}
 
-      {/* Singer badge — shown above main content when assigned */}
-      {line.singer && (
-        <span className="absolute top-0.5 right-2 text-[9px] font-semibold text-zinc-600 tracking-wide truncate max-w-[40%]">
-          {line.singer}
-        </span>
-      )}
-
+      {/* Singer chips — inline in content flow, not absolute */}
       {/* Left column for side-by-side: main + secondary */}
       {translationLayout === 'side-by-side' && activeTranslationText && showTranslationsInPreview ? (
         <>
           <div className="flex-1 min-w-0 flex flex-col">
+            {getLineSingers(line).length > 0 && (
+              <div className="flex gap-1 mb-0.5 flex-wrap">
+                {getLineSingers(line).map((name, idx) => (
+                  <Tip key={idx} content={name}>
+                    <span className={`inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-full border leading-none cursor-default ${SINGER_CHIP_COLORS[idx] || SINGER_CHIP_COLORS[0]}`}>
+                      {idx + 1}
+                    </span>
+                  </Tip>
+                ))}
+              </div>
+            )}
             <MainTrack
               line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={hasWordTimestamps}
               playbackPosition={playbackPosition} activeFontSizes={activeFontSizes}
@@ -158,6 +176,17 @@ export default function PreviewLine({
         </>
       ) : (
         <>
+          {getLineSingers(line).length > 0 && (
+            <div className="flex gap-1 mb-0.5 flex-wrap">
+              {getLineSingers(line).map((name, idx) => (
+                <Tip key={idx} content={name}>
+                  <span className={`inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-full border leading-none cursor-default ${SINGER_CHIP_COLORS[idx] || SINGER_CHIP_COLORS[0]}`}>
+                    {idx + 1}
+                  </span>
+                </Tip>
+              ))}
+            </div>
+          )}
           <MainTrack
             line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={hasWordTimestamps}
             playbackPosition={playbackPosition} activeFontSizes={activeFontSizes}
