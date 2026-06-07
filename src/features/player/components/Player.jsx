@@ -208,8 +208,11 @@ function Player(
       return;
     }
     spotifyApi.createUpload(trimmed).then((result) => {
-      sp.playTrack(result.spotifyTrackId || result.trackMeta?.trackId, result.title || result.trackMeta?.name || '', false);
-      onTitleChange?.(result.title || result.trackMeta?.name || '');
+      const trackId = result.spotifyTrackId || result.trackMeta?.trackId;
+      const title = result.title || result.trackMeta?.name || '';
+      sp.playTrack(trackId, title, false);
+      onTitleChange?.(title);
+      onSpotifyTrackIdChange?.(trackId);
       setSpotifyUrl('');
     }).catch((err) => setSpotifyError(err.message || 'Invalid Spotify URL'));
   };
