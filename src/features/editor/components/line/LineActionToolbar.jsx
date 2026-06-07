@@ -17,8 +17,7 @@ const LineActionToolbar = React.memo(({
   setEditingText,
   setEditingSecondary,
   setEditingTranslations,
-  setEditingSinger,
-  setEditingSinger2,
+  setEditingSingers,
   serializeToRubyMarkup,
   handleMark,
   playerRef,
@@ -149,8 +148,8 @@ const LineActionToolbar = React.memo(({
                       setEditingText(serializeToRubyMarkup(line.words) || line.text);
                       setEditingSecondary(line.secondary || '');
                       setEditingTranslations(line.translations ? [...line.translations] : []);
-                      setEditingSinger(line.singer || '');
-                      setEditingSinger2(line.singer2 || '');
+                      const lineSingers = line.singers || [line.singer, line.singer2].filter(Boolean);
+                      setEditingSingers([...lineSingers, '', '', '', ''].slice(0, 4));
                     }}
                     className="text-sky-400/70 hover:text-sky-400 hover:bg-sky-500/10"
                   >
@@ -172,8 +171,8 @@ const LineActionToolbar = React.memo(({
                 setEditingText(serializeToRubyMarkup(line.words) || line.text);
                 setEditingSecondary(line.secondary || '');
                 setEditingTranslations(line.translations ? [...line.translations] : []);
-                setEditingSinger(line.singer || '');
-                setEditingSinger2(line.singer2 || '');
+                const lineSingers = line.singers || [line.singer, line.singer2].filter(Boolean);
+                setEditingSingers([...lineSingers, '', '', '', ''].slice(0, 4));
               }}
               className="text-sky-400/70 hover:text-sky-400 hover:bg-sky-500/10"
             >
@@ -228,10 +227,26 @@ const LineActionToolbar = React.memo(({
 function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(0);
   const [custom, setCustom] = useState('');
   const indices = [...selectedLines];
 
   if (!handleAssignSinger) return null;
+
+  const ROLE_LABELS = [
+    { label: t('editor.singer', 'Singer 1'), className: '' },
+    { label: t('editor.singerN', 'Singer {{n}}', { n: 2 }), className: 'italic' },
+    { label: t('editor.singerN', 'Singer {{n}}', { n: 3 }), className: 'font-bold' },
+    { label: t('editor.singerN', 'Singer {{n}}', { n: 4 }), className: 'font-bold italic' },
+  ];
+
+  const assignName = (name) => {
+    // Build singers array with name at selectedSlot, others unset
+    // We merge with the existing line data in the handler
+    handleAssignSinger(name, indices, selectedSlot);
+    setOpen(false);
+    setCustom('');
+  };
 
   return (
     <div className="relative">
@@ -242,11 +257,27 @@ function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }) 
       </Tip>
       {open && (
         <div
-          className="absolute bottom-full right-0 mb-1 w-44 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 py-1 text-xs"
+          className="absolute bottom-full right-0 mb-1 w-52 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 py-1 text-xs"
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Role slot picker */}
+          <div className="flex gap-1 px-2 pb-1 border-b border-zinc-800 mb-1">
+            {ROLE_LABELS.map((role, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setSelectedSlot(idx)}
+                className={`flex-1 py-0.5 rounded text-[10px] transition-colors ${selectedSlot === idx ? 'bg-primary/20 text-primary' : 'text-zinc-500 hover:text-zinc-300'} ${role.className}`}
+              >
+                {idx + 1}
+              </button>
+            ))}
+          </div>
+          <p className="px-3 py-0.5 text-[10px] text-zinc-600">
+            {ROLE_LABELS[selectedSlot].label}
+          </p>
           {(songArtists?.length > 0 ? songArtists : []).map((a) => (
-            <button key={a} type="button" onClick={() => { handleAssignSinger(a, indices); setOpen(false); }} className="w-full text-left px-3 py-1.5 text-zinc-300 hover:bg-zinc-800 hover:text-primary truncate">
+            <button key={a} type="button" onClick={() => assignName(a)} className="w-full text-left px-3 py-1.5 text-zinc-300 hover:bg-zinc-800 hover:text-primary truncate">
               {a}
             </button>
           ))}
@@ -254,14 +285,14 @@ function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }) 
             <input
               value={custom}
               onChange={(e) => setCustom(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { handleAssignSinger(custom, indices); setOpen(false); setCustom(''); } }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && custom.trim()) assignName(custom.trim()); }}
               placeholder={t('editor.singerCustomPlaceholder')}
               className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-1 text-zinc-200 text-xs focus:outline-none focus:border-primary/60"
             />
-            <button type="button" onClick={() => { handleAssignSinger(custom, indices); setOpen(false); setCustom(''); }} className="px-2 py-1 rounded bg-primary/20 text-primary text-xs hover:bg-primary/30">✓</button>
+            <button type="button" onClick={() => { if (custom.trim()) assignName(custom.trim()); }} className="px-2 py-1 rounded bg-primary/20 text-primary text-xs hover:bg-primary/30">✓</button>
           </div>
-          <button type="button" onClick={() => { handleAssignSinger('', indices); setOpen(false); }} className="w-full text-left px-3 py-1.5 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400 text-[10px]">
-            {t('editor.clearSinger')}
+          <button type="button" onClick={() => { handleAssignSinger('', indices, selectedSlot); setOpen(false); }} className="w-full text-left px-3 py-1.5 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400 text-[10px]">
+            {t('editor.clearSingers', 'Clear singers')}
           </button>
         </div>
       )}
