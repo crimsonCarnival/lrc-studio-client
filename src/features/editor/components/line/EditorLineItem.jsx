@@ -12,6 +12,28 @@ import SrtModeColumn from '../modes/SrtModeColumn';
 import WordsModeColumn from '../modes/WordsModeColumn';
 import LineTextContent from './LineTextContent';
 import LineActionToolbar from './LineActionToolbar';
+import SectionPickerDropdown from './SectionPickerDropdown';
+
+const SINGER_BADGE_STYLES = [
+  'text-zinc-400 border-zinc-700/60',               // 0: normal
+  'text-zinc-400 border-zinc-700/60 italic',         // 1: italic
+  'text-zinc-400 border-zinc-700/60 font-bold',      // 2: bold
+  'text-zinc-400 border-zinc-700/60 font-bold italic', // 3: bold + italic
+];
+
+/** Colors per role to make chips visually distinct */
+const SINGER_BADGE_COLORS = [
+  'bg-primary/10 border-primary/30 text-primary',         // 0: primary
+  'bg-sky-500/10 border-sky-500/30 text-sky-400',         // 1: second
+  'bg-violet-500/10 border-violet-500/30 text-violet-400', // 2: third
+  'bg-amber-500/10 border-amber-500/30 text-amber-400',   // 3: fourth
+];
+/** Migrate old flat singer/singer2 fields to singers[] */
+function getSingers(line) {
+  if (line.singers) return line.singers;
+  const legacy = [line.singer, line.singer2].filter(Boolean);
+  return legacy.length ? legacy : [];
+}
 
 const EditorLineItem = React.memo(({
   line,
@@ -45,10 +67,8 @@ const EditorLineItem = React.memo(({
   setEditingSecondary,
   editingTranslations,
   setEditingTranslations,
-  editingSinger,
-  setEditingSinger,
-  editingSinger2,
-  setEditingSinger2,
+  editingSingers,
+  setEditingSingers,
   handleSaveLineText,
   handleInsertSection,
   handleAssignSinger,
@@ -235,18 +255,34 @@ const EditorLineItem = React.memo(({
         onDoubleClick={() => {
           setEditingLineIndex(i);
           setEditingText(line.label || '');
-          setEditingSinger(line.singer || '');
-          setEditingSinger2(line.singer2 || '');
+          const singers = getSingers(line);
+          setEditingSingers([...singers, '', '', '', ''].slice(0, 4));
         }}
         style={{ animationDelay: staggerDelay }}
         className={`flex items-center gap-2 px-4 py-1.5 rounded-lg cursor-pointer group animate-preview-line-in ${selectedLines.has(i) ? 'bg-primary/10 border border-primary/30' : 'hover:bg-zinc-800/30 border border-transparent'}`}
       >
         <div className="flex-1 h-px bg-zinc-800/50" />
         {isEditing ? (
-          <div className="flex items-center gap-1.5" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { handleSaveLineText(i, editingText, undefined, undefined, editingSinger, editingSinger2); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSinger, editingSinger2); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
-            <input autoFocus value={editingText} onChange={(e) => setEditingText(e.target.value)} placeholder={t('editor.sectionLabelPlaceholder')} className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-200 rounded px-2 py-0.5 w-28 focus:outline-none focus:border-primary/60" />
-            <input value={editingSinger} onChange={(e) => setEditingSinger(e.target.value)} placeholder={t('editor.singerOptPlaceholder')} list={`section-singers-${i}`} className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-400 rounded px-2 py-0.5 w-24 focus:outline-none focus:border-primary/60" />
-            <input value={editingSinger2} onChange={(e) => setEditingSinger2(e.target.value)} placeholder={t('editor.singer2')} list={`section-singers-${i}`} className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-400 italic rounded px-2 py-0.5 w-24 focus:outline-none focus:border-primary/60" />
+          <div className="flex items-center gap-1.5" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
+            <SectionPickerDropdown
+              value={editingText}
+              onChange={(v) => setEditingText(v)}
+            />
+            {editingSingers.map((singerVal, idx) => {
+              const isFilled = !!singerVal;
+              const nextEmpty = editingSingers.findIndex(s => !s);
+              if (!isFilled && idx !== nextEmpty) return null;
+              return (
+                <input
+                  key={idx}
+                  value={singerVal}
+                  onChange={(e) => setEditingSingers(prev => { const n = [...prev]; n[idx] = e.target.value; return n; })}
+                  placeholder={idx === 0 ? t('editor.singerOptPlaceholder') : t('editor.singerN', 'Singer {{n}}', { n: idx + 1 })}
+                  list={`section-singers-${i}`}
+                  className={`bg-zinc-800 border border-zinc-600 text-xs text-zinc-400 rounded px-2 py-0.5 w-20 focus:outline-none focus:border-primary/60 ${['', 'italic', 'font-bold', 'font-bold italic'][idx]}`}
+                />
+              );
+            })}
             {songArtists?.length > 0 && (
               <datalist id={`section-singers-${i}`}>
                 {songArtists.map((a) => <option key={a} value={a} />)}
@@ -258,8 +294,9 @@ const EditorLineItem = React.memo(({
             {(() => {
               const label = line.label || t('editor.sectionDefault');
               const hasSingers = songArtists?.length > 1;
-              const singers = [line.singer, line.singer2].filter(Boolean).join(' · ');
-              return hasSingers && singers ? `[${label}: ${singers}]` : label;
+              const lineSingers = getSingers(line);
+              const singersStr = lineSingers.join(' · ');
+              return hasSingers && singersStr ? `[${label}: ${singersStr}]` : label;
             })()}
           </span>
         )}
@@ -434,17 +471,16 @@ const EditorLineItem = React.memo(({
         )}
       </span>
 
-      {/* Singer badges */}
-      {line.singer && (
-        <span className="shrink-0 text-[9px] font-semibold text-zinc-600 bg-zinc-800/60 px-1.5 py-0.5 rounded-full border border-zinc-700/40 max-w-[72px] truncate">
-          {line.singer}
-        </span>
-      )}
-      {line.singer2 && (
-        <span className="shrink-0 text-[9px] font-semibold italic text-zinc-600 bg-zinc-800/60 px-1.5 py-0.5 rounded-full border border-zinc-700/40 max-w-[72px] truncate">
-          {line.singer2}
-        </span>
-      )}
+      {/* Singer badges — compact numbered chips with tooltip showing name */}
+      {getSingers(line).map((name, idx) => (
+        <Tip key={idx} content={name}>
+          <span
+            className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full border leading-none cursor-default ${SINGER_BADGE_COLORS[idx] || SINGER_BADGE_COLORS[0]}`}
+          >
+            {idx + 1}
+          </span>
+        </Tip>
+      ))}
 
       {/* Lyrics text container */}
       <div
@@ -455,8 +491,8 @@ const EditorLineItem = React.memo(({
           setEditingText(serializeToRubyMarkup(line.words) || line.text);
           setEditingSecondary(line.secondary || '');
           setEditingTranslations(line.translations ? [...line.translations] : []);
-          setEditingSinger(line.singer || '');
-          setEditingSinger2(line.singer2 || '');
+          const singers = getSingers(line);
+          setEditingSingers([...singers, '', '', '', ''].slice(0, 4));
         }}>
         {editingLineIndex === i ? (
           <LineTextEditingForm
@@ -468,10 +504,8 @@ const EditorLineItem = React.memo(({
             setEditingSecondary={setEditingSecondary}
             editingTranslations={editingTranslations}
             setEditingTranslations={setEditingTranslations}
-            editingSinger={editingSinger}
-            setEditingSinger={setEditingSinger}
-            editingSinger2={editingSinger2}
-            setEditingSinger2={setEditingSinger2}
+            editingSingers={editingSingers}
+            setEditingSingers={setEditingSingers}
             handleSaveLineText={handleSaveLineText}
             setEditingLineIndex={setEditingLineIndex}
             songArtists={songArtists}
@@ -509,8 +543,7 @@ const EditorLineItem = React.memo(({
         setEditingText={setEditingText}
         setEditingSecondary={setEditingSecondary}
         setEditingTranslations={setEditingTranslations}
-        setEditingSinger={setEditingSinger}
-        setEditingSinger2={setEditingSinger2}
+        setEditingSingers={setEditingSingers}
         serializeToRubyMarkup={serializeToRubyMarkup}
         handleInsertSection={handleInsertSection}
         handleAssignSinger={handleAssignSinger}

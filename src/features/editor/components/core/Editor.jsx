@@ -57,10 +57,8 @@ export default function Editor({
     setEditingSecondary,
     editingTranslations,
     setEditingTranslations,
-    editingSinger,
-    setEditingSinger,
-    editingSinger2,
-    setEditingSinger2,
+    editingSingers,
+    setEditingSingers,
     handleInsertSection,
     handleAssignSinger,
     dragIndex,
@@ -248,10 +246,8 @@ export default function Editor({
           setEditingSecondary={setEditingSecondary}
           editingTranslations={editingTranslations}
           setEditingTranslations={setEditingTranslations}
-          editingSinger={editingSinger}
-          setEditingSinger={setEditingSinger}
-          editingSinger2={editingSinger2}
-          setEditingSinger2={setEditingSinger2}
+          editingSingers={editingSingers}
+          setEditingSingers={setEditingSingers}
           handleSaveLineText={handleSaveLineText}
           handleInsertSection={handleInsertSection}
           handleAssignSinger={handleAssignSinger}
@@ -448,10 +444,8 @@ function VirtualizedLineList({
   setEditingSecondary,
   editingTranslations,
   setEditingTranslations,
-  editingSinger,
-  setEditingSinger,
-  editingSinger2,
-  setEditingSinger2,
+  editingSingers,
+  setEditingSingers,
   handleSaveLineText,
   handleInsertSection,
   handleAssignSinger,
@@ -651,10 +645,8 @@ function VirtualizedLineList({
                   setEditingSecondary={setEditingSecondary}
                   editingTranslations={editingTranslations}
                   setEditingTranslations={setEditingTranslations}
-                  editingSinger={editingSinger}
-                  setEditingSinger={setEditingSinger}
-                  editingSinger2={editingSinger2}
-                  setEditingSinger2={setEditingSinger2}
+                  editingSingers={editingSingers}
+                  setEditingSingers={setEditingSingers}
                   handleSaveLineText={handleSaveLineText}
                   handleInsertSection={handleInsertSection}
                   handleAssignSinger={handleAssignSinger}
@@ -691,7 +683,7 @@ function VirtualizedLineList({
         <ScrollProgress containerRef={listRef} className="absolute bottom-0 inset-x-0 h-[2px]" />
       </div>
 
-      <div className="hidden xl:block">
+        <div className="hidden xl:block">
           <SelectionActionBar
             selectedLines={selectedLines}
             settings={settings}
@@ -700,6 +692,8 @@ function VirtualizedLineList({
             handleBulkDelete={handleBulkDelete}
             clearSelection={clearSelection}
             handleApplyOffset={handleApplyOffset}
+            handleAssignSinger={handleAssignSinger}
+            songArtists={songArtists}
           />
         </div>
 

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { lyrics } from '@/app/api';
 import { matchKey } from '@/shared/utils/keyboard';
@@ -38,8 +38,8 @@ export function useEditor({
   const [editingText, setEditingText] = useState('');
   const [editingSecondary, setEditingSecondary] = useState('');
   const [editingTranslations, setEditingTranslations] = useState([]);
-  const [editingSinger, setEditingSinger] = useState('');
-  const [editingSinger2, setEditingSinger2] = useState('');
+  const [editingSingers, setEditingSingers] = useState(['', '', '', '']);
+  const [defaultSingers, setDefaultSingers] = useState([]);
   const [selectedLines, setSelectedLines] = useState(new Set());
   // awaitingEndMark is derived: only non-null when the stored context still matches
   const [awaitingEndMarkFor, setAwaitingEndMarkFor] = useState(null); // null | { lineIndex, mode }
@@ -587,16 +587,26 @@ export function useEditor({
     });
   };
 
-  const handleSaveLineText = (index, newText, newSecondary, newTranslations, newSinger, newSinger2) => {
+  const handleSaveLineText = (index, newText, newSecondary, newTranslations, singers) => {
     setModifiedLines(prev => new Set(prev).add(index));
     setLines((prev) => {
       const updated = [...prev];
       if (index < 0 || index >= updated.length) return prev;
       const prevLine = updated[index];
 
-      // Section marker — just update label and singer(s)
+      // Section marker — just update label and singers array
       if (prevLine.type === 'section') {
-        updated[index] = { ...prevLine, label: newText?.trim() || prevLine.label, singer: newSinger?.trim() || undefined, singer2: newSinger2?.trim() || undefined };
+        const cleanSingers = (singers || []).map(s => s?.trim() || '').filter(Boolean);
+        // Persist as default for new lines when a section defines singers
+        if (cleanSingers.length) setDefaultSingers(cleanSingers);
+        updated[index] = {
+          ...prevLine,
+          label: newText?.trim() || prevLine.label,
+          singers: cleanSingers.length ? cleanSingers : undefined,
+          // compat: remove old flat fields if present
+          singer: undefined,
+          singer2: undefined,
+        };
         return updated;
       }
 
@@ -608,8 +618,14 @@ export function useEditor({
         const filtered = newTranslations.filter(t => t.text?.trim());
         line.translations = filtered.length > 0 ? filtered : undefined;
       }
-      if (newSinger !== undefined) line.singer = newSinger?.trim() || undefined;
-      if (newSinger2 !== undefined) line.singer2 = newSinger2?.trim() || undefined;
+      // singers array — cap at 4, strip blanks, guard empty
+      if (singers !== undefined) {
+        const cleanSingers = (singers || []).slice(0, 4).map(s => s?.trim() || '').filter(Boolean);
+        line.singers = cleanSingers.length ? cleanSingers : undefined;
+        // Remove legacy flat fields
+        delete line.singer;
+        delete line.singer2;
+      }
       // Always re-tokenize when text or markup changed
       const textChanged = plainText !== (prevLine.text || '');
       // Always generate words if they are missing or text changed
@@ -723,12 +739,14 @@ export function useEditor({
           text: '',
           timestamp: prev[index]?.timestamp ?? null,
           id: crypto.randomUUID(),
+          // Inherit default singers from the last section context
+          singers: defaultSingers.length ? [...defaultSingers] : undefined,
         };
         updated.splice(insertAt, 0, newLine);
         return updated;
       });
     },
-    [setLines],
+    [setLines, defaultSingers],
   );
 
   // ——— Global offset ———
@@ -951,7 +969,7 @@ export function useEditor({
     [lines, settings.editor?.overlapThreshold],
   );
 
-  const handleInsertSection = useCallback((afterIndex, label = 'Section') => {
+  const handleInsertSection = useCallback((afterIndex, label = 'verse') => {
     setLines((prev) => {
       const updated = [...prev];
       const section = { type: 'section', label, timestamp: null, id: crypto.randomUUID() };
@@ -960,13 +978,33 @@ export function useEditor({
     });
   }, [setLines]);
 
-  const handleAssignSinger = useCallback((singer, lineIndices) => {
+  /**
+   * Assign a singer name to a specific role slot on selected lines.
+   * When `name` is empty, clears that slot. Other slots are preserved.
+   * @param {string} name — singer name (empty to clear the slot)
+   * @param {number[]} lineIndices
+   * @param {number} [slot=0] — which role index (0-3) to assign to
+   */
+  const handleAssignSinger = useCallback((name, lineIndices, slot = 0) => {
     setLines((prev) => {
       const updated = [...prev];
       for (const i of lineIndices) {
-        if (i >= 0 && i < updated.length) {
-          updated[i] = { ...updated[i], singer: singer?.trim() || undefined };
-        }
+        if (i < 0 || i >= updated.length) continue;
+        const line = updated[i];
+        // Migrate existing flat fields if needed
+        let current = line.singers
+          ? [...line.singers]
+          : [line.singer, line.singer2].filter(Boolean);
+        // Ensure the array is big enough
+        while (current.length <= slot) current.push('');
+        current[slot] = name?.trim() || '';
+        const cleanSingers = current.slice(0, 4).filter(Boolean);
+        updated[i] = {
+          ...line,
+          singers: cleanSingers.length ? cleanSingers : undefined,
+          singer: undefined,
+          singer2: undefined,
+        };
       }
       return updated;
     });
@@ -984,10 +1022,9 @@ export function useEditor({
     setEditingSecondary,
     editingTranslations,
     setEditingTranslations,
-    editingSinger,
-    setEditingSinger,
-    editingSinger2,
-    setEditingSinger2,
+    editingSingers,
+    setEditingSingers,
+    defaultSingers,
     dragIndex,
     dragOverIndex,
     selectedLines,
