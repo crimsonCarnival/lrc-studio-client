@@ -2,6 +2,8 @@ import React from 'react';
 import { useSettings } from '@/features/settings/useSettings';
 import { toHiragana, toKatakana, parseRubyMarkup } from '@/shared/utils/furigana';
 import { Tip } from '@ui/tip';
+import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { useTranslation } from 'react-i18next';
 
 /** Role chip color classes, matching the editor badges */
 const SINGER_CHIP_COLORS = [
@@ -44,14 +46,16 @@ export default function PreviewLine({
   playbackSpeed = 1,
 }) {
   const { settings } = useSettings();
+  const { t } = useTranslation();
 
   // Section marker — render as a divider chip
   if (line.type === 'section') {
+    const labelStr = formatSectionLabel(line.label, t);
     return (
       <div className="flex items-center gap-3 px-2 sm:px-4 py-2 my-1">
         <div className="flex-1 h-px bg-zinc-800/60" />
         <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-800/60 bg-zinc-900/40 whitespace-nowrap">
-          {line.label}{line.singer ? ` · ${line.singer}` : ''}
+          {labelStr}{line.singer ? ` · ${line.singer}` : ''}
         </span>
         <div className="flex-1 h-px bg-zinc-800/60" />
       </div>

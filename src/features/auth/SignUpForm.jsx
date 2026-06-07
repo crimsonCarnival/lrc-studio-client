@@ -119,12 +119,12 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
 
   const validateStep1 = () => {
     const result = step1Schema.safeParse({ displayName: displayName.trim(), accountName });
-    return result.success ? /** @type {Record<string, string>} */ ({}) : zodErrors(result, t);
+    return result.success ? /** @type {any} */ ({}) : zodErrors(result, t);
   };
 
   const validateStep2 = () => {
     const result = step2Schema.safeParse({ email, accountName, password, confirmPassword });
-    return result.success ? /** @type {Record<string, string>} */ ({}) : zodErrors(result, t);
+    return result.success ? /** @type {any} */ ({}) : zodErrors(result, t);
   };
 
   const handleNext = async (e) => {

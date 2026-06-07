@@ -972,7 +972,28 @@ export function useEditor({
   const handleInsertSection = useCallback((afterIndex, label = 'verse') => {
     setLines((prev) => {
       const updated = [...prev];
-      const section = { type: 'section', label, timestamp: null, id: crypto.randomUUID() };
+      
+      // Serialize the section label (e.g., "verse" -> "verse 2" if "verse" already exists)
+      const baseLabel = label.trim().toLowerCase();
+      let maxNumber = 0;
+      for (const line of prev) {
+        if (line.type === 'section' && line.label) {
+          const l = line.label.trim().toLowerCase();
+          if (l === baseLabel) {
+            maxNumber = Math.max(maxNumber, 1);
+          } else if (l.startsWith(`${baseLabel} `)) {
+            const numStr = l.slice(baseLabel.length + 1).trim();
+            const num = parseInt(numStr, 10);
+            if (!isNaN(num) && String(num) === numStr) {
+              maxNumber = Math.max(maxNumber, num);
+            }
+          }
+        }
+      }
+      
+      const finalLabel = maxNumber > 0 ? `${label} ${maxNumber + 1}` : label;
+      
+      const section = { type: 'section', label: finalLabel, timestamp: null, id: crypto.randomUUID() };
       updated.splice(afterIndex + 1, 0, section);
       return updated;
     });
@@ -981,9 +1002,9 @@ export function useEditor({
   /**
    * Assign a singer name to a specific role slot on selected lines.
    * When `name` is empty, clears that slot. Other slots are preserved.
-   * @param {string} name — singer name (empty to clear the slot)
+   * @param {string} name - singer name (empty to clear the slot)
    * @param {number[]} lineIndices
-   * @param {number} [slot=0] — which role index (0-3) to assign to
+   * @param {number} [slot=0] - which role index (0-3) to assign to
    */
   const handleAssignSinger = useCallback((name, lineIndices, slot = 0) => {
     setLines((prev) => {

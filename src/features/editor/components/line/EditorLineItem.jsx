@@ -13,6 +13,7 @@ import WordsModeColumn from '../modes/WordsModeColumn';
 import LineTextContent from './LineTextContent';
 import LineActionToolbar from './LineActionToolbar';
 import SectionPickerDropdown from './SectionPickerDropdown';
+import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 
 const SINGER_BADGE_STYLES = [
   'text-zinc-400 border-zinc-700/60',               // 0: normal
@@ -292,7 +293,7 @@ const EditorLineItem = React.memo(({
         ) : (
           <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-800 bg-zinc-900/40 whitespace-nowrap group-hover:text-zinc-400 group-hover:border-zinc-700 transition-colors">
             {(() => {
-              const label = line.label || t('editor.sectionDefault');
+              const label = formatSectionLabel(line.label, t);
               const hasSingers = songArtists?.length > 1;
               const lineSingers = getSingers(line);
               const singersStr = lineSingers.join(' · ');
