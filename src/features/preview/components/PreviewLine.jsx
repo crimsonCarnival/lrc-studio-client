@@ -96,6 +96,12 @@ export default function PreviewLine({
   // Active translation text for this line
   const activeTranslationText = line.translations?.[activeTranslationIndex]?.text ?? null;
 
+  const currentLineIndexInDisplay = displayLines?.findIndex(dl => dl.originalIndex === i);
+  const prevLine = currentLineIndexInDisplay > 0 ? displayLines[currentLineIndexInDisplay - 1] : null;
+  const prevSingersStr = prevLine && prevLine.type !== 'section' ? getLineSingers(prevLine).join(',') : '';
+  const currentSingersStr = getLineSingers(line).join(',');
+  const showSingers = currentSingersStr && currentSingersStr !== prevSingersStr;
+
   const inner = (
     <button
       type="button"
@@ -140,15 +146,16 @@ export default function PreviewLine({
       {translationLayout === 'side-by-side' && activeTranslationText && showTranslationsInPreview ? (
         <>
           <div className="flex-1 min-w-0 flex flex-col">
-            {getLineSingers(line).length > 0 && (
-              <div className="flex gap-1 mb-0.5 flex-wrap">
-                {getLineSingers(line).map((name, idx) => (
-                  <Tip key={idx} content={name}>
-                    <span className={`inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-full border leading-none cursor-default ${SINGER_CHIP_COLORS[idx] || SINGER_CHIP_COLORS[0]}`}>
-                      {idx + 1}
+            {showSingers && (
+              <div className="flex gap-2 mb-0.5 flex-wrap">
+                {getLineSingers(line).map((name, idx) => {
+                  const textColor = SINGER_CHIP_COLORS[idx]?.match(/text-\S+/)?.[0] || 'text-primary';
+                  return (
+                    <span key={idx} className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ${textColor}`}>
+                      {name}
                     </span>
-                  </Tip>
-                ))}
+                  );
+                })}
               </div>
             )}
             <MainTrack
@@ -180,15 +187,16 @@ export default function PreviewLine({
         </>
       ) : (
         <>
-          {getLineSingers(line).length > 0 && (
-            <div className="flex gap-1 mb-0.5 flex-wrap">
-              {getLineSingers(line).map((name, idx) => (
-                <Tip key={idx} content={name}>
-                  <span className={`inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-full border leading-none cursor-default ${SINGER_CHIP_COLORS[idx] || SINGER_CHIP_COLORS[0]}`}>
-                    {idx + 1}
+          {showSingers && (
+            <div className="flex gap-2 mb-0.5 flex-wrap">
+              {getLineSingers(line).map((name, idx) => {
+                const textColor = SINGER_CHIP_COLORS[idx]?.match(/text-\S+/)?.[0] || 'text-primary';
+                return (
+                  <span key={idx} className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ${textColor}`}>
+                    {name}
                   </span>
-                </Tip>
-              ))}
+                );
+              })}
             </div>
           )}
           <MainTrack
