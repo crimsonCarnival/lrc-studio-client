@@ -158,7 +158,7 @@ export function useAppState(user) {
           if (!(l && typeof l === 'object')) return [];
           // Section marker
           if (l.type === 'section') {
-            return [{ type: 'section', label: l.label || '', timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
+            return [{ type: 'section', label: l.label || '', depth: l.depth, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
           }
           if (typeof l.text !== 'string') return [];
           return [{
@@ -166,6 +166,7 @@ export function useAppState(user) {
             timestamp: typeof l.timestamp === 'number' && isFinite(l.timestamp) ? l.timestamp : null,
             endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
             secondary: typeof l.secondary === 'string' ? l.secondary : '',
+            singers: Array.isArray(l.singers) ? l.singers : undefined,
             translations: Array.isArray(l.translations) ? l.translations : undefined,
             id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
             words: Array.isArray(l.words) ? l.words.flatMap((w) => {
@@ -218,13 +219,14 @@ export function useAppState(user) {
           // Server data found - use it as source of truth
           const serverLines = migrateLines((project.lyrics?.lines || []).map((l) => {
             if (l.type === 'section') {
-              return { type: 'section', label: l.label || '', timestamp: l.timestamp ?? null, id: crypto.randomUUID() };
+              return { type: 'section', label: l.label || '', depth: l.depth, timestamp: l.timestamp ?? null, id: crypto.randomUUID() };
             }
             return {
               text: l.text || '',
               timestamp: l.timestamp ?? null,
               endTime: l.endTime ?? undefined,
               secondary: l.secondary || '',
+              singers: Array.isArray(l.singers) ? l.singers : undefined,
               translations: Array.isArray(l.translations) ? l.translations : undefined,
               id: crypto.randomUUID(),
               words: l.words,
@@ -341,13 +343,14 @@ export function useAppState(user) {
       const parsed = JSON.parse(saved);
       const validLines = (parsed.lines || []).flatMap((l) => {
         if (!(l && typeof l === 'object')) return [];
-        if (l.type === 'section') return [{ type: 'section', label: l.label || '', timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
+        if (l.type === 'section') return [{ type: 'section', label: l.label || '', depth: l.depth, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
         if (typeof l.text !== 'string') return [];
         return [{
           text: l.text,
           timestamp: typeof l.timestamp === 'number' && isFinite(l.timestamp) ? l.timestamp : null,
           endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
           secondary: typeof l.secondary === 'string' ? l.secondary : '',
+          singers: Array.isArray(l.singers) ? l.singers : undefined,
           translations: Array.isArray(l.translations) ? l.translations : undefined,
           id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
           words: Array.isArray(l.words) ? l.words.flatMap((w) => {

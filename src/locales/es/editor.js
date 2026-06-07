@@ -141,5 +141,22 @@ export default {
   clearSingers: "Quitar cantantes",
   stampWordTip: "Marcar \"{{word}}\" ({{current}}/{{total}})",
   langPlaceholder: "Idioma",
-  enterLyricsPlaceholder: "Introduce la letra..."
+  enterLyricsPlaceholder: "Introduce la letra...",
+  clickToPaintSinger: "Haz clic para pintar cantante",
+  splitAtColon: "Separar '{{name}}' como cantante",
+  maxSingers: "Máximo 4 cantantes",
+  rightClickToAssignSinger: "Clic derecho para asignar cantante",
+  deleteSection: "Eliminar sección",
+  help: {
+    sectionsTab: "Secciones",
+    singersTab: "Cantantes",
+    sectionsIntro: "Las secciones te ayudan a organizar la letra en partes estructurales (como Coro o Verso). Se tratan de forma diferente en exportaciones y vistas previas.",
+    sectionsAuto: "Formato automático: Al importar LRC, etiquetas como [Chorus] o líneas que empiecen con '#' se convierten en secciones.",
+    sectionsManual: "Entrada manual: Puedes insertar secciones usando el botón '+' junto a cualquier línea o haciendo clic derecho en el modo Palabras.",
+    sectionsDropdown: "Edición rápida: Cambia el tipo de sección usando el menú desplegable del editor. Ajusta la profundidad para anidar secciones.",
+    singersIntro: "Asignar cantantes a líneas o palabras individuales ayuda a crear duetos o partes con colores.",
+    singersPaint: "Modo pintura: Selecciona un cantante de la paleta sobre una línea, luego haz clic en palabras para asignarlas rápidamente.",
+    singersShortcuts: "Atajos de teclado: Presiona 1-4 para asignar la línea activa al cantante 1-4. Presiona 0 para limpiar.",
+    singersSplit: "División rápida: Usa el ícono de tijeras para dividir automáticamente 'Nombre: Letra' en una atribución de cantante."
+  }
 };

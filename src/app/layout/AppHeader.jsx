@@ -76,6 +76,7 @@ export function AppHeader({
   updateSetting,
   i18n,
   syncMode,
+  setShowKeyboardHelp,
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();

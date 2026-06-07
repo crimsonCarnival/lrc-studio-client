@@ -47,7 +47,6 @@ export default function Editor({
   "use no memo";
   const { t } = useTranslation();
   const {
-    projectSingers,
     rawText,
     setRawText,
     editingLineIndex,
@@ -379,7 +378,7 @@ export default function Editor({
                 label={t('editor.clearTimestamp')}
                 variant="danger"
                 onClick={() => {
-                  handleClearLine(activeLineMenuIndex);
+                  handleClearLine(activeLineMenuData.lineIndex);
                   setActiveDrawer(null);
                 }}
               />

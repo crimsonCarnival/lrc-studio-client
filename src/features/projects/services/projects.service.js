@@ -109,10 +109,12 @@ const GET_PROJECT = `
         lines {
           type
           label
+          depth
           text
           timestamp
           endTime
           secondary
+          singers
           translation
           translations { language text }
           words { word time reading }
@@ -262,10 +264,12 @@ export const projectsService = {
               lines {
                 type
                 label
+                depth
                 text
                 timestamp
                 endTime
                 secondary
+                singers
                 translation
                 translations { language text }
                 words { word time reading }

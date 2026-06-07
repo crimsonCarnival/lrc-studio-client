@@ -141,5 +141,22 @@ export default {
   clearSingers: "歌手をクリア",
   stampWordTip: "「{{word}}」をスタンプ ({{current}}/{{total}})",
   langPlaceholder: "言語",
-  enterLyricsPlaceholder: "歌詞を入力..."
+  enterLyricsPlaceholder: "歌詞を入力...",
+  clickToPaintSinger: "クリックして歌手を塗る",
+  splitAtColon: "'{{name}}' を歌手として分割",
+  maxSingers: "最大4名",
+  rightClickToAssignSinger: "右クリックで歌手を割り当て",
+  deleteSection: "セクションを削除",
+  help: {
+    sectionsTab: "セクション",
+    singersTab: "歌手",
+    sectionsIntro: "セクションを使うと、歌詞をコーラスやバースなどの構造パーツに整理できます。エクスポートやプレビューで異なる扱いになります。",
+    sectionsAuto: "自動フォーマット：LRCをインポートすると、[Chorus]などのタグや'#'で始まる行はセクションに変換されます。",
+    sectionsManual: "手動入力：行の横にある'+' ボタンを使うか、ワードモードで右クリックしてセクションを挿入できます。",
+    sectionsDropdown: "クイック編集：エディターのドロップダウンでセクション種類を変更できます。深さを設定してセクションをネストできます。",
+    singersIntro: "行や単語に歌手を割り当てると、デュエットやカラーコードのパートを作成できます。",
+    singersPaint: "ペイントモード：行の上にあるパレットから歌手を選び、単語をクリックして素早く割り当てます。",
+    singersShortcuts: "キーボードショートカット：1〜4を押して現在の行を歌手1〜4に割り当てます。0を押すとクリアします。",
+    singersSplit: "クイック分割：ハサミアイコンを使って、'名前：歌詞'を歌手の帰属として自動的に分割します。"
+  }
 };
