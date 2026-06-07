@@ -187,7 +187,7 @@ export default function GuestLanding() {
               className="flex flex-col gap-1"
               initial={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ root: scrollRef, once: true, margin: '-80px' }}
+              viewport={{ root: scrollRef, once: false, margin: '-80px' }}
               transition={{ duration: reducedMotion ? 0 : 0.6, ease: 'easeOut' }}
             >
               <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-600">
@@ -206,7 +206,7 @@ export default function GuestLanding() {
                   className="flex flex-col gap-4 p-6 bg-zinc-950/80 hover:bg-zinc-900/60 transition-colors"
                   initial={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ root: scrollRef, once: true, margin: '-60px' }}
+                  viewport={{ root: scrollRef, once: false, margin: '-60px' }}
                   transition={{ duration: reducedMotion ? 0 : 0.5, delay: reducedMotion ? 0 : i * 0.08, ease: 'easeOut' }}
                 >
                   <div className={`size-10 rounded-xl ${bg} flex items-center justify-center`}>
@@ -229,7 +229,7 @@ export default function GuestLanding() {
               className="flex flex-col gap-1"
               initial={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ root: scrollRef, once: true, margin: '-80px' }}
+              viewport={{ root: scrollRef, once: false, margin: '-80px' }}
               transition={{ duration: reducedMotion ? 0 : 0.6, ease: 'easeOut' }}
             >
               <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-600">
@@ -248,7 +248,7 @@ export default function GuestLanding() {
                   className="flex gap-5 relative"
                   initial={reducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ root: scrollRef, once: true, margin: '-40px' }}
+                  viewport={{ root: scrollRef, once: false, margin: '-40px' }}
                   transition={{ duration: reducedMotion ? 0 : 0.55, delay: reducedMotion ? 0 : i * 0.1, ease: 'easeOut' }}
                 >
                   {/* Left: step indicator column */}
@@ -277,7 +277,7 @@ export default function GuestLanding() {
               className="flex flex-col items-start gap-5 pt-4 border-t border-zinc-800/50"
               initial={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ root: scrollRef, once: true, margin: '-40px' }}
+              viewport={{ root: scrollRef, once: false, margin: '-40px' }}
               transition={{ duration: reducedMotion ? 0 : 0.55, ease: 'easeOut' }}
             >
               <h2 className="font-heading text-zinc-100 contrast-more:text-white"
