@@ -9,6 +9,7 @@ import { X, Sparkles, Image as ImageIcon, Upload, Loader2, Video, Music2 } from 
 import { Tip } from '@ui/tip';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
+import { PRIMARY_GENRES } from '@features/editor/constants/genre-tags';
 
 const EMPTY_TAGS = [];
 
@@ -62,6 +63,7 @@ export default function ProjectSetupModal({
   initialSongArtist = '',
   initialSongAlbum = '',
   initialSongYear = '',
+  initialGenre = '',
   initialCoverImage = '',
   initialAlbumArt = '',
   isEditing = false,
@@ -81,6 +83,7 @@ export default function ProjectSetupModal({
     songArtist: initialSongArtist || '',
     songAlbum: initialSongAlbum || '',
     songYear: initialSongYear || '',
+    genre: initialGenre || '',
     coverImage: initialCoverImage || '',
     albumArt: initialAlbumArt || '',
   }));
@@ -99,11 +102,12 @@ export default function ProjectSetupModal({
         songArtist: initialSongArtist || '',
         songAlbum: initialSongAlbum || '',
         songYear: initialSongYear || '',
+        genre: initialGenre || '',
         coverImage: initialCoverImage || '',
         albumArt: initialAlbumArt || '',
       });
     }
-  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialCoverImage, initialAlbumArt]);
+  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialAlbumArt]);
 
   if (!isOpen) return null;
 
@@ -158,6 +162,7 @@ export default function ProjectSetupModal({
       songArtist: form.songArtist.trim(),
       songAlbum: form.songAlbum.trim(),
       songYear: form.songYear.trim(),
+      genre: form.genre,
       coverImage: form.coverImage.trim(),
       albumArt: form.albumArt.trim(),
     });
@@ -276,6 +281,23 @@ export default function ProjectSetupModal({
                     maxLength={4}
                   />
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="song-genre" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  {t('setup.songGenre')}
+                </Label>
+                <select
+                  id="song-genre"
+                  value={form.genre}
+                  onChange={(e) => setForm(f => ({ ...f, genre: e.target.value }))}
+                  className="h-9 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="">—</option>
+                  {PRIMARY_GENRES.map((g) => (
+                    <option key={g} value={g}>{t(`setup.genre.${g}`)}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-2">

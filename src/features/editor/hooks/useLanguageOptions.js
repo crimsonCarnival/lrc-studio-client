@@ -19,11 +19,13 @@ export function useLanguageOptions() {
       displayNames = { of: (code) => code };
     }
 
-    const baseOptions = LANG_KEYS.map((k) => {
+    const baseOptions = LANG_KEYS.flatMap((k) => {
       let label = k;
       try { label = displayNames.of(k) || k; } catch { /* ignore */ }
+      // Skip entries where Intl couldn't resolve a real name (returned raw code)
+      if (!label || label.toLowerCase() === k.toLowerCase()) return [];
       label = label.charAt(0).toUpperCase() + label.slice(1);
-      return { value: label, label };
+      return [{ value: label, label }];
     }).sort((a, b) => a.label.localeCompare(b.label));
 
     const seen = new Set(baseOptions.map(o => o.value.toLowerCase()));

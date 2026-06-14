@@ -82,7 +82,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     return {
       ready: false,
       name: '',
-      tab: 'youtube',
+      // Default to the Spotify tab when the user has a connected Spotify account
+      // (unless a pending YouTube URL is being restored).
+      tab: (!initialPendingYtUrl && user?.spotify?.spotifyId) ? 'spotify' : 'youtube',
       source: null,
       ytUrl: initialPendingYtUrl || '',
       ytLoading: false,
@@ -115,7 +117,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     name: prefill?.name || '',
     description: prefill?.description || '',
     tags: prefill?.tags || [],
-    isPublic: true,
+    // Private by default — owner opts into public via the toggle. Guests can't
+    // toggle it (disabled when !user), so their drafts stay private until they
+    // sign up and choose to publish. See F8.
+    isPublic: false,
     songName: prefill?.songName || '',
     songArtist: prefill?.songArtist || '',
     songAlbum: prefill?.songAlbum || '',
@@ -290,9 +295,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   const handleYtKeyDown = (e) => { if (e.key === 'Enter') { e.preventDefault(); handleLoadUrl(); } };
 
   const handleSpotifyBrowserSelect = useCallback(async (track) => {
-    if (playerRef.current?.loadSpotify) playerRef.current.loadSpotify(track.trackId, track.title || track.name || '', false);
-    else if (playerRef.current?.playTrack) playerRef.current.playTrack(track.trackId, track.title || track.name || '', false);
-    setAudioState({ ready: true, name: track.title || track.name || 'Spotify track', source: 'spotify', selectedUpload: null });
+    playerRef.current?.loadSpotify?.(track.trackId, track.title || track.name || '');
+    const spotifyTitle = track.title || track.name || '';
+    setAudioState({ ready: true, name: spotifyTitle || 'Spotify track', source: 'spotify', selectedUpload: { source: 'spotify', spotifyTrackId: track.trackId, title: spotifyTitle } });
 
     const meta = track.trackMeta || track;
     const mappedGenre = matchSpotifyGenre(meta.genres || []);
@@ -386,10 +391,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
           ...(!coverImage && meta.albumArt ? { coverImage: meta.albumArt }   : {}),
         });
       } else {
-        toast.error(t('setup.metaSearchFailed', 'No results found'));
+        toast.error(t('setup.metaSearchFailed'));
       }
     } catch {
-      toast.error(t('setup.metaSearchFailed', 'No results found'));
+      toast.error(t('setup.metaSearchFailed'));
     } finally {
       setMetaSearching(false);
     }
@@ -433,10 +438,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
             <div className={`size-2 rounded-full bg-primary shrink-0 ${reducedMotion ? '' : 'animate-pulse'}`} />
             <div>
               <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">
-                {t('app.name')} · {t('setup.newProject', 'New Project')}
+                {t('app.name')} · {t('setup.newProject')}
               </p>
               <h2 className="font-heading text-zinc-100" style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)' }}>
-                {t('setup.newProjectTitle', 'New Project')}
+                {t('setup.newProjectTitle')}
               </h2>
             </div>
           </div>
@@ -452,11 +457,11 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       </div>
 
       {/* Two-column body */}
-      <div className="flex-1 min-h-0 px-6 overflow-y-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-7xl mx-auto pb-3 lg:min-h-[calc(100%-1rem)] lg:pb-0">
+      <div className="flex-1 min-h-0 px-6 overflow-y-auto lg:overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-7xl mx-auto pb-3 lg:h-[calc(100%-1rem)] lg:pb-0">
 
-          {/* LEFT: project info */}
-          <div className="glass rounded-2xl flex flex-col p-5 gap-4 self-start lg:self-auto relative">
+          {/* Project info — swapped to the right column on desktop */}
+          <div className="glass rounded-2xl flex flex-col p-5 gap-4 self-start lg:self-auto lg:overflow-y-auto lg:scrollbar-thin relative lg:order-2">
 
             {/* Project name */}
             <FloatingInput
@@ -475,10 +480,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
             {/* Song info */}
             <div className="flex items-center justify-between shrink-0">
               <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                {t('setup.songInformation', 'Song Information')}
+                {t('setup.songInformation')}
               </h3>
               {songName.trim() && songArtist.trim() && (
-                <Tip content={t('setup.fetchSongInfo', 'Auto-fill song metadata (Spotify/Last.fm)')} side="left">
+                <Tip content={t('setup.fetchSongInfo')} side="left">
                   <button
                     type="button"
                     onClick={handleFetchSongInfo}
@@ -488,7 +493,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                     {metaSearching
                       ? <Loader2 className="size-3 animate-spin" />
                       : <Sparkles className="size-3" />}
-                    {t('setup.fetchInfo', 'Fetch')}
+                    {t('setup.fetchInfo')}
                   </button>
                 </Tip>
               )}
@@ -614,22 +619,22 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                   disabled={!user}
                 />
                 <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">
-                  {isPublic ? t('setup.public', 'Public') : t('setup.private', 'Private')}
+                  {isPublic ? t('setup.public') : t('setup.private')}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* RIGHT: Media + Lyrics top-level tabs */}
-          <div className="glass rounded-2xl flex flex-col p-5 gap-0 overflow-hidden relative">
+          {/* Media + Lyrics — swapped to the left column on desktop */}
+          <div className="glass rounded-2xl flex flex-col p-5 gap-0 overflow-hidden relative lg:order-1">
 
             {/* Rollback notice — shown when project was missing media */}
             {prefill && (
               <div className="flex items-start gap-3 px-4 py-3 mb-3 rounded-xl bg-amber-500/8 border border-amber-500/20 shrink-0">
                 <span className="text-amber-400 text-base leading-none mt-0.5 shrink-0">⚠</span>
                 <div>
-                  <p className="text-xs font-semibold text-amber-300">{t('setup.noMediaTitle', 'Media source missing')}</p>
-                  <p className="text-xs text-amber-400/80 mt-0.5">{t('setup.noMediaDesc', 'Your project was loaded but had no audio attached. Please choose a new audio source to continue.')}</p>
+                  <p className="text-xs font-semibold text-amber-300">{t('setup.noMediaTitle')}</p>
+                  <p className="text-xs text-amber-400/80 mt-0.5">{t('setup.noMediaDesc')}</p>
                 </div>
               </div>
             )}
@@ -647,7 +652,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                       : 'border-transparent text-zinc-500 hover:text-zinc-300'
                   }`}
                 >
-                  {tab === 'media' ? t('setup.tabMedia', 'Media') : t('setup.tabLyrics', 'Lyrics')}
+                  {tab === 'media' ? t('setup.tabMedia') : t('setup.tabLyrics')}
                 </button>
               ))}
             </div>
@@ -658,9 +663,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                 {/* Source sub-tabs: YouTube / Spotify / File & URL */}
                 <div className="flex items-center gap-1 bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-1 shrink-0">
                   {[
-                    { id: 'youtube', label: t('setup.tabYoutube', 'YouTube') },
-                    { id: 'spotify', label: t('setup.tabSpotify', 'Spotify') },
-                    { id: 'local',   label: t('setup.tabLocal', 'File / URL') },
+                    { id: 'youtube', label: t('setup.tabYoutube') },
+                    { id: 'spotify', label: t('setup.tabSpotify') },
+                    { id: 'local',   label: t('setup.tabLocal') },
                   ].map(tab => (
                     <button
                       key={tab.id}
@@ -743,13 +748,13 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                             <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
                               <SpotifyIcon className="size-6 text-primary" />
                             </div>
-                            <p className="text-sm font-medium text-zinc-200">{t('settings.spotify.connectAccount', 'Connect Spotify Account')}</p>
-                            <p className="text-xs text-zinc-500">{t('settings.spotify.connectToAccess', 'Connect to access your library')}</p>
+                            <p className="text-sm font-medium text-zinc-200">{t('settings.spotify.connectAccount')}</p>
+                            <p className="text-xs text-zinc-500">{t('settings.spotify.connectToAccess')}</p>
                             <Button
                               onClick={handleSpotifyLogin}
                               className="h-9 px-4 bg-primary hover:bg-primary-dim text-zinc-950 text-xs font-bold rounded-xl"
                             >
-                              {t('settings.spotify.connectAccount', 'Connect Spotify')}
+                              {t('settings.spotify.connectAccount')}
                             </Button>
                           </div>
                         )}
@@ -893,7 +898,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                           >
                             <Search className="size-3.5 shrink-0 text-zinc-500" />
                             <span className="truncate">
-                              {t('lyricsSearch.searchFor', 'Search for')} &ldquo;{[songName, songArtist].filter(Boolean).join(' - ')}&rdquo;
+                              {t('lyricsSearch.searchFor')} &ldquo;{[songName, songArtist].filter(Boolean).join(' - ')}&rdquo;
                             </span>
                           </button>
                         )}

@@ -3,9 +3,10 @@ import toast from 'react-hot-toast';
 import { lyrics } from '@/app/api';
 import { useTranslation } from 'react-i18next';
 
-export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, setSyncMode, onImport }) {
+export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, setSyncMode, onImport, settings }) {
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
+  const parseOptions = { preserveEmptyLines: settings?.editor?.preserveEmptyLines ?? false };
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
@@ -26,7 +27,7 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
-        const { lines: parsed } = await lyrics.parse(evt.target.result, file.name);
+        const { lines: parsed } = await lyrics.parse(evt.target.result, file.name, parseOptions);
         if (parsed.length > 0) {
           setLines(parsed);
           {
@@ -63,7 +64,7 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const text = await resp.text();
       const filename = parsedUrl.pathname.split('/').pop() || 'lyrics.lrc';
-      const { lines: parsed } = await lyrics.parse(text, filename);
+      const { lines: parsed } = await lyrics.parse(text, filename, parseOptions);
       if (parsed.length === 0) {
         return { error: t('import.noLines') || 'No lyrics found in file' };
       }
