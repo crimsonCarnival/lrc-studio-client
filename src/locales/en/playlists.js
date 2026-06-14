@@ -54,4 +54,7 @@ export default {
   },
   editPlaylist: "Edit playlist",
   deletePlaylist: "Delete playlist",
+  deleteSuccess: "Playlist deleted",
+  deleteError: "Failed to delete playlist",
+  deleteTitle: "Delete Playlist",
 };

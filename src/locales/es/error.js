@@ -6,5 +6,15 @@ export default {
   userNotFoundTitle: "Usuario no encontrado",
   userNotFoundDesc: "El perfil que buscas no existe en nuestros registros.",
   pageNotFoundTitle: "¿Perdido en el espacio?",
-  pageNotFoundDesc: "La página que buscas se movió, cambió o nunca existió."
+  pageNotFoundDesc: "La página que buscas se movió, cambió o nunca existió.",
+
+  playlistNotFoundTitle: "Lista no encontrada",
+  playlistNotFoundDesc: "Esta lista no existe o puede haber sido eliminada.",
+
+  userNotFoundWithName: "El perfil {{name}} no existe o puede haber sido eliminado.",
+  projectNotFoundWithName: "No encontramos un proyecto que coincida con \"{{id}}\".",
+
+  searchAnotherUser: "Buscar otro perfil",
+  searchAnotherProject: "Buscar proyectos",
+  searchContent: "Buscar"
 };

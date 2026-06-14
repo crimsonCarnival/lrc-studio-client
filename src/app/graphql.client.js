@@ -37,7 +37,9 @@ export async function gqlRequest(query, variables = {}, { signal, headers: extra
   }
 
   if (json.errors?.length) {
-    const err = new Error(json.errors[0].message);
+    const gqlErr = json.errors[0];
+    const err = new Error(gqlErr.message);
+    err.code = gqlErr.extensions?.code;
     err.graphqlErrors = json.errors;
     throw err;
   }

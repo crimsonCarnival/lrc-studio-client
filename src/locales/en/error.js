@@ -49,5 +49,25 @@ export default {
     "We couldn't find the page you were looking for.",
     "Nothing but static here. Let's get you back to your dashboard.",
     "Looks like you followed a broken link. Let's head back home."
-  ]
+  ],
+
+  playlistNotFoundTitle: [
+    "Playlist Not Found",
+    "Missing List",
+    "List Unavailable",
+    "Can't Find That List"
+  ],
+  playlistNotFoundDesc: [
+    "This playlist doesn't exist or may have been removed.",
+    "We couldn't locate this list. It might have been deleted.",
+    "That list has gone quiet — it may no longer be available.",
+    "Looks like this playlist packed up and left."
+  ],
+
+  userNotFoundWithName: "The profile {{name}} doesn't exist or may have been removed.",
+  projectNotFoundWithName: "We couldn't find a project matching \"{{id}}\".",
+
+  searchAnotherUser: "Find another profile",
+  searchAnotherProject: "Search projects",
+  searchContent: "Search"
 };

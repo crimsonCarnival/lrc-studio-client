@@ -79,10 +79,10 @@ export function FloatingCombobox({
   const displayText = strict ? localText : value
 
   const filtered = React.useMemo(() => {
-    const q = displayText.toLowerCase().trim()
+    const q = (displayText || '').toLowerCase().trim()
     if (!q) return options
     return options.filter((o) =>
-      (o.label || o.value).toLowerCase().includes(q)
+      ((o.label || o.value) ?? '').toLowerCase().includes(q)
     )
   }, [displayText, options])
 
@@ -158,7 +158,7 @@ export function FloatingCombobox({
     >
       {filtered.map((opt, i) => (
         <button
-          key={opt.value}
+          key={`${opt.value ?? opt.label ?? ''}-${i}`}
           type="button"
           role="option"
           aria-selected={i === activeIndex}
@@ -185,7 +185,7 @@ export function FloatingCombobox({
     <div ref={wrapperRef} className={cn('relative group/floating w-full', className)}>
       <Input
         id={id}
-        value={displayText}
+        value={displayText || ''}
         onChange={(e) => handleChange(e.target.value)}
         onFocus={() => {
           setFocused(true)

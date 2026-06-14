@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
 
 export default function SyncModeTab({
@@ -11,6 +12,7 @@ export default function SyncModeTab({
   duration,
   isLoading = false,
 }) {
+  const { t } = useTranslation();
   const currentTimestamp = useMemo(() => formatTime(playbackPosition), [playbackPosition]);
   const durationFormatted = useMemo(() => formatTime(duration), [duration]);
 
@@ -46,8 +48,8 @@ export default function SyncModeTab({
             className="w-full min-h-44 h-40 bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-lg border border-zinc-700/50 flex items-center justify-center cursor-pointer hover:border-zinc-600/50 transition-colors"
           >
             <div className="text-center text-zinc-400">
-              <div className="text-sm font-medium mb-2">Waveform Preview</div>
-              <div className="text-xs text-zinc-500">Tap to mark timestamp</div>
+              <div className="text-sm font-medium mb-2">{t('editor.waveformPreview')}</div>
+              <div className="text-xs text-zinc-500">{t('editor.tapToMarkTimestamp')}</div>
             </div>
           </button>
 
@@ -70,7 +72,7 @@ export default function SyncModeTab({
           {/* Lines overview with sync status */}
           <div className="flex flex-col gap-2">
             <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest px-2">
-              Lines ({lines.filter((l) => l.timestamp != null).length}/{lines.length})
+              {t('editor.linesProgress', { synced: lines.filter((l) => l.timestamp != null).length, total: lines.length })}
             </h3>
             <div className="space-y-1.5 px-2">
               {lines.map((line, lineIndex) => (
@@ -86,7 +88,7 @@ export default function SyncModeTab({
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="flex-1 truncate">{line.text || '(empty)'}</span>
+                    <span className="flex-1 truncate">{line.text || t('editor.emptyLine')}</span>
                     {line.timestamp != null && (
                       <span className="text-xs font-mono text-zinc-400 flex-shrink-0">
                         {formatTime(line.timestamp)}

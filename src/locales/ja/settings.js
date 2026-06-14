@@ -94,6 +94,8 @@ export default {
     advanceModeNextUnsynced: "次の未同期行",
     skipBlank: "空白行をスキップ",
     skipBlankDesc: "自動進む時に空行を無視",
+    preserveEmptyLines: "空白行を保持",
+    preserveEmptyLinesDesc: "LRCファイルのインポート時に空行を維持する",
     showShiftAll: "「すべてシフト」を表示",
     showShiftAllDesc: "グローバルタイムスタンプオフセットツールを表示",
     shiftAllAmount: "すべてシフト量",
@@ -340,5 +342,6 @@ export default {
       medium: "中",
       high: "高"
     }
-  }
+  },
+  clearSearch: "検索をクリア",
 };

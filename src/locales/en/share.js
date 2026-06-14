@@ -53,4 +53,7 @@ export default {
   shareLink: "Share",
   linkCopied: "Copied!",
   secondsPlaceholder: "Seconds...",
+  forkedProject: "Forked project",
+  forkedBadge: "Forked",
+  verifying: "Verifying your session...",
 }

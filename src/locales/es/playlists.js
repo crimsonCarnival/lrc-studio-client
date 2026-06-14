@@ -54,4 +54,7 @@ export default {
   },
   editPlaylist: "Editar lista",
   deletePlaylist: "Eliminar lista",
+  deleteSuccess: "Lista eliminada",
+  deleteError: "Error al eliminar la lista",
+  deleteTitle: "Eliminar lista",
 };

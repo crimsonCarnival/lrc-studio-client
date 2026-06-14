@@ -121,16 +121,16 @@ export const UploadPage = () => {
             size="icon"
             onClick={() => navigate(-1)}
             className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0"
-            aria-label={t('common.back', 'Back')}
+            aria-label={t('common.back')}
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <h1 className="text-2xl font-semibold text-zinc-100">{t('uploads.uploadAudio', 'Upload Audio')}</h1>
+          <h1 className="text-2xl font-semibold text-zinc-100">{t('uploads.uploadAudio')}</h1>
         </div>
         <p className="text-sm text-zinc-400 px-10">
           {isMobile
-            ? t('uploads.tapToSelect', 'Tap to select an audio file')
-            : t('uploads.dragDrop', 'Drag and drop or select files')}
+            ? t('uploads.tapToSelect')
+            : t('uploads.dragDrop')}
         </p>
       </div>
 
@@ -177,7 +177,7 @@ export const UploadPage = () => {
                 <div className="flex items-center justify-center mb-4">
                   <LoadingSpinner size="lg" />
                 </div>
-                <p className="text-white font-medium">{t('uploads.uploading', 'Uploading files...')}</p>
+                <p className="text-white font-medium">{t('uploads.uploading')}</p>
               </motion.div>
             </motion.div>
           )}

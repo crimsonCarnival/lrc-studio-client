@@ -8,6 +8,7 @@ export default {
     allRemoved: "すべての歌詞を削除しました"
   },
   removeAll: "すべての歌詞を削除",
+  projectSettings: "プロジェクト設定",
   pastePlaceholder: "貼り付けた歌詞がここに表示されます（1行につき1行）…",
   startSyncing: "同期を開始",
   importFile: "インポート",
@@ -119,6 +120,7 @@ export default {
   sectionDefault: "セクション",
   sectionLabelPlaceholder: "セクションラベル",
   sections: {
+    part: "パート",
     intro: "イントロ",
     verse: "バース",
     preChorus: "プレコーラス",
@@ -127,6 +129,10 @@ export default {
     interlude: "間奏",
     outro: "アウトロ",
     other: "その他…",
+    groupStructural: "構造",
+    groupStandard: "スタンダード",
+    demote: "通常セクションに降格",
+    promote: "メインセクションに昇格",
   },
   singer: "歌手1",
   singerN: "歌手 {{n}}",
@@ -137,6 +143,8 @@ export default {
   addTranslation: "翻訳を追加",
   insertSectionAbove: "上にセクションを挿入",
   assignSingerToLines: "{{count}}行に歌手を割り当て",
+  assignToSection: "セクションへ移動",
+  moveToSection: "セクションへ移動",
   singerCustomPlaceholder: "カスタム…",
   clearSingers: "歌手をクリア",
   stampWordTip: "「{{word}}」をスタンプ ({{current}}/{{total}})",
@@ -158,5 +166,15 @@ export default {
     singersPaint: "ペイントモード：行の上にあるパレットから歌手を選び、単語をクリックして素早く割り当てます。",
     singersShortcuts: "キーボードショートカット：1〜4を押して現在の行を歌手1〜4に割り当てます。0を押すとクリアします。",
     singersSplit: "クイック分割：ハサミアイコンを使って、'名前：歌詞'を歌手の帰属として自動的に分割します。"
-  }
+  },
+  waveformPreview: "波形プレビュー",
+  tapToMarkTimestamp: "タップしてタイムスタンプを記録",
+  currentLine: "現在の行",
+  noLyricsToPreview: "プレビューする歌詞がありません",
+  linesProgress: "行 ({{synced}}/{{total}})",
+  emptyLine: "(空)",
+  addLyricsToPreview: "プレビューを表示するにはエディターで歌詞を追加してください",
+  nextLine: "次の行",
+  playing: "再生中",
+  paused: "一時停止中",
 };

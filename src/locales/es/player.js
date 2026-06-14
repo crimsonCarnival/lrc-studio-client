@@ -25,6 +25,7 @@ export default {
   pasteSpotifyUrl: "Pega la URL de una pista de Spotify...",
   spotifyPremiumRequired: "Se necesita Spotify Premium para reproducir",
   spotifyNotConnected: "Conecta Spotify en Ajustes para reproducir pistas",
+  listenOnSpotify: "Escuchar en Spotify",
   moveToTop: "Mover arriba",
   moveToBottom: "Mover abajo",
   mark: "Marcar posición actual",
@@ -36,5 +37,10 @@ export default {
   increaseSpeed: "Aumentar velocidad",
   decreaseVolume: "Bajar volumen",
   increaseVolume: "Subir volumen",
-  saveMediaRefFailed: "Error al guardar referencia multimedia"
+  saveMediaRefFailed: "Error al guardar referencia multimedia",
+  embeddingDisabled: "Inserción deshabilitada",
+  embeddingDisabledDesc: "El propietario de este video ha desactivado la reproducción en sitios externos. No se reproducirá audio en el editor.",
+  seekPlayback: "Buscar en la reproducción",
+  embeddingBlockedDesc: "El propietario de este video bloquea la reproducción externa. Usa un archivo de audio directo.",
+  watchOnYoutube: "Ver en YouTube",
 };

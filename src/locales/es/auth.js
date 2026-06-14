@@ -103,7 +103,8 @@ export default {
     recaptchaNotice: "Este sitio está protegido por reCAPTCHA y se aplican la <0>Política de Privacidad</0> y los <1>Términos de Servicio</1> de Google.",
     googleLoginFailed: "Fallo al iniciar sesión con Google. Intenta de nuevo.",
     googleWrongAccount: "Esa cuenta de Google no coincide con tu cuenta guardada. Inicia sesión con la cuenta correcta.",
-    googleDisconnectFailed: "Fallo al desconectar la cuenta de Google. Intenta de nuevo."
+    googleDisconnectFailed: "Fallo al desconectar la cuenta de Google. Intenta de nuevo.",
+  spotifyLoginFailed: "Error al iniciar sesión con Spotify",
   },
   verification: {
     sendSuccess: "Correo de verificación enviado. Revisa tu bandeja de entrada.",
@@ -185,7 +186,8 @@ export default {
     button: "Recuperar Contraseña",
     resetting: "Recuperando...",
     backToLogin: "Volver al inicio de sesión",
-    passwordMismatch: "Las contraseñas no coinciden"
+    passwordMismatch: "Las contraseñas no coinciden",
+  sendingLink: "Enviando enlace de restablecimiento...",
   },
   changePassword: {
     title: "Cambiar Contraseña",
@@ -216,6 +218,8 @@ export default {
     addAccount: "Agregar otra cuenta",
     removeAccount: "Olvidar esta cuenta",
     forgetAll: "Olvidar todas las cuentas",
+    usePasswordInstead: "Usar contraseña",
+    usePasskey: "Entrar con llave de acceso",
   },
   passwordManagement: {
     title: "Gestión de Contraseña",
@@ -248,7 +252,9 @@ export default {
     emailNotVerified: "Por favor verifica tu correo electrónico antes de agregar una clave de acceso.",
     deleted: "Clave de acceso eliminada.",
     deleteFailed: "Error al eliminar la clave de acceso.",
-    tryPasskey: "Iniciar sesión con clave de acceso o código QR"
+    tryPasskey: "Iniciar sesión con clave de acceso o código QR",
+  sessionExpired: "La sesión expiró. Inténtalo de nuevo.",
+  alreadyRegistered: "Este autenticador ya está registrado.",
   },
   setAccountName: {
     title: "Elige tu nombre de usuario",
@@ -273,4 +279,7 @@ export default {
     nameOrSurname:   "Los nombres y apellidos solos son fáciles de adivinar",
     commonName:      "Los nombres y apellidos comunes son fáciles de adivinar",
   },
+  backToLogin: "Volver al inicio de sesión",
+  hidePassword: "Ocultar contraseña",
+  showPassword: "Mostrar contraseña",
 };

@@ -94,6 +94,8 @@ export default {
     advanceModeNextUnsynced: "Next Unsynced Line",
     skipBlank: "Skip Blank Lines",
     skipBlankDesc: "Ignore empty lines when auto-advancing",
+    preserveEmptyLines: "Preserve Empty Lines",
+    preserveEmptyLinesDesc: "Retain blank lines when importing LRC files",
     showShiftAll: "Show 'Shift All' Controls",
     showShiftAllDesc: "Display the global timestamp offset tools",
     shiftAllAmount: "Shift All amount",
@@ -340,5 +342,6 @@ export default {
       medium: "Medium",
       high: "High"
     }
-  }
+  },
+  clearSearch: "Clear search",
 };

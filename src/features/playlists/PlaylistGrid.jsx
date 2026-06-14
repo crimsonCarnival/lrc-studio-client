@@ -46,12 +46,12 @@ export function PlaylistGrid({ accountName, isOwner }) {
         try {
           await deletePlaylist(playlist.id);
           setPlaylists(prev => prev.filter(p => p.id !== playlist.id));
-          toast.success(t('playlists.deleteSuccess', 'Playlist deleted'));
+          toast.success(t('playlists.deleteSuccess'));
         } catch {
-          toast.error(t('playlists.deleteError', 'Failed to delete playlist'));
+          toast.error(t('playlists.deleteError'));
         }
       },
-      { title: t('playlists.deleteTitle', 'Delete Playlist'), variant: 'danger' }
+      { title: t('playlists.deleteTitle'), variant: 'danger' }
     );
   };
 

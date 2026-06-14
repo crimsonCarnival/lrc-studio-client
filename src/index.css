@@ -857,6 +857,7 @@ audio::-webkit-media-controls-panel {
 @media (prefers-reduced-motion: no-preference) {
   .animate-shine {
     animation: shine var(--duration, 14s) infinite linear;
+    animation-play-state: paused;
   }
 }
 

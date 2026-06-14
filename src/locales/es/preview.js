@@ -13,5 +13,6 @@ export default {
   hoverHint: "Haz clic para saltar a esta línea",
   copyToClipboard: "Copiar",
   includeTranslations: "Incluir traducciones",
-  furigana: "Furigana"
+  furigana: "Furigana",
+  addTrack: "Agregar pista",
 };

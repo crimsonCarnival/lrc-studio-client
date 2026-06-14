@@ -82,5 +82,6 @@ export default {
     day_other:        '{{count}} day streak',
     syncedLines:      'Synced lines',
     forks:            'Forks received',
+  minutesSyncedNote: "Own projects only — forks excluded",
   },
 };

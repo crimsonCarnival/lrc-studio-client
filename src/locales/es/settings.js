@@ -94,6 +94,8 @@ export default {
     advanceModeNextUnsynced: "Siguiente línea sin sincronizar",
     skipBlank: "Saltar líneas vacías",
     skipBlankDesc: "Ignora las líneas vacías al avanzar automáticamente",
+    preserveEmptyLines: "Conservar líneas vacías",
+    preserveEmptyLinesDesc: "Mantiene las líneas en blanco al importar archivos LRC",
     showShiftAll: "Mostrar controles de 'Desplazar todo'",
     showShiftAllDesc: "Muestra las herramientas de desfase global de tiempo",
     shiftAllAmount: "Cantidad de desplazamiento",
@@ -340,5 +342,6 @@ export default {
       medium: "Medio",
       high: "Alto"
     }
-  }
+  },
+  clearSearch: "Borrar búsqueda",
 };

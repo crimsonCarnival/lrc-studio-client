@@ -122,6 +122,7 @@ export default {
   },
   editProject: "Edit project",
   deleteProject: "Delete project",
+  privateProject: "Private project",
   avatarAlt: "Avatar",
   peopleYouMightKnow: "People you might know"
 };

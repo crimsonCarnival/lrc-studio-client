@@ -29,6 +29,7 @@ export default {
   pasteSpotifyUrl: "Paste Spotify track URL...",
   spotifyPremiumRequired: "Spotify Premium required",
   spotifyNotConnected: "Connect Spotify to play tracks",
+  listenOnSpotify: "Listen on Spotify",
   moveToTop: "Move to top",
   moveToBottom: "Move to bottom",
   mark: "Mark position",
@@ -40,5 +41,10 @@ export default {
   increaseSpeed: "Increase speed",
   decreaseVolume: "Decrease volume",
   increaseVolume: "Increase volume",
-  saveMediaRefFailed: "Failed to save media reference"
+  saveMediaRefFailed: "Failed to save media reference",
+  embeddingDisabled: "Embedding disabled",
+  embeddingDisabledDesc: "This video's owner has disabled playback on external sites. No audio will play in the editor.",
+  seekPlayback: "Seek playback",
+  embeddingBlockedDesc: "This video's owner blocks external playback. Use a direct audio file instead.",
+  watchOnYoutube: "Watch on YouTube",
 }

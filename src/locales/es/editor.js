@@ -8,6 +8,7 @@ export default {
     allRemoved: "Todas las letras eliminadas"
   },
   removeAll: "Eliminar todas las letras",
+  projectSettings: "Configuración del proyecto",
   pastePlaceholder: "Las letras pegadas aparecerán aquí, una línea por línea...",
   startSyncing: "Empezar ",
   importFile: "Importar ",
@@ -119,6 +120,7 @@ export default {
   sectionDefault: "Sección",
   sectionLabelPlaceholder: "Etiqueta de sección",
   sections: {
+    part: "Parte",
     intro: "Intro",
     verse: "Verso",
     preChorus: "Pre-Coro",
@@ -127,6 +129,10 @@ export default {
     interlude: "Interludio",
     outro: "Outro",
     other: "Otro…",
+    groupStructural: "Estructural",
+    groupStandard: "Estándar",
+    demote: "Bajar a sección normal",
+    promote: "Promover a sección principal",
   },
   singer: "Cantante 1",
   singerN: "Cantante {{n}}",
@@ -137,6 +143,8 @@ export default {
   addTranslation: "Agregar traducción",
   insertSectionAbove: "Insertar sección arriba",
   assignSingerToLines: "Asignar cantante a {{count}} líneas",
+  assignToSection: "Mover a sección",
+  moveToSection: "Mover a sección",
   singerCustomPlaceholder: "Personalizado…",
   clearSingers: "Quitar cantantes",
   stampWordTip: "Marcar \"{{word}}\" ({{current}}/{{total}})",
@@ -158,5 +166,15 @@ export default {
     singersPaint: "Modo pintura: Selecciona un cantante de la paleta sobre una línea, luego haz clic en palabras para asignarlas rápidamente.",
     singersShortcuts: "Atajos de teclado: Presiona 1-4 para asignar la línea activa al cantante 1-4. Presiona 0 para limpiar.",
     singersSplit: "División rápida: Usa el ícono de tijeras para dividir automáticamente 'Nombre: Letra' en una atribución de cantante."
-  }
+  },
+  waveformPreview: "Vista previa de la onda",
+  tapToMarkTimestamp: "Toca para marcar la marca de tiempo",
+  currentLine: "Línea actual",
+  noLyricsToPreview: "No hay letras para previsualizar",
+  linesProgress: "Líneas ({{synced}}/{{total}})",
+  emptyLine: "(vacío)",
+  addLyricsToPreview: "Agrega letras en el editor para ver la vista previa",
+  nextLine: "Línea siguiente",
+  playing: "Reproduciendo",
+  paused: "Pausado",
 };

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Play, Pause } from 'lucide-react';
 
 export default function PreviewModeTab({
@@ -6,6 +7,7 @@ export default function PreviewModeTab({
   activeLineIndex,
   isPlaying,
 }) {
+  const { t } = useTranslation();
   const currentLine = useMemo(() => {
     if (!lines || lines.length === 0) return null;
     return lines[activeLineIndex];
@@ -28,8 +30,8 @@ export default function PreviewModeTab({
         className="flex-1 flex items-center justify-center h-96 text-zinc-400"
       >
         <div className="text-center">
-          <div className="text-sm font-medium mb-2">No lyrics to preview</div>
-          <div className="text-xs text-zinc-500">Add lyrics in the editor to see preview</div>
+          <div className="text-sm font-medium mb-2">{t('editor.noLyricsToPreview')}</div>
+          <div className="text-xs text-zinc-500">{t('editor.addLyricsToPreview')}</div>
         </div>
       </div>
     );
@@ -53,7 +55,7 @@ export default function PreviewModeTab({
       {nextLine && (
         <div className="w-full text-center space-y-2 border-t border-zinc-800/50 pt-6">
           <div className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-            Next Line
+            {t('editor.nextLine')}
           </div>
           <p className="text-lg text-zinc-400">{nextLine.text}</p>
         </div>
@@ -84,12 +86,12 @@ export default function PreviewModeTab({
         {isPlaying ? (
           <>
             <Play className="size-4 text-primary animate-pulse" />
-            <span>Playing</span>
+            <span>{t('editor.playing')}</span>
           </>
         ) : (
           <>
             <Pause className="size-4 text-zinc-500" />
-            <span>Paused</span>
+            <span>{t('editor.paused')}</span>
           </>
         )}
       </div>

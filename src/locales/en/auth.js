@@ -103,7 +103,8 @@ export default {
     recaptchaNotice: "This site is protected by reCAPTCHA and the Google <0>Privacy Policy</0> and <1>Terms of Service</1> apply.",
     googleLoginFailed: "Google sign-in failed. Please try again.",
     googleWrongAccount: "That Google account doesn't match your saved account. Please sign in with the correct account.",
-    googleDisconnectFailed: "Failed to disconnect Google account. Please try again."
+    googleDisconnectFailed: "Failed to disconnect Google account. Please try again.",
+  spotifyLoginFailed: "Spotify sign-in failed",
   },
   verification: {
     sendSuccess: "Verification email sent. Check your inbox.",
@@ -185,7 +186,8 @@ export default {
     button: "Reset Password",
     resetting: "Resetting...",
     backToLogin: "Back to login",
-    passwordMismatch: "Passwords do not match"
+    passwordMismatch: "Passwords do not match",
+  sendingLink: "Sending reset link...",
   },
   changePassword: {
     title: "Change Password",
@@ -216,6 +218,8 @@ export default {
     addAccount: "Add another account",
     removeAccount: "Forget this account",
     forgetAll: "Forget all accounts",
+    usePasswordInstead: "Use password instead",
+    usePasskey: "Sign in with passkey",
   },
   passwordManagement: {
     title: "Password Management",
@@ -248,7 +252,9 @@ export default {
     emailNotVerified: "Please verify your email before adding a passkey.",
     deleted: "Passkey deleted.",
     deleteFailed: "Failed to delete passkey.",
-    tryPasskey: "Sign in with Passkey or QR Code"
+    tryPasskey: "Sign in with Passkey or QR Code",
+  sessionExpired: "Session expired. Please try again.",
+  alreadyRegistered: "This authenticator is already registered.",
   },
   setAccountName: {
     title: "Choose your username",
@@ -273,4 +279,7 @@ export default {
     nameOrSurname:   "Names and surnames by themselves are easy to guess",
     commonName:      "Common names and surnames are easy to guess",
   },
+  backToLogin: "Back to login",
+  hidePassword: "Hide password",
+  showPassword: "Show password",
 };

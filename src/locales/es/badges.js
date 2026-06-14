@@ -75,5 +75,6 @@ export default {
     day_other:     'Racha de {{count}} días',
     syncedLines:   'Líneas sincronizadas',
     forks:         'Bifurcaciones recibidas',
+  minutesSyncedNote: "Solo proyectos propios — sin bifurcaciones",
   },
 };

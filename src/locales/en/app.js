@@ -18,6 +18,7 @@ export default {
     playback: "Playback"
   },
   hideEditor: "Hide Editor",
+  hidePreview: "Hide Preview",
   unsavedChangesTitle: [
     "Unsaved Changes",
     "Hold Up!",

@@ -44,5 +44,14 @@ export default {
   noFiles: "No hay archivos seleccionados",
   uploadSuccess: "Subido correctamente",
   uploadError: "Error al subir el archivo",
-  allComplete: "¡Todas las subidas completadas!"
+  allComplete: "¡Todas las subidas completadas!",
+  uploadAudio: "Subir audio",
+  tapToSelect: "Toca para seleccionar un archivo de audio",
+  dragDrop: "Arrastra y suelta o selecciona archivos",
+  uploading: "Subiendo archivos...",
+  dropAudioHere: "Arrastra y suelta archivos de audio aquí",
+  orClickToSelect: "o haz clic en el botón de abajo para seleccionar",
+  selectAudioFile: "Seleccionar archivo de audio",
+  filesCount: "Archivos ({{count}})",
+  uploadCount: "Subir {{count}} archivo(s)",
 };

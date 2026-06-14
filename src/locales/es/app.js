@@ -18,6 +18,7 @@ export default {
     playback: "Reproducción"
   },
   hideEditor: "Ocultar Editor",
+  hidePreview: "Ocultar Vista Previa",
   unsavedChangesTitle: "Cambios sin guardar",
   unsavedChangesMessage: "Tienes cambios sin guardar. ¿Qué deseas hacer antes de salir?",
   discard: "Descartar",

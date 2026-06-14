@@ -74,7 +74,7 @@ export function useDragAndDrop({
 
         try {
           const text = await file.text();
-          const { lines: parsedLines } = await lyrics.parse(text, file.name);
+          const { lines: parsedLines } = await lyrics.parse(text, file.name, { preserveEmptyLines: settings?.editor?.preserveEmptyLines ?? false });
 
           if (parsedLines.length === 0) {
             toast.error(t('import.noLines') || 'No lyrics found in file');
@@ -110,7 +110,7 @@ export function useDragAndDrop({
         );
       }
     },
-    [linesLength, setLines, setEditorMode, settings.advanced.confirmDestructive, t, requestConfirm, playerRef],
+    [linesLength, setLines, setEditorMode, settings, t, requestConfirm, playerRef],
   );
 
   const handleDragEnterRef = useRef(handleDragEnter);

@@ -179,4 +179,10 @@ export default {
   coverImagePlaceholder: "https://example.com/cover.jpg",
   albumArt: "アルバムアート",
   albumArtPlaceholder: "https://example.com/album.jpg",
+  newProject: "新規プロジェクト",
+  newProjectTitle: "新規プロジェクト",
+  public: "公開",
+  private: "非公開",
+  tabMedia: "メディア",
+  tabLyrics: "歌詞",
 };

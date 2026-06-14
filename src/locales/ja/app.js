@@ -18,6 +18,7 @@ export default {
     playback: "再生"
   },
   hideEditor: "エディターを隠す",
+  hidePreview: "プレビューを隠す",
   unsavedChangesTitle: "未保存の変更",
   unsavedChangesMessage: "保存されていない変更があります。退出前にどうしますか？",
   discard: "破棄",

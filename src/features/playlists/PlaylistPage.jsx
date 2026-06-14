@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+
+const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Lock, Pencil, Trash2, Music, Star, GitFork, GripVertical } from 'lucide-react';
 import { Button } from '@ui/button';
@@ -175,9 +177,9 @@ export default function PlaylistPage() {
 
   if (notFound || !playlist) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center px-4">
-        <p className="text-lg font-semibold text-foreground">{t('playlists.detail.notFound')}</p>
-      </div>
+      <Suspense fallback={null}>
+        <NotFoundPage type="playlist" identifier={playlistId} />
+      </Suspense>
     );
   }
 

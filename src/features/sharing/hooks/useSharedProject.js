@@ -2,10 +2,12 @@ import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { projects, uploads, getAccessToken } from '@/app/api';
+import { sectionsToFlat, flatToSections } from '@/features/editor/utils/sections';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { useSettings } from '@/features/settings/useSettings';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { useProjectSocket } from './useProjectSocket';
+import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 
 // Legacy URL-encoded share fallbacks
 async function decompressFromBase64(str) {
@@ -54,8 +56,7 @@ export function useSharedProject({
   setSyncMode,
   setActiveLineIndex,
   setEditorModeRaw,
-  setRestoredYtUrl,
-  setRestoredCloudinaryUpload,
+  setRestoredMedia,
   setProjectSpotifyTrackId,
   setRestoredPosition,
   setRestoredSpeed,
@@ -72,8 +73,7 @@ export function useSharedProject({
   projectYtUrl,
   cloudinaryAudio,
   projectSpotifyTrackId,
-  restoredYtUrl,
-  restoredCloudinaryUpload,
+  restoredMedia,
 }) {
   const { t } = useTranslation();
   const { executeRecaptcha } = useGoogleReCaptcha();
@@ -121,8 +121,18 @@ export function useSharedProject({
       if (typeof idx === 'number' && idx >= 0 && idx < validLines.length) setActiveLineIndex(idx);
       const mode = parsed.editorMode || (validLines.some((l) => l.endTime != null) ? 'srt' : 'lrc');
       setEditorModeRaw(mode);
-      if (parsed.ytUrl) setRestoredYtUrl(parsed.ytUrl);
-      if (parsed.cloudinaryUpload) setRestoredCloudinaryUpload(parsed.cloudinaryUpload);
+      if (parsed.ytUrl) {
+        setRestoredMedia({ type: 'youtube', url: parsed.ytUrl });
+      } else if (parsed.cloudinaryUpload) {
+        setRestoredMedia(uploadToRestoredMedia(parsed.cloudinaryUpload));
+      } else if (parsed.spotifyTrackId) {
+        setRestoredMedia({
+          type: 'spotify',
+          id: parsed.spotifyTrackId,
+          trackId: parsed.spotifyTrackId,
+          title: '',
+        });
+      }
       if (parsed.spotifyTrackId) setProjectSpotifyTrackId(parsed.spotifyTrackId);
       if (typeof parsed.playbackPosition === 'number') setRestoredPosition(parsed.playbackPosition);
       if (typeof parsed.playbackSpeed === 'number') setRestoredSpeed(parsed.playbackSpeed);
@@ -157,7 +167,7 @@ export function useSharedProject({
           } : null;
 
           restoreProject({
-            lines: project.lyrics?.lines || [],
+            lines: sectionsToFlat(project.lyrics?.sections || []),
             editorMode: project.lyrics?.editorMode || 'lrc',
             ytUrl: upload?.youtubeUrl || '',
             cloudinaryUpload: upload?.source === 'cloudinary' ? uploadData : null,
@@ -216,9 +226,17 @@ export function useSharedProject({
       let uploadIdToSave = null;
 
       // Get the effective upload - check current state first, then fall back to restored
-      const effectiveCloudinary = cloudinaryAudio || restoredCloudinaryUpload;
-      const effectiveYtUrl = projectYtUrl || restoredYtUrl;
-      const effectiveSpotifyTrackId = projectSpotifyTrackId || (restoredCloudinaryUpload?.source === 'spotify' ? restoredCloudinaryUpload.spotifyTrackId : null);
+      const effectiveCloudinary = cloudinaryAudio
+        || (restoredMedia?.type === 'cloudinary' ? {
+          id: restoredMedia.id,
+          cloudinaryUrl: restoredMedia.url,
+          publicId: restoredMedia.publicId,
+          fileName: restoredMedia.fileName,
+          duration: restoredMedia.duration,
+        } : null);
+      const effectiveYtUrl = projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : '');
+      const effectiveSpotifyTrackId = projectSpotifyTrackId
+        || (restoredMedia?.type === 'spotify' ? restoredMedia.trackId : null);
 
       console.log('[share] effectiveCloudinary:', effectiveCloudinary);
       console.log('[share] effectiveYtUrl:', effectiveYtUrl);
@@ -274,7 +292,7 @@ export function useSharedProject({
       const projectData = {
         title: mediaTitle || '',
         metadata: projectMetadata,
-        lyrics: { editorMode, lines: lines.map((l) => ({ ...l, id: undefined })) },
+        lyrics: { editorMode, sections: flatToSections(lines.map((l) => ({ ...l, id: undefined }))) },
         state: { syncMode, activeLineIndex: 0, playbackPosition: 0, playbackSpeed: 1 },
         public: true,
       };
@@ -312,7 +330,7 @@ export function useSharedProject({
       setShareModalState(null);
       toast.error(t('project.shareFailed') || 'Could not generate share link.');
     }
-  }, [lines, editorMode, projectYtUrl, syncMode, mediaTitle, cloudinaryAudio, duration, t, projectMetadata, activeProjectIdRef, setActiveProjectId, setShareModalState, executeRecaptcha, lastShareData, projectSpotifyTrackId, restoredCloudinaryUpload, restoredYtUrl]);
+  }, [lines, editorMode, projectYtUrl, syncMode, mediaTitle, cloudinaryAudio, duration, t, projectMetadata, activeProjectIdRef, setActiveProjectId, setShareModalState, executeRecaptcha, lastShareData, projectSpotifyTrackId, restoredMedia]);
 
   return {
     isSharedProject, setIsSharedProject,

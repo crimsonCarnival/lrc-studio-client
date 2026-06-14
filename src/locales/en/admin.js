@@ -1,4 +1,18 @@
 export default {
+  sudo: {
+    title: 'Confirm your identity',
+    description: 'For security, re-enter your password to continue with this action.',
+    passwordLabel: 'Password',
+    passwordPlaceholder: 'Enter your password',
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+    or: 'or',
+    usePasskey: 'Use a passkey',
+    invalidPassword: 'Incorrect password. Please try again.',
+    passkeyError: 'Passkey verification failed. Please try again.',
+    noPassword: 'Your account has no password or passkey. Add one in settings to perform admin actions.',
+    error: 'Could not verify. Please try again.'
+  },
   dashboard: {
     title: 'Admin Dashboard',
     subtitle: 'Monitor and manage platform accounts.',
@@ -91,6 +105,8 @@ export default {
     deviceId: 'Device ID',
     confirmUnblockIp: 'Remove this IP block? Users on this network will regain access to registration and login.',
     confirmUnblockDevice: 'Remove this hardware block? This machine will be able to access the platform again.',
+  noData: "No data available",
+  viewDetails: "View Details",
   },
   banned: {
     title: 'Account Suspended',

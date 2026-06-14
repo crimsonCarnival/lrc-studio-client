@@ -178,4 +178,10 @@ export default {
   coverImagePlaceholder: "https://example.com/cover.jpg",
   albumArt: "Album Art",
   albumArtPlaceholder: "https://example.com/album.jpg",
+  newProject: "New Project",
+  newProjectTitle: "New Project",
+  public: "Public",
+  private: "Private",
+  tabMedia: "Media",
+  tabLyrics: "Lyrics",
 };

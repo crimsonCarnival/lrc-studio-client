@@ -122,6 +122,7 @@ export default {
   },
   editProject: "プロジェクトを編集",
   deleteProject: "プロジェクトを削除",
+  privateProject: "非公開プロジェクト",
   avatarAlt: "アバター",
   peopleYouMightKnow: "知り合いかも"
 };

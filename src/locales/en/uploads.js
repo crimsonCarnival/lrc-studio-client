@@ -50,5 +50,14 @@ export default {
   noFiles: "No files selected",
   uploadSuccess: "Uploaded successfully",
   uploadError: "Upload failed",
-  allComplete: "All uploads complete!"
+  allComplete: "All uploads complete!",
+  uploadAudio: "Upload Audio",
+  tapToSelect: "Tap to select an audio file",
+  dragDrop: "Drag and drop or select files",
+  uploading: "Uploading files...",
+  dropAudioHere: "Drag and drop audio files here",
+  orClickToSelect: "or click the button below to select",
+  selectAudioFile: "Select Audio File",
+  filesCount: "Files ({{count}})",
+  uploadCount: "Upload {{count}} file(s)",
 };

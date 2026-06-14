@@ -71,5 +71,6 @@ export default {
     day:      '{{count}} 日連続',
     syncedLines: '同期済みライン',
     forks:    '獲得フォーク数',
+  minutesSyncedNote: "自分のプロジェクトのみ — フォークは除く",
   },
 };

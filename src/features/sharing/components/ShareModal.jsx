@@ -101,8 +101,8 @@ export function SharePanel({
     const cycleMessage = messagesArray[loadingStep % messagesArray.length];
 
     const isRecaptcha = loading === 'recaptcha';
-    const title = isRecaptcha ? t('share.securityCheck', 'Security Check') : t('share.generating', 'Generating...');
-    const desc = isRecaptcha ? t('share.verifying', 'Verifying your session...') : cycleMessage;
+    const title = isRecaptcha ? t('share.securityCheck') : t('share.generating');
+    const desc = isRecaptcha ? t('share.verifying') : cycleMessage;
 
     return (
       <div className="flex flex-col items-center justify-center gap-4 p-8 animate-fade-in min-h-[280px]">
@@ -131,7 +131,7 @@ export function SharePanel({
       {/* Privacy/visibility toggle */}
       <div className="flex items-center justify-between gap-2 mb-1">
         <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">
-          {t('share.visibility', 'Visibility')}
+          {t('share.visibility')}
         </span>
         <Button
           variant={privacy === 'public' ? 'outline' : 'secondary'}
@@ -144,12 +144,12 @@ export function SharePanel({
           {privacy === 'public' ? (
             <>
               <div className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              {t('share.public', 'Anyone with link')}
+              {t('share.public')}
             </>
           ) : (
             <>
               <div className="size-1.5 rounded-full bg-zinc-500" />
-              {t('share.private', 'Only me')}
+              {t('share.private')}
             </>
           )}
         </Button>
@@ -191,7 +191,7 @@ export function SharePanel({
           ) : (
             <AlertCircle className="size-3 text-zinc-700" />
           )}
-          {mediaSource === 'youtube' ? t('share.youtubeIncluded', 'YouTube') : (mediaSource === 'spotify' ? t('share.spotifyIncluded', 'Spotify') : (mediaSource === 'cloudinary' ? t('share.mediaIncluded', 'Cloud Audio') : t('share.noMedia', 'No Media')))}
+          {mediaSource === 'youtube' ? t('share.youtubeIncluded') : (mediaSource === 'spotify' ? t('share.spotifyIncluded') : (mediaSource === 'cloudinary' ? t('share.mediaIncluded') : t('share.noMedia')))}
         </div>
 
         <div className={`flex items-center gap-2 text-[10px] font-bold px-2.5 py-1.5 rounded-lg border transition-colors ${hasSynced
@@ -199,7 +199,7 @@ export function SharePanel({
             : 'border-zinc-800 bg-zinc-900/50 text-zinc-600'
           }`}>
           <Calendar className="size-3" />
-          {linesCount} {hasSynced ? t('share.syncedLines', 'Synced') : t('share.lines', 'Lines')}
+          {linesCount} {hasSynced ? t('share.syncedLines') : t('share.lines')}
         </div>
       </div>
 
@@ -223,7 +223,7 @@ export function SharePanel({
               <div className={`size-3 h-3 rounded-full bg-white shadow-sm transition-transform duration-300 ${includeTime ? 'translate-x-4' : 'translate-x-0'}`} />
             </button>
             <span className={`text-[11px] font-bold transition-colors ${includeTime ? 'text-zinc-200' : 'text-zinc-500'}`}>
-              {t('share.includeTime', 'Start at specific time')}
+              {t('share.includeTime')}
             </span>
           </label>
           {includeTime && (
@@ -267,7 +267,7 @@ export function SharePanel({
                 onClick={() => dispatch({ type: 'SET_CUSTOM_TIME', payload: Math.floor(playbackPosition) })}
                 className="h-8 px-2 text-[10px] text-zinc-400 hover:text-primary hover:bg-primary/5 font-bold"
               >
-                {t('share.useCurrent', 'Current')}
+                {t('share.useCurrent')}
               </Button>
             </div>
           </div>
@@ -277,8 +277,8 @@ export function SharePanel({
       {/* Description */}
       <p className="text-[10px] text-zinc-500 leading-relaxed px-1">
         {privacy === 'public'
-          ? t('share.description', 'Anyone with this link can view the lyrics sync and media.')
-          : t('share.privateDescription', 'Only you can access this project.')}
+          ? t('share.description')
+          : t('share.privateDescription')}
       </p>
 
       {/* URL + copy */}
@@ -293,7 +293,7 @@ export function SharePanel({
           />
           <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-zinc-950/50 to-transparent pointer-events-none rounded-r-xl" />
         </div>
-        <Tip content={copied ? t('share.copied', 'Copied!') : t('share.copy', 'Copy link')}>
+        <Tip content={copied ? t('share.copied') : t('share.copy')}>
           <Button
             onClick={handleCopy}
             variant="outline"

@@ -25,6 +25,7 @@ export default {
   pasteSpotifyUrl: "SpotifyトラックURLを貼り付け…",
   spotifyPremiumRequired: "再生にはSpotify Premiumが必要です",
   spotifyNotConnected: "設定でSpotifyに接続してトラックを再生",
+  listenOnSpotify: "Spotifyで聴く",
   moveToTop: "先頭に移動",
   moveToBottom: "末尾に移動",
   mark: "現在位置をマーク",
@@ -36,5 +37,10 @@ export default {
   increaseSpeed: "速度を上げる",
   decreaseVolume: "音量を下げる",
   increaseVolume: "音量を上げる",
-  saveMediaRefFailed: "メディア参照の保存に失敗しました"
+  saveMediaRefFailed: "メディア参照の保存に失敗しました",
+  embeddingDisabled: "埋め込みが無効です",
+  embeddingDisabledDesc: "この動画の所有者は外部サイトでの再生を無効にしています。エディターでは音声が再生されません。",
+  seekPlayback: "再生位置を移動",
+  embeddingBlockedDesc: "この動画の所有者は外部再生をブロックしています。直接の音声ファイルを使用してください。",
+  watchOnYoutube: "YouTubeで見る",
 };

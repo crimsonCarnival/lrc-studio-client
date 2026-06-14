@@ -92,7 +92,7 @@ export function HeaderSearchBar({ autoFocus = false, onClose }) {
           onChange={e => { handleQueryChange(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder={t('search.placeholder.0', 'Search…')}
+          placeholder={t('search.placeholder.0')}
           className="w-full pl-8 pr-8 py-1.5 rounded-xl bg-zinc-900/70 border border-zinc-800/60 focus:border-zinc-700 text-white placeholder:text-zinc-600 focus:outline-none text-xs transition-colors"
         />
       </div>

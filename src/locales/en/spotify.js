@@ -10,6 +10,11 @@ export default {
   savedTracks: "Saved",
   playlists: "Playlists",
   devices: "Devices",
+  nowPlaying: "Now Playing",
+  nowPlayingLabel: "Now playing",
+  paused: "Paused",
+  useThisTrack: "Use this track",
+  refresh: "Refresh",
 
   // Dynamic Empty States
   noTracks: [

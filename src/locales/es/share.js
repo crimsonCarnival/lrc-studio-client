@@ -53,4 +53,7 @@ export default {
   shareLink: "Compartir",
   linkCopied: "¡Copiado!",
   secondsPlaceholder: "Segundos...",
+  forkedProject: "Proyecto bifurcado",
+  forkedBadge: "Bifurcado",
+  verifying: "Verificando tu sesión...",
 };

@@ -103,7 +103,8 @@ export default {
     recaptchaNotice: "このサイトは reCAPTCHA によって保護されており、Google の<0>プライバシーポリシー</0>と<1>利用規約</1>が適用されます。",
     googleLoginFailed: "Googleログインに失敗しました。もう一度お試しください。",
     googleWrongAccount: "そのGoogleアカウントは保存済みアカウントと一致しません。正しいアカウントでサインインしてください。",
-    googleDisconnectFailed: "Googleアカウントの切断に失敗しました。もう一度お試しください。"
+    googleDisconnectFailed: "Googleアカウントの切断に失敗しました。もう一度お試しください。",
+  spotifyLoginFailed: "Spotifyのサインインに失敗しました",
   },
   verification: {
     sendSuccess: "確認メールを送信しました。受信トレイをご確認ください。",
@@ -185,7 +186,8 @@ export default {
     button: "パスワードをリセット",
     resetting: "リセット中...",
     backToLogin: "ログインに戻る",
-    passwordMismatch: "パスワードが一致しません"
+    passwordMismatch: "パスワードが一致しません",
+  sendingLink: "リセットリンクを送信しています...",
   },
   changePassword: {
     title: "パスワードを変更",
@@ -216,6 +218,8 @@ export default {
     addAccount: "別のアカウントを追加",
     removeAccount: "このアカウントを削除",
     forgetAll: "すべてのアカウントを削除",
+    usePasswordInstead: "パスワードでサインイン",
+    usePasskey: "パスキーでサインイン",
   },
   passwordManagement: {
     title: "パスワード管理",
@@ -248,7 +252,9 @@ export default {
     emailNotVerified: "パスキーを追加する前にメールアドレスを確認してください。",
     deleted: "パスキーを削除しました。",
     deleteFailed: "パスキーの削除に失敗しました。",
-    tryPasskey: "パスキーまたはQRコードでログイン"
+    tryPasskey: "パスキーまたはQRコードでログイン",
+  sessionExpired: "セッションが期限切れです。もう一度お試しください。",
+  alreadyRegistered: "この認証器はすでに登録されています。",
   },
   setAccountName: {
     title: "ユーザー名を選択",
@@ -273,4 +279,7 @@ export default {
     nameOrSurname:   "名前や苗字だけでは推測されやすいです",
     commonName:      "よくある名前や苗字は推測されやすいです",
   },
+  backToLogin: "ログインに戻る",
+  hidePassword: "パスワードを隠す",
+  showPassword: "パスワードを表示",
 };

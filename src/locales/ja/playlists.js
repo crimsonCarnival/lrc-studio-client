@@ -54,4 +54,7 @@ export default {
   },
   editPlaylist: "プレイリストを編集",
   deletePlaylist: "プレイリストを削除",
+  deleteSuccess: "プレイリストを削除しました",
+  deleteError: "プレイリストの削除に失敗しました",
+  deleteTitle: "プレイリストを削除",
 };

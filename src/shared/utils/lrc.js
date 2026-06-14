@@ -349,7 +349,7 @@ const generateId = () => {
  * @param {string} filename
  * @returns {Array<{text: string, timestamp: number|null, endTime?: number, secondary?: string, translation?: string, id: string}>}
  */
-export function parseLrcSrtFile(content, filename) {
+export function parseLrcSrtFile(content, filename, options = {}) {
   const isSrt = filename.toLowerCase().endsWith('.srt');
   const parsedLines = [];
   
@@ -456,6 +456,8 @@ export function parseLrcSrtFile(content, filename) {
         if (!/^\[[^\]]*:[^\]]*\]/.test(remaining)) {
           parsedLines.push({ text: remaining.trim(), timestamp: null, id: generateId() });
         }
+      } else if (options.preserveEmptyLines) {
+        parsedLines.push({ text: '', timestamp: null, id: generateId() });
       }
     });
   }

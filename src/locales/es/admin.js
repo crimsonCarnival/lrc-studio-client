@@ -1,4 +1,18 @@
 export default {
+  sudo: {
+    title: 'Confirma tu identidad',
+    description: 'Por seguridad, vuelve a introducir tu contraseña para continuar con esta acción.',
+    passwordLabel: 'Contraseña',
+    passwordPlaceholder: 'Introduce tu contraseña',
+    confirm: 'Confirmar',
+    cancel: 'Cancelar',
+    or: 'o',
+    usePasskey: 'Usar una llave de acceso',
+    invalidPassword: 'Contraseña incorrecta. Inténtalo de nuevo.',
+    passkeyError: 'La verificación con la llave de acceso falló. Inténtalo de nuevo.',
+    noPassword: 'Tu cuenta no tiene contraseña ni llave de acceso. Configura una en los ajustes para realizar acciones de administrador.',
+    error: 'No se pudo verificar. Inténtalo de nuevo.'
+  },
   dashboard: {
     title: 'Panel de Administración',
     subtitle: 'Administra usuarios.',
@@ -91,6 +105,8 @@ export default {
     deviceId: 'ID de Dispositivo',
     confirmUnblockIp: '¿Estás seguro de que deseas eliminar este bloqueo de IP? Esta red podrá registrarse e iniciar sesión de nuevo.',
     confirmUnblockDevice: '¿Estás seguro de que deseas eliminar este bloqueo de hardware? Esta máquina podrá acceder a la plataforma de nuevo.',
+  noData: "No hay datos disponibles",
+  viewDetails: "Ver detalles",
   },
   banned: {
     title: 'Cuenta Suspendida',

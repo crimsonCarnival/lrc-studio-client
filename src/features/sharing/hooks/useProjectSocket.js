@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { getSocket } from '@/app/socket.client';
+import { sectionsToFlat } from '@/features/editor/utils/sections';
 
 /**
  * Joins a project room and applies live server-pushed updates to editor state.
@@ -24,7 +25,7 @@ export function useProjectSocket(projectId, setters) {
 
     function onProjectUpdated(data) {
       const s = settersRef.current;
-      if (data.lyrics?.lines) s.setLines(data.lyrics.lines);
+      if (data.lyrics?.sections) s.setLines(sectionsToFlat(data.lyrics.sections));
       if (data.state?.syncMode !== undefined) s.setSyncMode(data.state.syncMode);
       if (typeof data.state?.activeLineIndex === 'number') s.setActiveLineIndex(data.state.activeLineIndex);
       if (typeof data.state?.playbackPosition === 'number') s.setRestoredPosition(data.state.playbackPosition);

@@ -1,4 +1,18 @@
 export default {
+  sudo: {
+    title: '本人確認',
+    description: 'セキュリティのため、この操作を続行するにはパスワードを再入力してください。',
+    passwordLabel: 'パスワード',
+    passwordPlaceholder: 'パスワードを入力',
+    confirm: '確認',
+    cancel: 'キャンセル',
+    or: 'または',
+    usePasskey: 'パスキーを使用',
+    invalidPassword: 'パスワードが正しくありません。もう一度お試しください。',
+    passkeyError: 'パスキーの確認に失敗しました。もう一度お試しください。',
+    noPassword: 'アカウントにパスワードまたはパスキーが設定されていません。管理者操作を行うには設定で追加してください。',
+    error: '確認できませんでした。もう一度お試しください。'
+  },
   dashboard: {
     title: '管理ダッシュボード',
     subtitle: 'ユーザーを管理します。',
@@ -91,6 +105,8 @@ export default {
     deviceId: 'デバイスID',
     confirmUnblockIp: '本当にこのIPブロックを解除しますか？このネットワークは再び登録・ログインできるようになります。',
     confirmUnblockDevice: '本当にこのハードウェアブロックを解除しますか？この端末は再びプラットフォームにアクセスできるようになります。',
+  noData: "データがありません",
+  viewDetails: "詳細を表示",
   },
   banned: {
     title: 'アカウント停止中',

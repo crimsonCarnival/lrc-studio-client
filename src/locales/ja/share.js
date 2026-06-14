@@ -53,4 +53,7 @@ export default {
   shareLink: "シェア",
   linkCopied: "コピーしました！",
   secondsPlaceholder: "秒数...",
+  forkedProject: "フォークしたプロジェクト",
+  forkedBadge: "フォーク済み",
+  verifying: "セッションを確認しています...",
 };

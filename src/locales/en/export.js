@@ -23,5 +23,6 @@ export default {
   includeSecondary: "Secondary lyrics",
   noExtraContent: "No secondary text, translations, or word timestamps to include.",
   formatTip: "Change format in Settings → Export",
-  failed: "Export failed"
+  failed: "Export failed",
+  includeMetadata: "Include song metadata (title, artist, album)",
 };

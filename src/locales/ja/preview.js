@@ -13,5 +13,6 @@ export default {
   hoverHint: "クリックしてこの行にジャンプ",
   copyToClipboard: "コピー",
   includeTranslations: "翻訳を含める",
-  furigana: "振り仮名"
+  furigana: "振り仮名",
+  addTrack: "トラックを追加",
 };

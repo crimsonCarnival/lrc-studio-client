@@ -23,5 +23,6 @@ export default {
   includeSecondary: "Letra secundaria",
   noExtraContent: "No hay texto secundario, traducciones ni marcas de tiempo de palabras para incluir.",
   formatTip: "Cambia el formato en Ajustes → Exportar",
-  failed: "Error al exportar"
+  failed: "Error al exportar",
+  includeMetadata: "Incluir metadatos de la canción (título, artista, álbum)",
 };

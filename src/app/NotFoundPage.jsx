@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import {
@@ -6,83 +7,171 @@ import {
   FolderSearch,
   UserX,
   Ghost,
+  Music,
   ArrowLeft,
   Home as HomeIcon,
+  Search,
 } from 'lucide-react';
 
-export default function NotFoundPage({ type = 'general' }) {
+const KNOWN_PREFIXES = new Set([
+  '/home', '/library', '/search', '/explore', '/feed',
+  '/settings', '/admin', '/notifications', '/leaderboard',
+  '/uploads', '/project', '/profile', '/auth', '/verify-email',
+  '/share', '/login', '/register', '/reset-password', '/change-password',
+]);
+
+function detectRouteType(pathname) {
+  // /:accountName/lists/:listId
+  if (/^\/[^/]+\/lists\/[^/]+\/?$/.test(pathname)) {
+    const parts = pathname.split('/');
+    return { type: 'playlist', identifier: parts[3] };
+  }
+  // /project/:id/edit or /project/:id
+  if (/^\/project\/[^/]/.test(pathname)) {
+    const parts = pathname.split('/');
+    return { type: 'project', identifier: parts[2] };
+  }
+  // /uploads/:id
+  if (/^\/uploads\/[^/]+/.test(pathname)) {
+    const parts = pathname.split('/');
+    return { type: 'upload', identifier: parts[2] };
+  }
+  // /profile/:accountName
+  if (/^\/profile\/[^/]+/.test(pathname)) {
+    const parts = pathname.split('/');
+    return { type: 'user', identifier: parts[2] };
+  }
+  // /:accountName (single segment, not a known prefix)
+  const firstSegment = '/' + pathname.split('/')[1];
+  if (!KNOWN_PREFIXES.has(firstSegment) && /^\/[a-z0-9_.:-]+\/?$/i.test(pathname)) {
+    return { type: 'user', identifier: pathname.replace(/^\/|\/$/g, '') };
+  }
+  return { type: 'general', identifier: null };
+}
+
+function pickVariant(t, key, opts) {
+  const val = t(key, { returnObjects: true, ...opts });
+  if (Array.isArray(val)) return val[Math.floor(Math.random() * val.length)];
+  return String(val);
+}
+
+export default function NotFoundPage({ type: typeProp, identifier: identifierProp }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Differentiate content based on type
-  const config = {
-    project: {
-      icon: <FolderSearch className="size-16 text-amber-400" />,
-      title: t('error.projectNotFoundTitle', 'Project Not Found'),
-      description: t('error.projectNotFoundDesc', "The project you're looking for doesn't exist or has been deleted."),
-      primaryAction: {
-        label: t('app.backToLibrary', 'Back to Library'),
-        onClick: () => navigate('/library')
-      }
-    },
-    upload: {
-      icon: <FileQuestion className="size-16 text-blue-400" />,
-      title: t('error.uploadNotFoundTitle', 'Media Not Found'),
-      description: t('error.uploadNotFoundDesc', "We couldn't find the audio or video file you're trying to access."),
-      primaryAction: {
-        label: t('app.viewUploads', 'View Uploads'),
-        onClick: () => navigate('/uploads')
-      }
-    },
-    user: {
-      icon: <UserX className="size-16 text-rose-400" />,
-      title: t('error.userNotFoundTitle', 'User Not Found'),
-      description: t('error.userNotFoundDesc', "The profile you're looking for doesn't exist in our records."),
-      primaryAction: {
-        label: t('app.backToDashboard', 'Back to Home'),
-        onClick: () => navigate('/home')
-      }
-    },
-    general: {
-      icon: <Ghost className="size-16 text-zinc-500" />,
-      title: t('error.pageNotFoundTitle', 'Lost in Space?'),
-      description: t('error.pageNotFoundDesc', "The page you're looking for moved, changed, or never existed in the first place."),
-      primaryAction: {
-        label: t('app.backHome', 'Return Home'),
-        onClick: () => navigate('/home')
-      }
+  const { type, identifier } = useMemo(() => {
+    const routeDetected = detectRouteType(location.pathname);
+    return {
+      type: typeProp || routeDetected.type,
+      identifier: identifierProp ?? routeDetected.identifier,
+    };
+  }, [typeProp, identifierProp, location.pathname]);
+
+  const config = useMemo(() => {
+    switch (type) {
+      case 'project':
+        return {
+          icon: <FolderSearch className="size-16 text-amber-400" />,
+          title: identifier
+            ? t('error.projectNotFoundWithName', { id: identifier })
+            : pickVariant(t, 'error.projectNotFoundTitle'),
+          description: pickVariant(t, 'error.projectNotFoundDesc'),
+          primaryAction: {
+            label: t('app.backToLibrary'),
+            icon: <HomeIcon className="size-5 mr-2" />,
+            onClick: () => navigate('/library'),
+          },
+          searchAction: {
+            label: t('error.searchAnotherProject'),
+            onClick: () => navigate('/search'),
+          },
+        };
+      case 'playlist':
+        return {
+          icon: <Music className="size-16 text-violet-400" />,
+          title: pickVariant(t, 'error.playlistNotFoundTitle'),
+          description: pickVariant(t, 'error.playlistNotFoundDesc'),
+          primaryAction: {
+            label: t('app.backHome'),
+            icon: <HomeIcon className="size-5 mr-2" />,
+            onClick: () => navigate('/home'),
+          },
+          searchAction: null,
+        };
+      case 'upload':
+        return {
+          icon: <FileQuestion className="size-16 text-blue-400" />,
+          title: pickVariant(t, 'error.uploadNotFoundTitle'),
+          description: pickVariant(t, 'error.uploadNotFoundDesc'),
+          primaryAction: {
+            label: t('app.viewUploads'),
+            icon: <HomeIcon className="size-5 mr-2" />,
+            onClick: () => navigate('/uploads'),
+          },
+          searchAction: null,
+        };
+      case 'user':
+        return {
+          icon: <UserX className="size-16 text-rose-400" />,
+          title: identifier
+            ? t('error.userNotFoundWithName', { name: `@${identifier}` })
+            : pickVariant(t, 'error.userNotFoundTitle'),
+          description: pickVariant(t, 'error.userNotFoundDesc'),
+          primaryAction: {
+            label: t('app.backToDashboard'),
+            icon: <HomeIcon className="size-5 mr-2" />,
+            onClick: () => navigate('/home'),
+          },
+          searchAction: {
+            label: t('error.searchAnotherUser'),
+            onClick: () => navigate('/search'),
+          },
+        };
+      default:
+        return {
+          icon: <Ghost className="size-16 text-zinc-500" />,
+          title: pickVariant(t, 'error.pageNotFoundTitle'),
+          description: pickVariant(t, 'error.pageNotFoundDesc'),
+          primaryAction: {
+            label: t('app.backHome'),
+            icon: <HomeIcon className="size-5 mr-2" />,
+            onClick: () => navigate('/home'),
+          },
+          searchAction: {
+            label: t('error.searchContent'),
+            onClick: () => navigate('/search'),
+          },
+        };
     }
-  };
-
-  const current = config[type] || config.general;
+  }, [type, identifier, t, navigate]);
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center animate-fade-in">
-      {/* Decorative background element */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-96 bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="relative z-10 flex flex-col items-center max-w-md">
         <div className="mb-8 p-6 bg-zinc-900/50 backdrop-blur-xl rounded-3xl border border-zinc-800/50 shadow-elevated animate-slide-up-fade">
-          {current.icon}
+          {config.icon}
         </div>
 
         <h1 className="text-3xl sm:text-4xl font-semibold text-zinc-100 mb-4 tracking-tight font-heading">
-          {current.title}
+          {config.title}
         </h1>
 
         <p className="text-zinc-400 text-lg mb-10 leading-relaxed">
-          {current.description}
+          {config.description}
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
           <Button
             variant="primary"
             size="lg"
-            onClick={current.primaryAction.onClick}
+            onClick={config.primaryAction.onClick}
             className="w-full sm:flex-1 h-12 text-base font-semibold glow-primary"
           >
-            <HomeIcon className="size-5 mr-2" />
-            {current.primaryAction.label}
+            {config.primaryAction.icon}
+            {config.primaryAction.label}
           </Button>
 
           <Button
@@ -92,9 +181,21 @@ export default function NotFoundPage({ type = 'general' }) {
             className="w-full sm:flex-1 h-12 text-base text-zinc-400 hover:text-zinc-100 border border-zinc-800 hover:bg-zinc-800/50"
           >
             <ArrowLeft className="size-5 mr-2" />
-            {t('app.goBack', 'Go Back')}
+            {t('app.goBack')}
           </Button>
         </div>
+
+        {config.searchAction && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={config.searchAction.onClick}
+            className="mt-4 text-zinc-500 hover:text-zinc-300 gap-2"
+          >
+            <Search className="size-4" />
+            {config.searchAction.label}
+          </Button>
+        )}
       </div>
     </div>
   );
