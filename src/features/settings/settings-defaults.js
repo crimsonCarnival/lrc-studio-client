@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS = {
     autoPauseOnMark: false,
     nudge: { fine: 0.01, coarse: 0.1, default: 0.1 },
     autoAdvance: { enabled: true, skipBlank: false, mode: 'next' },
+    preserveEmptyLines: false,
     showShiftAll: true,
     shiftAllAmount: 0.5,
     showLineNumbers: true,

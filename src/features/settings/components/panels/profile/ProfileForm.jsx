@@ -36,18 +36,18 @@ export default function ProfileForm() {
     <>
       <section className="space-y-4">
         <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-          {t('profile.displayName', 'Display name') + ' & ' + t('profile.bio', 'Bio')}
+          {t('profile.displayName') + ' & ' + t('profile.bio')}
         </h4>
         <div className="space-y-1.5">
           <div className="flex items-center ml-1 h-[18px]">
             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-              {t('profile.displayName', 'Display name')}
+              {t('profile.displayName')}
             </label>
           </div>
           <Input
             value={formData.displayName}
             onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
-            placeholder={t('profile.displayNamePlaceholder', 'Optional public name')}
+            placeholder={t('profile.displayNamePlaceholder')}
             className="bg-secondary/30 border-border rounded-xl h-10 text-sm"
             maxLength={50}
           />
@@ -73,7 +73,7 @@ export default function ProfileForm() {
 
       <section className="space-y-4">
         <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-          {t('profile.sections.visibility', 'Visibility')}
+          {t('profile.sections.visibility')}
         </h4>
         {/* Show followers toggle */}
         <div className="flex items-start justify-between gap-4">

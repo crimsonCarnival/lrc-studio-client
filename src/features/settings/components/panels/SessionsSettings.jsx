@@ -37,15 +37,15 @@ export default function SessionsSettings() {
 
   const handleRevoke = (sessionId) => {
     requestConfirm(
-      t('profile.sessions.revokeConfirm', 'Sign out this device?'),
+      t('profile.sessions.revokeConfirm'),
       async () => {
         setRevokingId(sessionId);
         try {
           await auth.revokeSession(sessionId);
           setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-          toast.success(t('profile.sessions.revokeSuccess', 'Device signed out.'));
+          toast.success(t('profile.sessions.revokeSuccess'));
         } catch {
-          toast.error(t('profile.sessions.revokeError', 'Failed to sign out device.'));
+          toast.error(t('profile.sessions.revokeError'));
         } finally {
           setRevokingId(null);
         }
@@ -56,15 +56,15 @@ export default function SessionsSettings() {
 
   const handleRevokeAllOthers = () => {
     requestConfirm(
-      t('profile.sessions.revokeAllOthersConfirm', 'Sign out all other devices?'),
+      t('profile.sessions.revokeAllOthersConfirm'),
       async () => {
         setRevokingAll(true);
         try {
           await auth.logoutAll(true);
           setSessions((prev) => prev.filter((s) => s.isCurrent));
-          toast.success(t('profile.sessions.revokeAllOthersSuccess', 'All other devices signed out.'));
+          toast.success(t('profile.sessions.revokeAllOthersSuccess'));
         } catch {
-          toast.error(t('profile.sessions.revokeError', 'Failed to sign out devices.'));
+          toast.error(t('profile.sessions.revokeError'));
         } finally {
           setRevokingAll(false);
         }
@@ -92,10 +92,10 @@ export default function SessionsSettings() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="font-heading text-sm font-semibold text-zinc-100 contrast-more:text-white">
-            {t('profile.sessions.title', 'Active Sessions')}
+            {t('profile.sessions.title')}
           </h3>
           <p className="text-xs text-zinc-500 mt-0.5 contrast-more:text-zinc-300">
-            {t('profile.sessions.subtitle', 'Devices currently signed in to your account.')}
+            {t('profile.sessions.subtitle')}
           </p>
         </div>
         {otherSessions.length > 0 && (
@@ -109,7 +109,7 @@ export default function SessionsSettings() {
             {revokingAll ? (
               <Loader2 className="size-3.5 animate-spin" />
             ) : (
-              <><ShieldOff className="size-3.5 mr-1.5" />{t('profile.sessions.revokeAllOthers', 'Sign out others')}</>
+              <><ShieldOff className="size-3.5 mr-1.5" />{t('profile.sessions.revokeAllOthers')}</>
             )}
           </Button>
         )}
@@ -117,7 +117,7 @@ export default function SessionsSettings() {
 
       {sessions.length === 0 ? (
         <p className="text-sm text-zinc-500 py-4 text-center">
-          {t('profile.sessions.noSessions', 'No active sessions found.')}
+          {t('profile.sessions.noSessions')}
         </p>
       ) : (
         <div className="space-y-2">
@@ -133,11 +133,11 @@ export default function SessionsSettings() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-medium text-zinc-200 truncate">
-                    {session.browser || session.deviceName || t('profile.sessions.unknownDevice', 'Unknown Device')}
+                    {session.browser || session.deviceName || t('profile.sessions.unknownDevice')}
                   </span>
                   {session.isCurrent && (
                     <span className="text-[10px] font-bold uppercase text-primary bg-primary/10 px-1.5 py-0.5 rounded flex-shrink-0">
-                      {t('profile.sessions.currentBadge', 'This device')}
+                      {t('profile.sessions.currentBadge')}
                     </span>
                   )}
                 </div>
@@ -151,7 +151,7 @@ export default function SessionsSettings() {
                   )}
                   {session.lastUsedAt && (
                     <span className="text-[11px] text-zinc-600">
-                      · {t('profile.sessions.lastActive', 'Active')}{' '}
+                      · {t('profile.sessions.lastActive')}{' '}
                       {formatInTimezone(
                         session.lastUsedAt,
                         'auto',
@@ -174,7 +174,7 @@ export default function SessionsSettings() {
                   {revokingId === session.id ? (
                     <Loader2 className="size-3.5 animate-spin" />
                   ) : (
-                    t('profile.sessions.signOut', 'Sign out')
+                    t('profile.sessions.signOut')
                   )}
                 </Button>
               )}

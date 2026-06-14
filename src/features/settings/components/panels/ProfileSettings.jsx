@@ -49,7 +49,7 @@ function ShowcaseSection() {
     <section className="space-y-4">
       <div className="flex items-center gap-2">
         <Award className="size-3.5 text-zinc-500" />
-        <SectionHeading>{t('badges.showcase.editorTitle', 'Achievement Showcase')}</SectionHeading>
+        <SectionHeading>{t('badges.showcase.editorTitle')}</SectionHeading>
       </div>
       <ShowcaseEditor
         userBadges={enrichedBadges}
@@ -109,14 +109,14 @@ export default function ProfileSettings({ searchTerm }) {
       <div className="flex items-center gap-2 mb-2 px-1">
         <UserCircle2 className="size-4 text-zinc-400" />
         <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-          {t('profile.tabs.account', 'Account Details')}
+          {t('profile.tabs.account')}
         </h3>
       </div>
 
       <div className="rounded-2xl border border-border/50 bg-secondary/10 p-5 lg:p-6 space-y-6">
         {/* Avatar */}
         <section className="space-y-4">
-          <SectionHeading>{t('profile.sections.public', 'Profile picture')}</SectionHeading>
+          <SectionHeading>{t('profile.sections.public')}</SectionHeading>
           <AvatarUpload />
         </section>
 
@@ -129,7 +129,7 @@ export default function ProfileSettings({ searchTerm }) {
 
         {/* Email */}
         <section className="space-y-4">
-          <SectionHeading>{t('profile.emailSection', 'Email address')}</SectionHeading>
+          <SectionHeading>{t('profile.emailSection')}</SectionHeading>
           <EmailSection />
         </section>
 
@@ -137,7 +137,7 @@ export default function ProfileSettings({ searchTerm }) {
 
         {/* Username */}
         <section className="space-y-4">
-          <SectionHeading>{t('profile.accountNameSection', 'Username')}</SectionHeading>
+          <SectionHeading>{t('profile.accountNameSection')}</SectionHeading>
           <AccountNameSection />
         </section>
 

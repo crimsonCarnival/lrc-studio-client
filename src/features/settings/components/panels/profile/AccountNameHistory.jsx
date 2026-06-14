@@ -10,7 +10,7 @@ export default function AccountNameHistory() {
     return (
       <div className="flex flex-col items-center justify-center py-6 text-zinc-500">
         <History className="size-10 mb-3 opacity-20" strokeWidth={1} />
-        <p className="text-xs">{t('profile.noHistory', 'No changes yet')}</p>
+        <p className="text-xs">{t('profile.noHistory')}</p>
       </div>
     );
   }

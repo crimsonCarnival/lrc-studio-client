@@ -59,10 +59,10 @@ export default function SecuritySettings({ focusCard, searchTerm }) {
         >
           <div className="mb-4">
             <h4 className="text-sm font-semibold text-zinc-200">
-              {t('auth.passkeyManagement.title', 'Passkeys')}
+              {t('auth.passkeyManagement.title')}
             </h4>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-              {t('profile.privacy.passkeysDesc', 'Passkeys let you sign in using biometrics or a device PIN — no password needed.')}
+              {t('profile.privacy.passkeysDesc')}
             </p>
           </div>
           <PasskeySection />
@@ -78,10 +78,10 @@ export default function SecuritySettings({ focusCard, searchTerm }) {
         >
           <div className="mb-4">
             <h4 className="text-sm font-semibold text-zinc-200">
-              {t('profile.sections.password', 'Password')}
+              {t('profile.sections.password')}
             </h4>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-              {t('profile.privacy.passwordDesc', 'Change your account password. You\'ll remain signed in on this device.')}
+              {t('profile.privacy.passwordDesc')}
             </p>
           </div>
           <PasswordSection />

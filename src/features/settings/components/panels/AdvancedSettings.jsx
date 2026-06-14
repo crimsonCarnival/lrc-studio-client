@@ -52,7 +52,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
             <div className="flex items-center gap-2">
               <Lock className="size-3.5 text-zinc-500 shrink-0" />
               <span className="text-[11px] text-zinc-500 italic">
-                {t('settings.advanced.autoSaveGuestNote', 'Requires an account')}
+                {t('settings.advanced.autoSaveGuestNote')}
               </span>
             </div>
           </SettingRow>

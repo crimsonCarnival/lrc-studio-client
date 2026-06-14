@@ -19,26 +19,23 @@ export default function PasswordSection() {
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between ml-1 mb-3">
-        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-          {t('profile.sections.password', 'Password')}
-          {!user?.hasPassword && (
-            <span className="size-2 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
-          )}
-        </label>
+      <div className="flex items-center gap-2 mb-3">
         <Button
           size="sm"
           onClick={() => navigate(user?.hasPassword ? '/change-password?from=password-reset' : '/change-password?mode=set')}
-          className="shrink-0 rounded-lg h-7 text-[11px] font-bold"
+          className="rounded-lg h-7 text-[11px] font-bold shrink-0"
         >
           {user?.hasPassword
             ? t('auth.passwordManagement.button')
             : t('auth.passwordManagement.setPassword')}
         </Button>
+        {!user?.hasPassword && (
+          <span className="size-2 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
+        )}
       </div>
 
-      <div className="flex items-center justify-between bg-secondary/30 border border-border rounded-xl px-3 h-11">
-        <span className="text-sm text-muted-foreground truncate">
+      <div className="flex items-center justify-between bg-secondary/30 border border-border rounded-xl px-3 min-h-11 py-2 gap-3">
+        <span className="text-sm text-muted-foreground">
           {user?.hasPassword
             ? lastChanged
               ? t('auth.passwordManagement.lastChanged', { date: lastChanged })
@@ -49,7 +46,7 @@ export default function PasswordSection() {
           <button
             type="button"
             onClick={() => navigate('/auth?tab=forgot')}
-            className="text-[11px] text-primary hover:underline shrink-0 ml-3"
+            className="text-[11px] text-primary hover:underline shrink-0"
           >
             {t('auth.passwordManagement.forgotPasswordLink')}
           </button>

@@ -8,6 +8,8 @@ export function useEditorSettings(updateSetting) {
 
   const handleSkipBlankChange = (v) => updateSetting('editor.autoAdvance.skipBlank', v);
 
+  const handlePreserveEmptyLinesChange = (v) => updateSetting('editor.preserveEmptyLines', v);
+
   const handleShowShiftAllChange = (v) => updateSetting('editor.showShiftAll', v);
 
   const handleShowLineNumbersChange = (v) => updateSetting('editor.showLineNumbers', v);
@@ -20,6 +22,7 @@ export function useEditorSettings(updateSetting) {
     handleNudgeChange,
     handleAutoAdvanceChange,
     handleSkipBlankChange,
+    handlePreserveEmptyLinesChange,
     handleShowShiftAllChange,
     handleShowLineNumbersChange,
     handleTimestampPrecisionChange,

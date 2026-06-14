@@ -33,10 +33,10 @@ export default function ConnectionsSettings({ searchTerm }) {
       <div className="rounded-2xl border border-border/50 contrast-more:border-zinc-600 bg-secondary/10 p-5 lg:p-6 hover:border-border transition-all">
         <div className="mb-4">
           <h4 className="font-heading text-sm font-semibold text-zinc-100 contrast-more:text-white">
-            {t('profile.sections.connections', 'Connected accounts')}
+            {t('profile.sections.connections')}
           </h4>
           <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-            {t('profile.connections.desc', 'Link external accounts to sign in faster and unlock additional features.')}
+            {t('profile.connections.desc')}
           </p>
         </div>
         <ConnectedAccounts />

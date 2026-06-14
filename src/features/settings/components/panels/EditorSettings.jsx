@@ -3,7 +3,7 @@ import NumberInput from "@shared/ui/NumberInput";
 import { Section, SettingRow, Toggle } from '../shared';
 import { useEditorSettings } from '../../hooks/useEditorSettings';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { FileText, PauseCircle, SlidersHorizontal, ChevronDown, SkipForward, MoveHorizontal, Hash, Clock, Film, Magnet, Zap, Search } from 'lucide-react';
+import { FileText, PauseCircle, SlidersHorizontal, ChevronDown, SkipForward, MoveHorizontal, Hash, Clock, Film, Magnet, Zap, Search, AlignJustify } from 'lucide-react';
 
 export default function EditorSettings({ settings, updateSetting, searchTerm }) {
   const { t } = useTranslation();
@@ -12,6 +12,7 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }) 
     handleNudgeChange,
     handleAutoAdvanceChange,
     handleSkipBlankChange,
+    handlePreserveEmptyLinesChange,
     handleShowShiftAllChange,
     handleShowLineNumbersChange,
     handleTimestampPrecisionChange,
@@ -85,6 +86,13 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }) 
           id="toggle-skip-blank"
           checked={settings.editor?.autoAdvance?.skipBlank ?? false}
           onChange={handleSkipBlankChange}
+        />
+      </SettingRow>
+      <SettingRow icon={AlignJustify} label={t('settings.editor.preserveEmptyLines')} description={t('settings.editor.preserveEmptyLinesDesc')}>
+        <Toggle
+          id="toggle-preserve-empty-lines"
+          checked={settings.editor?.preserveEmptyLines ?? false}
+          onChange={handlePreserveEmptyLinesChange}
         />
       </SettingRow>
       <SettingRow icon={MoveHorizontal} label={t('settings.editor.showShiftAll')} description={t('settings.editor.showShiftAllDesc')}>

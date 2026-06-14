@@ -201,7 +201,7 @@ export default function SettingsPage() {
               <button
                 onClick={() => setSearchTerm('')}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
-                aria-label="Clear search"
+                aria-label={t('settings.clearSearch')}
               >
                 <X className="size-3" />
               </button>
@@ -237,9 +237,9 @@ export default function SettingsPage() {
           <nav className="px-2 py-3 flex flex-col gap-0.5">
             {visibleTabs.map((tab, idx) => {
               const GROUP_LABELS = {
-                account: t('settings.groups.account', 'Account'),
-                preferences: t('settings.groups.preferences', 'Preferences'),
-                advanced: t('settings.groups.advanced', 'Advanced'),
+                account: t('settings.groups.account'),
+                preferences: t('settings.groups.preferences'),
+                advanced: t('settings.groups.advanced'),
               };
               const label = t(tab.labelKey) || tab.fallback || tab.id;
               const isActive = activeTab === tab.id;
@@ -322,7 +322,7 @@ export default function SettingsPage() {
               <div className="absolute bottom-5 left-1/2 -translate-x-1/2 pointer-events-none z-20">
                 <div className="flex items-center gap-2 bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/60 rounded-2xl shadow-2xl px-4 py-2.5 pointer-events-auto animate-slide-up-fade">
                   <span className="text-xs text-zinc-400 mr-1">
-                    <span className="font-semibold text-zinc-200">{t('settings.unsavedChanges', 'Unsaved changes')}</span>
+                    <span className="font-semibold text-zinc-200">{t('settings.unsavedChanges')}</span>
                   </span>
                   <Button
                     variant="ghost"
