@@ -116,9 +116,9 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
           <AlertTriangle className="size-6 text-orange-400" />
         </div>
         <div className="flex flex-col gap-1.5">
-          <p className="text-sm font-semibold text-zinc-100">Embedding disabled</p>
+          <p className="text-sm font-semibold text-zinc-100">{t('player.embeddingDisabled')}</p>
           <p className="text-xs text-zinc-400 max-w-xs leading-relaxed">
-            This video's owner has disabled playback on external sites. No audio will play in the editor.
+            {t('player.embeddingDisabledDesc')}
           </p>
         </div>
         <div className="flex flex-col gap-2 w-full max-w-xs">

@@ -231,12 +231,16 @@ export const projectsService = {
             isStarredByMe
             metadata {
               description
+              genre
               tags
               songName
               songArtist
               songAlbum
               songYear
               albumArt
+              songLanguage
+              trackNumber
+              trackCount
             }
             user {
               id

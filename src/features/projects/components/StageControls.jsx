@@ -18,7 +18,7 @@ export default function StageControls({
   return (
     <div className="absolute top-2 right-2 z-overlay flex items-center gap-1">
       {hasFurigana && (
-        <Tip content={t('preview.furigana', 'Furigana')}>
+        <Tip content={t('preview.furigana')}>
           <Button
             variant="ghost"
             size="icon"
@@ -30,7 +30,7 @@ export default function StageControls({
         </Tip>
       )}
       {hasTranslations && (
-        <Tip content={t('preview.toggleTranslations', 'Toggle Translations')}>
+        <Tip content={t('preview.toggleTranslations')}>
           <Button
             variant="ghost"
             size="icon"

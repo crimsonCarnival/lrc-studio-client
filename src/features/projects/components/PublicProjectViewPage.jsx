@@ -1,38 +1,26 @@
-import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
+import { useRef, useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Music2, GitFork, Pencil, Star, Check } from 'lucide-react';
+const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import { SettingsProvider } from '@/features/settings/SettingsContext';
 import { TooltipProvider } from '@ui/tooltip';
 import { Spinner } from '@ui/skeleton';
-import { Button } from '@ui/button';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import Player from '@features/player/components/Player';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
-import WatchLayout from './WatchLayout';
-import MediaStage from './MediaStage';
-import LyricsStage from './LyricsStage';
-import ProjectMetaBlock from './ProjectMetaBlock';
 import { ProjectUpNextPanel } from './ProjectUpNextPanel';
 import { usePublicProject } from '../hooks/usePublicProject';
+import { useColorPalette } from '../hooks/useColorPalette';
+import { useStarredPlaylist } from '../hooks/useStarredPlaylist';
+import ImmersiveLyricsDisplay from './ImmersiveLyricsDisplay';
+import ProjectInfoPanel from './ProjectInfoPanel';
 import { getPlaylist } from '@features/playlists/playlist.service';
 import { ReactionBar } from '@features/comments/components/ReactionBar';
 import { useProjectReactions } from '@features/comments/hooks/useReactions';
+import { sectionsToFlat } from '@/features/editor/utils/sections';
 import { projects as projectsApi } from '@/app/api';
-import { BoostButton } from './BoostButton';
-import { ShareOgButton } from './ShareOgButton';
 
-/**
- * Public, read-only project view at /project/:projectId.
- *
- * Watch layout: MediaStage (blurred cover + LyricsStage) | ProjectMetaBlock | optional ProjectUpNextPanel rail.
- * Fixed player bar at the bottom; CTA strip below the AppHeader (rendered by the app shell).
- *
- * Player wiring mirrors SharedProjectViewer: the project upload is passed as
- * initialYtUrl (YouTube) or initialCloudinaryUpload (everything else), and time /
- * playback state flows back via the on* callbacks.
- */
 function PublicProjectViewPageInner() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -45,112 +33,69 @@ function PublicProjectViewPageInner() {
   const { project, loading, notFound } = usePublicProject(projectId);
   const { reactions: projectReactions, myReaction: myProjectReaction, react: reactToProject } = useProjectReactions(project?.projectId ?? null);
 
-  // ── Star state ──
-  const [isStarred, setIsStarred] = useState(false);
-  const [starCount, setStarCount] = useState(0);
+  // ── Star / Starred-playlist ──────────────────────────────────
+  // Local deltas let us apply optimistic updates while deriving base from the server response.
+  const [starredOverride, setStarredOverride] = useState(null);
+  const [starDelta, setStarDelta] = useState(0);
   const [starring, setStarring] = useState(false);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsStarred(project?.isStarredByMe ?? false);
-    setStarCount(project?.starCount ?? 0);
-  }, [project?.isStarredByMe, project?.starCount]);
+  const { addToStarred, removeFromStarred } = useStarredPlaylist(user);
 
-  // ── Player / preview state ──
+  // Derive star state — no effect needed; reset local override when the project changes
+  const isStarred = starredOverride ?? project?.isStarredByMe ?? false;
+  const starCount = (project?.starCount ?? 0) + starDelta;
+
+  // ── Player / playback state ──────────────────────────────────
   const playerRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [playbackPosition, setPlaybackPosition] = useState(0);
   const [hasMedia, setHasMedia] = useState(false);
 
-  // ── Up-next playlist ──
+  // ── Up-next playlist ─────────────────────────────────────────
   const [playlist, setPlaylist] = useState(null);
-
-  // Derive read-only data from the fetched project (no effect needed)
-  const lines = useMemo(
-    () => (project?.lyrics?.lines || []).flatMap((l) => {
-      if (l.type === 'section') {
-        return [{ type: 'section', label: l.label || '', timestamp: l.timestamp ?? null, id: crypto.randomUUID(), singers: l.singers || undefined, depth: l.depth ?? 1 }];
-      }
-      return [{
-        text: l.text || '',
-        timestamp: l.timestamp ?? null,
-        endTime: l.endTime ?? undefined,
-        secondary: l.secondary || '',
-        translations: Array.isArray(l.translations) ? l.translations : undefined,
-        singers: Array.isArray(l.singers) ? l.singers : undefined,
-        id: crypto.randomUUID(),
-        words: l.words,
-        secondaryWords: l.secondaryWords,
-      }];
-    }),
-    [project],
-  );
-  const editorMode = project?.lyrics?.editorMode || 'lrc';
-  const projectTitle = project?.metadata?.songName || project?.title || '';
-
-  const { initialYtUrl, initialCloudinaryUpload } = useMemo(() => {
-    if (project?.upload?.source === 'youtube' && project?.upload?.youtubeUrl) {
-      return { initialYtUrl: project.upload.youtubeUrl, initialCloudinaryUpload: null };
-    }
-    if (project?.upload?.cloudinaryUrl) {
-      return { initialYtUrl: '', initialCloudinaryUpload: project.upload };
-    }
-    return { initialYtUrl: '', initialCloudinaryUpload: null };
-  }, [project]);
-
-  // mediaTitle is stateful because the Player can update it via onTitleChange
-  const [mediaTitleOverride, setMediaTitle] = useState(null);
-  const mediaTitle = mediaTitleOverride ?? projectTitle;
-
-  usePageTitle(mediaTitle);
-
-  // Fetch playlist when ?list= is present
   useEffect(() => {
     if (!listId) return;
     let cancelled = false;
     getPlaylist(listId)
       .then((pl) => { if (!cancelled) setPlaylist(pl); })
-      .catch(() => { if (!cancelled) setPlaylist(null); });
+      .catch(() => {});
     return () => { cancelled = true; };
   }, [listId]);
 
-  const handleTimeUpdate = (time) => setPlaybackPosition(time);
-  const handleMediaChange = (v) => setHasMedia(v);
+  // ── Derived data ─────────────────────────────────────────────
+  const lines = useMemo(
+    () => sectionsToFlat(project?.lyrics?.sections || []).map((l) => ({ ...l, id: l.id || crypto.randomUUID() })),
+    [project],
+  );
+  const editorMode = project?.lyrics?.editorMode || 'lrc';
+  const projectTitle = project?.metadata?.songName || project?.title || '';
 
-  // ── Ownership / CTA ──
+  const initialMedia = useMemo(() => {
+    const upload = project?.upload;
+    if (!upload) return null;
+    if (upload.source === 'youtube' && upload.youtubeUrl)
+      return { type: 'youtube', url: upload.youtubeUrl };
+    if (upload.source === 'cloudinary' && upload.cloudinaryUrl)
+      return { type: 'cloudinary', id: upload.id, url: upload.cloudinaryUrl,
+               fileName: upload.fileName ?? null, title: upload.title ?? null,
+               duration: upload.duration ?? null, publicId: upload.publicId ?? null };
+    if (upload.source === 'spotify' && upload.spotifyTrackId)
+      return { type: 'spotify', id: upload.id || upload.spotifyTrackId,
+               trackId: upload.spotifyTrackId, title: upload.title || '' };
+    return null;
+  }, [project]);
+
+  const [mediaTitleOverride, setMediaTitle] = useState(null);
+  const mediaTitle = mediaTitleOverride ?? projectTitle;
+  usePageTitle(mediaTitle);
+
+  const cover = resolveCoverImage(project);
+  const palette = useColorPalette(cover);
+
+  // ── Ownership ────────────────────────────────────────────────
   const isOwner = !!(user && project?.user?.id && user.id === project.user.id);
-  const accountName = project?.user?.accountName;
 
-  const handleFork = useCallback(() => {
-    window.location.href = `/project/fork/${projectId}`;
-  }, [projectId]);
-
-  const handleStar = async () => {
-    if (!user || starring) return;
-    setStarring(true);
-    const wasStarred = isStarred;
-    setIsStarred(!wasStarred);
-    setStarCount(c => wasStarred ? Math.max(0, c - 1) : c + 1);
-    try {
-      if (wasStarred) await projectsApi.unstar(project.projectId);
-      else await projectsApi.star(project.projectId);
-    } catch {
-      setIsStarred(wasStarred);
-      setStarCount(c => wasStarred ? c + 1 : Math.max(0, c - 1));
-    } finally {
-      setStarring(false);
-    }
-  };
-
-  const handleSignUp = useCallback(() => {
-    navigate(`/auth/signup?redirect=${encodeURIComponent(`/project/${projectId}`)}`);
-  }, [navigate, projectId]);
-
-  const handleEdit = useCallback(() => {
-    navigate(`/project/${projectId}/edit`);
-  }, [navigate, projectId]);
-
-  // ── Prev / next track within the list context ──
+  // ── Prev / next within list ──────────────────────────────────
   const { prevTrack, nextTrack } = useMemo(() => {
     const items = playlist?.projects || [];
     const idx = items.findIndex((p) => p.projectId === projectId);
@@ -166,7 +111,42 @@ function PublicProjectViewPageInner() {
     navigate(`/project/${track.projectId}?list=${listId}`);
   }, [navigate, listId]);
 
-  // ── Loading ──
+  // ── Handlers ─────────────────────────────────────────────────
+  const handleStar = async () => {
+    if (!user || starring) return;
+    setStarring(true);
+    const wasStarred = isStarred;
+    setStarredOverride(!wasStarred);
+    setStarDelta((d) => wasStarred ? d - 1 : d + 1);
+    try {
+      if (wasStarred) {
+        await projectsApi.unstar(project.projectId);
+        removeFromStarred(project.projectId);
+      } else {
+        await projectsApi.star(project.projectId);
+        addToStarred(project.projectId);
+      }
+    } catch {
+      setStarredOverride(wasStarred);
+      setStarDelta((d) => wasStarred ? d + 1 : d - 1);
+    } finally {
+      setStarring(false);
+    }
+  };
+
+  const handleFork = useCallback(() => {
+    window.location.href = `/project/fork/${projectId}`;
+  }, [projectId]);
+
+  const handleEdit = useCallback(() => {
+    navigate(`/project/${projectId}/edit`);
+  }, [navigate, projectId]);
+
+  const handleSignUp = useCallback(() => {
+    navigate(`/auth/signup?redirect=${encodeURIComponent(`/project/${projectId}`)}`);
+  }, [navigate, projectId]);
+
+  // ── Loading ──────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-background">
@@ -175,102 +155,89 @@ function PublicProjectViewPageInner() {
     );
   }
 
-  // ── Not found ──
   if (notFound || !project) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 bg-background px-6 text-center">
-        <Music2 className="size-10 text-muted-foreground" />
-        <h1 className="text-xl font-semibold text-foreground">{t('projectView.notFound')}</h1>
-        <p className="text-sm text-muted-foreground">{t('projectView.notFoundSub')}</p>
-      </div>
+      <Suspense fallback={null}>
+        <NotFoundPage type="project" identifier={projectId} />
+      </Suspense>
     );
   }
 
   const meta = project.metadata || {};
-  const cover = resolveCoverImage(project);
+
+  // Palette-driven page background (transitions when navigating between projects)
+  const pageBg = palette
+    ? `linear-gradient(180deg, ${palette.bgDeep} 0%, ${palette.bg} 40%, ${palette.bgDeep} 100%)`
+    : 'hsl(var(--background))';
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-background">
-      {/* CTA banner — non-owners only, in document flow (pushes content down, no overlap) */}
-      {!isOwner && (
-        <div className="w-full flex-shrink-0 bg-card/60 border-b border-border backdrop-blur-sm">
-          <div className="flex items-center gap-3 px-4 py-2.5 max-w-7xl mx-auto w-full">
-            <p className="text-xs text-muted-foreground flex-1 min-w-0 truncate">
-              {user ? t('projectView.ctaAuth') : t('projectView.ctaGuest')}
+    <div
+      className="flex-1 flex flex-col min-h-0 overflow-hidden"
+      style={{ background: pageBg, transition: 'background 0.8s ease' }}
+    >
+      {/* ── Guest CTA strip ─────────────────────────────────── */}
+      {!user && (
+        <div
+          className="w-full flex-shrink-0"
+          style={{
+            borderBottom: `1px solid ${palette?.faded ?? 'hsl(var(--border))'}44`,
+            background: palette ? `${palette.bg}cc` : 'hsl(var(--card) / 0.6)',
+          }}
+        >
+          <div className="flex items-center gap-3 px-4 py-2.5 max-w-screen-xl mx-auto">
+            <p className="text-xs flex-1 min-w-0 truncate" style={{ color: palette?.faded ?? 'hsl(var(--muted-foreground))' }}>
+              {t('projectView.ctaGuest')}
             </p>
-            <div className="flex items-center gap-1.5 shrink-0">
-              {!user && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleSignUp}
-                  className="h-7 px-2.5 text-[11px] font-medium rounded-lg"
-                >
-                  {t('projectView.signUpButton')}
-                </Button>
-              )}
-              {user && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleStar}
-                  disabled={starring}
-                  className={`h-7 px-2.5 text-[11px] font-medium gap-1 rounded-lg ${isStarred ? 'text-yellow-400 hover:text-yellow-300' : 'text-muted-foreground'}`}
-                >
-                  <Star className={`size-3 ${isStarred ? 'fill-yellow-400' : ''}`} />
-                  {isStarred ? t('projectView.unstarButton') : t('projectView.starButton')}
-                </Button>
-              )}
-              {project.forksEnabled !== false && (
-                project.isForkedByMe ? (
-                  <span className="inline-flex items-center gap-1 h-7 px-2.5 text-[11px] font-medium rounded-lg bg-primary/10 text-primary border border-primary/20">
-                    <Check className="size-3" />
-                    {t('projectView.forkedBadge')}
-                  </span>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={handleFork}
-                    className="h-7 px-2.5 text-[11px] font-medium gap-1 rounded-lg"
-                  >
-                    <GitFork className="size-3" />
-                    {t('projectView.forkButton')}
-                  </Button>
-                )
-              )}
-              {user && !user.isGuest && project?.user?.id !== user?.id && (
-                <BoostButton projectId={project.projectId} />
-              )}
-              <ShareOgButton
-                projectId={project.projectId}
-                title={project.metadata?.songName || project.title}
-              />
-            </div>
+            <button
+              onClick={handleSignUp}
+              className="shrink-0 h-7 px-3 text-[11px] font-medium rounded-full border transition-colors"
+              style={{
+                color: palette?.fg ?? 'hsl(var(--foreground))',
+                borderColor: palette?.faded ?? 'hsl(var(--border))',
+              }}
+            >
+              {t('projectView.signUpButton')}
+            </button>
           </div>
         </div>
       )}
 
-      {/* Content area: watch layout */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        <WatchLayout
-          stage={
-            <MediaStage cover={cover}>
-              <LyricsStage
-                lines={lines}
-                playbackPosition={playbackPosition}
-                editorMode={editorMode}
-                playerRef={playerRef}
-                hasMedia={hasMedia}
-                isPlaying={isPlaying}
-                playbackSpeed={playbackSpeed}
-              />
-            </MediaStage>
-          }
-          meta={
-            <ProjectMetaBlock
+      {/* ── Main content: 2-col (lyrics | info panel) ────────── */}
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
+
+        {/* Left: immersive lyrics — ~70% on desktop, full-width on mobile */}
+        <div className="flex-1 min-h-0 flex flex-col" style={{ minHeight: '50vh' }}>
+          <ImmersiveLyricsDisplay
+            lines={lines}
+            playbackPosition={playbackPosition}
+            editorMode={editorMode}
+            playerRef={playerRef}
+            hasMedia={hasMedia}
+            isPlaying={isPlaying}
+            playbackSpeed={playbackSpeed}
+            palette={palette}
+            showTranslations
+          />
+        </div>
+
+        {/* Right: info panel — fixed width on desktop, stacked below on mobile */}
+        <div
+          className="lg:w-80 xl:w-96 lg:flex-shrink-0 overflow-y-auto"
+          style={{ scrollbarWidth: 'thin' }}
+        >
+          <div className="p-4 flex flex-col gap-4">
+            <ProjectInfoPanel
               project={project}
               cover={cover}
+              palette={palette}
+              isOwner={isOwner}
+              user={user}
+              isStarred={isStarred}
               starCount={starCount}
+              starring={starring}
+              onStar={handleStar}
+              onFork={handleFork}
+              onEdit={handleEdit}
               reactionsSlot={
                 <ReactionBar
                   reactions={projectReactions}
@@ -279,53 +246,48 @@ function PublicProjectViewPageInner() {
                   disabled={!user}
                 />
               }
-              ctaSlot={
-                isOwner ? (
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <ShareOgButton
-                      projectId={project.projectId}
-                      title={project.metadata?.songName || project.title}
-                    />
-                    <Button size="sm" onClick={handleEdit} className="h-8 px-3 text-xs font-medium gap-1 rounded-full">
-                      <Pencil className="size-3.5" />
-                      {t('projectView.editButton')}
-                    </Button>
-                  </div>
-                ) : null
-              }
+              lines={lines}
             />
-          }
-          upNext={
-            listId && playlist ? (
+
+            {/* Up-next panel (list context) */}
+            {listId && playlist && (
               <ProjectUpNextPanel
                 playlist={playlist}
                 currentProjectId={projectId}
                 listId={listId}
-                accountName={playlist.owner?.accountName || accountName}
+                accountName={playlist.owner?.accountName || project?.user?.accountName}
               />
-            ) : null
-          }
-        />
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* ── Fixed player bar ── */}
-      <div className="flex-shrink-0 w-full border-t border-border bg-card/80 backdrop-blur-md shadow-[0_-4px_24px_rgba(0,0,0,0.3)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
-          {!hasMedia && !initialYtUrl && !initialCloudinaryUpload ? (
-            <p className="text-xs text-muted-foreground text-center py-2">{t('projectView.noAudio')}</p>
-          ) : null}
+      {/* ── Fixed player bar ────────────────────────────────── */}
+      <div
+        className="flex-shrink-0 w-full"
+        style={{
+          borderTop: `1px solid ${palette?.faded ?? 'hsl(var(--border))'}44`,
+          background: palette ? `${palette.bgDeep}e0` : 'hsl(var(--card) / 0.8)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+        }}
+      >
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-3">
+          {!hasMedia && !initialMedia
+            ? <p className="text-xs text-center py-2" style={{ color: palette?.faded ?? 'hsl(var(--muted-foreground))' }}>{t('projectView.noAudio')}</p>
+            : null}
+
           <Player
             ref={playerRef}
             mediaTitle={mediaTitle}
-            onTimeUpdate={handleTimeUpdate}
+            onTimeUpdate={setPlaybackPosition}
             onPlayingChange={setIsPlaying}
             onSpeedChange={setPlaybackSpeed}
             onDurationChange={() => {}}
-            onMediaChange={handleMediaChange}
+            onMediaChange={setHasMedia}
             onYtUrlChange={() => {}}
             onTitleChange={setMediaTitle}
-            initialYtUrl={initialYtUrl}
-            initialCloudinaryUpload={initialCloudinaryUpload}
+            initialMedia={initialMedia}
             initialSeek={initialSeek}
             initialSpeed={1}
             lines={lines}
@@ -333,34 +295,32 @@ function PublicProjectViewPageInner() {
             syncMode={false}
             onCloudinaryUpload={() => {}}
             projectMetadata={meta}
-            viewerMode={true}
+            viewerMode
           />
-          {/* Prev / next track navigation when in a list context */}
+
+          {/* Prev / next in playlist context */}
           {listId && (prevTrack || nextTrack) && (
             <div className="flex items-center justify-between mt-2">
-              <Button
-                size="sm"
-                variant="ghost"
+              <button
                 disabled={!prevTrack}
                 onClick={() => goToTrack(prevTrack)}
-                className="h-7 px-2.5 text-[11px]"
+                className="h-7 px-2.5 text-[11px] disabled:opacity-30 transition-opacity"
+                style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}
               >
                 {t('projectView.prevTrack')}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
+              </button>
+              <button
                 disabled={!nextTrack}
                 onClick={() => goToTrack(nextTrack)}
-                className="h-7 px-2.5 text-[11px]"
+                className="h-7 px-2.5 text-[11px] disabled:opacity-30 transition-opacity"
+                style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}
               >
                 {t('projectView.nextTrack')}
-              </Button>
+              </button>
             </div>
           )}
         </div>
       </div>
-
     </div>
   );
 }

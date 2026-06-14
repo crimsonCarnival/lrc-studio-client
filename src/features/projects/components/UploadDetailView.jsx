@@ -71,12 +71,12 @@ export default function UploadDetailView({ onBack }) {
             onClick={onBack}
             variant="outline"
             className="size-8 sm:size-10 p-0 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700 shadow-sm"
-            aria-label={t('common.back', 'Back')}
+            aria-label={t('common.back')}
           >
             <ChevronLeft className="size-4 sm:size-5" />
           </Button>
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl sm:text-2xl font-semibold text-zinc-100 truncate tracking-tight">{media.title || media.fileName || media.youtubeUrl || t('uploads.unnamed', 'Unnamed Audio')}</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold text-zinc-100 truncate tracking-tight">{media.title || media.fileName || media.youtubeUrl || t('uploads.unnamed')}</h2>
             <div className="flex items-center gap-3 text-xs sm:text-sm text-zinc-500 mt-1.5">
               <span className="flex items-center gap-1.5">
                 <Calendar className="size-3.5" />
@@ -95,7 +95,7 @@ export default function UploadDetailView({ onBack }) {
           <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-4 sm:p-6 shadow-inner">
             <h3 className="text-sm sm:text-base font-semibold text-zinc-200 mb-4 flex items-center gap-2">
               <FileAudio className="size-4 sm:size-5 text-zinc-400" />
-              {t('uploads.details', 'Media Details')}
+              {t('uploads.details')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30">
@@ -124,7 +124,7 @@ export default function UploadDetailView({ onBack }) {
           <div>
             <h3 className="text-sm sm:text-base font-semibold text-zinc-200 mb-4 flex items-center gap-2">
               <Music2 className="size-4 sm:size-5 text-primary" />
-              {t('uploads.associatedProjects', 'Associated Projects')}
+              {t('uploads.associatedProjects')}
               <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-xs ml-1 font-medium">{media.projects?.length || 0}</span>
             </h3>
 
@@ -143,7 +143,7 @@ export default function UploadDetailView({ onBack }) {
                         <Music2 className="size-5 text-zinc-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-zinc-200 truncate group-hover:text-primary transition-colors">{project.title || t('project.untitled', 'Untitled')}</h4>
+                        <h4 className="text-sm font-semibold text-zinc-200 truncate group-hover:text-primary transition-colors">{project.title || t('project.untitled')}</h4>
                         <div className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1">
                           <Calendar className="size-3" />
                           <ClientOnlyDate date={project.updatedAt || project.createdAt} options={{ dateStyle: 'medium' }} />

@@ -5,18 +5,22 @@ const GET_PUBLIC_PROJECT = `
   query GetPublicProject($projectId: String!) {
     publicProject(projectId: $projectId) {
       id projectId title coverImage
-      metadata { description tags songName songArtist songAlbum songYear albumArt }
+      metadata { description genre tags songName songArtist songAlbum songYear albumArt songLanguage trackNumber trackCount }
       upload { id source youtubeUrl cloudinaryUrl spotifyTrackId duration coverImage }
       user { id accountName displayName avatarUrl }
       lyrics {
         editorMode language
-        lines {
-          text timestamp endTime secondary translation
-          words { word time reading }
-          secondaryWords { word time }
+        sections {
+          label depth id singers timestamp
+          lines {
+            id text timestamp endTime secondary translation
+            singers
+            words { word time reading singerIndex }
+            secondaryWords { word time }
+          }
         }
       }
-      starCount forkCount isStarredByMe isForkedByMe forksEnabled
+      starCount forkCount isStarredByMe isForkedByMe forksEnabled createdAt
       forkedFrom { projectId accountName }
     }
   }
