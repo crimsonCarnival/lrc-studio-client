@@ -67,6 +67,12 @@ function getMostRecent() {
   return accounts.length > 0 ? accounts[0] : null;
 }
 
+// Updates specific fields without touching lastUsedAt (preserves sort order).
+function patch(userId, fields) {
+  if (!userId) return;
+  saveAll(getAll().map((a) => a.userId === userId ? { ...a, ...fields } : a));
+}
+
 function clear() {
   try {
     localStorage.removeItem(ACCOUNTS_KEY);
@@ -77,6 +83,7 @@ export const rememberedAccounts = {
   migrate,
   getAll,
   upsert,
+  patch,
   remove,
   getMostRecent,
   clear,

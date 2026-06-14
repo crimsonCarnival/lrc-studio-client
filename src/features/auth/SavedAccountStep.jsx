@@ -13,33 +13,18 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
   const [errors, setErrors] = useState({});
   const { loginWithPasskey } = useAuthContext();
 
+  // Default row action: go to password (or OAuth for OAuth-only accounts).
+  // Passkey is no longer forced here even when set up — it's an explicit,
+  // opt-in button (handlePasskey) so users can always choose password instead.
   const handleLogin = async (account) => {
     const key = account.userId || account.identifier;
     setLoadingKey(key);
     setErrors((prev) => ({ ...prev, [key]: '' }));
-    
-    if (account.hasPasskey) {
-      try {
-        const user = await loginWithPasskey(account.identifier || account.accountName);
-        if (user) {
-          onPasskeySuccess();
-          return;
-        }
-        // loginWithPasskey returned null = user cancelled (NotAllowedError)
-        // Don't fall through to password in that case
-        setLoadingKey(null);
-        return;
-      } catch (err) {
-        // NotAllowedError is handled inside loginWithPasskey (returns null)
-        // Any other error: fall through to password step
-        console.warn('Passkey login failed, falling back to password', err);
-      }
-    }
 
     try {
       const identifier = account.identifier || account.accountName;
       const result = await auth.checkIdentifier(identifier);
-      
+
       // OAuth-only accounts (no password): skip the password step and
       // trigger the appropriate OAuth sign-in directly.
       if (result.hasPassword === false) {
@@ -52,7 +37,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
           return;
         }
       }
-      
+
       onProceedToPassword({ identifier, ...result });
     } catch (err) {
       setErrors((prev) => ({
@@ -60,6 +45,29 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
         [key]: translateAuthError(t, err, 'login', account.identifier),
       }));
     } finally {
+      setLoadingKey(null);
+    }
+  };
+
+  // Explicit passkey sign-in for an account that has one set up.
+  const handlePasskey = async (e, account) => {
+    e.stopPropagation();
+    const key = account.userId || account.identifier;
+    setLoadingKey(key);
+    setErrors((prev) => ({ ...prev, [key]: '' }));
+    try {
+      const user = await loginWithPasskey(account.identifier || account.accountName);
+      if (user) {
+        onPasskeySuccess();
+        return;
+      }
+      // null = user cancelled the WebAuthn prompt — stay on the picker.
+      setLoadingKey(null);
+    } catch (err) {
+      setErrors((prev) => ({
+        ...prev,
+        [key]: translateAuthError(t, err, 'login', account.identifier),
+      }));
       setLoadingKey(null);
     }
   };
@@ -96,7 +104,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
     <div className="animate-fade-in flex flex-col gap-5">
       <div>
         <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-3">
-          {t('auth.savedAccount.continueAs', 'Continue as')}
+          {t('auth.savedAccount.continueAs')}
         </p>
 
         <div className="flex flex-col gap-2">
@@ -106,53 +114,66 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
             const isLoading = loadingKey === key;
 
             return (
-              <div
-                key={key}
-                role="button"
-                tabIndex={0}
-                onClick={() => !isLoading && handleLogin(account)}
-                onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleLogin(account)}
-                className="group relative flex items-center gap-3 p-3 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/70 border border-zinc-700/40 hover:border-zinc-600/50 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
-              >
-                <AvatarBadge
-                  username={account.accountName || account.identifier}
-                  avatarUrl={account.avatarUrl}
-                  size="md"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-zinc-100 truncate">{displayName}</p>
-                  {account.accountName && account.accountName.toLowerCase() !== displayName.toLowerCase() && (
-                    <p className="text-xs text-zinc-500">@{account.accountName}</p>
-                  )}
-                  {errors[key] && (
-                    <p className="text-xs text-red-400 mt-0.5">{errors[key]}</p>
-                  )}
+              // Outer row: the account card (password/OAuth login) and, when a
+              // passkey exists, a visually separate passkey button beside it so
+              // the two actions read as distinct.
+              <div key={key} className="flex items-stretch gap-2">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => !isLoading && handleLogin(account)}
+                  onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleLogin(account)}
+                  className="group relative flex-1 min-w-0 flex items-center gap-3 p-3 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/70 border border-zinc-700/40 hover:border-zinc-600/50 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50"
+                >
+                  <AvatarBadge
+                    username={account.accountName || account.identifier}
+                    avatarUrl={account.avatarUrl}
+                    size="md"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-zinc-100 truncate">{displayName}</p>
+                    {account.accountName && account.accountName.toLowerCase() !== displayName.toLowerCase() && (
+                      <p className="text-xs text-zinc-500">@{account.accountName}</p>
+                    )}
+                    {errors[key] && (
+                      <p className="text-xs text-red-400 mt-0.5">{errors[key]}</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {isLoading ? (
+                      <Loader2 className="size-4 animate-spin text-zinc-500" />
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRemoveAccount(account.userId);
+                          }}
+                          title={t('auth.savedAccount.removeAccount')}
+                          className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 p-1 rounded-lg text-zinc-600 hover:text-zinc-300 hover:bg-zinc-700 transition-all"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                        <LogIn className="size-4 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                      </>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {isLoading ? (
-                    <Loader2 className="size-4 animate-spin text-zinc-500" />
-                  ) : (
-                    <>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveAccount(account.userId);
-                        }}
-                        title={t('auth.savedAccount.removeAccount', 'Forget this account')}
-                        className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 p-1 rounded-lg text-zinc-600 hover:text-zinc-300 hover:bg-zinc-700 transition-all"
-                      >
-                        <X className="size-3.5" />
-                      </button>
-                      {account.hasPasskey ? (
-                        <Fingerprint className="size-4 text-zinc-600 group-hover:text-primary transition-colors" />
-                      ) : (
-                        <LogIn className="size-4 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
-                      )}
-                    </>
-                  )}
-                </div>
+                {account.hasPasskey && (
+                  <button
+                    type="button"
+                    onClick={(e) => handlePasskey(e, account)}
+                    disabled={isLoading}
+                    title={t('auth.savedAccount.usePasskey')}
+                    aria-label={t('auth.savedAccount.usePasskey')}
+                    className="shrink-0 w-[52px] flex items-center justify-center rounded-xl bg-zinc-800/40 hover:bg-zinc-800/70 border border-zinc-700/40 hover:border-primary/50 text-zinc-400 hover:text-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-40 disabled:pointer-events-none"
+                  >
+                    <Fingerprint className="size-5" />
+                  </button>
+                )}
               </div>
             );
           })}
@@ -165,7 +186,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
         className="flex items-center justify-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors py-1"
       >
         <Plus className="size-3.5" />
-        {t('auth.savedAccount.addAccount', 'Add another account')}
+        {t('auth.savedAccount.addAccount')}
       </button>
 
       {savedAccounts.length > 1 && (
@@ -177,7 +198,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
           }}
           className="flex items-center justify-center gap-1.5 text-xs text-zinc-600 hover:text-red-400 transition-colors py-1"
         >
-          {t('auth.savedAccount.forgetAll', 'Forget all accounts')}
+          {t('auth.savedAccount.forgetAll')}
         </button>
       )}
     </div>

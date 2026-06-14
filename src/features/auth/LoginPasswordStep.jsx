@@ -74,7 +74,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
           </p>
           <p className="text-xs text-zinc-500 flex items-center gap-1 group-hover:text-primary transition-colors">
             <ArrowLeft className="size-3" />
-            {t('auth.notYou', 'Not you? Change account')}
+            {t('auth.notYou')}
           </p>
         </div>
       </button>
@@ -93,7 +93,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
           <div className="flex flex-col gap-1.5">
             <div className="relative">
               <div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
-                <Tip content={t('auth.tips.loginPassword', 'Your account password. Use "Forgot password?" if you can\'t remember it.')}>
+                <Tip content={t('auth.tips.loginPassword')}>
                   <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
                 </Tip>
               </div>
@@ -117,7 +117,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                   }}
                   whileTap={{ scale: 0.95 }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center text-zinc-400 hover:text-zinc-300 transition-colors rounded-lg z-10 focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
-                  aria-label={showPassword ? t('auth.hidePassword', 'Hide password') : t('auth.showPassword', 'Show password')}
+                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                 >
                   {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </m.button>
@@ -142,7 +142,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
               onClick={onSwitchToForgotPassword}
               className="text-xs lg:text-xs text-primary hover:text-primary-dim hover:underline font-semibold transition-colors text-right mt-1"
             >
-              {t('auth.forgotPassword', 'Forgot password?')}
+              {t('auth.forgotPassword')}
             </button>
           </div>
         )}
@@ -174,7 +174,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
             ) : (
               <>
                 <Fingerprint className="size-4 text-primary" />
-                {t('auth.passkeyManagement.tryPasskey', 'Sign in with Passkey or QR Code')}
+                {t('auth.passkeyManagement.tryPasskey')}
               </>
             )}
           </m.button>
@@ -185,7 +185,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
             {identifierData.hasPassword !== false && (
               <div className="flex items-center gap-3 px-8">
                 <div className="flex-1 h-px bg-zinc-800/40" />
-                <span className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.2em] leading-none">{t('common.or', 'OR')}</span>
+                <span className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.2em] leading-none">{t('common.or')}</span>
                 <div className="flex-1 h-px bg-zinc-800/40" />
               </div>
             )}

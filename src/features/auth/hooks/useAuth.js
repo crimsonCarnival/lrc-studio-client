@@ -477,6 +477,15 @@ export function useAuth() {
           setAuthFlag(true);
           setState(s => ({ ...s, user: me, loading: false }));
           scheduleRefresh();
+          // Persist for the saved-account picker — the OAuth popup path doesn't
+          // trigger restore(), so without this the account is never remembered.
+          rememberedAccounts.upsert({
+            userId: me.id,
+            accountName: me.accountName,
+            displayName: me.displayName,
+            avatarUrl: me.avatarUrl,
+            identifier: me.email || me.accountName,
+          });
           resolve(me);
         } catch (err) {
           // auth.me() failed after OAuth succeeded — cookies are set but we couldn't
@@ -541,6 +550,14 @@ export function useAuth() {
           setAuthFlag(true);
           setState(s => ({ ...s, user: me, loading: false }));
           scheduleRefresh();
+          // Persist for the saved-account picker (OAuth popup path skips restore()).
+          rememberedAccounts.upsert({
+            userId: me.id,
+            accountName: me.accountName,
+            displayName: me.displayName,
+            avatarUrl: me.avatarUrl,
+            identifier: me.email || me.accountName,
+          });
           resolve(me);
         } catch (err) {
           reject(err);

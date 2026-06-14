@@ -63,8 +63,10 @@ export default function AuthPage() {
         const identifier = account.identifier || account.accountName;
         if (!identifier) return null; // malformed entry — drop it
         try {
-          await auth.checkIdentifier(identifier);
-          return account; // still exists
+          const result = await auth.checkIdentifier(identifier);
+          const patch = { hasPasskey: result.hasPasskey, hasPassword: result.hasPassword };
+          rememberedAccounts.patch(account.userId, patch);
+          return { ...account, ...patch }; // still exists, fresh auth-method flags
         } catch (err) {
           // 404 = account no longer exists; any other error = keep the account
           // (network blip / server error should not nuke the list)
@@ -146,7 +148,7 @@ export default function AuthPage() {
       const redirectTo = searchParams.get('redirect');
       navigate(redirectTo || '/home', { replace: true });
     } else {
-      toast.error(searchParams.get('scb_msg') || t('auth.errors.spotifyLoginFailed', 'Spotify sign-in failed'));
+      toast.error(searchParams.get('scb_msg') || t('auth.errors.spotifyLoginFailed'));
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -267,7 +269,7 @@ export default function AuthPage() {
           ? redirectTo
           : '/home';
       } else {
-        toast.error(t('auth.errors.spotifyLoginFailed', 'Spotify sign-in failed. Please try again.'));
+        toast.error(t('auth.errors.spotifyLoginFailed'));
       }
     }
   }, [loginWithSpotify, handleAuthSuccess, searchParams, t]);
@@ -301,6 +303,7 @@ export default function AuthPage() {
       displayName: u?.displayName ?? identifierData.displayName,
       avatarUrl: u?.avatarUrl ?? identifierData.avatarUrl,
       hasPasskey: u?.hasPasskey ?? identifierData.hasPasskey,
+      hasPassword: identifierData.hasPassword,
     } : null;
 
     if (fromSavedAccount) {
@@ -335,6 +338,7 @@ export default function AuthPage() {
           displayName: u?.displayName ?? identifierData.displayName,
           avatarUrl: u?.avatarUrl ?? identifierData.avatarUrl,
           hasPasskey: u?.hasPasskey ?? identifierData.hasPasskey,
+          hasPassword: identifierData.hasPassword,
         });
         setSavedAccounts(rememberedAccounts.getAll());
       }
@@ -397,7 +401,7 @@ export default function AuthPage() {
           >
             <h2 className="font-heading text-zinc-100 leading-tight contrast-more:text-white"
                 style={{ fontSize: 'clamp(2rem, 3.5vw, 3rem)' }}>
-              {t('auth.tagline', 'Sync lyrics to music, your way')}
+              {t('auth.tagline')}
             </h2>
           </M.div>
 

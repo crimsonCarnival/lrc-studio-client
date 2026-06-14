@@ -27,13 +27,13 @@ export default function ChangePasswordPage() {
     setError('');
 
     if (newPassword !== confirmPassword) {
-      setError(t('auth.changePassword.errorMismatch', 'Passwords do not match'));
+      setError(t('auth.changePassword.errorMismatch'));
       setSubmitting(false);
       return;
     }
 
     if (newPassword.length < 8) {
-      setError(t('auth.changePassword.errorMinLength', 'Password must be at least 8 characters'));
+      setError(t('auth.changePassword.errorMinLength'));
       setSubmitting(false);
       return;
     }
@@ -47,8 +47,8 @@ export default function ChangePasswordPage() {
 
       setSuccess(true);
       toast.success(isSetMode 
-        ? t('auth.passwordManagement.setSuccess', 'Password set successfully')
-        : t('auth.changePassword.success', 'Password changed successfully')
+        ? t('auth.passwordManagement.setSuccess')
+        : t('auth.changePassword.success')
       );
       setTimeout(async () => {
         if (!isSetMode) {
@@ -65,7 +65,7 @@ export default function ChangePasswordPage() {
         }
       }, 2000);
     } catch (err) {
-      setError(err.message || t('common.networkError', 'Network error'));
+      setError(err.message || t('common.networkError'));
       console.error(err);
     } finally {
       setSubmitting(false);
@@ -78,15 +78,15 @@ export default function ChangePasswordPage() {
         <div className="max-w-md w-full p-8 bg-zinc-900 rounded-lg border border-zinc-800 text-center space-y-4">
           <div className="text-emerald-500 text-4xl">✓</div>
           <h1 className="text-2xl font-semibold text-zinc-100">
-            {isSetMode ? t('auth.passwordManagement.setPasswordTitle', 'Password Set') : t('auth.changePassword.success', 'Password Changed')}
+            {isSetMode ? t('auth.passwordManagement.setPasswordTitle') : t('auth.changePassword.success')}
           </h1>
           <p className="text-zinc-400">
-            {isSetMode ? t('auth.passwordManagement.setSuccessMessage', 'Your password has been set successfully.') : t('auth.changePassword.successMessage', 'Your password has been changed successfully.')}
+            {isSetMode ? t('auth.passwordManagement.setSuccessMessage') : t('auth.changePassword.successMessage')}
           </p>
           <p className="text-sm text-zinc-500">
             {isSetMode
-              ? t('auth.changePassword.redirectingBack', 'Redirecting back...')
-              : t('auth.changePassword.redirecting', 'Logging out and redirecting to login...')}
+              ? t('auth.changePassword.redirectingBack')
+              : t('auth.changePassword.redirecting')}
           </p>
         </div>
       </div>
@@ -97,12 +97,12 @@ export default function ChangePasswordPage() {
     <div className="flex items-center justify-center min-h-screen px-4">
       <div className="max-w-md w-full p-8 bg-zinc-900 rounded-lg border border-zinc-800 space-y-6">
         <h1 className="text-2xl font-semibold text-center text-zinc-100">
-          {isSetMode ? t('auth.passwordManagement.setPasswordTitle', 'Set a Password') : t('auth.changePassword.title', 'Change Password')}
+          {isSetMode ? t('auth.passwordManagement.setPasswordTitle') : t('auth.changePassword.title')}
         </h1>
 
         {isSetMode && (
           <p className="text-sm text-zinc-500 text-center">
-            {t('auth.passwordManagement.setPasswordDesc', 'Create a password so you can sign in without Google.')}
+            {t('auth.passwordManagement.setPasswordDesc')}
           </p>
         )}
 
@@ -111,7 +111,7 @@ export default function ChangePasswordPage() {
             <div>
               <input
                 type="password"
-                placeholder={t('auth.changePassword.currentPassword', 'Current Password')}
+                placeholder={t('auth.changePassword.currentPassword')}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
@@ -124,7 +124,7 @@ export default function ChangePasswordPage() {
           <div>
             <input
               type="password"
-              placeholder={t('auth.changePassword.newPassword', 'New Password')}
+              placeholder={t('auth.changePassword.newPassword')}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
@@ -137,7 +137,7 @@ export default function ChangePasswordPage() {
           <div>
             <input
               type="password"
-              placeholder={t('auth.changePassword.confirmPassword', 'Confirm Password')}
+              placeholder={t('auth.changePassword.confirmPassword')}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -146,7 +146,7 @@ export default function ChangePasswordPage() {
             />
             {confirmPassword && newPassword !== confirmPassword && (
               <p className="text-destructive text-xs font-medium mt-1">
-                {t('auth.changePassword.errorMismatch', 'Passwords do not match')}
+                {t('auth.changePassword.errorMismatch')}
               </p>
             )}
           </div>
@@ -159,8 +159,8 @@ export default function ChangePasswordPage() {
             className="w-full h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-bold text-sm rounded-xl disabled:opacity-40 transition-all duration-200 mt-1"
           >
             {submitting 
-              ? (isSetMode ? t('auth.passwordManagement.setting', 'Setting...') : t('auth.changePassword.changing', 'Changing...'))
-              : (isSetMode ? t('auth.passwordManagement.setPassword', 'Set Password') : t('auth.changePassword.button', 'Change Password'))}
+              ? (isSetMode ? t('auth.passwordManagement.setting') : t('auth.changePassword.changing'))
+              : (isSetMode ? t('auth.passwordManagement.setPassword') : t('auth.changePassword.button'))}
           </button>
         </form>
 
@@ -174,7 +174,7 @@ export default function ChangePasswordPage() {
           }}
           className="w-full text-center text-zinc-400 hover:text-zinc-300 text-sm"
         >
-          {fromPasswordReset ? t('common.backToHome', 'Back to home') : t('common.goBack', 'Go back')}
+          {fromPasswordReset ? t('common.backToHome') : t('common.goBack')}
         </button>
       </div>
     </div>

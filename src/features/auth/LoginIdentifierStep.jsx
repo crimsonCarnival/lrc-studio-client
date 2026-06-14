@@ -118,7 +118,7 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
 
           <div className="flex items-center gap-3 px-8">
             <div className="flex-1 h-px bg-zinc-800/40" />
-            <span className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.2em] leading-none">{t('common.or', 'OR')}</span>
+            <span className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.2em] leading-none">{t('common.or')}</span>
             <div className="flex-1 h-px bg-zinc-800/40" />
           </div>
 

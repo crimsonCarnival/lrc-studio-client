@@ -204,8 +204,8 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
         </h1>
         <p className="text-sm text-zinc-500 mt-1">
           {step === 1
-            ? t('auth.registerSubtitle', 'Choose a display name to get started.')
-            : t('auth.registerSubtitleStep2', 'Add your email and a secure password.')}
+            ? t('auth.registerSubtitle')
+            : t('auth.registerSubtitleStep2')}
         </p>
       </div>
 
@@ -238,14 +238,14 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             <div className="flex flex-col gap-1.5">
               <div className="relative">
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
-                  <Tip content={t('auth.tips.displayName', 'Your public name — shown in credits and on your profile. Can include spaces, emojis, and Unicode.')}>
+                  <Tip content={t('auth.tips.displayName')}>
                     <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
                   </Tip>
                 </div>
                 <FloatingInput
                   id="reg-displayName"
                   type="text"
-                  label={t('auth.displayName', 'Display name')}
+                  label={t('auth.displayName')}
                   value={displayName}
                   onChange={handleDisplayNameChange}
                   autoComplete="name"
@@ -271,11 +271,11 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                     onChange={handleAccountNameChange}
                     autoComplete="username"
                     maxLength={30}
-                    placeholder={t('auth.accountNamePlaceholder', 'handle (optional)')}
+                    placeholder={t('auth.accountNamePlaceholder')}
                     className="w-full h-12 bg-transparent px-3 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none"
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
-                    <Tip content={t('auth.tips.accountName', 'Your unique handle — used in profile URLs and @mentions. Lowercase letters, numbers, _ and - only. Auto-generated from your display name, but you can customize it.')}>
+                    <Tip content={t('auth.tips.accountName')}>
                       <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
                     </Tip>
                   </div>
@@ -284,7 +284,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
               {fieldErrors.accountName
                 ? <FieldError message={fieldErrors.accountName} />
                 : accountName && (
-                  <p className="text-[11px] text-zinc-600 ml-1">{t('auth.accountNameHint', 'Used for URLs and mentions. Lowercase, 3–30 chars.')}</p>
+                  <p className="text-[11px] text-zinc-600 ml-1">{t('auth.accountNameHint')}</p>
                 )}
             </div>
 
@@ -293,7 +293,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
               whileTap={{ scale: 0.98 }}
               className={`h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-base lg:text-sm rounded-xl transition-all duration-200 mt-2 flex items-center justify-center gap-2 ${focusRingCls}`}
             >
-              {t('auth.continue', 'Continue')}
+              {t('auth.continue')}
               <ArrowRight className="size-4" />
             </M.button>
 
@@ -306,7 +306,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
               </p>
               <div className="flex items-center gap-3 px-8">
                 <div className="flex-1 h-px bg-zinc-800/40" />
-                <span className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.2em] leading-none">{t('common.or', 'OR')}</span>
+                <span className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.2em] leading-none">{t('common.or')}</span>
                 <div className="flex-1 h-px bg-zinc-800/40" />
               </div>
               <GoogleButton onClick={onGoogleLogin} t={t} />
@@ -317,7 +317,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                 className="group flex items-center justify-center gap-2 py-1 text-xs font-semibold text-zinc-500 hover:text-primary transition-all duration-300"
               >
                 <Zap className="size-3.5 text-zinc-600 group-hover:text-primary group-hover:fill-primary/20 transition-all" />
-                {t('auth.guestMode', 'Continue as Guest')}
+                {t('auth.guestMode')}
               </button>
             </div>
           </M.form>
@@ -337,7 +337,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             <div className="flex flex-col gap-1.5">
               <div className="relative">
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
-                  <Tip content={t('auth.tips.email', 'Used for sign-in and account recovery. Optional if you set a handle — but strongly recommended.')}>
+                  <Tip content={t('auth.tips.email')}>
                     <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
                   </Tip>
                 </div>
@@ -359,7 +359,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             <div className="flex flex-col gap-1.5">
               <div className="relative">
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1">
-                  <Tip content={t('auth.tips.password', 'Minimum 8 characters. Use a mix of letters, numbers, and symbols for a stronger password.')}>
+                  <Tip content={t('auth.tips.password')}>
                     <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
                   </Tip>
                   {password && (
@@ -368,7 +368,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                       onClick={() => { haptic('light'); setShowPassword(!showPassword); }}
                       whileTap={{ scale: 0.95 }}
                       className={`h-9 w-9 flex items-center justify-center text-zinc-400 hover:text-zinc-300 transition-colors rounded-lg ${focusRingCls}`}
-                      aria-label={showPassword ? t('auth.hidePassword', 'Hide password') : t('auth.showPassword', 'Show password')}
+                      aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                     >
                       {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                     </M.button>
@@ -393,7 +393,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             <div className="flex flex-col gap-1.5">
               <div className="relative">
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1">
-                  <Tip content={t('auth.tips.confirmPassword', 'Re-enter your password to make sure it matches.')}>
+                  <Tip content={t('auth.tips.confirmPassword')}>
                     <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
                   </Tip>
                   {confirmPassword && (
@@ -410,7 +410,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                 <FloatingInput
                   id="reg-confirm-password"
                   type={showConfirm ? 'text' : 'password'}
-                  label={t('auth.confirmPassword', 'Confirm password')}
+                  label={t('auth.confirmPassword')}
                   value={confirmPassword}
                   onChange={(e) => { setConfirmPassword(e.target.value); setFieldErrors(p => ({ ...p, confirmPassword: undefined })); }}
                   autoComplete="new-password"
@@ -441,7 +441,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                       <M.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}
                         className="size-4 border-2 border-white/30 border-t-white rounded-full"
                       />
-                      <span>{t('auth.registerActionLoading', 'Creating account...')}</span>
+                      <span>{t('auth.registerActionLoading')}</span>
                     </div>
                   )
                   : t('auth.registerAction')

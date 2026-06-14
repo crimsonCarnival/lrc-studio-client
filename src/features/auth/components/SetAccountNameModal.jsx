@@ -116,10 +116,10 @@ export default function SetAccountNameModal() {
                 <User className="size-6 text-primary" />
               </div>
               <h2 className="text-xl font-bold text-zinc-100 font-sans tracking-tight mb-2">
-                {t('auth.setAccountName.title', 'Choose your username')}
+                {t('auth.setAccountName.title')}
               </h2>
               <p className="text-sm text-zinc-400 font-sans">
-                {t('auth.setAccountName.subtitle', 'We generated a username for you, but you can change it now.')}
+                {t('auth.setAccountName.subtitle')}
               </p>
             </div>
 
@@ -129,7 +129,7 @@ export default function SetAccountNameModal() {
                   ref={inputRef}
                   id="account-name"
                   type="text"
-                  label={t('auth.accountName', 'Account Name')}
+                  label={t('auth.accountName')}
                   value={accountName}
                   onChange={(e) => {
                     setAccountName(e.target.value);
@@ -146,7 +146,7 @@ export default function SetAccountNameModal() {
                   </div>
                 ) : (
                   <p className="text-xs text-zinc-500 ml-1 mt-1">
-                    {t('auth.setAccountName.hint', 'Only letters, numbers, dashes, and underscores. 3-30 characters.')}
+                    {t('auth.setAccountName.hint')}
                   </p>
                 )}
               </div>
@@ -159,7 +159,7 @@ export default function SetAccountNameModal() {
                   disabled={loading}
                   className="sm:w-1/3 h-11 text-zinc-400 hover:text-zinc-200"
                 >
-                  {t('auth.setAccountName.keepGenerated', 'Keep This')}
+                  {t('auth.setAccountName.keepGenerated')}
                 </Button>
                 <Button
                   type="submit"
@@ -170,7 +170,7 @@ export default function SetAccountNameModal() {
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
                     <>
-                      {t('auth.setAccountName.saveUsername', 'Save Username')}
+                      {t('auth.setAccountName.saveUsername')}
                       <ArrowRight className="size-4 ml-1.5" />
                     </>
                   )}

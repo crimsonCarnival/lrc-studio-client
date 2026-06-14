@@ -143,18 +143,18 @@ export function RedirectMessage({ from, t }) {
 
   switch(from) {
     case 'logout':
-      message = t('auth.message.logout', 'You have been signed out successfully.');
+      message = t('auth.message.logout');
       break;
     case 'session-expiration':
-      message = t('auth.message.sessionExpired', 'Your session has expired. Please sign in again.');
+      message = t('auth.message.sessionExpired');
       variant = 'warning';
       break;
     case 'banned':
-      message = t('auth.message.banned', 'Your account has been restricted. Please contact support.');
+      message = t('auth.message.banned');
       variant = 'danger';
       break;
     case 'unauthorized':
-      message = t('auth.message.unauthorized', 'Please sign in to access this page.');
+      message = t('auth.message.unauthorized');
       break;
     default:
       return null;
@@ -217,7 +217,7 @@ export function SpotifyButton({ onClick, t, loading = false }) {
           <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
         </svg>
       )}
-      {t('auth.spotifyContinue', 'Continue with Spotify')}
+      {t('auth.spotifyContinue')}
     </button>
   );
 }
@@ -235,20 +235,20 @@ export function ContextBanner({ redirect, t }) {
 
     if (displayPath.startsWith('/project/')) {
       const id = displayPath.split('/').pop();
-      displayPath = id === 'new' ? t('auth.context.newProject', 'New Project') : t('auth.context.project', 'Project');
+      displayPath = id === 'new' ? t('auth.context.newProject') : t('auth.context.project');
     } else if (displayPath === '/library') {
-      displayPath = t('auth.context.library', 'Your Library');
+      displayPath = t('auth.context.library');
     } else if (displayPath === '/home') {
-      displayPath = t('auth.context.home', 'Home');
+      displayPath = t('auth.context.home');
     } else if (displayPath === '/settings') {
-      displayPath = t('auth.context.settings', 'Settings');
+      displayPath = t('auth.context.settings');
     } else if (displayPath === '/change-password') {
-      displayPath = t('auth.context.changePassword', 'Change Password');
+      displayPath = t('auth.context.changePassword');
     } else {
-      displayPath = t('auth.context.app', 'LRC Studio');
+      displayPath = t('auth.context.app');
     }
   } catch {
-    displayPath = t('auth.context.app', 'LRC Studio');
+    displayPath = t('auth.context.app');
   }
 
   return (
@@ -258,7 +258,7 @@ export function ContextBanner({ redirect, t }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[10px] uppercase tracking-wider font-bold text-zinc-500 leading-none">
-          {t('auth.context.continuingTo', 'Continuing to')}
+          {t('auth.context.continuingTo')}
         </p>
         <p className="text-xs font-semibold text-zinc-300 truncate mt-0.5">
           {displayPath}

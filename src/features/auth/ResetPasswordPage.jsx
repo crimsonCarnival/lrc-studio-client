@@ -58,7 +58,7 @@ export default function ResetPasswordPage() {
     setError('');
 
     if (newPassword !== confirmPassword) {
-      setError(t('auth.resetPassword.passwordMismatch', 'Passwords do not match'));
+      setError(t('auth.resetPassword.passwordMismatch'));
       setSubmitting(false);
       return;
     }
@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
       });
 
       setSuccess(true);
-      toast.success(t('auth.resetPassword.success', 'Password reset successfully'));
+      toast.success(t('auth.resetPassword.success'));
       setTimeout(async () => {
         await logout();
         navigate('/login');
@@ -89,7 +89,7 @@ export default function ResetPasswordPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full size-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-zinc-400">{t('auth.resetPassword.validating', 'Validating reset link...')}</p>
+          <p className="mt-4 text-zinc-400">{t('auth.resetPassword.validating')}</p>
         </div>
       </div>
     );
@@ -100,17 +100,17 @@ export default function ResetPasswordPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="max-w-md w-full p-8 bg-zinc-900 rounded-lg border border-zinc-800 text-center space-y-4">
           <div className="text-destructive text-4xl">✕</div>
-          <h1 className="text-2xl font-semibold text-zinc-100">{t('auth.resetPassword.errorExpired', 'Reset Link Expired')}</h1>
+          <h1 className="text-2xl font-semibold text-zinc-100">{t('auth.resetPassword.errorExpired')}</h1>
           <p className="text-zinc-400">
             {tokenReason === 'expired'
-              ? t('auth.resetPassword.errorInvalid', 'This reset link has expired. Request a new one.')
-              : t('auth.resetPassword.errorAlreadyUsed', 'Invalid or already used reset link.')}
+              ? t('auth.resetPassword.errorInvalid')
+              : t('auth.resetPassword.errorAlreadyUsed')}
           </p>
           <button
             onClick={() => navigate('/auth?tab=forgot')}
             className="w-full py-2 bg-primary hover:bg-primary-dim text-zinc-950 font-medium rounded"
           >
-            {t('auth.resetPassword.requestNewLink', 'Request New Link')}
+            {t('auth.resetPassword.requestNewLink')}
           </button>
         </div>
       </div>
@@ -122,9 +122,9 @@ export default function ResetPasswordPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="max-w-md w-full p-8 bg-zinc-900 rounded-lg border border-zinc-800 text-center space-y-4">
           <div className="text-emerald-500 text-4xl">✓</div>
-          <h1 className="text-2xl font-semibold text-zinc-100">{t('auth.resetPassword.success', 'Password Reset')}</h1>
-          <p className="text-zinc-400">{t('auth.resetPassword.successMessage', 'Your password has been reset successfully.')}</p>
-          <p className="text-sm text-zinc-500">{t('auth.resetPassword.redirecting', 'Redirecting to login...')}</p>
+          <h1 className="text-2xl font-semibold text-zinc-100">{t('auth.resetPassword.success')}</h1>
+          <p className="text-zinc-400">{t('auth.resetPassword.successMessage')}</p>
+          <p className="text-sm text-zinc-500">{t('auth.resetPassword.redirecting')}</p>
         </div>
       </div>
     );
@@ -133,7 +133,7 @@ export default function ResetPasswordPage() {
   return (
     <div className="flex items-center justify-center min-h-screen px-4">
       <div className="max-w-md w-full p-6 lg:p-8 bg-zinc-900 rounded-lg border border-zinc-800 space-y-6">
-        <h1 className="text-2xl lg:text-xl font-semibold text-center text-zinc-100">{t('auth.resetPassword.title', 'Reset Password')}</h1>
+        <h1 className="text-2xl lg:text-xl font-semibold text-center text-zinc-100">{t('auth.resetPassword.title')}</h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
@@ -148,7 +148,7 @@ export default function ResetPasswordPage() {
           <div>
             <input
               type="password"
-              placeholder={t('auth.resetPassword.newPassword', 'New Password')}
+              placeholder={t('auth.resetPassword.newPassword')}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
@@ -161,7 +161,7 @@ export default function ResetPasswordPage() {
           <div>
             <input
               type="password"
-              placeholder={t('auth.resetPassword.confirmPassword', 'Confirm Password')}
+              placeholder={t('auth.resetPassword.confirmPassword')}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -177,7 +177,7 @@ export default function ResetPasswordPage() {
                   transition={{ duration: 0.2 }}
                   className="text-destructive text-xs font-medium mt-1"
                 >
-                  {t('auth.resetPassword.passwordMismatch', 'Passwords do not match')}
+                  {t('auth.resetPassword.passwordMismatch')}
                 </motion.p>
               )}
             </AnimatePresence>
@@ -210,10 +210,10 @@ export default function ResetPasswordPage() {
                   transition={{ duration: 1, repeat: Infinity }}
                   className="size-4 border-2 border-white/30 border-t-white rounded-full"
                 />
-                <span>{t('auth.resetPassword.sendingLink', 'Sending reset link...')}</span>
+                <span>{t('auth.resetPassword.sendingLink')}</span>
               </div>
             ) : (
-              t('auth.resetPassword.button', 'Reset Password')
+              t('auth.resetPassword.button')
             )}
           </motion.button>
         </form>
@@ -222,7 +222,7 @@ export default function ResetPasswordPage() {
           onClick={() => navigate('/login')}
           className="w-full text-center text-zinc-400 hover:text-zinc-300 text-sm lg:text-xs"
         >
-          {t('auth.resetPassword.backToLogin', 'Back to login')}
+          {t('auth.resetPassword.backToLogin')}
         </button>
       </div>
     </div>

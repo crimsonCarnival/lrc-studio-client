@@ -19,16 +19,16 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
     try {
       const success = await registerPasskey();
       if (success) {
-        toast.success(t('auth.passkey.created', 'Passkey created successfully!'));
+        toast.success(t('auth.passkey.created'));
         onPasskeySuccess(); // Save info and proceed
       }
     } catch (err) {
       if (err.code === 'email_not_verified') {
-        toast.error(t('auth.passkey.emailNotVerified', 'Please verify your email before adding a passkey.'));
+        toast.error(t('auth.passkey.emailNotVerified'));
         onSkip();
         navigate('/settings');
       } else {
-        toast.error(t('auth.passkey.createFailed', 'Failed to create passkey.'));
+        toast.error(t('auth.passkey.createFailed'));
       }
     } finally {
       setLoading(false);
@@ -52,8 +52,8 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
       </div>
 
       <div className="flex flex-col items-center gap-1.5 text-center">
-        <p className="text-base font-semibold text-zinc-100">{t('auth.savedAccount.prompt', 'Create a Passkey')}</p>
-        <p className="text-xs text-zinc-500 leading-relaxed max-w-[240px]">{t('auth.savedAccount.promptSub', 'Sign in securely with your device\'s fingerprint, face, or screen lock.')}</p>
+        <p className="text-base font-semibold text-zinc-100">{t('auth.savedAccount.prompt')}</p>
+        <p className="text-xs text-zinc-500 leading-relaxed max-w-[240px]">{t('auth.savedAccount.promptSub')}</p>
       </div>
 
       <div className="w-full flex flex-col gap-2">
@@ -63,7 +63,7 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
           className="h-11 w-full bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-sm rounded-xl gap-2"
         >
           {loading ? <Loader2 className="size-4 animate-spin" /> : <Fingerprint className="size-4" />}
-          {t('auth.savedAccount.createPasskey', 'Create Passkey')}
+          {t('auth.savedAccount.createPasskey')}
         </Button>
         <Button
           onClick={onSave}
@@ -72,7 +72,7 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
           className="h-11 w-full border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800/50 font-normal text-sm rounded-xl gap-2"
         >
           <Check className="size-4" />
-          {t('auth.savedAccount.save', 'Save login info only')}
+          {t('auth.savedAccount.save')}
         </Button>
         <Button
           variant="ghost"
@@ -81,7 +81,7 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
           className="h-11 w-full text-zinc-500 hover:text-zinc-300 font-normal text-sm rounded-xl gap-2 mt-1"
         >
           <X className="size-4" />
-          {t('auth.savedAccount.skip', 'Not now')}
+          {t('auth.savedAccount.skip')}
         </Button>
       </div>
     </div>

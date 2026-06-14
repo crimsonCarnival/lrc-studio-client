@@ -78,16 +78,16 @@ export default function ForgotPasswordTab({ onBackToLogin }) {
           className="flex items-center gap-2 mb-6 text-sm font-semibold text-zinc-500 hover:text-primary transition-colors"
         >
           <ArrowLeft className="size-4" />
-          {t('auth.backToLogin', 'Back to login')}
+          {t('auth.backToLogin')}
         </button>
       )}
 
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight font-heading">
-          {t('auth.forgotPasswordForm.title', 'Reset your password')}
+          {t('auth.forgotPasswordForm.title')}
         </h1>
         <p className="text-sm text-zinc-500 mt-1.5">
-          {t('auth.forgotPasswordForm.subtitle', 'Enter your email address and we\'ll send you a link to reset your password.')}
+          {t('auth.forgotPasswordForm.subtitle')}
         </p>
       </div>
 
@@ -95,7 +95,7 @@ export default function ForgotPasswordTab({ onBackToLogin }) {
         <div className="flex flex-col gap-1.5">
           <input
             type="email"
-            placeholder={t('auth.forgotPasswordForm.placeholder', 'Email')}
+            placeholder={t('auth.forgotPasswordForm.placeholder')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -110,7 +110,7 @@ export default function ForgotPasswordTab({ onBackToLogin }) {
           disabled={loading || !email}
           className="h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-bold text-sm rounded-xl disabled:opacity-40 transition-all duration-200"
         >
-          {loading ? t('auth.forgotPasswordForm.sending', 'Sending...') : t('auth.forgotPasswordForm.button', 'Send Reset Link')}
+          {loading ? t('auth.forgotPasswordForm.sending') : t('auth.forgotPasswordForm.button')}
         </button>
       </form>
     </div>
