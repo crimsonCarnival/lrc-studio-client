@@ -70,6 +70,8 @@ const EditorLineItem = React.memo(({
   handleSaveLineText,
   handleInsertSection,
   onToggleDepth,
+  handleMoveToSection,
+  sectionLines,
   handleAssignSinger,
   songArtists,
   projectSingers,
@@ -267,11 +269,10 @@ const EditorLineItem = React.memo(({
       >
         <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/50'}`} />
         {isEditing ? (
-          <div className="flex items-center gap-1.5" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
+          <div className="flex items-start gap-1.5" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
             <SectionPickerDropdown
               value={editingText}
               onChange={(v) => setEditingText(v)}
-              projectSingers={projectSingers}
             />
             {editingSingers.map((singerVal, idx) => {
               const isFilled = !!singerVal;
@@ -314,19 +315,19 @@ const EditorLineItem = React.memo(({
         <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/50'}`} />
         {selectedLines.size === 0 && (
           <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-            <Tip content={isRoot ? t('editor.sections.demote', 'Demote to regular section') : t('editor.sections.promote', 'Promote to Part')}>
+            <Tip content={isRoot ? t('editor.sections.demote') : t('editor.sections.promote')}>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onToggleDepth?.(i); }}
                 className="text-zinc-600 hover:text-primary text-xs px-1"
               >{isRoot ? '⇲' : '⇱'}</button>
             </Tip>
-            <Tip content={t('editor.deleteSection', 'Delete section')}>
+            <Tip content={t('editor.deleteSection')}>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); handleDeleteLine(i); }}
                 className="text-zinc-600 hover:text-zinc-400 text-xs px-1"
-                aria-label={t('editor.deleteSection', 'Delete section')}
+                aria-label={t('editor.deleteSection')}
               >✕</button>
             </Tip>
           </div>
@@ -394,7 +395,7 @@ const EditorLineItem = React.memo(({
       )}
       {/* Drag Handle & Line number */}
       <div className="flex items-center gap-1 shrink-0">
-        <Tip content={t('editor.dragToReorder', 'Drag to reorder')}>
+        <Tip content={t('editor.dragToReorder')}>
           <div
             className="cursor-grab active:cursor-grabbing text-zinc-800 hover:text-zinc-500 transition-colors p-0.5 -ml-1 select-none"
           >
@@ -493,16 +494,6 @@ const EditorLineItem = React.memo(({
         )}
       </span>
 
-      {/* Singer badges — compact numbered chips with tooltip showing name */}
-      {getSingers(line).map((name, idx) => (
-        <Tip key={idx} content={name}>
-          <span
-            className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full border leading-none cursor-default ${SINGER_BADGE_COLORS[idx] || SINGER_BADGE_COLORS[0]}`}
-          >
-            {idx + 1}
-          </span>
-        </Tip>
-      ))}
 
       {/* Lyrics text container */}
       <div
@@ -571,6 +562,8 @@ const EditorLineItem = React.memo(({
         setEditingSingers={setEditingSingers}
         serializeToRubyMarkup={serializeToRubyMarkup}
         handleInsertSection={handleInsertSection}
+        handleMoveToSection={handleMoveToSection}
+        sectionLines={sectionLines}
         handleAssignSinger={handleAssignSinger}
         songArtists={songArtists}
         handleMark={handleMark}

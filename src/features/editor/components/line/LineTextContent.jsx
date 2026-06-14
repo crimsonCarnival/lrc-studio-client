@@ -41,6 +41,16 @@ const LineTextContent = React.memo(({
 
   const hasSingerSplit = line.singers?.length >= 2 && handleCycleWordSinger;
 
+  // Single-singer lines: always inherit singer color regardless of whether a words array exists
+  const lineColorClass = (() => {
+    if (line.singers?.length === 1) {
+      return isActive ? `${WORD_SINGER_COLORS[0]} font-medium` : WORD_SINGER_COLORS[0];
+    }
+    if (isActive) return 'text-zinc-100 font-medium';
+    if (isSynced) return line.words?.some(w => w.time != null) ? 'text-zinc-300' : 'text-zinc-100';
+    return 'text-zinc-500';
+  })();
+
   return (
     <div className={`flex flex-col gap-1 group/text min-w-0 w-full ${editorMode === 'words' ? 'pt-0.5' : ''}`}>
       {hasSingerSplit && (
@@ -70,12 +80,7 @@ const LineTextContent = React.memo(({
       )}
       <div className="flex items-center gap-2">
         <p
-          className={`text-[13px] lg:text-xs transition-all duration-300 ease-out ${(line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null))) ? 'overflow-hidden' : 'break-words whitespace-pre-wrap'} ${isActive
-            ? 'text-zinc-100 font-medium'
-            : isSynced
-              ? line.words?.some(w => w.time != null) ? 'text-zinc-300' : 'text-zinc-100'
-              : 'text-zinc-500'
-            }`}
+          className={`text-[13px] lg:text-xs transition-all duration-300 ease-out ${(line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null))) ? 'overflow-hidden' : 'break-words whitespace-pre-wrap'} ${lineColorClass}`}
           style={(line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null)))
             ? { lineHeight: '2.4' }
             : { lineHeight: '1.6' }}
@@ -92,7 +97,7 @@ const LineTextContent = React.memo(({
               const fmtR = (r) => r ? (rubyFmt === 'katakana' ? toKatakana(r) : toHiragana(r)) : r;
               const trailingSpace = /[a-zA-Z0-9]/.test(w.word) ? ' ' : null;
 
-              const wordSingerIdx = w.singerIndex ?? null;
+              const wordSingerIdx = w.singerIndex ?? (line.singers?.length === 1 ? 0 : null);
               const singerColorClass = wordSingerIdx !== null ? (WORD_SINGER_COLORS[wordSingerIdx] || '') : '';
 
               const spanClass = editorMode === 'words'
@@ -102,7 +107,7 @@ const LineTextContent = React.memo(({
                     ? wordSingerIdx !== null ? '' : 'text-primary/70 hover:bg-zinc-800'
                     : isActive || isSynced ? wordSingerIdx !== null ? '' : 'text-zinc-100 hover:bg-zinc-800' : 'hover:bg-zinc-800'
                 }`
-                : `transition-colors px-0.5 rounded ${canHaveReading ? 'hover:bg-white/5' : ''}`;
+                : `transition-colors px-0.5 rounded ${singerColorClass} ${canHaveReading ? 'hover:bg-white/5' : ''}`;
 
               const content = (
                 <span className={spanClass}>
@@ -224,7 +229,7 @@ const LineTextContent = React.memo(({
                   }, []);
 
                 return displayWords.map((w, wi) => {
-                  const wordSingerIdx = w.singerIndex ?? null;
+                  const wordSingerIdx = w.singerIndex ?? (line.singers?.length === 1 ? 0 : null);
                   const singerColorClass = wordSingerIdx !== null ? (WORD_SINGER_COLORS[wordSingerIdx] || '') : '';
                   return (
                     <Tip key={wi} content={activePaintSinger !== null ? t('editor.clickToPaintSinger') : t('editor.rightClickToAssignSinger')}>

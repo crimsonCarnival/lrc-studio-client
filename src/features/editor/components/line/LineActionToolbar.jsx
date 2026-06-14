@@ -32,6 +32,8 @@ const LineActionToolbar = React.memo(({
   activeWordIndex,
   focusedTimestamp,
   handleInsertSection,
+  handleMoveToSection,
+  sectionLines,
   handleAssignSinger,
   songArtists,
 }) => {
@@ -199,6 +201,8 @@ const LineActionToolbar = React.memo(({
                 handleAddLine={handleAddLine}
                 handleClearLine={handleClearLine}
                 handleDeleteLine={handleDeleteLine}
+                handleMoveToSection={handleMoveToSection}
+                sectionLines={sectionLines}
               />
             ) : (
               <Button
@@ -234,7 +238,7 @@ function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }) 
   if (!handleAssignSinger) return null;
 
   const ROLE_LABELS = [
-    { label: t('editor.singer', 'Singer 1'), className: '' },
+    { label: t('editor.singer'), className: '' },
     { label: t('editor.singerN', 'Singer {{n}}', { n: 2 }), className: 'italic' },
     { label: t('editor.singerN', 'Singer {{n}}', { n: 3 }), className: 'font-bold' },
     { label: t('editor.singerN', 'Singer {{n}}', { n: 4 }), className: 'font-bold italic' },
@@ -292,7 +296,7 @@ function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }) 
             <button type="button" onClick={() => { if (custom.trim()) assignName(custom.trim()); }} className="px-2 py-1 rounded bg-primary/20 text-primary text-xs hover:bg-primary/30">✓</button>
           </div>
           <button type="button" onClick={() => { handleAssignSinger('', indices, selectedSlot); setOpen(false); }} className="w-full text-left px-3 py-1.5 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400 text-[10px]">
-            {t('editor.clearSingers', 'Clear singers')}
+            {t('editor.clearSingers')}
           </button>
         </div>
       )}

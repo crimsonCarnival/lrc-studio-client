@@ -12,6 +12,7 @@ import ActionDrawer, { DrawerItem } from '@/shared/ui/ActionDrawer';
 import { Play, X, Pencil, Trash2, Eraser } from 'lucide-react';
 import { formatTime } from '@/shared/utils/format-time';
 import { hasKanji } from '@/shared/utils/furigana';
+import { splitArtists } from '@/shared/utils/lrc';
 
 const EMPTY_ARTISTS = [];
 
@@ -41,6 +42,7 @@ export default function Editor({
   compact,
   onNewProject,
   onShowKeyboardHelp,
+  onOpenProjectSettings,
   registerAfterSave,
   songArtists = EMPTY_ARTISTS,
 }) {
@@ -61,6 +63,7 @@ export default function Editor({
     setEditingSingers,
     handleInsertSection,
     handleToggleSectionDepth,
+    handleMoveToSection,
     handleAssignSinger,
     handleCycleWordSinger,
     handleSetWordSinger,
@@ -141,7 +144,13 @@ export default function Editor({
   }, [registerAfterSave, clearModifiedLines]);
 
   const combinedSingers = useMemo(() => {
-    const singersSet = new Set(songArtists || EMPTY_ARTISTS);
+    const singersSet = new Set();
+    // Split each artist entry in case any contain comma/feat separators (e.g. old data or Spotify joins)
+    for (const artist of songArtists || EMPTY_ARTISTS) {
+      for (const name of splitArtists(artist)) {
+        if (name) singersSet.add(name);
+      }
+    }
     (lines || []).forEach(line => {
       if (line.singers) {
         line.singers.forEach(s => {
@@ -208,6 +217,7 @@ export default function Editor({
         overlappingLines={overlappingLines}
         onNewProject={onNewProject}
         onShowKeyboardHelp={onShowKeyboardHelp}
+        onOpenProjectSettings={onOpenProjectSettings}
         activeLineIndex={activeLineIndex}
         activeWordIndex={activeWordIndex}
         stampTarget={stampTarget}
@@ -267,6 +277,7 @@ export default function Editor({
           handleSaveLineText={handleSaveLineText}
           handleInsertSection={handleInsertSection}
           handleToggleSectionDepth={handleToggleSectionDepth}
+          handleMoveToSection={handleMoveToSection}
           handleAssignSinger={handleAssignSinger}
           songArtists={combinedSingers}
           playerRef={playerRef}
@@ -469,6 +480,7 @@ function VirtualizedLineList({
   handleSaveLineText,
   handleInsertSection,
   handleToggleSectionDepth,
+  handleMoveToSection,
   handleAssignSinger,
   songArtists,
   playerRef,
@@ -579,13 +591,19 @@ function VirtualizedLineList({
     };
   }, [editingLineIndex, virtualizer]);
 
+  // Keep a stable ref to the latest scroll callback so the effect below doesn't
+  // need it in deps (avoids re-firing when virtualizer identity changes).
+  const prevActiveRefRef = useRef(prevActiveRef);
+  prevActiveRefRef.current = prevActiveRef;
+
   // Scroll when active line changes (not on hover)
-  const lastScrolledIndex = useMemo(() => ({ current: -1 }), []);
-  if (activeLineIndex !== lastScrolledIndex.current && activeLineIndex >= 0) {
-    lastScrolledIndex.current = activeLineIndex;
-    // Use queueMicrotask so the virtualizer has measured before scrolling
-    queueMicrotask(() => prevActiveRef(activeLineIndex));
-  }
+  const lastScrolledIndex = useRef(-1);
+  useEffect(() => {
+    if (activeLineIndex >= 0 && activeLineIndex !== lastScrolledIndex.current) {
+      lastScrolledIndex.current = activeLineIndex;
+      prevActiveRefRef.current(activeLineIndex);
+    }
+  }, [activeLineIndex]);
 
   // Pre-compute nextTimestamp for each line
   const nextTimestamps = useMemo(() => {
@@ -674,6 +692,8 @@ function VirtualizedLineList({
                   handleSaveLineText={handleSaveLineText}
                   handleInsertSection={handleInsertSection}
                   onToggleDepth={handleToggleSectionDepth}
+                  handleMoveToSection={handleMoveToSection}
+                  sectionLines={lines}
                   handleAssignSinger={handleAssignSinger}
                   songArtists={songArtists}
                   playerRef={playerRef}
@@ -710,9 +730,10 @@ function VirtualizedLineList({
         <ScrollProgress containerRef={listRef} className="absolute bottom-0 inset-x-0 h-[2px]" />
       </div>
 
-        <div className="hidden xl:block">
+        <div className="hidden xl:block relative z-20">
           <SelectionActionBar
             selectedLines={selectedLines}
+            lines={lines}
             settings={settings}
             handleBulkClearTimestamps={handleBulkClearTimestamps}
             handleBulkShift={handleBulkShift}
@@ -720,6 +741,7 @@ function VirtualizedLineList({
             clearSelection={clearSelection}
             handleApplyOffset={handleApplyOffset}
             handleAssignSinger={handleAssignSinger}
+            handleMoveToSection={handleMoveToSection}
             songArtists={songArtists}
           />
         </div>

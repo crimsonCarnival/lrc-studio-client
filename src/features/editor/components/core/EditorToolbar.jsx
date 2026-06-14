@@ -14,6 +14,7 @@ import {
 import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
+import { flatToSections } from '@/features/editor/utils/sections';
 
 // Mobile-friendly dropdown for actions that overflow
 const ActionsDropdown = ({ children, icon: Icon = MoreHorizontal, label }) => {
@@ -103,7 +104,30 @@ export default function EditorToolbar({
     setLyricsSearchPopoverOpen(false);
   }, [lines, setLines, setRawText, setSyncMode]);
 
-  if (!syncMode) return null;
+  if (!syncMode) {
+    if (!handleManualSave) return null;
+    return (
+      <div className="flex items-center justify-end gap-1 mb-2 shrink-0">
+        {handleManualSave && (
+          <Tip content={isSaving ? (t('project.saving') || 'Saving…') : isAutosaving ? (t('project.saved') || 'Saved') : (t('project.save') || 'Save')}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleManualSave}
+              disabled={isSaving}
+              className={`size-8 transition-colors ${isSaving ? 'text-zinc-400' : isAutosaving ? 'text-primary' : 'text-zinc-400'}`}
+            >
+              {isSaving
+                ? <Loader2 className="size-4 animate-spin" />
+                : isAutosaving
+                  ? <Check className="size-4" />
+                  : <Save className="size-4" />}
+            </Button>
+          </Tip>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2 mb-1 sm:mb-2 sticky top-[-1px] lg:static z-raised py-2 px-4 -mx-4 border-b border-zinc-800/50 transition-all bg-zinc-950/50 backdrop-blur-md lg:bg-transparent lg:backdrop-blur-none lg:border-none lg:p-0 lg:m-0">
@@ -296,7 +320,7 @@ export default function EditorToolbar({
                     const payload = buildProjectPayload ? buildProjectPayload() : {};
                     const idbPayload = {
                       title: payload.title,
-                      lyrics: { editorMode: payload.editorMode, lines: payload.lines },
+                      lyrics: { editorMode: payload.editorMode, sections: payload.sections || flatToSections(payload.lines || []) },
                       state: {
                         syncMode: payload.syncMode,
                         activeLineIndex: payload.activeLineIndex,
@@ -401,7 +425,7 @@ export default function EditorToolbar({
               {onShowKeyboardHelp && (
                 <PopoverItem onClick={onShowKeyboardHelp} className="text-xs">
                   <HelpCircle className="size-4" />
-                  {t('shortcuts.title', 'Editor Help')}
+                  {t('shortcuts.title')}
                 </PopoverItem>
               )}
 

@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Badge } from '@ui/badge';
 import { Separator } from '@ui/separator';
-import { Eraser, ChevronLeft, ChevronRight, Trash2, X, ChevronsLeft, ChevronsRight, User } from 'lucide-react';
+import { Eraser, ChevronLeft, ChevronRight, Trash2, X, ChevronsLeft, ChevronsRight, User, Layers } from 'lucide-react';
 import { Tip } from '@ui/tip';
+import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 
 const ROLE_LABELS_SHORT = ['1', '2', '3', '4'];
 const SINGER_CHIP_COLORS = [
@@ -17,6 +18,7 @@ const ROLE_STYLE_CLASSES = ['', 'italic', 'font-bold', 'font-bold italic'];
 
 export default function SelectionActionBar({
   selectedLines,
+  lines,
   settings,
   handleBulkClearTimestamps,
   handleBulkShift,
@@ -24,6 +26,7 @@ export default function SelectionActionBar({
   clearSelection,
   handleApplyOffset,
   handleAssignSinger,
+  handleMoveToSection,
   songArtists,
 }) {
   const { t } = useTranslation();
@@ -107,6 +110,16 @@ export default function SelectionActionBar({
         </>
       )}
 
+      {handleMoveToSection && lines && (
+        <>
+          <Separator orientation="vertical" className="h-4 bg-zinc-700/50" />
+          <SectionAssignButton
+            selectedLines={selectedLines}
+            lines={lines}
+            handleMoveToSection={handleMoveToSection}
+          />
+        </>
+      )}
       <Separator orientation="vertical" className="h-4 bg-zinc-700/50" />
       <Tip content={t('editor.selection.deleteSelected') || 'Delete selected'}>
         <Button
@@ -129,6 +142,56 @@ export default function SelectionActionBar({
           <X className="size-3.5" />
         </Button>
       </Tip>
+    </div>
+  );
+}
+
+function SectionAssignButton({ selectedLines, lines, handleMoveToSection }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const sections = lines
+    .map((l, i) => ({ line: l, index: i }))
+    .filter(({ line }) => line.type === 'section');
+
+  if (sections.length === 0) return null;
+
+  const assign = (sectionIndex) => {
+    handleMoveToSection([...selectedLines], sectionIndex);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <Tip content={t('editor.assignToSection')}>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onClick={(e) => { e.stopPropagation(); setOpen(p => !p); }}
+          className="text-zinc-400 hover:text-primary hover:bg-primary/10"
+        >
+          <Layers className="size-3.5" />
+        </Button>
+      </Tip>
+      {open && (
+        <div
+          className="absolute bottom-full right-0 mb-2 w-48 bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl z-50 py-1 text-xs"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p className="px-3 py-1 text-[10px] text-zinc-600 border-b border-zinc-800 mb-1">
+            {t('editor.moveToSection')}
+          </p>
+          {sections.map(({ line, index }) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => assign(index)}
+              className="w-full text-left px-3 py-1.5 text-zinc-300 hover:bg-zinc-800 hover:text-primary truncate"
+            >
+              {formatSectionLabel(line.label, t)}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -182,7 +245,7 @@ function SingerBulkButton({ selectedLines, handleAssignSinger, songArtists }) {
           </div>
           <p className="px-3 pb-1 text-[10px] text-zinc-600">
             {selectedSlot === 0
-              ? t('editor.singer', 'Singer 1')
+              ? t('editor.singer')
               : t('editor.singerN', 'Singer {{n}}', { n: selectedSlot + 1 })}
           </p>
           {(songArtists?.length > 0 ? songArtists : []).map((a) => (
@@ -200,7 +263,7 @@ function SingerBulkButton({ selectedLines, handleAssignSinger, songArtists }) {
               value={custom}
               onChange={(e) => setCustom(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && custom.trim()) assignName(custom.trim()); }}
-              placeholder={t('editor.singerCustomPlaceholder', 'Custom…')}
+              placeholder={t('editor.singerCustomPlaceholder')}
               className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-1 text-zinc-200 text-xs focus:outline-none focus:border-primary/60"
             />
             <button
@@ -214,7 +277,7 @@ function SingerBulkButton({ selectedLines, handleAssignSinger, songArtists }) {
             onClick={() => { handleAssignSinger('', indices, selectedSlot); setOpen(false); }}
             className="w-full text-left px-3 py-1.5 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400 text-[10px] mt-1 border-t border-zinc-800"
           >
-            {t('editor.clearSingers', 'Clear singers')}
+            {t('editor.clearSingers')}
           </button>
         </div>
       )}

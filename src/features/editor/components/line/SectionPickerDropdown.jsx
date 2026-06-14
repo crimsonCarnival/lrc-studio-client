@@ -1,77 +1,80 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SECTION_TYPES, SECTION_TYPE_IDS } from '@features/editor/constants/sectionTypes';
-import { FloatingCombobox } from '@ui/floating-combobox';
+import { SECTION_TYPES } from '@features/editor/constants/sectionTypes';
 
-/**
- * Compact section-type dropdown for the section-marker inline editor.
- *
- * Props:
- *   value      — current label string (a preset id or custom text)
- *   onChange   — (labelString) => void  called on every change
- *   projectSingers - Array of unique singers used in the project
- */
-export default function SectionPickerDropdown({ value, onChange, projectSingers }) {
+const STANDARD_TYPES = SECTION_TYPES.filter(s => s.depth !== 0);
+const STANDARD_IDS = new Set(STANDARD_TYPES.map(s => s.id));
+
+function resolvePreset(val) {
+  if (!val) return null;
+  const lower = val.trim().toLowerCase();
+  if (STANDARD_IDS.has(lower)) return lower;
+  // "verse 2", "chorus 3", etc.
+  const m = lower.match(/^(.+?)\s+\d+$/);
+  if (m && STANDARD_IDS.has(m[1])) return m[1];
+  return null;
+}
+
+export default function SectionPickerDropdown({ value, onChange }) {
   const { t } = useTranslation();
 
-  // If the current value is not a known preset, start in "other" mode
-  const [isOther, setIsOther] = useState(
-    () => !!value && !SECTION_TYPE_IDS.has(value)
-  );
-  const [customText, setCustomText] = useState(
-    () => (!!value && !SECTION_TYPE_IDS.has(value) ? value : '')
-  );
+  const preset = resolvePreset(value);
+  const [selected, setSelected] = useState(preset ?? '__other__');
+  const [customText, setCustomText] = useState(preset ? '' : (value || ''));
 
-  const handleSelectChange = (e) => {
-    const v = e.target.value;
-    if (v === '__other__') {
-      setIsOther(true);
-      // Keep the current custom text if we're switching back to other
-      onChange(customText || '');
-    } else {
-      setIsOther(false);
-      onChange(v);
-    }
+  const handlePreset = (id) => {
+    setSelected(id);
+    onChange(id);
   };
 
-  const handleCustomChange = (v) => {
-    setCustomText(v);
-    onChange(v);
+  const handleOtherClick = () => {
+    setSelected('__other__');
+    onChange(customText);
   };
 
-  const selectValue = isOther ? '__other__' : (value || 'verse');
+  const handleCustomChange = (e) => {
+    setCustomText(e.target.value);
+    onChange(e.target.value);
+  };
 
   return (
-    <div className="flex items-center gap-1.5">
-      <select
-        value={selectValue}
-        onChange={handleSelectChange}
-        className="bg-zinc-800 border border-zinc-600 text-xs text-zinc-200 rounded px-2 py-0.5 focus:outline-none focus:border-primary/60 cursor-pointer"
-      >
-        <optgroup label={t('editor.sections.groupStructural', 'Structural')}>
-          {SECTION_TYPES.filter(s => s.depth === 0).map((s) => (
-            <option key={s.id} value={s.id}>
-              {t(s.labelKey, s.id)}
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label={t('editor.sections.groupStandard', 'Standard')}>
-          {SECTION_TYPES.filter(s => s.depth !== 0).map((s) => (
-            <option key={s.id} value={s.id}>
-              {t(s.labelKey, s.id)}
-            </option>
-          ))}
-        </optgroup>
-        <option value="__other__">{t('editor.sections.other', 'Other…')}</option>
-      </select>
+    <div className="flex flex-col gap-1">
+      <div className="flex flex-wrap gap-1">
+        {STANDARD_TYPES.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => handlePreset(s.id)}
+            className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer
+              ${selected === s.id
+                ? 'bg-primary/20 border-primary/60 text-primary'
+                : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100'
+              }`}
+          >
+            {t(s.labelKey, s.id)}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={handleOtherClick}
+          className={`px-2 py-0.5 text-xs rounded border transition-colors cursor-pointer
+            ${selected === '__other__'
+              ? 'bg-primary/20 border-primary/60 text-primary'
+              : 'bg-zinc-800 border-zinc-600 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100'
+            }`}
+        >
+          {t('editor.sections.other')}
+        </button>
+      </div>
 
-      {isOther && (
-        <FloatingCombobox
+      {selected === '__other__' && (
+        <input
+          type="text"
           value={customText}
           onChange={handleCustomChange}
-          options={projectSingers || []}
-          placeholder={t('editor.sectionLabelPlaceholder', 'Section label')}
-          className="w-28 text-xs h-6"
+          placeholder={t('editor.sectionLabelPlaceholder')}
+          autoFocus
+          className="text-xs px-2 py-0.5 rounded border bg-zinc-800 border-zinc-600 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-primary/60 w-full min-w-[220px]"
         />
       )}
     </div>

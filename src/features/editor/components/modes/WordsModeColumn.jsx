@@ -7,6 +7,14 @@ import { TimestampBadge } from '../line/TimestampBadge';
 import { StampedWordChip } from './StampedWordChip';
 import { MoreHorizontal, Eraser } from 'lucide-react';
 
+// Per-singer chip color sets [bg, border, text] for stamped and unstamped word chips
+const WORD_SINGER_CHIP = [
+  { stamped: 'bg-primary/15 border-primary/40 text-primary/80 hover:border-primary hover:bg-primary/25 hover:text-primary', unstamped: 'bg-primary/8 border-primary/25 text-primary/60 hover:bg-primary/15 hover:text-primary/80' },
+  { stamped: 'bg-sky-500/15 border-sky-500/40 text-sky-400/80 hover:border-sky-400 hover:bg-sky-500/25 hover:text-sky-400', unstamped: 'bg-sky-500/8 border-sky-500/25 text-sky-400/60 hover:bg-sky-500/15 hover:text-sky-400/80' },
+  { stamped: 'bg-violet-500/15 border-violet-500/40 text-violet-400/80 hover:border-violet-400 hover:bg-violet-500/25 hover:text-violet-400', unstamped: 'bg-violet-500/8 border-violet-500/25 text-violet-400/60 hover:bg-violet-500/15 hover:text-violet-400/80' },
+  { stamped: 'bg-amber-500/15 border-amber-500/40 text-amber-400/80 hover:border-amber-400 hover:bg-amber-500/25 hover:text-amber-400', unstamped: 'bg-amber-500/8 border-amber-500/25 text-amber-400/60 hover:bg-amber-500/15 hover:text-amber-400/80' },
+];
+
 export default function WordsModeColumn({
   line,
   lineIndex,
@@ -106,7 +114,7 @@ export default function WordsModeColumn({
                         onClick={(e) => handleWordClick(e, w, wi)}
                         className={`text-[11px] px-2.5 py-0.5 rounded-full border leading-none transition-all duration-200 cursor-pointer ${isActiveWord || isFocusedWord
                           ? 'bg-primary text-zinc-950 border-primary ring-2 ring-primary/40 shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)] animate-pulse-glow'
-                          : 'bg-zinc-800 border-primary/30 text-primary/70 hover:border-primary hover:bg-primary/20 hover:text-primary'
+                          : (w.singerIndex != null ? WORD_SINGER_CHIP[w.singerIndex % WORD_SINGER_CHIP.length].stamped : 'bg-zinc-800 border-primary/30 text-primary/70 hover:border-primary hover:bg-primary/20 hover:text-primary')
                           }`}
                       >
                         {displayWord}
@@ -138,7 +146,7 @@ export default function WordsModeColumn({
                       onClick={(e) => handleWordClick(e, w, wi)}
                       className={`text-[11px] px-2.5 py-0.5 rounded-full border leading-none transition-all cursor-pointer outline-none focus:ring-2 focus:ring-primary/40 ${isActiveWord || isFocusedWord
                         ? 'bg-primary text-zinc-950 border-primary shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)] animate-pulse-glow'
-                        : 'bg-zinc-800/50 border-zinc-700/30 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400'
+                        : (w.singerIndex != null ? WORD_SINGER_CHIP[w.singerIndex % WORD_SINGER_CHIP.length].unstamped : 'bg-zinc-800/50 border-zinc-700/30 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400')
                         }`}
                     >
                       {displayWord}

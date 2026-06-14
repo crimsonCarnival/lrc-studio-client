@@ -61,7 +61,7 @@ export function useEditor({
   const listRef = useRef(null);
 
   const { handleFileUpload, handleUrlImport, fileInputRef } = useFileImport({
-    setLines, setEditorMode, setActiveLineIndex, setSyncMode, onImport,
+    setLines, setEditorMode, setActiveLineIndex, setSyncMode, onImport, settings,
   });
 
   const { dragIndex, dragOverIndex, handleDragStart, handleDragOver, handleDragEnd, handleDrop } = useDragReorder({
@@ -380,6 +380,7 @@ export function useEditor({
         if (!isNaN(newTimestamp)) targetTime = newTimestamp;
       }
 
+      setModifiedLines(prev => new Set(prev).add(index));
       setLines((prev) => {
         const updated = [...prev];
         if (!updated[index]) return prev;
@@ -422,7 +423,7 @@ export function useEditor({
         playerRef.current.seek(targetTime);
       }
     },
-    [playerRef, setLines, focusedTimestamp, editorMode],
+    [playerRef, setLines, setModifiedLines, focusedTimestamp, editorMode],
   );
 
   const handleMark = useCallback((opts = {}) => {
@@ -1006,6 +1007,30 @@ export function useEditor({
     });
   }, [setLines]);
 
+  // Move a set of line indices to appear directly after a target section marker.
+  // indices: number[] of line indices to move (section lines are skipped)
+  // targetSectionIndex: index of the section marker in the current lines array
+  const handleMoveToSection = useCallback((indices, targetSectionIndex) => {
+    setLines((prev) => {
+      const indicesSet = new Set(indices);
+      const targetSection = prev[targetSectionIndex];
+      if (!targetSection || targetSection.type !== 'section') return prev;
+      const toMove = prev.filter((l, i) => indicesSet.has(i) && l.type !== 'section');
+      if (toMove.length === 0) return prev;
+      // Build new array: all lines except the moved ones, then splice toMove after target section
+      const without = prev.filter((l, i) => !indicesSet.has(i) || l.type === 'section');
+      const insertAt = without.indexOf(targetSection) + 1;
+      const result = [...without];
+      result.splice(insertAt, 0, ...toMove);
+      return result;
+    });
+    setModifiedLines(prev => {
+      const next = new Set(prev);
+      indices.forEach(i => next.add(i));
+      return next;
+    });
+  }, [setLines, setModifiedLines]);
+
   /**
    * Assign a singer name to a specific role slot on selected lines.
    * When `name` is empty, clears that slot. Other slots are preserved.
@@ -1240,6 +1265,7 @@ export function useEditor({
     modifiedLines,
     handleInsertSection,
     handleToggleSectionDepth,
+    handleMoveToSection,
     handleAssignSinger,
     handleCycleWordSinger,
     handleSetWordSinger,

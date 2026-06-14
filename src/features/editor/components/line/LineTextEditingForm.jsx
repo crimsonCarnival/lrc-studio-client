@@ -47,7 +47,7 @@ function LineTextEditingForm({
   const languageOptions = useLanguageOptions();
 
   // Combined autocomplete options: project singers + song artists, deduped
-  const singerOptions = [...new Set([...(projectSingers || []), ...(songArtists || [])])].filter(Boolean);
+  const singerOptions = [...new Set([...(projectSingers || []), ...(songArtists || [])])].filter(Boolean).map(s => ({ value: s }));
 
   // Ensure we always work with a 4-slot array (padded with '')
   const singers = [...(editingSingers || []), '', '', '', ''].slice(0, 4);
@@ -202,7 +202,7 @@ function LineTextEditingForm({
           if (!isFilled && !isNextEmpty) return null;
 
           const roleLabel = idx === 0
-            ? t('editor.singer', 'Singer 1')
+            ? t('editor.singer')
             : t('editor.singerN', 'Singer {{n}}', { n: idx + 1 });
 
           return (
@@ -218,7 +218,7 @@ function LineTextEditingForm({
                 className={`flex-1 text-xs text-zinc-500 h-6 ${SINGER_STYLE_CLASSES[idx]}`}
               />
               {isFilled && (
-                <Tip content={t('editor.removeSinger', 'Remove singer')}>
+                <Tip content={t('editor.removeSinger')}>
                   <button
                     type="button"
                     onClick={() => removeSinger(idx)}
@@ -232,7 +232,7 @@ function LineTextEditingForm({
           );
         })}
         {activeSingerCount >= 4 && (
-          <p className="text-[9px] text-zinc-700 ml-4">{t('editor.maxSingers', 'Max 4 singers')}</p>
+          <p className="text-[9px] text-zinc-700 ml-4">{t('editor.maxSingers')}</p>
         )}
       </div>
     </div>

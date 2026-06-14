@@ -39,7 +39,7 @@ export function getDefaultDepthForLabel(label) {
  * Formats and localizes a section label, handling serialized numbers (e.g. "verse 2").
  */
 export function formatSectionLabel(label, t) {
-  if (!label) return t('editor.sectionDefault', 'Section');
+  if (!label) return t('editor.sectionDefault');
   
   const lower = label.trim().toLowerCase();
   
