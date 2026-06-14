@@ -22,22 +22,25 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     isDraggingFile, playerRef,
     handleManualSave, triggerImportSave, handleDiscardProject, handleRestoreProject, buildProjectPayload,
     handleTimeUpdate, handleDurationChange, handleMediaChange, handleYtUrlChange,
-    handleCloudinaryUpload, restoredYtUrl, restoredCloudinaryUpload, restoredPosition,
+    handleCloudinaryUpload, restoredMedia, restoredPosition,
     restoredSpeed, hasUnsavedChanges, activeProjectId, projectMetadata, setProjectMetadata,
     forkedFrom,
     isProjectLoading, hasMedia, lines, activeLineIndex, playbackPosition, syncMode, pendingProject,
     setIsPlaying, setPlaybackSpeed, setProjectSpotifyTrackId,
+    projectCoverImage, setProjectCoverImage,
   } = appState;
 
   const { settings, updateSetting } = settingsState;
-  const { focusMode, setFocusMode, hideEditor, setHideEditor, mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, playerTop, showNamingModal, setShowNamingModal } = layoutState;
+  const { focusMode, setFocusMode, hideEditor, setHideEditor, hidePreview, setHidePreview, mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, playerTop, showNamingModal, setShowNamingModal } = layoutState;
 
   const isSetupPage = location.pathname === '/project/new';
 
-  const handleProjectConfirm = useCallback(({ name, description, tags, songName, songArtist, songAlbum, songYear, coverImage, albumArt }) => {
+  const handleProjectConfirm = useCallback(({ name, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, albumArt }) => {
     const newTitle = name || mediaTitle || '';
     const songArtists = splitArtists(songArtist);
     const newMetadata = {
+      // Preserve fields not exposed in the modal (songLanguage, trackNumber, trackCount)
+      ...projectMetadata,
       description: description || '',
       tags: tags || [],
       songName: songName || '',
@@ -45,14 +48,16 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
       songArtists,
       songAlbum: songAlbum || '',
       songYear: songYear || '',
-      albumArt: albumArt || ''
+      genre: genre || '',
+      albumArt: albumArt || '',
     };
     setMediaTitle(newTitle);
     setProjectMetadata(newMetadata);
+    if (coverImage) setProjectCoverImage(coverImage);
     setShowNamingModal(false);
     handleManualSave({ title: newTitle, metadata: newMetadata, ...(coverImage ? { coverImage } : {}) });
     navigate('/project/local');
-  }, [mediaTitle, setMediaTitle, setProjectMetadata, navigate, handleManualSave, setShowNamingModal]);
+  }, [mediaTitle, projectMetadata, setMediaTitle, setProjectMetadata, setProjectCoverImage, navigate, handleManualSave, setShowNamingModal]);
 
   return (
     <SafeAreaContainer padding="bottom">
@@ -88,11 +93,14 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           setFocusMode={setFocusMode}
           hideEditor={hideEditor}
           setHideEditor={setHideEditor}
+          hidePreview={hidePreview}
+          setHidePreview={setHidePreview}
           setUnsavedModalTarget={setUnsavedModalTarget}
           settings={settings}
           updateSetting={updateSetting}
           i18n={i18n}
           syncMode={syncMode}
+          setShowNamingModal={setShowNamingModal}
         />
 
         <div className={`relative z-base flex-1 min-h-0 ${isSetupPage ? 'px-0' : 'px-0 lg:px-6'} flex flex-col transition-[padding] duration-500 ease-in-out
@@ -130,8 +138,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           handleMediaChange={handleMediaChange}
           handleYtUrlChange={handleYtUrlChange}
           handleCloudinaryUpload={handleCloudinaryUpload}
-          restoredYtUrl={restoredYtUrl}
-          restoredCloudinaryUpload={restoredCloudinaryUpload}
+          restoredMedia={restoredMedia}
           restoredPosition={restoredPosition}
           restoredSpeed={restoredSpeed}
           projectMetadata={projectMetadata}
@@ -160,17 +167,21 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           handleProjectConfirm={handleProjectConfirm}
           mediaTitle={mediaTitle}
           projectMetadata={projectMetadata}
-          projectCoverImage={appState.projectCoverImage || ''}
+          projectCoverImage={projectCoverImage || ''}
           pendingProject={pendingProject}
           handleDiscardProject={handleDiscardProject}
           handleRestoreProject={handleRestoreProject}
           unsavedModalTarget={layoutState.unsavedModalTarget}
           setUnsavedModalTarget={layoutState.setUnsavedModalTarget}
           sourceInfo={{
-            ytUrl: appState.projectYtUrl || restoredYtUrl,
-            cloudinary: appState.cloudinaryAudio || restoredCloudinaryUpload,
-            spotifyId: appState.projectSpotifyTrackId,
-            title: mediaTitle || appState.projectYtUrl || restoredYtUrl || ''
+            ytUrl: appState.projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : ''),
+            cloudinary: appState.cloudinaryAudio || (restoredMedia?.type === 'cloudinary' ? {
+              id: restoredMedia.id, cloudinaryUrl: restoredMedia.url,
+              publicId: restoredMedia.publicId, fileName: restoredMedia.fileName,
+              duration: restoredMedia.duration,
+            } : null),
+            spotifyId: appState.projectSpotifyTrackId || (restoredMedia?.type === 'spotify' ? restoredMedia.trackId : null),
+            title: mediaTitle || appState.projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : '') || '',
           }}
         />
       </div>

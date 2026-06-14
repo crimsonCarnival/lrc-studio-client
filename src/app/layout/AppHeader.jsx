@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   UploadCloud, Settings as SettingsIcon, LogOut, BookOpen, Pencil,
-  ShieldAlert, Eye, EyeOff, User, Check, ArrowLeft,
+  ShieldAlert, User, Check, ArrowLeft,
   Sun, Moon, Monitor, Palette, Globe, ExternalLink, Search, Compass, Trophy,
+  PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Settings2,
 } from 'lucide-react';
 import { HeaderSearchBar } from '@/features/search/components/HeaderSearchBar';
 import { Button } from '@ui/button';
@@ -16,6 +17,7 @@ import { LazyImage } from '@ui/LazyImage';
 import { projects, uploads } from '@/app/api';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
+import { flatToSections } from '@/features/editor/utils/sections';
 
 const THEMES = [
   { id: 'system',  label: 'System', Icon: Monitor, swatch: 'bg-zinc-500' },
@@ -71,12 +73,15 @@ export function AppHeader({
   setFocusMode,
   hideEditor,
   setHideEditor,
+  hidePreview,
+  setHidePreview,
   setUnsavedModalTarget,
   settings,
   updateSetting,
   i18n,
   syncMode,
   setShowKeyboardHelp,
+  setShowNamingModal,
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -124,7 +129,7 @@ export function AppHeader({
       feed: t('feed.title'),
       search: t('search.title'),
       explore: t('explore.nav'),
-      leaderboard: t('badges.leaderboard.title', 'Leaderboard'),
+      leaderboard: t('badges.leaderboard.title'),
       notifications: t('notifications.bell'),
     };
     return map[seg] || seg.replace(/-/g, ' ');
@@ -168,7 +173,7 @@ export function AppHeader({
     const payload = buildProjectPayload ? buildProjectPayload() : { title: mediaTitle || '', lines: lines ?? [] };
     const idbPayload = {
       title: payload.title,
-      lyrics: { editorMode: payload.editorMode, lines: payload.lines },
+      lyrics: { editorMode: payload.editorMode, sections: payload.sections || flatToSections(payload.lines || []) },
       state: {
         syncMode: payload.syncMode,
         activeLineIndex: payload.activeLineIndex,
@@ -246,10 +251,10 @@ export function AppHeader({
                   </button>
                 )}
                 {forkedFrom?.projectId && (
-                  <Tip content={forkedFrom.accountName ? t('share.forkedFrom', { username: forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
+                  <Tip content={forkedFrom.accountName ? t('share.forkedFrom', { username: forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject')}>
                     <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-accent-blue/10 border border-accent-blue/20 text-[9px] font-bold text-accent-blue uppercase shrink-0 cursor-help transition-colors hover:bg-accent-blue/20">
                       <ExternalLink className="size-2.5" />
-                      <span className="hidden xs:inline">{t('share.forkedBadge', 'Forked')}</span>
+                      <span className="hidden xs:inline">{t('share.forkedBadge')}</span>
                     </div>
                   </Tip>
                 )}
@@ -267,7 +272,7 @@ export function AppHeader({
                     type="button"
                     onClick={() => navigate(-1)}
                     className="flex items-center gap-1.5 min-w-0 group py-1 -my-1"
-                    aria-label={t('common.back', 'Back')}
+                    aria-label={t('common.back')}
                   >
                     <ArrowLeft className="size-3.5 text-zinc-500 group-hover:text-zinc-200 transition-colors shrink-0" />
                     <span className="text-xs font-semibold text-zinc-200 group-hover:text-zinc-100 truncate uppercase tracking-wide transition-colors">
@@ -294,27 +299,7 @@ export function AppHeader({
         {/* ── Right: Controls ── */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
 
-          {/* Hide editor toggle — desktop, project pages, when lines exist */}
-          {isReady && lines.length > 0 && (
-            <Tip content={t('app.hideEditor')} side="bottom">
-              <button
-                aria-label={t('app.hideEditor')}
-                onClick={() => {
-                  if (focusMode === 'playback') { setFocusMode('default'); setHideEditor(false); }
-                  else { setHideEditor(h => !h); }
-                }}
-                className={`hidden lg:flex size-8 items-center justify-center rounded-xl transition-colors flex-shrink-0 border text-xs font-bold ${
-                  (hideEditor || focusMode === 'playback')
-                    ? NAV_ACTIVE
-                    : 'bg-zinc-800/60 border-zinc-800/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-                }`}
-              >
-                {(hideEditor || focusMode === 'playback') ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-              </button>
-            </Tip>
-          )}
-
-          {/* Search — inline in header next to button */}
+          {/* Search — inline in header */}
           {!isGuestLanding && (
             <div ref={searchOverlayRef} className="flex items-center gap-1">
               {searchOpen && (
@@ -331,6 +316,52 @@ export function AppHeader({
                   <Search className="size-3.5" />
                 </button>
               </Tip>
+            </div>
+          )}
+
+          {/* Panel toggle button group — desktop, project pages */}
+          {isReady && lines.length > 0 && (
+            <div className="hidden lg:flex items-center bg-zinc-800/60 border border-zinc-800/50 rounded-xl overflow-hidden flex-shrink-0">
+              <Tip content={t('app.hideEditor')} side="bottom">
+                <button
+                  aria-label={t('app.hideEditor')}
+                  onClick={() => {
+                    if (focusMode === 'playback') { setFocusMode('default'); setHideEditor(false); }
+                    else { setHideEditor(h => !h); if (hidePreview) setHidePreview(false); }
+                  }}
+                  className={`flex size-8 items-center justify-center transition-colors text-xs font-bold border-r border-zinc-800/50 ${
+                    (hideEditor || focusMode === 'playback')
+                      ? 'text-primary bg-primary/10'
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                  }`}
+                >
+                  {(hideEditor || focusMode === 'playback') ? <PanelLeftOpen className="size-3.5" /> : <PanelLeftClose className="size-3.5" />}
+                </button>
+              </Tip>
+              <Tip content={t('app.hidePreview')} side="bottom">
+                <button
+                  aria-label={t('app.hidePreview')}
+                  onClick={() => { setHidePreview(h => !h); if (hideEditor) setHideEditor(false); }}
+                  className={`flex size-8 items-center justify-center transition-colors text-xs font-bold border-r border-zinc-800/50 ${
+                    hidePreview
+                      ? 'text-primary bg-primary/10'
+                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                  }`}
+                >
+                  {hidePreview ? <PanelRightOpen className="size-3.5" /> : <PanelRightClose className="size-3.5" />}
+                </button>
+              </Tip>
+              {setShowNamingModal && (
+                <Tip content={t('editor.projectSettings')} side="bottom">
+                  <button
+                    aria-label={t('editor.projectSettings')}
+                    onClick={() => setShowNamingModal(true)}
+                    className="flex size-8 items-center justify-center transition-colors text-xs font-bold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                  >
+                    <Settings2 className="size-3.5" />
+                  </button>
+                </Tip>
+              )}
             </div>
           )}
 
@@ -415,7 +446,7 @@ export function AppHeader({
                   }}
                   className="h-8 px-3 text-xs font-normal text-zinc-300 hover:text-zinc-100 bg-zinc-800/70 hover:bg-zinc-700/80 border border-zinc-800/50 rounded-xl transition-colors"
                 >
-                  {t('auth.signIn', 'Sign in')}
+                  {t('auth.signIn')}
                 </button>
               </div>
               <div className="relative flex items-center flex-shrink-0">
@@ -436,10 +467,10 @@ export function AppHeader({
                   }}
                   className="h-8 px-3 text-xs font-normal text-zinc-950 bg-primary hover:bg-primary/90 rounded-xl transition-colors"
                 >
-                  {t('auth.signUp', 'Sign up')}
+                  {t('auth.signUp')}
                 </button>
                 {(lines?.length ?? 0) > 0 && (
-                  <Tip content={t('auth.signUpToSave', 'Sign up to save your project to the cloud')}>
+                  <Tip content={t('auth.signUpToSave')}>
                     <span
                       className="absolute -top-1 -right-1 size-2 rounded-full bg-primary animate-pulse pointer-events-none"
                     />
@@ -496,7 +527,7 @@ export function AppHeader({
                     {counts.uploads > 0 && <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.uploads}</span>}
                   </PopoverItem>
                   <PopoverItem onClick={() => navigate('/leaderboard')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-                    <span className="flex items-center gap-2"><Trophy className="size-4 text-warning" />{t('badges.leaderboard.title', 'Leaderboard')}</span>
+                    <span className="flex items-center gap-2"><Trophy className="size-4 text-warning" />{t('badges.leaderboard.title')}</span>
                   </PopoverItem>
                 </div>
 
@@ -511,7 +542,7 @@ export function AppHeader({
                   </PopoverItem>
                   {setShowKeyboardHelp && (
                     <PopoverItem onClick={() => { setShowKeyboardHelp(true); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-                      <BookOpen className="size-4 text-zinc-400" />{t('shortcuts.title', 'Editor Help')}
+                      <BookOpen className="size-4 text-zinc-400" />{t('shortcuts.title')}
                     </PopoverItem>
                   )}
                 </div>
@@ -521,7 +552,7 @@ export function AppHeader({
                     await logout();
                     window.location.href = '/auth/signin?from=logout';
                   }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2 text-red-400 hover:text-red-300">
-                    <LogOut className="size-4" />{t('auth.signOut', 'Sign out')}
+                    <LogOut className="size-4" />{t('auth.signOut')}
                   </PopoverItem>
                 </div>
               </PopoverContent>

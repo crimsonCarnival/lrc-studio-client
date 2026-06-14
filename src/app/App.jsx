@@ -78,14 +78,16 @@ function AppInner() {
   // Layout-specific state
   const [ui, setUi] = useState({
     hideEditor: false,
+    hidePreview: false,
     unsavedModalTarget: null,
     isPlaying: false,
     playbackSpeed: 1,
     showNamingModal: false,
   });
 
-  const { hideEditor, unsavedModalTarget, isPlaying, playbackSpeed, showNamingModal } = ui;
+  const { hideEditor, hidePreview, unsavedModalTarget, isPlaying, playbackSpeed, showNamingModal } = ui;
   const setHideEditor = useCallback((val) => setUi(prev => ({ ...prev, hideEditor: typeof val === 'function' ? val(prev.hideEditor) : val })), []);
+  const setHidePreview = useCallback((val) => setUi(prev => ({ ...prev, hidePreview: typeof val === 'function' ? val(prev.hidePreview) : val })), []);
   const setUnsavedModalTarget = useCallback((val) => setUi(prev => ({ ...prev, unsavedModalTarget: val })), []);
   const setIsPlaying = useCallback((val) => setUi(prev => ({ ...prev, isPlaying: val })), []);
   const setPlaybackSpeed = useCallback((val) => setUi(prev => ({ ...prev, playbackSpeed: val })), []);
@@ -123,6 +125,7 @@ function AppInner() {
 
     if (audioSource === 'youtube' && effectiveYtUrl) {
       if (ytUrl) handleYtUrlChange(ytUrl);
+      if (ytUrl) appState.setRestoredMedia({ type: 'youtube', url: ytUrl });
       try {
         const oEmbedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(effectiveYtUrl)}&format=json`;
         const controller = new AbortController();
@@ -138,6 +141,25 @@ function AppInner() {
       }
     } else if (audioSource === 'cloud' && selectedUpload) {
       handleCloudinaryUpload(selectedUpload);
+      if (selectedUpload.cloudinaryUrl) {
+        appState.setRestoredMedia({
+          type: 'cloudinary',
+          id: selectedUpload.id,
+          url: selectedUpload.cloudinaryUrl,
+          fileName: selectedUpload.fileName ?? null,
+          title: selectedUpload.title ?? null,
+          duration: selectedUpload.duration ?? null,
+          publicId: selectedUpload.publicId ?? null,
+        });
+      }
+    } else if (audioSource === 'spotify' && selectedUpload?.spotifyTrackId) {
+      appState.setProjectSpotifyTrackId(selectedUpload.spotifyTrackId);
+      appState.setRestoredMedia({
+        type: 'spotify',
+        id: selectedUpload.spotifyTrackId,
+        trackId: selectedUpload.spotifyTrackId,
+        title: finalTitle || selectedUpload.title || '',
+      });
     }
 
     setMediaTitle(finalTitle);
@@ -146,10 +168,14 @@ function AppInner() {
     const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songArtists, songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), ...(albumArt ? { albumArt } : {}) };
     appState.setProjectMetadata(newMetadata);
 
+    const spotifyOverride = audioSource === 'spotify' && selectedUpload?.spotifyTrackId
+      ? { spotifyTrackId: selectedUpload.spotifyTrackId }
+      : {};
+
     if (!user) {
       // Guest: handleManualSave writes to localStorage only (no token).
       // The editor's Save button uses the server-side claim flow instead.
-      await appState.handleManualSave({ title: finalTitle, metadata: newMetadata, isPublic, lines, editorMode, syncMode: true });
+      await appState.handleManualSave({ title: finalTitle, metadata: newMetadata, isPublic, lines, editorMode, syncMode: true, ...spotifyOverride });
       navigate('/project/local');
       return;
     }
@@ -162,6 +188,7 @@ function AppInner() {
       editorMode,
       syncMode: true,
       ...(_coverImage ? { coverImage: _coverImage } : {}),
+      ...spotifyOverride,
     });
 
     navigate('/project/local');
@@ -198,6 +225,7 @@ function AppInner() {
           setHideEditor(false);
         } else {
           setHideEditor(h => !h);
+          setHidePreview(false);
         }
       } else if (matchKey(e, settings.shortcuts?.focusPlayback?.[0] || 'Ctrl+3')) {
         e.preventDefault();
@@ -206,7 +234,7 @@ function AppInner() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [settings.shortcuts, focusMode, setFocusMode, setHideEditor]);
+  }, [settings.shortcuts, focusMode, setFocusMode, setHideEditor, setHidePreview]);
 
   // Pause player when navigating away
   useEffect(() => {
@@ -241,13 +269,15 @@ function AppInner() {
     : ({ default: 'lg:col-span-5', sync: 'lg:col-span-4' }[focusMode] || 'lg:col-span-5')), [hideEditor, focusMode]);
 
   const showEditor = focusMode !== 'playback' && !hideEditor;
-  const showPreview = true;
+  const showPreview = !hidePreview;
 
   const layoutState = {
     focusMode,
     setFocusMode,
     hideEditor,
     setHideEditor,
+    hidePreview,
+    setHidePreview,
     unsavedModalTarget,
     setUnsavedModalTarget,
     mobileTab,

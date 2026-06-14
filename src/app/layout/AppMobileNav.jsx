@@ -15,8 +15,8 @@ export function AppMobileNav({ mobileTab, setMobileTab, activeProjectId, isReady
   if (!isReady) return null;
 
   const tabs = [
-    { id: 'editor',  label: t('app.tab.editor', 'Editor'),   Icon: LayoutList  },
-    { id: 'preview', label: t('app.tab.preview', 'Preview'),  Icon: Music2      },
+    { id: 'editor',  label: t('app.tab.editor'),   Icon: LayoutList  },
+    { id: 'preview', label: t('app.tab.preview'),  Icon: Music2      },
     { id: 'library', label: t('library.title'),               Icon: BookOpen    },
     { id: 'uploads', label: t('uploads.title'),               Icon: UploadCloud },
   ];

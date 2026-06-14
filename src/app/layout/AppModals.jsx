@@ -50,6 +50,7 @@ export function AppModals({
         initialSongArtist={(projectMetadata?.songArtists || []).join(', ') || projectMetadata?.songArtist || ''}
         initialSongAlbum={projectMetadata?.songAlbum}
         initialSongYear={projectMetadata?.songYear}
+        initialGenre={projectMetadata?.genre || ''}
         initialCoverImage={projectCoverImage || ''}
         initialAlbumArt={projectMetadata?.albumArt || ''}
         isEditing={true}
