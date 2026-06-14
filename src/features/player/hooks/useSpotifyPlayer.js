@@ -29,6 +29,7 @@ export default function useSpotifyPlayer({
   onMediaChange,
 }) {
   const [ready, setReady] = useState(false);
+  const [staged, setStaged] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [trackId, setTrackId] = useState(null);
@@ -38,6 +39,9 @@ export default function useSpotifyPlayer({
   const pollRef = useRef(null);
   const durationRef = useRef(0);
   const timeRef = useRef(0);
+  const loadingTrackIdRef = useRef(null);
+  const pendingTrackRef = useRef(null); // { trackId, title } staged but not yet playing
+  const lastPausedRef = useRef(null);   // dedup player_state_changed pause toggles
 
   // ——— Cleanup ———
   const cleanup = useCallback(() => {
@@ -47,14 +51,27 @@ export default function useSpotifyPlayer({
       playerRef.current = null;
     }
     deviceIdRef.current = null;
+    loadingTrackIdRef.current = null;
+    pendingTrackRef.current = null;
+    lastPausedRef.current = null;
     setReady(false);
+    setStaged(false);
     setTrackId(null);
   }, []);
 
   useEffect(() => () => cleanup(), [cleanup]);
 
   // ——— Initialize player & play a track ———
-  const playTrack = useCallback(async (spotifyTrackId, title, autoPlay = true) => {
+  const playTrack = useCallback(async (spotifyTrackId, title) => {
+    // Skip if already loaded or currently loading this exact track.
+    // Still call setSource so navigating away to another media type and back
+    // restores hasMedia correctly.
+    if (spotifyTrackId && (trackId === spotifyTrackId || loadingTrackIdRef.current === spotifyTrackId)) {
+      if (title) onTitleChange?.(title);
+      setSource('spotify');
+      return;
+    }
+    loadingTrackIdRef.current = spotifyTrackId;
     setError('');
     setLoading(true);
     setSource('spotify');
@@ -89,11 +106,14 @@ export default function useSpotifyPlayer({
 
         player.addListener('player_state_changed', (state) => {
           if (!state) return;
-          const { paused, position, duration } = state;
-          setIsPlaying(!paused);
-          timeRef.current = position / 1000;
-          setCurrentTime(position / 1000);
-          updateTime(position / 1000);
+          const { paused, duration } = state;
+          // Deduplicate: only update when paused state actually changes.
+          // Time updates are handled exclusively by the polling interval to
+          // avoid rapid double-updates that cause preview line flashing.
+          if (paused !== lastPausedRef.current) {
+            lastPausedRef.current = paused;
+            setIsPlaying(!paused);
+          }
           if (duration && duration !== durationRef.current) {
             durationRef.current = duration;
             updateDuration(duration / 1000);
@@ -124,17 +144,7 @@ export default function useSpotifyPlayer({
         });
       }
 
-      let originalVolume = null;
-      if (!autoPlay) {
-        try {
-          originalVolume = await playerRef.current?.getVolume();
-          await playerRef.current?.setVolume(0);
-        } catch (e) {
-          console.warn('Failed to mute before loading:', e);
-        }
-      }
-
-      // Transfer playback and start the track
+      // Start playback on the browser SDK device
       const { accessToken } = await spotifyApi.getToken();
       const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceIdRef.current)}`, {
         method: 'PUT',
@@ -147,34 +157,7 @@ export default function useSpotifyPlayer({
         throw new Error(body.error?.message || `Playback failed: ${res.status}`);
       }
 
-      // If autoPlay is false, pause immediately
-      if (!autoPlay) {
-        // Dispatch REST pause immediately (fire-and-forget) to preempt SDK delay
-        fetch(`https://api.spotify.com/v1/me/player/pause?device_id=${encodeURIComponent(deviceIdRef.current)}`, {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }).catch(() => {});
-
-        // Wait for track to start loading, then pause via SDK
-        await new Promise(resolve => setTimeout(resolve, 800));
-        try {
-          await playerRef.current?.pause();
-          // Ensure it's actually paused by checking state
-          const state = await playerRef.current?.getCurrentState?.();
-          if (state && !state.paused) {
-            // Try pausing again if still playing
-            await new Promise(resolve => setTimeout(resolve, 200));
-            await playerRef.current?.pause();
-          }
-        } catch (err) {
-          console.warn('Failed to pause after loading:', err);
-        } finally {
-          if (originalVolume !== null) {
-            await playerRef.current?.setVolume(originalVolume);
-          }
-        }
-      }
-
+      loadingTrackIdRef.current = null;
       setTrackId(spotifyTrackId);
       if (title) onTitleChange?.(title);
       onMediaChange?.(true);
@@ -195,13 +178,36 @@ export default function useSpotifyPlayer({
       }, POLL_INTERVAL);
     } catch (err) {
       setError(err.message || 'Spotify playback failed');
+      loadingTrackIdRef.current = null;
     } finally {
       setLoading(false);
     }
-  }, [setSource, setIsPlaying, setCurrentTime, updateTime, updateDuration, onTitleChange, onMediaChange]);
+  }, [trackId, setSource, setIsPlaying, updateTime, updateDuration, onTitleChange, onMediaChange]);
+
+  // ——— Stage a track without starting the SDK ———
+  const stageTrack = useCallback((spotifyTrackId, title) => {
+    if (spotifyTrackId && (trackId === spotifyTrackId || loadingTrackIdRef.current === spotifyTrackId)) {
+      if (title) onTitleChange?.(title);
+      setSource('spotify');
+      return;
+    }
+    pendingTrackRef.current = { trackId: spotifyTrackId, title };
+    setSource('spotify');
+    if (title) onTitleChange?.(title);
+    setStaged(true);
+  }, [trackId, setSource, onTitleChange]);
 
   // ——— Playback controls ———
-  const play = useCallback(() => playerRef.current?.resume(), []);
+  const play = useCallback(async () => {
+    if (pendingTrackRef.current) {
+      const { trackId: tid, title } = pendingTrackRef.current;
+      pendingTrackRef.current = null;
+      setStaged(false);
+      await playTrack(tid, title);
+      return;
+    }
+    playerRef.current?.resume();
+  }, [playTrack]);
   const pause = useCallback(() => playerRef.current?.pause(), []);
 
   const seek = useCallback((timeSeconds) => {
@@ -231,10 +237,12 @@ export default function useSpotifyPlayer({
 
   return {
     ready,
+    staged,
     error,
     loading,
     trackId,
     playTrack,
+    stageTrack,
     play,
     pause,
     seek,

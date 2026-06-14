@@ -17,7 +17,6 @@ export default function useYouTubePlayer({
   onMediaChange,
   isPlaying,
   setSource,
-  initialYtUrl,
   onYtUrlChange,
 }) {
   // useRef gives a stable identity ESLint recognises as safe in dep arrays.
@@ -64,7 +63,7 @@ export default function useYouTubePlayer({
   const onYtUrlChangeRef = useRef(onYtUrlChange);
   useLayoutEffect(() => { onYtUrlChangeRef.current = onYtUrlChange; });
 
-  const [ytUrl, setYtUrl] = useState(initialYtUrl || '');
+  const [ytUrl, setYtUrl] = useState('');
   const [ytReady, setYtReady] = useState(false);
   const [ytLoading, setYtLoading] = useState(false);
   const [ytError, setYtError] = useState('');
@@ -195,15 +194,6 @@ export default function useYouTubePlayer({
     }
   }, [containerRef, ytUrl, t, settings.playback.volume, settings.playback.muted, settings.playback.autoRewindOnPause?.enabled, settings.playback.autoRewindOnPause?.seconds, updateDuration, updateTime, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, setSource]);
 
-  // Auto-load when initialYtUrl is provided (e.g., project restore)
-  const autoLoadedFromInitialRef = useRef(false);
-  useEffect(() => {
-    if (initialYtUrl && !autoLoadedFromInitialRef.current) {
-      autoLoadedFromInitialRef.current = true;
-      loadYouTube(initialYtUrl);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialYtUrl]);
 
   // Poll YouTube time with requestAnimationFrame
   useEffect(() => {

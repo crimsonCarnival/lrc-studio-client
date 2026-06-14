@@ -30,7 +30,7 @@ const FOCUS_RING = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus
 const ALL_SPEED_PRESETS = [0.25, 0.5, 0.75, 1, 1.25, 1.5];
 
 function Player(
-  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef, mediaTitle, onTitleChange, initialYtUrl, initialCloudinaryUpload, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onCloudinaryUpload, playerTop = false, onDockToggle, onSpotifyTrackIdChange, viewerMode = false, ref },
+  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onCloudinaryUpload, playerTop = false, onDockToggle, onSpotifyTrackIdChange, viewerMode = false, projectMetadata, ref },
 ) {
   const { t, dt } = useDynamicTranslation();
   const { settings, updateSetting } = useSettings();
@@ -171,7 +171,6 @@ function Player(
     onMediaChange,
     isPlaying,
     setSource,
-    initialYtUrl,
     onYtUrlChange,
   });
 
@@ -193,11 +192,10 @@ function Player(
   const handleSpotifyBrowserSelect = useCallback((track) => {
     const trackId = track.trackId || track.id;
     const title = track.title || track.name || '';
-    sp.playTrack(trackId, title, false);
-    onTitleChange?.(title);
+    sp.playTrack(trackId, title);
     onSpotifyTrackIdChange?.(trackId);
     setShowSpotifyBrowser(false);
-  }, [sp, onTitleChange, onSpotifyTrackIdChange]);
+  }, [sp, onSpotifyTrackIdChange]);
 
   useSpotifyAuth();
 
@@ -210,8 +208,7 @@ function Player(
     spotifyApi.createUpload(trimmed).then((result) => {
       const trackId = result.spotifyTrackId || result.trackMeta?.trackId;
       const title = result.title || result.trackMeta?.name || '';
-      sp.playTrack(trackId, title, false);
-      onTitleChange?.(title);
+      sp.playTrack(trackId, title);
       onSpotifyTrackIdChange?.(trackId);
       setSpotifyUrl('');
     }).catch((err) => setSpotifyError(err.message || 'Invalid Spotify URL'));
@@ -311,16 +308,15 @@ function Player(
     }
   }, [sp, t, onSpotifyTrackIdChange]);
 
-  const hasMedia = (source === 'local' && local.localUrl) || (source === 'youtube' && yt.ytReady) || (source === 'spotify' && sp.ready);
+  const hasMedia = (source === 'local' && local.localUrl) || (source === 'youtube' && yt.ytReady) || (source === 'spotify' && (sp.ready || sp.staged));
 
   const handleSelectUpload = useCallback((upload) => {
     if (upload.source === 'youtube' && upload.youtubeUrl) {
       yt.setYtUrl(upload.youtubeUrl);
       setTimeout(() => yt.loadYouTube(), 0);
     } else if (upload.source === 'spotify' && upload.spotifyTrackId) {
-      sp.playTrack(upload.spotifyTrackId, upload.title || upload.artist || '', false);
+      sp.playTrack(upload.spotifyTrackId, upload.title || upload.artist || '');
       onSpotifyTrackIdChange?.(upload.spotifyTrackId);
-      onTitleChange?.(upload.title || upload.artist || '');
     } else if (upload.source === 'cloudinary' && upload.cloudinaryUrl) {
       fetch(upload.cloudinaryUrl)
         .then((res) => res.blob())
@@ -360,9 +356,13 @@ function Player(
     } else if (source === 'youtube' && yt.ytReady) {
       if (isPlaying) yt.pause();
       else yt.play();
-    } else if (source === 'spotify' && sp.ready) {
-      if (isPlaying) sp.pause();
-      else sp.play();
+    } else if (source === 'spotify') {
+      if (sp.ready) {
+        if (isPlaying) sp.pause();
+        else sp.play();
+      } else if (sp.staged) {
+        void sp.play(); // lazy SDK init from pendingTrackRef
+      }
     } else {
       console.warn('[togglePlay] No branch matched — source:', source, 'audioRef.current:', audioRef.current, 'ytReady:', yt.ytReady, 'spReady:', sp.ready);
     }
@@ -453,7 +453,7 @@ function Player(
       loadLocalAudio: (file) => local.handleFileChange(file),
       loadYouTube: (url) => yt.loadYouTube(url),
       loadFromUrl: (url, title) => local.loadFromUrl(url, title),
-      loadSpotify: (trackId, title, autoPlay = false) => sp.playTrack(trackId, title, autoPlay),
+      loadSpotify: (trackId, title) => sp.playTrack(trackId, title),
       setLoop: handleLoopChange,
       clearLoop,
       getLoop: () => loop,
@@ -466,6 +466,9 @@ function Player(
   useEffect(() => {
     if (hasMedia && !restoredValuesAppliedRef.current) {
       restoredValuesAppliedRef.current = true;
+      // Pause first to prevent any autoplay, then seek to the restored position
+      if (source === 'youtube') yt.pause();
+      else if (source === 'local') local.pause();
       if (initialSeek > 0) {
         seek(initialSeek);
       }
@@ -473,36 +476,55 @@ function Player(
         // eslint-disable-next-line react-hooks/set-state-in-effect
         applySpeed(initialSpeed);
       }
-      // Ensure the player doesn't autoplay after restoring position
+      // Re-pause after seek in case seekTo triggered playback (YouTube quirk)
       if (source === 'youtube') yt.pause();
-      else if (source === 'local') local.pause();
     }
   }, [hasMedia, initialSeek, initialSpeed, seek, applySpeed, source, yt, local]);
 
-  // ——— Auto-load initial Cloudinary/Spotify media ———
-  const loadedCloudinaryRef = useRef(null);
+  // ——— Unified auto-load effect ———
+  // hydratedMediaKeyRef deduplicates within one Player mount so the same media
+  // is never loaded twice. Resets to null on remount so a fresh mount always
+  // hydrates even if the descriptor value hasn't changed.
+  const hydratedMediaKeyRef = useRef(null);
   useEffect(() => {
-    if (initialCloudinaryUpload?.id && loadedCloudinaryRef.current !== initialCloudinaryUpload.id) {
-      loadedCloudinaryRef.current = initialCloudinaryUpload.id;
-
-      if (initialCloudinaryUpload.source === 'spotify' && initialCloudinaryUpload.spotifyTrackId) {
-        // Handle Spotify
-        sp.playTrack(initialCloudinaryUpload.spotifyTrackId, initialCloudinaryUpload.title || initialCloudinaryUpload.artist || '', false);
-        onSpotifyTrackIdChange?.(initialCloudinaryUpload.spotifyTrackId);
-        onTitleChange?.(initialCloudinaryUpload.title || initialCloudinaryUpload.artist || '');
-      } else if (initialCloudinaryUpload.cloudinaryUrl) {
-        // Handle Cloudinary
-        local.loadFromUrl(initialCloudinaryUpload.cloudinaryUrl, initialCloudinaryUpload.title || initialCloudinaryUpload.fileName);
-        onCloudinaryUpload?.({
-          id: initialCloudinaryUpload.id,
-          cloudinaryUrl: initialCloudinaryUpload.cloudinaryUrl,
-          publicId: initialCloudinaryUpload.publicId,
-          fileName: initialCloudinaryUpload.fileName,
-          duration: initialCloudinaryUpload.duration,
-        });
-      }
+    if (!initialMedia) {
+      hydratedMediaKeyRef.current = null;
+      return;
     }
-  }, [initialCloudinaryUpload, local, sp, onCloudinaryUpload, onSpotifyTrackIdChange, onTitleChange]);
+    const key =
+      initialMedia.type === 'youtube'     ? initialMedia.url
+      : initialMedia.type === 'cloudinary' ? initialMedia.id
+      : initialMedia.type === 'spotify'    ? initialMedia.trackId
+      : null;
+    if (!key) return;
+
+    // Spotify: always call stageTrack — it has its own dedup guard.
+    // Skipping the key check here ensures re-staging works after Player remounts
+    // or when the Spotify player state is reset by cleanup.
+    if (initialMedia.type === 'spotify') {
+      hydratedMediaKeyRef.current = key;
+      sp.stageTrack(initialMedia.trackId, initialMedia.title || '');
+      onSpotifyTrackIdChange?.(initialMedia.trackId);
+      return;
+    }
+
+    if (key === hydratedMediaKeyRef.current) return;
+    hydratedMediaKeyRef.current = key;
+
+    if (initialMedia.type === 'youtube') {
+      yt.loadYouTube(initialMedia.url);
+    } else if (initialMedia.type === 'cloudinary') {
+      local.loadFromUrl(initialMedia.url, initialMedia.title || initialMedia.fileName);
+      onCloudinaryUpload?.({
+        id: initialMedia.id,
+        cloudinaryUrl: initialMedia.url,
+        publicId: initialMedia.publicId,
+        fileName: initialMedia.fileName,
+        duration: initialMedia.duration,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMedia]);
 
 
   const changeMediaPopoverContent = (fileInputId) => (
@@ -627,6 +649,24 @@ function Player(
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
             </svg>
             <span className="text-sm text-zinc-400">{t('player.loading') || 'Loading…'}</span>
+          </div>
+        )}
+
+        {/* Viewer-mode fallback: Spotify failed or not connected */}
+        {!hasMedia && !sp.loading && viewerMode && initialMedia?.type === 'spotify' && (
+          <div className="flex items-center justify-center gap-3 py-3 animate-fade-in">
+            {sp.error
+              ? <span className="text-xs text-zinc-500">{sp.error}</span>
+              : null}
+            <a
+              href={`https://open.spotify.com/track/${initialMedia.trackId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-[#1DB954]/10 text-[#1DB954] hover:bg-[#1DB954]/20 transition-colors"
+            >
+              <svg className="size-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+              {t('player.listenOnSpotify') || 'Listen on Spotify'}
+            </a>
           </div>
         )}
 
@@ -770,8 +810,8 @@ function Player(
               <div className="absolute inset-x-0 -top-24 mx-2 bg-zinc-900/95 border border-orange-500/30 rounded-xl px-4 py-3 flex items-start gap-3 animate-fade-in shadow-lg">
                 <AlertTriangle className="size-4 text-orange-400 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-zinc-100">Embedding disabled</p>
-                  <p className="text-[11px] text-zinc-400 mt-0.5">This video's owner blocks external playback. Use a direct audio file instead.</p>
+                  <p className="text-xs font-semibold text-zinc-100">{t('player.embeddingDisabled')}</p>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">{t('player.embeddingBlockedDesc')}</p>
                 </div>
                 <a
                   href={yt.ytUrl}
@@ -779,7 +819,7 @@ function Player(
                   rel="noopener noreferrer"
                   className="shrink-0 text-[10px] font-semibold text-orange-400 hover:text-orange-300 transition-colors whitespace-nowrap mt-0.5"
                 >
-                  Watch on YouTube ↗
+                  {t('player.watchOnYoutube')} ↗
                 </a>
               </div>
             )}
@@ -824,11 +864,11 @@ function Player(
           </div>
         )}
 
-        {(local.localUrl || yt.ytReady || sp.ready) && (
+        {hasMedia && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
             <div className="flex items-center justify-between gap-3 w-full relative min-h-[48px] pb-1.5 lg:pb-2">
 
-              {/* ── Left: Dock Toggle ── */}
+              {/* ── Left: Dock Toggle + Album Art ── */}
               <div className="flex items-center gap-2 z-10">
                 <Tip content={playerTop ? (t('player.moveToBottom') || 'Move to bottom') : (t('player.moveToTop') || 'Move to top')}>
                   <Button
@@ -841,6 +881,13 @@ function Player(
                     {playerTop ? <PanelBottom className="size-4" /> : <PanelTop className="size-4" />}
                   </Button>
                 </Tip>
+                {projectMetadata?.albumArt && (
+                  <img
+                    src={projectMetadata.albumArt}
+                    alt=""
+                    className="size-9 rounded-md object-cover border border-zinc-700/50 shrink-0"
+                  />
+                )}
               </div>
 
               {/* ── CENTERED: Transport Cluster (Times + Speed + Nudges + Play + Volume) ── */}

@@ -1,4 +1,5 @@
 import { useMemo, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
 
 /**
@@ -13,6 +14,7 @@ export default function PlaybackProgress({
   onLoopChange
 }) {
   const containerRef = useRef(null);
+  const { t } = useTranslation();
 
   const pctToTime = useCallback((pct) => {
     return Math.max(0, Math.min(duration, pct * duration));
@@ -86,7 +88,7 @@ export default function PlaybackProgress({
         ref={containerRef}
         onMouseDown={handleMouseDown}
         role="slider"
-        aria-label="Seek playback"
+        aria-label={t('player.seekPlayback')}
         aria-valuemin={0}
         aria-valuemax={duration || 0}
         aria-valuenow={playbackPosition}

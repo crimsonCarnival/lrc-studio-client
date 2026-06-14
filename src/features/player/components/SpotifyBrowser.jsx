@@ -10,13 +10,13 @@ import toast from 'react-hot-toast';
 import {
   Search, Clock, TrendingUp, Heart, ListMusic, Music2,
   Loader2, ChevronRight, ChevronLeft, Monitor, Smartphone, Speaker,
-  Plus, Check, SkipForward, Download,
+  Plus, Check, SkipForward, Download, Radio,
 } from 'lucide-react';
 import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import { LRUCache } from '@crimson-carnival/ds-js';
 
 const searchCache = new LRUCache(30);
-const TABS = ['search', 'recent', 'top', 'saved', 'playlists', 'devices'];
+const TABS = ['nowplaying', 'search', 'recent', 'top', 'saved', 'playlists', 'devices'];
 
 function TabButton({ active, onClick, icon: Icon, label }) {
   return (
@@ -152,6 +152,9 @@ export default function SpotifyBrowser({ onSelectTrack }) {
   const [playlists, setPlaylists] = useState([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState(null);
 
+  // Now playing
+  const [nowPlaying, setNowPlaying] = useState(null); // { track, isPlaying, progressMs } | null
+
   // Devices
   const [devices, setDevices] = useState([]);
 
@@ -268,6 +271,15 @@ export default function SpotifyBrowser({ onSelectTrack }) {
     setLoading(false);
   }, [handleApiError]);
 
+  const loadNowPlaying = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await spotifyApi.getCurrentlyPlaying();
+      setNowPlaying(data?.track ? data : null);
+    } catch (err) { handleApiError(err); setNowPlaying(null); }
+    setLoading(false);
+  }, [handleApiError]);
+
   const loadDevices = useCallback(async () => {
     setLoading(true);
     try {
@@ -287,13 +299,14 @@ export default function SpotifyBrowser({ onSelectTrack }) {
     setOffset(0);
     setTotal(0);
 
-    if (newTab === 'search' && searchQuery.trim()) loadSearch(searchQuery);
+    if (newTab === 'nowplaying') loadNowPlaying();
+    else if (newTab === 'search' && searchQuery.trim()) loadSearch(searchQuery);
     else if (newTab === 'recent') loadRecentlyPlayed();
     else if (newTab === 'top') loadTopTracks(timeRange);
     else if (newTab === 'saved') loadSavedTracks();
     else if (newTab === 'playlists') loadPlaylists();
     else if (newTab === 'devices') loadDevices();
-  }, [searchQuery, timeRange, loadSearch, loadRecentlyPlayed, loadTopTracks, loadSavedTracks, loadPlaylists, loadDevices]);
+  }, [searchQuery, timeRange, loadNowPlaying, loadSearch, loadRecentlyPlayed, loadTopTracks, loadSavedTracks, loadPlaylists, loadDevices]);
 
   // Auto-load on first render
   useEffect(() => {
@@ -448,6 +461,7 @@ export default function SpotifyBrowser({ onSelectTrack }) {
       )}
       {/* Tab bar */}
       <div className="flex gap-1 overflow-x-auto pb-1 settings-scroll">
+        <TabButton active={tab === 'nowplaying'} onClick={() => handleTabChange('nowplaying')} icon={Radio} label={t('spotify.nowPlaying')} />
         <TabButton active={tab === 'search'} onClick={() => handleTabChange('search')} icon={Search} label={t('spotify.search')} />
         <TabButton active={tab === 'recent'} onClick={() => handleTabChange('recent')} icon={Clock} label={t('spotify.recentlyPlayed')} />
         <TabButton active={tab === 'top'} onClick={() => handleTabChange('top')} icon={TrendingUp} label={t('spotify.topTracks')} />
@@ -551,6 +565,54 @@ export default function SpotifyBrowser({ onSelectTrack }) {
             <Loader2 className="size-4 text-green-500 animate-spin" />
             <span className="text-xs text-zinc-500">{t('player.loading')}</span>
           </div>
+        ) : tab === 'nowplaying' ? (
+          nowPlaying?.track ? (
+            <div className="flex flex-col gap-3 p-1">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+                {nowPlaying.track.albumArt ? (
+                  <img src={nowPlaying.track.albumArt} alt="" className="size-14 rounded-lg object-cover flex-shrink-0" />
+                ) : (
+                  <div className="size-14 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                    <Music2 className="size-6 text-zinc-600" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="size-1.5 rounded-full bg-green-400 animate-pulse" />
+                    <span className="text-[10px] font-semibold text-green-400 uppercase tracking-wide">
+                      {nowPlaying.isPlaying ? t('spotify.nowPlayingLabel') : t('spotify.paused')}
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold text-zinc-100 truncate">{nowPlaying.track.name}</p>
+                  <p className="text-xs text-zinc-400 truncate">{nowPlaying.track.artist}</p>
+                  {nowPlaying.track.album && (
+                    <p className="text-[10px] text-zinc-600 truncate italic">{nowPlaying.track.album}</p>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => handleSelectTrack(nowPlaying.track)}
+                className="w-full flex items-center justify-center gap-2 h-8 rounded-lg bg-green-600 hover:bg-green-500 text-white text-xs font-semibold transition-colors"
+              >
+                <Plus className="size-3.5" />
+                {t('spotify.useThisTrack')}
+              </button>
+              <button
+                onClick={loadNowPlaying}
+                className="w-full text-[10px] text-zinc-500 hover:text-zinc-300 text-center transition-colors"
+              >
+                {t('spotify.refresh')}
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-8 text-center px-4">
+              <Radio className="size-8 text-zinc-700" />
+              <p className="text-xs text-zinc-500">{t('spotify.nothingPlaying')}</p>
+              <button onClick={loadNowPlaying} className="text-[10px] text-green-500 hover:text-green-400 transition-colors">
+                {t('spotify.refresh')}
+              </button>
+            </div>
+          )
         ) : tab === 'devices' ? (
           devices.length === 0 ? (
             <p className="text-xs text-zinc-500 text-center py-6">{t('spotify.noDevices')}</p>
