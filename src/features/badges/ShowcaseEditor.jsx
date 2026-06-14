@@ -77,7 +77,7 @@ function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop 
         <div className="size-7 rounded-lg bg-zinc-800/60 flex items-center justify-center">
           <span className="text-zinc-500 text-xs font-bold">{index + 1}</span>
         </div>
-        <span className="text-[10px] text-zinc-500 uppercase tracking-widest">{t('badges.showcase.emptySlot', 'Empty')}</span>
+        <span className="text-[10px] text-zinc-500 uppercase tracking-widest">{t('badges.showcase.emptySlot')}</span>
       </div>
     );
   }
@@ -186,7 +186,7 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-zinc-200">{t('badges.showcase.editorTitle', 'Showcase')}</p>
+          <p className="text-sm font-semibold text-zinc-200">{t('badges.showcase.editorTitle')}</p>
           <p className="text-[11px] text-zinc-500 mt-0.5">
             {t('badges.showcase.slots', { count: showcase.length, max: showcaseSlots })}
             {nextUnlock && (
@@ -209,7 +209,7 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mr-1">
-              {t('badges.showcase.earned', 'Earned')} ({userBadges.length})
+              {t('badges.showcase.earned')} ({userBadges.length})
             </p>
             {['all', 'legendary', 'epic', 'rare', 'uncommon', 'common'].map(r => (
               <button
@@ -232,7 +232,7 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
           <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto custom-scrollbar pr-1">
             {filteredBadges.length === 0 ? (
               <p className="text-xs text-zinc-600 py-4 text-center">
-                {t('badges.showcase.noBadgesFilter', 'No badges match this filter')}
+                {t('badges.showcase.noBadgesFilter')}
               </p>
             ) : (
               filteredBadges.map(badge => (
@@ -249,7 +249,7 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
           {userBadges.length === 0 && (
             <div className="flex flex-col items-center gap-2 py-6 text-center">
               <span className="text-3xl opacity-30">🏆</span>
-              <p className="text-xs text-zinc-600">{t('badges.showcase.noBadgesYet', 'Earn badges to showcase them')}</p>
+              <p className="text-xs text-zinc-600">{t('badges.showcase.noBadgesYet')}</p>
             </div>
           )}
         </div>
@@ -257,7 +257,7 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
         {/* Right: Showcase slots */}
         <div className="flex flex-col gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
-            {t('badges.showcase.displayedOn', 'Displayed on profile')}
+            {t('badges.showcase.displayedOn')}
           </p>
           <div className="flex flex-col gap-1.5">
             {slots.map((badge, i) => (
@@ -294,7 +294,7 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
           >
             <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${showcasePublic ? 'translate-x-4' : 'translate-x-0.5'}`} />
           </div>
-          <span className="text-xs text-zinc-400">{t('badges.showcase.publicToggle', 'Show on profile')}</span>
+          <span className="text-xs text-zinc-400">{t('badges.showcase.publicToggle')}</span>
         </label>
 
         <button
@@ -308,7 +308,7 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
           ) : (
             <Sparkles className="size-3.5" />
           )}
-          {t('badges.showcase.save', 'Save Showcase')}
+          {t('badges.showcase.save')}
         </button>
       </div>
     </div>

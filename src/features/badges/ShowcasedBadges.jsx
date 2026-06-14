@@ -158,7 +158,7 @@ export function ShowcasedBadges({ badges = EMPTY_BADGES, maxSlots = 3, locale = 
   return (
     <section className={`flex flex-col gap-3 ${className}`}>
       <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600">
-        {t('badges.showcase.title', 'Showcase')}
+        {t('badges.showcase.title')}
       </p>
       <div className="flex gap-2 flex-wrap pb-2">
         {slots.map((badge, i) =>

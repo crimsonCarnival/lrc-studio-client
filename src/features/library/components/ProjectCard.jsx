@@ -168,10 +168,10 @@ function ProjectCard({
                 {project.editorMode}
               </span>
               {project.forkedFrom?.projectId && (
-                <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { username: project.forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
+                <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { username: project.forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject')}>
                   <span className="text-[10px] font-bold uppercase text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-1.5 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
                     <ExternalLink className="size-2.5" />
-                    {t('share.forkedBadge', 'Forked')}
+                    {t('share.forkedBadge')}
                   </span>
                 </Tip>
               )}
@@ -278,10 +278,10 @@ function ProjectCard({
               {project.editorMode}
             </span>
             {project.forkedFrom?.projectId && (
-              <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { username: project.forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject', 'Forked project')}>
+              <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { username: project.forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject')}>
                 <span className="text-[10px] font-bold uppercase text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-1.5 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
                   <ExternalLink className="size-2.5" />
-                  {t('share.forkedBadge', 'Forked')}
+                  {t('share.forkedBadge')}
                 </span>
               </Tip>
             )}

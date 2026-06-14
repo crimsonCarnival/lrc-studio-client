@@ -92,7 +92,7 @@ export function NotificationPanel() {
         onClick={() => navigate('/notifications')}
         className="w-full px-4 py-2.5 border-t border-zinc-800/60 text-xs font-medium text-primary hover:text-primary/80 hover:bg-zinc-800/40 transition-colors text-center rounded-b-xl"
       >
-        {t('notifications.viewAll', 'View all notifications')}
+        {t('notifications.viewAll')}
       </button>
     </div>
   );

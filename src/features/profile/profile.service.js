@@ -13,8 +13,8 @@ const GET_PUBLIC_PROFILE = `
         id label icon color rarity rarityPct holderCount grantedAt
       }
       projects {
-        id projectId title starCount forkCount
-        metadata { songName songArtist description tags }
+        id projectId title starCount forkCount coverImage public
+        metadata { songName songArtist songAlbum songYear genre albumArt description tags }
         upload { source youtubeUrl cloudinaryUrl }
         createdAt updatedAt
       }

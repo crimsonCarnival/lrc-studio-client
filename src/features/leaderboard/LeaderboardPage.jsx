@@ -114,7 +114,7 @@ function LeaderboardRow({ entry, rank }) {
       {/* Inline stats — icon+value chips, no text labels = no locale overflow */}
       <div className="flex items-center gap-3 shrink-0">
         {entry.currentStreak > 0 && (
-          <Tip content={t('badges.leaderboard.streak', 'Day streak')} side="top">
+          <Tip content={t('badges.leaderboard.streak')} side="top">
             <div className="hidden lg:flex items-center gap-1">
               <Flame className="size-3 text-orange-500/70" />
               <span className="text-[11px] tabular-nums font-medium text-orange-500/70">{entry.currentStreak}d</span>
@@ -126,25 +126,25 @@ function LeaderboardRow({ entry, rank }) {
           <StatChip
             icon={Music2}
             value={formatCount(entry.karaokeLines ?? 0)}
-            tooltip={t('badges.leaderboard.syncedLines', 'Synced lines')}
+            tooltip={t('badges.leaderboard.syncedLines')}
             color="text-zinc-500"
           />
           <StatChip
             icon={Star}
             value={formatCount(entry.totalStarsReceived ?? 0)}
-            tooltip={t('badges.leaderboard.stars', 'Stars received')}
+            tooltip={t('badges.leaderboard.stars')}
             color="text-zinc-500"
           />
           <StatChip
             icon={GitFork}
             value={formatCount(entry.totalForksReceived ?? 0)}
-            tooltip={t('badges.leaderboard.forks', 'Forks received')}
+            tooltip={t('badges.leaderboard.forks')}
             color="text-zinc-500"
           />
           <StatChip
             icon={Music}
             value={formatCount(entry.projectCount ?? 0)}
-            tooltip={t('badges.leaderboard.projects', 'Projects')}
+            tooltip={t('badges.leaderboard.projects')}
             color="text-zinc-500"
           />
         </div>
@@ -222,20 +222,20 @@ export default function LeaderboardPage() {
             <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 mr-auto">
               {t('badges.leaderboard.user')}
             </span>
-            <Tip content={t('badges.leaderboard.syncedLines', 'Synced lines')} side="top">
+            <Tip content={t('badges.leaderboard.syncedLines')} side="top">
               <Music2 className="size-3.5 text-zinc-600" />
             </Tip>
-            <Tip content={t('badges.leaderboard.stars', 'Stars received')} side="top">
+            <Tip content={t('badges.leaderboard.stars')} side="top">
               <Star className="size-3.5 text-zinc-600" />
             </Tip>
-            <Tip content={t('badges.leaderboard.forks', 'Forks received')} side="top">
+            <Tip content={t('badges.leaderboard.forks')} side="top">
               <GitFork className="size-3.5 text-zinc-600" />
             </Tip>
-            <Tip content={t('badges.leaderboard.projects', 'Projects')} side="top">
+            <Tip content={t('badges.leaderboard.projects')} side="top">
               <Music className="size-3.5 text-zinc-600" />
             </Tip>
             <div className="w-px h-3 bg-zinc-700/60 mx-1" />
-            <Tip content={t('badges.leaderboard.synced', 'Minutes synced')} side="top">
+            <Tip content={t('badges.leaderboard.synced')} side="top">
               <Timer className="size-3.5 text-zinc-600" />
             </Tip>
           </div>

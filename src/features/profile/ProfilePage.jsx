@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, Link, useSearchParams, useLocation } from 'react-router-dom';
+
+const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import toast from 'react-hot-toast';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
-import { Star, GitFork, Music, PlayCircle, Settings, Pencil, Trash2, Timer, FolderOpen, Trophy } from 'lucide-react';
+import { Star, GitFork, Music, PlayCircle, Settings, Pencil, Trash2, Timer, FolderOpen, Trophy, Lock } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { getPublicProfile, followUser, unfollowUser } from './profile.service';
@@ -38,8 +40,9 @@ function AvatarBadge({ avatarUrl, name, size = 'lg' }) {
 
 function ProjectCard({ project, isOwner, onEdit, onDelete }) {
   const { t } = useTranslation();
-  const { title, projectId, starCount, forkCount, metadata, upload } = project;
+  const { title, projectId, starCount, forkCount, metadata, upload, public: isPublic } = project;
   const isYoutube = upload?.source === 'youtube' || !!upload?.youtubeUrl;
+  const isPrivate = isOwner && isPublic === false;
 
   const handleEdit = (e) => {
     e.preventDefault();
@@ -72,11 +75,16 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }) {
         <h3 className="text-sm font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
           {title}
         </h3>
-        {isYoutube ? (
-          <PlayCircle className="size-4 text-red-400 shrink-0" />
-        ) : (
-          <Music className="size-4 text-muted-foreground shrink-0" />
-        )}
+        <div className="flex items-center gap-1 shrink-0">
+          {isPrivate && (
+            <Lock className="size-3.5 text-muted-foreground" aria-label={t('profile.privateProject')} />
+          )}
+          {isYoutube ? (
+            <PlayCircle className="size-4 text-red-400" />
+          ) : (
+            <Music className="size-4 text-muted-foreground" />
+          )}
+        </div>
       </div>
       {(metadata?.songName || metadata?.songArtist) && (
         <p className="text-xs text-muted-foreground line-clamp-1">
@@ -248,7 +256,7 @@ export default function ProfilePage() {
           toast.error(t('project.deleteError'));
         }
       },
-      { title: t('confirm.deleteProjectTitle', 'Delete Project'), variant: 'danger' }
+      { title: t('confirm.deleteProjectTitle'), variant: 'danger' }
     );
   }, [requestConfirm, t]);
 
@@ -266,10 +274,9 @@ export default function ProfilePage() {
 
   if (notFound) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center px-4">
-        <p className="text-lg font-semibold text-foreground">{t('profile.notFound')}</p>
-        <p className="text-sm text-muted-foreground">{t('profile.notFoundSub')}</p>
-      </div>
+      <Suspense fallback={null}>
+        <NotFoundPage type="user" identifier={accountName} />
+      </Suspense>
     );
   }
 
@@ -379,7 +386,7 @@ export default function ProfilePage() {
 
           {minutesLabel && (
             <p className="text-[10.5px] text-muted-foreground mt-1 opacity-50">
-              ¹ {t('badges.leaderboard.minutesSyncedNote', 'Own projects only — forks excluded')}
+              ¹ {t('badges.leaderboard.minutesSyncedNote')}
             </p>
           )}
 
@@ -537,7 +544,7 @@ export default function ProfilePage() {
           onClose={() => setEditingProject(null)}
           onConfirm={async (data) => {
             try {
-              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, coverImage, albumArt } = data;
+              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, albumArt } = data;
               const updatedMetadata = {
                 ...editingProject.metadata,
                 description,
@@ -546,7 +553,8 @@ export default function ProfilePage() {
                 songArtist,
                 songAlbum,
                 songYear,
-                albumArt
+                genre,
+                albumArt,
               };
               await projects.patch(editingProject.projectId, {
                 title,
@@ -574,6 +582,7 @@ export default function ProfilePage() {
           initialSongArtist={editingProject.metadata?.songArtist || ''}
           initialSongAlbum={editingProject.metadata?.songAlbum || ''}
           initialSongYear={editingProject.metadata?.songYear || ''}
+          initialGenre={editingProject.metadata?.genre || ''}
           initialCoverImage={editingProject.coverImage || ''}
           initialAlbumArt={editingProject.metadata?.albumArt || ''}
           isEditing={true}
