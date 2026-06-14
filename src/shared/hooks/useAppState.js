@@ -15,7 +15,9 @@ import { useSharedProject } from '@/features/sharing/hooks/useSharedProject';
 import { useProjectActions } from '@/features/projects/hooks/useProjectActions';
 import { lyrics, projects, getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
-import { migrateLines } from '@/shared/utils/lrc';
+import { migrateLines, splitArtists } from '@/shared/utils/lrc';
+import { sectionsToFlat } from '@/features/editor/utils/sections';
+import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 
 const MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
@@ -90,8 +92,7 @@ export function useAppState(user) {
   const [isSaving, setIsSaving] = useState(false);
 
   const [projectYtUrl, setProjectYtUrl] = useState('');
-  const [restoredYtUrl, setRestoredYtUrl] = useState('');
-  const [restoredCloudinaryUpload, setRestoredCloudinaryUpload] = useState(null);
+  const [restoredMedia, setRestoredMedia] = useState(null);
   const [restoredPosition, setRestoredPosition] = useState(0);
   const [restoredSpeed, setRestoredSpeed] = useState(1);
   const [activeProjectId, setActiveProjectId] = useState(() => {
@@ -99,7 +100,9 @@ export function useAppState(user) {
   });
   const [cloudinaryAudio, setCloudinaryAudio] = useState(null);
   const [projectSpotifyTrackId, setProjectSpotifyTrackId] = useState('');
+  const [projectCoverImage, setProjectCoverImage] = useState('');
   const [loadError, setLoadError] = useState(null); // 'project', 'upload', 'user', etc.
+  const [projectUserId, setProjectUserId] = useState(null);
   // Refs for stale-closure-safe reads inside save callbacks and guarded setLines
   const lastServerSnapshotRef = useRef(null);
   // Guard: prevents two concurrent project.create() calls (manual + autosave race)
@@ -158,7 +161,7 @@ export function useAppState(user) {
           if (!(l && typeof l === 'object')) return [];
           // Section marker
           if (l.type === 'section') {
-            return [{ type: 'section', label: l.label || '', depth: l.depth, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
+            return [{ type: 'section', label: l.label || '', depth: l.depth, singers: Array.isArray(l.singers) ? l.singers : undefined, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
           }
           if (typeof l.text !== 'string') return [];
           return [{
@@ -196,16 +199,41 @@ export function useAppState(user) {
         const restoredMode = parsed.editorMode
           || (validLines.some((l) => l.endTime != null) ? 'srt' : 'lrc');
         setEditorModeRaw(restoredMode);
-        if (parsed.ytUrl) setRestoredYtUrl(parsed.ytUrl);
+        if (parsed.ytUrl) setRestoredMedia({ type: 'youtube', url: parsed.ytUrl });
         if (typeof parsed.playbackPosition === 'number') setRestoredPosition(parsed.playbackPosition);
         if (typeof parsed.playbackSpeed === 'number') setRestoredSpeed(parsed.playbackSpeed);
         if (parsed.title) setMediaTitle(parsed.title);
-        if (parsed.metadata) setProjectMetadata(parsed.metadata);
+        if (parsed.metadata) {
+          const m = parsed.metadata;
+          setProjectMetadata({
+            ...m,
+            songArtists: Array.isArray(m.songArtists) && m.songArtists.length > 0 ? m.songArtists : splitArtists(m.songArtist || ''),
+          });
+        }
         if (parsed.cloudinaryAudio) {
           setCloudinaryAudio(parsed.cloudinaryAudio);
-          setRestoredCloudinaryUpload(parsed.cloudinaryAudio);
+          const ca = parsed.cloudinaryAudio;
+          if (ca.cloudinaryUrl) {
+            setRestoredMedia({
+              type: 'cloudinary',
+              id: ca.id,
+              url: ca.cloudinaryUrl,
+              fileName: ca.fileName ?? null,
+              title: null,
+              duration: ca.duration ?? null,
+              publicId: ca.publicId ?? null,
+            });
+          }
         }
-        if (parsed.spotifyTrackId) setProjectSpotifyTrackId(parsed.spotifyTrackId);
+        if (parsed.spotifyTrackId) {
+          setProjectSpotifyTrackId(parsed.spotifyTrackId);
+          setRestoredMedia({
+            type: 'spotify',
+            id: parsed.spotifyTrackId,
+            trackId: parsed.spotifyTrackId,
+            title: parsed.title || '',
+          });
+        }
       } catch (e) {
         console.error('localStorage restore failed', e);
       }
@@ -217,34 +245,21 @@ export function useAppState(user) {
       projects.get(activeProjectId)
         .then(({ project }) => {
           // Server data found - use it as source of truth
-          const serverLines = migrateLines((project.lyrics?.lines || []).map((l) => {
-            if (l.type === 'section') {
-              return { type: 'section', label: l.label || '', depth: l.depth, timestamp: l.timestamp ?? null, id: crypto.randomUUID() };
-            }
-            return {
-              text: l.text || '',
-              timestamp: l.timestamp ?? null,
-              endTime: l.endTime ?? undefined,
-              secondary: l.secondary || '',
-              singers: Array.isArray(l.singers) ? l.singers : undefined,
-              translations: Array.isArray(l.translations) ? l.translations : undefined,
-              id: crypto.randomUUID(),
-              words: l.words,
-              secondaryWords: l.secondaryWords,
-            };
-          }));
+          const serverLines = migrateLines(sectionsToFlat(project.lyrics?.sections || []).map((l) => ({ ...l, id: l.id || crypto.randomUUID() })));
           setLines(serverLines);
           clearHistory();
           setSyncMode(serverLines.length > 0 ? true : (project.state?.syncMode ?? true));
           setActiveLineIndex(project.state?.activeLineIndex || 0);
           setEditorModeRaw(project.lyrics?.editorMode || 'lrc');
-          if (project.upload?.youtubeUrl) setRestoredYtUrl(project.upload.youtubeUrl);
-          if (project.upload?.source === 'cloudinary' && project.upload?.cloudinaryUrl) {
-            setRestoredCloudinaryUpload(project.upload);
+          setRestoredMedia(uploadToRestoredMedia(project.upload));
+          if (project.upload?.source === 'spotify' && project.upload?.spotifyTrackId) {
+            setProjectSpotifyTrackId(project.upload.spotifyTrackId);
           }
+          if (project.upload?.id) sessionUploadIdRef.current = project.upload.id;
           if (project.state?.playbackPosition) setRestoredPosition(project.state.playbackPosition);
           if (project.state?.playbackSpeed) setRestoredSpeed(project.state.playbackSpeed);
           if (project.title) setMediaTitle(project.title);
+          if (project.coverImage) setProjectCoverImage(project.coverImage);
           setForkedFrom(project.forkedFrom || null);
           if (project.metadata) {
             const m = project.metadata;
@@ -253,10 +268,14 @@ export function useAppState(user) {
               tags: m.tags || [],
               songName: m.songName || '',
               songArtist: m.songArtist || '',
-              songArtists: Array.isArray(m.songArtists) ? m.songArtists : (m.songArtist ? [m.songArtist] : []),
+              songArtists: Array.isArray(m.songArtists) && m.songArtists.length > 0 ? m.songArtists : splitArtists(m.songArtist || ''),
               songAlbum: m.songAlbum || '',
               songYear: m.songYear || '',
+              genre: m.genre || '',
+              albumArt: m.albumArt || '',
               songLanguage: m.songLanguage || '',
+              ...(m.trackNumber != null ? { trackNumber: m.trackNumber } : {}),
+              ...(m.trackCount != null ? { trackCount: m.trackCount } : {}),
             });
           }
           // ── Rollback to setup if the project has lyrics but no media ──
@@ -374,19 +393,42 @@ export function useAppState(user) {
       }
       setEditorModeRaw(parsed.editorMode || 'lrc');
       if (parsed.ytUrl) {
-        setRestoredYtUrl(parsed.ytUrl);
-        setProjectYtUrl(parsed.ytUrl); // ensure save payload includes the URL
+        setRestoredMedia({ type: 'youtube', url: parsed.ytUrl });
+        setProjectYtUrl(parsed.ytUrl);
       }
       if (typeof parsed.playbackPosition === 'number') setRestoredPosition(parsed.playbackPosition);
       if (typeof parsed.playbackSpeed === 'number') setRestoredSpeed(parsed.playbackSpeed);
       if (parsed.title) setMediaTitle(parsed.title);
-      if (parsed.metadata) setProjectMetadata(parsed.metadata);
+      if (parsed.metadata) {
+        const m = parsed.metadata;
+        setProjectMetadata({
+          ...m,
+          songArtists: Array.isArray(m.songArtists) && m.songArtists.length > 0 ? m.songArtists : splitArtists(m.songArtist || ''),
+        });
+      }
       if (parsed.cloudinaryAudio) {
         setCloudinaryAudio(parsed.cloudinaryAudio);
-        setRestoredCloudinaryUpload(parsed.cloudinaryAudio);
+        const ca = parsed.cloudinaryAudio;
+        if (ca.cloudinaryUrl) {
+          setRestoredMedia({
+            type: 'cloudinary',
+            id: ca.id,
+            url: ca.cloudinaryUrl,
+            fileName: ca.fileName ?? null,
+            title: null,
+            duration: ca.duration ?? null,
+            publicId: ca.publicId ?? null,
+          });
+        }
       }
       if (parsed.spotifyTrackId) {
         setProjectSpotifyTrackId(parsed.spotifyTrackId);
+        setRestoredMedia({
+          type: 'spotify',
+          id: parsed.spotifyTrackId,
+          trackId: parsed.spotifyTrackId,
+          title: parsed.title || '',
+        });
       }
       if (parsed.forkedFrom) setForkedFrom(parsed.forkedFrom);
     } catch (e) {
@@ -434,8 +476,7 @@ export function useAppState(user) {
     setSyncMode,
     setActiveLineIndex,
     setEditorModeRaw,
-    setRestoredYtUrl,
-    setRestoredCloudinaryUpload,
+    setRestoredMedia,
     setProjectSpotifyTrackId,
     setRestoredPosition,
     setRestoredSpeed,
@@ -452,8 +493,7 @@ export function useAppState(user) {
     projectYtUrl,
     cloudinaryAudio,
     projectSpotifyTrackId,
-    restoredYtUrl,
-    restoredCloudinaryUpload,
+    restoredMedia,
   });
 
   // Handle Playback Time (s) and Readonly params on mount
@@ -517,8 +557,7 @@ export function useAppState(user) {
     setMediaTitle,
     setProjectMetadata,
     setProjectYtUrl,
-    setRestoredYtUrl,
-    setRestoredCloudinaryUpload,
+    setRestoredMedia,
     setRestoredPosition,
     setRestoredSpeed,
     setActiveProjectId,
@@ -535,6 +574,7 @@ export function useAppState(user) {
     sessionUploadIdRef,
     pendingProject,
     setProjectSpotifyTrackId,
+    setProjectCoverImage,
     mediaTitle,
     projectMetadata,
     duration,
@@ -542,6 +582,7 @@ export function useAppState(user) {
     toast,
     requestConfirm,
     isCreatingProjectRef,
+    setProjectUserId,
   });
 
 
@@ -710,7 +751,7 @@ export function useAppState(user) {
       if (!window.location.pathname.startsWith('/project/')) return;
 
       // Block exit while a save / create is in-flight so we don't corrupt state.
-      if (isSaving || isCreatingProjectRef.current) {
+      if (isSaving || (isCreatingProjectRef.current && !!activeProjectIdRef.current)) {
         e.preventDefault();
         e.returnValue = '';
         return '';
@@ -829,8 +870,8 @@ export function useAppState(user) {
     handleTimeUpdate,
     handleDurationChange,
     handleYtUrlChange,
-    restoredYtUrl,
-    restoredCloudinaryUpload,
+    restoredMedia,
+    setRestoredMedia,
     restoredPosition,
     restoredSpeed,
     exportToUrl,
@@ -849,9 +890,12 @@ export function useAppState(user) {
     resetAppState,
     handleCloudinaryUpload,
     setProjectSpotifyTrackId,
+    projectCoverImage,
+    setProjectCoverImage,
     isProjectLoading,
     loadError,
     setLoadError,
+    projectUserId,
     setHasMedia,
     registerAfterSave,
     buildProjectPayload,

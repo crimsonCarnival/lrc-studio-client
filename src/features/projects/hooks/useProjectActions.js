@@ -2,13 +2,15 @@ import { useCallback } from 'react';
 import { projects, uploads, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { updateServerSnapshot } from '@/features/editor/hooks/useManualSave';
+import { sectionsToFlat, flatToSections } from '@/features/editor/utils/sections';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
+import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 
 function sanitizeLines(raw) {
   return (raw || []).flatMap((l) => {
     if (!(l && typeof l === 'object')) return [];
     if (l.type === 'section') {
-      return [{ type: 'section', label: l.label || '', timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
+      return [{ type: 'section', label: l.label || '', depth: l.depth, singers: Array.isArray(l.singers) ? l.singers : undefined, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
     }
     if (typeof l.text !== 'string') return [];
     return [{
@@ -16,12 +18,13 @@ function sanitizeLines(raw) {
       timestamp: typeof l.timestamp === 'number' && isFinite(l.timestamp) ? l.timestamp : null,
       endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
       secondary: typeof l.secondary === 'string' ? l.secondary : '',
+      singers: Array.isArray(l.singers) ? l.singers : undefined,
       translations: Array.isArray(l.translations) ? l.translations : undefined,
       id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
       words: Array.isArray(l.words)
         ? l.words.flatMap((w) => {
             const word = typeof w.word === 'string' ? w.word : '';
-            return word ? [{ word, time: typeof w.time === 'number' && isFinite(w.time) ? w.time : null, ...(typeof w.reading === 'string' && w.reading ? { reading: w.reading } : {}) }] : [];
+            return word ? [{ word, time: typeof w.time === 'number' && isFinite(w.time) ? w.time : null, ...(w.singerIndex != null ? { singerIndex: w.singerIndex } : {}), ...(typeof w.reading === 'string' && w.reading ? { reading: w.reading } : {}) }] : [];
           })
         : undefined,
       secondaryWords: Array.isArray(l.secondaryWords)
@@ -45,8 +48,7 @@ export function useProjectActions({
   setMediaTitle,
   setProjectMetadata,
   setProjectYtUrl,
-  setRestoredYtUrl,
-  setRestoredCloudinaryUpload,
+  setRestoredMedia,
   setRestoredPosition,
   setRestoredSpeed,
   setActiveProjectId,
@@ -63,6 +65,7 @@ export function useProjectActions({
   sessionUploadIdRef,
   pendingProject,
   setProjectSpotifyTrackId,
+  setProjectCoverImage,
   mediaTitle,
   projectMetadata,
   duration,
@@ -70,35 +73,34 @@ export function useProjectActions({
   toast,
   requestConfirm,
   isCreatingProjectRef,
+  setProjectUserId,
 }) {
   const { executeRecaptcha } = useGoogleReCaptcha();
   // ── Load a project from the library ──────────────────────────────────────
   const loadProject = useCallback(async (projectId) => {
     setIsProjectLoading(true);
+    setProjectUserId?.(null);
     try {
       const { project } = await projects.get(projectId);
       if (!project) throw new Error('Project not found');
-      const projectLines = (project?.lyrics?.lines || []).flatMap((l) => {
-        if (l.type === 'section') return [{ type: 'section', label: l.label || '', timestamp: l.timestamp ?? null, id: crypto.randomUUID() }];
-        return [{
-        text: l.text || '',
-        timestamp: l.timestamp ?? null,
-        endTime: l.endTime ?? undefined,
-        secondary: l.secondary || '',
-        translations: Array.isArray(l.translations) ? l.translations : undefined,
-        id: crypto.randomUUID(),
-        words: l.words,
-        secondaryWords: l.secondaryWords,
-        }];
-      });
+      // Server returns sections[]; convert to flat for editor state.
+      // Assign fresh IDs so React keys are stable per session.
+      const rawFlat = sectionsToFlat(project?.lyrics?.sections || []);
+      const projectLines = sanitizeLines(rawFlat);
       // Always restore all project state
       setLines(projectLines);
       setSyncMode(project.state?.syncMode ?? true);
       setActiveLineIndex(project.state?.activeLineIndex || 0);
       setEditorModeRaw(project.lyrics?.editorMode || 'lrc');
       // Always restore media
-      if (project.upload?.youtubeUrl) setRestoredYtUrl(project.upload.youtubeUrl);
-      else if (project.upload?.source === 'cloudinary' || project.upload?.cloudinaryUrl) setRestoredCloudinaryUpload(project.upload);
+      setRestoredMedia(uploadToRestoredMedia(project.upload));
+      if (project.upload?.source === 'youtube' && project.upload?.youtubeUrl) {
+        setProjectYtUrl?.(project.upload.youtubeUrl);
+      } else if (project.upload?.source === 'cloudinary') {
+        setCloudinaryAudio?.(project.upload);
+      } else if (project.upload?.source === 'spotify' && project.upload?.spotifyTrackId) {
+        setProjectSpotifyTrackId?.(project.upload.spotifyTrackId);
+      }
       if (project.upload?.id) {
         sessionUploadIdRef.current = project.upload.id;
       } else {
@@ -107,9 +109,12 @@ export function useProjectActions({
       if (project.state?.playbackPosition) setRestoredPosition(project.state.playbackPosition);
       if (project.state?.playbackSpeed) setRestoredSpeed(project.state.playbackSpeed);
       if (project.title) setMediaTitle(project.title);
+      setProjectMetadata?.(project.metadata || {});
+      setProjectCoverImage?.(project.coverImage || '');
       setForkedFrom(project.forkedFrom || null);
       setActiveProjectId(projectId);
       activeProjectIdRef.current = projectId;
+      setProjectUserId?.(project.user?.id ?? null);
       updateServerSnapshot(lastServerSnapshotRef, {
         title: project.title || '',
         metadata: project.metadata || { description: '', tags: [] },
@@ -138,7 +143,7 @@ export function useProjectActions({
     } finally {
       setIsProjectLoading(false);
     }
-  }, [setLines, setSyncMode, setActiveLineIndex, setEditorModeRaw, setMediaTitle, setForkedFrom, setRestoredYtUrl, setRestoredCloudinaryUpload, setRestoredPosition, setRestoredSpeed, setActiveProjectId, activeProjectIdRef, lastServerSnapshotRef, sessionUploadIdRef, setIsProjectLoading]);
+  }, [setLines, setSyncMode, setActiveLineIndex, setEditorModeRaw, setMediaTitle, setForkedFrom, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setActiveProjectId, activeProjectIdRef, lastServerSnapshotRef, sessionUploadIdRef, setIsProjectLoading, setProjectSpotifyTrackId, setProjectMetadata, setProjectYtUrl, setCloudinaryAudio, setProjectCoverImage, setProjectUserId]);
 
   // ── Restore pending (localStorage) project ────────────────────────────────
   const handleRestoreProject = useCallback(() => {
@@ -148,14 +153,37 @@ export function useProjectActions({
 
     isCreatingProjectRef.current = true;
     setLines(validLines);
-    setForkedFrom(pendingProject.forkedFrom || null); 
+    setForkedFrom(pendingProject.forkedFrom || null);
     setSyncMode(true);
     const idx = pendingProject.activeLineIndex;
     if (typeof idx === 'number' && idx >= 0 && idx < validLines.length) setActiveLineIndex(idx);
     const restoredMode = pendingProject.editorMode || (validLines.some((l) => l.endTime != null) ? 'srt' : 'lrc');
     setEditorModeRaw(restoredMode);
-    if (pendingProject.ytUrl) setRestoredYtUrl(pendingProject.ytUrl);
-    if (pendingProject.cloudinaryAudio) setRestoredCloudinaryUpload(pendingProject.cloudinaryAudio);
+    if (pendingProject.title) setMediaTitle(pendingProject.title);
+    if (pendingProject.metadata) setProjectMetadata(pendingProject.metadata);
+    if (pendingProject.ytUrl) {
+      setProjectYtUrl(pendingProject.ytUrl);
+      setRestoredMedia({ type: 'youtube', url: pendingProject.ytUrl });
+    } else if (pendingProject.cloudinaryAudio?.cloudinaryUrl) {
+      const ca = pendingProject.cloudinaryAudio;
+      setCloudinaryAudio(ca);
+      setRestoredMedia({
+        type: 'cloudinary',
+        id: ca.id,
+        url: ca.cloudinaryUrl,
+        fileName: ca.fileName ?? null,
+        title: null,
+        duration: ca.duration ?? null,
+        publicId: ca.publicId ?? null,
+      });
+    } else if (pendingProject.spotifyTrackId) {
+      setRestoredMedia({
+        type: 'spotify',
+        id: pendingProject.spotifyTrackId,
+        trackId: pendingProject.spotifyTrackId,
+        title: pendingProject.title || '',
+      });
+    }
     if (pendingProject.spotifyTrackId) setProjectSpotifyTrackId(pendingProject.spotifyTrackId);
     if (typeof pendingProject.playbackPosition === 'number') setRestoredPosition(pendingProject.playbackPosition);
     if (typeof pendingProject.playbackSpeed === 'number') setRestoredSpeed(pendingProject.playbackSpeed);
@@ -220,10 +248,10 @@ export function useProjectActions({
               }
             } catch (err) { console.error('[Restore] Spotify upload save failed:', err); }
           }
-          const serverPayload = { 
-            title: mediaTitle || pendingProject.title || '', 
-            metadata: projectMetadata, 
-            lyrics: { editorMode: restoredMode, lines: validLines }, 
+          const serverPayload = {
+            title: pendingProject.title || mediaTitle || '',
+            metadata: pendingProject.metadata || projectMetadata,
+            lyrics: { editorMode: restoredMode, sections: flatToSections(validLines) },
             state: { 
               syncMode: true, 
               activeLineIndex: idx || 0, 
@@ -266,7 +294,7 @@ export function useProjectActions({
       isCreatingProjectRef.current = false;
       setPendingProject(null);
     }
-  }, [pendingProject, setPendingProject, setLines, setForkedFrom, setSyncMode, setActiveLineIndex, setEditorModeRaw, setRestoredYtUrl, setRestoredPosition, setRestoredSpeed, setIsProjectLoading, activeProjectId, activeProjectIdRef, setActiveProjectId, sessionUploadIdRef, mediaTitle, projectMetadata, duration, executeRecaptcha, isCreatingProjectRef, setRestoredCloudinaryUpload, setProjectSpotifyTrackId]);
+  }, [pendingProject, setPendingProject, setLines, setForkedFrom, setSyncMode, setActiveLineIndex, setEditorModeRaw, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setIsProjectLoading, activeProjectId, activeProjectIdRef, setActiveProjectId, sessionUploadIdRef, mediaTitle, projectMetadata, duration, executeRecaptcha, isCreatingProjectRef, setProjectSpotifyTrackId, setMediaTitle, setProjectMetadata, setProjectYtUrl, setCloudinaryAudio]);
 
   // ── Discard pending project ───────────────────────────────────────────────
   const handleDiscardProject = useCallback(() => {
@@ -294,7 +322,7 @@ export function useProjectActions({
     setProjectMetadata({ description: '', tags: [] });
     setForkedFrom(null);
     setProjectYtUrl('');
-    setRestoredYtUrl('');
+    setRestoredMedia(null);
     setRestoredPosition(0);
     setRestoredSpeed(1);
     setActiveProjectId(null);
@@ -305,7 +333,7 @@ export function useProjectActions({
     localStorage.removeItem(STORAGE_KEYS.SHARED_PROJECT);
     lastServerSnapshotRef.current = null;
     sessionUploadIdRef.current = null;
-  }, [setLines, setSyncMode, setActiveLineIndex, setMediaTitle, setProjectMetadata, setForkedFrom, setProjectYtUrl, setRestoredYtUrl, setRestoredPosition, setRestoredSpeed, setActiveProjectId, activeProjectIdRef, setCloudinaryAudio, lastServerSnapshotRef, sessionUploadIdRef]);
+  }, [setLines, setSyncMode, setActiveLineIndex, setMediaTitle, setProjectMetadata, setForkedFrom, setProjectYtUrl, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setActiveProjectId, activeProjectIdRef, setCloudinaryAudio, lastServerSnapshotRef, sessionUploadIdRef]);
 
   // ── Media change handlers ─────────────────────────────────────────────────
   const handleMediaChange = useCallback((loaded) => {

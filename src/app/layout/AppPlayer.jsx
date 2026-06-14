@@ -22,8 +22,7 @@ export function AppPlayer({
   handleMediaChange,
   handleYtUrlChange,
   handleCloudinaryUpload,
-  restoredYtUrl,
-  restoredCloudinaryUpload,
+  restoredMedia,
   restoredPosition,
   restoredSpeed,
   projectMetadata,
@@ -73,8 +72,7 @@ export function AppPlayer({
             onMediaChange={handleMediaChange}
             onYtUrlChange={handleYtUrlChange}
             onCloudinaryUpload={handleCloudinaryUpload}
-            initialYtUrl={restoredYtUrl}
-            initialCloudinaryUpload={restoredCloudinaryUpload}
+            initialMedia={restoredMedia}
             initialSeek={restoredPosition}
             initialSpeed={restoredSpeed}
             projectMetadata={projectMetadata}

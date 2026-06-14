@@ -142,7 +142,7 @@ const PanelReorderGroup = React.memo(function PanelReorderGroup({
   );
 });
 
-function EditorContainer({ loadProject, activeProjectId, children }) {
+function EditorContainer({ loadProject, activeProjectId, isProjectLoading, projectUserId, user, navigate, children }) {
   const { id } = useParams();
 
   useEffect(() => {
@@ -152,6 +152,12 @@ function EditorContainer({ loadProject, activeProjectId, children }) {
     // loadProject is stable (useCallback); route param id is the true trigger
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, activeProjectId]);
+
+  useEffect(() => {
+    if (!isProjectLoading && projectUserId && activeProjectId === id && user && user.id !== projectUserId) {
+      navigate(`/project/${id}`);
+    }
+  }, [isProjectLoading, projectUserId, activeProjectId, id, user, navigate]);
 
   return children;
 }
@@ -216,6 +222,7 @@ export function AppRouter({
     loadProject,
     activeProjectId,
     isProjectLoading,
+    projectUserId,
     lines,
     setLines,
     syncMode,
@@ -255,12 +262,13 @@ export function AppRouter({
     handleSetupComplete,
     setShowKeyboardHelp,
     buildProjectPayload,
+    restoredMedia,
   } = appState;
 
   usePageTitle(mediaTitle);
 
   const { user } = useAuthContext();
-  const { editorColClass, previewColClass, showEditor, showPreview, mobileTab, layoutSwap, setLayoutSwap, editorWidth, setEditorWidth, lockLayout, focusMode } = layoutState;
+  const { editorColClass, previewColClass, showEditor, showPreview, mobileTab, layoutSwap, setLayoutSwap, editorWidth, setEditorWidth, lockLayout, focusMode, setShowNamingModal } = layoutState;
   const [draggingItem, setDraggingItem] = useState(null);
   const [isResizing, setIsResizing] = useState(false);
   const [isHoveringDivider, setIsHoveringDivider] = useState(false);
@@ -312,6 +320,7 @@ export function AppRouter({
     isSaving,
     onNewProject: handleNewProject,
     onShowKeyboardHelp: setShowKeyboardHelp ? handleToggleKeyboardHelp : undefined,
+    onOpenProjectSettings: setShowNamingModal ? () => setShowNamingModal(true) : undefined,
     registerAfterSave,
     songArtists: projectMetadata?.songArtists || [],
   }), [
@@ -326,6 +335,7 @@ export function AppRouter({
     isSaving,
     handleNewProject,
     setShowKeyboardHelp, handleToggleKeyboardHelp,
+    setShowNamingModal,
     registerAfterSave,
     projectMetadata,
   ]);
@@ -424,7 +434,7 @@ export function AppRouter({
       } />
       <Route path="project/fork/:id" element={<ForkHandler appState={appState} navigate={navigate} />} />
       <Route path="project/:id/edit" element={
-        <EditorContainer loadProject={loadProject} activeProjectId={activeProjectId}>
+        <EditorContainer loadProject={loadProject} activeProjectId={activeProjectId} isProjectLoading={isProjectLoading} projectUserId={projectUserId} user={user} navigate={navigate}>
           {loadError === 'project' ? (
             <NotFoundPage type="project" />
           ) : isProjectLoading ? (
@@ -465,7 +475,7 @@ export function AppRouter({
         </Suspense>
       } />
       <Route path="project/local" element={
-        editorReady && lines.length === 0 && !hasMedia && !pendingProject
+        editorReady && lines.length === 0 && !hasMedia && !pendingProject && !restoredMedia
           && new URLSearchParams(routerLocation.search).get('fromGuest') !== '1'
           ? <Navigate to="/project/new" replace />
           : <div ref={containerRef} className="flex-1 flex flex-col min-h-0 w-full overflow-x-hidden max-lg:pb-4">
