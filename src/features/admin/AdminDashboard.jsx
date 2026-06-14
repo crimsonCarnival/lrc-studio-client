@@ -14,6 +14,7 @@ import AdminIpsTab from './AdminIpsTab';
 import AdminDevicesTab from './AdminDevicesTab';
 import AdminAuditTab from './AdminAuditTab';
 import AdminBadgesTab from './AdminBadgesTab';
+import SudoPasswordModal from './SudoPasswordModal';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
@@ -532,6 +533,10 @@ export default function AdminDashboard() {
         onReject={handleRejectAppeal}
         onCancel={() => setAppealModal({ isOpen: false, user: null })}
       />
+
+      {/* Admin re-auth ("sudo") prompt — opens when a destructive action needs a
+          fresh password grant. (F24) */}
+      <SudoPasswordModal />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { request } from '@/app/api.client.js';
+import { withSudo } from './sudo.js';
 
 export const adminService = {
   async getUsers(params) {
@@ -6,44 +7,47 @@ export const adminService = {
     return request(`/admin/users?${query}`);
   },
 
+  // Destructive actions are wrapped in withSudo: if the server demands a fresh
+  // sudo grant (403 sudo_required), the password prompt fires and the call is
+  // retried automatically. (F24)
   async banUser(userId, { reason, bannedUntil, banIp }) {
-    return request(`/admin/users/${userId}/ban`, {
+    return withSudo(() => request(`/admin/users/${userId}/ban`, {
       method: 'POST',
       body: JSON.stringify({ reason, bannedUntil, banIp }),
-    });
+    }));
   },
 
   async unbanUser(userId) {
-    return request(`/admin/users/${userId}/unban`, {
+    return withSudo(() => request(`/admin/users/${userId}/unban`, {
       method: 'POST',
-    });
+    }));
   },
-  
+
   async rejectAppeal(userId) {
-    return request(`/admin/users/${userId}/reject-appeal`, {
+    return withSudo(() => request(`/admin/users/${userId}/reject-appeal`, {
       method: 'POST',
-    });
+    }));
   },
 
   async changeRole(userId, role) {
-    return request(`/admin/users/${userId}/role`, {
+    return withSudo(() => request(`/admin/users/${userId}/role`, {
       method: 'POST',
       body: JSON.stringify({ role }),
-    });
+    }));
   },
 
   async deleteUser(userId) {
-    return request(`/admin/users/${userId}`, {
+    return withSudo(() => request(`/admin/users/${userId}`, {
       method: 'DELETE',
-    });
+    }));
   },
 
   async reactivateUser(userId) {
-    return request(`/admin/users/${userId}/reactivate`, {
+    return withSudo(() => request(`/admin/users/${userId}/reactivate`, {
       method: 'POST',
-    });
+    }));
   },
-  
+
   async getStats() {
     return request('/admin/stats');
   },
@@ -53,16 +57,16 @@ export const adminService = {
   },
 
   async blockIp(ip, reason) {
-    return request('/admin/banned-ips', {
+    return withSudo(() => request('/admin/banned-ips', {
       method: 'POST',
       body: JSON.stringify({ ip, reason }),
-    });
+    }));
   },
 
   async unblockIp(ipId) {
-    return request(`/admin/banned-ips/${ipId}`, {
+    return withSudo(() => request(`/admin/banned-ips/${ipId}`, {
       method: 'DELETE',
-    });
+    }));
   },
 
   async getBannedDevices() {
@@ -70,16 +74,16 @@ export const adminService = {
   },
 
   async blockDevice(deviceId, reason) {
-    return request('/admin/banned-devices', {
+    return withSudo(() => request('/admin/banned-devices', {
       method: 'POST',
       body: JSON.stringify({ deviceId, reason }),
-    });
+    }));
   },
 
   async unblockDevice(deviceIdId) {
-    return request(`/admin/banned-devices/${deviceIdId}`, {
+    return withSudo(() => request(`/admin/banned-devices/${deviceIdId}`, {
       method: 'DELETE',
-    });
+    }));
   },
 
   async getAuditLogs(params) {
@@ -88,9 +92,9 @@ export const adminService = {
   },
 
   async adjustXP({ action, amount, target, userId, userIds }) {
-    return request('/admin/xp', {
+    return withSudo(() => request('/admin/xp', {
       method: 'POST',
       body: JSON.stringify({ action, amount, target, userId, userIds }),
-    });
+    }));
   },
 };

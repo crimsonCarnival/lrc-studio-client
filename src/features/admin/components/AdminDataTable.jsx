@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 
 /**
@@ -18,10 +19,12 @@ export function AdminDataTable({
   renderCell,
   renderRow,
   onRowAction,
-  actionLabel = 'View Details'
+  actionLabel
 }) {
+  const { t } = useTranslation();
   const inputMethod = useInputMethod();
   const isMobile = inputMethod === 'touch';
+  const rowActionLabel = actionLabel || t('admin.table.viewDetails');
 
   if (isMobile) {
     // Card-based layout for mobile
@@ -48,14 +51,14 @@ export function AdminDataTable({
                     onClick={() => onRowAction(row)}
                     className="mt-2 h-11 px-3 text-sm font-medium bg-primary/20 hover:bg-primary/30 rounded-lg text-primary transition-colors active:bg-primary/40"
                   >
-                    {actionLabel}
+                    {rowActionLabel}
                   </button>
                 )}
               </div>
             )
           )
         ) : (
-          <div className="text-center p-8 text-zinc-500">No data available</div>
+          <div className="text-center p-8 text-zinc-500">{t('admin.table.noData')}</div>
         )}
       </div>
     );
@@ -91,7 +94,7 @@ export function AdminDataTable({
         ) : (
           <tr>
             <td colSpan={columns.length} className="px-4 py-8 text-center text-zinc-500">
-              No data available
+              {t('admin.table.noData')}
             </td>
           </tr>
         )}
