@@ -27,6 +27,9 @@ function getLineSingers(line) {
 export default function PreviewLine({
   line,
   originalIndex: i,
+  prevLine: prevLineProp = null,
+  hasMultipleSingers = true,
+  sectionNumbers = null,
   displayedActiveIndex,
   lockedLineIndex,
   isDualLine,
@@ -56,9 +59,13 @@ export default function PreviewLine({
 
   // Section marker — render as a divider chip
   if (line.type === 'section') {
-    const labelStr = formatSectionLabel(line.label, t);
     const isRoot = line.depth === 0;
     const singers = getLineSingers(line);
+    const sectionNum = sectionNumbers?.get(line.id);
+    const baseLabel = line.label?.trim().toLowerCase().replace(/\s+\d+$/, '') ?? '';
+    const labelStr = sectionNum != null
+      ? `${formatSectionLabel(baseLabel || line.label, t)} ${sectionNum}`
+      : formatSectionLabel(line.label, t);
     
     return (
       <div className={`flex items-center gap-3 px-2 sm:px-4 py-2 ${isRoot ? 'my-4' : 'my-1'}`}>
@@ -110,10 +117,13 @@ export default function PreviewLine({
   const activeTranslationText = line.translations?.[activeTranslationIndex]?.text ?? null;
 
   const currentLineIndexInDisplay = displayLines?.findIndex(dl => dl.originalIndex === i);
-  const prevLine = currentLineIndexInDisplay > 0 ? displayLines[currentLineIndexInDisplay - 1] : null;
-  const prevSingersStr = prevLine && prevLine.type !== 'section' ? getLineSingers(prevLine).join(',') : '';
-  const currentSingersStr = getLineSingers(line).join(',');
-  const showSingers = currentSingersStr && currentSingersStr !== prevSingersStr;
+  const prevLineFromDisplay = currentLineIndexInDisplay > 0 ? displayLines[currentLineIndexInDisplay - 1] : null;
+  const effectivePrevLine = prevLineFromDisplay ?? prevLineProp;
+  const prevSingersStr = effectivePrevLine ? getLineSingers(effectivePrevLine).join(',') : '';
+  const currentLineSingers = getLineSingers(line);
+  const currentSingersStr = currentLineSingers.join(',');
+  // Always show label when line has multiple singers; suppress only for single-singer repeats
+  const showSingers = hasMultipleSingers && currentSingersStr && (currentLineSingers.length >= 2 || currentSingersStr !== prevSingersStr);
 
   const inner = (
     <button
@@ -336,8 +346,9 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
           }
           const nextWord = words[wi + 1];
           const addSpace = needsSpaceAfter(w.word, nextWord?.word);
-          const wordSingerColor = (w.singerIndex != null && line.singers?.length >= 2)
-            ? (WORD_SINGER_PREVIEW_COLORS[w.singerIndex] || '')
+          const effectiveSingerIdx = w.singerIndex ?? (line.singers?.length === 1 ? 0 : null);
+          const wordSingerColor = effectiveSingerIdx != null
+            ? (WORD_SINGER_PREVIEW_COLORS[effectiveSingerIdx] || '')
             : '';
 
           const wordContent = w.reading && isKanjiWord(w.word) && showFuriganaInPreview
@@ -370,12 +381,13 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
             </React.Fragment>
           );
         })
-        // No word timestamps: render with singer coloring if words have singerIndex
+        // No word timestamps: render with singer coloring if line has singers
         : (() => {
-          const hasSingerSplit = line.singers?.length >= 2 && line.words?.some(w => w.singerIndex != null);
+          const hasSingerSplit = line.singers?.length >= 1 && line.words?.length > 0;
           if (hasSingerSplit) {
             return line.words.map((w, wi) => {
-              const singerColor = w.singerIndex != null ? (WORD_SINGER_PREVIEW_COLORS[w.singerIndex] || '') : '';
+              const effIdx = w.singerIndex ?? (line.singers.length === 1 ? 0 : null);
+              const singerColor = effIdx != null ? (WORD_SINGER_PREVIEW_COLORS[effIdx] || '') : '';
               const nextWord = line.words[wi + 1];
               const addSpace = needsSpaceAfter(w.word, nextWord?.word);
               return (
@@ -386,7 +398,11 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
               );
             });
           }
-          return hasReadings ? renderLineWithReadings(line, fmtReading, showFuriganaInPreview) : mainText;
+          const singerFallbackColor = line.singers?.length >= 1 ? (WORD_SINGER_PREVIEW_COLORS[0] || '') : '';
+          const plainContent = hasReadings ? renderLineWithReadings(line, fmtReading, showFuriganaInPreview) : mainText;
+          return singerFallbackColor
+            ? <span className={singerFallbackColor}>{plainContent}</span>
+            : plainContent;
         })()
       }
     </p>

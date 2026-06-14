@@ -155,7 +155,7 @@ export default function Preview(props) {
           {hasSyncedLines && (
             <div className="relative flex items-center gap-1 text-zinc-300">
               {hasFurigana && (
-                <Tip content={t('preview.furigana', 'Furigana')}>
+                <Tip content={t('preview.furigana')}>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -258,7 +258,7 @@ export default function Preview(props) {
               {/* Menu */}
               {!viewerMode && !sharedReadOnly && (
                 <Popover>
-                  <Tip content={t('preview.addTrack', 'Add track')} side="bottom">
+                  <Tip content={t('preview.addTrack')} side="bottom">
                     <PopoverTrigger asChild>
                       <Button
                         variant="ghost"
@@ -357,7 +357,7 @@ export default function Preview(props) {
             <div className="size-6 rounded-lg bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center flex-shrink-0">
               <Share2 className="size-3 text-white" strokeWidth={2} />
             </div>
-            <span className="text-xs font-bold text-zinc-100">{t('share.title', 'Share Project')}</span>
+            <span className="text-xs font-bold text-zinc-100">{t('share.title')}</span>
           </div>
           <SharePanel
             {...shareModal}

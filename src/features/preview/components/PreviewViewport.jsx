@@ -40,6 +40,37 @@ export default function PreviewViewport({
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
 
+  // Map<line.id, number> — assigns sequential numbers to section types that appear >1 times
+  const sectionNumbers = useMemo(() => {
+    const baseCounts = {};
+    for (const l of lines) {
+      if (l.type !== 'section' || !l.label) continue;
+      const base = l.label.trim().toLowerCase().replace(/\s+\d+$/, '');
+      baseCounts[base] = (baseCounts[base] || 0) + 1;
+    }
+    const result = new Map();
+    const baseIndex = {};
+    for (const l of lines) {
+      if (l.type !== 'section' || !l.label) continue;
+      const base = l.label.trim().toLowerCase().replace(/\s+\d+$/, '');
+      if (baseCounts[base] > 1) {
+        baseIndex[base] = (baseIndex[base] || 0) + 1;
+        result.set(l.id, baseIndex[base]);
+      }
+    }
+    return result;
+  }, [lines]);
+
+  // True when more than one distinct singer name exists across all lines
+  const hasMultipleSingers = useMemo(() => {
+    const names = new Set();
+    for (const l of lines) {
+      if (l.singers) for (const s of l.singers) names.add(s);
+      if (names.size > 1) return true;
+    }
+    return false;
+  }, [lines]);
+
   // Pre-compute nextTimestamp for karaoke fill — O(n) backward pass
   const nextTimestamps = useMemo(() => {
     const result = {};
@@ -136,10 +167,11 @@ export default function PreviewViewport({
         <div className="h-full flex flex-col justify-center items-center gap-4 sm:gap-8 overflow-x-hidden px-1 sm:px-0">
           {dualDisplayLines.map(({ line, originalIndex: i }) => (
             <PreviewLine
-
               key={i}
               line={{ ...line, nextTimestamp: nextTimestamps[i] ?? null }}
               originalIndex={i}
+              hasMultipleSingers={hasMultipleSingers}
+              sectionNumbers={sectionNumbers}
               displayedActiveIndex={currentIndex}
               lockedLineIndex={null}
               isDualLine
@@ -200,6 +232,9 @@ export default function PreviewViewport({
                 <PreviewLine
                   line={{ ...line, nextTimestamp: nextTimestamps[i] ?? null }}
                   originalIndex={i}
+                  prevLine={i > 0 ? lines[i - 1] : null}
+                  hasMultipleSingers={hasMultipleSingers}
+                  sectionNumbers={sectionNumbers}
                   displayedActiveIndex={currentIndex}
                   lockedLineIndex={null}
                   isDualLine={false}

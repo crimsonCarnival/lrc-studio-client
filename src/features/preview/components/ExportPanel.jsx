@@ -60,7 +60,7 @@ export default function ExportPanel({
       ref={exportPanelRef}
       className="flex-1 min-h-0 flex flex-col animate-fade-in font-sans text-left"
     >
-      <div className="relative flex-1 min-h-0 overflow-y-auto space-y-2 p-3 rounded-xl bg-zinc-900 border border-zinc-700">
+      <div className="group relative flex-1 min-h-0 overflow-y-auto space-y-2 p-3 rounded-xl bg-zinc-900 border border-zinc-700">
         <ThemedShineBorder />
 
         {/* Filename + format */}
@@ -95,7 +95,7 @@ export default function ExportPanel({
             className="border-zinc-600 bg-zinc-900 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
           />
           <Label htmlFor="include-metadata" className="text-xs text-zinc-400 cursor-pointer">
-            {t('export.includeMetadata', 'Include song metadata (title, artist, album)')}
+            {t('export.includeMetadata')}
           </Label>
         </div>
 
@@ -111,7 +111,7 @@ export default function ExportPanel({
                   className="border-zinc-600 bg-zinc-900 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
                 <Label htmlFor="include-secondary-opt" className="text-xs text-zinc-400 cursor-pointer">
-                  {t('export.includeSecondaryLrc', 'Secondary lyrics')}
+                  {t('export.includeSecondaryLrc')}
                   {hasFurigana && (
                     <span className="ml-1 text-[10px] text-zinc-600 font-mono">{'({kanji|furigana})'}</span>
                   )}
@@ -127,7 +127,7 @@ export default function ExportPanel({
                   className="border-zinc-600 bg-zinc-900 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
                 <Label htmlFor="include-translations-opt" className="text-xs text-zinc-400 cursor-pointer">
-                  {t('export.includeTranslationsLrc', 'Translations')}
+                  {t('export.includeTranslationsLrc')}
                 </Label>
               </div>
             )}
@@ -140,7 +140,7 @@ export default function ExportPanel({
                   className="border-zinc-600 bg-zinc-900 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
                 <Label htmlFor="include-words" className="text-xs text-zinc-400 cursor-pointer">
-                  {t('export.includeWords', 'Word-by-word timestamps')}
+                  {t('export.includeWords')}
                 </Label>
               </div>
             )}

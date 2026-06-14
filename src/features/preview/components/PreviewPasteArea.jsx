@@ -17,7 +17,7 @@ export default function PreviewPasteArea({
     <div className="flex-1 flex flex-col gap-2 sm:gap-3 min-h-0 animate-fade-in overflow-hidden">
       <div className="flex items-center justify-between bg-zinc-800/40 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg">
         <span className="text-xs sm:text-sm font-medium text-primary">
-          {t('common.paste')} {pastingType === 'secondary' ? t('preview.secondaryLyrics') : pastingType === 'furigana' ? t('preview.furigana', 'Furigana') : t('preview.translation')} {t('preview.lyricsHeader')}
+          {t('common.paste')} {pastingType === 'secondary' ? t('preview.secondaryLyrics') : pastingType === 'furigana' ? t('preview.furigana') : t('preview.translation')} {t('preview.lyricsHeader')}
         </span>
         <Button
           variant="ghost"
