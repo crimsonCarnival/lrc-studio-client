@@ -13,7 +13,7 @@ export function detectDuplicateTimestamps(lines, threshold = 0.05) {
   const overlapping = new Set();
   const timestamped = [];
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].timestamp != null) {
+    if (lines[i].timestamp != null && lines[i].type !== 'section') {
       timestamped.push({ index: i, time: lines[i].timestamp });
     }
   }

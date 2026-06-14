@@ -13,15 +13,15 @@ function isNetworkError(err) {
 }
 
 export const lyricsService = {
-  async parse(content, filename) {
+  async parse(content, filename, options = {}) {
     try {
       return await request('/lyrics/parse', {
         method: 'POST',
-        body: JSON.stringify({ content, filename }),
+        body: JSON.stringify({ content, filename, options }),
       });
     } catch (err) {
       if (isNetworkError(err)) {
-        const lines = localParse(content, filename);
+        const lines = localParse(content, filename, options);
         return { lines, detectedFormat: filename.toLowerCase().endsWith('.srt') ? 'srt' : 'lrc', count: lines.length };
       }
       throw err;

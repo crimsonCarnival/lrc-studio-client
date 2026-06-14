@@ -1,5 +1,6 @@
 import { useRef, useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { uploads, projects, getAccessToken } from '@/app/api';
+import { flatToSections } from '@/features/editor/utils/sections';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
@@ -120,15 +121,21 @@ export function useAutosave({
         }
       } else if (!uploadIdToSave && payload.ytUrl) {
         try {
-          const upload = await uploads.saveMedia({
+          const { upload } = await uploads.saveMedia({
             source: 'youtube',
             youtubeUrl: payload.ytUrl,
             fileName: '',
             title: mediaTitle || '',
             duration: duration || null,
           });
-          uploadIdToSave = upload.id;
-          sessionUploadIdRef.current = upload.id;
+          if (upload?.id) { uploadIdToSave = upload.id; sessionUploadIdRef.current = upload.id; }
+        } catch (err) {
+          console.error('Failed to save upload:', err);
+        }
+      } else if (!uploadIdToSave && payload.spotifyTrackId) {
+        try {
+          const { upload } = await uploads.saveMedia({ source: 'spotify', spotifyTrackId: payload.spotifyTrackId, fileName: '', title: mediaTitle || '', duration: duration || null });
+          if (upload?.id) { uploadIdToSave = upload.id; sessionUploadIdRef.current = upload.id; }
         } catch (err) {
           console.error('Failed to save upload:', err);
         }
@@ -239,7 +246,7 @@ export function useAutosave({
       const createData = {
         title: derivedTitle,
         metadata: projectMetadata,
-        lyrics: { editorMode, lines: payload.lines },
+        lyrics: { editorMode, sections: payload.sections || flatToSections(payload.lines || []) },
         state: {
           syncMode,
           activeLineIndex,

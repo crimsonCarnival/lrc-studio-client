@@ -26,25 +26,30 @@ function toLocalISOString(date, utcOffset) {
 }
 
 import deepEqual from 'fast-deep-equal';
+import { flatToSections, flatIndexToSectionPos } from '../utils/sections';
 const cloneValue = (v) => structuredClone(v);
 
 function buildLyricsPatch(prev, nextMode, nextLines) {
-  if (!prev) return { editorMode: nextMode, lines: nextLines };
+  const nextSections = flatToSections(nextLines);
+  if (!prev) return { editorMode: nextMode, sections: nextSections };
   const prevLines = Array.isArray(prev.lines) ? prev.lines : [];
   const modeChanged = prev.editorMode !== nextMode;
   if (prevLines.length !== nextLines.length)
-    return modeChanged ? { editorMode: nextMode, lines: nextLines } : { lines: nextLines };
+    return modeChanged ? { editorMode: nextMode, sections: nextSections } : { sections: nextSections };
   let changedIdx = -1;
   for (let i = 0; i < nextLines.length; i++) {
     if (!deepEqual(prevLines[i], nextLines[i])) {
-      if (changedIdx !== -1) return modeChanged ? { editorMode: nextMode, lines: nextLines } : { lines: nextLines };
+      if (changedIdx !== -1) return modeChanged ? { editorMode: nextMode, sections: nextSections } : { sections: nextSections };
       changedIdx = i;
     }
   }
   if (changedIdx === -1) return modeChanged ? { editorMode: nextMode } : null;
+  // Section marker changed → send full sections (no positional patch for headers)
+  const pos = flatIndexToSectionPos(nextLines, changedIdx);
+  if (!pos) return modeChanged ? { editorMode: nextMode, sections: nextSections } : { sections: nextSections };
   return modeChanged
-    ? { editorMode: nextMode, lineIndex: changedIdx, line: nextLines[changedIdx] }
-    : { lineIndex: changedIdx, line: nextLines[changedIdx] };
+    ? { editorMode: nextMode, sectionIdx: pos.sectionIdx, lineIdx: pos.lineIdx, line: nextLines[changedIdx] }
+    : { sectionIdx: pos.sectionIdx, lineIdx: pos.lineIdx, line: nextLines[changedIdx] };
 }
 
 export function buildProjectPatch({ prevSnapshot, title, metadata, state, uploadId, editorMode, lines }) {
@@ -127,14 +132,16 @@ export function useManualSave({
       const sign = match[1] || '+';
       utcOffset = `${sign}${match[2].padStart(2, '0')}:${(match[3] || '0').padStart(2, '0')}`;
     }
+    const roundedLines = lines.map((l) => ({
+      ...l,
+      timestamp: typeof l.timestamp === 'number' ? Math.round(l.timestamp * 1000) / 1000 : l.timestamp,
+      endTime: editorMode === 'srt'
+        ? (typeof l.endTime === 'number' ? Math.round(l.endTime * 1000) / 1000 : (l.endTime ?? null))
+        : null,
+    }));
     return {
-      lines: lines.map((l) => ({
-        ...l,
-        timestamp: typeof l.timestamp === 'number' ? Math.round(l.timestamp * 1000) / 1000 : l.timestamp,
-        endTime: editorMode === 'srt'
-          ? (typeof l.endTime === 'number' ? Math.round(l.endTime * 1000) / 1000 : (l.endTime ?? null))
-          : null,
-      })),
+      lines: roundedLines,
+      sections: flatToSections(roundedLines),
       syncMode, activeLineIndex, editorMode,
       ytUrl: projectYtUrl || '',
       playbackPosition: hasMedia ? playbackPosition : 0,
@@ -161,9 +168,10 @@ export function useManualSave({
       if (songName) finalTitle = artistStr ? `${songName} - ${artistStr}` : songName;
     }
     if (overrides.isPublic !== undefined) payload.public = overrides.isPublic;
-    if (overrides.lines !== undefined) payload.lines = overrides.lines;
+    if (overrides.lines !== undefined) { payload.lines = overrides.lines; payload.sections = flatToSections(overrides.lines); }
     if (overrides.editorMode !== undefined) payload.editorMode = overrides.editorMode;
     if (overrides.syncMode !== undefined) payload.syncMode = overrides.syncMode;
+    if (overrides.spotifyTrackId !== undefined) payload.spotifyTrackId = overrides.spotifyTrackId;
     payload.metadata = finalMetadata;
     payload.title = finalTitle;
     // Only persist to localStorage for guest users.
@@ -274,10 +282,10 @@ export function useManualSave({
       } else if (payload.spotifyTrackId) {
         try {
           const { upload } = await uploads.saveMedia({ source: 'spotify', spotifyTrackId: payload.spotifyTrackId, fileName: '', title: '', duration: duration || null });
-          if (upload?.id) { uploadIdToSave = upload.id; }
+          if (upload?.id) { uploadIdToSave = upload.id; sessionUploadIdRef.current = upload.id; }
         } catch (err) { console.error(err); }
       }
-      const createData = { title: finalTitle, metadata: finalMetadata, lyrics: { editorMode: payload.editorMode, lines: payload.lines }, state: { syncMode: payload.syncMode, activeLineIndex, playbackPosition: payload.playbackPosition || 0, playbackSpeed: payload.playbackSpeed || 1, saveTime: payload.saveTime, timezone: payload.timezone, utcOffset: payload.utcOffset }, readOnly: false };
+      const createData = { title: finalTitle, metadata: finalMetadata, lyrics: { editorMode: payload.editorMode, sections: payload.sections }, state: { syncMode: payload.syncMode, activeLineIndex, playbackPosition: payload.playbackPosition || 0, playbackSpeed: payload.playbackSpeed || 1, saveTime: payload.saveTime, timezone: payload.timezone, utcOffset: payload.utcOffset }, readOnly: false };
       if (overrides.isPublic !== undefined) createData.public = overrides.isPublic;
       if (uploadIdToSave) createData.uploadId = uploadIdToSave;
 
