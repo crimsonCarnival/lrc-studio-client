@@ -19,7 +19,6 @@ const SEARCH_QUERY = `
         metadata {
           songName
           songArtist
-          albumArt
           tags
         }
       }

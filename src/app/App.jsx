@@ -117,7 +117,6 @@ function AppInner() {
     trackNumber,
     trackCount,
     coverImage: _coverImage,
-    albumArt,
   }) => {
     setLines(lines);
     setEditorMode(editorMode);
@@ -168,7 +167,7 @@ function AppInner() {
     setMediaTitle(finalTitle);
 
     const songArtists = splitArtists(songArtist);
-    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songArtists, songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), ...(albumArt ? { albumArt } : {}) };
+    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songArtists, songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}) };
     appState.setProjectMetadata(newMetadata);
 
     const spotifyOverride = audioSource === 'spotify' && selectedUpload?.spotifyTrackId

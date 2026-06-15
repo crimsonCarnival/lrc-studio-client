@@ -51,7 +51,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
 
   const isSetupPage = location.pathname === '/project/new';
 
-  const handleProjectConfirm = useCallback(({ name, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, albumArt }) => {
+  const handleProjectConfirm = useCallback(({ name, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage }) => {
     const newTitle = name || mediaTitle || '';
     const songArtists = splitArtists(songArtist);
     const newMetadata = {
@@ -65,7 +65,6 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
       songAlbum: songAlbum || '',
       songYear: songYear || '',
       genre: genre || '',
-      albumArt: albumArt || '',
     };
     setMediaTitle(newTitle);
     setProjectMetadata(newMetadata);

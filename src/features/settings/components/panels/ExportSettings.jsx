@@ -10,7 +10,6 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }) 
     handleLineEndingsChange,
     handleCopyFormatChange,
     handleDownloadFormatChange,
-    handleTimestampPrecisionChange,
     handleWordTimestampPrecisionChange,
     handleFilenamePatternChange,
   } = useExportSettings(updateSetting);

@@ -11,7 +11,7 @@ function DropdownProjectRow({ project }) {
   const { projectId, title, coverImage, metadata } = project;
   const displayTitle = metadata?.songName || title || 'Untitled';
   const artist = metadata?.songArtist;
-  const thumb = metadata?.albumArt || coverImage;
+  const thumb = coverImage;
 
   return (
     <Link

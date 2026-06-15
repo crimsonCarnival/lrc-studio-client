@@ -73,8 +73,8 @@ function PublicProjectViewPageInner() {
   const initialMedia = useMemo(() => {
     const upload = project?.upload;
     if (!upload) return null;
-    if (upload.source === 'youtube' && upload.youtubeUrl)
-      return { type: 'youtube', url: upload.youtubeUrl };
+    if (upload.source === 'youtube' && upload.uploadUrl)
+      return { type: 'youtube', url: upload.uploadUrl };
     if (upload.source === 'cloudinary' && upload.uploadUrl)
       return { type: 'cloudinary', id: upload.id, url: upload.uploadUrl,
                fileName: upload.fileName ?? null, title: upload.title ?? null,
@@ -255,7 +255,7 @@ function PublicProjectViewPageInner() {
                 playlist={playlist}
                 currentProjectId={projectId}
                 listId={listId}
-                accountName={playlist.owner?.accountName || project?.user?.accountName}
+                accountName={playlist.user?.accountName || project?.user?.accountName}
               />
             )}
           </div>

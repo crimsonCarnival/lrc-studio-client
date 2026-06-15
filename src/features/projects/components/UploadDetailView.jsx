@@ -76,7 +76,7 @@ export default function UploadDetailView({ onBack }) {
             <ChevronLeft className="size-4 sm:size-5" />
           </Button>
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl sm:text-2xl font-semibold text-zinc-100 truncate tracking-tight">{media.title || media.fileName || media.youtubeUrl || t('uploads.unnamed')}</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold text-zinc-100 truncate tracking-tight">{media.title || media.fileName || t('uploads.unnamed')}</h2>
             <div className="flex items-center gap-3 text-xs sm:text-sm text-zinc-500 mt-1.5">
               <span className="flex items-center gap-1.5">
                 <Calendar className="size-3.5" />
@@ -102,8 +102,8 @@ export default function UploadDetailView({ onBack }) {
                 <p className="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">{t('uploads.source')}</p>
                 <p className="text-sm sm:text-base text-zinc-300 truncate">
                   {isYouTube ? (
-                    <a href={media.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate block">
-                      {media.youtubeUrl}
+                    <a href={media.uploadUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate block">
+                      {media.uploadUrl}
                     </a>
                   ) : (
                     media.fileName || t('uploads.unknownFile')

@@ -40,7 +40,7 @@ export default function MediaLibrary({
               key={upload.id}
               role="button"
               tabIndex={0}
-              aria-label={upload.title || upload.fileName || upload.youtubeUrl || 'Untitled'}
+              aria-label={upload.title || upload.fileName || 'Untitled'}
               onClick={() => onSelect(upload)}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(upload); } }}
               className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border transition-all group cursor-pointer ${
@@ -57,7 +57,7 @@ export default function MediaLibrary({
               <p className={`flex-1 text-xs font-medium truncate ${
                 selectedId === upload.id ? 'text-primary' : 'text-zinc-300 group-hover:text-zinc-100'
               }`}>
-                {upload.title || upload.fileName || upload.youtubeUrl || 'Untitled'}
+                {upload.title || upload.fileName || 'Untitled'}
               </p>
               <button
                 onClick={(e) => {

@@ -135,7 +135,7 @@ export default function Library({ onOpenProject }) {
           onClose={() => setEditingProject(null)}
           onConfirm={async (data) => {
             try {
-              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, albumArt } = data;
+              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage } = data;
               const updatedMetadata = {
                 ...editingProject.metadata,
                 description,
@@ -145,7 +145,6 @@ export default function Library({ onOpenProject }) {
                 songAlbum,
                 songYear,
                 genre,
-                albumArt,
               };
               await projects.patch(editingProject.projectId, {
                 title,
@@ -172,7 +171,7 @@ export default function Library({ onOpenProject }) {
           initialSongYear={editingProject?.metadata?.songYear || ''}
           initialGenre={editingProject?.metadata?.genre || ''}
           initialCoverImage={editingProject?.coverImage || ''}
-          initialAlbumArt={editingProject?.metadata?.albumArt || ''}
+          initialAlbumArt={''}
           isEditing={true}
         />
       )}

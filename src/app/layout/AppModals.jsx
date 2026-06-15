@@ -52,7 +52,7 @@ export function AppModals({
         initialSongYear={projectMetadata?.songYear}
         initialGenre={projectMetadata?.genre || ''}
         initialCoverImage={projectCoverImage || ''}
-        initialAlbumArt={projectMetadata?.albumArt || ''}
+        initialAlbumArt={''}
         isEditing={true}
         sourceInfo={sourceInfo}
       />

@@ -80,7 +80,7 @@ export default function UploadsLibrary({ onSelect }) {
   const handleStartEdit = (e, upload) => {
     e.stopPropagation();
     setEditingId(upload.id);
-    setEditTitle(upload.title || upload.fileName || upload.youtubeUrl || '');
+    setEditTitle(upload.title || upload.fileName || upload.uploadUrl || '');
   };
 
   const handleCancelEdit = (e) => {
@@ -183,7 +183,7 @@ export default function UploadsLibrary({ onSelect }) {
                     />
                   ) : (
                     <span className="text-sm font-semibold text-zinc-100 truncate">
-                      {upload.title || upload.fileName || upload.youtubeUrl || t('uploads.untitled')}
+                      {upload.title || upload.fileName || t('uploads.untitled')}
                     </span>
                   )}
                   <span className="text-[10px] font-bold uppercase text-zinc-500 bg-zinc-700/50 px-1.5 py-0.5 rounded flex-shrink-0">

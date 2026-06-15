@@ -5,11 +5,11 @@ const GET_PUBLIC_PROJECT = `
   query GetPublicProject($projectId: String!) {
     publicProject(projectId: $projectId) {
       id projectId title coverImage
-      metadata { description genre tags songName songArtist songAlbum songYear albumArt songLanguage trackNumber trackCount }
-      upload { id source youtubeUrl uploadUrl spotifyTrackId duration coverImage }
+      metadata { description genre tags songName songArtist songAlbum songYear songLanguage trackNumber trackCount }
+      upload { id source uploadUrl spotifyTrackId duration coverImage }
       user { id accountName displayName avatarUrl }
       lyrics {
-        editorMode language
+        editorMode
         sections {
           label depth id singers timestamp
           lines {

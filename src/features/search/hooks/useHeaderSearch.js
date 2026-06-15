@@ -12,7 +12,7 @@ const HEADER_SEARCH_QUERY = `
         starCount
         forkCount
         forkedFrom { projectId accountName }
-        metadata { songName songArtist albumArt }
+        metadata { songName songArtist }
       }
       total
     }

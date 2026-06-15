@@ -5,7 +5,7 @@ import { Input } from '@ui/input';
 import { Textarea } from '@ui/textarea';
 import { Label } from '@ui/label';
 import { Badge } from '@ui/badge';
-import { X, Sparkles, Image as ImageIcon, Upload, Loader2, Video, Music2 } from 'lucide-react';
+import { X, Sparkles, Upload, Loader2, Video, Music2 } from 'lucide-react';
 import { Tip } from '@ui/tip';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
@@ -65,7 +65,6 @@ export default function ProjectSetupModal({
   initialSongYear = '',
   initialGenre = '',
   initialCoverImage = '',
-  initialAlbumArt = '',
   isEditing = false,
   sourceInfo = null
 }) {
@@ -73,7 +72,6 @@ export default function ProjectSetupModal({
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [imageUploading, setImageUploading] = useState(false);
   const coverImageInputRef = useRef(null);
-  const albumArtInputRef = useRef(null);
   const [form, setForm] = useState(() => ({
     name: initialName || '',
     description: initialDescription || '',
@@ -85,7 +83,6 @@ export default function ProjectSetupModal({
     songYear: initialSongYear || '',
     genre: initialGenre || '',
     coverImage: initialCoverImage || '',
-    albumArt: initialAlbumArt || '',
   }));
 
   // Sync form when the modal is opened or when the underlying data changes
@@ -104,10 +101,9 @@ export default function ProjectSetupModal({
         songYear: initialSongYear || '',
         genre: initialGenre || '',
         coverImage: initialCoverImage || '',
-        albumArt: initialAlbumArt || '',
       });
     }
-  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialAlbumArt]);
+  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage]);
 
   if (!isOpen) return null;
 
@@ -164,7 +160,6 @@ export default function ProjectSetupModal({
       songYear: form.songYear.trim(),
       genre: form.genre,
       coverImage: form.coverImage.trim(),
-      albumArt: form.albumArt.trim(),
     });
   };
 
@@ -384,40 +379,6 @@ export default function ProjectSetupModal({
                 </div>
               </div>
 
-              {/* Album Art */}
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="album-art" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  {t('setup.albumArt')}
-                </Label>
-                <div className="flex gap-2 items-center">
-                  <Input
-                    id="album-art"
-                    value={form.albumArt}
-                    onChange={(e) => setForm(f => ({ ...f, albumArt: e.target.value }))}
-                    placeholder={t('setup.albumArtPlaceholder')}
-                    className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9 placeholder:text-zinc-600"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => albumArtInputRef.current?.click()}
-                    disabled={imageUploading}
-                    className="shrink-0 size-9 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
-                  >
-                    {imageUploading ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Upload className="size-4" />
-                    )}
-                  </button>
-                  <input
-                    type="file"
-                    ref={albumArtInputRef}
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload('albumArt', e)}
-                    className="hidden"
-                  />
-                </div>
-              </div>
             </div>
           </form>
 

@@ -188,7 +188,7 @@ function ProjectCard({
                   {Math.floor(project.upload.duration / 60)}:{String(Math.floor(project.upload.duration % 60)).padStart(2, '0')}
                 </span>
               )}
-              {project.upload?.youtubeUrl && (
+              {project.upload?.source === 'youtube' && (
                 <span className="text-xs text-zinc-500 flex items-center gap-1">
                   <Video className="size-3" />
                   {t('uploads.youtube')}
@@ -298,7 +298,7 @@ function ProjectCard({
                 {Math.floor(project.upload.duration / 60)}:{String(Math.floor(project.upload.duration % 60)).padStart(2, '0')}
               </span>
             )}
-            {project.upload?.youtubeUrl && (
+            {project.upload?.source === 'youtube' && (
               <span className="text-xs text-zinc-500 flex items-center gap-1">
                 <Video className="size-3" />
                 {t('uploads.youtube')}
