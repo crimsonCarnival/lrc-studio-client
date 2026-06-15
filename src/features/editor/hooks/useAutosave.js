@@ -123,7 +123,7 @@ export function useAutosave({
         try {
           const { upload } = await uploads.saveMedia({
             source: 'youtube',
-            youtubeUrl: payload.ytUrl,
+            uploadUrl: payload.ytUrl,
             fileName: '',
             title: mediaTitle || '',
             duration: duration || null,
@@ -147,8 +147,6 @@ export function useAutosave({
         playbackPosition: payload.playbackPosition || 0,
         playbackSpeed: payload.playbackSpeed || 1,
         saveTime: payload.saveTime,
-        timezone: payload.timezone,
-        utcOffset: payload.utcOffset,
       };
       const title = mediaTitle || '';
       const metadata = projectMetadata;
@@ -224,7 +222,7 @@ export function useAutosave({
         try {
           const upload = await uploads.saveMedia({
             source: 'youtube',
-            youtubeUrl: payload.ytUrl,
+            uploadUrl: payload.ytUrl,
             fileName: '',
             title: mediaTitle || '',
             duration: duration || null,
@@ -253,8 +251,6 @@ export function useAutosave({
           playbackPosition: payload.playbackPosition || 0,
           playbackSpeed: payload.playbackSpeed || 1,
           saveTime: payload.saveTime,
-          timezone: payload.timezone,
-          utcOffset: payload.utcOffset,
         },
         readOnly: false,
       };

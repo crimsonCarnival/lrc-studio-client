@@ -138,13 +138,13 @@ export default function ListPage() {
               to={`/${accountName}`}
               className="flex items-center gap-2 w-fit hover:opacity-80 transition-opacity mb-3"
             >
-              {playlist.owner?.avatarUrl ? (
-                <img src={playlist.owner.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-5 rounded-full object-cover" />
+              {playlist.user?.avatarUrl ? (
+                <img src={playlist.user.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-5 rounded-full object-cover" />
               ) : (
                 <div className="size-5 rounded-full bg-muted" />
               )}
               <span className="text-sm font-medium text-foreground">
-                {playlist.owner?.displayName || `@${playlist.owner?.accountName}`}
+                {playlist.user?.displayName || `@${playlist.user?.accountName}`}
               </span>
             </Link>
 

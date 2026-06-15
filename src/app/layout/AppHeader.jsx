@@ -178,8 +178,6 @@ export function AppHeader({
         playbackPosition: payload.playbackPosition,
         playbackSpeed: payload.playbackSpeed,
         saveTime: payload.saveTime,
-        timezone: payload.timezone,
-        utcOffset: payload.utcOffset,
       },
       metadata: payload.metadata,
       ...(payload.ytUrl ? { ytUrl: payload.ytUrl } : {}),

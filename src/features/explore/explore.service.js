@@ -31,7 +31,8 @@ const POPULAR_PLAYLISTS = `
         savedCount
         projectCount
         isPublic
-        owner { id accountName displayName avatarUrl }
+        userId
+        user { id accountName displayName avatarUrl }
       }
       total
       hasMore

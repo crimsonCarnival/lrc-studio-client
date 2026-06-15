@@ -3,11 +3,12 @@ import { gqlRequest } from '@/app/graphql.client';
 const PLAYLIST_FIELDS = `
   id name description coverImage tags isPublic sortMode
   projectCount savedCount isSavedByMe createdAt updatedAt
-  owner { id accountName displayName avatarUrl }
+  userId
+  user { id accountName displayName avatarUrl }
   projects {
     id projectId title starCount forkCount coverImage
-    metadata { songName songArtist albumArt }
-    upload { source youtubeUrl coverImage }
+    metadata { songName songArtist }
+    upload { source uploadUrl coverImage }
   }
 `;
 

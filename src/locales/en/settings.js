@@ -18,25 +18,6 @@ export default {
     label: "Connections"
   },
 
-  spotify: {
-    label: "Spotify",
-    connect: "Connect Spotify",
-    disconnect: "Disconnect",
-    connected: "Spotify Connected",
-    premium: "Premium Account",
-    free: "Free Account",
-    notConnected: "Not connected",
-    connectDesc: "Link your Spotify account to play tracks directly in the app",
-    connectedDesc: "Used for sign-in and syncing your Spotify library",
-    lastUsed: "Last used: {{when}}",
-    premiumRequired: "Spotify Premium is required for playback integration",
-    connectSuccess: "Spotify connected successfully",
-    connectFailed: "Failed to connect Spotify",
-    disconnected: "Spotify disconnected",
-    connectAccount: "Connect Spotify Account",
-    connectToAccess: "Connect Spotify to access your library"
-  },
-
   google: {
     label: "Google",
     connect: "Connect Google",

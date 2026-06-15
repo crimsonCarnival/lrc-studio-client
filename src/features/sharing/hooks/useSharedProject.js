@@ -157,10 +157,8 @@ export function useSharedProject({
           const uploadData = upload ? {
             id: upload.id,
             source: upload.source,
-            youtubeUrl: upload.youtubeUrl,
             uploadUrl: upload.uploadUrl,
             spotifyTrackId: upload.spotifyTrackId,
-            artist: upload.artist,
             fileName: upload.fileName,
             title: upload.title,
             duration: upload.duration,
@@ -169,7 +167,7 @@ export function useSharedProject({
           restoreProject({
             lines: sectionsToFlat(project.lyrics?.sections || []),
             editorMode: project.lyrics?.editorMode || 'lrc',
-            ytUrl: upload?.youtubeUrl || '',
+            ytUrl: upload?.source === 'youtube' ? upload?.uploadUrl : '',
             cloudinaryUpload: upload?.source === 'cloudinary' ? uploadData : null,
             spotifyTrackId: upload?.source === 'spotify' ? upload.spotifyTrackId : null,
             syncMode: project.state?.syncMode ?? true,
@@ -265,7 +263,7 @@ export function useSharedProject({
           try {
             const upload = await uploads.saveMedia({
               source: 'youtube',
-              youtubeUrl: effectiveYtUrl,
+              uploadUrl: effectiveYtUrl,
               fileName: '',
               title: undefined,
               duration: duration || null,

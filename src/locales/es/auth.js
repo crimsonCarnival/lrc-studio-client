@@ -1,7 +1,6 @@
 export default {
   loginWelcome: "Bienvenido a <0>LRC Studio</0>",
   googleContinue: "Continuar con Google",
-  spotifyContinue: "Continuar con Spotify",
   loginWelcomeBack: "¡Bienvenido de nuevo, <0>{{name}}</0>!",
   loginSubtitle: "Ingresa tu usuario o correo para continuar.",
   enterPassword: "Ingresa tu contraseña",
@@ -104,7 +103,6 @@ export default {
     googleLoginFailed: "Fallo al iniciar sesión con Google. Intenta de nuevo.",
     googleWrongAccount: "Esa cuenta de Google no coincide con tu cuenta guardada. Inicia sesión con la cuenta correcta.",
     googleDisconnectFailed: "Fallo al desconectar la cuenta de Google. Intenta de nuevo.",
-  spotifyLoginFailed: "Error al iniciar sesión con Spotify",
   },
   verification: {
     sendSuccess: "Correo de verificación enviado. Revisa tu bandeja de entrada.",

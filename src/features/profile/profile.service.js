@@ -7,15 +7,17 @@ const GET_PUBLIC_PROFILE = `
       projectCount totalStarsReceived totalForksReceived
       followerCount followingCount isFollowedByMe showFollowers
       badges { id grantedAt }
-      level xp minutesSynced currentStreak
+      progression { xp level }
+      stats { minutesSynced }
+      streak { current }
       showcasePublic
       showcasedBadges {
         id label icon color rarity rarityPct holderCount grantedAt
       }
       projects {
         id projectId title starCount forkCount coverImage public
-        metadata { songName songArtist songAlbum songYear genre albumArt description tags }
-        upload { source youtubeUrl uploadUrl }
+        metadata { songName songArtist songAlbum songYear genre description tags }
+        upload { source uploadUrl }
         createdAt updatedAt
       }
     }

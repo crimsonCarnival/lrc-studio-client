@@ -218,7 +218,7 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
         const result = await lyrics.compileLrc({
           lines: exportLines,
           includeTranslations,
-          precision: settings.export?.timestampPrecision,
+          precision: settings.editor?.timestampPrecision,
           metadata: filteredMetadata,
           lineEndings: settings.export?.lineEndings,
           exportTranslationIndex: activeTranslationIndex,
@@ -262,7 +262,7 @@ export function usePreview({ lines, setLines, playbackPosition, playerRef, durat
         const result = await lyrics.compileLrc({
           lines: exportLines,
           includeTranslations,
-          precision: settings.export?.timestampPrecision,
+          precision: settings.editor?.timestampPrecision,
           metadata: filteredMetadata,
           lineEndings: settings.export?.lineEndings,
           exportTranslationIndex: activeTranslationIndex,

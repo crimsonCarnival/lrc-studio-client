@@ -3,7 +3,7 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
-import { Filter, Ban, CheckCircle2, BarChart3, Music, Trash2, Undo2, Info, Activity, Zap } from 'lucide-react';
+import { Filter, Ban, CheckCircle2, BarChart3, Music, Trash2, Undo2, Info, Zap } from 'lucide-react';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { useState as useLocalState } from 'react';
 
@@ -153,7 +153,6 @@ export default function AdminUsersTab({
                       <div className="font-mono text-zinc-500 text-[10px] break-all">{user.lastIp || '—'}</div>
                       <div className="flex items-center gap-2 flex-wrap">
                         {user.isVerified && <Tip content={t('admin.table.verified')}><CheckCircle2 className="size-4 text-emerald-500" /></Tip>}
-                        {user.spotify?.connected && <Tip content={t('admin.table.spotify')}><Activity className={`size-4 ${user.spotify?.isPremium ? 'text-emerald-400' : 'text-zinc-600'}`} /></Tip>}
                         {user.isDeleted && <Tip content={t('admin.table.deleted')}><Trash2 className="size-4 text-red-500" /></Tip>}
                       </div>
                     </div>
@@ -282,7 +281,6 @@ export default function AdminUsersTab({
                         <span className="font-mono text-[10px] text-zinc-500">{user.lastIp || '—'}</span>
                         <div className="flex items-center gap-1.5">
                           {user.isVerified && <Tip content={t('admin.table.verified')}><CheckCircle2 className="size-3.5 text-emerald-500" /></Tip>}
-                          {user.spotify?.connected && <Tip content={t('admin.table.spotify')}><Activity className={`size-3.5 ${user.spotify?.isPremium ? 'text-emerald-400' : 'text-zinc-600'}`} /></Tip>}
                           {user.isDeleted && <Tip content={t('admin.table.deleted')}><Trash2 className="size-3.5 text-red-500" /></Tip>}
                         </div>
                       </div>

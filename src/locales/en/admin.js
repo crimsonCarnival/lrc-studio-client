@@ -57,7 +57,6 @@ export default {
     actions: 'Actions',
     deleted: 'Deleted',
     verified: 'Verified',
-    spotify: 'Spotify Premium',
     noEmail: 'No email',
     banned: 'Banned',
     active: 'Active',

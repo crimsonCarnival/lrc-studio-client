@@ -18,25 +18,6 @@ export default {
     label: "Conexiones"
   },
 
-  spotify: {
-    label: "Spotify",
-    connect: "Conectar Spotify",
-    disconnect: "Desconectar",
-    connected: "Spotify Conectado",
-    premium: "Cuenta Premium",
-    free: "Cuenta Gratuita",
-    notConnected: "No conectado",
-    connectDesc: "Vincula tu cuenta de Spotify para reproducir canciones directamente",
-    connectedDesc: "Usado para iniciar sesión y sincronizar tu biblioteca de Spotify",
-    lastUsed: "Usado: {{when}}",
-    premiumRequired: "Se requiere Spotify Premium para la integración",
-    connectSuccess: "Spotify conectado correctamente",
-    connectFailed: "Error al conectar Spotify",
-    disconnected: "Spotify desconectado",
-    connectAccount: "Conectar cuenta de Spotify",
-    connectToAccess: "Conecta Spotify para acceder a tu biblioteca"
-  },
-
   google: {
     label: "Google",
     connect: "Conectar Google",

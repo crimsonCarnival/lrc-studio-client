@@ -36,9 +36,6 @@ export default {
   imageTooLarge: "La imagen debe pesar menos de 5MB",
   setAvatarUrl: "Establecer URL",
   avatarUrlPlaceholder: "https://ejemplo.com/avatar.jpg",
-  spotifyLabel: "Spotify",
-  spotifyConnected: "Conectado",
-  spotifyNotConnected: "No conectado",
   sections: {
     public: "Datos públicos",
     visibility: "Privacidad",

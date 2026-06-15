@@ -14,9 +14,8 @@ export default function ConnectionsSettings({ searchTerm }) {
   const matches = blockMatches(searchTerm, [
     t('profile.tabs.connections'), t('profile.sections.connections'),
     t('profile.connections.desc'),
-    t('settings.spotify.label'), t('settings.spotify.connectDesc'),
     t('settings.google.label'), t('settings.google.connectDesc'),
-    'connect', 'google', 'spotify', 'link', 'account', 'sign in', 'oauth',
+    'connect', 'google', 'link', 'account', 'sign in', 'oauth',
   ]);
 
   if (!matches) return null;

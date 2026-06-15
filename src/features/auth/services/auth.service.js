@@ -62,10 +62,6 @@ export const authService = {
     });
   },
 
-  async clearUnbanMessage() {
-    return request('/auth/clear-unban-message', { method: 'POST' });
-  },
-
   async changePassword({ currentPassword, newPassword, confirmPassword }) {
     return request('/auth/change-password', {
       method: 'POST',
@@ -110,19 +106,19 @@ export const authService = {
           emailHistory { from to changedAt }
           ban { active reason until }
           appeal { text status submittedAt resolvedAt }
-          showUnbanMessage
+          wasJustUnbanned
           role
           createdAt
           passwordChangedAt
           hasPassword
-          spotify { connected spotifyId isPremium profilePictureUrl }
           google { connected googleId email name pictureUrl }
           showFollowers
           badges { id grantedAt grantedBy }
           showcasedBadges
-          minutesSynced wordsSynced karaokeLines
-          currentStreak longestStreak
-          level xp showcaseSlots
+          stats { minutesSynced wordsSynced karaokeLines }
+          streak { current longest lastActiveDate }
+          progression { xp level }
+          showcaseSlots
         }
       }
     `);

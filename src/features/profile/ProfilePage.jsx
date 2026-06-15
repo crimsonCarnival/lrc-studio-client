@@ -41,7 +41,7 @@ function AvatarBadge({ avatarUrl, name, size = 'lg' }) {
 function ProjectCard({ project, isOwner, onEdit, onDelete }) {
   const { t } = useTranslation();
   const { title, projectId, starCount, forkCount, metadata, upload, public: isPublic } = project;
-  const isYoutube = upload?.source === 'youtube' || !!upload?.youtubeUrl;
+  const isYoutube = upload?.source === 'youtube';
   const isPrivate = isOwner && isPublic === false;
 
   const handleEdit = (e) => {
@@ -301,7 +301,7 @@ export default function ProfilePage() {
   const showcasedIds = (profile.showcasedBadges ?? []).map(b => b.id ?? b);
   const badgeIds = showcasedIds.length > 0 ? showcasedIds : allBadgeIds.slice(0, 3);
 
-  const minutesSynced = profile.minutesSynced ?? 0;
+  const minutesSynced = profile.stats?.minutesSynced ?? 0;
   const minutesLabel = minutesSynced > 0
     ? (() => {
         const h = Math.floor(minutesSynced / 60);
@@ -311,7 +311,7 @@ export default function ProfilePage() {
         return `${h}h ${m}m`;
       })()
     : null;
-  const level = profile.level ?? 0;
+  const level = profile.progression?.level ?? 0;
 
   const hasVisibleShowcase = profile.showcasePublic !== false && (profile.showcasedBadges?.length ?? 0) > 0;
 
@@ -544,7 +544,7 @@ export default function ProfilePage() {
           onClose={() => setEditingProject(null)}
           onConfirm={async (data) => {
             try {
-              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, albumArt } = data;
+              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage } = data;
               const updatedMetadata = {
                 ...editingProject.metadata,
                 description,
@@ -554,7 +554,6 @@ export default function ProfilePage() {
                 songAlbum,
                 songYear,
                 genre,
-                albumArt,
               };
               await projects.patch(editingProject.projectId, {
                 title,
@@ -584,7 +583,7 @@ export default function ProfilePage() {
           initialSongYear={editingProject.metadata?.songYear || ''}
           initialGenre={editingProject.metadata?.genre || ''}
           initialCoverImage={editingProject.coverImage || ''}
-          initialAlbumArt={editingProject.metadata?.albumArt || ''}
+          initialAlbumArt={''}
           isEditing={true}
         />
       )}

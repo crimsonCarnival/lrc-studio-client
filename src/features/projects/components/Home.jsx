@@ -266,8 +266,8 @@ export default function Home() {
             <div className="flex-1 overflow-y-auto scrollbar-thin min-h-0 pr-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 pb-2">
                 {filteredProjects.map((project) => {
-                  const hasCover = !!(project.coverImage || project.metadata?.albumArt);
-                  const coverSrc = project.coverImage || project.metadata?.albumArt;
+                  const hasCover = !!project.coverImage;
+                  const coverSrc = project.coverImage;
                   return (
                     <button
                       key={project.projectId}
@@ -331,7 +331,7 @@ export default function Home() {
         onClose={() => setEditingProject(null)}
         onConfirm={async (data) => {
           try {
-            const { name: title, description, tags, songName, songArtist, songAlbum, songYear, coverImage, albumArt } = data;
+            const { name: title, description, tags, songName, songArtist, songAlbum, songYear, coverImage } = data;
             const updatedMetadata = {
               ...editingProject.metadata,
               description,
@@ -340,7 +340,6 @@ export default function Home() {
               songArtist,
               songAlbum,
               songYear,
-              albumArt
             };
             await projects.patch(editingProject.projectId, {
               title,
@@ -366,7 +365,7 @@ export default function Home() {
         initialSongAlbum={editingProject?.metadata?.songAlbum || ''}
         initialSongYear={editingProject?.metadata?.songYear || ''}
         initialCoverImage={editingProject?.coverImage || ''}
-        initialAlbumArt={editingProject?.metadata?.albumArt || ''}
+        initialAlbumArt={''}
         isEditing={true}
       />
     </div>

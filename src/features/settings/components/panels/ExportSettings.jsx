@@ -64,18 +64,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }) 
 
       <Section title={t('settings.export.processingSection') || 'Timestamps & Processing'} icon={Settings2} searchTerm={searchTerm}>
         <SettingRow icon={Clock} label={t('settings.export.timestampPrecision')} description={t('settings.export.timestampPrecisionDesc')}>
-          <Select
-            value={settings.export?.timestampPrecision ?? 'hundredths'}
-            onValueChange={(val) => handleTimestampPrecisionChange({ target: { value: val } })}
-          >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-700">
-              <SelectItem value="hundredths">{t('settings.options.precision.hundredths')}</SelectItem>
-              <SelectItem value="thousandths">{t('settings.options.precision.thousandths')}</SelectItem>
-            </SelectContent>
-          </Select>
+          <span className="text-xs text-zinc-500 italic">{t('settings.export.timestampPrecisionFollowsEditor') || 'Follows the Editor setting'}</span>
         </SettingRow>
         <SettingRow icon={Clock} label={t('settings.export.wordTimestampPrecision')} description={t('settings.export.wordTimestampPrecisionDesc')}>
           <Select

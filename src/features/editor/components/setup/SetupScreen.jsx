@@ -133,7 +133,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, ytLoading, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
-  const { name: projectName, description: projectDescription, tags: projectTags, isPublic, songName, songArtist, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, albumArt } = metadata;
+  const { name: projectName, description: projectDescription, tags: projectTags, isPublic, songName, songArtist, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage } = metadata;
 
   // State setters
   const setAudioState = useCallback((val) => setAudio(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
@@ -264,14 +264,14 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   const handleSelectUpload = (upload) => {
     setAudioState({
       selectedUpload: upload,
-      name: upload.title || upload.fileName || upload.youtubeUrl || 'Media',
+      name: upload.title || upload.fileName || 'Media',
       ready: true,
       source: upload.source === 'youtube' ? 'youtube' : upload.source === 'spotify' ? 'spotify' : 'cloud',
     });
 
-    if (upload.source === 'youtube' && upload.youtubeUrl) {
-      setAudioState({ ytUrl: upload.youtubeUrl });
-      playerRef.current?.loadYouTube?.(upload.youtubeUrl);
+    if (upload.source === 'youtube' && upload.uploadUrl) {
+      setAudioState({ ytUrl: upload.uploadUrl });
+      playerRef.current?.loadYouTube?.(upload.uploadUrl);
     } else if (upload.source === 'cloudinary' && upload.uploadUrl) {
       playerRef.current?.loadFromUrl?.(upload.uploadUrl, upload.title || upload.fileName);
     } else if (upload.source === 'spotify' && upload.spotifyTrackId) {
@@ -352,8 +352,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
           songYear:   meta.releaseYear || songYear,
           ...(mappedGenre           ? { genre:      mappedGenre              } : {}),
           ...(meta.totalTracks      ? { trackCount: String(meta.totalTracks) } : {}),
-          // Store API art as albumArt (fallback); only populate coverImage if user hasn't set one
-          ...(meta.albumArt         ? { albumArt:   meta.albumArt            } : {}),
+          // Populate coverImage from API art if user hasn't set one
           ...(!coverImage && meta.albumArt ? { coverImage: meta.albumArt }   : {}),
         });
       } else {
@@ -375,7 +374,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     }
     const parsedTrackNumber = parseInt(trackNumber, 10);
     const parsedTrackCount = parseInt(trackCount, 10);
-    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), albumArt: albumArt?.trim() || '' });
+    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim() });
   };
 
   const handleImageUpload = async (e) => {

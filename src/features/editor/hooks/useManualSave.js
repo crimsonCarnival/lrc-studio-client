@@ -207,7 +207,7 @@ export function useManualSave({
         } else if (!uploadIdToSave && payload.ytUrl) {
           try {
             // Don't pass title - let backend fetch it from YouTube API
-            const { upload } = await uploads.saveMedia({ source: 'youtube', youtubeUrl: payload.ytUrl, fileName: '', title: undefined, duration: duration || null });
+            const { upload } = await uploads.saveMedia({ source: 'youtube', uploadUrl: payload.ytUrl, fileName: '', title: undefined, duration: duration || null });
             uploadIdToSave = upload.id;
             sessionUploadIdRef.current = upload.id;
             const isGeneric = ['Sin título', 'Untitled', '無題'].includes(finalTitle);
@@ -223,7 +223,7 @@ export function useManualSave({
           } catch (err) { console.error('Failed to save upload:', err); }
         }
 
-        const patchState = { syncMode: payload.syncMode, activeLineIndex, playbackPosition: payload.playbackPosition, playbackSpeed: payload.playbackSpeed, saveTime: payload.saveTime, timezone: payload.timezone, utcOffset: payload.utcOffset };
+        const patchState = { syncMode: payload.syncMode, activeLineIndex, playbackPosition: payload.playbackPosition, playbackSpeed: payload.playbackSpeed, saveTime: payload.saveTime };
         const patchData = buildProjectPatch({ prevSnapshot: lastServerSnapshotRef.current, title: finalTitle, metadata: finalMetadata, state: patchState, uploadId: uploadIdToSave ?? undefined, editorMode: payload.editorMode, lines: payload.lines });
         if (overrides.title !== undefined) patchData.title = overrides.title;
         if (overrides.metadata !== undefined) patchData.metadata = overrides.metadata;
@@ -270,7 +270,7 @@ export function useManualSave({
         } catch (err) { console.error(err); }
       } else if (payload.ytUrl) {
         try {
-          const { upload } = await uploads.saveMedia({ source: 'youtube', youtubeUrl: payload.ytUrl, fileName: '', title: '', duration: duration || null });
+          const { upload } = await uploads.saveMedia({ source: 'youtube', uploadUrl: payload.ytUrl, fileName: '', title: '', duration: duration || null });
           if (upload?.id) {
             uploadIdToSave = upload.id;
             const isGeneric = ['Sin título', 'Untitled', '無題'].includes(finalTitle);
@@ -285,7 +285,7 @@ export function useManualSave({
           if (upload?.id) { uploadIdToSave = upload.id; sessionUploadIdRef.current = upload.id; }
         } catch (err) { console.error(err); }
       }
-      const createData = { title: finalTitle, metadata: finalMetadata, lyrics: { editorMode: payload.editorMode, sections: payload.sections }, state: { syncMode: payload.syncMode, activeLineIndex, playbackPosition: payload.playbackPosition || 0, playbackSpeed: payload.playbackSpeed || 1, saveTime: payload.saveTime, timezone: payload.timezone, utcOffset: payload.utcOffset }, readOnly: false };
+      const createData = { title: finalTitle, metadata: finalMetadata, lyrics: { editorMode: payload.editorMode, sections: payload.sections }, state: { syncMode: payload.syncMode, activeLineIndex, playbackPosition: payload.playbackPosition || 0, playbackSpeed: payload.playbackSpeed || 1, saveTime: payload.saveTime }, readOnly: false };
       if (overrides.isPublic !== undefined) createData.public = overrides.isPublic;
       if (uploadIdToSave) createData.uploadId = uploadIdToSave;
 

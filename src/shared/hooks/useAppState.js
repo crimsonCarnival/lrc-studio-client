@@ -272,7 +272,6 @@ export function useAppState(user) {
               songAlbum: m.songAlbum || '',
               songYear: m.songYear || '',
               genre: m.genre || '',
-              albumArt: m.albumArt || '',
               songLanguage: m.songLanguage || '',
               ...(m.trackNumber != null ? { trackNumber: m.trackNumber } : {}),
               ...(m.trackCount != null ? { trackCount: m.trackCount } : {}),
@@ -282,7 +281,7 @@ export function useAppState(user) {
           // Only redirect when the project actually has content worth recovering.
           // Empty projects with no media are just blank slates — leave them alone.
           const hasServerMedia = !!(
-            project.upload?.youtubeUrl ||
+            (project.upload?.source === 'youtube' && project.upload?.uploadUrl) ||
             (project.upload?.source === 'cloudinary' && project.upload?.uploadUrl) ||
             (project.upload?.source === 'spotify' && project.upload?.spotifyTrackId)
           );
@@ -313,8 +312,6 @@ export function useAppState(user) {
               playbackPosition: project.state?.playbackPosition || 0,
               playbackSpeed: project.state?.playbackSpeed || 1,
               saveTime: project.state?.saveTime || null,
-              timezone: project.state?.timezone || null,
-              utcOffset: project.state?.utcOffset || null,
             },
             editorMode: project.lyrics?.editorMode || 'lrc',
             lines: serverLines,
@@ -729,8 +726,6 @@ export function useAppState(user) {
           playbackPosition: snapshot.state?.playbackPosition ?? 0,
           playbackSpeed: snapshot.state?.playbackSpeed ?? 1,
           saveTime: payload.saveTime,
-          timezone: payload.timezone,
-          utcOffset: payload.utcOffset,
         },
         editorMode,
         lines: payload.lines || [],

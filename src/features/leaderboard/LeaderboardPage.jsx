@@ -101,9 +101,9 @@ function LeaderboardRow({ entry, rank }) {
           <span className={`text-sm font-semibold truncate transition-colors group-hover:text-primary ${p ? p.label : 'text-zinc-200'}`}>
             {name}
           </span>
-          {entry.level > 0 && (
+          {(entry.progression?.level ?? 0) > 0 && (
             <span className="text-[9px] font-bold text-zinc-600 border border-zinc-800 px-1 py-0.5 rounded tabular-nums shrink-0">
-              Lv.{entry.level}
+              Lv.{entry.progression.level}
             </span>
           )}
           {badgeIds.length > 0 && <BadgeList ids={badgeIds} max={2} />}
@@ -113,11 +113,11 @@ function LeaderboardRow({ entry, rank }) {
 
       {/* Inline stats — icon+value chips, no text labels = no locale overflow */}
       <div className="flex items-center gap-3 shrink-0">
-        {entry.currentStreak > 0 && (
+        {(entry.streak?.current ?? 0) > 0 && (
           <Tip content={t('badges.leaderboard.streak')} side="top">
             <div className="hidden lg:flex items-center gap-1">
               <Flame className="size-3 text-orange-500/70" />
-              <span className="text-[11px] tabular-nums font-medium text-orange-500/70">{entry.currentStreak}d</span>
+              <span className="text-[11px] tabular-nums font-medium text-orange-500/70">{entry.streak.current}d</span>
             </div>
           </Tip>
         )}
@@ -125,7 +125,7 @@ function LeaderboardRow({ entry, rank }) {
         <div className="hidden sm:flex items-center gap-3">
           <StatChip
             icon={Music2}
-            value={formatCount(entry.karaokeLines ?? 0)}
+            value={formatCount(entry.stats?.karaokeLines ?? 0)}
             tooltip={t('badges.leaderboard.syncedLines')}
             color="text-zinc-500"
           />
@@ -153,7 +153,7 @@ function LeaderboardRow({ entry, rank }) {
         <div className="flex items-center gap-1.5 min-w-[52px] justify-end">
           <Timer className="size-3.5 text-accent-blue shrink-0" />
           <span className={`font-semibold tabular-nums text-sm ${p ? p.label : 'text-zinc-300'}`}>
-            {formatMinutes(entry.minutesSynced ?? 0)}
+            {formatMinutes(entry.stats?.minutesSynced ?? 0)}
           </span>
         </div>
       </div>

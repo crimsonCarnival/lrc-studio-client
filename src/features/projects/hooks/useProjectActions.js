@@ -94,8 +94,8 @@ export function useProjectActions({
       setEditorModeRaw(project.lyrics?.editorMode || 'lrc');
       // Always restore media
       setRestoredMedia(uploadToRestoredMedia(project.upload));
-      if (project.upload?.source === 'youtube' && project.upload?.youtubeUrl) {
-        setProjectYtUrl?.(project.upload.youtubeUrl);
+      if (project.upload?.source === 'youtube' && project.upload?.uploadUrl) {
+        setProjectYtUrl?.(project.upload.uploadUrl);
       } else if (project.upload?.source === 'cloudinary') {
         setUploadedAudio?.(project.upload);
       } else if (project.upload?.source === 'spotify' && project.upload?.spotifyTrackId) {
@@ -118,7 +118,7 @@ export function useProjectActions({
       updateServerSnapshot(lastServerSnapshotRef, {
         title: project.title || '',
         metadata: project.metadata || { description: '', tags: [] },
-        state: { syncMode: project.state?.syncMode ?? true, activeLineIndex: project.state?.activeLineIndex || 0, playbackPosition: project.state?.playbackPosition || 0, playbackSpeed: project.state?.playbackSpeed || 1, saveTime: project.state?.saveTime || null, timezone: project.state?.timezone || null, utcOffset: project.state?.utcOffset || null },
+        state: { syncMode: project.state?.syncMode ?? true, activeLineIndex: project.state?.activeLineIndex || 0, playbackPosition: project.state?.playbackPosition || 0, playbackSpeed: project.state?.playbackSpeed || 1, saveTime: project.state?.saveTime || null },
         editorMode: project.lyrics?.editorMode || 'lrc',
         lines: projectLines,
         uploadId: project.upload?.id,
@@ -129,7 +129,7 @@ export function useProjectActions({
         syncMode: true, 
         activeLineIndex: project.state?.activeLineIndex || 0, 
         editorMode: project.lyrics?.editorMode || 'lrc', 
-        ytUrl: project.upload?.youtubeUrl || '', 
+        ytUrl: project.upload?.source === 'youtube' ? (project.upload?.uploadUrl || '') : '',
         uploadedAudio: project.upload?.source === 'cloudinary' ? project.upload : null,
         spotifyTrackId: project.upload?.source === 'spotify' ? project.upload?.spotifyTrackId : '',
         playbackPosition: project.state?.playbackPosition || 0, 
@@ -199,7 +199,7 @@ export function useProjectActions({
             try {
               const { upload } = await uploads.saveMedia({
                 source: 'youtube',
-                youtubeUrl: pendingProject.ytUrl,
+                uploadUrl: pendingProject.ytUrl,
                 fileName: '',
                 title: mediaTitle || pendingProject.title || '',
                 duration: duration || null,

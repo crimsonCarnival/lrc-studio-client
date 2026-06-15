@@ -96,7 +96,7 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
 });
 
 function Player(
-  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onMediaUpload, playerTop = false, onDockToggle, viewerMode = false, projectMetadata, ref },
+  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onMediaUpload, playerTop = false, onDockToggle, viewerMode = false, projectMetadata, projectCoverImage, ref },
 ) {
   const { t, dt } = useDynamicTranslation();
   const { settings, updateSetting } = useSettings();
@@ -317,8 +317,8 @@ function Player(
   const hasMedia = (source === 'local' && local.localUrl) || (source === 'youtube' && yt.ytReady);
 
   const handleSelectUpload = useCallback((upload) => {
-    if (upload.source === 'youtube' && upload.youtubeUrl) {
-      yt.setYtUrl(upload.youtubeUrl);
+    if (upload.source === 'youtube' && upload.uploadUrl) {
+      yt.setYtUrl(upload.uploadUrl);
       setTimeout(() => yt.loadYouTube(), 0);
     } else if (upload.source === 'spotify' && upload.spotifyTrackId) {
       window.open(`https://open.spotify.com/track/${upload.spotifyTrackId}`, '_blank', 'noopener,noreferrer');
@@ -661,7 +661,7 @@ function Player(
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-zinc-200 truncate group-hover:text-primary transition-colors">
-                                {upload.title || upload.fileName || upload.youtubeUrl || t('uploads.untitled')}
+                                {upload.title || upload.fileName || t('uploads.untitled')}
                               </p>
                             </div>
                           </button>
@@ -751,9 +751,9 @@ function Player(
                     {playerTop ? <PanelBottom className="size-4" /> : <PanelTop className="size-4" />}
                   </Button>
                 </Tip>
-                {projectMetadata?.albumArt && (
+                {projectCoverImage && (
                   <img
-                    src={projectMetadata.albumArt}
+                    src={projectCoverImage}
                     alt=""
                     className="size-9 rounded-md object-cover border border-zinc-700/50 shrink-0"
                   />
@@ -1000,7 +1000,7 @@ function Player(
                                   : <Cloud className="size-3.5 text-blue-400 shrink-0" />}
                             </div>
                             <span className="text-xs font-medium text-zinc-200 truncate">
-                              {upload.title || upload.fileName || upload.youtubeUrl || t('uploads.untitled')}
+                              {upload.title || upload.fileName || t('uploads.untitled')}
                             </span>
                           </button>
                         ))

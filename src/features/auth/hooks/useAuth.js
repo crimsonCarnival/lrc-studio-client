@@ -43,6 +43,7 @@ function renderPopupLoading(popup) {
 
 export function useAuth() {
   const [state, setState] = useState(/** @type {{ user: any, loading: boolean, heldLoginResult: any }} */({ user: null, loading: true, heldLoginResult: null }));
+  const [wasJustUnbanned, setWasJustUnbanned] = useState(false);
   const user = state.user;
   const loading = state.loading;
   const setUser = useCallback((u) => setState(s => ({ ...s, user: typeof u === 'function' ? u(s.user) : u })), []);
@@ -143,10 +144,12 @@ export function useAuth() {
       }
 
       try {
-        const user = await auth.me();
+        const me = await auth.me();
+        const { wasJustUnbanned: justUnbanned, ...user } = me;
         storage.set(STORAGE_KEYS.HAS_SESSION, '1');
         setAuthFlag(true);
         setState(s => ({ ...s, user, loading: false }));
+        if (justUnbanned) setWasJustUnbanned(true);
         scheduleRefresh();
         // Keep remembered account data fresh
         rememberedAccounts.upsert({
@@ -161,10 +164,12 @@ export function useAuth() {
           // Access token might be expired, try refreshing
           try {
             await doRefresh();
-            const user = await auth.me();
+            const me = await auth.me();
+            const { wasJustUnbanned: justUnbanned, ...user } = me;
             storage.set(STORAGE_KEYS.HAS_SESSION, '1');
             setAuthFlag(true);
             setState(s => ({ ...s, user, loading: false }));
+            if (justUnbanned) setWasJustUnbanned(true);
             scheduleRefresh();
             rememberedAccounts.upsert({
               userId: user.id,
@@ -349,9 +354,9 @@ export function useAuth() {
           return;
         }
 
-        const me = await auth.me();
-        setState(s => ({ ...s, user: me }));
-        resolve(me);
+        const { wasJustUnbanned: _wju, ...meUser } = await auth.me();
+        setState(s => ({ ...s, user: meUser }));
+        resolve(meUser);
       };
 
       window.addEventListener('message', onMessage);
@@ -365,8 +370,8 @@ export function useAuth() {
   const disconnectGoogle = useCallback(async () => {
     try {
       await googleApi.disconnect();
-      const me = await auth.me();
-      setState(s => ({ ...s, user: me }));
+      const { wasJustUnbanned: _wju, ...meUser } = await auth.me();
+      setState(s => ({ ...s, user: meUser }));
     } catch (err) {
       if (err?.status === 409 && err?.error === 'last_auth_method') {
         throw new Error('Cannot disconnect Google — it is your only sign-in method. Set a password first.');
@@ -422,10 +427,11 @@ export function useAuth() {
         }
 
         try {
-          const me = await auth.me();
+          const { wasJustUnbanned: justUnbanned, ...me } = await auth.me();
           storage.set(STORAGE_KEYS.HAS_SESSION, '1');
           setAuthFlag(true);
           setState(s => ({ ...s, user: me, loading: false }));
+          if (justUnbanned) setWasJustUnbanned(true);
           scheduleRefresh();
           // Persist for the saved-account picker — the OAuth popup path doesn't
           // trigger restore(), so without this the account is never remembered.
@@ -453,9 +459,8 @@ export function useAuth() {
     });
   }, [scheduleRefresh]);
 
-  const clearUnbanMessage = useCallback(async () => {
-    await auth.clearUnbanMessage();
-    setState(prev => ({ ...prev, user: prev.user ? { ...prev.user, showUnbanMessage: false } : null }));
+  const dismissUnbanMessage = useCallback(() => {
+    setWasJustUnbanned(false);
   }, []);
 
   const logoutAllDevices = useCallback(async () => {
@@ -584,7 +589,8 @@ export function useAuth() {
     connectGoogle,
     disconnectGoogle,
     loginWithGoogle,
-    clearUnbanMessage,
+    wasJustUnbanned,
+    dismissUnbanMessage,
     loginWithPasskey,
     registerPasskey,
     deactivateAccount,

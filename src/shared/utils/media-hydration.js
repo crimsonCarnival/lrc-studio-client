@@ -9,8 +9,8 @@
  */
 export function uploadToRestoredMedia(upload) {
   if (!upload) return null;
-  if (upload.source === 'youtube' && upload.youtubeUrl)
-    return { type: 'youtube', url: upload.youtubeUrl };
+  if (upload.source === 'youtube' && upload.uploadUrl)
+    return { type: 'youtube', url: upload.uploadUrl };
   if (upload.source === 'cloudinary' && upload.uploadUrl)
     return {
       type: 'cloudinary',

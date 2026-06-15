@@ -30,7 +30,6 @@ const GET_PROJECTS = `
         songArtist
         songAlbum
         songYear
-        albumArt
         songLanguage
         trackNumber
         trackCount
@@ -42,9 +41,7 @@ const GET_PROJECTS = `
         source
         duration
         uploadUrl
-        youtubeUrl
         spotifyTrackId
-        artist
       }
     }
   }
@@ -84,7 +81,6 @@ const GET_PROJECT = `
         songArtist
         songAlbum
         songYear
-        albumArt
         songLanguage
         trackNumber
         trackCount
@@ -96,15 +92,12 @@ const GET_PROJECT = `
         source
         duration
         uploadUrl
-        youtubeUrl
         spotifyTrackId
-        artist
       }
       lyrics {
         id
         projectId
         editorMode
-        language
         version
         lines {
           type
@@ -237,7 +230,6 @@ export const projectsService = {
               songArtist
               songAlbum
               songYear
-              albumArt
               songLanguage
               trackNumber
               trackCount
@@ -253,11 +245,9 @@ export const projectsService = {
               source
               fileName
               title
-              youtubeUrl
               uploadUrl
               publicId
               spotifyTrackId
-              artist
               duration
             }
             uploadId

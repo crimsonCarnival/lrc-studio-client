@@ -27,6 +27,7 @@ export function AppPlayer({
   restoredPosition,
   restoredSpeed,
   projectMetadata,
+  projectCoverImage,
   lines,
   playbackPosition,
   syncMode,
@@ -89,6 +90,7 @@ export function AppPlayer({
             initialSeek={restoredPosition}
             initialSpeed={restoredSpeed}
             projectMetadata={projectMetadata}
+            projectCoverImage={projectCoverImage}
             lines={lines}
             playbackPosition={playbackPosition}
             syncMode={syncMode}

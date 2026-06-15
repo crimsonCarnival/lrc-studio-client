@@ -105,11 +105,9 @@ export const uploadsService = {
           source
           fileName
           title
-          artist
           duration
           uploadUrl
           publicId
-          youtubeUrl
           spotifyTrackId
           createdAt
           updatedAt
@@ -127,11 +125,9 @@ export const uploadsService = {
           source
           fileName
           title
-          artist
           duration
           uploadUrl
           publicId
-          youtubeUrl
           spotifyTrackId
           createdAt
           updatedAt

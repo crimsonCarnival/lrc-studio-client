@@ -12,15 +12,16 @@ export function youtubeThumbnail(url) {
 /** Resolve a cover from an upload record (stored cover, else derived YT thumbnail). */
 export function resolveUploadCover(upload) {
   if (!upload) return null;
-  return upload.coverImage || youtubeThumbnail(upload.youtubeUrl) || null;
+  // YouTube uploads now store their URL in uploadUrl
+  const ytUrl = upload.source === 'youtube' ? upload.uploadUrl : null;
+  return upload.coverImage || youtubeThumbnail(ytUrl) || null;
 }
 
-/** Resolve the cover for a project: explicit cover → album art → upload-derived. */
+/** Resolve the cover for a project: explicit cover → upload-derived. */
 export function resolveCoverImage(project) {
   if (!project) return null;
   return (
     project.coverImage ||
-    project.metadata?.albumArt ||
     resolveUploadCover(project.upload) ||
     null
   );

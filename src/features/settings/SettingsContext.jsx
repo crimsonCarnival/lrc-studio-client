@@ -60,7 +60,10 @@ function upgradeLegacySettings(parsed) {
   if (parsed.lineEndings !== undefined) migrated.export.lineEndings = parsed.lineEndings;
   if (parsed.copyFormat !== undefined) migrated.export.copyFormat = parsed.copyFormat;
   if (parsed.downloadFormat !== undefined) migrated.export.downloadFormat = parsed.downloadFormat;
-  if (parsed.timestampPrecision !== undefined) migrated.export.timestampPrecision = parsed.timestampPrecision;
+  // export.timestampPrecision was removed; migrate to editor.timestampPrecision
+  if (parsed.timestampPrecision !== undefined && migrated.editor.timestampPrecision === undefined) {
+    migrated.editor.timestampPrecision = parsed.timestampPrecision;
+  }
   if (parsed.defaultFilenamePattern !== undefined) migrated.export.defaultFilenamePattern = parsed.defaultFilenamePattern;
 
   // Interface
@@ -99,6 +102,20 @@ const SHORTCUT_RENAMES = [
   { key: 'seekForward', from: 'Alt+ArrowRight', to: 'ArrowRight' },
 ];
 
+function migrateExportTimestampPrecision(settings) {
+  if (settings.export?.timestampPrecision === undefined) return settings;
+  // Move export.timestampPrecision → editor.timestampPrecision if editor one is unset
+  const editorPrecision = settings.editor?.timestampPrecision;
+  const exportPrecision = settings.export.timestampPrecision;
+  const newExport = { ...settings.export };
+  delete newExport.timestampPrecision;
+  return {
+    ...settings,
+    editor: { ...settings.editor, timestampPrecision: editorPrecision ?? exportPrecision },
+    export: newExport,
+  };
+}
+
 function migrateShortcutDefaults(settings) {
   let changed = false;
   const shortcuts = { ...settings.shortcuts };
@@ -118,7 +135,7 @@ export function SettingsProvider({ children }) {
       if (stored) {
         const parsed = JSON.parse(stored);
         const migrated = upgradeLegacySettings(parsed);
-        return migrateShortcutDefaults(deepMerge(DEFAULT_SETTINGS, migrated));
+        return migrateExportTimestampPrecision(migrateShortcutDefaults(deepMerge(DEFAULT_SETTINGS, migrated)));
       }
     } catch (e) {
       console.error('Failed to load settings', e);

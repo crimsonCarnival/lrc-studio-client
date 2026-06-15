@@ -7,7 +7,7 @@ export function useExportSettings(updateSetting) {
     updateSetting('export.downloadFormat', e.target.value);
 
   const handleTimestampPrecisionChange = (e) =>
-    updateSetting('export.timestampPrecision', e.target.value);
+    updateSetting('editor.timestampPrecision', e.target.value);
 
   const handleWordTimestampPrecisionChange = (e) =>
     updateSetting('export.wordTimestampPrecision', e.target.value);

@@ -6,8 +6,9 @@ const LEADERBOARD_QUERY = `
       users {
         id accountName displayName avatarUrl
         badges { id grantedAt }
-        minutesSynced wordsSynced karaokeLines
-        level xp currentStreak
+        stats { minutesSynced wordsSynced karaokeLines }
+        progression { xp level }
+        streak { current }
         projectCount totalStarsReceived totalForksReceived
       }
       total hasMore
