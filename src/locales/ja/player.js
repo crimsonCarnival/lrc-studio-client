@@ -43,4 +43,5 @@ export default {
   seekPlayback: "再生位置を移動",
   embeddingBlockedDesc: "この動画の所有者は外部再生をブロックしています。直接の音声ファイルを使用してください。",
   watchOnYoutube: "YouTubeで見る",
+  stagedClickToPlay: "▶ をクリックして接続・再生",
 };

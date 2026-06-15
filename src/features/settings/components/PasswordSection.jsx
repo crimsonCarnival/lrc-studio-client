@@ -18,22 +18,7 @@ export default function PasswordSection() {
   const lastChanged = getLastChangedDate();
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center gap-2 mb-3">
-        <Button
-          size="sm"
-          onClick={() => navigate(user?.hasPassword ? '/change-password?from=password-reset' : '/change-password?mode=set')}
-          className="rounded-lg h-7 text-[11px] font-bold shrink-0"
-        >
-          {user?.hasPassword
-            ? t('auth.passwordManagement.button')
-            : t('auth.passwordManagement.setPassword')}
-        </Button>
-        {!user?.hasPassword && (
-          <span className="size-2 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
-        )}
-      </div>
-
+    <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between bg-secondary/30 border border-border rounded-xl px-3 min-h-11 py-2 gap-3">
         <span className="text-sm text-muted-foreground">
           {user?.hasPassword
@@ -50,6 +35,21 @@ export default function PasswordSection() {
           >
             {t('auth.passwordManagement.forgotPasswordLink')}
           </button>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 mt-1">
+        <Button
+          size="sm"
+          onClick={() => navigate(user?.hasPassword ? '/change-password?from=password-reset' : '/change-password?mode=set')}
+          className="rounded-lg h-7 text-[11px] font-bold shrink-0"
+        >
+          {user?.hasPassword
+            ? t('auth.passwordManagement.button')
+            : t('auth.passwordManagement.setPassword')}
+        </Button>
+        {!user?.hasPassword && (
+          <span className="size-2 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
         )}
       </div>
     </div>

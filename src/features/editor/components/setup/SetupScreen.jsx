@@ -17,7 +17,7 @@ import { LANG_KEYS } from '@features/editor/constants/languages';
 import { getMyMusicLibrary } from '@/features/editor/music-library.service';
 import {
   FolderOpen, Music2, FileText, Upload, Check, ArrowRight, Trash2,
-  Video, Cloud, Link2, Loader2, Lock, Globe, Sparkles, X, LockKeyhole, Lightbulb, Search
+  Video, Cloud, Link2, Loader2, Lock, Globe, X, LockKeyhole, Lightbulb, Search
 } from 'lucide-react';
 import { useSetupContext } from '@/features/editor/SetupContext';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
@@ -451,7 +451,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
             className="h-9 px-5 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 shadow-glow transition-all text-sm disabled:shadow-none shrink-0"
           >
             {t('setup.startToSync')}
-            <Sparkles className="size-3.5" />
           </Button>
         </div>
       </div>
@@ -490,9 +489,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                     disabled={metaSearching}
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
                   >
-                    {metaSearching
-                      ? <Loader2 className="size-3 animate-spin" />
-                      : <Sparkles className="size-3" />}
+                    {metaSearching && <Loader2 className="size-3 animate-spin" />}
                     {t('setup.fetchInfo')}
                   </button>
                 </Tip>

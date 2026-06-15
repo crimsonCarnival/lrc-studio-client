@@ -48,44 +48,56 @@ export default function SecuritySettings({ focusCard, searchTerm }) {
         </h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="flex flex-col gap-4">
         {/* Passkeys Card */}
-        {passkeyMatches && <div
-          ref={passkeyRef}
-          tabIndex={-1}
-          className={`rounded-2xl border border-border/50 bg-secondary/10 p-5 transition-all duration-300 outline-none ${
-            focusCard === 'passkey' ? highlightClass : 'hover:border-border'
-          }`}
-        >
-          <div className="mb-4">
-            <h4 className="text-sm font-semibold text-zinc-200">
-              {t('auth.passkeyManagement.title')}
-            </h4>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-              {t('profile.privacy.passkeysDesc')}
-            </p>
+        {passkeyMatches && (
+          <div
+            ref={passkeyRef}
+            tabIndex={-1}
+            className={`rounded-2xl border border-border/50 bg-secondary/10 p-6 transition-all duration-300 outline-none ${
+              focusCard === 'passkey' ? highlightClass : 'hover:border-border'
+            }`}
+          >
+            <div className="flex flex-col sm:flex-row gap-6">
+              <div className="sm:w-56 shrink-0">
+                <h4 className="text-sm font-semibold text-zinc-200">
+                  {t('auth.passkeyManagement.title')}
+                </h4>
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                  {t('profile.privacy.passkeysDesc')}
+                </p>
+              </div>
+              <div className="flex-1 min-w-0">
+                <PasskeySection />
+              </div>
+            </div>
           </div>
-          <PasskeySection />
-        </div>}
+        )}
 
         {/* Password Card */}
-        {passwordMatches && <div
-          ref={passwordRef}
-          tabIndex={-1}
-          className={`rounded-2xl border border-border/50 bg-secondary/10 p-5 transition-all duration-300 outline-none ${
-            focusCard === 'password' ? highlightClass : 'hover:border-border'
-          }`}
-        >
-          <div className="mb-4">
-            <h4 className="text-sm font-semibold text-zinc-200">
-              {t('profile.sections.password')}
-            </h4>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-              {t('profile.privacy.passwordDesc')}
-            </p>
+        {passwordMatches && (
+          <div
+            ref={passwordRef}
+            tabIndex={-1}
+            className={`rounded-2xl border border-border/50 bg-secondary/10 p-6 transition-all duration-300 outline-none ${
+              focusCard === 'password' ? highlightClass : 'hover:border-border'
+            }`}
+          >
+            <div className="flex flex-col sm:flex-row gap-6">
+              <div className="sm:w-56 shrink-0">
+                <h4 className="text-sm font-semibold text-zinc-200">
+                  {t('profile.sections.password')}
+                </h4>
+                <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+                  {t('profile.privacy.passwordDesc')}
+                </p>
+              </div>
+              <div className="flex-1 min-w-0">
+                <PasswordSection />
+              </div>
+            </div>
           </div>
-          <PasswordSection />
-        </div>}
+        )}
       </div>
     </div>
   );

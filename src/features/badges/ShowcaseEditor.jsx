@@ -303,10 +303,8 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
           disabled={saving}
           className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-primary text-zinc-950 text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors"
         >
-          {saving ? (
+          {saving && (
             <span className="size-3.5 rounded-full border-2 border-zinc-950 border-t-transparent animate-spin" />
-          ) : (
-            <Sparkles className="size-3.5" />
           )}
           {t('badges.showcase.save')}
         </button>

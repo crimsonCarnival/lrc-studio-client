@@ -43,4 +43,5 @@ export default {
   seekPlayback: "Buscar en la reproducción",
   embeddingBlockedDesc: "El propietario de este video bloquea la reproducción externa. Usa un archivo de audio directo.",
   watchOnYoutube: "Ver en YouTube",
+  stagedClickToPlay: "Toca ▶ para conectar y reproducir",
 };

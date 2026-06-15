@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Textarea } from '@ui/textarea';
@@ -18,6 +19,11 @@ export default function ProfileForm() {
     bio: user?.bio || '',
     showFollowers: user?.showFollowers ?? true,
   });
+
+  const isDirty =
+    formData.displayName !== (user?.displayName || '') ||
+    formData.bio !== (user?.bio || '') ||
+    formData.showFollowers !== (user?.showFollowers ?? true);
 
   const handleSave = async () => {
     setSaving(true);
@@ -103,20 +109,25 @@ export default function ProfileForm() {
       </div>
       </section>
 
-      <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-border pb-8">
-        <Button
-          onClick={handleSave}
-          disabled={saving || (
-            formData.displayName === (user?.displayName || '') &&
-            formData.bio === (user?.bio || '') &&
-            formData.showFollowers === (user?.showFollowers ?? true)
-          )}
-          className="w-full sm:w-auto min-w-[140px] h-10 rounded-xl font-bold gap-2"
-        >
-          {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-          {t('profile.save')}
-        </Button>
-      </div>
+      {isDirty && createPortal(
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
+          <div className="flex items-center gap-2 bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/60 rounded-2xl shadow-2xl px-4 py-2.5 pointer-events-auto animate-slide-up-fade">
+            <span className="text-xs text-zinc-400 mr-1">
+              <span className="font-semibold text-zinc-200">{t('settings.unsavedChanges')}</span>
+            </span>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-primary hover:bg-primary-dim text-zinc-950 font-semibold rounded-lg h-8 px-4 text-xs gap-1.5"
+            >
+              {saving && <Loader2 className="size-3 animate-spin" />}
+              {t('profile.save')}
+            </Button>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 }

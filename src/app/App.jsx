@@ -75,6 +75,9 @@ function AppInner() {
   const lockLayout = settings.interface?.lockLayout || false;
   const mobileTab = settings.interface?.mobileTab || 'editor';
 
+  // Dynamic player height — fed by ResizeObserver in AppPlayer
+  const [playerHeight, setPlayerHeight] = useState(0);
+
   // Layout-specific state
   const [ui, setUi] = useState({
     hideEditor: false,
@@ -298,6 +301,8 @@ function AppInner() {
     setLockLayout: useCallback((lock) => updateSetting('interface.lockLayout', lock), [updateSetting]),
     showNamingModal,
     setShowNamingModal,
+    playerHeight,
+    setPlayerHeight,
   };
 
   // Enhance appState with layout-driven state

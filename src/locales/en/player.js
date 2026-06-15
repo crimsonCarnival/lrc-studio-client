@@ -47,4 +47,5 @@ export default {
   seekPlayback: "Seek playback",
   embeddingBlockedDesc: "This video's owner blocks external playback. Use a direct audio file instead.",
   watchOnYoutube: "Watch on YouTube",
+  stagedClickToPlay: "Click ▶ to connect & play",
 }

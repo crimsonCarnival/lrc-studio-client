@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { splitArtists } from '@/shared/utils/lrc';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -31,7 +31,24 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   } = appState;
 
   const { settings, updateSetting } = settingsState;
-  const { focusMode, setFocusMode, hideEditor, setHideEditor, hidePreview, setHidePreview, mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, playerTop, showNamingModal, setShowNamingModal } = layoutState;
+  const { focusMode, setFocusMode, hideEditor, setHideEditor, hidePreview, setHidePreview, mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, playerTop, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
+
+  // Track lg breakpoint reactively so dynamic padding formula is correct on resize
+  const [isLg, setIsLg] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)');
+    const handler = (e) => setIsLg(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
+
+  // Compute dynamic padding from measured player height
+  const dynamicPt = playerTop && isReady && isPlayerMounted && playerHeight > 0 && isLg
+    ? `${playerHeight + 104}px`  // lg:top-[88px] + playerHeight + 16px gap
+    : undefined;
+  const dynamicPb = !playerTop && isReady && isPlayerMounted && playerHeight > 0
+    ? `${playerHeight + (isLg ? 48 : 72)}px`  // desktop: bottom-6(24) + gap(24); mobile: bottom-14(56) + gap(16)
+    : undefined;
 
   const isSetupPage = location.pathname === '/project/new';
 
@@ -103,20 +120,25 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           setShowNamingModal={setShowNamingModal}
         />
 
-        <div className={`relative z-base flex-1 min-h-0 ${isSetupPage ? 'px-0' : 'px-0 lg:px-6'} flex flex-col transition-[padding] duration-500 ease-in-out
-          ${location.pathname === '/' ? 'pt-14'
-            : (playerTop && isReady && isPlayerMounted) ? 'max-lg:pt-14 lg:pt-[216px]'
-              : 'pt-14 lg:pt-16'
-          }
-          ${isSetupPage
-            ? 'pb-0'
-            : isPlayerMounted && isReady
-              ? playerTop
-                ? 'max-lg:pb-[80px] lg:pb-6'
-                : 'max-lg:pb-[240px] lg:pb-[160px]'
-              : 'pb-20 lg:pb-6'
-          }
-        `}
+        <div
+          className={`relative z-base flex-1 min-h-0 ${isSetupPage ? 'px-0' : 'px-0 lg:px-6'} flex flex-col transition-[padding] duration-500 ease-in-out
+            ${location.pathname === '/' ? 'pt-14'
+              : (playerTop && isReady && isPlayerMounted) ? 'max-lg:pt-14 lg:pt-[216px]'
+                : 'pt-14 lg:pt-16'
+            }
+            ${isSetupPage
+              ? 'pb-0'
+              : isPlayerMounted && isReady
+                ? playerTop
+                  ? 'max-lg:pb-[80px] lg:pb-6'
+                  : 'max-lg:pb-[240px] lg:pb-[160px]'
+                : 'pb-20 lg:pb-6'
+            }
+          `}
+          style={{
+            ...(dynamicPt ? { paddingTop: dynamicPt } : {}),
+            ...(dynamicPb ? { paddingBottom: dynamicPb } : {}),
+          }}
         >
           <div className={`${isSetupPage ? 'w-full' : 'max-w-[1600px] mx-auto w-full'} flex-1 flex flex-col min-h-0`}>
             <SpotifyConnectBanner />
@@ -149,6 +171,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           playerTop={playerTop}
           hasMedia={hasMedia}
           setProjectSpotifyTrackId={setProjectSpotifyTrackId}
+          onHeightChange={setPlayerHeight}
         />
 
         <AppMobileNav

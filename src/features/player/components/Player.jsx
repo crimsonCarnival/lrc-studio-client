@@ -851,7 +851,59 @@ function Player(
           </div>
         )}
 
-        {source !== 'local' && hasMedia && (
+        {/* Staged Spotify — compact tap-to-play bar (replaces full controls) */}
+        {source === 'spotify' && sp.staged && (
+          <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
+            <div className="flex items-center justify-between gap-3 w-full relative min-h-[48px] pb-1.5 lg:pb-2">
+              {/* Left: dock toggle + album art */}
+              <div className="flex items-center gap-2 z-10">
+                <Tip content={playerTop ? t('player.moveToBottom') : t('player.moveToTop')}>
+                  <Button
+                    id="dock-toggle-btn"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDockToggle?.()}
+                    className={`shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
+                  >
+                    {playerTop ? <PanelBottom className="size-4" /> : <PanelTop className="size-4" />}
+                  </Button>
+                </Tip>
+                {projectMetadata?.albumArt && (
+                  <img src={projectMetadata.albumArt} alt="" className="size-9 rounded-md object-cover border border-zinc-700/50 shrink-0" />
+                )}
+              </div>
+
+              {/* Center: Spotify staged indicator */}
+              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 z-20">
+                <SpotifyIcon className="size-5 text-green-400/60" />
+                <div className="flex flex-col items-center gap-0.5">
+                  {mediaTitle && (
+                    <span className="text-sm font-medium text-zinc-200 truncate max-w-[300px]">{mediaTitle}</span>
+                  )}
+                  <span className="text-[11px] text-zinc-500 tracking-wide">{t('player.stagedClickToPlay')}</span>
+                </div>
+                <Tip content={t('shortcuts.playPause') || 'Play'}>
+                  <Button
+                    id="play-pause-btn"
+                    size="icon"
+                    onClick={togglePlay}
+                    aria-label={t('shortcuts.playPause') || 'Play'}
+                    className="rounded-full bg-primary hover:bg-primary-dim text-zinc-950 hover:scale-105 active:scale-95 glow-primary flex-shrink-0 transition-all duration-100"
+                  >
+                    <Play className="size-4 ml-0.5" fill="currentColor" />
+                  </Button>
+                </Tip>
+              </div>
+
+              {/* Right: Volume */}
+              <div className="flex items-center gap-2 z-10">
+                <VolumeControl />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {source !== 'local' && hasMedia && !sp.staged && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto px-4">
             <PlaybackProgress
               playbackPosition={playbackPosition}
@@ -864,7 +916,7 @@ function Player(
           </div>
         )}
 
-        {hasMedia && (
+        {hasMedia && !sp.staged && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
             <div className="flex items-center justify-between gap-3 w-full relative min-h-[48px] pb-1.5 lg:pb-2">
 
@@ -1166,8 +1218,26 @@ function Player(
           </div>
         )}
 
+        {/* Staged Spotify — compact mobile tap-to-play bar */}
+        {source === 'spotify' && sp.staged && (
+          <div className="animate-fade-in flex items-center gap-3 px-4 py-3">
+            <SpotifyIcon className="size-5 text-green-400/60 shrink-0" />
+            <div className="flex-1 min-w-0">
+              {mediaTitle && <p className="text-sm font-medium text-zinc-200 truncate">{mediaTitle}</p>}
+              <p className="text-[11px] text-zinc-500">{t('player.stagedClickToPlay')}</p>
+            </div>
+            <button
+              onClick={togglePlay}
+              aria-label={t('shortcuts.playPause') || 'Play'}
+              className="size-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0 active:scale-95 transition-all duration-100 shadow-lg shadow-primary/20"
+            >
+              <Play className="size-4 text-zinc-950 ml-0.5" fill="currentColor" />
+            </button>
+          </div>
+        )}
+
         {/* Has media: seekbar row + action row */}
-        {hasMedia && (
+        {hasMedia && !sp.staged && (
           <>
             <div className="flex flex-col gap-3 p-4 w-full">
               {/* Top Row: Play/Pause, Seeker, Speed */}

@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@ui/input';
-import { Loader2, Search, Sparkles } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { lyricsSearch } from '@features/editor/services/lyricsSearch.service';
 import LyricsResultCard from './LyricsResultCard';

@@ -438,7 +438,6 @@ export default function ProjectSetupModal({
               className="bg-primary hover:bg-primary-dim text-zinc-950 font-bold px-8 rounded-xl shadow-lg shadow-primary/10 transition-all h-10"
             >
               {isEditing ? t('common.save') : t('common.create')}
-              <Sparkles className="size-4 ml-2" />
             </Button>
           </div>
         </div>
