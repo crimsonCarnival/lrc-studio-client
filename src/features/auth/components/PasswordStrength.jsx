@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import zxcvbn from 'zxcvbn';
 
 // score 0–4 → i18n key + bar colour
 const LEVELS = [
@@ -31,8 +30,10 @@ const WARNING_KEY_MAP = {
 
 export default function PasswordStrength({ password }) {
   const { t } = useTranslation();
+  const [zxcvbn, setZxcvbn] = useState(null);
+  useEffect(() => { import('zxcvbn').then((m) => setZxcvbn(() => m.default)); }, []);
 
-  const result = useMemo(() => (password ? zxcvbn(password) : null), [password]);
+  const result = useMemo(() => (password && zxcvbn ? zxcvbn(password) : null), [password, zxcvbn]);
 
   if (!result) return null;
 

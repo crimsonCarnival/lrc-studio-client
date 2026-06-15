@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo, useRef, useImperativeHandle, useEffect, useLayoutEffect } from 'react';
+import { useState, useCallback, useMemo, useRef, useImperativeHandle, useEffect, useLayoutEffect, lazy, Suspense, memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useSettings } from '@/features/settings/useSettings';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
@@ -7,7 +8,7 @@ import { formatTime } from '@/shared/utils/format-time';
 import { matchKey } from '@/shared/utils/keyboard';
 import useLocalAudio from '../hooks/useLocalAudio';
 import useYouTubePlayer from '../hooks/useYouTubePlayer';
-import WaveformDisplay from './WaveformDisplay';
+const WaveformDisplay = lazy(() => import('./WaveformDisplay'));
 import PlaybackProgress from './PlaybackProgress';
 import VolumeControl from './VolumeControl';
 import SpeedControl from './SpeedControl';
@@ -23,6 +24,76 @@ import toast from 'react-hot-toast';
 const FOCUS_RING = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none';
 
 const ALL_SPEED_PRESETS = [0.25, 0.5, 0.75, 1, 1.25, 1.5];
+
+const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
+  fileInputId, ytUrl, onYtUrlChange, onYtErrorChange, onUrlLoad,
+  cdnLoading, onFileChange, uploads, onSelectUpload, onClearMedia,
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col gap-1 p-1">
+      <label
+        htmlFor={fileInputId}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-colors"
+      >
+        <FolderOpen className="size-4 shrink-0 text-zinc-500" />
+        {t('player.dropAudio')}
+        <input id={fileInputId} type="file" accept="audio/*" onChange={onFileChange} className="hidden" />
+      </label>
+      <div className="flex gap-1.5 px-1 py-1">
+        <div className="relative flex-1">
+          <Link2 className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-zinc-500 pointer-events-none" />
+          <Input
+            value={ytUrl}
+            onChange={(e) => { onYtUrlChange(e.target.value); onYtErrorChange(''); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') onUrlLoad(); }}
+            placeholder={t('player.pasteCdnUrl')}
+            className="h-8 pl-6 text-xs bg-zinc-800/60 border-zinc-700"
+          />
+        </div>
+        <Button
+          size="sm"
+          onClick={onUrlLoad}
+          disabled={!ytUrl.trim() || cdnLoading}
+          className="h-8 px-3 text-xs shrink-0 bg-zinc-700 hover:bg-zinc-600 border-zinc-600"
+        >
+          {cdnLoading ? <Loader2 className="size-3 animate-spin" /> : t('player.load')}
+        </Button>
+      </div>
+      {getAccessToken() && uploads.length > 0 && (
+        <div className="max-h-32 overflow-y-auto border-t border-zinc-800/60 pt-1 mt-0.5">
+          {uploads.map((upload) => (
+            <button
+              key={upload.id}
+              onClick={() => onSelectUpload(upload)}
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-left hover:bg-zinc-800 transition-colors group"
+            >
+              <div className="size-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
+                {upload.source === 'youtube'
+                  ? <Video className="size-3 text-red-400" />
+                  : upload.source === 'spotify'
+                    ? <SpotifyIcon className="size-3 text-green-400" />
+                    : <Cloud className="size-3 text-blue-400" />}
+              </div>
+              <span className="text-xs text-zinc-300 truncate group-hover:text-white transition-colors">
+                {upload.title || upload.fileName || t('uploads.untitled')}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="border-t border-zinc-800/60 mt-0.5 pt-1">
+        <button
+          onClick={onClearMedia}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+        >
+          <Trash2 className="size-4 shrink-0" />
+          {t('player.remove')}
+        </button>
+      </div>
+    </div>
+  );
+});
 
 function Player(
   { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onMediaUpload, playerTop = false, onDockToggle, viewerMode = false, projectMetadata, ref },
@@ -454,82 +525,17 @@ function Player(
   }, [initialMedia]);
 
 
-  const changeMediaPopoverContent = (fileInputId) => (
-    <div className="flex flex-col gap-1 p-1">
-      {/* Load file */}
-      <label
-        htmlFor={fileInputId}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-colors"
-      >
-        <FolderOpen className="size-4 shrink-0 text-zinc-500" />
-        {t('player.dropAudio')}
-        <input
-          id={fileInputId}
-          type="file"
-          accept="audio/*"
-          onChange={local.handleFileChange}
-          className="hidden"
-        />
-      </label>
-
-      {/* URL input */}
-      <div className="flex gap-1.5 px-1 py-1">
-        <div className="relative flex-1">
-          <Link2 className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-zinc-500 pointer-events-none" />
-          <Input
-            value={yt.ytUrl}
-            onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleUrlLoad(); }}
-            placeholder={t('player.pasteCdnUrl')}
-            className="h-8 pl-6 text-xs bg-zinc-800/60 border-zinc-700"
-          />
-        </div>
-        <Button
-          size="sm"
-          onClick={handleUrlLoad}
-          disabled={!yt.ytUrl.trim() || cdnLoading}
-          className="h-8 px-3 text-xs shrink-0 bg-zinc-700 hover:bg-zinc-600 border-zinc-600"
-        >
-          {cdnLoading ? <Loader2 className="size-3 animate-spin" /> : t('player.load')}
-        </Button>
-      </div>
-
-      {/* Uploads */}
-      {getAccessToken() && mediaUploads.length > 0 && (
-        <div className="max-h-32 overflow-y-auto border-t border-zinc-800/60 pt-1 mt-0.5">
-          {mediaUploads.map((upload) => (
-            <button
-              key={upload.id}
-              onClick={() => handleSelectUpload(upload)}
-              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-left hover:bg-zinc-800 transition-colors group"
-            >
-              <div className="size-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
-                {upload.source === 'youtube'
-                  ? <Video className="size-3 text-red-400" />
-                  : upload.source === 'spotify'
-                    ? <SpotifyIcon className="size-3 text-green-400" />
-                    : <Cloud className="size-3 text-blue-400" />}
-              </div>
-              <span className="text-xs text-zinc-300 truncate group-hover:text-white transition-colors">
-                {upload.title || upload.fileName || t('uploads.untitled')}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Remove */}
-      <div className="border-t border-zinc-800/60 mt-0.5 pt-1">
-        <button
-          onClick={handleClearMedia}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
-        >
-          <Trash2 className="size-4 shrink-0" />
-          {t('player.remove')}
-        </button>
-      </div>
-    </div>
-  );
+  const mediaPopoverProps = useMemo(() => ({
+    ytUrl: yt.ytUrl,
+    onYtUrlChange: yt.setYtUrl,
+    onYtErrorChange: yt.setYtError,
+    onUrlLoad: handleUrlLoad,
+    cdnLoading,
+    onFileChange: local.handleFileChange,
+    uploads: mediaUploads,
+    onSelectUpload: handleSelectUpload,
+    onClearMedia: handleClearMedia,
+  }), [yt.ytUrl, yt.setYtUrl, yt.setYtError, handleUrlLoad, cdnLoading, local.handleFileChange, mediaUploads, handleSelectUpload, handleClearMedia]);
 
   return (
     <>
@@ -697,19 +703,21 @@ function Player(
         {/* Local audio waveform */}
         {source === 'local' && local.localUrl && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
-            <WaveformDisplay
-              showWaveform={settings.playback?.showWaveform}
-              waveformSnap={settings.playback?.waveformSnap}
-              audioRef={audioRef}
-              localUrl={local.localUrl}
-              lines={lines}
-              playbackPosition={playbackPosition}
-              duration={duration}
-              onSeek={seek}
-              loopA={loopA}
-              loopB={loopB}
-              onLoopChange={handleLoopChange}
-            />
+            <Suspense fallback={null}>
+              <WaveformDisplay
+                showWaveform={settings.playback?.showWaveform}
+                waveformSnap={settings.playback?.waveformSnap}
+                audioRef={audioRef}
+                localUrl={local.localUrl}
+                lines={lines}
+                playbackPosition={playbackPosition}
+                duration={duration}
+                onSeek={seek}
+                loopA={loopA}
+                loopB={loopB}
+                onLoopChange={handleLoopChange}
+              />
+            </Suspense>
           </div>
         )}
 
@@ -861,7 +869,7 @@ function Player(
                       </PopoverTrigger>
                     </Tip>
                     <PopoverContent className="w-72 p-0 bg-zinc-900 border-zinc-800 shadow-xl" align="end" sideOffset={8}>
-                      {changeMediaPopoverContent('change-media-file-desktop')}
+                      <ChangeMediaPopoverContent fileInputId="change-media-file-desktop" {...mediaPopoverProps} />
                     </PopoverContent>
                   </Popover>
                 )}
@@ -1132,7 +1140,7 @@ function Player(
                       </PopoverTrigger>
                     </Tip>
                     <PopoverContent className="w-[280px] p-0 bg-zinc-900 border-zinc-800 shadow-xl" side="top" align="center" sideOffset={8}>
-                      {changeMediaPopoverContent('change-media-file-mobile')}
+                      <ChangeMediaPopoverContent fileInputId="change-media-file-mobile" {...mediaPopoverProps} />
                     </PopoverContent>
                   </Popover>
                 )}

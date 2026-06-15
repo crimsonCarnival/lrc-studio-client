@@ -152,7 +152,10 @@ export default function useLocalAudio({
   }, [audioRef, autoRewind?.enabled, autoRewind?.seconds, updateTime]);
 
   const remove = useCallback(() => {
-    if (audioRef.current) audioRef.current.pause();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+    }
     if (localUrl) URL.revokeObjectURL(localUrl);
     setLocalUrl(null);
     blobRef.current = null;
@@ -161,9 +164,7 @@ export default function useLocalAudio({
   }, [audioRef, blobRef, localUrl]);
 
   const play = useCallback(() => {
-    console.log('[local.play] audioRef.current:', audioRef.current, '| readyState:', audioRef.current?.readyState, '| error:', audioRef.current?.error);
     const promise = audioRef.current?.play();
-    console.log('[local.play] play() returned:', promise);
     promise?.catch((err) => {
       console.error('[local.play] play() rejected:', err.name, err.message);
       if (err.name !== 'AbortError') {

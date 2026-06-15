@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react({
       babel: {
@@ -56,6 +56,11 @@ export default defineConfig({
       },
     },
   },
+  // Strip console.log/warn/debug in production; keep console.error
+  esbuild: mode === 'production' ? {
+    drop: ['debugger'],
+    pure: ['console.log', 'console.warn', 'console.debug', 'console.info'],
+  } : {},
   envPrefix: 'VITE_',
   build: {
     chunkSizeWarningLimit: 500,
@@ -128,8 +133,12 @@ export default defineConfig({
           if (id.includes('node_modules/@fingerprintjs')) {
             return 'vendor-fingerprint';
           }
+          // Password strength — only needed on auth pages
+          if (id.includes('node_modules/zxcvbn')) {
+            return 'vendor-zxcvbn';
+          }
         },
       },
     },
   },
-})
+}))
