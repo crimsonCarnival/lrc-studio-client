@@ -55,8 +55,8 @@ function ShowcaseSection() {
         userBadges={enrichedBadges}
         initialShowcase={user?.showcasedBadges ?? []}
         initialPublic={user?.showcasePublic ?? true}
-        showcaseSlots={getShowcaseSlots(user?.level ?? 0)}
-        level={user?.level ?? 0}
+        showcaseSlots={getShowcaseSlots(user?.progression?.level ?? 0)}
+        level={user?.progression?.level ?? 0}
         onSaved={(ids, pub) => setUser(prev => ({ ...prev, showcasedBadges: ids, showcasePublic: pub }))}
       />
     </section>

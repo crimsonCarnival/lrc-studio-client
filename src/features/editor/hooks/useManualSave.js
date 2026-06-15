@@ -147,7 +147,6 @@ export function useManualSave({
       playbackPosition: hasMedia ? playbackPosition : 0,
       playbackSpeed: hasMedia ? (playerRef.current?.getSpeed?.() ?? 1) : 1,
       saveTime: toLocalISOString(now, utcOffset),
-      timezone: tz, utcOffset,
       title: mediaTitle || '',
       metadata: projectMetadata,
       uploadedAudio: uploadedAudio || null,
