@@ -332,11 +332,11 @@ export default function EditorToolbar({
                       },
                       metadata: payload.metadata,
                       ...(payload.ytUrl ? { ytUrl: payload.ytUrl } : {}),
-                      ...(payload.cloudinaryAudio ? {
-                        cloudinaryUrl: payload.cloudinaryAudio.cloudinaryUrl,
-                        cloudinaryPublicId: payload.cloudinaryAudio.publicId || null,
-                        fileName: payload.cloudinaryAudio.fileName || '',
-                        duration: payload.cloudinaryAudio.duration || null,
+                      ...(payload.uploadedAudio ? {
+                        uploadUrl: payload.uploadedAudio.uploadUrl,
+                        uploadPublicId: payload.uploadedAudio.publicId || null,
+                        fileName: payload.uploadedAudio.fileName || '',
+                        duration: payload.uploadedAudio.duration || null,
                       } : {}),
                     };
                     try {

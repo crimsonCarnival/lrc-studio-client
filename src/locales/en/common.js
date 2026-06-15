@@ -16,7 +16,6 @@ export default {
   restore: "Restore Defaults",
   "language.en": "English",
   "language.es": "Español",
-  "language.ja": "日本語",
   or: "OR",
   save: "Save",
   create: "Create",

@@ -23,7 +23,7 @@ function SourceIcon({ source }) {
 
 function SourceLabel({ source, t }) {
   if (source === 'youtube') return t('uploads.youtube');
-  if (source === 'cloudinary') return t('uploads.cloudinary');
+  if (source === 'cloudinary') return t('uploads.cloudAudio');
   if (source === 'spotify') return t('uploads.spotify');
   return source;
 }

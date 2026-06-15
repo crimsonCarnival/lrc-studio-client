@@ -21,7 +21,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     isDraggingFile, playerRef,
     handleManualSave, triggerImportSave, handleDiscardProject, handleRestoreProject, buildProjectPayload,
     handleTimeUpdate, handleDurationChange, handleMediaChange, handleYtUrlChange,
-    handleCloudinaryUpload, restoredMedia, restoredPosition,
+    handleMediaUpload, restoredMedia, restoredPosition,
     restoredSpeed, hasUnsavedChanges, activeProjectId, projectMetadata, setProjectMetadata,
     forkedFrom,
     isProjectLoading, hasMedia, lines, activeLineIndex, playbackPosition, syncMode, pendingProject,
@@ -157,7 +157,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           handleDurationChange={handleDurationChange}
           handleMediaChange={handleMediaChange}
           handleYtUrlChange={handleYtUrlChange}
-          handleCloudinaryUpload={handleCloudinaryUpload}
+          handleMediaUpload={handleMediaUpload}
           restoredMedia={restoredMedia}
           restoredPosition={restoredPosition}
           restoredSpeed={restoredSpeed}
@@ -196,8 +196,8 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           setUnsavedModalTarget={layoutState.setUnsavedModalTarget}
           sourceInfo={{
             ytUrl: appState.projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : ''),
-            cloudinary: appState.cloudinaryAudio || (restoredMedia?.type === 'cloudinary' ? {
-              id: restoredMedia.id, cloudinaryUrl: restoredMedia.url,
+            cloudinary: appState.uploadedAudio || (restoredMedia?.type === 'cloudinary' ? {
+              id: restoredMedia.id, uploadUrl: restoredMedia.url,
               publicId: restoredMedia.publicId, fileName: restoredMedia.fileName,
               duration: restoredMedia.duration,
             } : null),

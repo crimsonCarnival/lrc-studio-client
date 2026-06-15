@@ -36,9 +36,9 @@ export function TrendingProjects({ limit = 6 }) {
               className="flex flex-col rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors overflow-hidden group"
             >
               <div className="aspect-video w-full bg-gradient-to-br from-primary/30 to-violet-500/30 flex items-center justify-center relative shrink-0">
-                {project.coverImage || project.upload?.cloudinaryUrl ? (
+                {project.coverImage || project.upload?.uploadUrl ? (
                   <img
-                    src={project.coverImage ?? project.upload?.cloudinaryUrl}
+                    src={project.coverImage ?? project.upload?.uploadUrl}
                     alt={project.title}
                     className="absolute inset-0 w-full h-full object-cover"
                   />

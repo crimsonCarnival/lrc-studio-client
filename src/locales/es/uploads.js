@@ -39,7 +39,7 @@ export default {
   startNewProject: "Inicia un nuevo proyecto desde la pantalla de Configuración.",
   youtube: "YouTube",
   audioFile: "Archivo de audio",
-  cloudinary: "Nube",
+  cloudAudio: "Nube",
   spotify: "Spotify",
   noFiles: "No hay archivos seleccionados",
   uploadSuccess: "Subido correctamente",

@@ -1,10 +1,10 @@
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
-import { enUS, es, ja } from 'date-fns/locale';
+import { enUS, es } from 'date-fns/locale';
 import { BADGE_REGISTRY, RARITY_CONFIG, BADGE_COLORS } from './badge-registry';
 
-const DATE_LOCALES = { en: enUS, es, ja };
+const DATE_LOCALES = { en: enUS, es };
 const EMPTY_BADGES = [];
 
 const RARITY_BORDER_STYLE = {

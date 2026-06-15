@@ -15,7 +15,7 @@ export const uploadsService = {
    * Upload a file to Cloudinary using a server-signed request.
    * Returns { secure_url, public_id, duration }.
    */
-  async uploadToCloudinary(file, recaptchaToken) {
+  async uploadMedia(file, recaptchaToken) {
     const { signature, timestamp, cloudName, apiKey, folder, resourceType } =
       await this.getSignature({ fileName: file.name, fileSize: file.size, recaptchaToken });
 
@@ -107,7 +107,7 @@ export const uploadsService = {
           title
           artist
           duration
-          cloudinaryUrl
+          uploadUrl
           publicId
           youtubeUrl
           spotifyTrackId
@@ -129,7 +129,7 @@ export const uploadsService = {
           title
           artist
           duration
-          cloudinaryUrl
+          uploadUrl
           publicId
           youtubeUrl
           spotifyTrackId

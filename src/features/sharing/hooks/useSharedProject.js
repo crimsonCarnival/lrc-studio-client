@@ -71,7 +71,7 @@ export function useSharedProject({
   projectMetadata,
   duration,
   projectYtUrl,
-  cloudinaryAudio,
+  uploadedAudio,
   projectSpotifyTrackId,
   restoredMedia,
 }) {
@@ -158,7 +158,7 @@ export function useSharedProject({
             id: upload.id,
             source: upload.source,
             youtubeUrl: upload.youtubeUrl,
-            cloudinaryUrl: upload.cloudinaryUrl,
+            uploadUrl: upload.uploadUrl,
             spotifyTrackId: upload.spotifyTrackId,
             artist: upload.artist,
             fileName: upload.fileName,
@@ -226,10 +226,10 @@ export function useSharedProject({
       let uploadIdToSave = null;
 
       // Get the effective upload - check current state first, then fall back to restored
-      const effectiveCloudinary = cloudinaryAudio
+      const effectiveUpload = uploadedAudio
         || (restoredMedia?.type === 'cloudinary' ? {
           id: restoredMedia.id,
-          cloudinaryUrl: restoredMedia.url,
+          uploadUrl: restoredMedia.url,
           publicId: restoredMedia.publicId,
           fileName: restoredMedia.fileName,
           duration: restoredMedia.duration,
@@ -238,24 +238,24 @@ export function useSharedProject({
       const effectiveSpotifyTrackId = projectSpotifyTrackId
         || (restoredMedia?.type === 'spotify' ? restoredMedia.trackId : null);
 
-      console.log('[share] effectiveCloudinary:', effectiveCloudinary);
+      console.log('[share] effectiveUpload:', effectiveUpload);
       console.log('[share] effectiveYtUrl:', effectiveYtUrl);
       console.log('[share] effectiveSpotifyTrackId:', effectiveSpotifyTrackId);
 
       // Only persist upload records to the database for authenticated users.
       // Guests cannot own DB records and the project creation below also requires auth.
       if (getAccessToken()) {
-        if (effectiveCloudinary?.id) {
-          uploadIdToSave = effectiveCloudinary.id;
-        } else if (effectiveCloudinary && effectiveCloudinary.source !== 'spotify') {
+        if (effectiveUpload?.id) {
+          uploadIdToSave = effectiveUpload.id;
+        } else if (effectiveUpload && effectiveUpload.source !== 'spotify') {
           try {
             const upload = await uploads.saveMedia({
               source: 'cloudinary',
-              cloudinaryUrl: effectiveCloudinary.cloudinaryUrl,
-              publicId: effectiveCloudinary.publicId,
-              fileName: effectiveCloudinary.fileName,
-              title: effectiveCloudinary.fileName?.replace(/\.[^/.]+$/, '') || '',
-              duration: effectiveCloudinary.duration,
+              uploadUrl: effectiveUpload.uploadUrl,
+              publicId: effectiveUpload.publicId,
+              fileName: effectiveUpload.fileName,
+              title: effectiveUpload.fileName?.replace(/\.[^/.]+$/, '') || '',
+              duration: effectiveUpload.duration,
             });
             uploadIdToSave = upload.id;
           } catch (err) {
@@ -317,9 +317,9 @@ export function useSharedProject({
       const finalData = {
         url: `${window.location.origin}/share/${sharedId}`,
         ytUrl: projectYtUrl,
-        cloudinaryAudio,
+        uploadedAudio,
         spotifyTrackId: projectSpotifyTrackId,
-        mediaSource: projectSpotifyTrackId ? 'spotify' : (cloudinaryAudio ? 'cloudinary' : (projectYtUrl ? 'youtube' : 'none')),
+        mediaSource: projectSpotifyTrackId ? 'spotify' : (uploadedAudio ? 'cloudinary' : (projectYtUrl ? 'youtube' : 'none')),
         linesCount: lines.length,
         hasSynced: lines.some((l) => l.timestamp != null),
         readOnly: true,
@@ -330,7 +330,7 @@ export function useSharedProject({
       setShareModalState(null);
       toast.error(t('project.shareFailed') || 'Could not generate share link.');
     }
-  }, [lines, editorMode, projectYtUrl, syncMode, mediaTitle, cloudinaryAudio, duration, t, projectMetadata, activeProjectIdRef, setActiveProjectId, setShareModalState, executeRecaptcha, lastShareData, projectSpotifyTrackId, restoredMedia]);
+  }, [lines, editorMode, projectYtUrl, syncMode, mediaTitle, uploadedAudio, duration, t, projectMetadata, activeProjectIdRef, setActiveProjectId, setShareModalState, executeRecaptcha, lastShareData, projectSpotifyTrackId, restoredMedia]);
 
   return {
     isSharedProject, setIsSharedProject,

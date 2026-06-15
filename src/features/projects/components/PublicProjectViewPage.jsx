@@ -75,8 +75,8 @@ function PublicProjectViewPageInner() {
     if (!upload) return null;
     if (upload.source === 'youtube' && upload.youtubeUrl)
       return { type: 'youtube', url: upload.youtubeUrl };
-    if (upload.source === 'cloudinary' && upload.cloudinaryUrl)
-      return { type: 'cloudinary', id: upload.id, url: upload.cloudinaryUrl,
+    if (upload.source === 'cloudinary' && upload.uploadUrl)
+      return { type: 'cloudinary', id: upload.id, url: upload.uploadUrl,
                fileName: upload.fileName ?? null, title: upload.title ?? null,
                duration: upload.duration ?? null, publicId: upload.publicId ?? null };
     if (upload.source === 'spotify' && upload.spotifyTrackId)
@@ -293,7 +293,7 @@ function PublicProjectViewPageInner() {
             lines={lines}
             playbackPosition={playbackPosition}
             syncMode={false}
-            onCloudinaryUpload={() => {}}
+            onMediaUpload={() => {}}
             projectMetadata={meta}
             viewerMode
           />

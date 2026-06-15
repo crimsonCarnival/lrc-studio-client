@@ -238,7 +238,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       const title = rawName.length > 30 ? 'Cloud Audio' : rawName;
       if (playerRef.current?.loadFromUrl) playerRef.current.loadFromUrl(trimmed, title);
       setAudioState({ ready: true, name: title, source: 'cloud', selectedUpload: null });
-      saveUploadRecord({ source: 'cloudinary', cloudinaryUrl: trimmed, fileName: `${rawName}.${ext}`, title });
+      saveUploadRecord({ source: 'cloudinary', uploadUrl: trimmed, fileName: `${rawName}.${ext}`, title });
       return;
     }
 
@@ -272,11 +272,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     if (upload.source === 'youtube' && upload.youtubeUrl) {
       setAudioState({ ytUrl: upload.youtubeUrl });
       playerRef.current?.loadYouTube?.(upload.youtubeUrl);
-    } else if (upload.source === 'cloudinary' && upload.cloudinaryUrl) {
-      playerRef.current?.loadFromUrl?.(upload.cloudinaryUrl, upload.title || upload.fileName);
-    } else if (upload.source === 'spotify' && (upload.spotifyTrackId || upload.trackId)) {
-      const sId = upload.spotifyTrackId || (upload.trackId?.length !== 24 ? upload.trackId : null);
-      if (sId) playerRef.current?.loadSpotify?.(sId, upload.title || upload.fileName || 'Spotify Track', false);
+    } else if (upload.source === 'cloudinary' && upload.uploadUrl) {
+      playerRef.current?.loadFromUrl?.(upload.uploadUrl, upload.title || upload.fileName);
+    } else if (upload.source === 'spotify' && upload.spotifyTrackId) {
+      window.open(`https://open.spotify.com/track/${upload.spotifyTrackId}`, '_blank', 'noopener,noreferrer');
     }
   };
 

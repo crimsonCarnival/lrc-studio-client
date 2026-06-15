@@ -52,7 +52,7 @@ export function useProjectActions({
   setRestoredPosition,
   setRestoredSpeed,
   setActiveProjectId,
-  setCloudinaryAudio,
+  setUploadedAudio,
   setHasMedia,
   setPlaybackPosition,
   setDuration,
@@ -97,7 +97,7 @@ export function useProjectActions({
       if (project.upload?.source === 'youtube' && project.upload?.youtubeUrl) {
         setProjectYtUrl?.(project.upload.youtubeUrl);
       } else if (project.upload?.source === 'cloudinary') {
-        setCloudinaryAudio?.(project.upload);
+        setUploadedAudio?.(project.upload);
       } else if (project.upload?.source === 'spotify' && project.upload?.spotifyTrackId) {
         setProjectSpotifyTrackId?.(project.upload.spotifyTrackId);
       }
@@ -130,7 +130,7 @@ export function useProjectActions({
         activeLineIndex: project.state?.activeLineIndex || 0, 
         editorMode: project.lyrics?.editorMode || 'lrc', 
         ytUrl: project.upload?.youtubeUrl || '', 
-        cloudinaryAudio: project.upload?.source === 'cloudinary' ? project.upload : null,
+        uploadedAudio: project.upload?.source === 'cloudinary' ? project.upload : null,
         spotifyTrackId: project.upload?.source === 'spotify' ? project.upload?.spotifyTrackId : '',
         playbackPosition: project.state?.playbackPosition || 0, 
         playbackSpeed: project.state?.playbackSpeed || 1, 
@@ -143,7 +143,7 @@ export function useProjectActions({
     } finally {
       setIsProjectLoading(false);
     }
-  }, [setLines, setSyncMode, setActiveLineIndex, setEditorModeRaw, setMediaTitle, setForkedFrom, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setActiveProjectId, activeProjectIdRef, lastServerSnapshotRef, sessionUploadIdRef, setIsProjectLoading, setProjectSpotifyTrackId, setProjectMetadata, setProjectYtUrl, setCloudinaryAudio, setProjectCoverImage, setProjectUserId]);
+  }, [setLines, setSyncMode, setActiveLineIndex, setEditorModeRaw, setMediaTitle, setForkedFrom, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setActiveProjectId, activeProjectIdRef, lastServerSnapshotRef, sessionUploadIdRef, setIsProjectLoading, setProjectSpotifyTrackId, setProjectMetadata, setProjectYtUrl, setUploadedAudio, setProjectCoverImage, setProjectUserId]);
 
   // ── Restore pending (localStorage) project ────────────────────────────────
   const handleRestoreProject = useCallback(() => {
@@ -164,13 +164,13 @@ export function useProjectActions({
     if (pendingProject.ytUrl) {
       setProjectYtUrl(pendingProject.ytUrl);
       setRestoredMedia({ type: 'youtube', url: pendingProject.ytUrl });
-    } else if (pendingProject.cloudinaryAudio?.cloudinaryUrl) {
-      const ca = pendingProject.cloudinaryAudio;
-      setCloudinaryAudio(ca);
+    } else if (pendingProject.uploadedAudio?.uploadUrl) {
+      const ca = pendingProject.uploadedAudio;
+      setUploadedAudio(ca);
       setRestoredMedia({
         type: 'cloudinary',
         id: ca.id,
-        url: ca.cloudinaryUrl,
+        url: ca.uploadUrl,
         fileName: ca.fileName ?? null,
         title: null,
         duration: ca.duration ?? null,
@@ -209,10 +209,10 @@ export function useProjectActions({
                 sessionUploadIdRef.current = upload.id;
               }
             } catch (err) { console.error('[Restore] YouTube upload save failed:', err); }
-          } else if (pendingProject.cloudinaryAudio?.cloudinaryUrl) {
+          } else if (pendingProject.uploadedAudio?.uploadUrl) {
             // Cloudinary: guest may have a URL from a previous session or from a local upload
             // that now needs to be persisted as a real Upload record
-            const ca = pendingProject.cloudinaryAudio;
+            const ca = pendingProject.uploadedAudio;
             if (ca.id && !String(ca.id).startsWith('local:')) {
               // Already has a real DB id from a previous authenticated save
               uploadIdToSave = ca.id;
@@ -221,7 +221,7 @@ export function useProjectActions({
               try {
                 const { upload } = await uploads.saveMedia({
                   source: 'cloudinary',
-                  cloudinaryUrl: ca.cloudinaryUrl,
+                  uploadUrl: ca.uploadUrl,
                   publicId: ca.publicId || null,
                   fileName: ca.fileName || '',
                   title: ca.fileName?.replace(/\.[^/.]+$/, '') || mediaTitle || pendingProject.title || '',
@@ -294,7 +294,7 @@ export function useProjectActions({
       isCreatingProjectRef.current = false;
       setPendingProject(null);
     }
-  }, [pendingProject, setPendingProject, setLines, setForkedFrom, setSyncMode, setActiveLineIndex, setEditorModeRaw, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setIsProjectLoading, activeProjectId, activeProjectIdRef, setActiveProjectId, sessionUploadIdRef, mediaTitle, projectMetadata, duration, executeRecaptcha, isCreatingProjectRef, setProjectSpotifyTrackId, setMediaTitle, setProjectMetadata, setProjectYtUrl, setCloudinaryAudio]);
+  }, [pendingProject, setPendingProject, setLines, setForkedFrom, setSyncMode, setActiveLineIndex, setEditorModeRaw, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setIsProjectLoading, activeProjectId, activeProjectIdRef, setActiveProjectId, sessionUploadIdRef, mediaTitle, projectMetadata, duration, executeRecaptcha, isCreatingProjectRef, setProjectSpotifyTrackId, setMediaTitle, setProjectMetadata, setProjectYtUrl, setUploadedAudio]);
 
   // ── Discard pending project ───────────────────────────────────────────────
   const handleDiscardProject = useCallback(() => {
@@ -327,13 +327,13 @@ export function useProjectActions({
     setRestoredSpeed(1);
     setActiveProjectId(null);
     activeProjectIdRef.current = null;
-    setCloudinaryAudio(null);
+    setUploadedAudio(null);
     localStorage.removeItem(STORAGE_KEYS.ACTIVE_PROJECT_ID);
     localStorage.removeItem(STORAGE_KEYS.PROJECT);
     localStorage.removeItem(STORAGE_KEYS.SHARED_PROJECT);
     lastServerSnapshotRef.current = null;
     sessionUploadIdRef.current = null;
-  }, [setLines, setSyncMode, setActiveLineIndex, setMediaTitle, setProjectMetadata, setForkedFrom, setProjectYtUrl, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setActiveProjectId, activeProjectIdRef, setCloudinaryAudio, lastServerSnapshotRef, sessionUploadIdRef]);
+  }, [setLines, setSyncMode, setActiveLineIndex, setMediaTitle, setProjectMetadata, setForkedFrom, setProjectYtUrl, setRestoredMedia, setRestoredPosition, setRestoredSpeed, setActiveProjectId, activeProjectIdRef, setUploadedAudio, lastServerSnapshotRef, sessionUploadIdRef]);
 
   // ── Media change handlers ─────────────────────────────────────────────────
   const handleMediaChange = useCallback((loaded) => {
@@ -342,18 +342,18 @@ export function useProjectActions({
       setPlaybackPosition(0);
       setDuration(0);
       setMediaTitle('');
-      setCloudinaryAudio(null);
+      setUploadedAudio(null);
       sessionUploadIdRef.current = null;
     }
-  }, [setHasMedia, setPlaybackPosition, setDuration, setMediaTitle, setCloudinaryAudio, sessionUploadIdRef]);
+  }, [setHasMedia, setPlaybackPosition, setDuration, setMediaTitle, setUploadedAudio, sessionUploadIdRef]);
 
   const handleDurationChange = useCallback((d) => {
     setDuration(d);
-    setCloudinaryAudio((prev) => {
+    setUploadedAudio((prev) => {
       if (prev && (prev.duration === null || prev.duration === undefined)) return { ...prev, duration: d };
       return prev;
     });
-  }, [setDuration, setCloudinaryAudio]);
+  }, [setDuration, setUploadedAudio]);
 
   return {
     loadProject,

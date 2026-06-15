@@ -15,7 +15,7 @@ const GET_PUBLIC_PROFILE = `
       projects {
         id projectId title starCount forkCount coverImage public
         metadata { songName songArtist songAlbum songYear genre albumArt description tags }
-        upload { source youtubeUrl cloudinaryUrl }
+        upload { source youtubeUrl uploadUrl }
         createdAt updatedAt
       }
     }

@@ -22,7 +22,7 @@ export function useAutosave({
   isCreatingProjectRef,
   sessionUploadIdRef,
   lastServerSnapshotRef,
-  cloudinaryAudio,
+  uploadedAudio,
   mediaTitle,
   projectMetadata,
   editorMode,
@@ -59,7 +59,7 @@ export function useAutosave({
       editorMode,
       syncMode,
       activeLineIndex,
-      cloudinaryAudio,
+      uploadedAudio,
       duration,
     };
   });
@@ -81,7 +81,7 @@ export function useAutosave({
     const {
       buildPayload, isSharedProject,
       mediaTitle, projectMetadata, editorMode, syncMode,
-      activeLineIndex, cloudinaryAudio, duration,
+      activeLineIndex, uploadedAudio, duration,
     } = s;
 
     const payload = buildPayload();
@@ -96,20 +96,20 @@ export function useAutosave({
       // Skip saveMedia if we already have an upload ID for this session
       let uploadIdToSave = sessionUploadIdRef.current || null;
 
-      if (!uploadIdToSave && cloudinaryAudio) {
-        const hasRealId = cloudinaryAudio.id && !String(cloudinaryAudio.id).startsWith('local:');
+      if (!uploadIdToSave && uploadedAudio) {
+        const hasRealId = uploadedAudio.id && !String(uploadedAudio.id).startsWith('local:');
         if (hasRealId) {
-          uploadIdToSave = cloudinaryAudio.id;
-          sessionUploadIdRef.current = cloudinaryAudio.id;
+          uploadIdToSave = uploadedAudio.id;
+          sessionUploadIdRef.current = uploadedAudio.id;
         } else {
           try {
             const { upload } = await uploads.saveMedia({
               source: 'cloudinary',
-              cloudinaryUrl: cloudinaryAudio.cloudinaryUrl,
-              publicId: cloudinaryAudio.publicId,
-              fileName: cloudinaryAudio.fileName,
-              title: cloudinaryAudio.fileName?.replace(/\.[^/.]+$/, '') || '',
-              duration: cloudinaryAudio.duration,
+              uploadUrl: uploadedAudio.uploadUrl,
+              publicId: uploadedAudio.publicId,
+              fileName: uploadedAudio.fileName,
+              title: uploadedAudio.fileName?.replace(/\.[^/.]+$/, '') || '',
+              duration: uploadedAudio.duration,
             });
             if (upload?.id) {
               uploadIdToSave = upload.id;
@@ -201,19 +201,19 @@ export function useAutosave({
       isCreatingProjectRef.current = true;
 
       let uploadIdToSave = null;
-      if (cloudinaryAudio) {
-        const hasRealId = cloudinaryAudio.id && !String(cloudinaryAudio.id).startsWith('local:');
+      if (uploadedAudio) {
+        const hasRealId = uploadedAudio.id && !String(uploadedAudio.id).startsWith('local:');
         if (hasRealId) {
-          uploadIdToSave = cloudinaryAudio.id;
+          uploadIdToSave = uploadedAudio.id;
         } else {
           try {
             const { upload } = await uploads.saveMedia({
               source: 'cloudinary',
-              cloudinaryUrl: cloudinaryAudio.cloudinaryUrl,
-              publicId: cloudinaryAudio.publicId,
-              fileName: cloudinaryAudio.fileName,
-              title: cloudinaryAudio.fileName?.replace(/\.[^/.]+$/, '') || '',
-              duration: cloudinaryAudio.duration,
+              uploadUrl: uploadedAudio.uploadUrl,
+              publicId: uploadedAudio.publicId,
+              fileName: uploadedAudio.fileName,
+              title: uploadedAudio.fileName?.replace(/\.[^/.]+$/, '') || '',
+              duration: uploadedAudio.duration,
             });
             if (upload?.id) uploadIdToSave = upload.id;
           } catch (err) {
@@ -293,7 +293,7 @@ export function useAutosave({
     const indicatorDuration = { short: 800, normal: 1500, long: 3000 }[settings.advanced?.autoSaveIndicatorDuration] || 1500;
     setTimeout(() => setIsAutosaving(false), indicatorDuration);
   // Volatile editing values (mediaTitle, projectMetadata, editorMode, syncMode,
-  // activeLineIndex, cloudinaryAudio, duration) are intentionally NOT listed here.
+  // activeLineIndex, uploadedAudio, duration) are intentionally NOT listed here.
   // They are read from autoSaveRef.current which is updated every render,
   // ensuring freshness without recreating doAutoSave on every playback tick.
   }, [

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { enUS, es, ja } from 'date-fns/locale';
+import { enUS, es } from 'date-fns/locale';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projects } from '@/app/api';
@@ -11,7 +11,7 @@ import ProjectSetupModal from '@features/editor/components/setup/ProjectSetupMod
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 
-const DATE_FNS_LOCALES = { en: enUS, es, ja };
+const DATE_FNS_LOCALES = { en: enUS, es };
 
 function formatRelativeTime(dateStr, locale = 'en') {
   try {

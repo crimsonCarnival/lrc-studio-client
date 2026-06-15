@@ -15,7 +15,7 @@ export default function useLocalAudio({
   setCurrentTime,
   onTitleChange,
   onMediaChange,
-  onCloudinaryUpload,
+  onMediaUpload,
   initialSpeed,
   initialSeek,
 }) {
@@ -43,14 +43,14 @@ export default function useLocalAudio({
     onMediaChange?.(true);
 
     // Upload to Cloudinary in background if authenticated and not already hosted there
-    if (!file.isCloudinary && getAccessToken() && file.size <= 50 * 1024 * 1024) {
+    if (!file.isHosted && getAccessToken() && file.size <= 50 * 1024 * 1024) {
       uploadAbortRef.current = false;
       setIsUploading(true);
       
       const performUpload = async () => {
         if (uploadAbortRef.current) return;
         try {
-          const result = await uploads.uploadToCloudinary(
+          const result = await uploads.uploadMedia(
             file,
             executeRecaptcha ? await executeRecaptcha('upload_audio') : undefined
           );
@@ -58,7 +58,7 @@ export default function useLocalAudio({
             // Immediately persist to database before considering it successful
             const { upload } = await uploads.saveMedia({
               source: 'cloudinary',
-              cloudinaryUrl: result.secure_url,
+              uploadUrl: result.secure_url,
               publicId: result.public_id,
               fileName: file.name,
               title: file.name.replace(/\.[^/.]+$/, ''),
@@ -69,9 +69,9 @@ export default function useLocalAudio({
               // Assign a local: temp id so the session can track this upload
               // without sending a fake Mongo id to the server. The local: prefix
               // signals to save paths that a real DB record is still needed.
-              onCloudinaryUpload?.({
+              onMediaUpload?.({
                 id: `local:${crypto.randomUUID()}`,
-                cloudinaryUrl: result.secure_url,
+                uploadUrl: result.secure_url,
                 publicId: result.public_id,
                 fileName: file.name,
                 duration: result.duration,
@@ -79,9 +79,9 @@ export default function useLocalAudio({
               return;
             }
             if (uploadAbortRef.current) return;
-            onCloudinaryUpload?.({
+            onMediaUpload?.({
               id: upload.id,
-              cloudinaryUrl: result.secure_url,
+              uploadUrl: result.secure_url,
               publicId: result.public_id,
               fileName: file.name,
               duration: result.duration,
@@ -91,9 +91,9 @@ export default function useLocalAudio({
             console.error('Failed to persist upload to database:', err);
             // Don't show error toast - still allow playback from URL
             // Assign a local: temp id so the session knows this wasn't persisted
-            onCloudinaryUpload?.({
+            onMediaUpload?.({
               id: `local:${crypto.randomUUID()}`,
-              cloudinaryUrl: result.secure_url,
+              uploadUrl: result.secure_url,
               publicId: result.public_id,
               fileName: file.name,
               duration: result.duration,
@@ -108,7 +108,7 @@ export default function useLocalAudio({
       };
       performUpload();
     }
-  }, [blobRef, t, setSource, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, onCloudinaryUpload, executeRecaptcha]);
+  }, [blobRef, t, setSource, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, onMediaUpload, executeRecaptcha]);
 
   const handleTimeUpdate = useCallback(() => {
     if (audioRef.current) {

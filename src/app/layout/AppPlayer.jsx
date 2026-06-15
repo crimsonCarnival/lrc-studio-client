@@ -22,7 +22,7 @@ export function AppPlayer({
   handleDurationChange,
   handleMediaChange,
   handleYtUrlChange,
-  handleCloudinaryUpload,
+  handleMediaUpload,
   restoredMedia,
   restoredPosition,
   restoredSpeed,
@@ -84,7 +84,7 @@ export function AppPlayer({
             onDurationChange={handleDurationChange}
             onMediaChange={handleMediaChange}
             onYtUrlChange={handleYtUrlChange}
-            onCloudinaryUpload={handleCloudinaryUpload}
+            onMediaUpload={handleMediaUpload}
             initialMedia={restoredMedia}
             initialSeek={restoredPosition}
             initialSpeed={restoredSpeed}

@@ -75,10 +75,10 @@ export const UploadPage = () => {
       await Promise.all(Array.from(files).map(async (file) => {
         setUploadProgress(prev => ({ ...prev, [file.name]: 25 }));
         try {
-          const result = await uploadsService.uploadToCloudinary(file, null);
+          const result = await uploadsService.uploadMedia(file, null);
           await uploadsService.saveMedia({
             source: 'cloudinary',
-            cloudinaryUrl: result.secure_url,
+            uploadUrl: result.secure_url,
             publicId: result.public_id,
             fileName: file.name,
             duration: result.duration || 0,

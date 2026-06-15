@@ -33,7 +33,7 @@ function AppInner() {
     activeProjectId,
     setMediaTitle,
     handleYtUrlChange,
-    handleCloudinaryUpload,
+    handleMediaUpload,
   } = appState;
 
   useScrollLock(!!pendingProject);
@@ -143,12 +143,12 @@ function AppInner() {
         // oEmbed failed or timed out — leave finalTitle as-is
       }
     } else if (audioSource === 'cloud' && selectedUpload) {
-      handleCloudinaryUpload(selectedUpload);
-      if (selectedUpload.cloudinaryUrl) {
+      handleMediaUpload(selectedUpload);
+      if (selectedUpload.uploadUrl) {
         appState.setRestoredMedia({
           type: 'cloudinary',
           id: selectedUpload.id,
-          url: selectedUpload.cloudinaryUrl,
+          url: selectedUpload.uploadUrl,
           fileName: selectedUpload.fileName ?? null,
           title: selectedUpload.title ?? null,
           duration: selectedUpload.duration ?? null,
@@ -195,7 +195,7 @@ function AppInner() {
     });
 
     navigate('/project/local');
-  }, [setLines, setEditorMode, setSyncMode, setMediaTitle, handleYtUrlChange, handleCloudinaryUpload, appState, navigate, user]);
+  }, [setLines, setEditorMode, setSyncMode, setMediaTitle, handleYtUrlChange, handleMediaUpload, appState, navigate, user]);
 
   const setFocusMode = useCallback((mode) => {
     updateSetting('interface.focusMode', mode);

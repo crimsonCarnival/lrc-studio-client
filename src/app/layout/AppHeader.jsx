@@ -29,15 +29,13 @@ const THEMES = [
 ];
 
 const LANG_NAMES = {
-  en: { en: 'English',  es: 'Inglés',    ja: '英語'        },
-  es: { en: 'Spanish',  es: 'Español',   ja: 'スペイン語'  },
-  ja: { en: 'Japanese', es: 'Japonés',   ja: '日本語'      },
+  en: { en: 'English', es: 'Inglés' },
+  es: { en: 'Spanish', es: 'Español' },
 };
 
 const LANGUAGES = [
   { code: 'en', short: 'EN' },
   { code: 'es', short: 'ES' },
-  { code: 'ja', short: 'JA' },
 ];
 
 function getLangLabel(code, currentLang) {
@@ -185,11 +183,11 @@ export function AppHeader({
       },
       metadata: payload.metadata,
       ...(payload.ytUrl ? { ytUrl: payload.ytUrl } : {}),
-      ...(payload.cloudinaryAudio ? {
-        cloudinaryUrl: payload.cloudinaryAudio.cloudinaryUrl,
-        cloudinaryPublicId: payload.cloudinaryAudio.publicId || null,
-        fileName: payload.cloudinaryAudio.fileName || '',
-        duration: payload.cloudinaryAudio.duration || null,
+      ...(payload.uploadedAudio ? {
+        uploadUrl: payload.uploadedAudio.uploadUrl,
+        uploadPublicId: payload.uploadedAudio.publicId || null,
+        fileName: payload.uploadedAudio.fileName || '',
+        duration: payload.uploadedAudio.duration || null,
       } : {}),
     };
     await savePendingProject(idbPayload);

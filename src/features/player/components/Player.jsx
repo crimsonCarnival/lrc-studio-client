@@ -25,7 +25,7 @@ const FOCUS_RING = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus
 const ALL_SPEED_PRESETS = [0.25, 0.5, 0.75, 1, 1.25, 1.5];
 
 function Player(
-  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onCloudinaryUpload, playerTop = false, onDockToggle, viewerMode = false, projectMetadata, ref },
+  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onMediaUpload, playerTop = false, onDockToggle, viewerMode = false, projectMetadata, ref },
 ) {
   const { t, dt } = useDynamicTranslation();
   const { settings, updateSetting } = useSettings();
@@ -147,7 +147,7 @@ function Player(
     setCurrentTime,
     onTitleChange,
     onMediaChange,
-    onCloudinaryUpload,
+    onMediaUpload,
     initialSpeed,
     initialSeek,
   });
@@ -167,14 +167,6 @@ function Player(
     onYtUrlChange,
   });
 
-  const sp = useMemo(() => ({
-    ready: false, staged: false, loading: false, error: '', trackId: null,
-    playTrack: () => {}, stageTrack: () => {},
-    play: async () => {}, pause: () => {},
-    seek: () => {}, setVolume: () => {},
-    getCurrentTime: () => 0, remove: () => {},
-  }), []);
-
   // ——— CDN URL handling ———
   // Matches Cloudinary CDN URLs
   const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\//;
@@ -182,14 +174,14 @@ function Player(
   const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
   const YT_PATTERN = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|watch\?.+&v=)|youtu\.be\/)([^&?/\s]{11})/;
 
-  const detectedUrlType = (() => {
+  const detectedUrlType = useMemo(() => {
     const v = yt.ytUrl.trim().split(/\s+/)[0];
     if (!v) return 'none';
     if (CDN_PATTERN.test(v)) return 'cdn';
-    if (AUDIO_URL_PATTERN.test(v)) return 'cdn'; // treat any direct audio URL the same
+    if (AUDIO_URL_PATTERN.test(v)) return 'cdn';
     if (YT_PATTERN.test(v) || v.length === 11) return 'youtube';
     return 'unknown';
-  })();
+  }, [yt.ytUrl]);
 
   const [cdnLoading, setCdnLoading] = useState(false);
 
@@ -213,14 +205,14 @@ function Player(
       try {
         const { upload } = await uploadsApi.saveMedia({
           source: 'cloudinary',
-          cloudinaryUrl: cleanUrl,
+          uploadUrl: cleanUrl,
           fileName,
           title,
           duration: null,
         });
-        onCloudinaryUpload?.({
+        onMediaUpload?.({
           id: upload.id,
-          cloudinaryUrl: cleanUrl,
+          uploadUrl: cleanUrl,
           publicId: null,
           fileName,
           duration: null,
@@ -232,7 +224,7 @@ function Player(
         setCdnLoading(false);
       }
     }
-  }, [local, onCloudinaryUpload, yt, t]);
+  }, [local, onMediaUpload, yt, t]);
 
   const handleUrlLoad = useCallback(() => {
     const trimmed = yt.ytUrl.trim().split(/\s+/)[0];
@@ -259,29 +251,28 @@ function Player(
       setTimeout(() => yt.loadYouTube(), 0);
     } else if (upload.source === 'spotify' && upload.spotifyTrackId) {
       window.open(`https://open.spotify.com/track/${upload.spotifyTrackId}`, '_blank', 'noopener,noreferrer');
-    } else if (upload.source === 'cloudinary' && upload.cloudinaryUrl) {
-      fetch(upload.cloudinaryUrl)
+    } else if (upload.source === 'cloudinary' && upload.uploadUrl) {
+      fetch(upload.uploadUrl)
         .then((res) => res.blob())
         .then((blob) => {
           const file = new File([blob], upload.fileName || 'audio.mp3', { type: blob.type || 'audio/mpeg' });
-          file.isCloudinary = true;
+          file.isHosted = true;
           local.handleFileChange({ target: { files: [file] } });
         })
         .catch(() => { });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [local, yt, sp, onTitleChange]);
+  }, [local, yt, onTitleChange]);
 
   const handleClearMedia = useCallback(() => {
     local.remove();
     yt.remove();
-    sp.remove();
     setSource('local');
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
     onMediaChange?.(null);
-  }, [local, yt, sp, setIsPlaying, setCurrentTime, setDuration, onMediaChange]);
+  }, [local, yt, setIsPlaying, setCurrentTime, setDuration, onMediaChange]);
 
   // ——— Unified controls ———
   // Player controls are integrated into the Player component with responsive layouts:
@@ -290,7 +281,6 @@ function Player(
   // All interactive elements meet 44px+ touch target sizing requirement on mobile
 
   const togglePlay = useCallback(() => {
-    console.log('[togglePlay] source:', source, '| isPlaying:', isPlaying, '| audioRef.current:', audioRef.current, '| audio.error:', audioRef.current?.error, '| audio.readyState:', audioRef.current?.readyState, '| audio.src:', audioRef.current?.src?.slice(0, 60));
     if (source === 'local' && audioRef.current) {
       if (isPlaying) local.pause();
       else local.play();
@@ -298,8 +288,6 @@ function Player(
     } else if (source === 'youtube' && yt.ytReady) {
       if (isPlaying) yt.pause();
       else yt.play();
-    } else {
-      console.warn('[togglePlay] No branch matched — source:', source, 'audioRef.current:', audioRef.current, 'ytReady:', yt.ytReady);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, isPlaying, local, yt, haptic]);
@@ -332,6 +320,22 @@ function Player(
     setLoop({ a: null, b: null });
   }, [setLoop]);
 
+  // Refs so the keydown handler never needs to re-register when playback state changes
+  const currentTimeRef = useRef(currentTime);
+  const durationRef = useRef(duration);
+  const playbackSpeedRef = useRef(playbackSpeed);
+  useLayoutEffect(() => { currentTimeRef.current = currentTime; });
+  useLayoutEffect(() => { durationRef.current = duration; });
+  useLayoutEffect(() => { playbackSpeedRef.current = playbackSpeed; });
+
+  // Stable refs for callbacks — updated each render but handler registered once
+  const togglePlayRef = useRef(togglePlay);
+  const seekRef = useRef(seek);
+  const applySpeedRef = useRef(applySpeed);
+  useLayoutEffect(() => { togglePlayRef.current = togglePlay; });
+  useLayoutEffect(() => { seekRef.current = seek; });
+  useLayoutEffect(() => { applySpeedRef.current = applySpeed; });
+
   // ——— Player keyboard shortcuts ———
   useEffect(() => {
     const handler = (e) => {
@@ -343,27 +347,28 @@ function Player(
 
       if (matchKey(e, settings.shortcuts?.playPause?.[0] || 'Enter')) {
         e.preventDefault();
-        togglePlay();
+        togglePlayRef.current();
       } else if (matchKey(e, settings.shortcuts?.seekBackward?.[0] || 'ArrowLeft')) {
         e.preventDefault();
-        seek(Math.max(0, currentTime - seekTime));
+        seekRef.current(Math.max(0, currentTimeRef.current - seekTime));
       } else if (matchKey(e, settings.shortcuts?.seekForward?.[0] || 'ArrowRight')) {
         e.preventDefault();
-        seek(Math.min(duration, currentTime + seekTime));
+        seekRef.current(Math.min(durationRef.current, currentTimeRef.current + seekTime));
       } else if (matchKey(e, settings.shortcuts?.mute?.[0] || 'm')) {
         e.preventDefault();
         updateSetting('playback.muted', !settings.playback.muted);
       } else if (matchKey(e, settings.shortcuts?.speedUp?.[0] || '+')) {
         e.preventDefault();
-        applySpeed(playbackSpeed + speedStep);
+        applySpeedRef.current(playbackSpeedRef.current + speedStep);
       } else if (matchKey(e, settings.shortcuts?.speedDown?.[0] || '-')) {
         e.preventDefault();
-        applySpeed(playbackSpeed - speedStep);
+        applySpeedRef.current(playbackSpeedRef.current - speedStep);
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [togglePlay, seek, applySpeed, currentTime, duration, playbackSpeed, settings.shortcuts, settings.playback, updateSetting]);
+  // settings.shortcuts and settings.playback are stable config; update handler when they change
+  }, [settings.shortcuts, settings.playback, updateSetting]);
 
   // ——— Expose player API via ref ———
 
@@ -437,9 +442,9 @@ function Player(
       yt.loadYouTube(initialMedia.url);
     } else if (initialMedia.type === 'cloudinary') {
       local.loadFromUrl(initialMedia.url, initialMedia.title || initialMedia.fileName);
-      onCloudinaryUpload?.({
+      onMediaUpload?.({
         id: initialMedia.id,
-        cloudinaryUrl: initialMedia.url,
+        uploadUrl: initialMedia.url,
         publicId: initialMedia.publicId,
         fileName: initialMedia.fileName,
         duration: initialMedia.duration,

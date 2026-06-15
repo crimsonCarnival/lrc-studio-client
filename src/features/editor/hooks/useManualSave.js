@@ -101,8 +101,8 @@ export function useManualSave({
   mediaTitle,
   projectMetadata,
   duration,
-  cloudinaryAudio,
-  setCloudinaryAudio,
+  uploadedAudio,
+  setUploadedAudio,
   projectSpotifyTrackId,
   isSharedProjectRef,
   activeProjectIdRef,
@@ -150,10 +150,10 @@ export function useManualSave({
       timezone: tz, utcOffset,
       title: mediaTitle || '',
       metadata: projectMetadata,
-      cloudinaryAudio: cloudinaryAudio || null,
+      uploadedAudio: uploadedAudio || null,
       spotifyTrackId: projectSpotifyTrackId || '',
     };
-  }, [lines, syncMode, activeLineIndex, editorMode, settings.advanced.timezone, projectYtUrl, playbackPosition, hasMedia, mediaTitle, projectMetadata, playerRef, cloudinaryAudio, projectSpotifyTrackId]);
+  }, [lines, syncMode, activeLineIndex, editorMode, settings.advanced.timezone, projectYtUrl, playbackPosition, hasMedia, mediaTitle, projectMetadata, playerRef, uploadedAudio, projectSpotifyTrackId]);
 
   const handleManualSave = useCallback(async (overrides = {}) => {
     if (isCreatingProjectRef.current) return;
@@ -189,18 +189,18 @@ export function useManualSave({
         let uploadIdToSave = sessionUploadIdRef.current || null;
         // Skip a cached sessionUploadId that was set with a local: temp id
         if (uploadIdToSave && String(uploadIdToSave).startsWith('local:')) uploadIdToSave = null;
-        if (!uploadIdToSave && cloudinaryAudio) {
-          const hasRealId = cloudinaryAudio.id && !String(cloudinaryAudio.id).startsWith('local:');
+        if (!uploadIdToSave && uploadedAudio) {
+          const hasRealId = uploadedAudio.id && !String(uploadedAudio.id).startsWith('local:');
           if (hasRealId) {
-            uploadIdToSave = cloudinaryAudio.id;
-            sessionUploadIdRef.current = cloudinaryAudio.id;
+            uploadIdToSave = uploadedAudio.id;
+            sessionUploadIdRef.current = uploadedAudio.id;
           } else {
             try {
-              const { upload } = await uploads.saveMedia({ source: 'cloudinary', cloudinaryUrl: cloudinaryAudio.cloudinaryUrl, publicId: cloudinaryAudio.publicId, fileName: cloudinaryAudio.fileName, title: overrides?.title ?? mediaTitle ?? '', duration: cloudinaryAudio.duration });
+              const { upload } = await uploads.saveMedia({ source: 'cloudinary', uploadUrl: uploadedAudio.uploadUrl, publicId: uploadedAudio.publicId, fileName: uploadedAudio.fileName, title: overrides?.title ?? mediaTitle ?? '', duration: uploadedAudio.duration });
               if (upload?.id) {
                 uploadIdToSave = upload.id;
                 sessionUploadIdRef.current = upload.id;
-                setCloudinaryAudio((prev) => ({ ...prev, id: upload.id }));
+                setUploadedAudio((prev) => ({ ...prev, id: upload.id }));
               }
             } catch (err) { console.error('Failed to save upload:', err); }
           }
@@ -261,12 +261,12 @@ export function useManualSave({
       if (isCreatingProjectRef.current) return;
       isCreatingProjectRef.current = true;
       let uploadIdToSave = null;
-      const cloudinaryHasRealId = cloudinaryAudio?.id && !String(cloudinaryAudio.id).startsWith('local:');
-      if (cloudinaryHasRealId) { uploadIdToSave = cloudinaryAudio.id; }
-      else if (cloudinaryAudio) {
+      const cloudinaryHasRealId = uploadedAudio?.id && !String(uploadedAudio.id).startsWith('local:');
+      if (cloudinaryHasRealId) { uploadIdToSave = uploadedAudio.id; }
+      else if (uploadedAudio) {
         try {
-          const { upload } = await uploads.saveMedia({ source: 'cloudinary', cloudinaryUrl: cloudinaryAudio.cloudinaryUrl, publicId: cloudinaryAudio.publicId, fileName: cloudinaryAudio.fileName, title: cloudinaryAudio.fileName?.replace(/\.[^/.]+$/, '') || '', duration: cloudinaryAudio.duration });
-          if (upload?.id) { uploadIdToSave = upload.id; setCloudinaryAudio((p) => ({ ...p, id: upload.id })); }
+          const { upload } = await uploads.saveMedia({ source: 'cloudinary', uploadUrl: uploadedAudio.uploadUrl, publicId: uploadedAudio.publicId, fileName: uploadedAudio.fileName, title: uploadedAudio.fileName?.replace(/\.[^/.]+$/, '') || '', duration: uploadedAudio.duration });
+          if (upload?.id) { uploadIdToSave = upload.id; setUploadedAudio((p) => ({ ...p, id: upload.id })); }
         } catch (err) { console.error(err); }
       } else if (payload.ytUrl) {
         try {
@@ -310,7 +310,7 @@ export function useManualSave({
       };
       performCreate();
     }
-  }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, cloudinaryAudio, duration, t, isSharedProjectRef, activeProjectIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setActiveProjectId, setCloudinaryAudio, executeRecaptcha, onSaveSuccess, setForkedFrom, settings?.advanced?.autoSaveIndicatorDuration]);
+  }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, uploadedAudio, duration, t, isSharedProjectRef, activeProjectIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setActiveProjectId, setUploadedAudio, executeRecaptcha, onSaveSuccess, setForkedFrom, settings?.advanced?.autoSaveIndicatorDuration]);
 
   const manualSaveRef = useRef(null);
   useLayoutEffect(() => { manualSaveRef.current = handleManualSave; });

@@ -45,7 +45,7 @@ export default {
   startNewProject: "Start a new project from the Setup screen.",
   youtube: "YouTube",
   audioFile: "Audio File",
-  cloudinary: "Cloud Audio",
+  cloudAudio: "Cloud Audio",
   spotify: "Spotify",
   noFiles: "No files selected",
   uploadSuccess: "Uploaded successfully",

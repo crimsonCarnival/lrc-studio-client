@@ -98,7 +98,7 @@ export function useAppState(user) {
   const [activeProjectId, setActiveProjectId] = useState(() => {
     try { return localStorage.getItem(STORAGE_KEYS.ACTIVE_PROJECT_ID) || null; } catch { return null; }
   });
-  const [cloudinaryAudio, setCloudinaryAudio] = useState(null);
+  const [uploadedAudio, setUploadedAudio] = useState(null);
   const [projectSpotifyTrackId, setProjectSpotifyTrackId] = useState('');
   const [projectCoverImage, setProjectCoverImage] = useState('');
   const [loadError, setLoadError] = useState(null); // 'project', 'upload', 'user', etc.
@@ -210,14 +210,14 @@ export function useAppState(user) {
             songArtists: Array.isArray(m.songArtists) && m.songArtists.length > 0 ? m.songArtists : splitArtists(m.songArtist || ''),
           });
         }
-        if (parsed.cloudinaryAudio) {
-          setCloudinaryAudio(parsed.cloudinaryAudio);
-          const ca = parsed.cloudinaryAudio;
-          if (ca.cloudinaryUrl) {
+        if (parsed.uploadedAudio) {
+          setUploadedAudio(parsed.uploadedAudio);
+          const ca = parsed.uploadedAudio;
+          if (ca.uploadUrl) {
             setRestoredMedia({
               type: 'cloudinary',
               id: ca.id,
-              url: ca.cloudinaryUrl,
+              url: ca.uploadUrl,
               fileName: ca.fileName ?? null,
               title: null,
               duration: ca.duration ?? null,
@@ -283,7 +283,7 @@ export function useAppState(user) {
           // Empty projects with no media are just blank slates — leave them alone.
           const hasServerMedia = !!(
             project.upload?.youtubeUrl ||
-            (project.upload?.source === 'cloudinary' && project.upload?.cloudinaryUrl) ||
+            (project.upload?.source === 'cloudinary' && project.upload?.uploadUrl) ||
             (project.upload?.source === 'spotify' && project.upload?.spotifyTrackId)
           );
           if (!hasServerMedia && serverLines.length > 0) {
@@ -406,14 +406,14 @@ export function useAppState(user) {
           songArtists: Array.isArray(m.songArtists) && m.songArtists.length > 0 ? m.songArtists : splitArtists(m.songArtist || ''),
         });
       }
-      if (parsed.cloudinaryAudio) {
-        setCloudinaryAudio(parsed.cloudinaryAudio);
-        const ca = parsed.cloudinaryAudio;
-        if (ca.cloudinaryUrl) {
+      if (parsed.uploadedAudio) {
+        setUploadedAudio(parsed.uploadedAudio);
+        const ca = parsed.uploadedAudio;
+        if (ca.uploadUrl) {
           setRestoredMedia({
             type: 'cloudinary',
             id: ca.id,
-            url: ca.cloudinaryUrl,
+            url: ca.uploadUrl,
             fileName: ca.fileName ?? null,
             title: null,
             duration: ca.duration ?? null,
@@ -439,7 +439,7 @@ export function useAppState(user) {
       const raw = sessionStorage.getItem('pendingSetupUpload');
       if (raw) {
         const upload = JSON.parse(raw);
-        setCloudinaryAudio(upload);
+        setUploadedAudio(upload);
         sessionStorage.removeItem('pendingSetupUpload');
       }
     } catch { /* ignore */ }
@@ -491,7 +491,7 @@ export function useAppState(user) {
     projectMetadata,
     duration,
     projectYtUrl,
-    cloudinaryAudio,
+    uploadedAudio,
     projectSpotifyTrackId,
     restoredMedia,
   });
@@ -523,8 +523,8 @@ export function useAppState(user) {
     mediaTitle,
     projectMetadata,
     duration,
-    cloudinaryAudio,
-    setCloudinaryAudio,
+    uploadedAudio,
+    setUploadedAudio,
     projectSpotifyTrackId,
     activeProjectId,
     isSharedProjectRef,
@@ -561,7 +561,7 @@ export function useAppState(user) {
     setRestoredPosition,
     setRestoredSpeed,
     setActiveProjectId,
-    setCloudinaryAudio,
+    setUploadedAudio,
     setHasMedia,
     setPlaybackPosition,
     setDuration,
@@ -625,7 +625,7 @@ export function useAppState(user) {
     isCreatingProjectRef,
     sessionUploadIdRef,
     lastServerSnapshotRef,
-    cloudinaryAudio,
+    uploadedAudio,
     mediaTitle,
     projectMetadata,
     editorMode,
@@ -769,12 +769,12 @@ export function useAppState(user) {
   }, [isSaving, hasUnsavedChanges]);
 
 
-  const handleCloudinaryUpload = useCallback((info) => {
-    setCloudinaryAudio(info);
+  const handleMediaUpload = useCallback((info) => {
+    setUploadedAudio(info);
     if (activeProjectIdRef.current) {
       triggerImportSave();
     }
-  }, [triggerImportSave, setCloudinaryAudio]);
+  }, [triggerImportSave, setUploadedAudio]);
 
   // ——— Loop Current Line ———
   useLoopCurrentLine({
@@ -888,7 +888,7 @@ export function useAppState(user) {
     activeProjectId,
     loadProject,
     resetAppState,
-    handleCloudinaryUpload,
+    handleMediaUpload,
     setProjectSpotifyTrackId,
     projectCoverImage,
     setProjectCoverImage,

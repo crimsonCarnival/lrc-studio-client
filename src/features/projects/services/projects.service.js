@@ -41,7 +41,7 @@ const GET_PROJECTS = `
         title
         source
         duration
-        cloudinaryUrl
+        uploadUrl
         youtubeUrl
         spotifyTrackId
         artist
@@ -95,7 +95,7 @@ const GET_PROJECT = `
         title
         source
         duration
-        cloudinaryUrl
+        uploadUrl
         youtubeUrl
         spotifyTrackId
         artist
@@ -254,7 +254,7 @@ export const projectsService = {
               fileName
               title
               youtubeUrl
-              cloudinaryUrl
+              uploadUrl
               publicId
               spotifyTrackId
               artist
