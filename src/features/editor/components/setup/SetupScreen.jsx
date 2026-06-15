@@ -25,12 +25,9 @@ import { lyrics as lyricsApi, uploads as uploadsApi, spotify as spotifyApi, getA
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { SkeletonMediaItem } from '@ui/skeleton';
-import SpotifyBrowser from '@features/player/components/SpotifyBrowser';
-import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import YoutubeSearchPanel from '@features/projects/components/YoutubeSearchPanel';
 import toast from 'react-hot-toast';
-import { useSpotifyAuth } from '@/features/player/hooks/useSpotifyAuth';
 import MediaLibrary from './MediaLibrary';
 import AudioSourceBadge from './AudioSourceBadge';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
@@ -47,7 +44,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   const navigate = useNavigate();
   const location = useLocation();
   const prefill = location.state?.prefill || null;
-  const { login: handleSpotifyLogin } = useSpotifyAuth();
   const { step, setStep } = useSetupContext();
   const reducedMotion = useReducedMotion();
   const [rightTab, setRightTab] = useState('media');
@@ -84,7 +80,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       name: '',
       // Default to the Spotify tab when the user has a connected Spotify account
       // (unless a pending YouTube URL is being restored).
-      tab: (!initialPendingYtUrl && user?.spotify?.spotifyId) ? 'spotify' : 'youtube',
+      tab: 'youtube',
       source: null,
       ytUrl: initialPendingYtUrl || '',
       ytLoading: false,
@@ -293,35 +289,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   };
 
   const handleYtKeyDown = (e) => { if (e.key === 'Enter') { e.preventDefault(); handleLoadUrl(); } };
-
-  const handleSpotifyBrowserSelect = useCallback(async (track) => {
-    playerRef.current?.loadSpotify?.(track.trackId, track.title || track.name || '');
-    const spotifyTitle = track.title || track.name || '';
-    setAudioState({ ready: true, name: spotifyTitle || 'Spotify track', source: 'spotify', selectedUpload: { source: 'spotify', spotifyTrackId: track.trackId, title: spotifyTitle } });
-
-    const meta = track.trackMeta || track;
-    const mappedGenre = matchSpotifyGenre(meta.genres || []);
-    setMetadataState({
-      songName: meta.name || '',
-      songArtist: meta.artist || '',
-      songAlbum: meta.album || '',
-      songYear: meta.releaseYear || '',
-      ...(mappedGenre              ? { genre:        mappedGenre              } : {}),
-      ...(meta.trackNumber != null ? { trackNumber: String(meta.trackNumber) } : {}),
-      ...(meta.totalTracks != null ? { trackCount:  String(meta.totalTracks) } : {}),
-      // Store API art as albumArt (fallback); only populate coverImage if the user hasn't set one
-      ...(meta.albumArt            ? { albumArt:    meta.albumArt            } : {}),
-      ...(!coverImage && meta.albumArt ? { coverImage: meta.albumArt }       : {}),
-    });
-
-    if (getAccessToken()) {
-      try {
-        await spotifyApi.createUpload(`spotify:track:${track.trackId}`);
-        const uploads = await uploadsApi.listMedia();
-        setMediaUploads(uploads || []);
-      } catch { /* ignore */ }
-    }
-  }, [playerRef, setAudioState, setMetadataState, coverImage]);
 
   // ── Lyrics handlers ──
 
@@ -661,7 +628,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                 <div className="flex items-center gap-1 bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-1 shrink-0">
                   {[
                     { id: 'youtube', label: t('setup.tabYoutube') },
-                    { id: 'spotify', label: t('setup.tabSpotify') },
                     { id: 'local',   label: t('setup.tabLocal') },
                   ].map(tab => (
                     <button
@@ -716,45 +682,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                             playerRef.current?.loadYouTube?.(url);
                           }}
                         />
-                      </div>
-                    )}
-
-                    {audioTab === 'spotify' && (
-                      <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-zinc-800/50">
-                        {!user ? (
-                          <div className="h-full flex flex-col items-center justify-center gap-3 p-6 text-center">
-                            <div className="size-12 rounded-full bg-zinc-800 flex items-center justify-center">
-                              <SpotifyIcon className="size-6 text-zinc-500" />
-                            </div>
-                            <p className="text-sm font-medium text-zinc-300">{t('setup.searchSpotify')}</p>
-                            <p className="text-xs text-zinc-500">{t('setup.spotifyRequiresAccount')}</p>
-                            <Button
-                              onClick={() => navigate('/auth?action=signup')}
-                              className="h-9 px-4 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-semibold rounded-xl"
-                              variant="ghost"
-                            >
-                              {t('auth.signUp')}
-                            </Button>
-                          </div>
-                        ) : user?.spotify?.spotifyId ? (
-                          <div className="h-full overflow-y-auto scrollbar-thin">
-                            <SpotifyBrowser onSelectTrack={handleSpotifyBrowserSelect} />
-                          </div>
-                        ) : (
-                          <div className="h-full flex flex-col items-center justify-center gap-3 p-6 text-center">
-                            <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
-                              <SpotifyIcon className="size-6 text-primary" />
-                            </div>
-                            <p className="text-sm font-medium text-zinc-200">{t('settings.spotify.connectAccount')}</p>
-                            <p className="text-xs text-zinc-500">{t('settings.spotify.connectToAccess')}</p>
-                            <Button
-                              onClick={handleSpotifyLogin}
-                              className="h-9 px-4 bg-primary hover:bg-primary-dim text-zinc-950 text-xs font-bold rounded-xl"
-                            >
-                              {t('settings.spotify.connectAccount')}
-                            </Button>
-                          </div>
-                        )}
                       </div>
                     )}
 
