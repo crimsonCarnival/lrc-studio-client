@@ -25,7 +25,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     restoredSpeed, hasUnsavedChanges, activeProjectId, projectMetadata, setProjectMetadata,
     forkedFrom,
     isProjectLoading, hasMedia, lines, activeLineIndex, playbackPosition, syncMode, pendingProject,
-    setIsPlaying, setPlaybackSpeed, setProjectSpotifyTrackId,
+    setIsPlaying, setPlaybackSpeed,
     projectCoverImage, setProjectCoverImage,
   } = appState;
 
@@ -167,7 +167,6 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           syncMode={syncMode}
           playerTop={playerTop}
           hasMedia={hasMedia}
-          setProjectSpotifyTrackId={setProjectSpotifyTrackId}
           onHeightChange={setPlayerHeight}
         />
 
@@ -200,7 +199,6 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
               publicId: restoredMedia.publicId, fileName: restoredMedia.fileName,
               duration: restoredMedia.duration,
             } : null),
-            spotifyId: appState.projectSpotifyTrackId || (restoredMedia?.type === 'spotify' ? restoredMedia.trackId : null),
             title: mediaTitle || appState.projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : '') || '',
           }}
         />

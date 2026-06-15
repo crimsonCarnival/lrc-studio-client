@@ -10,21 +10,18 @@ import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { Cloud, Video, Trash2, Loader2, Music2, Clock, Edit2, Check, X, AlertCircle } from 'lucide-react';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
-import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import toast from 'react-hot-toast';
 import useConfirm from '@/shared/hooks/useConfirm';
 
 
 function SourceIcon({ source }) {
   if (source === 'youtube') return <Video className="size-4 text-red-400" />;
-  if (source === 'spotify') return <SpotifyIcon className="size-4 text-green-400" />;
   return <Cloud className="size-4 text-blue-400" />;
 }
 
 function SourceLabel({ source, t }) {
   if (source === 'youtube') return t('uploads.youtube');
   if (source === 'cloudinary') return t('uploads.cloudAudio');
-  if (source === 'spotify') return t('uploads.spotify');
   return source;
 }
 

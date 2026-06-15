@@ -145,7 +145,7 @@ export default function Editor({
 
   const combinedSingers = useMemo(() => {
     const singersSet = new Set();
-    // Split each artist entry in case any contain comma/feat separators (e.g. old data or Spotify joins)
+    // Split each artist entry in case any contain comma/feat separators (e.g. old data joins)
     for (const artist of songArtists || EMPTY_ARTISTS) {
       for (const name of splitArtists(artist)) {
         if (name) singersSet.add(name);

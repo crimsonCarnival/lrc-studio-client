@@ -61,8 +61,6 @@ export default {
   recentProjects: "Recent Projects",
   noResults: "No projects found matching \"{{query}}\"",
   noDescription: "No description",
-  connectSpotify: "Connect Spotify",
-  connectSpotifyDesc: "Browse your playlists and library directly",
   noResultsFound: "No projects found",
   proTip: "Pro Tip",
   ytSearchFailed: "Search failed. Please try again.",

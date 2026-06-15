@@ -12,7 +12,7 @@ import { Label } from '@ui/label';
 import { Switch } from '@ui/switch';
 import { Tip } from '@ui/tip';
 import { TagsSelector } from '@ui/tags-selector';
-import { PRIMARY_GENRES, matchSpotifyGenre } from '@features/editor/constants/genre-tags';
+import { PRIMARY_GENRES } from '@features/editor/constants/genre-tags';
 import { LANG_KEYS } from '@features/editor/constants/languages';
 import { getMyMusicLibrary } from '@/features/editor/music-library.service';
 import {
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useSetupContext } from '@/features/editor/SetupContext';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
-import { lyrics as lyricsApi, uploads as uploadsApi, spotify as spotifyApi, getAccessToken } from '@/app/api';
+import { lyrics as lyricsApi, uploads as uploadsApi, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { SkeletonMediaItem } from '@ui/skeleton';
@@ -78,8 +78,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     return {
       ready: false,
       name: '',
-      // Default to the Spotify tab when the user has a connected Spotify account
-      // (unless a pending YouTube URL is being restored).
       tab: 'youtube',
       source: null,
       ytUrl: initialPendingYtUrl || '',
@@ -129,7 +127,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   }));
 
   const [musicLibrary, setMusicLibrary] = useState([]);
-  const [metaSearching, setMetaSearching] = useState(false);
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, ytLoading, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
@@ -266,7 +263,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       selectedUpload: upload,
       name: upload.title || upload.fileName || 'Media',
       ready: true,
-      source: upload.source === 'youtube' ? 'youtube' : upload.source === 'spotify' ? 'spotify' : 'cloud',
+      source: upload.source === 'youtube' ? 'youtube' : 'cloud',
     });
 
     if (upload.source === 'youtube' && upload.uploadUrl) {
@@ -274,8 +271,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       playerRef.current?.loadYouTube?.(upload.uploadUrl);
     } else if (upload.source === 'cloudinary' && upload.uploadUrl) {
       playerRef.current?.loadFromUrl?.(upload.uploadUrl, upload.title || upload.fileName);
-    } else if (upload.source === 'spotify' && upload.spotifyTrackId) {
-      window.open(`https://open.spotify.com/track/${upload.spotifyTrackId}`, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -337,33 +332,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       ...(match.trackCount != null ? { trackCount: String(match.trackCount) } : {}),
     });
   }, [musicLibrary, setMetadataState]);
-
-  const handleFetchSongInfo = useCallback(async () => {
-    if (!songName.trim() || !songArtist.trim() || metaSearching) return;
-    setMetaSearching(true);
-    try {
-      const meta = await spotifyApi.lookupTrack(songName.trim(), songArtist.trim());
-      if (meta && !meta.error) {
-        const mappedGenre = matchSpotifyGenre(meta.genres || []);
-        setMetadataState({
-          songName:   meta.name   || songName,
-          songArtist: meta.artist || songArtist,
-          songAlbum:  meta.album  || songAlbum,
-          songYear:   meta.releaseYear || songYear,
-          ...(mappedGenre           ? { genre:      mappedGenre              } : {}),
-          ...(meta.totalTracks      ? { trackCount: String(meta.totalTracks) } : {}),
-          // Populate coverImage from API art if user hasn't set one
-          ...(!coverImage && meta.albumArt ? { coverImage: meta.albumArt }   : {}),
-        });
-      } else {
-        toast.error(t('setup.metaSearchFailed'));
-      }
-    } catch {
-      toast.error(t('setup.metaSearchFailed'));
-    } finally {
-      setMetaSearching(false);
-    }
-  }, [songName, songArtist, songAlbum, songYear, coverImage, metaSearching, setMetadataState, t]);
 
   const handleProceed = () => {
     let finalLines = parsedLines;
@@ -446,19 +414,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
               <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                 {t('setup.songInformation')}
               </h3>
-              {songName.trim() && songArtist.trim() && (
-                <Tip content={t('setup.fetchSongInfo')} side="left">
-                  <button
-                    type="button"
-                    onClick={handleFetchSongInfo}
-                    disabled={metaSearching}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
-                  >
-                    {metaSearching && <Loader2 className="size-3 animate-spin" />}
-                    {t('setup.fetchInfo')}
-                  </button>
-                </Tip>
-              )}
             </div>
 
             {/* Row 1: Song Name + Artist */}
@@ -622,7 +577,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
             {/* MEDIA PANEL */}
             {rightTab === 'media' && (
               <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
-                {/* Source sub-tabs: YouTube / Spotify / File & URL */}
+                {/* Source sub-tabs: YouTube / File & URL */}
                 <div className="flex items-center gap-1 bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-1 shrink-0">
                   {[
                     { id: 'youtube', label: t('setup.tabYoutube') },

@@ -6,7 +6,7 @@ const GET_PUBLIC_PROJECT = `
     publicProject(projectId: $projectId) {
       id projectId title coverImage
       metadata { description genre tags songName songArtist songAlbum songYear songLanguage trackNumber trackCount }
-      upload { id source uploadUrl spotifyTrackId duration coverImage }
+      upload { id source uploadUrl duration coverImage }
       user { id accountName displayName avatarUrl }
       lyrics {
         editorMode

@@ -49,7 +49,7 @@ export default {
   featureSyncDesc: "Tap to timestamp lines or words in real-time",
   featureExport: "Export standard .lrc files",
   featureExportDesc: "Compatible with every music player and karaoke app",
-  featureConnect: "YouTube & Spotify support",
+  featureConnect: "YouTube support",
   featureConnectDesc: "Stream directly from your favourite platforms",
   recaptchaNotice: "This site is protected by reCAPTCHA and the Google <0>Privacy Policy</0> and <1>Terms of Service</1> apply.",
   validation: {

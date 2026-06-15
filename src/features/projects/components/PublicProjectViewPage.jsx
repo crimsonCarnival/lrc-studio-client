@@ -79,9 +79,6 @@ function PublicProjectViewPageInner() {
       return { type: 'cloudinary', id: upload.id, url: upload.uploadUrl,
                fileName: upload.fileName ?? null, title: upload.title ?? null,
                duration: upload.duration ?? null, publicId: upload.publicId ?? null };
-    if (upload.source === 'spotify' && upload.spotifyTrackId)
-      return { type: 'spotify', id: upload.id || upload.spotifyTrackId,
-               trackId: upload.spotifyTrackId, title: upload.title || '' };
     return null;
   }, [project]);
 

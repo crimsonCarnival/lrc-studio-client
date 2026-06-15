@@ -5,7 +5,6 @@
  * Descriptor shapes:
  *   { type: 'youtube',    url }
  *   { type: 'cloudinary', id, url, fileName, title, duration, publicId }
- *   { type: 'spotify',    id, trackId, title }
  */
 export function uploadToRestoredMedia(upload) {
   if (!upload) return null;
@@ -20,13 +19,6 @@ export function uploadToRestoredMedia(upload) {
       title: upload.title ?? null,
       duration: upload.duration ?? null,
       publicId: upload.publicId ?? null,
-    };
-  if (upload.source === 'spotify' && upload.spotifyTrackId)
-    return {
-      type: 'spotify',
-      id: upload.id || upload.spotifyTrackId,
-      trackId: upload.spotifyTrackId,
-      title: upload.title || '',
     };
   return null;
 }

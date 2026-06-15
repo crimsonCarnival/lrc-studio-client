@@ -33,7 +33,6 @@ export function AppPlayer({
   syncMode,
   playerTop,
   hasMedia,
-  setProjectSpotifyTrackId,
   onHeightChange,
 }) {
   const { t } = useTranslation();
@@ -96,7 +95,6 @@ export function AppPlayer({
             syncMode={syncMode}
             playerTop={playerTop}
             onDockToggle={() => updateSetting('interface.playerTop', !playerTop)}
-            onSpotifyTrackIdChange={setProjectSpotifyTrackId}
             hasMedia={hasMedia}
           />
         )}

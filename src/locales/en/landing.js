@@ -22,7 +22,7 @@ export default {
   step1Title: 'Set project info',
   step1Desc: 'Enter the project name, song title, artist, and album — this powers lyrics search and tags your export.',
   step2Title: 'Load your audio',
-  step2Desc: 'Paste a YouTube URL, upload an audio file, or connect Spotify.',
+  step2Desc: 'Paste a YouTube URL or upload an audio file.',
   step3Title: 'Import lyrics',
   step3Desc: 'Paste lyrics manually, import an .lrc file, or use lyrics search to find and import them from your song info.',
   step4Title: 'Sync & export',

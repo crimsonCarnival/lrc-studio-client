@@ -40,7 +40,6 @@ export default {
   youtube: "YouTube",
   audioFile: "Archivo de audio",
   cloudAudio: "Nube",
-  spotify: "Spotify",
   noFiles: "No hay archivos seleccionados",
   uploadSuccess: "Subido correctamente",
   uploadError: "Error al subir el archivo",

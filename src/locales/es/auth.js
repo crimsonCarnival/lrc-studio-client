@@ -49,7 +49,7 @@ export default {
   featureSyncDesc: "Toca para marcar cada línea mientras suena la música",
   featureExport: "Exporta archivos .lrc estándar",
   featureExportDesc: "Compatible con cualquier reproductor y app de karaoke",
-  featureConnect: "YouTube y Spotify incluidos",
+  featureConnect: "YouTube incluido",
   featureConnectDesc: "Reproduce directamente desde tus plataformas favoritas",
   recaptchaNotice: "Este sitio está protegido por reCAPTCHA y se aplican la <0>Política de Privacidad</0> y los <1>Términos de Servicio</1> de Google.",
   validation: {

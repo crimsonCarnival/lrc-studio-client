@@ -56,7 +56,7 @@ export function FloatingCombobox({
   // localText: what is shown in the input (may differ from value in strict mode while searching)
   const [localText, setLocalText] = React.useState(() => labelForValue(value))
 
-  // Keep localText in sync when value changes externally (e.g. Spotify autofill)
+  // Keep localText in sync when value changes externally (e.g. metadata autofill)
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!focused) setLocalText(labelForValue(value))

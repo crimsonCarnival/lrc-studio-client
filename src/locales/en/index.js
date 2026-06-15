@@ -16,7 +16,6 @@ import shortcuts from './shortcuts.js';
 import settings from './settings.js';
 import setup from './setup.js';
 import uploads from './uploads.js';
-import spotify from './spotify.js';
 import lyricsSearch from './lyricsSearch.js';
 import landing from './landing.js';
 import admin from './admin.js';
@@ -51,7 +50,6 @@ export default {
     settings,
     setup,
     uploads,
-    spotify,
     lyricsSearch,
     landing,
     admin,

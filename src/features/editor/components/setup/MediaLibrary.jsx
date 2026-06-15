@@ -1,5 +1,4 @@
 ﻿import { Video, Cloud, Trash2 } from 'lucide-react';
-import SpotifyIcon from '@features/player/components/SpotifyIcon';
 import { SkeletonMediaItem } from '@ui/skeleton';
 import { useTranslation } from 'react-i18next';
 
@@ -51,7 +50,6 @@ export default function MediaLibrary({
             >
               <div className="size-7 rounded-lg bg-zinc-800 border border-zinc-700/60 flex items-center justify-center shrink-0">
                 {upload.source === 'youtube' ? <Video className="size-3.5 text-red-400" />
-                  : upload.source === 'spotify' ? <SpotifyIcon className="size-3.5 text-green-400" />
                   : <Cloud className="size-3.5 text-zinc-400" />}
               </div>
               <p className={`flex-1 text-xs font-medium truncate ${

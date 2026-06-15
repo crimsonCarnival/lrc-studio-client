@@ -132,13 +132,6 @@ export function useAutosave({
         } catch (err) {
           console.error('Failed to save upload:', err);
         }
-      } else if (!uploadIdToSave && payload.spotifyTrackId) {
-        try {
-          const { upload } = await uploads.saveMedia({ source: 'spotify', spotifyTrackId: payload.spotifyTrackId, fileName: '', title: mediaTitle || '', duration: duration || null });
-          if (upload?.id) { uploadIdToSave = upload.id; sessionUploadIdRef.current = upload.id; }
-        } catch (err) {
-          console.error('Failed to save upload:', err);
-        }
       }
 
       const patchState = {

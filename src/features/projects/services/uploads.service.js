@@ -108,7 +108,6 @@ export const uploadsService = {
           duration
           uploadUrl
           publicId
-          spotifyTrackId
           createdAt
           updatedAt
         }
@@ -128,7 +127,6 @@ export const uploadsService = {
           duration
           uploadUrl
           publicId
-          spotifyTrackId
           createdAt
           updatedAt
           projects {

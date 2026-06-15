@@ -18,7 +18,6 @@ import { Popover, PopoverTrigger, PopoverContent } from '@ui/popover';
 import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, Video, ChevronDown, Link2, PanelTop, PanelBottom, Bookmark, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { Tip } from '@ui/tip';
 import { uploads as uploadsApi, getAccessToken } from '@/app/api';
-import SpotifyIcon from './SpotifyIcon';
 import toast from 'react-hot-toast';
 
 const FOCUS_RING = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none';
@@ -71,9 +70,7 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
               <div className="size-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
                 {upload.source === 'youtube'
                   ? <Video className="size-3 text-red-400" />
-                  : upload.source === 'spotify'
-                    ? <SpotifyIcon className="size-3 text-green-400" />
-                    : <Cloud className="size-3 text-blue-400" />}
+                  : <Cloud className="size-3 text-blue-400" />}
               </div>
               <span className="text-xs text-zinc-300 truncate group-hover:text-white transition-colors">
                 {upload.title || upload.fileName || t('uploads.untitled')}
@@ -320,8 +317,6 @@ function Player(
     if (upload.source === 'youtube' && upload.uploadUrl) {
       yt.setYtUrl(upload.uploadUrl);
       setTimeout(() => yt.loadYouTube(), 0);
-    } else if (upload.source === 'spotify' && upload.spotifyTrackId) {
-      window.open(`https://open.spotify.com/track/${upload.spotifyTrackId}`, '_blank', 'noopener,noreferrer');
     } else if (upload.source === 'cloudinary' && upload.uploadUrl) {
       fetch(upload.uploadUrl)
         .then((res) => res.blob())
@@ -377,7 +372,6 @@ function Player(
       setPlaybackSpeed(clamped);
       if (source === 'local') local.setSpeed(clamped);
       else if (source === 'youtube') yt.setSpeed(clamped);
-      // Spotify Web Playback SDK does not support speed control
     },
     [source, MIN_SPEED, MAX_SPEED, local, yt, setPlaybackSpeed],
   );
@@ -606,7 +600,7 @@ function Player(
 
             <div className="w-px h-6 bg-zinc-800/80 mx-1" />
 
-            {/* URL Input (YouTube/CDN/Spotify) */}
+            {/* URL Input (YouTube/CDN) */}
             <div className="flex items-center gap-2 flex-1 max-w-[450px]">
               <div className="relative w-full">
                 <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none" />
@@ -655,9 +649,7 @@ function Player(
                             <div className="size-8 rounded bg-zinc-800 border border-zinc-700 group-hover:border-primary/40 flex items-center justify-center shrink-0">
                               {upload.source === 'youtube'
                                 ? <Video className="size-3.5 text-red-400" />
-                                : upload.source === 'spotify'
-                                  ? <SpotifyIcon className="size-3.5 text-green-400" />
-                                  : <Cloud className="size-3.5 text-blue-400" />}
+                                : <Cloud className="size-3.5 text-blue-400" />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-zinc-200 truncate group-hover:text-primary transition-colors">
@@ -954,7 +946,7 @@ function Player(
                         value={yt.ytUrl}
                         onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
                         onKeyDown={(e) => e.key === 'Enter' && handleUrlLoad()}
-                        placeholder={t('player.pasteCdnUrl') || 'Paste YouTube, Spotify, or CDN URL...'}
+                        placeholder={t('player.pasteCdnUrl') || 'Paste YouTube or CDN URL...'}
                         className="flex-1 h-9 pl-6 bg-zinc-800/60 text-zinc-100 placeholder-zinc-500 border-zinc-700 text-xs"
                       />
                     </div>
@@ -995,9 +987,7 @@ function Player(
                             <div className="size-8 rounded flex-shrink-0 overflow-hidden bg-zinc-700/50 flex items-center justify-center">
                               {upload.source === 'youtube'
                                 ? <Video className="size-3.5 text-red-400 shrink-0" />
-                                : upload.source === 'spotify'
-                                  ? <SpotifyIcon className="size-3.5 text-green-400 shrink-0" />
-                                  : <Cloud className="size-3.5 text-blue-400 shrink-0" />}
+                                : <Cloud className="size-3.5 text-blue-400 shrink-0" />}
                             </div>
                             <span className="text-xs font-medium text-zinc-200 truncate">
                               {upload.title || upload.fileName || t('uploads.untitled')}

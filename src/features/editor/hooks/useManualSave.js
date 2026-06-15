@@ -103,7 +103,6 @@ export function useManualSave({
   duration,
   uploadedAudio,
   setUploadedAudio,
-  projectSpotifyTrackId,
   isSharedProjectRef,
   activeProjectIdRef,
   isCreatingProjectRef,
@@ -150,9 +149,8 @@ export function useManualSave({
       title: mediaTitle || '',
       metadata: projectMetadata,
       uploadedAudio: uploadedAudio || null,
-      spotifyTrackId: projectSpotifyTrackId || '',
     };
-  }, [lines, syncMode, activeLineIndex, editorMode, settings.advanced.timezone, projectYtUrl, playbackPosition, hasMedia, mediaTitle, projectMetadata, playerRef, uploadedAudio, projectSpotifyTrackId]);
+  }, [lines, syncMode, activeLineIndex, editorMode, settings.advanced.timezone, projectYtUrl, playbackPosition, hasMedia, mediaTitle, projectMetadata, playerRef, uploadedAudio]);
 
   const handleManualSave = useCallback(async (overrides = {}) => {
     if (isCreatingProjectRef.current) return;
@@ -170,7 +168,6 @@ export function useManualSave({
     if (overrides.lines !== undefined) { payload.lines = overrides.lines; payload.sections = flatToSections(overrides.lines); }
     if (overrides.editorMode !== undefined) payload.editorMode = overrides.editorMode;
     if (overrides.syncMode !== undefined) payload.syncMode = overrides.syncMode;
-    if (overrides.spotifyTrackId !== undefined) payload.spotifyTrackId = overrides.spotifyTrackId;
     payload.metadata = finalMetadata;
     payload.title = finalTitle;
     // Only persist to localStorage for guest users.
@@ -213,12 +210,6 @@ export function useManualSave({
             if (isGeneric && upload.title) {
               finalTitle = upload.title;
             }
-          } catch (err) { console.error('Failed to save upload:', err); }
-        } else if (!uploadIdToSave && payload.spotifyTrackId) {
-          try {
-            const { upload } = await uploads.saveMedia({ source: 'spotify', spotifyTrackId: payload.spotifyTrackId, fileName: '', title: undefined, duration: duration || null });
-            uploadIdToSave = upload.id;
-            sessionUploadIdRef.current = upload.id;
           } catch (err) { console.error('Failed to save upload:', err); }
         }
 
@@ -277,11 +268,6 @@ export function useManualSave({
               finalTitle = upload.title;
             }
           }
-        } catch (err) { console.error(err); }
-      } else if (payload.spotifyTrackId) {
-        try {
-          const { upload } = await uploads.saveMedia({ source: 'spotify', spotifyTrackId: payload.spotifyTrackId, fileName: '', title: '', duration: duration || null });
-          if (upload?.id) { uploadIdToSave = upload.id; sessionUploadIdRef.current = upload.id; }
         } catch (err) { console.error(err); }
       }
       const createData = { title: finalTitle, metadata: finalMetadata, lyrics: { editorMode: payload.editorMode, sections: payload.sections }, state: { syncMode: payload.syncMode, activeLineIndex, playbackPosition: payload.playbackPosition || 0, playbackSpeed: payload.playbackSpeed || 1, saveTime: payload.saveTime }, readOnly: false };

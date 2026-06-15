@@ -99,7 +99,6 @@ export function useAppState(user) {
     try { return localStorage.getItem(STORAGE_KEYS.ACTIVE_PROJECT_ID) || null; } catch { return null; }
   });
   const [uploadedAudio, setUploadedAudio] = useState(null);
-  const [projectSpotifyTrackId, setProjectSpotifyTrackId] = useState('');
   const [projectCoverImage, setProjectCoverImage] = useState('');
   const [loadError, setLoadError] = useState(null); // 'project', 'upload', 'user', etc.
   const [projectUserId, setProjectUserId] = useState(null);
@@ -225,15 +224,6 @@ export function useAppState(user) {
             });
           }
         }
-        if (parsed.spotifyTrackId) {
-          setProjectSpotifyTrackId(parsed.spotifyTrackId);
-          setRestoredMedia({
-            type: 'spotify',
-            id: parsed.spotifyTrackId,
-            trackId: parsed.spotifyTrackId,
-            title: parsed.title || '',
-          });
-        }
       } catch (e) {
         console.error('localStorage restore failed', e);
       }
@@ -252,9 +242,6 @@ export function useAppState(user) {
           setActiveLineIndex(project.state?.activeLineIndex || 0);
           setEditorModeRaw(project.lyrics?.editorMode || 'lrc');
           setRestoredMedia(uploadToRestoredMedia(project.upload));
-          if (project.upload?.source === 'spotify' && project.upload?.spotifyTrackId) {
-            setProjectSpotifyTrackId(project.upload.spotifyTrackId);
-          }
           if (project.upload?.id) sessionUploadIdRef.current = project.upload.id;
           if (project.state?.playbackPosition) setRestoredPosition(project.state.playbackPosition);
           if (project.state?.playbackSpeed) setRestoredSpeed(project.state.playbackSpeed);
@@ -282,8 +269,7 @@ export function useAppState(user) {
           // Empty projects with no media are just blank slates — leave them alone.
           const hasServerMedia = !!(
             (project.upload?.source === 'youtube' && project.upload?.uploadUrl) ||
-            (project.upload?.source === 'cloudinary' && project.upload?.uploadUrl) ||
-            (project.upload?.source === 'spotify' && project.upload?.spotifyTrackId)
+            (project.upload?.source === 'cloudinary' && project.upload?.uploadUrl)
           );
           if (!hasServerMedia && serverLines.length > 0) {
             navigate('/project/new', {
@@ -418,20 +404,11 @@ export function useAppState(user) {
           });
         }
       }
-      if (parsed.spotifyTrackId) {
-        setProjectSpotifyTrackId(parsed.spotifyTrackId);
-        setRestoredMedia({
-          type: 'spotify',
-          id: parsed.spotifyTrackId,
-          trackId: parsed.spotifyTrackId,
-          title: parsed.title || '',
-        });
-      }
       if (parsed.forkedFrom) setForkedFrom(parsed.forkedFrom);
     } catch (e) {
       console.error('Guest localStorage restore failed', e);
     }
-    // Restore cloudinary/Spotify upload info saved before the auth redirect
+    // Restore cloudinary upload info saved before the auth redirect
     try {
       const raw = sessionStorage.getItem('pendingSetupUpload');
       if (raw) {
@@ -474,7 +451,6 @@ export function useAppState(user) {
     setActiveLineIndex,
     setEditorModeRaw,
     setRestoredMedia,
-    setProjectSpotifyTrackId,
     setRestoredPosition,
     setRestoredSpeed,
     setIsProjectLoading,
@@ -489,7 +465,6 @@ export function useAppState(user) {
     duration,
     projectYtUrl,
     uploadedAudio,
-    projectSpotifyTrackId,
     restoredMedia,
   });
 
@@ -522,7 +497,6 @@ export function useAppState(user) {
     duration,
     uploadedAudio,
     setUploadedAudio,
-    projectSpotifyTrackId,
     activeProjectId,
     isSharedProjectRef,
     activeProjectIdRef,
@@ -570,7 +544,6 @@ export function useAppState(user) {
     lastServerSnapshotRef,
     sessionUploadIdRef,
     pendingProject,
-    setProjectSpotifyTrackId,
     setProjectCoverImage,
     mediaTitle,
     projectMetadata,
@@ -884,7 +857,6 @@ export function useAppState(user) {
     loadProject,
     resetAppState,
     handleMediaUpload,
-    setProjectSpotifyTrackId,
     projectCoverImage,
     setProjectCoverImage,
     isProjectLoading,

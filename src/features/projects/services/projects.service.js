@@ -41,7 +41,6 @@ const GET_PROJECTS = `
         source
         duration
         uploadUrl
-        spotifyTrackId
       }
     }
   }
@@ -92,7 +91,6 @@ const GET_PROJECT = `
         source
         duration
         uploadUrl
-        spotifyTrackId
       }
       lyrics {
         id
@@ -247,7 +245,6 @@ export const projectsService = {
               title
               uploadUrl
               publicId
-              spotifyTrackId
               duration
             }
             uploadId

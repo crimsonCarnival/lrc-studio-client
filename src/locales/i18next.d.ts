@@ -16,7 +16,6 @@ import type shortcuts from './en/shortcuts.js';
 import type settings from './en/settings.js';
 import type setup from './en/setup.js';
 import type uploads from './en/uploads.js';
-import type spotify from './en/spotify.js';
 import type lyricsSearch from './en/lyricsSearch.js';
 import type landing from './en/landing.js';
 import type admin from './en/admin.js';
@@ -52,7 +51,6 @@ declare module 'i18next' {
         settings: typeof settings;
         setup: typeof setup;
         uploads: typeof uploads;
-        spotify: typeof spotify;
         lyricsSearch: typeof lyricsSearch;
         landing: typeof landing;
         admin: typeof admin;

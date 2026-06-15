@@ -7,7 +7,6 @@ export default {
   editingTitle: "Editing personal copy",
   youtubeIncluded: "YouTube",
   mediaIncluded: "Cloud Audio",
-  spotifyIncluded: "Spotify",
   noYoutube: "No Media",
   noMedia: "No Media",
   syncedLines: "synced lines",

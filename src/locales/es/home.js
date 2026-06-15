@@ -69,8 +69,6 @@ export default {
   recentProjects: "Proyectos Recientes",
   noResults: "No se encontraron proyectos que coincidan con \"{{query}}\"",
   noDescription: "Sin descripción",
-  connectSpotify: "Conectar Spotify",
-  connectSpotifyDesc: "Explora tus listas y biblioteca directamente",
   noResultsFound: "No se encontraron proyectos",
   proTip: "Consejo",
   ytSearchFailed: "La búsqueda falló. Inténtalo de nuevo.",

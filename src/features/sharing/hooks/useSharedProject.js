@@ -57,7 +57,6 @@ export function useSharedProject({
   setActiveLineIndex,
   setEditorModeRaw,
   setRestoredMedia,
-  setProjectSpotifyTrackId,
   setRestoredPosition,
   setRestoredSpeed,
   setIsProjectLoading,
@@ -72,7 +71,6 @@ export function useSharedProject({
   duration,
   projectYtUrl,
   uploadedAudio,
-  projectSpotifyTrackId,
   restoredMedia,
 }) {
   const { t } = useTranslation();
@@ -125,15 +123,7 @@ export function useSharedProject({
         setRestoredMedia({ type: 'youtube', url: parsed.ytUrl });
       } else if (parsed.cloudinaryUpload) {
         setRestoredMedia(uploadToRestoredMedia(parsed.cloudinaryUpload));
-      } else if (parsed.spotifyTrackId) {
-        setRestoredMedia({
-          type: 'spotify',
-          id: parsed.spotifyTrackId,
-          trackId: parsed.spotifyTrackId,
-          title: '',
-        });
       }
-      if (parsed.spotifyTrackId) setProjectSpotifyTrackId(parsed.spotifyTrackId);
       if (typeof parsed.playbackPosition === 'number') setRestoredPosition(parsed.playbackPosition);
       if (typeof parsed.playbackSpeed === 'number') setRestoredSpeed(parsed.playbackSpeed);
       const ro = parsed.readOnly !== false;
@@ -158,7 +148,6 @@ export function useSharedProject({
             id: upload.id,
             source: upload.source,
             uploadUrl: upload.uploadUrl,
-            spotifyTrackId: upload.spotifyTrackId,
             fileName: upload.fileName,
             title: upload.title,
             duration: upload.duration,
@@ -169,7 +158,6 @@ export function useSharedProject({
             editorMode: project.lyrics?.editorMode || 'lrc',
             ytUrl: upload?.source === 'youtube' ? upload?.uploadUrl : '',
             cloudinaryUpload: upload?.source === 'cloudinary' ? uploadData : null,
-            spotifyTrackId: upload?.source === 'spotify' ? upload.spotifyTrackId : null,
             syncMode: project.state?.syncMode ?? true,
             activeLineIndex: project.state?.activeLineIndex || 0,
             playbackPosition: project.state?.playbackPosition || 0,
@@ -233,19 +221,13 @@ export function useSharedProject({
           duration: restoredMedia.duration,
         } : null);
       const effectiveYtUrl = projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : '');
-      const effectiveSpotifyTrackId = projectSpotifyTrackId
-        || (restoredMedia?.type === 'spotify' ? restoredMedia.trackId : null);
-
-      console.log('[share] effectiveUpload:', effectiveUpload);
-      console.log('[share] effectiveYtUrl:', effectiveYtUrl);
-      console.log('[share] effectiveSpotifyTrackId:', effectiveSpotifyTrackId);
 
       // Only persist upload records to the database for authenticated users.
       // Guests cannot own DB records and the project creation below also requires auth.
       if (getAccessToken()) {
         if (effectiveUpload?.id) {
           uploadIdToSave = effectiveUpload.id;
-        } else if (effectiveUpload && effectiveUpload.source !== 'spotify') {
+        } else if (effectiveUpload) {
           try {
             const upload = await uploads.saveMedia({
               source: 'cloudinary',
@@ -267,18 +249,6 @@ export function useSharedProject({
               fileName: '',
               title: undefined,
               duration: duration || null,
-            });
-            uploadIdToSave = upload.id;
-          } catch (err) {
-            console.error(err);
-          }
-        } else if (effectiveSpotifyTrackId) {
-          try {
-            const upload = await uploads.saveMedia({
-              source: 'spotify',
-              spotifyTrackId: effectiveSpotifyTrackId,
-              fileName: '',
-              title: '',
             });
             uploadIdToSave = upload.id;
           } catch (err) {
@@ -316,8 +286,7 @@ export function useSharedProject({
         url: `${window.location.origin}/share/${sharedId}`,
         ytUrl: projectYtUrl,
         uploadedAudio,
-        spotifyTrackId: projectSpotifyTrackId,
-        mediaSource: projectSpotifyTrackId ? 'spotify' : (uploadedAudio ? 'cloudinary' : (projectYtUrl ? 'youtube' : 'none')),
+        mediaSource: uploadedAudio ? 'cloudinary' : (projectYtUrl ? 'youtube' : 'none'),
         linesCount: lines.length,
         hasSynced: lines.some((l) => l.timestamp != null),
         readOnly: true,
@@ -328,7 +297,7 @@ export function useSharedProject({
       setShareModalState(null);
       toast.error(t('project.shareFailed') || 'Could not generate share link.');
     }
-  }, [lines, editorMode, projectYtUrl, syncMode, mediaTitle, uploadedAudio, duration, t, projectMetadata, activeProjectIdRef, setActiveProjectId, setShareModalState, executeRecaptcha, lastShareData, projectSpotifyTrackId, restoredMedia]);
+  }, [lines, editorMode, projectYtUrl, syncMode, mediaTitle, uploadedAudio, duration, t, projectMetadata, activeProjectIdRef, setActiveProjectId, setShareModalState, executeRecaptcha, lastShareData, restoredMedia]);
 
   return {
     isSharedProject, setIsSharedProject,

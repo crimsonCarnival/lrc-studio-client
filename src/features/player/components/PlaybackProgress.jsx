@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
 
 /**
- * Fallback playback position indicator for sources that don't have a waveform (YouTube, Spotify).
+ * Fallback playback position indicator for sources that don't have a waveform (YouTube).
  */
 export default function PlaybackProgress({
   playbackPosition,

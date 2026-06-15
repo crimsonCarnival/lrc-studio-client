@@ -154,14 +154,6 @@ function AppInner() {
           publicId: selectedUpload.publicId ?? null,
         });
       }
-    } else if (audioSource === 'spotify' && selectedUpload?.spotifyTrackId) {
-      appState.setProjectSpotifyTrackId(selectedUpload.spotifyTrackId);
-      appState.setRestoredMedia({
-        type: 'spotify',
-        id: selectedUpload.spotifyTrackId,
-        trackId: selectedUpload.spotifyTrackId,
-        title: finalTitle || selectedUpload.title || '',
-      });
     }
 
     setMediaTitle(finalTitle);
@@ -170,14 +162,10 @@ function AppInner() {
     const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songArtists, songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}) };
     appState.setProjectMetadata(newMetadata);
 
-    const spotifyOverride = audioSource === 'spotify' && selectedUpload?.spotifyTrackId
-      ? { spotifyTrackId: selectedUpload.spotifyTrackId }
-      : {};
-
     if (!user) {
       // Guest: handleManualSave writes to localStorage only (no token).
       // The editor's Save button uses the server-side claim flow instead.
-      await appState.handleManualSave({ title: finalTitle, metadata: newMetadata, isPublic, lines, editorMode, syncMode: true, ...spotifyOverride });
+      await appState.handleManualSave({ title: finalTitle, metadata: newMetadata, isPublic, lines, editorMode, syncMode: true });
       navigate('/project/local');
       return;
     }
@@ -190,7 +178,6 @@ function AppInner() {
       editorMode,
       syncMode: true,
       ...(_coverImage ? { coverImage: _coverImage } : {}),
-      ...spotifyOverride,
     });
 
     navigate('/project/local');

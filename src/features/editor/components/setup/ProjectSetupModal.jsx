@@ -15,7 +15,7 @@ const EMPTY_TAGS = [];
 
 function SourceInfoBadge({ sourceInfo, initialName, t }) {
   if (!sourceInfo) return null;
-  const { ytUrl, cloudinary, spotifyId, title } = sourceInfo;
+  const { ytUrl, cloudinary, title } = sourceInfo;
 
   let sourceIcon = <Music2 className="size-4" />;
   let sourceLabel = t('setup.audioSource');
@@ -25,10 +25,6 @@ function SourceInfoBadge({ sourceInfo, initialName, t }) {
     sourceIcon = <Video className="size-4 text-red-500" />;
     sourceLabel = t('setup.youtubeVideo');
     sourceValue = title || initialName || ytUrl;
-  } else if (spotifyId) {
-    sourceIcon = <Music2 className="size-4 text-primary" />;
-    sourceLabel = t('setup.spotifyTrack');
-    sourceValue = title || initialName || spotifyId;
   } else if (cloudinary) {
     sourceIcon = <Upload className="size-4 text-blue-400" />;
     sourceLabel = t('setup.cloudUpload');

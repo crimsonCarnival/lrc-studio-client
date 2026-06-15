@@ -136,8 +136,6 @@ input:-webkit-autofill:active {
   --color-success-foreground: var(--success-foreground);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
-  --color-spotify: var(--spotify);
-  --color-spotify-foreground: var(--spotify-foreground);
 
   /* ── Spacing scale ── */
   --space-0: 0px;
@@ -278,8 +276,6 @@ input:-webkit-autofill:active {
   --info-foreground: #ffffff;
   --warning: #F59E0B;
   --warning-foreground: #080616;
-  --spotify: #1DB954;
-  --spotify-foreground: #FFFFFF;
 }
 
 /* ── Velvet (dark) — #1A1A1D #3B1C32 #6A1E55 #A64D79 ────────────────── */
@@ -337,8 +333,6 @@ input:-webkit-autofill:active {
   --info-foreground: #ffffff;
   --warning: #F59E0B;
   --warning-foreground: #1A1A1D;
-  --spotify: #1DB954;
-  --spotify-foreground: #FFFFFF;
 }
 
 /* ── Sage (dark) — #040D12 #183D3D #5C8374 #93B1A6 ──────────────────── */
@@ -396,8 +390,6 @@ input:-webkit-autofill:active {
   --info-foreground: #ffffff;
   --warning: #D97706;
   --warning-foreground: #040D12;
-  --spotify: #1DB954;
-  --spotify-foreground: #FFFFFF;
 }
 
 html,
@@ -929,8 +921,6 @@ audio::-webkit-media-controls-panel {
   --info-foreground: #1a1826;
   --warning: #f6c177;
   --warning-foreground: #1a1826;
-  --spotify: #1DB954;
-  --spotify-foreground: #FFFFFF;
   --sidebar: #2a273f;
   --sidebar-foreground: #f0eeff;
   --sidebar-primary: #c4a7e7;

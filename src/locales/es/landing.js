@@ -22,7 +22,7 @@ export default {
   step1Title: 'Configura el proyecto',
   step1Desc: 'Ingresa el nombre del proyecto, título, artista y álbum — esto activa la búsqueda de letras y etiqueta tu exportación.',
   step2Title: 'Carga tu audio',
-  step2Desc: 'Pega una URL de YouTube, sube un archivo de audio o conecta Spotify.',
+  step2Desc: 'Pega una URL de YouTube o sube un archivo de audio.',
   step3Title: 'Importa las letras',
   step3Desc: 'Pega las letras manualmente, importa un archivo .lrc o usa la búsqueda de letras para encontrarlas con la info de la canción.',
   step4Title: 'Sincroniza y exporta',
