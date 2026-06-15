@@ -12,7 +12,7 @@ import { Label } from '@ui/label';
 import { Switch } from '@ui/switch';
 import { Tip } from '@ui/tip';
 import { TagsSelector } from '@ui/tags-selector';
-import { PRIMARY_GENRES } from '@features/editor/constants/genre-tags';
+import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { LANG_KEYS } from '@features/editor/constants/languages';
 import { getMyMusicLibrary } from '@/features/editor/music-library.service';
 import {
@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useSetupContext } from '@/features/editor/SetupContext';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
-import { lyrics as lyricsApi, uploads as uploadsApi, getAccessToken } from '@/app/api';
+import { lyrics as lyricsApi, uploads as uploadsApi, songMetadata as songMetadataApi, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { SkeletonMediaItem } from '@ui/skeleton';
@@ -127,6 +127,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   }));
 
   const [musicLibrary, setMusicLibrary] = useState([]);
+  const [metaSearching, setMetaSearching] = useState(false);
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, ytLoading, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
@@ -333,6 +334,33 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     });
   }, [musicLibrary, setMetadataState]);
 
+  const handleFetchSongInfo = useCallback(async () => {
+    if (!songName.trim() || !songArtist.trim() || metaSearching) return;
+    setMetaSearching(true);
+    try {
+      const meta = await songMetadataApi.lookupTrack(songName.trim(), songArtist.trim());
+      if (meta && !meta.error) {
+        const mappedGenre = matchGenreFromTags(meta.genres || []);
+        setMetadataState({
+          songName:   meta.name   || songName,
+          songArtist: meta.artist || songArtist,
+          songAlbum:  meta.album  || songAlbum,
+          songYear:   meta.releaseYear || songYear,
+          ...(mappedGenre           ? { genre:      mappedGenre              } : {}),
+          ...(meta.totalTracks      ? { trackCount: String(meta.totalTracks) } : {}),
+          // Populate coverImage from API art if user hasn't set one
+          ...(!coverImage && meta.albumArt ? { coverImage: meta.albumArt }   : {}),
+        });
+      } else {
+        toast.error(t('setup.metaSearchFailed'));
+      }
+    } catch {
+      toast.error(t('setup.metaSearchFailed'));
+    } finally {
+      setMetaSearching(false);
+    }
+  }, [songName, songArtist, songAlbum, songYear, coverImage, metaSearching, setMetadataState, t]);
+
   const handleProceed = () => {
     let finalLines = parsedLines;
     if (!finalLines) {
@@ -414,6 +442,19 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
               <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                 {t('setup.songInformation')}
               </h3>
+              {songName.trim() && songArtist.trim() && (
+                <Tip content={t('setup.fetchSongInfo')} side="left">
+                  <button
+                    type="button"
+                    onClick={handleFetchSongInfo}
+                    disabled={metaSearching}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
+                  >
+                    {metaSearching && <Loader2 className="size-3 animate-spin" />}
+                    {t('setup.fetchInfo')}
+                  </button>
+                </Tip>
+              )}
             </div>
 
             {/* Row 1: Song Name + Artist */}

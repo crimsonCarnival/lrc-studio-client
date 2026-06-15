@@ -17,6 +17,7 @@ import { lyricsService, editorService } from '@/features/editor/services/lyrics.
 import { uploadsService } from '@/features/projects/services/uploads.service.js';
 import { googleService } from '@/features/auth/services/google.service.js';
 import { adminService } from '@/features/admin/services/admin.service.js';
+import { songMetadataService } from '@/features/editor/services/song-metadata.service.js';
 import { request } from './api.client.js';
 
 // Original named exports (object-style, backward compatible)
@@ -28,6 +29,7 @@ export const editor = editorService;
 export const uploads = uploadsService;
 export const google = googleService;
 export const admin = adminService;
+export const songMetadata = songMetadataService;
 
 export const api = {
   auth,
@@ -38,5 +40,6 @@ export const api = {
   uploads,
   google,
   admin,
+  songMetadata,
   getHealth() { return request('/health'); },
 };

@@ -111,3 +111,32 @@ export const GENRE_TAG_GROUPS: Record<PrimaryGenre, string[]> = {
   world:       ['world', 'latin'],
   other:       ['alt_indie', 'electronic', 'hiphop', 'rock_metal', 'pop_asian', 'latin', 'world', 'instrumental', 'media', 'religious', 'misc'],
 };
+
+/** Maps raw genre tag strings (from a track metadata lookup) to PRIMARY_GENRES enum keys */
+export const GENRE_KEYWORD_MAP: [PrimaryGenre, string[]][] = [
+  ['hip_hop',     ['hip hop', 'hip-hop', 'rap', 'trap', 'drill']],
+  ['rnb',         ['r&b', 'rnb', 'rhythm and blues']],
+  ['electronic',  ['electronic', 'edm', 'techno', 'house', 'dubstep', 'electro', 'synth', 'trance', 'drum and bass']],
+  ['alternative', ['alternative', 'alt rock', 'alt-rock', 'indie']],
+  ['soundtrack',  ['soundtrack', 'score', 'film', 'cinema', 'game music', 'anime', 'j-pop', 'jpop', 'j pop']],
+  ['classical',   ['classical', 'orchestra', 'chamber', 'baroque', 'opera', 'symphon']],
+  ['metal',       ['metal', 'hardcore', 'deathcore', 'doom']],
+  ['folk',        ['folk', 'acoustic', 'singer-songwriter', 'bluegrass', 'americana']],
+  ['country',     ['country', 'honky']],
+  ['latin',       ['latin', 'salsa', 'bossa nova', 'samba', 'reggaeton', 'cumbia', 'k-pop', 'kpop']],
+  ['reggae',      ['reggae', 'dancehall', 'ska', 'dub']],
+  ['soul',        ['soul', 'gospel', 'motown', 'neo soul', 'funk', 'disco', 'groove']],
+  ['blues',       ['blues']],
+  ['jazz',        ['jazz', 'bebop', 'swing']],
+  ['pop',         ['pop']],
+  ['rock',        ['rock']],
+];
+
+export function matchGenreFromTags(genres: string[]): PrimaryGenre | '' {
+  if (!genres?.length) return '';
+  const combined = genres.join(' ').toLowerCase();
+  for (const [key, keywords] of GENRE_KEYWORD_MAP) {
+    if (keywords.some((kw) => combined.includes(kw))) return key;
+  }
+  return '';
+}
