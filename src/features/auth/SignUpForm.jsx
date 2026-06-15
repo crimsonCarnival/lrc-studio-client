@@ -11,7 +11,7 @@ import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { auth } from '@/app/api';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import RegistrationBlockedModal from './RegistrationBlockedModal';
-import { FieldError, ErrorBanner, ContextBanner, GoogleButton, SpotifyButton } from './auth-shared';
+import { FieldError, ErrorBanner, ContextBanner, GoogleButton } from './auth-shared';
 
 const step1Schema = z.object({
   displayName: z.string().min(1, 'auth.validation.fieldRequired'),
@@ -77,7 +77,7 @@ function StepDots({ step }) {
 
 // ─── Register Form ─────────────────────────────────────────────────────────
 
-export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSpotifyLogin, onSuccess, redirect }) {
+export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSuccess, redirect }) {
   const navigate = useNavigate();
   const { trigger: haptic } = useHapticFeedback();
 
@@ -310,7 +310,6 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                 <div className="flex-1 h-px bg-zinc-800/40" />
               </div>
               <GoogleButton onClick={onGoogleLogin} t={t} />
-              <SpotifyButton onClick={onSpotifyLogin} t={t} />
               <button
                 type="button"
                 onClick={() => navigate('/project/new')}

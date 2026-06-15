@@ -8,7 +8,7 @@ import { rememberedAccounts } from '@/features/auth/services/remembered-accounts
 
 // ─── Account Picker — shown on return visits when remembered accounts exist ──
 
-export default function SavedAccountStep({ t, savedAccounts, accountsChecked, onProceedToPassword, onGoogleLogin, onSpotifyLogin, onAddAccount, onRemoveAccount, onPasskeySuccess }) {
+export default function SavedAccountStep({ t, savedAccounts, accountsChecked, onProceedToPassword, onGoogleLogin, onAddAccount, onRemoveAccount, onPasskeySuccess }) {
   const [loadingKey, setLoadingKey] = useState(null);
   const [errors, setErrors] = useState({});
   const { loginWithPasskey } = useAuthContext();
@@ -28,10 +28,6 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
       // OAuth-only accounts (no password): skip the password step and
       // trigger the appropriate OAuth sign-in directly.
       if (result.hasPassword === false) {
-        if (result.hasSpotify && onSpotifyLogin) {
-          await onSpotifyLogin();
-          return;
-        }
         if (result.hasGoogle && onGoogleLogin) {
           await onGoogleLogin(identifier);
           return;

@@ -8,11 +8,11 @@ import { Tip } from '@ui/tip';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { useAuthContext } from '@/features/auth/useAuthContext';
-import { FieldError, AvatarBadge, GoogleButton, SpotifyButton } from './auth-shared';
+import { FieldError, AvatarBadge, GoogleButton } from './auth-shared';
 
 // ─── Login Step 2 — Password ───────────────────────────────────────────────
 
-export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, onGoogleLogin, onSpotifyLogin, onSuccess, onSwitchToForgotPassword }) {
+export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, onGoogleLogin, onSuccess, onSwitchToForgotPassword }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -191,7 +191,6 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
             )}
 
             <GoogleButton onClick={onGoogleLogin} t={t} />
-            <SpotifyButton onClick={onSpotifyLogin} t={t} />
           </div>
         )}
       </form>

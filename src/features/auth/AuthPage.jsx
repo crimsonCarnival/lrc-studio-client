@@ -23,7 +23,7 @@ import SmoothWavyCanvas from '@features/landing/SmoothWavyCanvas';
 
 export default function AuthPage() {
   const { t, i18n } = useTranslation();
-  const { loginAndHold, commitLogin, heldLoginResult, registerAndHold, loginWithGoogle, loginWithSpotify } = useAuthContext();
+  const { loginAndHold, commitLogin, heldLoginResult, registerAndHold, loginWithGoogle } = useAuthContext();
   const [searchParams] = useSearchParams();
   const { mode } = useParams();
   const navigate = useNavigate();
@@ -134,24 +134,6 @@ export default function AuthPage() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Handle redirect-based Spotify OAuth callback (popup-blocked fallback).
-  useEffect(() => {
-    const scb = searchParams.get('scb');
-    if (!scb) return;
-
-    const cleanParams = new URLSearchParams(searchParams);
-    cleanParams.delete('scb');
-    cleanParams.delete('scb_msg');
-    navigate(`/auth/signin${cleanParams.toString() ? `?${cleanParams}` : ''}`, { replace: true });
-
-    if (scb === 'success') {
-      const redirectTo = searchParams.get('redirect');
-      navigate(redirectTo || '/home', { replace: true });
-    } else {
-      toast.error(searchParams.get('scb_msg') || t('auth.errors.spotifyLoginFailed'));
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
   const prevLocationSearchRef = useRef(location.search);
   useLayoutEffect(() => {
     if (prevLocationSearchRef.current !== location.search) {
@@ -256,23 +238,6 @@ export default function AuthPage() {
       }
     }
   }, [loginWithGoogle, handleAuthSuccess, searchParams, t]);
-
-  const handleSpotifyLogin = useCallback(async () => {
-    try {
-      await loginWithSpotify();
-      handleAuthSuccess();
-    } catch {
-      const hasSession = storage.get(STORAGE_KEYS.HAS_SESSION);
-      if (hasSession) {
-        const redirectTo = searchParams.get('redirect');
-        window.location.href = (redirectTo?.startsWith('/') && !redirectTo.startsWith('//'))
-          ? redirectTo
-          : '/home';
-      } else {
-        toast.error(t('auth.errors.spotifyLoginFailed'));
-      }
-    }
-  }, [loginWithSpotify, handleAuthSuccess, searchParams, t]);
 
   const handleSavedAccountProceed = useCallback((data) => {
     setIdentifierData(data);
@@ -511,7 +476,6 @@ export default function AuthPage() {
                 accountsChecked={accountsChecked}
                 onProceedToPassword={handleSavedAccountProceed}
                 onGoogleLogin={handleGoogleLogin}
-                onSpotifyLogin={handleSpotifyLogin}
                 onAddAccount={handleAddAccount}
                 onRemoveAccount={handleRemoveAccount}
                 onPasskeySuccess={handleAuthSuccess}
@@ -524,7 +488,6 @@ export default function AuthPage() {
                 onNext={handleIdentifierNext}
                 onSwitchToRegister={() => switchView('register')}
                 onGoogleLogin={() => handleGoogleLogin()}
-                onSpotifyLogin={handleSpotifyLogin}
                 from={searchParams.get('from')}
                 redirect={redirect}
               />
@@ -537,7 +500,6 @@ export default function AuthPage() {
                 onBack={handleBack}
                 onLogin={loginAndHold}
                 onGoogleLogin={() => handleGoogleLogin(identifierData?.identifier)}
-                onSpotifyLogin={handleSpotifyLogin}
                 onSuccess={handlePasswordSuccess}
                 onSwitchToForgotPassword={() => switchView('forgot-password')}
               />
@@ -559,7 +521,6 @@ export default function AuthPage() {
                 onSwitchToLogin={() => switchView('login-identifier')}
                 onRegister={registerAndHold}
                 onGoogleLogin={() => handleGoogleLogin()}
-                onSpotifyLogin={handleSpotifyLogin}
                 onSuccess={handleRegisterSuccess}
                 redirect={redirect}
               />

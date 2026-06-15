@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
-import { auth, spotify as spotifyApi, google as googleApi, setAuthFlag } from '@/app/api';
+import { auth, google as googleApi, setAuthFlag } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import toast from 'react-hot-toast';
 import { authEvents } from '@/shared/utils/auth-events';
@@ -316,56 +316,6 @@ export function useAuth() {
     return result;
   }, [scheduleRefresh, executeRecaptcha, handlePostAuthClone]);
 
-  // ——— Spotify connect / disconnect ———
-
-  const connectSpotify = useCallback(async () => {
-    // Open synchronously so browsers don't block it as a non-gesture popup
-    const width = 500, height = 700;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-    const popup = window.open('about:blank', 'spotify-auth', `width=${width},height=${height},left=${left},top=${top}`);
-    renderPopupLoading(popup);
-    const url = await spotifyApi.getAuthUrl();
-    if (popup) popup.location.href = url; else window.open(url, 'spotify-auth', `width=${width},height=${height},left=${left},top=${top}`);
-
-    return new Promise((resolve, reject) => {
-      let cleaned = false;
-      const cleanup = () => {
-        if (cleaned) return;
-        cleaned = true;
-        window.removeEventListener('message', onMessage);
-        clearTimeout(timeout);
-      };
-
-      const onMessage = async (event) => {
-        if (event.origin !== API_ORIGIN) return;
-        let data = event.data;
-        if (typeof data === 'string') try { data = JSON.parse(data); } catch { return; }
-        if (data?.type !== 'spotify-callback') return;
-        cleanup();
-
-        if (!data.success) { reject(new Error(data.error || 'Spotify connection failed')); return; }
-
-        const me = await auth.me();
-        setState(s => ({ ...s, user: me }));
-        resolve(me);
-      };
-
-      window.addEventListener('message', onMessage);
-      // Fallback timeout: if no message after 60s, assume popup was closed
-      const timeout = setTimeout(() => {
-        cleanup();
-        reject(new Error('Spotify auth popup was closed'));
-      }, 60000);
-    });
-  }, []);
-
-  const disconnectSpotify = useCallback(async () => {
-    await spotifyApi.disconnect();
-    const me = await auth.me();
-    setState(s => ({ ...s, user: me }));
-  }, []);
-
   // ——— Google connect / disconnect / login ———
 
   const connectGoogle = useCallback(async () => {
@@ -503,75 +453,6 @@ export function useAuth() {
     });
   }, [scheduleRefresh]);
 
-  const loginWithSpotify = useCallback(async () => {
-    const width = 500, height = 700;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-    // Open synchronously so browsers don't block it as a non-gesture popup
-    const popup = window.open('about:blank', 'spotify-login', `width=${width},height=${height},left=${left},top=${top}`);
-    renderPopupLoading(popup);
-    const url = await spotifyApi.getLoginUrl();
-
-    // Popup blocked — fall back to redirect-based flow
-    if (!popup || popup.closed) {
-      storage.set(STORAGE_KEYS.HAS_SESSION, '1');
-      window.location.href = url;
-      return new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('redirect_timeout')), 3000);
-      });
-    }
-
-    popup.location.href = url;
-
-    return new Promise((resolve, reject) => {
-      let cleaned = false;
-      const cleanup = () => {
-        if (cleaned) return;
-        cleaned = true;
-        window.removeEventListener('message', onMessage);
-        clearTimeout(timeout);
-      };
-
-      const onMessage = async (event) => {
-        if (event.origin !== API_ORIGIN) return;
-        let data = event.data;
-        if (typeof data === 'string') try { data = JSON.parse(data); } catch { return; }
-        if (data?.type !== 'spotify-callback') return;
-        cleanup();
-
-        if (!data.success) {
-          reject(new Error(data.error || 'Spotify login failed'));
-          return;
-        }
-
-        try {
-          const me = await auth.me();
-          storage.set(STORAGE_KEYS.HAS_SESSION, '1');
-          setAuthFlag(true);
-          setState(s => ({ ...s, user: me, loading: false }));
-          scheduleRefresh();
-          // Persist for the saved-account picker (OAuth popup path skips restore()).
-          rememberedAccounts.upsert({
-            userId: me.id,
-            accountName: me.accountName,
-            displayName: me.displayName,
-            avatarUrl: me.avatarUrl,
-            identifier: me.email || me.accountName,
-          });
-          resolve(me);
-        } catch (err) {
-          reject(err);
-        }
-      };
-
-      window.addEventListener('message', onMessage);
-      const timeout = setTimeout(() => {
-        cleanup();
-        reject(new Error('Spotify login popup was closed'));
-      }, 60000);
-    });
-  }, [scheduleRefresh]);
-
   const clearUnbanMessage = useCallback(async () => {
     await auth.clearUnbanMessage();
     setState(prev => ({ ...prev, user: prev.user ? { ...prev.user, showUnbanMessage: false } : null }));
@@ -700,12 +581,9 @@ export function useAuth() {
     registerAndHold,
     logout: doLogout,
     logoutAllDevices,
-    connectSpotify,
-    disconnectSpotify,
     connectGoogle,
     disconnectGoogle,
     loginWithGoogle,
-    loginWithSpotify,
     clearUnbanMessage,
     loginWithPasskey,
     registerPasskey,

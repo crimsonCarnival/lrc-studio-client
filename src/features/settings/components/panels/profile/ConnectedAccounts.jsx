@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { Unplug } from 'lucide-react';
-import SpotifyIcon from "@features/player/components/SpotifyIcon";
 import { Button } from '@ui/button';
 import toast from 'react-hot-toast';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -8,7 +7,7 @@ import { formatTimeAgo } from '@/features/notifications/timeAgo';
 
 export default function ConnectedAccounts() {
   const { t } = useTranslation();
-  const { user, connectSpotify, disconnectSpotify, connectGoogle, disconnectGoogle } = useAuthContext();
+  const { user, connectGoogle, disconnectGoogle } = useAuthContext();
 
   return (
     <div className="space-y-6">
@@ -84,71 +83,6 @@ export default function ConnectedAccounts() {
         )}
       </div>
 
-      {/* Spotify Section */}
-      <div className="animate-fade-in bg-secondary/10 border border-border rounded-2xl p-5 hover:border-primary/30 transition-all">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">
-            {t('settings.spotify.label') || 'Spotify'}
-          </h3>
-          {user?.spotify?.connected && user.spotify.lastUsedAt && (
-            <span className="text-[10px] text-zinc-500 font-medium">
-              {t('settings.spotify.lastUsed', { when: formatTimeAgo(user.spotify.lastUsedAt, t) })}
-            </span>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground mb-4">
-          {user?.spotify?.connected
-            ? t('settings.spotify.connectedDesc')
-            : t('settings.spotify.connectDesc')}
-        </p>
-
-        {user?.spotify?.connected ? (
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-3 p-4 rounded-2xl bg-spotify/10 border border-spotify/30">
-              <div className="size-10 rounded-full bg-spotify/20 flex items-center justify-center shrink-0">
-                <SpotifyIcon className="size-5 text-spotify shrink-0" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-spotify">{t('settings.spotify.connected')}</p>
-                <p className="text-xs text-muted-foreground truncate">{user.spotify.spotifyId || '---'}</p>
-              </div>
-              <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${user.spotify.isPremium ? 'bg-spotify/20 text-spotify' : 'bg-secondary text-muted-foreground'}`}>
-                {user.spotify.isPremium ? t('settings.spotify.premium') : t('settings.spotify.free')}
-              </span>
-            </div>
-            <button
-              onClick={async () => {
-                try {
-                  await disconnectSpotify();
-                  toast.success(t('settings.spotify.disconnected'));
-                } catch {
-                  toast.error(t('settings.spotify.connectFailed'));
-                }
-              }}
-              className="text-xs font-semibold text-zinc-500 hover:text-red-400 underline transition-colors cursor-pointer self-start ml-1"
-            >
-              {t('settings.spotify.disconnect') || 'Disconnect'}
-            </button>
-          </div>
-        ) : (
-          <Button
-            size="sm"
-            onClick={async () => {
-              try {
-                await connectSpotify();
-              } catch (err) {
-                if (err.message !== 'State mismatch') {
-                  toast.error(t('settings.spotify.connectFailed'));
-                }
-              }
-            }}
-            className="gap-2 bg-spotify hover:bg-spotify/80 text-spotify-foreground rounded-xl h-10 px-6 font-bold shadow-lg shadow-spotify/20"
-          >
-            <SpotifyIcon className="size-3.5" />
-            {t('settings.spotify.connect')}
-          </Button>
-        )}
-      </div>
     </div>
   );
 }
