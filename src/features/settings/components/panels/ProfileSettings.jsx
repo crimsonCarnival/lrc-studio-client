@@ -5,6 +5,7 @@ import AvatarUpload from './profile/AvatarUpload';
 import ProfileForm from './profile/ProfileForm';
 import AccountNameSection from './profile/AccountNameSection';
 import EmailSection from './profile/EmailSection';
+import XpHistory from './profile/XpHistory';
 import { ShowcaseEditor } from '@/features/badges/ShowcaseEditor';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { gqlRequest } from '@/app/graphql.client';
@@ -145,6 +146,14 @@ export default function ProfileSettings({ searchTerm }) {
 
         {/* Achievement Showcase */}
         <ShowcaseSection />
+
+        <Divider />
+
+        {/* XP History */}
+        <section className="space-y-4">
+          <SectionHeading>XP History</SectionHeading>
+          <XpHistory />
+        </section>
       </div>
     </div>
   );
