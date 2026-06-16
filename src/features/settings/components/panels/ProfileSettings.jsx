@@ -6,6 +6,7 @@ import ProfileForm from './profile/ProfileForm';
 import AccountNameSection from './profile/AccountNameSection';
 import EmailSection from './profile/EmailSection';
 import ActionHistory from './profile/ActionHistory';
+import StatsTab from './profile/StatsTab';
 import { ShowcaseEditor } from '@/features/badges/ShowcaseEditor';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { gqlRequest } from '@/app/graphql.client';
@@ -92,6 +93,7 @@ function blockMatches(searchTerm, labels) {
 
 export default function ProfileSettings({ searchTerm }) {
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState('account');
 
   const matches = blockMatches(searchTerm, [
     t('profile.tabs.account'), t('profile.title'),
@@ -100,7 +102,8 @@ export default function ProfileSettings({ searchTerm }) {
     t('profile.accountNameSection'), t('profile.accountName'),
     t('profile.showFollowers'), t('profile.avatar'),
     'avatar', 'photo', 'display name', 'bio', 'email', 'username', 'handle',
-    'followers', 'profile', 'public',
+    'followers', 'profile', 'public', 'activity', 'history', 'stats', 'synced',
+    'lines', 'projects', 'completion',
   ]);
 
   if (!matches) return null;
@@ -114,46 +117,76 @@ export default function ProfileSettings({ searchTerm }) {
         </h3>
       </div>
 
+      {/* Tab navigation */}
+      <div className="flex gap-2 border-b border-border/30 px-1">
+        {['account', 'activity', 'stats'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-3 py-2 text-xs font-semibold uppercase tracking-widest transition-colors ${
+              activeTab === tab
+                ? 'border-b-2 border-accent text-accent'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {t(`profile.tabs.${tab}`)}
+          </button>
+        ))}
+      </div>
+
       <div className="rounded-2xl border border-border/50 bg-secondary/10 p-5 lg:p-6 space-y-6">
-        {/* Avatar */}
-        <section className="space-y-4">
-          <SectionHeading>{t('profile.sections.public')}</SectionHeading>
-          <AvatarUpload />
-        </section>
+        {/* Account tab */}
+        {activeTab === 'account' && (
+          <>
+            {/* Avatar */}
+            <section className="space-y-4">
+              <SectionHeading>{t('profile.sections.public')}</SectionHeading>
+              <AvatarUpload />
+            </section>
 
-        <Divider />
+            <Divider />
 
-        {/* Display name + bio + visibility */}
-        <ProfileForm />
+            {/* Display name + bio + visibility */}
+            <ProfileForm />
 
-        <Divider />
+            <Divider />
 
-        {/* Email */}
-        <section className="space-y-4">
-          <SectionHeading>{t('profile.emailSection')}</SectionHeading>
-          <EmailSection />
-        </section>
+            {/* Email */}
+            <section className="space-y-4">
+              <SectionHeading>{t('profile.emailSection')}</SectionHeading>
+              <EmailSection />
+            </section>
 
-        <Divider />
+            <Divider />
 
-        {/* Username */}
-        <section className="space-y-4">
-          <SectionHeading>{t('profile.accountNameSection')}</SectionHeading>
-          <AccountNameSection />
-        </section>
+            {/* Username */}
+            <section className="space-y-4">
+              <SectionHeading>{t('profile.accountNameSection')}</SectionHeading>
+              <AccountNameSection />
+            </section>
 
-        <Divider />
+            <Divider />
 
-        {/* Achievement Showcase */}
-        <ShowcaseSection />
+            {/* Achievement Showcase */}
+            <ShowcaseSection />
+          </>
+        )}
 
-        <Divider />
+        {/* Activity tab */}
+        {activeTab === 'activity' && (
+          <section className="space-y-4">
+            <SectionHeading>Action History</SectionHeading>
+            <ActionHistory />
+          </section>
+        )}
 
-        {/* Action History */}
-        <section className="space-y-4">
-          <SectionHeading>Action History</SectionHeading>
-          <ActionHistory />
-        </section>
+        {/* Stats tab */}
+        {activeTab === 'stats' && (
+          <section className="space-y-4">
+            <SectionHeading>{t('profile.tabs.stats')}</SectionHeading>
+            <StatsTab />
+          </section>
+        )}
       </div>
     </div>
   );
