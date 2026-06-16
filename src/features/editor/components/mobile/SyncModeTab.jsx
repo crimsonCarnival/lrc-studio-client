@@ -72,7 +72,10 @@ export default function SyncModeTab({
           {/* Lines overview with sync status */}
           <div className="flex flex-col gap-2">
             <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest px-2">
-              {t('editor.linesProgress', { synced: lines.filter((l) => l.timestamp != null).length, total: lines.length })}
+              {t('editor.linesProgress', {
+                synced: lines.filter((l) => l.type !== 'section' && l.timestamp != null).length,
+                total: lines.filter((l) => l.type !== 'section').length,
+              })}
             </h3>
             <div className="space-y-1.5 px-2">
               {lines.map((line, lineIndex) => (

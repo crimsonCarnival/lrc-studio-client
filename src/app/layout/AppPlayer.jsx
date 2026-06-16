@@ -29,10 +29,10 @@ export function AppPlayer({
   projectMetadata,
   projectCoverImage,
   lines,
+  activeLineIndex,
   playbackPosition,
   syncMode,
   playerTop,
-  hasMedia,
   onHeightChange,
 }) {
   const { t } = useTranslation();
@@ -91,11 +91,11 @@ export function AppPlayer({
             projectMetadata={projectMetadata}
             projectCoverImage={projectCoverImage}
             lines={lines}
+            activeLineIndex={activeLineIndex}
             playbackPosition={playbackPosition}
             syncMode={syncMode}
             playerTop={playerTop}
             onDockToggle={() => updateSetting('interface.playerTop', !playerTop)}
-            hasMedia={hasMedia}
           />
         )}
       </div>

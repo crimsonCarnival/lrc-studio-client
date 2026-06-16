@@ -93,7 +93,7 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
 });
 
 function Player(
-  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onMediaUpload, playerTop = false, onDockToggle, viewerMode = false, projectMetadata: _projectMetadata, projectCoverImage, ref },
+  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef = null, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onMediaUpload, playerTop = false, onDockToggle, viewerMode = false, projectMetadata: _projectMetadata, projectCoverImage, ref },
 ) {
   const { t, dt } = useDynamicTranslation();
   const { settings, updateSetting } = useSettings();

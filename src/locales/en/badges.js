@@ -63,7 +63,6 @@ export default {
     title:             'Leaderboard',
     subtitle:          'Top creators ranked by minutes synced (own projects only)',
     user:              'User',
-    synced:            'Synced',
     words:             'Words',
     karaoke:           'Karaoke',
     projects:          'Projects',
@@ -73,6 +72,7 @@ export default {
     empty:             'No data yet — start syncing!',
     error:             'Could not load the leaderboard. Try again later.',
     minutesSynced:     'Min synced',
+    musicSynced:       'Music Synced',
     // Pluralized stat labels
     project_one:      '{{count}} project',
     project_other:    '{{count}} projects',

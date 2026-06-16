@@ -43,7 +43,9 @@ export default function LyricsModeTab({
     window.dispatchEvent(new CustomEvent('editor:mark'));
   }, []);
 
-  const lineProgressText = `${activeLineIndex + 1} / ${lines.length}`;
+  const totalLyricLines = lines.filter(l => l.type !== 'section').length;
+  const currentLyricPosition = lines.slice(0, activeLineIndex + 1).filter(l => l.type !== 'section').length;
+  const lineProgressText = `${currentLyricPosition} / ${totalLyricLines}`;
 
   return (
     <div className="flex flex-col h-full gap-4 p-4">

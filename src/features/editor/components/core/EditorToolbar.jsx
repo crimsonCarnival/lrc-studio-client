@@ -73,10 +73,11 @@ export default function EditorToolbar({
   const hasJapanese = useMemo(() => lines.some((l) => hasCJK(l.text || '') || hasCJK(l.secondary || '')), [lines]);
 
   const syncProgress = useMemo(() => {
-    if (!lines.length) return null;
-    const synced = lines.filter(l => l.timestamp != null).length;
-    const wordCount = lines.reduce((acc, l) => acc + (l.text ? l.text.trim().split(/\s+/).filter(Boolean).length : 0), 0);
-    const charCount = lines.reduce((acc, l) => acc + (l.text ? l.text.length : 0), 0);
+    const lyricLines = lines.filter(l => l.type !== 'section');
+    if (!lyricLines.length) return null;
+    const synced = lyricLines.filter(l => l.timestamp != null).length;
+    const wordCount = lyricLines.reduce((acc, l) => acc + (l.text ? l.text.trim().split(/\s+/).filter(Boolean).length : 0), 0);
+    const charCount = lyricLines.reduce((acc, l) => acc + (l.text ? l.text.length : 0), 0);
 
     // Active line word progress for Words mode
     const activeLine = lines[activeLineIndex];
@@ -84,7 +85,7 @@ export default function EditorToolbar({
     const totalWordsInLine = activeWords?.length || 0;
     const currentWordNum = activeWordIndex !== -1 ? Math.min(activeWordIndex + 1, totalWordsInLine) : 0;
 
-    return { synced, total: lines.length, wordCount, charCount, totalWordsInLine, currentWordNum };
+    return { synced, total: lyricLines.length, wordCount, charCount, totalWordsInLine, currentWordNum };
   }, [lines, activeLineIndex, activeWordIndex, stampTarget]);
 
   const [lyricsSearchPopoverOpen, setLyricsSearchPopoverOpen] = useState(false);

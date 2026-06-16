@@ -203,7 +203,7 @@ export function SkeletonPreview({ className }) {
 
 /* ─── Player skeleton ───────────────────────────────────────────────── */
 /* Mirrors: artwork/title → play controls + timeline → volume/options */
-export function SkeletonPlayer({ className }) {
+export function SkeletonPlayer({ className = '' }) {
   return (
     <div className={cn("h-14 lg:h-[72px] flex items-center justify-between px-2 sm:px-4 lg:px-0 w-full animate-fade-in gap-4", className)}>
       {/* Left: Artwork and title */}

@@ -18,10 +18,19 @@ export default function PreviewModeTab({
     return lines[activeLineIndex + 1];
   }, [lines, activeLineIndex]);
 
+  const totalLyricLines = useMemo(
+    () => lines?.filter(l => l.type !== 'section').length || 0,
+    [lines]
+  );
+  const currentLyricPosition = useMemo(
+    () => lines?.slice(0, activeLineIndex + 1).filter(l => l.type !== 'section').length || 0,
+    [lines, activeLineIndex]
+  );
+
   const progressPercent = useMemo(() => {
-    if (!lines || lines.length === 0) return 0;
-    return ((activeLineIndex + 1) / lines.length) * 100;
-  }, [lines, activeLineIndex]);
+    if (!totalLyricLines) return 0;
+    return (currentLyricPosition / totalLyricLines) * 100;
+  }, [totalLyricLines, currentLyricPosition]);
 
   if (!lines || lines.length === 0) {
     return (
@@ -73,8 +82,8 @@ export default function PreviewModeTab({
           />
         </div>
         <div className="flex items-center justify-between text-xs text-zinc-500">
-          <span>{activeLineIndex + 1}</span>
-          <span>{lines.length}</span>
+          <span>{currentLyricPosition}</span>
+          <span>{totalLyricLines}</span>
         </div>
       </div>
 

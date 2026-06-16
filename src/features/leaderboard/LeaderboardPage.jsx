@@ -150,12 +150,14 @@ function LeaderboardRow({ entry, rank }) {
         </div>
 
         {/* Primary metric — always visible */}
-        <div className="flex items-center gap-1.5 min-w-[52px] justify-end">
-          <Timer className="size-3.5 text-accent-blue shrink-0" />
-          <span className={`font-semibold tabular-nums text-sm ${p ? p.label : 'text-zinc-300'}`}>
-            {formatMinutes(entry.stats?.minutesSynced ?? 0)}
-          </span>
-        </div>
+        <Tip content={t('badges.leaderboard.musicSynced')} side="top">
+          <div className="flex items-center gap-1.5 min-w-[52px] justify-end">
+            <Timer className="size-3.5 text-accent-blue shrink-0" />
+            <span className={`font-semibold tabular-nums text-sm ${p ? p.label : 'text-zinc-300'}`}>
+              {formatMinutes(entry.stats?.minutesSynced ?? 0)}
+            </span>
+          </div>
+        </Tip>
       </div>
     </Link>
   );
@@ -235,7 +237,7 @@ export default function LeaderboardPage() {
               <Music className="size-3.5 text-zinc-600" />
             </Tip>
             <div className="w-px h-3 bg-zinc-700/60 mx-1" />
-            <Tip content={t('badges.leaderboard.synced')} side="top">
+            <Tip content={t('badges.leaderboard.musicSynced')} side="top">
               <Timer className="size-3.5 text-zinc-600" />
             </Tip>
           </div>

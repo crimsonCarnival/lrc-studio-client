@@ -24,7 +24,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     handleMediaUpload, restoredMedia, restoredPosition,
     restoredSpeed, hasUnsavedChanges, activeProjectId, projectMetadata, setProjectMetadata,
     forkedFrom,
-    isProjectLoading, hasMedia, lines, activeLineIndex, playbackPosition, syncMode, pendingProject,
+    isProjectLoading, lines, activeLineIndex, playbackPosition, syncMode, pendingProject,
     setIsPlaying, setPlaybackSpeed,
     projectCoverImage, setProjectCoverImage,
   } = appState;
@@ -166,7 +166,6 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           playbackPosition={playbackPosition}
           syncMode={syncMode}
           playerTop={playerTop}
-          hasMedia={hasMedia}
           onHeightChange={setPlayerHeight}
         />
 
