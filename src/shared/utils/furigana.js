@@ -3,8 +3,6 @@
  * Converts kuromoji tokenizer output into per-character readings.
  */
 
-const HIRAGANA_RE = /[\u3040-\u309F]/;
-const KATAKANA_RE = /[\u30A0-\u30FF]/;
 const KANJI_RE = /[\u4E00-\u9FAF\u3400-\u4DBF\uF900-\uFAFF]/;
 const CJK_RE = /[\u3000-\u9FFF\uF900-\uFAFF]/;
 
@@ -80,14 +78,6 @@ export function hasCJK(text) {
  */
 export function hasKanji(text) {
   return KANJI_RE.test(text);
-}
-
-export function isHiragana(ch) {
-  return HIRAGANA_RE.test(ch);
-}
-
-export function isKatakana(ch) {
-  return KATAKANA_RE.test(ch);
 }
 
 /**

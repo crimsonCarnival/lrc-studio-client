@@ -113,7 +113,7 @@ export const GENRE_TAG_GROUPS: Record<PrimaryGenre, string[]> = {
 };
 
 /** Maps raw genre tag strings (from a track metadata lookup) to PRIMARY_GENRES enum keys */
-export const GENRE_KEYWORD_MAP: [PrimaryGenre, string[]][] = [
+const GENRE_KEYWORD_MAP: [PrimaryGenre, string[]][] = [
   ['hip_hop',     ['hip hop', 'hip-hop', 'rap', 'trap', 'drill']],
   ['rnb',         ['r&b', 'rnb', 'rhythm and blues']],
   ['electronic',  ['electronic', 'edm', 'techno', 'house', 'dubstep', 'electro', 'synth', 'trance', 'drum and bass']],

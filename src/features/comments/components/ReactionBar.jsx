@@ -4,8 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { ReactionPicker } from './ReactionPicker';
 import { EMOJI_MAP } from './reaction-constants';
 
-export { EMOJI_MAP };
-
 const EMPTY_REACTIONS = [];
 
 export function ReactionBar({

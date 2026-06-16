@@ -51,16 +51,6 @@ const SUGGESTED_USERS = `
   }
 `;
 
-const EXPLORE_STATS = `
-  query ExploreStats {
-    exploreStats {
-      totalProjects
-      totalUsers
-      totalPlaylists
-    }
-  }
-`;
-
 export const getTrendingProjects = (offset = 0, limit = 6) =>
   gqlRequest(TRENDING_PROJECTS, { offset, limit }).then(d => d?.trendingProjects ?? { projects: [], total: 0, hasMore: false });
 
@@ -69,6 +59,3 @@ export const getPopularPlaylists = (offset = 0, limit = 6) =>
 
 export const getSuggestedUsers = (limit = 8) =>
   gqlRequest(SUGGESTED_USERS, { limit }).then(d => d?.suggestedUsers ?? []);
-
-export const getExploreStats = () =>
-  gqlRequest(EXPLORE_STATS).then(d => d?.exploreStats ?? { totalProjects: 0, totalUsers: 0, totalPlaylists: 0 });

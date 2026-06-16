@@ -84,39 +84,6 @@ export function AvatarBadge(props) {
   return <AvatarBadgeInner key={props.avatarUrl || ''} {...props} />;
 }
 
-// ─── Background ────────────────────────────────────────────────────────────
-
-export function Background() {
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      <div className="absolute inset-0 bg-zinc-950" />
-      {/* Noise texture */}
-      <div className="absolute inset-0 opacity-[0.018]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.75%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E")' }} />
-      {/* Gradient orbs */}
-      <div className="absolute -top-32 -left-32 size-[500px] bg-primary/8 rounded-full blur-[120px]" />
-      <div className="absolute top-1/2 -right-48 size-[400px] bg-accent-purple/6 rounded-full blur-[100px]" />
-      <div className="absolute -bottom-48 left-1/4 size-[500px] bg-accent-blue/5 rounded-full blur-[120px]" />
-    </div>
-  );
-}
-
-// ─── Tip footer ────────────────────────────────────────────────────────────
-
-export function TipFooter({ t, seed }) {
-  const getRandStr = (key) => {
-    const arr = t(key, { returnObjects: true });
-    if (Array.isArray(arr) && arr.length > 0) return arr[seed % arr.length];
-    return t(key);
-  };
-
-  return (
-    <div className="flex items-center justify-center gap-2 text-xs text-zinc-600 mt-6 animate-fade-in" style={{ animationDelay: '400ms' }}>
-      <Lightbulb className="size-3.5 text-warning/60 shrink-0" />
-      <p>{getRandStr('home.tips')}</p>
-    </div>
-  );
-}
-
 export function RedirectMessage({ from, t }) {
   const [visible, setVisible] = useState(!!from);
   const prevFromRef = useRef(from);

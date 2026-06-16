@@ -7,7 +7,6 @@ import { serializeToRubyMarkup, parseRubyMarkup } from './furigana';
 const KNOWN_LRC_META_KEYS = new Set(['ti','ar','al','au','by','lg','re','ve','length','offset','tool','id','hash','album']);
 
 /** No-op kept for call-site compatibility; DB is clean, no migration needed. */
-export function migrateLine(line) { return line; }
 export function migrateLines(lines) { return lines; }
 
 /**

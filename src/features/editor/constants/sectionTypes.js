@@ -18,12 +18,6 @@ export const SECTION_TYPES = [
   { id: 'outro',       labelKey: 'editor.sections.outro',       depth: 1 },
 ];
 
-/** IDs of depth-0 (root/structural) presets */
-export const ROOT_SECTION_IDS = new Set(SECTION_TYPES.filter(s => s.depth === 0).map(s => s.id));
-
-/** IDs of all built-in presets */
-export const SECTION_TYPE_IDS = new Set(SECTION_TYPES.map(s => s.id));
-
 /**
  * Returns the default depth for a given label string.
  * Falls back to 1 (child) for unknown labels.

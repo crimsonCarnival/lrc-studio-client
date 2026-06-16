@@ -1,4 +1,4 @@
-export const LANG_NAMES = {
+const LANG_NAMES = {
   en: { en: 'English', es: 'Inglés' },
   es: { en: 'Spanish', es: 'Español' },
 };
@@ -15,4 +15,3 @@ export function getLangLabel(code, currentLang) {
   return `${native} (${translated})`;
 }
 
-export const SAVED_ACCOUNT_KEY = 'lrc-studio-saved-account';

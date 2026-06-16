@@ -26,5 +26,3 @@ export function LazyImage({ src, alt, width, height, className, referrerPolicy =
     />
   );
 }
-
-export default LazyImage;

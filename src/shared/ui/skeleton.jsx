@@ -23,7 +23,7 @@ export function Spinner({ className, size = 16 }) {
 
 /* ─── Library / UploadsLibrary item skeleton ────────────────────────── */
 /* Mirrors: 9×9 source icon | title + badge | meta row | date */
-export function SkeletonCard({ className }) {
+function SkeletonCard({ className }) {
   return (
     <div className={cn("flex items-start gap-3 p-3 rounded-xl bg-zinc-800/40 border border-zinc-700/40", className)}>
       <Skeleton className="size-9 rounded-lg flex-shrink-0" />

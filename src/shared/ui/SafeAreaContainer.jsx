@@ -75,5 +75,3 @@ export const SafeAreaContainer = ({
     </div>
   );
 };
-
-export default SafeAreaContainer;

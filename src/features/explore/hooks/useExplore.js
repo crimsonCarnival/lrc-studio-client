@@ -3,7 +3,6 @@ import {
   getTrendingProjects,
   getPopularPlaylists,
   getSuggestedUsers,
-  getExploreStats,
 } from '../explore.service.js';
 
 export function useTrendingProjects(limit = 6) {
@@ -61,25 +60,6 @@ export function useSuggestedUsers(limit = 8) {
   }, [limit]);
 
   return { users, loading, error };
-}
-
-export function useExploreStats() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    getExploreStats()
-      .then(data => { if (!cancelled) setStats(data); })
-      .catch(err => { if (!cancelled) setError(err); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, []);
-
-  return { stats, loading, error };
 }
 
 export function usePaginatedProjects(limit = 12) {

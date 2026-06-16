@@ -24,12 +24,6 @@ const GET_PLAYLIST = `
   }
 `;
 
-const GET_SAVED_PLAYLISTS = `
-  query GetSavedPlaylists {
-    savedPlaylists { ${PLAYLIST_FIELDS} }
-  }
-`;
-
 const CREATE_PLAYLIST = `
   mutation CreatePlaylist($input: CreatePlaylistInput!) {
     createPlaylist(input: $input) { ${PLAYLIST_FIELDS} }
@@ -60,12 +54,6 @@ const REMOVE_PROJECT_FROM_PLAYLIST = `
   }
 `;
 
-const REORDER_PLAYLIST = `
-  mutation ReorderPlaylist($playlistId: ID!, $projectIds: [ID!]!) {
-    reorderPlaylist(playlistId: $playlistId, projectIds: $projectIds) { ${PLAYLIST_FIELDS} }
-  }
-`;
-
 const SAVE_PLAYLIST = `
   mutation SavePlaylist($playlistId: ID!) {
     savePlaylist(playlistId: $playlistId)
@@ -84,9 +72,6 @@ export const getPlaylists = (accountName) =>
 export const getPlaylist = (id) =>
   gqlRequest(GET_PLAYLIST, { id }).then(d => d?.playlist ?? null);
 
-export const getSavedPlaylists = () =>
-  gqlRequest(GET_SAVED_PLAYLISTS).then(d => d?.savedPlaylists ?? []);
-
 export const createPlaylist = (input) =>
   gqlRequest(CREATE_PLAYLIST, { input }).then(d => d?.createPlaylist);
 
@@ -101,9 +86,6 @@ export const addProjectToPlaylist = (playlistId, projectId) =>
 
 export const removeProjectFromPlaylist = (playlistId, projectId) =>
   gqlRequest(REMOVE_PROJECT_FROM_PLAYLIST, { playlistId, projectId }).then(d => d?.removeProjectFromPlaylist);
-
-export const reorderPlaylist = (playlistId, projectIds) =>
-  gqlRequest(REORDER_PLAYLIST, { playlistId, projectIds }).then(d => d?.reorderPlaylist);
 
 export const savePlaylist = (playlistId) =>
   gqlRequest(SAVE_PLAYLIST, { playlistId }).then(d => d?.savePlaylist);

@@ -17,5 +17,3 @@ export function LoadingSpinner({ size = 'md' }) {
     />
   );
 }
-
-export default LoadingSpinner;

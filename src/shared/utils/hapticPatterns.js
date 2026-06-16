@@ -2,7 +2,7 @@
  * Haptic vibration patterns for tactile feedback
  */
 
-export const HAPTIC_PATTERNS = {
+const HAPTIC_PATTERNS = {
   light: 10,
   medium: [50, 50],
   heavy: 100,
