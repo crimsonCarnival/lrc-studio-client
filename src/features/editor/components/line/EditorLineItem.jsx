@@ -14,6 +14,7 @@ import LineTextContent from './LineTextContent';
 import LineActionToolbar from './LineActionToolbar';
 import SectionPickerDropdown from './SectionPickerDropdown';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { validateLineSingers } from '@features/editor/utils/sections';
 
 const SINGER_BADGE_STYLES = [
   'text-zinc-400 border-zinc-700/60',               // 0: normal
@@ -248,6 +249,8 @@ const EditorLineItem = React.memo(({
 
   const distanceFromActive = displayedActiveIndex != null ? Math.abs(i - displayedActiveIndex) : 0;
   const staggerDelay = `${Math.min(distanceFromActive * 20, 150)}ms`;
+
+  const invalidSingers = sectionLines ? validateLineSingers(sectionLines, i) : [];
 
   // Section marker — full-width divider with editable label
   if (line.type === 'section') {
@@ -547,6 +550,11 @@ const EditorLineItem = React.memo(({
           />
         )}
       </div>
+      {invalidSingers.length > 0 && (
+        <Tip content={t('editor.invalidSingersWarning', { names: invalidSingers.join(', ') })}>
+          <span className="text-warning text-[10px] shrink-0 select-none">⚠</span>
+        </Tip>
+      )}
       <LineActionToolbar
         line={line}
         lineIndex={i}

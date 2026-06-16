@@ -162,6 +162,7 @@ export default {
   moveToSection: "Move to section",
   singerCustomPlaceholder: "Custom…",
   clearSingers: "Clear singers",
+  invalidSingersWarning: "Not in this section's roster: {{names}}",
   stampWordTip: "Stamp \"{{word}}\" ({{current}}/{{total}})",
   langPlaceholder: "Lang",
   enterLyricsPlaceholder: "Enter lyrics...",

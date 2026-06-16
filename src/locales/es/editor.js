@@ -147,6 +147,7 @@ export default {
   moveToSection: "Mover a sección",
   singerCustomPlaceholder: "Personalizado…",
   clearSingers: "Quitar cantantes",
+  invalidSingersWarning: "No está en el reparto de esta sección: {{names}}",
   stampWordTip: "Marcar \"{{word}}\" ({{current}}/{{total}})",
   langPlaceholder: "Idioma",
   enterLyricsPlaceholder: "Introduce la letra...",

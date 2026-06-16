@@ -97,7 +97,7 @@ export function flatIndexToSectionPos(lines, flatIdx) {
  * Return the singers[] of the section that contains lines[lineIdx].
  * Used to restrict singer picker options to the parent section's roster.
  */
-export function getParentSectionSingers(lines, lineIdx) {
+function getParentSectionSingers(lines, lineIdx) {
   for (let i = lineIdx; i >= 0; i--) {
     if (lines[i]?.type === 'section') {
       return Array.isArray(lines[i].singers) ? lines[i].singers : [];
@@ -116,4 +116,18 @@ export function validateLineSingers(lines, lineIdx) {
   const allowed = new Set(getParentSectionSingers(lines, lineIdx));
   if (allowed.size === 0) return []; // section has no singer roster → no restriction
   return line.singers.filter((s) => !allowed.has(s));
+}
+
+/**
+ * Singer options to offer for a bulk-assignment picker covering `indices`.
+ * Restricts to the parent section's roster only when every selected line
+ * shares the same non-empty roster — a mixed selection can't be restricted
+ * to a single roster safely, so it falls back to the full song-wide list.
+ */
+export function getSingerOptionsForSelection(lines, indices, songArtists) {
+  const rosters = indices.map((idx) => getParentSectionSingers(lines, idx));
+  const first = rosters[0] || [];
+  if (first.length === 0) return songArtists || [];
+  const sameForAll = rosters.every((r) => r.length === first.length && r.every((s, i) => s === first[i]));
+  return sameForAll ? first : (songArtists || []);
 }

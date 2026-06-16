@@ -4,6 +4,7 @@ import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { Pencil, Play, ChevronLeft, ChevronRight, Plus, MoreHorizontal, User, Layers } from 'lucide-react';
 import LineActionsPopover from './LineActionsPopover';
+import { getSingerOptionsForSelection } from '../../utils/sections';
 
 const LineActionToolbar = React.memo(({
   line,
@@ -220,7 +221,7 @@ const LineActionToolbar = React.memo(({
           <SingerAssignButton
             selectedLines={selectedLines}
             handleAssignSinger={handleAssignSinger}
-            songArtists={songArtists}
+            songArtists={getSingerOptionsForSelection(sectionLines, [...selectedLines], songArtists)}
           />
         )}
       </div>

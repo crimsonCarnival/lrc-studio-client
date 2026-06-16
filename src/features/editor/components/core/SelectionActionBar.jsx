@@ -6,6 +6,7 @@ import { Separator } from '@ui/separator';
 import { Eraser, ChevronLeft, ChevronRight, Trash2, X, ChevronsLeft, ChevronsRight, User, Layers } from 'lucide-react';
 import { Tip } from '@ui/tip';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { getSingerOptionsForSelection } from '@features/editor/utils/sections';
 
 const ROLE_LABELS_SHORT = ['1', '2', '3', '4'];
 const SINGER_CHIP_COLORS = [
@@ -105,7 +106,7 @@ export default function SelectionActionBar({
           <SingerBulkButton
             selectedLines={selectedLines}
             handleAssignSinger={handleAssignSinger}
-            songArtists={songArtists}
+            songArtists={lines ? getSingerOptionsForSelection(lines, [...selectedLines], songArtists) : songArtists}
           />
         </>
       )}
