@@ -86,6 +86,13 @@ export default {
     revokeAllOthersSuccess: "All other devices signed out.",
     noSessions: "No active sessions found.",
   },
+  heatmap: {
+    title: "Activity",
+    activities: "activities",
+    totalActivities: "activities in the last 90 days",
+    less: "Less",
+    more: "More",
+  },
   stats: {
     musicSynced: "Music Synced",
     totalLinesSynced: "Total Lines Synced",

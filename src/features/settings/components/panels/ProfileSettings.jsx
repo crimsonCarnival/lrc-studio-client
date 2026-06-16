@@ -6,6 +6,7 @@ import ProfileForm from './profile/ProfileForm';
 import AccountNameSection from './profile/AccountNameSection';
 import EmailSection from './profile/EmailSection';
 import ActionHistory from './profile/ActionHistory';
+import ActivityHeatmap from './profile/ActivityHeatmap';
 import StatsTab from './profile/StatsTab';
 import { ShowcaseEditor } from '@/features/badges/ShowcaseEditor';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -174,10 +175,19 @@ export default function ProfileSettings({ searchTerm }) {
 
         {/* Activity tab */}
         {activeTab === 'activity' && (
-          <section className="space-y-4">
-            <SectionHeading>Action History</SectionHeading>
-            <ActionHistory />
-          </section>
+          <>
+            <section className="space-y-4">
+              <SectionHeading>{t('profile.heatmap.title') || 'Activity'}</SectionHeading>
+              <ActivityHeatmap />
+            </section>
+
+            <Divider />
+
+            <section className="space-y-4">
+              <SectionHeading>Action History</SectionHeading>
+              <ActionHistory />
+            </section>
+          </>
         )}
 
         {/* Stats tab */}
