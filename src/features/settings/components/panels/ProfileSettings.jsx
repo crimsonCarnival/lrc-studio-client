@@ -5,7 +5,7 @@ import AvatarUpload from './profile/AvatarUpload';
 import ProfileForm from './profile/ProfileForm';
 import AccountNameSection from './profile/AccountNameSection';
 import EmailSection from './profile/EmailSection';
-import XpHistory from './profile/XpHistory';
+import ActionHistory from './profile/ActionHistory';
 import { ShowcaseEditor } from '@/features/badges/ShowcaseEditor';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { gqlRequest } from '@/app/graphql.client';
@@ -149,10 +149,10 @@ export default function ProfileSettings({ searchTerm }) {
 
         <Divider />
 
-        {/* XP History */}
+        {/* Action History */}
         <section className="space-y-4">
-          <SectionHeading>XP History</SectionHeading>
-          <XpHistory />
+          <SectionHeading>Action History</SectionHeading>
+          <ActionHistory />
         </section>
       </div>
     </div>

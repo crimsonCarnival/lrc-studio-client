@@ -104,7 +104,6 @@ export const authService = {
           accountNameChangeCount
           previousAccountNames { from to changedAt }
           emailHistory { from to changedAt }
-          xpHistory { type source delta totalXpAfter reason createdAt }
           ban { active reason until }
           appeal { text status submittedAt resolvedAt }
           wasJustUnbanned
