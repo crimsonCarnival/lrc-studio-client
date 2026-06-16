@@ -1,6 +1,7 @@
 import { useRef, useCallback, memo } from 'react';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
-import { Music, Video, Upload, FileText, Trash2, ExternalLink, Clock, Pencil, Loader2, Star, GitFork } from 'lucide-react';
+import { FileText, Trash2, ExternalLink, Clock, Pencil, Loader2, Star, GitFork, Video } from 'lucide-react';
+import { ProjectListCover } from '@/features/projects/components/ProjectListCover';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { useTranslation } from 'react-i18next';
@@ -8,12 +9,6 @@ import useConfirm from '@/shared/hooks/useConfirm';
 import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
 
 const SWIPE_THRESHOLD = 60;
-
-function SourceIcon({ source }) {
-  if (source === 'youtube') return <Video className="size-4 text-red-400" />;
-  if (source === 'local') return <Upload className="size-4 text-blue-400" />;
-  return <Music className="size-4 text-zinc-400" />;
-}
 
 /**
  * ProjectCard component for displaying a project
@@ -153,10 +148,12 @@ function ProjectCard({
           onTouchEnd={handleTouchEnd}
           className="w-full group flex items-start gap-3 p-3 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/80 border border-zinc-700/40 hover:border-zinc-600/60 transition-all duration-150 text-left cursor-pointer"
         >
-          {/* Cover or Source icon */}
-          <div className="size-9 rounded-lg bg-zinc-700/50 flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden">
-            <SourceIcon source={project.upload?.source} />
-          </div>
+          {/* Cover or genre placeholder */}
+          <ProjectListCover
+            coverImage={project.coverImage}
+            genre={project.metadata?.genre}
+            className="size-9 mt-0.5"
+          />
 
           {/* Info */}
           <div className="flex-1 min-w-0">
@@ -263,10 +260,12 @@ function ProjectCard({
         onTouchEnd={handleTouchEnd}
         className="w-full group relative flex items-start gap-3 p-3 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/80 border border-zinc-700/40 hover:border-zinc-600/60 transition-all duration-150 text-left cursor-pointer"
       >
-        {/* Cover or Source icon */}
-        <div className="size-9 rounded-lg bg-zinc-700/50 flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden">
-          <SourceIcon source={project.upload?.source} />
-        </div>
+        {/* Cover or genre placeholder */}
+        <ProjectListCover
+          coverImage={project.coverImage}
+          genre={project.metadata?.genre}
+          className="size-9 mt-0.5"
+        />
 
         {/* Info */}
         <div className="flex-1 min-w-0">

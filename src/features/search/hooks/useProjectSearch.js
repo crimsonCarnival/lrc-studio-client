@@ -19,6 +19,7 @@ const SEARCH_QUERY = `
         metadata {
           songName
           songArtist
+          genre
           tags
         }
       }

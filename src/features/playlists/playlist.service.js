@@ -7,7 +7,7 @@ const PLAYLIST_FIELDS = `
   user { id accountName displayName avatarUrl }
   projects {
     id projectId title starCount forkCount coverImage
-    metadata { songName songArtist }
+    metadata { songName songArtist genre }
     upload { source uploadUrl coverImage }
   }
 `;

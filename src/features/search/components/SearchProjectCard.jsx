@@ -1,26 +1,20 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Star, GitFork } from 'lucide-react';
+import { ProjectListCover } from '@/features/projects/components/ProjectListCover';
 
 export function SearchProjectCard({ project }) {
   const { t } = useTranslation();
   const { projectId, title, coverImage, starCount, forkCount, metadata, forkedFrom } = project;
   const displayTitle = metadata?.songName || title || 'Untitled';
   const artist = metadata?.songArtist;
-  const thumb = coverImage;
 
   return (
     <Link
       to={`/project/${projectId}`}
       className="flex gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 hover:bg-zinc-800/50 transition-all"
     >
-      {thumb && (
-        <img
-          src={thumb}
-          alt=""
-          className="w-12 h-12 rounded-lg object-cover shrink-0"
-        />
-      )}
+      <ProjectListCover coverImage={coverImage} genre={metadata?.genre} className="size-12" />
 
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-white text-sm truncate">{displayTitle}</p>
