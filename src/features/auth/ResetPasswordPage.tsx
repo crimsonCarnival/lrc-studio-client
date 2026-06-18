@@ -1,0 +1,237 @@
+import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import PasswordStrength from './components/PasswordStrength';
+import { authService } from '@/features/auth/services/auth.service';
+import toast from 'react-hot-toast';
+
+interface ValidateTokenResult {
+  valid?: boolean;
+  email?: string;
+  reason?: string;
+}
+
+export default function ResetPasswordPage() {
+  const { t } = useTranslation();
+  const { logout } = useAuthContext();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const token = searchParams.get('token');
+
+  const [email, setEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [validating, setValidating] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
+  const [tokenReason, setTokenReason] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const validateToken = async () => {
+      if (!token) {
+        setValidating(false);
+        setTokenReason('invalid');
+        return;
+      }
+
+      try {
+        const data = await authService.validateResetToken(token) as ValidateTokenResult;
+
+        if (data.valid) {
+          setEmail(data.email ?? '');
+          setTokenValid(true);
+        } else {
+          setTokenReason(data.reason || 'invalid');
+        }
+      } catch (err) {
+        setTokenReason('error');
+        console.error(err);
+      } finally {
+        setValidating(false);
+      }
+    };
+
+    validateToken();
+  }, [token]);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+
+    if (newPassword !== confirmPassword) {
+      setError(t('auth.resetPassword.passwordMismatch'));
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      await authService.resetPassword({
+        token: token ?? '',
+        newPassword,
+        confirmPassword,
+      });
+
+      setSuccess(true);
+      toast.success(t('auth.resetPassword.success'));
+      setTimeout(async () => {
+        await logout();
+        navigate('/login');
+      }, 2000);
+    } catch (err) {
+      setError((err as { body?: { error?: string } }).body?.error || 'Failed to reset password');
+      console.error(err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (validating) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full size-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-zinc-400">{t('auth.resetPassword.validating')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!tokenValid) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="max-w-md w-full p-8 bg-zinc-900 rounded-lg border border-zinc-800 text-center space-y-4">
+          <div className="text-destructive text-4xl">✕</div>
+          <h1 className="text-2xl font-semibold text-zinc-100">{t('auth.resetPassword.errorExpired')}</h1>
+          <p className="text-zinc-400">
+            {tokenReason === 'expired'
+              ? t('auth.resetPassword.errorInvalid')
+              : t('auth.resetPassword.errorAlreadyUsed')}
+          </p>
+          <button
+            onClick={() => navigate('/auth?tab=forgot')}
+            className="w-full py-2 bg-primary hover:bg-primary-dim text-zinc-950 font-medium rounded"
+          >
+            {t('auth.resetPassword.requestNewLink')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="max-w-md w-full p-8 bg-zinc-900 rounded-lg border border-zinc-800 text-center space-y-4">
+          <div className="text-emerald-500 text-4xl">✓</div>
+          <h1 className="text-2xl font-semibold text-zinc-100">{t('auth.resetPassword.success')}</h1>
+          <p className="text-zinc-400">{t('auth.resetPassword.successMessage')}</p>
+          <p className="text-sm text-zinc-500">{t('auth.resetPassword.redirecting')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen px-4">
+      <div className="max-w-md w-full p-6 lg:p-8 bg-zinc-900 rounded-lg border border-zinc-800 space-y-6">
+        <h1 className="text-2xl lg:text-xl font-semibold text-center text-zinc-100">{t('auth.resetPassword.title')}</h1>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <input
+              type="email"
+              value={email}
+              readOnly
+              disabled
+              className="w-full h-12 lg:h-10 px-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-zinc-400 placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 text-base lg:text-sm"
+            />
+          </div>
+          <div>
+            <input
+              type="password"
+              placeholder={t('auth.resetPassword.newPassword')}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              disabled={submitting}
+              className="w-full h-12 lg:h-10 px-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 text-base lg:text-sm"
+            />
+            <PasswordStrength password={newPassword} />
+          </div>
+
+          <div>
+            <input
+              type="password"
+              placeholder={t('auth.resetPassword.confirmPassword')}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              disabled={submitting}
+              className="w-full h-12 lg:h-10 px-4 bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-white placeholder-zinc-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 text-base lg:text-sm"
+            />
+            <AnimatePresence>
+              {confirmPassword && newPassword !== confirmPassword && (
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-destructive text-xs font-medium mt-1"
+                >
+                  {t('auth.resetPassword.passwordMismatch')}
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <AnimatePresence>
+            {error && (
+              <motion.p
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                className="text-destructive text-xs font-medium p-3 rounded-lg bg-red-500/10 border border-red-500/30"
+              >
+                {error}
+              </motion.p>
+            )}
+          </AnimatePresence>
+
+          <motion.button
+            type="submit"
+            disabled={submitting || !newPassword || newPassword.length < 8}
+            whileTap={{ scale: 0.98 }}
+            className="w-full h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-semibold text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 disabled:cursor-not-allowed focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
+          >
+            {submitting ? (
+              <div className="flex items-center gap-2 justify-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className="size-4 border-2 border-white/30 border-t-white rounded-full"
+                />
+                <span>{t('auth.resetPassword.sendingLink')}</span>
+              </div>
+            ) : (
+              t('auth.resetPassword.button')
+            )}
+          </motion.button>
+        </form>
+
+        <button
+          onClick={() => navigate('/login')}
+          className="w-full text-center text-zinc-400 hover:text-zinc-300 text-sm lg:text-xs"
+        >
+          {t('auth.resetPassword.backToLogin')}
+        </button>
+      </div>
+    </div>
+  );
+}

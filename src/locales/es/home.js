@@ -1,45 +1,56 @@
 export default {
-  welcome: [
-    "¡Bienvenido a LRC Studio, {{name}}!",
-    "¡Empecemos, {{name}}!",
-    "¡Es hora de crear magia, {{name}}!",
-    "¡{{name}} de vuelta!",
-    "Qué bueno verte, {{name}}",
-    "Bienvenido de nuevo, {{name}}",
-    "Hola, {{name}}"
-  ],
-  "welcome.morning": [
-    "¡Buenos días, {{name}}! 🌅",
-    "¡A levantarse y sincronizar, {{name}}!",
-    "¡El que madruga sincroniza antes, {{name}}!",
-    "Empieza tu mañana con música, {{name}}."
-  ],
-  "welcome.afternoon": [
-    "¡Buenas tardes, {{name}}! ☀️",
-    "¡Espero que tu día vaya bien, {{name}}!",
-    "¿Tomando un descanso musical, {{name}}?",
-    "Qué bueno verte esta tarde, {{name}}."
-  ],
-  "welcome.evening": [
-    "¡Buenas noches, {{name}}! 🌆",
-    "¿Relajándote con algunas letras, {{name}}?",
-    "¿Sesión nocturna de sincronización, {{name}}?",
-    "El momento perfecto para crear magia, {{name}}."
-  ],
-  "welcome.night": [
-    "¿Trasnochando con la música, {{name}}? 🌙",
-    "Letras a la luz de la luna, {{name}}?",
-    "La luna está fuera, y la música también, {{name}}.",
-    "Buenas noches, {{name}}. ¿Creando hasta tarde?"
-  ],
-  welcomeSub: [
-    "Crea letras perfectamente sincronizadas para tus canciones favoritas. Importa audio, carga letras y crea experiencias de karaoke inmersivas.",
-    "La forma más fácil de sincronizar letras con tu música. Comienza tu primer proyecto para experimentar el flujo.",
-    "Dale vida a tus canciones favoritas. Sube un archivo de audio o pega un enlace de YouTube para empezar.",
-    "¿Listo para sincronizar algunas letras?",
-    "¿En qué estamos trabajando hoy?",
-    "Vamos a crear algo asombroso."
-  ],
+  welcome: {
+    morning: [
+      "¡Buenos días, {{name}}!",
+      "¡A levantarse y sincronizar, {{name}}!",
+      "¡El que madruga sincroniza antes, {{name}}!",
+      "Empieza tu mañana con música, {{name}}."
+    ],
+    afternoon: [
+      "¡Buenas tardes, {{name}}!",
+      "¡Espero que tu día vaya bien, {{name}}!",
+      "¿Tomando un descanso musical, {{name}}?",
+      "Qué bueno verte esta tarde, {{name}}."
+    ],
+    evening: [
+      "¡Buenas noches, {{name}}!",
+      "¿Relajándote con algunas letras, {{name}}?",
+      "¿Sesión nocturna de sincronización, {{name}}?",
+      "El momento perfecto para crear magia, {{name}}."
+    ],
+    night: [
+      "¿Trasnochando con la música, {{name}}?",
+      "Letras a la luz de la luna, {{name}}?",
+      "La luna está fuera, y la música también, {{name}}.",
+      "Buenas noches, {{name}}. ¿Creando hasta tarde?"
+    ],
+  },
+  welcomeSub: {
+    morning: [
+      "Empieza tu mañana con una buena sesión de sincronización.",
+      "Buena mañana para sincronizar algunas letras.",
+      "Café en una mano, letras en la otra.",
+      "Vamos a arrancar el día con música."
+    ],
+    afternoon: [
+      "Buena tarde para avanzar con la sincronización.",
+      "Tómate un descanso y sincroniza unas líneas.",
+      "A mitad del día, momento perfecto para letras.",
+      "Sigamos con el ritmo esta tarde."
+    ],
+    evening: [
+      "Cierra la tarde sincronizando algunas letras.",
+      "Buen momento para terminar ese proyecto.",
+      "Avancemos un poco antes de que termine el día.",
+      "Sincroniza unas líneas antes de descansar."
+    ],
+    night: [
+      "¿Sesión de sincronización nocturna?",
+      "Horas tranquilas, perfectas para concentrarse.",
+      "Trasnochando con algunas letras.",
+      "La noche es tuya, vamos a sincronizar algo."
+    ],
+  },
   noProjects: "No tienes proyectos",
   createNew: "Crear Nuevo Proyecto",
   createNewDesc: "Empieza desde cero con un nuevo archivo de audio o enlace de YouTube.",

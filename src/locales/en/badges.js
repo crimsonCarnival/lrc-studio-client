@@ -1,25 +1,4 @@
 export default {
-  // ─── Badge labels & tips ────────────────────────────────────────────────────
-  og:          { label: 'OG',            tip: 'One of the first 100 users to join'           },
-  pioneer:     { label: 'Pioneer',       tip: 'Among the first 1,000 users'                  },
-  syncer10h:   { label: 'Synced 10h',    tip: '10 hours of lyrics synced'                    },
-  syncer100h:  { label: 'Synced 100h',   tip: '100 hours of lyrics synced'                   },
-  wordsmith1k: { label: 'Wordsmith',     tip: '1,000 individual words timestamped'            },
-  wordsmith50k:{ label: 'Lyric Master',  tip: '50,000 words timestamped'                     },
-  karaoke100:  { label: 'Karaoke Hero',  tip: '100 lyric lines with word-level timing'        },
-  karaoke1k:   { label: 'Stage Star',    tip: '1,000 lyric lines with word-level timing'      },
-  century:     { label: 'Century',       tip: '100 projects created'                          },
-  published10: { label: 'Publisher',     tip: '10 public projects published'                  },
-  beloved:     { label: 'Beloved',       tip: '50 stars received across your work'            },
-  influential: { label: 'Influential',   tip: 'Your work has been forked 25 times'            },
-  following50: { label: 'Well Connected',tip: '50 followers'                                  },
-  uploader:    { label: 'Uploader',      tip: '10 media files uploaded'                       },
-  veteran:     { label: 'Veteran',       tip: 'Account is at least 1 year old'                },
-  streak7:     { label: 'On a Roll',     tip: '7-day activity streak'                         },
-  streak30:    { label: 'Unstoppable',   tip: '30-day activity streak'                        },
-  verified:    { label: 'Verified',      tip: 'Verified email address'                        },
-  admin:       { label: 'Staff',         tip: 'LRC Studio staff member'                       },
-
   // ─── Rarity labels ──────────────────────────────────────────────────────────
   rarity: {
     common:    'Common',
@@ -82,6 +61,6 @@ export default {
     day_other:        '{{count}} day streak',
     syncedLines:      'Synced lines',
     forks:            'Forks received',
-  minutesSyncedNote: "Own projects only — forks excluded",
+    minutesSyncedNote: "Own projects only — forks excluded",
   },
 };

@@ -142,22 +142,22 @@ const PanelReorderGroup = React.memo(function PanelReorderGroup({
   );
 });
 
-function EditorContainer({ loadProject, activeProjectId, isProjectLoading, projectUserId, user, navigate, children }) {
+function EditorContainer({ loadProject, activepublicId, isProjectLoading, projectUserId, user, navigate, children }) {
   const { id } = useParams();
 
   useEffect(() => {
-    if (id && id !== 'new' && id !== 'local' && id !== 'fork' && id !== activeProjectId) {
+    if (id && id !== 'new' && id !== 'local' && id !== 'fork' && id !== activepublicId) {
       loadProject(id);
     }
     // loadProject is stable (useCallback); route param id is the true trigger
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, activeProjectId]);
+  }, [id, activepublicId]);
 
   useEffect(() => {
-    if (!isProjectLoading && projectUserId && activeProjectId === id && user && user.id !== projectUserId) {
+    if (!isProjectLoading && projectUserId && activepublicId === id && user && user.id !== projectUserId) {
       navigate(`/project/${id}`);
     }
-  }, [isProjectLoading, projectUserId, activeProjectId, id, user, navigate]);
+  }, [isProjectLoading, projectUserId, activepublicId, id, user, navigate]);
 
   return children;
 }
@@ -184,8 +184,8 @@ function ForkHandler({ appState, navigate }) {
     import('@/app/api').then(({ projects }) => {
       projects.clone(id)
         .then((res) => {
-          loadProject(res.projectId);
-          navigate(`/project/${res.projectId}/edit`);
+          loadProject(res.publicId);
+          navigate(`/project/${res.publicId}/edit`);
           import('react-hot-toast').then(({ default: toast }) => {
             toast.success(t('project.cloneSuccess') || 'Project copied successfully!');
           });
@@ -220,7 +220,7 @@ export function AppRouter({
   const routerLocation = useLocation();
   const {
     loadProject,
-    activeProjectId,
+    activepublicId,
     isProjectLoading,
     projectUserId,
     lines,
@@ -346,7 +346,7 @@ export function AppRouter({
     editorMode, exportToUrl, isSharedProject,
     sharedReadOnly, setSharedReadOnly,
     shareModal, setShareModal, hasMedia,
-    isPlaying, playbackSpeed, activeProjectId,
+    isPlaying, playbackSpeed, activepublicId,
     project: pendingProject, projectMetadata,
   }), [
     lines, setLines, playbackPosition,
@@ -354,7 +354,7 @@ export function AppRouter({
     editorMode, exportToUrl, isSharedProject,
     sharedReadOnly, setSharedReadOnly,
     shareModal, setShareModal, hasMedia,
-    isPlaying, playbackSpeed, activeProjectId,
+    isPlaying, playbackSpeed, activepublicId,
     pendingProject, projectMetadata,
   ]);
 
@@ -417,9 +417,9 @@ export function AppRouter({
       <Route path="library" element={
         <Suspense fallback={<div className="glass rounded-xl p-5 flex-1"><SkeletonList count={3} /></div>}>
           <Library
-            onOpenProject={(projectId) => {
-              loadProject(projectId);
-              navigate(`/project/${projectId}/edit`);
+            onOpenProject={(publicId) => {
+              loadProject(publicId);
+              navigate(`/project/${publicId}/edit`);
             }}
             onBack={() => navigate(-1)}
           />
@@ -434,7 +434,7 @@ export function AppRouter({
       } />
       <Route path="project/fork/:id" element={<ForkHandler appState={appState} navigate={navigate} />} />
       <Route path="project/:id/edit" element={
-        <EditorContainer loadProject={loadProject} activeProjectId={activeProjectId} isProjectLoading={isProjectLoading} projectUserId={projectUserId} user={user} navigate={navigate}>
+        <EditorContainer loadProject={loadProject} activepublicId={activepublicId} isProjectLoading={isProjectLoading} projectUserId={projectUserId} user={user} navigate={navigate}>
           {loadError === 'project' ? (
             <NotFoundPage type="project" />
           ) : isProjectLoading ? (
@@ -502,7 +502,7 @@ export function AppRouter({
           />
         </div>
       } />
-      <Route path="project/:projectId" element={
+      <Route path="project/:publicId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
           <PublicProjectViewPage />
         </Suspense>

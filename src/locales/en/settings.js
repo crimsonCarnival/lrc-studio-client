@@ -109,6 +109,7 @@ export default {
     downloadFormatDesc: "Default file format for downloads",
     timestampPrecision: "LRC Precision",
     timestampPrecisionDesc: "Precision of timestamps in exported LRC files",
+    timestampPrecisionFollowsEditor: "Follows the Editor setting",
     wordTimestampPrecision: "Word Precision",
     wordTimestampPrecisionDesc: "Precision of enhanced word-level timestamps",
     filenamePattern: "Filename Pattern",

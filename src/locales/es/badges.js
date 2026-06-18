@@ -1,24 +1,5 @@
 export default {
-  og:          { label: 'OG',               tip: 'Uno de los primeros 100 usuarios en unirse'         },
-  pioneer:     { label: 'Pionero',          tip: 'Entre los primeros 1.000 usuarios'                  },
-  syncer10h:   { label: 'Sincronizado 10h', tip: '10 horas de letras sincronizadas'                   },
-  syncer100h:  { label: 'Sincronizado 100h',tip: '100 horas de letras sincronizadas'                  },
-  wordsmith1k: { label: 'Artesano',         tip: '1.000 palabras con marca de tiempo'                 },
-  wordsmith50k:{ label: 'Maestro lírico',   tip: '50.000 palabras con marca de tiempo'                },
-  karaoke100:  { label: 'Héroe del karaoke',tip: '100 líneas con tiempo a nivel de palabra'            },
-  karaoke1k:   { label: 'Estrella',         tip: '1.000 líneas con tiempo a nivel de palabra'         },
-  century:     { label: 'Centenario',       tip: '100 proyectos creados'                              },
-  published10: { label: 'Publicador',       tip: '10 proyectos públicos publicados'                   },
-  beloved:     { label: 'Amado',            tip: '50 estrellas recibidas en tu trabajo'               },
-  influential: { label: 'Influyente',       tip: 'Tu trabajo ha sido bifurcado 25 veces'              },
-  following50: { label: 'Bien conectado',   tip: '50 seguidores'                                      },
-  uploader:    { label: 'Subidor',          tip: '10 archivos multimedia subidos'                     },
-  veteran:     { label: 'Veterano',         tip: 'Cuenta con al menos 1 año de antigüedad'            },
-  streak7:     { label: 'En racha',         tip: 'Racha de actividad de 7 días'                       },
-  streak30:    { label: 'Imparable',        tip: 'Racha de actividad de 30 días'                      },
-  verified:    { label: 'Verificado',       tip: 'Correo electrónico verificado'                      },
-  admin:       { label: 'Staff',            tip: 'Miembro del equipo de LRC Studio'                   },
-
+  // ─── Rarity labels ──────────────────────────────────────────────────────────
   rarity: {
     common:    'Común',
     uncommon:  'Poco común',
@@ -27,6 +8,7 @@ export default {
     legendary: 'Legendario',
   },
 
+  // ─── Showcase ───────────────────────────────────────────────────────────────
   showcase: {
     title:           'Vitrina',
     editorTitle:     'Vitrina de logros',
@@ -53,6 +35,7 @@ export default {
     holders_other:   '{{count}} poseedores',
   },
 
+  // ─── Leaderboard ────────────────────────────────────────────────────────────
   leaderboard: {
     title:         'Clasificación',
     subtitle:      'Los mejores creadores por minutos sincronizados',
@@ -75,6 +58,6 @@ export default {
     day_other:     'Racha de {{count}} días',
     syncedLines:   'Líneas sincronizadas',
     forks:         'Bifurcaciones recibidas',
-  minutesSyncedNote: "Solo proyectos propios — sin bifurcaciones",
+    minutesSyncedNote: "Solo proyectos propios — sin bifurcaciones",
   },
 };

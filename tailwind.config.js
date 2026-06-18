@@ -23,18 +23,6 @@ export default {
       size: {
         'touch-target': '2.75rem', // 44px minimum
       },
-      zIndex: {
-        'base': 'var(--z-base)',
-        'raised': 'var(--z-raised)',
-        'player': 'var(--z-player)',
-        'nav': 'var(--z-nav)',
-        'mobile-overlay': 'var(--z-mobile-overlay)',
-        'sticky': 'var(--z-sticky)',
-        'modal-backdrop': 'var(--z-modal-backdrop)',
-        'modal': 'var(--z-modal)',
-        'popover': 'var(--z-popover)',
-        'overlay': 'var(--z-overlay)',
-      },
       boxShadow: {
         'sm': 'var(--shadow-sm)',
         'card': 'var(--shadow-card)',

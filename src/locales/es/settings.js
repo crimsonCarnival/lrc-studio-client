@@ -109,6 +109,7 @@ export default {
     downloadFormatDesc: "Formato de archivo predeterminado para descargas",
     timestampPrecision: "Precisión LRC",
     timestampPrecisionDesc: "Precisión de los tiempos en archivos LRC exportados",
+    timestampPrecisionFollowsEditor: "Sigue el ajuste del Editor",
     wordTimestampPrecision: "Precisión de palabras",
     wordTimestampPrecisionDesc: "Precisión de los tiempos a nivel de palabra",
     filenamePattern: "Patrón de nombre de archivo",

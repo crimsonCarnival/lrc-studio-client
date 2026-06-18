@@ -62,7 +62,17 @@ export async function submitSudoPasskey() {
 /** Called by the modal on cancel/escape — rejects the awaiting action. */
 export function cancelSudo() {
   emit(false);
-  if (pending) { pending.reject(new Error('sudo_cancelled')); pending = null; }
+  if (pending) {
+    const err = new Error('sudo_cancelled');
+    err.code = 'sudo_cancelled';
+    pending.reject(err);
+    pending = null;
+  }
+}
+
+/** True if `err` is a rejection from the user dismissing the sudo prompt (not a real failure). */
+export function isSudoCancelled(err) {
+  return err?.code === 'sudo_cancelled';
 }
 
 /**

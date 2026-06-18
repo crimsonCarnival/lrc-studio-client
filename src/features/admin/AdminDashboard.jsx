@@ -1,9 +1,11 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { admin } from '@/app/api';
+import { isSudoCancelled } from './services/sudo.js';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Button } from '@ui/button';
-import { ShieldAlert, RefreshCw, Users, Globe, History, Award, Zap } from 'lucide-react';
+import { ShieldAlert, RefreshCw, Users, Globe, History, Award, Zap, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import BanUserModal from './BanUserModal';
@@ -14,12 +16,21 @@ import AdminIpsTab from './AdminIpsTab';
 import AdminDevicesTab from './AdminDevicesTab';
 import AdminAuditTab from './AdminAuditTab';
 import AdminBadgesTab from './AdminBadgesTab';
+import AdminLevelsTab from './AdminLevelsTab';
 import SudoPasswordModal from './SudoPasswordModal';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
   const { user: currentUser } = useAuthContext();
-  const [activeTab, setActiveTab] = useState('users'); // users, ips, devices, audit, badges
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'users'; // users, ips, devices, audit, badges, levels, xp
+
+  const setActiveTab = (tab) => {
+    setSearchParams(prev => {
+      prev.set('tab', tab);
+      return prev;
+    }, { replace: true });
+  };
 
   // Data States
   const [users, setUsers] = useState([]);
@@ -50,7 +61,6 @@ export default function AdminDashboard() {
   const statsFetchedRef = useRef(false);
 
   // Bulk XP state
-  const [xpPanel, setXpPanel] = useState(false);
   const [xpBulkAmount, setXpBulkAmount] = useState('500');
   const [xpBulkTarget, setXpBulkTarget] = useState('all'); // 'all' | 'ids'
   const [xpBulkIds, setXpBulkIds] = useState(''); // comma-separated usernames/ids
@@ -141,7 +151,7 @@ export default function AdminDashboard() {
     else if (activeTab === 'ips') fetchIps();
     else if (activeTab === 'devices') fetchDevices();
     else if (activeTab === 'audit') fetchAuditLogs();
-    // badges tab manages its own data fetching
+    // badges and levels tabs manage their own data fetching
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
@@ -178,7 +188,7 @@ export default function AdminDashboard() {
       toast.success(t(action === 'grant' ? 'admin.xp.grantedXp' : 'admin.xp.revokedXp', { amount, count: result.affected }));
       refreshUsersFromStart();
     } catch (err) {
-      toast.error(err?.message || t('admin.xp.failedAdjust'));
+      if (!isSudoCancelled(err)) toast.error(t('admin.xp.failedAdjust'));
     }
   };
 
@@ -194,7 +204,6 @@ export default function AdminDashboard() {
         if (!ids.length) { toast.error(t('admin.xp.enterUserIds')); setXpBulkSaving(false); return; }
         await handleAdjustXP(action, amount, 'users', undefined, ids);
       }
-      setXpPanel(false);
     } finally {
       setXpBulkSaving(false);
     }
@@ -218,8 +227,8 @@ export default function AdminDashboard() {
         toast.success(t('admin.toast.unbannedSuccess', { name: user.displayName || user.accountName }));
         setAppealModal({ isOpen: false, user: null });
         refreshUsersFromStart();
-      } catch {
-        toast.error(t('admin.toast.statusError'));
+      } catch (err) {
+        if (!isSudoCancelled(err)) toast.error(t('admin.toast.statusError'));
       }
     } else {
       setBanModal({ isOpen: true, user });
@@ -232,8 +241,8 @@ export default function AdminDashboard() {
       toast.success(t('admin.toast.appealRejectedSuccess', { name: user.displayName || user.accountName }));
       setAppealModal({ isOpen: false, user: null });
       refreshUsersFromStart();
-    } catch {
-      toast.error(t('admin.toast.statusError'));
+    } catch (err) {
+      if (!isSudoCancelled(err)) toast.error(t('admin.toast.statusError'));
     }
   };
 
@@ -242,8 +251,8 @@ export default function AdminDashboard() {
       await admin.reactivateUser(user.id || user._id);
       toast.success(t('admin.toast.reactivateSuccess', { name: user.displayName || user.accountName }));
       refreshUsersFromStart();
-    } catch {
-      toast.error(t('admin.toast.statusError'));
+    } catch (err) {
+      if (!isSudoCancelled(err)) toast.error(t('admin.toast.statusError'));
     }
   };
 
@@ -255,8 +264,8 @@ export default function AdminDashboard() {
       toast.success(t('admin.toast.bannedSuccess', { name: user.displayName || user.accountName }));
       refreshUsersFromStart();
       fetchStats();
-    } catch {
-      toast.error(t('admin.toast.statusError'));
+    } catch (err) {
+      if (!isSudoCancelled(err)) toast.error(t('admin.toast.statusError'));
     }
   };
 
@@ -285,8 +294,8 @@ export default function AdminDashboard() {
       setIpForm({ ip: '', reason: '' });
       fetchIps();
       fetchStats();
-    } catch {
-      toast.error(t('admin.toast.ipBlockError'));
+    } catch (err) {
+      if (!isSudoCancelled(err)) toast.error(t('admin.toast.ipBlockError'));
     }
   };
 
@@ -303,8 +312,8 @@ export default function AdminDashboard() {
       setDeviceForm({ deviceId: '', reason: '' });
       fetchDevices();
       fetchStats();
-    } catch {
-      toast.error(t('admin.toast.deviceBlockError'));
+    } catch (err) {
+      if (!isSudoCancelled(err)) toast.error(t('admin.toast.deviceBlockError'));
     }
   };
 
@@ -336,8 +345,8 @@ export default function AdminDashboard() {
         fetchStats();
       }
       refreshUsersFromStart();
-    } catch {
-      toast.error(t('admin.toast.statusError'));
+    } catch (err) {
+      if (!isSudoCancelled(err)) toast.error(t('admin.toast.statusError'));
     }
   };
 
@@ -353,71 +362,7 @@ export default function AdminDashboard() {
       {/* Stats Cards */}
       <AdminStatsCards stats={stats} />
 
-      {/* Bulk XP panel */}
-      <div className="mb-4">
-        <button
-          onClick={() => setXpPanel(p => !p)}
-          className="flex items-center gap-2 text-xs font-semibold text-amber-500/80 hover:text-amber-400 transition-colors"
-        >
-          <Zap className="size-3.5" />
-          {xpPanel ? t('admin.xp.hideManager') : t('admin.xp.manageXp')}
-        </button>
-        {xpPanel && (
-          <div className="mt-2 p-4 rounded-xl border border-amber-500/20 bg-amber-500/5 flex flex-col sm:flex-row gap-3 items-start sm:items-end">
-            <label className="flex flex-col gap-1 shrink-0">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.amount')}</span>
-              <input
-                type="number"
-                min={1}
-                value={xpBulkAmount}
-                onChange={e => setXpBulkAmount(e.target.value)}
-                className="w-24 h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500/50"
-              />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.target')}</span>
-              <select
-                value={xpBulkTarget}
-                onChange={e => setXpBulkTarget(e.target.value)}
-                className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 focus:outline-none focus:border-amber-500/50"
-              >
-                <option value="all">{t('admin.xp.allUsers')}</option>
-                <option value="ids">{t('admin.xp.specificUsers')}</option>
-              </select>
-            </label>
-            {xpBulkTarget === 'ids' && (
-              <label className="flex flex-col gap-1 flex-1 min-w-[180px]">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.userIds')}</span>
-                <input
-                  type="text"
-                  value={xpBulkIds}
-                  onChange={e => setXpBulkIds(e.target.value)}
-                  placeholder={t('admin.xp.usernamePlaceholder')}
-                  className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50 w-full"
-                />
-              </label>
-            )}
-            <div className="flex gap-2 shrink-0">
-              <button
-                onClick={() => handleBulkXP('grant')}
-                disabled={xpBulkSaving}
-                className="h-9 px-4 text-sm font-semibold rounded-lg bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors disabled:opacity-50"
-              >
-                {t('admin.xp.grantXp')}
-              </button>
-              <button
-                onClick={() => handleBulkXP('revoke')}
-                disabled={xpBulkSaving}
-                className="h-9 px-4 text-sm font-semibold rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors disabled:opacity-50"
-              >
-                {t('admin.xp.revokeXp')}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Tab bar — underline style */}
+      {/* Tab bar */}
       <div className="flex items-center gap-0 border-b border-zinc-800/60 contrast-more:border-zinc-600 mb-4 overflow-x-auto">
         {[
           { id: 'users',   icon: Users,       label: t('admin.dashboard.tabs.users') },
@@ -425,6 +370,8 @@ export default function AdminDashboard() {
           { id: 'devices', icon: ShieldAlert, label: t('admin.dashboard.tabs.deviceBlocklist') },
           { id: 'audit',   icon: History,     label: t('admin.dashboard.tabs.auditLogs') },
           { id: 'badges',  icon: Award,       label: t('admin.dashboard.tabs.badges') },
+          { id: 'levels',  icon: Zap,         label: t('admin.dashboard.tabs.levels') },
+          { id: 'xp',      icon: Sparkles,    label: t('admin.dashboard.tabs.xp') },
         ].map(tab => (
           <button
             key={tab.id}
@@ -495,6 +442,86 @@ export default function AdminDashboard() {
           <AdminBadgesTab />
         )}
 
+        {activeTab === 'levels' && (
+          <AdminLevelsTab />
+        )}
+
+        {activeTab === 'xp' && (
+          <div className="flex flex-col gap-6 max-w-xl">
+            {/* Header */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-4 text-amber-400" />
+                <h2 className="text-sm font-semibold text-zinc-200">{t('admin.xp.sectionTitle')}</h2>
+              </div>
+              <p className="text-xs text-zinc-500">{t('admin.xp.sectionDescription')}</p>
+            </div>
+
+            {/* Controls card */}
+            <div className="p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 flex flex-col gap-4">
+              {/* Amount + Target row */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.amount')}</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={xpBulkAmount}
+                    onChange={e => setXpBulkAmount(e.target.value)}
+                    className="w-28 h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500/50"
+                  />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.target')}</span>
+                  <select
+                    value={xpBulkTarget}
+                    onChange={e => setXpBulkTarget(e.target.value)}
+                    className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 focus:outline-none focus:border-amber-500/50"
+                  >
+                    <option value="all">{t('admin.xp.allUsers')}</option>
+                    <option value="ids">{t('admin.xp.specificUsers')}</option>
+                  </select>
+                </label>
+              </div>
+
+              {/* User IDs input — shown only for specific-users target */}
+              {xpBulkTarget === 'ids' && (
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.userIds')}</span>
+                  <input
+                    type="text"
+                    value={xpBulkIds}
+                    onChange={e => setXpBulkIds(e.target.value)}
+                    placeholder={t('admin.xp.usernamePlaceholder')}
+                    className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50"
+                  />
+                </label>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex gap-3 pt-1">
+                <button
+                  onClick={() => handleBulkXP('grant')}
+                  disabled={xpBulkSaving}
+                  className="flex items-center gap-2 h-9 px-5 text-sm font-semibold rounded-xl bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors disabled:opacity-50"
+                >
+                  <Sparkles className="size-3.5" />
+                  {t('admin.xp.grantXp')}
+                </button>
+                <button
+                  onClick={() => handleBulkXP('revoke')}
+                  disabled={xpBulkSaving}
+                  className="flex items-center gap-2 h-9 px-5 text-sm font-semibold rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors disabled:opacity-50"
+                >
+                  {t('admin.xp.revokeXp')}
+                </button>
+                {xpBulkSaving && (
+                  <span className="self-center size-4 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Confirm Action Modal */}

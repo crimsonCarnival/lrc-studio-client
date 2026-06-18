@@ -542,6 +542,11 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
             {/* Cover Image + Privacy toggle — same row */}
             <div className="flex items-center gap-2 shrink-0 mt-auto">
+              {coverImage ? (
+                <div className="relative w-10 h-10 shrink-0 rounded-xl overflow-hidden border border-zinc-700/50 bg-zinc-800/50">
+                  <img src={coverImage} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+                </div>
+              ) : null}
               <FloatingInput
                 id="cover-image"
                 type="text"

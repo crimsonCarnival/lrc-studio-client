@@ -17,6 +17,19 @@ function _getFormatter(locale, options) {
   return _formattersCache.get(key);
 }
 
+/**
+ * Gets the current hour (0-23) in the given timezone ('auto' uses the system timezone).
+ */
+export function getHourInTimezone(timezone) {
+  if (!timezone || timezone === 'auto') return new Date().getHours();
+  try {
+    const hourStr = _getFormatter('en', { timeZone: timezone, hour: 'numeric', hourCycle: 'h23' }).format(new Date());
+    return parseInt(hourStr, 10);
+  } catch {
+    return new Date().getHours();
+  }
+}
+
 export function formatInTimezone(date, timezone, options = {}, locale = 'en') {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) return '';

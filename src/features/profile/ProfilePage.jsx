@@ -6,7 +6,7 @@ const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import toast from 'react-hot-toast';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
-import { Star, GitFork, Music, PlayCircle, Settings, Pencil, Trash2, Timer, FolderOpen, Trophy, Lock } from 'lucide-react';
+import { Star, GitFork, Music, PlayCircle, Settings, Pencil, Trash2, Timer, FolderOpen, Trophy, Lock, Activity, BarChart3, Music2, ChevronRight } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { getPublicProfile, followUser, unfollowUser } from './profile.service';
@@ -19,6 +19,24 @@ import { ShowcasedBadges } from '@/features/badges/ShowcasedBadges';
 import { projects } from '@/app/api';
 import ProjectSetupModal from '@/features/editor/components/setup/ProjectSetupModal';
 import useConfirm from '@/shared/hooks/useConfirm';
+import { Tip } from '@/shared/ui/tip';
+import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
+import { ThemedShineBorder } from '@ui/themed-shine-border';
+import { formatDistanceToNow } from 'date-fns';
+import { enUS, es } from 'date-fns/locale';
+
+const DATE_FNS_LOCALES = { en: enUS, es };
+
+function formatRelativeTime(dateStr, locale = 'en') {
+  try {
+    return formatDistanceToNow(new Date(dateStr), {
+      addSuffix: true,
+      locale: DATE_FNS_LOCALES[locale] ?? enUS,
+    });
+  } catch {
+    return '';
+  }
+}
 
 function AvatarBadge({ avatarUrl, name, size = 'lg' }) {
   const sizeClass = size === 'lg' ? 'size-24 text-4xl rounded-[1.5rem]' : 'size-16 text-2xl rounded-xl';
@@ -39,10 +57,12 @@ function AvatarBadge({ avatarUrl, name, size = 'lg' }) {
 }
 
 function ProjectCard({ project, isOwner, onEdit, onDelete }) {
-  const { t } = useTranslation();
-  const { title, projectId, starCount, forkCount, metadata, upload, public: isPublic } = project;
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const { title, publicId, upload, public: isPublic, coverImage } = project;
   const isYoutube = upload?.source === 'youtube';
   const isPrivate = isOwner && isPublic === false;
+  const hasCover = !!coverImage;
 
   const handleEdit = (e) => {
     e.preventDefault();
@@ -57,12 +77,15 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }) {
   };
 
   return (
-    <Link
-      to={`/project/${projectId}`}
-      className="glass rounded-2xl p-4 flex flex-col gap-2 hover:bg-white/5 transition-colors group relative"
+    <button
+      type="button"
+      onClick={() => navigate(`/project/${publicId}${isOwner ? '/edit' : ''}`)}
+      className="group relative glass rounded-2xl overflow-hidden text-left hover:border-primary/30 transition-all cursor-pointer focus:ring-1 focus:ring-primary/30 outline-none animate-fade-in contrast-more:border-zinc-600 w-full"
     >
+      <ThemedShineBorder />
+      
       {isOwner && (
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10 bg-black/40 backdrop-blur-sm rounded-lg p-1">
+        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-20 bg-black/40 backdrop-blur-sm rounded-lg p-1">
           <button onClick={handleEdit} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" aria-label={t('profile.editProject')}>
             <Pencil className="size-3.5" />
           </button>
@@ -71,37 +94,45 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }) {
           </button>
         </div>
       )}
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
-          {title}
-        </h3>
-        <div className="flex items-center gap-1 shrink-0">
+
+      <div className={`relative ${hasCover ? 'h-20' : 'h-12 bg-gradient-to-br from-zinc-900 to-zinc-800/50 flex items-center justify-center'} overflow-hidden`}>
+        {hasCover ? (
+          <>
+            <img src={coverImage} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 motion-reduce:group-hover:scale-100 transition-transform duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
+          </>
+        ) : (
+          <Music2 className="size-4 text-zinc-600" />
+        )}
+        {/* Source indicator */}
+        <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
           {isPrivate && (
-            <Lock className="size-3.5 text-muted-foreground" aria-label={t('profile.privateProject')} />
+            <Lock className="size-3.5 text-zinc-300 drop-shadow-md" aria-label={t('profile.privateProject')} />
           )}
-          {isYoutube ? (
-            <PlayCircle className="size-4 text-red-400" />
-          ) : (
-            <Music className="size-4 text-muted-foreground" />
-          )}
+          {isYoutube
+            ? <YoutubeIcon className="size-4 drop-shadow-md" />
+            : hasCover ? <Music2 className="size-3 text-primary/60 drop-shadow-md" /> : null}
         </div>
       </div>
-      {(metadata?.songName || metadata?.songArtist) && (
-        <p className="text-xs text-muted-foreground line-clamp-1">
-          {[metadata.songName, metadata.songArtist].filter(Boolean).join(' · ')}
-        </p>
-      )}
-      <div className="flex items-center gap-3 mt-auto pt-1">
-        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Star className="size-3" />
-          {starCount ?? 0}
-        </span>
-        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-          <GitFork className="size-3" />
-          {forkCount ?? 0}
-        </span>
+      
+      {/* Info */}
+      <div className="p-3 flex items-start gap-2.5">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-xs font-semibold text-zinc-200 truncate group-hover:text-primary transition-colors leading-snug">
+            {title || t('library.untitled')}
+          </h3>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[10px] text-zinc-500">{formatRelativeTime(project.createdAt, (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
+            <span className="size-0.5 rounded-full bg-zinc-700 shrink-0" />
+            <span className="text-[10px] text-zinc-500 flex items-center gap-0.5">
+              <Activity className="size-2.5" />
+              {(project.syncedLineCount || 0)}/{(project.lineCount || 0)}
+            </span>
+          </div>
+        </div>
+        <ChevronRight className="size-3.5 text-zinc-800 group-hover:text-primary group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
       </div>
-    </Link>
+    </button>
   );
 }
 
@@ -245,10 +276,10 @@ export default function ProfilePage() {
       t('confirm.deleteProject', { title: project.title || t('library.untitled') }),
       async () => {
         try {
-          await projects.remove(project.projectId);
+          await projects.remove(project.publicId);
           setProfile(prev => prev ? { 
             ...prev, 
-            projects: prev.projects.filter(p => p.projectId !== project.projectId), 
+            projects: prev.projects.filter(p => p.publicId !== project.publicId), 
             projectCount: Math.max(0, prev.projectCount - 1) 
           } : prev);
           toast.success(t('project.deleteSuccess'));
@@ -347,7 +378,7 @@ export default function ProfilePage() {
           </p>
 
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 mt-4 text-sm text-muted-foreground">
-            {profile.showFollowers ? (
+            {profile.showFollowers && profile.followerCount > 0 ? (
               <button
                 onClick={() => setFollowModal('FOLLOWERS')}
                 className="hover:text-foreground transition-colors"
@@ -358,7 +389,7 @@ export default function ProfilePage() {
               <span>{t('profile.statsFollowers', { count: profile.followerCount })}</span>
             )}
             <span className="opacity-30">·</span>
-            {profile.showFollowers ? (
+            {profile.showFollowers && profile.followingCount > 0 ? (
               <button
                 onClick={() => setFollowModal('FOLLOWING')}
                 className="hover:text-foreground transition-colors"
@@ -398,15 +429,35 @@ export default function ProfilePage() {
         </div>
 
         {isOwner ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/settings')}
-            className="absolute top-4 right-4 flex items-center gap-1.5"
-          >
-            <Settings className="size-4" />
-            {t('profile.editProfile')}
-          </Button>
+          <div className="absolute top-4 right-4 flex items-center gap-1.5">
+            <Tip content={t('profile.tabs.activity')}>
+              <Button
+                variant="outline"
+                size="icon-sm"
+                onClick={() => navigate('/settings/activity')}
+              >
+                <Activity className="size-4" />
+              </Button>
+            </Tip>
+            <Tip content={t('profile.tabs.stats')}>
+              <Button
+                variant="outline"
+                size="icon-sm"
+                onClick={() => navigate('/settings/stats')}
+              >
+                <BarChart3 className="size-4" />
+              </Button>
+            </Tip>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/settings')}
+              className="flex items-center gap-1.5"
+            >
+              <Settings className="size-4" />
+              {t('profile.editProfile')}
+            </Button>
+          </div>
         ) : (
           <div className="absolute top-4 right-4">
             {isFollowing ? (
@@ -476,7 +527,7 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {profile.projects.map((project) => (
                   <ProjectCard
-                    key={project.projectId}
+                    key={project.publicId}
                     project={project}
                     isOwner={isOwner}
                     onEdit={handleEditProject}
@@ -539,12 +590,12 @@ export default function ProfilePage() {
 
       {editingProject && (
         <ProjectSetupModal
-          key={editingProject.projectId}
+          key={editingProject.publicId}
           isOpen={!!editingProject}
           onClose={() => setEditingProject(null)}
           onConfirm={async (data) => {
             try {
-              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage } = data;
+              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic } = data;
               const updatedMetadata = {
                 ...editingProject.metadata,
                 description,
@@ -555,16 +606,17 @@ export default function ProfilePage() {
                 songYear,
                 genre,
               };
-              await projects.patch(editingProject.projectId, {
+              await projects.patch(editingProject.publicId, {
                 title,
                 coverImage,
+                public: isPublic,
                 metadata: updatedMetadata
               });
               setProfile(prev => prev ? {
                 ...prev,
                 projects: prev.projects.map(p =>
-                  p.projectId === editingProject.projectId
-                    ? { ...p, title, coverImage, metadata: updatedMetadata }
+                  p.publicId === editingProject.publicId
+                    ? { ...p, title, coverImage, public: isPublic, metadata: updatedMetadata }
                     : p
                 )
               } : prev);
@@ -578,11 +630,12 @@ export default function ProfilePage() {
           initialDescription={editingProject.metadata?.description || ''}
           initialTags={editingProject.metadata?.tags || []}
           initialSongName={editingProject.metadata?.songName || ''}
-          initialSongArtist={editingProject.metadata?.songArtist || ''}
-          initialSongAlbum={editingProject.metadata?.songAlbum || ''}
-          initialSongYear={editingProject.metadata?.songYear || ''}
-          initialGenre={editingProject.metadata?.genre || ''}
-          initialCoverImage={editingProject.coverImage || ''}
+          initialSongArtist={(editingProject?.metadata?.songArtists || []).join(', ') || editingProject?.metadata?.songArtist || ''}
+          initialSongAlbum={editingProject?.metadata?.songAlbum || ''}
+          initialSongYear={editingProject?.metadata?.songYear || ''}
+          initialGenre={editingProject?.metadata?.genre || ''}
+          initialCoverImage={editingProject?.coverImage || ''}
+          initialIsPublic={editingProject?.public || false}
           initialAlbumArt={''}
           isEditing={true}
         />

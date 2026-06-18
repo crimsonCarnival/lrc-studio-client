@@ -1,0 +1,986 @@
+type UserStats {
+    minutesSynced: Float
+    wordsSynced: Float
+    karaokeLines: Float
+  }
+
+  type UserStreak {
+    current: Int
+    longest: Int
+    lastActiveDate: String
+  }
+
+  type UserProgression {
+    xp: Float
+    level: Int
+  }
+
+  type User {
+    id: ID!
+    accountName: String
+    displayName: String
+    email: String
+    avatarUrl: String
+    bio: String
+    isVerified: Boolean!
+    ban: UserBan
+    appeal: UserAppeal
+    wasJustUnbanned: Boolean
+    role: String!
+    createdAt: String
+    passwordChangedAt: String
+    lastAccountNameChangedAt: String
+    pendingEmail: String
+    accountNameChangeCount: Int!
+    previousAccountNames: [NameChange!]!
+    emailHistory: [EmailChange!]!
+    hasPassword: Boolean!
+    google: GoogleInfo
+    projects: [Project!]!
+    uploads: [Upload!]!
+    settings: Settings
+    showFollowers: Boolean!
+    badges: [UserBadge!]!
+    showcasedBadges: [String!]!
+    stats: UserStats
+    streak: UserStreak
+    progression: UserProgression
+    showcaseSlots: Int!
+  }
+
+  type UserBan {
+    active: Boolean!
+    reason: String
+    until: String
+  }
+
+  type UserAppeal {
+    text: String
+    status: String
+    submittedAt: String
+    resolvedAt: String
+  }
+
+  type GoogleInfo {
+    connected: Boolean!
+    googleId: String
+    email: String
+    name: String
+    pictureUrl: String
+  }
+
+  type NameChange {
+    from: String!
+    to: String!
+    changedAt: String!
+  }
+
+  type EmailChange {
+    from: String!
+    to: String!
+    changedAt: String!
+  }
+
+  type PublicUser {
+    id: ID!
+    accountName: String!
+    displayName: String
+    avatarUrl: String
+    bio: String
+    isVerified: Boolean!
+    isAdmin: Boolean!
+    createdAt: String
+    projects: [Project!]!
+    projectCount: Int!
+    totalStarsReceived: Int!
+    totalForksReceived: Int!
+    followerCount: Int!
+    followingCount: Int!
+    isFollowedByMe: Boolean!
+    showFollowers: Boolean!
+    badges: [UserBadge!]!
+    showcasedBadges: [ShowcasedBadge!]!
+    showcasePublic: Boolean!
+    stats: UserStats
+    streak: UserStreak
+    progression: UserProgression
+  }
+
+  type FollowUser {
+    id: ID!
+    accountName: String!
+    displayName: String
+    avatarUrl: String
+    isFollowedByMe: Boolean!
+  }
+
+  type FollowListResult {
+    users: [FollowUser!]!
+    total: Int!
+  }
+
+  enum FollowListType {
+    FOLLOWERS
+    FOLLOWING
+  }
+
+
+  type Project {
+    id: ID!
+    publicId: String!
+    title: String
+    user: User
+    upload: Upload
+    lyrics: Lyrics
+    state: ProjectState
+    metadata: ProjectMetadata
+    type: String
+    readOnly: Boolean
+    public: Boolean
+    lineCount: Int
+    syncedLineCount: Int
+    userId: ID
+    uploadId: ID
+    lyricsId: ID
+    expiresAt: String
+    createdAt: String
+    updatedAt: String
+    coverImage: String
+    forkedFrom: ForkedFrom
+    forkCount: Int
+    starCount: Int
+    isStarredByMe: Boolean
+    isForkedByMe: Boolean
+    forksEnabled: Boolean
+    trendingScore: Float
+  }
+
+  type ForkedFrom {
+    publicId: String
+    userId: ID
+    accountName: String
+  }
+
+  type ProjectState {
+    syncMode: Boolean
+    activeLineIndex: Int
+    playbackPosition: Float
+    playbackSpeed: Float
+    saveTime: String
+  }
+
+  type ProjectMetadata {
+    description: String
+    genre: String
+    tags: [String!]
+    songName: String
+    songArtist: String
+    songAlbum: String
+    songYear: String
+    songLanguage: String
+    trackNumber: Int
+    trackCount: Int
+  }
+
+  input WordInput {
+    id: String
+    word: String!
+    time: Float
+    reading: String
+    singerIndex: Int
+  }
+
+  input TranslationInput {
+    language: String!
+    text: String!
+  }
+
+  input LineInput {
+    id: String
+    type: String
+    label: String
+    depth: Int
+    text: String
+    timestamp: Float
+    endTime: Float
+    secondary: String
+    singers: [String!]
+    translation: String
+    translations: [TranslationInput!]
+    words: [WordInput!]
+    secondaryWords: [WordInput!]
+  }
+
+  input ProjectStateInput {
+    syncMode: Boolean
+    activeLineIndex: Int
+    playbackPosition: Float
+    playbackSpeed: Float
+    saveTime: String
+  }
+
+  input ProjectMetadataInput {
+    description: String
+    genre: String
+    tags: [String!]
+    songName: String
+    songArtist: String
+    songAlbum: String
+    songYear: String
+    songLanguage: String
+    trackNumber: Int
+    trackCount: Int
+  }
+
+  input ProjectLyricsInput {
+    editorMode: String
+    language: String
+    # Full sections replace
+    sections: [SectionInput!]
+    # Positional single-line patch
+    sectionIdx: Int
+    lineIdx: Int
+    line: LineInput
+    # Positional word patch
+    wordIndex: Int
+    word: WordInput
+  }
+
+  input CreateProjectInput {
+    title: String
+    uploadId: ID
+    type: String
+    readOnly: Boolean
+    public: Boolean
+    metadata: ProjectMetadataInput
+    coverImage: String
+    state: ProjectStateInput
+    lyrics: ProjectLyricsInput
+    recaptchaToken: String
+  }
+
+  input UpdateProjectInput {
+    title: String
+    uploadId: ID
+    public: Boolean
+    readOnly: Boolean
+    version: Int
+    metadata: ProjectMetadataInput
+    coverImage: String
+    state: ProjectStateInput
+    lyrics: ProjectLyricsInput
+  }
+
+
+  type Lyrics {
+    id: ID!
+    publicId: String!
+    editorMode: String!
+    language: String
+    sections: [Section!]!
+    version: Int
+    createdAt: String
+    updatedAt: String
+  }
+
+  type Section {
+    label: String
+    depth: Int
+    id: String
+    singers: [String!]
+    timestamp: Float
+    lines: [Line!]!
+  }
+
+  type Translation {
+    language: String!
+    text: String!
+  }
+
+  type Line {
+    id: String
+    text: String
+    timestamp: Float
+    endTime: Float
+    secondary: String
+    singers: [String!]
+    translation: String
+    translations: [Translation!]
+    words: [Word!]
+    secondaryWords: [SecondaryWord!]
+  }
+
+  type Word {
+    word: String!
+    time: Float
+    reading: String
+    singerIndex: Int
+  }
+
+  type SecondaryWord {
+    word: String!
+    time: Float
+  }
+
+  input SectionInput {
+    label: String
+    depth: Int
+    id: String
+    singers: [String!]
+    timestamp: Float
+    lines: [LineInput!]
+  }
+
+  input UpdateLyricsInput {
+    editorMode: String
+    language: String
+    sections: [SectionInput!]
+  }
+
+
+  type Upload {
+    id: ID!
+    source: String!
+    uploadUrl: String
+    publicId: String
+    fileName: String!
+    title: String!
+    duration: Float
+    coverImage: String
+    user: User
+    createdAt: String
+    updatedAt: String
+    projects: [Project!]!
+  }
+
+  input SaveMediaInput {
+    source: String!
+    uploadUrl: String
+    publicId: String
+    fileName: String
+    title: String
+    duration: Float
+  }
+
+
+  type Settings {
+    playback: PlaybackSettings
+    editor: EditorSettings
+    export: ExportSettings
+    interface: InterfaceSettings
+    shortcuts: ShortcutsSettings
+    import: ImportSettings
+    advanced: AdvancedSettings
+  }
+
+  type PlaybackSettings {
+    volume: Float
+    muted: Boolean
+    autoRewindOnPause: AutoRewindSettings
+    speedBounds: SpeedBoundsSettings
+    showWaveform: Boolean
+    waveformSnap: Boolean
+    loopCurrentLine: Boolean
+    speedPresets: [Float!]
+    seekTime: Float
+    seekPlays: Boolean
+  }
+
+  type AutoRewindSettings {
+    enabled: Boolean
+    seconds: Float
+  }
+
+  type SpeedBoundsSettings {
+    min: Float
+    max: Float
+  }
+
+  type EditorSettings {
+    autoPauseOnMark: Boolean
+    nudge: NudgeSettings
+    autoAdvance: AutoAdvanceSettings
+    showShiftAll: Boolean
+    shiftAllAmount: Float
+    showLineNumbers: Boolean
+    timestampPrecision: String
+    srt: SrtSettings
+    history: HistorySettings
+    display: DisplaySettings
+    scroll: ScrollSettings
+  }
+
+  type NudgeSettings {
+    fine: Float
+    coarse: Float
+    default: Float
+  }
+
+  type AutoAdvanceSettings {
+    enabled: Boolean
+    skipBlank: Boolean
+    mode: String
+  }
+
+  type SrtSettings {
+    defaultSubtitleDuration: Float
+    minSubtitleGap: Float
+    snapToNextLine: Boolean
+  }
+
+  type HistorySettings {
+    limit: Int
+    groupingThresholdMs: Float
+  }
+
+  type DisplaySettings {
+    activeHighlight: String
+    showNextLine: Boolean
+    dualLine: Boolean
+    languageLayout: String
+    translationLayout: String
+    readingFormat: String
+    karaokeFillTrack: String
+    karaokeFillEasing: String
+  }
+
+  type ScrollSettings {
+    mode: String
+    alignment: String
+  }
+
+  type ExportSettings {
+    lineEndings: String
+    copyFormat: String
+    downloadFormat: String
+    timestampPrecision: String
+    defaultFilenamePattern: String
+    includeMetadata: Boolean
+    stripEmptyLines: Boolean
+    normalizeTimestamps: Boolean
+    wordTimestampPrecision: String
+  }
+
+  type InterfaceSettings {
+    theme: String
+    defaultLanguage: String
+    fontSize: String
+    spacing: String
+    previewAlignment: String
+    focusMode: String
+    layoutSwap: Boolean
+    playerTop: Boolean
+    editorWidth: Float
+    lockLayout: Boolean
+    mobileTab: String
+    toastPosition: String
+  }
+
+  type ShortcutsSettings {
+    mark: [String!]
+    nudgeLeft: [String!]
+    nudgeRight: [String!]
+    nudgeLeftFine: [String!]
+    nudgeRightFine: [String!]
+    addLine: [String!]
+    deleteLine: [String!]
+    clearTimestamp: [String!]
+    switchMode: [String!]
+    deselect: [String!]
+    showHelp: [String!]
+    rangeSelect: [String!]
+    toggleSelect: [String!]
+    playPause: [String!]
+    seekForward: [String!]
+    seekBackward: [String!]
+    mute: [String!]
+    speedUp: [String!]
+    speedDown: [String!]
+    addSecondary: [String!]
+    addTranslation: [String!]
+    toggleTranslation: [String!]
+    focusSync: [String!]
+    focusPreview: [String!]
+    focusPlayback: [String!]
+  }
+
+  type ImportSettings {
+    expandRepeats: Boolean
+  }
+
+  type AdvancedSettings {
+    autoSave: AutoSaveSettings
+    confirmDestructive: Boolean
+    timezone: String
+  }
+
+  type AutoSaveSettings {
+    enabled: Boolean
+    timeInterval: Float
+  }
+
+  input UpdateSettingsInput {
+    playback: PlaybackSettingsInput
+    editor: EditorSettingsInput
+    export: ExportSettingsInput
+    interface: InterfaceSettingsInput
+    shortcuts: ShortcutsSettingsInput
+    import: ImportSettingsInput
+    advanced: AdvancedSettingsInput
+  }
+
+  input AutoRewindSettingsInput {
+    enabled: Boolean
+    seconds: Float
+  }
+
+  input SpeedBoundsSettingsInput {
+    min: Float
+    max: Float
+  }
+
+  input PlaybackSettingsInput {
+    volume: Float
+    muted: Boolean
+    autoRewindOnPause: AutoRewindSettingsInput
+    speedBounds: SpeedBoundsSettingsInput
+    showWaveform: Boolean
+    waveformSnap: Boolean
+    loopCurrentLine: Boolean
+    speedPresets: [Float!]
+    seekTime: Float
+    seekPlays: Boolean
+  }
+
+  input NudgeSettingsInput {
+    fine: Float
+    coarse: Float
+    default: Float
+  }
+
+  input AutoAdvanceSettingsInput {
+    enabled: Boolean
+    skipBlank: Boolean
+    mode: String
+  }
+
+  input SrtSettingsInput {
+    defaultSubtitleDuration: Float
+    minSubtitleGap: Float
+    snapToNextLine: Boolean
+  }
+
+  input HistorySettingsInput {
+    limit: Int
+    groupingThresholdMs: Float
+  }
+
+  input DisplaySettingsInput {
+    activeHighlight: String
+    showNextLine: Boolean
+    dualLine: Boolean
+    languageLayout: String
+    translationLayout: String
+    readingFormat: String
+    karaokeFillTrack: String
+    karaokeFillEasing: String
+  }
+
+  input ScrollSettingsInput {
+    mode: String
+    alignment: String
+  }
+
+  input EditorSettingsInput {
+    autoPauseOnMark: Boolean
+    nudge: NudgeSettingsInput
+    autoAdvance: AutoAdvanceSettingsInput
+    showShiftAll: Boolean
+    shiftAllAmount: Float
+    showLineNumbers: Boolean
+    timestampPrecision: String
+    srt: SrtSettingsInput
+    history: HistorySettingsInput
+    display: DisplaySettingsInput
+    scroll: ScrollSettingsInput
+  }
+
+  input ExportSettingsInput {
+    lineEndings: String
+    copyFormat: String
+    downloadFormat: String
+    timestampPrecision: String
+    wordTimestampPrecision: String
+    defaultFilenamePattern: String
+    includeMetadata: Boolean
+    stripEmptyLines: Boolean
+    normalizeTimestamps: Boolean
+  }
+
+  input InterfaceSettingsInput {
+    theme: String
+    defaultLanguage: String
+    fontSize: String
+    spacing: String
+    previewAlignment: String
+    focusMode: String
+    layoutSwap: Boolean
+    playerTop: Boolean
+    editorWidth: Float
+    lockLayout: Boolean
+    mobileTab: String
+    toastPosition: String
+  }
+
+  input ShortcutsSettingsInput {
+    mark: [String!]
+    nudgeLeft: [String!]
+    nudgeRight: [String!]
+    nudgeLeftFine: [String!]
+    nudgeRightFine: [String!]
+    addLine: [String!]
+    deleteLine: [String!]
+    clearTimestamp: [String!]
+    switchMode: [String!]
+    deselect: [String!]
+    showHelp: [String!]
+    rangeSelect: [String!]
+    toggleSelect: [String!]
+    playPause: [String!]
+    seekForward: [String!]
+    seekBackward: [String!]
+    mute: [String!]
+    speedUp: [String!]
+    speedDown: [String!]
+    addSecondary: [String!]
+    addTranslation: [String!]
+    toggleTranslation: [String!]
+    focusSync: [String!]
+    focusPreview: [String!]
+    focusPlayback: [String!]
+  }
+
+  input ImportSettingsInput {
+    expandRepeats: Boolean
+  }
+
+  input AutoSaveSettingsInput {
+    enabled: Boolean
+    timeInterval: Float
+  }
+
+  input AdvancedSettingsInput {
+    autoSave: AutoSaveSettingsInput
+    confirmDestructive: Boolean
+    timezone: String
+  }
+
+
+  type Playlist {
+    id: ID!
+    owner: FollowUser!
+    name: String!
+    description: String
+    coverImage: String
+    tags: [String!]!
+    isPublic: Boolean!
+    sortMode: PlaylistSortMode!
+    projects: [Project!]!
+    projectCount: Int!
+    savedCount: Int!
+    isSavedByMe: Boolean!
+    createdAt: String!
+    updatedAt: String!
+    trendingScore: Float
+  }
+
+  enum PlaylistSortMode {
+    MANUAL
+    DATE_ADDED
+    STARS
+    ALPHABETICAL
+  }
+
+  input CreatePlaylistInput {
+    name: String!
+    description: String
+    coverImage: String
+    tags: [String!]
+    isPublic: Boolean
+    sortMode: PlaylistSortMode
+    publicIds: [ID!]
+  }
+
+  input UpdatePlaylistInput {
+    name: String
+    description: String
+    coverImage: String
+    tags: [String!]
+    isPublic: Boolean
+    sortMode: PlaylistSortMode
+  }
+
+
+  type Activity {
+    id: ID!
+    actor: FollowUser!
+    type: ActivityType!
+    publicId: String!
+    projectTitle: String!
+    coverImage: String
+    targetPath: String
+    createdAt: String!
+  }
+
+  enum ActivityType {
+    PROJECT_PUBLISHED
+    PROJECT_STARRED
+    PROJECT_FORKED
+    PROJECT_BOOSTED
+    PLAYLIST_CREATED
+    USER_FOLLOWED
+  }
+
+  type FeedResult {
+    activities: [Activity!]!
+    hasMore: Boolean!
+  }
+
+  enum SearchSort {
+    RELEVANCE
+    STARS
+    NEWEST
+  }
+
+  type SearchResult {
+    projects: [Project!]!
+    total: Int!
+  }
+
+
+  type ProjectPage {
+    projects: [Project!]!
+    total: Int!
+    hasMore: Boolean!
+  }
+
+  type PlaylistPage {
+    playlists: [Playlist!]!
+    total: Int!
+    hasMore: Boolean!
+  }
+
+  type ExploreStats {
+    totalProjects: Int!
+    totalUsers: Int!
+    totalPlaylists: Int!
+  }
+
+
+  type ReactionSummary {
+    emoji: String!
+    count: Int!
+  }
+
+  type ProjectReactions {
+    reactions: [ReactionSummary!]!
+    myReaction: String
+  }
+
+
+  type HealthStatus {
+    status: String!
+    version: String
+    uptime: Float
+  }
+
+  type Query {
+    health: HealthStatus!
+    me: User
+    project(id: ID!): Project
+    projects(limit: Int, offset: Int): [Project!]!
+    upload(id: ID!): Upload
+    uploads(limit: Int, offset: Int): [Upload!]!
+    settings: Settings
+    getShare(id: ID!): Project
+    publicProfile(accountName: String!): PublicUser
+    followList(accountName: String!, type: FollowListType!, offset: Int): FollowListResult!
+    playlist(id: ID!): Playlist
+    playlists(accountName: String!): [Playlist!]!
+    savedPlaylists: [Playlist!]!
+    feed(offset: Int, limit: Int): FeedResult!
+    userActivity(offset: Int, limit: Int): FeedResult!
+    userActivityHeatmap: [ActivityHeatmapDay!]!
+    searchProjects(query: String!, sortBy: SearchSort, offset: Int, limit: Int): SearchResult!
+    searchUsers(query: String!, limit: Int): [FollowUser!]!
+    trendingProjects(offset: Int, limit: Int): ProjectPage!
+    popularPlaylists(offset: Int, limit: Int): PlaylistPage!
+    suggestedUsers(limit: Int): [FollowUser!]!
+    exploreStats: ExploreStats!
+    publicProject(publicId: String!): Project
+    projectReactions(publicId: String!): ProjectReactions!
+    leaderboard(limit: Int, offset: Int): LeaderboardResult!
+    badgeDefinitions: [BadgeDef!]!
+    userShowcase(accountName: String!): [ShowcasedBadge!]!
+    myMusicLibrary: [MusicLibraryEntry!]!
+    userContentStats: ContentStats!
+  }
+
+  type Mutation {
+    createProject(input: CreateProjectInput!): Project!
+    updateProject(id: ID!, input: UpdateProjectInput!): Project!
+    deleteProject(id: ID!): Boolean!
+    updateLyrics(publicId: String!, input: UpdateLyricsInput!): Lyrics!
+    updateProfile(input: UpdateProfileInput!): User!
+    updateSettings(input: UpdateSettingsInput!): Settings!
+    resetSettings: Boolean!
+    saveMedia(input: SaveMediaInput!): Upload!
+    deleteMedia(id: ID!): Boolean!
+    cloneProject(id: ID!): Project!
+    starProject(id: ID!): Project!
+    unstarProject(id: ID!): Project!
+    sendVerificationEmail: Boolean!
+    follow(accountName: String!): Boolean!
+    unfollow(accountName: String!): Boolean!
+    createPlaylist(input: CreatePlaylistInput!): Playlist!
+    updatePlaylist(id: ID!, input: UpdatePlaylistInput!): Playlist!
+    deletePlaylist(id: ID!): Boolean!
+    addProjectToPlaylist(playlistId: ID!, publicId: ID!): Playlist!
+    removeProjectFromPlaylist(playlistId: ID!, publicId: ID!): Playlist!
+    reorderPlaylist(playlistId: ID!, publicIds: [ID!]!): Playlist!
+    savePlaylist(playlistId: ID!): Boolean!
+    unsavePlaylist(playlistId: ID!): Boolean!
+    setForksEnabled(publicId: ID!, enabled: Boolean!): Project!
+    boostProject(publicId: ID!): Boolean!
+    reactToProject(publicId: String!, emoji: String!): ProjectReactions!
+    updateShowcase(badgeIds: [String!]!, showcasePublic: Boolean): UpdateShowcaseResult!
+    adminGrantBadge(userIdentifier: String!, badgeId: String!): Boolean!
+    adminRevokeBadge(userId: ID!, badgeId: String!): Boolean!
+    adminCreateBadge(input: BadgeDefInput!): BadgeDef!
+    adminUpdateBadge(id: String!, input: BadgeDefInput!): BadgeDef!
+    adminDeleteBadge(id: String!): Boolean!
+    adminRetroactiveScan(badgeId: String!): RetroactiveResult!
+  }
+
+  input UpdateProfileInput {
+    accountName: String
+    displayName: String
+    email: String
+    bio: String
+    avatarUrl: String
+    showFollowers: Boolean
+  }
+
+  type LeaderboardUser {
+    id: ID!
+    accountName: String!
+    displayName: String
+    avatarUrl: String
+    badges: [UserBadge!]!
+    stats: UserStats
+    progression: UserProgression
+    streak: UserStreak
+    projectCount: Int!
+    totalStarsReceived: Int!
+    totalForksReceived: Int!
+  }
+
+  type LeaderboardResult {
+    users: [LeaderboardUser!]!
+    total: Int!
+    hasMore: Boolean!
+  }
+
+  type UserBadge {
+    id: String!
+    grantedAt: String!
+    grantedBy: String!
+  }
+
+  type ShowcasedBadge {
+    id: String!
+    label: String!
+    icon: String!
+    color: String!
+    rarity: String!
+    rarityPct: Float!
+    holderCount: Int!
+    grantedAt: String!
+  }
+
+  type UpdateShowcaseResult {
+    success: Boolean!
+    error: String
+    showcaseSlots: Int!
+    level: Int!
+    showcasePublic: Boolean!
+  }
+
+  type BadgeDef {
+    id: String!
+    label: String!
+    description: String!
+    icon: String!
+    color: String!
+    conditionType: String!
+    conditionValue: Int
+    autoGrant: Boolean!
+    isBuiltin: Boolean!
+    holderCount: Int!
+    xpReward: Int!
+  }
+
+  input BadgeDefInput {
+    id: String
+    label: String!
+    description: String
+    icon: String!
+    color: String!
+    conditionType: String!
+    conditionValue: Int
+    autoGrant: Boolean
+    xpReward: Int
+  }
+
+  type RetroactiveResult {
+    granted: Int!
+    scanned: Int!
+    error: String
+  }
+
+  type MusicLibraryEntry {
+    artist: String
+    album: String
+    genre: String
+    language: String
+    trackCount: Int
+  }
+
+  type ActivityHeatmapDay {
+    date: String!
+    count: Int!
+  }
+
+  type ProjectStats {
+    title: String!
+    count: Int!
+  }
+
+  type ContentStats {
+    totalProjects: Int!
+    totalLines: Int!
+    syncedLines: Int!
+    completionPercentage: Int!
+    averageProjectCompletion: Int!
+    averageLinesPerProject: Int!
+    fullySyncedProjects: Int!
+    musicSyncedMinutes: Int!
+    wordsTimestamped: Int!
+    karaokeLines: Int!
+    publicProjects: Int!
+    starsReceived: Int!
+    forksReceived: Int!
+    mostSyncedProject: ProjectStats
+    largestProject: ProjectStats
+    syncTrendPercentage: Int!
+  }

@@ -27,7 +27,7 @@ import feed from './feed.js';
 import search from './search.js';
 import projectView from './projectView.js';
 import explore from './explore.js';
-import comments from './comments.js';
+import reactions from './reactions.js';
 import badges from './badges.js';
 
 export default {
@@ -61,7 +61,7 @@ export default {
     search,
     projectView,
     explore,
-    comments,
+    reactions,
     badges,
   }
 };

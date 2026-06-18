@@ -23,6 +23,10 @@ export default {
   titlePlaceholder: "e.g. Bohemian Rhapsody — Queen",
   description: "Description",
   descriptionPlaceholder: "Optional notes about this project...",
+  visibilityPublic: "Public Project",
+  visibilityPrivate: "Private Project",
+  publicDescription: "Anyone can view this project on your profile.",
+  privateDescription: "Only you can view and edit this project.",
   tags: "Tags",
   tagsPlaceholder: "Add tags separated by commas...",
   notFoundTitle: [

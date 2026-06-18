@@ -19,6 +19,7 @@ import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, Ski
 import { Tip } from '@ui/tip';
 import { uploads as uploadsApi, getAccessToken } from '@/app/api';
 import toast from 'react-hot-toast';
+import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
 
 const FOCUS_RING = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none';
 
@@ -69,7 +70,7 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
             >
               <div className="size-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
                 {upload.source === 'youtube'
-                  ? <Video className="size-3 text-red-400" />
+                  ? <svg preserveAspectRatio="xMidYMid" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" /><path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" className="size-3 text-red-400" /></svg>
                   : <Cloud className="size-3 text-blue-400" />}
               </div>
               <span className="text-xs text-zinc-300 truncate group-hover:text-white transition-colors">
@@ -91,6 +92,13 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
     </div>
   );
 });
+
+// ——— CDN URL handling ———
+// Matches Cloudinary CDN URLs
+const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\//;
+// Matches any generic HTTPS audio URL (fallback)
+const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
+const YT_PATTERN = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|watch\?.+&v=)|youtu\.be\/)([^&?/\s]{11})/;
 
 function Player(
   { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef = null, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onMediaUpload, playerTop = false, onDockToggle, viewerMode = false, projectMetadata: _projectMetadata, projectCoverImage, ref },
@@ -234,13 +242,6 @@ function Player(
     setSource,
     onYtUrlChange,
   });
-
-  // ——— CDN URL handling ———
-  // Matches Cloudinary CDN URLs
-  const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\//;
-  // Matches any generic HTTPS audio URL (fallback)
-  const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
-  const YT_PATTERN = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|watch\?.+&v=)|youtu\.be\/)([^&?/\s]{11})/;
 
   const detectedUrlType = useMemo(() => {
     const v = yt.ytUrl.trim().split(/\s+/)[0];
@@ -432,7 +433,7 @@ function Player(
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  // settings.shortcuts and settings.playback are stable config; update handler when they change
+    // settings.shortcuts and settings.playback are stable config; update handler when they change
   }, [settings.shortcuts, settings.playback, updateSetting]);
 
   // ——— Expose player API via ref ———
@@ -495,9 +496,9 @@ function Player(
       return;
     }
     const key =
-      initialMedia.type === 'youtube'     ? initialMedia.url
-      : initialMedia.type === 'cloudinary' ? initialMedia.id
-      : null;
+      initialMedia.type === 'youtube' ? initialMedia.url
+        : initialMedia.type === 'cloudinary' ? initialMedia.id
+          : null;
     if (!key) return;
 
     if (key === hydratedMediaKeyRef.current) return;
@@ -515,7 +516,7 @@ function Player(
         duration: initialMedia.duration,
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialMedia]);
 
 
@@ -648,7 +649,7 @@ function Player(
                           >
                             <div className="size-8 rounded bg-zinc-800 border border-zinc-700 group-hover:border-primary/40 flex items-center justify-center shrink-0">
                               {upload.source === 'youtube'
-                                ? <Video className="size-3.5 text-red-400" />
+                                ? <YoutubeIcon className="size-5" />
                                 : <Cloud className="size-3.5 text-blue-400" />}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -986,7 +987,7 @@ function Player(
                           >
                             <div className="size-8 rounded flex-shrink-0 overflow-hidden bg-zinc-700/50 flex items-center justify-center">
                               {upload.source === 'youtube'
-                                ? <Video className="size-3.5 text-red-400 shrink-0" />
+                                ? <YoutubeIcon className="size-5" />
                                 : <Cloud className="size-3.5 text-blue-400 shrink-0" />}
                             </div>
                             <span className="text-xs font-medium text-zinc-200 truncate">

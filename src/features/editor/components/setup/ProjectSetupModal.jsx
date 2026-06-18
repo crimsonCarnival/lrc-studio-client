@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Textarea } from '@ui/textarea';
 import { Label } from '@ui/label';
 import { Badge } from '@ui/badge';
-import { X, Sparkles, Upload, Loader2, Video, Music2 } from 'lucide-react';
+import { X, Sparkles, Upload, Loader2, Music2, Globe, Lock } from 'lucide-react';
 import { Tip } from '@ui/tip';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { PRIMARY_GENRES } from '@features/editor/constants/genre-tags';
+import { Switch } from '@/shared/ui/switch';
 
 const EMPTY_TAGS = [];
 
@@ -22,7 +24,7 @@ function SourceInfoBadge({ sourceInfo, initialName, t }) {
   let sourceValue = title || initialName;
 
   if (ytUrl) {
-    sourceIcon = <Video className="size-4 text-red-500" />;
+    sourceIcon = <svg preserveAspectRatio="xMidYMid" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" /><path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" className="size-4 text-red-500" /></svg>
     sourceLabel = t('setup.youtubeVideo');
     sourceValue = title || initialName || ytUrl;
   } else if (cloudinary) {
@@ -61,6 +63,7 @@ export default function ProjectSetupModal({
   initialSongYear = '',
   initialGenre = '',
   initialCoverImage = '',
+  initialIsPublic = false,
   isEditing = false,
   sourceInfo = null
 }) {
@@ -79,6 +82,7 @@ export default function ProjectSetupModal({
     songYear: initialSongYear || '',
     genre: initialGenre || '',
     coverImage: initialCoverImage || '',
+    isPublic: initialIsPublic || false,
   }));
 
   // Sync form when the modal is opened or when the underlying data changes
@@ -97,9 +101,10 @@ export default function ProjectSetupModal({
         songYear: initialSongYear || '',
         genre: initialGenre || '',
         coverImage: initialCoverImage || '',
+        isPublic: initialIsPublic || false,
       });
     }
-  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage]);
+  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialIsPublic]);
 
   if (!isOpen) return null;
 
@@ -156,11 +161,12 @@ export default function ProjectSetupModal({
       songYear: form.songYear.trim(),
       genre: form.genre,
       coverImage: form.coverImage.trim(),
+      isPublic: form.isPublic,
     });
   };
 
 
-  return (
+  const modalContent = (
     <>
       <button
         type="button"
@@ -198,11 +204,11 @@ export default function ProjectSetupModal({
           {/* Scrollable Form Content */}
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto scrollbar-thin p-6 pt-4 flex flex-col gap-5">
             <SourceInfoBadge sourceInfo={sourceInfo} initialName={initialName} t={t} />
-            
+
             <div className="space-y-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="project-name" className="text-xs font-semibold text-zinc-300">
-                  {t('setup.projectName')} *
+                  {t('setup.projectName')}
                 </Label>
                 <Input
                   id="project-name"
@@ -375,6 +381,27 @@ export default function ProjectSetupModal({
                 </div>
               </div>
 
+              {/* Privacy Setting */}
+              <div className="flex flex-row items-center justify-between p-3 rounded-xl border border-zinc-800 bg-zinc-900/50">
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-1.5">
+                    {form.isPublic ? <Globe className="size-3.5 text-zinc-400" /> : <Lock className="size-3.5 text-zinc-400" />}
+                    <span className="text-xs font-semibold text-zinc-300">
+                      {form.isPublic ? t('project.visibilityPublic', 'Public Project') : t('project.visibilityPrivate', 'Private Project')}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-zinc-500">
+                    {form.isPublic 
+                      ? t('project.publicDescription', 'Anyone can view this project on your profile.') 
+                      : t('project.privateDescription', 'Only you can view and edit this project.')}
+                  </span>
+                </div>
+                <Switch 
+                  checked={form.isPublic} 
+                  onCheckedChange={(checked) => setForm(f => ({ ...f, isPublic: checked }))} 
+                />
+              </div>
+
             </div>
           </form>
 
@@ -401,4 +428,7 @@ export default function ProjectSetupModal({
       </div>
     </>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(modalContent, document.body);
 }

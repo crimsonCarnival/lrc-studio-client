@@ -1,31 +1,56 @@
 export default {
-  welcome: [
-    "Welcome to LRC Studio, {{name}}!",
-    "Let's get started",
-    "Good to see you, {{name}}",
-    "Welcome back, {{name}}",
-    "{{name}} back again!",
-    "You're back!!",
-    "Ready to sync moments?",
-    "Pick up where you left off, {{name}}.",
-    "Studio is ready, {{name}}.",
-
-  ],
-  welcomeSub: [
-    "Create perfectly synchronized lyrics for your favorite tracks. Import audio, load lyrics, and build immersive karaoke experiences.",
-    "The easiest way to sync lyrics to your music. Start your first project to experience the flow.",
-    "Bring your favorite songs to life. Upload an audio file or paste a YouTube link to begin.",
-    "Ready to sync some lyrics?",
-    "What are we working on today?",
-    "Let's make something awesome.",
-    "Upload a track or drop a link to start syncing.",
-    "Precision lyric synchronization made easy.",
-    "Sync lyrics. Export anywhere.",
-    "Start your next synchronization project.",
-    "Jump back into your library or start a new track.",
-    "Your audio, perfectly in sync."
-
-  ],
+  welcome: {
+    morning: [
+      "Good morning, {{name}}!",
+      "Rise and sync, {{name}}!",
+      "Early bird syncs first, {{name}}!",
+      "Start your morning with some music, {{name}}."
+    ],
+    afternoon: [
+      "Good afternoon, {{name}}!",
+      "Hope your day's going well, {{name}}!",
+      "Taking a music break, {{name}}?",
+      "Good to see you this afternoon, {{name}}."
+    ],
+    evening: [
+      "Good evening, {{name}}!",
+      "Unwinding with some lyrics, {{name}}?",
+      "Evening sync session, {{name}}?",
+      "Perfect time to make some magic, {{name}}."
+    ],
+    night: [
+      "Up late with the music, {{name}}?",
+      "Lyrics by moonlight, {{name}}?",
+      "The moon's out, and so is the music, {{name}}.",
+      "Burning the midnight oil, {{name}}?"
+    ],
+  },
+  welcomeSub: {
+    morning: [
+      "Start your morning with a fresh sync session.",
+      "A good morning for syncing some lyrics.",
+      "Coffee in one hand, lyrics in the other.",
+      "Let's kick off the day with some music."
+    ],
+    afternoon: [
+      "A solid afternoon for getting some syncing done.",
+      "Take a break and sync a few lines.",
+      "Halfway through the day — perfect time for lyrics.",
+      "Let's keep the momentum going this afternoon."
+    ],
+    evening: [
+      "Wind down the evening with some lyric syncing.",
+      "Evening's a good time to finish that project.",
+      "Let's make some progress before the day's over.",
+      "Sync a few lines before calling it a night."
+    ],
+    night: [
+      "Late-night syncing session?",
+      "Quiet hours, perfect for focused syncing.",
+      "Burning the midnight oil on some lyrics.",
+      "The night is yours — let's sync something."
+    ],
+  },
   noProjects: "No projects yet",
   createNew: "Create New Project",
   createNewDesc: "Start from scratch with a new audio file or YouTube link.",

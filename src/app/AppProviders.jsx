@@ -7,6 +7,8 @@ import { connectSocket, disconnectSocket } from '@/app/socket.client';
 import { useSessionSocket } from '@/features/auth/hooks/useSessionSocket';
 import SetAccountNameModal from '@/features/auth/components/SetAccountNameModal';
 
+import { BadgeDefsProvider } from '@/features/badges/BadgeDefsContext';
+
 export function AppProviders({ children }) {
   useEffect(() => {
     connectSocket();
@@ -20,8 +22,10 @@ export function AppProviders({ children }) {
       <SetupProvider>
         <TooltipProvider>
           <NotificationsProvider>
-            <SetAccountNameModal />
-            {children}
+            <BadgeDefsProvider>
+              <SetAccountNameModal />
+              {children}
+            </BadgeDefsProvider>
           </NotificationsProvider>
         </TooltipProvider>
       </SetupProvider>
