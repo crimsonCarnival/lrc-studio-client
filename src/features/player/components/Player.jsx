@@ -309,7 +309,6 @@ function Player(
       return;
     }
     yt.setYtError(t('player.invalidUrl') || 'Invalid URL. Paste a YouTube or Cloudinary CDN URL.');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [yt, detectedUrlType, handleCdnUrlLoad, t]);
 
   const hasMedia = (source === 'local' && local.localUrl) || (source === 'youtube' && yt.ytReady);
