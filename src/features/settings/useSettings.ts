@@ -1,5 +1,5 @@
 import { use } from 'react';
-import { SettingsContext } from './settings-context-value.js';
+import { SettingsContext } from './settings-context-value';
 import type { SettingsContextValue } from './settings.types';
 
 export function useSettings(): SettingsContextValue {

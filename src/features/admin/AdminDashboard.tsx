@@ -3,7 +3,7 @@ import type { ComponentProps, FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { admin } from '@/app/api';
-import { isSudoCancelled } from './services/sudo.js';
+import { isSudoCancelled } from './services/sudo';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Button } from '@ui/button';
 import { ShieldAlert, RefreshCw, Users, Globe, History, Award, Zap, Sparkles } from 'lucide-react';

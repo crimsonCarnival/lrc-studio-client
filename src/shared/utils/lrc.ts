@@ -3,20 +3,32 @@
  */
 
 import { serializeToRubyMarkup, parseRubyMarkup } from './furigana';
+import type { EditorLine, EditorWord, EditorTranslation } from '@/features/editor/services/editor.service';
 
 const KNOWN_LRC_META_KEYS = new Set(['ti','ar','al','au','by','lg','re','ve','length','offset','tool','id','hash','album']);
 
+interface LrcMeta {
+  ti?: string; ar?: string; al?: string; au?: string;
+  by?: string; lg?: string; re?: string; ve?: string;
+  [key: string]: string | undefined;
+}
+
+interface SrtConfig {
+  minSubtitleGap?: number;
+  defaultSubtitleDuration?: number;
+}
+
 /** No-op kept for call-site compatibility; DB is clean, no migration needed. */
-export function migrateLines(lines) { return lines; }
+export function migrateLines(lines: EditorLine[]) { return lines; }
 
 /**
  * Splits an artist string on commas, feat./ft./featuring, ×, &, "and", "vs", "/".
  * Preserves original casing. Returns deduplicated, non-empty names.
  */
-export function splitArtists(raw) {
+export function splitArtists(raw?: string | null): string[] {
   if (!raw?.trim()) return [];
-  const seen = new Set();
-  const result = [];
+  const seen = new Set<string>();
+  const result: string[] = [];
   for (const part of raw.split(/\s*(?:,|feat\.?|ft\.?|featuring|×|\bx\b|&|\band\b|\/|vs\.?)\s*/i)) {
     const value = part.trim();
     if (!value || seen.has(value)) continue;
@@ -26,7 +38,7 @@ export function splitArtists(raw) {
   return result;
 }
 
-function parseSectionText(raw) {
+function parseSectionText(raw: string): { label: string; singer?: string } {
   const colonIdx = raw.indexOf(':');
   if (colonIdx !== -1) {
     return { label: raw.slice(0, colonIdx).trim(), singer: raw.slice(colonIdx + 1).trim() || undefined };
@@ -39,10 +51,8 @@ function parseSectionText(raw) {
  * If the line has words with readings, serialize to {word|reading} markup.
  * If the line has secondaryWords with timestamps, serialize with <mm:ss.xx> tokens.
  * Otherwise fall back to line.secondary.
- * @param {{ secondary?: string, secondaryWords?: Array, words?: Array }} line
- * @returns {string|null}
  */
-function buildSecondaryText(line, wordPrecision) {
+function buildSecondaryText(line: EditorLine, wordPrecision?: string): string | null {
   if (line.secondaryWords?.length && line.secondaryWords.some(w => w.time != null)) {
     return formatWordsToLrc(line.secondaryWords, wordPrecision);
   }
@@ -56,20 +66,20 @@ function buildSecondaryText(line, wordPrecision) {
  * Format an array of {word, time} into LRC inline word-timestamp text.
  * E.g. "<00:05.12>Hello <00:05.56>world"
  */
-function formatWordsToLrc(words, precision = 'hundredths') {
-  const cjk = (ch) => { const c = ch?.codePointAt(0) ?? 0; return (c >= 0x3000 && c <= 0x9FFF) || (c >= 0xF900 && c <= 0xFAFF) || (c >= 0xFF00 && c <= 0xFFEF) || (c >= 0x20000 && c <= 0x2FA1F); };
+function formatWordsToLrc(words: EditorWord[], precision: string = 'hundredths'): string {
+  const cjk = (ch?: string) => { const c = ch?.codePointAt(0) ?? 0; return (c >= 0x3000 && c <= 0x9FFF) || (c >= 0xF900 && c <= 0xFAFF) || (c >= 0xFF00 && c <= 0xFFEF) || (c >= 0x20000 && c <= 0x2FA1F); };
   return words.map((w, i, arr) => {
     const ts = w.time != null ? formatWordTimestamp(w.time, precision) : '';
-    const token = `${ts}${w.word}`;
+    const token = `${ts}${w.word ?? ''}`;
     const next = arr[i + 1];
     if (!next) return token;
-    const lastChar = w.word.slice(-1);
-    const firstChar = next.word.slice(0, 1);
+    const lastChar = (w.word ?? '').slice(-1);
+    const firstChar = (next.word ?? '').slice(0, 1);
     return cjk(lastChar) || cjk(firstChar) ? token : token + ' ';
   }).join('');
 }
 
-function formatWordTimestamp(seconds, precision = 'hundredths') {
+function formatWordTimestamp(seconds: number | null | undefined, precision: string = 'hundredths'): string {
   if (seconds == null) return '';
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
@@ -82,11 +92,8 @@ function formatWordTimestamp(seconds, precision = 'hundredths') {
 
 /**
  * Formats a number of seconds into LRC timestamp format [mm:ss.xx] or [mm:ss.xxx]
- * @param {number} seconds
- * @param {'hundredths'|'thousandths'} precision
- * @returns {string}
  */
-export function formatTimestamp(seconds, precision = 'hundredths') {
+export function formatTimestamp(seconds: number | null | undefined, precision: string = 'hundredths'): string {
   if (seconds == null || isNaN(seconds) || seconds < 0) {
     return precision === 'thousandths' ? '00:00.000' : '00:00.00';
   }
@@ -102,25 +109,16 @@ export function formatTimestamp(seconds, precision = 'hundredths') {
 
 /**
  * Sanitizes a string for use inside LRC bracket tags.
- * @param {string} s
- * @returns {string}
  */
-function sanitizeLrcTag(s) {
+function sanitizeLrcTag(s: string): string {
   if (typeof s !== 'string') return String(s || '');
   return s.replace(/[[\]]/g, '');
 }
 
 /**
  * Compiles an array of { text, timestamp } into a valid .lrc string
- * @param {Array} lines
- * @param {boolean} includeTranslations
- * @param {'hundredths'|'thousandths'} precision
- * @param {object} metadata
- * @param {'lf'|'crlf'} lineEndings
- * @returns {string}
  */
-
-export function compileLRC(lines, includeTranslations = false, precision = 'hundredths', metadata = {}, lineEndings = 'lf', includeSecondary = false, wordPrecision, exportTranslationIndex = 0, includeSections = true) {
+export function compileLRC(lines: EditorLine[], includeTranslations = false, precision: string = 'hundredths', metadata: LrcMeta = {}, lineEndings = 'lf', includeSecondary = false, wordPrecision?: string, exportTranslationIndex = 0, includeSections = true): string {
   const wp = wordPrecision || precision;
   let header = '';
   if (metadata.ti) header += `[ti:${sanitizeLrcTag(metadata.ti)}]\n`;
@@ -133,7 +131,7 @@ export function compileLRC(lines, includeTranslations = false, precision = 'hund
   if (metadata.ve) header += `[ve:${sanitizeLrcTag(metadata.ve)}]\n`;
 
   const body = lines
-    .flatMap((line) => {
+    .flatMap((line): string[] => {
       // Section marker
       if (line.type === 'section') {
         if (!includeSections) return [];
@@ -141,7 +139,7 @@ export function compileLRC(lines, includeTranslations = false, precision = 'hund
         const prefix = isRoot ? '##' : '#';
         const singerPart = line.singers?.length
           ? ': ' + line.singers.join(' & ')
-          : line.singer ? ': ' + line.singer : '';
+          : line.singer ? ': ' + String(line.singer) : '';
         const comment = `${prefix} ${line.label}${singerPart}`;
         if (line.timestamp != null) return [`[${formatTimestamp(line.timestamp, precision)}] ${comment}`];
         return [comment];
@@ -149,8 +147,8 @@ export function compileLRC(lines, includeTranslations = false, precision = 'hund
 
       if (line.timestamp != null) {
         const ts = line.timestamp;
-        const result = [];
-        let mainLyric = null;
+        const result: string[] = [];
+        let mainLyric: string | undefined = undefined;
         if (line.words?.some(w => w.reading)) {
           mainLyric = serializeToRubyMarkup(line.words);
         } else if (line.words?.length) {
@@ -175,20 +173,20 @@ export function compileLRC(lines, includeTranslations = false, precision = 'hund
     })
     .join('\n');
 
-  let result = header + body;
+  const result = header + body;
   return lineEndings === 'crlf' ? result.replace(/\n/g, '\r\n') : result;
 }
+
+interface ParsedWord { word: string; time: number }
 
 /**
  * Parses inline word-level timestamp tokens from LRC line text.
  * Format: <mm:ss.xx>word or <mm:ss.xxx>word
- * @param {string} text
- * @returns {Array<{word: string, time: number}>}
  */
-function parseWordTimestamps(text) {
+function parseWordTimestamps(text: string): ParsedWord[] {
   const re = /<(\d{1,2}):(\d{2}\.\d{2,3})>([^<]*)/g;
-  const words = [];
-  let match;
+  const words: ParsedWord[] = [];
+  let match: RegExpExecArray | null;
   while ((match = re.exec(text)) !== null) {
     const time = parseInt(match[1], 10) * 60 + parseFloat(match[2]);
     const word = match[3].trimEnd();
@@ -198,8 +196,8 @@ function parseWordTimestamps(text) {
   // Latin/ASCII runs are kept as whole tokens.
   const hasCJK = words.some(w => /[\u3000-\u9FFF\uF900-\uFAFF]/.test(w.word));
   if (hasCJK && words.length > 0) {
-    const expanded = [];
-    const isCJKChar = (ch) => /[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch);
+    const expanded: ParsedWord[] = [];
+    const isCJKChar = (ch: string) => /[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch);
     words.forEach((w, wi) => {
       const codePoints = [...w.word].filter(ch => ch.trim());
       // If the token has no CJK characters, keep it as-is (e.g. Latin words)
@@ -216,7 +214,7 @@ function parseWordTimestamps(text) {
       const nextTime = words[wi + 1]?.time;
       const duration = nextTime != null ? nextTime - w.time : null;
       // Build sub-tokens (CJK individually, Latin as runs)
-      const subTokens = [];
+      const subTokens: string[] = [];
       let ci = 0;
       while (ci < codePoints.length) {
         const ch = codePoints[ci];
@@ -246,10 +244,8 @@ function parseWordTimestamps(text) {
 
 /**
  * Triggers a browser download of the given text content as a file.
- * @param {string} content
- * @param {string} filename
  */
-export function downloadLRC(content, filename = 'lyrics.lrc') {
+export function downloadLRC(content: string, filename = 'lyrics.lrc') {
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -263,10 +259,8 @@ export function downloadLRC(content, filename = 'lyrics.lrc') {
 
 /**
  * Formats a number of seconds into SRT timestamp format HH:MM:SS,mmm
- * @param {number} seconds
- * @returns {string}
  */
-function formatSrtTimestamp(seconds) {
+function formatSrtTimestamp(seconds: number | null | undefined): string {
   if (seconds == null || isNaN(seconds) || seconds < 0) return '00:00:00,000';
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
@@ -281,15 +275,8 @@ function formatSrtTimestamp(seconds) {
 
 /**
  * Compiles an array of { text, timestamp } into a valid .srt string
- * @param {Array} lines
- * @param {number} duration
- * @param {boolean} includeTranslations
- * @param {'lf'|'crlf'} lineEndings
- * @param {object} srtConfig
- * @returns {string}
  */
-
-export function compileSRT(lines, duration, includeTranslations = false, lineEndings = 'lf', srtConfig = {}, includeSecondary = false, exportTranslationIndex = 0) {
+export function compileSRT(lines: EditorLine[], duration?: number, includeTranslations = false, lineEndings = 'lf', srtConfig: SrtConfig = {}, includeSecondary = false, exportTranslationIndex = 0): string {
   const minGap = srtConfig.minSubtitleGap || 0.05;
   const defaultDur = srtConfig.defaultSubtitleDuration || 5;
 
@@ -298,8 +285,8 @@ export function compileSRT(lines, duration, includeTranslations = false, lineEnd
   if (synced.length === 0) return '';
 
   const body = synced.map((line, i) => {
-    const start = line.timestamp;
-    let end;
+    const start = line.timestamp ?? 0;
+    let end: number;
     if (line.endTime != null) {
       end = line.endTime;
     } else {
@@ -314,9 +301,9 @@ export function compileSRT(lines, duration, includeTranslations = false, lineEnd
     }
 
     // Build all lines for this timestamp
-    const linesForThisTimestamp = [];
+    const linesForThisTimestamp: string[] = [];
     // Main lyric
-    linesForThisTimestamp.push(line.text);
+    linesForThisTimestamp.push(line.text ?? '');
     // Secondary lyric
     if (includeSecondary) {
       const sec = buildSecondaryText(line);
@@ -334,7 +321,7 @@ export function compileSRT(lines, duration, includeTranslations = false, lineEnd
   return lineEndings === 'crlf' ? body.replace(/\n/g, '\r\n') : body;
 }
 
-const generateId = () => {
+const generateId = (): string => {
   try {
     return (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2, 11);
   } catch {
@@ -344,14 +331,11 @@ const generateId = () => {
 
 /**
  * Parses an LRC or SRT file into an array of line objects.
- * @param {string} content
- * @param {string} filename
- * @returns {Array<{text: string, timestamp: number|null, endTime?: number, secondary?: string, translation?: string, id: string}>}
  */
-export function parseLrcSrtFile(content, filename, options = {}) {
+export function parseLrcSrtFile(content: string, filename: string, options: { preserveEmptyLines?: boolean } = {}): EditorLine[] {
   const isSrt = filename.toLowerCase().endsWith('.srt');
-  const parsedLines = [];
-  
+  const parsedLines: EditorLine[] = [];
+
   if (isSrt) {
     const blocks = content.replace(/\r\n/g, '\n').split('\n\n');
     blocks.forEach(block => {
@@ -364,18 +348,18 @@ export function parseLrcSrtFile(content, filename, options = {}) {
           const s = parseInt(timeMatch[3], 10);
           const ms = parseInt(timeMatch[4], 10);
           const timestamp = h * 3600 + m * 60 + s + ms / 1000;
-          
+
           const eh = parseInt(timeMatch[5], 10);
           const em = parseInt(timeMatch[6], 10);
           const es = parseInt(timeMatch[7], 10);
           const ems = parseInt(timeMatch[8], 10);
           const endTime = eh * 3600 + em * 60 + es + ems / 1000;
-          
+
           // SRT multi-line text is joined as plain text by default
           const textLines = parts.slice(2);
           const text = textLines.join('\n');
 
-          parsedLines.push({ text, timestamp, endTime, secondary: '', translation: '', id: generateId() });
+          parsedLines.push({ text, timestamp, endTime, secondary: '', id: generateId() });
         }
       }
     });
@@ -384,8 +368,8 @@ export function parseLrcSrtFile(content, filename, options = {}) {
     lrcLines.forEach(line => {
       let remaining = line.trim();
       const tsStepRe = /^\[(\d{1,2}):(\d{2}\.\d{2,3})\]/;
-      const collectedTs = [];
-      let step;
+      const collectedTs: number[] = [];
+      let step: RegExpMatchArray | null;
       while ((step = remaining.match(tsStepRe))) {
         collectedTs.push(parseInt(step[1], 10) * 60 + parseFloat(step[2]));
         remaining = remaining.slice(step[0].length);
@@ -419,7 +403,7 @@ export function parseLrcSrtFile(content, filename, options = {}) {
 
         const words = parseWordTimestamps(rawText);
         const text = rawText.replace(/<\d{1,2}:\d{2}\.\d{2,3}>/g, '').trim();
-        const entry = { text, timestamp: primary, id: generateId() };
+        const entry: EditorLine = { text, timestamp: primary, id: generateId() };
         if (words.length > 0) entry.words = words;
         parsedLines.push(entry);
       } else if (remaining !== '') {
@@ -460,10 +444,10 @@ export function parseLrcSrtFile(content, filename, options = {}) {
       }
     });
   }
-  
+
   // Merge duplicate timestamps (for LRC bilingual files) using a Map for O(n) lookup
-  const mergedLines = [];
-  const timestampMap = new Map();
+  const mergedLines: EditorLine[] = [];
+  const timestampMap = new Map<number, number>();
 
   for (const line of parsedLines) {
     // Section markers are never merged — push directly
@@ -474,7 +458,7 @@ export function parseLrcSrtFile(content, filename, options = {}) {
 
     const key = Math.round(line.timestamp * 100); // group within 0.01s
     if (timestampMap.has(key)) {
-      const existingIndex = timestampMap.get(key);
+      const existingIndex = timestampMap.get(key)!;
       const existing = mergedLines[existingIndex];
       // Skip merge if existing is a section marker
       if (existing.type === 'section') {
@@ -483,31 +467,31 @@ export function parseLrcSrtFile(content, filename, options = {}) {
       }
       if (!existing.secondary) {
         // 2nd same-ts line: treat as secondary (romaji / furigana markup)
-        const secWords = parseWordTimestamps(line.text);
+        const secWords = parseWordTimestamps(line.text ?? '');
         if (secWords.length > 0) {
           existing.secondaryWords = secWords;
-          existing.secondary = line.text.replace(/<\d{1,2}:\d{2}\.\d{2,3}>/g, '').trim();
-        } else if (/\{[^|{]+\|[^}]+\}/.test(line.text)) {
-          const { plainText, segments } = parseRubyMarkup(line.text);
+          existing.secondary = (line.text ?? '').replace(/<\d{1,2}:\d{2}\.\d{2,3}>/g, '').trim();
+        } else if (/\{[^|{]+\|[^}]+\}/.test(line.text ?? '')) {
+          const { plainText, segments } = parseRubyMarkup(line.text ?? '');
           existing.secondary = plainText;
           if (!existing.words?.length) {
-            existing.words = segments.flatMap(s => {
+            existing.words = segments.flatMap((s): EditorWord[] => {
               if (!s.text.trim()) return [];
               return [{ word: s.text, reading: s.reading || undefined, time: null }];
             });
           } else {
             const oldWords = [...existing.words];
-            const newWords = [];
+            const newWords: EditorWord[] = [];
             let oldIdx = 0;
             for (const seg of segments) {
               const segText = seg.text;
               if (!segText) continue;
               let consumed = '';
-              let firstTime = null;
+              let firstTime: number | null = null;
               while (oldIdx < oldWords.length && consumed.length < segText.length) {
                 const w = oldWords[oldIdx];
-                if (firstTime === null) firstTime = w.time;
-                consumed += w.word;
+                if (firstTime === null) firstTime = w.time ?? null;
+                consumed += w.word ?? '';
                 oldIdx++;
               }
               newWords.push({ word: segText, reading: seg.reading || undefined, time: firstTime });
@@ -521,7 +505,7 @@ export function parseLrcSrtFile(content, filename, options = {}) {
       } else {
         // 3rd+ same-ts line: push to translations array
         if (!existing.translations) existing.translations = [];
-        existing.translations.push({ text: line.text });
+        (existing.translations as EditorTranslation[]).push({ text: line.text });
       }
     } else {
       const idx = mergedLines.length;
@@ -536,12 +520,8 @@ export function parseLrcSrtFile(content, filename, options = {}) {
 /**
  * Infers end times for lines that don't have them.
  * Uses the next line's start time (minus a tiny gap) or a default duration for the last line.
- * @param {Array} lines
- * @param {number} duration - total media duration
- * @param {object} srtConfig
- * @returns {Array} new array with endTime populated
  */
-export function inferEndTimes(lines, duration, srtConfig = {}) {
+export function inferEndTimes(lines: EditorLine[], duration?: number, srtConfig: SrtConfig = {}): EditorLine[] {
   const minGap = srtConfig.minSubtitleGap || 0.05;
   const defaultDur = srtConfig.defaultSubtitleDuration || 5;
 
@@ -552,15 +532,15 @@ export function inferEndTimes(lines, duration, srtConfig = {}) {
     if (line.timestamp == null) return line;
 
     // Find the next synced line after this one
-    let nextStart = null;
+    let nextStart: number | null = null;
     for (let j = i + 1; j < lines.length; j++) {
       if (lines[j].timestamp != null) {
-        nextStart = lines[j].timestamp;
+        nextStart = lines[j].timestamp ?? null;
         break;
       }
     }
 
-    let endTime;
+    let endTime: number;
     if (nextStart != null) {
       endTime = Math.max(line.timestamp + minGap, nextStart - minGap);
     } else if (duration) {

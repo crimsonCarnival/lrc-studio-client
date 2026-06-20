@@ -5,21 +5,35 @@
  * Flat format: [{type:'section', label, depth, singers, ...}, {text,...}, ...]
  * Nested format: [{label, depth, singers, lines:[{text,...},...]}]
  */
+import type { EditorLine } from '@/features/editor/services/editor.service';
+
+interface Section {
+  label: string | null;
+  depth: number | null;
+  id: string | number | null;
+  singers?: string[];
+  timestamp: number | null;
+  lines: EditorLine[];
+}
 
 /**
  * Convert client flat lines array to nested sections.
  * Lines before the first section marker are grouped into an anonymous section.
  */
-export function flatToSections(lines) {
-  const sections = [];
-  let current = null;
+// lines/sections cross the editor<->DB JSON boundary with several caller-local
+// shapes (EditorLine, toolbar line, graphql Section, raw unknown), so the public
+// converters stay permissive; the internal Section shape is still modelled.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function flatToSections(lines: any[]): any[] {
+  const sections: Section[] = [];
+  let current: Section | null = null;
 
   for (const line of lines ?? []) {
     if (line?.type === 'section') {
       if (current) sections.push(current);
       current = {
-        label: line.label ?? null,
-        depth: line.depth ?? null,
+        label: (line.label as string | undefined) ?? null,
+        depth: (line.depth as number | undefined) ?? null,
         id: line.id ?? null,
         singers: Array.isArray(line.singers) ? line.singers : undefined,
         timestamp: typeof line.timestamp === 'number' ? line.timestamp : null,
@@ -29,7 +43,7 @@ export function flatToSections(lines) {
       if (!current) current = { label: null, depth: null, id: null, singers: undefined, timestamp: null, lines: [] };
       // Strip section-only fields from line entries
       const { type: _t, label: _l, depth: _d, ...rest } = line;
-      current.lines.push(rest);
+      current.lines.push(rest as EditorLine);
     }
   }
   if (current) sections.push(current);
@@ -39,8 +53,9 @@ export function flatToSections(lines) {
 /**
  * Convert nested sections back to flat lines (with section marker objects).
  */
-export function sectionsToFlat(sections) {
-  const flat = [];
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function sectionsToFlat(sections: any[]): EditorLine[] {
+  const flat: EditorLine[] = [];
   for (const sec of sections ?? []) {
     // Anonymous sections (implicit grouping for lines before any explicit section marker)
     // have no label, depth, id, or singers — skip the marker so they don't appear in the editor.
@@ -55,7 +70,7 @@ export function sectionsToFlat(sections) {
         singers: sec.singers,
         timestamp: sec.timestamp ?? null,
         text: '',
-      });
+      } as EditorLine);
     }
     for (const line of sec.lines ?? []) {
       flat.push(line);
@@ -69,7 +84,7 @@ export function sectionsToFlat(sections) {
  * pointing into the sections structure that flatToSections() would produce.
  * Returns null if the index points to a section marker (not a regular line).
  */
-export function flatIndexToSectionPos(lines, flatIdx) {
+export function flatIndexToSectionPos(lines: EditorLine[], flatIdx: number) {
   // Mirror flatToSections exactly: sections[0] is the implicit anonymous
   // section when lines start before any explicit section marker — those lines
   // must map to sectionIdx 0, not -1.
@@ -97,10 +112,10 @@ export function flatIndexToSectionPos(lines, flatIdx) {
  * Return the singers[] of the section that contains lines[lineIdx].
  * Used to restrict singer picker options to the parent section's roster.
  */
-function getParentSectionSingers(lines, lineIdx) {
+function getParentSectionSingers(lines: EditorLine[], lineIdx: number): string[] {
   for (let i = lineIdx; i >= 0; i--) {
     if (lines[i]?.type === 'section') {
-      return Array.isArray(lines[i].singers) ? lines[i].singers : [];
+      return Array.isArray(lines[i].singers) ? lines[i].singers as string[] : [];
     }
   }
   return [];
@@ -110,12 +125,12 @@ function getParentSectionSingers(lines, lineIdx) {
  * Validate that all singers assigned to a line exist in their parent section.
  * Returns an array of invalid singer names (empty = valid).
  */
-export function validateLineSingers(lines, lineIdx) {
+export function validateLineSingers(lines: EditorLine[], lineIdx: number): string[] {
   const line = lines[lineIdx];
   if (!line || !Array.isArray(line.singers) || line.singers.length === 0) return [];
   const allowed = new Set(getParentSectionSingers(lines, lineIdx));
   if (allowed.size === 0) return []; // section has no singer roster → no restriction
-  return line.singers.filter((s) => !allowed.has(s));
+  return (line.singers as string[]).filter((s) => !allowed.has(s));
 }
 
 /**
@@ -124,10 +139,10 @@ export function validateLineSingers(lines, lineIdx) {
  * shares the same non-empty roster — a mixed selection can't be restricted
  * to a single roster safely, so it falls back to the full song-wide list.
  */
-export function getSingerOptionsForSelection(lines, indices, songArtists) {
+export function getSingerOptionsForSelection(lines: EditorLine[], indices: number[], songArtists?: string[]) {
   const rosters = indices.map((idx) => getParentSectionSingers(lines, idx));
   const first = rosters[0] || [];
   if (first.length === 0) return songArtists || [];
-  const sameForAll = rosters.every((r) => r.length === first.length && r.every((s, i) => s === first[i]));
+  const sameForAll = rosters.every((r) => r.length === first.length && r.every((s: string, i: number) => s === first[i]));
   return sameForAll ? first : (songArtists || []);
 }

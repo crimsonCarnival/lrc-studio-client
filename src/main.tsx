@@ -9,7 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from '
 // });
 import { Toaster } from 'react-hot-toast'
 import './index.css';
-import '@/app/i18n.js';
+import '@/app/i18n';
 import { useTranslation } from 'react-i18next';
 import { useEffect } from 'react';
 import App from '@/app/App'

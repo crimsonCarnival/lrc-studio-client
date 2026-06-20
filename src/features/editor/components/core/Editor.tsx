@@ -1,16 +1,13 @@
-import { useMemo, useCallback, useState, useEffect } from 'react';
+import { useMemo, useEffect } from 'react';
 import type { ComponentProps } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useEditor } from '@features/editor/hooks/useEditor';
+import { useEditorActionDrawer } from '@features/editor/hooks/useEditorActionDrawer';
 import EditorToolbar from './EditorToolbar';
 import EditorPasteArea from '../setup/EditorPasteArea';
 import VirtualizedLineList from './VirtualizedLineList';
-import ActionDrawer, { DrawerItem } from '@/shared/ui/ActionDrawer';
-import { Play, X, Pencil, Trash2, Eraser } from 'lucide-react';
-import { formatTime } from '@/shared/utils/format-time';
-import { hasKanji } from '@/shared/utils/furigana';
+import EditorActionDrawer from './EditorActionDrawer';
 import { splitArtists } from '@/shared/utils/lrc';
-import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 
 const EMPTY_ARTISTS: string[] = [];
@@ -49,18 +46,6 @@ interface EditorProps {
   songArtists?: string[];
 }
 
-interface WordMenuData {
-  lineIndex: number | null;
-  wordIndex: number | null;
-  word: EditorWord | null;
-  isSecondary: boolean;
-}
-
-interface LineMenuData {
-  lineIndex: number | null;
-  line: EditorLine | null;
-}
-
 export default function Editor({
   user,
   lines,
@@ -91,7 +76,6 @@ export default function Editor({
   songArtists = EMPTY_ARTISTS,
 }: EditorProps) {
   "use no memo";
-  const { t } = useTranslation();
   const {
     rawText,
     setRawText,
@@ -202,23 +186,7 @@ export default function Editor({
     return Array.from(singersSet);
   }, [songArtists, lines]);
 
-  const [activeDrawer, setActiveDrawer] = useState<'word' | 'bulk' | 'line' | null>(null);
-  const [activeWordMenuData, setActiveWordMenuData] = useState<WordMenuData>({ lineIndex: null, wordIndex: null, word: null, isSecondary: false });
-  const [activeLineMenuData, setActiveLineMenuData] = useState<LineMenuData>({ lineIndex: null, line: null });
-
-  const handleWordMenuOpen = useCallback((lineIndex: number, wordIndex: number, word: EditorWord, isSecondary: boolean) => {
-    setActiveWordMenuData({ lineIndex, wordIndex, word, isSecondary });
-    setActiveDrawer('word');
-  }, []);
-
-  const handleLineMenuOpen = useCallback((lineIndex: number, line: EditorLine) => {
-    setActiveLineMenuData({ lineIndex, line });
-    setActiveDrawer('line');
-  }, []);
-
-  const handleBulkMenuOpen = useCallback(() => {
-    setActiveDrawer('bulk');
-  }, []);
+  const { activeDrawer, wordData, lineData, openWord, openLine, openBulk, close: closeDrawer } = useEditorActionDrawer();
 
 
   return (
@@ -341,9 +309,9 @@ export default function Editor({
           stampTarget={stampTarget}
           handleStampTargetToggle={handleStampTargetToggle}
           playbackPosition={playbackPosition}
-          onWordMenu={handleWordMenuOpen}
-          onLineMenu={handleLineMenuOpen}
-          onBulkMenu={handleBulkMenuOpen}
+          onWordMenu={openWord}
+          onLineMenu={openLine}
+          onBulkMenu={openBulk}
           modifiedLines={modifiedLines}
         />
         </div>
@@ -351,126 +319,21 @@ export default function Editor({
       </div>
 
       {/* Action Drawer for Mobile Actions */}
-      <ActionDrawer
-        isOpen={activeDrawer !== null}
-        onClose={() => setActiveDrawer(null)}
-        title={activeDrawer === 'word'
-          ? (activeWordMenuData.word?.word ? t('editor.wordDrawerTitle', { word: activeWordMenuData.word.word }) : t('editor.wordDrawerTitleNoWord'))
-          : activeDrawer === 'line'
-            ? t('editor.lineDrawerTitle', { n: (activeLineMenuData.lineIndex ?? 0) + 1 })
-            : t('editor.selectionDrawerTitle', { n: selectedLines.size })
-        }
-      >
-        {activeDrawer === 'word' && (
-          <>
-            <DrawerItem
-              icon={Play}
-              label={activeWordMenuData.word?.time != null ? t('editor.jumpToTime', { time: formatTime(activeWordMenuData.word.time) }) : t('editor.jumpToWord')}
-              onClick={() => {
-                if (activeWordMenuData.word?.time != null && playerRef?.current?.seek) {
-                  playerRef.current.seek(activeWordMenuData.word.time);
-                  if (playerRef.current.play) playerRef.current.play();
-                }
-                setActiveDrawer(null);
-              }}
-            />
-
-            {activeWordMenuData.word?.time != null && (
-              <DrawerItem
-                icon={Eraser}
-                label={t('editor.clearTimestamp')}
-                variant="danger"
-                onClick={() => {
-                  handleClearWordTimestamp(activeWordMenuData.lineIndex!, activeWordMenuData.wordIndex!, activeWordMenuData.isSecondary ? 'secondaryWords' : 'words');
-                  setActiveDrawer(null);
-                }}
-              />
-            )}
-
-            {hasKanji(activeWordMenuData.word?.word || '') && (
-              <DrawerItem
-                icon={Pencil}
-                label={activeWordMenuData.word?.reading ? t('editor.editReading') : t('editor.addReading')}
-                onClick={() => {
-                  setActiveDrawer(null);
-                  const currentReading = activeWordMenuData.word?.reading || '';
-                  const newReading = window.prompt(t('editor.enterReadingPrompt'), currentReading);
-                  if (newReading !== null) {
-                    handleSetWordReading(activeWordMenuData.lineIndex!, activeWordMenuData.wordIndex!, newReading);
-                  }
-                }}
-              />
-            )}
-          </>
-        )}
-
-        {activeDrawer === 'line' && (
-          <>
-            <DrawerItem
-              icon={Play}
-              label={activeLineMenuData.line?.timestamp != null ? t('editor.jumpToTime', { time: formatTime(activeLineMenuData.line.timestamp) }) : t('editor.jumpToLine')}
-              onClick={() => {
-                if (activeLineMenuData.line?.timestamp != null && playerRef?.current?.seek) {
-                  playerRef.current.seek(activeLineMenuData.line.timestamp);
-                  if (playerRef.current.play) playerRef.current.play();
-                }
-                setActiveDrawer(null);
-              }}
-            />
-            {activeLineMenuData.line?.timestamp != null && (
-              <DrawerItem
-                icon={Eraser}
-                label={t('editor.clearTimestamp')}
-                variant="danger"
-                onClick={() => {
-                  handleClearLine(activeLineMenuData.lineIndex!);
-                  setActiveDrawer(null);
-                }}
-              />
-            )}
-            <DrawerItem
-              icon={Trash2}
-              label={t('editor.removeLine')}
-              variant="danger"
-              onClick={() => {
-                handleDeleteLine(activeLineMenuData.lineIndex!);
-                setActiveDrawer(null);
-              }}
-            />
-          </>
-        )}
-
-        {activeDrawer === 'bulk' && (
-          <>
-            <DrawerItem
-              icon={Eraser}
-              label={t('editor.selection.clearTimestamps')}
-              variant="danger"
-              onClick={() => {
-                handleBulkClearTimestamps();
-                setActiveDrawer(null);
-              }}
-            />
-            <DrawerItem
-              icon={Trash2}
-              label={t('editor.selection.deleteSelected')}
-              variant="danger"
-              onClick={() => {
-                handleBulkDelete();
-                setActiveDrawer(null);
-              }}
-            />
-            <DrawerItem
-              icon={X}
-              label={t('editor.selection.deselectAll')}
-              onClick={() => {
-                clearSelection();
-                setActiveDrawer(null);
-              }}
-            />
-          </>
-        )}
-      </ActionDrawer>
+      <EditorActionDrawer
+        activeDrawer={activeDrawer}
+        wordData={wordData}
+        lineData={lineData}
+        selectedCount={selectedLines.size}
+        onClose={closeDrawer}
+        playerRef={playerRef}
+        handleClearWordTimestamp={handleClearWordTimestamp}
+        handleSetWordReading={handleSetWordReading}
+        handleClearLine={handleClearLine}
+        handleDeleteLine={handleDeleteLine}
+        handleBulkClearTimestamps={handleBulkClearTimestamps}
+        handleBulkDelete={handleBulkDelete}
+        clearSelection={clearSelection}
+      />
 
       {confirmModal}
     </div>

@@ -1,4 +1,5 @@
 import { request } from '@/app/api.client';
+import type { EditorLine } from './editor.service';
 import {
   parseLrcSrtFile as localParse,
   compileLRC as localCompileLRC,
@@ -62,7 +63,7 @@ export const lyricsService = {
         body: JSON.stringify({ lines, includeTranslations, precision, metadata, lineEndings, includeSecondary, wordPrecision, exportTranslationIndex }),
       });
     } catch {
-      const output = localCompileLRC(lines, includeTranslations, precision as 'hundredths' | 'thousandths' | undefined, metadata, lineEndings as 'lf' | 'crlf' | undefined, includeSecondary, wordPrecision, exportTranslationIndex);
+      const output = localCompileLRC(lines as EditorLine[], includeTranslations, precision as 'hundredths' | 'thousandths' | undefined, metadata as Parameters<typeof localCompileLRC>[3], lineEndings as 'lf' | 'crlf' | undefined, includeSecondary, wordPrecision as string | undefined, exportTranslationIndex);
       return { output, format: 'lrc' };
     }
   },
@@ -74,7 +75,7 @@ export const lyricsService = {
         body: JSON.stringify({ lines, duration, includeTranslations, lineEndings, srtConfig, includeSecondary, exportTranslationIndex }),
       });
     } catch {
-      const output = localCompileSRT(lines, duration ?? 0, includeTranslations, lineEndings as 'lf' | 'crlf' | undefined, srtConfig, includeSecondary, exportTranslationIndex);
+      const output = localCompileSRT(lines as EditorLine[], duration ?? 0, includeTranslations, lineEndings as 'lf' | 'crlf' | undefined, srtConfig as Parameters<typeof localCompileSRT>[4], includeSecondary, exportTranslationIndex);
       return { output, format: 'srt' };
     }
   },
@@ -87,7 +88,7 @@ export const lyricsService = {
       });
     } catch (err) {
       if (isNetworkError(err)) {
-        const result = localInferEndTimes(lines, duration ?? 0, srtConfig);
+        const result = localInferEndTimes(lines as EditorLine[], duration ?? 0, srtConfig as Parameters<typeof localInferEndTimes>[2]);
         return { lines: result };
       }
       throw err;

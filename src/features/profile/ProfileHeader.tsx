@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
@@ -6,6 +5,7 @@ import { LazyImage } from '@ui/LazyImage';
 import { Settings, Timer, Trophy, Activity, BarChart3 } from 'lucide-react';
 import { BadgeList } from '@/features/badges/BadgeList';
 import { Tip } from '@/shared/ui/tip';
+import { FollowButton } from './FollowButton';
 import type { PublicUser } from '@/types';
 
 function AvatarBadge({ avatarUrl, name, size = 'lg' }: { avatarUrl?: string | null; name: string; size?: 'lg' | 'sm' }) {
@@ -57,8 +57,6 @@ export function ProfileHeader({
 }: ProfileHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  // Two-step unfollow confirmation is local to this button.
-  const [confirmingUnfollow, setConfirmingUnfollow] = useState(false);
 
   return (
     <div className="glass rounded-[2rem] p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden mb-6">
@@ -171,36 +169,12 @@ export function ProfileHeader({
         </div>
       ) : (
         <div className="absolute top-4 right-4">
-          {isFollowing ? (
-            confirmingUnfollow ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => { setConfirmingUnfollow(false); onUnfollow(); }}
-                disabled={followLoading}
-                className="text-muted-foreground border-border"
-              >
-                {t('profile.confirmUnfollow')}
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmingUnfollow(true)}
-                disabled={followLoading}
-              >
-                {t('profile.following')}
-              </Button>
-            )
-          ) : (
-            <Button
-              size="sm"
-              onClick={onFollow}
-              disabled={followLoading}
-            >
-              {t('profile.follow')}
-            </Button>
-          )}
+          <FollowButton
+            isFollowing={isFollowing}
+            followLoading={followLoading}
+            onFollow={onFollow}
+            onUnfollow={onUnfollow}
+          />
         </div>
       )}
     </div>

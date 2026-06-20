@@ -1,5 +1,5 @@
 import { startAuthentication } from '@simplewebauthn/browser';
-import { request } from '@/app/api.client.js';
+import { request } from '@/app/api.client';
 
 /**
  * Coordinates the admin re-authentication ("sudo") flow. Destructive admin
@@ -8,24 +8,31 @@ import { request } from '@/app/api.client.js';
  * retried once. Keeps the prompt logic out of every call site. (F24)
  */
 
-let pending = null;            // { resolve, reject, promise } for the in-flight prompt
-const subscribers = new Set(); // modal visibility subscribers
+interface PendingPrompt {
+  resolve: () => void;
+  reject: (err: unknown) => void;
+  promise: Promise<void>;
+}
+
+let pending: PendingPrompt | null = null; // for the in-flight prompt
+const subscribers = new Set<(open: boolean) => void>(); // modal visibility subscribers
 
 /** Subscribe to prompt open/close. Returns an unsubscribe fn. */
-export function onSudoPrompt(cb) {
+export function onSudoPrompt(cb: (open: boolean) => void) {
   subscribers.add(cb);
   return () => subscribers.delete(cb);
 }
 
-function emit(open) {
+function emit(open: boolean) {
   subscribers.forEach((cb) => cb(open));
 }
 
-function promptForPassword() {
+function promptForPassword(): Promise<void> {
   // Coalesce concurrent prompts into a single modal.
   if (pending) return pending.promise;
-  let resolve, reject;
-  const promise = new Promise((res, rej) => { resolve = res; reject = rej; });
+  let resolve!: () => void;
+  let reject!: (err: unknown) => void;
+  const promise = new Promise<void>((res, rej) => { resolve = res; reject = rej; });
   pending = { resolve, reject, promise };
   emit(true);
   return promise;
@@ -40,7 +47,7 @@ export function getSudoFactors() {
  * Called by the modal on submit. Throws on a bad password so the modal can show
  * an error and let the user retry; only resolves the pending prompt on success.
  */
-export async function submitSudoPassword(password) {
+export async function submitSudoPassword(password: string) {
   await request('/admin/sudo', { method: 'POST', body: JSON.stringify({ password }) });
   emit(false);
   if (pending) { pending.resolve(); pending = null; }
@@ -52,7 +59,7 @@ export async function submitSudoPassword(password) {
  * cancellation or failure so the modal can react.
  */
 export async function submitSudoPasskey() {
-  const { options } = await request('/admin/sudo/passkey/options', { method: 'POST', body: JSON.stringify({}) });
+  const { options } = await request('/admin/sudo/passkey/options', { method: 'POST', body: JSON.stringify({}) }) as { options: Parameters<typeof startAuthentication>[0]['optionsJSON'] };
   const assertion = await startAuthentication({ optionsJSON: options });
   await request('/admin/sudo/passkey/verify', { method: 'POST', body: JSON.stringify(assertion) });
   emit(false);
@@ -63,7 +70,7 @@ export async function submitSudoPasskey() {
 export function cancelSudo() {
   emit(false);
   if (pending) {
-    const err = new Error('sudo_cancelled');
+    const err = new Error('sudo_cancelled') as Error & { code?: string };
     err.code = 'sudo_cancelled';
     pending.reject(err);
     pending = null;
@@ -71,19 +78,19 @@ export function cancelSudo() {
 }
 
 /** True if `err` is a rejection from the user dismissing the sudo prompt (not a real failure). */
-export function isSudoCancelled(err) {
-  return err?.code === 'sudo_cancelled';
+export function isSudoCancelled(err: unknown): boolean {
+  return (err as { code?: string })?.code === 'sudo_cancelled';
 }
 
 /**
  * Wrap a destructive admin call. On `sudo_required`, prompt for the password and
  * retry once. Any other error (or a cancelled prompt) propagates to the caller.
  */
-export async function withSudo(fn) {
+export async function withSudo<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (err) {
-    if (err?.code === 'sudo_required') {
+    if ((err as { code?: string })?.code === 'sudo_required') {
       await promptForPassword(); // rejects if the user cancels the modal
       return fn();               // retry once with the fresh grant
     }

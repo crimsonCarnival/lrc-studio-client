@@ -4,8 +4,8 @@
 // The public context surface is strongly typed via SettingsContextValue.
 import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { DEFAULT_SETTINGS } from './settings-defaults.js';
-import { SettingsContext } from './settings-context-value.js';
+import { DEFAULT_SETTINGS } from './settings-defaults';
+import { SettingsContext } from './settings-context-value';
 import { settings as settingsApi, getAccessToken } from '@/app/api';
 import type { AppSettings, SettingsContextValue } from './settings.types';
 
