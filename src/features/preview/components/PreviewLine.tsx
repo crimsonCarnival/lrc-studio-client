@@ -1,9 +1,11 @@
 import React from 'react';
+import type { Ref } from 'react';
 import { useSettings } from '@/features/settings/useSettings';
 import { toHiragana, toKatakana, parseRubyMarkup } from '@/shared/utils/furigana';
-import { Tip } from '@ui/tip';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import { useTranslation } from 'react-i18next';
+import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
+import type { AppSettings } from '@/features/settings/settings.types';
 
 /** Role chip color classes, matching the editor badges */
 const SINGER_CHIP_COLORS = [
@@ -21,9 +23,49 @@ const WORD_SINGER_PREVIEW_COLORS = [
   'text-amber-400',     // singer 3
 ];
 
-function getLineSingers(line) {
+type SizeMap = Record<string, string>;
+type ReadingFmt = (r?: string) => string | undefined;
+
+interface DisplayLine {
+  originalIndex: number;
+  [key: string]: unknown;
+}
+
+function getLineSingers(line: EditorLine): string[] {
   return line.singers || [];
 }
+
+interface PreviewLineProps {
+  line: EditorLine;
+  originalIndex: number;
+  prevLine?: EditorLine | null;
+  hasMultipleSingers?: boolean;
+  sectionNumbers?: Map<string | number | undefined, number> | null;
+  displayedActiveIndex: number;
+  lockedLineIndex: number;
+  isDualLine: boolean;
+  displayLines: DisplayLine[];
+  playbackPosition: number;
+  activeRef?: Ref<HTMLButtonElement>;
+  handleLineClick: (line: EditorLine, i: number) => void;
+  handleLineHover: (i: number) => void;
+  handleLineHoverEnd: () => void;
+  showTranslationsInPreview?: boolean;
+  showFuriganaInPreview?: boolean;
+  activeTranslationIndex?: number;
+  sizeOption: string;
+  spacingOption: string;
+  activeSecondarySizes: SizeMap;
+  inactiveSecondarySizes: SizeMap;
+  activeFontSizes: SizeMap;
+  inactiveFontSizes: SizeMap;
+  activeMargin: SizeMap;
+  distanceFromActive?: number | null;
+  hasMedia?: boolean;
+  isPlaying?: boolean;
+  playbackSpeed?: number;
+}
+
 export default function PreviewLine({
   line,
   originalIndex: i,
@@ -53,7 +95,7 @@ export default function PreviewLine({
   hasMedia,
   isPlaying,
   playbackSpeed = 1,
-}) {
+}: PreviewLineProps) {
   const { settings } = useSettings();
   const { t } = useTranslation();
 
@@ -66,7 +108,7 @@ export default function PreviewLine({
     const labelStr = sectionNum != null
       ? `${formatSectionLabel(baseLabel || line.label, t)} ${sectionNum}`
       : formatSectionLabel(line.label, t);
-    
+
     return (
       <div className={`flex items-center gap-3 px-2 sm:px-4 py-2 ${isRoot ? 'my-4' : 'my-1'}`}>
         <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/60'}`} />
@@ -116,9 +158,9 @@ export default function PreviewLine({
   // Active translation text for this line
   const activeTranslationText = line.translations?.[activeTranslationIndex]?.text ?? null;
 
-  const currentLineIndexInDisplay = displayLines?.findIndex(dl => dl.originalIndex === i);
+  const currentLineIndexInDisplay = displayLines?.findIndex(dl => dl.originalIndex === i) ?? -1;
   const prevLineFromDisplay = currentLineIndexInDisplay > 0 ? displayLines[currentLineIndexInDisplay - 1] : null;
-  const effectivePrevLine = prevLineFromDisplay ?? prevLineProp;
+  const effectivePrevLine = (prevLineFromDisplay as unknown as EditorLine) ?? prevLineProp;
   const prevSingersStr = effectivePrevLine ? getLineSingers(effectivePrevLine).join(',') : '';
   const currentLineSingers = getLineSingers(line);
   const currentSingersStr = currentLineSingers.join(',');
@@ -182,11 +224,11 @@ export default function PreviewLine({
               </div>
             )}
             <MainTrack
-              line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={hasWordTimestamps}
+              line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={!!hasWordTimestamps}
               playbackPosition={playbackPosition} activeFontSizes={activeFontSizes}
               inactiveFontSizes={inactiveFontSizes} sizeOption={sizeOption} spacingOption={spacingOption}
               settings={settings} showFuriganaInPreview={showFuriganaInPreview}
-              isPlaying={isPlaying} playbackSpeed={playbackSpeed} hasReadings={hasReadings}
+              isPlaying={isPlaying} playbackSpeed={playbackSpeed} hasReadings={!!hasReadings}
             />
             {line.secondary && renderSecondaryTrack({
               line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings,
@@ -223,11 +265,11 @@ export default function PreviewLine({
             </div>
           )}
           <MainTrack
-            line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={hasWordTimestamps}
+            line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={!!hasWordTimestamps}
             playbackPosition={playbackPosition} activeFontSizes={activeFontSizes}
             inactiveFontSizes={inactiveFontSizes} sizeOption={sizeOption} spacingOption={spacingOption}
             settings={settings} showFuriganaInPreview={showFuriganaInPreview}
-            isPlaying={isPlaying} playbackSpeed={playbackSpeed} hasReadings={hasReadings}
+            isPlaying={isPlaying} playbackSpeed={playbackSpeed} hasReadings={!!hasReadings}
           />
 
           {line.secondary && renderSecondaryTrack({
@@ -258,9 +300,10 @@ export default function PreviewLine({
 }
 
 // ——— CJK detection for spaceless scripts ———
-function isCJKChar(ch) {
+function isCJKChar(ch?: string): boolean {
   if (!ch) return false;
   const code = ch.codePointAt(0);
+  if (code == null) return false;
   return (
     (code >= 0x3000 && code <= 0x9FFF) ||  // CJK Unified, Hiragana, Katakana, CJK Symbols
     (code >= 0xF900 && code <= 0xFAFF) ||   // CJK Compatibility Ideographs
@@ -269,16 +312,33 @@ function isCJKChar(ch) {
   );
 }
 
-function needsSpaceAfter(currentWord, nextWord) {
+function needsSpaceAfter(currentWord?: string, nextWord?: string): boolean {
   if (!nextWord) return false;
-  const lastChar = currentWord.slice(-1);
+  const lastChar = (currentWord || '').slice(-1);
   const firstChar = nextWord.slice(0, 1);
   return !isCJKChar(lastChar) && !isCJKChar(firstChar);
 }
 
+interface MainTrackProps {
+  line: EditorLine;
+  isActive: boolean;
+  isPast: boolean;
+  hasWordTimestamps: boolean;
+  playbackPosition: number;
+  activeFontSizes: SizeMap;
+  inactiveFontSizes: SizeMap;
+  sizeOption: string;
+  spacingOption: string;
+  settings: AppSettings;
+  showFuriganaInPreview?: boolean;
+  isPlaying?: boolean;
+  playbackSpeed: number;
+  hasReadings: boolean;
+}
+
 // ——— Render main text track with karaoke fill ———
 // Fill effect is ONLY applied when word-level timestamps exist.
-function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying, playbackSpeed, hasReadings }) {
+function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying, playbackSpeed, hasReadings }: MainTrackProps) {
   const fillTrack = settings.editor?.display?.karaokeFillTrack ?? 'main';
   const fillEasing = settings.editor?.display?.karaokeFillEasing ?? 'linear';
   const skipMainFill = isActive && fillTrack === 'secondary';
@@ -292,21 +352,21 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
   // Furigana readings come from word.reading; gated by showFuriganaInPreview
   const mainText = line.text || '♪';
   const readingFmt = settings.editor?.display?.readingFormat || 'hiragana';
-  const fmtReading = (r) => r ? (readingFmt === 'katakana' ? toKatakana(r) : toHiragana(r)) : r;
+  const fmtReading: ReadingFmt = (r) => r ? (readingFmt === 'katakana' ? toKatakana(r) : toHiragana(r)) : r;
 
   // Estimate fill end time for the last timed word to avoid an abrupt 0→100% snap
-  let lastWordFillEnd = null;
+  let lastWordFillEnd: number | null = null;
   if (effectiveHasWordTimestamps) {
-    const timedWordsList = line.words.filter((w2) => w2.time != null);
+    const timedWordsList = (line.words || []).filter((w2) => w2.time != null);
     if (timedWordsList.length > 0) {
       const lastTW = timedWordsList[timedWordsList.length - 1];
-      if (line.endTime != null && line.endTime > lastTW.time) {
+      if (line.endTime != null && line.endTime > lastTW.time!) {
         lastWordFillEnd = line.endTime;
       } else if (timedWordsList.length >= 2) {
-        const avgDur = (lastTW.time - timedWordsList[0].time) / (timedWordsList.length - 1);
-        lastWordFillEnd = lastTW.time + avgDur;
+        const avgDur = (lastTW.time! - timedWordsList[0].time!) / (timedWordsList.length - 1);
+        lastWordFillEnd = lastTW.time! + avgDur;
       } else {
-        lastWordFillEnd = lastTW.time + 0.8;
+        lastWordFillEnd = lastTW.time! + 0.8;
       }
     }
   }
@@ -319,20 +379,20 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
         ? words.map((w, wi) => {
           // Calculate effective start and end times for this word (interpolate if untimed)
           let startTime = w.time;
-          let endTime = null;
+          let endTime: number | null = null;
 
           if (startTime == null) {
             // Untimed word: find surrounding timed anchors
             let prevT = line.timestamp ?? 0;
             let untimedCountBefore = 0;
             for (let j = wi - 1; j >= 0; j--) {
-              if (words[j].time != null) { prevT = words[j].time; break; }
+              if (words[j].time != null) { prevT = words[j].time!; break; }
               untimedCountBefore++;
             }
             let nextT = lastWordFillEnd;
             let untimedCountAfter = 0;
             for (let j = wi + 1; j < words.length; j++) {
-              if (words[j].time != null) { nextT = words[j].time; break; }
+              if (words[j].time != null) { nextT = words[j].time!; break; }
               untimedCountAfter++;
             }
             const totalGapWords = untimedCountBefore + untimedCountAfter + 1;
@@ -364,10 +424,10 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
                     className={`absolute left-0 top-0 h-full overflow-hidden whitespace-nowrap karaoke-fill-glow karaoke-fill-mask ${wordSingerColor || 'text-primary'}`}
                     style={{
                       animationName: 'karaoke-fill-anim',
-                      animationDuration: `${(endTime - startTime) / playbackSpeed}s`,
+                      animationDuration: `${(endTime! - startTime!) / playbackSpeed}s`,
                       animationTimingFunction: fillEasing,
                       animationFillMode: 'both',
-                      animationDelay: `${(startTime - playbackPosition) / playbackSpeed}s`,
+                      animationDelay: `${(startTime! - playbackPosition) / playbackSpeed}s`,
                       animationPlayState: isPlaying ? 'running' : 'paused',
                     }}
                     onAnimationStart={(e) => { e.currentTarget.style.willChange = 'width'; }}
@@ -383,12 +443,12 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
         })
         // No word timestamps: render with singer coloring if line has singers
         : (() => {
-          const hasSingerSplit = line.singers?.length >= 1 && line.words?.length > 0;
+          const hasSingerSplit = (line.singers?.length ?? 0) >= 1 && (line.words?.length ?? 0) > 0;
           if (hasSingerSplit) {
-            return line.words.map((w, wi) => {
-              const effIdx = w.singerIndex ?? (line.singers.length === 1 ? 0 : null);
+            return (line.words || []).map((w, wi) => {
+              const effIdx = w.singerIndex ?? (line.singers!.length === 1 ? 0 : null);
               const singerColor = effIdx != null ? (WORD_SINGER_PREVIEW_COLORS[effIdx] || '') : '';
-              const nextWord = line.words[wi + 1];
+              const nextWord = (line.words || [])[wi + 1];
               const addSpace = needsSpaceAfter(w.word, nextWord?.word);
               return (
                 <React.Fragment key={wi}>
@@ -398,7 +458,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
               );
             });
           }
-          const singerFallbackColor = line.singers?.length >= 1 ? (WORD_SINGER_PREVIEW_COLORS[0] || '') : '';
+          const singerFallbackColor = (line.singers?.length ?? 0) >= 1 ? (WORD_SINGER_PREVIEW_COLORS[0] || '') : '';
           const plainContent = hasReadings ? renderLineWithReadings(line, fmtReading, showFuriganaInPreview) : mainText;
           return singerFallbackColor
             ? <span className={singerFallbackColor}>{plainContent}</span>
@@ -409,7 +469,19 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
   );
 }
 
-function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings, isPlaying, playbackSpeed }) {
+interface SecondaryTrackParams {
+  line: EditorLine;
+  isActive: boolean;
+  playbackPosition: number;
+  activeSecondarySizes: SizeMap;
+  inactiveSecondarySizes: SizeMap;
+  sizeOption: string;
+  settings: AppSettings;
+  isPlaying?: boolean;
+  playbackSpeed: number;
+}
+
+function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings, isPlaying, playbackSpeed }: SecondaryTrackParams) {
   const fillTrack = settings?.editor?.display?.karaokeFillTrack ?? 'main';
   const fillEasing = settings?.editor?.display?.karaokeFillEasing ?? 'linear';
   const hasSecondaryStamps = line.secondaryWords?.some((w) => w.time != null);
@@ -425,38 +497,40 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
     return <p className={baseClass}><ParsedSecondary text={line.secondary} /></p>;
   }
 
+  const secWords = line.secondaryWords || [];
+
   // Estimate fill end time for the last timed secondary word
-  const timedSecWordsList = line.secondaryWords.filter((w2) => w2.time != null);
-  let lastSecWordFillEnd = null;
+  const timedSecWordsList = secWords.filter((w2) => w2.time != null);
+  let lastSecWordFillEnd: number | null = null;
   if (timedSecWordsList.length > 0) {
     const lastTW = timedSecWordsList[timedSecWordsList.length - 1];
     if (timedSecWordsList.length >= 2) {
-      const avgDur = (lastTW.time - timedSecWordsList[0].time) / (timedSecWordsList.length - 1);
-      lastSecWordFillEnd = lastTW.time + avgDur;
+      const avgDur = (lastTW.time! - timedSecWordsList[0].time!) / (timedSecWordsList.length - 1);
+      lastSecWordFillEnd = lastTW.time! + avgDur;
     } else {
-      lastSecWordFillEnd = lastTW.time + 0.8;
+      lastSecWordFillEnd = lastTW.time! + 0.8;
     }
   }
 
   return (
     <p className={baseClass}>
-      {line.secondaryWords.map((w, wi) => {
+      {secWords.map((w, wi) => {
         // Calculate effective start and end times for this word (interpolate if untimed)
         let startTime = w.time;
-        let endTime = null;
+        let endTime: number | null = null;
 
         if (startTime == null) {
           // Untimed word: find surrounding timed anchors
           let prevT = line.timestamp ?? 0;
           let untimedCountBefore = 0;
           for (let j = wi - 1; j >= 0; j--) {
-            if (line.secondaryWords[j].time != null) { prevT = line.secondaryWords[j].time; break; }
+            if (secWords[j].time != null) { prevT = secWords[j].time!; break; }
             untimedCountBefore++;
           }
           let nextT = lastSecWordFillEnd;
           let untimedCountAfter = 0;
-          for (let j = wi + 1; j < line.secondaryWords.length; j++) {
-            if (line.secondaryWords[j].time != null) { nextT = line.secondaryWords[j].time; break; }
+          for (let j = wi + 1; j < secWords.length; j++) {
+            if (secWords[j].time != null) { nextT = secWords[j].time!; break; }
             untimedCountAfter++;
           }
           const totalGapWords = untimedCountBefore + untimedCountAfter + 1;
@@ -466,9 +540,9 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
           endTime = prevT + (slice * (untimedCountBefore + 2));
         } else {
           // Timed word: ends when next timed word starts
-          endTime = line.secondaryWords.slice(wi + 1).find((w2) => w2.time != null)?.time ?? lastSecWordFillEnd;
+          endTime = secWords.slice(wi + 1).find((w2) => w2.time != null)?.time ?? lastSecWordFillEnd;
         }
-        const addSpace = wi < line.secondaryWords.length - 1;
+        const addSpace = wi < secWords.length - 1;
         return (
           <React.Fragment key={wi}>
             <span className="relative inline-block">
@@ -477,10 +551,10 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
                 className="absolute left-0 top-0 h-full overflow-hidden text-zinc-200 whitespace-nowrap karaoke-fill-mask"
                 style={{
                   animationName: 'karaoke-fill-anim',
-                  animationDuration: `${(endTime - startTime) / playbackSpeed}s`,
+                  animationDuration: `${(endTime! - startTime!) / playbackSpeed}s`,
                   animationTimingFunction: fillEasing,
                   animationFillMode: 'both',
-                  animationDelay: `${(startTime - playbackPosition) / playbackSpeed}s`,
+                  animationDelay: `${(startTime! - playbackPosition) / playbackSpeed}s`,
                   animationPlayState: isPlaying ? 'running' : 'paused',
                 }}
                 onAnimationStart={(e) => { e.currentTarget.style.willChange = 'width'; }}
@@ -498,11 +572,11 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
 }
 
 // ——— Parse {word|reading} markup in secondary text into rendered ruby elements ———
-function ParsedSecondary({ text }) {
+function ParsedSecondary({ text }: { text?: string }) {
   if (!text) return null;
   const { segments } = parseRubyMarkup(text);
   let charOffset = 0;
-  return segments.map((seg) => {
+  return segments.map((seg: { text: string; reading?: string | null }) => {
     const key = charOffset;
     charOffset += seg.text.length;
     return seg.reading ? (
@@ -514,14 +588,14 @@ function ParsedSecondary({ text }) {
 }
 
 // ——— Kanji detection: only kanji get ruby annotations, not hiragana/katakana ———
-const KANJI_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF]/;
-function isKanjiWord(word) {
-  return KANJI_RE.test(word);
+const KANJI_RE = /[一-鿿㐀-䶿豈-﫿]/;
+function isKanjiWord(word?: string): boolean {
+  return KANJI_RE.test(word || '');
 }
 
 
 // ——— Render line text with ruby annotations from word.reading (only on kanji) ———
-function renderLineWithReadings(line, fmtReading, showFurigana = true) {
+function renderLineWithReadings(line: EditorLine, fmtReading: ReadingFmt, showFurigana = true) {
   const words = line.words || [];
   if (words.length === 0) return line.text || '♪';
   return words.map((w, i) => {

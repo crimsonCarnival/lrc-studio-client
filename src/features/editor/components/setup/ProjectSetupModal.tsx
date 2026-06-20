@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import type { ChangeEvent, FormEvent, MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Textarea } from '@ui/textarea';
@@ -13,9 +15,21 @@ import { uploadsService } from '@/features/projects/services/uploads.service';
 import { PRIMARY_GENRES } from '@features/editor/constants/genre-tags';
 import { Switch } from '@/shared/ui/switch';
 
-const EMPTY_TAGS = [];
+const EMPTY_TAGS: string[] = [];
 
-function SourceInfoBadge({ sourceInfo, initialName, t }) {
+interface SourceInfo {
+  ytUrl?: string;
+  cloudinary?: { title?: string; fileName?: string } | null;
+  title?: string;
+}
+
+interface SourceInfoBadgeProps {
+  sourceInfo?: SourceInfo | null;
+  initialName: string;
+  t: TFunction;
+}
+
+function SourceInfoBadge({ sourceInfo, initialName, t }: SourceInfoBadgeProps) {
   if (!sourceInfo) return null;
   const { ytUrl, cloudinary, title } = sourceInfo;
 
@@ -24,7 +38,7 @@ function SourceInfoBadge({ sourceInfo, initialName, t }) {
   let sourceValue = title || initialName;
 
   if (ytUrl) {
-    sourceIcon = <svg preserveAspectRatio="xMidYMid" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" /><path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" className="size-4 text-red-500" /></svg>
+    sourceIcon = <svg preserveAspectRatio="xMidYMid" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" /><path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" className="size-4 text-red-500" /></svg>;
     sourceLabel = t('setup.youtubeVideo');
     sourceValue = title || initialName || ytUrl;
   } else if (cloudinary) {
@@ -50,6 +64,52 @@ function SourceInfoBadge({ sourceInfo, initialName, t }) {
   );
 }
 
+interface ProjectSetupForm {
+  name: string;
+  description: string;
+  tags: string[];
+  tagInput: string;
+  songName: string;
+  songArtist: string;
+  songAlbum: string;
+  songYear: string;
+  genre: string;
+  coverImage: string;
+  isPublic: boolean;
+}
+
+export interface ProjectSetupConfirm {
+  name: string;
+  title: string;
+  description: string;
+  tags: string[];
+  songName: string;
+  songArtist: string;
+  songAlbum: string;
+  songYear: string;
+  genre: string;
+  coverImage: string;
+  isPublic: boolean;
+}
+
+interface ProjectSetupModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (data: ProjectSetupConfirm) => void;
+  initialName?: string;
+  initialDescription?: string;
+  initialTags?: string[];
+  initialSongName?: string;
+  initialSongArtist?: string;
+  initialSongAlbum?: string;
+  initialSongYear?: string;
+  initialGenre?: string;
+  initialCoverImage?: string;
+  initialIsPublic?: boolean;
+  isEditing?: boolean;
+  sourceInfo?: SourceInfo | null;
+}
+
 export default function ProjectSetupModal({
   isOpen,
   onClose,
@@ -65,13 +125,13 @@ export default function ProjectSetupModal({
   initialCoverImage = '',
   initialIsPublic = false,
   isEditing = false,
-  sourceInfo = null
-}) {
+  sourceInfo = null,
+}: ProjectSetupModalProps) {
   const { t } = useTranslation();
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [imageUploading, setImageUploading] = useState(false);
-  const coverImageInputRef = useRef(null);
-  const [form, setForm] = useState(() => ({
+  const coverImageInputRef = useRef<HTMLInputElement>(null);
+  const [form, setForm] = useState<ProjectSetupForm>(() => ({
     name: initialName || '',
     description: initialDescription || '',
     tags: initialTags || [],
@@ -108,18 +168,18 @@ export default function ProjectSetupModal({
 
   if (!isOpen) return null;
 
-  const addTag = (text) => {
+  const addTag = (text: string) => {
     const trimmed = text.trim();
     if (trimmed && !form.tags.includes(trimmed)) {
       setForm(f => ({ ...f, tags: [...f.tags, trimmed] }));
     }
   };
 
-  const removeTag = (index) => {
+  const removeTag = (index: number) => {
     setForm(f => ({ ...f, tags: f.tags.filter((_, i) => i !== index) }));
   };
 
-  const handleTagInputChange = (e) => {
+  const handleTagInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (value.includes(',')) {
       const parts = value.split(',');
@@ -130,7 +190,7 @@ export default function ProjectSetupModal({
     }
   };
 
-  const handleImageUpload = async (field, e) => {
+  const handleImageUpload = async (field: keyof ProjectSetupForm, e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) return;
@@ -138,7 +198,7 @@ export default function ProjectSetupModal({
     setImageUploading(true);
     try {
       const token = executeRecaptcha ? await executeRecaptcha('upload_cover') : undefined;
-      const url = await uploadsService.uploadCoverImage(file, token);
+      const url = await uploadsService.uploadCoverImage(file, token) as string;
       setForm(f => ({ ...f, [field]: url }));
     } catch { /* ignore */ }
     finally {
@@ -147,7 +207,7 @@ export default function ProjectSetupModal({
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent | ReactMouseEvent) => {
     e.preventDefault();
     const finalTags = form.tagInput.trim() ? [...form.tags, form.tagInput.trim()] : form.tags;
     onConfirm({
@@ -391,14 +451,14 @@ export default function ProjectSetupModal({
                     </span>
                   </div>
                   <span className="text-[11px] text-zinc-500">
-                    {form.isPublic 
-                      ? t('project.publicDescription', 'Anyone can view this project on your profile.') 
+                    {form.isPublic
+                      ? t('project.publicDescription', 'Anyone can view this project on your profile.')
                       : t('project.privateDescription', 'Only you can view and edit this project.')}
                   </span>
                 </div>
-                <Switch 
-                  checked={form.isPublic} 
-                  onCheckedChange={(checked) => setForm(f => ({ ...f, isPublic: checked }))} 
+                <Switch
+                  checked={form.isPublic}
+                  onCheckedChange={(checked) => setForm(f => ({ ...f, isPublic: checked }))}
                 />
               </div>
 

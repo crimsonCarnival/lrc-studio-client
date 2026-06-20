@@ -1,6 +1,8 @@
 import { useRef } from 'react';
+import type { ComponentProps, PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import { LazyMotion, domAnimation, m as M, useScroll, useSpring } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useSettings } from '@/features/settings/useSettings';
 import { useSettingsModal } from '@features/settings/hooks/useSettingsModal';
 import { useScrollLock } from '@/shared/hooks/useScrollLock';
@@ -20,10 +22,13 @@ import ChangesHistorySettings from './panels/ChangesHistorySettings';
 import CollapsibleSection from './CollapsibleSection';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
-import { X, Headphones, FileText, Download, Monitor, Keyboard, SlidersHorizontal, User, ShieldCheck, EyeOff, Link2, History } from 'lucide-react';
+import { X, Headphones, FileText, Download, Monitor, Keyboard, SlidersHorizontal, User, ShieldCheck, Link2, History } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Tip } from '@ui/tip';
+import type { AppSettings } from '@/features/settings/settings.types';
+import type { AuthUser } from '@/features/auth/hooks/useAuth';
 
-function ModalScrollProgress({ container }) {
+function ModalScrollProgress({ container }: { container: RefObject<HTMLElement | null> }) {
     const { scrollYProgress } = useScroll({ container });
     const scaleX = useSpring(scrollYProgress, { stiffness: 200, damping: 50, restDelta: 0.001 });
     return (
@@ -36,13 +41,22 @@ function ModalScrollProgress({ container }) {
     );
 }
 
-const TABS = [
+interface SettingsTab {
+  id: string;
+  labelKey: string;
+  icon: LucideIcon;
+  authOnly?: boolean;
+  group: string;
+  fallback?: string;
+}
+
+const TABS: SettingsTab[] = [
   // Account & Identity
   { id: 'profile', labelKey: 'profile.tabs.account', icon: User, authOnly: true, group: 'account' },
   { id: 'security', labelKey: 'profile.sections.security', icon: ShieldCheck, authOnly: true, group: 'account' },
   { id: 'connections', labelKey: 'profile.tabs.connections', icon: Link2, authOnly: true, group: 'account' },
   { id: 'history', labelKey: 'profile.tabs.history', icon: History, authOnly: true, group: 'account' },
-  
+
   // App Preferences
   { id: 'playback', labelKey: 'settings.playback.label', icon: Headphones, group: 'preferences' },
   { id: 'editor', labelKey: 'settings.editor.label', icon: FileText, group: 'preferences' },
@@ -54,23 +68,47 @@ const TABS = [
   { id: 'advanced', labelKey: 'settings.advanced.label', icon: SlidersHorizontal, group: 'advanced' },
 ];
 
+// Typed i18next rejects arbitrary string keys; alias for dynamic tab labels.
+type TkFn = (key: string) => string;
+type ShortcutsSettingsProps = ComponentProps<typeof ShortcutsSettings>;
+
 // Map tab ids to their labels for mobile collapsible sections
-const getTabLabel = (tabId, t) => {
-    const tab = TABS.find(t => t.id === tabId);
+const getTabLabel = (tabId: string, t: TFunction): string => {
+    const tab = TABS.find(x => x.id === tabId);
     if (!tab) return tabId;
-    return t(tab.labelKey) || tab.fallback || tab.id;
+    return (t as TkFn)(tab.labelKey) || tab.fallback || tab.id;
 };
 
-function tabPanelClass(tabId, activeTab, searchTerm) {
+function tabPanelClass(tabId: string, activeTab: string, searchTerm: string): string {
     if (searchTerm) return 'flex flex-col';
     const isActive = activeTab === tabId;
     return `col-start-1 row-start-1 px-5 pt-4 pb-0 flex flex-col min-h-0 transition-all duration-200 ease-out ${isActive ? 'opacity-100 z-raised animate-tab-slide-in' : 'opacity-0 z-base pointer-events-none'
         }`;
 }
 
-function contentWrapperClass(searchTerm) {
+function contentWrapperClass(searchTerm: string): string {
     if (searchTerm) return '';
     return 'flex-1 min-h-0 overflow-y-auto settings-scroll pr-1 pb-4';
+}
+
+type ShortcutValidator = (newKey: string, currentKeyName: string) => boolean;
+
+interface SettingsPanelProps {
+    t: TFunction;
+    user: AuthUser | null;
+    settings: AppSettings;
+    activeTab: string;
+    setActiveTab: (id: string) => void;
+    searchTerm: string;
+    setSearchTerm: (s: string) => void;
+    handleMouseDown: (e: ReactPointerEvent) => void;
+    updateSetting: (path: string, value: unknown) => void;
+    validateShortcut: ShortcutValidator;
+    handleReset: () => void;
+    handleApply: () => void;
+    isGuest: boolean;
+    visibleTabs: SettingsTab[];
+    onClose: () => void;
 }
 
 // SettingsPanel component - handles all internal content and layout
@@ -82,7 +120,6 @@ function SettingsPanel({
     setActiveTab,
     searchTerm,
     setSearchTerm,
-    _position,
     handleMouseDown,
     updateSetting,
     validateShortcut,
@@ -91,15 +128,15 @@ function SettingsPanel({
     isGuest,
     visibleTabs,
     onClose,
-}) {
+}: SettingsPanelProps) {
     const inputMethod = useInputMethod();
     const isMobile = inputMethod === 'touch';
 
-    const outerScrollRef = useRef(null);
-    const contentScrollRefs = useRef({});
+    const outerScrollRef = useRef<HTMLDivElement>(null);
+    const contentScrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
     /* eslint-disable react-hooks/refs */
-    const activeContainerRef = searchTerm
+    const activeContainerRef: RefObject<HTMLElement | null> = searchTerm
         ? outerScrollRef
         : { current: contentScrollRefs.current[activeTab] ?? null };
     /* eslint-enable react-hooks/refs */
@@ -142,7 +179,7 @@ function SettingsPanel({
                                 isOpen={activeTab === 'security'}
                                 onToggle={(isOpen) => isOpen && setActiveTab('security')}
                             >
-                                <SecuritySettings focusCard={null} />
+                                <SecuritySettings focusCard={undefined} />
                             </CollapsibleSection>
 
                             <CollapsibleSection
@@ -229,7 +266,7 @@ function SettingsPanel({
                         onToggle={(isOpen) => isOpen && setActiveTab('shortcuts')}
                     >
                         <ShortcutsSettings
-                            settings={settings}
+                            settings={settings as unknown as ShortcutsSettingsProps['settings']}
                             updateSetting={updateSetting}
                             searchTerm={searchTerm}
                             validateShortcut={validateShortcut}
@@ -314,7 +351,7 @@ function SettingsPanel({
             {!searchTerm && (
                 <div className="flex w-full border-b border-zinc-800 flex-shrink-0 overflow-x-auto no-scrollbar" role="tablist">
                     {visibleTabs.map((tab, idx) => {
-                        const label = t(tab.labelKey) || tab.fallback || tab.id;
+                        const label = (t as TkFn)(tab.labelKey) || tab.fallback || tab.id;
                         const isActive = activeTab === tab.id;
                         const showDivider = idx > 0 && visibleTabs[idx - 1].group !== tab.group;
                         return (
@@ -360,7 +397,7 @@ function SettingsPanel({
                 </div>
                 <div className={tabPanelClass('security', activeTab, searchTerm)}>
                     <div ref={(el) => { contentScrollRefs.current.security = el; }} className={contentWrapperClass(searchTerm)}>
-                        <SecuritySettings focusCard={null} />
+                        <SecuritySettings focusCard={undefined} />
                     </div>
                 </div>
                 <div className={tabPanelClass('connections', activeTab, searchTerm)}>
@@ -412,7 +449,7 @@ function SettingsPanel({
                 <div className={tabPanelClass('shortcuts', activeTab, searchTerm)}>
                     <div ref={(el) => { contentScrollRefs.current.shortcuts = el; }} className={contentWrapperClass(searchTerm)}>
                         <ShortcutsSettings
-                            settings={settings}
+                            settings={settings as unknown as ShortcutsSettingsProps['settings']}
                             updateSetting={updateSetting}
                             searchTerm={searchTerm}
                             validateShortcut={validateShortcut}
@@ -462,7 +499,12 @@ function SettingsPanel({
     return renderDesktopContent();
 }
 
-export default function SettingsModal({ isOpen, onClose }) {
+interface SettingsModalProps {
+    isOpen: boolean;
+    onClose: (open?: boolean) => void;
+}
+
+export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const { t } = useTranslation();
     const { user } = useAuthContext();
     const { settings: globalSettings, updateAllSettings } = useSettings();
@@ -472,7 +514,6 @@ export default function SettingsModal({ isOpen, onClose }) {
         setActiveTab,
         searchTerm,
         setSearchTerm,
-        position,
         handleMouseDown,
         updateSetting,
         validateShortcut,
@@ -510,7 +551,6 @@ export default function SettingsModal({ isOpen, onClose }) {
                 setActiveTab={setActiveTab}
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
-                position={position}
                 handleMouseDown={handleMouseDown}
                 updateSetting={updateSetting}
                 validateShortcut={validateShortcut}

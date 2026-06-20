@@ -1,14 +1,19 @@
 import {
   Suspense, lazy, useEffect, useLayoutEffect, useState, useRef, useCallback, useMemo, Fragment, memo
 } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import React from 'react';
 import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
+import type { NavigateFunction } from 'react-router-dom';
+import type { TFunction } from 'i18next';
 import { SkeletonList, SkeletonEditor, SkeletonPreview, SkeletonSetup } from '@ui/skeleton';
 import { Loader2, GripVertical } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
+import type { AppState } from '@/shared/hooks/useAppState';
+import type { AuthUser } from '@/features/auth/hooks/useAuth';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
 const PreviewLazy = lazy(() => import('@features/preview/components/Preview'));
@@ -40,7 +45,21 @@ const ListPage = lazy(() => import('@features/playlists/ListPage'));
 const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage'));
 const NotificationsPage = lazy(() => import('@features/notifications/NotificationsPage'));
 
-function RequireAdmin({ children }) {
+type EditorProps = ComponentProps<typeof Editor>;
+type PreviewComponentProps = ComponentProps<typeof Preview>;
+
+// appState is the enhanced useAppState result (App augments it with t + setup handler).
+type RouterAppState = AppState & {
+  t: TFunction;
+  handleSetupComplete: (data: unknown) => void;
+  isPlaying: boolean;
+  playbackSpeed: number;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RouterLayoutState = Record<string, any>;
+
+function RequireAdmin({ children }: { children: ReactNode }) {
   const { user, loading } = useAuthContext();
   if (loading) return <div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>;
   if (!user) return <Navigate to="/auth/signin" replace />;
@@ -51,6 +70,28 @@ function RequireAdmin({ children }) {
 function LegacyListRedirect() {
   const { accountName, listId } = useParams();
   return <Navigate to={`/${accountName}/lists/${listId}`} replace />;
+}
+
+interface PanelReorderGroupProps {
+  items: string[];
+  onReorder: (newOrder: string[]) => void;
+  isMobile: boolean;
+  isDesktop: boolean;
+  lockLayout: boolean;
+  showEditor: boolean;
+  showPreview: boolean;
+  mobileTab: string;
+  editorWidth: number;
+  borderClasses: { editor: string; preview: string };
+  draggingItem: string | null;
+  setDraggingItem: (item: string | null) => void;
+  isResizing: boolean;
+  isHoveringDivider: boolean;
+  setIsHoveringDivider: (v: boolean) => void;
+  startResizing: () => void;
+  user?: AuthUser | null;
+  editorProps: EditorProps;
+  previewProps: PreviewComponentProps;
 }
 
 const PanelReorderGroup = React.memo(function PanelReorderGroup({
@@ -73,7 +114,7 @@ const PanelReorderGroup = React.memo(function PanelReorderGroup({
   user,
   editorProps,
   previewProps,
-}) {
+}: PanelReorderGroupProps) {
   return (
     <Reorder.Group
       axis="x"
@@ -98,7 +139,7 @@ const PanelReorderGroup = React.memo(function PanelReorderGroup({
             <div className="flex items-stretch min-h-0 min-w-0" style={widthStyle}>
               <Reorder.Item
                 value={item}
-                layout={!isMobile}
+                layout={!isMobile ? true : undefined}
                 dragListener={isDesktop && !lockLayout}
                 whileDrag={{ scale: 1.01, zIndex: 50, boxShadow: "0px 20px 40px rgba(0,0,0,0.4)", opacity: 0.8 }}
                 className={`flex-1 flex flex-col min-h-0 ${isEditor ? 'gap-4' : ''} ${mobileTab !== item ? 'max-lg:hidden' : ''} relative group/reorder lg:border-2 lg:rounded-2xl border-0 rounded-none ${isEditor ? borderClasses.editor : borderClasses.preview} transition-colors duration-200 overflow-hidden lg:bg-zinc-900/50 lg:backdrop-blur-sm bg-zinc-950`}
@@ -142,7 +183,17 @@ const PanelReorderGroup = React.memo(function PanelReorderGroup({
   );
 });
 
-function EditorContainer({ loadProject, activepublicId, isProjectLoading, projectUserId, user, navigate, children }) {
+interface EditorContainerProps {
+  loadProject: (id: string) => void;
+  activepublicId?: string | null;
+  isProjectLoading?: boolean;
+  projectUserId?: string | null;
+  user?: AuthUser | null;
+  navigate: NavigateFunction;
+  children: ReactNode;
+}
+
+function EditorContainer({ loadProject, activepublicId, isProjectLoading, projectUserId, user, navigate, children }: EditorContainerProps) {
   const { id } = useParams();
 
   useEffect(() => {
@@ -162,7 +213,7 @@ function EditorContainer({ loadProject, activepublicId, isProjectLoading, projec
   return children;
 }
 
-function ForkHandler({ appState, navigate }) {
+function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigate: NavigateFunction }) {
   const { id } = useParams();
   const { user } = useAuthContext();
   const { loadProject, t } = appState;
@@ -184,8 +235,9 @@ function ForkHandler({ appState, navigate }) {
     import('@/app/api').then(({ projects }) => {
       projects.clone(id)
         .then((res) => {
-          loadProject(res.publicId);
-          navigate(`/project/${res.publicId}/edit`);
+          const result = res as { publicId: string };
+          loadProject(result.publicId);
+          navigate(`/project/${result.publicId}/edit`);
           import('react-hot-toast').then(({ default: toast }) => {
             toast.success(t('project.cloneSuccess') || 'Project copied successfully!');
           });
@@ -212,11 +264,17 @@ function ForkHandler({ appState, navigate }) {
   );
 }
 
+interface AppRouterProps {
+  appState: RouterAppState;
+  layoutState: RouterLayoutState;
+  navigate: NavigateFunction;
+}
+
 export function AppRouter({
   appState,
   layoutState,
   navigate
-}) {
+}: AppRouterProps) {
   const routerLocation = useLocation();
   const {
     loadProject,
@@ -269,12 +327,12 @@ export function AppRouter({
 
   const { user } = useAuthContext();
   const { editorColClass, previewColClass, showEditor, showPreview, mobileTab, layoutSwap, setLayoutSwap, editorWidth, setEditorWidth, lockLayout, focusMode, setShowNamingModal } = layoutState;
-  const [draggingItem, setDraggingItem] = useState(null);
+  const [draggingItem, setDraggingItem] = useState<string | null>(null);
   const [isResizing, setIsResizing] = useState(false);
   const [isHoveringDivider, setIsHoveringDivider] = useState(false);
   const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
   const isMobile = !isDesktop;
-  const containerRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleWinResize = () => setIsDesktop(window.innerWidth >= 1024);
@@ -284,18 +342,18 @@ export function AppRouter({
 
   // Reorder logic
   const items = layoutSwap ? ['preview', 'editor'] : ['editor', 'preview'];
-  const handleReorder = useCallback((newOrder) => {
+  const handleReorder = useCallback((newOrder: string[]) => {
     const isSwapped = newOrder[0] === 'preview';
     if (isSwapped !== layoutSwap) setLayoutSwap(isSwapped);
   }, [layoutSwap, setLayoutSwap]);
 
   const handleNewProject = useCallback(() => navigate('/project/new'), [navigate]);
   const handleToggleKeyboardHelp = useCallback(() => {
-    setShowKeyboardHelp?.(p => !p);
+    setShowKeyboardHelp?.((p: boolean) => !p);
   }, [setShowKeyboardHelp]);
 
   const borderClasses = useMemo(() => {
-    const base = (item) => {
+    const base = (item: string) => {
       if (draggingItem === item) return 'border-dashed border-primary/40 shadow-2xl scale-[1.01] z-50';
       if (isResizing || isHoveringDivider) return 'border-primary/40 shadow-xl';
       const isFocused = (item === 'editor' && focusMode === 'sync') ||
@@ -319,11 +377,11 @@ export function AppRouter({
     handleRemoveAllLyrics, isAutosaving,
     isSaving,
     onNewProject: handleNewProject,
-    onShowKeyboardHelp: setShowKeyboardHelp ? handleToggleKeyboardHelp : undefined,
+    onShowKeyboardHelp: handleToggleKeyboardHelp,
     onOpenProjectSettings: setShowNamingModal ? () => setShowNamingModal(true) : undefined,
     registerAfterSave,
     songArtists: projectMetadata?.songArtists || [],
-  }), [
+  } as unknown as EditorProps), [
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
     playbackPosition, playerRef,
@@ -334,7 +392,7 @@ export function AppRouter({
     handleRemoveAllLyrics, isAutosaving,
     isSaving,
     handleNewProject,
-    setShowKeyboardHelp, handleToggleKeyboardHelp,
+    handleToggleKeyboardHelp,
     setShowNamingModal,
     registerAfterSave,
     projectMetadata,
@@ -348,7 +406,7 @@ export function AppRouter({
     shareModal, setShareModal, hasMedia,
     isPlaying, playbackSpeed, activepublicId,
     project: pendingProject, projectMetadata,
-  }), [
+  } as unknown as PreviewComponentProps), [
     lines, setLines, playbackPosition,
     mediaTitle, playerRef, duration,
     editorMode, exportToUrl, isSharedProject,
@@ -358,7 +416,7 @@ export function AppRouter({
     pendingProject, projectMetadata,
   ]);
 
-  const handleResize = useCallback((e) => {
+  const handleResize = useCallback((e: MouseEvent) => {
     if (!containerRef.current) return;
     const containerRect = containerRef.current.getBoundingClientRect();
     const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
@@ -383,7 +441,7 @@ export function AppRouter({
     if (!isDesktop || lockLayout) return;
     setIsResizing(true);
     document.body.style.cssText += 'cursor: col-resize; user-select: none;';
-    const onMove = (e) => handleResizeRef.current(e);
+    const onMove = (e: MouseEvent) => handleResizeRef.current(e);
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', () => {
       setIsResizing(false);
@@ -396,7 +454,7 @@ export function AppRouter({
     <Routes>
       <Route path="uploads" element={
         <Suspense fallback={<div className="glass rounded-xl p-5 flex-1"><SkeletonList count={3} /></div>}>
-          <UploadsLibrary onSelect={(upload) => navigate(`/uploads/${upload.id}`)} onBack={() => navigate(-1)} />
+          <UploadsLibrary onSelect={(upload) => navigate(`/uploads/${upload.id}`)} />
         </Suspense>
       } />
       <Route path="uploads/:id" element={
@@ -410,18 +468,16 @@ export function AppRouter({
             onComplete={handleSetupComplete}
             playerRef={playerRef}
             onShowAllUploads={() => navigate('/uploads')}
-            onOpenSettings={() => navigate('/settings')}
           />
         </Suspense>
       } />
       <Route path="library" element={
         <Suspense fallback={<div className="glass rounded-xl p-5 flex-1"><SkeletonList count={3} /></div>}>
           <Library
-            onOpenProject={(publicId) => {
+            onOpenProject={(publicId: string) => {
               loadProject(publicId);
               navigate(`/project/${publicId}/edit`);
             }}
-            onBack={() => navigate(-1)}
           />
         </Suspense>
       } />

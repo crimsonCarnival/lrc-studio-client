@@ -1,36 +1,32 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
+import type { ChangeEvent, ComponentProps, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { FloatingCombobox } from '@/shared/ui/floating-combobox';
 import { useLanguageOptions } from '../../hooks/useLanguageOptions';
-import { FloatingTextarea } from '@ui/floating-textarea';
 import { Textarea } from '@ui/textarea';
-import { Input } from '@ui/input';
-import { Label } from '@ui/label';
 import { Switch } from '@ui/switch';
 import { Tip } from '@ui/tip';
 import { TagsSelector } from '@ui/tags-selector';
 import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
-import { LANG_KEYS } from '@features/editor/constants/languages';
 import { getMyMusicLibrary } from '@/features/editor/music-library.service';
 import {
-  FolderOpen, Music2, FileText, Upload, Check, ArrowRight, Trash2,
-  Video, Cloud, Link2, Loader2, Lock, Globe, X, LockKeyhole, Lightbulb, Search
+  FolderOpen, Upload, Check, ArrowRight,
+  Link2, Loader2, Lock, Search
 } from 'lucide-react';
 import { useSetupContext } from '@/features/editor/SetupContext';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { lyrics as lyricsApi, uploads as uploadsApi, songMetadata as songMetadataApi, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
-import { SkeletonMediaItem } from '@ui/skeleton';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import YoutubeSearchPanel from '@features/projects/components/YoutubeSearchPanel';
 import toast from 'react-hot-toast';
 import MediaLibrary from './MediaLibrary';
-import AudioSourceBadge from './AudioSourceBadge';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
+import type { EditorLine } from '@/features/editor/services/editor.service';
 
 const MAX_IMPORT_FILE_SIZE = 2 * 1024 * 1024;
 
@@ -38,18 +34,97 @@ const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\
 const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
 const YT_PATTERN = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|watch\?.+&v=)|youtu\.be\/)([^&?/\s]{11})/;
 
-export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }) {
+// Typed i18next rejects arbitrary string keys.
+type TkFn = (k: string) => string;
+
+interface Prefill {
+  lines?: EditorLine[];
+  editorMode?: string;
+  name?: string;
+  description?: string;
+  tags?: string[];
+  songName?: string;
+  songArtist?: string;
+  songAlbum?: string;
+  songYear?: string;
+  genre?: string;
+  songLanguage?: string;
+  trackNumber?: number | string;
+  trackCount?: number | string;
+  coverImage?: string;
+}
+
+interface UploadItem {
+  id?: string;
+  title?: string;
+  fileName?: string;
+  source?: string;
+  uploadUrl?: string;
+}
+
+interface AudioState {
+  ready: boolean;
+  name: string;
+  tab: string;
+  source: string | null;
+  ytUrl: string;
+  ytLoading: boolean;
+  selectedUpload: UploadItem | null;
+}
+
+interface LyricsState {
+  text: string;
+  parsedLines: EditorLine[] | null;
+  fileName: string;
+  editorMode: string;
+}
+
+interface MetadataState {
+  name: string;
+  description: string;
+  tags: string[];
+  isPublic: boolean;
+  songName: string;
+  songArtist: string;
+  songAlbum: string;
+  songYear: string;
+  genre: string;
+  songLanguage: string;
+  trackNumber: number | string;
+  trackCount: number | string;
+  coverImage: string;
+}
+
+interface MusicEntry {
+  artist?: string;
+  album?: string;
+  genre?: string;
+  language?: string;
+  trackCount?: number | null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PlayerRef = { current?: any } | null;
+
+interface SetupScreenProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onComplete: (data: any) => void | Promise<void>;
+  playerRef: PlayerRef;
+  onShowAllUploads?: () => void;
+}
+
+export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }: SetupScreenProps) {
   const { t } = useTranslation();
   const { user } = useAuthContext();
   const navigate = useNavigate();
   const location = useLocation();
-  const prefill = location.state?.prefill || null;
+  const prefill = (location.state as { prefill?: Prefill } | null)?.prefill || null;
   const { step, setStep } = useSetupContext();
   const reducedMotion = useReducedMotion();
   const [rightTab, setRightTab] = useState('media');
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [imageUploading, setImageUploading] = useState(false);
-  const coverImageInputRef = useRef(null);
+  const coverImageInputRef = useRef<HTMLInputElement | null>(null);
 
   // If arriving with prefill data (rollback from no-media project), start at the media step
   useEffect(() => {
@@ -62,9 +137,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     return () => setStep(1);
   }, [setStep]);
 
-  const audioInputRef = useRef(null);
-  const lyricsInputRef = useRef(null);
-  const projectNameInputRef = useRef(null);
+  const audioInputRef = useRef<HTMLInputElement | null>(null);
+  const lyricsInputRef = useRef<HTMLInputElement | null>(null);
+  const projectNameInputRef = useRef<HTMLInputElement | null>(null);
   const autoLoadPendingRef = useRef(false);
 
   useEffect(() => {
@@ -74,19 +149,17 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   const [initialPendingYtUrl] = useState(() => sessionStorage.getItem('pendingYtUrl'));
 
   // Consolidated state for Step 1 & 2
-  const [audio, setAudio] = useState(() => {
-    return {
-      ready: false,
-      name: '',
-      tab: 'youtube',
-      source: null,
-      ytUrl: initialPendingYtUrl || '',
-      ytLoading: false,
-      selectedUpload: null,
-    };
-  });
+  const [audio, setAudio] = useState<AudioState>(() => ({
+    ready: false,
+    name: '',
+    tab: 'youtube',
+    source: null,
+    ytUrl: initialPendingYtUrl || '',
+    ytLoading: false,
+    selectedUpload: null,
+  }));
 
-  const [lyrics, setLyrics] = useState(() => {
+  const [lyrics, setLyrics] = useState<LyricsState>(() => {
     if (prefill?.lines?.length) {
       return {
         text: '',
@@ -104,10 +177,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   });
 
   const [lyricsTab, setLyricsTab] = useState('write');
-  const [lyricsAutoSearch, setLyricsAutoSearch] = useState(null);
+  const [lyricsAutoSearch, setLyricsAutoSearch] = useState<{ q: string; v: number } | null>(null);
 
 
-  const [metadata, setMetadata] = useState(() => ({
+  const [metadata, setMetadata] = useState<MetadataState>(() => ({
     name: prefill?.name || '',
     description: prefill?.description || '',
     tags: prefill?.tags || [],
@@ -126,7 +199,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     coverImage: prefill?.coverImage || '',
   }));
 
-  const [musicLibrary, setMusicLibrary] = useState([]);
+  const [musicLibrary, setMusicLibrary] = useState<MusicEntry[]>([]);
   const [metaSearching, setMetaSearching] = useState(false);
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, ytLoading, selectedUpload } = audio;
@@ -134,22 +207,22 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   const { name: projectName, description: projectDescription, tags: projectTags, isPublic, songName, songArtist, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage } = metadata;
 
   // State setters
-  const setAudioState = useCallback((val) => setAudio(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
-  const setLyricsState = useCallback((val) => setLyrics(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
-  const setMetadataState = useCallback((val) => setMetadata(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
+  const setAudioState = useCallback((val: Partial<AudioState> | ((p: AudioState) => Partial<AudioState>)) => setAudio(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
+  const setLyricsState = useCallback((val: Partial<LyricsState> | ((p: LyricsState) => Partial<LyricsState>)) => setLyrics(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
+  const setMetadataState = useCallback((val: Partial<MetadataState> | ((p: MetadataState) => Partial<MetadataState>)) => setMetadata(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
 
-  const handleLyricsSearchImport = useCallback((lyricsText) => {
-    const parsedLines = lyricsText.split('\n').reduce((acc, line) => {
+  const handleLyricsSearchImport = useCallback((searchText: string) => {
+    const parsed = searchText.split('\n').reduce<EditorLine[]>((acc, line) => {
       const text = line.trim();
       if (text.length > 0) acc.push({ text, timestamp: null });
       return acc;
     }, []);
-    setLyricsState({ parsedLines, text: '', fileName: '' });
+    setLyricsState({ parsedLines: parsed, text: '', fileName: '' });
     setLyricsTab('write');
   }, [setLyricsState]);
 
   // Media library state
-  const [mediaUploads, setMediaUploads] = useState([]);
+  const [mediaUploads, setMediaUploads] = useState<UploadItem[]>([]);
   const [mediaLoading, setMediaLoading] = useState(!!getAccessToken());
 
   const hasLyrics = parsedLines ? parsedLines.length > 0 : lyricsText.trim().length > 0;
@@ -159,7 +232,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   useEffect(() => {
     if (!getAccessToken()) return;
     uploadsApi.listMedia()
-      .then((uploads) => setMediaUploads(uploads || []))
+      .then((uploads) => setMediaUploads((uploads as UploadItem[]) || []))
       .catch(() => { })
       .finally(() => setMediaLoading(false));
   }, []);
@@ -167,7 +240,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   // Fetch music library for artist/album autofill
   useEffect(() => {
     if (!getAccessToken()) return;
-    getMyMusicLibrary().then(setMusicLibrary).catch(() => {});
+    getMyMusicLibrary().then((lib) => setMusicLibrary(lib as MusicEntry[])).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -190,12 +263,12 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     }
   }, [step, projectName, audioName, t, setMetadataState]);
 
-  const saveUploadRecord = useCallback(async (data) => {
+  const saveUploadRecord = useCallback(async (data: Record<string, unknown>) => {
     if (!getAccessToken()) return;
     try {
-      await uploadsApi.saveMedia(data);
+      await uploadsApi.saveMedia(data as Parameters<typeof uploadsApi.saveMedia>[0]);
       const uploads = await uploadsApi.listMedia();
-      setMediaUploads(uploads || []);
+      setMediaUploads((uploads as UploadItem[]) || []);
     } catch { /* ignore */ }
   }, []);
 
@@ -211,7 +284,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
   // ── Audio handlers ──
 
-  const handleAudioFile = (e) => {
+  const handleAudioFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('audio/')) {
@@ -219,7 +292,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       if (audioInputRef.current) audioInputRef.current.value = '';
       return;
     }
-    if (playerRef.current?.loadLocalAudio) playerRef.current.loadLocalAudio(file);
+    if (playerRef?.current?.loadLocalAudio) playerRef.current.loadLocalAudio(file);
     setAudioState({ ready: true, name: file.name, source: 'local', selectedUpload: null });
   };
 
@@ -234,7 +307,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
       const rawName = dotIdx > 0 ? lastSegment.slice(0, dotIdx) : lastSegment;
       const ext = dotIdx > 0 ? lastSegment.slice(dotIdx + 1).toLowerCase() : 'mp4';
       const title = rawName.length > 30 ? 'Cloud Audio' : rawName;
-      if (playerRef.current?.loadFromUrl) playerRef.current.loadFromUrl(trimmed, title);
+      if (playerRef?.current?.loadFromUrl) playerRef.current.loadFromUrl(trimmed, title);
       setAudioState({ ready: true, name: title, source: 'cloud', selectedUpload: null });
       saveUploadRecord({ source: 'cloudinary', uploadUrl: trimmed, fileName: `${rawName}.${ext}`, title });
       return;
@@ -244,11 +317,11 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     if (!videoId) { toast.error(t('player.invalidUrl')); return; }
 
     setAudioState({ ytLoading: true });
-    if (playerRef.current?.loadYouTube) playerRef.current.loadYouTube(trimmed);
+    if (playerRef?.current?.loadYouTube) playerRef.current.loadYouTube(trimmed);
     setAudioState({ ready: true, name: t('setup.youtubeVideo'), source: 'youtube', selectedUpload: null, ytLoading: false, ytUrl: '' });
   }, [ytUrl, detectedUrlType, playerRef, setAudioState, saveUploadRecord, t]);
 
-  const handleLoadUrlRef = useRef(null);
+  const handleLoadUrlRef = useRef(handleLoadUrl);
   useLayoutEffect(() => { handleLoadUrlRef.current = handleLoadUrl; });
 
   useEffect(() => {
@@ -259,7 +332,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     }
   }, [ytUrl]);
 
-  const handleSelectUpload = (upload) => {
+  const handleSelectUpload = (upload: UploadItem) => {
     setAudioState({
       selectedUpload: upload,
       name: upload.title || upload.fileName || 'Media',
@@ -269,13 +342,13 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
 
     if (upload.source === 'youtube' && upload.uploadUrl) {
       setAudioState({ ytUrl: upload.uploadUrl });
-      playerRef.current?.loadYouTube?.(upload.uploadUrl);
+      playerRef?.current?.loadYouTube?.(upload.uploadUrl);
     } else if (upload.source === 'cloudinary' && upload.uploadUrl) {
-      playerRef.current?.loadFromUrl?.(upload.uploadUrl, upload.title || upload.fileName);
+      playerRef?.current?.loadFromUrl?.(upload.uploadUrl, upload.title || upload.fileName);
     }
   };
 
-  const handleDeleteUpload = async (uploadId) => {
+  const handleDeleteUpload = async (uploadId: string) => {
     try {
       await uploadsApi.deleteMedia(uploadId);
       setMediaUploads((prev) => prev.filter((u) => u.id !== uploadId));
@@ -283,19 +356,19 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     } catch { toast.error(t('setup.deleteFailed')); }
   };
 
-  const handleYtKeyDown = (e) => { if (e.key === 'Enter') { e.preventDefault(); handleLoadUrl(); } };
+  const handleYtKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') { e.preventDefault(); handleLoadUrl(); } };
 
   // ── Lyrics handlers ──
 
-  const handleLyricsFile = async (e) => {
+  const handleLyricsFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const ext = file.name.split('.').pop().toLowerCase();
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
     if (!['lrc', 'srt', 'txt'].includes(ext)) { toast.error(t('import.unsupportedFormat')); return; }
     if (file.size > MAX_IMPORT_FILE_SIZE) { toast.error(t('import.tooLarge')); return; }
     try {
       const text = await file.text();
-      const { lines } = await lyricsApi.parse(text, file.name);
+      const { lines } = await lyricsApi.parse(text, file.name) as { lines: EditorLine[] };
       if (lines.length === 0) { toast.error(t('import.noLines')); return; }
       setLyricsState({ parsedLines: lines, fileName: file.name, editorMode: ext === 'srt' ? 'srt' : 'lrc', text: '' });
     } catch { toast.error(t('import.failed')); }
@@ -304,27 +377,27 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
   // ── Metadata handlers ──
 
 
-  const genreOptions    = useMemo(() => PRIMARY_GENRES.map((k) => ({ value: k, label: t(`setup.genre.${k}`) })), [t]);
+  const genreOptions    = useMemo(() => PRIMARY_GENRES.map((k) => ({ value: k, label: (t as TkFn)(`setup.genre.${k}`) })), [t]);
   const languageOptions = useLanguageOptions();
 
   const artistOptions = useMemo(() => {
-    const seen = new Set();
+    const seen = new Set<string>();
     return musicLibrary
-      .filter((e) => e.artist && !seen.has(e.artist.toLowerCase()) && seen.add(e.artist.toLowerCase()))
-      .map((e) => ({ value: e.artist }));
+      .filter((e) => !!e.artist && !seen.has(e.artist.toLowerCase()) && !!seen.add(e.artist.toLowerCase()))
+      .map((e) => ({ value: e.artist as string }));
   }, [musicLibrary]);
 
   const albumOptions = useMemo(() => {
-    const seen = new Set();
+    const seen = new Set<string>();
     const base = songArtist
       ? musicLibrary.filter((e) => e.artist?.toLowerCase() === songArtist.toLowerCase())
       : musicLibrary;
     return base
-      .filter((e) => e.album && !seen.has(e.album.toLowerCase()) && seen.add(e.album.toLowerCase()))
-      .map((e) => ({ value: e.album }));
+      .filter((e) => !!e.album && !seen.has(e.album.toLowerCase()) && !!seen.add(e.album.toLowerCase()))
+      .map((e) => ({ value: e.album as string }));
   }, [musicLibrary, songArtist]);
 
-  const handleAlbumSelect = useCallback((albumName) => {
+  const handleAlbumSelect = useCallback((albumName: string) => {
     const match = musicLibrary.find((e) => e.album?.toLowerCase() === albumName.toLowerCase());
     if (!match) return;
     setMetadataState({
@@ -338,7 +411,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     if (!songName.trim() || !songArtist.trim() || metaSearching) return;
     setMetaSearching(true);
     try {
-      const meta = await songMetadataApi.lookupTrack(songName.trim(), songArtist.trim());
+      const meta = await songMetadataApi.lookupTrack(songName.trim(), songArtist.trim()) as {
+        error?: string; genres?: string[]; name?: string; artist?: string; album?: string; releaseYear?: string; totalTracks?: number; albumArt?: string;
+      };
       if (meta && !meta.error) {
         const mappedGenre = matchGenreFromTags(meta.genres || []);
         setMetadataState({
@@ -368,12 +443,12 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
         text: text.trimEnd(), timestamp: null, endTime: null, secondary: '', translation: '', id: crypto.randomUUID(),
       }));
     }
-    const parsedTrackNumber = parseInt(trackNumber, 10);
-    const parsedTrackCount = parseInt(trackCount, 10);
-    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: songYear.trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim() });
+    const parsedTrackNumber = parseInt(String(trackNumber), 10);
+    const parsedTrackCount = parseInt(String(trackCount), 10);
+    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim() });
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) return;
@@ -381,7 +456,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
     setImageUploading(true);
     try {
       const token = executeRecaptcha ? await executeRecaptcha('upload_cover') : undefined;
-      const url = await uploadsService.uploadCoverImage(file, token);
+      const url = await uploadsService.uploadCoverImage(file, token) as string;
       setMetadataState({ coverImage: url });
     } catch { /* ignore */ }
     finally {
@@ -466,7 +541,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                 id="song-artist"
                 label={t('setup.songArtist')}
                 value={songArtist}
-                onChange={(v) => setMetadataState({ songArtist: v })}
+                onChange={(v: string) => setMetadataState({ songArtist: v })}
                 options={artistOptions}
                 maxLength={300}
               />
@@ -478,7 +553,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                 id="song-album"
                 label={t('setup.songAlbum')}
                 value={songAlbum}
-                onChange={(v) => setMetadataState({ songAlbum: v })}
+                onChange={(v: string) => setMetadataState({ songAlbum: v })}
                 onSelect={handleAlbumSelect}
                 options={albumOptions}
                 maxLength={300}
@@ -514,7 +589,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                 id="song-genre"
                 label={t('setup.songGenre')}
                 value={genre}
-                onChange={(v) => {
+                onChange={(v: string) => {
                   setMetadataState({ genre: v, tags: [] });
                 }}
                 options={genreOptions}
@@ -523,7 +598,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
               />
               <TagsSelector
                 value={projectTags}
-                onChange={(tags) => setMetadataState({ tags })}
+                onChange={(tags: string[]) => setMetadataState({ tags })}
                 genre={genre}
               />
             </div>
@@ -533,7 +608,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
               id="song-language"
               label={t('setup.songLanguage')}
               value={songLanguage}
-              onChange={(v) => setMetadataState({ songLanguage: v })}
+              onChange={(v: string) => setMetadataState({ songLanguage: v })}
               options={languageOptions}
               maxLength={100}
               strict
@@ -578,7 +653,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
               <div className="flex flex-col items-center gap-1 shrink-0 pl-1">
                 <Switch
                   checked={isPublic}
-                  onCheckedChange={(checked) => setMetadataState({ isPublic: checked })}
+                  onCheckedChange={(checked: boolean) => setMetadataState({ isPublic: checked })}
                   disabled={!user}
                 />
                 <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">
@@ -676,9 +751,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                       <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-zinc-800/50">
                         <YoutubeSearchPanel
                           initialQuery={[songName, songArtist].filter(Boolean).join(' ').trim()}
-                          onSelect={({ url, title }) => {
+                          onSelect={({ url, title }: { url: string; title?: string }) => {
                             setAudioState({ ytUrl: url, source: 'youtube', ready: true, name: title || t('setup.youtubeVideo'), selectedUpload: null });
-                            playerRef.current?.loadYouTube?.(url);
+                            playerRef?.current?.loadYouTube?.(url);
                           }}
                         />
                       </div>
@@ -732,8 +807,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads })
                         {/* Media library */}
                         <MediaLibrary
                           loading={mediaLoading}
-                          uploads={mediaUploads}
-                          onSelect={handleSelectUpload}
+                          uploads={mediaUploads as ComponentProps<typeof MediaLibrary>['uploads']}
+                          onSelect={handleSelectUpload as ComponentProps<typeof MediaLibrary>['onSelect']}
                           onDelete={handleDeleteUpload}
                           onShowAll={onShowAllUploads}
                           selectedId={selectedUpload?.id}

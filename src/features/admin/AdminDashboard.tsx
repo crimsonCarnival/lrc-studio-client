@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import type { ComponentProps, FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { admin } from '@/app/api';
@@ -17,15 +18,46 @@ import AdminDevicesTab from './AdminDevicesTab';
 import AdminAuditTab from './AdminAuditTab';
 import AdminBadgesTab from './AdminBadgesTab';
 import AdminLevelsTab from './AdminLevelsTab';
+import AdminXpTab from './AdminXpTab';
 import SudoPasswordModal from './SudoPasswordModal';
+
+interface AdminUser {
+  id?: string;
+  _id?: string;
+  role?: string;
+  displayName?: string;
+  accountName?: string;
+  ban?: { active?: boolean } | null;
+  [key: string]: unknown;
+}
+
+interface ConfirmModalState {
+  isOpen: boolean;
+  type: string;
+  user?: AdminUser | null;
+  ipId?: string | null;
+  deviceId?: string | null;
+}
+
+interface BanConfirmData {
+  reason?: string;
+  bannedUntil?: string | null;
+  banIp?: boolean;
+  banDevice?: boolean;
+}
+
+// Resolve a user's id across the id/_id duality the API returns.
+const uid = (u?: AdminUser | null): string => u?.id || u?._id || '';
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
+  // Loose alias for interpolation calls with numeric values (typed-i18n options are strict).
+  const tk = t as (k: string, o?: Record<string, unknown>) => string;
   const { user: currentUser } = useAuthContext();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'users'; // users, ips, devices, audit, badges, levels, xp
 
-  const setActiveTab = (tab) => {
+  const setActiveTab = (tab: string) => {
     setSearchParams(prev => {
       prev.set('tab', tab);
       return prev;
@@ -33,11 +65,11 @@ export default function AdminDashboard() {
   };
 
   // Data States
-  const [users, setUsers] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [bannedIps, setBannedIps] = useState([]);
-  const [bannedDevices, setBannedDevices] = useState([]);
-  const [auditLogs, setAuditLogs] = useState([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [stats, setStats] = useState<unknown>(null);
+  const [bannedIps, setBannedIps] = useState<unknown[]>([]);
+  const [bannedDevices, setBannedDevices] = useState<unknown[]>([]);
+  const [auditLogs, setAuditLogs] = useState<unknown[]>([]);
 
   // UI States
   const [loading, setLoading] = useState(true);
@@ -48,23 +80,17 @@ export default function AdminDashboard() {
   const [deviceForm, setDeviceForm] = useState({ deviceId: '', reason: '' });
 
   // Cursor-based pagination state
-  const [cursor, setCursor] = useState(null);
-  const [cursorStack, setCursorStack] = useState([]);
+  const [cursor, setCursor] = useState<string | null>(null);
+  const [cursorStack, setCursorStack] = useState<(string | null)[]>([]);
   const [hasMore, setHasMore] = useState(false);
-  const [totalUsers, setTotalUsers] = useState(null);
+  const [totalUsers, setTotalUsers] = useState<number | null>(null);
 
   // Modal States
-  const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: '', user: null, ipId: null, deviceId: null });
-  const [banModal, setBanModal] = useState({ isOpen: false, user: null });
-  const [appealModal, setAppealModal] = useState({ isOpen: false, user: null });
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({ isOpen: false, type: '', user: null, ipId: null, deviceId: null });
+  const [banModal, setBanModal] = useState<{ isOpen: boolean; user: AdminUser | null }>({ isOpen: false, user: null });
+  const [appealModal, setAppealModal] = useState<{ isOpen: boolean; user: AdminUser | null }>({ isOpen: false, user: null });
   // Track whether stats have been fetched at least once (avoid re-fetching on tab switch)
   const statsFetchedRef = useRef(false);
-
-  // Bulk XP state
-  const [xpBulkAmount, setXpBulkAmount] = useState('500');
-  const [xpBulkTarget, setXpBulkTarget] = useState('all'); // 'all' | 'ids'
-  const [xpBulkIds, setXpBulkIds] = useState(''); // comma-separated usernames/ids
-  const [xpBulkSaving, setXpBulkSaving] = useState(false);
 
   const fetchStats = async () => {
     try {
@@ -76,12 +102,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchUsers = async (fetchCursor = cursor) => {
+  const fetchUsers = async (fetchCursor: string | null = cursor) => {
     setLoading(true);
     try {
-      const params = { search, role: roleFilter, status: statusFilter };
+      const params: { search: string; role: string; status: string; cursor?: string } = { search, role: roleFilter, status: statusFilter };
       if (fetchCursor) params.cursor = fetchCursor;
-      const data = await admin.getUsers(params);
+      const data = await admin.getUsers(params) as { users: AdminUser[]; hasMore?: boolean; total?: number | null };
       setUsers(data.users);
       setHasMore(data.hasMore ?? false);
       if (data.total !== null && data.total !== undefined) setTotalUsers(data.total);
@@ -95,7 +121,7 @@ export default function AdminDashboard() {
   const fetchIps = async () => {
     setLoading(true);
     try {
-      const data = await admin.getBannedIps();
+      const data = await admin.getBannedIps() as unknown[];
       setBannedIps(data);
     } catch {
       toast.error(t('admin.toast.fetchError'));
@@ -107,7 +133,7 @@ export default function AdminDashboard() {
   const fetchDevices = async () => {
     setLoading(true);
     try {
-      const data = await admin.getBannedDevices();
+      const data = await admin.getBannedDevices() as unknown[];
       setBannedDevices(data);
     } catch {
       toast.error(t('admin.toast.fetchError'));
@@ -119,7 +145,7 @@ export default function AdminDashboard() {
   const fetchAuditLogs = async () => {
     setLoading(true);
     try {
-      const { logs } = await admin.getAuditLogs({ limit: 50 });
+      const { logs } = await admin.getAuditLogs({ limit: '50' }) as { logs: unknown[] };
       setAuditLogs(logs);
     } catch {
       toast.error(t('admin.toast.fetchError'));
@@ -168,7 +194,8 @@ export default function AdminDashboard() {
   }, [search, roleFilter, statusFilter]);
 
   const handleNextPage = () => {
-    const nextCursor = users[users.length - 1]?._id?.toString() || users[users.length - 1]?.id;
+    const last = users[users.length - 1];
+    const nextCursor = last?._id?.toString() || last?.id;
     if (!nextCursor) return;
     setCursorStack(prev => [...prev, cursor]);
     setCursor(nextCursor);
@@ -182,30 +209,13 @@ export default function AdminDashboard() {
     fetchUsers(prevCursor);
   };
 
-  const handleAdjustXP = async (action, amount, target, userId, userIds) => {
+  const handleAdjustXP = async (action: string, amount: number, target: string, userId?: string, userIds?: string[]) => {
     try {
-      const result = await admin.adjustXP({ action, amount, target, userId, userIds });
-      toast.success(t(action === 'grant' ? 'admin.xp.grantedXp' : 'admin.xp.revokedXp', { amount, count: result.affected }));
+      const result = await admin.adjustXP({ action, amount, target, userId, userIds }) as { affected?: number };
+      toast.success(tk(action === 'grant' ? 'admin.xp.grantedXp' : 'admin.xp.revokedXp', { amount, count: result.affected }));
       refreshUsersFromStart();
     } catch (err) {
       if (!isSudoCancelled(err)) toast.error(t('admin.xp.failedAdjust'));
-    }
-  };
-
-  const handleBulkXP = async (action) => {
-    const amount = Number(xpBulkAmount);
-    if (!amount || amount <= 0) { toast.error(t('admin.xp.enterValidAmount')); return; }
-    setXpBulkSaving(true);
-    try {
-      if (xpBulkTarget === 'all') {
-        await handleAdjustXP(action, amount, 'all');
-      } else {
-        const ids = xpBulkIds.split(/[\s,]+/).map(s => s.trim()).filter(Boolean);
-        if (!ids.length) { toast.error(t('admin.xp.enterUserIds')); setXpBulkSaving(false); return; }
-        await handleAdjustXP(action, amount, 'users', undefined, ids);
-      }
-    } finally {
-      setXpBulkSaving(false);
     }
   };
 
@@ -215,7 +225,7 @@ export default function AdminDashboard() {
     fetchUsers(null);
   };
 
-  const handleToggleBan = async (user) => {
+  const handleToggleBan = async (user: AdminUser) => {
     if (user.id === currentUser?.id || user._id === currentUser?._id) {
       toast.error(t('admin.toast.noSelfAction'));
       return;
@@ -223,7 +233,7 @@ export default function AdminDashboard() {
 
     if (user.ban?.active) {
       try {
-        await admin.unbanUser(user.id || user._id);
+        await admin.unbanUser(uid(user));
         toast.success(t('admin.toast.unbannedSuccess', { name: user.displayName || user.accountName }));
         setAppealModal({ isOpen: false, user: null });
         refreshUsersFromStart();
@@ -235,9 +245,9 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleRejectAppeal = async (user) => {
+  const handleRejectAppeal = async (user: AdminUser) => {
     try {
-      await admin.rejectAppeal(user.id || user._id);
+      await admin.rejectAppeal(uid(user));
       toast.success(t('admin.toast.appealRejectedSuccess', { name: user.displayName || user.accountName }));
       setAppealModal({ isOpen: false, user: null });
       refreshUsersFromStart();
@@ -246,9 +256,9 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleReactivate = async (user) => {
+  const handleReactivate = async (user: AdminUser) => {
     try {
-      await admin.reactivateUser(user.id || user._id);
+      await admin.reactivateUser(uid(user));
       toast.success(t('admin.toast.reactivateSuccess', { name: user.displayName || user.accountName }));
       refreshUsersFromStart();
     } catch (err) {
@@ -256,11 +266,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const onBanConfirm = async ({ reason, bannedUntil, banIp, banDevice }) => {
+  const onBanConfirm = async ({ reason, bannedUntil, banIp, banDevice }: BanConfirmData) => {
     const { user } = banModal;
+    if (!user) return;
     setBanModal({ isOpen: false, user: null });
     try {
-      await admin.banUser(user.id || user._id, { reason, bannedUntil, banIp, banDevice });
+      await admin.banUser(uid(user), { reason, bannedUntil, banIp, banDevice } as Parameters<typeof admin.banUser>[1]);
       toast.success(t('admin.toast.bannedSuccess', { name: user.displayName || user.accountName }));
       refreshUsersFromStart();
       fetchStats();
@@ -269,7 +280,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleChangeRole = (user) => {
+  const handleChangeRole = (user: AdminUser) => {
     if (user.id === currentUser?.id || user._id === currentUser?._id) {
       toast.error(t('admin.toast.noSelfAction'));
       return;
@@ -277,7 +288,7 @@ export default function AdminDashboard() {
     setConfirmModal({ isOpen: true, type: 'role', user });
   };
 
-  const handleDelete = (user) => {
+  const handleDelete = (user: AdminUser) => {
     if (user.id === currentUser?.id || user._id === currentUser?._id) {
       toast.error(t('admin.toast.noSelfAction'));
       return;
@@ -285,7 +296,7 @@ export default function AdminDashboard() {
     setConfirmModal({ isOpen: true, type: 'delete', user });
   };
 
-  const handleBlockIp = async (e) => {
+  const handleBlockIp = async (e: FormEvent) => {
     e.preventDefault();
     if (!ipForm.ip) return;
     try {
@@ -299,11 +310,11 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUnblockIp = (ipId) => {
+  const handleUnblockIp = (ipId: string) => {
     setConfirmModal({ isOpen: true, type: 'unblock_ip', ipId });
   };
 
-  const handleBlockDevice = async (e) => {
+  const handleBlockDevice = async (e: FormEvent) => {
     e.preventDefault();
     if (!deviceForm.deviceId) return;
     try {
@@ -317,7 +328,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUnblockDevice = (deviceId) => {
+  const handleUnblockDevice = (deviceId: string) => {
     setConfirmModal({ isOpen: true, type: 'unblock_device', deviceId });
   };
 
@@ -327,19 +338,19 @@ export default function AdminDashboard() {
 
     try {
       if (type === 'role') {
-        const newRole = user.role === 'admin' ? 'user' : 'admin';
-        await admin.changeRole(user.id || user._id, newRole);
-        toast.success(t('admin.toast.roleSuccess', { name: user.displayName || user.accountName, role: newRole }));
+        const newRole = user?.role === 'admin' ? 'user' : 'admin';
+        await admin.changeRole(uid(user), newRole);
+        toast.success(t('admin.toast.roleSuccess', { name: user?.displayName || user?.accountName, role: newRole }));
       } else if (type === 'delete') {
-        await admin.deleteUser(user.id || user._id);
-        toast.success(t('admin.toast.deleteSuccess', { name: user.displayName || user.accountName }));
+        await admin.deleteUser(uid(user));
+        toast.success(t('admin.toast.deleteSuccess', { name: user?.displayName || user?.accountName }));
       } else if (type === 'unblock_ip') {
-        await admin.unblockIp(ipId);
+        await admin.unblockIp(ipId ?? "");
         toast.success(t('admin.toast.ipUnblocked'));
         fetchIps();
         fetchStats();
       } else if (type === 'unblock_device') {
-        await admin.unblockDevice(deviceId);
+        await admin.unblockDevice(deviceId ?? "");
         toast.success(t('admin.toast.deviceUnblocked'));
         fetchDevices();
         fetchStats();
@@ -360,7 +371,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <AdminStatsCards stats={stats} />
+      <AdminStatsCards stats={stats as ComponentProps<typeof AdminStatsCards>["stats"]} />
 
       {/* Tab bar */}
       <div className="flex items-center gap-0 border-b border-zinc-800/60 contrast-more:border-zinc-600 mb-4 overflow-x-auto">
@@ -392,7 +403,7 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col min-h-[400px]">
         {activeTab === 'users' && (
           <AdminUsersTab
-            users={users}
+            users={users as ComponentProps<typeof AdminUsersTab>["users"]}
             currentUser={currentUser}
             search={search}
             setSearch={setSearch}
@@ -420,7 +431,7 @@ export default function AdminDashboard() {
             setIpForm={setIpForm}
             handleBlockIp={handleBlockIp}
             handleUnblockIp={handleUnblockIp}
-            bannedIps={bannedIps}
+            bannedIps={bannedIps as ComponentProps<typeof AdminIpsTab>["bannedIps"]}
           />
         )}
 
@@ -430,12 +441,12 @@ export default function AdminDashboard() {
             setDeviceForm={setDeviceForm}
             handleBlockDevice={handleBlockDevice}
             handleUnblockDevice={handleUnblockDevice}
-            bannedDevices={bannedDevices}
+            bannedDevices={bannedDevices as ComponentProps<typeof AdminDevicesTab>["bannedDevices"]}
           />
         )}
 
         {activeTab === 'audit' && (
-          <AdminAuditTab auditLogs={auditLogs} />
+          <AdminAuditTab auditLogs={auditLogs as ComponentProps<typeof AdminAuditTab>["auditLogs"]} />
         )}
 
         {activeTab === 'badges' && (
@@ -447,80 +458,7 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'xp' && (
-          <div className="flex flex-col gap-6 max-w-xl">
-            {/* Header */}
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <Sparkles className="size-4 text-amber-400" />
-                <h2 className="text-sm font-semibold text-zinc-200">{t('admin.xp.sectionTitle')}</h2>
-              </div>
-              <p className="text-xs text-zinc-500">{t('admin.xp.sectionDescription')}</p>
-            </div>
-
-            {/* Controls card */}
-            <div className="p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 flex flex-col gap-4">
-              {/* Amount + Target row */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.amount')}</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={xpBulkAmount}
-                    onChange={e => setXpBulkAmount(e.target.value)}
-                    className="w-28 h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-amber-500/50"
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.target')}</span>
-                  <select
-                    value={xpBulkTarget}
-                    onChange={e => setXpBulkTarget(e.target.value)}
-                    className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 focus:outline-none focus:border-amber-500/50"
-                  >
-                    <option value="all">{t('admin.xp.allUsers')}</option>
-                    <option value="ids">{t('admin.xp.specificUsers')}</option>
-                  </select>
-                </label>
-              </div>
-
-              {/* User IDs input — shown only for specific-users target */}
-              {xpBulkTarget === 'ids' && (
-                <label className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">{t('admin.xp.userIds')}</span>
-                  <input
-                    type="text"
-                    value={xpBulkIds}
-                    onChange={e => setXpBulkIds(e.target.value)}
-                    placeholder={t('admin.xp.usernamePlaceholder')}
-                    className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50"
-                  />
-                </label>
-              )}
-
-              {/* Action buttons */}
-              <div className="flex gap-3 pt-1">
-                <button
-                  onClick={() => handleBulkXP('grant')}
-                  disabled={xpBulkSaving}
-                  className="flex items-center gap-2 h-9 px-5 text-sm font-semibold rounded-xl bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors disabled:opacity-50"
-                >
-                  <Sparkles className="size-3.5" />
-                  {t('admin.xp.grantXp')}
-                </button>
-                <button
-                  onClick={() => handleBulkXP('revoke')}
-                  disabled={xpBulkSaving}
-                  className="flex items-center gap-2 h-9 px-5 text-sm font-semibold rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors disabled:opacity-50"
-                >
-                  {t('admin.xp.revokeXp')}
-                </button>
-                {xpBulkSaving && (
-                  <span className="self-center size-4 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
-                )}
-              </div>
-            </div>
-          </div>
+          <AdminXpTab onAdjustXP={handleAdjustXP} />
         )}
       </div>
 
@@ -555,9 +493,9 @@ export default function AdminDashboard() {
 
       <AppealDetailsModal
         isOpen={appealModal.isOpen}
-        user={appealModal.user}
-        onApprove={handleToggleBan}
-        onReject={handleRejectAppeal}
+        user={appealModal.user as ComponentProps<typeof AppealDetailsModal>["user"]}
+        onApprove={handleToggleBan as ComponentProps<typeof AppealDetailsModal>["onApprove"]}
+        onReject={handleRejectAppeal as ComponentProps<typeof AppealDetailsModal>["onReject"]}
         onCancel={() => setAppealModal({ isOpen: false, user: null })}
       />
 

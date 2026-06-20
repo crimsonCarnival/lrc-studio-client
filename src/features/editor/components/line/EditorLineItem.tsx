@@ -1,11 +1,11 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import type { ComponentProps, Dispatch, RefObject, SetStateAction, MouseEvent as ReactMouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { serializeToRubyMarkup, parseRubyMarkup, isKanji, hasKanji } from '@/shared/utils/furigana';
 import { Checkbox } from '@ui/checkbox';
 import { Tip } from '@ui/tip';
 import { GripVertical } from 'lucide-react';
 import LineTextEditingForm from './LineTextEditingForm';
-import LineActionsPopover from './LineActionsPopover';
 import { useLineGestures } from '../../hooks/useLineGestures';
 import LrcModeColumn from '../modes/LrcModeColumn';
 import SrtModeColumn from '../modes/SrtModeColumn';
@@ -15,24 +15,88 @@ import LineActionToolbar from './LineActionToolbar';
 import SectionPickerDropdown from './SectionPickerDropdown';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import { validateLineSingers } from '@features/editor/utils/sections';
+import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
+import type { AppSettings } from '@/features/settings/settings.types';
 
-const SINGER_BADGE_STYLES = [
-  'text-zinc-400 border-zinc-700/60',               // 0: normal
-  'text-zinc-400 border-zinc-700/60 italic',         // 1: italic
-  'text-zinc-400 border-zinc-700/60 font-bold',      // 2: bold
-  'text-zinc-400 border-zinc-700/60 font-bold italic', // 3: bold + italic
-];
-
-/** Colors per role to make chips visually distinct */
-const SINGER_BADGE_COLORS = [
-  'bg-primary/10 border-primary/30 text-primary',         // 0: primary
-  'bg-sky-500/10 border-sky-500/30 text-sky-400',         // 1: second
-  'bg-violet-500/10 border-violet-500/30 text-violet-400', // 2: third
-  'bg-amber-500/10 border-amber-500/30 text-amber-400',   // 3: fourth
-];
-function getSingers(line) {
+function getSingers(line: EditorLine): string[] {
   return line.singers || [];
 }
+
+interface CharSelection {
+  start: number | null;
+  end: number | null;
+  range: { s: number; e: number } | null;
+}
+
+type FocusedTs = { lineIndex: number; type: string } | null;
+type PlayerRef = RefObject<{ seek?: (t: number) => void; play?: () => void } | null> | null;
+
+interface EditorLineItemProps {
+  line: EditorLine;
+  nextTimestamp?: number | null;
+  i: number;
+  displayedActiveIndex?: number | null;
+  isActive: boolean;
+  isLocked: boolean;
+  isSynced: boolean;
+  editorMode: string;
+  awaitingEndMark?: number | null;
+  focusedTimestamp?: FocusedTs;
+  setFocusedTimestamp: (v: FocusedTs) => void;
+  activeLineRef?: RefObject<HTMLDivElement | null>;
+  handleLineClick: (i: number, e: ReactMouseEvent) => void;
+  handleLineHover: (i: number) => void;
+  handleLineHoverEnd: () => void;
+  handleDragStart: (e: React.DragEvent, i: number) => void;
+  handleDragOver: (e: React.DragEvent, i: number) => void;
+  handleDragEnd: (e: React.DragEvent) => void;
+  handleDrop: (e: React.DragEvent, i: number) => void;
+  dragOverIndex?: number | null;
+  dragIndex?: number | null;
+  selectedLines: Set<number>;
+  settings: AppSettings;
+  editingLineIndex: number | null;
+  setEditingLineIndex: (v: number | null) => void;
+  editingText: string;
+  setEditingText: (v: string) => void;
+  editingSecondary: string;
+  setEditingSecondary: (v: string) => void;
+  editingTranslations: unknown[];
+  setEditingTranslations: (v: unknown[]) => void;
+  editingSingers: string[];
+  setEditingSingers: Dispatch<SetStateAction<string[]>>;
+  handleSaveLineText: (i: number, text: string, secondary?: string, translations?: unknown[], singers?: string[]) => void;
+  handleInsertSection?: (i: number) => void;
+  onToggleDepth?: (i: number) => void;
+  handleMoveToSection?: (i: number, target: unknown) => void;
+  sectionLines?: EditorLine[];
+  handleAssignSinger?: (name: string, lineIndices: number[], slot?: number, onlyFirst?: boolean) => void;
+  songArtists?: string[];
+  projectSingers?: string[];
+  playerRef?: PlayerRef;
+  shiftTime: (i: number, delta: number) => void;
+  handleAddLine?: (i: number) => void;
+  handleClearLine?: (i: number) => void;
+  handleDeleteLine: (i: number) => void;
+  handleToggleLine: (i: number) => void;
+  handleMark?: (opts?: { forceAdvance?: boolean }) => void;
+  handleSetWordReading?: (i: number, wi: number, val: string) => void;
+  handleCycleWordSinger?: (i: number, wi: number) => void;
+  handleSetWordSinger?: (i: number, wi: number, slot: number) => void;
+  activeWordIndex: number;
+  handleClearWordTimestamp?: (i: number, wi: number) => void;
+  handleSetActiveWordIndex: (wi: number) => void;
+  handleSetTimestamp: (lineIndex: number, which: string, val: number) => void;
+  stampTarget?: string;
+  handleStampTargetToggle?: () => void;
+  playbackPosition?: number | null;
+  upcomingDepth?: number;
+  onWordMenu?: (...args: unknown[]) => void;
+  onLineMenu?: (...args: unknown[]) => void;
+  isModified?: boolean;
+}
+
+const SYNC_FLASH_MS: Record<string, number> = { short: 300, normal: 600, long: 1200 };
 
 const EditorLineItem = React.memo(({
   line,
@@ -97,27 +161,27 @@ const EditorLineItem = React.memo(({
   onWordMenu,
   onLineMenu,
   isModified,
-}) => {
+}: EditorLineItemProps) => {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
   const { t } = useTranslation();
-  const [editingTimestamp, setEditingTimestamp] = useState(null); // null | 'start' | 'end'
-  const [editingReadingWordIndex, setEditingReadingWordIndex] = useState(null);
-  const [selection, setSelection] = useState({ start: null, end: null, range: null }); // { start: ci|null, end: ci|null, range: {s,e}|null }
-  const [nudgeIndicator, setNudgeIndicator] = useState(null);
+  const [editingTimestamp, setEditingTimestamp] = useState<string | null>(null); // null | 'start' | 'end'
+  const [editingReadingWordIndex, setEditingReadingWordIndex] = useState<number | null>(null);
+  const [selection, setSelection] = useState<CharSelection>({ start: null, end: null, range: null });
+  const [nudgeIndicator, setNudgeIndicator] = useState<string | null>(null);
   const [justSynced, setJustSynced] = useState(false);
-  const nudgeTimerRef = useRef(null);
-  const justSyncedTimerRef = useRef(null);
-  const editInputRef = useRef(null);
+  const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const justSyncedTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const editInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (editingLineIndex === i) {
-      const t = setTimeout(() => editInputRef.current?.focus(), 50);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => editInputRef.current?.focus(), 50);
+      return () => clearTimeout(timer);
     }
   }, [editingLineIndex, i]);
 
-  const onCharClick = useCallback((ci) => {
+  const onCharClick = useCallback((ci: number) => {
     setSelection(prev => {
       if (prev.range) return prev;
 
@@ -167,7 +231,7 @@ const EditorLineItem = React.memo(({
     }
   }, [isActive, activeLineRef]);
 
-  const handleReadingCommit = useCallback((val, wi, direction) => {
+  const handleReadingCommit = useCallback((val: string, wi: number, direction: number) => {
     handleSetWordReading?.(i, wi, val);
     if (direction !== 0) {
       const words = line.words || [];
@@ -184,13 +248,13 @@ const EditorLineItem = React.memo(({
   }, [i, line.words, handleSetWordReading, setEditingReadingWordIndex]);
 
   // Used to distinguish single-click from double-click on word chips/rubies in words mode
-  const wordClickTimerRef = useRef(null);
+  const wordClickTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  const showNudge = useCallback((delta) => {
+  const showNudge = useCallback((delta: number) => {
     const sign = delta > 0 ? '+' : '';
     setNudgeIndicator(`${sign}${delta.toFixed(2)}s`);
     clearTimeout(nudgeTimerRef.current);
-    const duration = { short: 300, normal: 600, long: 1200 }[settings.editor?.syncFlashDuration] || 600;
+    const duration = SYNC_FLASH_MS[settings.editor?.syncFlashDuration as string] || 600;
     nudgeTimerRef.current = setTimeout(() => setNudgeIndicator(null), duration);
   }, [settings.editor?.syncFlashDuration]);
 
@@ -203,7 +267,7 @@ const EditorLineItem = React.memo(({
     showNudge,
   });
 
-  const handleWordClick = useCallback((e, w, wi) => {
+  const handleWordClick = useCallback((e: ReactMouseEvent, w: EditorWord, wi: number) => {
     e.stopPropagation();
     if (w.time != null && playerRef?.current?.seek) {
       playerRef.current.seek(w.time);
@@ -212,7 +276,7 @@ const EditorLineItem = React.memo(({
     if (activeWordIndex !== -1) handleSetActiveWordIndex(wi);
   }, [playerRef, settings.playback?.seekPlays, activeWordIndex, handleSetActiveWordIndex]);
 
-  const handleTimestampWheel = useCallback((e, index) => {
+  const handleTimestampWheel = useCallback((e: { preventDefault: () => void; deltaY: number }, index: number) => {
     e.preventDefault();
     const delta = e.deltaY < 0 ? 0.01 : -0.01;
     shiftTime(index, delta);
@@ -235,7 +299,7 @@ const EditorLineItem = React.memo(({
   useEffect(() => {
     if (justSynced) {
       clearTimeout(justSyncedTimerRef.current);
-      const duration = { short: 300, normal: 600, long: 1200 }[settings.editor?.syncFlashDuration] || 600;
+      const duration = SYNC_FLASH_MS[settings.editor?.syncFlashDuration as string] || 600;
       justSyncedTimerRef.current = setTimeout(() => setJustSynced(false), duration);
     }
     return () => clearTimeout(justSyncedTimerRef.current);
@@ -243,7 +307,7 @@ const EditorLineItem = React.memo(({
 
   // Segment progress for active synced line
   const segmentEnd = line.endTime ?? nextTimestamp;
-  const segmentProgress = isActive && isSynced && segmentEnd != null && playbackPosition != null
+  const segmentProgress = isActive && isSynced && segmentEnd != null && playbackPosition != null && line.timestamp != null
     ? Math.min(1, Math.max(0, (playbackPosition - line.timestamp) / (segmentEnd - line.timestamp)))
     : null;
 
@@ -256,7 +320,7 @@ const EditorLineItem = React.memo(({
   if (line.type === 'section') {
     const isEditing = editingLineIndex === i;
     const isRoot = line.depth === 0;
-    
+
     return (
       <div
         ref={isActive ? activeLineRef : null}
@@ -272,10 +336,10 @@ const EditorLineItem = React.memo(({
       >
         <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/50'}`} />
         {isEditing ? (
-          <div className="flex items-start gap-1.5" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
+          <div className="flex items-start gap-1.5" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
             <SectionPickerDropdown
               value={editingText}
-              onChange={(v) => setEditingText(v)}
+              onChange={(v: string) => setEditingText(v)}
             />
             {editingSingers.map((singerVal, idx) => {
               const isFilled = !!singerVal;
@@ -292,7 +356,7 @@ const EditorLineItem = React.memo(({
                 />
               );
             })}
-            {songArtists?.length > 0 && (
+            {songArtists && songArtists.length > 0 && (
               <datalist id={`section-singers-${i}`}>
                 {songArtists.map((a) => <option key={a} value={a} />)}
               </datalist>
@@ -365,7 +429,7 @@ const EditorLineItem = React.memo(({
       draggable={editingLineIndex !== i}
       onDragStart={(e) => {
         // Only allow dragging if the target is the handle or the container itself (not text/inputs)
-        const target = e.target;
+        const target = e.target as HTMLElement;
         if (target.closest('input, button, rt, [data-no-drag]')) {
           e.preventDefault();
           return;
@@ -384,7 +448,7 @@ const EditorLineItem = React.memo(({
             : `bg-primary/5 border border-${isModified ? 'warning' : 'primary'}/20 border-dashed`
           : dragOverIndex === i
             ? 'bg-accent-blue/10 border border-accent-blue/30'
-            : upcomingDepth > 0
+            : (upcomingDepth ?? 0) > 0
               ? `bg-primary/${upcomingDepth === 1 ? '5' : upcomingDepth === 2 ? '3' : '2'} border border-primary/${upcomingDepth === 1 ? '15' : '10'} border-dashed`
               : `hover:bg-zinc-800/40 border border-${isModified ? 'warning/30' : 'transparent'}`
         } ${dragIndex === i ? 'opacity-40' : ''} ${justSynced ? 'ring-2 ring-primary/60 animate-just-synced' : ''}`}
@@ -436,7 +500,7 @@ const EditorLineItem = React.memo(({
       >
         {editorMode === 'words' ? (
           <WordsModeColumn
-            line={line}
+            line={line as ComponentProps<typeof WordsModeColumn>['line']}
             lineIndex={i}
             isSynced={isSynced}
             isActive={isActive}
@@ -444,7 +508,7 @@ const EditorLineItem = React.memo(({
             settings={settings}
             editingTimestamp={editingTimestamp}
             setEditingTimestamp={setEditingTimestamp}
-            focusedTimestamp={focusedTimestamp}
+            focusedTimestamp={focusedTimestamp ?? null}
             setFocusedTimestamp={setFocusedTimestamp}
             stampTarget={stampTarget}
             handleStampTargetToggle={handleStampTargetToggle}
@@ -452,8 +516,8 @@ const EditorLineItem = React.memo(({
             handleSetTimestamp={handleSetTimestamp}
             handleTimestampWheel={handleTimestampWheel}
             nudgeIndicator={nudgeIndicator}
-            handleWordClick={handleWordClick}
-            handleClearWordTimestamp={handleClearWordTimestamp}
+            handleWordClick={handleWordClick as ComponentProps<typeof WordsModeColumn>['handleWordClick']}
+            handleClearWordTimestamp={handleClearWordTimestamp as ComponentProps<typeof WordsModeColumn>['handleClearWordTimestamp']}
             onWordMenu={onWordMenu}
           />
         ) : editorMode === 'srt' ? (
@@ -466,7 +530,7 @@ const EditorLineItem = React.memo(({
             awaitingEndMark={awaitingEndMark}
             editingTimestamp={editingTimestamp}
             setEditingTimestamp={setEditingTimestamp}
-            focusedTimestamp={focusedTimestamp}
+            focusedTimestamp={focusedTimestamp ?? null}
             setFocusedTimestamp={setFocusedTimestamp}
             handleSetTimestamp={handleSetTimestamp}
             handleTimestampWheel={handleTimestampWheel}
@@ -481,7 +545,7 @@ const EditorLineItem = React.memo(({
             settings={settings}
             editingTimestamp={editingTimestamp}
             setEditingTimestamp={setEditingTimestamp}
-            focusedTimestamp={focusedTimestamp}
+            focusedTimestamp={focusedTimestamp ?? null}
             setFocusedTimestamp={setFocusedTimestamp}
             handleSetTimestamp={handleSetTimestamp}
             handleTimestampWheel={handleTimestampWheel}
@@ -504,7 +568,7 @@ const EditorLineItem = React.memo(({
         data-no-drag
         onDoubleClick={() => {
           setEditingLineIndex(i);
-          setEditingText(serializeToRubyMarkup(line.words) || line.text);
+          setEditingText(serializeToRubyMarkup(line.words) || line.text || '');
           setEditingSecondary(line.secondary || '');
           setEditingTranslations(line.translations ? [...line.translations] : []);
           const singers = getSingers(line);
@@ -518,8 +582,8 @@ const EditorLineItem = React.memo(({
             setEditingText={setEditingText}
             editingSecondary={editingSecondary}
             setEditingSecondary={setEditingSecondary}
-            editingTranslations={editingTranslations}
-            setEditingTranslations={setEditingTranslations}
+            editingTranslations={editingTranslations as ComponentProps<typeof LineTextEditingForm>['editingTranslations']}
+            setEditingTranslations={setEditingTranslations as ComponentProps<typeof LineTextEditingForm>['setEditingTranslations']}
             editingSingers={editingSingers}
             setEditingSingers={setEditingSingers}
             handleSaveLineText={handleSaveLineText}
@@ -529,7 +593,7 @@ const EditorLineItem = React.memo(({
           />
         ) : (
           <LineTextContent
-            line={line}
+            line={line as ComponentProps<typeof LineTextContent>['line']}
             lineIndex={i}
             isActive={isActive}
             isSynced={isSynced}
@@ -542,11 +606,11 @@ const EditorLineItem = React.memo(({
             selection={selection}
             setSelection={setSelection}
             onCharClick={onCharClick}
-            handleWordClick={handleWordClick}
-            wordClickTimerRef={wordClickTimerRef}
+            handleWordClick={handleWordClick as ComponentProps<typeof LineTextContent>['handleWordClick']}
+            wordClickTimerRef={wordClickTimerRef as ComponentProps<typeof LineTextContent>['wordClickTimerRef']}
             handleSaveLineText={handleSaveLineText}
             handleCycleWordSinger={handleCycleWordSinger}
-            handleSetWordSinger={handleSetWordSinger}
+            handleSetWordSinger={handleSetWordSinger as ComponentProps<typeof LineTextContent>['handleSetWordSinger']}
           />
         )}
       </div>
@@ -556,7 +620,7 @@ const EditorLineItem = React.memo(({
         </Tip>
       )}
       <LineActionToolbar
-        line={line}
+        line={line as ComponentProps<typeof LineActionToolbar>['line']}
         lineIndex={i}
         isActive={isActive}
         isSynced={isSynced}
@@ -566,19 +630,19 @@ const EditorLineItem = React.memo(({
         setEditingLineIndex={setEditingLineIndex}
         setEditingText={setEditingText}
         setEditingSecondary={setEditingSecondary}
-        setEditingTranslations={setEditingTranslations}
+        setEditingTranslations={setEditingTranslations as ComponentProps<typeof LineActionToolbar>['setEditingTranslations']}
         setEditingSingers={setEditingSingers}
         serializeToRubyMarkup={serializeToRubyMarkup}
         handleInsertSection={handleInsertSection}
-        handleMoveToSection={handleMoveToSection}
-        sectionLines={sectionLines}
+        handleMoveToSection={handleMoveToSection as ComponentProps<typeof LineActionToolbar>['handleMoveToSection']}
+        sectionLines={sectionLines as ComponentProps<typeof LineActionToolbar>['sectionLines']}
         handleAssignSinger={handleAssignSinger}
         songArtists={songArtists}
-        handleMark={handleMark}
-        playerRef={playerRef}
+        handleMark={handleMark as ComponentProps<typeof LineActionToolbar>['handleMark']}
+        playerRef={playerRef as ComponentProps<typeof LineActionToolbar>['playerRef']}
         shiftTime={shiftTime}
-        handleAddLine={handleAddLine}
-        handleClearLine={handleClearLine}
+        handleAddLine={handleAddLine as ComponentProps<typeof LineActionToolbar>['handleAddLine']}
+        handleClearLine={handleClearLine as ComponentProps<typeof LineActionToolbar>['handleClearLine']}
         handleDeleteLine={handleDeleteLine}
         selectedLines={selectedLines}
         isMobile={isMobile}

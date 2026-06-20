@@ -1,35 +1,36 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams, Link, useSearchParams, useLocation } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
 
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import toast from 'react-hot-toast';
-import { Button } from '@ui/button';
-import { LazyImage } from '@ui/LazyImage';
-import { Star, GitFork, Music, PlayCircle, Settings, Pencil, Trash2, Timer, FolderOpen, Trophy, Lock, Activity, BarChart3, Music2, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, Timer, FolderOpen, Lock, Activity, Music2, ChevronRight } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { getPublicProfile, followUser, unfollowUser } from './profile.service';
 import { useSuggestedUsers } from '@/features/explore/hooks/useExplore';
 import { FollowModal } from './FollowModal';
 import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
-import { BadgeList } from '@/features/badges/BadgeList';
 import { BadgeChip } from '@/features/badges/BadgeChip';
 import { ShowcasedBadges } from '@/features/badges/ShowcasedBadges';
 import { projects } from '@/app/api';
 import ProjectSetupModal from '@/features/editor/components/setup/ProjectSetupModal';
+import type { ProjectSetupConfirm } from '@/features/editor/components/setup/ProjectSetupModal';
 import useConfirm from '@/shared/hooks/useConfirm';
-import { Tip } from '@/shared/ui/tip';
 import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 import { formatDistanceToNow } from 'date-fns';
 import { enUS, es } from 'date-fns/locale';
+import type { Locale } from 'date-fns';
+import { ProfileHeader } from './ProfileHeader';
+import type { PublicUser, Project } from '@/types';
 
-const DATE_FNS_LOCALES = { en: enUS, es };
+const DATE_FNS_LOCALES: Record<string, Locale> = { en: enUS, es };
 
-function formatRelativeTime(dateStr, locale = 'en') {
+function formatRelativeTime(dateStr?: string | null, locale = 'en'): string {
   try {
-    return formatDistanceToNow(new Date(dateStr), {
+    return formatDistanceToNow(new Date(dateStr ?? ''), {
       addSuffix: true,
       locale: DATE_FNS_LOCALES[locale] ?? enUS,
     });
@@ -38,25 +39,26 @@ function formatRelativeTime(dateStr, locale = 'en') {
   }
 }
 
-function AvatarBadge({ avatarUrl, name, size = 'lg' }) {
-  const sizeClass = size === 'lg' ? 'size-24 text-4xl rounded-[1.5rem]' : 'size-16 text-2xl rounded-xl';
-  if (avatarUrl) {
-    return (
-      <LazyImage
-        src={avatarUrl}
-        alt={name}
-        className={`${sizeClass} object-cover border-4 border-border shadow-2xl shadow-primary/20`}
-      />
-    );
-  }
-  return (
-    <div className={`${sizeClass} bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center border-4 border-border shadow-2xl shadow-primary/20 font-bold text-zinc-950 select-none`}>
-      {(name || '?')[0].toUpperCase()}
-    </div>
-  );
+// Project metadata is loosely shaped at this layer; narrow the fields we touch.
+interface ProjectMetaLoose {
+  description?: string;
+  tags?: string[];
+  songName?: string;
+  songArtist?: string;
+  songArtists?: string[];
+  songAlbum?: string;
+  songYear?: string;
+  genre?: string;
 }
 
-function ProjectCard({ project, isOwner, onEdit, onDelete }) {
+interface ProjectCardProps {
+  project: Project;
+  isOwner: boolean;
+  onEdit: (project: Project) => void;
+  onDelete: (project: Project) => void;
+}
+
+function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { title, publicId, upload, public: isPublic, coverImage } = project;
@@ -64,13 +66,13 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }) {
   const isPrivate = isOwner && isPublic === false;
   const hasCover = !!coverImage;
 
-  const handleEdit = (e) => {
+  const handleEdit = (e: ReactMouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onEdit(project);
   };
 
-  const handleDelete = (e) => {
+  const handleDelete = (e: ReactMouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onDelete(project);
@@ -83,7 +85,7 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }) {
       className="group relative glass rounded-2xl overflow-hidden text-left hover:border-primary/30 transition-all cursor-pointer focus:ring-1 focus:ring-primary/30 outline-none animate-fade-in contrast-more:border-zinc-600 w-full"
     >
       <ThemedShineBorder />
-      
+
       {isOwner && (
         <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-20 bg-black/40 backdrop-blur-sm rounded-lg p-1">
           <button onClick={handleEdit} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" aria-label={t('profile.editProject')}>
@@ -98,7 +100,7 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }) {
       <div className={`relative ${hasCover ? 'h-20' : 'h-12 bg-gradient-to-br from-zinc-900 to-zinc-800/50 flex items-center justify-center'} overflow-hidden`}>
         {hasCover ? (
           <>
-            <img src={coverImage} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 motion-reduce:group-hover:scale-100 transition-transform duration-500" />
+            <img src={coverImage ?? ''} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 motion-reduce:group-hover:scale-100 transition-transform duration-500" />
             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
           </>
         ) : (
@@ -114,7 +116,7 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }) {
             : hasCover ? <Music2 className="size-3 text-primary/60 drop-shadow-md" /> : null}
         </div>
       </div>
-      
+
       {/* Info */}
       <div className="p-3 flex items-start gap-2.5">
         <div className="flex-1 min-w-0">
@@ -179,17 +181,16 @@ export default function ProfilePage() {
   const { accountName } = useParams();
   const { user } = useAuthContext();
 
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState('projects');
 
   const [isFollowing, setIsFollowing] = useState(false);
-  const [confirmingUnfollow, setConfirmingUnfollow] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
-  const [followModal, setFollowModal] = useState(null); // 'FOLLOWERS' | 'FOLLOWING' | null
+  const [followModal, setFollowModal] = useState<'FOLLOWERS' | 'FOLLOWING' | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [editingProject, setEditingProject] = useState(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [requestConfirm, confirmModal] = useConfirm();
 
   const isOwner = !!user && !!accountName && user.accountName === accountName;
@@ -248,7 +249,7 @@ export default function ProfilePage() {
     }
     setFollowLoading(true);
     try {
-      await followUser(accountName);
+      await followUser(accountName!);
       setIsFollowing(true);
       setProfile(prev => prev ? { ...prev, followerCount: prev.followerCount + 1 } : prev);
     } catch {
@@ -260,27 +261,25 @@ export default function ProfilePage() {
   const handleUnfollow = useCallback(async () => {
     setFollowLoading(true);
     try {
-      await unfollowUser(accountName);
+      await unfollowUser(accountName!);
       setIsFollowing(false);
-      setConfirmingUnfollow(false);
       setProfile(prev => prev ? { ...prev, followerCount: Math.max(0, prev.followerCount - 1) } : prev);
     } catch {
       toast.error(t('profile.unfollowError'));
-      setConfirmingUnfollow(false);
     }
     setFollowLoading(false);
   }, [accountName, t]);
 
-  const handleDeleteProject = useCallback((project) => {
+  const handleDeleteProject = useCallback((project: Project) => {
     requestConfirm(
       t('confirm.deleteProject', { title: project.title || t('library.untitled') }),
       async () => {
         try {
           await projects.remove(project.publicId);
-          setProfile(prev => prev ? { 
-            ...prev, 
-            projects: prev.projects.filter(p => p.publicId !== project.publicId), 
-            projectCount: Math.max(0, prev.projectCount - 1) 
+          setProfile(prev => prev ? {
+            ...prev,
+            projects: prev.projects.filter(p => p.publicId !== project.publicId),
+            projectCount: Math.max(0, prev.projectCount - 1)
           } : prev);
           toast.success(t('project.deleteSuccess'));
         } catch {
@@ -291,7 +290,7 @@ export default function ProfilePage() {
     );
   }, [requestConfirm, t]);
 
-  const handleEditProject = useCallback((project) => {
+  const handleEditProject = useCallback((project: Project) => {
     setEditingProject(project);
   }, []);
 
@@ -326,10 +325,10 @@ export default function ProfilePage() {
   const allBadgeIds = [
     ...serverBadgeIds,
     ...(profile.isVerified && !serverBadgeIds.includes('verified') ? ['verified'] : []),
-    ...(profile.isAdmin   && !serverBadgeIds.includes('admin')    ? ['admin']    : []),
+    ...(profile.isAdmin && !serverBadgeIds.includes('admin') ? ['admin'] : []),
   ];
   // Header shows only showcased badges; fall back to all if none showcased
-  const showcasedIds = (profile.showcasedBadges ?? []).map(b => b.id ?? b);
+  const showcasedIds = (profile.showcasedBadges ?? []).map(b => b.id);
   const badgeIds = showcasedIds.length > 0 ? showcasedIds : allBadgeIds.slice(0, 3);
 
   const minutesSynced = profile.stats?.minutesSynced ?? 0;
@@ -349,150 +348,20 @@ export default function ProfilePage() {
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
     <div className="flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-5xl mx-auto w-full">
-      {/* Profile Header */}
-      <div className="glass rounded-[2rem] p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden mb-6">
-        <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} />
-
-        <div className="flex-1 text-center sm:text-left">
-          <div className="flex flex-col sm:flex-row sm:items-start gap-2">
-            <div>
-              <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-                <h1 className="text-2xl font-semibold text-foreground">{displayName}</h1>
-                {level > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-zinc-800/80 border border-zinc-700/50 text-[11px] font-bold text-zinc-400">
-                    <Trophy className="size-3 text-warning" />
-                    Lv.{level}
-                  </span>
-                )}
-              </div>
-              {badgeIds.length > 0 && (
-                <BadgeList ids={badgeIds} max={3} className="mt-1.5 justify-center sm:justify-start" />
-              )}
-            </div>
-          </div>
-
-          <p className="text-muted-foreground text-sm font-mono mt-1.5">@{profile.accountName}</p>
-
-          <p className="text-muted-foreground text-sm mt-3 max-w-md">
-            {profile.bio || <span className="italic opacity-50">{t('profile.noBio')}</span>}
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 mt-4 text-sm text-muted-foreground">
-            {profile.showFollowers && profile.followerCount > 0 ? (
-              <button
-                onClick={() => setFollowModal('FOLLOWERS')}
-                className="hover:text-foreground transition-colors"
-              >
-                {t('profile.statsFollowers', { count: profile.followerCount })}
-              </button>
-            ) : (
-              <span>{t('profile.statsFollowers', { count: profile.followerCount })}</span>
-            )}
-            <span className="opacity-30">·</span>
-            {profile.showFollowers && profile.followingCount > 0 ? (
-              <button
-                onClick={() => setFollowModal('FOLLOWING')}
-                className="hover:text-foreground transition-colors"
-              >
-                {t('profile.statsFollowing', { count: profile.followingCount })}
-              </button>
-            ) : (
-              <span>{t('profile.statsFollowing', { count: profile.followingCount })}</span>
-            )}
-            <span className="opacity-30">·</span>
-            <span>{t('profile.statsProjects', { count: profile.projectCount })}</span>
-            <span className="opacity-30">·</span>
-            <span>{t('profile.statsStars', { count: profile.totalStarsReceived })}</span>
-            {minutesLabel && (
-              <>
-                <span className="opacity-30">·</span>
-                <span className="flex items-center gap-1">
-                  <Timer className="size-3.5 text-accent-blue" />
-                  {minutesLabel}
-                  <span className="text-xs opacity-50">¹</span>
-                </span>
-              </>
-            )}
-          </div>
-
-          {minutesLabel && (
-            <p className="text-[10.5px] text-muted-foreground mt-1 opacity-50">
-              ¹ {t('badges.leaderboard.minutesSyncedNote')}
-            </p>
-          )}
-
-          {profile.totalForksReceived > 0 && (
-            <p className="text-xs text-muted-foreground mt-2 opacity-70">
-              {t('profile.forkBadge', { count: profile.totalForksReceived })}
-            </p>
-          )}
-        </div>
-
-        {isOwner ? (
-          <div className="absolute top-4 right-4 flex items-center gap-1.5">
-            <Tip content={t('profile.tabs.activity')}>
-              <Button
-                variant="outline"
-                size="icon-sm"
-                onClick={() => navigate('/settings/activity')}
-              >
-                <Activity className="size-4" />
-              </Button>
-            </Tip>
-            <Tip content={t('profile.tabs.stats')}>
-              <Button
-                variant="outline"
-                size="icon-sm"
-                onClick={() => navigate('/settings/stats')}
-              >
-                <BarChart3 className="size-4" />
-              </Button>
-            </Tip>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/settings')}
-              className="flex items-center gap-1.5"
-            >
-              <Settings className="size-4" />
-              {t('profile.editProfile')}
-            </Button>
-          </div>
-        ) : (
-          <div className="absolute top-4 right-4">
-            {isFollowing ? (
-              confirmingUnfollow ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleUnfollow}
-                  disabled={followLoading}
-                  className="text-muted-foreground border-border"
-                >
-                  {t('profile.confirmUnfollow')}
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setConfirmingUnfollow(true)}
-                  disabled={followLoading}
-                >
-                  {t('profile.following')}
-                </Button>
-              )
-            ) : (
-              <Button
-                size="sm"
-                onClick={handleFollow}
-                disabled={followLoading}
-              >
-                {t('profile.follow')}
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
+      <ProfileHeader
+        profile={profile}
+        displayName={displayName}
+        badgeIds={badgeIds}
+        level={level}
+        minutesLabel={minutesLabel}
+        isOwner={isOwner}
+        isFollowing={isFollowing}
+        followLoading={followLoading}
+        onFollow={handleFollow}
+        onUnfollow={handleUnfollow}
+        onOpenFollowers={() => setFollowModal('FOLLOWERS')}
+        onOpenFollowing={() => setFollowModal('FOLLOWING')}
+      />
 
       {/* Two-column layout: main content + showcase sidebar */}
       <div className={`flex gap-6 items-start ${hasVisibleShowcase || isOwner || (!isOwner && !!user) ? 'flex-col lg:flex-row' : ''}`}>
@@ -510,7 +379,7 @@ export default function ProfilePage() {
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {t(`profile.publicTabs.${tab}`)}
+                {t(`profile.publicTabs.${tab}` as 'profile.publicTabs.projects')}
               </button>
             ))}
           </div>
@@ -588,16 +457,18 @@ export default function ProfilePage() {
         />
       )}
 
-      {editingProject && (
+      {editingProject && (() => {
+        const meta = (editingProject.metadata || {}) as ProjectMetaLoose;
+        return (
         <ProjectSetupModal
           key={editingProject.publicId}
           isOpen={!!editingProject}
           onClose={() => setEditingProject(null)}
-          onConfirm={async (data) => {
+          onConfirm={async (data: ProjectSetupConfirm) => {
             try {
               const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic } = data;
               const updatedMetadata = {
-                ...editingProject.metadata,
+                ...(editingProject.metadata as Record<string, unknown>),
                 description,
                 tags,
                 songName,
@@ -627,19 +498,19 @@ export default function ProfilePage() {
             }
           }}
           initialName={editingProject.title || ''}
-          initialDescription={editingProject.metadata?.description || ''}
-          initialTags={editingProject.metadata?.tags || []}
-          initialSongName={editingProject.metadata?.songName || ''}
-          initialSongArtist={(editingProject?.metadata?.songArtists || []).join(', ') || editingProject?.metadata?.songArtist || ''}
-          initialSongAlbum={editingProject?.metadata?.songAlbum || ''}
-          initialSongYear={editingProject?.metadata?.songYear || ''}
-          initialGenre={editingProject?.metadata?.genre || ''}
-          initialCoverImage={editingProject?.coverImage || ''}
-          initialIsPublic={editingProject?.public || false}
-          initialAlbumArt={''}
+          initialDescription={meta.description || ''}
+          initialTags={meta.tags || []}
+          initialSongName={meta.songName || ''}
+          initialSongArtist={(meta.songArtists || []).join(', ') || meta.songArtist || ''}
+          initialSongAlbum={meta.songAlbum || ''}
+          initialSongYear={meta.songYear || ''}
+          initialGenre={meta.genre || ''}
+          initialCoverImage={editingProject.coverImage || ''}
+          initialIsPublic={editingProject.public || false}
           isEditing={true}
         />
-      )}
+        );
+      })()}
       {confirmModal}
     </div>
     </div>

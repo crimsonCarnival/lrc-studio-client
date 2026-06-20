@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { SettingsProvider } from '@/features/settings/SettingsContext';
 import { SetupProvider } from '@/features/editor/SetupContext';
 import { TooltipProvider } from '@ui/tooltip';
@@ -9,7 +10,7 @@ import SetAccountNameModal from '@/features/auth/components/SetAccountNameModal'
 
 import { BadgeDefsProvider } from '@/features/badges/BadgeDefsContext';
 
-export function AppProviders({ children }) {
+export function AppProviders({ children }: { children: ReactNode }) {
   useEffect(() => {
     connectSocket();
     return () => disconnectSocket();

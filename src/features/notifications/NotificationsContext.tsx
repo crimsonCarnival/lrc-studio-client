@@ -1,4 +1,5 @@
 import { createContext, use, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import type { ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { request } from '@/app/api.client';
@@ -6,13 +7,26 @@ import { getSocket } from '@/app/socket.client';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
 
-/** @type {import('react').Context<any>} */
-const NotificationsContext = createContext(null);
+interface AppNotification {
+  _id: string;
+  read?: boolean;
+  [key: string]: unknown;
+}
 
-export function NotificationsProvider({ children }) {
+interface NotificationsContextValue {
+  notifications: AppNotification[];
+  unreadCount: number;
+  markRead: (ids: string[]) => void;
+  markAllRead: () => void;
+  dismiss: (id: string) => void;
+}
+
+const NotificationsContext = createContext<NotificationsContextValue | null>(null);
+
+export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuthContext();
   const { t } = useTranslation();
-  const [notifications, setNotifications] = useState(/** @type {any[]} */ ([]));
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const fetchedRef = useRef(false);
 
@@ -20,7 +34,8 @@ export function NotificationsProvider({ children }) {
     if (!user || fetchedRef.current) return;
     fetchedRef.current = true;
     request('/notifications')
-      .then(data => {
+      .then(raw => {
+        const data = raw as { notifications?: AppNotification[]; unreadCount?: number };
         setNotifications(data.notifications || []);
         setUnreadCount(data.unreadCount || 0);
       })
@@ -40,7 +55,7 @@ export function NotificationsProvider({ children }) {
     const socket = getSocket();
     if (!socket || !user) return;
 
-    function onPush(notification) {
+    function onPush(notification: AppNotification) {
       setNotifications(prev => {
         const idx = prev.findIndex(n => n._id === notification._id);
         if (idx >= 0) {
@@ -53,7 +68,7 @@ export function NotificationsProvider({ children }) {
       if (!notification.read) setUnreadCount(c => c + 1);
     }
 
-    function onDismissed({ id }) {
+    function onDismissed({ id }: { id: string }) {
       setNotifications(prev => {
         const target = prev.find(n => n._id === id);
         if (target && !target.read) setUnreadCount(c => Math.max(0, c - 1));
@@ -61,8 +76,8 @@ export function NotificationsProvider({ children }) {
       });
     }
 
-    function onBadgeAwarded({ badgeId }) {
-      const def = BADGE_REGISTRY[badgeId];
+    function onBadgeAwarded({ badgeId }: { badgeId: string }) {
+      const def = (BADGE_REGISTRY as Record<string, { label?: string } | undefined>)[badgeId];
       const label = def?.label ?? badgeId;
       toast(
         (item) => (
@@ -99,7 +114,7 @@ export function NotificationsProvider({ children }) {
     };
   }, [user, t]);
 
-  const markRead = useCallback((ids) => {
+  const markRead = useCallback((ids: string[]) => {
     setNotifications(prev => {
       const unreadInBatch = prev.filter(n => ids.includes(n._id) && !n.read).length;
       if (unreadInBatch > 0) setUnreadCount(c => Math.max(0, c - unreadInBatch));
@@ -114,7 +129,7 @@ export function NotificationsProvider({ children }) {
     request('/notifications/read-all', { method: 'POST' }).catch(() => {});
   }, []);
 
-  const dismiss = useCallback((id) => {
+  const dismiss = useCallback((id: string) => {
     setNotifications(prev => {
       const target = prev.find(n => n._id === id);
       if (target && !target.read) setUnreadCount(c => Math.max(0, c - 1));
@@ -123,7 +138,7 @@ export function NotificationsProvider({ children }) {
     request(`/notifications/${id}`, { method: 'DELETE' }).catch(() => {});
   }, []);
 
-  const value = useMemo(() => ({
+  const value = useMemo<NotificationsContextValue>(() => ({
     notifications,
     unreadCount,
     markRead,
@@ -139,7 +154,7 @@ export function NotificationsProvider({ children }) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export function useNotificationsContext() {
+export function useNotificationsContext(): NotificationsContextValue {
   const ctx = use(NotificationsContext);
   if (!ctx) throw new Error('useNotificationsContext must be used inside NotificationsProvider');
   return ctx;

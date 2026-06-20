@@ -53,7 +53,8 @@ interface SetupConfirmData {
   isPublic?: boolean;
 }
 
-export default function Library({ onOpenProject }: { onOpenProject?: (project: ProjectItem) => void }) {
+// onOpenProject receives the project's publicId (ProjectCard.onSelect passes project.publicId).
+export default function Library({ onOpenProject }: { onOpenProject?: (publicId: string) => void }) {
   const { t, i18n } = useTranslation();
   const { settings } = useSettings();
   const timezone = settings.advanced?.timezone;

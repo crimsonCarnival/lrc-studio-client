@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
@@ -9,15 +10,25 @@ import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger 
 import {
   FileText, Pencil, Save, Check, Eraser,
   Trash2, ListChecks,
-  Repeat, EyeOff, MoreHorizontal, Plus, X, Loader2, HelpCircle, Languages, Music, Undo2, Redo2
+  MoreHorizontal, Plus, X, Loader2, HelpCircle, Languages, Music, Undo2, Redo2
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
 import { flatToSections } from '@/features/editor/utils/sections';
+import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { AppSettings } from '@/features/settings/settings.types';
+import type { AuthUser } from '@/features/auth/hooks/useAuth';
+
+interface ActionsDropdownProps {
+  children: ReactNode;
+  icon?: LucideIcon;
+  label?: string;
+}
 
 // Mobile-friendly dropdown for actions that overflow
-const ActionsDropdown = ({ children, icon: Icon = MoreHorizontal, label }) => {
+const ActionsDropdown = ({ children, icon: Icon = MoreHorizontal, label }: ActionsDropdownProps) => {
   const { t } = useTranslation();
   return (
   <Popover>
@@ -34,6 +45,45 @@ const ActionsDropdown = ({ children, icon: Icon = MoreHorizontal, label }) => {
   </Popover>
   );
 };
+
+interface ConfirmOptions {
+  title?: string;
+  variant?: 'danger' | 'default';
+}
+
+interface EditorToolbarProps {
+  user?: AuthUser | null;
+  editorMode: string;
+  setEditorMode: (mode: string) => void;
+  updateSetting: (path: string, value: unknown) => void;
+  settings: AppSettings;
+  syncMode: boolean;
+  lines: EditorLine[];
+  setSelectedLines: (s: Set<number>) => void;
+  selectedLines: Set<number>;
+  handleClearTimestamps: () => void;
+  handleClearAllWordTimestamps: () => void;
+  requestConfirm: (message: string, action: () => void, opts?: ConfirmOptions) => void;
+  setLines: (lines: EditorLine[]) => void;
+  setRawText: (text: string) => void;
+  setSyncMode: (v: boolean) => void;
+  handleManualSave?: (() => void | Promise<void>) | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  buildProjectPayload?: () => Record<string, any>;
+  handleRemoveAllLyrics: () => void;
+  isAutosaving?: boolean;
+  isSaving?: boolean;
+  overlappingLines?: Set<number>;
+  onNewProject: () => void;
+  onShowKeyboardHelp?: () => void;
+  activeLineIndex: number;
+  activeWordIndex: number;
+  stampTarget?: string;
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+}
 
 export default function EditorToolbar({
   user,
@@ -66,7 +116,7 @@ export default function EditorToolbar({
   redo,
   canUndo,
   canRedo,
-}) {
+}: EditorToolbarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const hasAnyTimestamp = useMemo(() => lines.some((l) => l.timestamp != null), [lines]);
@@ -90,8 +140,8 @@ export default function EditorToolbar({
 
   const [lyricsSearchPopoverOpen, setLyricsSearchPopoverOpen] = useState(false);
 
-  const handleLyricsSearchImport = useCallback((lyricsText, keepTimestamps) => {
-    const newLines = lyricsText.split('\n').reduce((acc, line) => {
+  const handleLyricsSearchImport = useCallback((lyricsText: string, keepTimestamps: boolean) => {
+    const newLines = lyricsText.split('\n').reduce<EditorLine[]>((acc, line) => {
       const text = line.trim();
       if (text.length > 0) acc.push({ text, timestamp: null });
       return acc;
@@ -223,7 +273,7 @@ export default function EditorToolbar({
             </ToggleGroup>
           )}
 
-          {overlappingLines?.size > 0 && (
+          {overlappingLines && overlappingLines.size > 0 && (
             <Badge
               variant="outline"
               className="text-[10px] font-mono tabular-nums border-orange-500/40 bg-orange-500/10 text-orange-400 select-none animate-pulse shrink-0 ml-1"
@@ -434,7 +484,7 @@ export default function EditorToolbar({
                 <Plus className="size-4" />
                 {t('home.newProject')}
               </PopoverItem>
-              
+
               <PopoverItem
                 onClick={() => requestConfirm(t('confirm.removeAll'), handleRemoveAllLyrics, { title: t('confirm.removeAllTitle'), variant: 'danger' })}
                 className="text-xs text-red-400"

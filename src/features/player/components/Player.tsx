@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useImperativeHandle, useEffect, useLayoutEffect, lazy, Suspense, memo } from 'react';
+import type { ChangeEvent, Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useSettings } from '@/features/settings/useSettings';
@@ -15,20 +16,42 @@ import SpeedControl from './SpeedControl';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/popover';
-import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, Video, ChevronDown, Link2, PanelTop, PanelBottom, Bookmark, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, ChevronDown, Link2, PanelTop, PanelBottom, Bookmark, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { Tip } from '@ui/tip';
 import { uploads as uploadsApi, getAccessToken } from '@/app/api';
 import toast from 'react-hot-toast';
 import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
+import type { EditorLine } from '@/features/editor/services/editor.service';
 
 const FOCUS_RING = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none';
 
 const ALL_SPEED_PRESETS = [0.25, 0.5, 0.75, 1, 1.25, 1.5];
 
+interface UploadItem {
+  id?: string;
+  title?: string;
+  fileName?: string;
+  source?: string;
+  uploadUrl?: string;
+}
+
+interface ChangeMediaPopoverContentProps {
+  fileInputId: string;
+  ytUrl: string;
+  onYtUrlChange: (v: string) => void;
+  onYtErrorChange: (v: string) => void;
+  onUrlLoad: () => void;
+  cdnLoading: boolean;
+  onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  uploads: UploadItem[];
+  onSelectUpload: (upload: UploadItem) => void;
+  onClearMedia: () => void;
+}
+
 const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
   fileInputId, ytUrl, onYtUrlChange, onYtErrorChange, onUrlLoad,
   cdnLoading, onFileChange, uploads, onSelectUpload, onClearMedia,
-}) {
+}: ChangeMediaPopoverContentProps) {
   const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-1 p-1">
@@ -100,8 +123,68 @@ const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\
 const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
 const YT_PATTERN = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|watch\?.+&v=)|youtu\.be\/)([^&?/\s]{11})/;
 
+interface Loop {
+  a: number | null;
+  b: number | null;
+}
+
+export interface PlayerHandle {
+  getCurrentTime: () => number;
+  isPlaying: () => boolean;
+  play: () => void;
+  pause: () => void;
+  togglePlay: () => void;
+  adjustSpeed: (delta: number) => void;
+  getSpeed: () => number;
+  seek: (time: number) => void;
+  getAudioBlob: () => Blob | null;
+  loadLocalAudio: (file: File) => void;
+  loadYouTube: (url?: string) => void;
+  loadFromUrl: (url: string, title?: string) => void;
+  setLoop: (a: number | null, b: number | null) => void;
+  clearLoop: () => void;
+  getLoop: () => Loop;
+}
+
+interface InitialMedia {
+  type: string;
+  url?: string;
+  id?: string;
+  title?: string;
+  fileName?: string;
+  publicId?: string | null;
+  duration?: number | null;
+}
+
+interface PlayerProps {
+  onTimeUpdate?: (t: number) => void;
+  onPlayingChange?: (p: boolean) => void;
+  onSpeedChange?: (s: number) => void;
+  onDurationChange?: (d: number) => void;
+  onMediaChange?: (m: unknown) => void;
+  playerRef?: Ref<PlayerHandle> | null;
+  mediaTitle?: string;
+  onTitleChange?: (title: string) => void;
+  initialMedia?: InitialMedia | null;
+  onYtUrlChange?: (url: string) => void;
+  initialSeek?: number;
+  initialSpeed?: number | string;
+  lines?: EditorLine[];
+  activeLineIndex?: number;
+  playbackPosition?: number;
+  syncMode?: boolean;
+  onMediaUpload?: (u: unknown) => void;
+  playerTop?: boolean;
+  onDockToggle?: () => void;
+  viewerMode?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  projectMetadata?: any;
+  projectCoverImage?: string;
+  ref?: Ref<PlayerHandle>;
+}
+
 function Player(
-  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef = null, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek, initialSpeed, lines, activeLineIndex, playbackPosition, syncMode = false, onMediaUpload, playerTop = false, onDockToggle, viewerMode = false, projectMetadata: _projectMetadata, projectCoverImage, ref },
+  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef = null, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek = 0, initialSpeed, lines, activeLineIndex = 0, playbackPosition, syncMode = false, onMediaUpload, playerTop = false, onDockToggle, viewerMode = false, projectMetadata: _projectMetadata, projectCoverImage, ref }: PlayerProps,
 ) {
   const { t, dt } = useDynamicTranslation();
   const { settings, updateSetting } = useSettings();
@@ -112,42 +195,42 @@ function Player(
   const SPEED_PRESETS = useMemo(
     () =>
       (settings.playback?.speedPresets || ALL_SPEED_PRESETS).filter(
-        (s) => s >= MIN_SPEED && s <= MAX_SPEED,
+        (s: number) => s >= MIN_SPEED && s <= MAX_SPEED,
       ),
     [MIN_SPEED, MAX_SPEED, settings.playback?.speedPresets],
   );
 
   const [source, setSource] = useState('local');
   const [playbackSpeed, setPlaybackSpeedRaw] = useState(() => {
-    const s = parseFloat(initialSpeed);
+    const s = parseFloat(String(initialSpeed ?? ''));
     return (isFinite(s) && s > 0) ? s : 1;
   });
 
-  const setPlaybackSpeed = useCallback((s) => {
+  const setPlaybackSpeed = useCallback((s: number) => {
     setPlaybackSpeedRaw(s);
     onSpeedChange?.(s);
   }, [onSpeedChange]);
 
   const [isPlaying, setIsPlayingRaw] = useState(false);
-  const setIsPlaying = useCallback((p) => {
+  const setIsPlaying = useCallback((p: boolean) => {
     setIsPlayingRaw(p);
     onPlayingChange?.(p);
   }, [onPlayingChange]);
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [mediaUploads, setMediaUploads] = useState([]);
+  const [mediaUploads, setMediaUploads] = useState<UploadItem[]>([]);
 
   // A-B Loop state
-  const [loop, setLoop] = useState({ a: null, b: null });
+  const [loop, setLoop] = useState<Loop>({ a: null, b: null });
   const loopA = loop.a;
   const loopB = loop.b;
-  const loopARef = useRef(null);
-  const loopBRef = useRef(null);
+  const loopARef = useRef<number | null>(null);
+  const loopBRef = useRef<number | null>(null);
 
-  const audioRef = useRef(null);
-  const localBlobRef = useRef(null);
-  const ytContainerRef = useRef(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const localBlobRef = useRef<Blob | null>(null);
+  const ytContainerRef = useRef<HTMLDivElement | null>(null);
 
   const sourceRef = useRef(source);
 
@@ -160,12 +243,12 @@ function Player(
     if (!getAccessToken()) return;
     try {
       const uploads = await uploadsApi.listMedia();
-      setMediaUploads(uploads || []);
+      setMediaUploads((uploads as UploadItem[]) || []);
     } catch { /* ignore */ }
   }, []);
 
   const updateTime = useCallback(
-    (time) => {
+    (time: number) => {
       // A-B loop enforcement
       const a = loopARef.current;
       const b = loopBRef.current;
@@ -188,11 +271,11 @@ function Player(
   useEffect(() => {
     if (settings.playback?.loopCurrentLine && lines?.[activeLineIndex] && lines[activeLineIndex].timestamp != null) {
       const currentLine = lines[activeLineIndex];
-      const a = currentLine.timestamp;
-      let b = currentLine.endTime ?? null;
+      const a = currentLine.timestamp ?? null;
+      let b: number | null = currentLine.endTime ?? null;
       if (b == null) {
         const nextLine = lines.slice(activeLineIndex + 1).find(l => l.timestamp != null);
-        b = nextLine ? nextLine.timestamp : duration;
+        b = nextLine ? (nextLine.timestamp ?? null) : duration;
       }
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoop({ a, b });
@@ -204,7 +287,7 @@ function Player(
   }, [settings.playback?.loopCurrentLine, activeLineIndex, lines, duration]);
 
   const updateDuration = useCallback(
-    (d) => {
+    (d: number) => {
       setDuration(d);
       onDurationChange?.(d);
     },
@@ -254,7 +337,7 @@ function Player(
 
   const [cdnLoading, setCdnLoading] = useState(false);
 
-  const handleCdnUrlLoad = useCallback(async (url) => {
+  const handleCdnUrlLoad = useCallback(async (url: string) => {
     // Extract filename from URL path (strip query string)
     const cleanUrl = url.split(/\s+/)[0];
     const pathOnly = cleanUrl.split('?')[0].split('#')[0];
@@ -278,7 +361,7 @@ function Player(
           fileName,
           title,
           duration: null,
-        });
+        } as Parameters<typeof uploadsApi.saveMedia>[0]) as { upload: { id: string } };
         onMediaUpload?.({
           id: upload.id,
           uploadUrl: cleanUrl,
@@ -305,7 +388,7 @@ function Player(
     const videoId = trimmed.match(YT_PATTERN)?.[1] || (trimmed.length === 11 ? trimmed : null);
     if (videoId) {
       yt.setYtError('');
-      yt.loadYouTube();
+      yt.loadYouTube(undefined);
       return;
     }
     yt.setYtError(t('player.invalidUrl') || 'Invalid URL. Paste a YouTube or Cloudinary CDN URL.');
@@ -313,17 +396,17 @@ function Player(
 
   const hasMedia = (source === 'local' && local.localUrl) || (source === 'youtube' && yt.ytReady);
 
-  const handleSelectUpload = useCallback((upload) => {
+  const handleSelectUpload = useCallback((upload: UploadItem) => {
     if (upload.source === 'youtube' && upload.uploadUrl) {
       yt.setYtUrl(upload.uploadUrl);
-      setTimeout(() => yt.loadYouTube(), 0);
+      setTimeout(() => yt.loadYouTube(undefined), 0);
     } else if (upload.source === 'cloudinary' && upload.uploadUrl) {
       fetch(upload.uploadUrl)
         .then((res) => res.blob())
         .then((blob) => {
           const file = new File([blob], upload.fileName || 'audio.mp3', { type: blob.type || 'audio/mpeg' });
-          file.isHosted = true;
-          local.handleFileChange({ target: { files: [file] } });
+          (file as File & { isHosted?: boolean }).isHosted = true;
+          local.handleFileChange(file);
         })
         .catch(() => { });
     }
@@ -340,12 +423,6 @@ function Player(
     onMediaChange?.(null);
   }, [local, yt, setIsPlaying, setCurrentTime, setDuration, onMediaChange]);
 
-  // ——— Unified controls ———
-  // Player controls are integrated into the Player component with responsive layouts:
-  // - Desktop: Horizontal layout with full controls bar (hidden on mobile, shown on lg:)
-  // - Mobile: Vertical stack with compact controls (hidden on lg:, shown on mobile)
-  // All interactive elements meet 44px+ touch target sizing requirement on mobile
-
   const togglePlay = useCallback(() => {
     if (source === 'local' && audioRef.current) {
       if (isPlaying) local.pause();
@@ -359,7 +436,7 @@ function Player(
   }, [source, isPlaying, local, yt, haptic]);
 
   const seek = useCallback(
-    (time) => {
+    (time: number) => {
       if (source === 'local') local.seek(time);
       else if (source === 'youtube') yt.seek(time);
     },
@@ -367,8 +444,8 @@ function Player(
   );
 
   const applySpeed = useCallback(
-    (speed) => {
-      const clamped = Math.min(MAX_SPEED, Math.max(MIN_SPEED, parseFloat(speed) || 1));
+    (speed: number | string) => {
+      const clamped = Math.min(MAX_SPEED, Math.max(MIN_SPEED, parseFloat(String(speed)) || 1));
       setPlaybackSpeed(clamped);
       if (source === 'local') local.setSpeed(clamped);
       else if (source === 'youtube') yt.setSpeed(clamped);
@@ -377,7 +454,7 @@ function Player(
   );
 
   // ——— A-B Loop helpers ———
-  const handleLoopChange = useCallback((a, b) => {
+  const handleLoopChange = useCallback((a: number | null, b: number | null) => {
     setLoop({ a, b });
   }, [setLoop]);
 
@@ -403,9 +480,9 @@ function Player(
 
   // ——— Player keyboard shortcuts ———
   useEffect(() => {
-    const handler = (e) => {
+    const handler = (e: KeyboardEvent) => {
       const tag = document.activeElement?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (document.activeElement as HTMLElement | null)?.isContentEditable) return;
 
       const seekTime = settings.playback?.seekTime ?? 5;
       const speedStep = 0.25;
@@ -421,7 +498,7 @@ function Player(
         seekRef.current(Math.min(durationRef.current, currentTimeRef.current + seekTime));
       } else if (matchKey(e, settings.shortcuts?.mute?.[0] || 'm')) {
         e.preventDefault();
-        updateSetting('playback.muted', !settings.playback.muted);
+        updateSetting('playback.muted', !settings.playback?.muted);
       } else if (matchKey(e, settings.shortcuts?.speedUp?.[0] || '+')) {
         e.preventDefault();
         applySpeedRef.current(playbackSpeedRef.current + speedStep);
@@ -450,13 +527,13 @@ function Player(
         if (isPlaying) togglePlay();
       },
       togglePlay: () => togglePlay(),
-      adjustSpeed: (delta) => applySpeed(Math.round((playbackSpeed + delta) * 1000) / 1000),
+      adjustSpeed: (delta: number) => applySpeed(Math.round((playbackSpeed + delta) * 1000) / 1000),
       getSpeed: () => playbackSpeed,
       seek,
       getAudioBlob: () => localBlobRef.current || null,
-      loadLocalAudio: (file) => local.handleFileChange(file),
-      loadYouTube: (url) => yt.loadYouTube(url),
-      loadFromUrl: (url, title) => local.loadFromUrl(url, title),
+      loadLocalAudio: (file: File) => local.handleFileChange(file),
+      loadYouTube: (url?: string) => yt.loadYouTube(url),
+      loadFromUrl: (url: string, title?: string) => local.loadFromUrl(url, title),
       setLoop: handleLoopChange,
       clearLoop,
       getLoop: () => loop,
@@ -488,7 +565,7 @@ function Player(
   // hydratedMediaKeyRef deduplicates within one Player mount so the same media
   // is never loaded twice. Resets to null on remount so a fresh mount always
   // hydrates even if the descriptor value hasn't changed.
-  const hydratedMediaKeyRef = useRef(null);
+  const hydratedMediaKeyRef = useRef<string | null>(null);
   useEffect(() => {
     if (!initialMedia) {
       hydratedMediaKeyRef.current = null;
@@ -506,7 +583,7 @@ function Player(
     if (initialMedia.type === 'youtube') {
       yt.loadYouTube(initialMedia.url);
     } else if (initialMedia.type === 'cloudinary') {
-      local.loadFromUrl(initialMedia.url, initialMedia.title || initialMedia.fileName);
+      local.loadFromUrl(initialMedia.url!, initialMedia.title || initialMedia.fileName);
       onMediaUpload?.({
         id: initialMedia.id,
         uploadUrl: initialMedia.url,
@@ -525,7 +602,7 @@ function Player(
     onYtErrorChange: yt.setYtError,
     onUrlLoad: handleUrlLoad,
     cdnLoading,
-    onFileChange: local.handleFileChange,
+    onFileChange: local.handleFileChange as (e: ChangeEvent<HTMLInputElement>) => void,
     uploads: mediaUploads,
     onSelectUpload: handleSelectUpload,
     onClearMedia: handleClearMedia,
@@ -542,7 +619,7 @@ function Player(
           onLoadedMetadata={local.handleLoadedMetadata}
           onPause={local.handlePause}
           onEnded={() => setIsPlaying(false)}
-          onError={(e) => console.error('[audio] load error:', e.target.error, '| src:', e.target.src?.slice(0, 80))}
+          onError={(e) => console.error('[audio] load error:', (e.currentTarget as HTMLAudioElement).error, '| src:', (e.currentTarget as HTMLAudioElement).src?.slice(0, 80))}
           className="hidden"
         />
       )}
@@ -590,7 +667,7 @@ function Player(
               onDrop={(e) => {
                 e.preventDefault();
                 const file = e.dataTransfer.files?.[0];
-                if (file) local.handleFileChange({ target: { files: [file] } });
+                if (file) local.handleFileChange(file);
               }}
             >
               <FolderOpen className="size-4 text-zinc-400 group-hover:text-primary transition-colors" />
@@ -637,7 +714,7 @@ function Player(
                   </PopoverTrigger>
                   <PopoverContent className="w-[320px] max-h-[300px] overflow-y-auto p-1 glass-dark border-zinc-700/50 shadow-2xl" align="end" sideOffset={12}>
                     {mediaUploads.length === 0 ? (
-                      <p className="text-xs text-zinc-500 text-center py-6">{dt('uploads.empty')}</p>
+                      <p className="text-xs text-zinc-500 text-center py-6">{(dt as (k: string) => string)("uploads.empty")}</p>
                     ) : (
                       <div className="grid grid-cols-1 gap-1">
                         {mediaUploads.map((upload) => (
@@ -702,7 +779,7 @@ function Player(
                 audioRef={audioRef}
                 localUrl={local.localUrl}
                 lines={lines}
-                playbackPosition={playbackPosition}
+                playbackPosition={playbackPosition ?? 0}
                 duration={duration}
                 onSeek={seek}
                 loopA={loopA}
@@ -716,7 +793,7 @@ function Player(
         {source !== 'local' && hasMedia && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto px-4">
             <PlaybackProgress
-              playbackPosition={playbackPosition}
+              playbackPosition={playbackPosition ?? 0}
               duration={duration}
               onSeek={seek}
               loopA={loopA}
@@ -976,7 +1053,7 @@ function Player(
                     </PopoverTrigger>
                     <PopoverContent className="w-[var(--radix-popover-trigger-width)] max-h-[180px] overflow-y-auto p-1" align="start">
                       {mediaUploads.length === 0 ? (
-                        <p className="text-xs text-zinc-500 text-center py-3">{t('uploads.empty')}</p>
+                        <p className="text-xs text-zinc-500 text-center py-3">{(t as (k: string) => string)('uploads.empty')}</p>
                       ) : (
                         mediaUploads.map((upload) => (
                           <button
@@ -1073,15 +1150,15 @@ function Player(
                         if (lines?.length) {
                           let activeIdx = -1;
                           for (let i = 0; i < lines.length; i++) {
-                            if (lines[i].timestamp != null && lines[i].timestamp <= now) activeIdx = i;
+                            if (lines[i].timestamp != null && lines[i].timestamp! <= now) activeIdx = i;
                           }
                           if (activeIdx >= 0) {
-                            const a = lines[activeIdx].timestamp;
-                            let b = lines[activeIdx].endTime ?? null;
+                            const a = lines[activeIdx].timestamp ?? null;
+                            let b: number | null = lines[activeIdx].endTime ?? null;
                             if (b == null) {
                               b = duration;
                               for (let i = activeIdx + 1; i < lines.length; i++) {
-                                if (lines[i].timestamp != null) { b = lines[i].timestamp; break; }
+                                if (lines[i].timestamp != null) { b = lines[i].timestamp ?? null; break; }
                               }
                             }
                             setLoop({ a, b });

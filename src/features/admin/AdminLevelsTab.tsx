@@ -1,9 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { FormEvent } from 'react';
 import { motion as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Plus, RefreshCw, Pencil, Trash2, ChevronUp, ChevronDown, X, Music2 } from 'lucide-react';
 import { gqlRequest } from '@/app/graphql.client';
+
+// Typed i18next rejects arbitrary string keys; alias for dynamic req/stat labels.
+type TkFn = (key: string) => string;
 
 // ─── GraphQL ──────────────────────────────────────────────────────────────────
 
@@ -47,9 +51,36 @@ const DELETE_LEVEL = /* GraphQL */ `
   mutation DeleteLevel($id: String!) { adminDeleteAddictionLevel(id: $id) }
 `;
 
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
+interface LocalizedText {
+  en: string;
+  es?: string;
+}
+
+interface LevelRequirements {
+  syncedLines: number;
+  karaokeLines: number;
+  musicSyncedMinutes: number;
+  publicProjects: number;
+  starsReceived: number;
+  wordsTimestamped: number;
+  totalProjects: number;
+}
+
+interface AddictionLevel {
+  id: string;
+  title: LocalizedText;
+  description?: LocalizedText | null;
+  order: number;
+  requirements?: Partial<LevelRequirements> | null;
+}
+
+type ReqKey = keyof LevelRequirements;
+
 // ─── Requirement field definitions ───────────────────────────────────────────
 
-const REQ_FIELDS = [
+const REQ_FIELDS: { key: ReqKey; suffixKey: string }[] = [
   { key: 'syncedLines',        suffixKey: 'lines'    },
   { key: 'karaokeLines',       suffixKey: 'lines'    },
   { key: 'musicSyncedMinutes', suffixKey: 'minutes'  },
@@ -61,7 +92,15 @@ const REQ_FIELDS = [
 
 // ─── Form Modal ───────────────────────────────────────────────────────────────
 
-const BLANK_FORM = {
+interface LevelForm {
+  id: string;
+  title: LocalizedText;
+  description: LocalizedText;
+  order: number | string;
+  requirements: LevelRequirements;
+}
+
+const BLANK_FORM: LevelForm = {
   id: '', title: { en: '', es: '' }, description: { en: '', es: '' }, order: 0,
   requirements: {
     syncedLines: 0, karaokeLines: 0, musicSyncedMinutes: 0,
@@ -69,9 +108,15 @@ const BLANK_FORM = {
   },
 };
 
-function LevelFormModal({ editing, onClose, onSaved }) {
+interface LevelFormModalProps {
+  editing: AddictionLevel | null;
+  onClose: () => void;
+  onSaved: (level: AddictionLevel, type: 'create' | 'update') => void;
+}
+
+function LevelFormModal({ editing, onClose, onSaved }: LevelFormModalProps) {
   const { t } = useTranslation();
-  const [form, setForm] = useState(() =>
+  const [form, setForm] = useState<LevelForm>(() =>
     editing
       ? {
           id: editing.id,
@@ -84,10 +129,10 @@ function LevelFormModal({ editing, onClose, onSaved }) {
   );
   const [saving, setSaving] = useState(false);
 
-  const setReq = (key, val) =>
+  const setReq = (key: ReqKey, val: string) =>
     setForm(p => ({ ...p, requirements: { ...p.requirements, [key]: Number(val) || 0 } }));
 
-  const submit = async (e) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
@@ -108,7 +153,7 @@ function LevelFormModal({ editing, onClose, onSaved }) {
         const { adminUpdateAddictionLevel } = await gqlRequest(UPDATE_LEVEL, {
           id: editing.id,
           input: { title: titleInput, description: descriptionInput, order: Number(form.order), requirements },
-        });
+        }) as { adminUpdateAddictionLevel: AddictionLevel };
         onSaved(adminUpdateAddictionLevel, 'update');
       } else {
         const { adminCreateAddictionLevel } = await gqlRequest(CREATE_LEVEL, {
@@ -119,12 +164,12 @@ function LevelFormModal({ editing, onClose, onSaved }) {
             order: Number(form.order),
             requirements,
           },
-        });
+        }) as { adminCreateAddictionLevel: AddictionLevel };
         onSaved(adminCreateAddictionLevel, 'create');
       }
       onClose();
     } catch (err) {
-      toast.error(err.message || t('admin.levels.saveError'));
+      toast.error((err as Error)?.message || t('admin.levels.saveError'));
     } finally {
       setSaving(false);
     }
@@ -186,7 +231,7 @@ function LevelFormModal({ editing, onClose, onSaved }) {
                     maxLength={60}
                   />
                 </label>
-                
+
                 <label className="flex flex-col gap-1">
                   <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.levels.modal.order')}</span>
                   <input
@@ -249,8 +294,8 @@ function LevelFormModal({ editing, onClose, onSaved }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/50">
                   {REQ_FIELDS.map(f => (
                     <div key={f.key} className="flex flex-col gap-1">
-                      <span className="text-[10px] text-zinc-400 truncate" title={t(`admin.levels.req.${f.key}`)}>
-                        {t(`admin.levels.req.${f.key}`)}
+                      <span className="text-[10px] text-zinc-400 truncate" title={(t as TkFn)(`admin.levels.req.${f.key}`)}>
+                        {(t as TkFn)(`admin.levels.req.${f.key}`)}
                       </span>
                       <input
                         type="number"
@@ -289,11 +334,20 @@ function LevelFormModal({ editing, onClose, onSaved }) {
 
 // ─── Level card ───────────────────────────────────────────────────────────────
 
-function LevelCard({ level, rank, total, onEdit, onDelete, onMove }) {
+interface LevelCardProps {
+  level: AddictionLevel;
+  rank: number;
+  total: number;
+  onEdit: (level: AddictionLevel) => void;
+  onDelete: (level: AddictionLevel) => void;
+  onMove: (level: AddictionLevel, direction: 'up' | 'down') => void;
+}
+
+function LevelCard({ level, rank, total, onEdit, onDelete, onMove }: LevelCardProps) {
   const { t, i18n } = useTranslation();
   const hasReqs = REQ_FIELDS.some(f => (level.requirements?.[f.key] ?? 0) > 0);
 
-  const lang = i18n.language === 'es' ? 'es' : 'en';
+  const lang: 'en' | 'es' = i18n.language === 'es' ? 'es' : 'en';
   const titleText = level.title?.[lang] || level.title?.en || level.id;
   const descriptionText = level.description?.[lang] || level.description?.en || '';
 
@@ -363,7 +417,7 @@ function LevelCard({ level, rank, total, onEdit, onDelete, onMove }) {
                 key={f.key}
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary border border-primary/20"
               >
-                {t(`admin.levels.req.${f.key}`)} ≥ {level.requirements[f.key].toLocaleString()}
+                {(t as TkFn)(`admin.levels.req.${f.key}`)} ≥ {(level.requirements?.[f.key] ?? 0).toLocaleString()}
               </span>
             ))
           ) : (
@@ -381,14 +435,14 @@ function LevelCard({ level, rank, total, onEdit, onDelete, onMove }) {
 
 export default function AdminLevelsTab() {
   const { t, i18n } = useTranslation();
-  const [levels, setLevels] = useState([]);
+  const [levels, setLevels] = useState<AddictionLevel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [formModal, setFormModal] = useState(null);
+  const [formModal, setFormModal] = useState<AddictionLevel | 'new' | null>(null);
 
   const fetchLevels = useCallback(async () => {
     setLoading(true);
     try {
-      const { adminAddictionLevels } = await gqlRequest(GET_LEVELS);
+      const { adminAddictionLevels } = await gqlRequest(GET_LEVELS) as { adminAddictionLevels: AddictionLevel[] };
       setLevels([...adminAddictionLevels].sort((a, b) => b.order - a.order));
     } catch {
       toast.error(t('admin.levels.fetchError'));
@@ -402,8 +456,8 @@ export default function AdminLevelsTab() {
     fetchLevels();
   }, [fetchLevels]);
 
-  const handleSaved = (level, type) => {
-    const lang = i18n.language === 'es' ? 'es' : 'en';
+  const handleSaved = (level: AddictionLevel, type: 'create' | 'update') => {
+    const lang: 'en' | 'es' = i18n.language === 'es' ? 'es' : 'en';
     const title = level.title?.[lang] || level.title?.en || level.id;
     if (type === 'create') {
       setLevels(prev => [...prev, level].sort((a, b) => b.order - a.order));
@@ -414,8 +468,8 @@ export default function AdminLevelsTab() {
     }
   };
 
-  const handleDelete = async (level) => {
-    const lang = i18n.language === 'es' ? 'es' : 'en';
+  const handleDelete = async (level: AddictionLevel) => {
+    const lang: 'en' | 'es' = i18n.language === 'es' ? 'es' : 'en';
     const title = level.title?.[lang] || level.title?.en || level.id;
     if (!window.confirm(t('admin.levels.deleteConfirm', { title }))) return;
     try {
@@ -423,11 +477,11 @@ export default function AdminLevelsTab() {
       setLevels(prev => prev.filter(l => l.id !== level.id));
       toast.success(t('admin.levels.deleteSuccess', { title: level.title?.en || level.id }));
     } catch (err) {
-      toast.error(err.message || t('admin.levels.deleteError'));
+      toast.error((err as Error)?.message || t('admin.levels.deleteError'));
     }
   };
 
-  const handleMove = async (level, direction) => {
+  const handleMove = async (level: AddictionLevel, direction: 'up' | 'down') => {
     const sorted = [...levels].sort((a, b) => b.order - a.order);
     const idx = sorted.findIndex(l => l.id === level.id);
     const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
@@ -487,7 +541,7 @@ export default function AdminLevelsTab() {
         ].map(stat => (
           <div key={stat.labelKey} className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/50 text-center">
             <p className="text-lg font-bold text-zinc-200">{stat.value}</p>
-            <p className="text-[10px] text-zinc-400 uppercase tracking-widest">{t(`admin.levels.stats.${stat.labelKey}`)}</p>
+            <p className="text-[10px] text-zinc-400 uppercase tracking-widest">{(t as TkFn)(`admin.levels.stats.${stat.labelKey}`)}</p>
           </div>
         ))}
       </div>

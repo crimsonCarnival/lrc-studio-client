@@ -1,7 +1,9 @@
 import { useState, useCallback, useRef } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import { Trans } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader2, Zap, ArrowRight, ArrowLeft, Lightbulb } from 'lucide-react';
+import { Eye, EyeOff, Zap, ArrowRight, ArrowLeft, Lightbulb } from 'lucide-react';
 import { AnimatePresence, m as M } from 'framer-motion';
 import { z } from 'zod';
 import { FloatingInput } from '@ui/floating-input';
@@ -11,7 +13,7 @@ import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { auth } from '@/app/api';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import RegistrationBlockedModal from './RegistrationBlockedModal';
-import { FieldError, ErrorBanner, ContextBanner, GoogleButton } from './auth-shared';
+import { FieldError, ContextBanner, GoogleButton } from './auth-shared';
 
 const step1Schema = z.object({
   displayName: z.string().min(1, 'auth.validation.fieldRequired'),
@@ -36,16 +38,19 @@ const step2Schema = z.object({
   { message: 'auth.validation.passwordMismatch', path: ['confirmPassword'] }
 );
 
-function zodErrors(result, t) {
-  const errs = {};
+type FieldErrors = Record<string, string | undefined>;
+type TranslateFn = (key: string, def?: string) => string;
+
+function zodErrors(result: { error?: z.ZodError }, t: TranslateFn): FieldErrors {
+  const errs: FieldErrors = {};
   for (const issue of result.error?.issues ?? []) {
-    const key = issue.path[0];
+    const key = String(issue.path[0] ?? '');
     if (key && !errs[key]) errs[key] = t(issue.message, issue.message);
   }
   return errs;
 }
 
-function generateHandle(displayName) {
+function generateHandle(displayName: string): string {
   const base = displayName
     .toLowerCase()
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -60,7 +65,7 @@ function generateHandle(displayName) {
 
 // ─── Step indicator ────────────────────────────────────────────────────────
 
-function StepDots({ step }) {
+function StepDots({ step }: { step: number }) {
   return (
     <div className="flex items-center gap-2 mb-6">
       {[1, 2].map(n => (
@@ -77,7 +82,23 @@ function StepDots({ step }) {
 
 // ─── Register Form ─────────────────────────────────────────────────────────
 
-export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSuccess, redirect }) {
+interface RegisterData {
+  displayName?: string;
+  accountName?: string;
+  email?: string;
+  password: string;
+}
+
+interface SignUpFormProps {
+  t: TFunction;
+  onSwitchToLogin: () => void;
+  onRegister: (data: RegisterData) => Promise<unknown>;
+  onGoogleLogin: () => void;
+  onSuccess?: (result: unknown) => void;
+  redirect?: string;
+}
+
+export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSuccess, redirect }: SignUpFormProps) {
   const navigate = useNavigate();
   const { trigger: haptic } = useHapticFeedback();
 
@@ -96,12 +117,14 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
   const [showConfirm, setShowConfirm] = useState(false);
 
   const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState(/** @type {Record<string, string|undefined>} */({}));
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
   const [showBlockedModal, setShowBlockedModal] = useState(false);
   const [blockedMessage, setBlockedMessage] = useState('');
 
-  const handleDisplayNameChange = useCallback((e) => {
+  const tk = t as TranslateFn;
+
+  const handleDisplayNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setDisplayName(val);
     setFieldErrors(p => ({ ...p, displayName: undefined }));
@@ -110,24 +133,24 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
     }
   }, []);
 
-  const handleAccountNameChange = useCallback((e) => {
+  const handleAccountNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '');
     setAccountName(val);
     accountNameTouchedRef.current = true;
     setFieldErrors(p => ({ ...p, accountName: undefined }));
   }, []);
 
-  const validateStep1 = () => {
+  const validateStep1 = (): FieldErrors => {
     const result = step1Schema.safeParse({ displayName: displayName.trim(), accountName });
-    return result.success ? /** @type {any} */ ({}) : zodErrors(result, t);
+    return result.success ? {} : zodErrors(result, tk);
   };
 
-  const validateStep2 = () => {
+  const validateStep2 = (): FieldErrors => {
     const result = step2Schema.safeParse({ email, accountName, password, confirmPassword });
-    return result.success ? /** @type {any} */ ({}) : zodErrors(result, t);
+    return result.success ? {} : zodErrors(result, tk);
   };
 
-  const handleNext = async (e) => {
+  const handleNext = async (e: FormEvent) => {
     e.preventDefault();
     const errs = validateStep1();
     setFieldErrors(errs);
@@ -144,7 +167,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
         return;
       } catch (err) {
         // 404 means no account found — safe to proceed
-        if (err?.status !== 404) {
+        if ((err as { status?: number })?.status !== 404) {
           // Some other error (e.g. banned IP) — surface it
           setError(translateAuthError(t, err, 'register', accountName));
           setLoading(false);
@@ -161,11 +184,11 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
 
   const handleBack = () => {
     setError('');
-    setFieldErrors(/** @type {Record<string, string>} */ ({}));
+    setFieldErrors({});
     setStep(1);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const errs = validateStep2();
     setFieldErrors(errs);
@@ -181,7 +204,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
       });
       onSuccess?.(result);
     } catch (err) {
-      if (err.status === 403) {
+      if ((err as { status?: number }).status === 403) {
         setBlockedMessage(translateAuthError(t, err, 'register', accountName || email));
         setShowBlockedModal(true);
       } else {

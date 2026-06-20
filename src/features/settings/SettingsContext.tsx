@@ -1,11 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// This module is a dynamic settings store: it deep-merges, deep-diffs and walks
+// arbitrary key paths, so the internal helpers are intentionally `any`-typed.
+// The public context surface is strongly typed via SettingsContextValue.
 import { useState, useEffect, useLayoutEffect, useCallback, useRef, useMemo } from 'react';
+import type { ReactNode } from 'react';
 import { DEFAULT_SETTINGS } from './settings-defaults.js';
 import { SettingsContext } from './settings-context-value.js';
 import { settings as settingsApi, getAccessToken } from '@/app/api';
+import type { AppSettings, SettingsContextValue } from './settings.types';
 
 const STORAGE_KEY = 'lrc-syncer-settings';
 
-function deepMerge(target, source) {
+function deepMerge(target: any, source: any): any {
   if (typeof target !== 'object' || target === null) return source;
   if (typeof source !== 'object' || source === null) return target;
 
@@ -22,7 +28,7 @@ function deepMerge(target, source) {
   return output;
 }
 
-function upgradeLegacySettings(parsed) {
+function upgradeLegacySettings(parsed: any): any {
   // If we already have the nested 'playback' object, it's likely migrated.
   if (parsed.playback && typeof parsed.playback === 'object') {
     return parsed;
@@ -102,7 +108,7 @@ const SHORTCUT_RENAMES = [
   { key: 'seekForward', from: 'Alt+ArrowRight', to: 'ArrowRight' },
 ];
 
-function migrateExportTimestampPrecision(settings) {
+function migrateExportTimestampPrecision(settings: any): any {
   if (settings.export?.timestampPrecision === undefined) return settings;
   // Move export.timestampPrecision → editor.timestampPrecision if editor one is unset
   const editorPrecision = settings.editor?.timestampPrecision;
@@ -116,7 +122,7 @@ function migrateExportTimestampPrecision(settings) {
   };
 }
 
-function migrateShortcutDefaults(settings) {
+function migrateShortcutDefaults(settings: any): any {
   let changed = false;
   const shortcuts = { ...settings.shortcuts };
   for (const { key, from, to } of SHORTCUT_RENAMES) {
@@ -128,8 +134,8 @@ function migrateShortcutDefaults(settings) {
   return changed ? { ...settings, shortcuts } : settings;
 }
 
-export function SettingsProvider({ children }) {
-  const [settings, setSettings] = useState(() => {
+export function SettingsProvider({ children }: { children: ReactNode }) {
+  const [settings, setSettings] = useState<AppSettings>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -144,18 +150,18 @@ export function SettingsProvider({ children }) {
   });
 
   // Track the last version saved to server to compute diffs
-  const lastSavedToServerRef = useRef(null);
+  const lastSavedToServerRef = useRef<any>(null);
   const isSyncingRef = useRef(false);
   const isFirstRender = useRef(true);
-  const computeChangesRef = useRef(null);
+  const computeChangesRef = useRef<((original: any, current: any) => any) | null>(null);
 
   // Compute deep diff between two objects, returning only changed paths
-  const computeChanges = useCallback((original, current) => {
+  const computeChanges = useCallback((original: any, current: any) => {
     if (!original) return current;
-    
-    const changes = {};
-    
-    const findDiffs = (origObj, currObj, path = []) => {
+
+    const changes: any = {};
+
+    const findDiffs = (origObj: any, currObj: any, path: string[] = []) => {
       if (typeof currObj !== 'object' || currObj === null) {
         if (origObj !== currObj) {
           // Leaf value changed
@@ -168,7 +174,7 @@ export function SettingsProvider({ children }) {
         }
         return;
       }
-      
+
       // Handle arrays - send full array if changed
       if (Array.isArray(currObj)) {
         if (JSON.stringify(origObj) !== JSON.stringify(currObj)) {
@@ -181,14 +187,14 @@ export function SettingsProvider({ children }) {
         }
         return;
       }
-      
+
       // Handle objects recursively
       const allKeys = new Set([...Object.keys(origObj || {}), ...Object.keys(currObj)]);
       for (const key of allKeys) {
         findDiffs(origObj?.[key], currObj[key], [...path, key]);
       }
     };
-    
+
     findDiffs(original, current, []);
     return changes;
   }, []);
@@ -212,8 +218,8 @@ export function SettingsProvider({ children }) {
 
       // Push to server if authenticated (only changed fields)
       if (getAccessToken()) {
-        const changes = computeChangesRef.current(lastSavedToServerRef.current, settings);
-        
+        const changes = computeChangesRef.current?.(lastSavedToServerRef.current, settings) ?? {};
+
         // Only send if there are actual changes
         if (Object.keys(changes).length > 0) {
           // Use PATCH for partial updates (changed fields only)
@@ -229,8 +235,8 @@ export function SettingsProvider({ children }) {
     return () => clearTimeout(timer);
   }, [settings]);
 
-  const updateSetting = useCallback((keyPath, value) => {
-    setSettings((prev) => {
+  const updateSetting = useCallback((keyPath: string, value: unknown) => {
+    setSettings((prev: any) => {
       const keys = keyPath.split('.');
       const next = { ...prev };
       let cursor = next;
@@ -243,9 +249,9 @@ export function SettingsProvider({ children }) {
     });
   }, []);
 
-  const updateSettings = useCallback((updates) => {
-    setSettings((prev) => {
-      let next = { ...prev };
+  const updateSettings = useCallback((updates: Record<string, unknown>) => {
+    setSettings((prev: any) => {
+      const next = { ...prev };
       for (const [keyPath, value] of Object.entries(updates)) {
         const keys = keyPath.split('.');
         let cursor = next;
@@ -260,7 +266,7 @@ export function SettingsProvider({ children }) {
     });
   }, []);
 
-  const updateAllSettings = useCallback((newSettings) => {
+  const updateAllSettings = useCallback((newSettings: AppSettings) => {
     setSettings(newSettings);
   }, []);
 
@@ -275,10 +281,10 @@ export function SettingsProvider({ children }) {
     if (!getAccessToken() || syncInFlightRef.current) return;
     syncInFlightRef.current = true;
 
-    settingsApi.get().then((remote) => {
+    settingsApi.get().then((remote: any) => {
       if (remote && Object.keys(remote).length > 0) {
         isSyncingRef.current = true;
-        setSettings((local) => {
+        setSettings((local: any) => {
           const merged = deepMerge(local, remote);
           // Persist merge to localStorage immediately (save effect is suppressed)
           try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* ignore */ }
@@ -294,7 +300,7 @@ export function SettingsProvider({ children }) {
     });
   }, []);
 
-  const contextValue = useMemo(
+  const contextValue = useMemo<SettingsContextValue>(
     () => ({ settings, updateSetting, updateSettings, updateAllSettings, resetSettings, syncFromServer }),
     [settings, updateSetting, updateSettings, updateAllSettings, resetSettings, syncFromServer]
   );

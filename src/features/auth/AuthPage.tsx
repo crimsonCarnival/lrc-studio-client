@@ -18,6 +18,32 @@ import { rememberedAccounts } from '@/features/auth/services/remembered-accounts
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
 import { auth } from '@/app/api';
 import SmoothWavyCanvas from '@features/landing/SmoothWavyCanvas';
+import type { ComponentProps } from 'react';
+import type { AuthUser } from '@/features/auth/hooks/useAuth';
+import type { RememberedAccount } from '@/features/auth/services/remembered-accounts.service';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type View =
+  | 'forgot-password'
+  | 'register'
+  | 'login-saved-account'
+  | 'login-identifier'
+  | 'login-password'
+  | 'login-prompt';
+
+type SavedAccount = ReturnType<typeof rememberedAccounts.getAll>[number];
+
+interface IdentifierData {
+  identifier?: string;
+  accountName?: string;
+  displayName?: string;
+  avatarUrl?: string;
+  hasPasskey?: boolean;
+  hasPassword?: boolean;
+}
+
+type HeldResult = { user?: AuthUser } | null | undefined;
 
 // ─── Main AuthPage ──────────────────────────────────────────────────────────
 
@@ -34,19 +60,18 @@ export default function AuthPage() {
   const redirect = searchParams.get('redirect') || '';
   usePageTitle();
 
-  const [savedAccounts, setSavedAccounts] = useState(() => rememberedAccounts.getAll());
+  const [savedAccounts, setSavedAccounts] = useState<SavedAccount[]>(() => rememberedAccounts.getAll());
   // Skip validation entirely when there are no saved accounts (avoids a redundant setState in the effect)
   const [accountsChecked, setAccountsChecked] = useState(() => rememberedAccounts.getAll().length === 0);
 
-  const [view, setView] = useState(() => {
+  const [view, setView] = useState<View>(() => {
     if (action === 'forgot-password') return 'forgot-password';
     if (action === 'signup' || action === 'register') return 'register';
     if (rememberedAccounts.getAll().length > 0) return 'login-saved-account';
     return 'login-identifier';
   });
 
-  /** @type {any} */
-  const [identifierData, setIdentifierData] = useState(null);
+  const [identifierData, setIdentifierData] = useState<IdentifierData | null>(null);
   const [fromSavedAccount, setFromSavedAccount] = useState(false);
 
   // Validate saved accounts against the server on mount. Accounts that no longer
@@ -59,18 +84,18 @@ export default function AuthPage() {
     if (accounts.length === 0) return; // already checked via lazy initializer
     let cancelled = false;
     Promise.all(
-      accounts.map(async (account) => {
+      accounts.map(async (account): Promise<SavedAccount | null> => {
         const identifier = account.identifier || account.accountName;
         if (!identifier) return null; // malformed entry — drop it
         try {
-          const result = await auth.checkIdentifier(identifier);
+          const result = await auth.checkIdentifier(identifier) as { hasPasskey?: boolean; hasPassword?: boolean };
           const patch = { hasPasskey: result.hasPasskey, hasPassword: result.hasPassword };
           rememberedAccounts.patch(account.userId, patch);
           return { ...account, ...patch }; // still exists, fresh auth-method flags
         } catch (err) {
           // 404 = account no longer exists; any other error = keep the account
           // (network blip / server error should not nuke the list)
-          if (err?.status === 404) {
+          if ((err as { status?: number })?.status === 404) {
             rememberedAccounts.remove(account.userId);
             return null;
           }
@@ -79,7 +104,7 @@ export default function AuthPage() {
       })
     ).then((results) => {
       if (cancelled) return;
-      const valid = results.filter(Boolean);
+      const valid = results.filter(Boolean) as SavedAccount[];
       setSavedAccounts(valid);
       setAccountsChecked(true);
       // If every saved account was pruned, fall back to the identifier step
@@ -182,7 +207,7 @@ export default function AuthPage() {
     }
   }, [view, action, navigate, searchParams]);
 
-  const handleIdentifierNext = useCallback((data) => {
+  const handleIdentifierNext = useCallback((data: IdentifierData) => {
     setIdentifierData(data);
     setView('login-password');
   }, []);
@@ -218,12 +243,12 @@ export default function AuthPage() {
   // Wraps loginWithGoogle with a hard-redirect fallback: if auth.me() fails after
   // the OAuth popup completes, the server cookies are already set, so we can still
   // get the user to /home via a full page reload (useAuth.restore() picks it up).
-  const handleGoogleLogin = useCallback(async (loginHint) => {
+  const handleGoogleLogin = useCallback(async (loginHint?: string) => {
     try {
       await loginWithGoogle(loginHint);
       handleAuthSuccess();
     } catch (err) {
-      if (err?.message === 'wrong_account') {
+      if ((err as { message?: string })?.message === 'wrong_account') {
         toast.error(t('auth.errors.googleWrongAccount'));
         return;
       }
@@ -239,7 +264,7 @@ export default function AuthPage() {
     }
   }, [loginWithGoogle, handleAuthSuccess, searchParams, t]);
 
-  const handleSavedAccountProceed = useCallback((data) => {
+  const handleSavedAccountProceed = useCallback((data: IdentifierData) => {
     setIdentifierData(data);
     setFromSavedAccount(true);
     setView('login-password');
@@ -250,7 +275,7 @@ export default function AuthPage() {
     setView('login-identifier');
   }, []);
 
-  const handleRemoveAccount = useCallback((userId) => {
+  const handleRemoveAccount = useCallback((userId: string) => {
     rememberedAccounts.remove(userId);
     const updated = rememberedAccounts.getAll();
     setSavedAccounts(updated);
@@ -260,7 +285,7 @@ export default function AuthPage() {
   }, []);
 
   const handlePasswordSuccess = useCallback(() => {
-    const u = heldLoginResult?.user;
+    const u = (heldLoginResult as HeldResult)?.user;
     const toUpsert = identifierData && u?.id ? {
       userId: u.id,
       identifier: identifierData.identifier,
@@ -274,7 +299,7 @@ export default function AuthPage() {
     if (fromSavedAccount) {
       // User logged in via account picker — silently refresh their stored data
       if (toUpsert) {
-        rememberedAccounts.upsert(toUpsert);
+        rememberedAccounts.upsert(toUpsert as RememberedAccount);
         setSavedAccounts(rememberedAccounts.getAll());
       }
       handleAuthSuccess();
@@ -282,7 +307,7 @@ export default function AuthPage() {
       const alreadySaved = u?.id && rememberedAccounts.getAll().some((a) => a.userId === u.id);
       if (alreadySaved && toUpsert) {
         // Silently update existing entry, no re-prompt
-        rememberedAccounts.upsert(toUpsert);
+        rememberedAccounts.upsert(toUpsert as RememberedAccount);
         setSavedAccounts(rememberedAccounts.getAll());
         handleAuthSuccess();
       } else {
@@ -294,7 +319,7 @@ export default function AuthPage() {
 
   const handleSaveAndContinue = useCallback(() => {
     if (identifierData) {
-      const u = heldLoginResult?.user;
+      const u = (heldLoginResult as HeldResult)?.user;
       if (u?.id) {
         rememberedAccounts.upsert({
           userId: u.id,
@@ -304,28 +329,28 @@ export default function AuthPage() {
           avatarUrl: u?.avatarUrl ?? identifierData.avatarUrl,
           hasPasskey: u?.hasPasskey ?? identifierData.hasPasskey,
           hasPassword: identifierData.hasPassword,
-        });
+        } as RememberedAccount);
         setSavedAccounts(rememberedAccounts.getAll());
       }
     }
     handleAuthSuccess();
   }, [identifierData, heldLoginResult, handleAuthSuccess]);
 
-  const handleRegisterSuccess = useCallback((result) => {
-    const u = result?.user;
+  const handleRegisterSuccess = useCallback((result: unknown) => {
+    const u = (result as { user?: AuthUser })?.user;
     if (!u) { handleAuthSuccess(); return; }
     // New accounts never have a saved profile — always show the prompt.
-    const data = {
+    const data: IdentifierData = {
       identifier: u.email || u.accountName,
       accountName: u.accountName,
       displayName: u.displayName,
-      avatarUrl: u.avatarUrl || null,
+      avatarUrl: u.avatarUrl || undefined,
     };
     setIdentifierData(data);
     setView('login-prompt');
   }, [handleAuthSuccess]);
 
-  const switchView = useCallback((newView) => {
+  const switchView = useCallback((newView: View) => {
     setView(newView);
     setIdentifierData(null);
     // Force immediate URL update to be snappy
@@ -472,7 +497,7 @@ export default function AuthPage() {
             {view === 'login-saved-account' && (savedAccounts.length > 0 || !accountsChecked) && (
               <SavedAccountStep
                 t={t}
-                savedAccounts={savedAccounts}
+                savedAccounts={savedAccounts as ComponentProps<typeof SavedAccountStep>['savedAccounts']}
                 accountsChecked={accountsChecked}
                 onProceedToPassword={handleSavedAccountProceed}
                 onGoogleLogin={handleGoogleLogin}
@@ -488,7 +513,7 @@ export default function AuthPage() {
                 onNext={handleIdentifierNext}
                 onSwitchToRegister={() => switchView('register')}
                 onGoogleLogin={() => handleGoogleLogin()}
-                from={searchParams.get('from')}
+                from={searchParams.get('from') || undefined}
                 redirect={redirect}
               />
             )}

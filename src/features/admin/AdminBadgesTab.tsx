@@ -1,11 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { FormEvent } from 'react';
 import { motion as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Plus, RefreshCw, Scan, Pencil, Trash2, Award, Users, X, Search, UserPlus } from 'lucide-react';
 import { gqlRequest } from '@/app/graphql.client';
 import { BadgeChip } from '@/features/badges/BadgeChip';
-import { BADGE_COLORS, RARITY_CONFIG } from '@/features/badges/badge-registry';
+import { BADGE_COLORS } from '@/features/badges/badge-registry';
+
+// Typed i18next rejects arbitrary string keys / object interpolation values.
+type TkFn = (k: string, o?: Record<string, unknown>) => string;
+
+interface BadgeColorConf { text: string; border: string }
+const badgeColor = (c: string): BadgeColorConf => {
+  const map = BADGE_COLORS as Record<string, BadgeColorConf>;
+  return map[c] ?? map.primary;
+};
 
 // ─── GraphQL ──────────────────────────────────────────────────────────────────
 
@@ -63,11 +73,44 @@ const CONDITION_TYPES = [
 const COLORS = ['amber', 'teal', 'green', 'primary', 'rose', 'blue', 'orange', 'shimmer'];
 
 const NO_VALUE_CONDITIONS = ['is_verified', 'role_admin', 'manual'];
-const needsValue = (ct) => !NO_VALUE_CONDITIONS.includes(ct);
+const needsValue = (ct: string) => !NO_VALUE_CONDITIONS.includes(ct);
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
+interface LocalizedText {
+  en: string;
+  es?: string;
+}
+
+interface BadgeDef {
+  id: string;
+  label: LocalizedText;
+  description?: LocalizedText | null;
+  icon: string;
+  color: string;
+  conditionType: string;
+  conditionValue?: number | null;
+  autoGrant: boolean;
+  isBuiltin: boolean;
+  holderCount: number;
+  xpReward?: number;
+}
+
+interface BadgeForm {
+  id: string;
+  label: LocalizedText;
+  description: LocalizedText;
+  icon: string;
+  color: string;
+  conditionType: string;
+  conditionValue: number | string | null;
+  autoGrant: boolean;
+  xpReward: number | string;
+}
 
 // ─── Badge preview chip ───────────────────────────────────────────────────────
 
-function LivePreview({ form }) {
+function LivePreview({ form }: { form: BadgeForm }) {
   const label = form.label?.en || '—';
   if (!form.label?.en) {
     return (
@@ -78,7 +121,7 @@ function LivePreview({ form }) {
     );
   }
 
-  const colorConf = BADGE_COLORS[form.color] ?? BADGE_COLORS.primary;
+  const colorConf = badgeColor(form.color);
   const isShimmer = form.color === 'shimmer';
 
   return (
@@ -98,19 +141,25 @@ function LivePreview({ form }) {
 
 // ─── Badge form modal ─────────────────────────────────────────────────────────
 
-const BLANK_FORM = {
+const BLANK_FORM: BadgeForm = {
   id: '', label: { en: '', es: '' }, description: { en: '', es: '' }, icon: '',
   color: 'primary', conditionType: 'manual', conditionValue: null, autoGrant: false, xpReward: 50,
 };
 
-function BadgeFormModal({ editing, onClose, onSaved }) {
+interface BadgeFormModalProps {
+  editing: BadgeDef | null;
+  onClose: () => void;
+  onSaved: (def: BadgeDef, type: 'create' | 'update') => void;
+}
+
+function BadgeFormModal({ editing, onClose, onSaved }: BadgeFormModalProps) {
   const { t } = useTranslation();
-  const [form, setForm] = useState(editing ?? BLANK_FORM);
+  const [form, setForm] = useState<BadgeForm>(() => (editing ? { ...BLANK_FORM, ...editing, description: editing.description ?? BLANK_FORM.description } : BLANK_FORM));
   const [saving, setSaving] = useState(false);
 
-  const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+  const set = <K extends keyof BadgeForm>(k: K, v: BadgeForm[K]) => setForm(p => ({ ...p, [k]: v }));
 
-  const submit = async (e) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
@@ -133,15 +182,15 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
       };
 
       if (editing) {
-        const { adminUpdateBadge } = await gqlRequest(UPDATE_BADGE, { id: editing.id, input });
+        const { adminUpdateBadge } = await gqlRequest(UPDATE_BADGE, { id: editing.id, input }) as { adminUpdateBadge: BadgeDef };
         onSaved(adminUpdateBadge, 'update');
       } else {
-        const { adminCreateBadge } = await gqlRequest(CREATE_BADGE, { input });
+        const { adminCreateBadge } = await gqlRequest(CREATE_BADGE, { input }) as { adminCreateBadge: BadgeDef };
         onSaved(adminCreateBadge, 'create');
       }
       onClose();
     } catch (e) {
-      toast.error(e.message || t('admin.badges.saveError'));
+      toast.error((e as Error)?.message || t('admin.badges.saveError'));
     } finally {
       setSaving(false);
     }
@@ -267,7 +316,7 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
                 <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.badges.color')}</span>
                 <div className="flex gap-2 flex-wrap">
                   {COLORS.map(c => {
-                    const cc = BADGE_COLORS[c] ?? BADGE_COLORS.primary;
+                    const cc = badgeColor(c);
                     return (
                       <button
                         key={c}
@@ -295,7 +344,7 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
                   onChange={e => set('conditionType', e.target.value)}
                 >
                   {CONDITION_TYPES.map(ct => (
-                    <option key={ct} value={ct}>{t(`admin.badges.conditions.${ct}`)}</option>
+                    <option key={ct} value={ct}>{(t as TkFn)(`admin.badges.conditions.${ct}`)}</option>
                   ))}
                 </select>
               </label>
@@ -361,14 +410,23 @@ function BadgeFormModal({ editing, onClose, onSaved }) {
 
 // ─── Badge card ───────────────────────────────────────────────────────────────
 
-function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading }) {
+interface BadgeCardProps {
+  def: BadgeDef;
+  onEdit: (def: BadgeDef) => void;
+  onDelete: (def: BadgeDef) => void;
+  onRetroactive: (badgeId: string) => void;
+  onGrant: (def: BadgeDef) => void;
+  retroLoading: string | null;
+}
+
+function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading }: BadgeCardProps) {
   const { t, i18n } = useTranslation();
-  const colorConf = BADGE_COLORS[def.color] ?? BADGE_COLORS.primary;
+  const colorConf = badgeColor(def.color);
   const conditionLabel = CONDITION_TYPES.includes(def.conditionType)
-    ? t(`admin.badges.conditions.${def.conditionType}`)
+    ? (t as TkFn)(`admin.badges.conditions.${def.conditionType}`)
     : def.conditionType;
 
-  const lang = i18n.language === 'es' ? 'es' : 'en';
+  const lang: 'en' | 'es' = i18n.language === 'es' ? 'es' : 'en';
   const descriptionText = def.description?.[lang] || def.description?.en || '—';
 
   return (
@@ -457,22 +515,22 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
 
 // ─── Grant modal ──────────────────────────────────────────────────────────────
 
-function GrantModal({ badge, onClose }) {
+function GrantModal({ badge, onClose }: { badge: BadgeDef; onClose: () => void }) {
   const { t, i18n } = useTranslation();
   const [identifier, setIdentifier] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const grant = async (e) => {
+  const grant = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       await gqlRequest(GRANT_BADGE, { userIdentifier: identifier.trim(), badgeId: badge.id });
-      const lang = i18n.language === 'es' ? 'es' : 'en';
+      const lang: 'en' | 'es' = i18n.language === 'es' ? 'es' : 'en';
       const labelText = badge.label?.[lang] || badge.label?.en || badge.id;
       toast.success(t('admin.badges.grantSuccess', { label: labelText }));
       onClose();
     } catch (e) {
-      toast.error(e.message || t('admin.badges.grantError'));
+      toast.error((e as Error)?.message || t('admin.badges.grantError'));
     } finally {
       setLoading(false);
     }
@@ -488,7 +546,7 @@ function GrantModal({ badge, onClose }) {
         className="w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl p-5 flex flex-col gap-4"
       >
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-semibold text-zinc-200">{t('admin.badges.grantTitle', { name: badge.label })}</h3>
+          <h3 className="text-sm font-semibold text-zinc-200">{(t as TkFn)('admin.badges.grantTitle', { name: badge.label?.en || badge.id })}</h3>
         </div>
         <form onSubmit={grant} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1">
@@ -519,17 +577,17 @@ function GrantModal({ badge, onClose }) {
 
 export default function AdminBadgesTab() {
   const { t, i18n } = useTranslation();
-  const [defs, setDefs] = useState([]);
+  const [defs, setDefs] = useState<BadgeDef[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [formModal, setFormModal] = useState(null); // null | 'new' | badge def (for edit)
-  const [grantModal, setGrantModal] = useState(null);
-  const [retroLoading, setRetroLoading] = useState(null);
+  const [formModal, setFormModal] = useState<BadgeDef | 'new' | null>(null);
+  const [grantModal, setGrantModal] = useState<BadgeDef | null>(null);
+  const [retroLoading, setRetroLoading] = useState<string | null>(null);
 
   const fetchDefs = useCallback(async () => {
     setLoading(true);
     try {
-      const { badgeDefinitions } = await gqlRequest(GET_BADGE_DEFS);
+      const { badgeDefinitions } = await gqlRequest(GET_BADGE_DEFS) as { badgeDefinitions: BadgeDef[] };
       setDefs(badgeDefinitions);
     } catch {
       toast.error(t('admin.badges.fetchError'));
@@ -543,8 +601,8 @@ export default function AdminBadgesTab() {
     fetchDefs();
   }, [fetchDefs]);
 
-  const handleSaved = (def, type) => {
-    const lang = i18n.language === 'es' ? 'es' : 'en';
+  const handleSaved = (def: BadgeDef, type: 'create' | 'update') => {
+    const lang: 'en' | 'es' = i18n.language === 'es' ? 'es' : 'en';
     const labelText = def.label?.[lang] || def.label?.en || def.id;
     if (type === 'create') {
       setDefs(prev => [...prev, def]);
@@ -554,8 +612,8 @@ export default function AdminBadgesTab() {
     toast.success(type === 'create' ? t('admin.badges.createSuccess', { label: labelText }) : t('admin.badges.updateSuccess', { label: labelText }));
   };
 
-  const handleDelete = async (def) => {
-    const lang = i18n.language === 'es' ? 'es' : 'en';
+  const handleDelete = async (def: BadgeDef) => {
+    const lang: 'en' | 'es' = i18n.language === 'es' ? 'es' : 'en';
     const labelText = def.label?.[lang] || def.label?.en || def.id;
     if (!window.confirm(t('admin.badges.confirmDelete', { label: labelText }))) return;
     try {
@@ -563,19 +621,19 @@ export default function AdminBadgesTab() {
       setDefs(prev => prev.filter(d => d.id !== def.id));
       toast.success(t('admin.badges.deleteSuccess', { label: labelText }));
     } catch (e) {
-      toast.error(e.message || t('admin.badges.deleteError'));
+      toast.error((e as Error)?.message || t('admin.badges.deleteError'));
     }
   };
 
-  const handleRetroactive = async (badgeId) => {
+  const handleRetroactive = async (badgeId: string) => {
     setRetroLoading(badgeId);
     try {
-      const { adminRetroactiveScan: result } = await gqlRequest(RETROACTIVE, { badgeId });
+      const { adminRetroactiveScan: result } = await gqlRequest(RETROACTIVE, { badgeId }) as { adminRetroactiveScan: { granted: number; scanned: number; error?: string | null } };
       if (result.error) throw new Error(result.error);
       toast.success(t('admin.badges.retroSuccess', { granted: result.granted.toLocaleString(), scanned: result.scanned.toLocaleString() }));
       fetchDefs(); // refresh holder counts
     } catch (e) {
-      toast.error(e.message || t('admin.badges.scanFailed'));
+      toast.error((e as Error)?.message || t('admin.badges.scanFailed'));
     } finally {
       setRetroLoading(null);
     }
