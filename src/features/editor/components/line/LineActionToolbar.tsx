@@ -282,7 +282,7 @@ const LineActionToolbar = memo(({
           <SingerAssignButton
             selectedLines={selectedLines}
             handleAssignSinger={handleAssignSinger}
-            songArtists={getSingerOptionsForSelection(sectionLines, [...selectedLines], songArtists)}
+            songArtists={getSingerOptionsForSelection((sectionLines ?? []) as unknown as Parameters<typeof getSingerOptionsForSelection>[0], [...selectedLines], songArtists)}
           />
         )}
       </div>

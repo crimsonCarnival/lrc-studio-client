@@ -1,7 +1,29 @@
 ﻿import { useState, useCallback, useEffect, useRef } from 'react';
+import type { ChangeEvent, RefObject } from 'react';
+import type { TFunction } from 'i18next';
 import toast from 'react-hot-toast';
 import { uploads, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import type { AppSettings } from '@/features/settings/settings.types';
+
+type HostedFile = File & { isHosted?: boolean };
+
+interface UseLocalAudioParams {
+  audioRef: RefObject<HTMLAudioElement | null>;
+  blobRef: RefObject<Blob | null>;
+  t: TFunction;
+  settings: AppSettings;
+  updateTime: (t: number) => void;
+  updateDuration: (d: number) => void;
+  setSource: (s: string) => void;
+  setIsPlaying: (p: boolean) => void;
+  setCurrentTime: (t: number) => void;
+  onTitleChange?: (title: string) => void;
+  onMediaChange?: (v: unknown) => void;
+  onMediaUpload?: (u: unknown) => void;
+  initialSpeed?: number | string;
+  initialSeek?: number;
+}
 
 export default function useLocalAudio({
   audioRef,
@@ -17,15 +39,15 @@ export default function useLocalAudio({
   onMediaChange,
   onMediaUpload,
   initialSpeed,
-  initialSeek,
-}) {
+  initialSeek = 0,
+}: UseLocalAudioParams) {
   const [localUrl, setLocalUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const uploadAbortRef = useRef<boolean | null>(null);
   const { executeRecaptcha } = useGoogleReCaptcha();
 
-  const handleFileChange = useCallback((e) => {
-    const file = e.type === 'change' ? e.target.files?.[0] : e;
+  const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement> | File) => {
+    const file = (e instanceof File ? e : e.target.files?.[0]) as HostedFile | undefined;
     if (!file) return;
 
     if (file.size > 150 * 1024 * 1024) {
@@ -53,7 +75,7 @@ export default function useLocalAudio({
           const result = await uploads.uploadMedia(
             file,
             executeRecaptcha ? await executeRecaptcha('upload_audio') : undefined
-          );
+          ) as { secure_url: string; public_id: string; duration?: number | null };
           try {
             // Immediately persist to database before considering it successful
             const { upload } = await uploads.saveMedia({
@@ -63,7 +85,7 @@ export default function useLocalAudio({
               fileName: file.name,
               title: file.name.replace(/\.[^/.]+$/, ''),
               duration: result.duration || null,
-            });
+            } as Parameters<typeof uploads.saveMedia>[0]) as { upload?: { id: string } };
             if (!upload) {
               console.warn('Upload not persisted - user may not be authenticated');
               // Assign a local: temp id so the session can track this upload
@@ -101,7 +123,7 @@ export default function useLocalAudio({
           }
         } catch (err) {
           if (uploadAbortRef.current) return;
-          console.warn('Cloudinary upload failed:', err.message);
+          console.warn('Cloudinary upload failed:', (err as Error)?.message);
         } finally {
           if (!uploadAbortRef.current) setIsUploading(false);
         }
@@ -121,8 +143,8 @@ export default function useLocalAudio({
       const d = audioRef.current.duration;
       if (!isFinite(d) || d <= 0) return;
       updateDuration(d);
-      audioRef.current.volume = settings.playback.muted ? 0 : settings.playback.volume;
-      const s = parseFloat(initialSpeed);
+      audioRef.current.volume = settings.playback?.muted ? 0 : settings.playback?.volume;
+      const s = parseFloat(String(initialSpeed ?? ''));
       if (isFinite(s) && s > 0 && s !== 1) {
         audioRef.current.playbackRate = s;
       }
@@ -132,9 +154,9 @@ export default function useLocalAudio({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audioRef, updateDuration, settings.playback.muted, settings.playback.volume, initialSpeed]);
+  }, [audioRef, updateDuration, settings.playback?.muted, settings.playback?.volume, initialSpeed]);
 
-  const autoRewind = settings.playback.autoRewindOnPause;
+  const autoRewind = settings.playback?.autoRewindOnPause;
   const handlePause = useCallback(() => {
     if (
       autoRewind?.enabled &&
@@ -165,7 +187,7 @@ export default function useLocalAudio({
 
   const play = useCallback(() => {
     const promise = audioRef.current?.play();
-    promise?.catch((err) => {
+    promise?.catch((err: Error) => {
       console.error('[local.play] play() rejected:', err.name, err.message);
       if (err.name !== 'AbortError') {
         setIsPlaying(false);
@@ -174,14 +196,14 @@ export default function useLocalAudio({
   }, [audioRef, setIsPlaying]);
   const pause = useCallback(() => { audioRef.current?.pause(); }, [audioRef]);
 
-  const seek = useCallback((time) => {
+  const seek = useCallback((time: number) => {
     if (audioRef.current) {
       audioRef.current.currentTime = time;
       updateTime(time);
     }
   }, [audioRef, updateTime]);
 
-  const setSpeed = useCallback((speed) => {
+  const setSpeed = useCallback((speed: number) => {
     if (audioRef.current) audioRef.current.playbackRate = speed;
   }, [audioRef]);
 
@@ -190,9 +212,9 @@ export default function useLocalAudio({
   // Sync volume when settings change
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = settings.playback.muted ? 0 : settings.playback.volume;
+      audioRef.current.volume = settings.playback?.muted ? 0 : settings.playback?.volume;
     }
-  }, [audioRef, settings.playback.volume, settings.playback.muted]);
+  }, [audioRef, settings.playback?.volume, settings.playback?.muted]);
 
   return {
     localUrl,
@@ -207,7 +229,7 @@ export default function useLocalAudio({
     seek,
     setSpeed,
     getCurrentTime,
-    loadFromUrl: useCallback((url, title) => {
+    loadFromUrl: useCallback((url: string, title?: string) => {
       // Abort any pending Cloudinary upload
       uploadAbortRef.current = true;
       // Set the URL directly — browser streams it without downloading the full blob

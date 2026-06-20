@@ -1,5 +1,5 @@
 import { request } from '@/app/api.client';
-import { withSudo } from './sudo.js';
+import { withSudo } from './sudo';
 
 interface BanOptions {
   reason?: string;

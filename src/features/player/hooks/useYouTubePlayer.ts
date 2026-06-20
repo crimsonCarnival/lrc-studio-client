@@ -7,11 +7,29 @@ declare global {
 }
 
 import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
+import type { RefObject } from 'react';
+import type { TFunction } from 'i18next';
 import { extractVideoId } from '../services/player.service';
+import type { AppSettings } from '@/features/settings/settings.types';
 
 // Module-level WeakMap: stores raw YouTube player objects outside React's
 // tracking system so React DevTools never walks the cross-origin iframe.
 const ytPlayerStore = new WeakMap();
+
+interface UseYouTubePlayerParams {
+  containerRef: RefObject<HTMLDivElement | null>;
+  t: TFunction;
+  settings: AppSettings;
+  updateTime: (t: number) => void;
+  updateDuration: (d: number) => void;
+  setIsPlaying: (p: boolean) => void;
+  setCurrentTime: (t: number) => void;
+  onTitleChange?: (title: string) => void;
+  onMediaChange?: (v: unknown) => void;
+  isPlaying: boolean;
+  setSource: (s: string) => void;
+  onYtUrlChange?: (url: string) => void;
+}
 
 export default function useYouTubePlayer({
   containerRef,
@@ -26,7 +44,7 @@ export default function useYouTubePlayer({
   isPlaying,
   setSource,
   onYtUrlChange,
-}) {
+}: UseYouTubePlayerParams) {
   // useRef gives a stable identity ESLint recognises as safe in dep arrays.
   // On first render we redefine `current` as a non-enumerable WeakMap-backed
   // accessor so React DevTools' property-walker never reaches the raw YT player
@@ -110,7 +128,7 @@ export default function useYouTubePlayer({
     }
   }, [containerRef]);
 
-  const loadYouTube = useCallback((urlOverride) => {
+  const loadYouTube = useCallback((urlOverride?: string) => {
     const urlToLoad = (typeof urlOverride === 'string') ? urlOverride : ytUrl;
     const videoId = extractVideoId(urlToLoad);
     if (!videoId) {
@@ -159,7 +177,7 @@ export default function useYouTubePlayer({
             setYtLoading(false);
             const d = e.target.getDuration();
             updateDuration(d);
-            e.target.setVolume(settings.playback.muted ? 0 : (settings.playback.volume * 100));
+            e.target.setVolume(settings.playback?.muted ? 0 : (settings.playback?.volume * 100));
             const title = e.target.getVideoData()?.title;
             if (title) onTitleChange?.(title);
             onMediaChange?.(true);
@@ -201,7 +219,7 @@ export default function useYouTubePlayer({
     } else {
       window.onYouTubeIframeAPIReady = initPlayer;
     }
-  }, [containerRef, ytUrl, t, settings.playback.volume, settings.playback.muted, settings.playback.autoRewindOnPause?.enabled, settings.playback.autoRewindOnPause?.seconds, updateDuration, updateTime, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, setSource]);
+  }, [containerRef, ytUrl, t, settings.playback?.volume, settings.playback?.muted, settings.playback?.autoRewindOnPause?.enabled, settings.playback?.autoRewindOnPause?.seconds, updateDuration, updateTime, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, setSource]);
 
 
   // Poll YouTube time with requestAnimationFrame
@@ -212,7 +230,7 @@ export default function useYouTubePlayer({
     }
 
     let lastPoll = 0;
-    const poll = (timestamp) => {
+    const poll = (timestamp: number) => {
       if (timestamp - lastPoll >= 50) {
         lastPoll = timestamp;
         if (ytPlayerRef.current?.getCurrentTime) {
@@ -251,14 +269,14 @@ export default function useYouTubePlayer({
   const play = useCallback(() => { ytPlayerRef.current?.playVideo(); }, []);
   const pause = useCallback(() => { ytPlayerRef.current?.pauseVideo(); }, []);
 
-  const seek = useCallback((time) => {
+  const seek = useCallback((time: number) => {
     if (ytPlayerRef.current) {
       ytPlayerRef.current.seekTo(time, true);
       updateTime(time);
     }
   }, [updateTime]);
 
-  const setSpeed = useCallback((speed) => {
+  const setSpeed = useCallback((speed: number) => {
     if (ytPlayerRef.current?.setPlaybackRate) {
       ytPlayerRef.current.setPlaybackRate(speed);
     }
@@ -269,9 +287,9 @@ export default function useYouTubePlayer({
   // Sync volume when settings change
   useEffect(() => {
     if (ytPlayerRef.current?.setVolume) {
-      ytPlayerRef.current.setVolume(settings.playback.muted ? 0 : (settings.playback.volume * 100));
+      ytPlayerRef.current.setVolume(settings.playback?.muted ? 0 : (settings.playback?.volume * 100));
     }
-  }, [settings.playback.volume, settings.playback.muted, ytReady]);
+  }, [settings.playback?.volume, settings.playback?.muted, ytReady]);
 
   return {
     ytUrl,

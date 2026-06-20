@@ -6,13 +6,14 @@ import { useTranslation } from 'react-i18next';
 import { UploadCloud } from 'lucide-react';
 
 import { AppBackground } from './layout/AppBackground';
-import { AppHeader } from './layout/AppHeader';
+import { AppHeader } from './layout/header/AppHeader';
 import { AppPlayer } from './layout/AppPlayer';
 import { AppMobileNav } from './layout/AppMobileNav';
 import { AppModals } from './layout/AppModals';
 import { SafeAreaContainer } from '../shared/ui/SafeAreaContainer';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AppSettings } from '@/features/settings/settings.types';
+import type { AuthUser } from '@/features/auth/hooks/useAuth';
 
 // App augments the raw useAppState result with layout-driven playback state
 // before passing it down (see App.tsx enhancedAppState).
@@ -138,8 +139,8 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         )}
 
         <AppHeader
-          user={user}
-          logout={logout}
+          user={user as AuthUser | null | undefined}
+          logout={logout ?? (() => {})}
           isReady={isReady}
           lines={lines}
           mediaTitle={mediaTitle}
