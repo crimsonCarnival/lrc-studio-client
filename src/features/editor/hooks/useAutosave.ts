@@ -281,7 +281,7 @@ export function useAutosave({
     lastSaveTimeRef.current = Date.now();
     changeCountRef.current = 0;
     setIsAutosaving(true);
-    const indicatorDuration = { short: 800, normal: 1500, long: 3000 }[settings.advanced?.autoSaveIndicatorDuration] || 1500;
+    const indicatorDuration = { short: 800, normal: 1500, long: 3000 }[settings.advanced?.autoSaveIndicator] || 1500;
     setTimeout(() => setIsAutosaving(false), indicatorDuration);
   // Volatile editing values (mediaTitle, projectMetadata, editorMode, syncMode,
   // activeLineIndex, uploadedAudio, duration) are intentionally NOT listed here.
@@ -301,7 +301,7 @@ export function useAutosave({
     onSaveSuccess,
     isProjectLoadingRef,
     setForkedFrom,
-    settings.advanced?.autoSaveIndicatorDuration,
+    settings.advanced?.autoSaveIndicator,
   ]);
 
   const doAutoSaveRef = useRef(doAutoSave);

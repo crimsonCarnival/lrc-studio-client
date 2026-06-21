@@ -12,7 +12,7 @@ export interface AppSettings {
   playback?: Section;
   shortcuts?: Section;
   advanced?: Section;
-  preview?: Section;
+  import?: Section;
 }
 
 export interface SettingsContextValue {

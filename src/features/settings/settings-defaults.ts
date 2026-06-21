@@ -20,6 +20,9 @@ export const DEFAULT_SETTINGS = {
     shiftAllAmount: 0.5,
     showLineNumbers: true,
     timestampPrecision: 'thousandths',
+    syncFlashDuration: 'normal',
+    lyricsSearchSpeed: 'normal',
+    overlapThreshold: 0.05,
     srt: {
       defaultSubtitleDuration: 5,
       minSubtitleGap: 0,
@@ -48,7 +51,6 @@ export const DEFAULT_SETTINGS = {
     lineEndings: 'lf',
     copyFormat: 'lrc',
     downloadFormat: 'lrc',
-    timestampPrecision: 'thousandths',
     wordTimestampPrecision: 'hundredths',
     defaultFilenamePattern: 'fixed',
     includeMetadata: true,
@@ -61,6 +63,7 @@ export const DEFAULT_SETTINGS = {
     fontSize: 'normal',
     spacing: 'normal',
     previewAlignment: 'left',
+    focusContrast: 'medium',
     focusMode: 'default',
     layoutSwap: false,
     playerTop: false,
@@ -104,6 +107,7 @@ export const DEFAULT_SETTINGS = {
   },
   advanced: {
     autoSave: { enabled: true, timeInterval: 60 },
+    autoSaveIndicator: 'normal',
     confirmDestructive: true,
     timezone: 'auto'
   }
