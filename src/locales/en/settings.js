@@ -18,6 +18,13 @@ export default {
     label: "Connections"
   },
 
+  blocked: {
+    label: "Blocked users",
+    description: "Blocked users can't follow you or see your profile, and they won't appear in your feed, search, or suggestions.",
+    empty: "You haven't blocked anyone.",
+    loading: "Loading…"
+  },
+
   google: {
     label: "Google",
     connect: "Connect Google",
