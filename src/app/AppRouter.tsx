@@ -11,6 +11,7 @@ import { Loader2, GripVertical } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { isStaff } from '@/features/auth/permissions';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
@@ -63,7 +64,9 @@ function RequireAdmin({ children }: { children: ReactNode }) {
   const { user, loading } = useAuthContext();
   if (loading) return <div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>;
   if (!user) return <Navigate to="/auth/signin" replace />;
-  if (user.role !== 'admin') return <Navigate to="/home" replace />;
+  // Any staff member (holds at least one permission) may reach the dashboard;
+  // individual tabs/actions are gated by their specific permission.
+  if (!isStaff(user.permissions)) return <Navigate to="/home" replace />;
   return children;
 }
 

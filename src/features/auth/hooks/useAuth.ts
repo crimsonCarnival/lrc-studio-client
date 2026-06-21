@@ -27,6 +27,7 @@ export interface AuthUser {
   avatarUrl?: string;
   isGuest?: boolean;
   role?: string;
+  permissions?: string[];
   ban?: { active?: boolean; reason?: string };
   [key: string]: unknown;
 }
@@ -105,11 +106,12 @@ export function useAuth() {
     } catch (err) {
       console.error('Logout failed:', err);
     }
-    // Clear project data so stale projects don't persist across accounts
+    // Clear project data + settings so they don't persist across accounts
     storage.remove(STORAGE_KEYS.PROJECT);
     storage.remove(STORAGE_KEYS.SHARED_PROJECT);
     storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
     storage.remove(STORAGE_KEYS.HAS_SESSION);
+    storage.remove(STORAGE_KEYS.SETTINGS);
     setAuthFlag(false);
     // Intentionally keep remembered accounts — they are UI metadata only.
     // The server cleared the refresh token cookie via POST /auth/logout.
@@ -486,20 +488,25 @@ export function useAuth() {
     setWasJustUnbanned(false);
   }, []);
 
+  const removeStorageKeys = useCallback(() => {
+    storage.remove(STORAGE_KEYS.PROJECT);
+    storage.remove(STORAGE_KEYS.SHARED_PROJECT);
+    storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
+    storage.remove(STORAGE_KEYS.HAS_SESSION);
+    storage.remove(STORAGE_KEYS.SETTINGS);
+  }, []);
+
   const logoutAllDevices = useCallback(async () => {
     try {
       await auth.logoutAll(false); // keepCurrent=false → clears all sessions + server cookie
     } catch (err) {
       console.error('Logout all failed:', err);
     }
-    storage.remove(STORAGE_KEYS.PROJECT);
-    storage.remove(STORAGE_KEYS.SHARED_PROJECT);
-    storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
-    storage.remove(STORAGE_KEYS.HAS_SESSION);
+    removeStorageKeys();
     setAuthFlag(false);
     setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-  }, []);
+  }, [removeStorageKeys]);
 
   const deactivateAccount = useCallback(async () => {
     try {
@@ -508,14 +515,11 @@ export function useAuth() {
       console.error('Deactivate failed:', err);
       throw err;
     }
-    storage.remove(STORAGE_KEYS.PROJECT);
-    storage.remove(STORAGE_KEYS.SHARED_PROJECT);
-    storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
-    storage.remove(STORAGE_KEYS.HAS_SESSION);
+    removeStorageKeys();
     setAuthFlag(false);
     setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-  }, []);
+  }, [removeStorageKeys]);
 
   // ——— WebAuthn / Passkeys ———
 

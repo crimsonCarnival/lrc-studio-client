@@ -1,4 +1,4 @@
-import { createContext, use, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createContext, use, useState, useEffect, useLayoutEffect, useCallback, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,13 @@ import { request } from '@/app/api.client';
 import { getSocket } from '@/app/socket.client';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
+import { NotificationText, NotificationAvatar, notificationDestination, type NotificationData } from './components/NotificationItem';
+import { appNavigate } from '@/app/navigation';
+
+// Push events that warrant an on-screen toast. Sticky/system notifications
+// (verify_email, set_password, etc.) arrive on the same channel but should not
+// toast — they live only in the panel.
+const TOAST_TYPES = new Set(['star', 'fork', 'follow', 'reaction', 'admin_granted', 'ban', 'request_submitted', 'request_reviewed']);
 
 interface AppNotification {
   _id: string;
@@ -29,6 +36,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const fetchedRef = useRef(false);
+  // Lets the socket effect's toast call the latest markRead without re-subscribing
+  // on every render (markRead is defined below, after this effect).
+  const markReadRef = useRef<(ids: string[]) => void>(() => {});
 
   useEffect(() => {
     if (!user || fetchedRef.current) return;
@@ -66,6 +76,42 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         return [notification, ...prev];
       });
       if (!notification.read) setUnreadCount(c => c + 1);
+
+      // Surface social actions (star/fork/follow/reaction) as a transient toast,
+      // mirroring the panel row. Without this, real-time pushes only bumped the
+      // bell count silently — nothing drew the user's attention.
+      const data = notification as unknown as NotificationData;
+      if (TOAST_TYPES.has(data.type)) {
+        toast(
+          (item) => (
+            <div
+              className="flex items-center gap-3 cursor-pointer select-none"
+              onClick={() => {
+                toast.dismiss(item.id);
+                if (!data.read) markReadRef.current([data._id]);
+                const dest = notificationDestination(data);
+                if (dest) appNavigate(dest);
+              }}
+            >
+              <NotificationAvatar notification={data} />
+              <p className="text-xs text-foreground leading-snug min-w-0">
+                <NotificationText notification={data} t={t} />
+              </p>
+            </div>
+          ),
+          {
+            id: `notif:${data._id}`,
+            duration: 5000,
+            style: {
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
+              borderRadius: '1rem',
+              padding: '12px 16px',
+              color: 'var(--card-foreground)',
+            },
+          }
+        );
+      }
     }
 
     function onDismissed({ id }: { id: string }) {
@@ -78,7 +124,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
     function onBadgeAwarded({ badgeId }: { badgeId: string }) {
       const def = (BADGE_REGISTRY as Record<string, { label?: string } | undefined>)[badgeId];
-      const label = def?.label ?? badgeId;
+      // Localized label (badges.<id>.label), English registry label as fallback.
+      const label = t(`badges.${badgeId}.label`, { defaultValue: def?.label ?? badgeId });
       toast(
         (item) => (
           <div
@@ -122,6 +169,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     });
     request('/notifications/read', { method: 'POST', body: JSON.stringify({ ids }) }).catch(() => {});
   }, []);
+  useLayoutEffect(() => { markReadRef.current = markRead; }, [markRead]);
 
   const markAllRead = useCallback(() => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));

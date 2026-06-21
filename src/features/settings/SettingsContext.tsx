@@ -282,19 +282,24 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     syncInFlightRef.current = true;
 
     settingsApi.get().then((remote: any) => {
-      if (remote && Object.keys(remote).length > 0) {
-        isSyncingRef.current = true;
-        setSettings((local: any) => {
-          const merged = deepMerge(local, remote);
-          // Persist merge to localStorage immediately (save effect is suppressed)
-          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* ignore */ }
-          // Update last saved snapshot since we just synced from server
-          lastSavedToServerRef.current = structuredClone(merged);
-          return merged;
-        });
-        // Clear the sync flag after React processes the state update
-        queueMicrotask(() => { isSyncingRef.current = false; });
-      }
+      isSyncingRef.current = true;
+      setSettings(() => {
+        // Server is the source of truth for a logged-in user. Rebase on
+        // DEFAULT_SETTINGS (NOT the current local state) so a previous
+        // account's leftover localStorage can't bleed into this session.
+        // Empty remote = brand-new user (no server doc) = pure defaults.
+        const base = structuredClone(DEFAULT_SETTINGS);
+        const merged = remote && Object.keys(remote).length > 0
+          ? deepMerge(base, remote)
+          : base;
+        // Persist immediately (save effect is suppressed via isSyncingRef)
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* ignore */ }
+        // Update last saved snapshot since we just synced from server
+        lastSavedToServerRef.current = structuredClone(merged);
+        return merged;
+      });
+      // Clear the sync flag after React processes the state update
+      queueMicrotask(() => { isSyncingRef.current = false; });
     }).catch(() => { /* ignore */ }).finally(() => {
       syncInFlightRef.current = false;
     });

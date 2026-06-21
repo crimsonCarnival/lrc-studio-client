@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
-import { X, Star, GitFork, UserPlus, ShieldCheck, Lock, KeyRound, Ban, Smile, Award } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { X, Star, GitFork, UserPlus, ShieldCheck, Lock, KeyRound, Ban, Smile, Award, Inbox, CheckCheck } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { LazyImage } from '@ui/LazyImage';
 import { useNotificationsContext } from '../NotificationsContext';
@@ -13,7 +13,7 @@ interface NotificationActor {
   avatarUrl?: string;
 }
 
-interface AppNotification {
+export interface NotificationData {
   _id: string;
   type: string;
   actors?: NotificationActor[];
@@ -37,9 +37,12 @@ const TYPE_ICON: Record<string, typeof Star> = {
   verify_email:     KeyRound,
   ban:              Ban,
   badge_awarded:    Award,
+  request_submitted: Inbox,
+  request_reviewed:  CheckCheck,
 };
 
-function notificationDestination(notification: AppNotification): string | null {
+// eslint-disable-next-line react-refresh/only-export-components
+export function notificationDestination(notification: NotificationData): string | null {
   const { type, actors, publicId } = notification;
   if ((type === 'star' || type === 'fork' || type === 'reaction') && publicId) return `/project/${publicId}`;
   if (type === 'follow' && actors?.[0]?.accountName) return `/${actors[0].accountName}`;
@@ -47,10 +50,11 @@ function notificationDestination(notification: AppNotification): string | null {
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';
   if (type === 'verify_email') return '/settings/profile';
   if (type === 'badge_awarded') return '/settings/profile';
+  if (type === 'request_submitted' || type === 'request_reviewed') return '/admin?tab=requests';
   return null;
 }
 
-function NotificationText({ notification, t }: { notification: AppNotification; t: TFunction }) {
+export function NotificationText({ notification, t }: { notification: NotificationData; t: TFunction }) {
   // badge label keys are composed from a registry; bypass strict key checking.
   const tk = t as (key: string, defaultValue?: string) => string;
   const { type, actors, actorCount, projectTitle, body } = notification;
@@ -64,19 +68,19 @@ function NotificationText({ notification, t }: { notification: AppNotification; 
 
   if (type === 'star') {
     return projectTitle
-      ? <span><strong>{actorStr}</strong> starred <strong>{projectTitle}</strong></span>
-      : <span><strong>{actorStr}</strong> starred your project</span>;
+      ? <span><Trans i18nKey="notifications.starredProject" values={{ actors: actorStr, title: projectTitle }} components={[<strong key="0" />, <strong key="1" />]} /></span>
+      : <span><Trans i18nKey="notifications.starred" values={{ actors: actorStr }} components={[<strong key="0" />]} /></span>;
   }
   if (type === 'fork') {
     return projectTitle
-      ? <span><strong>{actorStr}</strong> forked <strong>{projectTitle}</strong></span>
-      : <span><strong>{actorStr}</strong> forked your project</span>;
+      ? <span><Trans i18nKey="notifications.forkedProject" values={{ actors: actorStr, title: projectTitle }} components={[<strong key="0" />, <strong key="1" />]} /></span>
+      : <span><Trans i18nKey="notifications.forked" values={{ actors: actorStr }} components={[<strong key="0" />]} /></span>;
   }
   if (type === 'reaction') {
     const emojiChar = body || '❤️';
     return projectTitle
-      ? <span><strong>{actorStr}</strong> reacted {emojiChar} to <strong>{projectTitle}</strong></span>
-      : <span><strong>{actorStr}</strong> reacted {emojiChar} to your project</span>;
+      ? <span><Trans i18nKey="notifications.reactedProject" values={{ actors: actorStr, emoji: emojiChar, title: projectTitle }} components={[<strong key="0" />, <strong key="1" />]} /></span>
+      : <span><Trans i18nKey="notifications.reacted" values={{ actors: actorStr, emoji: emojiChar }} components={[<strong key="0" />]} /></span>;
   }
   if (type === 'follow') return <span><strong>{actorStr}</strong> {t('notifications.followed')}</span>;
   if (type === 'admin_granted') return <span>{t('notifications.adminGranted')}</span>;
@@ -87,10 +91,12 @@ function NotificationText({ notification, t }: { notification: AppNotification; 
     const label = def ? tk(`badges.${body}.label`, def.label) : (body ?? '');
     return <span>{t('notifications.badgeUnlocked')} <strong>{label}</strong></span>;
   }
+  if (type === 'request_submitted') return <span><strong>{t('notifications.requestSubmitted')}</strong> {body}</span>;
+  if (type === 'request_reviewed') return <span><strong>{t('notifications.requestReviewed')}</strong> {body}</span>;
   return <span>{body || ''}</span>;
 }
 
-function NotificationAvatar({ notification }: { notification: AppNotification }) {
+export function NotificationAvatar({ notification }: { notification: NotificationData }) {
   const { type, actors } = notification;
   const first = actors?.[0];
   const hasActor = !!first;
@@ -115,7 +121,7 @@ function NotificationAvatar({ notification }: { notification: AppNotification })
   );
 }
 
-export function NotificationItem({ notification }: { notification: AppNotification }) {
+export function NotificationItem({ notification }: { notification: NotificationData }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { markRead, dismiss } = useNotificationsContext();

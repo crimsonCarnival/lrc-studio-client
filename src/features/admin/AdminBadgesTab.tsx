@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { motion as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +8,7 @@ import { Plus, RefreshCw, Scan, Pencil, Trash2, Award, Users, X, Search, UserPlu
 import { gqlRequest } from '@/app/graphql.client';
 import { BadgeChip } from '@/features/badges/BadgeChip';
 import { BADGE_COLORS } from '@/features/badges/badge-registry';
+import { requestsApi } from './services/requests.service';
 
 // Typed i18next rejects arbitrary string keys / object interpolation values.
 type TkFn = (k: string, o?: Record<string, unknown>) => string;
@@ -141,6 +143,8 @@ function LivePreview({ form }: { form: BadgeForm }) {
 
 // ─── Badge form modal ─────────────────────────────────────────────────────────
 
+// Icon is intentionally not editable in the UI (to be designed later). It stays
+// in the data model as an optional field; new badges are created without one.
 const BLANK_FORM: BadgeForm = {
   id: '', label: { en: '', es: '' }, description: { en: '', es: '' }, icon: '',
   color: 'primary', conditionType: 'manual', conditionValue: null, autoGrant: false, xpReward: 50,
@@ -150,9 +154,10 @@ interface BadgeFormModalProps {
   editing: BadgeDef | null;
   onClose: () => void;
   onSaved: (def: BadgeDef, type: 'create' | 'update') => void;
+  proposeMode?: boolean;
 }
 
-function BadgeFormModal({ editing, onClose, onSaved }: BadgeFormModalProps) {
+function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormModalProps) {
   const { t } = useTranslation();
   const [form, setForm] = useState<BadgeForm>(() => (editing ? { ...BLANK_FORM, ...editing, description: editing.description ?? BLANK_FORM.description } : BLANK_FORM));
   const [saving, setSaving] = useState(false);
@@ -181,6 +186,13 @@ function BadgeFormModal({ editing, onClose, onSaved }: BadgeFormModalProps) {
         ...(editing ? {} : { id: form.id.trim().toLowerCase().replace(/\s+/g, '_') }),
       };
 
+      if (proposeMode) {
+        // Admin lacks badges.manage — submit a proposal for a superadmin to approve.
+        await requestsApi.submit(editing ? 'badge_update' : 'badge_create', editing ? { id: editing.id, input } : { input });
+        toast.success(t('admin.requests.composer.submitted'));
+        onClose();
+        return;
+      }
       if (editing) {
         const { adminUpdateBadge } = await gqlRequest(UPDATE_BADGE, { id: editing.id, input }) as { adminUpdateBadge: BadgeDef };
         onSaved(adminUpdateBadge, 'update');
@@ -196,14 +208,14 @@ function BadgeFormModal({ editing, onClose, onSaved }: BadgeFormModalProps) {
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <M.div
         initial={{ opacity: 0, scale: 0.95, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.18 }}
-        className="w-full max-w-2xl bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
+        className="w-full max-w-3xl bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60">
           <div className="flex items-center gap-3">
@@ -224,7 +236,7 @@ function BadgeFormModal({ editing, onClose, onSaved }: BadgeFormModalProps) {
             <LivePreview form={form} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Left Column */}
             <div className="flex flex-col gap-4">
               {/* ID — only for new badges */}
@@ -243,17 +255,6 @@ function BadgeFormModal({ editing, onClose, onSaved }: BadgeFormModalProps) {
               )}
 
               <div className="grid grid-cols-2 gap-3">
-                {/* Icon */}
-                <label className="flex flex-col gap-1">
-                  <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.badges.icon')}</span>
-                  <input
-                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-lg focus:border-primary/50 focus:outline-none text-center"
-                    value={form.icon}
-                    onChange={e => set('icon', e.target.value)}
-                    maxLength={2}
-                    required
-                  />
-                </label>
                 {/* Label EN */}
                 <label className="flex flex-col gap-1">
                   <span className="text-[11px] text-zinc-300 uppercase tracking-widest">
@@ -333,8 +334,10 @@ function BadgeFormModal({ editing, onClose, onSaved }: BadgeFormModalProps) {
               </div>
             </div>
 
-            {/* Right Column */}
-            <div className="flex flex-col gap-4">
+            {/* Right Column — award behavior, boxed to match the levels modal */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.badges.behaviorSection')}</span>
+              <div className="flex flex-col gap-4 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/50">
               {/* Condition */}
               <label className="flex flex-col gap-1">
                 <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.badges.condition_label')}</span>
@@ -386,6 +389,7 @@ function BadgeFormModal({ editing, onClose, onSaved }: BadgeFormModalProps) {
                 </div>
                 <span className="text-xs text-zinc-400">{t('admin.badges.autoGrantToggle')}</span>
               </label>
+              </div>
             </div>
           </div>
 
@@ -404,7 +408,8 @@ function BadgeFormModal({ editing, onClose, onSaved }: BadgeFormModalProps) {
           </div>
         </form>
       </M.div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -417,9 +422,10 @@ interface BadgeCardProps {
   onRetroactive: (badgeId: string) => void;
   onGrant: (def: BadgeDef) => void;
   retroLoading: string | null;
+  proposeMode?: boolean;
 }
 
-function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading }: BadgeCardProps) {
+function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading, proposeMode }: BadgeCardProps) {
   const { t, i18n } = useTranslation();
   const colorConf = badgeColor(def.color);
   const conditionLabel = CONDITION_TYPES.includes(def.conditionType)
@@ -485,30 +491,32 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
         {conditionLabel}{def.conditionValue != null ? ` (${def.conditionValue.toLocaleString()})` : ''}
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-1.5 flex-wrap">
-        <button
-          type="button"
-          onClick={() => onGrant(def)}
-          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-all border border-zinc-700/50"
-        >
-          <UserPlus className="size-3" />
-          {t('admin.badges.grantToUser')}
-        </button>
-        <button
-          type="button"
-          onClick={() => onRetroactive(def.id)}
-          disabled={retroLoading === def.id}
-          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-zinc-800 hover:bg-primary/20 text-zinc-400 hover:text-primary transition-all border border-zinc-700/50 disabled:opacity-50"
-        >
-          {retroLoading === def.id ? (
-            <span className="size-3 rounded-full border border-primary border-t-transparent animate-spin" />
-          ) : (
-            <Scan className="size-3" />
-          )}
-          {t('admin.badges.retroactiveScan')}
-        </button>
-      </div>
+      {/* Actions — grant/retro require badges.manage, hidden when proposing */}
+      {!proposeMode && (
+        <div className="flex gap-1.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => onGrant(def)}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-all border border-zinc-700/50"
+          >
+            <UserPlus className="size-3" />
+            {t('admin.badges.grantToUser')}
+          </button>
+          <button
+            type="button"
+            onClick={() => onRetroactive(def.id)}
+            disabled={retroLoading === def.id}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-zinc-800 hover:bg-primary/20 text-zinc-400 hover:text-primary transition-all border border-zinc-700/50 disabled:opacity-50"
+          >
+            {retroLoading === def.id ? (
+              <span className="size-3 rounded-full border border-primary border-t-transparent animate-spin" />
+            ) : (
+              <Scan className="size-3" />
+            )}
+            {t('admin.badges.retroactiveScan')}
+          </button>
+        </div>
+      )}
     </M.div>
   );
 }
@@ -536,7 +544,7 @@ function GrantModal({ badge, onClose }: { badge: BadgeDef; onClose: () => void }
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <M.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -569,13 +577,14 @@ function GrantModal({ badge, onClose }: { badge: BadgeDef; onClose: () => void }
           </div>
         </form>
       </M.div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
 // ─── Main tab ─────────────────────────────────────────────────────────────────
 
-export default function AdminBadgesTab() {
+export default function AdminBadgesTab({ proposeMode = false }: { proposeMode?: boolean }) {
   const { t, i18n } = useTranslation();
   const [defs, setDefs] = useState<BadgeDef[]>([]);
   const [loading, setLoading] = useState(true);
@@ -616,6 +625,15 @@ export default function AdminBadgesTab() {
     const lang: 'en' | 'es' = i18n.language === 'es' ? 'es' : 'en';
     const labelText = def.label?.[lang] || def.label?.en || def.id;
     if (!window.confirm(t('admin.badges.confirmDelete', { label: labelText }))) return;
+    if (proposeMode) {
+      try {
+        await requestsApi.submit('badge_delete', { id: def.id });
+        toast.success(t('admin.requests.composer.submitted'));
+      } catch (e) {
+        toast.error((e as Error)?.message || t('admin.requests.composer.error'));
+      }
+      return;
+    }
     try {
       await gqlRequest(DELETE_BADGE, { id: def.id });
       setDefs(prev => prev.filter(d => d.id !== def.id));
@@ -715,6 +733,7 @@ export default function AdminBadgesTab() {
                       onRetroactive={handleRetroactive}
                       onGrant={d => setGrantModal(d)}
                       retroLoading={retroLoading}
+                      proposeMode={proposeMode}
                     />
                   ))}
                 </AnimatePresence>
@@ -737,6 +756,7 @@ export default function AdminBadgesTab() {
                       onRetroactive={handleRetroactive}
                       onGrant={d => setGrantModal(d)}
                       retroLoading={retroLoading}
+                      proposeMode={proposeMode}
                     />
                   ))}
                 </AnimatePresence>
@@ -760,6 +780,7 @@ export default function AdminBadgesTab() {
             editing={formModal === 'new' ? null : formModal}
             onClose={() => setFormModal(null)}
             onSaved={handleSaved}
+            proposeMode={proposeMode}
           />
         )}
         {grantModal && (

@@ -36,7 +36,20 @@ export function connectSocket(): Socket {
     reconnectionDelayMax: 10000,
   });
 
+  attachLifecycleLogging(_socket);
   return _socket;
+}
+
+// Surfaces the socket lifecycle in the console. Without this, a failing
+// reconnect loop (server unreachable, CORS, proxy drop) is completely silent
+// on the client — you only see the disconnect, never why it never came back.
+function attachLifecycleLogging(socket: Socket): void {
+  socket.on('connect', () => console.info('[socket] connected', socket.id));
+  socket.on('disconnect', (reason) => console.info('[socket] disconnected:', reason));
+  socket.on('connect_error', (err) => console.warn('[socket] connect_error:', err.message));
+  socket.io.on('reconnect_attempt', (n) => console.info('[socket] reconnect attempt', n));
+  socket.io.on('reconnect', (n) => console.info('[socket] reconnected after', n, 'attempts'));
+  socket.io.on('reconnect_failed', () => console.error('[socket] reconnect failed — gave up'));
 }
 
 export function disconnectSocket(): void {
