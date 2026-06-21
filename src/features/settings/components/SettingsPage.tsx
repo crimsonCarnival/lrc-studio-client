@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react
 import type { ComponentType } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Headphones, FileText, Download, Monitor, Keyboard, SlidersHorizontal, User, ShieldCheck, Link2, History, Search, X, Layers, Activity, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Headphones, FileText, Download, Monitor, Keyboard, SlidersHorizontal, User, ShieldCheck, Link2, History, Search, X, Layers, Activity, BarChart3, Ban } from 'lucide-react';
 import { useSettings } from '@/features/settings/useSettings';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { DEFAULT_SETTINGS } from '@/features/settings/settings-defaults';
@@ -16,6 +16,7 @@ import ProfileSettings from './panels/ProfileSettings';
 import SecuritySettings from './panels/SecuritySettings';
 import ConnectionsSettings from './panels/ConnectionsSettings';
 import ChangesHistorySettings from './panels/ChangesHistorySettings';
+import BlockedUsersSettings from './panels/BlockedUsersSettings';
 import SessionsSettings from './panels/SessionsSettings';
 import ActivitySettings from './panels/ActivitySettings';
 import StatsSettings from './panels/StatsSettings';
@@ -44,6 +45,7 @@ function SettingsPanelContent({ activeTab, settings, updateSetting, validateShor
     case 'security':    return <SecuritySettings focusCard={focusCard ?? undefined} searchTerm={searchTerm} />;
     case 'connections': return <ConnectionsSettings searchTerm={searchTerm} />;
     case 'history':     return <ChangesHistorySettings searchTerm={searchTerm} />;
+    case 'blocked':     return <BlockedUsersSettings key={userId} searchTerm={searchTerm} />;
     case 'sessions':    return <SessionsSettings />;
     case 'playback':    return <PlaybackSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
     case 'editor':      return <EditorSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
@@ -73,6 +75,7 @@ const TABS: TabMeta[] = [
   { id: 'security', labelKey: 'profile.sections.security', icon: ShieldCheck, authOnly: true, group: 'account', searchable: true },
   { id: 'connections', labelKey: 'profile.tabs.connections', icon: Link2, authOnly: true, group: 'account', searchable: true },
   { id: 'history', labelKey: 'profile.tabs.history', icon: History, authOnly: true, group: 'account', searchable: true },
+  { id: 'blocked', labelKey: 'settings.blocked.label', fallback: 'Blocked users', icon: Ban, authOnly: true, group: 'account', searchable: true },
   { id: 'sessions', labelKey: 'profile.sessions.title', fallback: 'Sessions', icon: Layers, authOnly: true, group: 'account', searchable: false },
 
   // App Preferences

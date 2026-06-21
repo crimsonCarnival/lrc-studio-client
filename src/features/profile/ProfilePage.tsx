@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { Pencil, Trash2, Timer, FolderOpen, Lock, Activity, Music2, ChevronRight } from 'lucide-react';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
-import { getPublicProfile, followUser, unfollowUser } from './profile.service';
+import { getPublicProfile, followUser, unfollowUser, blockUser, unblockUser } from './profile.service';
 import { useSuggestedUsers } from '@/features/explore/hooks/useExplore';
 import { FollowModal } from './FollowModal';
 import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
@@ -195,6 +195,8 @@ export default function ProfilePage() {
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockLoading, setBlockLoading] = useState(false);
   const [followModal, setFollowModal] = useState<'FOLLOWERS' | 'FOLLOWING' | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -230,6 +232,7 @@ export default function ProfilePage() {
         } else {
           setProfile(data);
           setIsFollowing(data.isFollowedByMe ?? false);
+          setIsBlocked(data.isBlockedByMe ?? false);
         }
       })
       .catch(() => setNotFound(true))
@@ -275,6 +278,37 @@ export default function ProfilePage() {
       toast.error(t('profile.unfollowError'));
     }
     setFollowLoading(false);
+  }, [accountName, t]);
+
+  const handleBlock = useCallback(async () => {
+    if (!user) {
+      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/${accountName}`)}`);
+      return;
+    }
+    setBlockLoading(true);
+    try {
+      await blockUser(accountName!);
+      setIsBlocked(true);
+      // Blocking severs follows both ways.
+      setIsFollowing(false);
+      setProfile(prev => prev ? { ...prev, isBlockedByMe: true } : prev);
+      toast.success(t('profile.blockSuccess', { name: accountName }));
+    } catch {
+      toast.error(t('profile.blockError'));
+    }
+    setBlockLoading(false);
+  }, [user, accountName, navigate, t]);
+
+  const handleUnblock = useCallback(async () => {
+    setBlockLoading(true);
+    try {
+      await unblockUser(accountName!);
+      setIsBlocked(false);
+      setProfile(prev => prev ? { ...prev, isBlockedByMe: false } : prev);
+    } catch {
+      toast.error(t('profile.unblockError'));
+    }
+    setBlockLoading(false);
   }, [accountName, t]);
 
   const handleDeleteProject = useCallback((project: Project) => {
@@ -366,6 +400,10 @@ export default function ProfilePage() {
         followLoading={followLoading}
         onFollow={handleFollow}
         onUnfollow={handleUnfollow}
+        isBlocked={isBlocked}
+        blockLoading={blockLoading}
+        onBlock={handleBlock}
+        onUnblock={handleUnblock}
         onOpenFollowers={() => setFollowModal('FOLLOWERS')}
         onOpenFollowing={() => setFollowModal('FOLLOWING')}
       />

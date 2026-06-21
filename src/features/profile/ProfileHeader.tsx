@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
-import { Settings, Timer, Trophy, Activity, BarChart3 } from 'lucide-react';
+import { useState } from 'react';
+import { Settings, Timer, Trophy, Activity, BarChart3, Ban } from 'lucide-react';
 import { BadgeList } from '@/features/badges/BadgeList';
 import { Tip } from '@/shared/ui/tip';
 import { FollowButton } from './FollowButton';
@@ -37,8 +38,45 @@ interface ProfileHeaderProps {
   followLoading: boolean;
   onFollow: () => void;
   onUnfollow: () => void;
+  isBlocked: boolean;
+  blockLoading: boolean;
+  onBlock: () => void;
+  onUnblock: () => void;
   onOpenFollowers: () => void;
   onOpenFollowing: () => void;
+}
+
+/** Block toggle with two-step confirm; parent owns isBlocked + the API calls. */
+function BlockControl({ isBlocked, blockLoading, onBlock, onUnblock }: {
+  isBlocked: boolean; blockLoading: boolean; onBlock: () => void; onUnblock: () => void;
+}) {
+  const { t } = useTranslation();
+  const [confirming, setConfirming] = useState(false);
+
+  if (isBlocked) {
+    return (
+      <Button variant="outline" size="sm" onClick={onUnblock} disabled={blockLoading}
+        className="text-destructive border-destructive/40 hover:bg-destructive/10">
+        {t('profile.unblock')}
+      </Button>
+    );
+  }
+  if (confirming) {
+    return (
+      <Button variant="outline" size="sm" onClick={() => { setConfirming(false); onBlock(); }}
+        disabled={blockLoading} className="text-destructive border-destructive/40 hover:bg-destructive/10">
+        {t('profile.confirmBlock')}
+      </Button>
+    );
+  }
+  return (
+    <Tip content={t('profile.block')}>
+      <Button variant="outline" size="icon-sm" onClick={() => setConfirming(true)} disabled={blockLoading}
+        className="text-muted-foreground hover:text-destructive">
+        <Ban className="size-4" />
+      </Button>
+    </Tip>
+  );
 }
 
 export function ProfileHeader({
@@ -52,6 +90,10 @@ export function ProfileHeader({
   followLoading,
   onFollow,
   onUnfollow,
+  isBlocked,
+  blockLoading,
+  onBlock,
+  onUnblock,
   onOpenFollowers,
   onOpenFollowing,
 }: ProfileHeaderProps) {
@@ -168,12 +210,20 @@ export function ProfileHeader({
           </Button>
         </div>
       ) : (
-        <div className="absolute top-4 right-4">
-          <FollowButton
-            isFollowing={isFollowing}
-            followLoading={followLoading}
-            onFollow={onFollow}
-            onUnfollow={onUnfollow}
+        <div className="absolute top-4 right-4 flex items-center gap-1.5">
+          {!isBlocked && (
+            <FollowButton
+              isFollowing={isFollowing}
+              followLoading={followLoading}
+              onFollow={onFollow}
+              onUnfollow={onUnfollow}
+            />
+          )}
+          <BlockControl
+            isBlocked={isBlocked}
+            blockLoading={blockLoading}
+            onBlock={onBlock}
+            onUnblock={onUnblock}
           />
         </div>
       )}

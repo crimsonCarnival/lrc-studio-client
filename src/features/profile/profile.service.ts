@@ -6,7 +6,7 @@ const GET_PUBLIC_PROFILE = /* GraphQL */ `
     publicProfile(accountName: $accountName) {
       id accountName displayName avatarUrl bio isVerified isAdmin createdAt
       projectCount totalStarsReceived totalForksReceived
-      followerCount followingCount isFollowedByMe showFollowers
+      followerCount followingCount isFollowedByMe isBlockedByMe showFollowers
       badges { id grantedAt }
       progression { xp level }
       stats { minutesSynced }
@@ -37,6 +37,24 @@ const UNFOLLOW_USER = /* GraphQL */ `
   }
 `;
 
+const BLOCK_USER = /* GraphQL */ `
+  mutation BlockUser($accountName: String!) {
+    blockUser(accountName: $accountName)
+  }
+`;
+
+const UNBLOCK_USER = /* GraphQL */ `
+  mutation UnblockUser($accountName: String!) {
+    unblockUser(accountName: $accountName)
+  }
+`;
+
+const GET_BLOCKED_USERS = /* GraphQL */ `
+  query GetBlockedUsers {
+    blockedUsers { id accountName displayName avatarUrl blockedAt }
+  }
+`;
+
 const GET_FOLLOW_LIST = /* GraphQL */ `
   query GetFollowList($accountName: String!, $type: FollowListType!, $offset: Int) {
     followList(accountName: $accountName, type: $type, offset: $offset) {
@@ -59,6 +77,29 @@ export async function followUser(accountName: string): Promise<boolean> {
 export async function unfollowUser(accountName: string): Promise<boolean> {
   const data = await gqlRequest<{ unfollow: boolean }>(UNFOLLOW_USER, { accountName });
   return data?.unfollow ?? false;
+}
+
+export async function blockUser(accountName: string): Promise<boolean> {
+  const data = await gqlRequest<{ blockUser: boolean }>(BLOCK_USER, { accountName });
+  return data?.blockUser ?? false;
+}
+
+export async function unblockUser(accountName: string): Promise<boolean> {
+  const data = await gqlRequest<{ unblockUser: boolean }>(UNBLOCK_USER, { accountName });
+  return data?.unblockUser ?? false;
+}
+
+export interface BlockedUser {
+  id: string;
+  accountName: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  blockedAt: string | null;
+}
+
+export async function getBlockedUsers(): Promise<BlockedUser[]> {
+  const data = await gqlRequest<{ blockedUsers: BlockedUser[] }>(GET_BLOCKED_USERS);
+  return data?.blockedUsers ?? [];
 }
 
 export async function getFollowList(

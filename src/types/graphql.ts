@@ -780,6 +780,7 @@ export type PublicUser = {
   followingCount: Scalars['Int']['output'];
   id: Scalars['ID']['output'];
   isAdmin: Scalars['Boolean']['output'];
+  isBlockedByMe: Scalars['Boolean']['output'];
   isFollowedByMe: Scalars['Boolean']['output'];
   isVerified: Scalars['Boolean']['output'];
   progression?: Maybe<UserProgression>;
