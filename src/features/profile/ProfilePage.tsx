@@ -138,18 +138,25 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
   );
 }
 
-function PeopleYouMightKnow() {
+function PeopleYouMightKnow({ excludeAccountName }: { excludeAccountName?: string }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { users, loading } = useSuggestedUsers(5);
+  // Over-fetch by one so filtering out the viewed profile still leaves 5.
+  const { users, loading } = useSuggestedUsers(6);
 
-  if (loading || users.length === 0) return null;
+  // Don't recommend the profile the visitor is currently looking at.
+  const suggestions = (excludeAccountName
+    ? users.filter(u => u.accountName !== excludeAccountName)
+    : users
+  ).slice(0, 5);
+
+  if (loading || suggestions.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2">
       <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600">{t('profile.peopleYouMightKnow')}</p>
       <div className="flex flex-col gap-1.5">
-        {users.map(u => (
+        {suggestions.map(u => (
           <button
             key={u.id}
             type="button"
@@ -444,7 +451,7 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {!isOwner && !!user && <PeopleYouMightKnow />}
+            {!isOwner && !!user && <PeopleYouMightKnow excludeAccountName={accountName} />}
           </aside>
         )}
       </div>

@@ -7,6 +7,7 @@ import { LazyImage } from '@ui/LazyImage';
 import { Filter, Ban, CheckCircle2, BarChart3, Music, Trash2, Undo2, Info, Zap } from 'lucide-react';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { useState as useLocalState } from 'react';
+import { userHasPermission, ROLES, ROLE_RANK, type Role } from '@/features/auth/permissions';
 
 interface AdminUser {
   id?: string;
@@ -28,14 +29,14 @@ interface AdminUser {
 
 interface AdminUsersTabProps {
   users: AdminUser[];
-  currentUser?: { id?: string; _id?: string } | null;
+  currentUser?: { id?: string; _id?: string; role?: string; permissions?: string[] } | null;
   search: string;
   setSearch: (v: string) => void;
   roleFilter: string;
   setRoleFilter: (v: string) => void;
   statusFilter: string;
   setStatusFilter: (v: string) => void;
-  handleChangeRole: (user: AdminUser) => void;
+  handleChangeRole: (user: AdminUser, role: string) => void;
   handleToggleBan: (user: AdminUser) => void;
   handleReactivate: (user: AdminUser) => void;
   handleDelete: (user: AdminUser) => void;
@@ -77,6 +78,37 @@ export default function AdminUsersTab({
   const [xpPopover, setXpPopover] = useLocalState<string | null>(null); // userId | null
   const [xpAmount, setXpAmount] = useLocalState('100');
 
+  // Role assignment is gated by the `users.role` permission and bounded by rank:
+  // you can only set a role strictly below your own. The server enforces the same
+  // rules — this is just UX.
+  const myRank = ROLE_RANK[(currentUser?.role as Role) ?? 'user'] ?? 0;
+  const canAssignRoles = userHasPermission(currentUser?.permissions, 'users.role');
+  const assignableRoles = ROLES.filter(r => ROLE_RANK[r] < myRank);
+
+  function RoleControl({ user }: { user: AdminUser }) {
+    const targetRank = ROLE_RANK[(user.role as Role) ?? 'user'] ?? 0;
+    const isPrivileged = user.role === 'admin' || user.role === 'superadmin';
+    if (canAssignRoles && targetRank < myRank) {
+      // Current role first, then any other roles below the actor's rank.
+      const options = Array.from(new Set([user.role ?? 'user', ...assignableRoles]));
+      return (
+        <select
+          value={user.role ?? 'user'}
+          onChange={(e) => handleChangeRole(user, e.target.value)}
+          onClick={(e) => e.stopPropagation()}
+          className="bg-zinc-800 text-zinc-200 rounded px-1.5 py-1 text-[10px] font-semibold uppercase tracking-wider border border-zinc-700 focus:border-primary outline-none cursor-pointer"
+        >
+          {options.map(r => <option key={r} value={r}>{tk(`admin.table.${r}`)}</option>)}
+        </select>
+      );
+    }
+    return (
+      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${isPrivileged ? 'bg-primary/20 text-primary' : 'bg-zinc-800 text-zinc-400'}`}>
+        {user.role ? tk(`admin.table.${user.role}`) : ''}
+      </span>
+    );
+  }
+
   return (
     <>
       <div className="p-3 sm:p-4 border-b border-zinc-800/50 flex flex-col gap-3 bg-zinc-900/50">
@@ -97,7 +129,9 @@ export default function AdminUsersTab({
             className={`bg-zinc-950 border border-zinc-800 rounded-lg px-3 text-sm text-zinc-300 outline-none focus:border-primary ${isMobile ? 'h-10 flex-1' : ''}`}
           >
             <option value="">{t('admin.dashboard.filters.allRoles')}</option>
+            <option value="superadmin">{t('admin.table.superadmin')}</option>
             <option value="admin">{t('admin.table.admin')}</option>
+            <option value="mod">{t('admin.table.mod')}</option>
             <option value="user">{t('admin.table.user')}</option>
           </select>
           <select
@@ -148,15 +182,7 @@ export default function AdminUsersTab({
                     <div className="flex gap-2">
                       <div className="flex-1">
                         <p className="text-xs font-semibold text-zinc-400 mb-1">{t('admin.table.role')}</p>
-                        <button
-                          disabled={isSelf}
-                          onClick={() => handleChangeRole(user)}
-                          className={`w-full px-2 py-2 rounded text-xs font-semibold uppercase tracking-wider transition-all ${
-                            user.role === 'admin' ? 'bg-primary/20 text-primary' : 'bg-zinc-800 text-zinc-400 active:bg-zinc-700'
-                          }`}
-                        >
-                          {user.role}
-                        </button>
+                        <RoleControl user={user} />
                       </div>
                       <div className="flex-1">
                         <p className="text-xs font-semibold text-zinc-400 mb-1">{t('admin.table.status')}</p>
@@ -290,14 +316,7 @@ export default function AdminUsersTab({
                       </div>
                     </td>
                     <td className="p-4">
-                      <button
-                        disabled={isSelf}
-                        onClick={() => handleChangeRole(user)}
-                        className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider transition-all ${user.role === 'admin' ? 'bg-primary/20 text-primary' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                          }`}
-                      >
-                        {user.role}
-                      </button>
+                      <RoleControl user={user} />
                     </td>
                     <td className="p-4">
                       {user.ban?.active ? (

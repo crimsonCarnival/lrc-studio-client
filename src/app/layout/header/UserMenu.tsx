@@ -11,6 +11,7 @@ import { LazyImage } from '@ui/LazyImage';
 import { projects, uploads } from '@/app/api';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
+import { isStaff } from '@/features/auth/permissions';
 
 interface UserMenuProps {
   user: AuthUser;
@@ -88,7 +89,7 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp }:
           </div>
 
           <div className="p-1 border-b border-zinc-800/60">
-            {user?.role === 'admin' && (
+            {isStaff(user?.permissions) && (
               <PopoverItem onClick={() => { navigate('/admin'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2 text-zinc-400 hover:text-zinc-200">
                 <ShieldAlert className="size-4" />{t('admin.dashboard.title')}
               </PopoverItem>

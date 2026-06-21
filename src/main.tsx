@@ -1,7 +1,8 @@
 import { StrictMode, lazy, Suspense, useState } from 'react'
 import type { ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, useNavigate } from 'react-router-dom';
+import { setAppNavigate } from '@/app/navigation';
 
 // Auto-reload when a new deployment invalidates lazy-loaded chunks
 // window.addEventListener('vite:preloadError', () => {
@@ -15,6 +16,17 @@ import { useEffect } from 'react';
 import App from '@/app/App'
 import ErrorBoundary from '@shared/ui/ErrorBoundary'
 import { SpeedInsights } from '@vercel/speed-insights/react'
+
+// Bridges react-router navigation to code outside the Router tree (toasts).
+// eslint-disable-next-line react-refresh/only-export-components
+function NavigationBridge() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    setAppNavigate(navigate);
+    return () => setAppNavigate(null);
+  }, [navigate]);
+  return null;
+}
 
 // eslint-disable-next-line react-refresh/only-export-components
 function LanguageSync() {
@@ -234,6 +246,7 @@ window.__reactRoot.render(
           <SpeedInsights />
           <AppProviders>
             <BrowserRouter>
+              <NavigationBridge />
               <RootRoutes />
             </BrowserRouter>
             <AppToaster />

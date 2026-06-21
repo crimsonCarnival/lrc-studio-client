@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { ComponentProps, FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { admin } from '@/app/api';
 import { isSudoCancelled } from './services/sudo';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { userHasPermission, type Permission } from '@/features/auth/permissions';
 import { Button } from '@ui/button';
-import { ShieldAlert, RefreshCw, Users, Globe, History, Award, Zap, Sparkles } from 'lucide-react';
+import { ShieldAlert, RefreshCw, Users, Globe, History, Award, Zap, Sparkles, Inbox } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import BanUserModal from './BanUserModal';
@@ -19,6 +20,8 @@ import AdminAuditTab from './AdminAuditTab';
 import AdminBadgesTab from './AdminBadgesTab';
 import AdminLevelsTab from './AdminLevelsTab';
 import AdminXpTab from './AdminXpTab';
+import AdminRequestsTab from './AdminRequestsTab';
+import { requestsApi } from './services/requests.service';
 import SudoPasswordModal from './SudoPasswordModal';
 
 interface AdminUser {
@@ -37,6 +40,7 @@ interface ConfirmModalState {
   user?: AdminUser | null;
   ipId?: string | null;
   deviceId?: string | null;
+  role?: string | null;
 }
 
 interface BanConfirmData {
@@ -54,6 +58,11 @@ export default function AdminDashboard() {
   // Loose alias for interpolation calls with numeric values (typed-i18n options are strict).
   const tk = t as (k: string, o?: Record<string, unknown>) => string;
   const { user: currentUser } = useAuthContext();
+  // Request types this user may submit — drives propose-mode tab visibility.
+  const [submittable, setSubmittable] = useState<string[]>([]);
+  useEffect(() => {
+    requestsApi.capabilities().then(c => setSubmittable(c.submittable)).catch(() => {});
+  }, []);
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'users'; // users, ips, devices, audit, badges, levels, xp
 
@@ -63,6 +72,42 @@ export default function AdminDashboard() {
       return prev;
     }, { replace: true });
   };
+
+  // Tabs are gated by permission — a mod sees only moderation tabs, etc.
+  const visibleTabs = useMemo(() => {
+    const defs: { id: string; icon: typeof Users; label: string; perm?: Permission }[] = [
+      { id: 'users',   icon: Users,       label: t('admin.dashboard.tabs.users'),          perm: 'users.view' },
+      { id: 'ips',     icon: Globe,       label: t('admin.dashboard.tabs.ipBlocklist'),    perm: 'network.block' },
+      { id: 'devices', icon: ShieldAlert, label: t('admin.dashboard.tabs.deviceBlocklist'), perm: 'network.block' },
+      { id: 'audit',   icon: History,     label: t('admin.dashboard.tabs.auditLogs'),      perm: 'audit.view' },
+      { id: 'badges',  icon: Award,       label: t('admin.dashboard.tabs.badges'),         perm: 'badges.manage' },
+      { id: 'levels',  icon: Zap,         label: t('admin.dashboard.tabs.levels'),         perm: 'levels.manage' },
+      { id: 'xp',      icon: Sparkles,    label: t('admin.dashboard.tabs.xp'),             perm: 'xp.adjust' },
+    ];
+    const canProposeBadges = submittable.some(ty => ty.startsWith('badge_'));
+    const canProposeLevels = submittable.some(ty => ty.startsWith('level_'));
+    const gated = defs.filter(tab => {
+      if (tab.perm && userHasPermission(currentUser?.permissions, tab.perm)) return true;
+      // Show badges/levels to proposers (admins) in propose mode even without the
+      // direct manage permission.
+      if (tab.id === 'badges' && canProposeBadges) return true;
+      if (tab.id === 'levels' && canProposeLevels) return true;
+      return false;
+    });
+    // Requests inbox is available to every staff member — to review what they can
+    // and to track their own submitted requests.
+    gated.push({ id: 'requests', icon: Inbox, label: t('admin.dashboard.tabs.requests') });
+    return gated;
+  }, [t, currentUser?.permissions, submittable]);
+
+  // If the URL points at a tab the user can't access, fall back to the first
+  // permitted one.
+  useEffect(() => {
+    if (visibleTabs.length > 0 && !visibleTabs.some(tab => tab.id === activeTab)) {
+      setActiveTab(visibleTabs[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, visibleTabs]);
 
   // Data States
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -280,12 +325,13 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleChangeRole = (user: AdminUser) => {
+  const handleChangeRole = (user: AdminUser, role: string) => {
     if (user.id === currentUser?.id || user._id === currentUser?._id) {
       toast.error(t('admin.toast.noSelfAction'));
       return;
     }
-    setConfirmModal({ isOpen: true, type: 'role', user });
+    if (!role || role === user.role) return;
+    setConfirmModal({ isOpen: true, type: 'role', user, role });
   };
 
   const handleDelete = (user: AdminUser) => {
@@ -333,14 +379,14 @@ export default function AdminDashboard() {
   };
 
   const onConfirmAction = async () => {
-    const { type, user, ipId, deviceId } = confirmModal;
+    const { type, user, ipId, deviceId, role } = confirmModal;
     setConfirmModal({ isOpen: false, type: '', user: null, ipId: null, deviceId: null });
 
     try {
       if (type === 'role') {
-        const newRole = user?.role === 'admin' ? 'user' : 'admin';
+        const newRole = role ?? 'user';
         await admin.changeRole(uid(user), newRole);
-        toast.success(t('admin.toast.roleSuccess', { name: user?.displayName || user?.accountName, role: newRole }));
+        toast.success(t('admin.toast.roleSuccess', { name: user?.displayName || user?.accountName, role: tk(`admin.table.${newRole}`) }));
       } else if (type === 'delete') {
         await admin.deleteUser(uid(user));
         toast.success(t('admin.toast.deleteSuccess', { name: user?.displayName || user?.accountName }));
@@ -375,15 +421,7 @@ export default function AdminDashboard() {
 
       {/* Tab bar */}
       <div className="flex items-center gap-0 border-b border-zinc-800/60 contrast-more:border-zinc-600 mb-4 overflow-x-auto">
-        {[
-          { id: 'users',   icon: Users,       label: t('admin.dashboard.tabs.users') },
-          { id: 'ips',     icon: Globe,       label: t('admin.dashboard.tabs.ipBlocklist') },
-          { id: 'devices', icon: ShieldAlert, label: t('admin.dashboard.tabs.deviceBlocklist') },
-          { id: 'audit',   icon: History,     label: t('admin.dashboard.tabs.auditLogs') },
-          { id: 'badges',  icon: Award,       label: t('admin.dashboard.tabs.badges') },
-          { id: 'levels',  icon: Zap,         label: t('admin.dashboard.tabs.levels') },
-          { id: 'xp',      icon: Sparkles,    label: t('admin.dashboard.tabs.xp') },
-        ].map(tab => (
+        {visibleTabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -450,15 +488,19 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'badges' && (
-          <AdminBadgesTab />
+          <AdminBadgesTab proposeMode={!userHasPermission(currentUser?.permissions, 'badges.manage')} />
         )}
 
         {activeTab === 'levels' && (
-          <AdminLevelsTab />
+          <AdminLevelsTab proposeMode={!userHasPermission(currentUser?.permissions, 'levels.manage')} />
         )}
 
         {activeTab === 'xp' && (
           <AdminXpTab onAdjustXP={handleAdjustXP} />
+        )}
+
+        {activeTab === 'requests' && (
+          <AdminRequestsTab />
         )}
       </div>
 

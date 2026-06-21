@@ -126,6 +126,7 @@ export const authService = {
           appeal { text status submittedAt resolvedAt }
           wasJustUnbanned
           role
+          permissions
           createdAt
           passwordChangedAt
           hasPassword

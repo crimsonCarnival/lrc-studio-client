@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { motion as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Plus, RefreshCw, Pencil, Trash2, ChevronUp, ChevronDown, X, Music2 } from 'lucide-react';
 import { gqlRequest } from '@/app/graphql.client';
+import { requestsApi } from './services/requests.service';
 
 // Typed i18next rejects arbitrary string keys; alias for dynamic req/stat labels.
 type TkFn = (key: string) => string;
@@ -112,9 +114,10 @@ interface LevelFormModalProps {
   editing: AddictionLevel | null;
   onClose: () => void;
   onSaved: (level: AddictionLevel, type: 'create' | 'update') => void;
+  proposeMode?: boolean;
 }
 
-function LevelFormModal({ editing, onClose, onSaved }: LevelFormModalProps) {
+function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormModalProps) {
   const { t } = useTranslation();
   const [form, setForm] = useState<LevelForm>(() =>
     editing
@@ -149,21 +152,26 @@ function LevelFormModal({ editing, onClose, onSaved }: LevelFormModalProps) {
           es: form.description.es?.trim() ?? '',
         };
 
+      const updateInput = { title: titleInput, description: descriptionInput, order: Number(form.order), requirements };
+      const createInput = { id: form.id.trim().toLowerCase().replace(/\s+/g, '_'), ...updateInput };
+
+      if (proposeMode) {
+        // Admin lacks levels.manage — submit a proposal for a superadmin to approve.
+        await requestsApi.submit(editing ? 'level_update' : 'level_create', editing ? { id: editing.id, input: updateInput } : { input: createInput });
+        toast.success(t('admin.requests.composer.submitted'));
+        onClose();
+        return;
+      }
+
       if (editing) {
         const { adminUpdateAddictionLevel } = await gqlRequest(UPDATE_LEVEL, {
           id: editing.id,
-          input: { title: titleInput, description: descriptionInput, order: Number(form.order), requirements },
+          input: updateInput,
         }) as { adminUpdateAddictionLevel: AddictionLevel };
         onSaved(adminUpdateAddictionLevel, 'update');
       } else {
         const { adminCreateAddictionLevel } = await gqlRequest(CREATE_LEVEL, {
-          input: {
-            id: form.id.trim().toLowerCase().replace(/\s+/g, '_'),
-            title: titleInput,
-            description: descriptionInput,
-            order: Number(form.order),
-            requirements,
-          },
+          input: createInput,
         }) as { adminCreateAddictionLevel: AddictionLevel };
         onSaved(adminCreateAddictionLevel, 'create');
       }
@@ -175,7 +183,7 @@ function LevelFormModal({ editing, onClose, onSaved }: LevelFormModalProps) {
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <M.div
         initial={{ opacity: 0, scale: 0.95, y: 12 }}
@@ -328,7 +336,8 @@ function LevelFormModal({ editing, onClose, onSaved }: LevelFormModalProps) {
           </div>
         </form>
       </M.div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -341,9 +350,10 @@ interface LevelCardProps {
   onEdit: (level: AddictionLevel) => void;
   onDelete: (level: AddictionLevel) => void;
   onMove: (level: AddictionLevel, direction: 'up' | 'down') => void;
+  proposeMode?: boolean;
 }
 
-function LevelCard({ level, rank, total, onEdit, onDelete, onMove }: LevelCardProps) {
+function LevelCard({ level, rank, total, onEdit, onDelete, onMove, proposeMode }: LevelCardProps) {
   const { t, i18n } = useTranslation();
   const hasReqs = REQ_FIELDS.some(f => (level.requirements?.[f.key] ?? 0) > 0);
 
@@ -361,23 +371,27 @@ function LevelCard({ level, rank, total, onEdit, onDelete, onMove }: LevelCardPr
       className="group flex items-start gap-3 p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/60 hover:border-primary/20 transition-all"
     >
       <div className="flex flex-col items-center gap-0.5 mt-0.5 shrink-0">
-        <button
-          type="button"
-          disabled={rank === 0}
-          onClick={() => onMove(level, 'up')}
-          className="size-5 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-20 transition-colors"
-        >
-          <ChevronUp className="size-3.5" />
-        </button>
+        {!proposeMode && (
+          <button
+            type="button"
+            disabled={rank === 0}
+            onClick={() => onMove(level, 'up')}
+            className="size-5 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-20 transition-colors"
+          >
+            <ChevronUp className="size-3.5" />
+          </button>
+        )}
         <span className="text-[10px] font-bold text-zinc-400 tabular-nums w-5 text-center">#{rank + 1}</span>
-        <button
-          type="button"
-          disabled={rank === total - 1}
-          onClick={() => onMove(level, 'down')}
-          className="size-5 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-20 transition-colors"
-        >
-          <ChevronDown className="size-3.5" />
-        </button>
+        {!proposeMode && (
+          <button
+            type="button"
+            disabled={rank === total - 1}
+            onClick={() => onMove(level, 'down')}
+            className="size-5 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-20 transition-colors"
+          >
+            <ChevronDown className="size-3.5" />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 min-w-0">
@@ -433,7 +447,7 @@ function LevelCard({ level, rank, total, onEdit, onDelete, onMove }: LevelCardPr
 
 // ─── Main tab ─────────────────────────────────────────────────────────────────
 
-export default function AdminLevelsTab() {
+export default function AdminLevelsTab({ proposeMode = false }: { proposeMode?: boolean }) {
   const { t, i18n } = useTranslation();
   const [levels, setLevels] = useState<AddictionLevel[]>([]);
   const [loading, setLoading] = useState(true);
@@ -472,6 +486,15 @@ export default function AdminLevelsTab() {
     const lang: 'en' | 'es' = i18n.language === 'es' ? 'es' : 'en';
     const title = level.title?.[lang] || level.title?.en || level.id;
     if (!window.confirm(t('admin.levels.deleteConfirm', { title }))) return;
+    if (proposeMode) {
+      try {
+        await requestsApi.submit('level_delete', { id: level.id });
+        toast.success(t('admin.requests.composer.submitted'));
+      } catch (e) {
+        toast.error((e as Error)?.message || t('admin.requests.composer.error'));
+      }
+      return;
+    }
     try {
       await gqlRequest(DELETE_LEVEL, { id: level.id });
       setLevels(prev => prev.filter(l => l.id !== level.id));
@@ -482,6 +505,8 @@ export default function AdminLevelsTab() {
   };
 
   const handleMove = async (level: AddictionLevel, direction: 'up' | 'down') => {
+    if (proposeMode) return; // reordering isn't proposable
+
     const sorted = [...levels].sort((a, b) => b.order - a.order);
     const idx = sorted.findIndex(l => l.id === level.id);
     const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
@@ -562,6 +587,7 @@ export default function AdminLevelsTab() {
                 onEdit={l => setFormModal(l)}
                 onDelete={handleDelete}
                 onMove={handleMove}
+                proposeMode={proposeMode}
               />
             ))}
           </AnimatePresence>
@@ -580,6 +606,7 @@ export default function AdminLevelsTab() {
             editing={formModal === 'new' ? null : formModal}
             onClose={() => setFormModal(null)}
             onSaved={handleSaved}
+            proposeMode={proposeMode}
           />
         )}
       </AnimatePresence>
