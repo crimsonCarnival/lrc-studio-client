@@ -28,120 +28,12 @@ function deepMerge(target: any, source: any): any {
   return output;
 }
 
-function upgradeLegacySettings(parsed: any): any {
-  // If we already have the nested 'playback' object, it's likely migrated.
-  if (parsed.playback && typeof parsed.playback === 'object') {
-    return parsed;
-  }
-
-  // Create a base config using defaults
-  const migrated = structuredClone(DEFAULT_SETTINGS);
-
-  // Playback
-  if (parsed.defaultVolume !== undefined) migrated.playback.volume = parsed.defaultVolume;
-  if (parsed.volume !== undefined) migrated.playback.volume = parsed.volume;
-  if (parsed.muted !== undefined) migrated.playback.muted = parsed.muted;
-  if (parsed.autoRewindOnPause !== undefined) {
-    migrated.playback.autoRewindOnPause = { enabled: parsed.autoRewindOnPause > 0, seconds: parsed.autoRewindOnPause };
-  }
-  if (parsed.minSpeed !== undefined) migrated.playback.speedBounds.min = parsed.minSpeed;
-  if (parsed.maxSpeed !== undefined) migrated.playback.speedBounds.max = parsed.maxSpeed;
-  if (parsed.showWaveform !== undefined) migrated.playback.showWaveform = parsed.showWaveform;
-
-  // Editor
-  if (parsed.autoPauseOnMark !== undefined) migrated.editor.autoPauseOnMark = parsed.autoPauseOnMark;
-  if (parsed.nudgeIncrement !== undefined) {
-    migrated.editor.nudge.default = parsed.nudgeIncrement;
-    migrated.editor.nudge.coarse = parsed.nudgeIncrement;
-  }
-  if (parsed.autoAdvance !== undefined) migrated.editor.autoAdvance.enabled = parsed.autoAdvance;
-  if (parsed.skipBlankLines !== undefined) migrated.editor.autoAdvance.skipBlank = parsed.skipBlankLines;
-  if (parsed.showShiftAll !== undefined) migrated.editor.showShiftAll = parsed.showShiftAll;
-  if (parsed.editorTimestampPrecision !== undefined) migrated.editor.timestampPrecision = parsed.editorTimestampPrecision;
-  if (parsed.activeLineHighlight !== undefined) migrated.editor.display.activeHighlight = parsed.activeLineHighlight;
-  if (parsed.scrollBehavior !== undefined) migrated.editor.scroll.mode = parsed.scrollBehavior;
-  if (parsed.scrollBlock !== undefined) migrated.editor.scroll.alignment = parsed.scrollBlock;
-
-  // Export
-  if (parsed.lineEndings !== undefined) migrated.export.lineEndings = parsed.lineEndings;
-  if (parsed.copyFormat !== undefined) migrated.export.copyFormat = parsed.copyFormat;
-  if (parsed.downloadFormat !== undefined) migrated.export.downloadFormat = parsed.downloadFormat;
-  // export.timestampPrecision was removed; migrate to editor.timestampPrecision
-  if (parsed.timestampPrecision !== undefined && migrated.editor.timestampPrecision === undefined) {
-    migrated.editor.timestampPrecision = parsed.timestampPrecision;
-  }
-  if (parsed.defaultFilenamePattern !== undefined) migrated.export.defaultFilenamePattern = parsed.defaultFilenamePattern;
-
-  // Interface
-  if (parsed.theme !== undefined) migrated.interface.theme = parsed.theme;
-  if (parsed.defaultLanguage !== undefined) {
-    const lang = parsed.defaultLanguage === 'jp' ? 'ja' : parsed.defaultLanguage;
-    migrated.interface.defaultLanguage = ['en', 'es'].includes(lang) ? lang : 'en';
-  }
-  if (parsed.fontSize !== undefined) migrated.interface.fontSize = parsed.fontSize;
-  if (parsed.spacing !== undefined) migrated.interface.spacing = parsed.spacing;
-  if (parsed.previewAlignment !== undefined) migrated.interface.previewAlignment = parsed.previewAlignment;
-
-  // Shortcuts
-  if (parsed.shortcutMark) migrated.shortcuts.mark = [parsed.shortcutMark];
-  if (parsed.shortcutNudgeLeft) migrated.shortcuts.nudgeLeft = [parsed.shortcutNudgeLeft];
-  if (parsed.shortcutNudgeRight) migrated.shortcuts.nudgeRight = [parsed.shortcutNudgeRight];
-  if (parsed.shortcutAddLine) migrated.shortcuts.addLine = [parsed.shortcutAddLine];
-  if (parsed.shortcutDeleteLine) migrated.shortcuts.deleteLine = [parsed.shortcutDeleteLine];
-  if (parsed.shortcutClearTimestamp) migrated.shortcuts.clearTimestamp = [parsed.shortcutClearTimestamp];
-  if (parsed.shortcutSwitchMode) migrated.shortcuts.switchMode = [parsed.shortcutSwitchMode];
-
-  // Advanced
-  if (parsed.autoSaveEnabled !== undefined) migrated.advanced.autoSave.enabled = parsed.autoSaveEnabled;
-  if (parsed.autoSaveInterval !== undefined) migrated.advanced.autoSave.timeInterval = parsed.autoSaveInterval;
-  if (parsed.confirmDestructive !== undefined) migrated.advanced.confirmDestructive = parsed.confirmDestructive;
-
-  return migrated;
-}
-
-// Migrate stored shortcut defaults that changed across versions.
-// Only rewrites values that exactly match the old default — custom bindings are preserved.
-const SHORTCUT_RENAMES = [
-  { key: 'nudgeLeft', from: 'ArrowLeft', to: 'Alt+ArrowLeft' },
-  { key: 'nudgeRight', from: 'ArrowRight', to: 'Alt+ArrowRight' },
-  { key: 'seekBackward', from: 'Alt+ArrowLeft', to: 'ArrowLeft' },
-  { key: 'seekForward', from: 'Alt+ArrowRight', to: 'ArrowRight' },
-];
-
-function migrateExportTimestampPrecision(settings: any): any {
-  if (settings.export?.timestampPrecision === undefined) return settings;
-  // Move export.timestampPrecision → editor.timestampPrecision if editor one is unset
-  const editorPrecision = settings.editor?.timestampPrecision;
-  const exportPrecision = settings.export.timestampPrecision;
-  const newExport = { ...settings.export };
-  delete newExport.timestampPrecision;
-  return {
-    ...settings,
-    editor: { ...settings.editor, timestampPrecision: editorPrecision ?? exportPrecision },
-    export: newExport,
-  };
-}
-
-function migrateShortcutDefaults(settings: any): any {
-  let changed = false;
-  const shortcuts = { ...settings.shortcuts };
-  for (const { key, from, to } of SHORTCUT_RENAMES) {
-    if (shortcuts[key]?.[0] === from) {
-      shortcuts[key] = [to];
-      changed = true;
-    }
-  }
-  return changed ? { ...settings, shortcuts } : settings;
-}
-
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        const migrated = upgradeLegacySettings(parsed);
-        return migrateExportTimestampPrecision(migrateShortcutDefaults(deepMerge(DEFAULT_SETTINGS, migrated)));
+        return deepMerge(DEFAULT_SETTINGS, JSON.parse(stored));
       }
     } catch (e) {
       console.error('Failed to load settings', e);

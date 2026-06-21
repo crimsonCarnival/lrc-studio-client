@@ -95,8 +95,8 @@ export function useAppState(user?: AuthUserType | null) {
   });
 
   const [lines, setLines, undo, redo, canUndo, canRedo, clearHistory] = useHistory<EditorLine[]>([], {
-    limit: settings.advanced?.history?.limit || 50,
-    groupingThresholdMs: settings.advanced?.history?.groupingThresholdMs || 500,
+    limit: settings.editor?.history?.limit || 250,
+    groupingThresholdMs: settings.editor?.history?.groupingThresholdMs || 1000,
     getCompanion: () => editorMode,
     onRestoreCompanion: setEditorModeRaw,
   });

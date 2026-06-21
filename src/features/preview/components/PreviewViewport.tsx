@@ -162,7 +162,7 @@ export default function PreviewViewport({
 
   // Auto-scroll to active line (virtual)
   useEffect(() => {
-    if (isDualLine || scrollAlignment === 'none' || currentIndex < 0 || settings.preview?.autoScroll === false) return;
+    if (isDualLine || scrollAlignment === 'none' || currentIndex < 0) return;
 
     // Use requestAnimationFrame to ensure the virtualizer has painted items before scrolling
     const raf = requestAnimationFrame(() => {
@@ -173,7 +173,7 @@ export default function PreviewViewport({
     });
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex, isDualLine, scrollAlignment, scrollMode, settings.preview?.autoScroll]);
+  }, [currentIndex, isDualLine, scrollAlignment, scrollMode]);
 
   let content;
 

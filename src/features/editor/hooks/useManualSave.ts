@@ -179,7 +179,7 @@ export function useManualSave({
       localStorage.setItem(key, JSON.stringify(payload));
     }
     setIsAutosaving(true);
-    const indicatorDuration = { short: 800, normal: 1500, long: 3000 }[settings?.advanced?.autoSaveIndicatorDuration] || 1500;
+    const indicatorDuration = { short: 800, normal: 1500, long: 3000 }[settings?.advanced?.autoSaveIndicator] || 1500;
     setTimeout(() => setIsAutosaving(false), indicatorDuration);
 
     if (getAccessToken() && activepublicIdRef.current && !isSharedProjectRef.current) {
@@ -300,7 +300,7 @@ export function useManualSave({
       };
       performCreate();
     }
-  }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, uploadedAudio, duration, t, isSharedProjectRef, activepublicIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setActivepublicId, setUploadedAudio, executeRecaptcha, onSaveSuccess, setForkedFrom, settings?.advanced?.autoSaveIndicatorDuration]);
+  }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, uploadedAudio, duration, t, isSharedProjectRef, activepublicIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setActivepublicId, setUploadedAudio, executeRecaptcha, onSaveSuccess, setForkedFrom, settings?.advanced?.autoSaveIndicator]);
 
   const manualSaveRef = useRef<typeof handleManualSave | null>(null);
   useLayoutEffect(() => { manualSaveRef.current = handleManualSave; });
