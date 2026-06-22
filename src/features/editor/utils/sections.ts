@@ -169,3 +169,19 @@ export function linesToRawText(
     })
     .join('\n');
 }
+
+// LRC timestamp shape, e.g. [00:12.50] — must NOT be treated as a section header.
+const LRC_TIMESTAMP = /^\d{1,2}:\d{2}(?:\.\d{1,3})?$/;
+
+/**
+ * Raw textarea line → section header parts, or null if the line is not a header.
+ * Header form: `[Label]` or `[Label: A, B]` (comma-separated singers).
+ */
+export function parseSectionHeader(rawLine: string): { label: string; singers: string[] } | null {
+  const m = (rawLine ?? '').trim().match(/^\[(.+?)(?::\s*(.+))?\]$/);
+  if (!m) return null;
+  const inner = m[1].trim();
+  if (LRC_TIMESTAMP.test(inner)) return null; // [00:12.50] is a timestamp, not a section
+  const singers = m[2] ? m[2].split(',').map((s) => s.trim()).filter(Boolean) : [];
+  return { label: inner, singers };
+}
