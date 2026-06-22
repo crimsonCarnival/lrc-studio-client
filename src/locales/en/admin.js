@@ -132,8 +132,10 @@ export default {
     appealRejectedSub: 'An administrator has reviewed your appeal and decided to keep your account suspended.',
   },
   requests: {
+    title: 'Requests',
     toReview: 'To review',
     mine: 'My requests',
+    reviewedHistory: 'Reviewed by me',
     noneToReview: 'No requests awaiting your review.',
     noneMine: "You haven't submitted any requests.",
     approve: 'Approve',

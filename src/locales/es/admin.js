@@ -132,8 +132,10 @@ export default {
     appealRejectedSub: 'Un administrador ha revisado tu apelación y decidió mantener tu cuenta suspendida.',
   },
   requests: {
+    title: 'Solicitudes',
     toReview: 'Para revisar',
     mine: 'Mis solicitudes',
+    reviewedHistory: 'Revisadas por mí',
     noneToReview: 'No hay solicitudes pendientes de tu revisión.',
     noneMine: 'No has enviado ninguna solicitud.',
     approve: 'Aprobar',

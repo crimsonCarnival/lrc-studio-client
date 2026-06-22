@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { setAppNavigate } from '@/app/navigation';
+import { accessFor } from '@/app/route-access';
+import { isStaff } from '@/features/auth/permissions';
 
 // Auto-reload when a new deployment invalidates lazy-loaded chunks
 // window.addEventListener('vite:preloadError', () => {
@@ -113,30 +115,23 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/home" replace />;
   }
 
-  // Routes that share /:segment shape with public profiles but require auth.
-  const AUTH_ONLY_SEGMENTS = new Set([
-    'admin', 'settings', 'home', 'library', 'uploads', 'feed',
-  ]);
-  const seg1 = location.pathname.split('/')[1] || '';
+  // Default-deny access control. Source of truth: app/route-access.ts.
+  // `auth` means any session (including guest sessions, which some pages such
+  // as Settings intentionally support); only fully-anonymous visitors are
+  // blocked. `admin` additionally requires staff permissions below.
+  const access = accessFor(location.pathname);
 
-  // Guests can access certain paths without signing in.
-  const isGuestAllowed =
-    ['/', '/project/new', '/project/local'].includes(location.pathname) ||
-    /^\/project\/[^/]+$/.test(location.pathname) ||                   // public project view
-    /^\/verify-email/.test(location.pathname) ||                      // email verification
-    /^\/search/.test(location.pathname) ||                            // public search
-    /^\/explore(\/.*)?$/.test(location.pathname) ||                   // public explore
-    (!AUTH_ONLY_SEGMENTS.has(seg1) && (
-      /^\/[a-z0-9_.:-]+$/.test(location.pathname) ||                  // public profile /:accountName
-      /^\/profile\/[a-z0-9_.:-]+$/.test(location.pathname) ||         // legacy public profile
-      /^\/[a-z0-9_.:-]+\/lists\/[^/]+$/.test(location.pathname)       // public list page
-    ));
-  if (!user && !isGuestAllowed) {
+  if (access !== 'public' && !user) {
     let redirectUrl = location.pathname + location.search;
     if (location.pathname === '/change-password') {
       redirectUrl = '/home';
     }
     return <Navigate to={`/auth/signin?redirect=${encodeURIComponent(redirectUrl)}`} replace />;
+  }
+
+  // Staff-only routes: an authenticated non-staff user is bounced home.
+  if (access === 'admin' && !isStaff(user?.permissions)) {
+    return <Navigate to="/home" replace />;
   }
 
   return children;

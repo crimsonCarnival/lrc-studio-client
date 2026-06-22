@@ -20,6 +20,11 @@ export interface RequestCapabilities {
   reviewable: string[];
 }
 
+export interface RequestCounts {
+  pendingReview: number;
+  myPending: number;
+}
+
 const FIELDS = 'id requesterName type payload summary status reviewerName decisionNote error createdAt resolvedAt';
 
 export const requestsApi = {
@@ -28,6 +33,12 @@ export const requestsApi = {
 
   pending: () =>
     gqlRequest<{ pendingRequests: StaffRequest[] }>(`query { pendingRequests { ${FIELDS} } }`).then(d => d.pendingRequests),
+
+  reviewed: () =>
+    gqlRequest<{ reviewedRequests: StaffRequest[] }>(`query { reviewedRequests { ${FIELDS} } }`).then(d => d.reviewedRequests),
+
+  counts: () =>
+    gqlRequest<{ requestCounts: RequestCounts }>(`query { requestCounts { pendingReview myPending } }`).then(d => d.requestCounts),
 
   capabilities: () =>
     gqlRequest<{ requestCapabilities: RequestCapabilities }>(`query { requestCapabilities { submittable reviewable } }`)

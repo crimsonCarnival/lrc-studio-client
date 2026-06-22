@@ -1,5 +1,5 @@
 import type { TFunction } from 'i18next';
-import { X, Star, GitFork, UserPlus, ShieldCheck, Lock, KeyRound, Ban, Smile, Award, Inbox, CheckCheck } from 'lucide-react';
+import { X, Star, GitFork, UserPlus, ShieldCheck, Lock, KeyRound, Ban, Smile, Award, Inbox, CheckCheck, Zap, UserCog, Undo2 } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { LazyImage } from '@ui/LazyImage';
@@ -24,6 +24,7 @@ export interface NotificationData {
   read?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string } | null;
 }
 
 const TYPE_ICON: Record<string, typeof Star> = {
@@ -39,6 +40,9 @@ const TYPE_ICON: Record<string, typeof Star> = {
   badge_awarded:    Award,
   request_submitted: Inbox,
   request_reviewed:  CheckCheck,
+  xp_changed:        Zap,
+  role_changed:      UserCog,
+  unban:             Undo2,
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -46,7 +50,8 @@ export function notificationDestination(notification: NotificationData): string 
   const { type, actors, publicId } = notification;
   if ((type === 'star' || type === 'fork' || type === 'reaction') && publicId) return `/project/${publicId}`;
   if (type === 'follow' && actors?.[0]?.accountName) return `/${actors[0].accountName}`;
-  if (type === 'admin_granted') return '/admin';
+  if (type === 'admin_granted' || type === 'role_changed') return '/admin';
+  if (type === 'xp_changed') return '/settings/profile';
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';
   if (type === 'verify_email') return '/settings/profile';
   if (type === 'badge_awarded') return '/settings/profile';
@@ -85,6 +90,31 @@ export function NotificationText({ notification, t }: { notification: Notificati
   if (type === 'follow') return <span><strong>{actorStr}</strong> {t('notifications.followed')}</span>;
   if (type === 'admin_granted') return <span>{t('notifications.adminGranted')}</span>;
   if (type === 'ban') return <span>{t('notifications.banned')}</span>;
+  if (type === 'unban') return <span>{t('notifications.unbanned')}</span>;
+  if (type === 'xp_changed') {
+    const delta = notification.meta?.delta ?? 0;
+    const signed = `${delta >= 0 ? '+' : ''}${delta}`;
+    return (
+      <span>
+        <Trans
+          i18nKey={delta >= 0 ? 'notifications.xpGranted' : 'notifications.xpRevoked'}
+          values={{ amount: signed, before: notification.meta?.before ?? 0, after: notification.meta?.after ?? 0 }}
+          components={[<strong key="0" />, <strong key="1" />]}
+        />
+      </span>
+    );
+  }
+  if (type === 'role_changed') {
+    return (
+      <span>
+        <Trans
+          i18nKey="notifications.roleChanged"
+          values={{ from: notification.meta?.from ?? '?', to: notification.meta?.to ?? '?' }}
+          components={[<strong key="0" />, <strong key="1" />]}
+        />
+      </span>
+    );
+  }
   if (type === 'password_changed') return <span>{t('notifications.passwordChanged')}</span>;
   if (type === 'badge_awarded') {
     const def = body ? BADGE_REGISTRY[body] : null;
