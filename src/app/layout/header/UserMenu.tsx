@@ -3,12 +3,13 @@ import type { NavigateFunction } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   UploadCloud, Settings as SettingsIcon, LogOut, BookOpen,
-  ShieldAlert, User, Globe, Search, Compass, Trophy,
+  ShieldAlert, User, Globe, Search, Compass, Trophy, Inbox,
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
 import { projects, uploads } from '@/app/api';
+import { requestsApi } from '@/features/admin/services/requests.service';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isStaff } from '@/features/auth/permissions';
@@ -24,14 +25,20 @@ interface UserMenuProps {
 
 export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp }: UserMenuProps) {
   const { t } = useTranslation();
-  // Library/upload counts are only shown in this menu — own the state here.
-  const [counts, setCounts] = useState({ library: 0, uploads: 0 });
+  // Library/upload/request counts are only shown in this menu — own the state here.
+  const [counts, setCounts] = useState({ library: 0, uploads: 0, requests: 0 });
+  const staff = isStaff(user?.permissions);
 
   const fetchCounts = async () => {
     if (!user) return;
     try {
-      const [pRes, uRes] = await Promise.all([projects.list(), uploads.listMedia()]) as [{ length?: number } | null, { length?: number } | null];
-      setCounts({ library: pRes?.length || 0, uploads: uRes?.length || 0 });
+      const [pRes, uRes, rRes] = await Promise.all([
+        projects.list(),
+        uploads.listMedia(),
+        // Staff workflow counts; non-staff users have no reviewable/own requests.
+        staff ? requestsApi.counts().catch(() => ({ pendingReview: 0, myPending: 0 })) : Promise.resolve({ pendingReview: 0, myPending: 0 }),
+      ]) as [{ length?: number } | null, { length?: number } | null, { pendingReview: number; myPending: number }];
+      setCounts({ library: pRes?.length || 0, uploads: uRes?.length || 0, requests: rRes.pendingReview + rRes.myPending });
     } catch (err) { console.error('Failed to fetch counts for menu:', err); }
   };
 
@@ -89,10 +96,16 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp }:
           </div>
 
           <div className="p-1 border-b border-zinc-800/60">
-            {isStaff(user?.permissions) && (
-              <PopoverItem onClick={() => { navigate('/admin'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2 text-zinc-400 hover:text-zinc-200">
-                <ShieldAlert className="size-4" />{t('admin.dashboard.title')}
-              </PopoverItem>
+            {staff && (
+              <>
+                <PopoverItem onClick={() => { navigate('/admin'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2 text-zinc-400 hover:text-zinc-200">
+                  <ShieldAlert className="size-4" />{t('admin.dashboard.title')}
+                </PopoverItem>
+                <PopoverItem onClick={() => { navigate('/admin?tab=requests'); }} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2 text-zinc-400 hover:text-zinc-200">
+                  <span className="flex items-center gap-2"><Inbox className="size-4" />{t('admin.requests.title')}</span>
+                  {counts.requests > 0 && <span className="bg-primary/20 text-primary px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.requests}</span>}
+                </PopoverItem>
+              </>
             )}
             <PopoverItem onClick={() => { navigate('/settings'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <SettingsIcon className="size-4 text-zinc-400" />{t('settings.title')}

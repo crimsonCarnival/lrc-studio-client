@@ -4,9 +4,10 @@ import { createPortal } from 'react-dom';
 import { motion as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { Check, X, RefreshCw, Inbox, Clock, Plus } from 'lucide-react';
+import { Check, X, RefreshCw, Inbox, Clock, Plus, History } from 'lucide-react';
 import { requestsApi, type StaffRequest } from './services/requests.service';
 import { isSudoCancelled } from './services/sudo';
+import { getSocket } from '@/app/socket.client';
 
 // Request types the inline composer can build (simple payloads). Other types
 // (badges/levels) are submitted from their own tabs.
@@ -140,7 +141,11 @@ export default function AdminRequestsTab() {
   const { t } = useTranslation();
   const [pending, setPending] = useState<StaffRequest[]>([]);
   const [mine, setMine] = useState<StaffRequest[]>([]);
+  const [reviewed, setReviewed] = useState<StaffRequest[]>([]);
   const [canReview, setCanReview] = useState(false);
+  // Superadmins (and other roles that can't submit any request type) never file
+  // requests, so the "My Requests" panel is hidden for them.
+  const [canSubmit, setCanSubmit] = useState(false);
   const [composerTypes, setComposerTypes] = useState<ComposerType[]>([]);
   const [composerOpen, setComposerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -151,14 +156,18 @@ export default function AdminRequestsTab() {
     try {
       const caps = await requestsApi.capabilities();
       const reviewable = caps.reviewable.length > 0;
+      const submittable = caps.submittable.length > 0;
       setCanReview(reviewable);
+      setCanSubmit(submittable);
       setComposerTypes(COMPOSER_TYPES.filter(t => caps.submittable.includes(t)));
-      const [p, m] = await Promise.all([
+      const [p, m, rv] = await Promise.all([
         reviewable ? requestsApi.pending() : Promise.resolve([]),
-        requestsApi.myRequests(),
+        submittable ? requestsApi.myRequests() : Promise.resolve([]),
+        reviewable ? requestsApi.reviewed() : Promise.resolve([]),
       ]);
       setPending(p);
       setMine(m);
+      setReviewed(rv);
     } catch {
       toast.error(t('admin.requests.fetchError'));
     } finally {
@@ -169,6 +178,19 @@ export default function AdminRequestsTab() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAll();
+  }, [fetchAll]);
+
+  // Real-time: refresh the lists when a request notification arrives (a new
+  // request to review, or a decision on one of mine) so the tab stays live
+  // without a manual reload.
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+    function onPush(n: { type?: string }) {
+      if (n?.type === 'request_submitted' || n?.type === 'request_reviewed') fetchAll();
+    }
+    socket.on('notification:push', onPush);
+    return () => { socket.off('notification:push', onPush); };
   }, [fetchAll]);
 
   const decide = async (req: StaffRequest, decision: 'approve' | 'reject') => {
@@ -257,18 +279,31 @@ export default function AdminRequestsTab() {
         </section>
       )}
 
-      <section className="flex flex-col gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-1.5">
-          <Clock className="size-3" /> {t('admin.requests.mine')}
-        </p>
-        {mine.length === 0 ? (
-          <p className="text-sm text-zinc-500 py-6 text-center">{t('admin.requests.noneMine')}</p>
-        ) : (
+      {canSubmit && (
+        <section className="flex flex-col gap-2">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-1.5">
+            <Clock className="size-3" /> {t('admin.requests.mine')}
+          </p>
+          {mine.length === 0 ? (
+            <p className="text-sm text-zinc-500 py-6 text-center">{t('admin.requests.noneMine')}</p>
+          ) : (
+            <AnimatePresence>
+              {mine.map(req => <RequestRow key={req.id} req={req} />)}
+            </AnimatePresence>
+          )}
+        </section>
+      )}
+
+      {canReview && reviewed.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-1.5">
+            <History className="size-3" /> {t('admin.requests.reviewedHistory')}
+          </p>
           <AnimatePresence>
-            {mine.map(req => <RequestRow key={req.id} req={req} />)}
+            {reviewed.map(req => <RequestRow key={req.id} req={req} />)}
           </AnimatePresence>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }
