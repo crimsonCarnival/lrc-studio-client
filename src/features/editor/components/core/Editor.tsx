@@ -6,7 +6,7 @@ import EditorToolbar from './EditorToolbar';
 import EditorPasteArea from '../setup/EditorPasteArea';
 import VirtualizedLineList from './VirtualizedLineList';
 import EditorActionDrawer from './EditorActionDrawer';
-import { splitArtists } from '@/shared/utils/lrc';
+import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 
@@ -116,6 +116,7 @@ export default function Editor({
     handleClearTimestamps,
     handleClearAllWordTimestamps,
     handleSaveLineText,
+    handleToggleLineMode,
     handleDeleteLine,
     handleAddLine,
     handleDragStart,
@@ -168,23 +169,10 @@ export default function Editor({
     };
   }, [registerAfterSave, clearModifiedLines]);
 
-  const combinedSingers = useMemo(() => {
-    const singersSet = new Set<string>();
-    // Split each artist entry in case any contain comma/feat separators (e.g. old data joins)
-    for (const artist of songArtists || EMPTY_ARTISTS) {
-      for (const name of splitArtists(artist)) {
-        if (name) singersSet.add(name);
-      }
-    }
-    (lines || []).forEach(line => {
-      if (line.singers) {
-        line.singers.forEach(s => {
-          if (s && s.trim()) singersSet.add(s.trim());
-        });
-      }
-    });
-    return Array.from(singersSet);
-  }, [songArtists, lines]);
+  const combinedSingers = useMemo(
+    () => buildSingerRoster(lines, songArtists),
+    [songArtists, lines],
+  );
 
   const { activeDrawer, wordData, lineData, openWord, openLine, openBulk, close: closeDrawer } = useEditorActionDrawer();
 
@@ -313,6 +301,7 @@ export default function Editor({
           onLineMenu={openLine}
           onBulkMenu={openBulk}
           modifiedLines={modifiedLines}
+          onToggleLineMode={handleToggleLineMode}
         />
         </div>
       )}

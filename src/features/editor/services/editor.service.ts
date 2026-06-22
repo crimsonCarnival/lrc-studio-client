@@ -25,10 +25,27 @@ export interface EditorLine {
   translations?: EditorTranslation[];
   furigana?: unknown;
   singers?: string[];
+  mode?: 'solo' | 'duet' | 'split';
   label?: string;
   id?: string | number;
   // Lines carry other presentation fields preserved across spreads.
   [key: string]: unknown;
+}
+
+export type LineMode = 'solo' | 'duet' | 'split';
+
+/**
+ * Single source of truth for the singers/words ↔ mode invariant.
+ * - 0/1 singers          → 'solo'
+ * - any word attributed  → 'split'
+ * - else explicit 'split' is preserved, otherwise multi-singer defaults to 'duet'
+ */
+export function normalizeLineMode(line: EditorLine): LineMode {
+  const count = line.singers?.length ?? 0;
+  if (count <= 1) return 'solo';
+  const hasWordAttribution = (line.words ?? []).some((w) => w.singerIndex != null);
+  if (hasWordAttribution) return 'split';
+  return line.mode === 'split' ? 'split' : 'duet';
 }
 
 interface EditorSettings {

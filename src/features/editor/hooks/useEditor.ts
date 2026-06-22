@@ -13,7 +13,9 @@ import {
   clearLineTimestamp,
   applyMark,
   detectDuplicateTimestamps,
+  normalizeLineMode,
 } from '../services/editor.service';
+import { parseSectionHeader } from '@/features/editor/utils/sections';
 import { getDefaultDepthForLabel } from '../constants/sectionTypes';
 import { useFileImport } from './useFileImport';
 import { useDragReorder } from './useDragReorder';
@@ -264,7 +266,26 @@ export function useEditor({
       }
     }
 
-    const newLinesData = rawText.split('\n').map((rawLine) => {
+    const rawLines = rawText.split('\n');
+    const priorBodyLines = lines.filter((l) => l.type !== 'section');
+    const updated: EditorLine[] = [];
+    let oldOrdinal = 0; // index into priorBodyLines, for word/timestamp preservation
+
+    for (const rawLine of rawLines) {
+      const header = parseSectionHeader(rawLine);
+      if (header) {
+        updated.push({
+          type: 'section',
+          label: header.label,
+          singers: header.singers.length ? header.singers : undefined,
+          // Preserve structural depth so root dividers (e.g. [Part]) round-trip as roots,
+          // not dim children — preview gates root styling on depth === 0.
+          depth: getDefaultDepthForLabel(header.label),
+          text: '',
+        } as EditorLine);
+        continue;
+      }
+
       const { plainText, segments } = parseRubyMarkup(rawLine.trim());
       const isCJKText = hasCJK(plainText);
       const newWords: EditorWord[] = [];
@@ -288,55 +309,51 @@ export function useEditor({
             } else {
               let j = ci;
               while (j < segChars.length && !/[\u3000-\u9FFF\uF900-\uFAFF]/.test(segChars[j]) && segChars[j].trim()) j++;
-              const latinToken = segChars.slice(ci, j).join('');
-              newWords.push({ word: latinToken, time: null });
+              newWords.push({ word: segChars.slice(ci, j).join(''), time: null });
               ci = j;
             }
           }
         } else {
-          const tokens = seg.text.split(/\s+/).filter(Boolean);
-          for (const token of tokens) {
+          for (const token of seg.text.split(/\s+/).filter(Boolean)) {
             newWords.push({ word: token, time: null });
           }
         }
       }
-      return { plainText, words: newWords.length > 0 ? newWords : undefined };
-    });
 
-    const updated = newLinesData.map((data, i) => {
-      const old = lines[i] || {};
-      const line = {
+      const old = priorBodyLines[oldOrdinal] || {};
+      oldOrdinal++;
+      const line: EditorLine = {
         ...old,
-        text: data.plainText,
+        text: plainText,
         timestamp: old.timestamp ?? null,
-        id: old.id || crypto.randomUUID()
+        id: old.id || crypto.randomUUID(),
       };
-      if (data.words) {
-        // If we already had words with timestamps, try to preserve them by position
-        if (old.words?.length && data.words) {
+      if (newWords.length > 0) {
+        if (old.words?.length) {
           let charIdx = 0;
           old.words.forEach((oldWord) => {
             let pos = 0;
             let tokIdx = 0;
-            while (tokIdx < data.words!.length && pos + [...(data.words![tokIdx].word || "")].length <= charIdx) {
-              pos += [...(data.words![tokIdx].word || "")].length;
+            while (tokIdx < newWords.length && pos + [...(newWords[tokIdx].word || '')].length <= charIdx) {
+              pos += [...(newWords[tokIdx].word || '')].length;
               tokIdx++;
             }
-            if (tokIdx < data.words!.length) {
-              if (oldWord.time != null) data.words![tokIdx].time = oldWord.time;
-              // Markup readings in the paste area take priority over old readings
-              if (!data.words![tokIdx].reading && oldWord.reading) data.words![tokIdx].reading = oldWord.reading;
+            if (tokIdx < newWords.length) {
+              if (oldWord.time != null) newWords[tokIdx].time = oldWord.time;
+              if (!newWords[tokIdx].reading && oldWord.reading) newWords[tokIdx].reading = oldWord.reading;
             }
-            charIdx += [...(oldWord.word || "")].length;
+            charIdx += [...(oldWord.word || '')].length;
           });
         }
-        line.words = data.words;
+        line.words = newWords;
       }
-      return line;
-    });
+      line.mode = normalizeLineMode(line);
+      updated.push(line);
+    }
+
     setLines(updated);
     clearHistory?.();
-    setActiveLineIndex(Math.max(0, updated.findIndex((l) => l.timestamp == null)));
+    setActiveLineIndex(Math.max(0, updated.findIndex((l) => l.type !== 'section' && l.timestamp == null)));
     setSyncMode(true);
   }, [rawText, lines, clearHistory, t, setLines, setEditorMode, setActiveLineIndex, setSyncMode]);
 
@@ -714,10 +731,21 @@ export function useEditor({
         }
         line.words = newWords.filter(w => (w.word || "").trim());
       }
+      line.mode = normalizeLineMode(line);
       updated[index] = line;
       return updated;
     });
   };
+
+  const handleToggleLineMode = useCallback((index: number, next: EditorLine) => {
+    setModifiedLines(prev => new Set(prev).add(index));
+    setLines((prev) => {
+      const updated = [...prev];
+      if (index < 0 || index >= updated.length) return prev;
+      updated[index] = { ...next, mode: normalizeLineMode(next) };
+      return updated;
+    });
+  }, [setLines, setModifiedLines]);
 
   const handleSetWordReading = useCallback((lineIndex, wordIndex, reading) => {
     setModifiedLines(prev => new Set(prev).add(lineIndex));
@@ -755,13 +783,15 @@ export function useEditor({
       setLines((prev) => {
         const updated = [...prev];
         const insertAt = before ? Math.max(0, index) : index + 1;
-        const newLine = lineData || {
+        const base = lineData || {
           text: '',
           timestamp: prev[index]?.timestamp ?? null,
           id: crypto.randomUUID(),
           // Inherit default singers from the last section context
           singers: defaultSingers.length ? [...defaultSingers] : undefined,
         };
+        // Keep the solo/duet/split invariant in sync with the inherited singers.
+        const newLine = { ...base, mode: normalizeLineMode(base) };
         updated.splice(insertAt, 0, newLine);
         return updated;
       });
@@ -1073,10 +1103,12 @@ export function useEditor({
         while (current.length <= slot) current.push('');
         current[slot] = name?.trim() || '';
         const cleanSingers = current.slice(0, 4).filter(Boolean);
-        updated[i] = {
+        const next = {
           ...line,
           singers: cleanSingers.length ? cleanSingers : undefined,
         };
+        next.mode = normalizeLineMode(next);
+        updated[i] = next;
       }
       return updated;
     });
@@ -1122,6 +1154,7 @@ export function useEditor({
         ? (() => { const { singerIndex: _s, ...rest } = w; return rest; })()
         : { ...w, singerIndex: next };
       line.words = words;
+      line.mode = normalizeLineMode(line);
       updated[lineIndex] = line;
       return updated;
     });
@@ -1161,6 +1194,7 @@ export function useEditor({
         ? (() => { const { singerIndex: _s, ...rest } = w; return rest; })()
         : { ...w, singerIndex };
       line.words = words;
+      line.mode = normalizeLineMode(line);
       updated[lineIndex] = line;
       return updated;
     });
@@ -1184,7 +1218,9 @@ export function useEditor({
         setModifiedLines(prev => new Set(prev).add(idx));
         setLines(prev => {
           const updated = [...prev];
-          updated[idx] = { ...updated[idx], singers: undefined };
+          const next = { ...updated[idx], singers: undefined };
+          next.mode = normalizeLineMode(next);
+          updated[idx] = next;
           return updated;
         });
       } else if (e.key >= '1' && e.key <= '4') {
@@ -1201,7 +1237,9 @@ export function useEditor({
           const existing = updated[idx].singers || [];
           // If singer not yet in array, append it; otherwise line already has it
           if (!existing.includes(singerName)) {
-            updated[idx] = { ...updated[idx], singers: [...existing, singerName].slice(0, 4) };
+            const next = { ...updated[idx], singers: [...existing, singerName].slice(0, 4) };
+            next.mode = normalizeLineMode(next);
+            updated[idx] = next;
           }
           return updated;
         });
@@ -1227,6 +1265,7 @@ export function useEditor({
   return {
     // state
     projectSingers,
+    songSingers: projectSingers,
     rawText,
     setRawText,
     editingLineIndex,
@@ -1265,6 +1304,7 @@ export function useEditor({
     handleClearAllWordTimestamps,
     handleClearActiveLineWordTimestamps,
     handleSaveLineText,
+    handleToggleLineMode,
     handleDeleteLine,
     handleAddLine,
     handleDragStart,

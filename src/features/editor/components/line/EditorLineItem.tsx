@@ -94,6 +94,7 @@ interface EditorLineItemProps {
   onWordMenu?: (...args: unknown[]) => void;
   onLineMenu?: (...args: unknown[]) => void;
   isModified?: boolean;
+  onToggleLineMode?: (i: number, next: EditorLine) => void;
 }
 
 const SYNC_FLASH_MS: Record<string, number> = { short: 300, normal: 600, long: 1200 };
@@ -161,6 +162,7 @@ const EditorLineItem = React.memo(({
   onWordMenu,
   onLineMenu,
   isModified,
+  onToggleLineMode,
 }: EditorLineItemProps) => {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
@@ -611,12 +613,34 @@ const EditorLineItem = React.memo(({
             handleSaveLineText={handleSaveLineText}
             handleCycleWordSinger={handleCycleWordSinger}
             handleSetWordSinger={handleSetWordSinger as ComponentProps<typeof LineTextContent>['handleSetWordSinger']}
+            songSingers={projectSingers}
           />
         )}
       </div>
       {invalidSingers.length > 0 && (
         <Tip content={t('editor.invalidSingersWarning', { names: invalidSingers.join(', ') })}>
           <span className="text-warning text-[10px] shrink-0 select-none">⚠</span>
+        </Tip>
+      )}
+      {(line.singers?.length ?? 0) >= 2 && onToggleLineMode && (
+        <Tip content={t('editor.toggleSingMode')}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const mode = line.mode === 'duet' ? 'split' : 'duet';
+              const next: EditorLine = {
+                ...line,
+                mode,
+                words: mode === 'duet' ? line.words?.map(({ singerIndex: _si, ...w }) => w) : line.words,
+              };
+              onToggleLineMode(i, next);
+            }}
+            className="text-zinc-600 hover:text-primary text-xs px-1 shrink-0 select-none"
+            aria-label={t('editor.toggleSingMode')}
+          >
+            {line.mode === 'duet' ? t('editor.duetMode') : t('editor.splitMode')}
+          </button>
         </Tip>
       )}
       <LineActionToolbar

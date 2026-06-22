@@ -146,3 +146,42 @@ export function getSingerOptionsForSelection(lines: EditorLine[], indices: numbe
   const sameForAll = rosters.every((r) => r.length === first.length && r.every((s: string, i: number) => s === first[i]));
   return sameForAll ? first : (songArtists || []);
 }
+
+/**
+ * Editor flat lines → raw textarea text. Reconstructs `[Label: A, B]` section headers
+ * so the editor → text → editor round-trip preserves section structure.
+ *
+ * @param lineText optional serializer for non-section lines (e.g. ruby markup). Defaults to `line.text`.
+ */
+export function linesToRawText(
+  lines: EditorLine[],
+  lineText: (line: EditorLine) => string = (l) => (l.text as string | undefined) ?? '',
+): string {
+  return (lines ?? [])
+    .map((line) => {
+      if (line?.type === 'section') {
+        const label = ((line.label as string | undefined) ?? '').trim();
+        const singers = Array.isArray(line.singers) ? (line.singers as string[]).filter(Boolean) : [];
+        if (!label && singers.length === 0) return ''; // anonymous marker → blank line
+        return singers.length ? `[${label}: ${singers.join(', ')}]` : `[${label}]`;
+      }
+      return lineText(line);
+    })
+    .join('\n');
+}
+
+// LRC timestamp shape, e.g. [00:12.50] — must NOT be treated as a section header.
+const LRC_TIMESTAMP = /^\d{1,2}:\d{2}(?:\.\d{1,3})?$/;
+
+/**
+ * Raw textarea line → section header parts, or null if the line is not a header.
+ * Header form: `[Label]` or `[Label: A, B]` (comma-separated singers).
+ */
+export function parseSectionHeader(rawLine: string): { label: string; singers: string[] } | null {
+  const m = (rawLine ?? '').trim().match(/^\[(.+?)(?::\s*(.+))?\]$/);
+  if (!m) return null;
+  const inner = m[1].trim();
+  if (LRC_TIMESTAMP.test(inner)) return null; // [00:12.50] is a timestamp, not a section
+  const singers = m[2] ? m[2].split(',').map((s) => s.trim()).filter(Boolean) : [];
+  return { label: inner, singers };
+}

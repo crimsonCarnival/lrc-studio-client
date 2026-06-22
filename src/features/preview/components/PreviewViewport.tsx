@@ -3,6 +3,7 @@ import type { TFunction } from 'i18next';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import PreviewLineRaw from './PreviewLine';
+import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 
 // PreviewLine is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,6 +41,9 @@ interface PreviewViewportProps {
   isPlaying?: boolean;
   playbackSpeed?: number;
   activeTranslationIndex?: number;
+  // Pre-split song artists, threaded from the editor side so the roster (and thus
+  // singer color identity) matches the editor pane. Standalone/public path omits this.
+  songArtists?: string[];
   // Parent (Preview) still passes extra display-tuning props; allow passthrough until it migrates.
   [key: string]: unknown;
 }
@@ -71,6 +75,7 @@ export default function PreviewViewport({
   isPlaying,
   playbackSpeed,
   activeTranslationIndex = 0,
+  songArtists,
 }: PreviewViewportProps) {
   // Own the refs here — the virtualizer needs getScrollElement to return
   // a non-null element on mount for its ResizeObserver to attach properly.
@@ -111,6 +116,16 @@ export default function PreviewViewport({
     }
     return false;
   }, [lines]);
+
+  // Distinct singer names in first-appearance order — stable identity for color mapping.
+  // Uses the SAME shared builder + inputs as the editor pane so a given singer maps
+  // to the same palette index in both. songArtists is absent on the standalone/public
+  // path, which falls back to a lines-only roster (acceptable — parity only needs to
+  // hold when the editor and its preview share a project).
+  const songSingers = useMemo(
+    () => buildSingerRoster(lines, songArtists),
+    [lines, songArtists],
+  );
 
   // Pre-compute nextTimestamp for karaoke fill — O(n) backward pass
   const nextTimestamps = useMemo(() => {
@@ -238,6 +253,7 @@ export default function PreviewViewport({
               totalLines={lines.length}
               editorMode={editorMode}
               hasMedia={hasMedia}
+              songSingers={songSingers}
             />
           ))}
         </div>
@@ -300,6 +316,7 @@ export default function PreviewViewport({
                   totalLines={lines.length}
                   editorMode={editorMode}
                   hasMedia={hasMedia}
+                  songSingers={songSingers}
                 />
               </div>
             );

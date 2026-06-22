@@ -16,7 +16,7 @@ import type { LucideIcon } from 'lucide-react';
 import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
-import { flatToSections } from '@/features/editor/utils/sections';
+import { flatToSections, linesToRawText } from '@/features/editor/utils/sections';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
@@ -149,7 +149,7 @@ export default function EditorToolbar({
     if (keepTimestamps) {
       setLines(newLines.map((l, idx) => ({ ...l, timestamp: lines[idx]?.timestamp ?? null })));
     } else {
-      setRawText(newLines.map((l) => l.text).join('\n'));
+      setRawText(linesToRawText(newLines));
       setSyncMode(false);
     }
     setLyricsSearchPopoverOpen(false);
@@ -197,7 +197,7 @@ export default function EditorToolbar({
                 variant="ghost"
                 size="icon"
                 onClick={() => {
-                  setRawText(lines.map(l => serializeToRubyMarkup(l.words) || l.text).join('\n'));
+                  setRawText(linesToRawText(lines, (l) => serializeToRubyMarkup(l.words) || l.text || ''));
                   setSyncMode(false);
                 }}
                 className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0 size-7"
