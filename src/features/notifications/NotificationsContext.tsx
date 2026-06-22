@@ -12,7 +12,7 @@ import { appNavigate } from '@/app/navigation';
 // Push events that warrant an on-screen toast. Sticky/system notifications
 // (verify_email, set_password, etc.) arrive on the same channel but should not
 // toast — they live only in the panel.
-const TOAST_TYPES = new Set(['star', 'fork', 'follow', 'reaction', 'admin_granted', 'ban', 'request_submitted', 'request_reviewed']);
+const TOAST_TYPES = new Set(['star', 'fork', 'follow', 'reaction', 'admin_granted', 'ban', 'unban', 'request_submitted', 'request_reviewed', 'xp_changed', 'role_changed']);
 
 interface AppNotification {
   _id: string;
@@ -39,6 +39,12 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   // Lets the socket effect's toast call the latest markRead without re-subscribing
   // on every render (markRead is defined below, after this effect).
   const markReadRef = useRef<(ids: string[]) => void>(() => {});
+  // Live mirror of the list so handlers can read the current read-state of a
+  // notification WITHOUT calling setUnreadCount inside the setNotifications
+  // updater. That nesting was the off-by-two bug: React StrictMode double-invokes
+  // updater functions, so the nested setUnreadCount fired twice per dismiss.
+  const notificationsRef = useRef<AppNotification[]>([]);
+  useEffect(() => { notificationsRef.current = notifications; }, [notifications]);
 
   useEffect(() => {
     if (!user || fetchedRef.current) return;
@@ -115,11 +121,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
 
     function onDismissed({ id }: { id: string }) {
-      setNotifications(prev => {
-        const target = prev.find(n => n._id === id);
-        if (target && !target.read) setUnreadCount(c => Math.max(0, c - 1));
-        return prev.filter(n => n._id !== id);
-      });
+      const target = notificationsRef.current.find(n => n._id === id);
+      if (target && !target.read) setUnreadCount(c => Math.max(0, c - 1));
+      setNotifications(prev => prev.filter(n => n._id !== id));
     }
 
     function onBadgeAwarded({ badgeId }: { badgeId: string }) {
@@ -162,11 +166,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, [user, t]);
 
   const markRead = useCallback((ids: string[]) => {
-    setNotifications(prev => {
-      const unreadInBatch = prev.filter(n => ids.includes(n._id) && !n.read).length;
-      if (unreadInBatch > 0) setUnreadCount(c => Math.max(0, c - unreadInBatch));
-      return prev.map(n => ids.includes(n._id) ? { ...n, read: true } : n);
-    });
+    const unreadInBatch = notificationsRef.current.filter(n => ids.includes(n._id) && !n.read).length;
+    if (unreadInBatch > 0) setUnreadCount(c => Math.max(0, c - unreadInBatch));
+    setNotifications(prev => prev.map(n => ids.includes(n._id) ? { ...n, read: true } : n));
     request('/notifications/read', { method: 'POST', body: JSON.stringify({ ids }) }).catch(() => {});
   }, []);
   useLayoutEffect(() => { markReadRef.current = markRead; }, [markRead]);
@@ -178,11 +180,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const dismiss = useCallback((id: string) => {
-    setNotifications(prev => {
-      const target = prev.find(n => n._id === id);
-      if (target && !target.read) setUnreadCount(c => Math.max(0, c - 1));
-      return prev.filter(n => n._id !== id);
-    });
+    const target = notificationsRef.current.find(n => n._id === id);
+    if (target && !target.read) setUnreadCount(c => Math.max(0, c - 1));
+    setNotifications(prev => prev.filter(n => n._id !== id));
     request(`/notifications/${id}`, { method: 'DELETE' }).catch(() => {});
   }, []);
 
