@@ -198,6 +198,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           i18n={i18n}
           syncMode={syncMode}
           setShowNamingModal={setShowNamingModal}
+          playerSlot={playerSlot}
         />
 
         <div

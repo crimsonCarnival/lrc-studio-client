@@ -17,6 +17,8 @@ import { GuestAuthButtons } from './GuestAuthButtons';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
+import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
+import PlayerControls from '@/features/player/components/PlayerControls';
 
 interface ForkedFrom {
   publicId?: string;
@@ -49,6 +51,7 @@ interface AppHeaderProps {
   syncMode: boolean;
   setShowKeyboardHelp?: (v: boolean) => void;
   setShowNamingModal?: (v: boolean) => void;
+  playerSlot?: PlayerSlot;
 }
 
 export function AppHeader({
@@ -76,6 +79,7 @@ export function AppHeader({
   syncMode,
   setShowKeyboardHelp,
   setShowNamingModal,
+  playerSlot,
 }: AppHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -150,7 +154,7 @@ export function AppHeader({
           />
 
           {/* ── Center: Start Syncing (edit mode only) ── */}
-          {!syncMode && isReady && (
+          {!syncMode && isReady && playerSlot !== 'header' && (
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('editor:start-syncing'))}
               className="py-1 px-3 h-7 text-xs font-semibold text-zinc-950 bg-primary hover:bg-primary-dim rounded-lg transition-colors shrink-0"
@@ -158,6 +162,12 @@ export function AppHeader({
               {t('editor.startSyncing')}
             </button>
           )}
+
+          {/* ── Center: Compact player (header slot only) ── */}
+          {playerSlot === 'header' && isReady && (
+            <PlayerControls variant="header" />
+          )}
+
           <div className="flex-1" />
 
           {/* ── Right: Controls ── */}

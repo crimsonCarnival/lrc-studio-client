@@ -126,8 +126,91 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
   const { dt } = useDynamicTranslation();
   const { settings, updateSetting } = useSettings();
 
-  // variant is accepted but not yet branched on — Task 1 renders both blocks identically to original
-  void variant;
+  // ── Header compact variant ──────────────────────────────────────────────────
+  if (variant === 'header') {
+    return (
+      <div className="flex items-center gap-2 h-8 min-w-0 flex-1 max-w-xl animate-fade-in">
+        {/* Play/Pause */}
+        <button
+          onClick={togglePlay}
+          aria-label={isPlaying ? t('shortcuts.playPause') : t('shortcuts.playPause')}
+          className="size-7 rounded-full bg-primary flex items-center justify-center shrink-0 active:scale-95 transition-all duration-100 shadow-sm shadow-primary/20"
+        >
+          {isPlaying
+            ? <Pause className="size-3 text-zinc-950" fill="currentColor" />
+            : <Play className="size-3 text-zinc-950 ml-px" fill="currentColor" />}
+        </button>
+
+        {/* Media title */}
+        {mediaTitle && (
+          <span className="text-xs text-zinc-300 truncate shrink min-w-0 max-w-[140px]">
+            {mediaTitle}
+          </span>
+        )}
+
+        {/* Thin scrubber */}
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+          <input
+            type="range"
+            min={0}
+            max={duration || 0}
+            step={0.1}
+            value={playbackPosition ?? currentTime}
+            aria-label={t('player.seekPlayback')}
+            aria-valuenow={Math.round(playbackPosition ?? currentTime)}
+            aria-valuemin={0}
+            aria-valuemax={Math.round(duration)}
+            onChange={(e) => seek(parseFloat(e.target.value))}
+            className="w-full h-1 appearance-none rounded-full outline-none"
+            style={{
+              background: `linear-gradient(to right, var(--color-primary) ${duration ? ((playbackPosition ?? currentTime) / duration) * 100 : 0}%, rgba(255,255,255,0.1) ${duration ? ((playbackPosition ?? currentTime) / duration) * 100 : 0}%)`,
+            }}
+          />
+        </div>
+
+        {/* Time */}
+        <span className="text-[10px] font-mono tabular-nums text-zinc-500 shrink-0">
+          {formatTime(playbackPosition ?? currentTime)}<span className="text-zinc-700">/</span>{formatTime(duration)}
+        </span>
+
+        {/* Overflow popover: speed + volume + change media */}
+        {!viewerMode && (
+          <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
+            <Tip content={t('player.changeSong')}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`size-7 shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
+                >
+                  <ChevronDown className="size-3.5" />
+                </Button>
+              </PopoverTrigger>
+            </Tip>
+            <PopoverContent className="w-72 p-0 bg-zinc-900 border-zinc-800 shadow-xl" align="end" sideOffset={8}>
+              <div className="flex flex-col gap-1 p-2 border-b border-zinc-800/60">
+                <div className="flex items-center gap-3 px-1">
+                  <span className="text-xs text-zinc-500 w-14 shrink-0">{t('player.speed')}</span>
+                  <SpeedControl
+                    playbackSpeed={playbackSpeed}
+                    applySpeed={applySpeed}
+                    MIN_SPEED={MIN_SPEED}
+                    MAX_SPEED={MAX_SPEED}
+                    SPEED_PRESETS={SPEED_PRESETS}
+                  />
+                </div>
+                <div className="flex items-center gap-3 px-1">
+                  <span className="text-xs text-zinc-500 w-14 shrink-0">{t('player.volume')}</span>
+                  <VolumeControl />
+                </div>
+              </div>
+              <ChangeMediaPopoverContent fileInputId="change-media-file-header" {...mediaPopoverProps} />
+            </PopoverContent>
+          </Popover>
+        )}
+      </div>
+    );
+  }
 
   return (
     <>
