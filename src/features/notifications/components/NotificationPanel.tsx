@@ -15,7 +15,8 @@ const PANEL_CAP = 8;
 
 const SOCIAL_TYPES  = new Set(['star', 'fork', 'follow', 'reaction']);
 const BADGE_TYPES   = new Set(['badge_awarded']);
-const SYSTEM_TYPES  = new Set(['system', 'admin', 'ban', 'password_changed', 'admin_granted']);
+const REQUEST_TYPES = new Set(['request_submitted', 'request_reviewed']);
+const SYSTEM_TYPES  = new Set(['system', 'admin', 'ban', 'unban', 'password_changed', 'admin_granted', 'xp_changed', 'role_changed']);
 const STICKY_TYPES  = new Set(['verify_email', 'set_password']);
 
 function SectionLabel({ label, variant = 'default' }: { label: string; variant?: 'default' | 'action' | 'badge' }) {
@@ -40,14 +41,16 @@ export function NotificationPanel() {
 
   const sticky  = notifications.filter(n => STICKY_TYPES.has(n.type));
   const badges  = notifications.filter(n => BADGE_TYPES.has(n.type));
+  const requests = notifications.filter(n => REQUEST_TYPES.has(n.type));
   const social  = notifications.filter(n => SOCIAL_TYPES.has(n.type));
   const system  = notifications.filter(n => SYSTEM_TYPES.has(n.type));
-  const total   = sticky.length + badges.length + social.length + system.length;
+  const total   = sticky.length + badges.length + requests.length + social.length + system.length;
   const hasAny  = total > 0;
 
   // Cap each section proportionally — simpler: just slice the rendered list
   let remaining = PANEL_CAP;
   const stickySlice  = sticky.slice(0, remaining); remaining -= stickySlice.length;
+  const requestsSlice = requests.slice(0, remaining); remaining -= requestsSlice.length;
   const badgesSlice  = badges.slice(0, remaining);  remaining -= badgesSlice.length;
   const socialSlice  = social.slice(0, remaining);  remaining -= socialSlice.length;
   const systemSlice  = system.slice(0, remaining);
@@ -73,6 +76,13 @@ export function NotificationPanel() {
           <>
             <SectionLabel label={t('notifications.sectionActionRequired')} variant="action" />
             <NotificationStickySection notifications={stickySlice} />
+          </>
+        )}
+
+        {requestsSlice.length > 0 && (
+          <>
+            <SectionLabel label={t('notifications.sectionRequests')} variant="action" />
+            {requestsSlice.map(n => <NotificationItem key={n._id} notification={n} />)}
           </>
         )}
 
