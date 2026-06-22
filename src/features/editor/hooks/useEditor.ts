@@ -13,7 +13,9 @@ import {
   clearLineTimestamp,
   applyMark,
   detectDuplicateTimestamps,
+  normalizeLineMode,
 } from '../services/editor.service';
+import { parseSectionHeader } from '@/features/editor/utils/sections';
 import { getDefaultDepthForLabel } from '../constants/sectionTypes';
 import { useFileImport } from './useFileImport';
 import { useDragReorder } from './useDragReorder';
@@ -264,7 +266,23 @@ export function useEditor({
       }
     }
 
-    const newLinesData = rawText.split('\n').map((rawLine) => {
+    const rawLines = rawText.split('\n');
+    const priorBodyLines = lines.filter((l) => l.type !== 'section');
+    const updated: EditorLine[] = [];
+    let oldOrdinal = 0; // index into priorBodyLines, for word/timestamp preservation
+
+    for (const rawLine of rawLines) {
+      const header = parseSectionHeader(rawLine);
+      if (header) {
+        updated.push({
+          type: 'section',
+          label: header.label,
+          singers: header.singers.length ? header.singers : undefined,
+          text: '',
+        } as EditorLine);
+        continue;
+      }
+
       const { plainText, segments } = parseRubyMarkup(rawLine.trim());
       const isCJKText = hasCJK(plainText);
       const newWords: EditorWord[] = [];
@@ -288,55 +306,51 @@ export function useEditor({
             } else {
               let j = ci;
               while (j < segChars.length && !/[\u3000-\u9FFF\uF900-\uFAFF]/.test(segChars[j]) && segChars[j].trim()) j++;
-              const latinToken = segChars.slice(ci, j).join('');
-              newWords.push({ word: latinToken, time: null });
+              newWords.push({ word: segChars.slice(ci, j).join(''), time: null });
               ci = j;
             }
           }
         } else {
-          const tokens = seg.text.split(/\s+/).filter(Boolean);
-          for (const token of tokens) {
+          for (const token of seg.text.split(/\s+/).filter(Boolean)) {
             newWords.push({ word: token, time: null });
           }
         }
       }
-      return { plainText, words: newWords.length > 0 ? newWords : undefined };
-    });
 
-    const updated = newLinesData.map((data, i) => {
-      const old = lines[i] || {};
-      const line = {
+      const old = priorBodyLines[oldOrdinal] || {};
+      oldOrdinal++;
+      const line: EditorLine = {
         ...old,
-        text: data.plainText,
+        text: plainText,
         timestamp: old.timestamp ?? null,
-        id: old.id || crypto.randomUUID()
+        id: old.id || crypto.randomUUID(),
       };
-      if (data.words) {
-        // If we already had words with timestamps, try to preserve them by position
-        if (old.words?.length && data.words) {
+      if (newWords.length > 0) {
+        if (old.words?.length) {
           let charIdx = 0;
           old.words.forEach((oldWord) => {
             let pos = 0;
             let tokIdx = 0;
-            while (tokIdx < data.words!.length && pos + [...(data.words![tokIdx].word || "")].length <= charIdx) {
-              pos += [...(data.words![tokIdx].word || "")].length;
+            while (tokIdx < newWords.length && pos + [...(newWords[tokIdx].word || '')].length <= charIdx) {
+              pos += [...(newWords[tokIdx].word || '')].length;
               tokIdx++;
             }
-            if (tokIdx < data.words!.length) {
-              if (oldWord.time != null) data.words![tokIdx].time = oldWord.time;
-              // Markup readings in the paste area take priority over old readings
-              if (!data.words![tokIdx].reading && oldWord.reading) data.words![tokIdx].reading = oldWord.reading;
+            if (tokIdx < newWords.length) {
+              if (oldWord.time != null) newWords[tokIdx].time = oldWord.time;
+              if (!newWords[tokIdx].reading && oldWord.reading) newWords[tokIdx].reading = oldWord.reading;
             }
-            charIdx += [...(oldWord.word || "")].length;
+            charIdx += [...(oldWord.word || '')].length;
           });
         }
-        line.words = data.words;
+        line.words = newWords;
       }
-      return line;
-    });
+      line.mode = normalizeLineMode(line);
+      updated.push(line);
+    }
+
     setLines(updated);
     clearHistory?.();
-    setActiveLineIndex(Math.max(0, updated.findIndex((l) => l.timestamp == null)));
+    setActiveLineIndex(Math.max(0, updated.findIndex((l) => l.type !== 'section' && l.timestamp == null)));
     setSyncMode(true);
   }, [rawText, lines, clearHistory, t, setLines, setEditorMode, setActiveLineIndex, setSyncMode]);
 
@@ -1227,6 +1241,7 @@ export function useEditor({
   return {
     // state
     projectSingers,
+    songSingers: projectSingers,
     rawText,
     setRawText,
     editingLineIndex,
