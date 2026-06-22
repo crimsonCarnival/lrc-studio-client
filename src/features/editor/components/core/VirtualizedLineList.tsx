@@ -80,6 +80,7 @@ interface VirtualizedLineListProps {
   onLineMenu?: LineItemProps['onLineMenu'];
   onBulkMenu?: () => void;
   modifiedLines?: Set<number>;
+  onToggleLineMode?: LineItemProps['onToggleLineMode'];
 }
 
 export default function VirtualizedLineList({
@@ -147,6 +148,7 @@ export default function VirtualizedLineList({
   onLineMenu,
   onBulkMenu,
   modifiedLines,
+  onToggleLineMode,
 }: VirtualizedLineListProps) {
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
@@ -350,6 +352,7 @@ export default function VirtualizedLineList({
                   onWordMenu={onWordMenu}
                   onLineMenu={onLineMenu}
                   isModified={modifiedLines?.has(i)}
+                  onToggleLineMode={onToggleLineMode}
                 />
               </div>
             );

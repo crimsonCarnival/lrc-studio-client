@@ -116,6 +116,7 @@ export default function Editor({
     handleClearTimestamps,
     handleClearAllWordTimestamps,
     handleSaveLineText,
+    handleToggleLineMode,
     handleDeleteLine,
     handleAddLine,
     handleDragStart,
@@ -313,6 +314,7 @@ export default function Editor({
           onLineMenu={openLine}
           onBulkMenu={openBulk}
           modifiedLines={modifiedLines}
+          onToggleLineMode={handleToggleLineMode}
         />
         </div>
       )}

@@ -178,4 +178,7 @@ export default {
   nextLine: "Línea siguiente",
   playing: "Reproduciendo",
   paused: "Pausado",
+  duetMode: "Cantan juntos",
+  splitMode: "Dividir por cantante",
+  toggleSingMode: "Alternar dúo / dividido",
 };

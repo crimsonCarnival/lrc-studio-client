@@ -734,6 +734,16 @@ export function useEditor({
     });
   };
 
+  const handleToggleLineMode = useCallback((index: number, next: EditorLine) => {
+    setModifiedLines(prev => new Set(prev).add(index));
+    setLines((prev) => {
+      const updated = [...prev];
+      if (index < 0 || index >= updated.length) return prev;
+      updated[index] = { ...next, mode: normalizeLineMode(next) };
+      return updated;
+    });
+  }, [setLines, setModifiedLines]);
+
   const handleSetWordReading = useCallback((lineIndex, wordIndex, reading) => {
     setModifiedLines(prev => new Set(prev).add(lineIndex));
     setLines((prev) => {
@@ -1289,6 +1299,7 @@ export function useEditor({
     handleClearAllWordTimestamps,
     handleClearActiveLineWordTimestamps,
     handleSaveLineText,
+    handleToggleLineMode,
     handleDeleteLine,
     handleAddLine,
     handleDragStart,
