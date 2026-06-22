@@ -728,6 +728,7 @@ export function useEditor({
         }
         line.words = newWords.filter(w => (w.word || "").trim());
       }
+      line.mode = normalizeLineMode(line);
       updated[index] = line;
       return updated;
     });
@@ -1087,10 +1088,12 @@ export function useEditor({
         while (current.length <= slot) current.push('');
         current[slot] = name?.trim() || '';
         const cleanSingers = current.slice(0, 4).filter(Boolean);
-        updated[i] = {
+        const next = {
           ...line,
           singers: cleanSingers.length ? cleanSingers : undefined,
         };
+        next.mode = normalizeLineMode(next);
+        updated[i] = next;
       }
       return updated;
     });
@@ -1136,6 +1139,7 @@ export function useEditor({
         ? (() => { const { singerIndex: _s, ...rest } = w; return rest; })()
         : { ...w, singerIndex: next };
       line.words = words;
+      line.mode = normalizeLineMode(line);
       updated[lineIndex] = line;
       return updated;
     });
@@ -1175,6 +1179,7 @@ export function useEditor({
         ? (() => { const { singerIndex: _s, ...rest } = w; return rest; })()
         : { ...w, singerIndex };
       line.words = words;
+      line.mode = normalizeLineMode(line);
       updated[lineIndex] = line;
       return updated;
     });
@@ -1198,7 +1203,9 @@ export function useEditor({
         setModifiedLines(prev => new Set(prev).add(idx));
         setLines(prev => {
           const updated = [...prev];
-          updated[idx] = { ...updated[idx], singers: undefined };
+          const next = { ...updated[idx], singers: undefined };
+          next.mode = normalizeLineMode(next);
+          updated[idx] = next;
           return updated;
         });
       } else if (e.key >= '1' && e.key <= '4') {
@@ -1215,7 +1222,9 @@ export function useEditor({
           const existing = updated[idx].singers || [];
           // If singer not yet in array, append it; otherwise line already has it
           if (!existing.includes(singerName)) {
-            updated[idx] = { ...updated[idx], singers: [...existing, singerName].slice(0, 4) };
+            const next = { ...updated[idx], singers: [...existing, singerName].slice(0, 4) };
+            next.mode = normalizeLineMode(next);
+            updated[idx] = next;
           }
           return updated;
         });
