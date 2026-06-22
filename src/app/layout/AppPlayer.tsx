@@ -7,7 +7,6 @@ interface AppPlayerProps {
   isReady?: boolean;
   isPlayerMounted?: boolean;
   isProjectLoading?: boolean;
-  playerTop?: boolean;
   onHeightChange?: (height: number) => void;
   playerSlot?: PlayerSlot;
 }
@@ -22,13 +21,11 @@ export function AppPlayer({
   isReady,
   isPlayerMounted,
   isProjectLoading,
-  playerTop,
   onHeightChange,
   playerSlot,
 }: AppPlayerProps) {
-  const positionClass = playerTop
-    ? 'lg:top-[88px] lg:bottom-auto bottom-14 top-auto'
-    : 'bottom-14 lg:bottom-6 top-auto';
+  // Mobile dock is always pinned above the tab bar
+  const positionClass = 'bottom-14 top-auto';
 
   const innerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
