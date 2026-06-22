@@ -5,7 +5,7 @@ import { Brush, Eraser } from 'lucide-react';
 import { ReadingInput } from './ReadingInput';
 import { Tip } from '@ui/tip';
 import { useTranslation } from 'react-i18next';
-import { singerColorIndex } from '@features/editor/utils/singer-colors';
+import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 
 const WORD_SINGER_COLORS = [
   // index 0 → primary
@@ -25,23 +25,6 @@ const WORD_SINGER_COLORS = [
   // index 7 → fuchsia
   'text-fuchsia-400/90',
 ];
-
-// Parallel gradient stop colors using CSS theme variables (Tailwind v4 tokens)
-const SINGER_GRADIENT_STOPS = [
-  'var(--color-primary)',
-  'var(--color-sky-400)',
-  'var(--color-violet-400)',
-  'var(--color-amber-400)',
-  'var(--color-emerald-400)',
-  'var(--color-rose-400)',
-  'var(--color-cyan-400)',
-  'var(--color-fuchsia-400)',
-];
-
-function singerGradient(singers: string[], roster: string[]): string {
-  const stops = singers.map((n) => SINGER_GRADIENT_STOPS[singerColorIndex(n, roster)]);
-  return `linear-gradient(90deg, ${stops.join(', ')})`;
-}
 
 interface Word {
   word: string;

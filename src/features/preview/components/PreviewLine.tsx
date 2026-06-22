@@ -6,7 +6,7 @@ import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import { useTranslation } from 'react-i18next';
 import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
-import { singerColorIndex } from '@features/editor/utils/singer-colors';
+import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 
 /** Role chip color classes, matching the editor badges */
 const SINGER_CHIP_COLORS = [
@@ -31,23 +31,6 @@ const WORD_SINGER_PREVIEW_COLORS = [
   'text-cyan-400',      // singer 6
   'text-fuchsia-400',   // singer 7
 ];
-
-/** Parallel gradient stop colors using CSS theme variables (Tailwind v4 tokens) */
-const SINGER_GRADIENT_STOPS = [
-  'var(--color-primary)',
-  'var(--color-sky-400)',
-  'var(--color-violet-400)',
-  'var(--color-amber-400)',
-  'var(--color-emerald-400)',
-  'var(--color-rose-400)',
-  'var(--color-cyan-400)',
-  'var(--color-fuchsia-400)',
-];
-
-function singerGradient(singers: string[], roster: string[]): string {
-  const stops = singers.map((n) => SINGER_GRADIENT_STOPS[singerColorIndex(n, roster)]);
-  return `linear-gradient(90deg, ${stops.join(', ')})`;
-}
 
 type SizeMap = Record<string, string>;
 type ReadingFmt = (r?: string) => string | undefined;

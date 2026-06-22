@@ -278,6 +278,9 @@ export function useEditor({
           type: 'section',
           label: header.label,
           singers: header.singers.length ? header.singers : undefined,
+          // Preserve structural depth so root dividers (e.g. [Part]) round-trip as roots,
+          // not dim children — preview gates root styling on depth === 0.
+          depth: getDefaultDepthForLabel(header.label),
           text: '',
         } as EditorLine);
         continue;
@@ -780,13 +783,15 @@ export function useEditor({
       setLines((prev) => {
         const updated = [...prev];
         const insertAt = before ? Math.max(0, index) : index + 1;
-        const newLine = lineData || {
+        const base = lineData || {
           text: '',
           timestamp: prev[index]?.timestamp ?? null,
           id: crypto.randomUUID(),
           // Inherit default singers from the last section context
           singers: defaultSingers.length ? [...defaultSingers] : undefined,
         };
+        // Keep the solo/duet/split invariant in sync with the inherited singers.
+        const newLine = { ...base, mode: normalizeLineMode(base) };
         updated.splice(insertAt, 0, newLine);
         return updated;
       });

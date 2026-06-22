@@ -49,6 +49,9 @@ interface PreviewProps {
 export default function Preview(props: PreviewProps) {
   // Accept activepublicId and project as props
   const { activepublicId, project } = props;
+  // Pre-split song artists (when driven by a project) — threaded into PreviewViewport
+  // so its singer roster matches the editor pane. See buildSingerRoster.
+  const songArtists = (props.projectMetadata as { songArtists?: string[] } | undefined)?.songArtists;
 
   // Privacy state for sharing (default public)
   const [isPublic, setIsPublic] = useState(project?.public ?? true);
@@ -373,6 +376,7 @@ export default function Preview(props: PreviewProps) {
             hasMedia={hasMedia}
             isPlaying={isPlaying}
             playbackSpeed={playbackSpeed}
+            songArtists={songArtists}
           />
         )}
       </div>
