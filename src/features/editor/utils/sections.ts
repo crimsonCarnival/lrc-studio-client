@@ -146,3 +146,26 @@ export function getSingerOptionsForSelection(lines: EditorLine[], indices: numbe
   const sameForAll = rosters.every((r) => r.length === first.length && r.every((s: string, i: number) => s === first[i]));
   return sameForAll ? first : (songArtists || []);
 }
+
+/**
+ * Editor flat lines → raw textarea text. Reconstructs `[Label: A, B]` section headers
+ * so the editor → text → editor round-trip preserves section structure.
+ *
+ * @param lineText optional serializer for non-section lines (e.g. ruby markup). Defaults to `line.text`.
+ */
+export function linesToRawText(
+  lines: EditorLine[],
+  lineText: (line: EditorLine) => string = (l) => (l.text as string | undefined) ?? '',
+): string {
+  return (lines ?? [])
+    .map((line) => {
+      if (line?.type === 'section') {
+        const label = ((line.label as string | undefined) ?? '').trim();
+        const singers = Array.isArray(line.singers) ? (line.singers as string[]).filter(Boolean) : [];
+        if (!label && singers.length === 0) return ''; // anonymous marker → blank line
+        return singers.length ? `[${label}: ${singers.join(', ')}]` : `[${label}]`;
+      }
+      return lineText(line);
+    })
+    .join('\n');
+}
