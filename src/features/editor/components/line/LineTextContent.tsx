@@ -5,17 +5,43 @@ import { Brush, Eraser } from 'lucide-react';
 import { ReadingInput } from './ReadingInput';
 import { Tip } from '@ui/tip';
 import { useTranslation } from 'react-i18next';
+import { singerColorIndex } from '@features/editor/utils/singer-colors';
 
 const WORD_SINGER_COLORS = [
-  // singerIndex 0 → primary
+  // index 0 → primary
   'text-primary/90 [text-shadow:0_0_8px_hsl(var(--primary)/0.5)]',
-  // singerIndex 1 → sky
+  // index 1 → sky
   'text-sky-400/90 [text-shadow:0_0_8px_theme(colors.sky.400/0.5)]',
-  // singerIndex 2 → violet
+  // index 2 → violet
   'text-violet-400/90',
-  // singerIndex 3 → amber
+  // index 3 → amber
   'text-amber-400/90',
+  // index 4 → emerald
+  'text-emerald-400/90',
+  // index 5 → rose
+  'text-rose-400/90',
+  // index 6 → cyan
+  'text-cyan-400/90',
+  // index 7 → fuchsia
+  'text-fuchsia-400/90',
 ];
+
+// Parallel gradient stop colors using CSS theme variables (Tailwind v4 tokens)
+const SINGER_GRADIENT_STOPS = [
+  'var(--color-primary)',
+  'var(--color-sky-400)',
+  'var(--color-violet-400)',
+  'var(--color-amber-400)',
+  'var(--color-emerald-400)',
+  'var(--color-rose-400)',
+  'var(--color-cyan-400)',
+  'var(--color-fuchsia-400)',
+];
+
+function singerGradient(singers: string[], roster: string[]): string {
+  const stops = singers.map((n) => SINGER_GRADIENT_STOPS[singerColorIndex(n, roster)]);
+  return `linear-gradient(90deg, ${stops.join(', ')})`;
+}
 
 interface Word {
   word: string;
@@ -35,6 +61,7 @@ interface TextLine {
   text?: string;
   secondary?: string;
   translations?: Translation[];
+  mode?: string;
   [key: string]: unknown;
 }
 
@@ -65,6 +92,7 @@ interface LineTextContentProps {
   handleSaveLineText?: (lineIndex: number, text: string, secondary?: string, translations?: Translation[], singers?: string[]) => void;
   handleCycleWordSinger?: (lineIndex: number, wi: number) => void;
   handleSetWordSinger: (lineIndex: number, wi: number, singer: number | null) => void;
+  songSingers?: string[];
 }
 
 const LineTextContent = memo(({
@@ -86,16 +114,20 @@ const LineTextContent = memo(({
   handleSaveLineText,
   handleCycleWordSinger,
   handleSetWordSinger,
+  songSingers,
 }: LineTextContentProps) => {
   const { t } = useTranslation();
   const [activePaintSinger, setActivePaintSinger] = useState<number | null>(null); // null = off, -1 = eraser, 0..3 = singer
+
+  const roster = songSingers ?? [];
 
   const hasSingerSplit = (line.singers?.length ?? 0) >= 2 && handleCycleWordSinger;
 
   // Single-singer lines: always inherit singer color regardless of whether a words array exists
   const lineColorClass = (() => {
     if (line.singers?.length === 1) {
-      return isActive ? `${WORD_SINGER_COLORS[0]} font-medium` : WORD_SINGER_COLORS[0];
+      const idx = singerColorIndex(line.singers[0], roster);
+      return isActive ? `${WORD_SINGER_COLORS[idx]} font-medium` : WORD_SINGER_COLORS[idx];
     }
     if (isActive) return 'text-zinc-100 font-medium';
     if (isSynced) return line.words?.some(w => w.time != null) ? 'text-zinc-300' : 'text-zinc-100';
@@ -113,17 +145,20 @@ const LineTextContent = memo(({
         <div className="flex items-center gap-1.5 mb-1 bg-zinc-900/50 p-1 rounded-md border border-zinc-800/50 self-start">
           <Brush className="size-3 text-zinc-500 ml-1" />
           <div className="w-px h-3 bg-zinc-700/50 mx-0.5" />
-          {line.singers!.map((singer, idx) => (
-            <button
-              key={idx}
-              onClick={(e) => { e.stopPropagation(); setActivePaintSinger(activePaintSinger === idx ? null : idx); }}
-              className={`text-[10px] px-1.5 py-0.5 rounded transition-all select-none ${
-                activePaintSinger === idx ? 'bg-primary/20 ring-1 ring-primary/50' : 'hover:bg-zinc-800'
-              } ${WORD_SINGER_COLORS[idx]?.split(' ')[0]}`}
-            >
-              {singer}
-            </button>
-          ))}
+          {line.singers!.map((singer, idx) => {
+            const globalIdx = singerColorIndex(singer, roster);
+            return (
+              <button
+                key={idx}
+                onClick={(e) => { e.stopPropagation(); setActivePaintSinger(activePaintSinger === idx ? null : idx); }}
+                className={`text-[10px] px-1.5 py-0.5 rounded transition-all select-none ${
+                  activePaintSinger === idx ? 'bg-primary/20 ring-1 ring-primary/50' : 'hover:bg-zinc-800'
+                } ${WORD_SINGER_COLORS[globalIdx]?.split(' ')[0]}`}
+              >
+                {singer}
+              </button>
+            );
+          })}
           <button
             onClick={(e) => { e.stopPropagation(); setActivePaintSinger(activePaintSinger === -1 ? null : -1); }}
             className={`text-[10px] px-1.5 py-0.5 rounded transition-all select-none flex items-center gap-1 ${
@@ -135,11 +170,18 @@ const LineTextContent = memo(({
         </div>
       )}
       <div className="flex items-center gap-2">
+        {(() => {
+          const isDuet = line.mode === 'duet' && (line.singers?.length ?? 0) >= 2;
+          const hasRubyOrSelection = line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null));
+          const layoutClass = hasRubyOrSelection ? 'overflow-hidden' : 'break-words whitespace-pre-wrap';
+          const lineStyle = hasRubyOrSelection ? { lineHeight: '2.4' } : { lineHeight: '1.6' };
+          const duetStyle = isDuet
+            ? { ...lineStyle, backgroundImage: singerGradient(line.singers!, roster) }
+            : lineStyle;
+          return (
         <p
-          className={`text-[13px] lg:text-xs transition-all duration-300 ease-out ${(line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null))) ? 'overflow-hidden' : 'break-words whitespace-pre-wrap'} ${lineColorClass}`}
-          style={(line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null)))
-            ? { lineHeight: '2.4' }
-            : { lineHeight: '1.6' }}
+          className={`text-[13px] lg:text-xs transition-all duration-300 ease-out ${layoutClass} ${isDuet ? 'bg-clip-text text-transparent' : lineColorClass}`}
+          style={duetStyle}
         >
           {(line.words?.length ?? 0) > 0
             ? (() => {
@@ -153,7 +195,9 @@ const LineTextContent = memo(({
               const trailingSpace = /[a-zA-Z0-9]/.test(w.word) ? ' ' : null;
 
               const wordSingerIdx = w.singerIndex ?? (line.singers?.length === 1 ? 0 : null);
-              const singerColorClass = wordSingerIdx !== null ? (WORD_SINGER_COLORS[wordSingerIdx] || '') : '';
+              const singerName = wordSingerIdx !== null ? line.singers?.[wordSingerIdx] : undefined;
+              const globalIdx = singerName ? singerColorIndex(singerName, roster) : null;
+              const singerColorClass = globalIdx !== null ? (WORD_SINGER_COLORS[globalIdx] || '') : '';
 
               const spanClass = editorMode === 'words'
                 ? `transition-all px-0.5 rounded ${singerColorClass} ${isActive && wi === activeWordIndex
@@ -285,7 +329,9 @@ const LineTextContent = memo(({
 
                 return displayWords.map((w, wi) => {
                   const wordSingerIdx = w.singerIndex ?? (line.singers?.length === 1 ? 0 : null);
-                  const singerColorClass = wordSingerIdx !== null ? (WORD_SINGER_COLORS[wordSingerIdx] || '') : '';
+                  const singerName2 = wordSingerIdx !== null ? line.singers?.[wordSingerIdx] : undefined;
+                  const globalIdx2 = singerName2 ? singerColorIndex(singerName2, roster) : null;
+                  const singerColorClass = globalIdx2 !== null ? (WORD_SINGER_COLORS[globalIdx2] || '') : '';
                   return (
                     <Tip key={wi} content={activePaintSinger !== null ? t('editor.clickToPaintSinger') : t('editor.rightClickToAssignSinger')}>
                       <span
@@ -457,6 +503,8 @@ const LineTextContent = memo(({
             })()
           }
         </p>
+          );
+        })()}
         {editorMode !== 'words' && line.words?.some((w) => w.time != null) && (
           <Tip content={t('editor.wordBadgeHint', { count: line.words.filter(w => w.time != null).length })}>
             <button

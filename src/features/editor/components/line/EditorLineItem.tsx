@@ -611,6 +611,7 @@ const EditorLineItem = React.memo(({
             handleSaveLineText={handleSaveLineText}
             handleCycleWordSinger={handleCycleWordSinger}
             handleSetWordSinger={handleSetWordSinger as ComponentProps<typeof LineTextContent>['handleSetWordSinger']}
+            songSingers={projectSingers}
           />
         )}
       </div>
