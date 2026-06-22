@@ -87,9 +87,9 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     ? `${88 + playerHeight + 16}px`
     : undefined;
   // playerTop=false: player is fixed at bottom, content needs bottom padding = playerHeight + offset + gap
-  // desktop: bottom-6 (24px) + 8px gap = 32px; mobile: bottom-14 (56px) + 8px gap = 64px
+  // desktop: bottom-6 (24px) + 24px gap = 48px; mobile: bottom-14 (56px) + 24px gap = 80px
   const dynamicPb = !playerTop && isReady && isPlayerMounted && playerHeight > 0
-    ? `${playerHeight + (isLg ? 32 : 64)}px`
+    ? `${playerHeight + (isLg ? 48 : 80)}px`
     : undefined;
 
   const isSetupPage = location.pathname === '/project/new';
