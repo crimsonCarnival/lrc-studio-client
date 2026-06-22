@@ -112,6 +112,20 @@ export default function PreviewViewport({
     return false;
   }, [lines]);
 
+  // Distinct singer names in first-appearance order — stable identity for color mapping
+  const songSingers = useMemo(() => {
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const l of lines) {
+      if (l.singers) {
+        for (const s of l.singers) {
+          if (!seen.has(s)) { seen.add(s); result.push(s); }
+        }
+      }
+    }
+    return result;
+  }, [lines]);
+
   // Pre-compute nextTimestamp for karaoke fill — O(n) backward pass
   const nextTimestamps = useMemo(() => {
     const result: Record<number, number> = {};
@@ -238,6 +252,7 @@ export default function PreviewViewport({
               totalLines={lines.length}
               editorMode={editorMode}
               hasMedia={hasMedia}
+              songSingers={songSingers}
             />
           ))}
         </div>
@@ -300,6 +315,7 @@ export default function PreviewViewport({
                   totalLines={lines.length}
                   editorMode={editorMode}
                   hasMedia={hasMedia}
+                  songSingers={songSingers}
                 />
               </div>
             );
