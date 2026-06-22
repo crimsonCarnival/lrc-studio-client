@@ -8,6 +8,7 @@ import { matchKey } from '@/shared/utils/keyboard';
 import useLocalAudio from './hooks/useLocalAudio';
 import useYouTubePlayer from './hooks/useYouTubePlayer';
 import { PlayerContext } from './PlayerContext';
+import type { UploadItem } from './PlayerContext';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import { uploads as uploadsApi, getAccessToken } from '@/app/api';
 import toast from 'react-hot-toast';
@@ -18,14 +19,6 @@ const ALL_SPEED_PRESETS = [0.25, 0.5, 0.75, 1, 1.25, 1.5];
 const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\//;
 const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
 const YT_PATTERN = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|watch\?.+&v=)|youtu\.be\/)([^&?/\s]{11})/;
-
-interface UploadItem {
-  id?: string;
-  title?: string;
-  fileName?: string;
-  source?: string;
-  uploadUrl?: string;
-}
 
 interface Loop {
   a: number | null;
@@ -78,8 +71,6 @@ export interface PlayerEngineProps {
   playbackPosition?: number;
   syncMode?: boolean;
   onMediaUpload?: (u: unknown) => void;
-  playerTop?: boolean;
-  onDockToggle?: () => void;
   viewerMode?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   projectMetadata?: any;
@@ -89,7 +80,7 @@ export interface PlayerEngineProps {
 }
 
 function PlayerEngineInner(
-  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef = null, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek = 0, initialSpeed, lines, activeLineIndex = 0, playbackPosition, syncMode = false, onMediaUpload, playerTop = false, onDockToggle, viewerMode = false, projectMetadata: _projectMetadata, projectCoverImage, ref, children }: PlayerEngineProps,
+  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef = null, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek = 0, initialSpeed, lines, activeLineIndex = 0, playbackPosition, syncMode = false, onMediaUpload, viewerMode = false, projectMetadata: _projectMetadata, projectCoverImage, ref, children }: PlayerEngineProps,
 ) {
   const { t } = useTranslation();
   const { settings, updateSetting } = useSettings();
@@ -530,8 +521,6 @@ function PlayerEngineInner(
     cdnLoading,
     syncMode,
     viewerMode,
-    playerTop,
-    onDockToggle,
     speedPresets: SPEED_PRESETS,
     MIN_SPEED,
     MAX_SPEED,
@@ -553,7 +542,7 @@ function PlayerEngineInner(
   }), [
     source, isPlaying, currentTime, duration, playbackSpeed, hasMedia, loop, loopA, loopB,
     mediaTitle, projectCoverImage, local, yt, mediaUploads, cdnLoading,
-    syncMode, viewerMode, playerTop, onDockToggle, SPEED_PRESETS, MIN_SPEED, MAX_SPEED,
+    syncMode, viewerMode, SPEED_PRESETS, MIN_SPEED, MAX_SPEED,
     lines, playbackPosition, detectedUrlType, mediaPopoverProps, fetchUploads,
     togglePlay, seek, applySpeed, setLoop, handleLoopChange, clearLoop,
     handleUrlLoad, handleSelectUpload, handleClearMedia,

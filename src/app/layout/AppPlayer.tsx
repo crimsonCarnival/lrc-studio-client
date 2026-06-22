@@ -12,7 +12,7 @@ interface AppPlayerProps {
 }
 
 /**
- * Docked player bar — desktop bottom, mobile above tab bar.
+ * Docked player bar — mobile only, pinned above the tab bar.
  * Hidden during setup phase but stays mounted to keep the engine alive.
  * Media state is owned by PlayerEngineProvider (mounted above this in AppLayout).
  * Only renders when playerSlot === 'mobile'; the editor and header own the other slots.

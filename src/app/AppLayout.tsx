@@ -73,7 +73,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   } = appState;
 
   const { settings, updateSetting } = settingsState;
-  const { focusMode, setFocusMode, hideEditor, setHideEditor, hidePreview, setHidePreview, mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, playerTop, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
+  const { focusMode, setFocusMode, hideEditor, setHideEditor, hidePreview, setHidePreview, mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
 
   // Track lg breakpoint reactively so dynamic padding formula is correct on resize
   const [isLg, setIsLg] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
@@ -151,8 +151,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         activeLineIndex={activeLineIndex}
         playbackPosition={playbackPosition}
         syncMode={syncMode}
-        playerTop={playerTop}
-        onDockToggle={() => updateSetting('interface.playerTop', !playerTop)}
+
       >
       <div className="min-h-screen lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col">
         <AppBackground />

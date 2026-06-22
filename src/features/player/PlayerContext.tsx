@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 import type { ChangeEvent, RefObject } from 'react';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 
-interface UploadItem {
+export interface UploadItem {
   id?: string;
   title?: string;
   fileName?: string;
@@ -47,8 +47,6 @@ export interface PlayerContextValue {
   // config passthroughs the UI needs
   syncMode: boolean;
   viewerMode: boolean;
-  playerTop: boolean;
-  onDockToggle?: () => void;
   speedPresets: number[];
   MIN_SPEED: number;
   MAX_SPEED: number;

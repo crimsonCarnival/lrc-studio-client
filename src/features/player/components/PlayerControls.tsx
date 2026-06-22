@@ -6,6 +6,7 @@ import { useSettings } from '@/features/settings/useSettings';
 
 import { formatTime } from '@/shared/utils/format-time';
 import { usePlayer } from '../PlayerContext';
+import type { UploadItem } from '../PlayerContext';
 const WaveformDisplay = lazy(() => import('./WaveformDisplay'));
 import PlaybackProgress from './PlaybackProgress';
 import VolumeControl from './VolumeControl';
@@ -13,20 +14,12 @@ import SpeedControl from './SpeedControl';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/popover';
-import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, ChevronDown, Link2, PanelTop, PanelBottom, Bookmark, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, ChevronDown, Link2, Bookmark, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { Tip } from '@ui/tip';
 import { getAccessToken } from '@/app/api';
 import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
 
 const FOCUS_RING = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none';
-
-interface UploadItem {
-  id?: string;
-  title?: string;
-  fileName?: string;
-  source?: string;
-  uploadUrl?: string;
-}
 
 interface ChangeMediaPopoverContentProps {
   fileInputId: string;
@@ -114,7 +107,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
     source, isPlaying, currentTime, duration, playbackSpeed,
     hasMedia, loopA, loopB, mediaTitle, projectCoverImage,
     local, yt, mediaUploads, cdnLoading,
-    syncMode, viewerMode, playerTop, onDockToggle,
+    syncMode, viewerMode,
     MIN_SPEED, MAX_SPEED, speedPresets: SPEED_PRESETS,
     lines, playbackPosition, audioRef,
     detectedUrlType, mediaPopoverProps, fetchUploads,
@@ -133,7 +126,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
         {/* Play/Pause */}
         <button
           onClick={togglePlay}
-          aria-label={isPlaying ? t('shortcuts.playPause') : t('shortcuts.playPause')}
+          aria-label={t('shortcuts.playPause')}
           className="size-7 rounded-full bg-primary flex items-center justify-center shrink-0 active:scale-95 transition-all duration-100 shadow-sm shadow-primary/20"
         >
           {isPlaying
@@ -211,6 +204,13 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
       </div>
     );
   }
+
+  // Shared loop tooltip content — used by both wide and narrow layouts so they stay in sync
+  const loopTipContent = settings.playback?.loopCurrentLine
+    ? (loopA != null && loopB != null)
+      ? `${t('player.loopActive')}: ${formatTime(loopA)} – ${formatTime(loopB)} · ${t('player.clickToDisable')}`
+      : t('player.setLoop')
+    : t('player.setLoop') || 'Loop current line';
 
   return (
     <>
@@ -394,19 +394,8 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
             {/* Wide layout (≥480px container): absolute-centered cluster, full controls */}
             <div className={`${variant === 'editor' ? '@[480px]/ebar:flex hidden' : 'flex'} items-center justify-between gap-3 w-full relative min-h-[48px] pb-1.5 lg:pb-2`}>
 
-              {/* ── Left: Dock Toggle + Album Art ── */}
+              {/* ── Left: Album Art ── */}
               <div className="flex items-center gap-2 z-10">
-                <Tip content={playerTop ? (t('player.moveToBottom') || 'Move to bottom') : (t('player.moveToTop') || 'Move to top')}>
-                  <Button
-                    id="dock-toggle-btn"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDockToggle?.()}
-                    className={`shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
-                  >
-                    {playerTop ? <PanelBottom className="size-4" /> : <PanelTop className="size-4" />}
-                  </Button>
-                </Tip>
                 {projectCoverImage && (
                   <img
                     src={projectCoverImage}
@@ -545,12 +534,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                 )}
 
                 {!viewerMode && (
-                  <Tip content={settings.playback?.loopCurrentLine
-                    ? (loopA != null && loopB != null)
-                      ? `${t('player.loopActive')}: ${formatTime(loopA)} – ${formatTime(loopB)} · ${t('player.clickToDisable')}`
-                      : t('player.setLoop')
-                    : t('player.setLoop') || 'Loop current line'
-                  }>
+                  <Tip content={loopTipContent}>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -646,17 +630,19 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                         {!viewerMode && (
                           <div className="flex items-center gap-3 px-1">
                             <span className="text-xs text-zinc-500 w-14 shrink-0">{t('player.loop') || 'Loop'}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => updateSetting('playback.loopCurrentLine', !settings.playback?.loopCurrentLine)}
-                              className={`rounded-full shrink-0 ${FOCUS_RING} ${settings.playback?.loopCurrentLine
-                                ? 'bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 border border-violet-500/30'
-                                : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'
-                              }`}
-                            >
-                              <Repeat className="size-4" />
-                            </Button>
+                            <Tip content={loopTipContent}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => updateSetting('playback.loopCurrentLine', !settings.playback?.loopCurrentLine)}
+                                className={`rounded-full shrink-0 ${FOCUS_RING} ${settings.playback?.loopCurrentLine
+                                  ? 'bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 border border-violet-500/30'
+                                  : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'
+                                }`}
+                              >
+                                <Repeat className="size-4" />
+                              </Button>
+                            </Tip>
                           </div>
                         )}
                       </div>
@@ -706,16 +692,6 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                         </Button>
                       </Tip>
                     )}
-                    <Tip content={playerTop ? (t('player.moveToBottom') || 'Move to bottom') : (t('player.moveToTop') || 'Move to top')}>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDockToggle?.()}
-                        className={`shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
-                      >
-                        {playerTop ? <PanelBottom className="size-4" /> : <PanelTop className="size-4" />}
-                      </Button>
-                    </Tip>
                   </div>
                 </div>
               </div>
