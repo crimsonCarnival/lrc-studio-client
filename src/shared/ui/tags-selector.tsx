@@ -21,6 +21,8 @@ interface TagsSelectorProps {
 
 export function TagsSelector({ value, onChange, genre, className }: TagsSelectorProps) {
   const { t } = useTranslation()
+  // Tag group labels are dynamic keys; cast for the typed t().
+  const tk = t as (key: string) => string
   const [open, setOpen] = React.useState(false)
   const [query, setQuery] = React.useState('')
   const wrapperRef = React.useRef<HTMLDivElement>(null)
@@ -226,7 +228,7 @@ export function TagsSelector({ value, onChange, genre, className }: TagsSelector
                 Array.from(grouped.entries()).map(([group, tags]) => (
                   <div key={group} className="mb-2.5 last:mb-0">
                     <p className="px-1 pb-1.5 text-[9px] font-bold uppercase tracking-widest text-zinc-600">
-                      {t(TAG_GROUPS[group] || group)}
+                      {tk(TAG_GROUPS[group] || group)}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {tags.map((tag) => {

@@ -29,7 +29,7 @@ function SectionLabel({ label, variant = 'default' }: { label: string; variant?:
 
 export default function NotificationsPage() {
   const { t } = useTranslation();
-  const { notifications, markAllRead } = useNotificationsContext() as {
+  const { notifications, markAllRead } = useNotificationsContext() as unknown as {
     notifications: AppNotification[];
     markAllRead: () => void;
   };

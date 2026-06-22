@@ -11,7 +11,7 @@ import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
 
 const SWIPE_THRESHOLD = 60;
 
-interface CardProject {
+export interface CardProject {
   publicId: string;
   title?: string;
   coverImage?: string;

@@ -1,4 +1,4 @@
-import ProjectCard from './ProjectCard.jsx';
+import ProjectCard, { type CardProject } from './ProjectCard.jsx';
 import type { Project } from '@/types';
 
 interface ProjectListProps {
@@ -16,12 +16,14 @@ export default function ProjectList({ projects, onDelete, onFavorite, onSelect }
     <div className="flex flex-col gap-3 p-4">
       {projects?.length ? (
         projects.map((project) => (
+          // ProjectCard exposes publicId-based callbacks; adapt them to the
+          // project-based handlers this list's parent expects.
           <ProjectCard
             key={project.publicId}
-            project={project}
-            onDelete={onDelete}
-            onFavorite={onFavorite}
-            onSelect={onSelect}
+            project={project as unknown as CardProject}
+            onDelete={onDelete ? () => onDelete(project) : undefined}
+            onFavorite={onFavorite ? () => onFavorite(project) : undefined}
+            onSelect={onSelect ? () => onSelect(project) : undefined}
             isListView={true}
           />
         ))

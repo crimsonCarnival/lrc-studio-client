@@ -275,6 +275,8 @@ export type GoogleInfo = {
   connected: Scalars['Boolean']['output'];
   email?: Maybe<Scalars['String']['output']>;
   googleId?: Maybe<Scalars['String']['output']>;
+  /** Supplied by the REST /me payload, not the GraphQL schema. */
+  lastUsedAt?: Maybe<Scalars['String']['output']>;
   name?: Maybe<Scalars['String']['output']>;
   pictureUrl?: Maybe<Scalars['String']['output']>;
 };

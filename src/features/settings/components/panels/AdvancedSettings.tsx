@@ -88,7 +88,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
               >
                 <Select
                   value={String(settings.advanced?.autoSave?.timeInterval ?? 30)}
-                  onValueChange={(val) => handleAutoSaveTimeIntervalChange({ target: { value: Number(val) } })}
+                  onValueChange={(val) => handleAutoSaveTimeIntervalChange({ target: { value: val } })}
                 >
                   <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
                     <SelectValue />

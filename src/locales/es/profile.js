@@ -102,6 +102,7 @@ export default {
     history: "Historial de acciones",
   },
   stats: {
+    addictionLevel: "Nivel de adicción",
     musicSynced: "Música sincronizada",
     totalLinesSynced: "Total de líneas sincronizadas",
     completionPercentage: "Porcentaje completado",

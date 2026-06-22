@@ -52,7 +52,7 @@ function ShowcaseSection() {
           }))
         );
       })
-      .catch(() => setEnrichedBadges(user.badges as EnrichedBadge[]));
+      .catch(() => setEnrichedBadges(user.badges as unknown as EnrichedBadge[]));
   }, [user?.badges]);
 
   if (!enrichedBadges) return null;
@@ -66,7 +66,7 @@ function ShowcaseSection() {
       <ShowcaseEditor
         userBadges={enrichedBadges}
         initialShowcase={user?.showcasedBadges ?? []}
-        initialPublic={user?.showcasePublic ?? true}
+        initialPublic={user?.showcasePublic !== false}
         showcaseSlots={getShowcaseSlots(user?.progression?.level ?? 0)}
         level={user?.progression?.level ?? 0}
         onSaved={(ids: string[], pub: boolean) => setUser(prev => ({ ...prev, showcasedBadges: ids, showcasePublic: pub }))}

@@ -181,9 +181,9 @@ export default function StatsTab() {
       {/* Addiction Title Banner */}
       <div className="bg-primary/10 border border-primary/20 p-4 rounded-xl flex items-center justify-between mb-8 shadow-sm">
         <div className="flex flex-col">
-          <span className="text-sm text-primary/80 font-medium uppercase tracking-wider">{tk('profile.stats.addictionLevel', 'Current Level')}</span>
+          <span className="text-sm text-primary/80 font-medium uppercase tracking-wider">{tk('profile.stats.addictionLevel')}</span>
           <span className="text-2xl font-bold text-foreground">
-            {stats.addictionTitle?.[i18n.language === 'es' ? 'es' : 'en'] || stats.addictionTitle?.en}
+            {stats.addictionTitle?.[i18n.language === 'es' ? 'es' : 'en']}
           </span>
         </div>
       </div>
@@ -245,8 +245,8 @@ export default function StatsTab() {
           tip={t('profile.stats.tips.karaokeLines')}
         />
         <div className="col-span-full border-t border-border/50 my-2" />
-        <StatCard label={t('profile.stats.currentStreak')} value={`${stats.currentStreak} days`} tip={t('profile.stats.tips.currentStreak')} />
-        <StatCard label={t('profile.stats.longestStreak')} value={`${stats.longestStreak} days`} tip={t('profile.stats.tips.longestStreak')} />
+        <StatCard label={t('profile.stats.currentStreak')} value={`${stats.currentStreak}d`} tip={t('profile.stats.tips.currentStreak')} />
+        <StatCard label={t('profile.stats.longestStreak')} value={`${stats.longestStreak}d`} tip={t('profile.stats.tips.longestStreak')} />
 
         <div className="col-span-full border-t border-border/50 my-2" />
         <TrendCard

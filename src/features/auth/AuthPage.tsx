@@ -341,9 +341,9 @@ export default function AuthPage() {
     if (!u) { handleAuthSuccess(); return; }
     // New accounts never have a saved profile — always show the prompt.
     const data: IdentifierData = {
-      identifier: u.email || u.accountName,
-      accountName: u.accountName,
-      displayName: u.displayName,
+      identifier: u.email || u.accountName || undefined,
+      accountName: u.accountName ?? undefined,
+      displayName: u.displayName ?? undefined,
       avatarUrl: u.avatarUrl || undefined,
     };
     setIdentifierData(data);

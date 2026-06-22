@@ -6,6 +6,7 @@ import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
+import type { User } from '@/types/graphql';
 
 // Migrate legacy single-account format to multi-account array on first load
 rememberedAccounts.migrate();
@@ -18,17 +19,12 @@ const API_ORIGIN = import.meta.env.VITE_SERVER_ORIGIN || (apiUrl ? new URL(apiUr
 // blank white window while we fetch the provider URL. The popup is an isolated
 // about:blank document with no access to the app's CSS variables, so the theme
 // colors (zinc-950 bg, primary lavender) are inlined here on purpose.
-export interface AuthUser {
-  id?: string;
+// Mirrors the server `User` (the /me shape) with auth-only extras. Partial<User>
+// because the client sometimes holds a subset (guest, optimistic updates).
+export interface AuthUser extends Partial<User> {
   _id?: string;
-  accountName?: string;
-  displayName?: string;
-  email?: string;
-  avatarUrl?: string;
   isGuest?: boolean;
-  role?: string;
   permissions?: string[];
-  ban?: { active?: boolean; reason?: string };
   [key: string]: unknown;
 }
 

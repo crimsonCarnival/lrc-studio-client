@@ -4,8 +4,8 @@ const MAX_ACCOUNTS = 10;
 
 export interface RememberedAccount {
   userId: string;
-  displayName?: string;
-  accountName?: string;
+  displayName?: string | null;
+  accountName?: string | null;
   avatarUrl?: string | null;
   identifier?: string;
   hasPasskey?: boolean;
