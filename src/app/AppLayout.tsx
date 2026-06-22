@@ -11,6 +11,7 @@ import { AppPlayer } from './layout/AppPlayer';
 import { AppMobileNav } from './layout/AppMobileNav';
 import { AppModals } from './layout/AppModals';
 import { SafeAreaContainer } from '../shared/ui/SafeAreaContainer';
+import { PlayerEngineProvider } from '@/features/player/PlayerEngine';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
@@ -123,6 +124,34 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
 
   return (
     <SafeAreaContainer padding="bottom">
+      <PlayerEngineProvider
+        ref={playerRef as Parameters<typeof PlayerEngineProvider>[0]['ref']}
+        onTimeUpdate={handleTimeUpdate}
+        onPlayingChange={setIsPlaying}
+        onSpeedChange={setPlaybackSpeed}
+        onDurationChange={handleDurationChange}
+        onMediaChange={handleMediaChange}
+        onYtUrlChange={handleYtUrlChange}
+        onMediaUpload={handleMediaUpload}
+        onTitleChange={(newTitle: string) => {
+          const isSetupPhase = location.pathname === '/project/new';
+          if (isSetupPhase || !mediaTitle || mediaTitle === t('library.untitled') || mediaTitle === 'Untitled') {
+            setMediaTitle(newTitle);
+          }
+        }}
+        mediaTitle={mediaTitle}
+        initialMedia={restoredMedia as Parameters<typeof PlayerEngineProvider>[0]['initialMedia']}
+        initialSeek={restoredPosition}
+        initialSpeed={restoredSpeed}
+        projectMetadata={projectMetadata}
+        projectCoverImage={projectCoverImage ?? undefined}
+        lines={lines as Parameters<typeof PlayerEngineProvider>[0]['lines']}
+        activeLineIndex={activeLineIndex}
+        playbackPosition={playbackPosition}
+        syncMode={syncMode}
+        playerTop={playerTop}
+        onDockToggle={() => updateSetting('interface.playerTop', !playerTop)}
+      >
       <div className="min-h-screen lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col">
         <AppBackground />
 
@@ -195,25 +224,6 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           isReady={isReady}
           isPlayerMounted={isPlayerMounted}
           isProjectLoading={isProjectLoading}
-          playerRef={playerRef}
-          mediaTitle={mediaTitle}
-          setMediaTitle={setMediaTitle}
-          setIsPlaying={setIsPlaying}
-          setPlaybackSpeed={setPlaybackSpeed}
-          handleTimeUpdate={handleTimeUpdate}
-          handleDurationChange={handleDurationChange}
-          handleMediaChange={handleMediaChange}
-          handleYtUrlChange={handleYtUrlChange}
-          handleMediaUpload={handleMediaUpload}
-          restoredMedia={restoredMedia}
-          restoredPosition={restoredPosition}
-          restoredSpeed={restoredSpeed}
-          projectMetadata={projectMetadata}
-          projectCoverImage={projectCoverImage}
-          lines={lines}
-          activeLineIndex={activeLineIndex}
-          playbackPosition={playbackPosition}
-          syncMode={syncMode}
           playerTop={playerTop}
           onHeightChange={setPlayerHeight}
         />
@@ -251,6 +261,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           }}
         />
       </div>
+      </PlayerEngineProvider>
     </SafeAreaContainer>
   );
 }
