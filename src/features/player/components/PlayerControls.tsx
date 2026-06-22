@@ -215,7 +215,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
   return (
     <>
       {/* ─────────────── Desktop full bar content (hidden on mobile) ─────────────── */}
-      <div className="max-lg:hidden animate-fade-in overflow-visible flex flex-col items-center w-full">
+      <div className={`max-lg:hidden animate-fade-in flex flex-col items-center w-full min-w-0 ${variant === 'editor' ? 'overflow-hidden @container/ebar' : 'overflow-visible'}`}>
         {/* Header */}
         {!hasMedia && !viewerMode && (
           <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 mb-2">
@@ -391,7 +391,8 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
 
         {hasMedia && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
-            <div className="flex items-center justify-between gap-3 w-full relative min-h-[48px] pb-1.5 lg:pb-2">
+            {/* Wide layout (≥480px container): absolute-centered cluster, full controls */}
+            <div className={`${variant === 'editor' ? '@[480px]/ebar:flex hidden' : 'flex'} items-center justify-between gap-3 w-full relative min-h-[48px] pb-1.5 lg:pb-2`}>
 
               {/* ── Left: Dock Toggle + Album Art ── */}
               <div className="flex items-center gap-2 z-10">
@@ -565,6 +566,160 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                 )}
               </div>
             </div>
+
+            {/* Narrow editor layout (<480px container): inline flex, no absolute positioning */}
+            {variant === 'editor' && (
+              <div className="@[480px]/ebar:hidden flex flex-col gap-1 w-full min-w-0 pb-1.5 transition-all">
+                {/* Row 1: play + scrubber + time + overflow */}
+                <div className="flex items-center gap-2 w-full min-w-0">
+                  {/* Play/Pause */}
+                  <Tip content={isPlaying ? t('shortcuts.playPause') || 'Pause' : t('shortcuts.playPause') || 'Play'}>
+                    <Button
+                      id="play-pause-btn-narrow"
+                      size="icon"
+                      onClick={togglePlay}
+                      aria-label={isPlaying ? t('shortcuts.playPause') || 'Pause' : t('shortcuts.playPause') || 'Play'}
+                      className="rounded-full bg-primary hover:bg-primary-dim text-zinc-950 hover:scale-105 active:scale-95 glow-primary shrink-0 transition-all duration-100"
+                    >
+                      {isPlaying ? (
+                        <Pause className="size-4" fill="currentColor" />
+                      ) : (
+                        <Play className="size-4 ml-0.5" fill="currentColor" />
+                      )}
+                    </Button>
+                  </Tip>
+
+                  {/* Scrubber */}
+                  <div className="flex-1 min-w-0">
+                    <input
+                      type="range"
+                      min={0}
+                      max={duration || 0}
+                      step={0.1}
+                      value={playbackPosition ?? currentTime}
+                      aria-label={t('player.seekPlayback')}
+                      aria-valuenow={Math.round(playbackPosition ?? currentTime)}
+                      aria-valuemin={0}
+                      aria-valuemax={Math.round(duration)}
+                      onChange={(e) => seek(parseFloat(e.target.value))}
+                      className="w-full h-1 appearance-none rounded-full outline-none"
+                      style={{
+                        background: `linear-gradient(to right, var(--color-primary) ${duration ? ((playbackPosition ?? currentTime) / duration) * 100 : 0}%, rgba(255,255,255,0.1) ${duration ? ((playbackPosition ?? currentTime) / duration) * 100 : 0}%)`,
+                      }}
+                    />
+                  </div>
+
+                  {/* Time */}
+                  <span className="text-[10px] font-mono tabular-nums text-zinc-500 shrink-0">
+                    {formatTime(playbackPosition ?? currentTime)}<span className="text-zinc-700">/</span>{formatTime(duration)}
+                  </span>
+
+                  {/* Overflow popover: speed + volume + change media + loop */}
+                  <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
+                    <Tip content={t('player.changeSong')}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`size-7 shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
+                        >
+                          <ChevronDown className="size-3.5" />
+                        </Button>
+                      </PopoverTrigger>
+                    </Tip>
+                    <PopoverContent className="w-72 p-0 bg-zinc-900 border-zinc-800 shadow-xl" align="end" sideOffset={8}>
+                      <div className="flex flex-col gap-1 p-2 border-b border-zinc-800/60">
+                        <div className="flex items-center gap-3 px-1">
+                          <span className="text-xs text-zinc-500 w-14 shrink-0">{t('player.speed')}</span>
+                          <SpeedControl
+                            playbackSpeed={playbackSpeed}
+                            applySpeed={applySpeed}
+                            MIN_SPEED={MIN_SPEED}
+                            MAX_SPEED={MAX_SPEED}
+                            SPEED_PRESETS={SPEED_PRESETS}
+                          />
+                        </div>
+                        <div className="flex items-center gap-3 px-1">
+                          <span className="text-xs text-zinc-500 w-14 shrink-0">{t('player.volume')}</span>
+                          <VolumeControl />
+                        </div>
+                        {!viewerMode && (
+                          <div className="flex items-center gap-3 px-1">
+                            <span className="text-xs text-zinc-500 w-14 shrink-0">{t('player.loop') || 'Loop'}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => updateSetting('playback.loopCurrentLine', !settings.playback?.loopCurrentLine)}
+                              className={`rounded-full shrink-0 ${FOCUS_RING} ${settings.playback?.loopCurrentLine
+                                ? 'bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 border border-violet-500/30'
+                                : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'
+                              }`}
+                            >
+                              <Repeat className="size-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      {!viewerMode && (
+                        <ChangeMediaPopoverContent fileInputId="change-media-file-editor-narrow" {...mediaPopoverProps} />
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Row 2 (≥360px only): nudge buttons + secondary actions */}
+                <div className="@[360px]/ebar:flex hidden items-center justify-between gap-1 px-1 min-w-0">
+                  <div className="flex items-center gap-0.5">
+                    <Tip content="-0.1s">
+                      <Button variant="ghost" size="icon" onClick={() => seek(currentTime - 0.1)} className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}>
+                        <ChevronLeft className="size-4" />
+                      </Button>
+                    </Tip>
+                    <Tip content={`-${settings.playback?.seekTime ?? 5}s`}>
+                      <Button variant="ghost" size="icon" onClick={() => seek(Math.max(0, currentTime - (settings.playback?.seekTime ?? 5)))} className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}>
+                        <SkipBack className="size-4" />
+                      </Button>
+                    </Tip>
+                    <Tip content={`+${settings.playback?.seekTime ?? 5}s`}>
+                      <Button variant="ghost" size="icon" onClick={() => seek(Math.min(duration, currentTime + (settings.playback?.seekTime ?? 5)))} className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}>
+                        <SkipForward className="size-4" />
+                      </Button>
+                    </Tip>
+                    <Tip content="+0.1s">
+                      <Button variant="ghost" size="icon" onClick={() => seek(currentTime + 0.1)} className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}>
+                        <ChevronRight className="size-4" />
+                      </Button>
+                    </Tip>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    {syncMode && (
+                      <Tip content={t('player.mark') || 'Mark'}>
+                        <Button
+                          id="mark-btn-narrow"
+                          variant="ghost"
+                          size="icon"
+                          onPointerDown={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('editor:mark')); }}
+                          className={`shrink-0 text-zinc-400 hover:text-primary hover:bg-primary/10 ${FOCUS_RING}`}
+                        >
+                          <Bookmark className="size-4" />
+                        </Button>
+                      </Tip>
+                    )}
+                    <Tip content={playerTop ? (t('player.moveToBottom') || 'Move to bottom') : (t('player.moveToTop') || 'Move to top')}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onDockToggle?.()}
+                        className={`shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
+                      >
+                        {playerTop ? <PanelBottom className="size-4" /> : <PanelTop className="size-4" />}
+                      </Button>
+                    </Tip>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
