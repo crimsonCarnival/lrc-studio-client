@@ -102,6 +102,10 @@ export function AppHeader({
 
 
   const isGuestLanding = location.pathname === '/';
+  // Project pages (setup, edit, public view) are fixed-height app layouts that don't
+  // window-scroll — the editor and preview panes own their own scroll-progress bars,
+  // so the header's window-scroll bar is meaningless noise there.
+  const isProjectPage = location.pathname.startsWith('/project/');
 
   const currentTheme = settings?.interface?.theme || 'dark';
 
@@ -246,7 +250,7 @@ export function AppHeader({
           </div>
         </div>
 
-        <ScrollProgress className="absolute top-auto bottom-0 h-[2px]" />
+        {!isProjectPage && <ScrollProgress className="absolute top-auto bottom-0 h-[2px]" />}
 
 
       </header>
