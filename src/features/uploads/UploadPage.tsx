@@ -40,7 +40,7 @@ export const UploadPage = () => {
     // Convert FileList to array and validate audio files
     const audioFiles = Array.from(fileList).filter(file => {
       if (!file.type.startsWith('audio/')) {
-        toast.error(t('uploads.invalidFormat', { ns: 'uploads' }) || `Invalid file: ${file.name} is not an audio file`);
+        toast.error((t as (key: string, options?: Record<string, unknown>) => string)('uploads.invalidFormat', { ns: 'uploads' }) || `Invalid file: ${file.name} is not an audio file`);
         return false;
       }
       return true;

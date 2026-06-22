@@ -22,9 +22,9 @@ import ActivitySettings from './panels/ActivitySettings';
 import StatsSettings from './panels/StatsSettings';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
+import type { AppSettings } from '@/features/settings/settings.types';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Settings = Record<string, any>;
+type Settings = AppSettings;
 
 interface PanelContentProps {
   activeTab: string;
@@ -111,7 +111,7 @@ export default function SettingsPage() {
   const { user } = useAuthContext();
   const { settings: globalSettings, updateAllSettings } = useSettings() as { settings: Settings; updateAllSettings: (s: Settings) => void };
 
-  const isGuest = !user || user.isGuest;
+  const isGuest = !user || !!user.isGuest;
   const visibleTabs = TABS.filter(entry => !entry.authOnly || !isGuest);
 
   const defaultTab = visibleTabs[0]?.id || 'playback';

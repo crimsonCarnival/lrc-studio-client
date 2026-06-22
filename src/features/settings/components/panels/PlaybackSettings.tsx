@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import NumberInput from "@shared/ui/NumberInput";
 import { Section, SettingRow, Toggle } from '../shared';
 import { usePlaybackSettings } from '../../hooks/usePlaybackSettings';
+import type { AppSettings } from '@/features/settings/settings.types';
 import { Headphones, RotateCcw, ChevronsDown, ChevronsUp, ActivitySquare, Timer, Magnet, Play, Forward, List } from 'lucide-react';
 import { Input } from '@ui/input';
 
@@ -37,17 +38,7 @@ function SpeedPresetsInput({ value, onChange }: { value?: number[]; onChange: (p
 }
 
 interface PlaybackSettingsProps {
-  settings: {
-    playback?: {
-      speedBounds?: { min?: number; max?: number };
-      speedPresets?: number[];
-      autoRewindOnPause?: { seconds?: number };
-      seekTime?: number;
-      seekPlays?: boolean;
-      showWaveform?: boolean;
-      waveformSnap?: boolean;
-    };
-  };
+  settings: AppSettings;
   updateSetting: (path: string, value: unknown) => void;
   searchTerm?: string;
 }

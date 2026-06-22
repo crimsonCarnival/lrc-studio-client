@@ -29,7 +29,7 @@ interface ModalProject {
 interface PlaylistInput {
   name?: string;
   description?: string;
-  coverImage?: string;
+  coverImage?: string | null;
   tags?: string[];
   isPublic?: boolean;
   sortMode?: string;

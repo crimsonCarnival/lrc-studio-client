@@ -5,14 +5,17 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Section = Record<string, any>;
 
+// Sections are always present at runtime — the provider seeds state from
+// DEFAULT_SETTINGS and deep-merges server/localStorage onto it, so every
+// section exists. Typed as required to avoid spurious "possibly undefined".
 export interface AppSettings {
-  interface?: Section;
-  editor?: Section;
-  export?: Section;
-  playback?: Section;
-  shortcuts?: Section;
-  advanced?: Section;
-  import?: Section;
+  interface: Section;
+  editor: Section;
+  export: Section;
+  playback: Section;
+  shortcuts: Section;
+  advanced: Section;
+  import: Section;
 }
 
 export interface SettingsContextValue {

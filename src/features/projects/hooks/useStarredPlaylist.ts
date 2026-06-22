@@ -4,7 +4,7 @@ import { getPlaylists, createPlaylist, addProjectToPlaylist, removeProjectFromPl
 const STARRED_NAME = 'Starred Projects';
 
 interface StarUser {
-  accountName?: string;
+  accountName?: string | null;
   [key: string]: unknown;
 }
 

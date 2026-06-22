@@ -42,7 +42,7 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp }:
         <div className="relative flex-shrink-0">
           <PopoverTrigger className="relative z-[110] size-8 rounded-full overflow-hidden bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-all focus:ring-2 focus:ring-primary/50 cursor-pointer outline-none block">
             {user?.avatarUrl
-              ? <LazyImage src={user.avatarUrl} alt={user?.displayName || user?.accountName || user?.email} className="size-full object-cover" />
+              ? <LazyImage src={user.avatarUrl} alt={user?.displayName || user?.accountName || user?.email || ''} className="size-full object-cover" />
               : <div className="size-full flex items-center justify-center bg-gradient-to-br from-primary/50 to-accent-purple/50 text-white font-bold text-sm">
                 {(user?.displayName || user?.accountName || user?.email || '?').charAt(0).toUpperCase()}
               </div>}

@@ -24,7 +24,8 @@ const SHORTCUT_LABELS: Record<string, string> = {
 };
 
 interface ShortcutsSettingsProps {
-  settings: { shortcuts?: Record<string, string[] | undefined>; [key: string]: unknown };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  settings: { shortcuts?: Record<string, string[] | undefined>; [key: string]: any };
   updateSetting: (path: string, value: unknown) => void;
   searchTerm?: string;
   validateShortcut: (value: string, key: string) => boolean;
