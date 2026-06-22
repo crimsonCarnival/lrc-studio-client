@@ -12,6 +12,8 @@ import { AppMobileNav } from './layout/AppMobileNav';
 import { AppModals } from './layout/AppModals';
 import { SafeAreaContainer } from '../shared/ui/SafeAreaContainer';
 import { PlayerEngineProvider } from '@/features/player/PlayerEngine';
+import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
+import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
@@ -81,6 +83,10 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     mql.addEventListener('change', handler);
     return () => mql.removeEventListener('change', handler);
   }, []);
+
+  const inputMethod = useInputMethod();
+  const isTouch = inputMethod === 'touch';
+  const playerSlot = usePlayerSlot({ hideEditor, hidePreview, focusMode, isLg, isTouch });
 
   // Compute dynamic padding from measured player height
   // playerTop=true: player is fixed at lg:top-[88px], so content needs top padding = 88 + playerHeight + 16px gap
@@ -226,6 +232,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           isProjectLoading={isProjectLoading}
           playerTop={playerTop}
           onHeightChange={setPlayerHeight}
+          playerSlot={playerSlot}
         />
 
         <AppMobileNav

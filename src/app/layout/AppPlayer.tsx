@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { SkeletonPlayer } from '@ui/skeleton';
 import PlayerControls from '@features/player/components/PlayerControls';
+import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 
 interface AppPlayerProps {
   isReady?: boolean;
@@ -8,12 +9,14 @@ interface AppPlayerProps {
   isProjectLoading?: boolean;
   playerTop?: boolean;
   onHeightChange?: (height: number) => void;
+  playerSlot?: PlayerSlot;
 }
 
 /**
  * Docked player bar — desktop bottom, mobile above tab bar.
  * Hidden during setup phase but stays mounted to keep the engine alive.
  * Media state is owned by PlayerEngineProvider (mounted above this in AppLayout).
+ * Only renders when playerSlot === 'mobile'; the editor and header own the other slots.
  */
 export function AppPlayer({
   isReady,
@@ -21,6 +24,7 @@ export function AppPlayer({
   isProjectLoading,
   playerTop,
   onHeightChange,
+  playerSlot,
 }: AppPlayerProps) {
   const positionClass = playerTop
     ? 'lg:top-[88px] lg:bottom-auto bottom-14 top-auto'
@@ -39,6 +43,8 @@ export function AppPlayer({
   }, [onHeightChange]);
 
   if (!isPlayerMounted) return null;
+  // Editor and header own their respective slots; dock is only for mobile
+  if (playerSlot === 'editor' || playerSlot === 'header') return null;
 
   return (
     <div
