@@ -7,6 +7,7 @@ import EditorPasteArea from '../setup/EditorPasteArea';
 import VirtualizedLineList from './VirtualizedLineList';
 import EditorActionDrawer from './EditorActionDrawer';
 import PlayerControls from '@/features/player/components/PlayerControls';
+import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
@@ -312,9 +313,9 @@ export default function Editor({
       </div>
 
       {playerSlot === 'editor' && (
-        <div className="flex-shrink-0 mt-3 border-t border-zinc-800/50 -mx-3 sm:-mx-5 px-3 sm:px-5 pt-3">
+        <DragPointerIsolate className="flex-shrink-0 mt-3 border-t border-zinc-800/50 -mx-3 sm:-mx-5 px-3 sm:px-5 pt-3">
           <PlayerControls variant="editor" />
-        </div>
+        </DragPointerIsolate>
       )}
 
       {/* Action Drawer for Mobile Actions */}
