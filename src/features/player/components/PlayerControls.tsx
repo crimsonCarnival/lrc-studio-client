@@ -117,7 +117,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
 
   const { t } = useTranslation();
   const { dt } = useDynamicTranslation();
-  const { settings, updateSetting } = useSettings();
+  const { settings } = useSettings();
 
   // ── Header compact variant ──────────────────────────────────────────────────
   if (variant === 'header') {
@@ -204,13 +204,6 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
       </div>
     );
   }
-
-  // Shared loop tooltip content — used by both wide and narrow layouts so they stay in sync
-  const loopTipContent = settings.playback?.loopCurrentLine
-    ? (loopA != null && loopB != null)
-      ? `${t('player.loopActive')}: ${formatTime(loopA)} – ${formatTime(loopB)} · ${t('player.clickToDisable')}`
-      : t('player.setLoop')
-    : t('player.setLoop') || 'Loop current line';
 
   return (
     <>

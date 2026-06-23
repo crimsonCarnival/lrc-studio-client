@@ -6,7 +6,7 @@
  * Nested format: [{label, depth, singers, lines:[{text,...},...]}]
  */
 import type { EditorLine } from '@/features/editor/services/editor.service';
-import { formatSectionLabelForSerialization, isIntroLabel } from '@/features/editor/constants/sectionTypes';
+import { formatSectionLabelForSerialization } from '@/features/editor/constants/sectionTypes';
 
 interface Section {
   label: string | null;
@@ -44,7 +44,6 @@ export function flatToSections(lines: any[]): any[] {
       if (!current) current = { label: null, depth: null, id: null, singers: undefined, timestamp: null, lines: [] };
       // Strip section-only and client-only fields before sending to the server.
       // `furigana` is a client rendering cache, not a persisted field.
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { type: _t, label: _l, depth: _d, furigana: _f, ...rest } = line;
       current.lines.push(rest as EditorLine);
     }

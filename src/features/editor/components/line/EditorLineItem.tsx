@@ -604,7 +604,7 @@ const EditorLineItem = React.memo(({
           open={editingLineIndex === i}
           onOpenChange={(open) => {
             if (!open) {
-              handleSaveLineText(i, editingText, editingSecondary, editingTranslations as any, editingSingers);
+              handleSaveLineText(i, editingText, editingSecondary, editingTranslations, editingSingers);
               setEditingLineIndex(null);
             }
           }}
