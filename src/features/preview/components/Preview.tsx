@@ -16,7 +16,7 @@ import {
 import { Tip } from '@ui/tip';
 import { SharePanel } from '@features/sharing/components/ShareModal';
 import { useAuthContext } from '@/features/auth/useAuthContext';
-import { Eye, Share2, X, Lock, LockOpen, BookOpen, Plus } from 'lucide-react';
+import { Eye, Share2, X, Lock, LockOpen, BookOpen, Plus, PanelRightClose, PanelLeftOpen } from 'lucide-react';
 
 interface PreviewLineLite {
   secondary?: string;
@@ -43,6 +43,11 @@ interface PreviewProps {
   viewerMode?: boolean;
   isPlaying?: boolean;
   playbackSpeed?: number;
+  // Panel toggles relocated from the header (#12/#13): hide the preview, or
+  // restore the editor when it's hidden.
+  onHidePreview?: () => void;
+  editorHidden?: boolean;
+  onShowEditor?: () => void;
   [key: string]: unknown;
 }
 
@@ -135,7 +140,7 @@ export default function Preview(props: PreviewProps) {
     handleCopy,
   }: UsePreviewResult = usePreview(props);
 
-  const { lines, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, isPlaying, playbackSpeed } = props;
+  const { lines, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, isPlaying, playbackSpeed, onHidePreview, editorHidden, onShowEditor } = props;
 
   const shareTriggerRef = useRef<HTMLButtonElement>(null);
   const sharePanelRef = useRef<HTMLDivElement>(null);
@@ -184,6 +189,20 @@ export default function Preview(props: PreviewProps) {
               </span>
             </h2>
           )}
+          {/* #13: restore the editor when it's hidden — always available on desktop */}
+          {editorHidden && onShowEditor && (
+            <Tip content={t('app.showEditor')}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onShowEditor}
+                aria-label={t('app.showEditor')}
+                className="hidden lg:flex flex-shrink-0 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+              >
+                <PanelLeftOpen className="w-4 sm:w-5 h-4 sm:h-5" strokeWidth={1.8} />
+              </Button>
+            </Tip>
+          )}
           {hasSyncedLines && (
             <div className="relative flex items-center gap-1 text-zinc-300">
               {hasFurigana && (
@@ -195,6 +214,20 @@ export default function Preview(props: PreviewProps) {
                     className={`flex-shrink-0 transition-colors ${showFuriganaInPreview ? 'text-primary bg-primary/10 hover:bg-primary/20' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'}`}
                   >
                     <BookOpen className="w-4 sm:w-5 h-4 sm:h-5" strokeWidth={1.8} />
+                  </Button>
+                </Tip>
+              )}
+              {/* #12: hide the preview — sits to the left of Share */}
+              {onHidePreview && !viewerMode && (
+                <Tip content={t('app.hidePreview')}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onHidePreview}
+                    aria-label={t('app.hidePreview')}
+                    className="hidden lg:flex flex-shrink-0 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                  >
+                    <PanelRightClose className="w-4 sm:w-5 h-4 sm:h-5" strokeWidth={1.8} />
                   </Button>
                 </Tip>
               )}

@@ -19,6 +19,8 @@ export default {
   },
   hideEditor: "Hide Editor",
   hidePreview: "Hide Preview",
+  showEditor: "Show Editor",
+  showPreview: "Show Preview",
   unsavedChangesTitle: [
     "Unsaved Changes",
     "Hold Up!",

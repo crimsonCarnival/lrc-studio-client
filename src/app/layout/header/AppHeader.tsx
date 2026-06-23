@@ -38,12 +38,6 @@ interface AppHeaderProps {
   hasUnsavedChanges: () => boolean;
   activepublicId?: string | null;
   forkedFrom?: ForkedFrom | null;
-  focusMode: string;
-  setFocusMode: (mode: string) => void;
-  hideEditor: boolean;
-  setHideEditor: Dispatch<SetStateAction<boolean>>;
-  hidePreview: boolean;
-  setHidePreview: Dispatch<SetStateAction<boolean>>;
   setUnsavedModalTarget: (target: string) => void;
   settings: AppSettings;
   updateSetting?: (path: string, value: unknown) => void;
@@ -67,12 +61,6 @@ export function AppHeader({
   hasUnsavedChanges,
   activepublicId,
   forkedFrom,
-  focusMode,
-  setFocusMode,
-  hideEditor,
-  setHideEditor,
-  hidePreview,
-  setHidePreview,
   setUnsavedModalTarget,
   settings,
   updateSetting,
@@ -201,38 +189,7 @@ export function AppHeader({
               </div>
             )}
 
-            {/* Panel toggle button group — desktop, project pages */}
-            {isReady && lines.length > 0 && (
-              <div className="hidden lg:flex items-center bg-zinc-800/60 border border-zinc-800/50 rounded-xl overflow-hidden flex-shrink-0">
-                <Tip content={t('app.hideEditor')} side="bottom">
-                  <button
-                    aria-label={t('app.hideEditor')}
-                    onClick={() => {
-                      if (focusMode === 'playback') { setFocusMode('default'); setHideEditor(false); }
-                      else { setHideEditor(h => !h); if (hidePreview) setHidePreview(false); }
-                    }}
-                    className={`flex size-8 items-center justify-center transition-colors text-xs font-bold border-r border-zinc-800/50 ${(hideEditor || focusMode === 'playback')
-                        ? 'text-primary bg-primary/10'
-                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-                      }`}
-                  >
-                    {(hideEditor || focusMode === 'playback') ? <PanelLeftOpen className="size-3.5" /> : <PanelLeftClose className="size-3.5" />}
-                  </button>
-                </Tip>
-                <Tip content={t('app.hidePreview')} side="bottom">
-                  <button
-                    aria-label={t('app.hidePreview')}
-                    onClick={() => { setHidePreview(h => !h); if (hideEditor) setHideEditor(false); }}
-                    className={`flex size-8 items-center justify-center transition-colors text-xs font-bold border-r border-zinc-800/50 ${hidePreview
-                        ? 'text-primary bg-primary/10'
-                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-                      }`}
-                  >
-                    {hidePreview ? <PanelRightOpen className="size-3.5" /> : <PanelRightClose className="size-3.5" />}
-                  </button>
-                </Tip>
-              </div>
-            )}
+            {/* Panel hide/show controls moved into the editor toolbar and preview (#11/#12/#13) */}
 
             {/* Auth section — theme/lang live in the user menu for signed-in users (#14),
                 so guests keep the standalone switcher. */}

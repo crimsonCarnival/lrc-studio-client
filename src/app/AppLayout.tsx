@@ -73,7 +73,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   } = appState;
 
   const { settings, updateSetting } = settingsState;
-  const { focusMode, setFocusMode, hideEditor, setHideEditor, hidePreview, setHidePreview, mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
+  const { focusMode, hideEditor, hidePreview, mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
 
   // Track lg breakpoint reactively so dynamic padding formula is correct on resize
   const [isLg, setIsLg] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
@@ -181,12 +181,6 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           activepublicId={activepublicId}
           forkedFrom={forkedFrom}
           setShowKeyboardHelp={setShowKeyboardHelp}
-          focusMode={focusMode}
-          setFocusMode={setFocusMode}
-          hideEditor={hideEditor}
-          setHideEditor={setHideEditor}
-          hidePreview={hidePreview}
-          setHidePreview={setHidePreview}
           setUnsavedModalTarget={setUnsavedModalTarget}
           settings={settings}
           updateSetting={updateSetting}

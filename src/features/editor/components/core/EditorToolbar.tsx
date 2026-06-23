@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger 
 import {
   FileText, Pencil, Save, Check, Eraser,
   Trash2, ListChecks,
-  MoreHorizontal, Plus, X, Loader2, HelpCircle, Languages, Music, Undo2, Redo2, ChevronLeft, ChevronRight
+  MoreHorizontal, Plus, X, Loader2, HelpCircle, Languages, Music, Undo2, Redo2, ChevronLeft, ChevronRight, PanelLeftClose, PanelRightOpen
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
@@ -84,6 +84,11 @@ interface EditorToolbarProps {
   canUndo: boolean;
   canRedo: boolean;
   handleApplyOffset: (direction: number) => void;
+  // Panel toggles relocated from the header (#11/#13): hide this editor, or
+  // restore the preview when it's hidden.
+  onHideEditor?: () => void;
+  previewHidden?: boolean;
+  onShowPreview?: () => void;
 }
 
 export default function EditorToolbar({
@@ -118,6 +123,9 @@ export default function EditorToolbar({
   canUndo,
   canRedo,
   handleApplyOffset,
+  onHideEditor,
+  previewHidden,
+  onShowPreview,
 }: EditorToolbarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -228,6 +236,34 @@ export default function EditorToolbar({
                 <span className="text-zinc-600 hidden sm:inline">·</span>
                 <span className="text-zinc-600 hidden sm:inline">{t('editor.wordCount', { count: syncProgress.wordCount })}</span>
               </div>
+            </Tip>
+          )}
+
+          {/* Panel toggles (desktop) — relocated from the global header (#11/#13) */}
+          {previewHidden && onShowPreview && (
+            <Tip content={t('app.showPreview')} side="bottom">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onShowPreview}
+                aria-label={t('app.showPreview')}
+                className="hidden lg:flex size-7 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 shrink-0"
+              >
+                <PanelRightOpen className="size-3.5" />
+              </Button>
+            </Tip>
+          )}
+          {onHideEditor && (
+            <Tip content={t('app.hideEditor')} side="bottom">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onHideEditor}
+                aria-label={t('app.hideEditor')}
+                className="hidden lg:flex size-7 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 shrink-0"
+              >
+                <PanelLeftClose className="size-3.5" />
+              </Button>
             </Tip>
           )}
 

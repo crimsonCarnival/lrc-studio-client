@@ -54,6 +54,9 @@ interface EditorProps {
   registerAfterSave?: (cb: (() => void) | null) => void;
   songArtists?: string[];
   playerSlot?: PlayerSlot;
+  onHideEditor?: () => void;
+  previewHidden?: boolean;
+  onShowPreview?: () => void;
 }
 
 export default function Editor({
@@ -85,6 +88,9 @@ export default function Editor({
   registerAfterSave,
   songArtists = EMPTY_ARTISTS,
   playerSlot,
+  onHideEditor,
+  previewHidden,
+  onShowPreview,
 }: EditorProps) {
   "use no memo";
   const { t } = useTranslation();
@@ -274,6 +280,9 @@ export default function Editor({
         activeWordIndex={activeWordIndex}
         stampTarget={stampTarget}
         handleApplyOffset={handleApplyOffset}
+        onHideEditor={onHideEditor}
+        previewHidden={previewHidden}
+        onShowPreview={onShowPreview}
       />
 
       {playerPosition === 'top' && playerDock}
