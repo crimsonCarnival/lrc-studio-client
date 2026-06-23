@@ -154,6 +154,7 @@ export function AppHeader({
             forkedFrom={forkedFrom}
             projectCoverImage={projectCoverImage}
             onLogoClick={goHomeOrWarn}
+            onProjectSettings={isReady && setShowNamingModal ? () => setShowNamingModal(true) : undefined}
           />
 
           {/* ── Center: Start Syncing (edit mode only) ── */}
@@ -230,31 +231,21 @@ export function AppHeader({
                     {hidePreview ? <PanelRightOpen className="size-3.5" /> : <PanelRightClose className="size-3.5" />}
                   </button>
                 </Tip>
-                {setShowNamingModal && (
-                  <Tip content={t('editor.projectSettings')} side="bottom">
-                    <button
-                      aria-label={t('editor.projectSettings')}
-                      onClick={() => setShowNamingModal(true)}
-                      className="flex size-8 items-center justify-center transition-colors text-xs font-bold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
-                    >
-                      <Settings2 className="size-3.5" />
-                    </button>
-                  </Tip>
-                )}
               </div>
             )}
 
-            {/* Grouped icon controls: theme | lang */}
-            <ThemeLangSwitcher currentTheme={currentTheme} updateSetting={updateSetting} i18n={i18n} />
-
-            {/* Auth section */}
+            {/* Auth section — theme/lang live in the user menu for signed-in users (#14),
+                so guests keep the standalone switcher. */}
             {!user ? (
-              <GuestAuthButtons
-                isReady={isReady}
-                lines={lines}
-                mediaTitle={mediaTitle}
-                buildProjectPayload={buildProjectPayload}
-              />
+              <>
+                <ThemeLangSwitcher currentTheme={currentTheme} updateSetting={updateSetting} i18n={i18n} />
+                <GuestAuthButtons
+                  isReady={isReady}
+                  lines={lines}
+                  mediaTitle={mediaTitle}
+                  buildProjectPayload={buildProjectPayload}
+                />
+              </>
             ) : (
               <UserMenu
                 user={user}
@@ -262,6 +253,9 @@ export function AppHeader({
                 navigate={navigate}
                 navTo={navTo}
                 setShowKeyboardHelp={setShowKeyboardHelp}
+                currentTheme={currentTheme}
+                updateSetting={updateSetting}
+                i18n={i18n}
               />
             )}
           </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { NavigateFunction } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import type { i18n as I18nInstance } from 'i18next';
 import {
   UploadCloud, Settings as SettingsIcon, LogOut, BookOpen,
   ShieldAlert, User, Globe, Search, Compass, Trophy, Inbox,
@@ -13,6 +14,7 @@ import { requestsApi } from '@/features/admin/services/requests.service';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isStaff } from '@/features/auth/permissions';
+import { THEMES } from './theme-options';
 
 interface UserMenuProps {
   user: AuthUser;
@@ -21,10 +23,15 @@ interface UserMenuProps {
   // navTo carries the unsaved-changes guard from AppHeader (project pages warn before leaving).
   navTo: (path: string) => void;
   setShowKeyboardHelp?: (v: boolean) => void;
+  // Theme + language now live in this menu (#14).
+  currentTheme: string;
+  updateSetting?: (path: string, value: unknown) => void;
+  i18n?: I18nInstance;
 }
 
-export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp }: UserMenuProps) {
+export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, currentTheme, updateSetting, i18n }: UserMenuProps) {
   const { t } = useTranslation();
+  const currentLang = (i18n?.language || 'en').split('-')[0];
   // Library/upload/request counts are only shown in this menu — own the state here.
   const [counts, setCounts] = useState({ library: 0, uploads: 0, requests: 0 });
   const staff = isStaff(user?.permissions);
@@ -115,6 +122,33 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp }:
                 <BookOpen className="size-4 text-zinc-400" />{t('shortcuts.title')}
               </PopoverItem>
             )}
+          </div>
+
+          <div className="p-1 border-b border-zinc-800/60">
+            {/* Theme picker (#14) */}
+            <div className="px-3 py-2 flex items-center justify-between gap-2">
+              <span className="text-sm font-medium text-zinc-300">{t('settings.interface.theme')}</span>
+              <div className="flex items-center gap-1.5">
+                {THEMES.map(({ id, label, swatch }) => (
+                  <Tip key={id} content={label}>
+                    <button
+                      onClick={() => updateSetting?.('interface.theme', id)}
+                      aria-label={label}
+                      aria-pressed={currentTheme === id}
+                      className={`size-4 rounded-full shrink-0 transition-all ${swatch} ${currentTheme === id ? 'ring-2 ring-primary ring-offset-1 ring-offset-zinc-900' : 'opacity-70 hover:opacity-100'}`}
+                    />
+                  </Tip>
+                ))}
+              </div>
+            </div>
+            {/* Language toggle — two languages, so a single flip (#14) */}
+            <PopoverItem
+              onClick={() => i18n?.changeLanguage(currentLang === 'es' ? 'en' : 'es')}
+              className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2"
+            >
+              <span className="flex items-center gap-2"><Globe className="size-4 text-zinc-400" />{t('settings.interface.language')}</span>
+              <span className="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold uppercase">{currentLang}</span>
+            </PopoverItem>
           </div>
 
           <div className="p-1">

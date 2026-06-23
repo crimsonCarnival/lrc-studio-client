@@ -1,7 +1,7 @@
 import { useState, useRef, startTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Pencil, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Pencil, ArrowLeft, ExternalLink, Settings2 } from 'lucide-react';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
@@ -20,9 +20,11 @@ interface HeaderBreadcrumbProps {
   projectCoverImage?: string | null;
   // Logo click is guarded for unsaved changes by the parent.
   onLogoClick: () => void;
+  // Opens the project settings modal; shown left of the title on project pages (#10).
+  onProjectSettings?: () => void;
 }
 
-export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerImportSave, forkedFrom, projectCoverImage, onLogoClick }: HeaderBreadcrumbProps) {
+export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerImportSave, forkedFrom, projectCoverImage, onLogoClick, onProjectSettings }: HeaderBreadcrumbProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -76,6 +78,17 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
                 alt=""
                 className="size-6 rounded object-cover border border-zinc-700/50 shrink-0"
               />
+            )}
+            {onProjectSettings && (
+              <Tip content={t('editor.projectSettings')} side="bottom">
+                <button
+                  onClick={onProjectSettings}
+                  aria-label={t('editor.projectSettings')}
+                  className="size-6 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors shrink-0 cursor-pointer"
+                >
+                  <Settings2 className="size-3.5" />
+                </button>
+              </Tip>
             )}
             {editingProjectName ? (
               <Input
