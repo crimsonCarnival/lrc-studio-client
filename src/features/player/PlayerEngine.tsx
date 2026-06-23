@@ -80,7 +80,7 @@ export interface PlayerEngineProps {
 }
 
 function PlayerEngineInner(
-  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef = null, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek = 0, initialSpeed, lines, activeLineIndex = 0, playbackPosition, syncMode = false, onMediaUpload, viewerMode = false, projectMetadata: _projectMetadata, projectCoverImage, ref, children }: PlayerEngineProps,
+  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef = null, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek = 0, initialSpeed, lines, activeLineIndex = 0, playbackPosition, syncMode = false, onMediaUpload, viewerMode = false, projectMetadata, projectCoverImage, ref, children }: PlayerEngineProps,
 ) {
   const { t } = useTranslation();
   const { settings, updateSetting } = useSettings();
@@ -90,7 +90,9 @@ function PlayerEngineInner(
   const MAX_SPEED = settings.playback?.speedBounds?.max ?? 3;
   const SPEED_PRESETS = useMemo(
     () =>
-      (settings.playback?.speedPresets || ALL_SPEED_PRESETS).filter(
+      // An empty/missing saved preset array must fall back to defaults — `[] || ALL`
+      // would keep the empty array (arrays are truthy), leaving only the custom input.
+      (settings.playback?.speedPresets?.length ? settings.playback.speedPresets : ALL_SPEED_PRESETS).filter(
         (s: number) => s >= MIN_SPEED && s <= MAX_SPEED,
       ),
     [MIN_SPEED, MAX_SPEED, settings.playback?.speedPresets],
@@ -503,6 +505,8 @@ function PlayerEngineInner(
     onClearMedia: handleClearMedia,
   }), [yt.ytUrl, yt.setYtUrl, yt.setYtError, handleUrlLoad, cdnLoading, local.handleFileChange, mediaUploads, handleSelectUpload, handleClearMedia]);
 
+  /* eslint-disable react-hooks/refs -- audioRef is exposed as a stable ref OBJECT (never .current)
+     through context so WaveformDisplay can read it; passing the ref identifier here is intentional. */
   const value = useMemo(() => ({
     source,
     isPlaying,
@@ -514,6 +518,7 @@ function PlayerEngineInner(
     loopA,
     loopB,
     mediaTitle,
+    songName: projectMetadata?.songName,
     projectCoverImage,
     local,
     yt,
@@ -541,12 +546,13 @@ function PlayerEngineInner(
     handleClearMedia,
   }), [
     source, isPlaying, currentTime, duration, playbackSpeed, hasMedia, loop, loopA, loopB,
-    mediaTitle, projectCoverImage, local, yt, mediaUploads, cdnLoading,
+    mediaTitle, projectMetadata?.songName, projectCoverImage, local, yt, mediaUploads, cdnLoading,
     syncMode, viewerMode, SPEED_PRESETS, MIN_SPEED, MAX_SPEED,
     lines, playbackPosition, detectedUrlType, mediaPopoverProps, fetchUploads,
     togglePlay, seek, applySpeed, setLoop, handleLoopChange, clearLoop,
     handleUrlLoad, handleSelectUpload, handleClearMedia,
   ]);
+  /* eslint-enable react-hooks/refs */
 
   return (
     <PlayerContext.Provider value={value}>

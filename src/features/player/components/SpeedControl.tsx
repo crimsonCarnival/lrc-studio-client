@@ -5,7 +5,6 @@ import { Button } from '@ui/button';
 import {
   Popover,
   PopoverContent,
-  PopoverItem,
   PopoverTrigger,
 } from '@ui/popover';
 import { Tip } from '@ui/tip';
@@ -79,22 +78,24 @@ const SpeedControl = memo(function SpeedControl({
           </PopoverTrigger>
         </Tip>
         <PopoverContent
-          className="w-48 lg:w-44 p-0 overflow-hidden bg-zinc-950 border-zinc-800 shadow-2xl"
+          className="w-56 lg:w-52 p-0 overflow-hidden bg-zinc-950 border-zinc-800 shadow-2xl"
           align="end"
         >
-          <div className="p-1.5 max-h-64 overflow-y-auto no-scrollbar">
+          {/* Preset chips — quick one-tap selection */}
+          <div className="grid grid-cols-3 gap-1.5 p-2.5">
             {SPEED_PRESETS.map((speed) => (
-              <PopoverItem
+              <button
                 key={speed}
                 onClick={() => applySpeed(speed)}
-                className={`font-mono rounded-lg py-2.5 lg:py-1.5 ${
+                aria-pressed={playbackSpeed === speed}
+                className={`font-mono text-sm rounded-lg py-1.5 transition-colors cursor-pointer border ${
                   playbackSpeed === speed
-                    ? 'bg-primary/20 text-primary font-bold hover:bg-primary/30'
-                    : ''
+                    ? 'bg-primary/20 text-primary font-bold border-primary/50'
+                    : 'bg-zinc-800/60 text-zinc-300 border-zinc-700/60 hover:bg-zinc-700 hover:text-zinc-100'
                 }`}
               >
-                {speed}x {speed === 1 && <span className="text-zinc-500 font-sans ml-1">{t('player.speedNormal')}</span>}
-              </PopoverItem>
+                {speed}x
+              </button>
             ))}
           </div>
           <div className="border-t border-zinc-800 p-3 lg:p-2" onPointerDown={(e) => e.stopPropagation()}>

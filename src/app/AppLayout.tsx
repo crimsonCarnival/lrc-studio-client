@@ -194,6 +194,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           syncMode={syncMode}
           setShowNamingModal={setShowNamingModal}
           playerSlot={playerSlot}
+          projectCoverImage={projectCoverImage}
         />
 
         <div

@@ -105,7 +105,7 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
 export default function PlayerControls({ variant }: { variant: 'editor' | 'header' | 'mobile' }) {
   const {
     source, isPlaying, currentTime, duration, playbackSpeed,
-    hasMedia, loopA, loopB, mediaTitle, projectCoverImage,
+    hasMedia, loopA, loopB, mediaTitle, songName,
     local, yt, mediaUploads, cdnLoading,
     syncMode, viewerMode,
     MIN_SPEED, MAX_SPEED, speedPresets: SPEED_PRESETS,
@@ -134,10 +134,10 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
             : <Play className="size-3 text-zinc-950 ml-px" fill="currentColor" />}
         </button>
 
-        {/* Media title */}
-        {mediaTitle && (
+        {/* Song name (falls back to project title) */}
+        {(songName || mediaTitle) && (
           <span className="text-xs text-zinc-300 truncate shrink min-w-0 max-w-[140px]">
-            {mediaTitle}
+            {songName || mediaTitle}
           </span>
         )}
 
@@ -392,21 +392,14 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
         {hasMedia && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
             {/* Wide layout (≥480px container): absolute-centered cluster, full controls */}
-            <div className={`${variant === 'editor' ? '@[480px]/ebar:flex hidden' : 'flex'} items-center justify-between gap-3 w-full relative min-h-[48px] pb-1.5 lg:pb-2`}>
+            <div className={`${variant === 'editor' ? '@[680px]/ebar:flex hidden' : 'flex'} items-center gap-2 w-full min-h-[48px] pb-1.5 lg:pb-2`}>
 
-              {/* ── Left: Album Art ── */}
-              <div className="flex items-center gap-2 z-10">
-                {projectCoverImage && (
-                  <img
-                    src={projectCoverImage}
-                    alt=""
-                    className="size-9 rounded-md object-cover border border-zinc-700/50 shrink-0"
-                  />
-                )}
-              </div>
+              {/* Left spacer — balances the right actions so the transport stays centered.
+                  (Album art now lives next to the project title in the header.) */}
+              <div className="flex-1 min-w-0" />
 
               {/* ── CENTERED: Transport Cluster (Times + Speed + Nudges + Play + Volume) ── */}
-              <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-4 z-20">
+              <div className="flex items-center gap-1 sm:gap-4 shrink-0">
                 {/* Current Time on the left */}
                 <span className="text-xs text-zinc-400 font-mono tabular-nums shrink-0 min-w-[44px] text-right">
                   {formatTime(currentTime)}
@@ -497,7 +490,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
               </div>
 
               {/* ── Right Section: Actions, Loop ── */}
-              <div className="flex items-center gap-2 sm:gap-3 z-10">
+              <div className="flex-1 min-w-0 flex items-center justify-end gap-2 sm:gap-3">
 
                 {/* Change Media */}
                 {hasMedia && !viewerMode && (
@@ -553,7 +546,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
 
             {/* Narrow editor layout (<480px container): inline flex, no absolute positioning */}
             {variant === 'editor' && (
-              <div className="@[480px]/ebar:hidden flex flex-col gap-1 w-full min-w-0 pb-1.5 transition-all">
+              <div className="@[680px]/ebar:hidden flex flex-col gap-1 w-full min-w-0 pb-1.5 transition-all">
                 {/* Row 1: play + scrubber + time + overflow */}
                 <div className="flex items-center gap-2 w-full min-w-0">
                   {/* Play/Pause */}

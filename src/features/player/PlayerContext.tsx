@@ -35,6 +35,7 @@ export interface PlayerContextValue {
   loopB: number | null;
   // media meta / sources
   mediaTitle?: string;
+  songName?: string;
   thumbnail?: string | null;
   projectCoverImage?: string;
   // hook surfaces the UI reads (keep the existing `local` / `yt` shapes)

@@ -52,6 +52,7 @@ interface AppHeaderProps {
   setShowKeyboardHelp?: (v: boolean) => void;
   setShowNamingModal?: (v: boolean) => void;
   playerSlot?: PlayerSlot;
+  projectCoverImage?: string | null;
 }
 
 export function AppHeader({
@@ -80,6 +81,7 @@ export function AppHeader({
   setShowKeyboardHelp,
   setShowNamingModal,
   playerSlot,
+  projectCoverImage,
 }: AppHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -141,7 +143,7 @@ export function AppHeader({
     <>
       <header className="fixed top-0 left-0 right-0 z-nav animate-fade-in bg-zinc-950/60 backdrop-blur-2xl">
 
-        <div className="max-w-[1600px] mx-auto w-full px-4 lg:px-6 py-2 sm:py-2.5 flex flex-row items-center justify-between gap-2">
+        <div className="relative max-w-[1600px] mx-auto w-full px-4 lg:px-6 py-2 sm:py-2.5 flex flex-row items-center justify-between gap-2">
 
           {/* ── Left: Logo + breadcrumb ── */}
           <HeaderBreadcrumb
@@ -150,6 +152,7 @@ export function AppHeader({
             setMediaTitle={setMediaTitle}
             triggerImportSave={triggerImportSave}
             forkedFrom={forkedFrom}
+            projectCoverImage={projectCoverImage}
             onLogoClick={goHomeOrWarn}
           />
 
@@ -163,9 +166,13 @@ export function AppHeader({
             </button>
           )}
 
-          {/* ── Center: Compact player (header slot only) ── */}
+          {/* ── Center: Compact player (header slot only) — absolutely centered in the bar ── */}
           {playerSlot === 'header' && isReady && (
-            <PlayerControls variant="header" />
+            <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-full max-w-xl px-2 flex justify-center">
+              <div className="pointer-events-auto w-full flex justify-center">
+                <PlayerControls variant="header" />
+              </div>
+            </div>
           )}
 
           <div className="flex-1" />
