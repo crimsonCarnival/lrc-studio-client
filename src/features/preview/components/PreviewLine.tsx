@@ -8,18 +8,6 @@ import type { EditorLine, EditorWord } from '@/features/editor/services/editor.s
 import type { AppSettings } from '@/features/settings/settings.types';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 
-/** Role chip color classes, matching the editor badges */
-const SINGER_CHIP_COLORS = [
-  'bg-primary/10 border-primary/30 text-primary',
-  'bg-sky-500/10 border-sky-500/30 text-sky-400',
-  'bg-violet-500/10 border-violet-500/30 text-violet-400',
-  'bg-amber-500/10 border-amber-500/30 text-amber-400',
-  'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
-  'bg-rose-500/10 border-rose-500/30 text-rose-400',
-  'bg-cyan-500/10 border-cyan-500/30 text-cyan-400',
-  'bg-fuchsia-500/10 border-fuchsia-500/30 text-fuchsia-400',
-];
-
 /** Inline text color classes for words attributed to a specific singer */
 const WORD_SINGER_PREVIEW_COLORS = [
   'text-primary',       // singer 0
@@ -79,8 +67,6 @@ interface PreviewLineProps {
 export default function PreviewLine({
   line,
   originalIndex: i,
-  prevLine: prevLineProp = null,
-  hasMultipleSingers = true,
   sectionNumbers = null,
   displayedActiveIndex,
   lockedLineIndex,
@@ -122,15 +108,31 @@ export default function PreviewLine({
       : formatSectionLabel(line.label, t);
 
     return (
-      <div className={`flex items-center gap-4 px-2 sm:px-4 py-4 ${isRoot ? 'my-6' : 'my-1'}`}>
+      <div className={`flex items-center gap-4 px-2 sm:px-4 ${isRoot ? 'py-4 my-5' : 'py-2 my-2'}`}>
         <div className={`flex-1 h-px ${isRoot ? 'bg-gradient-to-r from-transparent via-primary/50 to-primary/20' : 'bg-zinc-800/60'}`} />
-        <span className={`px-4 py-1 rounded-full whitespace-nowrap ${
+        {/* No pill: main sections render as a large title, secondary as a normal title (#1).
+            Singer names carry their own colors so the lines below don't need labels (#2). */}
+        <div className={`flex items-baseline gap-2 whitespace-nowrap uppercase ${
           isRoot
-            ? 'text-sm sm:text-base font-black tracking-[0.2em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-primary via-fuchsia-400 to-primary drop-shadow-[0_0_12px_rgba(var(--color-primary),0.6)] border border-primary/20 bg-zinc-900/50 shadow-[0_0_15px_rgba(var(--color-primary),0.15)]'
-            : 'text-[10px] font-semibold tracking-widest uppercase text-zinc-600 bg-zinc-900/40 border border-zinc-800/60'
+            ? 'text-lg sm:text-2xl font-black tracking-[0.15em]'
+            : 'text-xs sm:text-sm font-semibold tracking-widest'
         }`}>
-          {labelStr}{singers?.length > 0 ? ` · ${singers.join(', ')}` : ''}
-        </span>
+          <span className={isRoot
+            ? 'text-transparent bg-clip-text bg-gradient-to-r from-primary via-fuchsia-400 to-primary'
+            : 'text-zinc-500'}>
+            {labelStr}
+          </span>
+          {singers.length > 0 && (
+            <span className="flex items-baseline gap-1.5">
+              <span className="text-zinc-600 font-normal">·</span>
+              {singers.map((name, idx) => (
+                <span key={idx} className={WORD_SINGER_PREVIEW_COLORS[singerColorIndex(name, roster)] || 'text-primary'}>
+                  {name}{idx < singers.length - 1 ? ',' : ''}
+                </span>
+              ))}
+            </span>
+          )}
+        </div>
         <div className={`flex-1 h-px ${isRoot ? 'bg-gradient-to-l from-transparent via-primary/50 to-primary/20' : 'bg-zinc-800/60'}`} />
       </div>
     );
@@ -169,15 +171,6 @@ export default function PreviewLine({
 
   // Active translation text for this line
   const activeTranslationText = line.translations?.[activeTranslationIndex]?.text ?? null;
-
-  const currentLineIndexInDisplay = displayLines?.findIndex(dl => dl.originalIndex === i) ?? -1;
-  const prevLineFromDisplay = currentLineIndexInDisplay > 0 ? displayLines[currentLineIndexInDisplay - 1] : null;
-  const effectivePrevLine = (prevLineFromDisplay as unknown as EditorLine) ?? prevLineProp;
-  const prevSingersStr = effectivePrevLine ? getLineSingers(effectivePrevLine).join(',') : '';
-  const currentLineSingers = getLineSingers(line);
-  const currentSingersStr = currentLineSingers.join(',');
-  // Always show label when line has multiple singers; suppress only for single-singer repeats
-  const showSingers = hasMultipleSingers && currentSingersStr && (currentLineSingers.length >= 2 || currentSingersStr !== prevSingersStr);
 
   const inner = (
     <button
@@ -223,19 +216,6 @@ export default function PreviewLine({
       {translationLayout === 'side-by-side' && activeTranslationText && showTranslationsInPreview ? (
         <>
           <div className="flex-1 min-w-0 flex flex-col">
-            {showSingers && (
-              <div className="flex gap-2 mb-0.5 flex-wrap">
-                {getLineSingers(line).map((name, idx) => {
-                  const ci = singerColorIndex(name, roster);
-                  const textColor = SINGER_CHIP_COLORS[ci]?.match(/text-\S+/)?.[0] || 'text-primary';
-                  return (
-                    <span key={idx} className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ${textColor}`}>
-                      {name}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
             <MainTrack
               line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={!!hasWordTimestamps}
               playbackPosition={playbackPosition} activeFontSizes={activeFontSizes}
@@ -266,19 +246,6 @@ export default function PreviewLine({
         </>
       ) : (
         <>
-          {showSingers && (
-            <div className="flex gap-2 mb-0.5 flex-wrap">
-              {getLineSingers(line).map((name, idx) => {
-                const ci = singerColorIndex(name, roster);
-                const textColor = SINGER_CHIP_COLORS[ci]?.match(/text-\S+/)?.[0] || 'text-primary';
-                return (
-                  <span key={idx} className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ${textColor}`}>
-                    {name}
-                  </span>
-                );
-              })}
-            </div>
-          )}
           <MainTrack
             line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={!!hasWordTimestamps}
             playbackPosition={playbackPosition} activeFontSizes={activeFontSizes}
@@ -394,7 +361,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
 
   return (
     <p
-      className={`transition-colors duration-100 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass} ${isDuet ? 'bg-clip-text text-transparent' : ''}`}
+      className={`transition-colors duration-100 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass} ${isDuet ? 'bg-clip-text !text-transparent' : ''}`}
       style={{ lineHeight: hasReadings ? '2' : undefined, ...duetGradientStyle }}
     >
       {effectiveHasWordTimestamps
@@ -468,7 +435,9 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
         })
         // No word timestamps: render with singer coloring if line has singers
         : (() => {
-          const hasSingerSplit = (line.singers?.length ?? 0) >= 1 && (line.words?.length ?? 0) > 0;
+          // Duet renders the multi-singer gradient on the parent <p>, so skip per-word
+          // and fallback solid colors that would otherwise hide it (#3).
+          const hasSingerSplit = !isDuet && (line.singers?.length ?? 0) >= 1 && (line.words?.length ?? 0) > 0;
           if (hasSingerSplit) {
             return (line.words || []).map((w, wi) => {
               const effIdx = w.singerIndex ?? (line.singers!.length === 1 ? 0 : null);
@@ -484,7 +453,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
               );
             });
           }
-          const singerFallbackColor = (line.singers?.length ?? 0) >= 1
+          const singerFallbackColor = !isDuet && (line.singers?.length ?? 0) >= 1
             ? (WORD_SINGER_PREVIEW_COLORS[singerColorIndex(line.singers![0], roster)] || '')
             : '';
           const plainContent = hasReadings ? renderLineWithReadings(line, fmtReading, showFuriganaInPreview) : mainText;
