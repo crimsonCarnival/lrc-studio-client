@@ -6,6 +6,7 @@
  * Nested format: [{label, depth, singers, lines:[{text,...},...]}]
  */
 import type { EditorLine } from '@/features/editor/services/editor.service';
+import { formatSectionLabelForSerialization, isIntroLabel } from '@/features/editor/constants/sectionTypes';
 
 interface Section {
   label: string | null;
@@ -149,7 +150,11 @@ export function getSingerOptionsForSelection(lines: EditorLine[], indices: numbe
 
 /**
  * Editor flat lines → raw textarea text. Reconstructs `[Label: A, B]` section headers
- * so the editor → text → editor round-trip preserves section structure.
+ * so the editor → text → editor round-trip preserves section structure. Section names are
+ * capitalized via formatSectionLabelForSerialization (`[Verse: A]`, not `[verse: A]`).
+ *
+ * Intro sections are editor-only metadata: their header AND their body lines are omitted
+ * entirely from the raw text (so a round-trip through the textarea drops the intro).
  *
  * @param lineText optional serializer for non-section lines (e.g. ruby markup). Defaults to `line.text`.
  */
@@ -157,17 +162,31 @@ export function linesToRawText(
   lines: EditorLine[],
   lineText: (line: EditorLine) => string = (l) => (l.text as string | undefined) ?? '',
 ): string {
-  return (lines ?? [])
-    .map((line) => {
-      if (line?.type === 'section') {
-        const label = ((line.label as string | undefined) ?? '').trim();
-        const singers = Array.isArray(line.singers) ? (line.singers as string[]).filter(Boolean) : [];
-        if (!label && singers.length === 0) return ''; // anonymous marker → blank line
-        return singers.length ? `[${label}: ${singers.join(', ')}]` : `[${label}]`;
+  const out: string[] = [];
+  let inOmittedSection = false; // currently inside an Intro section → skip its body lines
+
+  for (const line of lines ?? []) {
+    if (line?.type === 'section') {
+      const label = ((line.label as string | undefined) ?? '').trim();
+      const singers = Array.isArray(line.singers) ? (line.singers as string[]).filter(Boolean) : [];
+      if (isIntroLabel(label)) {
+        inOmittedSection = true; // drop the [Intro] header and everything under it
+        continue;
       }
-      return lineText(line);
-    })
-    .join('\n');
+      inOmittedSection = false;
+      if (!label && singers.length === 0) {
+        out.push(''); // anonymous marker → blank line
+        continue;
+      }
+      const display = formatSectionLabelForSerialization(label);
+      out.push(singers.length ? `[${display}: ${singers.join(', ')}]` : `[${display}]`);
+      continue;
+    }
+    if (inOmittedSection) continue; // body line belonging to an omitted Intro section
+    out.push(lineText(line));
+  }
+
+  return out.join('\n');
 }
 
 // LRC timestamp shape, e.g. [00:12.50] — must NOT be treated as a section header.
