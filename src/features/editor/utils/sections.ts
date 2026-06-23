@@ -6,7 +6,7 @@
  * Nested format: [{label, depth, singers, lines:[{text,...},...]}]
  */
 import type { EditorLine } from '@/features/editor/services/editor.service';
-import { formatSectionLabelForSerialization } from '@/features/editor/constants/sectionTypes';
+import { formatSectionLabelForSerialization, isIntroLabel } from '@/features/editor/constants/sectionTypes';
 
 interface Section {
   label: string | null;
@@ -165,12 +165,18 @@ export function linesToRawText(
 ): string {
   const out: string[] = [];
   let currentDepth = 0;
+  let inOmittedSection = false; // inside an Intro section → drop its header and body (#8)
 
   for (const line of lines ?? []) {
     if (line?.type === 'section') {
-      currentDepth = (line.depth as number) ?? 1;
       const label = ((line.label as string | undefined) ?? '').trim();
       const singers = Array.isArray(line.singers) ? (line.singers as string[]).filter(Boolean) : [];
+      if (isIntroLabel(label)) {
+        inOmittedSection = true; // Intro is editor-only metadata; omit header + body entirely
+        continue;
+      }
+      inOmittedSection = false;
+      currentDepth = (line.depth as number) ?? 1;
       if (!label && singers.length === 0) {
         out.push(''); // anonymous marker → blank line
         continue;
@@ -180,6 +186,7 @@ export function linesToRawText(
       out.push(singers.length ? `${indent}[${display} | ${singers.join(', ')}]` : `${indent}[${display}]`);
       continue;
     }
+    if (inOmittedSection) continue; // body line belonging to an omitted Intro section
     const indent = currentDepth > 0 ? '  ' : '';
     const textStr = lineText(line);
     // Don't indent blank lines
