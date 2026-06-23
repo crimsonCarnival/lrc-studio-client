@@ -30,6 +30,32 @@ export function getDefaultDepthForLabel(label) {
 }
 
 /**
+ * Title-cases a section label for raw-text serialization, e.g. "pre-chorus 2" → "Pre-Chorus 2".
+ *
+ * Deliberately locale-INDEPENDENT (unlike formatSectionLabel, which localizes via t()):
+ * the emitted `[Label]` must round-trip back through parseSectionHeader to a label that
+ * getDefaultDepthForLabel / formatSectionLabel still recognize — and those match against
+ * lowercase English ids. Title-casing the canonical id keeps it matchable and idempotent.
+ */
+export function formatSectionLabelForSerialization(label) {
+  if (!label) return '';
+  return label
+    .trim()
+    .split(/(\s+|-)/) // keep separators so we can re-join verbatim
+    .map((part) => (/^[\s-]+$/.test(part) ? part : part.charAt(0).toUpperCase() + part.slice(1)))
+    .join('');
+}
+
+/**
+ * Whether a label denotes an Intro section (ignoring any trailing serialized number).
+ * Intro sections are treated as editor-only metadata and omitted from raw-text serialization.
+ */
+export function isIntroLabel(label) {
+  if (!label) return false;
+  return label.trim().toLowerCase().replace(/\s+\d+$/, '') === 'intro';
+}
+
+/**
  * Formats and localizes a section label, handling serialized numbers (e.g. "verse 2").
  */
 export function formatSectionLabel(label, t) {
