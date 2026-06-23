@@ -81,6 +81,7 @@ interface VirtualizedLineListProps {
   onBulkMenu?: () => void;
   modifiedLines?: Set<number>;
   onToggleLineMode?: LineItemProps['onToggleLineMode'];
+  hideMarkInstruction?: boolean;
 }
 
 export default function VirtualizedLineList({
@@ -149,6 +150,7 @@ export default function VirtualizedLineList({
   onBulkMenu,
   modifiedLines,
   onToggleLineMode,
+  hideMarkInstruction,
 }: VirtualizedLineListProps) {
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
@@ -401,6 +403,7 @@ export default function VirtualizedLineList({
         editorMode={editorMode}
         awaitingEndMark={awaitingEndMark}
         onBulkMenu={onBulkMenu}
+        hideMarkInstruction={hideMarkInstruction}
       />
     </div>
   );
