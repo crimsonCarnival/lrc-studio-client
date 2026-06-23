@@ -3,6 +3,9 @@ import type { ChangeEvent, KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Check, Upload as UploadIcon, Loader2 } from 'lucide-react';
 import { Button } from '@ui/button';
+import { FloatingInput } from '@ui/floating-input';
+import { FloatingTextarea } from '@ui/floating-textarea';
+import { FloatingCombobox } from '@ui/floating-combobox';
 import { createPlaylist, updatePlaylist, addProjectToPlaylist, removeProjectFromPlaylist } from './playlist.service';
 import { gqlRequest } from '@/app/graphql.client';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
@@ -217,41 +220,31 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
           {(isEdit || step === 1) && (
             <>
               {/* Name */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-muted-foreground">{t('playlists.modal.name')}</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  maxLength={100}
-                  onChange={e => handleField('name', e.target.value)}
-                  placeholder={t('playlists.modal.namePlaceholder')}
-                  className="bg-zinc-800/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-primary/60"
-                />
-              </div>
+              <FloatingInput
+                label={t('playlists.modal.name')}
+                value={form.name}
+                maxLength={100}
+                onChange={e => handleField('name', e.target.value)}
+              />
 
               {/* Description */}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-muted-foreground">{t('playlists.modal.description')}</label>
-                <textarea
-                  value={form.description}
-                  maxLength={500}
-                  onChange={e => handleField('description', e.target.value)}
-                  placeholder={t('playlists.modal.descriptionPlaceholder')}
-                  rows={3}
-                  className="bg-zinc-800/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-primary/60 resize-none"
-                />
-              </div>
+              <FloatingTextarea
+                label={t('playlists.modal.description')}
+                value={form.description}
+                maxLength={500}
+                rows={3}
+                onChange={e => handleField('description', e.target.value)}
+                className="resize-none"
+              />
 
               {/* Cover image URL + upload */}
               <div className="flex flex-col gap-1">
-                <label className="text-xs text-muted-foreground">{t('playlists.modal.coverImage')}</label>
                 <div className="flex gap-2 items-center">
-                  <input
-                    type="text"
+                  <FloatingInput
+                    className="flex-1"
+                    label={t('playlists.modal.coverImage')}
                     value={form.coverImage}
                     onChange={e => handleField('coverImage', e.target.value)}
-                    placeholder={t('playlists.modal.coverImagePlaceholder')}
-                    className="flex-1 bg-zinc-800/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-primary/60"
                   />
                   <button
                     type="button"
@@ -300,29 +293,25 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
 
               {/* Visibility + Sort */}
               <div className="flex gap-3">
-                <div className="flex flex-col gap-1 flex-1">
-                  <label className="text-xs text-muted-foreground">{t('playlists.modal.visibility')}</label>
-                  <select
-                    value={form.isPublic ? 'public' : 'private'}
-                    onChange={e => handleField('isPublic', e.target.value === 'public')}
-                    className="bg-zinc-800/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-primary/60"
-                  >
-                    <option value="public">{t('playlists.public')}</option>
-                    <option value="private">{t('playlists.private')}</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1 flex-1">
-                  <label className="text-xs text-muted-foreground">{t('playlists.modal.sortMode')}</label>
-                  <select
-                    value={form.sortMode}
-                    onChange={e => handleField('sortMode', e.target.value)}
-                    className="bg-zinc-800/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-primary/60"
-                  >
-                    {SORT_OPTIONS.map(m => (
-                      <option key={m} value={m}>{tk(`playlists.sortMode.${m}`)}</option>
-                    ))}
-                  </select>
-                </div>
+                <FloatingCombobox
+                  className="flex-1"
+                  label={t('playlists.modal.visibility')}
+                  value={form.isPublic ? 'public' : 'private'}
+                  onChange={v => handleField('isPublic', v === 'public')}
+                  options={[
+                    { value: 'public', label: t('playlists.public') },
+                    { value: 'private', label: t('playlists.private') },
+                  ]}
+                  strict
+                />
+                <FloatingCombobox
+                  className="flex-1"
+                  label={t('playlists.modal.sortMode')}
+                  value={form.sortMode}
+                  onChange={v => handleField('sortMode', v)}
+                  options={SORT_OPTIONS.map(m => ({ value: m, label: tk(`playlists.sortMode.${m}`) }))}
+                  strict
+                />
               </div>
             </>
           )}
@@ -331,12 +320,10 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
           {(step === 2 || isEdit) && (
             <>
               <p className="text-xs text-muted-foreground">{t('playlists.modal.projects')}</p>
-              <input
-                type="text"
+              <FloatingInput
+                label={t('playlists.modal.projectSearch')}
                 value={projectSearch}
                 onChange={e => setProjectSearch(e.target.value)}
-                placeholder={t('playlists.modal.projectSearch')}
-                className="bg-zinc-800/50 border border-border rounded-lg px-3 py-2 text-sm text-foreground outline-none focus:border-primary/60"
               />
               <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
                 {filteredProjects.map(p => {

@@ -408,6 +408,8 @@ export default function Editor({
         handleBulkClearTimestamps={handleBulkClearTimestamps}
         handleBulkDelete={handleBulkDelete}
         clearSelection={clearSelection}
+        lines={lines}
+        handleMoveToSection={handleMoveToSection}
       />
 
       {confirmModal}
