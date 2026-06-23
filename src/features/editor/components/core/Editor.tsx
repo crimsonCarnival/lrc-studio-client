@@ -9,10 +9,12 @@ import EditorActionDrawer from './EditorActionDrawer';
 import PlayerControls from '@/features/player/components/PlayerControls';
 import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
+import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import { ArrowUpToLine, ArrowDownToLine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { KEY_SYMBOLS } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
-import { getMarkInstruction } from '@features/editor/utils/mark-instruction';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
@@ -205,12 +207,31 @@ export default function Editor({
         </button>
       </Tip>
       <PlayerControls variant="editor" />
-      {/* #4: mark hint lives directly below the player, regardless of dock position */}
-      {syncMode && lines.length > 0 && selectedLines.size === 0 && (
-        <p className="text-xs text-zinc-600 text-center mt-2">
-          {getMarkInstruction(t, editorMode, awaitingEndMark, settings.shortcuts?.mark?.[0] || 'Space')}
-        </p>
-      )}
+      {(() => {
+        const symbols = KEY_SYMBOLS as Record<string, string>;
+        const rangeKey = settings.shortcuts?.rangeSelect?.[0] || 'Shift';
+        const toggleKey = settings.shortcuts?.toggleSelect?.[0] || 'Ctrl';
+        const deselectKey = settings.shortcuts?.deselect?.[0] || 'Escape';
+        const selectionHintText = t('editor.selection.hint', {
+          defaultValue: '{{range}}+Click: range · {{toggle}}+Click: toggle · {{deselect}}: deselect',
+          range: symbols[rangeKey] ?? rangeKey,
+          toggle: symbols[toggleKey] ?? toggleKey,
+          deselect: symbols[deselectKey] ?? deselectKey
+        });
+
+        return (
+          <p className="text-xs text-zinc-600 text-center mt-2 animate-fade-in pb-1">
+            {selectedLines.size > 0
+              ? selectionHintText
+              : editorMode === 'srt'
+                ? (awaitingEndMark != null ? t('editor.markEndInstruction').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Space') : t('editor.markInstructionSRT').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Space'))
+                : editorMode === 'words'
+                  ? t('editor.markInstructionWords').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Space')
+                  : t('editor.markInstruction').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Space')
+            }
+          </p>
+        );
+      })()}
     </DragPointerIsolate>
   ) : null;
 
@@ -252,6 +273,7 @@ export default function Editor({
         activeLineIndex={activeLineIndex}
         activeWordIndex={activeWordIndex}
         stampTarget={stampTarget}
+        handleApplyOffset={handleApplyOffset}
       />
 
       {playerPosition === 'top' && playerDock}
@@ -262,20 +284,34 @@ export default function Editor({
       )}
 
       <div className="flex flex-col flex-1 min-h-0 min-w-0">
-      {/* Edit Mode */}
-      {!syncMode && (
-        <EditorPasteArea
-          rawText={rawText}
-          setRawText={setRawText}
-          fileInputRef={fileInputRef}
-          handleFileUpload={handleFileUpload}
-          handleUrlImport={handleUrlImport as ComponentProps<typeof EditorPasteArea>['handleUrlImport']}
-        />
-      )}
+      <ResponsiveModal
+        open={!syncMode}
+        onOpenChange={(open) => {
+          if (!open) {
+            window.dispatchEvent(new CustomEvent('editor:start-syncing'));
+          }
+        }}
+        title={t('editor.editRawText', 'Raw Lyrics')}
+        dialogProps={{ className: 'max-w-3xl w-[90vw]' }}
+      >
+        <div className="h-[60vh] flex flex-col mt-2 min-h-0">
+          <EditorPasteArea
+            rawText={rawText}
+            setRawText={setRawText}
+            fileInputRef={fileInputRef}
+            handleFileUpload={handleFileUpload}
+            handleUrlImport={handleUrlImport as ComponentProps<typeof EditorPasteArea>['handleUrlImport']}
+          />
+          <div className="flex justify-end mt-4 pt-4 border-t border-zinc-800 shrink-0">
+            <Button onClick={() => window.dispatchEvent(new CustomEvent('editor:start-syncing'))} className="font-semibold px-6 text-zinc-950 bg-primary hover:bg-primary/90">
+              {t('editor.done', 'Done')}
+            </Button>
+          </div>
+        </div>
+      </ResponsiveModal>
 
-      {/* Sync Mode */}
-      {syncMode && (
-        <div className="relative flex flex-col flex-1 min-h-0">
+      {/* Sync Mode View */}
+      <div className="relative flex flex-col flex-1 min-h-0">
         <VirtualizedLineList
           lines={lines}
           displayedActiveIndex={displayedActiveIndex}
@@ -342,10 +378,8 @@ export default function Editor({
           onBulkMenu={openBulk}
           modifiedLines={modifiedLines}
           onToggleLineMode={handleToggleLineMode}
-          hideMarkInstruction={playerSlot === 'editor'}
         />
-        </div>
-      )}
+      </div>
       </div>
 
       {playerPosition === 'bottom' && playerDock}

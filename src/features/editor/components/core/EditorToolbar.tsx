@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger 
 import {
   FileText, Pencil, Save, Check, Eraser,
   Trash2, ListChecks,
-  MoreHorizontal, Plus, X, Loader2, HelpCircle, Languages, Music, Undo2, Redo2
+  MoreHorizontal, Plus, X, Loader2, HelpCircle, Languages, Music, Undo2, Redo2, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
@@ -31,18 +31,18 @@ interface ActionsDropdownProps {
 const ActionsDropdown = ({ children, icon: Icon = MoreHorizontal, label }: ActionsDropdownProps) => {
   const { t } = useTranslation();
   return (
-  <Popover>
-    <Tip content={label || t('editor.lineOptions')}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-9 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800">
-          <Icon className="size-4" />
-        </Button>
-      </PopoverTrigger>
-    </Tip>
-    <PopoverContent className="w-56 p-1 bg-zinc-900 border-zinc-800 shadow-xl" align="end">
-      {children}
-    </PopoverContent>
-  </Popover>
+    <Popover>
+      <Tip content={label || t('editor.lineOptions')}>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon" className="size-9 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800">
+            <Icon className="size-4" />
+          </Button>
+        </PopoverTrigger>
+      </Tip>
+      <PopoverContent className="w-56 p-1 bg-zinc-900 border-zinc-800 shadow-xl" align="end">
+        {children}
+      </PopoverContent>
+    </Popover>
   );
 };
 
@@ -83,6 +83,7 @@ interface EditorToolbarProps {
   redo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  handleApplyOffset: (direction: number) => void;
 }
 
 export default function EditorToolbar({
@@ -116,6 +117,7 @@ export default function EditorToolbar({
   redo,
   canUndo,
   canRedo,
+  handleApplyOffset,
 }: EditorToolbarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -214,12 +216,10 @@ export default function EditorToolbar({
           {/* Sync progress + word/char count badge */}
           {syncProgress && (
             <Tip content={t('editor.wordCharCount', { words: syncProgress.wordCount, chars: syncProgress.charCount })}>
-              <div className={`text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full border border-zinc-800 bg-zinc-900/50 flex items-center gap-1.5 cursor-default ${
-                syncProgress.synced === syncProgress.total ? 'text-primary border-primary/20' : 'text-zinc-500'
-              }`}>
-                <div className={`size-1.5 rounded-full flex-shrink-0 ${
-                  syncProgress.synced === syncProgress.total ? 'bg-primary' : 'bg-zinc-700'
-                }`} />
+              <div className={`text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full border border-zinc-800 bg-zinc-900/50 flex items-center gap-1.5 cursor-default ${syncProgress.synced === syncProgress.total ? 'text-primary border-primary/20' : 'text-zinc-500'
+                }`}>
+                <div className={`size-1.5 rounded-full flex-shrink-0 ${syncProgress.synced === syncProgress.total ? 'bg-primary' : 'bg-zinc-700'
+                  }`} />
                 {editorMode === 'words' && syncProgress.totalWordsInLine > 0 ? (
                   <span>{syncProgress.currentWordNum}/{syncProgress.totalWordsInLine}</span>
                 ) : (
@@ -285,18 +285,53 @@ export default function EditorToolbar({
           <div className="w-px h-4 bg-zinc-800 mx-1 shrink-0" />
 
           {/* Primary Actions */}
-          {selectedLines.size > 0 && (
-            <Tip content={t('editor.selection.deselectAll')}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSelectedLines(new Set())}
-                className="size-9 shrink-0 text-primary"
-              >
-                <X className="size-4" />
-              </Button>
-            </Tip>
-          )}
+          <div className="flex items-center gap-1 shrink-0">
+            {settings.editor?.showShiftAll && (() => {
+              const shiftAmount = settings.editor?.shiftAllAmount ?? 0.5;
+              return (
+                <div className="flex items-center bg-zinc-900/50 rounded-lg p-0.5 border border-zinc-800">
+                  <Tip content={`-${shiftAmount}s`}>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={() => handleApplyOffset(-1)}
+                      className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60 size-7"
+                    >
+                      <ChevronLeft className="size-3.5" />
+                    </Button>
+                  </Tip>
+                  <Tip content={t('editor.shiftAll')}>
+                    <span className="text-xs font-mono text-zinc-500 tabular-nums w-8 text-center select-none cursor-default">
+                      {shiftAmount}s
+                    </span>
+                  </Tip>
+                  <Tip content={`+${shiftAmount}s`}>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={() => handleApplyOffset(1)}
+                      className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60 size-7"
+                    >
+                      <ChevronRight className="size-3.5" />
+                    </Button>
+                  </Tip>
+                </div>
+              );
+            })()}
+
+            {selectedLines.size > 0 && (
+              <Tip content={t('editor.selection.deselectAll')}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedLines(new Set())}
+                  className="size-9 shrink-0 text-primary"
+                >
+                  <X className="size-4" />
+                </Button>
+              </Tip>
+            )}
+          </div>
 
           {/* Desktop-only individual action buttons */}
           <div className="hidden lg:flex items-center gap-1 shrink-0">
@@ -335,8 +370,8 @@ export default function EditorToolbar({
               </Tip>
             )}
 
-            </div>
           </div>
+        </div>
 
         <div className="flex items-center gap-1">
           <Tip content={t('editor.undoTitle') || 'Undo (Ctrl+Z)'}>
@@ -403,9 +438,8 @@ export default function EditorToolbar({
                   }
                 }}
                 disabled={isSaving}
-                className={`flex-shrink-0 size-9 transition-colors ${
-                  isSaving ? 'text-zinc-400' : isAutosaving ? 'text-primary' : 'text-zinc-400'
-                }`}
+                className={`flex-shrink-0 size-9 transition-colors ${isSaving ? 'text-zinc-400' : isAutosaving ? 'text-primary' : 'text-zinc-400'
+                  }`}
               >
                 {isSaving
                   ? <Loader2 className="size-4 animate-spin" />
@@ -456,15 +490,13 @@ export default function EditorToolbar({
                 }}>
                   <Languages className="size-4" />
                   <div className="flex items-center gap-1.5">
-                    <span className={`text-xs font-bold ${
-                      settings.editor?.display?.readingFormat !== 'katakana' ? 'text-primary' : 'text-zinc-400'
-                    }`}>
+                    <span className={`text-xs font-bold ${settings.editor?.display?.readingFormat !== 'katakana' ? 'text-primary' : 'text-zinc-400'
+                      }`}>
                       {t('editor.readingFormat.hiragana')}
                     </span>
                     <span className="text-zinc-600 text-[10px]">↔</span>
-                    <span className={`text-xs font-bold ${
-                      settings.editor?.display?.readingFormat === 'katakana' ? 'text-primary' : 'text-zinc-400'
-                    }`}>
+                    <span className={`text-xs font-bold ${settings.editor?.display?.readingFormat === 'katakana' ? 'text-primary' : 'text-zinc-400'
+                      }`}>
                       {t('editor.readingFormat.katakana')}
                     </span>
                   </div>

@@ -280,7 +280,7 @@ export function useEditor({
           singers: header.singers.length ? header.singers : undefined,
           // Preserve structural depth so root dividers (e.g. [Part]) round-trip as roots,
           // not dim children — preview gates root styling on depth === 0.
-          depth: getDefaultDepthForLabel(header.label),
+          depth: header.depth,
           text: '',
         } as EditorLine);
         continue;

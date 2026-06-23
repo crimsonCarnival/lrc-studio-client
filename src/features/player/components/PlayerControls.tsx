@@ -526,21 +526,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                   </Tip>
                 )}
 
-                {!viewerMode && (
-                  <Tip content={loopTipContent}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => updateSetting('playback.loopCurrentLine', !settings.playback?.loopCurrentLine)}
-                      className={`rounded-full shrink-0 ${FOCUS_RING} ${settings.playback?.loopCurrentLine
-                        ? 'bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 border border-violet-500/30'
-                        : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'
-                        }`}
-                    >
-                      <Repeat className="size-4" />
-                    </Button>
-                  </Tip>
-                )}
+
               </div>
             </div>
 
@@ -620,24 +606,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                           <span className="text-xs text-zinc-500 w-14 shrink-0">{t('player.volume')}</span>
                           <VolumeControl />
                         </div>
-                        {!viewerMode && (
-                          <div className="flex items-center gap-3 px-1">
-                            <span className="text-xs text-zinc-500 w-14 shrink-0">{t('player.loop') || 'Loop'}</span>
-                            <Tip content={loopTipContent}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => updateSetting('playback.loopCurrentLine', !settings.playback?.loopCurrentLine)}
-                                className={`rounded-full shrink-0 ${FOCUS_RING} ${settings.playback?.loopCurrentLine
-                                  ? 'bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 border border-violet-500/30'
-                                  : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800'
-                                }`}
-                              >
-                                <Repeat className="size-4" />
-                              </Button>
-                            </Tip>
-                          </div>
-                        )}
+
                       </div>
                       {!viewerMode && (
                         <ChangeMediaPopoverContent fileInputId="change-media-file-editor-narrow" {...mediaPopoverProps} />

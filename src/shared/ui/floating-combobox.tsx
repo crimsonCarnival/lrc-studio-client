@@ -71,7 +71,8 @@ export function FloatingCombobox({
         top: rect.bottom + 4,
         left: rect.left,
         width: rect.width,
-        zIndex: 9999,
+        zIndex: 999999,
+        pointerEvents: 'auto',
       })
     }
   }, [open])

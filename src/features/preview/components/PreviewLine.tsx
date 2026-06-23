@@ -122,16 +122,16 @@ export default function PreviewLine({
       : formatSectionLabel(line.label, t);
 
     return (
-      <div className={`flex items-center gap-3 px-2 sm:px-4 py-2 ${isRoot ? 'my-4' : 'my-1'}`}>
-        <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/60'}`} />
-        <span className={`px-2 py-0.5 rounded-full border whitespace-nowrap ${
+      <div className={`flex items-center gap-4 px-2 sm:px-4 py-4 ${isRoot ? 'my-6' : 'my-1'}`}>
+        <div className={`flex-1 h-px ${isRoot ? 'bg-gradient-to-r from-transparent via-primary/50 to-primary/20' : 'bg-zinc-800/60'}`} />
+        <span className={`px-4 py-1 rounded-full whitespace-nowrap ${
           isRoot
-            ? 'text-xs font-bold tracking-widest uppercase text-primary bg-primary/10 border-primary/30'
-            : 'text-[10px] font-semibold tracking-widest uppercase text-zinc-600 bg-zinc-900/40 border-zinc-800/60'
+            ? 'text-sm sm:text-base font-black tracking-[0.2em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-primary via-fuchsia-400 to-primary drop-shadow-[0_0_12px_rgba(var(--color-primary),0.6)] border border-primary/20 bg-zinc-900/50 shadow-[0_0_15px_rgba(var(--color-primary),0.15)]'
+            : 'text-[10px] font-semibold tracking-widest uppercase text-zinc-600 bg-zinc-900/40 border border-zinc-800/60'
         }`}>
           {labelStr}{singers?.length > 0 ? ` · ${singers.join(', ')}` : ''}
         </span>
-        <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/60'}`} />
+        <div className={`flex-1 h-px ${isRoot ? 'bg-gradient-to-l from-transparent via-primary/50 to-primary/20' : 'bg-zinc-800/60'}`} />
       </div>
     );
   }
