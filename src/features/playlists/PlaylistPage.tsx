@@ -6,6 +6,7 @@ const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Lock, Pencil, Trash2, Music, Star, GitFork, GripVertical } from 'lucide-react';
 import { Button } from '@ui/button';
+import { FloatingCombobox } from '@ui/floating-combobox';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import {
   getPlaylist,
@@ -194,9 +195,8 @@ export default function PlaylistPage() {
     } : prev);
   }, []);
 
-  const handleSortModeChange = async (e: ChangeEvent<HTMLSelectElement>) => {
+  const handleSortModeChange = async (value: string) => {
     if (!playlist?.id) return;
-    const value = e.target.value;
     try {
       await updatePlaylist(playlist.id, { sortMode: value } as Parameters<typeof updatePlaylist>[1]);
       setPlaylist(prev => prev ? { ...prev, sortMode: value } : prev);
@@ -266,20 +266,21 @@ export default function PlaylistPage() {
                 </div>
               )}
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs text-muted-foreground">{t('playlists.modal.sortMode')}:</span>
                 {isOwner ? (
-                  <select
-                    value={playlist.sortMode}
+                  <FloatingCombobox
+                    size="sm"
+                    className="w-44"
+                    label={t('playlists.modal.sortMode')}
+                    value={playlist.sortMode ?? 'DATE_ADDED'}
                     onChange={handleSortModeChange}
-                    className="text-xs bg-transparent border border-border rounded px-1.5 py-0.5 text-foreground"
-                  >
-                    <option value="MANUAL">{t('playlists.sortMode.MANUAL')}</option>
-                    <option value="DATE_ADDED">{t('playlists.sortMode.DATE_ADDED')}</option>
-                    <option value="STARS">{t('playlists.sortMode.STARS')}</option>
-                    <option value="ALPHABETICAL">{t('playlists.sortMode.ALPHABETICAL')}</option>
-                  </select>
+                    options={['MANUAL', 'DATE_ADDED', 'STARS', 'ALPHABETICAL'].map(m => ({ value: m, label: tk(`playlists.sortMode.${m}`) }))}
+                    strict
+                  />
                 ) : (
-                  <span className="text-xs text-foreground">{tk(`playlists.sortMode.${playlist.sortMode}`)}</span>
+                  <>
+                    <span className="text-xs text-muted-foreground">{t('playlists.modal.sortMode')}:</span>
+                    <span className="text-xs text-foreground">{tk(`playlists.sortMode.${playlist.sortMode}`)}</span>
+                  </>
                 )}
               </div>
             </div>
