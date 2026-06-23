@@ -18,6 +18,8 @@ export const DEFAULT_SETTINGS = {
     preserveEmptyLines: false,
     showShiftAll: true,
     shiftAllAmount: 0.5,
+    playerPosition: 'bottom', // 'top' | 'bottom' — where the in-editor player docks
+
     showLineNumbers: true,
     timestampPrecision: 'thousandths',
     syncFlashDuration: 'normal',
