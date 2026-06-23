@@ -12,6 +12,7 @@ import { Tip } from '@ui/tip';
 import { ArrowUpToLine, ArrowDownToLine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
+import { getMarkInstruction } from '@features/editor/utils/mark-instruction';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
@@ -204,6 +205,12 @@ export default function Editor({
         </button>
       </Tip>
       <PlayerControls variant="editor" />
+      {/* #4: mark hint lives directly below the player, regardless of dock position */}
+      {syncMode && lines.length > 0 && selectedLines.size === 0 && (
+        <p className="text-xs text-zinc-600 text-center mt-2">
+          {getMarkInstruction(t, editorMode, awaitingEndMark, settings.shortcuts?.mark?.[0] || 'Space')}
+        </p>
+      )}
     </DragPointerIsolate>
   ) : null;
 
@@ -335,6 +342,7 @@ export default function Editor({
           onBulkMenu={openBulk}
           modifiedLines={modifiedLines}
           onToggleLineMode={handleToggleLineMode}
+          hideMarkInstruction={playerSlot === 'editor'}
         />
         </div>
       )}

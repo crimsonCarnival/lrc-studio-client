@@ -3,6 +3,7 @@ import { Button } from '@ui/button';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { Tip } from '@ui/tip';
 import { KEY_SYMBOLS } from '@features/settings/key-symbols';
+import { getMarkInstruction } from '@features/editor/utils/mark-instruction';
 
 interface EditorSyncControlsProps {
   settings: {
@@ -14,6 +15,9 @@ interface EditorSyncControlsProps {
   editorMode?: string;
   awaitingEndMark?: number | null;
   onBulkMenu?: () => void;
+  // When the player is docked inside the editor, the mark hint is shown below it
+  // instead (#4), so the in-list copy is suppressed here to avoid duplication.
+  hideMarkInstruction?: boolean;
   // Editor (still untyped JS) passes this through; unused here.
   updateSetting?: unknown;
 }
@@ -25,6 +29,7 @@ export default function EditorSyncControls({
   editorMode,
   awaitingEndMark,
   onBulkMenu,
+  hideMarkInstruction,
 }: EditorSyncControlsProps) {
   const { t } = useTranslation();
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
@@ -93,16 +98,13 @@ export default function EditorSyncControls({
       </div>
 
 
-      <p className="text-xs text-zinc-600 text-center">
-        {selectedLines.size > 0
-          ? selectionHintText
-          : editorMode === 'srt'
-            ? (awaitingEndMark != null ? t('editor.markEndInstruction').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Space') : t('editor.markInstructionSRT').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Space'))
-            : editorMode === 'words'
-              ? t('editor.markInstructionWords').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Space')
-              : t('editor.markInstruction').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Space')
-        }
-      </p>
+      {(selectedLines.size > 0 || !hideMarkInstruction) && (
+        <p className="text-xs text-zinc-600 text-center">
+          {selectedLines.size > 0
+            ? selectionHintText
+            : getMarkInstruction(t, editorMode, awaitingEndMark, settings.shortcuts?.mark?.[0] || 'Space')}
+        </p>
+      )}
     </>
   );
 }
