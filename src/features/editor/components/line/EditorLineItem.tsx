@@ -3,8 +3,10 @@ import type { ComponentProps, Dispatch, RefObject, SetStateAction, MouseEvent as
 import { useTranslation } from 'react-i18next';
 import { serializeToRubyMarkup, parseRubyMarkup, isKanji, hasKanji } from '@/shared/utils/furigana';
 import { Checkbox } from '@ui/checkbox';
+import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { GripVertical } from 'lucide-react';
+import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import LineTextEditingForm from './LineTextEditingForm';
 import { useLineGestures } from '../../hooks/useLineGestures';
 import LrcModeColumn from '../modes/LrcModeColumn';
@@ -576,46 +578,57 @@ const EditorLineItem = React.memo(({
           const singers = getSingers(line);
           setEditingSingers([...singers, '', '', '', ''].slice(0, 4));
         }}>
-        {editingLineIndex === i ? (
-          <LineTextEditingForm
-            ref={editInputRef}
-            lineIndex={i}
-            editingText={editingText}
-            setEditingText={setEditingText}
-            editingSecondary={editingSecondary}
-            setEditingSecondary={setEditingSecondary}
-            editingTranslations={editingTranslations as ComponentProps<typeof LineTextEditingForm>['editingTranslations']}
-            setEditingTranslations={setEditingTranslations as ComponentProps<typeof LineTextEditingForm>['setEditingTranslations']}
-            editingSingers={editingSingers}
-            setEditingSingers={setEditingSingers}
-            handleSaveLineText={handleSaveLineText}
-            setEditingLineIndex={setEditingLineIndex}
-            songArtists={songArtists}
-            projectSingers={projectSingers}
-          />
-        ) : (
-          <LineTextContent
-            line={line as ComponentProps<typeof LineTextContent>['line']}
-            lineIndex={i}
-            isActive={isActive}
-            isSynced={isSynced}
-            editorMode={editorMode}
-            settings={settings}
-            activeWordIndex={activeWordIndex}
-            editingReadingWordIndex={editingReadingWordIndex}
-            setEditingReadingWordIndex={setEditingReadingWordIndex}
-            handleReadingCommit={handleReadingCommit}
-            selection={selection}
-            setSelection={setSelection}
-            onCharClick={onCharClick}
-            handleWordClick={handleWordClick as ComponentProps<typeof LineTextContent>['handleWordClick']}
-            wordClickTimerRef={wordClickTimerRef as ComponentProps<typeof LineTextContent>['wordClickTimerRef']}
-            handleSaveLineText={handleSaveLineText}
-            handleCycleWordSinger={handleCycleWordSinger}
-            handleSetWordSinger={handleSetWordSinger as ComponentProps<typeof LineTextContent>['handleSetWordSinger']}
-            songSingers={projectSingers}
-          />
-        )}
+        <LineTextContent
+          line={line as ComponentProps<typeof LineTextContent>['line']}
+          lineIndex={i}
+          isActive={isActive}
+          isSynced={isSynced}
+          editorMode={editorMode}
+          settings={settings}
+          activeWordIndex={activeWordIndex}
+          editingReadingWordIndex={editingReadingWordIndex}
+          setEditingReadingWordIndex={setEditingReadingWordIndex}
+          handleReadingCommit={handleReadingCommit}
+          selection={selection}
+          setSelection={setSelection}
+          onCharClick={onCharClick}
+          handleWordClick={handleWordClick as ComponentProps<typeof LineTextContent>['handleWordClick']}
+          wordClickTimerRef={wordClickTimerRef as ComponentProps<typeof LineTextContent>['wordClickTimerRef']}
+          handleSaveLineText={handleSaveLineText}
+          handleCycleWordSinger={handleCycleWordSinger}
+          handleSetWordSinger={handleSetWordSinger as ComponentProps<typeof LineTextContent>['handleSetWordSinger']}
+          songSingers={projectSingers}
+        />
+
+        <ResponsiveModal
+          open={editingLineIndex === i}
+          onOpenChange={(open) => {
+            if (!open) {
+              handleSaveLineText(i, editingText, editingSecondary, editingTranslations as any, editingSingers);
+              setEditingLineIndex(null);
+            }
+          }}
+          title={t('editor.editLine', 'Edit Line')}
+        >
+          <div className="pt-2">
+            <LineTextEditingForm
+              ref={editInputRef}
+              lineIndex={i}
+              editingText={editingText}
+              setEditingText={setEditingText}
+              editingSecondary={editingSecondary}
+              setEditingSecondary={setEditingSecondary}
+              editingTranslations={editingTranslations as ComponentProps<typeof LineTextEditingForm>['editingTranslations']}
+              setEditingTranslations={setEditingTranslations as ComponentProps<typeof LineTextEditingForm>['setEditingTranslations']}
+              editingSingers={editingSingers}
+              setEditingSingers={setEditingSingers}
+              handleSaveLineText={handleSaveLineText}
+              setEditingLineIndex={setEditingLineIndex}
+              songArtists={songArtists}
+              projectSingers={projectSingers}
+            />
+          </div>
+        </ResponsiveModal>
       </div>
       {invalidSingers.length > 0 && (
         <Tip content={t('editor.invalidSingersWarning', { names: invalidSingers.join(', ') })}>

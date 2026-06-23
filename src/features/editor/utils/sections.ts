@@ -42,8 +42,10 @@ export function flatToSections(lines: any[]): any[] {
       };
     } else if (line) {
       if (!current) current = { label: null, depth: null, id: null, singers: undefined, timestamp: null, lines: [] };
-      // Strip section-only fields from line entries
-      const { type: _t, label: _l, depth: _d, ...rest } = line;
+      // Strip section-only and client-only fields before sending to the server.
+      // `furigana` is a client rendering cache, not a persisted field.
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { type: _t, label: _l, depth: _d, furigana: _f, ...rest } = line;
       current.lines.push(rest as EditorLine);
     }
   }
@@ -163,27 +165,26 @@ export function linesToRawText(
   lineText: (line: EditorLine) => string = (l) => (l.text as string | undefined) ?? '',
 ): string {
   const out: string[] = [];
-  let inOmittedSection = false; // currently inside an Intro section → skip its body lines
+  let currentDepth = 0;
 
   for (const line of lines ?? []) {
     if (line?.type === 'section') {
+      currentDepth = (line.depth as number) ?? 1;
       const label = ((line.label as string | undefined) ?? '').trim();
       const singers = Array.isArray(line.singers) ? (line.singers as string[]).filter(Boolean) : [];
-      if (isIntroLabel(label)) {
-        inOmittedSection = true; // drop the [Intro] header and everything under it
-        continue;
-      }
-      inOmittedSection = false;
       if (!label && singers.length === 0) {
         out.push(''); // anonymous marker → blank line
         continue;
       }
       const display = formatSectionLabelForSerialization(label);
-      out.push(singers.length ? `[${display}: ${singers.join(', ')}]` : `[${display}]`);
+      const indent = currentDepth > 0 ? '  ' : '';
+      out.push(singers.length ? `${indent}[${display} | ${singers.join(', ')}]` : `${indent}[${display}]`);
       continue;
     }
-    if (inOmittedSection) continue; // body line belonging to an omitted Intro section
-    out.push(lineText(line));
+    const indent = currentDepth > 0 ? '  ' : '';
+    const textStr = lineText(line);
+    // Don't indent blank lines
+    out.push(textStr.trim() ? `${indent}${textStr}` : textStr);
   }
 
   return out.join('\n');
@@ -196,11 +197,19 @@ const LRC_TIMESTAMP = /^\d{1,2}:\d{2}(?:\.\d{1,3})?$/;
  * Raw textarea line → section header parts, or null if the line is not a header.
  * Header form: `[Label]` or `[Label: A, B]` (comma-separated singers).
  */
-export function parseSectionHeader(rawLine: string): { label: string; singers: string[] } | null {
-  const m = (rawLine ?? '').trim().match(/^\[(.+?)(?::\s*(.+))?\]$/);
+export function parseSectionHeader(rawLine: string): { label: string; singers: string[]; depth: number } | null {
+  const leadingSpacesMatch = (rawLine ?? '').match(/^\s*/);
+  const leadingSpaces = leadingSpacesMatch ? leadingSpacesMatch[0].length : 0;
+  
+  const trimmed = (rawLine ?? '').trim();
+  const m = trimmed.match(/^\[(.+?)(?:\s*\|\s*(.+))?\]$/);
   if (!m) return null;
   const inner = m[1].trim();
   if (LRC_TIMESTAMP.test(inner)) return null; // [00:12.50] is a timestamp, not a section
   const singers = m[2] ? m[2].split(',').map((s) => s.trim()).filter(Boolean) : [];
-  return { label: inner, singers };
+  
+  // Depth 0 for unindented, depth 1 for indented
+  const depth = leadingSpaces > 0 ? 1 : 0;
+  
+  return { label: inner, singers, depth };
 }

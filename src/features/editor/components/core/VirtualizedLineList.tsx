@@ -2,9 +2,11 @@ import { useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react'
 import type { ComponentProps, RefObject } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
+import { Button } from '@ui/button';
+import { MoreHorizontal } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import EditorLineItem from '../line/EditorLineItem';
 import SelectionActionBar from './SelectionActionBar';
-import EditorSyncControls from './EditorSyncControls';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
 
@@ -81,7 +83,6 @@ interface VirtualizedLineListProps {
   onBulkMenu?: () => void;
   modifiedLines?: Set<number>;
   onToggleLineMode?: LineItemProps['onToggleLineMode'];
-  hideMarkInstruction?: boolean;
 }
 
 export default function VirtualizedLineList({
@@ -150,8 +151,8 @@ export default function VirtualizedLineList({
   onBulkMenu,
   modifiedLines,
   onToggleLineMode,
-  hideMarkInstruction,
 }: VirtualizedLineListProps) {
+  const { t } = useTranslation();
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
 
@@ -395,16 +396,22 @@ export default function VirtualizedLineList({
           />
         </div>
 
-      <EditorSyncControls
-        settings={settings}
-        updateSetting={updateSetting}
-        handleApplyOffset={handleApplyOffset as ComponentProps<typeof EditorSyncControls>['handleApplyOffset']}
-        selectedLines={selectedLines}
-        editorMode={editorMode}
-        awaitingEndMark={awaitingEndMark}
-        onBulkMenu={onBulkMenu}
-        hideMarkInstruction={hideMarkInstruction}
-      />
+        {typeof window !== 'undefined' && window.innerWidth < 1024 && selectedLines.size > 0 && onBulkMenu && (
+          <div className="flex flex-row gap-2 pt-2 border-t border-zinc-800/50 items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onBulkMenu}
+              className="bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 text-xs h-8 rounded-full px-3"
+            >
+              <MoreHorizontal className="size-3.5 mr-1.5" />
+              {t('editor.selection.actions') || 'Selection Actions'}
+              <span className="ml-1.5 bg-primary/20 px-1.5 rounded-full text-[10px] font-bold">
+                {selectedLines.size}
+              </span>
+            </Button>
+          </div>
+        )}
     </div>
   );
 }

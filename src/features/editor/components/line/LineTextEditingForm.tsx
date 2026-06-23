@@ -147,12 +147,6 @@ function LineTextEditingForm({
     <div
       role="group"
       className="flex flex-col gap-1 w-full"
-      onBlur={(e: FocusEvent<HTMLDivElement>) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-          save();
-          setEditingLineIndex(null);
-        }
-      }}
       onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           save();

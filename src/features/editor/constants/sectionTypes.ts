@@ -24,7 +24,7 @@ export const SECTION_TYPES = [
  */
 export function getDefaultDepthForLabel(label) {
   if (!label) return 1;
-  const base = label.trim().toLowerCase().replace(/\s+\d+$/, '');
+  const base = label.trim().toLowerCase().replace(/\s+(i{1,3}|iv|v|vi{0,3}|ix|x{1,2}|\d+)$/, '');
   const preset = SECTION_TYPES.find(s => s.id === base);
   return preset?.depth ?? 1;
 }
@@ -52,7 +52,7 @@ export function formatSectionLabelForSerialization(label) {
  */
 export function isIntroLabel(label) {
   if (!label) return false;
-  return label.trim().toLowerCase().replace(/\s+\d+$/, '') === 'intro';
+  return label.trim().toLowerCase().replace(/\s+(i{1,3}|iv|v|vi{0,3}|ix|x{1,2}|\d+)$/, '') === 'intro';
 }
 
 /**

@@ -358,8 +358,9 @@ export type LeaderboardUser = {
 export type Line = {
   endTime?: Maybe<Scalars['Float']['output']>;
   id?: Maybe<Scalars['String']['output']>;
+  mode?: Maybe<Scalars['String']['output']>;
   secondary?: Maybe<Scalars['String']['output']>;
-  secondaryWords?: Maybe<Array<SecondaryWord>>;
+  secondaryWords?: Maybe<Array<Word>>;
   singers?: Maybe<Array<Scalars['String']['output']>>;
   text?: Maybe<Scalars['String']['output']>;
   timestamp?: Maybe<Scalars['Float']['output']>;
@@ -373,6 +374,7 @@ export type LineInput = {
   endTime?: InputMaybe<Scalars['Float']['input']>;
   id?: InputMaybe<Scalars['String']['input']>;
   label?: InputMaybe<Scalars['String']['input']>;
+  mode?: InputMaybe<Scalars['String']['input']>;
   secondary?: InputMaybe<Scalars['String']['input']>;
   secondaryWords?: InputMaybe<Array<WordInput>>;
   singers?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -990,10 +992,7 @@ export type SearchSort =
   | 'RELEVANCE'
   | 'STARS';
 
-export type SecondaryWord = {
-  time?: Maybe<Scalars['Float']['output']>;
-  word: Scalars['String']['output'];
-};
+
 
 export type Section = {
   depth?: Maybe<Scalars['Int']['output']>;
