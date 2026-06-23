@@ -331,7 +331,14 @@ export function AppRouter({
   usePageTitle(mediaTitle);
 
   const { user } = useAuthContext();
-  const { editorColClass, previewColClass, showEditor, showPreview, mobileTab, layoutSwap, setLayoutSwap, editorWidth, setEditorWidth, lockLayout, focusMode, hideEditor, hidePreview, setShowNamingModal } = layoutState;
+  const { editorColClass, previewColClass, showEditor, showPreview, mobileTab, layoutSwap, setLayoutSwap, editorWidth, setEditorWidth, lockLayout, focusMode, setFocusMode, hideEditor, hidePreview, setHideEditor, setHidePreview, setShowNamingModal } = layoutState;
+
+  // Panel hide/show handlers (#11/#12/#13). Centralized here so the focusMode
+  // interplay lives in one place; the editor toolbar and preview just call these.
+  const handleHideEditor = useCallback(() => { setHideEditor(true); setHidePreview(false); }, [setHideEditor, setHidePreview]);
+  const handleShowEditor = useCallback(() => { setHideEditor(false); if (focusMode === 'playback') setFocusMode('default'); }, [setHideEditor, setFocusMode, focusMode]);
+  const handleHidePreview = useCallback(() => { setHidePreview(true); setHideEditor(false); }, [setHidePreview, setHideEditor]);
+  const handleShowPreview = useCallback(() => { setHidePreview(false); }, [setHidePreview]);
 
   const [isLgRouter, setIsLgRouter] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
   useEffect(() => {
@@ -404,6 +411,9 @@ export function AppRouter({
     registerAfterSave,
     songArtists: projectMetadata?.songArtists || [],
     playerSlot,
+    onHideEditor: handleHideEditor,
+    previewHidden: !showPreview,
+    onShowPreview: handleShowPreview,
   } as unknown as EditorProps), [
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
@@ -420,6 +430,7 @@ export function AppRouter({
     registerAfterSave,
     projectMetadata,
     playerSlot,
+    handleHideEditor, showPreview, handleShowPreview,
   ]);
 
   const previewProps = useMemo(() => ({
@@ -430,6 +441,9 @@ export function AppRouter({
     shareModal, setShareModal, hasMedia,
     isPlaying, playbackSpeed, activepublicId,
     project: pendingProject, projectMetadata,
+    onHidePreview: handleHidePreview,
+    editorHidden: !showEditor,
+    onShowEditor: handleShowEditor,
   } as unknown as PreviewComponentProps), [
     lines, setLines, playbackPosition,
     mediaTitle, playerRef, duration,
@@ -438,6 +452,7 @@ export function AppRouter({
     shareModal, setShareModal, hasMedia,
     isPlaying, playbackSpeed, activepublicId,
     pendingProject, projectMetadata,
+    handleHidePreview, showEditor, handleShowEditor,
   ]);
 
   const handleResize = useCallback((e: MouseEvent) => {
