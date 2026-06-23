@@ -142,6 +142,35 @@ export default function PreviewViewport({
     return result;
   }, [lines]);
 
+  // #6: hide unsynced section groups from the normal preview. A "group" is a section
+  // marker plus the lines under it (and a leading anonymous group for lines before the
+  // first marker). A group with no timestamp anywhere is still being edited — don't show
+  // its header or its lines in the preview until at least one line is synced.
+  const visibleLines = useMemo(() => {
+    type Group = { items: { line: PreviewLineData; originalIndex: number }[]; hasTs: boolean };
+    const groups: Group[] = [];
+    let g: Group | null = null;
+    lines.forEach((line, idx) => {
+      if (line.type === 'section') {
+        g = { items: [{ line, originalIndex: idx }], hasTs: line.timestamp != null };
+        groups.push(g);
+      } else {
+        if (!g) { g = { items: [], hasTs: false }; groups.push(g); }
+        g.items.push({ line, originalIndex: idx });
+        if (line.timestamp != null) g.hasTs = true;
+      }
+    });
+    const result: { line: PreviewLineData; originalIndex: number }[] = [];
+    for (const grp of groups) if (grp.hasTs) result.push(...grp.items);
+    return result;
+  }, [lines]);
+
+  // Active line's position within the filtered list (-1 when it's in a hidden group).
+  const mappedActiveIndex = useMemo(
+    () => visibleLines.findIndex((v) => v.originalIndex === currentIndex),
+    [visibleLines, currentIndex],
+  );
+
   // Compute display lines for dual-line mode
   const dualDisplayLines = useMemo(() => {
     if (!isDualLine) return null;
@@ -168,7 +197,7 @@ export default function PreviewViewport({
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
-    count: isDualLine ? 0 : lines.length,
+    count: isDualLine ? 0 : visibleLines.length,
     getScrollElement: () => containerRef.current,
     estimateSize: () => 52,
     overscan: 5,
@@ -177,18 +206,18 @@ export default function PreviewViewport({
 
   // Auto-scroll to active line (virtual)
   useEffect(() => {
-    if (isDualLine || scrollAlignment === 'none' || currentIndex < 0) return;
+    if (isDualLine || scrollAlignment === 'none' || mappedActiveIndex < 0) return;
 
     // Use requestAnimationFrame to ensure the virtualizer has painted items before scrolling
     const raf = requestAnimationFrame(() => {
-      virtualizer.scrollToIndex(currentIndex, {
+      virtualizer.scrollToIndex(mappedActiveIndex, {
         align: scrollAlignment === 'start' ? 'start' : scrollAlignment === 'end' ? 'end' : 'center',
         behavior: scrollMode,
       });
     });
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex, isDualLine, scrollAlignment, scrollMode]);
+  }, [mappedActiveIndex, isDualLine, scrollAlignment, scrollMode]);
 
   let content;
 
@@ -271,12 +300,14 @@ export default function PreviewViewport({
           className={`overflow-x-hidden px-1 sm:px-0`}
         >
           {virtualizer.getVirtualItems().map((vRow) => {
-            const i = vRow.index;
-            const line = lines[i];
+            const entry = visibleLines[vRow.index];
+            if (!entry) return null;
+            const i = entry.originalIndex;
+            const line = entry.line;
             return (
               <div
                 key={i}
-                data-index={i}
+                data-index={vRow.index}
                 ref={virtualizer.measureElement}
                 style={{
                   position: 'absolute',
