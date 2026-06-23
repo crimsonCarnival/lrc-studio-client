@@ -4,15 +4,7 @@ import { Sun, Moon, Monitor, Palette, Globe, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
-
-const THEMES = [
-  { id: 'system', label: 'System', Icon: Monitor, swatch: 'bg-zinc-500' },
-  { id: 'dark', label: 'Dark', Icon: Moon, swatch: 'bg-[#232136] border border-[#393552]' },
-  { id: 'light', label: 'Light', Icon: Sun, swatch: 'bg-[#faf4ed] border border-[#dfdad9]' },
-  { id: 'cobalt', label: 'Cobalt', Icon: Palette, swatch: 'bg-[#2F2FE4]' },
-  { id: 'velvet', label: 'Velvet', Icon: Palette, swatch: 'bg-[#A64D79]' },
-  { id: 'sage', label: 'Sage', Icon: Palette, swatch: 'bg-[#5C8374]' },
-];
+import { THEMES } from './theme-options';
 
 const LANG_NAMES: Record<string, Record<string, string>> = {
   en: { en: 'English', es: 'Inglés' },
