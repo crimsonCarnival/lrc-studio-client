@@ -146,7 +146,7 @@ const PanelReorderGroup = React.memo(function PanelReorderGroup({
                 value={item}
                 layout={!isMobile ? true : undefined}
                 dragListener={isDesktop && !lockLayout}
-                whileDrag={{ scale: 1.01, zIndex: 50, boxShadow: "0px 20px 40px rgba(0,0,0,0.4)", opacity: 0.8 }}
+                whileDrag={{ zIndex: 50, boxShadow: "0px 20px 40px rgba(0,0,0,0.4)", opacity: 0.8 }}
                 className={`flex-1 flex flex-col min-h-0 ${isEditor ? 'gap-4' : ''} ${mobileTab !== item ? 'max-lg:hidden' : ''} relative group/reorder lg:border-2 lg:rounded-2xl border-0 rounded-none ${isEditor ? borderClasses.editor : borderClasses.preview} transition-colors duration-200 overflow-hidden lg:bg-zinc-900/50 lg:backdrop-blur-sm bg-zinc-950`}
                 onDragStart={() => setDraggingItem(item)}
                 onDragEnd={() => setDraggingItem(null)}
