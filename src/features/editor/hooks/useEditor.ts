@@ -1020,35 +1020,42 @@ export function useEditor({
   );
 
   const handleInsertSection = useCallback((afterIndex, label = 'verse') => {
-    setLines((prev) => {
-      const updated = [...prev];
-      
-      // Serialize the section label (e.g., "verse" -> "verse 2" if "verse" already exists)
-      const baseLabel = label.trim().toLowerCase();
-      let maxNumber = 0;
-      for (const line of prev) {
-        if (line.type === 'section' && line.label) {
-          const l = line.label.trim().toLowerCase();
-          if (l === baseLabel) {
-            maxNumber = Math.max(maxNumber, 1);
-          } else if (l.startsWith(`${baseLabel} `)) {
-            const numStr = l.slice(baseLabel.length + 1).trim();
-            const num = parseInt(numStr, 10);
-            if (!isNaN(num) && String(num) === numStr) {
-              maxNumber = Math.max(maxNumber, num);
-            }
+    // Serialize the section label (e.g., "verse" -> "verse 2" if "verse" already exists).
+    // Computed from current `lines` (not inside the updater) so we can seed the edit state
+    // synchronously below and open the section editor on the freshly inserted marker.
+    const baseLabel = label.trim().toLowerCase();
+    let maxNumber = 0;
+    for (const line of lines) {
+      if (line.type === 'section' && line.label) {
+        const l = line.label.trim().toLowerCase();
+        if (l === baseLabel) {
+          maxNumber = Math.max(maxNumber, 1);
+        } else if (l.startsWith(`${baseLabel} `)) {
+          const numStr = l.slice(baseLabel.length + 1).trim();
+          const num = parseInt(numStr, 10);
+          if (!isNaN(num) && String(num) === numStr) {
+            maxNumber = Math.max(maxNumber, num);
           }
         }
       }
-      
-      const finalLabel = maxNumber > 0 ? `${label} ${maxNumber + 1}` : label;
-      
-      const depth = getDefaultDepthForLabel(finalLabel);
-      const section = { type: 'section', label: finalLabel, depth, timestamp: null, id: crypto.randomUUID() };
-      updated.splice(afterIndex + 1, 0, section);
+    }
+
+    const finalLabel = maxNumber > 0 ? `${label} ${maxNumber + 1}` : label;
+    const depth = getDefaultDepthForLabel(finalLabel);
+    const newIndex = afterIndex + 1;
+
+    setLines((prev) => {
+      const updated = [...prev];
+      updated.splice(newIndex, 0, { type: 'section', label: finalLabel, depth, timestamp: null, id: crypto.randomUUID() });
       return updated;
     });
-  }, [setLines]);
+
+    // Open the section editor immediately so the singer inputs are available without a
+    // second click — the user can name singers right after adding the section.
+    setEditingLineIndex(newIndex);
+    setEditingText(finalLabel);
+    setEditingSingers(['', '', '', '']);
+  }, [lines, setLines, setEditingLineIndex, setEditingText, setEditingSingers]);
 
   const handleToggleSectionDepth = useCallback((index) => {
     setLines((prev) => {
