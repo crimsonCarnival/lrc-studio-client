@@ -135,7 +135,6 @@ export default function VirtualizedLineList({
   handleBulkDelete,
   clearSelection,
   handleToggleLine,
-  updateSetting,
   activeWordIndex,
   handleClearWordTimestamp,
   handleSetActiveWordIndex,

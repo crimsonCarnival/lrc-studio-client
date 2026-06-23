@@ -44,7 +44,6 @@ export function flatToSections(lines: any[]): any[] {
       if (!current) current = { label: null, depth: null, id: null, singers: undefined, timestamp: null, lines: [] };
       // Strip section-only and client-only fields before sending to the server.
       // `furigana` is a client rendering cache, not a persisted field.
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { type: _t, label: _l, depth: _d, furigana: _f, ...rest } = line;
       current.lines.push(rest as EditorLine);
     }
@@ -166,12 +165,18 @@ export function linesToRawText(
 ): string {
   const out: string[] = [];
   let currentDepth = 0;
+  let inOmittedSection = false; // inside an Intro section → drop its header and body (#8)
 
   for (const line of lines ?? []) {
     if (line?.type === 'section') {
-      currentDepth = (line.depth as number) ?? 1;
       const label = ((line.label as string | undefined) ?? '').trim();
       const singers = Array.isArray(line.singers) ? (line.singers as string[]).filter(Boolean) : [];
+      if (isIntroLabel(label)) {
+        inOmittedSection = true; // Intro is editor-only metadata; omit header + body entirely
+        continue;
+      }
+      inOmittedSection = false;
+      currentDepth = (line.depth as number) ?? 1;
       if (!label && singers.length === 0) {
         out.push(''); // anonymous marker → blank line
         continue;
@@ -181,6 +186,7 @@ export function linesToRawText(
       out.push(singers.length ? `${indent}[${display} | ${singers.join(', ')}]` : `${indent}[${display}]`);
       continue;
     }
+    if (inOmittedSection) continue; // body line belonging to an omitted Intro section
     const indent = currentDepth > 0 ? '  ' : '';
     const textStr = lineText(line);
     // Don't indent blank lines
