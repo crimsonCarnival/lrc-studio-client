@@ -1040,7 +1040,9 @@ export function useEditor({
       }
     }
 
-    const finalLabel = maxNumber > 0 ? `${label} ${maxNumber + 1}` : label;
+    // Always number from 1 so the first section of a type reads "Verse 1", not "Verse".
+    // `maxNumber` already accounts for any legacy bare "verse" marker (counted as 1 above).
+    const finalLabel = `${label} ${maxNumber + 1}`;
     const depth = getDefaultDepthForLabel(finalLabel);
     const newIndex = afterIndex + 1;
 
