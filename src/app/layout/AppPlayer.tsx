@@ -1,78 +1,31 @@
 import { useRef, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
 import { SkeletonPlayer } from '@ui/skeleton';
-import PlayerRaw from '@features/player/components/Player';
-import { useSettings } from '@/features/settings/useSettings';
-
-// Player is still untyped JS; cast until it is migrated.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const Player = PlayerRaw as any;
+import PlayerControls from '@features/player/components/PlayerControls';
+import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 
 interface AppPlayerProps {
   isReady?: boolean;
   isPlayerMounted?: boolean;
   isProjectLoading?: boolean;
-  playerRef?: unknown;
-  mediaTitle?: string;
-  setMediaTitle?: (title: string) => void;
-  setIsPlaying?: (playing: boolean) => void;
-  setPlaybackSpeed?: (speed: number) => void;
-  handleTimeUpdate?: (...args: unknown[]) => void;
-  handleDurationChange?: (...args: unknown[]) => void;
-  handleMediaChange?: (...args: unknown[]) => void;
-  handleYtUrlChange?: (...args: unknown[]) => void;
-  handleMediaUpload?: (...args: unknown[]) => void;
-  restoredMedia?: unknown;
-  restoredPosition?: number;
-  restoredSpeed?: number;
-  projectMetadata?: unknown;
-  projectCoverImage?: string | null;
-  lines?: unknown[];
-  activeLineIndex?: number;
-  playbackPosition?: number;
-  syncMode?: boolean;
-  playerTop?: boolean;
   onHeightChange?: (height: number) => void;
+  playerSlot?: PlayerSlot;
 }
 
 /**
- * Docked player bar — desktop bottom, mobile above tab bar.
- * Hidden during setup phase but stays mounted to keep playerRef alive.
+ * Docked player bar — mobile only, pinned above the tab bar.
+ * Hidden during setup phase but stays mounted to keep the engine alive.
+ * Media state is owned by PlayerEngineProvider (mounted above this in AppLayout).
+ * Only renders when playerSlot === 'mobile'; the editor and header own the other slots.
  */
 export function AppPlayer({
   isReady,
   isPlayerMounted,
   isProjectLoading,
-  playerRef,
-  mediaTitle,
-  setMediaTitle,
-  setIsPlaying,
-  setPlaybackSpeed,
-  handleTimeUpdate,
-  handleDurationChange,
-  handleMediaChange,
-  handleYtUrlChange,
-  handleMediaUpload,
-  restoredMedia,
-  restoredPosition,
-  restoredSpeed,
-  projectMetadata,
-  projectCoverImage,
-  lines,
-  activeLineIndex,
-  playbackPosition,
-  syncMode,
-  playerTop,
   onHeightChange,
+  playerSlot,
 }: AppPlayerProps) {
-  const { t } = useTranslation();
-  const location = useLocation();
-  const { updateSetting } = useSettings();
-
-  const positionClass = playerTop
-    ? 'lg:top-[88px] lg:bottom-auto bottom-14 top-auto'
-    : 'bottom-14 lg:bottom-6 top-auto';
+  // Mobile dock is always pinned above the tab bar
+  const positionClass = 'bottom-14 top-auto';
 
   const innerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -87,6 +40,8 @@ export function AppPlayer({
   }, [onHeightChange]);
 
   if (!isPlayerMounted) return null;
+  // Editor and header own their respective slots; dock is only for mobile
+  if (playerSlot === 'editor' || playerSlot === 'header') return null;
 
   return (
     <div
@@ -96,39 +51,7 @@ export function AppPlayer({
         {isProjectLoading && isReady ? (
           <SkeletonPlayer />
         ) : (
-          <Player
-            ref={playerRef}
-            mediaTitle={mediaTitle}
-            onPlayingChange={setIsPlaying}
-            onSpeedChange={setPlaybackSpeed}
-            onTitleChange={(newTitle: string) => {
-              const isSetupPhase = location.pathname === '/project/new';
-              if (
-                isSetupPhase ||
-                !mediaTitle ||
-                mediaTitle === t('library.untitled') ||
-                mediaTitle === 'Untitled'
-              ) {
-                setMediaTitle?.(newTitle);
-              }
-            }}
-            onTimeUpdate={handleTimeUpdate}
-            onDurationChange={handleDurationChange}
-            onMediaChange={handleMediaChange}
-            onYtUrlChange={handleYtUrlChange}
-            onMediaUpload={handleMediaUpload}
-            initialMedia={restoredMedia}
-            initialSeek={restoredPosition}
-            initialSpeed={restoredSpeed}
-            projectMetadata={projectMetadata}
-            projectCoverImage={projectCoverImage}
-            lines={lines}
-            activeLineIndex={activeLineIndex}
-            playbackPosition={playbackPosition}
-            syncMode={syncMode}
-            playerTop={playerTop}
-            onDockToggle={() => updateSetting('interface.playerTop', !playerTop)}
-          />
+          <PlayerControls variant="mobile" />
         )}
       </div>
     </div>

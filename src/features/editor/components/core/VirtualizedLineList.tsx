@@ -194,6 +194,21 @@ export default function VirtualizedLineList({
     });
   }, [editingLineIndex, virtualizer, listRef]);
 
+  // The active line grows when selected (highlight box padding + text wrapping), but the
+  // virtualizer only self-measures via ResizeObserver — which doesn't fire on the one frame
+  // the active styling is applied. Force-measure the current (and previously) active row
+  // synchronously so the following rows don't overlap it. Mirrors the editing-line effect above.
+  const prevActiveLineIndexRef = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const prev = prevActiveLineIndexRef.current;
+    prevActiveLineIndexRef.current = displayedActiveIndex;
+    const toMeasure = new Set([displayedActiveIndex, prev].filter((x): x is number => x != null && x >= 0));
+    toMeasure.forEach(idx => {
+      const el = listRef.current?.querySelector(`[data-index="${idx}"]`);
+      if (el) virtualizer.measureElement(el as HTMLElement);
+    });
+  }, [displayedActiveIndex, virtualizer, listRef]);
+
   // Auto-scroll to active line via virtualizer
   const prevActiveRef = useCallback((idx: number) => {
     if (scrollAlignment === 'none') return;

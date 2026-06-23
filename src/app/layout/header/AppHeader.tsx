@@ -17,6 +17,8 @@ import { GuestAuthButtons } from './GuestAuthButtons';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
+import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
+import PlayerControls from '@/features/player/components/PlayerControls';
 
 interface ForkedFrom {
   publicId?: string;
@@ -49,6 +51,8 @@ interface AppHeaderProps {
   syncMode: boolean;
   setShowKeyboardHelp?: (v: boolean) => void;
   setShowNamingModal?: (v: boolean) => void;
+  playerSlot?: PlayerSlot;
+  projectCoverImage?: string | null;
 }
 
 export function AppHeader({
@@ -76,6 +80,8 @@ export function AppHeader({
   syncMode,
   setShowKeyboardHelp,
   setShowNamingModal,
+  playerSlot,
+  projectCoverImage,
 }: AppHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -137,7 +143,7 @@ export function AppHeader({
     <>
       <header className="fixed top-0 left-0 right-0 z-nav animate-fade-in bg-zinc-950/60 backdrop-blur-2xl">
 
-        <div className="max-w-[1600px] mx-auto w-full px-4 lg:px-6 py-2 sm:py-2.5 flex flex-row items-center justify-between gap-2">
+        <div className="relative max-w-[1600px] mx-auto w-full px-4 lg:px-6 py-2 sm:py-2.5 flex flex-row items-center justify-between gap-2">
 
           {/* ── Left: Logo + breadcrumb ── */}
           <HeaderBreadcrumb
@@ -146,11 +152,12 @@ export function AppHeader({
             setMediaTitle={setMediaTitle}
             triggerImportSave={triggerImportSave}
             forkedFrom={forkedFrom}
+            projectCoverImage={projectCoverImage}
             onLogoClick={goHomeOrWarn}
           />
 
           {/* ── Center: Start Syncing (edit mode only) ── */}
-          {!syncMode && isReady && (
+          {!syncMode && isReady && playerSlot !== 'header' && (
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('editor:start-syncing'))}
               className="py-1 px-3 h-7 text-xs font-semibold text-zinc-950 bg-primary hover:bg-primary-dim rounded-lg transition-colors shrink-0"
@@ -158,6 +165,16 @@ export function AppHeader({
               {t('editor.startSyncing')}
             </button>
           )}
+
+          {/* ── Center: Compact player (header slot only) — absolutely centered in the bar ── */}
+          {playerSlot === 'header' && isReady && (
+            <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-full max-w-xl px-2 flex justify-center">
+              <div className="pointer-events-auto w-full flex justify-center">
+                <PlayerControls variant="header" />
+              </div>
+            </div>
+          )}
+
           <div className="flex-1" />
 
           {/* ── Right: Controls ── */}

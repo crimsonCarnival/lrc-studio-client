@@ -6,9 +6,11 @@ import EditorToolbar from './EditorToolbar';
 import EditorPasteArea from '../setup/EditorPasteArea';
 import VirtualizedLineList from './VirtualizedLineList';
 import EditorActionDrawer from './EditorActionDrawer';
+import PlayerControls from '@/features/player/components/PlayerControls';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
+import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 
 const EMPTY_ARTISTS: string[] = [];
 
@@ -44,6 +46,7 @@ interface EditorProps {
   onOpenProjectSettings?: () => void;
   registerAfterSave?: (cb: (() => void) | null) => void;
   songArtists?: string[];
+  playerSlot?: PlayerSlot;
 }
 
 export default function Editor({
@@ -74,6 +77,7 @@ export default function Editor({
   onShowKeyboardHelp,
   registerAfterSave,
   songArtists = EMPTY_ARTISTS,
+  playerSlot,
 }: EditorProps) {
   "use no memo";
   const {
@@ -306,6 +310,12 @@ export default function Editor({
         </div>
       )}
       </div>
+
+      {playerSlot === 'editor' && (
+        <div className="flex-shrink-0 mt-3 border-t border-zinc-800/50 -mx-3 sm:-mx-5 px-3 sm:px-5 pt-3">
+          <PlayerControls variant="editor" />
+        </div>
+      )}
 
       {/* Action Drawer for Mobile Actions */}
       <EditorActionDrawer

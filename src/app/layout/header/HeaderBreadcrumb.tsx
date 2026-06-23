@@ -17,11 +17,12 @@ interface HeaderBreadcrumbProps {
   setMediaTitle: (title: string) => void;
   triggerImportSave: (opts: { title?: string }) => void;
   forkedFrom?: ForkedFrom | null;
+  projectCoverImage?: string | null;
   // Logo click is guarded for unsaved changes by the parent.
   onLogoClick: () => void;
 }
 
-export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerImportSave, forkedFrom, onLogoClick }: HeaderBreadcrumbProps) {
+export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerImportSave, forkedFrom, projectCoverImage, onLogoClick }: HeaderBreadcrumbProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -69,6 +70,13 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
         {isReady ? (
           <>
             <span className="text-zinc-700 shrink-0">/</span>
+            {projectCoverImage && (
+              <LazyImage
+                src={projectCoverImage}
+                alt=""
+                className="size-6 rounded object-cover border border-zinc-700/50 shrink-0"
+              />
+            )}
             {editingProjectName ? (
               <Input
                 ref={projectNameInputRef}

@@ -11,6 +11,9 @@ import { AppPlayer } from './layout/AppPlayer';
 import { AppMobileNav } from './layout/AppMobileNav';
 import { AppModals } from './layout/AppModals';
 import { SafeAreaContainer } from '../shared/ui/SafeAreaContainer';
+import { PlayerEngineProvider } from '@/features/player/PlayerEngine';
+import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
+import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
@@ -70,7 +73,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   } = appState;
 
   const { settings, updateSetting } = settingsState;
-  const { focusMode, setFocusMode, hideEditor, setHideEditor, hidePreview, setHidePreview, mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, playerTop, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
+  const { focusMode, setFocusMode, hideEditor, setHideEditor, hidePreview, setHidePreview, mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
 
   // Track lg breakpoint reactively so dynamic padding formula is correct on resize
   const [isLg, setIsLg] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
@@ -81,15 +84,15 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     return () => mql.removeEventListener('change', handler);
   }, []);
 
-  // Compute dynamic padding from measured player height
-  // playerTop=true: player is fixed at lg:top-[88px], so content needs top padding = 88 + playerHeight + 16px gap
-  const dynamicPt = playerTop && isReady && isPlayerMounted && playerHeight > 0 && isLg
-    ? `${88 + playerHeight + 16}px`
-    : undefined;
-  // playerTop=false: player is fixed at bottom, content needs bottom padding = playerHeight + offset + gap
-  // desktop: bottom-6 (24px) + 24px gap = 48px; mobile: bottom-14 (56px) + 24px gap = 80px
-  const dynamicPb = !playerTop && isReady && isPlayerMounted && playerHeight > 0
-    ? `${playerHeight + (isLg ? 48 : 80)}px`
+  const inputMethod = useInputMethod();
+  const isTouch = inputMethod === 'touch';
+  const playerSlot = usePlayerSlot({ hideEditor, hidePreview, focusMode, isLg, isTouch });
+
+  // Compute dynamic bottom padding only for the mobile dock (fixed above the tab bar).
+  // Desktop slots (editor/header) are in-flow — no space reservation needed.
+  // mobile: bottom-14 (56px) + 24px gap = 80px
+  const dynamicPb = playerSlot === 'mobile' && isReady && isPlayerMounted && playerHeight > 0
+    ? `${playerHeight + 80}px`
     : undefined;
 
   const isSetupPage = location.pathname === '/project/new';
@@ -123,6 +126,33 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
 
   return (
     <SafeAreaContainer padding="bottom">
+      <PlayerEngineProvider
+        ref={playerRef as Parameters<typeof PlayerEngineProvider>[0]['ref']}
+        onTimeUpdate={handleTimeUpdate}
+        onPlayingChange={setIsPlaying}
+        onSpeedChange={setPlaybackSpeed}
+        onDurationChange={handleDurationChange}
+        onMediaChange={handleMediaChange}
+        onYtUrlChange={handleYtUrlChange}
+        onMediaUpload={handleMediaUpload}
+        onTitleChange={(newTitle: string) => {
+          const isSetupPhase = location.pathname === '/project/new';
+          if (isSetupPhase || !mediaTitle || mediaTitle === t('library.untitled') || mediaTitle === 'Untitled') {
+            setMediaTitle(newTitle);
+          }
+        }}
+        mediaTitle={mediaTitle}
+        initialMedia={restoredMedia as Parameters<typeof PlayerEngineProvider>[0]['initialMedia']}
+        initialSeek={restoredPosition}
+        initialSpeed={restoredSpeed}
+        projectMetadata={projectMetadata}
+        projectCoverImage={projectCoverImage ?? undefined}
+        lines={lines as Parameters<typeof PlayerEngineProvider>[0]['lines']}
+        activeLineIndex={activeLineIndex}
+        playbackPosition={playbackPosition}
+        syncMode={syncMode}
+
+      >
       <div className="min-h-screen lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col">
         <AppBackground />
 
@@ -163,26 +193,26 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           i18n={i18n}
           syncMode={syncMode}
           setShowNamingModal={setShowNamingModal}
+          playerSlot={playerSlot}
+          projectCoverImage={projectCoverImage}
         />
 
         <div
           className={`relative z-base flex-1 min-h-0 ${isFullWidthPage ? 'px-0' : 'px-0 lg:px-6'} flex flex-col transition-[padding] duration-500 ease-in-out
             ${location.pathname === '/' ? 'pt-14'
-              : (playerTop && isReady && isPlayerMounted) ? 'max-lg:pt-14 lg:pt-[220px]'
-                : isPublicProjectView ? 'pt-14 lg:pt-0' // Public view handles its own header padding if needed, but AppHeader is fixed so pt-14 helps.
-                  : 'pt-14 lg:pt-16'
+              : isPublicProjectView ? 'pt-14 lg:pt-0'
+                : 'pt-14 lg:pt-16'
             }
             ${isFullWidthPage
               ? 'pb-0'
               : isPlayerMounted && isReady
-                ? playerTop
-                  ? 'max-lg:pb-[80px] lg:pb-6'
-                  : 'max-lg:pb-[200px] lg:pb-[148px]'
+                ? playerSlot === 'mobile'
+                  ? 'pb-[200px]'
+                  : 'pb-6'
                 : 'pb-20 lg:pb-6'
             }
           `}
           style={{
-            ...(dynamicPt && !isPublicProjectView ? { paddingTop: dynamicPt } : {}),
             ...(dynamicPb && !isPublicProjectView ? { paddingBottom: dynamicPb } : {}),
           }}
         >
@@ -195,27 +225,8 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           isReady={isReady}
           isPlayerMounted={isPlayerMounted}
           isProjectLoading={isProjectLoading}
-          playerRef={playerRef}
-          mediaTitle={mediaTitle}
-          setMediaTitle={setMediaTitle}
-          setIsPlaying={setIsPlaying}
-          setPlaybackSpeed={setPlaybackSpeed}
-          handleTimeUpdate={handleTimeUpdate}
-          handleDurationChange={handleDurationChange}
-          handleMediaChange={handleMediaChange}
-          handleYtUrlChange={handleYtUrlChange}
-          handleMediaUpload={handleMediaUpload}
-          restoredMedia={restoredMedia}
-          restoredPosition={restoredPosition}
-          restoredSpeed={restoredSpeed}
-          projectMetadata={projectMetadata}
-          projectCoverImage={projectCoverImage}
-          lines={lines}
-          activeLineIndex={activeLineIndex}
-          playbackPosition={playbackPosition}
-          syncMode={syncMode}
-          playerTop={playerTop}
           onHeightChange={setPlayerHeight}
+          playerSlot={playerSlot}
         />
 
         <AppMobileNav
@@ -251,6 +262,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           }}
         />
       </div>
+      </PlayerEngineProvider>
     </SafeAreaContainer>
   );
 }
