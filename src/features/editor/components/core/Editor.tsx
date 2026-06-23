@@ -7,6 +7,10 @@ import EditorPasteArea from '../setup/EditorPasteArea';
 import VirtualizedLineList from './VirtualizedLineList';
 import EditorActionDrawer from './EditorActionDrawer';
 import PlayerControls from '@/features/player/components/PlayerControls';
+import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
+import { Tip } from '@ui/tip';
+import { ArrowUpToLine, ArrowDownToLine } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
@@ -80,6 +84,7 @@ export default function Editor({
   playerSlot,
 }: EditorProps) {
   "use no memo";
+  const { t } = useTranslation();
   const {
     rawText,
     setRawText,
@@ -180,6 +185,28 @@ export default function Editor({
 
   const { activeDrawer, wordData, lineData, openWord, openLine, openBulk, close: closeDrawer } = useEditorActionDrawer();
 
+  // #3: the in-editor player docks at the top (below the toolbar) or bottom, persisted
+  // as a global editor setting. The same dock block renders in whichever slot is active.
+  const playerPosition = settings.editor?.playerPosition === 'top' ? 'top' : 'bottom';
+  const playerDock = playerSlot === 'editor' ? (
+    <DragPointerIsolate
+      className={`relative flex-shrink-0 border-zinc-800/50 -mx-3 sm:-mx-5 px-3 sm:px-5 ${
+        playerPosition === 'top' ? 'mb-3 border-b pb-3' : 'mt-3 border-t pt-3'
+      }`}
+    >
+      <Tip content={playerPosition === 'top' ? t('editor.player.moveToBottom') : t('editor.player.moveToTop')}>
+        <button
+          onClick={() => updateSetting('editor.playerPosition', playerPosition === 'top' ? 'bottom' : 'top')}
+          aria-label={playerPosition === 'top' ? t('editor.player.moveToBottom') : t('editor.player.moveToTop')}
+          className="absolute top-1 right-3 sm:right-5 z-raised size-6 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 flex items-center justify-center transition-colors"
+        >
+          {playerPosition === 'top' ? <ArrowDownToLine className="size-3" /> : <ArrowUpToLine className="size-3" />}
+        </button>
+      </Tip>
+      <PlayerControls variant="editor" />
+    </DragPointerIsolate>
+  ) : null;
+
 
   return (
     <div
@@ -219,6 +246,8 @@ export default function Editor({
         activeWordIndex={activeWordIndex}
         stampTarget={stampTarget}
       />
+
+      {playerPosition === 'top' && playerDock}
 
       {/* Visual separator between toolbar and lyrics list */}
       {syncMode && lines.length > 0 && (
@@ -311,11 +340,7 @@ export default function Editor({
       )}
       </div>
 
-      {playerSlot === 'editor' && (
-        <div className="flex-shrink-0 mt-3 border-t border-zinc-800/50 -mx-3 sm:-mx-5 px-3 sm:px-5 pt-3">
-          <PlayerControls variant="editor" />
-        </div>
-      )}
+      {playerPosition === 'bottom' && playerDock}
 
       {/* Action Drawer for Mobile Actions */}
       <EditorActionDrawer

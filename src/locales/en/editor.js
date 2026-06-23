@@ -119,6 +119,10 @@ export default {
   savingStillTrying: "Still trying — check your connection",
   sectionDefault: "Section",
   sectionLabelPlaceholder: "Section label",
+  player: {
+    moveToTop: "Move player to top",
+    moveToBottom: "Move player to bottom",
+  },
   sections: {
     part: "Part",
     intro: "Intro",
