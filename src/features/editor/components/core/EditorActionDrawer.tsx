@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ActionDrawer, { DrawerItem } from '@/shared/ui/ActionDrawer';
-import { Play, X, Pencil, Trash2, Eraser } from 'lucide-react';
+import { Play, X, Pencil, Trash2, Eraser, FolderInput, ChevronLeft } from 'lucide-react';
 import { formatTime } from '@/shared/utils/format-time';
 import { hasKanji } from '@/shared/utils/furigana';
+import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { DrawerKind, WordMenuData, LineMenuData } from '@/features/editor/hooks/useEditorActionDrawer';
 
 interface PlayerRefLike {
@@ -23,6 +26,8 @@ interface EditorActionDrawerProps {
   handleBulkClearTimestamps: () => void;
   handleBulkDelete: () => void;
   clearSelection: () => void;
+  lines?: EditorLine[];
+  handleMoveToSection?: (indices: number[], sectionIndex: number) => void;
 }
 
 export default function EditorActionDrawer({
@@ -39,13 +44,26 @@ export default function EditorActionDrawer({
   handleBulkClearTimestamps,
   handleBulkDelete,
   clearSelection,
+  lines,
+  handleMoveToSection,
 }: EditorActionDrawerProps) {
   const { t } = useTranslation();
+  const [showSections, setShowSections] = useState(false);
+
+  // Section markers a line can be moved into (excluding the line itself) (#)
+  const sections = (lines || [])
+    .map((line, index) => ({ line, index }))
+    .filter(({ line, index }) => line.type === 'section' && index !== lineData.lineIndex);
+
+  const handleClose = () => {
+    setShowSections(false);
+    onClose();
+  };
 
   return (
     <ActionDrawer
       isOpen={activeDrawer !== null}
-      onClose={onClose}
+      onClose={handleClose}
       title={activeDrawer === 'word'
         ? (wordData.word?.word ? t('editor.wordDrawerTitle', { word: wordData.word.word }) : t('editor.wordDrawerTitleNoWord'))
         : activeDrawer === 'line'
@@ -97,39 +115,66 @@ export default function EditorActionDrawer({
       )}
 
       {activeDrawer === 'line' && (
-        <>
-          <DrawerItem
-            icon={Play}
-            label={lineData.line?.timestamp != null ? t('editor.jumpToTime', { time: formatTime(lineData.line.timestamp) }) : t('editor.jumpToLine')}
-            onClick={() => {
-              if (lineData.line?.timestamp != null && playerRef?.current?.seek) {
-                playerRef.current.seek(lineData.line.timestamp);
-                if (playerRef.current.play) playerRef.current.play();
-              }
-              onClose();
-            }}
-          />
-          {lineData.line?.timestamp != null && (
+        showSections ? (
+          <>
             <DrawerItem
-              icon={Eraser}
-              label={t('editor.clearTimestamp')}
-              variant="danger"
+              icon={ChevronLeft}
+              label={t('editor.moveToSection')}
+              onClick={() => setShowSections(false)}
+            />
+            {sections.map(({ line: sl, index }) => (
+              <DrawerItem
+                key={index}
+                label={formatSectionLabel(sl.label, t)}
+                onClick={() => {
+                  handleMoveToSection?.([lineData.lineIndex!], index);
+                  handleClose();
+                }}
+              />
+            ))}
+          </>
+        ) : (
+          <>
+            <DrawerItem
+              icon={Play}
+              label={lineData.line?.timestamp != null ? t('editor.jumpToTime', { time: formatTime(lineData.line.timestamp) }) : t('editor.jumpToLine')}
               onClick={() => {
-                handleClearLine(lineData.lineIndex!);
+                if (lineData.line?.timestamp != null && playerRef?.current?.seek) {
+                  playerRef.current.seek(lineData.line.timestamp);
+                  if (playerRef.current.play) playerRef.current.play();
+                }
                 onClose();
               }}
             />
-          )}
-          <DrawerItem
-            icon={Trash2}
-            label={t('editor.removeLine')}
-            variant="danger"
-            onClick={() => {
-              handleDeleteLine(lineData.lineIndex!);
-              onClose();
-            }}
-          />
-        </>
+            {lineData.line?.timestamp != null && (
+              <DrawerItem
+                icon={Eraser}
+                label={t('editor.clearTimestamp')}
+                variant="danger"
+                onClick={() => {
+                  handleClearLine(lineData.lineIndex!);
+                  onClose();
+                }}
+              />
+            )}
+            {handleMoveToSection && sections.length > 0 && (
+              <DrawerItem
+                icon={FolderInput}
+                label={t('editor.moveToSection')}
+                onClick={() => setShowSections(true)}
+              />
+            )}
+            <DrawerItem
+              icon={Trash2}
+              label={t('editor.removeLine')}
+              variant="danger"
+              onClick={() => {
+                handleDeleteLine(lineData.lineIndex!);
+                onClose();
+              }}
+            />
+          </>
+        )
       )}
 
       {activeDrawer === 'bulk' && (
