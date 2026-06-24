@@ -8,6 +8,8 @@ export default {
   clearWordTimestampsTitle: "Borrar marcas de palabras",
   deleteLine: "¿Eliminar esta línea?",
   deleteLineTitle: "Eliminar línea",
+  deleteSection: "¿Eliminar esta sección?",
+  deleteSectionTitle: "Eliminar sección",
   bulkClear: "¿Borrar marcas de tiempo de las líneas seleccionadas?",
   bulkClearTitle: "Borrar selección",
   bulkDelete: "¿Eliminar las líneas seleccionadas?",

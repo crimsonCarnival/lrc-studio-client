@@ -10,6 +10,14 @@ export default {
   removeAll: "Remove all lyrics",
   projectSettings: "Project settings",
   pastePlaceholder: "Pasted lyrics will appear here, one line per line...",
+  paste: {
+    add: "Add",
+    apply: "Apply",
+    depthMain: "Main",
+    depthRegular: "Regular"
+  },
+  editRawText: "Raw Lyrics",
+  done: "Done",
   startSyncing: "Start Syncing",
   importFile: "Import ",
   mark: "Mark",

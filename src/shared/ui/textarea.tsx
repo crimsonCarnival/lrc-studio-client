@@ -2,9 +2,11 @@
 
 import { cn } from "@/shared/utils/utils"
 
-function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
+const Textarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<"textarea">>(
+  function Textarea({ className, ...props }, ref) {
   return (
     <textarea
+      ref={ref}
       data-slot="textarea"
       className={cn(
         // Mobile-first sizing (44px+ touch target)
@@ -22,6 +24,7 @@ function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
       {...props}
     />
   )
-}
+})
+Textarea.displayName = "Textarea"
 
 export { Textarea }

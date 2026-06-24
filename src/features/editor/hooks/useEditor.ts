@@ -764,7 +764,8 @@ export function useEditor({
   }, [setLines, setModifiedLines]);
 
   const handleDeleteLine = (index) => {
-    requestConfirm(t('confirm.deleteLine') || 'Delete this line?', () => {
+    const isSection = lines[index]?.type === 'section';
+    requestConfirm(isSection ? t('confirm.deleteSection') : t('confirm.deleteLine'), () => {
       setLines((prev) => {
         const newLines = prev.filter((_, i) => i !== index);
         setActiveLineIndex((prevIdx) => {
@@ -775,7 +776,7 @@ export function useEditor({
         return newLines;
       });
       setEditingLineIndex(null);
-    }, { title: t('confirm.deleteLineTitle') || 'Delete Line', variant: 'danger' });
+    }, { title: isSection ? t('confirm.deleteSectionTitle') : t('confirm.deleteLineTitle'), variant: 'danger' });
   };
 
   const handleAddLine = useCallback(

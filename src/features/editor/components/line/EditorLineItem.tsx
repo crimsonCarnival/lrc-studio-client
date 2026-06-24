@@ -5,7 +5,7 @@ import { serializeToRubyMarkup, parseRubyMarkup, isKanji, hasKanji } from '@/sha
 import { Checkbox } from '@ui/checkbox';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Trash2, Check } from 'lucide-react';
 import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import LineTextEditingForm from './LineTextEditingForm';
 import { useLineGestures } from '../../hooks/useLineGestures';
@@ -320,6 +320,12 @@ const EditorLineItem = React.memo(({
 
   const invalidSingers = sectionLines ? validateLineSingers(sectionLines, i) : [];
 
+  // Display number counting only lyric lines, so section markers don't consume
+  // a number and leave gaps in the sequence.
+  const lyricNumber = sectionLines
+    ? sectionLines.slice(0, i).filter((l) => l.type !== 'section').length + 1
+    : i + 1;
+
   // Section marker — full-width divider with editable label
   if (line.type === 'section') {
     const isEditing = editingLineIndex === i;
@@ -365,6 +371,14 @@ const EditorLineItem = React.memo(({
                 {songArtists.map((a) => <option key={a} value={a} />)}
               </datalist>
             )}
+            <Tip content={t('editor.done')}>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); }}
+                className="text-zinc-500 hover:text-primary px-1 flex items-center self-center"
+                aria-label={t('editor.done')}
+              ><Check className="size-4" /></button>
+            </Tip>
           </div>
         ) : (
           <span className={`px-2 py-0.5 rounded-full border whitespace-nowrap transition-colors ${
@@ -397,9 +411,9 @@ const EditorLineItem = React.memo(({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); handleDeleteLine(i); }}
-                className="text-zinc-600 hover:text-zinc-400 text-xs px-1"
+                className="text-zinc-600 hover:text-destructive px-1 flex items-center"
                 aria-label={t('editor.deleteSection')}
-              >✕</button>
+              ><Trash2 className="size-3.5" /></button>
             </Tip>
           </div>
         )}
@@ -411,7 +425,7 @@ const EditorLineItem = React.memo(({
     <div
       ref={isActive ? activeLineRef : null}
       role="button"
-      aria-label={line.text || `Line ${i + 1}`}
+      aria-label={line.text || `Line ${lyricNumber}`}
       onClick={(e) => {
         if (!selection.range) {
           setSelection({ start: null, end: null, range: null });
@@ -486,7 +500,7 @@ const EditorLineItem = React.memo(({
               />
             ) : (
               <span className="text-[10px] font-mono tabular-nums text-zinc-700/70 select-none text-right">
-                {i + 1}
+                {lyricNumber}
               </span>
             )}
           </div>

@@ -10,6 +10,14 @@ export default {
   removeAll: "Eliminar todas las letras",
   projectSettings: "Configuración del proyecto",
   pastePlaceholder: "Las letras pegadas aparecerán aquí, una línea por línea...",
+  paste: {
+    add: "Añadir",
+    apply: "Aplicar",
+    depthMain: "Principal",
+    depthRegular: "Normal"
+  },
+  editRawText: "Letra en bruto",
+  done: "Listo",
   startSyncing: "Empezar ",
   importFile: "Importar ",
   mark: "Marcar",
