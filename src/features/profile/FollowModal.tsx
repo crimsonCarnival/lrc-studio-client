@@ -1,13 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { X, Users, Heart } from 'lucide-react';
 import { LazyImage } from '@ui/LazyImage';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { OnlineDot } from '@ui/OnlineDot';
+import { UserHoverCard } from '@ui/UserHoverCard';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { usePresence } from '@/shared/hooks/usePresence';
 import { getFollowList, followUser, unfollowUser } from './profile.service';
+
+type Tab = 'FOLLOWERS' | 'FOLLOWING' | 'FRIENDS';
 
 interface FollowListUser {
   id: string;
@@ -17,53 +20,84 @@ interface FollowListUser {
   isFollowedByMe?: boolean;
 }
 
+interface TabState {
+  users: FollowListUser[];
+  total: number;
+  offset: number;
+  loading: boolean;
+  loaded: boolean;
+  loadingMore: boolean;
+}
+
+const INITIAL_TAB_STATE: TabState = {
+  users: [], total: 0, offset: 0,
+  loading: false, loaded: false, loadingMore: false,
+};
+
 interface FollowModalProps {
   accountName: string;
-  type: 'FOLLOWERS' | 'FOLLOWING';
+  initialTab?: Tab;
   onClose: () => void;
 }
 
-export function FollowModal({ accountName, type, onClose }: FollowModalProps) {
+export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: FollowModalProps) {
   const { t } = useTranslation();
   const { user: me } = useAuthContext();
   const presence = usePresence();
-  const [users, setUsers] = useState<FollowListUser[]>([]);
-  const [total, setTotal] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  // Map of accountName → 'following' | 'pending' | 'unfollowing'
+  const isOwnProfile = me?.accountName === accountName;
+
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+  const [tabStates, setTabStates] = useState<Record<Tab, TabState>>({
+    FOLLOWERS: { ...INITIAL_TAB_STATE },
+    FOLLOWING: { ...INITIAL_TAB_STATE },
+    FRIENDS:   { ...INITIAL_TAB_STATE },
+  });
   const [followState, setFollowState] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    let ignore = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    setUsers([]);
-    setTotal(0);
-    setOffset(0);
-    setFollowState({});
-    getFollowList(accountName, type, 0)
-      .then(({ users: initial, total: totalCount }) => {
-        if (ignore) return;
-        setUsers(initial as FollowListUser[]);
-        setTotal(totalCount);
-        setOffset(initial.length);
-      })
-      .finally(() => {
-        if (!ignore) setLoading(false);
-      });
-    return () => { ignore = true; };
-  }, [accountName, type]);
+  const updateTab = useCallback((tab: Tab, patch: Partial<TabState>) => {
+    setTabStates(prev => ({ ...prev, [tab]: { ...prev[tab], ...patch } }));
+  }, []);
 
-  const loadMore = () => {
-    setLoadingMore(true);
-    getFollowList(accountName, type, offset)
-      .then(({ users: more }) => {
-        setUsers(prev => [...prev, ...(more as FollowListUser[])]);
-        setOffset(prev => prev + more.length);
-      })
-      .finally(() => setLoadingMore(false));
+  const loadTab = useCallback(async (tab: Tab, offset = 0) => {
+    if (offset === 0) {
+      updateTab(tab, { loading: true, users: [], total: 0, offset: 0 });
+    } else {
+      updateTab(tab, { loadingMore: true });
+    }
+    try {
+      const { users, total } = await getFollowList(accountName, tab, offset) as { users: FollowListUser[]; total: number };
+      setTabStates(prev => ({
+        ...prev,
+        [tab]: {
+          ...prev[tab],
+          users: offset === 0 ? users : [...prev[tab].users, ...users],
+          total,
+          offset: offset + users.length,
+          loaded: true,
+          loading: false,
+          loadingMore: false,
+        },
+      }));
+    } catch {
+      updateTab(tab, { loading: false, loadingMore: false });
+    }
+  }, [accountName, updateTab]);
+
+  // Load initial tab
+  const loadedRef = useRef<Set<Tab>>(new Set());
+  useEffect(() => {
+    if (!loadedRef.current.has(activeTab)) {
+      loadedRef.current.add(activeTab);
+      loadTab(activeTab);
+    }
+  }, [activeTab, loadTab]);
+
+  const switchTab = (tab: Tab) => {
+    setActiveTab(tab);
+    if (!loadedRef.current.has(tab)) {
+      loadedRef.current.add(tab);
+      loadTab(tab);
+    }
   };
 
   const handleFollow = useCallback(async (targetAccountName: string) => {
@@ -71,9 +105,18 @@ export function FollowModal({ accountName, type, onClose }: FollowModalProps) {
     try {
       await followUser(targetAccountName);
       setFollowState(s => ({ ...s, [targetAccountName]: 'following' }));
-      setUsers(prev => prev.map(u =>
-        u.accountName === targetAccountName ? { ...u, isFollowedByMe: true } : u
-      ));
+      setTabStates(prev => {
+        const updated = { ...prev };
+        for (const tab of ['FOLLOWERS', 'FOLLOWING', 'FRIENDS'] as Tab[]) {
+          updated[tab] = {
+            ...updated[tab],
+            users: updated[tab].users.map(u =>
+              u.accountName === targetAccountName ? { ...u, isFollowedByMe: true } : u
+            ),
+          };
+        }
+        return updated;
+      });
     } catch {
       setFollowState(s => { const n = { ...s }; delete n[targetAccountName]; return n; });
     }
@@ -84,13 +127,94 @@ export function FollowModal({ accountName, type, onClose }: FollowModalProps) {
     try {
       await unfollowUser(targetAccountName);
       setFollowState(s => ({ ...s, [targetAccountName]: 'unfollowing' }));
-      setUsers(prev => prev.map(u =>
-        u.accountName === targetAccountName ? { ...u, isFollowedByMe: false } : u
-      ));
+      setTabStates(prev => {
+        const updated = { ...prev };
+        for (const tab of ['FOLLOWERS', 'FOLLOWING', 'FRIENDS'] as Tab[]) {
+          updated[tab] = {
+            ...updated[tab],
+            users: updated[tab].users.map(u =>
+              u.accountName === targetAccountName ? { ...u, isFollowedByMe: false } : u
+            ),
+          };
+        }
+        return updated;
+      });
     } catch {
       setFollowState(s => { const n = { ...s }; delete n[targetAccountName]; return n; });
     }
   }, []);
+
+  const TABS: { id: Tab; label: string; icon: typeof Users }[] = [
+    { id: 'FOLLOWERS', label: t('profile.followersTitle'), icon: Users },
+    { id: 'FOLLOWING', label: t('profile.followingTitle'), icon: Users },
+    { id: 'FRIENDS',   label: t('profile.friendsTitle'),   icon: Heart },
+  ];
+
+  const current = tabStates[activeTab];
+
+  function UserRow({ u }: { u: FollowListUser }) {
+    const isSelf = me?.accountName === u.accountName;
+    const state = followState[u.accountName];
+    const isFollowing = state === 'following' ? true : state === 'unfollowing' ? false : u.isFollowedByMe;
+    const isPending = state === 'pending';
+    const isFriendsTab = activeTab === 'FRIENDS';
+
+    const followBtnLabel = isFollowing
+      ? (isFriendsTab ? t('profile.friends') : t('profile.following'))
+      : (activeTab === 'FOLLOWERS' && isOwnProfile ? t('profile.followBack') : t('profile.follow'));
+
+    return (
+      <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.03] transition-colors">
+        <UserHoverCard accountName={u.accountName} userId={u.id}>
+          <Link
+            to={`/${u.accountName}`}
+            onClick={onClose}
+            className="flex items-center gap-3 flex-1 min-w-0"
+          >
+            <div className="relative size-9 shrink-0">
+              {u.avatarUrl ? (
+                <LazyImage src={u.avatarUrl} alt={u.accountName} className="size-9 rounded-xl object-cover" />
+              ) : (
+                <div className="size-9 rounded-xl bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center font-bold text-zinc-950 text-sm select-none">
+                  {(u.displayName || u.accountName)[0].toUpperCase()}
+                </div>
+              )}
+              {presence.isOnline(u.id) && <OnlineDot />}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-foreground truncate flex items-center gap-1.5">
+                {u.displayName || u.accountName}
+                {isFriendsTab && (
+                  <Heart className="size-3 text-primary/60 shrink-0 fill-primary/40" />
+                )}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">@{u.accountName}</p>
+            </div>
+          </Link>
+        </UserHoverCard>
+
+        {me && !isSelf && (
+          isFollowing ? (
+            <button
+              onClick={() => handleUnfollow(u.accountName)}
+              disabled={isPending}
+              className="shrink-0 text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-50 whitespace-nowrap"
+            >
+              {followBtnLabel}
+            </button>
+          ) : (
+            <button
+              onClick={() => handleFollow(u.accountName)}
+              disabled={isPending}
+              className="shrink-0 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
+            >
+              {followBtnLabel}
+            </button>
+          )
+        )}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -98,107 +222,80 @@ export function FollowModal({ accountName, type, onClose }: FollowModalProps) {
         className="fixed inset-0 z-modal-backdrop bg-black/60 backdrop-blur-sm animate-fade-in cursor-default"
         onClick={onClose}
       />
-      <div
-        className="fixed inset-0 z-modal flex items-center justify-center pointer-events-none"
-      >
-      <div
-        className="glass w-full max-w-sm mx-4 rounded-2xl p-6 flex flex-col gap-4 max-h-[75vh] pointer-events-auto"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between shrink-0">
-          <h2 className="text-base font-semibold text-foreground">
-            {type === 'FOLLOWERS' ? t('profile.followersTitle') : t('profile.followingTitle')}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <LoadingSpinner size="sm" />
+      <div className="fixed inset-0 z-modal flex items-center justify-center pointer-events-none p-4">
+        <div
+          className="glass w-full max-w-sm rounded-2xl flex flex-col pointer-events-auto"
+          style={{ height: 520 }}
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
+            <p className="text-sm font-semibold text-foreground">
+              <span className="text-muted-foreground">@</span>{accountName}
+            </p>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-1 -mr-1">
+              <X className="size-4" />
+            </button>
           </div>
-        ) : users.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            {type === 'FOLLOWERS' ? t('profile.noFollowers') : t('profile.noFollowing')}
-          </p>
-        ) : (
-          <div className="overflow-y-auto flex flex-col gap-1 -mx-2">
-            {users.map(u => {
-              const isSelf = me?.accountName === u.accountName;
-              const state = followState[u.accountName];
-              const isFollowing = state === 'following' ? true : state === 'unfollowing' ? false : u.isFollowedByMe;
-              const isPending = state === 'pending';
 
+          {/* Tabs */}
+          <div className="flex items-center gap-1 px-4 pb-0 shrink-0 border-b border-border/40">
+            {TABS.map(tab => {
+              const count = tabStates[tab.id].loaded ? tabStates[tab.id].total : null;
               return (
-                <div
-                  key={u.id}
-                  className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-white/5 transition-colors"
+                <button
+                  key={tab.id}
+                  onClick={() => switchTab(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
                 >
-                  <Link
-                    to={`/${u.accountName}`}
-                    onClick={onClose}
-                    className="flex items-center gap-3 flex-1 min-w-0"
-                  >
-                    <div className="relative size-9 shrink-0">
-                      {u.avatarUrl ? (
-                        <LazyImage
-                          src={u.avatarUrl}
-                          alt={u.accountName}
-                          className="size-9 rounded-xl object-cover"
-                        />
-                      ) : (
-                        <div className="size-9 rounded-xl bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center font-bold text-zinc-950 text-sm select-none">
-                          {(u.displayName || u.accountName)[0].toUpperCase()}
-                        </div>
-                      )}
-                      {presence.isOnline(u.id) && <OnlineDot />}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {u.displayName || u.accountName}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">@{u.accountName}</p>
-                    </div>
-                  </Link>
-
-                  {me && !isSelf && (
-                    isFollowing ? (
-                      <button
-                        onClick={() => handleUnfollow(u.accountName)}
-                        disabled={isPending}
-                        className="shrink-0 text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-50"
-                      >
-                        {t('profile.following')}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleFollow(u.accountName)}
-                        disabled={isPending}
-                        className="shrink-0 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors disabled:opacity-50"
-                      >
-                        {type === 'FOLLOWERS' ? t('profile.followBack') : t('profile.follow')}
-                      </button>
-                    )
+                  {tab.label}
+                  {count !== null && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      activeTab === tab.id ? 'bg-primary/15 text-primary' : 'bg-zinc-800 text-zinc-500'
+                    }`}>
+                      {count}
+                    </span>
                   )}
-                </div>
+                </button>
               );
             })}
-            {users.length < total && (
-              <button
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="text-sm text-primary hover:underline text-center py-2 disabled:opacity-50"
-              >
-                {loadingMore ? '...' : t('profile.loadMore')}
-              </button>
+          </div>
+
+          {/* List */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {current.loading ? (
+              <div className="flex justify-center py-10">
+                <LoadingSpinner size="sm" />
+              </div>
+            ) : current.loaded && current.users.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-10">
+                {activeTab === 'FOLLOWERS' ? t('profile.noFollowers')
+                  : activeTab === 'FOLLOWING' ? t('profile.noFollowing')
+                  : t('profile.noFriends')}
+              </p>
+            ) : (
+              <div className="py-1">
+                {current.users.map(u => <UserRow key={u.id} u={u} />)}
+
+                {current.users.length < current.total && (
+                  <div className="flex justify-center py-3">
+                    <button
+                      onClick={() => loadTab(activeTab, current.offset)}
+                      disabled={current.loadingMore}
+                      className="text-sm text-primary hover:underline disabled:opacity-50"
+                    >
+                      {current.loadingMore ? <LoadingSpinner size="sm" /> : t('profile.loadMore')}
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
       </div>
     </>
   );
