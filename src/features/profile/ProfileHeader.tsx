@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { useState } from 'react';
-import { Settings, Timer, Trophy, Activity, BarChart3, Ban } from 'lucide-react';
+import { Settings, Timer, Activity, BarChart3, Ban } from 'lucide-react';
+import { LevelBadge } from '@ui/LevelBadge';
 import { BadgeList } from '@/features/badges/BadgeList';
 import { Tip } from '@/shared/ui/tip';
 import { FollowButton } from './FollowButton';
@@ -32,6 +33,7 @@ interface ProfileHeaderProps {
   displayName: string;
   badgeIds: string[];
   level: number;
+  xp: number;
   minutesLabel: string | null;
   isOwner: boolean;
   isFollowing: boolean;
@@ -84,6 +86,7 @@ export function ProfileHeader({
   displayName,
   badgeIds,
   level,
+  xp,
   minutesLabel,
   isOwner,
   isFollowing,
@@ -102,6 +105,22 @@ export function ProfileHeader({
 
   return (
     <div className="glass rounded-[2rem] p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden mb-6">
+      {isOwner ? (
+        <Tip
+          content={(() => {
+            const xpForLevel = level * level * 100;
+            const xpForNext  = (level + 1) * (level + 1) * 100;
+            const progress   = xp - xpForLevel;
+            const needed     = xpForNext - xp;
+            return `${xp.toLocaleString()} XP · ${needed.toLocaleString()} to Lv.${level + 1} (${Math.round((progress / (xpForNext - xpForLevel)) * 100)}%)`;
+          })()}
+          side="bottom"
+        >
+          <LevelBadge level={level} className="right-6" />
+        </Tip>
+      ) : (
+        <LevelBadge level={level} className="right-6" />
+      )}
       <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} />
 
       <div className="flex-1 text-center sm:text-left">
@@ -109,12 +128,6 @@ export function ProfileHeader({
           <div>
             <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
               <h1 className="text-2xl font-semibold text-foreground">{displayName}</h1>
-              {level > 0 && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-zinc-800/80 border border-zinc-700/50 text-[11px] font-bold text-zinc-400">
-                  <Trophy className="size-3 text-warning" />
-                  Lv.{level}
-                </span>
-              )}
             </div>
             {badgeIds.length > 0 && (
               <BadgeList ids={badgeIds} max={3} className="mt-1.5 justify-center sm:justify-start" />
@@ -164,6 +177,18 @@ export function ProfileHeader({
               </span>
             </>
           )}
+          {isOwner && (
+            <>
+              <span className="opacity-30">·</span>
+              <button
+                onClick={() => navigate('/settings')}
+                className="flex items-center gap-1 hover:text-foreground transition-colors"
+              >
+                <Settings className="size-3.5" />
+                {t('profile.editProfile')}
+              </button>
+            </>
+          )}
         </div>
 
         {minutesLabel && (
@@ -180,7 +205,7 @@ export function ProfileHeader({
       </div>
 
       {isOwner ? (
-        <div className="absolute top-4 right-4 flex items-center gap-1.5">
+        <div className="absolute top-4 right-24 flex items-center gap-1.5">
           <Tip content={t('profile.tabs.activity')}>
             <Button
               variant="outline"
@@ -199,18 +224,9 @@ export function ProfileHeader({
               <BarChart3 className="size-4" />
             </Button>
           </Tip>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/settings')}
-            className="flex items-center gap-1.5"
-          >
-            <Settings className="size-4" />
-            {t('profile.editProfile')}
-          </Button>
         </div>
       ) : (
-        <div className="absolute top-4 right-4 flex items-center gap-1.5">
+        <div className="absolute top-4 right-24 flex items-center gap-1.5">
           {!isBlocked && (
             <FollowButton
               isFollowing={isFollowing}

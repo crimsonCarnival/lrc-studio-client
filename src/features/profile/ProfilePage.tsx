@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
+import { UserHoverCard } from '@ui/UserHoverCard';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams, useLocation } from 'react-router-dom';
@@ -140,7 +142,6 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
 
 function PeopleYouMightKnow({ excludeAccountName }: { excludeAccountName?: string }) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   // Over-fetch by one so filtering out the viewed profile still leaves 5.
   const { users, loading } = useSuggestedUsers(6);
 
@@ -157,24 +158,24 @@ function PeopleYouMightKnow({ excludeAccountName }: { excludeAccountName?: strin
       <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600">{t('profile.peopleYouMightKnow')}</p>
       <div className="flex flex-col gap-1.5">
         {suggestions.map(u => (
-          <button
-            key={u.id}
-            type="button"
-            onClick={() => navigate(`/${u.accountName}`)}
-            className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors text-left w-full"
-          >
-            {u.avatarUrl ? (
-              <img src={u.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-7 rounded-full object-cover shrink-0" />
-            ) : (
-              <div className="size-7 rounded-full bg-gradient-to-br from-primary/50 to-violet-500/50 flex items-center justify-center text-xs font-bold text-white shrink-0 select-none">
-                {(u.displayName || u.accountName || '?').charAt(0).toUpperCase()}
+          <UserHoverCard key={u.id} accountName={u.accountName} userId={u.id}>
+            <Link
+              to={`/${u.accountName}`}
+              className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors w-full"
+            >
+              {u.avatarUrl ? (
+                <img src={u.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-7 rounded-full object-cover shrink-0" />
+              ) : (
+                <div className="size-7 rounded-full bg-gradient-to-br from-primary/50 to-violet-500/50 flex items-center justify-center text-xs font-bold text-white shrink-0 select-none">
+                  {(u.displayName || u.accountName || '?').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-foreground truncate">{u.displayName || u.accountName}</p>
+                <p className="text-[10px] text-zinc-500 truncate">@{u.accountName}</p>
               </div>
-            )}
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-foreground truncate">{u.displayName || u.accountName}</p>
-              <p className="text-[10px] text-zinc-500 truncate">@{u.accountName}</p>
-            </div>
-          </button>
+            </Link>
+          </UserHoverCard>
         ))}
       </div>
     </div>
@@ -383,6 +384,7 @@ export default function ProfilePage() {
       })()
     : null;
   const level = profile.progression?.level ?? 0;
+  const xp    = profile.progression?.xp    ?? 0;
 
   const hasVisibleShowcase = profile.showcasePublic !== false && (profile.showcasedBadges?.length ?? 0) > 0;
 
@@ -394,6 +396,7 @@ export default function ProfilePage() {
         displayName={displayName}
         badgeIds={badgeIds}
         level={level}
+        xp={xp}
         minutesLabel={minutesLabel}
         isOwner={isOwner}
         isFollowing={isFollowing}
@@ -480,7 +483,7 @@ export default function ProfilePage() {
               </div>
             ) : null}
 
-            {allBadgeIds.length > 0 && (
+            {allBadgeIds.length > 0 && (isOwner || profile.showcasePublic !== false) && (
               <div>
                 <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600 mb-2">{t('badges.showcase.allBadges')}</p>
                 <div className="flex flex-wrap gap-1.5">
@@ -497,7 +500,7 @@ export default function ProfilePage() {
       {followModal && profile.showFollowers && (
         <FollowModal
           accountName={profile.accountName}
-          type={followModal}
+          initialTab={followModal}
           onClose={() => setFollowModal(null)}
         />
       )}
