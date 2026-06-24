@@ -18,17 +18,19 @@ export default function ProfileForm() {
     displayName: user?.displayName || '',
     bio: user?.bio || '',
     showFollowers: user?.showFollowers ?? true,
+    onlineVisibility: (user?.onlineVisibility as 'friends' | 'nobody') ?? 'friends',
   });
 
   const isDirty =
     formData.displayName !== (user?.displayName || '') ||
     formData.bio !== (user?.bio || '') ||
-    formData.showFollowers !== (user?.showFollowers ?? true);
+    formData.showFollowers !== (user?.showFollowers ?? true) ||
+    formData.onlineVisibility !== ((user?.onlineVisibility as 'friends' | 'nobody') ?? 'friends');
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updatedUser = await authService.updateProfile({ displayName: formData.displayName, bio: formData.bio, showFollowers: formData.showFollowers });
+      const updatedUser = await authService.updateProfile({ displayName: formData.displayName, bio: formData.bio, showFollowers: formData.showFollowers, onlineVisibility: formData.onlineVisibility });
       setUser(prev => ({ ...prev, ...updatedUser }));
       toast.success(t('profile.saveSuccess'));
     } catch {
@@ -107,6 +109,35 @@ export default function ProfileForm() {
           />
         </button>
       </div>
+
+        {/* Online visibility toggle */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm text-foreground font-medium">
+              {t('profile.settings.onlineVisibility')}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {formData.onlineVisibility === 'friends'
+                ? t('profile.settings.onlineVisibilityFriendsSub')
+                : t('profile.settings.onlineVisibilityNobodySub')}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={formData.onlineVisibility === 'friends'}
+            onClick={() => setFormData(prev => ({ ...prev, onlineVisibility: prev.onlineVisibility === 'friends' ? 'nobody' : 'friends' }))}
+            className={`relative shrink-0 w-10 h-6 rounded-full transition-colors ${
+              formData.onlineVisibility === 'friends' ? 'bg-primary' : 'bg-border'
+            }`}
+          >
+            <span
+              className={`absolute top-1 left-1 size-4 rounded-full bg-white shadow transition-transform ${
+                formData.onlineVisibility === 'friends' ? 'translate-x-4' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
       </section>
 
       {isDirty && createPortal(

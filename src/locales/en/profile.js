@@ -179,6 +179,9 @@ export default {
   settings: {
     showFollowers: "Show followers & following publicly",
     showFollowersSub: "When off, counts still appear but the list stays private",
+    onlineVisibility: "Show online status to mutual follows",
+    onlineVisibilityFriendsSub: "Mutual follows see a green dot when you're online",
+    onlineVisibilityNobodySub: "Nobody sees your online status (ghost mode)",
   },
   editProject: "Edit project",
   deleteProject: "Delete project",

@@ -7,15 +7,14 @@ import { isSudoCancelled } from './services/sudo';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { userHasPermission, type Permission } from '@/features/auth/permissions';
 import { Button } from '@ui/button';
-import { ShieldAlert, RefreshCw, Users, Globe, History, Award, Zap, Sparkles, Inbox } from 'lucide-react';
+import { ShieldAlert, RefreshCw, Users, History, Award, Zap, Sparkles, Inbox, UsersRound } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import BanUserModal from './BanUserModal';
 import AppealDetailsModal from './AppealDetailsModal';
 import AdminStatsCards from './AdminStatsCards';
-import AdminUsersTab from './AdminUsersTab';
-import AdminIpsTab from './AdminIpsTab';
-import AdminDevicesTab from './AdminDevicesTab';
+import AdminModerationTab from './AdminModerationTab';
+import AdminStaffTab from './AdminStaffTab';
 import AdminAuditTab from './AdminAuditTab';
 import AdminBadgesTab from './AdminBadgesTab';
 import AdminLevelsTab from './AdminLevelsTab';
@@ -31,6 +30,8 @@ interface AdminUser {
   displayName?: string;
   accountName?: string;
   ban?: { active?: boolean } | null;
+  lastIp?: string;
+  lastDeviceId?: string;
   [key: string]: unknown;
 }
 
@@ -41,6 +42,8 @@ interface ConfirmModalState {
   ipId?: string | null;
   deviceId?: string | null;
   role?: string | null;
+  blockIp?: string | null;
+  blockDeviceId?: string | null;
 }
 
 interface BanConfirmData {
@@ -64,7 +67,7 @@ export default function AdminDashboard() {
     requestsApi.capabilities().then(c => setSubmittable(c.submittable)).catch(() => {});
   }, []);
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'users'; // users, ips, devices, audit, badges, levels, xp
+  const activeTab = searchParams.get('tab') || 'moderation';
 
   const setActiveTab = (tab: string) => {
     setSearchParams(prev => {
@@ -76,26 +79,24 @@ export default function AdminDashboard() {
   // Tabs are gated by permission — a mod sees only moderation tabs, etc.
   const visibleTabs = useMemo(() => {
     const defs: { id: string; icon: typeof Users; label: string; perm?: Permission }[] = [
-      { id: 'users',   icon: Users,       label: t('admin.dashboard.tabs.users'),          perm: 'users.view' },
-      { id: 'ips',     icon: Globe,       label: t('admin.dashboard.tabs.ipBlocklist'),    perm: 'network.block' },
-      { id: 'devices', icon: ShieldAlert, label: t('admin.dashboard.tabs.deviceBlocklist'), perm: 'network.block' },
-      { id: 'audit',   icon: History,     label: t('admin.dashboard.tabs.auditLogs'),      perm: 'audit.view' },
-      { id: 'badges',  icon: Award,       label: t('admin.dashboard.tabs.badges'),         perm: 'badges.manage' },
-      { id: 'levels',  icon: Zap,         label: t('admin.dashboard.tabs.levels'),         perm: 'levels.manage' },
-      { id: 'xp',      icon: Sparkles,    label: t('admin.dashboard.tabs.xp'),             perm: 'xp.adjust' },
+      { id: 'moderation', icon: ShieldAlert, label: t('admin.dashboard.tabs.moderation'), perm: 'users.view' },
+      { id: 'staff',      icon: UsersRound,  label: t('admin.dashboard.tabs.staff') },
+      { id: 'audit',      icon: History,     label: t('admin.dashboard.tabs.auditLogs'),  perm: 'audit.view' },
+      { id: 'badges',     icon: Award,       label: t('admin.dashboard.tabs.badges'),     perm: 'badges.manage' },
+      { id: 'levels',     icon: Zap,         label: t('admin.dashboard.tabs.levels'),     perm: 'levels.manage' },
+      { id: 'xp',         icon: Sparkles,    label: t('admin.dashboard.tabs.xp'),         perm: 'xp.adjust' },
     ];
     const canProposeBadges = submittable.some(ty => ty.startsWith('badge_'));
     const canProposeLevels = submittable.some(ty => ty.startsWith('level_'));
+    const isNetworkOnly = !userHasPermission(currentUser?.permissions, 'users.view') && userHasPermission(currentUser?.permissions, 'network.block');
     const gated = defs.filter(tab => {
+      if (tab.id === 'moderation') return userHasPermission(currentUser?.permissions, 'users.view') || userHasPermission(currentUser?.permissions, 'network.block');
+      if (tab.id === 'staff') return !isNetworkOnly; // all staff except network-only roles
       if (tab.perm && userHasPermission(currentUser?.permissions, tab.perm)) return true;
-      // Show badges/levels to proposers (admins) in propose mode even without the
-      // direct manage permission.
       if (tab.id === 'badges' && canProposeBadges) return true;
       if (tab.id === 'levels' && canProposeLevels) return true;
       return false;
     });
-    // Requests inbox is available to every staff member — to review what they can
-    // and to track their own submitted requests.
     gated.push({ id: 'requests', icon: Inbox, label: t('admin.dashboard.tabs.requests') });
     return gated;
   }, [t, currentUser?.permissions, submittable]);
@@ -202,9 +203,7 @@ export default function AdminDashboard() {
   // Fetch stats once on mount (not on every tab switch) and fetch tab data in parallel
   const fetchData = (forceStats = false) => {
     if (!statsFetchedRef.current || forceStats) fetchStats();
-    if (activeTab === 'users') fetchUsers();
-    else if (activeTab === 'ips') fetchIps();
-    else if (activeTab === 'devices') fetchDevices();
+    if (activeTab === 'moderation') { fetchUsers(); fetchIps(); fetchDevices(); }
     else if (activeTab === 'audit') fetchAuditLogs();
   };
 
@@ -218,16 +217,14 @@ export default function AdminDashboard() {
     }
     // Tab content always refreshes on tab switch
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (activeTab === 'users') fetchUsers();
-    else if (activeTab === 'ips') fetchIps();
-    else if (activeTab === 'devices') fetchDevices();
+    if (activeTab === 'moderation') { fetchUsers(); fetchIps(); fetchDevices(); }
     else if (activeTab === 'audit') fetchAuditLogs();
     // badges and levels tabs manage their own data fetching
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab !== 'users') return;
+    if (activeTab !== 'moderation') return;
     const timer = setTimeout(() => {
       // Reset to first page when filters change
       setCursor(null);
@@ -342,6 +339,16 @@ export default function AdminDashboard() {
     setConfirmModal({ isOpen: true, type: 'delete', user });
   };
 
+  const handleBlockIpDirect = (user: AdminUser) => {
+    if (!user.lastIp) return;
+    setConfirmModal({ isOpen: true, type: 'block_ip_direct', user, blockIp: user.lastIp });
+  };
+
+  const handleBlockDeviceDirect = (user: AdminUser) => {
+    if (!user.lastDeviceId) return;
+    setConfirmModal({ isOpen: true, type: 'block_device_direct', user, blockDeviceId: user.lastDeviceId });
+  };
+
   const handleBlockIp = async (e: FormEvent) => {
     e.preventDefault();
     if (!ipForm.ip) return;
@@ -379,8 +386,8 @@ export default function AdminDashboard() {
   };
 
   const onConfirmAction = async () => {
-    const { type, user, ipId, deviceId, role } = confirmModal;
-    setConfirmModal({ isOpen: false, type: '', user: null, ipId: null, deviceId: null });
+    const { type, user, ipId, deviceId, role, blockIp, blockDeviceId } = confirmModal;
+    setConfirmModal({ isOpen: false, type: '', user: null, ipId: null, deviceId: null, blockIp: null, blockDeviceId: null });
 
     try {
       if (type === 'role') {
@@ -398,6 +405,18 @@ export default function AdminDashboard() {
       } else if (type === 'unblock_device') {
         await admin.unblockDevice(deviceId ?? "");
         toast.success(t('admin.toast.deviceUnblocked'));
+        fetchDevices();
+        fetchStats();
+      } else if (type === 'block_ip_direct') {
+        const reason = `${t('admin.table.blockIpAutoReason')}: ${user?.accountName ?? user?.displayName ?? ''}`;
+        await admin.blockIp(blockIp ?? '', reason);
+        toast.success(t('admin.toast.ipBlocked'));
+        fetchIps();
+        fetchStats();
+      } else if (type === 'block_device_direct') {
+        const reason = `${t('admin.table.blockIpAutoReason')}: ${user?.accountName ?? user?.displayName ?? ''}`;
+        await admin.blockDevice(blockDeviceId ?? '', reason);
+        toast.success(t('admin.toast.deviceBlocked'));
         fetchDevices();
         fetchStats();
       }
@@ -439,9 +458,9 @@ export default function AdminDashboard() {
 
       {/* Tab Content */}
       <div className="flex-1 flex flex-col min-h-[400px]">
-        {activeTab === 'users' && (
-          <AdminUsersTab
-            users={users as ComponentProps<typeof AdminUsersTab>["users"]}
+        {activeTab === 'moderation' && (
+          <AdminModerationTab
+            users={users as ComponentProps<typeof AdminModerationTab>["users"]}
             currentUser={currentUser}
             search={search}
             setSearch={setSearch}
@@ -455,31 +474,37 @@ export default function AdminDashboard() {
             handleDelete={handleDelete}
             setAppealModal={setAppealModal}
             handleAdjustXP={handleAdjustXP}
+            handleBlockIpDirect={handleBlockIpDirect}
+            handleBlockDeviceDirect={handleBlockDeviceDirect}
             hasMore={hasMore}
             hasPrev={cursorStack.length > 0}
             totalUsers={totalUsers}
             onNextPage={handleNextPage}
             onPrevPage={handlePrevPage}
-          />
-        )}
-
-        {activeTab === 'ips' && (
-          <AdminIpsTab
             ipForm={ipForm}
             setIpForm={setIpForm}
             handleBlockIp={handleBlockIp}
             handleUnblockIp={handleUnblockIp}
-            bannedIps={bannedIps as ComponentProps<typeof AdminIpsTab>["bannedIps"]}
-          />
-        )}
-
-        {activeTab === 'devices' && (
-          <AdminDevicesTab
+            bannedIps={bannedIps}
             deviceForm={deviceForm}
             setDeviceForm={setDeviceForm}
             handleBlockDevice={handleBlockDevice}
             handleUnblockDevice={handleUnblockDevice}
-            bannedDevices={bannedDevices as ComponentProps<typeof AdminDevicesTab>["bannedDevices"]}
+            bannedDevices={bannedDevices}
+          />
+        )}
+
+        {activeTab === 'staff' && (
+          <AdminStaffTab
+            currentUser={currentUser}
+            handleChangeRole={handleChangeRole}
+            handleToggleBan={handleToggleBan}
+            handleReactivate={handleReactivate}
+            handleDelete={handleDelete}
+            setAppealModal={setAppealModal}
+            handleAdjustXP={handleAdjustXP}
+            handleBlockIpDirect={handleBlockIpDirect}
+            handleBlockDeviceDirect={handleBlockDeviceDirect}
           />
         )}
 
@@ -509,9 +534,11 @@ export default function AdminDashboard() {
         isOpen={confirmModal.isOpen}
         title={
           confirmModal.type === 'role' ? t('admin.table.roleTitle') :
-            confirmModal.type === 'unblock_ip' ? t('admin.table.unblock') :
-              confirmModal.type === 'unblock_device' ? t('admin.table.unblock') :
-                t('admin.table.deleteTitle')
+          confirmModal.type === 'unblock_ip' ? t('admin.table.unblock') :
+          confirmModal.type === 'unblock_device' ? t('admin.table.unblock') :
+          confirmModal.type === 'block_ip_direct' ? t('admin.table.blockIpTitle') :
+          confirmModal.type === 'block_device_direct' ? t('admin.table.blockDeviceTitle') :
+          t('admin.table.deleteTitle')
         }
         message={
           confirmModal.type === 'role'
@@ -520,10 +547,14 @@ export default function AdminDashboard() {
               ? t('admin.table.confirmUnblockIp')
               : confirmModal.type === 'unblock_device'
                 ? t('admin.table.confirmUnblockDevice')
-                : t('admin.table.confirmDelete', { name: confirmModal.user?.displayName || confirmModal.user?.accountName })
+                : confirmModal.type === 'block_ip_direct'
+                  ? t('admin.table.confirmBlockIp', { ip: confirmModal.blockIp, name: confirmModal.user?.accountName ?? confirmModal.user?.displayName })
+                  : confirmModal.type === 'block_device_direct'
+                    ? t('admin.table.confirmBlockDevice', { name: confirmModal.user?.accountName ?? confirmModal.user?.displayName })
+                    : t('admin.table.confirmDelete', { name: confirmModal.user?.displayName || confirmModal.user?.accountName })
         }
         onConfirm={onConfirmAction}
-        onCancel={() => setConfirmModal({ isOpen: false, type: '', user: null, ipId: null, deviceId: null })}
+        onCancel={() => setConfirmModal({ isOpen: false, type: '', user: null, ipId: null, deviceId: null, blockIp: null, blockDeviceId: null })}
       />
 
       <BanUserModal

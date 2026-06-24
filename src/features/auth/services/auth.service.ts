@@ -132,6 +132,7 @@ export const authService = {
           hasPassword
           google { connected googleId email name pictureUrl }
           showFollowers
+          onlineVisibility
           badges { id grantedAt grantedBy }
           showcasedBadges
           stats { minutesSynced wordsSynced karaokeLines }
@@ -156,6 +157,7 @@ export const authService = {
           avatarUrl
           bio
           showFollowers
+          onlineVisibility
           lastAccountNameChangedAt
         }
       }

@@ -1,25 +1,31 @@
 import { useEffect } from 'react';
 import { getSocket } from '@/app/socket.client';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { presenceStore } from '@/features/auth/presence.store';
+import { ROLE_RANK } from '@/features/auth/permissions';
+
+const STAFF_RANK = ROLE_RANK['mod'] ?? 2;
 
 export function useSessionSocket() {
   const { user, logout } = useAuthContext();
   const userId = user?.id;
+  const isStaff = user?.role ? (ROLE_RANK[user.role as keyof typeof ROLE_RANK] ?? 0) >= STAFF_RANK : false;
 
   useEffect(() => {
     const socket = getSocket();
     if (!socket || !userId) return;
 
-    // Immediately join the user room if already connected.
-    if (socket.connected) {
-      socket.emit('join:user', userId);
+    function joinRooms() {
+      socket!.emit('join:user', userId);
+      if (isStaff) socket!.emit('join:admin');
     }
 
-    // Re-join the user room on every (re)connect — Socket.IO fires the
-    // 'connect' event both on the initial connection and after each
-    // successful reconnect, so this handles both cases.
+    if (socket.connected) {
+      joinRooms();
+    }
+
     function onConnect() {
-      socket!.emit('join:user', userId);
+      joinRooms();
     }
 
     function onBanned() {
@@ -30,14 +36,32 @@ export function useSessionSocket() {
       logout();
     }
 
+    function onPresenceInit({ onlineUserIds }: { onlineUserIds: string[] }) {
+      presenceStore.init(onlineUserIds);
+    }
+
+    function onPresenceOnline({ userId: uid }: { userId: string }) {
+      presenceStore.add(uid);
+    }
+
+    function onPresenceOffline({ userId: uid }: { userId: string }) {
+      presenceStore.remove(uid);
+    }
+
     socket.on('connect', onConnect);
     socket.on('user:banned', onBanned);
     socket.on('session:revoked', onRevoked);
+    socket.on('presence:init', onPresenceInit);
+    socket.on('presence:online', onPresenceOnline);
+    socket.on('presence:offline', onPresenceOffline);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('user:banned', onBanned);
       socket.off('session:revoked', onRevoked);
+      socket.off('presence:init', onPresenceInit);
+      socket.off('presence:online', onPresenceOnline);
+      socket.off('presence:offline', onPresenceOffline);
     };
-  }, [userId, logout]);
+  }, [userId, isStaff, logout]);
 }

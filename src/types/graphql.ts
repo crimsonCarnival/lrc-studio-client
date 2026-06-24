@@ -1143,6 +1143,7 @@ export type UpdateProfileInput = {
   displayName?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
   showFollowers?: InputMaybe<Scalars['Boolean']['input']>;
+  onlineVisibility?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateProjectInput = {
@@ -1215,6 +1216,7 @@ export type User = {
   role: Scalars['String']['output'];
   settings?: Maybe<Settings>;
   showFollowers: Scalars['Boolean']['output'];
+  onlineVisibility: Scalars['String']['output'];
   showcaseSlots: Scalars['Int']['output'];
   showcasedBadges: Array<Scalars['String']['output']>;
   stats?: Maybe<UserStats>;

@@ -4,10 +4,12 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
-import { Filter, Ban, CheckCircle2, BarChart3, Music, Trash2, Undo2, Info, Zap } from 'lucide-react';
+import { Filter, Ban, CheckCircle2, BarChart3, Music, Trash2, Undo2, Info, Zap, Globe, ShieldAlert, Monitor } from 'lucide-react';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { useState as useLocalState } from 'react';
 import { userHasPermission, ROLES, ROLE_RANK, type Role } from '@/features/auth/permissions';
+import { usePresence } from '@/shared/hooks/usePresence';
+import { OnlineDot } from '@/shared/ui/OnlineDot';
 
 interface AdminUser {
   id?: string;
@@ -24,6 +26,8 @@ interface AdminUser {
   projectCount?: number;
   uploadCount?: number;
   lastIp?: string;
+  lastDeviceId?: string;
+  lastDeviceName?: string;
   [key: string]: unknown;
 }
 
@@ -42,6 +46,9 @@ interface AdminUsersTabProps {
   handleDelete: (user: AdminUser) => void;
   setAppealModal: (state: { isOpen: boolean; user: AdminUser }) => void;
   handleAdjustXP: (action: 'grant' | 'revoke', amount: number, type: string, id?: string) => void;
+  handleBlockIpDirect: (user: AdminUser) => void;
+  handleBlockDeviceDirect: (user: AdminUser) => void;
+  hideRoleFilter?: boolean;
   hasMore?: boolean;
   hasPrev?: boolean;
   totalUsers?: number | null;
@@ -64,6 +71,9 @@ export default function AdminUsersTab({
   handleDelete,
   setAppealModal,
   handleAdjustXP,
+  handleBlockIpDirect,
+  handleBlockDeviceDirect,
+  hideRoleFilter,
   hasMore,
   hasPrev,
   totalUsers,
@@ -74,6 +84,7 @@ export default function AdminUsersTab({
   // Some admin.table.* keys (e.g. delete) aren't in the typed resource map.
   const tk = t as (key: string) => string;
   const inputMethod = useInputMethod();
+  const presence = usePresence();
   const isMobile = inputMethod === 'touch';
   const [xpPopover, setXpPopover] = useLocalState<string | null>(null); // userId | null
   const [xpAmount, setXpAmount] = useLocalState('100');
@@ -84,6 +95,13 @@ export default function AdminUsersTab({
   const myRank = ROLE_RANK[(currentUser?.role as Role) ?? 'user'] ?? 0;
   const canAssignRoles = userHasPermission(currentUser?.permissions, 'users.role');
   const assignableRoles = ROLES.filter(r => ROLE_RANK[r] < myRank);
+
+  // Can act on this user: not self, and target rank strictly below mine
+  const canActOn = (user: AdminUser) => {
+    const isSelf = user.id === currentUser?.id || user._id === currentUser?._id;
+    const targetRank = ROLE_RANK[(user.role as Role) ?? 'user'] ?? 0;
+    return !isSelf && targetRank < myRank;
+  };
 
   function RoleControl({ user }: { user: AdminUser }) {
     const targetRank = ROLE_RANK[(user.role as Role) ?? 'user'] ?? 0;
@@ -122,18 +140,20 @@ export default function AdminUsersTab({
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-600 pointer-events-none" />
         </div>
         <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-row gap-2 sm:gap-4'}`}>
-          <select
-            value={roleFilter}
-            aria-label={t('admin.dashboard.filters.filterByRole')}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className={`bg-zinc-950 border border-zinc-800 rounded-lg px-3 text-sm text-zinc-300 outline-none focus:border-primary ${isMobile ? 'h-10 flex-1' : ''}`}
-          >
-            <option value="">{t('admin.dashboard.filters.allRoles')}</option>
-            <option value="superadmin">{t('admin.table.superadmin')}</option>
-            <option value="admin">{t('admin.table.admin')}</option>
-            <option value="mod">{t('admin.table.mod')}</option>
-            <option value="user">{t('admin.table.user')}</option>
-          </select>
+          {!hideRoleFilter && (
+            <select
+              value={roleFilter}
+              aria-label={t('admin.dashboard.filters.filterByRole')}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className={`bg-zinc-950 border border-zinc-800 rounded-lg px-3 text-sm text-zinc-300 outline-none focus:border-primary ${isMobile ? 'h-10 flex-1' : ''}`}
+            >
+              <option value="">{t('admin.dashboard.filters.allRoles')}</option>
+              <option value="superadmin">{t('admin.table.superadmin')}</option>
+              <option value="admin">{t('admin.table.admin')}</option>
+              <option value="mod">{t('admin.table.mod')}</option>
+              <option value="user">{t('admin.table.user')}</option>
+            </select>
+          )}
           <select
             value={statusFilter}
             aria-label={t('admin.dashboard.filters.filterByStatus')}
@@ -166,8 +186,11 @@ export default function AdminUsersTab({
                   >
                     {/* User Info */}
                     <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700 flex-shrink-0">
-                        {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
+                      <div className="relative size-10 shrink-0">
+                        <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
+                          {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
+                        </div>
+                        {presence.isOnline(user.id || user._id || '') && <OnlineDot />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -216,10 +239,32 @@ export default function AdminUsersTab({
                       </div>
                     </div>
 
-                    {/* IP and Flags */}
+                    {/* IP / Device */}
                     <div className="flex flex-col gap-1 text-xs">
-                      <p className="font-semibold text-zinc-400">{t('admin.table.ip')} / {t('admin.table.flags')}</p>
-                      <div className="font-mono text-zinc-500 text-[10px] break-all">{user.lastIp || '—'}</div>
+                      <p className="font-semibold text-zinc-400">{t('admin.table.ip')} / {t('admin.table.lastDevice')}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-zinc-500 text-[10px] break-all">{user.lastIp || '—'}</span>
+                        {user.lastIp && canActOn(user) && (
+                          <Tip content={t('admin.table.blockIp')}>
+                            <button type="button" onClick={() => handleBlockIpDirect(user)} className="text-zinc-600 hover:text-red-400">
+                              <Globe className="size-3.5" />
+                            </button>
+                          </Tip>
+                        )}
+                      </div>
+                      {user.lastDeviceName && (
+                        <div className="flex items-center gap-1.5">
+                          <Monitor className="size-3.5 text-zinc-600 shrink-0" />
+                          <span className="text-zinc-500 text-[10px] break-all">{user.lastDeviceName}</span>
+                          {user.lastDeviceId && canActOn(user) && (
+                            <Tip content={t('admin.table.blockDevice')}>
+                              <button type="button" onClick={() => handleBlockDeviceDirect(user)} className="text-zinc-600 hover:text-red-400">
+                                <ShieldAlert className="size-3.5" />
+                              </button>
+                            </Tip>
+                          )}
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 flex-wrap">
                         {user.isVerified && <Tip content={t('admin.table.verified')}><CheckCircle2 className="size-4 text-emerald-500" /></Tip>}
                         {user.isDeleted && <Tip content={t('admin.table.deleted')}><Trash2 className="size-4 text-red-500" /></Tip>}
@@ -227,7 +272,7 @@ export default function AdminUsersTab({
                     </div>
 
                     {/* Actions */}
-                    {!isSelf && (
+                    {canActOn(user) && (
                       <div className="flex flex-col gap-2 pt-2 border-t border-zinc-700/50">
                         {user.isDeleted ? (
                           <Button
@@ -292,7 +337,7 @@ export default function AdminUsersTab({
                 <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.role')}</th>
                 <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.status')}</th>
                 <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.projects')} / {t('admin.table.uploads')}</th>
-                <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.ip')} / {t('admin.table.flags')}</th>
+                <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.ip')} / {t('admin.table.lastDevice')}</th>
                 <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest text-right">{t('admin.table.actions')}</th>
               </tr>
             </thead>
@@ -303,8 +348,11 @@ export default function AdminUsersTab({
                   <tr key={user.id || user._id} className={`group hover:bg-zinc-800/30 transition-colors ${user.isDeleted ? 'opacity-50 grayscale-[0.5]' : ''}`}>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
-                          {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
+                        <div className="relative size-10 shrink-0">
+                          <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
+                            {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
+                          </div>
+                          {presence.isOnline(user.id || user._id || '') && <OnlineDot />}
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -340,7 +388,37 @@ export default function AdminUsersTab({
                     </td>
                     <td className="p-4">
                       <div className="flex flex-col gap-1.5">
-                        <span className="font-mono text-[10px] text-zinc-500">{user.lastIp || '—'}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-[10px] text-zinc-500">{user.lastIp || '—'}</span>
+                          {user.lastIp && canActOn(user) && (
+                            <Tip content={t('admin.table.blockIp') as string}>
+                              <button
+                                type="button"
+                                onClick={() => handleBlockIpDirect(user)}
+                                className="text-zinc-600 hover:text-red-400 transition-colors"
+                              >
+                                <Globe className="size-3" />
+                              </button>
+                            </Tip>
+                          )}
+                        </div>
+                        {user.lastDeviceName && (
+                          <div className="flex items-center gap-1.5">
+                            <Monitor className="size-3 text-zinc-600 shrink-0" />
+                            <span className="text-[10px] text-zinc-500 truncate max-w-[140px]" title={user.lastDeviceName}>{user.lastDeviceName}</span>
+                            {user.lastDeviceId && canActOn(user) && (
+                              <Tip content={t('admin.table.blockDevice')}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleBlockDeviceDirect(user)}
+                                  className="text-zinc-600 hover:text-red-400 transition-colors shrink-0"
+                                >
+                                  <ShieldAlert className="size-3" />
+                                </button>
+                              </Tip>
+                            )}
+                          </div>
+                        )}
                         <div className="flex items-center gap-1.5">
                           {user.isVerified && <Tip content={t('admin.table.verified')}><CheckCircle2 className="size-3.5 text-emerald-500" /></Tip>}
                           {user.isDeleted && <Tip content={t('admin.table.deleted')}><Trash2 className="size-3.5 text-red-500" /></Tip>}
@@ -370,7 +448,7 @@ export default function AdminUsersTab({
                             <button onClick={() => setXpPopover(null)} className="h-7 px-1.5 text-zinc-600 hover:text-zinc-400 text-xs">✕</button>
                           </div>
                         )}
-                        {!isSelf && (
+                        {canActOn(user) && (
                           <>
                             <Tip content="Adjust XP" side="top">
                               <Button variant="ghost" size="icon" onClick={() => { setXpPopover(p => p === (user.id || user._id) ? null : (user.id || user._id) ?? null); }} className="size-8 text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg">

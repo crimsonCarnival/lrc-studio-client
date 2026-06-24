@@ -179,6 +179,9 @@ export default {
   settings: {
     showFollowers: "Mostrar seguidores y seguidos públicamente",
     showFollowersSub: "Si está desactivado, los conteos se muestran pero la lista permanece privada",
+    onlineVisibility: "Mostrar estado en línea a contactos mutuos",
+    onlineVisibilityFriendsSub: "Tus contactos mutuos verán un punto verde cuando estés conectado",
+    onlineVisibilityNobodySub: "Nadie ve tu estado en línea (modo fantasma)",
   },
   editProject: "Editar proyecto",
   deleteProject: "Eliminar proyecto",

@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { LazyImage } from '@ui/LazyImage';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
+import { OnlineDot } from '@ui/OnlineDot';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { usePresence } from '@/shared/hooks/usePresence';
 import { getFollowList, followUser, unfollowUser } from './profile.service';
 
 interface FollowListUser {
@@ -24,6 +26,7 @@ interface FollowModalProps {
 export function FollowModal({ accountName, type, onClose }: FollowModalProps) {
   const { t } = useTranslation();
   const { user: me } = useAuthContext();
+  const presence = usePresence();
   const [users, setUsers] = useState<FollowListUser[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -140,17 +143,20 @@ export function FollowModal({ accountName, type, onClose }: FollowModalProps) {
                     onClick={onClose}
                     className="flex items-center gap-3 flex-1 min-w-0"
                   >
-                    {u.avatarUrl ? (
-                      <LazyImage
-                        src={u.avatarUrl}
-                        alt={u.accountName}
-                        className="size-9 rounded-xl object-cover shrink-0"
-                      />
-                    ) : (
-                      <div className="size-9 rounded-xl bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center font-bold text-zinc-950 text-sm shrink-0 select-none">
-                        {(u.displayName || u.accountName)[0].toUpperCase()}
-                      </div>
-                    )}
+                    <div className="relative size-9 shrink-0">
+                      {u.avatarUrl ? (
+                        <LazyImage
+                          src={u.avatarUrl}
+                          alt={u.accountName}
+                          className="size-9 rounded-xl object-cover"
+                        />
+                      ) : (
+                        <div className="size-9 rounded-xl bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center font-bold text-zinc-950 text-sm select-none">
+                          {(u.displayName || u.accountName)[0].toUpperCase()}
+                        </div>
+                      )}
+                      {presence.isOnline(u.id) && <OnlineDot />}
+                    </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
                         {u.displayName || u.accountName}
