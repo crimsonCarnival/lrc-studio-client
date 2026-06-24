@@ -10,6 +10,7 @@ import { SkeletonList, SkeletonEditor, SkeletonPreview, SkeletonSetup } from '@u
 import { Loader2, GripVertical } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
+import { useEditorActivity } from '@/features/auth/hooks/useSessionSocket';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { isStaff } from '@/features/auth/permissions';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
@@ -329,6 +330,16 @@ export function AppRouter({
   } = appState;
 
   usePageTitle(mediaTitle);
+
+  // Broadcast editor activity to mutual friends via socket presence system.
+  // Emits when user is actively working in a project; clears on close/unmount.
+  const songName = (projectMetadata as { songName?: string } | undefined)?.songName;
+  const projectTitle = (projectMetadata as { name?: string } | undefined)?.name;
+  useEditorActivity(
+    activepublicId && activepublicId !== 'new' && activepublicId !== 'local'
+      ? { projectTitle: projectTitle ?? '', songName: songName ?? '', publicId: activepublicId }
+      : null
+  );
 
   const { user } = useAuthContext();
   const { editorColClass, previewColClass, showEditor, showPreview, mobileTab, layoutSwap, setLayoutSwap, editorWidth, setEditorWidth, lockLayout, focusMode, setFocusMode, hideEditor, hidePreview, setHideEditor, setHidePreview, setShowNamingModal } = layoutState;
