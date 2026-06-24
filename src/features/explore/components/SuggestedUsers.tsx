@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { useSuggestedUsers } from '../hooks/useExplore';
 import { followUser, unfollowUser } from '@/features/profile/profile.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { UserHoverCard } from '@ui/UserHoverCard';
 
 interface SuggestedUser {
   id: string;
@@ -69,26 +70,28 @@ export function SuggestedUsers({ limit = 8 }: { limit?: number }) {
                 key={u.id}
                 className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors"
               >
-                <Link to={`/${u.accountName}`} className="flex items-center gap-3 flex-1 min-w-0">
-                  {u.avatarUrl ? (
-                    <img
-                      src={u.avatarUrl}
-                      alt={u.displayName || u.accountName}
-                      referrerPolicy="no-referrer"
-                      className="size-9 rounded-full object-cover shrink-0"
-                    />
-                  ) : (
-                    <div className="size-9 rounded-full bg-gradient-to-br from-primary/50 to-violet-500/50 flex items-center justify-center text-sm font-bold text-white shrink-0 select-none">
-                      {(u.displayName || u.accountName || '?').charAt(0).toUpperCase()}
+                <UserHoverCard accountName={u.accountName} userId={u.id}>
+                  <Link to={`/${u.accountName}`} className="flex items-center gap-3 flex-1 min-w-0">
+                    {u.avatarUrl ? (
+                      <img
+                        src={u.avatarUrl}
+                        alt={u.displayName || u.accountName}
+                        referrerPolicy="no-referrer"
+                        className="size-9 rounded-full object-cover shrink-0"
+                      />
+                    ) : (
+                      <div className="size-9 rounded-full bg-gradient-to-br from-primary/50 to-violet-500/50 flex items-center justify-center text-sm font-bold text-white shrink-0 select-none">
+                        {(u.displayName || u.accountName || '?').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-white truncate">
+                        {u.displayName || u.accountName}
+                      </p>
+                      <p className="text-xs text-zinc-500 truncate">@{u.accountName}</p>
                     </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
-                      {u.displayName || u.accountName}
-                    </p>
-                    <p className="text-xs text-zinc-500 truncate">@{u.accountName}</p>
-                  </div>
-                </Link>
+                  </Link>
+                </UserHoverCard>
 
                 {me && !isSelf && (
                   isFollowing ? (
