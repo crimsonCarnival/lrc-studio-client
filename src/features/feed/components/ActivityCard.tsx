@@ -2,6 +2,10 @@ import { Link } from 'react-router-dom';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Star, GitFork, Globe, Repeat2, ListMusic, UserPlus } from 'lucide-react';
+import { ReactionBar } from '@features/reactions/components/ReactionBar';
+import { useCardReactions } from '@features/reactions/hooks/useCardReactions';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { UserHoverCard } from '@ui/UserHoverCard';
 
 const TYPE_ICONS: Record<string, typeof Star> = {
   PROJECT_PUBLISHED: Globe,
@@ -21,6 +25,9 @@ const TYPE_I18N_KEY: Record<string, string> = {
   USER_FOLLOWED:     'user_followed',
 };
 
+// Project-type activities that support reactions
+const REACTABLE_TYPES = new Set(['PROJECT_PUBLISHED', 'PROJECT_STARRED', 'PROJECT_FORKED', 'PROJECT_BOOSTED']);
+
 interface Activity {
   id: string;
   actor: { accountName: string; avatarUrl?: string | null; displayName?: string | null };
@@ -32,8 +39,6 @@ interface Activity {
   createdAt: string;
 }
 
-// Deterministic pick from an array based on a string seed (activity id).
-// Keeps the same variant across re-renders for the same activity.
 function pick(arr: unknown, seed: string): string {
   if (!Array.isArray(arr)) return arr as string;
   const hash = [...String(seed)].reduce((acc, c) => acc + c.charCodeAt(0), 0);
@@ -51,9 +56,28 @@ function relativeTime(isoString: string, t: TFunction): string {
   return t('library.daysAgo', { count: days });
 }
 
+function ActivityReactions({ publicId }: { publicId: string }) {
+  const { user } = useAuthContext();
+  const { reactions, myReaction, loaded, load, react } = useCardReactions(publicId);
+
+  return (
+    <div
+      onMouseEnter={load}
+      onFocus={load}
+      className="mt-1.5"
+    >
+      <ReactionBar
+        reactions={loaded ? reactions : []}
+        myReaction={myReaction}
+        onReact={user ? react : undefined}
+        disabled={!user}
+      />
+    </div>
+  );
+}
+
 export function ActivityCard({ activity }: { activity: Activity }) {
   const { t } = useTranslation();
-  // Action keys are composed from a fixed map; bypass strict key checking.
   const tk = t as (key: string, options?: object) => unknown;
   const { id, actor, type, publicId, projectTitle, coverImage, targetPath, createdAt } = activity;
   const Icon       = TYPE_ICONS[type] ?? Star;
@@ -62,24 +86,29 @@ export function ActivityCard({ activity }: { activity: Activity }) {
 
   const targetLink = targetPath || (publicId ? `/project/${publicId}` : null);
   const isUserFollow = type === 'USER_FOLLOWED';
+  const canReact = REACTABLE_TYPES.has(type) && !!publicId;
 
   return (
     <div className="flex gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors">
-      <Link to={`/${actor.accountName}`} className="shrink-0">
-        {actor.avatarUrl ? (
-          <img src={actor.avatarUrl} alt={actor.displayName || actor.accountName} referrerPolicy="no-referrer" className="w-9 h-9 rounded-full object-cover" />
-        ) : (
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/50 to-violet-500/50 flex items-center justify-center text-sm font-bold text-white">
-            {(actor.displayName || actor.accountName || '?').charAt(0).toUpperCase()}
-          </div>
-        )}
-      </Link>
+      <UserHoverCard accountName={actor.accountName}>
+        <Link to={`/${actor.accountName}`} className="shrink-0 block">
+          {actor.avatarUrl ? (
+            <img src={actor.avatarUrl} alt={actor.displayName || actor.accountName} referrerPolicy="no-referrer" className="w-9 h-9 rounded-full object-cover" />
+          ) : (
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/50 to-violet-500/50 flex items-center justify-center text-sm font-bold text-white">
+              {(actor.displayName || actor.accountName || '?').charAt(0).toUpperCase()}
+            </div>
+          )}
+        </Link>
+      </UserHoverCard>
 
       <div className="flex-1 min-w-0">
         <p className="text-sm text-zinc-300 leading-snug">
-          <Link to={`/${actor.accountName}`} className="font-semibold text-white hover:text-primary transition-colors">
-            {actor.displayName || actor.accountName}
-          </Link>
+          <UserHoverCard accountName={actor.accountName}>
+            <Link to={`/${actor.accountName}`} className="font-semibold text-white hover:text-primary transition-colors">
+              {actor.displayName || actor.accountName}
+            </Link>
+          </UserHoverCard>
           {' '}
           <span className="text-zinc-400">{actionText}</span>
           {isUserFollow && projectTitle && (
@@ -112,6 +141,8 @@ export function ActivityCard({ activity }: { activity: Activity }) {
             <img src={coverImage} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
           </Link>
         )}
+
+        {canReact && <ActivityReactions publicId={publicId!} />}
 
         <p className="text-xs text-zinc-500 mt-1.5">
           {relativeTime(createdAt, t)}
