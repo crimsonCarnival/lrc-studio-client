@@ -255,7 +255,8 @@ export type FollowListResult = {
 
 export type FollowListType =
   | 'FOLLOWERS'
-  | 'FOLLOWING';
+  | 'FOLLOWING'
+  | 'FRIENDS';
 
 export type FollowUser = {
   accountName: Scalars['String']['output'];
@@ -1144,6 +1145,8 @@ export type UpdateProfileInput = {
   email?: InputMaybe<Scalars['String']['input']>;
   showFollowers?: InputMaybe<Scalars['Boolean']['input']>;
   onlineVisibility?: InputMaybe<Scalars['String']['input']>;
+  miniProfileBadgesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type UpdateProjectInput = {
@@ -1217,6 +1220,8 @@ export type User = {
   settings?: Maybe<Settings>;
   showFollowers: Scalars['Boolean']['output'];
   onlineVisibility: Scalars['String']['output'];
+  miniProfileBadgesEnabled: Scalars['Boolean']['output'];
+  miniProfileBadgeIds: Array<Scalars['String']['output']>;
   showcaseSlots: Scalars['Int']['output'];
   showcasedBadges: Array<Scalars['String']['output']>;
   stats?: Maybe<UserStats>;
