@@ -133,6 +133,8 @@ export const authService = {
           google { connected googleId email name pictureUrl }
           showFollowers
           onlineVisibility
+          miniProfileBadgesEnabled
+          miniProfileBadgeIds
           badges { id grantedAt grantedBy }
           showcasedBadges
           stats { minutesSynced wordsSynced karaokeLines }
@@ -158,6 +160,8 @@ export const authService = {
           bio
           showFollowers
           onlineVisibility
+          miniProfileBadgesEnabled
+          miniProfileBadgeIds
           lastAccountNameChangedAt
         }
       }

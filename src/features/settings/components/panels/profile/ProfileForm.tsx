@@ -8,29 +8,57 @@ import { Textarea } from '@ui/textarea';
 import toast from 'react-hot-toast';
 import { authService } from '@/features/auth/services/auth.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { BadgeChip } from '@/features/badges/BadgeChip';
+
+function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onToggle}
+      className={`relative shrink-0 w-10 h-6 rounded-full transition-colors ${checked ? 'bg-primary' : 'bg-border'}`}
+    >
+      <span className={`absolute top-1 left-1 size-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
+    </button>
+  );
+}
 
 export default function ProfileForm() {
   const { t } = useTranslation();
   const { user, setUser } = useAuthContext();
   const [saving, setSaving] = useState(false);
 
+  const ownedBadgeIds: string[] = (user?.badges as Array<{ id: string }> | undefined)?.map(b => b.id) ?? [];
+
   const [formData, setFormData] = useState({
     displayName: user?.displayName || '',
     bio: user?.bio || '',
     showFollowers: user?.showFollowers ?? true,
     onlineVisibility: (user?.onlineVisibility as 'friends' | 'nobody') ?? 'friends',
+    miniProfileBadgesEnabled: (user?.miniProfileBadgesEnabled as boolean | undefined) ?? true,
+    miniProfileBadgeIds: (user?.miniProfileBadgeIds as string[] | undefined) ?? [],
   });
 
   const isDirty =
     formData.displayName !== (user?.displayName || '') ||
     formData.bio !== (user?.bio || '') ||
     formData.showFollowers !== (user?.showFollowers ?? true) ||
-    formData.onlineVisibility !== ((user?.onlineVisibility as 'friends' | 'nobody') ?? 'friends');
+    formData.onlineVisibility !== ((user?.onlineVisibility as 'friends' | 'nobody') ?? 'friends') ||
+    formData.miniProfileBadgesEnabled !== ((user?.miniProfileBadgesEnabled as boolean | undefined) ?? true) ||
+    JSON.stringify(formData.miniProfileBadgeIds) !== JSON.stringify((user?.miniProfileBadgeIds as string[] | undefined) ?? []);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updatedUser = await authService.updateProfile({ displayName: formData.displayName, bio: formData.bio, showFollowers: formData.showFollowers, onlineVisibility: formData.onlineVisibility });
+      const updatedUser = await authService.updateProfile({
+        displayName: formData.displayName,
+        bio: formData.bio,
+        showFollowers: formData.showFollowers,
+        onlineVisibility: formData.onlineVisibility,
+        miniProfileBadgesEnabled: formData.miniProfileBadgesEnabled,
+        miniProfileBadgeIds: formData.miniProfileBadgeIds,
+      });
       setUser(prev => ({ ...prev, ...updatedUser }));
       toast.success(t('profile.saveSuccess'));
     } catch {
@@ -38,6 +66,15 @@ export default function ProfileForm() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const toggleMiniProfileBadge = (id: string) => {
+    setFormData(prev => {
+      const current = prev.miniProfileBadgeIds;
+      if (current.includes(id)) return { ...prev, miniProfileBadgeIds: current.filter(x => x !== id) };
+      if (current.length >= 3) return prev; // cap at 3
+      return { ...prev, miniProfileBadgeIds: [...current, id] };
+    });
   };
 
   return (
@@ -61,20 +98,20 @@ export default function ProfileForm() {
           />
         </div>
 
-      <div className="space-y-1.5">
-        <div className="flex justify-between items-end">
-          <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
-            {t('profile.bio')}
-          </label>
-          <span className="text-[9px] text-muted-foreground font-bold mr-1">{formData.bio.length}/160</span>
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-end">
+            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+              {t('profile.bio')}
+            </label>
+            <span className="text-[9px] text-muted-foreground font-bold mr-1">{formData.bio.length}/160</span>
+          </div>
+          <Textarea
+            value={formData.bio}
+            onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value.slice(0, 160) }))}
+            placeholder={t('profile.bioPlaceholder')}
+            className="bg-secondary/30 border-border rounded-2xl min-h-[100px] text-sm resize-none"
+          />
         </div>
-        <Textarea
-          value={formData.bio}
-          onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value.slice(0, 160) }))}
-          placeholder={t('profile.bioPlaceholder')}
-          className="bg-secondary/30 border-border rounded-2xl min-h-[100px] text-sm resize-none"
-        />
-      </div>
       </section>
 
       <hr className="border-border/50" />
@@ -83,61 +120,80 @@ export default function ProfileForm() {
         <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
           {t('profile.sections.visibility')}
         </h4>
-        {/* Show followers toggle */}
-        <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-foreground font-medium">
-            {t('profile.settings.showFollowers')}
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {t('profile.settings.showFollowersSub')}
-          </p>
-        </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={formData.showFollowers}
-          onClick={() => setFormData(prev => ({ ...prev, showFollowers: !prev.showFollowers }))}
-          className={`relative shrink-0 w-10 h-6 rounded-full transition-colors ${
-            formData.showFollowers ? 'bg-primary' : 'bg-border'
-          }`}
-        >
-          <span
-            className={`absolute top-1 left-1 size-4 rounded-full bg-white shadow transition-transform ${
-              formData.showFollowers ? 'translate-x-4' : 'translate-x-0'
-            }`}
-          />
-        </button>
-      </div>
 
-        {/* Online visibility toggle */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm text-foreground font-medium">
-              {t('profile.settings.onlineVisibility')}
-            </p>
+            <p className="text-sm text-foreground font-medium">{t('profile.settings.showFollowers')}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('profile.settings.showFollowersSub')}</p>
+          </div>
+          <Toggle checked={formData.showFollowers} onToggle={() => setFormData(prev => ({ ...prev, showFollowers: !prev.showFollowers }))} />
+        </div>
+
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm text-foreground font-medium">{t('profile.settings.onlineVisibility')}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {formData.onlineVisibility === 'friends'
                 ? t('profile.settings.onlineVisibilityFriendsSub')
                 : t('profile.settings.onlineVisibilityNobodySub')}
             </p>
           </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={formData.onlineVisibility === 'friends'}
-            onClick={() => setFormData(prev => ({ ...prev, onlineVisibility: prev.onlineVisibility === 'friends' ? 'nobody' : 'friends' }))}
-            className={`relative shrink-0 w-10 h-6 rounded-full transition-colors ${
-              formData.onlineVisibility === 'friends' ? 'bg-primary' : 'bg-border'
-            }`}
-          >
-            <span
-              className={`absolute top-1 left-1 size-4 rounded-full bg-white shadow transition-transform ${
-                formData.onlineVisibility === 'friends' ? 'translate-x-4' : 'translate-x-0'
-              }`}
-            />
-          </button>
+          <Toggle
+            checked={formData.onlineVisibility === 'friends'}
+            onToggle={() => setFormData(prev => ({ ...prev, onlineVisibility: prev.onlineVisibility === 'friends' ? 'nobody' : 'friends' }))}
+          />
         </div>
+      </section>
+
+      <hr className="border-border/50" />
+
+      <section className="space-y-4">
+        <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+          {t('profile.sections.miniProfile')}
+        </h4>
+
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm text-foreground font-medium">{t('profile.settings.miniProfileBadges')}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('profile.settings.miniProfileBadgesSub')}</p>
+          </div>
+          <Toggle
+            checked={formData.miniProfileBadgesEnabled}
+            onToggle={() => setFormData(prev => ({ ...prev, miniProfileBadgesEnabled: !prev.miniProfileBadgesEnabled }))}
+          />
+        </div>
+
+        {formData.miniProfileBadgesEnabled && ownedBadgeIds.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-0.5">
+              {t('profile.settings.miniProfileBadgesPick')} <span className="text-primary">{formData.miniProfileBadgeIds.length}/3</span>
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {ownedBadgeIds.map(id => {
+                const selected = formData.miniProfileBadgeIds.includes(id);
+                const atCap = !selected && formData.miniProfileBadgeIds.length >= 3;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => toggleMiniProfileBadge(id)}
+                    disabled={atCap}
+                    className={`rounded-full transition-all outline-none focus-visible:ring-2 ring-primary/50 ${selected ? 'ring-2 ring-primary scale-105' : ''} ${atCap ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                  >
+                    <BadgeChip id={id} />
+                  </button>
+                );
+              })}
+            </div>
+            {ownedBadgeIds.length === 0 && (
+              <p className="text-xs text-muted-foreground italic">{t('profile.settings.noBadges')}</p>
+            )}
+          </div>
+        )}
+
+        {formData.miniProfileBadgesEnabled && ownedBadgeIds.length === 0 && (
+          <p className="text-xs text-muted-foreground italic">{t('profile.settings.noBadges')}</p>
+        )}
       </section>
 
       {isDirty && createPortal(
