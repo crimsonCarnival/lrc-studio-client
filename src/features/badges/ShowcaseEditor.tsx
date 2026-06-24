@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { X, Lock, Sparkles, GripVertical } from 'lucide-react';
 import { gqlRequest } from '@/app/graphql.client';
 import { BADGE_REGISTRY, RARITY_CONFIG, BADGE_COLORS } from './badge-registry';
+import { useBadgeDefs } from './BadgeDefsContext';
 
 const UPDATE_SHOWCASE = /* GraphQL */ `
   mutation UpdateShowcase($badgeIds: [String!]!, $showcasePublic: Boolean) {
@@ -28,21 +29,13 @@ interface Badge {
 const EMPTY_BADGES: Badge[] = [];
 const EMPTY_SHOWCASE: string[] = [];
 
-function rarityOf(pct: number) {
-  if (pct > 50) return 'common';
-  if (pct > 10) return 'uncommon';
-  if (pct > 2)  return 'rare';
-  if (pct > 0.5)return 'epic';
-  return 'legendary';
-}
-
 function EarnedBadgeItem({ badge, isInShowcase, onToggle }: { badge: Badge; isInShowcase: boolean; onToggle: (id: string) => void }) {
   const { t } = useTranslation();
-  // Badge label/tip keys are dynamic.
   const tk = t as (key: string, defaultValue?: string) => string;
+  const dbDefs = useBadgeDefs();
   const def = BADGE_REGISTRY[badge.id] ?? { label: badge.id, icon: '?', color: 'primary' };
   const colorConf = BADGE_COLORS[def.color] ?? BADGE_COLORS.primary;
-  const rarity = badge.rarity ?? rarityOf(badge.rarityPct ?? 100);
+  const rarity = dbDefs[badge.id]?.rarity ?? badge.rarity ?? 'common';
   const rarityConf = RARITY_CONFIG[rarity] ?? RARITY_CONFIG.common;
 
   return (
@@ -147,15 +140,16 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
 
   const showcaseSet = new Set(showcase);
 
+  const dbDefs = useBadgeDefs();
+  const rarityFor = (b: Badge) => dbDefs[b.id]?.rarity ?? b.rarity ?? 'common';
+
   const sortedBadges = userBadges.toSorted((a, b) => {
-    const ra = rarityOf(a.rarityPct ?? 100);
-    const rb = rarityOf(b.rarityPct ?? 100);
-    return (RARITY_ORDER[ra] ?? 4) - (RARITY_ORDER[rb] ?? 4);
+    return (RARITY_ORDER[rarityFor(a)] ?? 4) - (RARITY_ORDER[rarityFor(b)] ?? 4);
   });
 
   const filteredBadges = rarityFilter === 'all'
     ? sortedBadges
-    : sortedBadges.filter(b => rarityOf(b.rarityPct ?? 100) === rarityFilter);
+    : sortedBadges.filter(b => rarityFor(b) === rarityFilter);
 
   const toggleBadge = useCallback((badgeId: string) => {
     setShowcase(prev => {

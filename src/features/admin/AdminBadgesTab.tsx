@@ -24,21 +24,21 @@ const badgeColor = (c: string): BadgeColorConf => {
 const GET_BADGE_DEFS = /* GraphQL */ `
   query AdminBadgeDefinitions {
     badgeDefinitions {
-      id label { en es } description { en es } icon color conditionType conditionValue autoGrant isBuiltin holderCount xpReward
+      id label { en es } description { en es } icon color rarity conditionType conditionValue autoGrant isBuiltin holderCount holderPct xpReward
     }
   }
 `;
 const CREATE_BADGE = /* GraphQL */ `
   mutation CreateBadge($input: BadgeDefInput!) {
     adminCreateBadge(input: $input) {
-      id label { en es } description { en es } icon color conditionType conditionValue autoGrant isBuiltin holderCount
+      id label { en es } description { en es } icon color rarity conditionType conditionValue autoGrant isBuiltin holderCount holderPct
     }
   }
 `;
 const UPDATE_BADGE = /* GraphQL */ `
   mutation UpdateBadge($id: String!, $input: BadgeDefInput!) {
     adminUpdateBadge(id: $id, input: $input) {
-      id label { en es } description { en es } icon color conditionType conditionValue autoGrant isBuiltin holderCount xpReward
+      id label { en es } description { en es } icon color rarity conditionType conditionValue autoGrant isBuiltin holderCount holderPct xpReward
     }
   }
 `;
@@ -90,11 +90,13 @@ interface BadgeDef {
   description?: LocalizedText | null;
   icon: string;
   color: string;
+  rarity: string;
   conditionType: string;
   conditionValue?: number | null;
   autoGrant: boolean;
   isBuiltin: boolean;
   holderCount: number;
+  holderPct: number;
   xpReward?: number;
 }
 
@@ -104,6 +106,7 @@ interface BadgeForm {
   description: LocalizedText;
   icon: string;
   color: string;
+  rarity: string;
   conditionType: string;
   conditionValue: number | string | null;
   autoGrant: boolean;
@@ -147,7 +150,16 @@ function LivePreview({ form }: { form: BadgeForm }) {
 // in the data model as an optional field; new badges are created without one.
 const BLANK_FORM: BadgeForm = {
   id: '', label: { en: '', es: '' }, description: { en: '', es: '' }, icon: '',
-  color: 'primary', conditionType: 'manual', conditionValue: null, autoGrant: false, xpReward: 50,
+  color: 'primary', rarity: 'common', conditionType: 'manual', conditionValue: null, autoGrant: false, xpReward: 50,
+};
+
+const RARITIES = ['common', 'uncommon', 'rare', 'epic', 'legendary'] as const;
+const RARITY_COLORS: Record<string, string> = {
+  common:    'text-zinc-400 border-zinc-600 bg-zinc-800',
+  uncommon:  'text-emerald-400 border-emerald-500/40 bg-emerald-950/50',
+  rare:      'text-blue-400 border-blue-500/40 bg-blue-950/50',
+  epic:      'text-purple-400 border-purple-500/40 bg-purple-950/50',
+  legendary: 'text-amber-400 border-amber-500/40 bg-amber-950/50',
 };
 
 interface BadgeFormModalProps {
@@ -159,7 +171,7 @@ interface BadgeFormModalProps {
 
 function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormModalProps) {
   const { t } = useTranslation();
-  const [form, setForm] = useState<BadgeForm>(() => (editing ? { ...BLANK_FORM, ...editing, description: editing.description ?? BLANK_FORM.description } : BLANK_FORM));
+  const [form, setForm] = useState<BadgeForm>(() => (editing ? { ...BLANK_FORM, ...editing, rarity: editing.rarity ?? 'common', description: editing.description ?? BLANK_FORM.description } : BLANK_FORM));
   const [saving, setSaving] = useState(false);
 
   const set = <K extends keyof BadgeForm>(k: K, v: BadgeForm[K]) => setForm(p => ({ ...p, [k]: v }));
@@ -179,6 +191,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
         },
         icon: form.icon,
         color: form.color,
+        rarity: form.rarity,
         conditionType: form.conditionType,
         conditionValue: needsValue(form.conditionType) ? Number(form.conditionValue) : null,
         autoGrant: form.autoGrant,
@@ -332,6 +345,24 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                   })}
                 </div>
               </div>
+
+              {/* Rarity */}
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.badges.rarity')}</span>
+                <div className="flex gap-2 flex-wrap">
+                  {RARITIES.map(r => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => set('rarity', r)}
+                      className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all
+                        ${form.rarity === r ? RARITY_COLORS[r] : 'border-zinc-800 text-zinc-700 hover:border-zinc-700'}`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Right Column — award behavior, boxed to match the levels modal */}
@@ -470,19 +501,19 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="flex items-center gap-1.5 text-[10px] text-zinc-600">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${RARITY_COLORS[def.rarity ?? 'common'] ?? RARITY_COLORS.common}`}>
+          {def.rarity ?? 'common'}
+        </span>
+        <span className="text-[10px] text-zinc-600 flex items-center gap-1">
           <Users className="size-3" />
-          <span>{t('admin.badges.holders', { count: def.holderCount.toLocaleString() })}</span>
-        </div>
-        <div className="flex items-center gap-1 text-[10px] text-amber-600">
-          <span>⚡</span>
-          <span>{(def.xpReward ?? 50).toLocaleString()} XP</span>
-        </div>
-        <div className={`flex items-center gap-1 text-[10px] ${def.autoGrant ? 'text-emerald-600' : 'text-zinc-700'}`}>
+          {def.holderCount.toLocaleString()} ({(def.holderPct ?? 0).toFixed(1)}%)
+        </span>
+        <span className="text-[10px] text-amber-600 flex items-center gap-1">⚡ {(def.xpReward ?? 50).toLocaleString()} XP</span>
+        <span className={`text-[10px] flex items-center gap-1 ${def.autoGrant ? 'text-emerald-600' : 'text-zinc-700'}`}>
           <div className={`size-1.5 rounded-full ${def.autoGrant ? 'bg-emerald-500' : 'bg-zinc-700'}`} />
-          <span>{def.autoGrant ? t('admin.badges.autoGrant') : t('admin.badges.manualOnly')}</span>
-        </div>
+          {def.autoGrant ? t('admin.badges.autoGrant') : t('admin.badges.manualOnly')}
+        </span>
       </div>
 
       {/* Condition */}

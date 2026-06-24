@@ -220,6 +220,7 @@ export default {
     description: 'Descripción',
     descriptionPlaceholder: '¿Qué hizo el usuario para ganarla?',
     color: 'Color',
+    rarity: 'Rareza',
     behaviorSection: 'Comportamiento de la insignia',
     condition_label: 'Condición',
     thresholdValue: 'Valor umbral',

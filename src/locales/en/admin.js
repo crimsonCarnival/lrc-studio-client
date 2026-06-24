@@ -220,6 +220,7 @@ export default {
     description: 'Description',
     descriptionPlaceholder: 'What did the user do to earn this?',
     color: 'Color',
+    rarity: 'Rarity',
     behaviorSection: 'Award behavior',
     condition_label: 'Condition',
     thresholdValue: 'Threshold Value',

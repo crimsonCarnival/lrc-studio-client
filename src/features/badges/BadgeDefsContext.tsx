@@ -9,6 +9,7 @@ const BADGE_DEFS_QUERY = /* GraphQL */ `
       description { en es }
       icon
       color
+      rarity
     }
   }
 `;
@@ -19,6 +20,7 @@ export interface BadgeDefLocalized {
   description: { en: string; es: string };
   icon: string;
   color: string;
+  rarity: string;
 }
 
 type BadgeDefsMap = Record<string, BadgeDefLocalized>;
