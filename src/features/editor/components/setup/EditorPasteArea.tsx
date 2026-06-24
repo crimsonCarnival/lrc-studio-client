@@ -1,9 +1,14 @@
-import { useState } from 'react';
-import type { ChangeEventHandler, RefObject } from 'react';
+import { useRef, useState } from 'react';
+import type { ChangeEventHandler, RefObject, SyntheticEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Textarea } from '@ui/textarea';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
+import PasteSelectionToolbar from './PasteSelectionToolbar';
+import { getCaretCoords } from '../../utils/textarea-caret';
+
+type Selection = { start: number; end: number };
+type PillPos = { x: number; y: number; below: boolean };
 
 interface UrlImportResult {
   success: boolean;
@@ -16,6 +21,8 @@ interface EditorPasteAreaProps {
   fileInputRef: RefObject<HTMLInputElement | null>;
   handleFileUpload: ChangeEventHandler<HTMLInputElement>;
   handleUrlImport: (url: string) => Promise<UrlImportResult>;
+  /** Project singer roster, for the selection toolbar's section-singer assignment. */
+  singers?: string[];
 }
 
 export default function EditorPasteArea({
@@ -24,11 +31,47 @@ export default function EditorPasteArea({
   fileInputRef,
   handleFileUpload,
   handleUrlImport,
+  singers = [],
 }: EditorPasteAreaProps) {
   const { t } = useTranslation();
   const [urlInput, setUrlInput] = useState('');
   const [urlFetching, setUrlFetching] = useState(false);
   const [urlError, setUrlError] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [selection, setSelection] = useState<Selection | null>(null);
+  const [pill, setPill] = useState<PillPos | null>(null);
+
+  // Position the floating toolbar just above the selection start. If there isn't
+  // room above (selection near the top), flip it below the line instead.
+  const computePill = (sel: Selection | null) => {
+    const ta = textareaRef.current;
+    if (!sel || !ta) {
+      setPill(null);
+      return;
+    }
+    const { top, left } = getCaretCoords(ta, sel.start);
+    const y = ta.offsetTop + top - ta.scrollTop;
+    const x = ta.offsetLeft + left - ta.scrollLeft;
+    setPill({ x: Math.max(4, x), y, below: y < 44 });
+  };
+
+  // Track non-empty selections so the contextual section/singer toolbar can act
+  // on them. A collapsed caret hides the toolbar.
+  const handleSelect = (e: SyntheticEvent<HTMLTextAreaElement>) => {
+    const ta = e.currentTarget;
+    const sel: Selection | null =
+      ta.selectionStart !== ta.selectionEnd ? { start: ta.selectionStart, end: ta.selectionEnd } : null;
+    setSelection(sel);
+    computePill(sel);
+  };
+  const handleScroll = () => {
+    if (selection) computePill(selection);
+  };
+  const applyToolbar = (next: string) => {
+    setRawText(next);
+    setSelection(null);
+    setPill(null);
+  };
 
   const handleUrlSubmit = async () => {
     const trimmed = urlInput.trim();
@@ -46,13 +89,33 @@ export default function EditorPasteArea({
 
   return (
     <div className="flex flex-col flex-1 gap-1.5 animate-fade-in min-h-0 px-1">
-      <Textarea
-        id="lyrics-textarea"
-        value={rawText}
-        onChange={(e) => setRawText(e.target.value)}
-        placeholder={t('editor.pastePlaceholder')}
-        className="flex-1 bg-zinc-800/40 border-zinc-700/50 text-zinc-200 placeholder:text-zinc-600 resize-none focus:border-primary/50 focus:ring-primary/25 font-mono leading-relaxed min-h-0"
-      />
+      <div className="relative flex flex-1 min-h-0">
+        <Textarea
+          ref={textareaRef}
+          id="lyrics-textarea"
+          value={rawText}
+          onChange={(e) => setRawText(e.target.value)}
+          onSelect={handleSelect}
+          onScroll={handleScroll}
+          placeholder={t('editor.pastePlaceholder')}
+          className="flex-1 bg-zinc-800/40 border-zinc-700/50 text-zinc-200 placeholder:text-zinc-600 resize-none focus:border-primary/50 focus:ring-primary/25 font-mono leading-relaxed min-h-0"
+        />
+        {selection && pill && (
+          <div
+            className="absolute z-10 pointer-events-none"
+            style={{ top: pill.y, left: pill.x }}
+          >
+            <div className={`pointer-events-auto w-max ${pill.below ? 'translate-y-7' : '-translate-y-full -mt-2'}`}>
+              <PasteSelectionToolbar
+                value={rawText}
+                selection={selection}
+                singers={singers}
+                onApply={applyToolbar}
+              />
+            </div>
+          </div>
+        )}
+      </div>
       <div className="flex flex-col gap-1.5 shrink-0">
         <div className="flex gap-2">
           <input
