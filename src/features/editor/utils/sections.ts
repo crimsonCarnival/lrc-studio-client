@@ -6,7 +6,7 @@
  * Nested format: [{label, depth, singers, lines:[{text,...},...]}]
  */
 import type { EditorLine } from '@/features/editor/services/editor.service';
-import { formatSectionLabelForSerialization, isIntroLabel } from '@/features/editor/constants/sectionTypes';
+import { formatSectionLabelForSerialization, isIntroLabel, isStructuralSection } from '@/features/editor/constants/sectionTypes';
 
 interface Section {
   label: string | null;
@@ -212,10 +212,23 @@ export function parseSectionHeader(rawLine: string): { label: string; singers: s
   if (!m) return null;
   const inner = m[1].trim();
   if (LRC_TIMESTAMP.test(inner)) return null; // [00:12.50] is a timestamp, not a section
-  const singers = m[2] ? m[2].split(',').map((s) => s.trim()).filter(Boolean) : [];
-  
+
+  let label = inner;
+  let singers = m[2] ? m[2].split(',').map((s) => s.trim()).filter(Boolean) : [];
+
+  // Genius-style `[Section: Singer & Singer]` form. Split the colon into a singer
+  // roster for every label EXCEPT structural dividers — `[Part I: NO SALVATION...]`
+  // keeps the colon as part of its title.
+  if (singers.length === 0) {
+    const colon = inner.match(/^(.+?):\s*(.+)$/);
+    if (colon && !isStructuralSection(colon[1])) {
+      label = colon[1].trim();
+      singers = colon[2].split(/[,&]/).map((s) => s.trim()).filter(Boolean);
+    }
+  }
+
   // Depth 0 for unindented, depth 1 for indented
   const depth = leadingSpaces > 0 ? 1 : 0;
-  
-  return { label: inner, singers, depth };
+
+  return { label, singers, depth };
 }

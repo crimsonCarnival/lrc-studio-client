@@ -120,10 +120,11 @@ const GET_PROJECT = /* GraphQL */ `
             endTime
             secondary
             singers
+            mode
             translation
             translations { language text }
-            words { word time reading }
-            secondaryWords { word time }
+            words { word time reading singerIndex }
+            secondaryWords { word time singerIndex }
           }
         }
       }
@@ -228,10 +229,11 @@ const GET_SHARE = /* GraphQL */ `
             endTime
             secondary
             singers
+            mode
             translation
             translations { language text }
-            words { word time reading }
-            secondaryWords { word time }
+            words { word time reading singerIndex }
+            secondaryWords { word time singerIndex }
           }
         }
       }

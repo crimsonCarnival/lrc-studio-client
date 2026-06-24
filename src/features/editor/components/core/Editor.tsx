@@ -300,7 +300,7 @@ export default function Editor({
             window.dispatchEvent(new CustomEvent('editor:start-syncing'));
           }
         }}
-        title={t('editor.editRawText', 'Raw Lyrics')}
+        title={t('editor.editRawText')}
         dialogProps={{ className: 'max-w-3xl w-[90vw]' }}
       >
         <div className="h-[60vh] flex flex-col mt-2 min-h-0">
@@ -310,10 +310,11 @@ export default function Editor({
             fileInputRef={fileInputRef}
             handleFileUpload={handleFileUpload}
             handleUrlImport={handleUrlImport as ComponentProps<typeof EditorPasteArea>['handleUrlImport']}
+            singers={combinedSingers}
           />
           <div className="flex justify-end mt-4 pt-4 border-t border-zinc-800 shrink-0">
             <Button onClick={() => window.dispatchEvent(new CustomEvent('editor:start-syncing'))} className="font-semibold px-6 text-zinc-950 bg-primary hover:bg-primary/90">
-              {t('editor.done', 'Done')}
+              {t('editor.done')}
             </Button>
           </div>
         </div>

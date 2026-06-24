@@ -8,6 +8,8 @@ export default {
   clearWordTimestampsTitle: "Clear Word Timestamps",
   deleteLine: "Delete this line?",
   deleteLineTitle: "Delete Line",
+  deleteSection: "Delete this section?",
+  deleteSectionTitle: "Delete Section",
   bulkClear: "Clear timestamps for all selected lines?",
   bulkClearTitle: "Clear Selected",
   bulkDelete: "Delete all selected lines?",

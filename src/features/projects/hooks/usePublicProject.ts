@@ -16,8 +16,9 @@ const GET_PUBLIC_PROJECT = /* GraphQL */ `
           lines {
             id text timestamp endTime secondary translation
             singers
+            mode
             words { word time reading singerIndex }
-            secondaryWords { word time }
+            secondaryWords { word time singerIndex }
           }
         }
       }

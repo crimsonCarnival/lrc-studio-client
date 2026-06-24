@@ -47,6 +47,19 @@ export function formatSectionLabelForSerialization(label) {
 }
 
 /**
+ * Whether a label denotes a recognized STRUCTURAL divider (a depth-0 preset such
+ * as Part). For these, the text after a colon in `[Part I: TITLE]` is a title, not
+ * a singer, so it must NOT be split off. Every other label — known performance
+ * section or custom — is assumed to follow the `[Section: Performer]` convention.
+ */
+export function isStructuralSection(label) {
+  if (!label) return false;
+  const base = label.trim().toLowerCase().replace(/\s+(i{1,3}|iv|v|vi{0,3}|ix|x{1,2}|\d+)$/, '');
+  const preset = SECTION_TYPES.find(s => s.id === base);
+  return preset != null && preset.depth === 0;
+}
+
+/**
  * Whether a label denotes an Intro section (ignoring any trailing serialized number).
  * Intro sections are treated as editor-only metadata and omitted from raw-text serialization.
  */
