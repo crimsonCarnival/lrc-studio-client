@@ -67,9 +67,20 @@ export function NotificationText({ notification, t }: { notification: Notificati
   const firstName = first?.accountName ?? 'Someone';
 
   let actorStr;
-  if (!actorCount || actorCount <= 1) actorStr = firstName;
-  else if (actorCount === 2) actorStr = t('notifications.actorAndOther', { name: firstName });
-  else actorStr = t('notifications.actorAndOthers', { name: firstName, count: actorCount - 1 });
+  if (!actorCount || actorCount <= 1) {
+    actorStr = firstName;
+  } else if (actorCount === 2) {
+    const second = actors?.[actors.length - 2]?.accountName ?? '';
+    actorStr = second ? t('notifications.actorAndOne', { name: firstName, other: second }) : t('notifications.actorAndOther', { name: firstName });
+  } else if (actorCount === 3) {
+    const second = actors?.[actors.length - 2]?.accountName ?? '';
+    const third  = actors?.[actors.length - 3]?.accountName ?? '';
+    actorStr = second && third
+      ? t('notifications.actorAndTwo', { name: firstName, second, third })
+      : t('notifications.actorAndOthers', { name: firstName, count: 2 });
+  } else {
+    actorStr = t('notifications.actorAndOthers', { name: firstName, count: actorCount - 1 });
+  }
 
   if (type === 'star') {
     return projectTitle

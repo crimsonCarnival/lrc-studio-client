@@ -12,7 +12,7 @@ import { appNavigate } from '@/app/navigation';
 // Push events that warrant an on-screen toast. Sticky/system notifications
 // (verify_email, set_password, etc.) arrive on the same channel but should not
 // toast — they live only in the panel.
-const TOAST_TYPES = new Set(['star', 'fork', 'follow', 'reaction', 'admin_granted', 'ban', 'unban', 'request_submitted', 'request_reviewed', 'xp_changed', 'role_changed']);
+const TOAST_TYPES = new Set(['star', 'fork', 'follow', 'reaction', 'admin_granted', 'ban', 'unban', 'request_submitted', 'request_reviewed', 'xp_changed', 'role_changed', 'badge_awarded']);
 
 interface AppNotification {
   _id: string;
@@ -52,11 +52,46 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     request('/notifications')
       .then(raw => {
         const data = raw as { notifications?: AppNotification[]; unreadCount?: number };
-        setNotifications(data.notifications || []);
+        const notifs = data.notifications || [];
+        setNotifications(notifs);
         setUnreadCount(data.unreadCount || 0);
+
+        // Show toasts for unread badge_awarded notifications that were missed
+        // because the socket wasn't connected yet (e.g. awarded during registration).
+        for (const n of notifs) {
+          const notif = n as unknown as NotificationData;
+          if (notif.type !== 'badge_awarded' || notif.read || !notif.body) continue;
+          const badgeId = notif.body;
+          const def = (BADGE_REGISTRY as Record<string, { label?: string } | undefined>)[badgeId];
+          const label = def?.label ?? badgeId;
+          toast(
+            (item) => (
+              <div
+                className="flex items-center gap-3 cursor-pointer select-none"
+                onClick={() => toast.dismiss(item.id)}
+              >
+                <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-lg shrink-0">🏅</div>
+                <div>
+                  <p className="text-xs font-bold text-foreground leading-tight">{t('notifications.badgeUnlocked')}</p>
+                  <p className="text-xs text-muted-foreground leading-tight">{label}</p>
+                </div>
+              </div>
+            ),
+            {
+              duration: 6000,
+              style: {
+                background: 'var(--card)',
+                border: '1px solid var(--border)',
+                borderRadius: '1rem',
+                padding: '12px 16px',
+                color: 'var(--card-foreground)',
+              },
+            }
+          );
+        }
       })
       .catch(() => {});
-  }, [user]);
+  }, [user, t]);
 
   useEffect(() => {
     if (!user) {

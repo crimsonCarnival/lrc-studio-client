@@ -30,6 +30,8 @@ export default {
   roleChanged: 'Your role changed: <0>{{from}}</0> → <1>{{to}}</1>',
   passwordChanged: 'Your password was changed.',
   actorAndOther: '{{name}} and 1 other',
+  actorAndOne: '{{name}} and {{other}}',
+  actorAndTwo: '{{name}}, {{second}} and {{third}}',
   actorAndOthers: '{{name}} and {{count}} others',
   goToSettings: 'Go to settings',
   timeJustNow: 'Just now',
