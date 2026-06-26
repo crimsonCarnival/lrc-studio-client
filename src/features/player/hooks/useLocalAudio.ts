@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { uploads, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import type { AppSettings } from '@/features/settings/settings.types';
+import type { PlaybackEntry } from '../playback-history';
 
 type HostedFile = File & { isHosted?: boolean };
 
@@ -23,6 +24,7 @@ interface UseLocalAudioParams {
   onMediaUpload?: (u: unknown) => void;
   initialSpeed?: number | string;
   initialSeek?: number;
+  onTrackLoad?: (entry: PlaybackEntry) => void;
 }
 
 export default function useLocalAudio({
@@ -40,6 +42,7 @@ export default function useLocalAudio({
   onMediaUpload,
   initialSpeed,
   initialSeek = 0,
+  onTrackLoad,
 }: UseLocalAudioParams) {
   const [localUrl, setLocalUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -61,8 +64,10 @@ export default function useLocalAudio({
     setLocalUrl(url);
     setIsPlaying(false);
     setCurrentTime(0);
-    onTitleChange?.(file.name.replace(/\.[^/.]+$/, ''));
+    const fileTitle = file.name.replace(/\.[^/.]+$/, '');
+    onTitleChange?.(fileTitle);
     onMediaChange?.(true);
+    onTrackLoad?.({ url, title: fileTitle, type: 'local' });
 
     // Upload to Cloudinary in background if authenticated and not already hosted there
     if (!file.isHosted && getAccessToken() && file.size <= 50 * 1024 * 1024) {
@@ -130,7 +135,7 @@ export default function useLocalAudio({
       };
       performUpload();
     }
-  }, [blobRef, t, setSource, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, onMediaUpload, executeRecaptcha]);
+  }, [blobRef, t, setSource, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, onMediaUpload, executeRecaptcha, onTrackLoad]);
 
   const handleTimeUpdate = useCallback(() => {
     if (audioRef.current) {
@@ -239,6 +244,7 @@ export default function useLocalAudio({
       setCurrentTime(0);
       if (title) onTitleChange?.(title);
       onMediaChange?.(true);
-    }, [setSource, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange]),
+      onTrackLoad?.({ url, title: title ?? '', type: 'url' });
+    }, [setSource, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, onTrackLoad]),
   };
 }

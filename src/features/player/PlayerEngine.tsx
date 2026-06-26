@@ -7,6 +7,8 @@ import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { matchKey } from '@/shared/utils/keyboard';
 import useLocalAudio from './hooks/useLocalAudio';
 import useYouTubePlayer from './hooks/useYouTubePlayer';
+import { pushPlaybackEntry, popPrevEntry, getPlaybackHistorySize } from './playback-history';
+import type { PlaybackEntry } from './playback-history';
 import { PlayerContext } from './PlayerContext';
 import type { UploadItem } from './PlayerContext';
 import type { EditorLine } from '@/features/editor/services/editor.service';
@@ -41,6 +43,7 @@ export interface PlayerHandle {
   setLoop: (a: number | null, b: number | null) => void;
   clearLoop: () => void;
   getLoop: () => Loop;
+  getPrevTrack: () => PlaybackEntry | undefined;
 }
 
 interface InitialMedia {
@@ -207,6 +210,7 @@ function PlayerEngineInner(
     onMediaUpload,
     initialSpeed,
     initialSeek,
+    onTrackLoad: pushPlaybackEntry,
   });
 
   const yt = useYouTubePlayer({
@@ -222,6 +226,7 @@ function PlayerEngineInner(
     isPlaying,
     setSource,
     onYtUrlChange,
+    onTrackLoad: pushPlaybackEntry,
   });
 
   const detectedUrlType = useMemo(() => {
@@ -435,6 +440,11 @@ function PlayerEngineInner(
       setLoop: handleLoopChange,
       clearLoop,
       getLoop: () => loop,
+      getPrevTrack: () => {
+        if (getPlaybackHistorySize() < 2) return undefined;
+        popPrevEntry(); // discard current
+        return popPrevEntry(); // return previous
+      },
     }),
     [source, isPlaying, togglePlay, seek, local, yt, applySpeed, playbackSpeed, handleLoopChange, clearLoop, loop],
   );

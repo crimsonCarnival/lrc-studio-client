@@ -11,6 +11,7 @@ import type { RefObject } from 'react';
 import type { TFunction } from 'i18next';
 import { extractVideoId } from '../services/player.service';
 import type { AppSettings } from '@/features/settings/settings.types';
+import type { PlaybackEntry } from '../playback-history';
 
 // Module-level WeakMap: stores raw YouTube player objects outside React's
 // tracking system so React DevTools never walks the cross-origin iframe.
@@ -29,6 +30,7 @@ interface UseYouTubePlayerParams {
   isPlaying: boolean;
   setSource: (s: string) => void;
   onYtUrlChange?: (url: string) => void;
+  onTrackLoad?: (entry: PlaybackEntry) => void;
 }
 
 export default function useYouTubePlayer({
@@ -44,6 +46,7 @@ export default function useYouTubePlayer({
   isPlaying,
   setSource,
   onYtUrlChange,
+  onTrackLoad,
 }: UseYouTubePlayerParams) {
   // useRef gives a stable identity ESLint recognises as safe in dep arrays.
   // On first render we redefine `current` as a non-enumerable WeakMap-backed
@@ -89,6 +92,8 @@ export default function useYouTubePlayer({
   const apiLoadedRef = useRef(false);
   const onYtUrlChangeRef = useRef(onYtUrlChange);
   useLayoutEffect(() => { onYtUrlChangeRef.current = onYtUrlChange; });
+  const onTrackLoadRef = useRef(onTrackLoad);
+  useLayoutEffect(() => { onTrackLoadRef.current = onTrackLoad; });
 
   const [ytUrl, setYtUrl] = useState('');
   const [ytReady, setYtReady] = useState(false);
@@ -182,6 +187,7 @@ export default function useYouTubePlayer({
             if (title) onTitleChange?.(title);
             onMediaChange?.(true);
             onYtUrlChangeRef.current?.(urlToLoad);
+            onTrackLoadRef.current?.({ url: urlToLoad, title: title ?? '', type: 'youtube' });
           },
           onStateChange: (e) => {
             const playing = e.data === window.YT.PlayerState.PLAYING;
