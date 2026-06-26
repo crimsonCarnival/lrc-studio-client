@@ -101,7 +101,7 @@ export function useAppState(user?: AuthUserType | null) {
     onRestoreCompanion: setEditorModeRaw,
   });
 
-  const [syncMode, setSyncMode] = useState(false);
+  const [syncMode, setSyncMode] = useState(true);
   const [activeLineIndex, setActiveLineIndex] = useState(0);
   const [activeTranslationIndex, setActiveTranslationIndex] = useState(0);
   const [playbackPosition, setPlaybackPosition] = useState(0);
@@ -119,6 +119,12 @@ export function useAppState(user?: AuthUserType | null) {
     localStorage.removeItem(STORAGE_KEYS.SHARED_PROJECT);
     // If a shared project hash is in the URL, skip localStorage — useEffect handles it async
     if (typeof window !== 'undefined' && window.location.hash.startsWith('#s=')) {
+      return null;
+    }
+    // GuestProjectSaveGate owns the fromGuest=1 flow — it reads from IndexedDB and creates
+    // the project on the server. Restoring from localStorage here would show a stale
+    // restoration prompt on top of the in-progress project creation.
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('fromGuest') === '1') {
       return null;
     }
     // If we have an activepublicId, this is a known project — skip the restore modal
@@ -479,7 +485,11 @@ export function useAppState(user?: AuthUserType | null) {
   // ——— Migration Detection (Guest -> Auth) ———
   // If the user just logged in and has local data but no active project ID,
   // trigger the restoration prompt.
+  // Skip when fromGuest=1: GuestProjectSaveGate owns that flow — it reads from
+  // IndexedDB and creates the project on the server. Restoring from localStorage
+  // here would show a stale restoration prompt on top of the new project.
   useEffect(() => {
+    if (searchParams.get('fromGuest') === '1') return;
     if (user && !user.isGuest && !activepublicId && !pendingProject) {
       try {
         const saved = localStorage.getItem(STORAGE_KEYS.PROJECT);
@@ -492,7 +502,7 @@ export function useAppState(user?: AuthUserType | null) {
         }
       } catch { /* ignore */ }
     }
-  }, [user, activepublicId, pendingProject]);
+  }, [user, activepublicId, pendingProject, searchParams]);
 
   // ——— Shared project (hash decode, fork guard, export-to-URL) ———
   const {
@@ -640,7 +650,7 @@ export function useAppState(user?: AuthUserType | null) {
   );
 
   // ——— Auto-save ———
-  useAutosave({
+  const { pendingSyncs } = useAutosave({
     settings,
     pendingProject,
     isSharedProject,
@@ -901,6 +911,7 @@ export function useAppState(user?: AuthUserType | null) {
     hasUnsavedChanges,
     confirmModal,
     isAutosaving,
+    pendingSyncs,
     isSaving,
     isSharedProject,
     sharedReadOnly,

@@ -127,10 +127,6 @@ export default {
   savingStillTrying: "Still trying — check your connection",
   sectionDefault: "Section",
   sectionLabelPlaceholder: "Section label",
-  player: {
-    moveToTop: "Move player to top",
-    moveToBottom: "Move player to bottom",
-  },
   sections: {
     part: "Part",
     intro: "Intro",
@@ -193,4 +189,6 @@ export default {
   duetMode: "Sing together",
   splitMode: "Split by singer",
   toggleSingMode: "Toggle duet / split",
+  pendingSync_one: "{{count}} save pending",
+  pendingSync_other: "{{count}} saves pending",
 };

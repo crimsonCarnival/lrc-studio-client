@@ -11,7 +11,6 @@ import DragPointerIsolate from '@/features/player/components/DragPointerIsolate'
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import ResponsiveModal from '@/shared/ui/ResponsiveModal';
-import { ArrowUpToLine, ArrowDownToLine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { KEY_SYMBOLS } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
@@ -46,6 +45,7 @@ interface EditorProps {
   buildProjectPayload?: () => Record<string, any>;
   handleRemoveAllLyrics: () => void;
   isAutosaving?: boolean;
+  pendingSyncs?: number;
   isSaving?: boolean;
   compact?: boolean;
   onNewProject: () => void;
@@ -81,6 +81,7 @@ export default function Editor({
   buildProjectPayload,
   handleRemoveAllLyrics,
   isAutosaving,
+  pendingSyncs,
   isSaving,
   compact,
   onNewProject,
@@ -203,15 +204,6 @@ export default function Editor({
         playerPosition === 'top' ? 'mb-3 border-b pb-3' : 'mt-3 border-t pt-3'
       }`}
     >
-      <Tip content={playerPosition === 'top' ? t('editor.player.moveToBottom') : t('editor.player.moveToTop')}>
-        <button
-          onClick={() => updateSetting('editor.playerPosition', playerPosition === 'top' ? 'bottom' : 'top')}
-          aria-label={playerPosition === 'top' ? t('editor.player.moveToBottom') : t('editor.player.moveToTop')}
-          className="absolute top-1 right-3 sm:right-5 z-raised size-6 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 flex items-center justify-center transition-colors"
-        >
-          {playerPosition === 'top' ? <ArrowDownToLine className="size-3" /> : <ArrowUpToLine className="size-3" />}
-        </button>
-      </Tip>
       <PlayerControls variant="editor" />
       {(() => {
         const symbols = KEY_SYMBOLS as Record<string, string>;
@@ -272,6 +264,7 @@ export default function Editor({
         buildProjectPayload={buildProjectPayload}
         handleRemoveAllLyrics={handleRemoveAllLyrics}
         isAutosaving={isAutosaving}
+        pendingSyncs={pendingSyncs}
         isSaving={isSaving}
         overlappingLines={overlappingLines}
         onNewProject={onNewProject}

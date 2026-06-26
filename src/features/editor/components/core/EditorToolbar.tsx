@@ -72,6 +72,7 @@ interface EditorToolbarProps {
   buildProjectPayload?: () => Record<string, any>;
   handleRemoveAllLyrics: () => void;
   isAutosaving?: boolean;
+  pendingSyncs?: number;
   isSaving?: boolean;
   overlappingLines?: Set<number>;
   onNewProject: () => void;
@@ -111,6 +112,7 @@ export default function EditorToolbar({
   buildProjectPayload,
   handleRemoveAllLyrics,
   isAutosaving,
+  pendingSyncs = 0,
   isSaving,
   overlappingLines,
   onNewProject,
@@ -484,6 +486,11 @@ export default function EditorToolbar({
                     : <Save className="size-4" />}
               </Button>
             </Tip>
+          )}
+          {pendingSyncs > 0 && (
+            <span className="text-xs text-amber-400 shrink-0">
+              {t('editor.pendingSync', { count: pendingSyncs })}
+            </span>
           )}
           <div className="w-px h-4 bg-zinc-800 mx-0.5 shrink-0" />
           <Popover open={lyricsSearchPopoverOpen} onOpenChange={setLyricsSearchPopoverOpen}>

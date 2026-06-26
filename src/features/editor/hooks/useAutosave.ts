@@ -5,6 +5,12 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { getSocket } from '@/app/socket.client';
+import {
+  enqueueSyncJob,
+  flushSyncQueue,
+  getSyncQueueSize,
+  isSyncQueueEmpty,
+} from '../sync.queue';
 
 /**
  * Dual-condition autosave: fires when either the time interval elapses
@@ -65,6 +71,7 @@ export function useAutosave({
     };
   });
 
+  const [pendingSyncs, setPendingSyncs] = useState(0);
   const [initialTime] = useState(() => Date.now());
   const lastSaveTimeRef = useRef(initialTime);
   const changeCountRef = useRef(0);
@@ -172,11 +179,25 @@ export function useAutosave({
             uploadId: uploadIdToSave ?? undefined,
           });
           onSaveSuccess?.();
+          // On a successful save, attempt to drain any jobs that failed earlier
+          if (!isSyncQueueEmpty()) {
+            try {
+              await flushSyncQueue((id, p) => projects.patch(id, p));
+              setPendingSyncs(0);
+            } catch {
+              setPendingSyncs(getSyncQueueSize());
+            }
+          }
         } catch (err) {
-          if (err?.name === 'AbortError') return; // superseded — ignore
+          if ((err as { name?: string })?.name === 'AbortError') return; // superseded — ignore
           // Auth failure: token may have expired. Signal the global handler.
-          if (err?.status === 401 || err?.status === 403) {
+          if ((err as { status?: number })?.status === 401 || (err as { status?: number })?.status === 403) {
             authEvents.emit('token:expired');
+          } else {
+            // Network failure — queue for retry on reconnect
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            enqueueSyncJob({ projectId: activepublicIdRef.current, payload: patchData as any, timestamp: Date.now() });
+            setPendingSyncs(getSyncQueueSize());
           }
           // All other errors: silent fail (autosave — user not waiting for feedback)
         }
@@ -343,5 +364,24 @@ export function useAutosave({
     return () => { socket.off("autosave:ack", onAck); };
   }, []);
 
-  return { doAutoSave };
+  // ——— Flush queued saves on socket reconnect ———
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleReconnect = async () => {
+      if (isSyncQueueEmpty()) return;
+      try {
+        await flushSyncQueue((id, p) => projects.patch(id, p));
+        setPendingSyncs(0);
+      } catch {
+        setPendingSyncs(getSyncQueueSize());
+      }
+    };
+
+    socket.on('connect', handleReconnect);
+    return () => { socket.off('connect', handleReconnect); };
+  }, []);
+
+  return { doAutoSave, pendingSyncs };
 }
