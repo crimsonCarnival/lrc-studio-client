@@ -1,7 +1,9 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Star, GitFork, Globe, Repeat2, ListMusic, UserPlus } from 'lucide-react';
+import { useIntersectionLoader } from '../hooks/useIntersectionLoader';
 import { ReactionBar } from '@features/reactions/components/ReactionBar';
 import { useCardReactions } from '@features/reactions/hooks/useCardReactions';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -88,8 +90,11 @@ export function ActivityCard({ activity }: { activity: Activity }) {
   const isUserFollow = type === 'USER_FOLLOWED';
   const canReact = REACTABLE_TYPES.has(type) && !!publicId;
 
+  const cardRef = useRef<HTMLDivElement>(null);
+  useIntersectionLoader(cardRef, id, 'activity');
+
   return (
-    <div className="flex gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors">
+    <div ref={cardRef} className="flex gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors">
       <UserHoverCard accountName={actor.accountName}>
         <Link to={`/${actor.accountName}`} className="shrink-0 block">
           {actor.avatarUrl ? (
