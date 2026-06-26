@@ -7,7 +7,7 @@ import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { matchKey } from '@/shared/utils/keyboard';
 import useLocalAudio from './hooks/useLocalAudio';
 import useYouTubePlayer from './hooks/useYouTubePlayer';
-import { pushPlaybackEntry, popPrevEntry, getPlaybackHistorySize } from './playback-history';
+import { pushPlaybackEntry, popPrevEntry } from './playback-history';
 import type { PlaybackEntry } from './playback-history';
 import { PlayerContext } from './PlayerContext';
 import type { UploadItem } from './PlayerContext';
@@ -441,9 +441,7 @@ function PlayerEngineInner(
       clearLoop,
       getLoop: () => loop,
       getPrevTrack: () => {
-        if (getPlaybackHistorySize() < 2) return undefined;
-        popPrevEntry(); // discard current
-        return popPrevEntry(); // return previous
+        return popPrevEntry()
       },
     }),
     [source, isPlaying, togglePlay, seek, local, yt, applySpeed, playbackSpeed, handleLoopChange, clearLoop, loop],
