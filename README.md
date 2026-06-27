@@ -4,7 +4,7 @@ A professional web application for synchronizing song lyrics with audio, with su
  
 **[lrc-studio.vercel.app](https://lrc-studio.vercel.app)** · [GitHub](https://github.com/crimsonCarnival/lrc-studio) · [Documentation (DeepWiki)](https://deepwiki.com/crimsonCarnival/lrc-studio)
 
-> Translations: [Español (Spanish)](docs/translations/README.es.md) • [日本語 (Japanese)](docs/translations/README.ja.md)
+> Translations: [Español (Spanish)](docs/translations/README.es.md)
 
 ## Table of Contents
 
@@ -61,7 +61,7 @@ A professional web application for synchronizing song lyrics with audio, with su
 ### Lyric Content
 
 - **Secondary lyrics** — Add a secondary text track per line (e.g., romaji, alternate language pronunciation).
-- **Translation layer** — A separate per-line translation field (e.g., English translation alongside Japanese lyrics).
+- **Translation layer** — A separate per-line translation field (e.g., an English translation alongside the main lyrics).
 - **Furigana / Ruby markup** — Annotate CJK characters with readings using `{字|じ}` syntax. The editor renders ruby markup above the character inline.
 - **CJK-aware tokenization** — Japanese, Chinese, and Korean text is automatically split character-by-character for per-character timing; Latin runs are kept as whole-word tokens.
 - **Reading format** — Toggle between Hiragana and Katakana for phonetic reading display.
