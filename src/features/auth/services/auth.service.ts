@@ -149,10 +149,6 @@ export const authService = {
           accountNameChangeCount
           previousAccountNames { from to changedAt }
           emailHistory { from to changedAt }
-          showFollowers
-          onlineVisibility
-          miniProfileBadgesEnabled
-          miniProfileBadgeIds
           stats { minutesSynced wordsSynced karaokeLines }
           streak { current longest lastActiveDate }
         }
