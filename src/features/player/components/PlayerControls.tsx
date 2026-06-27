@@ -14,7 +14,7 @@ import SpeedControl from './SpeedControl';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/popover';
-import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, ChevronDown, Link2, Bookmark, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, ChevronDown, Link2, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { Tip } from '@ui/tip';
 import { getAccessToken } from '@/app/api';
 import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
@@ -51,7 +51,7 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
       </label>
       <div className="flex gap-1.5 px-1 py-1">
         <div className="relative flex-1">
-          <Link2 className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-zinc-500 pointer-events-none" />
+          {!ytUrl && <Link2 className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-zinc-500 pointer-events-none" />}
           <Input
             value={ytUrl}
             onChange={(e) => { onYtUrlChange(e.target.value); onYtErrorChange(''); }}
@@ -169,7 +169,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
         {/* Overflow popover: speed + volume + change media */}
         {!viewerMode && (
           <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
-            <Tip content={t('player.changeSong')}>
+            <Tip content={t('player.moreActions')}>
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
@@ -259,7 +259,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
             {/* URL Input (YouTube/CDN) */}
             <div className="flex items-center gap-2 flex-1 max-w-[450px]">
               <div className="relative w-full">
-                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none" />
+                {!yt.ytUrl && <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none" />}
                 <Input
                   value={yt.ytUrl}
                   onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
@@ -505,21 +505,6 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                   </Popover>
                 )}
 
-                {syncMode && (
-                  <Tip content={t('player.mark') || 'Mark'}>
-                    <Button
-                      id="mark-btn"
-                      variant="ghost"
-                      size="icon"
-                      onPointerDown={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('editor:mark')); }}
-                      className={`shrink-0 text-zinc-400 hover:text-primary hover:bg-primary/10 ${FOCUS_RING}`}
-                    >
-                      <Bookmark className="size-4" />
-                    </Button>
-                  </Tip>
-                )}
-
-
               </div>
             </div>
 
@@ -572,7 +557,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
 
                   {/* Overflow popover: speed + volume + change media + loop */}
                   <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
-                    <Tip content={t('player.changeSong')}>
+                    <Tip content={t('player.moreActions')}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="ghost"
@@ -633,21 +618,6 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                     </Tip>
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    {syncMode && (
-                      <Tip content={t('player.mark') || 'Mark'}>
-                        <Button
-                          id="mark-btn-narrow"
-                          variant="ghost"
-                          size="icon"
-                          onPointerDown={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('editor:mark')); }}
-                          className={`shrink-0 text-zinc-400 hover:text-primary hover:bg-primary/10 ${FOCUS_RING}`}
-                        >
-                          <Bookmark className="size-4" />
-                        </Button>
-                      </Tip>
-                    )}
-                  </div>
                 </div>
               </div>
             )}
