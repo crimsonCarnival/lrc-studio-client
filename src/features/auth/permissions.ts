@@ -11,6 +11,7 @@ export type Permission =
   | 'users.ban'
   | 'users.delete'
   | 'users.role'
+  | 'users.shadowban'
   | 'network.block'
   | 'audit.view'
   | 'stats.view'

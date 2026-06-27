@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { UserCircle2, Award } from 'lucide-react';
+import { UserCircle2, Award, Bell } from 'lucide-react';
 import AvatarUpload from './profile/AvatarUpload';
 import ProfileForm from './profile/ProfileForm';
 import AccountNameSection from './profile/AccountNameSection';
@@ -9,6 +9,8 @@ import EmailSection from './profile/EmailSection';
 import { ShowcaseEditor } from '@/features/badges/ShowcaseEditor';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { gqlRequest } from '@/app/graphql.client';
+import { updatePreferences } from '@/features/settings/services/preferences.service';
+import toast from 'react-hot-toast';
 
 interface BadgeDef {
   id: string;
@@ -24,6 +26,102 @@ interface EnrichedBadge {
 const GET_BADGE_DEFS = /* GraphQL */ `
   query ProfileBadgeDefinitions { badgeDefinitions { id holderCount } }
 `;
+
+type NotifKey = 'follow' | 'reaction' | 'star' | 'fork' | 'badge_awarded' | 'xp_changed';
+
+const NOTIF_KEYS: NotifKey[] = ['follow', 'reaction', 'star', 'fork', 'badge_awarded', 'xp_changed'];
+
+function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onToggle}
+      className={`relative shrink-0 w-10 h-6 rounded-full transition-colors ${checked ? 'bg-primary' : 'bg-border'}`}
+    >
+      <span className={`absolute top-1 left-1 size-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
+    </button>
+  );
+}
+
+function NotificationPrefsSection() {
+  const { t } = useTranslation();
+  const { user, setUser } = useAuthContext();
+
+  const notifs = user?.preferences?.notifications;
+
+  const getChecked = (key: NotifKey): boolean => {
+    if (!notifs) return true;
+    return notifs[key] ?? true;
+  };
+
+  const handleToggle = async (key: NotifKey) => {
+    const current = getChecked(key);
+    const next = !current;
+    // Optimistically update UI.
+    setUser(prev => ({
+      ...prev,
+      preferences: {
+        showFollowers: prev?.preferences?.showFollowers ?? true,
+        onlineVisibility: prev?.preferences?.onlineVisibility ?? 'friends',
+        miniProfileBadgesEnabled: prev?.preferences?.miniProfileBadgesEnabled ?? true,
+        miniProfileBadgeIds: prev?.preferences?.miniProfileBadgeIds ?? [],
+        notifications: {
+          follow: prev?.preferences?.notifications?.follow ?? true,
+          reaction: prev?.preferences?.notifications?.reaction ?? true,
+          star: prev?.preferences?.notifications?.star ?? true,
+          fork: prev?.preferences?.notifications?.fork ?? true,
+          badge_awarded: prev?.preferences?.notifications?.badge_awarded ?? true,
+          xp_changed: prev?.preferences?.notifications?.xp_changed ?? true,
+          [key]: next,
+        },
+      },
+    }));
+    try {
+      const updated = await updatePreferences({ notifications: { [key]: next } });
+      setUser(prev => ({ ...prev, preferences: updated }));
+    } catch {
+      // Revert on failure.
+      setUser(prev => ({
+        ...prev,
+        preferences: {
+          showFollowers: prev?.preferences?.showFollowers ?? true,
+          onlineVisibility: prev?.preferences?.onlineVisibility ?? 'friends',
+          miniProfileBadgesEnabled: prev?.preferences?.miniProfileBadgesEnabled ?? true,
+          miniProfileBadgeIds: prev?.preferences?.miniProfileBadgeIds ?? [],
+          notifications: {
+            follow: prev?.preferences?.notifications?.follow ?? true,
+            reaction: prev?.preferences?.notifications?.reaction ?? true,
+            star: prev?.preferences?.notifications?.star ?? true,
+            fork: prev?.preferences?.notifications?.fork ?? true,
+            badge_awarded: prev?.preferences?.notifications?.badge_awarded ?? true,
+            xp_changed: prev?.preferences?.notifications?.xp_changed ?? true,
+            [key]: current,
+          },
+        },
+      }));
+      toast.error(t('profile.saveError'));
+    }
+  };
+
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Bell className="size-3.5 text-zinc-500" />
+        <SectionHeading>{t('profile.notifications')}</SectionHeading>
+      </div>
+      <div className="space-y-3">
+        {NOTIF_KEYS.map(key => (
+          <div key={key} className="flex items-center justify-between gap-4">
+            <p className="text-sm text-foreground font-medium">{t(`profile.notif_${key}`)}</p>
+            <Toggle checked={getChecked(key)} onToggle={() => handleToggle(key)} />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 function ShowcaseSection() {
   const { t } = useTranslation();
@@ -138,6 +236,11 @@ export default function ProfileSettings({ searchTerm }: { searchTerm?: string })
 
         {/* Display name + bio + visibility */}
         <ProfileForm />
+
+        <Divider />
+
+        {/* Notification preferences */}
+        <NotificationPrefsSection />
 
         <Divider />
 

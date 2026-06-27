@@ -1,6 +1,6 @@
 import { request } from '@/app/api.client';
 import { gqlRequest } from '@/app/graphql.client';
-import type { User, UpdateProfileInput } from '@/types';
+import type { User, UpdateProfileInput, UserPreferences } from '@/types';
 
 interface RegisterParams {
   accountName: string;
@@ -137,7 +137,7 @@ export const authService = {
 
   // Heavy profile/settings fields — fetched lazily when the user opens settings.
   async meProfile(): Promise<Partial<User> | null> {
-    const data = await gqlRequest<{ me: Partial<User> | null }>(/* GraphQL */ `
+    const data = await gqlRequest<{ me: Partial<User> | null; myPreferences: UserPreferences | null }>(/* GraphQL */ `
       query MeProfile {
         me {
           id
@@ -156,9 +156,17 @@ export const authService = {
           stats { minutesSynced wordsSynced karaokeLines }
           streak { current longest lastActiveDate }
         }
+        myPreferences {
+          showFollowers
+          onlineVisibility
+          miniProfileBadgesEnabled
+          miniProfileBadgeIds
+          notifications { follow reaction star fork badge_awarded xp_changed }
+        }
       }
     `);
-    return data.me;
+    if (!data.me) return null;
+    return { ...data.me, preferences: data.myPreferences ?? undefined };
   },
 
   async me(): Promise<User | null> {

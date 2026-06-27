@@ -123,6 +123,8 @@ export default {
     blockIpAutoReason: 'Blocked from user panel',
     noData: "No data available",
     viewDetails: "View Details",
+    shadowBan: 'Shadow ban',
+    unshadowBan: 'Remove shadow ban',
   },
   moderation: {
     viewUsers: 'Users',

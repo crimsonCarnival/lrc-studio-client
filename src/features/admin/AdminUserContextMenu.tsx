@@ -10,8 +10,10 @@ import {
   ContextMenuSubContent,
   ContextMenuLabel,
 } from '@ui/context-menu';
-import { ExternalLink, Zap, Ban, Undo2, Globe, ShieldAlert, Trash2, UserCheck } from 'lucide-react';
-import { ROLE_RANK, type Role } from '@/features/auth/permissions';
+import { ExternalLink, Zap, Ban, Undo2, Globe, ShieldAlert, Trash2, UserCheck, EyeOff, Eye } from 'lucide-react';
+import { ROLE_RANK, userHasPermission, type Role } from '@/features/auth/permissions';
+import { adminShadowBan, adminUnshadowBan } from '@/features/settings/services/preferences.service';
+import toast from 'react-hot-toast';
 
 interface AdminUser {
   id?: string;
@@ -21,6 +23,7 @@ interface AdminUser {
   ban?: { active?: boolean };
   appeal?: { status?: string };
   isDeleted?: boolean;
+  shadowBanned?: boolean;
   lastIp?: string;
   lastDeviceId?: string;
   [key: string]: unknown;
@@ -30,6 +33,7 @@ interface Props {
   children: React.ReactNode;
   user: AdminUser;
   myRank: number;
+  myPermissions?: string[] | null;
   canAssignRoles: boolean;
   assignableRoles: string[];
   handleChangeRole: (user: AdminUser, role: string) => void;
@@ -40,12 +44,14 @@ interface Props {
   handleAdjustXP: (action: 'grant' | 'revoke', amount: number, type: string, id?: string) => void;
   handleBlockIpDirect: (user: AdminUser) => void;
   handleBlockDeviceDirect: (user: AdminUser) => void;
+  onRefresh?: () => void;
 }
 
 export function AdminUserContextMenu({
   children,
   user,
   myRank,
+  myPermissions,
   canAssignRoles,
   assignableRoles,
   handleChangeRole,
@@ -56,12 +62,36 @@ export function AdminUserContextMenu({
   handleAdjustXP,
   handleBlockIpDirect,
   handleBlockDeviceDirect,
+  onRefresh,
 }: Props) {
   const { t } = useTranslation();
   const tk = t as (key: string) => string;
 
   const targetRank = ROLE_RANK[(user.role as Role) ?? 'user'] ?? 0;
   const canAct = targetRank < myRank;
+  const canShadowBan = userHasPermission(myPermissions, 'users.shadowban');
+
+  const handleShadowBan = async () => {
+    const userId = user.id || user._id;
+    if (!userId) return;
+    try {
+      await adminShadowBan(userId, true, true, null);
+      onRefresh?.();
+    } catch {
+      toast.error(t('admin.toast.statusError'));
+    }
+  };
+
+  const handleUnshadowBan = async () => {
+    const userId = user.id || user._id;
+    if (!userId) return;
+    try {
+      await adminUnshadowBan(userId);
+      onRefresh?.();
+    } catch {
+      toast.error(t('admin.toast.statusError'));
+    }
+  };
 
   return (
     <ContextMenu>
@@ -126,6 +156,20 @@ export function AdminUserContextMenu({
                     <Ban />
                     {t('admin.table.ban')}
                   </ContextMenuItem>
+                )}
+
+                {canShadowBan && (
+                  user.shadowBanned ? (
+                    <ContextMenuItem onClick={handleUnshadowBan}>
+                      <Eye />
+                      {t('admin.table.unshadowBan')}
+                    </ContextMenuItem>
+                  ) : (
+                    <ContextMenuItem variant="destructive" onClick={handleShadowBan}>
+                      <EyeOff />
+                      {t('admin.table.shadowBan')}
+                    </ContextMenuItem>
+                  )
                 )}
 
                 {user.lastIp && (

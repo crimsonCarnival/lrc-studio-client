@@ -7,6 +7,7 @@ import { Input } from '@ui/input';
 import { Textarea } from '@ui/textarea';
 import toast from 'react-hot-toast';
 import { authService } from '@/features/auth/services/auth.service';
+import { updatePreferences } from '@/features/settings/services/preferences.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { BadgeChip } from '@/features/badges/BadgeChip';
 
@@ -31,35 +32,63 @@ export default function ProfileForm() {
 
   const ownedBadgeIds: string[] = (user?.badges as Array<{ id: string }> | undefined)?.map(b => b.id) ?? [];
 
+  const prefs = user?.preferences;
+
   const [formData, setFormData] = useState({
     displayName: user?.displayName || '',
     bio: user?.bio || '',
-    showFollowers: user?.showFollowers ?? true,
-    onlineVisibility: (user?.onlineVisibility as 'friends' | 'nobody') ?? 'friends',
-    miniProfileBadgesEnabled: (user?.miniProfileBadgesEnabled as boolean | undefined) ?? true,
-    miniProfileBadgeIds: (user?.miniProfileBadgeIds as string[] | undefined) ?? [],
+    showFollowers: prefs?.showFollowers ?? (user?.showFollowers ?? true),
+    onlineVisibility: (prefs?.onlineVisibility ?? user?.onlineVisibility ?? 'friends') as 'friends' | 'nobody',
+    miniProfileBadgesEnabled: prefs?.miniProfileBadgesEnabled ?? ((user?.miniProfileBadgesEnabled as boolean | undefined) ?? true),
+    miniProfileBadgeIds: prefs?.miniProfileBadgeIds ?? ((user?.miniProfileBadgeIds as string[] | undefined) ?? []),
   });
+
+  const baseShowFollowers = prefs?.showFollowers ?? (user?.showFollowers ?? true);
+  const baseOnlineVisibility = (prefs?.onlineVisibility ?? user?.onlineVisibility ?? 'friends') as 'friends' | 'nobody';
+  const baseMiniProfileBadgesEnabled = prefs?.miniProfileBadgesEnabled ?? ((user?.miniProfileBadgesEnabled as boolean | undefined) ?? true);
+  const baseMiniProfileBadgeIds = prefs?.miniProfileBadgeIds ?? ((user?.miniProfileBadgeIds as string[] | undefined) ?? []);
 
   const isDirty =
     formData.displayName !== (user?.displayName || '') ||
     formData.bio !== (user?.bio || '') ||
-    formData.showFollowers !== (user?.showFollowers ?? true) ||
-    formData.onlineVisibility !== ((user?.onlineVisibility as 'friends' | 'nobody') ?? 'friends') ||
-    formData.miniProfileBadgesEnabled !== ((user?.miniProfileBadgesEnabled as boolean | undefined) ?? true) ||
-    JSON.stringify(formData.miniProfileBadgeIds) !== JSON.stringify((user?.miniProfileBadgeIds as string[] | undefined) ?? []);
+    formData.showFollowers !== baseShowFollowers ||
+    formData.onlineVisibility !== baseOnlineVisibility ||
+    formData.miniProfileBadgesEnabled !== baseMiniProfileBadgesEnabled ||
+    JSON.stringify(formData.miniProfileBadgeIds) !== JSON.stringify(baseMiniProfileBadgeIds);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updatedUser = await authService.updateProfile({
-        displayName: formData.displayName,
-        bio: formData.bio,
-        showFollowers: formData.showFollowers,
-        onlineVisibility: formData.onlineVisibility,
-        miniProfileBadgesEnabled: formData.miniProfileBadgesEnabled,
-        miniProfileBadgeIds: formData.miniProfileBadgeIds,
-      });
-      setUser(prev => ({ ...prev, ...updatedUser }));
+      // Separate profile fields from preferences fields and save both in parallel.
+      const profileDelta: Record<string, unknown> = {};
+      if (formData.displayName !== (user?.displayName || '')) profileDelta.displayName = formData.displayName;
+      if (formData.bio !== (user?.bio || '')) profileDelta.bio = formData.bio;
+
+      const prefsDelta: Record<string, unknown> = {};
+      if (formData.showFollowers !== baseShowFollowers) prefsDelta.showFollowers = formData.showFollowers;
+      if (formData.onlineVisibility !== baseOnlineVisibility) prefsDelta.onlineVisibility = formData.onlineVisibility;
+      if (formData.miniProfileBadgesEnabled !== baseMiniProfileBadgesEnabled) prefsDelta.miniProfileBadgesEnabled = formData.miniProfileBadgesEnabled;
+      if (JSON.stringify(formData.miniProfileBadgeIds) !== JSON.stringify(baseMiniProfileBadgeIds)) prefsDelta.miniProfileBadgeIds = formData.miniProfileBadgeIds;
+
+      const tasks: Promise<unknown>[] = [];
+
+      if (Object.keys(profileDelta).length > 0) {
+        tasks.push(
+          authService.updateProfile(profileDelta).then(updatedUser => {
+            setUser(prev => ({ ...prev, ...updatedUser }));
+          }),
+        );
+      }
+
+      if (Object.keys(prefsDelta).length > 0) {
+        tasks.push(
+          updatePreferences(prefsDelta).then(updatedPrefs => {
+            setUser(prev => ({ ...prev, preferences: updatedPrefs }));
+          }),
+        );
+      }
+
+      await Promise.all(tasks);
       toast.success(t('profile.saveSuccess'));
     } catch {
       toast.error(t('profile.saveError'));

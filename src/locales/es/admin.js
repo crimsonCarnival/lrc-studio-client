@@ -123,6 +123,8 @@ export default {
     blockIpAutoReason: 'Bloqueado desde el panel de usuario',
     noData: "No hay datos disponibles",
     viewDetails: "Ver detalles",
+    shadowBan: 'Shadow ban',
+    unshadowBan: 'Quitar shadow ban',
   },
   moderation: {
     viewUsers: 'Usuarios',

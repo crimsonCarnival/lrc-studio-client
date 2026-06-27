@@ -1149,6 +1149,40 @@ export type UpdateProfileInput = {
   miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
+export type UserPreferencesNotifications = {
+  follow: Scalars['Boolean']['output'];
+  reaction: Scalars['Boolean']['output'];
+  star: Scalars['Boolean']['output'];
+  fork: Scalars['Boolean']['output'];
+  badge_awarded: Scalars['Boolean']['output'];
+  xp_changed: Scalars['Boolean']['output'];
+};
+
+export type UserPreferences = {
+  showFollowers: Scalars['Boolean']['output'];
+  onlineVisibility: Scalars['String']['output'];
+  miniProfileBadgesEnabled: Scalars['Boolean']['output'];
+  miniProfileBadgeIds: Array<Scalars['String']['output']>;
+  notifications: UserPreferencesNotifications;
+};
+
+export type UpdatePreferencesNotificationsInput = {
+  follow?: InputMaybe<Scalars['Boolean']['input']>;
+  reaction?: InputMaybe<Scalars['Boolean']['input']>;
+  star?: InputMaybe<Scalars['Boolean']['input']>;
+  fork?: InputMaybe<Scalars['Boolean']['input']>;
+  badge_awarded?: InputMaybe<Scalars['Boolean']['input']>;
+  xp_changed?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type UpdatePreferencesInput = {
+  showFollowers?: InputMaybe<Scalars['Boolean']['input']>;
+  onlineVisibility?: InputMaybe<Scalars['String']['input']>;
+  miniProfileBadgesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  notifications?: InputMaybe<UpdatePreferencesNotificationsInput>;
+};
+
 export type UpdateProjectInput = {
   coverImage?: InputMaybe<Scalars['String']['input']>;
   lyrics?: InputMaybe<ProjectLyricsInput>;
@@ -1216,6 +1250,7 @@ export type User = {
   previousAccountNames: Array<NameChange>;
   progression?: Maybe<UserProgression>;
   projects: Array<Project>;
+  preferences?: Maybe<UserPreferences>;
   role: Scalars['String']['output'];
   settings?: Maybe<Settings>;
   showFollowers: Scalars['Boolean']['output'];
