@@ -124,6 +124,7 @@ export const authService = {
           role
           permissions
           hasPassword
+          lastAccountNameChangedAt
           google { connected googleId email name pictureUrl }
           badges { id grantedAt grantedBy }
           showcasedBadges

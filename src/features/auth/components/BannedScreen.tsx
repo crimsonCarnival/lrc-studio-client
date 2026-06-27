@@ -80,7 +80,7 @@ export default function BannedScreen() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/95 backdrop-blur-md p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-zinc-950 p-4">
       <div className="max-w-md w-full bg-zinc-900 border border-red-500/30 rounded-2xl p-6 shadow-[0_0_50px_rgba(239,68,68,0.1)] text-center relative overflow-hidden">
         <div className="absolute top-0 left-0 right-0 h-1 bg-red-500" />
 
