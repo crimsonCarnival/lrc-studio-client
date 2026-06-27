@@ -20,7 +20,7 @@ interface LeaderEntry {
   badges?: { id: string }[];
   progression?: { level?: number };
   streak?: { current?: number };
-  stats?: { karaokeLines?: number; minutesSynced?: number; secondsSynced?: number; wordsSynced?: number; syncedLines?: number };
+  stats?: { karaokeLines?: number; minutesSynced?: number; syncedLines?: number };
   totalStarsReceived?: number;
   totalForksReceived?: number;
   projectCount?: number;
@@ -34,15 +34,13 @@ interface PodiumStyle {
   label: string;
 }
 
-function formatSyncTime(min = 0, sec = 0) {
-  const totalSecs = min * 60 + sec;
-  if (totalSecs <= 0) return '—';
-  const h = Math.floor(totalSecs / 3600);
-  const m = Math.floor((totalSecs % 3600) / 60);
-  const s = totalSecs % 60;
-  if (h > 0) return m > 0 ? `${h}h ${m}m` : `${h}h`;
-  if (m > 0) return s > 0 ? `${m}m ${s}s` : `${m}m`;
-  return `${s}s`;
+function formatMinutes(min?: number) {
+  if (!min || min <= 0) return '—';
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
 }
 
 function formatCount(n?: number) {
@@ -181,7 +179,7 @@ function LeaderboardRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
           <div className="flex items-center gap-1.5 min-w-[52px] justify-end">
             <Timer className="size-3.5 text-accent-blue shrink-0" />
             <span className={`font-semibold tabular-nums text-sm ${p ? p.label : 'text-zinc-300'}`}>
-              {formatSyncTime(entry.stats?.minutesSynced ?? 0, entry.stats?.secondsSynced ?? 0)}
+              {formatMinutes(entry.stats?.minutesSynced ?? 0)}
             </span>
           </div>
         </Tip>
