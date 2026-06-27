@@ -108,7 +108,7 @@ export default function SettingsPage() {
 
   const searchParams = new URLSearchParams(location.search);
   const focusCard = searchParams.get('focus');
-  const { user } = useAuthContext();
+  const { user, refreshUserProfile } = useAuthContext();
   const { settings: globalSettings, updateAllSettings } = useSettings() as { settings: Settings; updateAllSettings: (s: Settings) => void };
 
   const isGuest = !user || !!user.isGuest;
@@ -157,6 +157,13 @@ export default function SettingsPage() {
       autoSaveRef.current = null;
     }
   });
+
+  // Lazy-load heavy profile fields (bio, emailHistory, stats, streak, etc.)
+  // that were omitted from the startup meCore query.
+  useEffect(() => {
+    if (user && !user.isGuest) refreshUserProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {

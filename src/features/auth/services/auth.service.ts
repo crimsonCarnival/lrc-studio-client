@@ -106,6 +106,61 @@ export const authService = {
   },
 
   // ── Migrated to GraphQL ──
+
+  // Lightweight startup query — only what the app needs before any page renders.
+  async meCore(): Promise<User | null> {
+    const data = await gqlRequest<{ me: User | null }>(/* GraphQL */ `
+      query MeCore {
+        me {
+          id
+          accountName
+          displayName
+          email
+          avatarUrl
+          isVerified
+          ban { active reason until }
+          appeal { text status submittedAt resolvedAt }
+          wasJustUnbanned
+          role
+          permissions
+          hasPassword
+          google { connected googleId email name pictureUrl }
+          showFollowers
+          onlineVisibility
+          miniProfileBadgesEnabled
+          miniProfileBadgeIds
+          badges { id grantedAt grantedBy }
+          showcasedBadges
+          progression { xp level }
+          showcaseSlots
+        }
+      }
+    `);
+    return data.me;
+  },
+
+  // Heavy profile fields — fetched lazily when the user opens settings.
+  async meProfile(): Promise<Partial<User> | null> {
+    const data = await gqlRequest<{ me: Partial<User> | null }>(/* GraphQL */ `
+      query MeProfile {
+        me {
+          id
+          pendingEmail
+          bio
+          createdAt
+          passwordChangedAt
+          lastAccountNameChangedAt
+          accountNameChangeCount
+          previousAccountNames { from to changedAt }
+          emailHistory { from to changedAt }
+          stats { minutesSynced wordsSynced karaokeLines }
+          streak { current longest lastActiveDate }
+        }
+      }
+    `);
+    return data.me;
+  },
+
   async me(): Promise<User | null> {
     const data = await gqlRequest<{ me: User | null }>(/* GraphQL */ `
       query Me {

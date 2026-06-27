@@ -154,25 +154,34 @@ export function useAuth() {
     if (restoringRef.current) return;
     restoringRef.current = true;
 
+    const clearStaleProjectData = () => {
+      storage.remove(STORAGE_KEYS.PROJECT);
+      storage.remove(STORAGE_KEYS.SHARED_PROJECT);
+      storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
+      storage.remove(STORAGE_KEYS.SETTINGS);
+    };
+
     const restore = async () => {
+      // Prefer the session_hint cookie (set/cleared by the server alongside auth cookies)
+      // so it expires with the refresh token and is never stale. Fall back to the
+      // localStorage flag for sessions created before this cookie was introduced.
+      const hasHintCookie = document.cookie.split(';').some(c => c.trim().startsWith('session_hint='));
       const hasSession = storage.get(STORAGE_KEYS.HAS_SESSION);
       const hasRememberedAccounts = rememberedAccounts.getAll().length > 0;
 
-      // Skip round-trip entirely when there's no reason to expect a valid session
-      if (!hasSession && !hasRememberedAccounts) {
+      if (!hasHintCookie && !hasSession && !hasRememberedAccounts) {
         setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
         return;
       }
 
       try {
-        const me = await auth.me() as AuthUser & { wasJustUnbanned?: boolean };
+        const me = await auth.meCore() as AuthUser & { wasJustUnbanned?: boolean };
         const { wasJustUnbanned: justUnbanned, ...user } = me;
         storage.set(STORAGE_KEYS.HAS_SESSION, '1');
         setAuthFlag(true);
         setState(s => ({ ...s, user, loading: false }));
         if (justUnbanned) setWasJustUnbanned(true);
         scheduleRefresh();
-        // Keep remembered account data fresh
         rememberedAccounts.upsert({
           userId: user.id || '',
           accountName: user.accountName,
@@ -182,10 +191,9 @@ export function useAuth() {
         });
       } catch (err) {
         if ((err as ApiError)?.status === 401) {
-          // Access token might be expired, try refreshing
           try {
             await doRefresh();
-            const me = await auth.me() as AuthUser & { wasJustUnbanned?: boolean };
+            const me = await auth.meCore() as AuthUser & { wasJustUnbanned?: boolean };
             const { wasJustUnbanned: justUnbanned, ...user } = me;
             storage.set(STORAGE_KEYS.HAS_SESSION, '1');
             setAuthFlag(true);
@@ -200,17 +208,18 @@ export function useAuth() {
               identifier: user.email || user.accountName || "",
             });
           } catch {
-            // Both tokens invalid — clear session hint but keep remembered accounts
+            // Both tokens dead — wipe stale project data so a new login starts clean
             storage.remove(STORAGE_KEYS.HAS_SESSION);
             setAuthFlag(false);
+            clearStaleProjectData();
             setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
           }
         } else if (!(err as ApiError)?.status || ((err as ApiError).status ?? 0) >= 500) {
-          // Network error or server down — don't clear session, just stop loading
           setState(s => ({ ...s, loading: false }));
         } else {
           storage.remove(STORAGE_KEYS.HAS_SESSION);
           setAuthFlag(false);
+          clearStaleProjectData();
           setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
         }
       }
@@ -268,7 +277,11 @@ export function useAuth() {
     }
 
     const result = await auth.login({ identifier, password, recaptchaToken }) as { user: AuthUser };
-    // Cookies are automatically set by the server. Just update user state.
+    // Clear any stale project data from a previous session before setting the new user.
+    // Prevents a different user's localStorage project from leaking into this session.
+    storage.remove(STORAGE_KEYS.PROJECT);
+    storage.remove(STORAGE_KEYS.SHARED_PROJECT);
+    storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
     storage.set(STORAGE_KEYS.HAS_SESSION, '1');
     setAuthFlag(true);
     setState(s => ({ ...s, user: result.user, loading: false }));
@@ -480,6 +493,17 @@ export function useAuth() {
     });
   }, [scheduleRefresh]);
 
+  // Fetches the heavy profile fields (bio, emailHistory, stats, streak, etc.) and
+  // merges them into the auth user. Call this when the user opens settings.
+  const refreshUserProfile = useCallback(async () => {
+    try {
+      const profile = await auth.meProfile();
+      if (profile) setUser(prev => prev ? { ...prev, ...profile } : prev);
+    } catch {
+      // Non-critical — settings will show empty state for missing fields
+    }
+  }, [setUser]);
+
   const dismissUnbanMessage = useCallback(() => {
     setWasJustUnbanned(false);
   }, []);
@@ -617,6 +641,7 @@ export function useAuth() {
     loginWithPasskey,
     registerPasskey,
     deactivateAccount,
+    refreshUserProfile,
   };
 }
 
