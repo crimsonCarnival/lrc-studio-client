@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useTranslation } from 'react-i18next';
 import { auth } from '@/app/api';
@@ -10,14 +11,21 @@ import { Clock } from 'lucide-react';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
 
-function Countdown({ targetDate }: { targetDate: string }) {
+function Countdown({ targetDate, onExpire }: { targetDate: string; onExpire: () => void }) {
   const { t } = useTranslation();
   const [timeLeft, setTimeLeft] = useState('');
 
   useEffect(() => {
+    let expiredFired = false;
     const calculateTimeLeft = () => {
       const difference = new Date(targetDate).getTime() - Date.now();
-      if (difference <= 0) return t('admin.banned.expired') || 'Expired';
+      if (difference <= 0) {
+        if (!expiredFired) {
+          expiredFired = true;
+          onExpire();
+        }
+        return t('admin.banned.expired') || 'Expired';
+      }
 
       const d = Math.floor(difference / (1000 * 60 * 60 * 24));
       const h = Math.floor((difference / (1000 * 60 * 60)) % 24);
@@ -40,7 +48,7 @@ function Countdown({ targetDate }: { targetDate: string }) {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [targetDate, t]);
+  }, [targetDate, t, onExpire]);
 
   return (
     <div className="flex items-center gap-1.5 text-red-400 font-mono text-xs mt-1">
@@ -54,12 +62,36 @@ export default function BannedScreen() {
   const { user, logout } = useAuthContext();
   const { t, i18n } = useTranslation();
   const { settings } = useSettings();
+  const navigate = useNavigate();
   const [appealText, setAppealText] = useState('');
   const [loading, setLoading] = useState(false);
   const [localSubmitted, setLocalSubmitted] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
   const formattedDate = user?.ban?.until ? formatInTimezone(user.ban.until, settings.advanced?.timezone, {}, i18n.resolvedLanguage || i18n.language) : '';
 
+  const handleExpire = useCallback(() => {
+    if (!isExpired) {
+      setIsExpired(true);
+      setTimeout(() => {
+        logout();
+        navigate('/auth');
+      }, 5000);
+    }
+  }, [isExpired, logout, navigate]);
+
   if (!user || !user.ban?.active) return null;
+
+  if (isExpired) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-zinc-950 p-4 text-center">
+        <h2 className="text-2xl font-semibold text-zinc-100 mb-2">{t('admin.banned.expiredTitle') || 'Ban Expired'}</h2>
+        <p className="text-zinc-400 text-sm mb-6">{t('admin.banned.expiredDesc') || 'Your ban has expired. Please log in again to continue.'}</p>
+        <div className="flex items-center justify-center gap-2 text-emerald-500 text-sm">
+          <RefreshCw className="size-4 animate-spin" /> Redirecting to login in 5 seconds...
+        </div>
+      </div>
+    );
+  }
 
   const currentStatus = localSubmitted ? 'pending' : (user.appeal?.status || 'none');
 
@@ -108,7 +140,7 @@ export default function BannedScreen() {
               <span className="text-zinc-200 font-semibold text-sm">
                 {formattedDate || '...'}
               </span>
-              <Countdown targetDate={user.ban.until} />
+              <Countdown targetDate={user.ban.until} onExpire={handleExpire} />
             </div>
           </div>
         )}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { ComponentProps, FormEvent } from 'react';
+import type { Socket } from 'socket.io-client';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { admin } from '@/app/api';
@@ -220,6 +221,33 @@ export default function AdminDashboard() {
     if (activeTab === 'moderation') { fetchUsers(); fetchIps(); fetchDevices(); }
     else if (activeTab === 'audit') fetchAuditLogs();
     // badges and levels tabs manage their own data fetching
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  useEffect(() => {
+    let activeSocket: Socket | null = null;
+    let handleAppealSubmitted: (() => void) | null = null;
+    
+    import('@/app/socket.client').then(({ getSocket }) => {
+      activeSocket = getSocket();
+      if (!activeSocket) return;
+      
+      handleAppealSubmitted = () => {
+        fetchStats();
+        if (activeTab === 'moderation') {
+          setCursor(null);
+          setCursorStack([]);
+          fetchUsers(null);
+        }
+      };
+      activeSocket.on('admin:appeal_submitted', handleAppealSubmitted);
+    });
+    
+    return () => {
+      if (activeSocket && handleAppealSubmitted) {
+        activeSocket.off('admin:appeal_submitted', handleAppealSubmitted);
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
