@@ -41,21 +41,21 @@ export async function updatePreferences(input: UpdatePreferencesInput): Promise<
 
 export async function adminShadowBan(
   userId: string,
-  shadowBanned: boolean,
-  hideContent: boolean,
+  feed: boolean,
+  search: boolean,
   reason: string | null,
 ): Promise<void> {
   await withSudo(() => gqlRequest(/* GraphQL */ `
-    mutation AdminShadowBan($userId: ID!, $shadowBanned: Boolean!, $hideContent: Boolean!, $reason: String) {
-      adminShadowBan(userId: $userId, shadowBanned: $shadowBanned, hideContent: $hideContent, reason: $reason)
+    mutation AdminShadowBan($userId: ID!, $feed: Boolean!, $search: Boolean!, $reason: String) {
+      adminShadowBan(userId: $userId, feed: $feed, search: $search, reason: $reason)
     }
-  `, { userId, shadowBanned, hideContent, reason }));
+  `, { userId, feed, search, reason }));
 }
 
 export async function adminUnshadowBan(userId: string): Promise<void> {
   await withSudo(() => gqlRequest(/* GraphQL */ `
     mutation AdminUnshadowBan($userId: ID!) {
-      adminShadowBan(userId: $userId, shadowBanned: false, hideContent: false, reason: null)
+      adminUnshadowBan(userId: $userId)
     }
   `, { userId }));
 }
