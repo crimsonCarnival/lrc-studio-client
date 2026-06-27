@@ -11,11 +11,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export default defineConfig(({ mode }) => ({
   plugins: [
     react({
-      babel: {
-        plugins: [
-          ['babel-plugin-react-compiler', { target: '19' }],
-        ],
-      },
+      // React Compiler via Babel is skipped in dev — Babel on every file tanks HMR speed.
+      // Production still gets the optimization.
+      babel: mode === 'production' ? {
+        plugins: [['babel-plugin-react-compiler', { target: '19' }]],
+      } : undefined,
     }),
     tailwindcss(),
   ],
