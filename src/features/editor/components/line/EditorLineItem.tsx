@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import type { ComponentProps, Dispatch, RefObject, SetStateAction, MouseEvent as ReactMouseEvent } from 'react';
+import { EditorLineContextMenu } from './EditorLineContextMenu';
 import { useTranslation } from 'react-i18next';
 import { serializeToRubyMarkup, parseRubyMarkup, isKanji, hasKanji } from '@/shared/utils/furigana';
 import { Checkbox } from '@ui/checkbox';
@@ -332,6 +333,17 @@ const EditorLineItem = React.memo(({
     const isRoot = line.depth === 0;
 
     return (
+      <EditorLineContextMenu
+        line={line}
+        lineIndex={i}
+        isSection
+        selectedLines={selectedLines}
+        sectionLines={sectionLines}
+        handleAddLine={handleAddLine as (i: number, line?: EditorLine | null, opts?: { before?: boolean }) => void}
+        handleDeleteLine={handleDeleteLine}
+        handleMoveToSection={handleMoveToSection as unknown as (indices: number[], target: number) => void}
+        onToggleDepth={onToggleDepth}
+      >
       <div
         ref={isActive ? activeLineRef : null}
         onClick={(e) => handleLineClick(i, e)}
@@ -418,10 +430,23 @@ const EditorLineItem = React.memo(({
           </div>
         )}
       </div>
+      </EditorLineContextMenu>
     );
   }
 
   return (
+    <EditorLineContextMenu
+      line={line}
+      lineIndex={i}
+      isSection={false}
+      selectedLines={selectedLines}
+      sectionLines={sectionLines}
+      handleAddLine={handleAddLine as (i: number, line?: EditorLine | null, opts?: { before?: boolean }) => void}
+      handleClearLine={handleClearLine}
+      handleDeleteLine={handleDeleteLine}
+      handleMoveToSection={handleMoveToSection as unknown as (indices: number[], target: number) => void}
+      handleInsertSection={handleInsertSection}
+    >
     <div
       ref={isActive ? activeLineRef : null}
       role="button"
@@ -712,6 +737,7 @@ const EditorLineItem = React.memo(({
         </div>
       )}
     </div>
+    </EditorLineContextMenu>
   );
 });
 
