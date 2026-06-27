@@ -12,6 +12,7 @@ import { Tip } from '@ui/tip';
 import { TagsSelector } from '@ui/tags-selector';
 import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { getMyMusicLibrary } from '@/features/editor/music-library.service';
+import { parseRawLyricsText } from '@/features/editor/utils/parseRawLyrics';
 import {
   FolderOpen, Upload, Check, ArrowRight,
   Link2, Loader2, Lock, Search
@@ -439,9 +440,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const handleProceed = () => {
     let finalLines = parsedLines;
     if (!finalLines) {
-      finalLines = lyricsText.split('\n').map((text) => ({
-        text: text.trimEnd(), timestamp: null, endTime: null, secondary: '', translation: '', id: crypto.randomUUID(),
-      }));
+      finalLines = parseRawLyricsText(lyricsText);
     }
     const parsedTrackNumber = parseInt(String(trackNumber), 10);
     const parsedTrackCount = parseInt(String(trackCount), 10);
@@ -782,7 +781,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                               onKeyDown={handleYtKeyDown}
                               className="pl-12 bg-transparent border-none text-sm h-11 focus:ring-0 focus-visible:ring-0 outline-none"
                             />
-                            <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-500 pointer-events-none" />
+                            {!ytUrl && <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-500 pointer-events-none" />}
                           </div>
                           <Button
                             onClick={handleLoadUrl}
