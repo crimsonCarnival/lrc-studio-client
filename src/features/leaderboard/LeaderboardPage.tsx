@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Trophy, Timer, Music2, Star, GitFork, Loader2, ChevronDown, Flame, Music } from 'lucide-react';
+import { Trophy, Timer, Music2, Star, GitFork, Loader2, ChevronDown, Flame, Music, WholeWord, Mic2 } from 'lucide-react';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
@@ -20,7 +20,7 @@ interface LeaderEntry {
   badges?: { id: string }[];
   progression?: { level?: number };
   streak?: { current?: number };
-  stats?: { karaokeLines?: number; minutesSynced?: number; syncedLines?: number };
+  stats?: { karaokeLines?: number; minutesSynced?: number; secondsSynced?: number; syncedLines?: number; wordsSynced?: number };
   totalStarsReceived?: number;
   totalForksReceived?: number;
   projectCount?: number;
@@ -34,13 +34,25 @@ interface PodiumStyle {
   label: string;
 }
 
-function formatMinutes(min?: number) {
-  if (!min || min <= 0) return '—';
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
+function formatTime(min?: number, sec?: number) {
+  const m = min ?? 0;
+  const s = sec ?? 0;
+  if (m <= 0 && s <= 0) return '—';
+  
+  const totalSeconds = m * 60 + s;
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  
+  if (hours > 0) {
+    if (minutes === 0) return `${hours}h`;
+    return `${hours}h ${minutes}m`;
+  }
+  if (minutes > 0) {
+    if (seconds === 0) return `${minutes}m`;
+    return `${minutes}m ${seconds}s`;
+  }
+  return `${seconds}s`;
 }
 
 function formatCount(n?: number) {
@@ -150,8 +162,20 @@ function LeaderboardRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
         <div className="hidden sm:flex items-center gap-3">
           <StatChip
             icon={Music2}
-            value={formatCount(entry.stats?.syncedLines ?? entry.stats?.karaokeLines ?? 0)}
-            tooltip={t('badges.leaderboard.syncedLines')}
+            value={formatCount(entry.stats?.syncedLines ?? 0)}
+            tooltip={t('badges.leaderboard.syncedLines', 'Synced Lines')}
+            color="text-zinc-500"
+          />
+          <StatChip
+            icon={WholeWord}
+            value={formatCount(entry.stats?.wordsSynced ?? 0)}
+            tooltip={t('badges.leaderboard.wordsSynced', 'Words Synced')}
+            color="text-zinc-500"
+          />
+          <StatChip
+            icon={Mic2}
+            value={formatCount(entry.stats?.karaokeLines ?? 0)}
+            tooltip={t('badges.leaderboard.karaokeLines', 'Karaoke Lines')}
             color="text-zinc-500"
           />
           <StatChip
@@ -179,7 +203,7 @@ function LeaderboardRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
           <div className="flex items-center gap-1.5 min-w-[52px] justify-end">
             <Timer className="size-3.5 text-accent-blue shrink-0" />
             <span className={`font-semibold tabular-nums text-sm ${p ? p.label : 'text-zinc-300'}`}>
-              {formatMinutes(entry.stats?.minutesSynced ?? 0)}
+              {formatTime(entry.stats?.minutesSynced, entry.stats?.secondsSynced)}
             </span>
           </div>
         </Tip>
