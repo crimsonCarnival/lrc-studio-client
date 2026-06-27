@@ -7,7 +7,7 @@ const LEADERBOARD_QUERY = /* GraphQL */ `
       users {
         id accountName displayName avatarUrl
         badges { id grantedAt }
-        stats { minutesSynced wordsSynced karaokeLines }
+        stats { minutesSynced secondsSynced wordsSynced karaokeLines syncedLines }
         progression { xp level }
         streak { current }
         projectCount totalStarsReceived totalForksReceived

@@ -1,7 +1,7 @@
 import { useRef, useCallback } from 'react';
 import { getPlaylists, createPlaylist, addProjectToPlaylist, removeProjectFromPlaylist } from '@features/playlists/playlist.service';
+import { useTranslation } from 'react-i18next';
 
-const STARRED_NAME = 'Starred Projects';
 
 interface StarUser {
   accountName?: string | null;
@@ -11,6 +11,8 @@ interface StarUser {
 // Finds or lazily creates the "Starred Projects" playlist for the current user,
 // then keeps it in sync with star/unstar actions.
 export function useStarredPlaylist(user: StarUser | null | undefined) {
+  const { t } = useTranslation();
+  const playlistName = t('projectView.newPlaylist', { defaultValue: 'Starred Projects' });
   const playlistIdRef = useRef<string | null>(null);
   const resolving = useRef(false);
 
@@ -27,17 +29,18 @@ export function useStarredPlaylist(user: StarUser | null | undefined) {
 
     resolving.current = true;
     try {
-      const playlists = await getPlaylists(accountName) as { id: string; name: string }[];
-      const existing = playlists.find((p) => p.name === STARRED_NAME);
+      const playlists = await getPlaylists(accountName) as { id: string; name: string; tags: string[] }[];
+      const existing = playlists.find((p) => p.tags?.includes('starred'));
       if (existing) {
         playlistIdRef.current = existing.id;
         return existing.id;
       }
 
       const created = await createPlaylist({
-        name: STARRED_NAME,
+        name: playlistName,
         description: '',
         isPublic: false,
+        tags: ['starred'],
       });
       playlistIdRef.current = created?.id ?? null;
       return playlistIdRef.current;
@@ -46,7 +49,7 @@ export function useStarredPlaylist(user: StarUser | null | undefined) {
     } finally {
       resolving.current = false;
     }
-  }, [user]);
+  }, [user, playlistName]);
 
   const addToStarred = useCallback(
     async (publicId: string) => {

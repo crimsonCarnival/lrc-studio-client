@@ -1292,7 +1292,9 @@ export type UserProgression = {
 export type UserStats = {
   karaokeLines?: Maybe<Scalars['Float']['output']>;
   minutesSynced?: Maybe<Scalars['Float']['output']>;
+  secondsSynced?: Maybe<Scalars['Float']['output']>;
   wordsSynced?: Maybe<Scalars['Float']['output']>;
+  syncedLines?: Maybe<Scalars['Float']['output']>;
 };
 
 export type UserStreak = {
