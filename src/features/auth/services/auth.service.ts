@@ -125,10 +125,6 @@ export const authService = {
           permissions
           hasPassword
           google { connected googleId email name pictureUrl }
-          showFollowers
-          onlineVisibility
-          miniProfileBadgesEnabled
-          miniProfileBadgeIds
           badges { id grantedAt grantedBy }
           showcasedBadges
           progression { xp level }
@@ -139,7 +135,7 @@ export const authService = {
     return data.me;
   },
 
-  // Heavy profile fields — fetched lazily when the user opens settings.
+  // Heavy profile/settings fields — fetched lazily when the user opens settings.
   async meProfile(): Promise<Partial<User> | null> {
     const data = await gqlRequest<{ me: Partial<User> | null }>(/* GraphQL */ `
       query MeProfile {
@@ -153,6 +149,10 @@ export const authService = {
           accountNameChangeCount
           previousAccountNames { from to changedAt }
           emailHistory { from to changedAt }
+          showFollowers
+          onlineVisibility
+          miniProfileBadgesEnabled
+          miniProfileBadgeIds
           stats { minutesSynced wordsSynced karaokeLines }
           streak { current longest lastActiveDate }
         }
