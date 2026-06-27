@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
+import i18n from 'i18next';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -37,35 +38,119 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
   render() {
     if (this.state.error) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-100 font-sans p-8">
-          <div className="max-w-md w-full bg-white/[0.04] border border-white/10 rounded-2xl p-8 text-center">
-            <div className="size-12 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center mx-auto mb-6 text-2xl">
-              ⚠
-            </div>
-            <h1 className="text-lg font-semibold mb-2">
-              Something went wrong
-            </h1>
-            <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
-              The app encountered an unexpected error. You can try reloading, or reset all data to recover.
+        <div
+          style={{
+            position: 'relative',
+            minHeight: '100vh',
+            backgroundColor: 'var(--color-zinc-950)',
+            color: 'var(--color-zinc-100)',
+            fontFamily: 'var(--font-sans)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            padding: 'clamp(2rem, 6vw, 4rem) clamp(1.5rem, 6vw, 4rem)',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Broken LRC lines — app-specific decorative texture */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              top: 'clamp(1.5rem, 4vw, 3rem)',
+              left: 'clamp(1.5rem, 6vw, 4rem)',
+              fontFamily: 'var(--font-sans)',
+              fontSize: '0.8125rem',
+              color: 'color-mix(in srgb, var(--color-primary) 14%, transparent)',
+              userSelect: 'none',
+              lineHeight: 2,
+              letterSpacing: '0.02em',
+              pointerEvents: 'none',
+            }}
+          >
+            <div>[--:--] ♪ ————</div>
+            <div>[--:--] ——————</div>
+            <div>[--:--] ♪ ———</div>
+          </div>
+
+          <div style={{ maxWidth: '520px' }}>
+            <p
+              style={{
+                fontSize: '0.6875rem',
+                fontWeight: 500,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'var(--color-primary)',
+                marginBottom: '1rem',
+              }}
+            >
+              {i18n.t('error.boundary.label')}
             </p>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => window.location.reload()}
-                className="flex-1 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-zinc-300 font-semibold text-sm cursor-pointer"
-              >
-                Reload
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  window.location.reload();
-                }}
-                className="flex-1 py-2.5 bg-red-600 rounded-xl text-white font-semibold text-sm cursor-pointer"
-              >
-                Reset &amp; Reload
-              </button>
-            </div>
+            <h1
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: 'clamp(2rem, 5vw, 3.25rem)',
+                fontWeight: 600,
+                lineHeight: 1.1,
+                letterSpacing: '-0.01em',
+                color: 'var(--color-zinc-100)',
+                marginBottom: '1.25rem',
+                whiteSpace: 'pre-line',
+              }}
+            >
+              {i18n.t('error.boundary.title')}
+            </h1>
+
+            <p
+              style={{
+                fontSize: '0.9375rem',
+                fontWeight: 300,
+                lineHeight: 1.65,
+                color: 'color-mix(in srgb, var(--color-zinc-100) 50%, transparent)',
+                marginBottom: '2.5rem',
+                maxWidth: '38ch',
+              }}
+            >
+              {i18n.t('error.boundary.description')}
+            </p>
+
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '0.625rem 1.5rem',
+                backgroundColor: 'var(--color-primary)',
+                color: 'var(--color-zinc-950)',
+                border: 'none',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontFamily: 'var(--font-sans)',
+                letterSpacing: '0.01em',
+              }}
+            >
+              {i18n.t('error.boundary.reload')}
+            </button>
+          </div>
+
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              bottom: '2rem',
+              right: 'clamp(1.5rem, 6vw, 3rem)',
+              fontSize: '0.6875rem',
+              fontFamily: 'var(--font-sans)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              color: 'color-mix(in srgb, var(--color-zinc-100) 12%, transparent)',
+              userSelect: 'none',
+            }}
+          >
+            ERR_RUNTIME
           </div>
         </div>
       );

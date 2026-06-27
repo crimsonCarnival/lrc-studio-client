@@ -69,5 +69,12 @@ export default {
 
   searchAnotherUser: "Find another profile",
   searchAnotherProject: "Search projects",
-  searchContent: "Search"
+  searchContent: "Search",
+
+  boundary: {
+    label: "Sync failed",
+    title: "Something broke\nmid-track.",
+    description: "The app ran into an unexpected error. Reload to get back to your session.",
+    reload: "Reload",
+  },
 };

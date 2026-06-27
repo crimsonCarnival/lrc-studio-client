@@ -16,5 +16,12 @@ export default {
 
   searchAnotherUser: "Buscar otro perfil",
   searchAnotherProject: "Buscar proyectos",
-  searchContent: "Buscar"
+  searchContent: "Buscar",
+
+  boundary: {
+    label: "Error de sincronización",
+    title: "Algo se rompió\na mitad de canción.",
+    description: "La app encontró un error inesperado. Recarga para volver a tu sesión.",
+    reload: "Recargar",
+  },
 };
