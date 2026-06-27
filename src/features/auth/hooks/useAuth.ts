@@ -466,6 +466,14 @@ export function useAuth() {
         }
 
         try {
+          // Exchange the one-time token for auth cookies.
+          // This call goes through the Vercel /api proxy, so the browser
+          // scopes the response cookies to lrc-studio.vercel.app — not the
+          // Render backend domain that served the OAuth callback.
+          if (data.ott) {
+            await auth.exchangeOtt(data.ott as string);
+          }
+
           const { wasJustUnbanned: justUnbanned, ...me } = await auth.me() as AuthUser & { wasJustUnbanned?: boolean };
           storage.set(STORAGE_KEYS.HAS_SESSION, '1');
           setAuthFlag(true);

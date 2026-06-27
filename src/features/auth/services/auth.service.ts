@@ -293,4 +293,16 @@ export const authService = {
       method: 'POST',
     });
   },
+
+  /**
+   * Exchanges the one-time token from the Google OAuth callback for auth
+   * cookies. Called through the Vercel /api proxy so cookies are correctly
+   * scoped to lrc-studio.vercel.app (not the Render backend domain).
+   */
+  async exchangeOtt(ott: string): Promise<unknown> {
+    return request('/auth/exchange-ott', {
+      method: 'POST',
+      body: JSON.stringify({ ott }),
+    });
+  },
 };

@@ -139,7 +139,7 @@ export default function AuthPage() {
   }, [mode, searchParams, navigate]);
 
   // Handle redirect-based Google OAuth callback (popup-blocked fallback).
-  // The server redirects to /auth/signin?gcb=success|error after the OAuth dance.
+  // The server redirects to /auth/signin?gcb=success&ott=<token>|error after the OAuth dance.
   useEffect(() => {
     const gcb = searchParams.get('gcb');
     if (!gcb) return;
@@ -148,12 +148,22 @@ export default function AuthPage() {
     const cleanParams = new URLSearchParams(searchParams);
     cleanParams.delete('gcb');
     cleanParams.delete('gcb_msg');
+    cleanParams.delete('ott');
     navigate(`/auth/signin${cleanParams.toString() ? `?${cleanParams}` : ''}`, { replace: true });
 
     if (gcb === 'success') {
-      // Cookies are set by the server callback; navigate home and let useAuth.restore() pick them up
+      // Exchange the OTT for auth cookies (through the Vercel proxy so the browser
+      // scopes them to lrc-studio.vercel.app), then navigate home so useAuth.restore()
+      // picks up the freshly-set cookies.
+      const ott = searchParams.get('ott');
       const redirectTo = searchParams.get('redirect');
-      navigate(redirectTo || '/home', { replace: true });
+      const doNavigate = () => navigate(redirectTo || '/home', { replace: true });
+
+      if (ott) {
+        auth.exchangeOtt(ott).then(doNavigate).catch(doNavigate);
+      } else {
+        doNavigate();
+      }
     } else {
       toast.error(searchParams.get('gcb_msg') || t('auth.errors.googleLoginFailed'));
     }
