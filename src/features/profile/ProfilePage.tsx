@@ -8,6 +8,7 @@ import { useNavigate, useParams, useSearchParams, useLocation } from 'react-rout
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import toast from 'react-hot-toast';
 import { Pencil, Trash2, Timer, FolderOpen, Lock, Activity, Music2, ChevronRight } from 'lucide-react';
+import { ProjectCardContextMenu } from './ProjectCardContextMenu';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { getPublicProfile, followUser, unfollowUser, blockUser, unblockUser } from './profile.service';
@@ -81,6 +82,7 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
   };
 
   return (
+    <ProjectCardContextMenu project={project} isOwner={isOwner} onEdit={onEdit} onDelete={onDelete}>
     <button
       type="button"
       onClick={() => navigate(`/project/${publicId}${isOwner ? '/edit' : ''}`)}
@@ -137,6 +139,7 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
         <ChevronRight className="size-3.5 text-zinc-800 group-hover:text-primary group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
       </div>
     </button>
+    </ProjectCardContextMenu>
   );
 }
 

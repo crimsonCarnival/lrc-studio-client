@@ -200,6 +200,7 @@ export default {
   },
   editProject: "Edit project",
   deleteProject: "Delete project",
+  openInNewTab: "Open in new tab",
   privateProject: "Private project",
   avatarAlt: "Avatar",
   peopleYouMightKnow: "People you might know"
