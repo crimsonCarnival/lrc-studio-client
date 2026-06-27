@@ -49,6 +49,7 @@ interface AdminUsersTabProps {
   handleAdjustXP: (action: 'grant' | 'revoke', amount: number, type: string, id?: string) => void;
   handleBlockIpDirect: (user: AdminUser) => void;
   handleBlockDeviceDirect: (user: AdminUser) => void;
+  onRefresh?: () => void;
   hideRoleFilter?: boolean;
   hasMore?: boolean;
   hasPrev?: boolean;
@@ -74,6 +75,7 @@ export default function AdminUsersTab({
   handleAdjustXP,
   handleBlockIpDirect,
   handleBlockDeviceDirect,
+  onRefresh,
   hideRoleFilter,
   hasMore,
   hasPrev,
@@ -185,6 +187,7 @@ export default function AdminUsersTab({
                     key={user.id || user._id}
                     user={user}
                     myRank={myRank}
+                    myPermissions={currentUser?.permissions ?? []}
                     canAssignRoles={canAssignRoles}
                     assignableRoles={assignableRoles}
                     handleChangeRole={handleChangeRole}
@@ -195,6 +198,7 @@ export default function AdminUsersTab({
                     handleAdjustXP={handleAdjustXP}
                     handleBlockIpDirect={handleBlockIpDirect}
                     handleBlockDeviceDirect={handleBlockDeviceDirect}
+                    onRefresh={onRefresh}
                   >
                   <div
                     className={`bg-zinc-800/30 rounded-lg p-4 flex flex-col gap-3 border border-zinc-700/50 ${user.isDeleted ? 'opacity-50' : ''}`}
@@ -365,6 +369,7 @@ export default function AdminUsersTab({
                     key={user.id || user._id}
                     user={user}
                     myRank={myRank}
+                    myPermissions={currentUser?.permissions ?? []}
                     canAssignRoles={canAssignRoles}
                     assignableRoles={assignableRoles}
                     handleChangeRole={handleChangeRole}
@@ -375,6 +380,7 @@ export default function AdminUsersTab({
                     handleAdjustXP={handleAdjustXP}
                     handleBlockIpDirect={handleBlockIpDirect}
                     handleBlockDeviceDirect={handleBlockDeviceDirect}
+                    onRefresh={onRefresh}
                   >
                   <tr className={`group hover:bg-zinc-800/30 transition-colors ${user.isDeleted ? 'opacity-50 grayscale-[0.5]' : ''}`}>
                     <td className="p-4">

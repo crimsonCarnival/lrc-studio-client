@@ -476,6 +476,7 @@ export default function AdminDashboard() {
             handleAdjustXP={handleAdjustXP}
             handleBlockIpDirect={handleBlockIpDirect}
             handleBlockDeviceDirect={handleBlockDeviceDirect}
+            onRefresh={refreshUsersFromStart}
             hasMore={hasMore}
             hasPrev={cursorStack.length > 0}
             totalUsers={totalUsers}

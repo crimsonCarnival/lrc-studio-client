@@ -38,6 +38,7 @@ interface AdminModerationTabProps {
   handleAdjustXP: (action: 'grant' | 'revoke', amount: number, type: string, id?: string) => void;
   handleBlockIpDirect: (user: AdminUser) => void;
   handleBlockDeviceDirect: (user: AdminUser) => void;
+  onRefresh?: () => void;
   hasMore?: boolean;
   hasPrev?: boolean;
   totalUsers?: number | null;
@@ -117,6 +118,7 @@ export default function AdminModerationTab(props: AdminModerationTabProps) {
             handleAdjustXP={props.handleAdjustXP}
             handleBlockIpDirect={props.handleBlockIpDirect}
             handleBlockDeviceDirect={props.handleBlockDeviceDirect}
+            onRefresh={props.onRefresh}
             hasMore={props.hasMore}
             hasPrev={props.hasPrev}
             totalUsers={props.totalUsers}
