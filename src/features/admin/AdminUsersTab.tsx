@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { ChangeEvent } from 'react';
+import { AdminUserContextMenu } from './AdminUserContextMenu';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
@@ -180,8 +181,22 @@ export default function AdminUsersTab({
               users.map(user => {
                 const isSelf = user.id === currentUser?.id || user._id === currentUser?._id;
                 return (
-                  <div
+                  <AdminUserContextMenu
                     key={user.id || user._id}
+                    user={user}
+                    myRank={myRank}
+                    canAssignRoles={canAssignRoles}
+                    assignableRoles={assignableRoles}
+                    handleChangeRole={handleChangeRole}
+                    handleToggleBan={handleToggleBan}
+                    handleReactivate={handleReactivate}
+                    handleDelete={handleDelete}
+                    setAppealModal={setAppealModal}
+                    handleAdjustXP={handleAdjustXP}
+                    handleBlockIpDirect={handleBlockIpDirect}
+                    handleBlockDeviceDirect={handleBlockDeviceDirect}
+                  >
+                  <div
                     className={`bg-zinc-800/30 rounded-lg p-4 flex flex-col gap-3 border border-zinc-700/50 ${user.isDeleted ? 'opacity-50' : ''}`}
                   >
                     {/* User Info */}
@@ -324,6 +339,7 @@ export default function AdminUsersTab({
                       </div>
                     )}
                   </div>
+                  </AdminUserContextMenu>
                 );
               })
             )}
@@ -345,7 +361,22 @@ export default function AdminUsersTab({
               {users.map(user => {
                 const isSelf = user.id === currentUser?.id || user._id === currentUser?._id;
                 return (
-                  <tr key={user.id || user._id} className={`group hover:bg-zinc-800/30 transition-colors ${user.isDeleted ? 'opacity-50 grayscale-[0.5]' : ''}`}>
+                  <AdminUserContextMenu
+                    key={user.id || user._id}
+                    user={user}
+                    myRank={myRank}
+                    canAssignRoles={canAssignRoles}
+                    assignableRoles={assignableRoles}
+                    handleChangeRole={handleChangeRole}
+                    handleToggleBan={handleToggleBan}
+                    handleReactivate={handleReactivate}
+                    handleDelete={handleDelete}
+                    setAppealModal={setAppealModal}
+                    handleAdjustXP={handleAdjustXP}
+                    handleBlockIpDirect={handleBlockIpDirect}
+                    handleBlockDeviceDirect={handleBlockDeviceDirect}
+                  >
+                  <tr className={`group hover:bg-zinc-800/30 transition-colors ${user.isDeleted ? 'opacity-50 grayscale-[0.5]' : ''}`}>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="relative size-10 shrink-0">
@@ -487,6 +518,7 @@ export default function AdminUsersTab({
                       </div>
                     </td>
                   </tr>
+                  </AdminUserContextMenu>
                 );
               })}
             </tbody>
