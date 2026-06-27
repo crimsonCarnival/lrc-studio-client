@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Trophy, Timer, Music2, Star, GitFork, Loader2, ChevronDown, Flame, Music, WholeWord, Mic2, ListMusic, FolderOpen } from 'lucide-react';
+import { Trophy, Timer, Music2, Star, GitFork, Loader2, ChevronDown, Flame, Music, WholeWord, Mic2, ListMusic, FolderOpen, Sparkles } from 'lucide-react';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
@@ -24,6 +24,7 @@ interface LeaderEntry {
   totalStarsReceived?: number;
   totalForksReceived?: number;
   projectCount?: number;
+  rankScore?: number;
 }
 
 interface PodiumStyle {
@@ -160,17 +161,29 @@ function LeaderboardRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
         </div>
       </div>
 
-      {/* Primary Streak Badge (highlighted) */}
-      {(entry.streak?.current ?? 0) > 0 && (
-        <div className="shrink-0 ml-3 flex items-center justify-end">
-          <Tip content={t('badges.leaderboard.streak')} side="top">
-            <div className="flex items-center gap-1.5 bg-orange-500/10 border border-orange-500/20 px-2.5 py-1 rounded-full">
-              <Flame className="size-3.5 text-orange-500" />
-              <span className="text-xs tabular-nums font-bold text-orange-500">{entry.streak!.current}d</span>
+      {/* Right-side badges: rankScore + streak */}
+      <div className="shrink-0 ml-2 flex flex-col items-end gap-1.5">
+        {/* Rank score — always rendered when > 0 */}
+        {(entry.rankScore ?? 0) > 0 && (
+          <Tip content={t('badges.leaderboard.rankScore', 'Rank Score')} side="top">
+            <div className="flex items-center gap-1 bg-primary/8 border border-primary/20 px-2 py-0.5 rounded-full">
+              <Sparkles className="size-3 text-primary/70" />
+              <span className="text-[11px] tabular-nums font-bold text-primary/80">
+                {Math.round(entry.rankScore!).toLocaleString()}
+              </span>
             </div>
           </Tip>
-        </div>
-      )}
+        )}
+        {/* Streak chip */}
+        {(entry.streak?.current ?? 0) > 0 && (
+          <Tip content={t('badges.leaderboard.streak')} side="top">
+            <div className="flex items-center gap-1 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full">
+              <Flame className="size-3 text-orange-500" />
+              <span className="text-[11px] tabular-nums font-bold text-orange-500">{entry.streak!.current}d</span>
+            </div>
+          </Tip>
+        )}
+      </div>
     </Link>
   );
 }

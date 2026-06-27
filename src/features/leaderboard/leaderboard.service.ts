@@ -11,6 +11,7 @@ const LEADERBOARD_QUERY = /* GraphQL */ `
         progression { xp level }
         streak { current }
         projectCount totalStarsReceived totalForksReceived
+        rankScore
       }
       total hasMore
     }
