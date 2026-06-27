@@ -175,8 +175,12 @@ export function useAuth() {
       }
 
       try {
-        const me = await auth.meCore() as AuthUser & { wasJustUnbanned?: boolean };
-        const { wasJustUnbanned: justUnbanned, ...user } = me;
+        const meResult = await auth.meCore() as (AuthUser & { wasJustUnbanned?: boolean }) | null;
+        // me returns null (no error) when the access token is missing or expired.
+        // Treat it the same as a 401 so we attempt a refresh instead of silently
+        // landing in a logged-out state with stale session flags.
+        if (!meResult) throw Object.assign(new Error('session_expired'), { status: 401 });
+        const { wasJustUnbanned: justUnbanned, ...user } = meResult;
         storage.set(STORAGE_KEYS.HAS_SESSION, '1');
         setAuthFlag(true);
         setState(s => ({ ...s, user, loading: false }));
@@ -193,8 +197,9 @@ export function useAuth() {
         if ((err as ApiError)?.status === 401) {
           try {
             await doRefresh();
-            const me = await auth.meCore() as AuthUser & { wasJustUnbanned?: boolean };
-            const { wasJustUnbanned: justUnbanned, ...user } = me;
+            const meResult = await auth.meCore() as (AuthUser & { wasJustUnbanned?: boolean }) | null;
+            if (!meResult) throw Object.assign(new Error('session_expired'), { status: 401 });
+            const { wasJustUnbanned: justUnbanned, ...user } = meResult;
             storage.set(STORAGE_KEYS.HAS_SESSION, '1');
             setAuthFlag(true);
             setState(s => ({ ...s, user, loading: false }));
