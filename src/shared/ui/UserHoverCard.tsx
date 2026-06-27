@@ -64,10 +64,11 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
   const { user: me } = useAuthContext();
   const presence = usePresence();
   const triggerRef = useRef<HTMLSpanElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   // Shared timer used for both open-delay and close-delay
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const [pos, setPos] = useState({ top: -9999, left: -9999 });
   const [profile, setProfile] = useState<MiniProfile | null>(() => profileCache.get(accountName) ?? null);
   const [following, setFollowing] = useState<boolean | null>(null);
   const [followPending, setFollowPending] = useState(false);
@@ -76,23 +77,23 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
   }, []);
 
-  const computePos = useCallback(() => {
-    if (!triggerRef.current) return { top: 0, left: 0 };
+  const updatePos = useCallback(() => {
+    if (!triggerRef.current || !cardRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
-    const cardH = 320;
-    const cardW = 332;
+    const cardRect = cardRef.current.getBoundingClientRect();
+    const cardH = cardRect.height;
+    const cardW = cardRect.width;
     let top = rect.bottom + 8 + window.scrollY;
     let left = rect.left + window.scrollX;
     if (rect.bottom + cardH + 8 > window.innerHeight) top = rect.top - cardH - 8 + window.scrollY;
     if (left + cardW > window.innerWidth + window.scrollX) left = window.innerWidth + window.scrollX - cardW - 8;
     left = Math.max(8 + window.scrollX, left);
-    return { top, left };
+    setPos({ top, left });
   }, []);
 
   const startOpen = useCallback(() => {
     clearTimer();
     timerRef.current = setTimeout(async () => {
-      setPos(computePos());
       setOpen(true);
       if (!profileCache.has(accountName)) {
         const p = await fetchMiniProfile(accountName);
@@ -112,6 +113,12 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
   const cancelClose = useCallback(() => {
     clearTimer();
   }, [clearTimer]);
+
+  useEffect(() => {
+    if (open) {
+      updatePos();
+    }
+  }, [open, profile, updatePos]);
 
   useEffect(() => {
     if (!open) return;
@@ -166,9 +173,10 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
 
       {open && createPortal(
         <div
+          ref={cardRef}
           onMouseEnter={cancelClose}
           onMouseLeave={startClose}
-          style={{ position: 'absolute', top: pos.top, left: pos.left, zIndex: 9999, width: 332 }}
+          style={{ position: 'absolute', top: pos.top, left: pos.left, zIndex: 9999, width: 332, visibility: pos.top === -9999 ? 'hidden' : 'visible' }}
           className="bg-zinc-900 border border-zinc-700/60 rounded-2xl shadow-2xl shadow-black/70 flex flex-col overflow-hidden animate-fade-in"
         >
           {/* Avatar banner */}
