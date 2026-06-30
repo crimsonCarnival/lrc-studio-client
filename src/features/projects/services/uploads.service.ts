@@ -11,6 +11,7 @@ interface CloudinarySignature {
   folder: string;
   resourceType: string;
   transformation?: string;
+  allowedFormats?: string;
 }
 
 interface CloudinaryUploadResult {
@@ -34,7 +35,7 @@ export const uploadsService = {
    * Returns { secure_url, public_id, duration }.
    */
   async uploadMedia(file: File, recaptchaToken?: string): Promise<CloudinaryUploadResult> {
-    const { signature, timestamp, cloudName, apiKey, folder, resourceType } =
+    const { signature, timestamp, cloudName, apiKey, folder, resourceType, allowedFormats } =
       await this.getSignature({ fileName: file.name, fileSize: file.size, recaptchaToken });
 
     const formData = new FormData();
@@ -43,6 +44,7 @@ export const uploadsService = {
     formData.append('timestamp', String(timestamp));
     formData.append('signature', signature);
     formData.append('folder', folder);
+    if (allowedFormats) formData.append('allowed_formats', allowedFormats);
 
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/${resourceType}/upload`,
