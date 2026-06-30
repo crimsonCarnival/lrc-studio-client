@@ -1,10 +1,7 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useSettings } from '@/features/settings/useSettings';
-
 export function useThemeSync() {
-  const { settings, updateSetting } = useSettings();
   const { i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 

@@ -103,7 +103,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
         setProfile(p); setFollowing(p.isFollowedByMe);
       }
     }, OPEN_DELAY);
-  }, [accountName, clearTimer, computePos]);
+  }, [accountName, clearTimer]);
 
   const startClose = useCallback(() => {
     clearTimer();
