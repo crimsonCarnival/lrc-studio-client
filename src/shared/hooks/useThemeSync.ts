@@ -8,52 +8,21 @@ export function useThemeSync() {
   const { i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // 1. Sync Settings -> DOM
-  // This effect solely controls the DOM classes based on the current setting.
+  // 1. Enforce Dark Theme
+  // The app is now strictly dark-themed. We just ensure the dark class is present.
   useEffect(() => {
     const root = document.documentElement;
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    root.classList.remove('theme-cobalt', 'theme-velvet', 'theme-sage');
+    root.classList.add('dark');
+  }, []);
 
-    const updateDOM = () => {
-      const activeTheme = settings.interface?.theme || 'dark';
-      root.classList.remove('dark', 'theme-cobalt', 'theme-velvet', 'theme-sage');
-
-      if (activeTheme === 'light') {
-        // no classes needed
-      } else if (activeTheme === 'cobalt') {
-        root.classList.add('dark', 'theme-cobalt');
-      } else if (activeTheme === 'velvet') {
-        root.classList.add('dark', 'theme-velvet');
-      } else if (activeTheme === 'sage') {
-        root.classList.add('dark', 'theme-sage');
-      } else if (activeTheme === 'system') {
-        if (mediaQuery.matches) {
-          root.classList.add('dark');
-        }
-      } else {
-        root.classList.add('dark');
-      }
-    };
-
-    updateDOM();
-    mediaQuery.addEventListener('change', updateDOM);
-    return () => mediaQuery.removeEventListener('change', updateDOM);
-  }, [settings.interface?.theme]);
-
-  // 2. Sync Settings & Language -> URL
-  // When the theme or language changes, update the URL silently
+  // 2. Sync Language -> URL
+  // When language changes, update the URL silently
   useEffect(() => {
     setSearchParams(prev => {
-      const activeTheme = settings.interface?.theme;
       const currentHl = i18n.language?.split('-')[0];
-
       const newParams = new URLSearchParams(prev);
       let changed = false;
-
-      if (activeTheme && newParams.get('theme') !== activeTheme) {
-        newParams.set('theme', activeTheme);
-        changed = true;
-      }
 
       if (currentHl && newParams.get('hl') !== currentHl) {
         newParams.set('hl', currentHl);
@@ -62,16 +31,12 @@ export function useThemeSync() {
 
       return changed ? newParams : prev;
     }, { replace: true });
-  }, [settings.interface?.theme, i18n.language, setSearchParams]);
+  }, [i18n.language, setSearchParams]);
 
   // 3. Sync URL -> App State (Mount Only)
   // Support deep-linking by checking the URL only once when the app loads
   useEffect(() => {
-    // Theme
-    const themeParam = searchParams.get('theme');
-    if (themeParam && settings.interface?.theme !== themeParam) {
-      updateSetting('interface.theme', themeParam);
-    }
+    // Theme url param is ignored because it's always dark
 
     // Language
     const hlParam = searchParams.get('hl');

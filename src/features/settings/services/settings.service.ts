@@ -50,7 +50,6 @@ const GET_SETTINGS = /* GraphQL */ `
         wordTimestampPrecision
       }
       interface {
-        theme
         defaultLanguage
         fontSize
         spacing
@@ -83,7 +82,7 @@ const GET_SETTINGS = /* GraphQL */ `
 const UPDATE_SETTINGS = /* GraphQL */ `
   mutation UpdateSettings($input: UpdateSettingsInput!) {
     updateSettings(input: $input) {
-      interface { theme fontSize spacing }
+      interface { fontSize spacing }
     }
   }
 `;

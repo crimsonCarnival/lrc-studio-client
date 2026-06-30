@@ -12,8 +12,6 @@ export function useInterfaceSettings(updateSetting: UpdateSetting) {
     i18n.changeLanguage(lang);
   };
 
-  const handleThemeChange = (e: ChangeLike) => updateSetting('interface.theme', e.target.value);
-
   const handleActiveHighlightChange = (e: ChangeLike) =>
     updateSetting('editor.display.activeHighlight', e.target.value);
 
@@ -40,7 +38,6 @@ export function useInterfaceSettings(updateSetting: UpdateSetting) {
 
   return {
     handleLanguageChange,
-    handleThemeChange,
     handleActiveHighlightChange,
     handleScrollModeChange,
     handleScrollAlignmentChange,

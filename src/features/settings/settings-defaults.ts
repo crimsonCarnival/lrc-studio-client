@@ -60,7 +60,6 @@ export const DEFAULT_SETTINGS = {
     normalizeTimestamps: false
   },
   interface: {
-    theme: 'system',
     defaultLanguage: 'en',
     fontSize: 'normal',
     spacing: 'normal',
