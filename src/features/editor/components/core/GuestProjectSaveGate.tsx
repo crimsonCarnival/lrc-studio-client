@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { getPendingProject, clearPendingProject } from '@/features/editor/services/guest-project-db';
-import { request } from '@/app/api.client';
+import { projectsService } from '@/features/projects/services/projects.service';
+import { uploadsService } from '@/features/projects/services/uploads.service';
 
 const BACKOFF_INTERVALS_MS = [2000, 4000, 8000, 16000, 32000];
 const STEADY_INTERVAL_MS = 30000;
@@ -76,19 +77,49 @@ export default function GuestProjectSaveGate() {
             ? await executeRecaptchaRef.current('create_project').catch(() => undefined)
             : undefined;
 
-          const { savedAt: _savedAt, ...payload } = record;
+          const { savedAt: _savedAt, ytUrl, uploadUrl, uploadPublicId, fileName, duration: fileDuration, ...payload } = record as PendingRecord & {
+            ytUrl?: string; uploadUrl?: string; uploadPublicId?: string; fileName?: string; duration?: number;
+          };
+
           if (payload.metadata) {
-            const { songArtists, ...restMeta } = payload.metadata;
+            const { songArtists, ...restMeta } = payload.metadata as { songArtists?: string[]; songArtist?: string; [key: string]: unknown };
             const songArtist = Array.isArray(songArtists) && songArtists.length > 0
               ? songArtists.join(', ')
               : (restMeta.songArtist ?? '');
             payload.metadata = { ...restMeta, songArtist };
           }
+
+          // Resolve upload → get a real DB uploadId so the GraphQL mutation can link it.
+          let uploadId: string | undefined;
+          if (ytUrl) {
+            try {
+              const { upload } = await uploadsService.saveMedia({ source: 'youtube', uploadUrl: ytUrl });
+              if (upload?.id) uploadId = upload.id;
+            } catch { /* non-fatal — project saves without media */ }
+          } else if (uploadUrl) {
+            try {
+              const { upload } = await uploadsService.saveMedia({
+                source: 'cloudinary',
+                uploadUrl,
+                publicId: uploadPublicId || null,
+                fileName: fileName || '',
+                duration: fileDuration || null,
+              });
+              if (upload?.id) uploadId = upload.id;
+            } catch { /* non-fatal */ }
+          }
+
           if (cancelled) return;
-          const result = await request('/projects', {
-            method: 'POST',
-            body: JSON.stringify({ ...payload, recaptchaToken }),
-          }) as { publicId: string };
+          const result = await projectsService.create({
+            title: (payload.title as string) || '',
+            metadata: payload.metadata as Record<string, unknown> | undefined,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            lyrics: payload.lyrics as any,
+            state: payload.state as Record<string, unknown> | undefined,
+            readOnly: false,
+            uploadId,
+            recaptchaToken,
+          });
           await clearPendingProject();
           navigateRef.current(`/project/${result.publicId}/edit`, { replace: true });
         } catch {
