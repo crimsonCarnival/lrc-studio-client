@@ -53,15 +53,34 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       .then(raw => {
         const data = raw as { notifications?: AppNotification[]; unreadCount?: number };
         const notifs = data.notifications || [];
-        setNotifications(notifs);
-        setUnreadCount(data.unreadCount || 0);
 
-        // Show toasts for unread badge_awarded notifications that were missed
-        // because the socket wasn't connected yet (e.g. awarded during registration).
+        // Collect unread badge catch-up notifications before setting state.
+        // Mark them read immediately so they don't re-toast on every subsequent sign-in.
+        const catchUpIds: string[] = [];
         for (const n of notifs) {
           const notif = n as unknown as NotificationData;
-          if (notif.type !== 'badge_awarded' || notif.read || !notif.body) continue;
-          const badgeId = notif.body;
+          if (notif.type === 'badge_awarded' && !notif.read && notif.body) {
+            catchUpIds.push(n._id);
+          }
+        }
+
+        const processedNotifs = catchUpIds.length > 0
+          ? notifs.map(n => catchUpIds.includes(n._id) ? { ...n, read: true } : n)
+          : notifs;
+
+        setNotifications(processedNotifs);
+        setUnreadCount(Math.max(0, (data.unreadCount || 0) - catchUpIds.length));
+
+        if (catchUpIds.length > 0) {
+          request('/notifications/read', { method: 'POST', body: JSON.stringify({ ids: catchUpIds }) }).catch(() => {});
+        }
+
+        // Show toasts for missed badge_awarded notifications (e.g. awarded during registration
+        // before the socket connected). Shown once — they are now marked read above.
+        for (const n of notifs) {
+          const notif = n as unknown as NotificationData;
+          if (!catchUpIds.includes(n._id)) continue;
+          const badgeId = notif.body as string;
           const def = (BADGE_REGISTRY as Record<string, { label?: string } | undefined>)[badgeId];
           const label = def?.label ?? badgeId;
           toast(
