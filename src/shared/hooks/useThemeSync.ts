@@ -1,17 +1,21 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-export function useThemeSync() {
+
+export function useThemeSync(theme?: string) {
   const { i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // 1. Enforce Dark Theme
-  // The app is now strictly dark-themed. We just ensure the dark class is present.
+  // 1. Apply theme — dark (default) or light
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove('theme-cobalt', 'theme-velvet', 'theme-sage');
-    root.classList.add('dark');
-  }, []);
+    if (theme === 'light') {
+      root.classList.remove('dark');
+    } else {
+      root.classList.add('dark');
+    }
+  }, [theme]);
 
   // 2. Sync Language -> URL
   // When language changes, update the URL silently
