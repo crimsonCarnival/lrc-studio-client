@@ -1,21 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Section, SettingRow, ShortcutInput, ModifierInput } from '../../shared';
 import NumberInput from '@shared/ui/NumberInput';
-import { Icon } from '@/shared/ui/Icon';
-
-const MapPinIcon = ({ className }: { className?: string }) => <Icon name="location_on" className={className} />;
-const ChevronLeftIcon = ({ className }: { className?: string }) => <Icon name="chevron_left" className={className} />;
-const ChevronRightIcon = ({ className }: { className?: string }) => <Icon name="chevron_right" className={className} />;
-const PlusIcon = ({ className }: { className?: string }) => <Icon name="add" className={className} />;
-const Trash2Icon = ({ className }: { className?: string }) => <Icon name="delete" className={className} />;
-const EraserIcon = ({ className }: { className?: string }) => <Icon name="ink_eraser" className={className} />;
-const RefreshCwIcon = ({ className }: { className?: string }) => <Icon name="refresh" className={className} />;
-const LogOutIcon = ({ className }: { className?: string }) => <Icon name="logout" className={className} />;
-const HelpCircleIcon = ({ className }: { className?: string }) => <Icon name="help" className={className} />;
-const MousePointerIcon = ({ className }: { className?: string }) => <Icon name="arrow_selector_tool" className={className} />;
-const MousePointerClickIcon = ({ className }: { className?: string }) => <Icon name="arrow_selector_tool" className={className} />;
-const KeyboardIcon = ({ className }: { className?: string }) => <Icon name="keyboard" className={className} />;
-const MoveHorizontalIcon = ({ className }: { className?: string }) => <Icon name="swap_horiz" className={className} />;
 
 interface EditorShortcutsProps {
   settings: {
@@ -33,9 +18,9 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
   const { t } = useTranslation();
 
   return (
-    <Section title={t('settings.shortcuts.label') || 'Editor'} icon={KeyboardIcon} searchTerm={searchTerm}>
+    <Section title={t('settings.shortcuts.label') || 'Editor'} iconName="keyboard" searchTerm={searchTerm}>
       <SettingRow
-        icon={MapPinIcon}
+        iconName="location_on"
         label={t('settings.shortcuts.markLabel') || 'Mark Timestamp'}
         description={t('settings.shortcuts.markDesc') || 'Key to mark start/end times'}
       >
@@ -47,7 +32,7 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
         />
       </SettingRow>
       <SettingRow
-        icon={ChevronLeftIcon}
+        iconName="chevron_left"
         label={t('settings.shortcuts.nudgeLeftLabel') || 'Nudge Left'}
         description={
           t('settings.shortcuts.nudgeLeftDesc', { val: settings.editor?.nudge?.default || 0.1 }) ||
@@ -62,7 +47,7 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
         />
       </SettingRow>
       <SettingRow
-        icon={ChevronRightIcon}
+        iconName="chevron_right"
         label={t('settings.shortcuts.nudgeRightLabel') || 'Nudge Right'}
         description={
           t('settings.shortcuts.nudgeRightDesc', { val: settings.editor?.nudge?.default || 0.1 }) ||
@@ -77,7 +62,7 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
         />
       </SettingRow>
       <SettingRow
-        icon={PlusIcon}
+        iconName="add"
         label={t('settings.shortcuts.addLineLabel') || 'Add Line'}
         description={t('settings.shortcuts.addLineDesc') || 'Add new line below active line'}
       >
@@ -89,7 +74,7 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
         />
       </SettingRow>
       <SettingRow
-        icon={Trash2Icon}
+        iconName="delete"
         label={t('settings.shortcuts.deleteLineLabel') || 'Delete Line'}
         description={t('settings.shortcuts.deleteLineDesc') || 'Delete active line (or selection)'}
       >
@@ -101,7 +86,7 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
         />
       </SettingRow>
       <SettingRow
-        icon={EraserIcon}
+        iconName="ink_eraser"
         label={t('settings.shortcuts.clearTimestampLabel') || 'Clear Timestamp'}
         description={t('settings.shortcuts.clearTimestampDesc') || 'Clear timestamp on active line'}
       >
@@ -113,7 +98,7 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
         />
       </SettingRow>
       <SettingRow
-        icon={RefreshCwIcon}
+        iconName="refresh"
         label={t('settings.shortcuts.switchModeLabel') || 'Switch Mode'}
         description={t('settings.shortcuts.switchModeDesc') || 'Toggle LRC/SRT editor mode'}
       >
@@ -125,7 +110,7 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
         />
       </SettingRow>
       <SettingRow
-        icon={LogOutIcon}
+        iconName="logout"
         label={t('settings.shortcuts.deselectLabel') || 'Deselect / Close'}
         description={t('settings.shortcuts.deselectDesc') || 'Clear selection or close dialogs'}
       >
@@ -137,7 +122,7 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
         />
       </SettingRow>
       <SettingRow
-        icon={HelpCircleIcon}
+        iconName="help"
         label={t('settings.shortcuts.showHelpLabel') || 'Show Shortcuts'}
         description={t('settings.shortcuts.showHelpDesc') || 'Open the keyboard shortcuts dialog'}
       >
@@ -149,7 +134,7 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
         />
       </SettingRow>
       <SettingRow
-        icon={MoveHorizontalIcon}
+        iconName="swap_horiz"
         label={t('settings.editor.shiftAllAmount') || 'Shift All amount'}
         description={t('settings.editor.shiftAllAmountDesc') || 'Seconds applied per Shift All button press'}
       >
@@ -163,7 +148,7 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
         />
       </SettingRow>
       <SettingRow
-        icon={MousePointerIcon}
+        iconName="arrow_selector_tool"
         label={t('settings.shortcuts.rangeSelectLabel') || 'Select a range'}
         description={t('settings.shortcuts.rangeSelectDesc') || 'Hold + Click to select a continuous block of lines'}
       >
@@ -174,7 +159,7 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
         />
       </SettingRow>
       <SettingRow
-        icon={MousePointerClickIcon}
+        iconName="touch_app"
         label={t('settings.shortcuts.toggleSelectLabel') || 'Pick individual lines'}
         description={t('settings.shortcuts.toggleSelectDesc') || 'Hold + Click to add/remove single lines from the selection'}
       >

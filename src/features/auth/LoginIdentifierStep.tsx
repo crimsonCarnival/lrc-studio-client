@@ -140,7 +140,7 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
             onClick={() => navigate('/project/new')}
             className="group flex items-center justify-center gap-2 py-1 text-xs font-semibold text-zinc-500 hover:text-primary transition-all duration-300"
           >
-            <Icon name="bolt" size={14} className="text-zinc-600 group-hover:text-primary group-hover:fill-primary/20 transition-all" />
+            <Icon name="bolt" size={14} className="text-zinc-600 group-hover:text-primary transition-all" />
             {t('auth.guestMode')}
           </button>
         </div>

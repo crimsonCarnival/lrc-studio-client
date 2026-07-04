@@ -146,6 +146,8 @@ export default {
     untilLabel: 'Suspended until',
     remainingTime: 'Remaining time',
     expired: 'Expiring now...',
+    expiredTitle: 'Ban Expired',
+    expiredDesc: 'Your ban has expired. Please log in again to continue.',
     yourAppealLabel: 'Your Appeal',
     appealRejected: 'Appeal Rejected',
     appealRejectedSub: 'An administrator has reviewed your appeal and decided to keep your account suspended.',

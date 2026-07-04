@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import type { ComponentProps, PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import { LazyMotion, domAnimation, m as M, useScroll, useSpring } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -24,16 +24,6 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Icon } from '@/shared/ui/Icon';
 
-const HeadphonesIcon = ({ className }: { className?: string }) => <Icon name="headphones" className={className} />;
-const FileTextIcon = ({ className }: { className?: string }) => <Icon name="description" className={className} />;
-const DownloadIcon = ({ className }: { className?: string }) => <Icon name="download" className={className} />;
-const MonitorIcon = ({ className }: { className?: string }) => <Icon name="desktop_windows" className={className} />;
-const KeyboardIcon = ({ className }: { className?: string }) => <Icon name="keyboard" className={className} />;
-const SlidersHorizontalIcon = ({ className }: { className?: string }) => <Icon name="tune" className={className} />;
-const UserIcon = ({ className }: { className?: string }) => <Icon name="person" className={className} />;
-const ShieldCheckIcon = ({ className }: { className?: string }) => <Icon name="verified_user" className={className} />;
-const Link2Icon = ({ className }: { className?: string }) => <Icon name="link" className={className} />;
-const HistoryIcon = ({ className }: { className?: string }) => <Icon name="history" className={className} />;
 import { Tip } from '@ui/tip';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
@@ -54,7 +44,7 @@ function ModalScrollProgress({ container }: { container: RefObject<HTMLElement |
 interface SettingsTab {
   id: string;
   labelKey: string;
-  icon: ({ className }: { className?: string }) => React.ReactElement;
+  iconName: string;
   authOnly?: boolean;
   group: string;
   fallback?: string;
@@ -62,20 +52,20 @@ interface SettingsTab {
 
 const TABS: SettingsTab[] = [
   // Account & Identity
-  { id: 'profile', labelKey: 'profile.tabs.account', icon: UserIcon, authOnly: true, group: 'account' },
-  { id: 'security', labelKey: 'profile.sections.security', icon: ShieldCheckIcon, authOnly: true, group: 'account' },
-  { id: 'connections', labelKey: 'profile.tabs.connections', icon: Link2Icon, authOnly: true, group: 'account' },
-  { id: 'history', labelKey: 'profile.tabs.history', icon: HistoryIcon, authOnly: true, group: 'account' },
+  { id: 'profile', labelKey: 'profile.tabs.account', iconName: 'person', authOnly: true, group: 'account' },
+  { id: 'security', labelKey: 'profile.sections.security', iconName: 'verified_user', authOnly: true, group: 'account' },
+  { id: 'connections', labelKey: 'profile.tabs.connections', iconName: 'link', authOnly: true, group: 'account' },
+  { id: 'history', labelKey: 'profile.tabs.history', iconName: 'history', authOnly: true, group: 'account' },
 
   // App Preferences
-  { id: 'playback', labelKey: 'settings.playback.label', icon: HeadphonesIcon, group: 'preferences' },
-  { id: 'editor', labelKey: 'settings.editor.label', icon: FileTextIcon, group: 'preferences' },
-  { id: 'export', labelKey: 'settings.export.label', icon: DownloadIcon, group: 'preferences' },
-  { id: 'interface', labelKey: 'settings.interface.label', icon: MonitorIcon, group: 'preferences' },
+  { id: 'playback', labelKey: 'settings.playback.label', iconName: 'headphones', group: 'preferences' },
+  { id: 'editor', labelKey: 'settings.editor.label', iconName: 'description', group: 'preferences' },
+  { id: 'export', labelKey: 'settings.export.label', iconName: 'download', group: 'preferences' },
+  { id: 'interface', labelKey: 'settings.interface.label', iconName: 'desktop_windows', group: 'preferences' },
 
   // Advanced
-  { id: 'shortcuts', labelKey: 'settings.shortcuts.label', fallback: 'Shortcuts', icon: KeyboardIcon, group: 'advanced' },
-  { id: 'advanced', labelKey: 'settings.advanced.label', icon: SlidersHorizontalIcon, group: 'advanced' },
+  { id: 'shortcuts', labelKey: 'settings.shortcuts.label', fallback: 'Shortcuts', iconName: 'keyboard', group: 'advanced' },
+  { id: 'advanced', labelKey: 'settings.advanced.label', iconName: 'tune', group: 'advanced' },
 ];
 
 // Typed i18next rejects arbitrary string keys; alias for dynamic tab labels.
@@ -378,7 +368,7 @@ function SettingsPanel({
                                                     : 'text-zinc-500 hover:text-zinc-300 border-transparent hover:border-zinc-600 hover:scale-105'
                                                 }`}
                                         >
-                                            {tab.icon && <tab.icon className={`size-4 shrink-0 ${isActive ? 'text-primary' : ''}`} />}
+                                            {tab.iconName && <Icon name={tab.iconName} size={16} className={`shrink-0 ${isActive ? 'text-primary' : ''}`} />}
                                         </button>
                                     </Tip>
                                 </div>

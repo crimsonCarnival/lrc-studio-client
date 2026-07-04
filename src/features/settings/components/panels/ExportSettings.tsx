@@ -2,19 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { Section, SettingRow, Toggle } from '../shared';
 import { useExportSettings } from '../../hooks/useExportSettings';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { Icon } from '@/shared/ui/Icon';
-
-const DownloadIcon = ({ className }: { className?: string }) => <Icon name="download" className={className} />;
-const WrapTextIcon = ({ className }: { className?: string }) => <Icon name="wrap_text" className={className} />;
-const ClipboardIcon = ({ className }: { className?: string }) => <Icon name="content_paste" className={className} />;
-const FileDownIcon = ({ className }: { className?: string }) => <Icon name="file_download" className={className} />;
-const ClockIcon = ({ className }: { className?: string }) => <Icon name="schedule" className={className} />;
-const FileTextIcon = ({ className }: { className?: string }) => <Icon name="description" className={className} />;
-const FilterXIcon = ({ className }: { className?: string }) => <Icon name="filter_list_off" className={className} />;
-const ArrowUpDownIcon = ({ className }: { className?: string }) => <Icon name="swap_vert" className={className} />;
-const TagIcon = ({ className }: { className?: string }) => <Icon name="label" className={className} />;
-const Settings2Icon = ({ className }: { className?: string }) => <Icon name="tune" className={className} />;
-const FolderOutputIcon = ({ className }: { className?: string }) => <Icon name="folder_zip" className={className} />;
 
 interface ExportSettingsProps {
   settings: {
@@ -45,8 +32,8 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
 
   return (
     <>
-      <Section title={t('settings.export.formatSection') || 'Format & Encoding'} icon={DownloadIcon} searchTerm={searchTerm}>
-        <SettingRow icon={WrapTextIcon} label={t('settings.export.lineEndings')} description={t('settings.export.lineEndingsDesc')}>
+      <Section title={t('settings.export.formatSection') || 'Format & Encoding'} iconName="download" searchTerm={searchTerm}>
+        <SettingRow iconName="wrap_text" label={t('settings.export.lineEndings')} description={t('settings.export.lineEndingsDesc')}>
           <Select
             value={settings.export?.lineEndings ?? 'lf'}
             onValueChange={(val) => handleLineEndingsChange({ target: { value: val } })}
@@ -60,7 +47,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow icon={ClipboardIcon} label={t('settings.export.copyFormat')} description={t('settings.export.copyFormatDesc')}>
+        <SettingRow iconName="content_paste" label={t('settings.export.copyFormat')} description={t('settings.export.copyFormatDesc')}>
           <Select
             value={settings.export?.copyFormat ?? 'lrc'}
             onValueChange={(val) => handleCopyFormatChange({ target: { value: val } })}
@@ -74,7 +61,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow icon={FileDownIcon} label={t('settings.export.downloadFormat')} description={t('settings.export.downloadFormatDesc')}>
+        <SettingRow iconName="file_download" label={t('settings.export.downloadFormat')} description={t('settings.export.downloadFormatDesc')}>
           <Select
             value={settings.export?.downloadFormat ?? 'lrc'}
             onValueChange={(val) => handleDownloadFormatChange({ target: { value: val } })}
@@ -90,11 +77,11 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.export.processingSection') || 'Timestamps & Processing'} icon={Settings2Icon} searchTerm={searchTerm}>
-        <SettingRow icon={ClockIcon} label={t('settings.export.timestampPrecision')} description={t('settings.export.timestampPrecisionDesc')}>
+      <Section title={t('settings.export.processingSection') || 'Timestamps & Processing'} iconName="tune" searchTerm={searchTerm}>
+        <SettingRow iconName="schedule" label={t('settings.export.timestampPrecision')} description={t('settings.export.timestampPrecisionDesc')}>
           <span className="text-xs text-zinc-500 italic">{t('settings.export.timestampPrecisionFollowsEditor')}</span>
         </SettingRow>
-        <SettingRow icon={ClockIcon} label={t('settings.export.wordTimestampPrecision')} description={t('settings.export.wordTimestampPrecisionDesc')}>
+        <SettingRow iconName="schedule" label={t('settings.export.wordTimestampPrecision')} description={t('settings.export.wordTimestampPrecisionDesc')}>
           <Select
             value={settings.export?.wordTimestampPrecision ?? 'hundredths'}
             onValueChange={(val) => handleWordTimestampPrecisionChange({ target: { value: val } })}
@@ -108,7 +95,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow icon={ArrowUpDownIcon} label={t('settings.export.normalizeTimestamps')} description={t('settings.export.normalizeTimestampsDesc')}>
+        <SettingRow iconName="swap_vert" label={t('settings.export.normalizeTimestamps')} description={t('settings.export.normalizeTimestampsDesc')}>
           <Toggle
             id="toggle-normalize-ts"
             checked={settings.export?.normalizeTimestamps ?? false}
@@ -117,8 +104,8 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.export.outputSection') || 'Output Options'} icon={FolderOutputIcon} searchTerm={searchTerm}>
-        <SettingRow icon={FileTextIcon} label={t('settings.export.filenamePattern')} description={t('settings.export.filenamePatternDesc')}>
+      <Section title={t('settings.export.outputSection') || 'Output Options'} iconName="folder_zip" searchTerm={searchTerm}>
+        <SettingRow iconName="description" label={t('settings.export.filenamePattern')} description={t('settings.export.filenamePatternDesc')}>
           <Select
             value={settings.export?.defaultFilenamePattern ?? 'fixed'}
             onValueChange={(val) => handleFilenamePatternChange({ target: { value: val } })}
@@ -132,14 +119,14 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow icon={FilterXIcon} label={t('settings.export.stripEmptyLines')} description={t('settings.export.stripEmptyLinesDesc')}>
+        <SettingRow iconName="filter_list_off" label={t('settings.export.stripEmptyLines')} description={t('settings.export.stripEmptyLinesDesc')}>
           <Toggle
             id="toggle-strip-empty"
             checked={settings.export?.stripEmptyLines ?? false}
             onChange={(v) => updateSetting('export.stripEmptyLines', v)}
           />
         </SettingRow>
-        <SettingRow icon={TagIcon} label={t('settings.export.includeMetadata')} description={t('settings.export.includeMetadataDesc')}>
+        <SettingRow iconName="label" label={t('settings.export.includeMetadata')} description={t('settings.export.includeMetadataDesc')}>
           <Toggle
             id="toggle-include-metadata"
             checked={settings.export?.includeMetadata ?? true}

@@ -185,7 +185,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
               <p className="text-sm font-medium text-foreground truncate flex items-center gap-1.5">
                 {u.displayName || u.accountName}
                 {isFriendsTab && (
-                  <Icon name="favorite" size={12} className="text-primary/60 shrink-0" />
+                  <Icon name="favorite" size={12} filled className="text-primary/60 shrink-0" />
                 )}
               </p>
               <p className="text-xs text-muted-foreground truncate">@{u.accountName}</p>

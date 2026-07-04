@@ -4,9 +4,6 @@ import { useShortcutsSettings } from '../../hooks/useShortcutsSettings';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 
-const KeyboardIcon = ({ className }: { className?: string }) => <Icon name="keyboard" className={className} />;
-const HeadphonesIcon = ({ className }: { className?: string }) => <Icon name="headphones" className={className} />;
-const EyeIcon = ({ className }: { className?: string }) => <Icon name="visibility" className={className} />;
 import EditorShortcuts from './shortcuts/EditorShortcuts';
 import PlayerShortcuts from './shortcuts/PlayerShortcuts';
 import PreviewShortcuts from './shortcuts/PreviewShortcuts';
@@ -63,9 +60,9 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
   }, [settings.shortcuts]);
 
   const SUB_TABS = [
-    { id: 'editor',    icon: KeyboardIcon,     label: t('settings.editor.label') || 'Editor' },
-    { id: 'player',    icon: HeadphonesIcon,   label: t('settings.shortcuts.playerSection') || 'Player' },
-    { id: 'preview',   icon: EyeIcon,          label: t('settings.shortcuts.previewSection') || 'Preview' },
+    { id: 'editor',  iconName: 'keyboard',    label: t('settings.editor.label') || 'Editor' },
+    { id: 'player',  iconName: 'headphones',  label: t('settings.shortcuts.playerSection') || 'Player' },
+    { id: 'preview', iconName: 'visibility',  label: t('settings.shortcuts.previewSection') || 'Preview' },
   ];
 
   // When searching, show all; otherwise show only the active sub-tab
@@ -96,7 +93,7 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
               }`}
             >
-              <tab.icon className="size-3.5" />
+              <Icon name={tab.iconName} size={14} />
               {tab.label}
             </Button>
           ))}

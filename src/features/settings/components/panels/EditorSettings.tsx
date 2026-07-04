@@ -3,22 +3,6 @@ import NumberInput from "@shared/ui/NumberInput";
 import { Section, SettingRow, Toggle } from '../shared';
 import { useEditorSettings } from '../../hooks/useEditorSettings';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { Icon } from '@/shared/ui/Icon';
-
-const FileTextIcon = ({ className }: { className?: string }) => <Icon name="description" className={className} />;
-const PauseCircleIcon = ({ className }: { className?: string }) => <Icon name="pause_circle" className={className} />;
-const SlidersHorizontalIcon = ({ className }: { className?: string }) => <Icon name="tune" className={className} />;
-const ChevronDownIcon = ({ className }: { className?: string }) => <Icon name="expand_more" className={className} />;
-const SkipForwardIcon = ({ className }: { className?: string }) => <Icon name="skip_next" className={className} />;
-const MoveHorizontalIcon = ({ className }: { className?: string }) => <Icon name="swap_horiz" className={className} />;
-const HashIcon = ({ className }: { className?: string }) => <Icon name="tag" className={className} />;
-const ClockIcon = ({ className }: { className?: string }) => <Icon name="schedule" className={className} />;
-const FilmIcon = ({ className }: { className?: string }) => <Icon name="movie" className={className} />;
-const MagnetIcon = ({ className }: { className?: string }) => <Icon name="magnet" className={className} />;
-const ZapIcon = ({ className }: { className?: string }) => <Icon name="bolt" className={className} />;
-const SearchIcon = ({ className }: { className?: string }) => <Icon name="search" className={className} />;
-const AlignJustifyIcon = ({ className }: { className?: string }) => <Icon name="format_align_justify" className={className} />;
-
 interface EditorSettingsProps {
   settings: {
     editor?: {
@@ -53,9 +37,9 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
 
   return (
     <>
-    <Section title={t('settings.editor.label')} icon={FileTextIcon} searchTerm={searchTerm}>
+    <Section title={t('settings.editor.label')} iconName="description" searchTerm={searchTerm}>
       <SettingRow
-        icon={PauseCircleIcon}
+        iconName="pause_circle"
         label={t('settings.playback.autoPauseOnMark')}
         description={t('settings.playback.autoPauseOnMarkDesc')}
       >
@@ -66,7 +50,7 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
         />
       </SettingRow>
       <SettingRow
-        icon={SlidersHorizontalIcon}
+        iconName="tune"
         label={t('settings.editor.nudgeIncrement')}
         description={t('settings.editor.nudgeIncrementDesc')}
       >
@@ -80,7 +64,7 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
         />
       </SettingRow>
       <SettingRow
-        icon={SlidersHorizontalIcon}
+        iconName="tune"
         label={t('settings.editor.nudgeFine')}
         description={t('settings.editor.nudgeFineDesc')}
       >
@@ -93,14 +77,14 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
           className="w-20"
         />
       </SettingRow>
-      <SettingRow icon={ChevronDownIcon} label={t('settings.editor.autoAdvance')} description={t('settings.editor.autoAdvanceDesc')}>
+      <SettingRow iconName="expand_more" label={t('settings.editor.autoAdvance')} description={t('settings.editor.autoAdvanceDesc')}>
         <Toggle
           id="toggle-auto-advance"
           checked={settings.editor?.autoAdvance?.enabled ?? true}
           onChange={handleAutoAdvanceChange}
         />
       </SettingRow>
-      <SettingRow icon={SkipForwardIcon} label={t('settings.editor.autoAdvanceMode')} description={t('settings.editor.autoAdvanceModeDesc')}>
+      <SettingRow iconName="skip_next" label={t('settings.editor.autoAdvanceMode')} description={t('settings.editor.autoAdvanceModeDesc')}>
         <Select
           value={settings.editor?.autoAdvance?.mode ?? 'next'}
           onValueChange={(val) => updateSetting('editor.autoAdvance.mode', val)}
@@ -114,28 +98,28 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
           </SelectContent>
         </Select>
       </SettingRow>
-      <SettingRow icon={SkipForwardIcon} label={t('settings.editor.skipBlank')} description={t('settings.editor.skipBlankDesc')}>
+      <SettingRow iconName="skip_next" label={t('settings.editor.skipBlank')} description={t('settings.editor.skipBlankDesc')}>
         <Toggle
           id="toggle-skip-blank"
           checked={settings.editor?.autoAdvance?.skipBlank ?? false}
           onChange={handleSkipBlankChange}
         />
       </SettingRow>
-      <SettingRow icon={AlignJustifyIcon} label={t('settings.editor.preserveEmptyLines')} description={t('settings.editor.preserveEmptyLinesDesc')}>
+      <SettingRow iconName="format_align_justify" label={t('settings.editor.preserveEmptyLines')} description={t('settings.editor.preserveEmptyLinesDesc')}>
         <Toggle
           id="toggle-preserve-empty-lines"
           checked={settings.editor?.preserveEmptyLines ?? false}
           onChange={handlePreserveEmptyLinesChange}
         />
       </SettingRow>
-      <SettingRow icon={MoveHorizontalIcon} label={t('settings.editor.showShiftAll')} description={t('settings.editor.showShiftAllDesc')}>
+      <SettingRow iconName="swap_horiz" label={t('settings.editor.showShiftAll')} description={t('settings.editor.showShiftAllDesc')}>
         <Toggle
           id="toggle-shift-all"
           checked={settings.editor?.showShiftAll ?? true}
           onChange={handleShowShiftAllChange}
         />
       </SettingRow>
-      <SettingRow icon={HashIcon} label={t('settings.editor.showLineNumbers') || 'Line numbers'} description={t('settings.editor.showLineNumbersDesc') || 'Show line numbers in the editor'}>
+      <SettingRow iconName="tag" label={t('settings.editor.showLineNumbers') || 'Line numbers'} description={t('settings.editor.showLineNumbersDesc') || 'Show line numbers in the editor'}>
         <Toggle
           id="toggle-line-numbers"
           checked={settings.editor?.showLineNumbers ?? true}
@@ -143,7 +127,7 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
         />
       </SettingRow>
       <SettingRow
-        icon={ClockIcon}
+        iconName="schedule"
         label={t('settings.editor.timestampPrecision')}
         description={t('settings.editor.timestampPrecisionDesc')}
       >
@@ -161,7 +145,7 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
         </Select>
       </SettingRow>
       <SettingRow
-        icon={ZapIcon}
+        iconName="bolt"
         label={t('settings.editor.syncFlashDuration')}
         description={t('settings.editor.syncFlashDurationDesc')}
       >
@@ -180,7 +164,7 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
         </Select>
       </SettingRow>
       <SettingRow
-        icon={SearchIcon}
+        iconName="search"
         label={t('settings.editor.lyricsSearchSpeed')}
         description={t('settings.editor.lyricsSearchSpeedDesc')}
       >
@@ -199,8 +183,8 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
         </Select>
       </SettingRow>
     </Section>
-    <Section title={t('settings.editor.srtSection')} icon={FilmIcon} searchTerm={searchTerm}>
-      <SettingRow icon={ClockIcon} label={t('settings.editor.srtDuration')} description={t('settings.editor.srtDurationDesc')}>
+    <Section title={t('settings.editor.srtSection')} iconName="movie" searchTerm={searchTerm}>
+      <SettingRow iconName="schedule" label={t('settings.editor.srtDuration')} description={t('settings.editor.srtDurationDesc')}>
         <NumberInput
           min={0.5}
           max={30}
@@ -210,7 +194,7 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
           className="w-20"
         />
       </SettingRow>
-      <SettingRow icon={MoveHorizontalIcon} label={t('settings.editor.srtGap')} description={t('settings.editor.srtGapDesc')}>
+      <SettingRow iconName="swap_horiz" label={t('settings.editor.srtGap')} description={t('settings.editor.srtGapDesc')}>
         <NumberInput
           min={0}
           max={5}
@@ -220,7 +204,7 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
           className="w-20"
         />
       </SettingRow>
-      <SettingRow icon={MagnetIcon} label={t('settings.editor.srtSnap')} description={t('settings.editor.srtSnapDesc')}>
+      <SettingRow iconName="snap_to_grid" label={t('settings.editor.srtSnap')} description={t('settings.editor.srtSnapDesc')}>
         <Toggle
           id="toggle-srt-snap"
           checked={settings.editor?.srt?.snapToNextLine ?? false}

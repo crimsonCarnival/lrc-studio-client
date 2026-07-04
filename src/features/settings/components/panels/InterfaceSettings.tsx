@@ -2,27 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { Section, SettingRow, Toggle } from '../shared';
 import { useInterfaceSettings } from '../../hooks/useInterfaceSettings';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { Icon } from '@/shared/ui/Icon';
-
-const MonitorIcon = ({ className }: { className?: string }) => <Icon name="desktop_windows" className={className} />;
-const SparklesIcon = ({ className }: { className?: string }) => <Icon name="auto_awesome" className={className} />;
-const GlobeIcon = ({ className }: { className?: string }) => <Icon name="language" className={className} />;
-const ScrollTextIcon = ({ className }: { className?: string }) => <Icon name="subject" className={className} />;
-const AlignCenterIcon = ({ className }: { className?: string }) => <Icon name="format_align_center" className={className} />;
-const AlignLeftIcon = ({ className }: { className?: string }) => <Icon name="format_align_left" className={className} />;
-const TypeIcon = ({ className }: { className?: string }) => <Icon name="text_fields" className={className} />;
-const Rows2Icon = ({ className }: { className?: string }) => <Icon name="table_rows" className={className} />;
-const LayoutListIcon = ({ className }: { className?: string }) => <Icon name="view_list" className={className} />;
-const ChevronDownIcon = ({ className }: { className?: string }) => <Icon name="expand_more" className={className} />;
-const ColumnsIcon = ({ className }: { className?: string }) => <Icon name="view_column" className={className} />;
-const BookOpenIcon = ({ className }: { className?: string }) => <Icon name="menu_book" className={className} />;
-const LockIcon = ({ className }: { className?: string }) => <Icon name="lock" className={className} />;
-const BellIcon = ({ className }: { className?: string }) => <Icon name="notifications" className={className} />;
-const PaletteIcon = ({ className }: { className?: string }) => <Icon name="palette" className={className} />;
-const MusicIcon = ({ className }: { className?: string }) => <Icon name="music_note" className={className} />;
-const ContrastIcon = ({ className }: { className?: string }) => <Icon name="contrast" className={className} />;
-
-
 type SelectEvent = { target: { value: string } };
 
 interface InterfaceSettingsProps {
@@ -48,8 +27,8 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
 
   return (
     <>
-      <Section title={t('settings.interface.generalSection') || 'General'} icon={MonitorIcon} searchTerm={searchTerm}>
-        <SettingRow icon={GlobeIcon} label={t('settings.interface.language')} description={t('settings.interface.languageDesc')}>
+      <Section title={t('settings.interface.generalSection') || 'General'} iconName="desktop_windows" searchTerm={searchTerm}>
+        <SettingRow iconName="language" label={t('settings.interface.language')} description={t('settings.interface.languageDesc')}>
           <Select
             value={settings.interface?.defaultLanguage ?? 'en'}
             onValueChange={(val) => handleLanguageChange({ target: { value: val } })}
@@ -63,14 +42,14 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow icon={LockIcon} label={t('settings.interface.lockLayout')} description={t('settings.interface.lockLayoutDesc')}>
+        <SettingRow iconName="lock" label={t('settings.interface.lockLayout')} description={t('settings.interface.lockLayoutDesc')}>
           <Toggle
             id="toggle-lock-layout"
             checked={settings.interface?.lockLayout ?? false}
             onChange={(v: boolean) => updateSetting('interface.lockLayout', v)}
           />
         </SettingRow>
-        <SettingRow icon={BellIcon} label={t('settings.interface.toastPosition') || 'Toast Position'} description={t('settings.interface.toastPositionDesc') || 'Controls where notifications appear on the screen'}>
+        <SettingRow iconName="notifications" label={t('settings.interface.toastPosition') || 'Toast Position'} description={t('settings.interface.toastPositionDesc') || 'Controls where notifications appear on the screen'}>
           <Select
             value={settings.interface?.toastPosition ?? 'bottom-right'}
             onValueChange={(val) => handleToastPositionChange({ target: { value: val } })}
@@ -87,8 +66,8 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.interface.displaySection') || 'Editor Display'} icon={PaletteIcon} searchTerm={searchTerm}>
-        <SettingRow icon={SparklesIcon} label={t('settings.interface.activeLineHighlight')} description={t('settings.interface.activeLineHighlightDesc')}>
+      <Section title={t('settings.interface.displaySection') || 'Editor Display'} iconName="palette" searchTerm={searchTerm}>
+        <SettingRow iconName="auto_awesome" label={t('settings.interface.activeLineHighlight')} description={t('settings.interface.activeLineHighlightDesc')}>
           <Select
             value={settings.editor?.display?.activeHighlight ?? 'glow'}
             onValueChange={(val) => handleActiveHighlightChange({ target: { value: val } })}
@@ -104,7 +83,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow icon={TypeIcon} label={t('settings.interface.fontSize')} description={t('settings.interface.fontSizeDesc')}>
+        <SettingRow iconName="text_fields" label={t('settings.interface.fontSize')} description={t('settings.interface.fontSizeDesc')}>
           <Select
             value={settings.interface?.fontSize ?? 'normal'}
             onValueChange={(val) => handleFontSizeChange({ target: { value: val } })}
@@ -120,7 +99,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow icon={Rows2Icon} label={t('settings.interface.spacing')} description={t('settings.interface.spacingDesc')}>
+        <SettingRow iconName="table_rows" label={t('settings.interface.spacing')} description={t('settings.interface.spacingDesc')}>
           <Select
             value={settings.interface?.spacing ?? 'normal'}
             onValueChange={(val) => handleSpacingChange({ target: { value: val } })}
@@ -137,8 +116,8 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.interface.scrollSection') || 'Scrolling & Alignment'} icon={ScrollTextIcon} searchTerm={searchTerm}>
-        <SettingRow icon={ScrollTextIcon} label={t('settings.interface.scrollBehavior')} description={t('settings.interface.scrollBehaviorDesc')}>
+      <Section title={t('settings.interface.scrollSection') || 'Scrolling & Alignment'} iconName="subject" searchTerm={searchTerm}>
+        <SettingRow iconName="subject" label={t('settings.interface.scrollBehavior')} description={t('settings.interface.scrollBehaviorDesc')}>
           <Select
             value={settings.editor?.scroll?.mode ?? 'smooth'}
             onValueChange={(val) => handleScrollModeChange({ target: { value: val } })}
@@ -152,7 +131,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow icon={AlignCenterIcon} label={t('settings.interface.scrollBlock')} description={t('settings.interface.scrollBlockDesc')}>
+        <SettingRow iconName="format_align_center" label={t('settings.interface.scrollBlock')} description={t('settings.interface.scrollBlockDesc')}>
           <Select
             value={settings.editor?.scroll?.alignment ?? 'center'}
             onValueChange={(val) => handleScrollAlignmentChange({ target: { value: val } })}
@@ -168,7 +147,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow icon={AlignLeftIcon} label={t('settings.interface.previewAlignment')} description={t('settings.interface.previewAlignmentDesc')}>
+        <SettingRow iconName="format_align_left" label={t('settings.interface.previewAlignment')} description={t('settings.interface.previewAlignmentDesc')}>
           <Select
             value={settings.interface?.previewAlignment ?? 'left'}
             onValueChange={(val) => handlePreviewAlignmentChange({ target: { value: val } })}
@@ -185,8 +164,8 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.interface.lyricsSection') || 'Lyrics & Translations'} icon={MusicIcon} searchTerm={searchTerm}>
-        <SettingRow icon={LayoutListIcon} label={t('settings.interface.dualLine')} description={t('settings.interface.dualLineDesc')}>
+      <Section title={t('settings.interface.lyricsSection') || 'Lyrics & Translations'} iconName="music_note" searchTerm={searchTerm}>
+        <SettingRow iconName="view_list" label={t('settings.interface.dualLine')} description={t('settings.interface.dualLineDesc')}>
           <Toggle
             id="toggle-dual-line"
             checked={settings.editor?.display?.dualLine ?? false}
@@ -194,7 +173,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
           />
         </SettingRow>
         {(settings.editor?.display?.dualLine) && (
-          <SettingRow icon={ChevronDownIcon} label={t('settings.interface.showNextLine')} description={t('settings.interface.showNextLineDesc')}>
+          <SettingRow iconName="expand_more" label={t('settings.interface.showNextLine')} description={t('settings.interface.showNextLineDesc')}>
             <Toggle
               id="toggle-show-next-line"
               checked={settings.editor?.display?.showNextLine ?? true}
@@ -202,7 +181,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             />
           </SettingRow>
         )}
-        <SettingRow icon={ColumnsIcon} label={t('settings.interface.translationLayout')} description={t('settings.interface.translationLayoutDesc')}>
+        <SettingRow iconName="view_column" label={t('settings.interface.translationLayout')} description={t('settings.interface.translationLayoutDesc')}>
           <Select
             value={settings.editor?.display?.translationLayout ?? 'side-by-side'}
             onValueChange={(val) => handleTranslationLayoutChange({ target: { value: val } })}
@@ -216,7 +195,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow icon={SparklesIcon} label={t('settings.interface.karaokeFillTrack')} description={t('settings.interface.karaokeFillTrackDesc')}>
+        <SettingRow iconName="auto_awesome" label={t('settings.interface.karaokeFillTrack')} description={t('settings.interface.karaokeFillTrackDesc')}>
           <Select
             value={settings.editor?.display?.karaokeFillTrack ?? 'main'}
             onValueChange={(val) => updateSetting('editor.display.karaokeFillTrack', val)}
@@ -231,7 +210,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow icon={SparklesIcon} label={t('settings.interface.karaokeFillEasing') || 'Fill Easing'} description={t('settings.interface.karaokeFillEasingDesc') || 'Controls how the karaoke fill animates across each word'}>
+        <SettingRow iconName="auto_awesome" label={t('settings.interface.karaokeFillEasing') || 'Fill Easing'} description={t('settings.interface.karaokeFillEasingDesc') || 'Controls how the karaoke fill animates across each word'}>
           <Select
             value={settings.editor?.display?.karaokeFillEasing ?? 'linear'}
             onValueChange={(val) => updateSetting('editor.display.karaokeFillEasing', val)}
@@ -245,7 +224,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow icon={BookOpenIcon} label={t('settings.interface.readingFormat')} description={t('settings.interface.readingFormatDesc')}>
+        <SettingRow iconName="menu_book" label={t('settings.interface.readingFormat')} description={t('settings.interface.readingFormatDesc')}>
           <Select
             value={settings.editor?.display?.readingFormat ?? 'hiragana'}
             onValueChange={(val) => updateSetting('editor.display.readingFormat', val)}
@@ -261,8 +240,8 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.interface.previewSection') || 'Preview'} icon={ColumnsIcon} searchTerm={searchTerm}>
-        <SettingRow icon={ContrastIcon} label={t('settings.interface.focusContrast')} description={t('settings.interface.focusContrastDesc')}>
+      <Section title={t('settings.interface.previewSection') || 'Preview'} iconName="view_column" searchTerm={searchTerm}>
+        <SettingRow iconName="contrast" label={t('settings.interface.focusContrast')} description={t('settings.interface.focusContrastDesc')}>
           <Select
             value={settings.interface?.focusContrast ?? 'medium'}
             onValueChange={(val) => updateSetting('interface.focusContrast', val)}

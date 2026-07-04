@@ -146,6 +146,8 @@ export default {
     untilLabel: 'Suspendida hasta',
     remainingTime: 'Tiempo restante',
     expired: 'Expirando ahora...',
+    expiredTitle: 'Suspensión Expirada',
+    expiredDesc: 'Tu suspensión ha expirado. Inicia sesión de nuevo para continuar.',
     yourAppealLabel: 'Tu Apelación',
     appealRejected: 'Apelación Rechazada',
     appealRejectedSub: 'Un administrador ha revisado tu apelación y decidió mantener tu cuenta suspendida.',

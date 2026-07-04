@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { ComponentType, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { m, LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
 import { Icon } from '@/shared/ui/Icon';
 import { createPortal } from 'react-dom';
@@ -84,16 +84,13 @@ export default function ActionDrawer({
 }
 
 interface DrawerItemProps {
-  icon?: ComponentType<{ className?: string }>;
+  iconName?: string;
   label: ReactNode;
   onClick?: () => void;
   variant?: 'default' | 'danger' | 'primary';
 }
 
-/**
- * Standardized drawer item component
- */
-export function DrawerItem({ icon: Icon, label, onClick, variant = 'default' }: DrawerItemProps) {
+export function DrawerItem({ iconName, label, onClick, variant = 'default' }: DrawerItemProps) {
   const baseClasses = "w-full flex items-center gap-4 p-4 rounded-2xl transition-all active:scale-[0.98]";
   const variants = {
     default: "text-zinc-300 hover:bg-zinc-900 active:bg-zinc-900",
@@ -103,7 +100,7 @@ export function DrawerItem({ icon: Icon, label, onClick, variant = 'default' }: 
 
   return (
     <button onClick={onClick} className={`${baseClasses} ${variants[variant]}`}>
-      {Icon && <Icon className="size-5" />}
+      {iconName && <Icon name={iconName} size={20} />}
       <span className="text-base font-medium">{label}</span>
     </button>
   );

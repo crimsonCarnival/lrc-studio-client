@@ -23,18 +23,12 @@ const resolveShortcut = (shortcut: string): string[] => {
   return shortcut.split('+').map((k) => SYMBOLS[k] ?? k);
 };
 
-const HeadphonesIcon = ({ className }: { className?: string }) => <Icon name="headphones" className={className} />;
-const FileTextIcon = ({ className }: { className?: string }) => <Icon name="description" className={className} />;
-const EyeIcon = ({ className }: { className?: string }) => <Icon name="visibility" className={className} />;
-const ListChecksIcon = ({ className }: { className?: string }) => <Icon name="checklist" className={className} />;
-const UserCircleIcon = ({ className }: { className?: string }) => <Icon name="account_circle" className={className} />;
-
 const HELP_TABS = [
-  { id: 'player', icon: HeadphonesIcon, labelKey: 'shortcuts.tabs.player' },
-  { id: 'editor', icon: FileTextIcon,   labelKey: 'shortcuts.tabs.editor' },
-  { id: 'preview', icon: EyeIcon,       labelKey: 'shortcuts.tabs.preview' },
-  { id: 'sections', icon: ListChecksIcon, labelKey: 'editor.help.sectionsTab' },
-  { id: 'singers', icon: UserCircleIcon, labelKey: 'editor.help.singersTab' },
+  { id: 'player',   iconName: 'headphones',    labelKey: 'shortcuts.tabs.player' },
+  { id: 'editor',   iconName: 'description',   labelKey: 'shortcuts.tabs.editor' },
+  { id: 'preview',  iconName: 'visibility',    labelKey: 'shortcuts.tabs.preview' },
+  { id: 'sections', iconName: 'checklist',     labelKey: 'editor.help.sectionsTab' },
+  { id: 'singers',  iconName: 'account_circle', labelKey: 'editor.help.singersTab' },
 ];
 
 interface HelpItem {
@@ -148,7 +142,6 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
           {/* Tabs */}
           <div className="flex px-3 pt-2 gap-0.5 bg-zinc-950/40">
             {HELP_TABS.map((tab) => {
-              const TabIcon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <Button
@@ -161,7 +154,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
                       : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
                   }`}
                 >
-                  <TabIcon className="size-3.5" />
+                  <Icon name={tab.iconName} size={14} />
                   {tk(tab.labelKey)}
                 </Button>
               );

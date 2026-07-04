@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import type { ComponentType, KeyboardEvent, ReactNode } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Switch } from '@ui/switch';
 import { Kbd } from '@ui/kbd';
 import { KEY_SYMBOLS } from '../key-symbols';
+import { Icon } from '@/shared/ui/Icon';
 
 const SYMBOLS = KEY_SYMBOLS as Record<string, string>;
 
@@ -29,16 +30,16 @@ const ICON_COLORS: Record<string, string> = {
 interface SettingRowProps {
   label?: ReactNode;
   description?: ReactNode;
-  icon?: ComponentType<{ className?: string }>;
+  iconName?: string;
   children?: ReactNode;
 }
 
-export function SettingRow({ label, description, icon: Icon, children }: SettingRowProps) {
+export function SettingRow({ label, description, iconName, children }: SettingRowProps) {
   return (
     <div className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-white/[0.018] group [&+&]:border-t [&+&]:border-border/40">
-      {Icon && (
+      {iconName && (
         <div className="size-8 rounded-lg bg-white/[0.03] flex items-center justify-center flex-shrink-0">
-          <Icon className="size-3.5 text-zinc-500 group-hover:text-zinc-400 transition-colors" />
+          <Icon name={iconName} size={14} className="text-zinc-500 group-hover:text-zinc-400 transition-colors" />
         </div>
       )}
       <div className="flex-1 min-w-0">
@@ -54,13 +55,13 @@ export function SettingRow({ label, description, icon: Icon, children }: Setting
 
 interface SectionProps {
   title?: ReactNode;
-  icon?: ComponentType<{ className?: string }>;
+  iconName?: string;
   children?: ReactNode;
   searchTerm?: string;
   color?: string;
 }
 
-export function Section({ title, icon: Icon, children, searchTerm, color = 'default' }: SectionProps) {
+export function Section({ title, iconName, children, searchTerm, color = 'default' }: SectionProps) {
   const filteredChildren = React.Children.map(children, (child) => {
     if (!React.isValidElement(child)) return child;
 
@@ -99,9 +100,9 @@ export function Section({ title, icon: Icon, children, searchTerm, color = 'defa
     <div className={`settings-section mb-4 ${searchTerm ? 'animate-fade-in' : ''}`}>
       <div className="rounded-2xl border border-border/60 overflow-hidden hover:border-border/80 transition-colors bg-secondary/5 contrast-more:border-zinc-600">
         <div className="flex items-center gap-2.5 px-5 py-3 border-b border-border/40 contrast-more:border-zinc-600">
-          {Icon && (
+          {iconName && (
             <div className={`size-[22px] rounded-md flex items-center justify-center flex-shrink-0 ${iconCls}`}>
-              <Icon className="size-3" />
+              <Icon name={iconName} size={12} />
             </div>
           )}
           <h4 className="font-heading text-[13px] font-semibold tracking-tight text-zinc-200 contrast-more:text-white">

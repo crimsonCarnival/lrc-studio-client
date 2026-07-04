@@ -1,26 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
-import type { ComponentType } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
-
-const ArrowLeftIcon = ({ className }: { className?: string }) => <Icon name="arrow_back" className={className} />;
-const HeadphonesIcon = ({ className }: { className?: string }) => <Icon name="headphones" className={className} />;
-const FileTextIcon = ({ className }: { className?: string }) => <Icon name="description" className={className} />;
-const DownloadIcon = ({ className }: { className?: string }) => <Icon name="download" className={className} />;
-const MonitorIcon = ({ className }: { className?: string }) => <Icon name="desktop_windows" className={className} />;
-const KeyboardIcon = ({ className }: { className?: string }) => <Icon name="keyboard" className={className} />;
-const SlidersHorizontalIcon = ({ className }: { className?: string }) => <Icon name="tune" className={className} />;
-const UserIcon = ({ className }: { className?: string }) => <Icon name="person" className={className} />;
-const ShieldCheckIcon = ({ className }: { className?: string }) => <Icon name="verified_user" className={className} />;
-const Link2Icon = ({ className }: { className?: string }) => <Icon name="link" className={className} />;
-const HistoryIcon = ({ className }: { className?: string }) => <Icon name="history" className={className} />;
-const SearchIcon = ({ className }: { className?: string }) => <Icon name="search" className={className} />;
-const XIcon = ({ className }: { className?: string }) => <Icon name="close" className={className} />;
-const LayersIcon = ({ className }: { className?: string }) => <Icon name="layers" className={className} />;
-const ActivityIcon = ({ className }: { className?: string }) => <Icon name="monitoring" className={className} />;
-const BarChart3Icon = ({ className }: { className?: string }) => <Icon name="bar_chart" className={className} />;
-const BanIcon = ({ className }: { className?: string }) => <Icon name="block" className={className} />;
 import { useSettings } from '@/features/settings/useSettings';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { DEFAULT_SETTINGS } from '@/features/settings/settings-defaults';
@@ -78,7 +59,7 @@ function SettingsPanelContent({ activeTab, settings, updateSetting, validateShor
 interface TabMeta {
   id: string;
   labelKey: string;
-  icon: ComponentType<{ className?: string }>;
+  iconName: string;
   authOnly?: boolean;
   group: string;
   searchable: boolean;
@@ -87,24 +68,24 @@ interface TabMeta {
 
 const TABS: TabMeta[] = [
   // Account & Identity
-  { id: 'profile', labelKey: 'profile.tabs.account', icon: UserIcon, authOnly: true, group: 'account', searchable: true },
-  { id: 'activity', labelKey: 'profile.tabs.activity', icon: ActivityIcon, authOnly: true, group: 'account', searchable: true },
-  { id: 'stats', labelKey: 'profile.tabs.stats', icon: BarChart3Icon, authOnly: true, group: 'account', searchable: true },
-  { id: 'security', labelKey: 'profile.sections.security', icon: ShieldCheckIcon, authOnly: true, group: 'account', searchable: true },
-  { id: 'connections', labelKey: 'profile.tabs.connections', icon: Link2Icon, authOnly: true, group: 'account', searchable: true },
-  { id: 'history', labelKey: 'profile.tabs.history', icon: HistoryIcon, authOnly: true, group: 'account', searchable: true },
-  { id: 'blocked', labelKey: 'settings.blocked.label', fallback: 'Blocked users', icon: BanIcon, authOnly: true, group: 'account', searchable: true },
-  { id: 'sessions', labelKey: 'profile.sessions.title', fallback: 'Sessions', icon: LayersIcon, authOnly: true, group: 'account', searchable: false },
+  { id: 'profile', labelKey: 'profile.tabs.account', iconName: 'person', authOnly: true, group: 'account', searchable: true },
+  { id: 'activity', labelKey: 'profile.tabs.activity', iconName: 'monitoring', authOnly: true, group: 'account', searchable: true },
+  { id: 'stats', labelKey: 'profile.tabs.stats', iconName: 'bar_chart', authOnly: true, group: 'account', searchable: true },
+  { id: 'security', labelKey: 'profile.sections.security', iconName: 'verified_user', authOnly: true, group: 'account', searchable: true },
+  { id: 'connections', labelKey: 'profile.tabs.connections', iconName: 'link', authOnly: true, group: 'account', searchable: true },
+  { id: 'history', labelKey: 'profile.tabs.history', iconName: 'history', authOnly: true, group: 'account', searchable: true },
+  { id: 'blocked', labelKey: 'settings.blocked.label', fallback: 'Blocked users', iconName: 'block', authOnly: true, group: 'account', searchable: true },
+  { id: 'sessions', labelKey: 'profile.sessions.title', fallback: 'Sessions', iconName: 'layers', authOnly: true, group: 'account', searchable: false },
 
   // App Preferences
-  { id: 'playback', labelKey: 'settings.playback.label', icon: HeadphonesIcon, group: 'preferences', searchable: true },
-  { id: 'editor', labelKey: 'settings.editor.label', icon: FileTextIcon, group: 'preferences', searchable: true },
-  { id: 'export', labelKey: 'settings.export.label', icon: DownloadIcon, group: 'preferences', searchable: true },
-  { id: 'interface', labelKey: 'settings.interface.label', icon: MonitorIcon, group: 'preferences', searchable: true },
+  { id: 'playback', labelKey: 'settings.playback.label', iconName: 'headphones', group: 'preferences', searchable: true },
+  { id: 'editor', labelKey: 'settings.editor.label', iconName: 'description', group: 'preferences', searchable: true },
+  { id: 'export', labelKey: 'settings.export.label', iconName: 'download', group: 'preferences', searchable: true },
+  { id: 'interface', labelKey: 'settings.interface.label', iconName: 'desktop_windows', group: 'preferences', searchable: true },
 
   // Advanced
-  { id: 'shortcuts', labelKey: 'settings.shortcuts.label', fallback: 'Shortcuts', icon: KeyboardIcon, group: 'advanced', searchable: true },
-  { id: 'advanced', labelKey: 'settings.advanced.label', icon: SlidersHorizontalIcon, group: 'advanced', searchable: true },
+  { id: 'shortcuts', labelKey: 'settings.shortcuts.label', fallback: 'Shortcuts', iconName: 'keyboard', group: 'advanced', searchable: true },
+  { id: 'advanced', labelKey: 'settings.advanced.label', iconName: 'tune', group: 'advanced', searchable: true },
 ];
 
 const SHORTCUT_KEYS = [
@@ -325,7 +306,7 @@ export default function SettingsPage() {
                     {isActive && (
                       <span className="absolute left-0 top-[22%] h-[56%] w-[3px] bg-primary rounded-r-full shadow-[0_0_8px_rgba(196,167,231,.6)]" aria-hidden="true" />
                     )}
-                    <entry.icon className={`size-3.5 shrink-0 ${isActive ? 'text-primary' : 'text-zinc-500'}`} />
+                    <Icon name={entry.iconName} size={14} className={`shrink-0 ${isActive ? 'text-primary' : 'text-zinc-500'}`} />
                     {label}
                   </button>
                 </div>
@@ -352,7 +333,7 @@ export default function SettingsPage() {
                         : 'text-zinc-500 border-transparent hover:text-zinc-300 hover:border-zinc-600'
                     }`}
                   >
-                    <entry.icon className="size-3.5 shrink-0" />
+                    <Icon name={entry.iconName} size={14} className="shrink-0" />
                     {label}
                   </button>
                 </div>

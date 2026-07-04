@@ -4,15 +4,6 @@ import { useAdvancedSettings } from '../../hooks/useAdvancedSettings';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
 import { Icon } from '@/shared/ui/Icon';
 
-const SlidersHorizontalIcon = ({ className }: { className?: string }) => <Icon name="tune" className={className} />;
-const SaveIcon = ({ className }: { className?: string }) => <Icon name="save" className={className} />;
-const TimerIcon = ({ className }: { className?: string }) => <Icon name="timer" className={className} />;
-const ShieldAlertIcon = ({ className }: { className?: string }) => <Icon name="gpp_bad" className={className} />;
-const GlobeIcon = ({ className }: { className?: string }) => <Icon name="language" className={className} />;
-const LockIcon = ({ className }: { className?: string }) => <Icon name="lock" className={className} />;
-const AlertTriangleIcon = ({ className }: { className?: string }) => <Icon name="warning" className={className} />;
-const UserXIcon = ({ className }: { className?: string }) => <Icon name="person_remove" className={className} />;
-const ZapIcon = ({ className }: { className?: string }) => <Icon name="bolt" className={className} />;
 import { Button } from '@ui/button';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useState } from 'react';
@@ -69,10 +60,10 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
 
   return (
     <>
-      <Section title={t('settings.advanced.label')} icon={SlidersHorizontalIcon} searchTerm={searchTerm}>
+      <Section title={t('settings.advanced.label')} iconName="tune" searchTerm={searchTerm}>
         {isGuest ? (
           /* Guests: show Auto Save row as locked with a note */
-          <SettingRow icon={SaveIcon} label={t('settings.advanced.autoSave')} description={t('settings.advanced.autoSaveDesc')}>
+          <SettingRow iconName="save" label={t('settings.advanced.autoSave')} description={t('settings.advanced.autoSaveDesc')}>
             <div className="flex items-center gap-2">
               <Icon name="lock" size={14} className="text-zinc-500 shrink-0" />
               <span className="text-[11px] text-zinc-500 italic">
@@ -82,7 +73,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
           </SettingRow>
         ) : (
           <>
-            <SettingRow icon={SaveIcon} label={t('settings.advanced.autoSave')} description={t('settings.advanced.autoSaveDesc')}>
+            <SettingRow iconName="save" label={t('settings.advanced.autoSave')} description={t('settings.advanced.autoSaveDesc')}>
               <Toggle
                 id="toggle-auto-save"
                 checked={settings.advanced?.autoSave?.enabled ?? false}
@@ -92,7 +83,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
 
             {settings.advanced?.autoSave?.enabled && (
               <SettingRow
-                icon={TimerIcon}
+                iconName="timer"
                 label={t('settings.advanced.autoSaveInterval')}
                 description={t('settings.advanced.autoSaveIntervalDesc')}
               >
@@ -117,7 +108,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
         )}
 
         <SettingRow
-          icon={ZapIcon}
+          iconName="bolt"
           label={t('settings.advanced.autoSaveIndicatorDuration') || 'Auto-save Indicator Duration'}
           description={t('settings.advanced.autoSaveIndicatorDurationDesc') || 'How long the "Saved" indicator stays visible'}
         >
@@ -137,7 +128,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
         </SettingRow>
 
         <SettingRow
-          icon={ShieldAlertIcon}
+          iconName="gpp_bad"
           label={t('settings.advanced.confirmDestructive')}
           description={t('settings.advanced.confirmDestructiveDesc')}
         >
@@ -149,7 +140,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
         </SettingRow>
 
         <SettingRow
-          icon={GlobeIcon}
+          iconName="language"
           label={t('settings.advanced.timezone') || 'Timezone'}
           description={t('settings.advanced.timezoneDesc') || 'Override detected timezone for saved timestamps'}
         >
@@ -173,9 +164,9 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
       </Section>
 
       {!isGuest && (
-        <Section title={t('settings.advanced.dangerZone') || 'Danger Zone'} icon={AlertTriangleIcon} searchTerm={searchTerm}>
+        <Section title={t('settings.advanced.dangerZone') || 'Danger Zone'} iconName="warning" searchTerm={searchTerm}>
           <SettingRow
-            icon={UserXIcon}
+            iconName="person_remove"
             label={t('settings.advanced.deactivate') || 'Deactivate Account'}
             description={t('settings.advanced.deactivateDesc') || 'Permanently deactivate your account. This action cannot be undone.'}
           >

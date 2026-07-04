@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Icon } from '@/shared/ui/Icon';
-
-const BanIcon = ({ className }: { className?: string }) => <Icon name="block" className={className} />;
 import toast from 'react-hot-toast';
 import { Section } from '../shared';
 import { Button } from '@ui/button';
@@ -35,7 +32,7 @@ export default function BlockedUsersSettings({ searchTerm }: { searchTerm?: stri
   }, [t]);
 
   return (
-    <Section title={t('settings.blocked.label')} icon={BanIcon} searchTerm={searchTerm}>
+    <Section title={t('settings.blocked.label')} iconName="block" searchTerm={searchTerm}>
       <p className="text-[11px] text-muted-foreground px-1 mb-2">{t('settings.blocked.description')}</p>
 
       {loading ? (
