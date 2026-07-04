@@ -2,7 +2,11 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useShortcutsSettings } from '../../hooks/useShortcutsSettings';
 import { Button } from '@ui/button';
-import { Keyboard, Headphones, Eye } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
+
+const KeyboardIcon = ({ className }: { className?: string }) => <Icon name="keyboard" className={className} />;
+const HeadphonesIcon = ({ className }: { className?: string }) => <Icon name="headphones" className={className} />;
+const EyeIcon = ({ className }: { className?: string }) => <Icon name="visibility" className={className} />;
 import EditorShortcuts from './shortcuts/EditorShortcuts';
 import PlayerShortcuts from './shortcuts/PlayerShortcuts';
 import PreviewShortcuts from './shortcuts/PreviewShortcuts';
@@ -59,9 +63,9 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
   }, [settings.shortcuts]);
 
   const SUB_TABS = [
-    { id: 'editor',    icon: Keyboard,          label: t('settings.editor.label') || 'Editor' },
-    { id: 'player',    icon: Headphones,         label: t('settings.shortcuts.playerSection') || 'Player' },
-    { id: 'preview',   icon: Eye,               label: t('settings.shortcuts.previewSection') || 'Preview' },
+    { id: 'editor',    icon: KeyboardIcon,     label: t('settings.editor.label') || 'Editor' },
+    { id: 'player',    icon: HeadphonesIcon,   label: t('settings.shortcuts.playerSection') || 'Player' },
+    { id: 'preview',   icon: EyeIcon,          label: t('settings.shortcuts.previewSection') || 'Preview' },
   ];
 
   // When searching, show all; otherwise show only the active sub-tab

@@ -2,7 +2,7 @@ import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
-import { Ban } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 
@@ -59,7 +59,7 @@ export default function AdminIpsTab({
           />
         </div>
         <Button type="submit" disabled={!ipForm.ip} className={`bg-red-600 hover:bg-red-500 text-white gap-2 ${isMobile ? 'w-full h-10' : ''}`}>
-          <Ban className="size-4" /> {t('admin.table.ban')}
+          <Icon name="block" size={16} /> {t('admin.table.ban')}
         </Button>
       </form>
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Share2, Check } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 function getServerOrigin() {
   if (import.meta.env.PROD) return import.meta.env.VITE_SERVER_ORIGIN || '';
@@ -47,8 +47,8 @@ export function ShareOgButton({ publicId, title = '', className = '' }: ShareOgB
       ].join(' ')}
     >
       {copied
-        ? <Check className="size-3 text-primary" />
-        : <Share2 className="size-3" />}
+        ? <Icon name="check" size={12} className="text-primary" />
+        : <Icon name="share" size={12} />}
       {copied ? t('share.linkCopied') : t('share.shareLink')}
     </button>
   );

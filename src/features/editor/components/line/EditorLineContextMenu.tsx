@@ -10,10 +10,7 @@ import {
   ContextMenuSubContent,
   ContextMenuLabel,
 } from '@ui/context-menu';
-import {
-  ArrowUpToLine, ArrowDownToLine, CopyPlus, Eraser,
-  Trash2, Layers, LayoutList, ChevronUp, ChevronDown,
-} from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 
@@ -65,19 +62,19 @@ export function EditorLineContextMenu({
           <ContextMenuLabel>{t('editor.sectionDefault')}</ContextMenuLabel>
           {handleAddLine && (
             <ContextMenuItem onClick={() => handleAddLine(lineIndex)}>
-              <ArrowDownToLine />
+              <Icon name="vertical_align_bottom" />
               {t('editor.insertLineBelow')}
             </ContextMenuItem>
           )}
           {onToggleDepth && (
             <ContextMenuItem onClick={() => onToggleDepth(lineIndex)}>
-              {isRoot ? <ChevronDown /> : <ChevronUp />}
+              {isRoot ? <Icon name="expand_more" /> : <Icon name="expand_less" />}
               {isRoot ? t('editor.sections.demote') : t('editor.sections.promote')}
             </ContextMenuItem>
           )}
           <ContextMenuSeparator />
           <ContextMenuItem variant="destructive" onClick={() => handleDeleteLine(lineIndex)}>
-            <Trash2 />
+            <Icon name="delete" />
             {t('editor.deleteSection')}
           </ContextMenuItem>
         </ContextMenuContent>
@@ -93,20 +90,20 @@ export function EditorLineContextMenu({
           <ContextMenuLabel>{t('editor.selection.count', { count: selectedCount, defaultValue: '{{count}} lines' })}</ContextMenuLabel>
           {handleClearLine && (
             <ContextMenuItem onClick={() => selectedLines.forEach(i => handleClearLine!(i))}>
-              <Eraser />
+              <Icon name="ink_eraser" />
               {t('editor.selection.clearTimestamps', 'Clear timestamps')}
             </ContextMenuItem>
           )}
           {handleMoveToSection && sections.length > 0 && (
             <ContextMenuSub>
               <ContextMenuSubTrigger>
-                <Layers />
+                <Icon name="layers" />
                 {t('editor.moveToSection')}
               </ContextMenuSubTrigger>
               <ContextMenuSubContent>
                 {sections.map(({ line: sl, index }) => (
                   <ContextMenuItem key={index} onClick={() => handleMoveToSection([...selectedLines], index)}>
-                    <LayoutList />
+                    <Icon name="format_list_bulleted" />
                     {formatSectionLabel(sl.label, t)}
                   </ContextMenuItem>
                 ))}
@@ -115,7 +112,7 @@ export function EditorLineContextMenu({
           )}
           <ContextMenuSeparator />
           <ContextMenuItem variant="destructive" onClick={() => [...selectedLines].forEach(i => handleDeleteLine(i))}>
-            <Trash2 />
+            <Icon name="delete" />
             {t('editor.selection.removeN', { count: selectedCount, defaultValue: 'Remove {{count}} lines' })}
           </ContextMenuItem>
         </ContextMenuContent>
@@ -130,41 +127,41 @@ export function EditorLineContextMenu({
         {handleAddLine && (
           <>
             <ContextMenuItem onClick={() => handleAddLine(lineIndex, null, { before: true })}>
-              <ArrowUpToLine />
+              <Icon name="vertical_align_top" />
               {t('editor.insertLineAbove')}
             </ContextMenuItem>
             <ContextMenuItem onClick={() => handleAddLine(lineIndex)}>
-              <ArrowDownToLine />
+              <Icon name="vertical_align_bottom" />
               {t('editor.insertLineBelow')}
             </ContextMenuItem>
             <ContextMenuItem onClick={() => handleAddLine(lineIndex, { ...line, id: crypto.randomUUID() })}>
-              <CopyPlus />
+              <Icon name="post_add" />
               {t('editor.duplicateLine')}
             </ContextMenuItem>
           </>
         )}
         {handleInsertSection && (
           <ContextMenuItem onClick={() => handleInsertSection(lineIndex)}>
-            <Layers />
+            <Icon name="layers" />
             {t('editor.insertSectionAbove')}
           </ContextMenuItem>
         )}
         {line.timestamp != null && handleClearLine && (
           <ContextMenuItem onClick={() => handleClearLine(lineIndex)}>
-            <Eraser />
+            <Icon name="ink_eraser" />
             {t('editor.clearTimestamp')}
           </ContextMenuItem>
         )}
         {handleMoveToSection && sections.length > 0 && (
           <ContextMenuSub>
             <ContextMenuSubTrigger>
-              <Layers />
+              <Icon name="layers" />
               {t('editor.moveToSection')}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               {sections.map(({ line: sl, index }) => (
                 <ContextMenuItem key={index} onClick={() => handleMoveToSection([lineIndex], index)}>
-                  <LayoutList />
+                  <Icon name="format_list_bulleted" />
                   {formatSectionLabel(sl.label, t)}
                 </ContextMenuItem>
               ))}
@@ -173,7 +170,7 @@ export function EditorLineContextMenu({
         )}
         <ContextMenuSeparator />
         <ContextMenuItem variant="destructive" onClick={() => handleDeleteLine(lineIndex)}>
-          <Trash2 />
+          <Icon name="delete" />
           {t('editor.removeLine')}
         </ContextMenuItem>
       </ContextMenuContent>

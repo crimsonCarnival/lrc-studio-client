@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { useState } from 'react';
-import { Settings, Timer, Activity, BarChart3, Ban } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { LevelBadge } from '@ui/LevelBadge';
 import { BadgeList } from '@/features/badges/BadgeList';
 import { Tip } from '@/shared/ui/tip';
@@ -75,7 +75,7 @@ function BlockControl({ isBlocked, blockLoading, onBlock, onUnblock }: {
     <Tip content={t('profile.block')}>
       <Button variant="outline" size="icon-sm" onClick={() => setConfirming(true)} disabled={blockLoading}
         className="text-muted-foreground hover:text-destructive">
-        <Ban className="size-4" />
+        <Icon name="block" size={16} />
       </Button>
     </Tip>
   );
@@ -171,7 +171,7 @@ export function ProfileHeader({
             <>
               <span className="opacity-30">·</span>
               <span className="flex items-center gap-1">
-                <Timer className="size-3.5 text-accent-blue" />
+                <Icon name="timer" size={14} className="text-accent-blue" />
                 {minutesLabel}
                 <span className="text-xs opacity-50">¹</span>
               </span>
@@ -184,7 +184,7 @@ export function ProfileHeader({
                 onClick={() => navigate('/settings')}
                 className="flex items-center gap-1 hover:text-foreground transition-colors"
               >
-                <Settings className="size-3.5" />
+                <Icon name="settings" size={14} />
                 {t('profile.editProfile')}
               </button>
             </>
@@ -212,7 +212,7 @@ export function ProfileHeader({
               size="icon-sm"
               onClick={() => navigate('/settings/activity')}
             >
-              <Activity className="size-4" />
+              <Icon name="monitoring" size={16} />
             </Button>
           </Tip>
           <Tip content={t('profile.tabs.stats')}>
@@ -221,7 +221,7 @@ export function ProfileHeader({
               size="icon-sm"
               onClick={() => navigate('/settings/stats')}
             >
-              <BarChart3 className="size-4" />
+              <Icon name="bar_chart" size={16} />
             </Button>
           </Tip>
         </div>

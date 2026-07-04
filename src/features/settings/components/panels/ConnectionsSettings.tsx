@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Link2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import ConnectedAccounts from './profile/ConnectedAccounts';
 
 function blockMatches(searchTerm: string | undefined, labels: string[]) {
@@ -23,7 +23,7 @@ export default function ConnectionsSettings({ searchTerm }: { searchTerm?: strin
   return (
     <div className="settings-section space-y-6 animate-fade-in">
       <div className="flex items-center gap-2 mb-2 px-1">
-        <Link2 className="size-4 text-zinc-400" />
+        <Icon name="link" size={16} className="text-zinc-400" />
         <h3 className="font-heading text-[13px] font-semibold tracking-tight text-zinc-200 contrast-more:text-white">
           {t('profile.tabs.connections') || 'Connections'}
         </h3>

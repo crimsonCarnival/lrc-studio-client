@@ -5,7 +5,7 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
-import { Filter, Ban, CheckCircle2, BarChart3, Music, Trash2, Undo2, Info, Zap, Globe, ShieldAlert, Monitor } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { useState as useLocalState } from 'react';
 import { userHasPermission, ROLES, ROLE_RANK, type Role } from '@/features/auth/permissions';
@@ -140,7 +140,7 @@ export default function AdminUsersTab({
             onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
             className="bg-zinc-950 border-zinc-800 focus:border-primary !pl-10 h-10 text-sm"
           />
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-600 pointer-events-none" />
+          <Icon name="filter_list" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
         </div>
         <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-row gap-2 sm:gap-4'}`}>
           {!hideRoleFilter && (
@@ -231,11 +231,11 @@ export default function AdminUsersTab({
                         <div className="w-full p-2 rounded text-xs font-medium text-center">
                           {user.ban?.active ? (
                             <span className="flex items-center justify-center gap-1 text-red-400">
-                              <Ban className="size-3" /> {t('admin.table.banned')}
+                              <Icon name="block" size={12} /> {t('admin.table.banned')}
                             </span>
                           ) : (
                             <span className="flex items-center justify-center gap-1 text-emerald-400">
-                              <CheckCircle2 className="size-3" /> {t('admin.table.active')}
+                              <Icon name="check_circle" size={12} /> {t('admin.table.active')}
                             </span>
                           )}
                         </div>
@@ -246,13 +246,13 @@ export default function AdminUsersTab({
                     <div className="flex gap-2 text-xs">
                       <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
                         <div className="flex items-center justify-center gap-1 text-zinc-300">
-                          <BarChart3 className="size-3.5" />
+                          <Icon name="bar_chart" size={14} />
                           <span>{user.projectCount} {t('admin.table.projects')}</span>
                         </div>
                       </div>
                       <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
                         <div className="flex items-center justify-center gap-1 text-zinc-300">
-                          <Music className="size-3.5" />
+                          <Icon name="music_note" size={14} />
                           <span>{user.uploadCount} {t('admin.table.uploads')}</span>
                         </div>
                       </div>
@@ -266,27 +266,27 @@ export default function AdminUsersTab({
                         {user.lastIp && canActOn(user) && (
                           <Tip content={t('admin.table.blockIp')}>
                             <button type="button" onClick={() => handleBlockIpDirect(user)} className="text-zinc-600 hover:text-red-400">
-                              <Globe className="size-3.5" />
+                              <Icon name="language" size={14} />
                             </button>
                           </Tip>
                         )}
                       </div>
                       {user.lastDeviceName && (
                         <div className="flex items-center gap-1.5">
-                          <Monitor className="size-3.5 text-zinc-600 shrink-0" />
+                          <Icon name="desktop_windows" size={14} className="text-zinc-600 shrink-0" />
                           <span className="text-zinc-500 text-[10px] break-all">{user.lastDeviceName}</span>
                           {user.lastDeviceId && canActOn(user) && (
                             <Tip content={t('admin.table.blockDevice')}>
                               <button type="button" onClick={() => handleBlockDeviceDirect(user)} className="text-zinc-600 hover:text-red-400">
-                                <ShieldAlert className="size-3.5" />
+                                <Icon name="gpp_bad" size={14} />
                               </button>
                             </Tip>
                           )}
                         </div>
                       )}
                       <div className="flex items-center gap-2 flex-wrap">
-                        {user.isVerified && <Tip content={t('admin.table.verified')}><CheckCircle2 className="size-4 text-emerald-500" /></Tip>}
-                        {user.isDeleted && <Tip content={t('admin.table.deleted')}><Trash2 className="size-4 text-red-500" /></Tip>}
+                        {user.isVerified && <Tip content={t('admin.table.verified')}><Icon name="check_circle" size={16} className="text-emerald-500" /></Tip>}
+                        {user.isDeleted && <Tip content={t('admin.table.deleted')}><Icon name="delete" size={16} className="text-red-500" /></Tip>}
                       </div>
                     </div>
 
@@ -299,7 +299,7 @@ export default function AdminUsersTab({
                             onClick={() => handleReactivate(user)}
                             className="h-10 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 gap-2 w-full"
                           >
-                            <Undo2 className="size-4" /> {t('admin.table.reactivate')}
+                            <Icon name="undo" size={16} /> {t('admin.table.reactivate')}
                           </Button>
                         ) : (
                           <>
@@ -309,7 +309,7 @@ export default function AdminUsersTab({
                                 onClick={() => setAppealModal({ isOpen: true, user })}
                                 className="h-10 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/30 gap-2 w-full"
                               >
-                                <Info className="size-4" /> {t('admin.table.reviewAppeal')}
+                                <Icon name="info" size={16} /> {t('admin.table.reviewAppeal')}
                               </Button>
                             ) : (
                               !user.ban?.active && (
@@ -318,7 +318,7 @@ export default function AdminUsersTab({
                                   onClick={() => handleToggleBan(user)}
                                   className="h-10 text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-2 w-full"
                                 >
-                                  <Ban className="size-4" /> {t('admin.table.ban')}
+                                  <Icon name="block" size={16} /> {t('admin.table.ban')}
                                 </Button>
                               )
                             )}
@@ -336,7 +336,7 @@ export default function AdminUsersTab({
                               onClick={() => handleDelete(user)}
                               className="h-10 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 gap-2 w-full"
                             >
-                              <Trash2 className="size-4" /> {tk('admin.table.delete')}
+                              <Icon name="delete" size={16} /> {tk('admin.table.delete')}
                             </Button>
                           </>
                         )}
@@ -406,20 +406,20 @@ export default function AdminUsersTab({
                     <td className="p-4">
                       {user.ban?.active ? (
                         <div className="flex flex-col">
-                          <span className="flex items-center gap-1.5 text-xs text-red-400 font-medium"><Ban className="size-3" /> {t('admin.table.banned')}</span>
+                          <span className="flex items-center gap-1.5 text-xs text-red-400 font-medium"><Icon name="block" size={12} /> {t('admin.table.banned')}</span>
                           <span className="text-[10px] text-zinc-600 line-clamp-1 italic" title={user.ban?.reason}>{user.ban?.reason}</span>
                         </div>
                       ) : (
-                        <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium"><CheckCircle2 className="size-3" /> {t('admin.table.active')}</span>
+                        <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium"><Icon name="check_circle" size={12} /> {t('admin.table.active')}</span>
                       )}
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-4 text-xs font-medium">
                         <div className="flex items-center gap-1.5 text-zinc-300">
-                          <BarChart3 className="size-3.5 text-zinc-500" /> {user.projectCount}
+                          <Icon name="bar_chart" size={14} className="text-zinc-500" /> {user.projectCount}
                         </div>
                         <div className="flex items-center gap-1.5 text-zinc-300">
-                          <Music className="size-3.5 text-zinc-500" /> {user.uploadCount}
+                          <Icon name="music_note" size={14} className="text-zinc-500" /> {user.uploadCount}
                         </div>
                       </div>
                     </td>
@@ -434,14 +434,14 @@ export default function AdminUsersTab({
                                 onClick={() => handleBlockIpDirect(user)}
                                 className="text-zinc-600 hover:text-red-400 transition-colors"
                               >
-                                <Globe className="size-3" />
+                                <Icon name="language" size={12} />
                               </button>
                             </Tip>
                           )}
                         </div>
                         {user.lastDeviceName && (
                           <div className="flex items-center gap-1.5">
-                            <Monitor className="size-3 text-zinc-600 shrink-0" />
+                            <Icon name="desktop_windows" size={12} className="text-zinc-600 shrink-0" />
                             <span className="text-[10px] text-zinc-500 truncate max-w-[140px]" title={user.lastDeviceName}>{user.lastDeviceName}</span>
                             {user.lastDeviceId && canActOn(user) && (
                               <Tip content={t('admin.table.blockDevice')}>
@@ -450,15 +450,15 @@ export default function AdminUsersTab({
                                   onClick={() => handleBlockDeviceDirect(user)}
                                   className="text-zinc-600 hover:text-red-400 transition-colors shrink-0"
                                 >
-                                  <ShieldAlert className="size-3" />
+                                  <Icon name="gpp_bad" size={12} />
                                 </button>
                               </Tip>
                             )}
                           </div>
                         )}
                         <div className="flex items-center gap-1.5">
-                          {user.isVerified && <Tip content={t('admin.table.verified')}><CheckCircle2 className="size-3.5 text-emerald-500" /></Tip>}
-                          {user.isDeleted && <Tip content={t('admin.table.deleted')}><Trash2 className="size-3.5 text-red-500" /></Tip>}
+                          {user.isVerified && <Tip content={t('admin.table.verified')}><Icon name="check_circle" size={14} className="text-emerald-500" /></Tip>}
+                          {user.isDeleted && <Tip content={t('admin.table.deleted')}><Icon name="delete" size={14} className="text-red-500" /></Tip>}
                         </div>
                       </div>
                     </td>
@@ -489,23 +489,23 @@ export default function AdminUsersTab({
                           <>
                             <Tip content="Adjust XP" side="top">
                               <Button variant="ghost" size="icon" onClick={() => { setXpPopover(p => p === (user.id || user._id) ? null : (user.id || user._id) ?? null); }} className="size-8 text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg">
-                                <Zap className="size-3.5" />
+                                <Icon name="bolt" size={14} />
                               </Button>
                             </Tip>
                             {user.isDeleted ? (
                               <Button variant="ghost" size="sm" onClick={() => handleReactivate(user)} className="h-8 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 gap-1.5">
-                                <Undo2 className="size-3.5" /> {t('admin.table.reactivate')}
+                                <Icon name="undo" size={14} /> {t('admin.table.reactivate')}
                               </Button>
                             ) : (
                               <>
                                 {user.appeal?.status === 'pending' ? (
                                   <Button variant="secondary" size="sm" onClick={() => setAppealModal({ isOpen: true, user })} className="h-8 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/30 gap-1.5">
-                                    <Info className="size-3.5" /> {t('admin.table.reviewAppeal')}
+                                    <Icon name="info" size={14} /> {t('admin.table.reviewAppeal')}
                                   </Button>
                                 ) : (
                                   !user.ban?.active && (
                                     <Button variant="ghost" size="sm" onClick={() => handleToggleBan(user)} className="h-8 text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-1.5">
-                                      <Ban className="size-3.5" /> {t('admin.table.ban')}
+                                      <Icon name="block" size={14} /> {t('admin.table.ban')}
                                     </Button>
                                   )
                                 )}
@@ -515,7 +515,7 @@ export default function AdminUsersTab({
                                   </Button>
                                 )}
                                 <Button variant="ghost" size="icon" onClick={() => handleDelete(user)} className="size-8 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg">
-                                  <Trash2 className="size-4" />
+                                  <Icon name="delete" size={16} />
                                 </Button>
                               </>
                             )}

@@ -1,7 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import type { ComponentType } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Fingerprint, KeyRound, Laptop, Loader2, Smartphone, Trash2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
+
+const FingerprintIcon = ({ className }: { className?: string }) => <Icon name="fingerprint" className={className} />;
+const KeyRoundIcon = ({ className }: { className?: string }) => <Icon name="key" className={className} />;
+const LaptopIcon = ({ className }: { className?: string }) => <Icon name="laptop" className={className} />;
+const SmartphoneIcon = ({ className }: { className?: string }) => <Icon name="smartphone" className={className} />;
+const Trash2Icon = ({ className }: { className?: string }) => <Icon name="delete" className={className} />;
 import { Button } from '@ui/button';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useSettings } from '@/features/settings/useSettings';
@@ -96,39 +101,39 @@ export default function PasskeySection() {
     return formatInTimezone(date, settings.advanced?.timezone, {}, i18n.resolvedLanguage || i18n.language);
   };
 
-  const getPasskeyInfo = (passkey: Passkey, index: number): { label: string; Icon: ComponentType<{ className?: string }> } => {
+  const getPasskeyInfo = (passkey: Passkey, index: number): { label: string; PasskeyIcon: ({ className }: { className?: string }) => React.ReactElement } => {
     const transports = passkey.transports || [];
-    let Icon: ComponentType<{ className?: string }> = Laptop;
+    let PasskeyIcon: ({ className }: { className?: string }) => React.ReactElement = LaptopIcon;
     let label;
 
     if (passkey.deviceName) {
       label = passkey.deviceName;
       const dt = passkey.deviceType;
-      Icon = dt === 'mobile' || dt === 'tablet' ? Smartphone
-        : transports.includes('usb') ? KeyRound
-        : Fingerprint;
+      PasskeyIcon = dt === 'mobile' || dt === 'tablet' ? SmartphoneIcon
+        : transports.includes('usb') ? KeyRoundIcon
+        : FingerprintIcon;
     } else if (transports.includes('internal')) {
       label = t('auth.passkeyManagement.platformLabel');
-      Icon = Fingerprint;
+      PasskeyIcon = FingerprintIcon;
     } else if (transports.includes('usb')) {
       label = t('auth.passkeyManagement.usbKeyLabel');
-      Icon = KeyRound;
+      PasskeyIcon = KeyRoundIcon;
     } else if (transports.includes('hybrid')) {
       label = t('auth.passkeyManagement.phoneLabel');
-      Icon = Smartphone;
+      PasskeyIcon = SmartphoneIcon;
     } else {
       const number = passkeys.length - index;
       label = t('auth.passkeyManagement.passkeyLabel', { number });
     }
 
-    return { label, Icon };
+    return { label, PasskeyIcon };
   };
 
   return (
     <div className="flex flex-col gap-2">
       {loading ? (
         <div className="flex items-center justify-center p-4">
-          <Loader2 className="size-4 animate-spin text-muted-foreground" />
+          <Icon name="progress_activity" size={16} className="animate-spin text-muted-foreground" />
         </div>
       ) : passkeys.length === 0 ? (
         <div className="flex items-center justify-between bg-secondary/30 border border-border rounded-xl px-3 h-11">
@@ -138,11 +143,11 @@ export default function PasskeySection() {
         </div>
       ) : (
         passkeys.map((passkey, index) => {
-          const { label, Icon } = getPasskeyInfo(passkey, index);
+          const { label, PasskeyIcon } = getPasskeyInfo(passkey, index);
           return (
             <div key={passkey.id} className="flex items-center justify-between bg-secondary/30 border border-border rounded-xl px-3 h-11">
               <div className="flex items-center gap-2.5 min-w-0">
-                <Icon className="size-3.5 text-zinc-400 shrink-0" />
+                <PasskeyIcon className="size-3.5 text-zinc-400 shrink-0" />
                 <div className="flex flex-col min-w-0">
                   <span className="text-sm text-foreground truncate font-medium leading-tight">
                     {label}
@@ -160,7 +165,7 @@ export default function PasskeySection() {
                 className="size-8 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 shrink-0"
                 title={t('auth.passkeyManagement.delete')}
               >
-                {deletingId === passkey.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                {deletingId === passkey.id ? <Icon name="progress_activity" size={14} className="animate-spin" /> : <Trash2Icon className="size-3.5" />}
               </Button>
             </div>
           );
@@ -174,7 +179,7 @@ export default function PasskeySection() {
           disabled={registering || loading}
           className="rounded-lg h-7 text-[11px] font-bold gap-1.5"
         >
-          {registering ? <Loader2 className="size-3 animate-spin" /> : <Fingerprint className="size-3" />}
+          {registering ? <Icon name="progress_activity" size={12} className="animate-spin" /> : <FingerprintIcon className="size-3" />}
           {t('auth.passkeyManagement.add')}
         </Button>
       </div>

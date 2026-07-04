@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LazyMotion, domAnimation, m as M } from 'framer-motion';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
-import { Music2, FileText, Zap, Download, Mic2, Globe, ArrowRight, Play } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import SmoothWavyCanvas from './SmoothWavyCanvas';
 import { LangSwitcher } from '@/features/auth/auth-shared';
@@ -18,17 +18,17 @@ const LYRIC_LINES = [
 ];
 
 const FEATURES = [
-  { icon: Zap,      color: 'text-primary',      bg: 'bg-primary/10',       titleKey: 'landing.feat1Title', descKey: 'landing.feat1Desc' },
-  { icon: Mic2,     color: 'text-accent-purple', bg: 'bg-accent-purple/10', titleKey: 'landing.feat2Title', descKey: 'landing.feat2Desc' },
-  { icon: Globe,    color: 'text-accent-blue',   bg: 'bg-accent-blue/10',   titleKey: 'landing.feat3Title', descKey: 'landing.feat3Desc' },
-  { icon: Download, color: 'text-warning',        bg: 'bg-warning/10',       titleKey: 'landing.feat4Title', descKey: 'landing.feat4Desc' },
+  { iconName: 'bolt',        color: 'text-primary',      bg: 'bg-primary/10',       titleKey: 'landing.feat1Title', descKey: 'landing.feat1Desc' },
+  { iconName: 'mic',         color: 'text-accent-purple', bg: 'bg-accent-purple/10', titleKey: 'landing.feat2Title', descKey: 'landing.feat2Desc' },
+  { iconName: 'language',    color: 'text-accent-blue',   bg: 'bg-accent-blue/10',   titleKey: 'landing.feat3Title', descKey: 'landing.feat3Desc' },
+  { iconName: 'download',    color: 'text-warning',       bg: 'bg-warning/10',       titleKey: 'landing.feat4Title', descKey: 'landing.feat4Desc' },
 ];
 
 const STEPS = [
-  { n: '01', icon: Music2,   titleKey: 'landing.step1Title', descKey: 'landing.step1Desc' },
-  { n: '02', icon: Zap,      titleKey: 'landing.step2Title', descKey: 'landing.step2Desc' },
-  { n: '03', icon: FileText, titleKey: 'landing.step3Title', descKey: 'landing.step3Desc' },
-  { n: '04', icon: Download, titleKey: 'landing.step4Title', descKey: 'landing.step4Desc' },
+  { n: '01', iconName: 'music_note',  titleKey: 'landing.step1Title', descKey: 'landing.step1Desc' },
+  { n: '02', iconName: 'bolt',        titleKey: 'landing.step2Title', descKey: 'landing.step2Desc' },
+  { n: '03', iconName: 'description', titleKey: 'landing.step3Title', descKey: 'landing.step3Desc' },
+  { n: '04', iconName: 'download',    titleKey: 'landing.step4Title', descKey: 'landing.step4Desc' },
 ];
 
 export default function GuestLanding() {
@@ -120,7 +120,7 @@ export default function GuestLanding() {
                   onClick={() => navigate('/project/new')}
                   className="gap-2 px-7 h-12 font-normal shadow-glow"
                 >
-                  <Play className="size-4" />
+                  <Icon name="play_arrow" size={16} />
                   {t('landing.ctaStart')}
                 </Button>
                 <Button
@@ -130,7 +130,7 @@ export default function GuestLanding() {
                   className="gap-2 px-7 h-12 font-normal text-zinc-400 hover:text-zinc-100"
                 >
                   {t('landing.ctaSignIn')}
-                  <ArrowRight className="size-4" />
+                  <Icon name="arrow_forward" size={16} />
                 </Button>
               </div>
             </M.div>
@@ -239,7 +239,7 @@ export default function GuestLanding() {
             </M.div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-zinc-800/40 rounded-2xl overflow-hidden border border-zinc-800/40">
-              {FEATURES.map(({ icon: Icon, color, bg, titleKey, descKey }, i) => (
+              {FEATURES.map(({ iconName, color, bg, titleKey, descKey }, i) => (
                 <M.div
                   key={titleKey}
                   className="flex flex-col gap-4 p-6 bg-zinc-950/80 hover:bg-zinc-900/60 transition-colors"
@@ -249,7 +249,7 @@ export default function GuestLanding() {
                   transition={{ duration: reducedMotion ? 0 : 0.5, delay: reducedMotion ? 0 : i * 0.08, ease: 'easeOut' }}
                 >
                   <div className={`size-10 rounded-xl ${bg} flex items-center justify-center`}>
-                    <Icon className={`size-5 ${color}`} />
+                    <Icon name={iconName} size={20} className={color} />
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <h3 className="font-semibold text-zinc-100 text-sm">{tk(titleKey)}</h3>
@@ -281,7 +281,7 @@ export default function GuestLanding() {
             </M.div>
 
             <div className="flex flex-col">
-              {STEPS.map(({ n, icon: Icon, titleKey, descKey }, i) => (
+              {STEPS.map(({ n, iconName, titleKey, descKey }, i) => (
                 <M.div
                   key={n}
                   className="flex gap-5 relative"
@@ -293,7 +293,7 @@ export default function GuestLanding() {
                   {/* Left: step indicator column */}
                   <div className="flex flex-col items-center shrink-0">
                     <div className="size-10 rounded-xl bg-zinc-900 border border-zinc-800 contrast-more:border-zinc-600 flex items-center justify-center relative">
-                      <Icon className="size-4 text-zinc-400" />
+                      <Icon name={iconName} size={16} className="text-zinc-400" />
                       <span className="absolute -top-2 -right-2 font-heading text-[9px] text-primary bg-zinc-950 border border-primary/30 rounded-full size-5 flex items-center justify-center leading-none">
                         {n}
                       </span>
@@ -326,7 +326,7 @@ export default function GuestLanding() {
               <div className="flex flex-col sm:flex-row items-start gap-3">
                 <Button size="lg" onClick={() => navigate('/project/new')} className="gap-2 px-7 h-12 font-normal">
                   {t('landing.ctaStart')}
-                  <ArrowRight className="size-4" />
+                  <Icon name="arrow_forward" size={16} />
                 </Button>
                 <Button variant="outline" size="lg" onClick={() => navigate('/auth/signup')} className="px-7 h-12 font-normal contrast-more:border-zinc-400">
                   {t('landing.ctaSignUp')}

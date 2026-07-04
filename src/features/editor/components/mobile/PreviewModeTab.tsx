@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Play, Pause } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 interface PreviewLine {
   text?: string;
@@ -106,12 +106,12 @@ export default function PreviewModeTab({
       >
         {isPlaying ? (
           <>
-            <Play className="size-4 text-primary animate-pulse" />
+            <Icon name="play_arrow" size={16} className="text-primary animate-pulse" />
             <span>{t('editor.playing')}</span>
           </>
         ) : (
           <>
-            <Pause className="size-4 text-zinc-500" />
+            <Icon name="pause" size={16} className="text-zinc-500" />
             <span>{t('editor.paused')}</span>
           </>
         )}

@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -145,7 +145,7 @@ export default function GuestProjectSaveGate() {
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-zinc-950/95 backdrop-blur-sm gap-4">
-      <Loader2 className="size-10 animate-spin text-primary" />
+      <Icon name="progress_activity" size={40} className="animate-spin text-primary" />
       <p className="text-base font-medium text-zinc-200">{t('editor.savingProject')}</p>
       {displayAttempt > 0 && (
         <p className="text-sm text-zinc-500">

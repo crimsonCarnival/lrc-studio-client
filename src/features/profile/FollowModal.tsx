@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { X, Users, Heart } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { LazyImage } from '@ui/LazyImage';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { OnlineDot } from '@ui/OnlineDot';
@@ -144,10 +144,10 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
     }
   }, []);
 
-  const TABS: { id: Tab; label: string; icon: typeof Users }[] = [
-    { id: 'FOLLOWERS', label: t('profile.followersTitle'), icon: Users },
-    { id: 'FOLLOWING', label: t('profile.followingTitle'), icon: Users },
-    { id: 'FRIENDS',   label: t('profile.friendsTitle'),   icon: Heart },
+  const TABS: { id: Tab; label: string }[] = [
+    { id: 'FOLLOWERS', label: t('profile.followersTitle') },
+    { id: 'FOLLOWING', label: t('profile.followingTitle') },
+    { id: 'FRIENDS',   label: t('profile.friendsTitle') },
   ];
 
   const current = tabStates[activeTab];
@@ -185,7 +185,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
               <p className="text-sm font-medium text-foreground truncate flex items-center gap-1.5">
                 {u.displayName || u.accountName}
                 {isFriendsTab && (
-                  <Heart className="size-3 text-primary/60 shrink-0 fill-primary/40" />
+                  <Icon name="favorite" size={12} className="text-primary/60 shrink-0" />
                 )}
               </p>
               <p className="text-xs text-muted-foreground truncate">@{u.accountName}</p>
@@ -234,7 +234,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
               <span className="text-muted-foreground">@</span>{accountName}
             </p>
             <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-1 -mr-1">
-              <X className="size-4" />
+              <Icon name="close" size={16} />
             </button>
           </div>
 

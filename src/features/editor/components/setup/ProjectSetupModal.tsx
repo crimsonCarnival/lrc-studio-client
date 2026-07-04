@@ -8,7 +8,7 @@ import { Input } from '@ui/input';
 import { Textarea } from '@ui/textarea';
 import { Label } from '@ui/label';
 import { Badge } from '@ui/badge';
-import { X, Sparkles, Upload, Loader2, Music2, Globe, Lock } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
@@ -33,7 +33,7 @@ function SourceInfoBadge({ sourceInfo, initialName, t }: SourceInfoBadgeProps) {
   if (!sourceInfo) return null;
   const { ytUrl, cloudinary, title } = sourceInfo;
 
-  let sourceIcon = <Music2 className="size-4" />;
+  let sourceIcon = <Icon name="music_note" size={16} />;
   let sourceLabel = t('setup.audioSource');
   let sourceValue = title || initialName;
 
@@ -42,7 +42,7 @@ function SourceInfoBadge({ sourceInfo, initialName, t }: SourceInfoBadgeProps) {
     sourceLabel = t('setup.youtubeVideo');
     sourceValue = title || initialName || ytUrl;
   } else if (cloudinary) {
-    sourceIcon = <Upload className="size-4 text-blue-400" />;
+    sourceIcon = <Icon name="upload" size={16} className="text-blue-400" />;
     sourceLabel = t('setup.cloudUpload');
     sourceValue = cloudinary.title || cloudinary.fileName || title || initialName;
   }
@@ -245,7 +245,7 @@ export default function ProjectSetupModal({
               className="absolute top-3 right-3 p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors z-10"
               aria-label={t('common.close')}
             >
-              <X className="size-4" />
+              <Icon name="close" size={16} />
             </button>
           </Tip>
 
@@ -253,7 +253,7 @@ export default function ProjectSetupModal({
           <div className="px-6 pt-6 pb-4 border-b border-zinc-700/60 shrink-0">
             <div className="flex items-center gap-3">
               <div className="size-9 rounded-xl bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center shadow-lg shadow-primary/20">
-                <Sparkles className="size-4 text-white" />
+                <Icon name="auto_awesome" size={16} className="text-white" />
               </div>
               <h3 className="text-lg font-semibold text-zinc-100">
                 {isEditing ? t('setup.settingsTitle') || 'Project Settings' : t('setup.title')}
@@ -384,7 +384,7 @@ export default function ProjectSetupModal({
                           onClick={() => removeTag(i)}
                           className="p-0.5 hover:bg-zinc-600 rounded-full transition-colors"
                         >
-                          <X className="size-3" />
+                          <Icon name="close" size={12} />
                         </button>
                       </Badge>
                     ))}
@@ -426,9 +426,9 @@ export default function ProjectSetupModal({
                     className="shrink-0 size-9 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
                   >
                     {imageUploading ? (
-                      <Loader2 className="size-4 animate-spin" />
+                      <Icon name="progress_activity" size={16} className="animate-spin" />
                     ) : (
-                      <Upload className="size-4" />
+                      <Icon name="upload" size={16} />
                     )}
                   </button>
                   <input
@@ -445,7 +445,7 @@ export default function ProjectSetupModal({
               <div className="flex flex-row items-center justify-between p-3 rounded-xl border border-zinc-800 bg-zinc-900/50">
                 <div className="flex flex-col gap-0.5">
                   <div className="flex items-center gap-1.5">
-                    {form.isPublic ? <Globe className="size-3.5 text-zinc-400" /> : <Lock className="size-3.5 text-zinc-400" />}
+                    {form.isPublic ? <Icon name="language" size={14} className="text-zinc-400" /> : <Icon name="lock" size={14} className="text-zinc-400" />}
                     <span className="text-xs font-semibold text-zinc-300">
                       {form.isPublic ? t('project.visibilityPublic', 'Public Project') : t('project.visibilityPrivate', 'Private Project')}
                     </span>

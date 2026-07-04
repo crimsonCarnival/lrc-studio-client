@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import PasskeySection from '../PasskeySection';
 import PasswordSection from '../PasswordSection';
 
@@ -42,7 +42,7 @@ export default function SecuritySettings({ focusCard, searchTerm }: { focusCard?
   return (
     <div className="settings-section space-y-6 animate-fade-in">
       <div className="flex items-center gap-2 mb-2 px-1">
-        <ShieldCheck className="size-4 text-zinc-400" />
+        <Icon name="verified_user" size={16} className="text-zinc-400" />
         <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
           {t('profile.sections.security') || 'Security'}
         </h3>

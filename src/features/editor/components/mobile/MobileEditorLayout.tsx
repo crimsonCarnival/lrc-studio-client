@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Music, Mic2, Eye } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { AnimatePresence, motion } from 'framer-motion';
 import SyncModeTab from './SyncModeTab';
 import LyricsModeTab from './LyricsModeTab';
@@ -54,10 +54,10 @@ export default function MobileEditorLayout({
   const [activeMode, setActiveMode] = useState('sync');
 
   const modes = [
-    { id: 'sync', label: t('editor.sync') || 'Sync', icon: Music },
-    { id: 'lyrics', label: t('editor.lyrics') || 'Lyrics', icon: Mic2 },
-    { id: 'preview', label: t('editor.preview') || 'Preview', icon: Eye },
-  ];
+    { id: 'sync', label: t('editor.sync') || 'Sync', iconName: 'music_note' },
+    { id: 'lyrics', label: t('editor.lyrics') || 'Lyrics', iconName: 'mic' },
+    { id: 'preview', label: t('editor.preview') || 'Preview', iconName: 'visibility' },
+  ] as const;
 
   const handleModeChange = (modeId: string) => {
     setActiveMode(modeId);
@@ -102,7 +102,7 @@ export default function MobileEditorLayout({
     <div className="flex flex-col h-full max-lg:pb-20 overflow-hidden" data-testid="mobile-editor-layout">
       {/* Sticky mode tabs at top */}
       <div className="sticky top-0 z-40 flex border-b border-zinc-800/50 bg-zinc-950/95 backdrop-blur-md">
-        {modes.map(({ id, label, icon: Icon }) => (
+        {modes.map(({ id, label, iconName }) => (
           <button
             key={id}
             onClick={() => handleModeChange(id)}
@@ -113,7 +113,7 @@ export default function MobileEditorLayout({
             }`}
             aria-selected={activeMode === id}
           >
-            <Icon className="size-4 flex-shrink-0" />
+            <Icon name={iconName} size={16} className="flex-shrink-0" />
             <span className="hidden sm:inline">{label}</span>
           </button>
         ))}

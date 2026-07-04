@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Star, GitFork } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { ProjectListCover } from '@/features/projects/components/ProjectListCover';
 import type { Project } from '@/types';
 
@@ -31,11 +31,11 @@ export function SearchProjectCard({ project }: { project: Project }) {
 
       <div className="flex flex-col items-end gap-1.5 shrink-0">
         <div className="flex items-center gap-1 text-xs text-zinc-500">
-          <Star className="size-3" />
+          <Icon name="star" size={12} />
           <span>{starCount ?? 0}</span>
         </div>
         <div className="flex items-center gap-1 text-xs text-zinc-500">
-          <GitFork className="size-3" />
+          <Icon name="call_split" size={12} />
           <span>{forkCount ?? 0}</span>
         </div>
       </div>

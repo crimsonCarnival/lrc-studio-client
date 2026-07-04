@@ -1,9 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
-import { Sun, Moon, Monitor, Palette, Globe, Check } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
+import { Icon } from '@/shared/ui/Icon';
 import { THEMES } from './theme-options';
 
 const LANG_NAMES: Record<string, Record<string, string>> = {
@@ -22,16 +21,6 @@ function getLangLabel(code: string, currentLang: string): string {
   if (!translated || translated === native) return native;
   return `${native} (${translated})`;
 }
-
-// Resolved outside render so ESLint doesn't flag it as a component created during render
-const THEME_ICONS: Record<string, LucideIcon> = {
-  system: Monitor,
-  dark: Moon,
-  light: Sun,
-  cobalt: Palette,
-  velvet: Palette,
-  sage: Palette,
-};
 
 const iconBtn = 'size-8 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors rounded-lg flex-shrink-0 cursor-pointer';
 
@@ -53,7 +42,7 @@ export function ThemeLangSwitcher({ currentTheme, updateSetting, i18n }: ThemeLa
         <Tip content={t('settings.interface.theme')} side="bottom">
           <PopoverTrigger asChild>
             <button className={`${iconBtn} hidden sm:flex`} aria-label={t('settings.interface.theme')}>
-              {(() => { const TI = THEME_ICONS[currentTheme] || Moon; return <TI className="size-3.5" />; })()}
+              <Icon name={THEMES.find(t => t.id === currentTheme)?.iconName || 'dark_mode'} size={14} />
             </button>
           </PopoverTrigger>
         </Tip>
@@ -66,7 +55,7 @@ export function ThemeLangSwitcher({ currentTheme, updateSetting, i18n }: ThemeLa
             >
               <span className={`size-3 rounded-full shrink-0 ${swatch}`} />
               <span className="flex-1 text-left">{label}</span>
-              <Check className={`size-3 shrink-0 ${currentTheme === id ? 'text-primary' : 'invisible'}`} />
+              <Icon name="check" size={12} className={`shrink-0 ${currentTheme === id ? 'text-primary' : 'invisible'}`} />
             </PopoverItem>
           ))}
         </PopoverContent>
@@ -79,7 +68,7 @@ export function ThemeLangSwitcher({ currentTheme, updateSetting, i18n }: ThemeLa
         <Tip content={t('settings.interface.language')} side="bottom">
           <PopoverTrigger asChild>
             <button className={`${iconBtn} gap-0.5 w-auto px-2`} aria-label={t('settings.interface.language')}>
-              <Globe className="size-3.5 shrink-0" />
+              <Icon name="language" size={14} className="shrink-0" />
               <span className="text-[10px] font-bold tracking-wide">{currentLang}</span>
             </button>
           </PopoverTrigger>
@@ -96,7 +85,7 @@ export function ThemeLangSwitcher({ currentTheme, updateSetting, i18n }: ThemeLa
                 className={`flex items-center gap-2.5 cursor-pointer text-sm py-2 ${active ? 'text-primary' : ''}`}
               >
                 <span className="flex-1 text-left">{label}</span>
-                <Check className={`size-3 shrink-0 ${active ? 'text-primary' : 'invisible'}`} />
+                <Icon name="check" size={12} className={`shrink-0 ${active ? 'text-primary' : 'invisible'}`} />
               </PopoverItem>
             );
           })}

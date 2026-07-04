@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
-import { X, Star, GitFork, UserPlus, ShieldCheck, Lock, KeyRound, Ban, Smile, Award, Inbox, CheckCheck, Zap, UserCog, Undo2 } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
+import { Icon } from '@/shared/ui/Icon';
 import { useNavigate } from 'react-router-dom';
 import { LazyImage } from '@ui/LazyImage';
 import { useNotificationsContext } from '../NotificationsContext';
@@ -27,22 +27,22 @@ export interface NotificationData {
   meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string } | null;
 }
 
-const TYPE_ICON: Record<string, typeof Star> = {
-  star:             Star,
-  fork:             GitFork,
-  follow:           UserPlus,
-  reaction:         Smile,
-  admin_granted:    ShieldCheck,
-  password_changed: Lock,
-  set_password:     KeyRound,
-  verify_email:     KeyRound,
-  ban:              Ban,
-  badge_awarded:    Award,
-  request_submitted: Inbox,
-  request_reviewed:  CheckCheck,
-  xp_changed:        Zap,
-  role_changed:      UserCog,
-  unban:             Undo2,
+const TYPE_ICON_NAME: Record<string, string> = {
+  star:             'star',
+  fork:             'call_split',
+  follow:           'person_add',
+  reaction:         'sentiment_satisfied',
+  admin_granted:    'verified_user',
+  password_changed: 'lock',
+  set_password:     'key',
+  verify_email:     'key',
+  ban:              'block',
+  badge_awarded:    'military_tech',
+  request_submitted: 'inbox',
+  request_reviewed:  'done_all',
+  xp_changed:        'bolt',
+  role_changed:      'manage_accounts',
+  unban:             'undo',
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -152,12 +152,12 @@ export function NotificationAvatar({ notification }: { notification: Notificatio
       );
   }
 
-  const Icon = TYPE_ICON[type];
-  if (!Icon) return null;
+  const iconName = TYPE_ICON_NAME[type];
+  if (!iconName) return null;
   const isBadge = type === 'badge_awarded';
   return (
     <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center ${isBadge ? 'bg-amber-400/10' : 'bg-primary/10'}`}>
-      <Icon size={14} className={isBadge ? 'text-amber-400' : 'text-primary'} aria-hidden="true" />
+      <Icon name={iconName} size={14} className={isBadge ? 'text-amber-400' : 'text-primary'} aria-hidden="true" />
     </div>
   );
 }
@@ -201,7 +201,7 @@ export function NotificationItem({ notification }: { notification: NotificationD
           className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors"
           aria-label={t('notifications.dismiss')}
         >
-          <X size={14} />
+          <Icon name="close" size={14} />
         </button>
       </div>
     </div>

@@ -7,7 +7,7 @@ import ProjectSetupModalRaw from '@features/editor/components/setup/ProjectSetup
 import useConfirm from '@/shared/hooks/useConfirm';
 import { useSettings } from '@/features/settings/useSettings';
 import useInputMethod from '@/shared/hooks/useInputMethod';
-import { FileText, AlertCircle } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import ProjectCard from './ProjectCard.jsx';
 import ProjectListRaw from './ProjectList';
@@ -120,7 +120,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
       ) : error ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
           <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
-            <AlertCircle className="size-7 text-zinc-500" />
+            <Icon name="error" size={28} className="text-zinc-500" />
           </div>
           <p className="text-sm text-zinc-400 font-medium">{t('common.loadError')}</p>
           <button onClick={fetchProjects} className="text-xs text-primary hover:text-primary/70 transition-colors font-medium">
@@ -135,7 +135,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
           className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6"
         >
           <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
-            <FileText className="size-7 text-zinc-500" />
+            <Icon name="description" size={28} className="text-zinc-500" />
           </div>
           <p className="text-sm text-zinc-400 font-medium">{t('library.empty')}</p>
           <p className="text-xs text-zinc-500">{t('library.emptyHint')}</p>

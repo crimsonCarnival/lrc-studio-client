@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatTimeAgo } from '../timeAgo';
 
@@ -19,7 +19,7 @@ function StickyCard({ labelKey, to, createdAt }: { labelKey: 'notifications.veri
       className="w-full mx-3 my-2 flex items-center gap-3 rounded-lg border-l-4 border-primary bg-primary/10 px-4 py-3 hover:bg-primary/15 transition-colors text-left"
       style={{ width: 'calc(100% - 1.5rem)' }}
     >
-      <Settings size={15} className="shrink-0 text-primary" aria-hidden="true" />
+      <Icon name="settings" size={15} className="shrink-0 text-primary" aria-hidden="true" />
       <div className="flex flex-col gap-0.5 min-w-0">
         <p className="text-sm text-primary">{t(labelKey)}</p>
         {createdAt && (

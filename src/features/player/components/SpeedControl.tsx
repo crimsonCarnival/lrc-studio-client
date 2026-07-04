@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from '@ui/popover';
 import { Tip } from '@ui/tip';
-import { ChevronDown, Minus, Plus } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 interface SpeedControlProps {
   playbackSpeed: number;
@@ -55,7 +55,7 @@ const SpeedControl = memo(function SpeedControl({
           className="size-8 lg:w-6 lg:h-6 flex items-center justify-center rounded-full lg:rounded bg-zinc-800/60 lg:bg-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label={t('player.decreaseSpeed')}
         >
-          <Minus className="size-4 lg:w-3 lg:h-3" />
+          <Icon name="remove" size={16} className="lg:size-3" />
         </button>
       </Tip>
 
@@ -73,7 +73,7 @@ const SpeedControl = memo(function SpeedControl({
               }`}
             >
               <span className="text-[13px] lg:text-sm">{playbackSpeed}x</span>
-              <ChevronDown className="size-3 lg:w-2.5 lg:h-2.5 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+              <Icon name="expand_more" size={12} className="lg:size-2.5 transition-transform duration-200 group-data-[state=open]:rotate-180" />
             </Button>
           </PopoverTrigger>
         </Tip>
@@ -135,7 +135,7 @@ const SpeedControl = memo(function SpeedControl({
           className="size-8 lg:w-6 lg:h-6 flex items-center justify-center rounded-full lg:rounded bg-zinc-800/60 lg:bg-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label={t('player.increaseSpeed')}
         >
-          <Plus className="size-4 lg:w-3 lg:h-3" />
+          <Icon name="add" size={16} className="lg:size-3" />
         </button>
       </Tip>
     </div>

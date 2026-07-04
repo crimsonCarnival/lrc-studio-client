@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Loader2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Textarea } from '@ui/textarea';
@@ -237,7 +237,7 @@ export default function ProfileForm() {
               disabled={saving}
               className="bg-primary hover:bg-primary-dim text-zinc-950 font-semibold rounded-lg h-8 px-4 text-xs gap-1.5"
             >
-              {saving && <Loader2 className="size-3 animate-spin" />}
+              {saving && <Icon name="progress_activity" size={12} className="animate-spin" />}
               {t('profile.save')}
             </Button>
           </div>

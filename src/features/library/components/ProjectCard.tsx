@@ -1,7 +1,7 @@
 import { useRef, useCallback, memo } from 'react';
 import type { TouchEvent, MouseEvent, KeyboardEvent } from 'react';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
-import { FileText, Trash2, ExternalLink, Clock, Pencil, Loader2, Star, GitFork } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { ProjectListCover } from '@/features/projects/components/ProjectListCover';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
@@ -186,7 +186,7 @@ function ProjectCard({
               {project.forkedFrom?.publicId && (
                 <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { username: project.forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject')}>
                   <span className="text-[10px] font-bold uppercase text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-1.5 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
-                    <ExternalLink className="size-2.5" />
+                    <Icon name="open_in_new" size={10} />
                     {t('share.forkedBadge')}
                   </span>
                 </Tip>
@@ -195,12 +195,12 @@ function ProjectCard({
 
             <div className="flex items-center gap-3 mt-1">
               <span className="text-xs text-zinc-500 flex items-center gap-1">
-                <FileText className="size-3" />
+                <Icon name="description" size={12} />
                 {t('library.lines', { count: project.lineCount || 0 })}
               </span>
               {project.upload?.duration && (
                 <span className="text-xs text-zinc-500 flex items-center gap-1">
-                  <Clock className="size-3" />
+                  <Icon name="schedule" size={12} />
                   {Math.floor(project.upload.duration / 60)}:{String(Math.floor(project.upload.duration % 60)).padStart(2, '0')}
                 </span>
               )}
@@ -212,13 +212,13 @@ function ProjectCard({
               )}
               {(project.starCount ?? 0) > 0 && (
                 <span className="text-xs text-zinc-500 flex items-center gap-1">
-                  <Star className="size-3" />
+                  <Icon name="star" size={12} />
                   {project.starCount}
                 </span>
               )}
               {(project.forkCount ?? 0) > 0 && (
                 <span className="text-xs text-zinc-500 flex items-center gap-1">
-                  <GitFork className="size-3" />
+                  <Icon name="call_split" size={12} />
                   {project.forkCount}
                 </span>
               )}
@@ -243,7 +243,7 @@ function ProjectCard({
                 onClick={handleEdit}
                 className="text-zinc-500 hover:text-primary hover:bg-primary/10 size-7"
               >
-                <Pencil className="size-3.5" />
+                <Icon name="edit" size={14} />
               </Button>
             </Tip>
             <Button
@@ -254,8 +254,8 @@ function ProjectCard({
               className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10 size-7"
             >
               {isDeleting
-                ? <Loader2 className="size-3.5 animate-spin" />
-                : <Trash2 className="size-3.5" />}
+                ? <Icon name="progress_activity" size={14} className="animate-spin" />
+                : <Icon name="delete" size={14} />}
             </Button>
           </div>
         </div>
@@ -298,7 +298,7 @@ function ProjectCard({
             {project.forkedFrom?.publicId && (
               <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { username: project.forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject')}>
                 <span className="text-[10px] font-bold uppercase text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-1.5 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
-                  <ExternalLink className="size-2.5" />
+                  <Icon name="open_in_new" size={10} />
                   {t('share.forkedBadge')}
                 </span>
               </Tip>
@@ -307,12 +307,12 @@ function ProjectCard({
 
           <div className="flex items-center gap-3 mt-1">
             <span className="text-xs text-zinc-500 flex items-center gap-1">
-              <FileText className="size-3" />
+              <Icon name="description" size={12} />
               {t('library.lines', { count: project.lineCount || 0 })}
             </span>
             {project.upload?.duration && (
               <span className="text-xs text-zinc-500 flex items-center gap-1">
-                <Clock className="size-3" />
+                <Icon name="schedule" size={12} />
                 {Math.floor(project.upload.duration / 60)}:{String(Math.floor(project.upload.duration % 60)).padStart(2, '0')}
               </span>
             )}
@@ -343,7 +343,7 @@ function ProjectCard({
               onClick={handleEdit}
               className="text-zinc-500 hover:text-primary hover:bg-primary/10 size-7"
             >
-              <Pencil className="size-3.5" />
+              <Icon name="edit" size={14} />
             </Button>
           </Tip>
           <Button
@@ -354,8 +354,8 @@ function ProjectCard({
             className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10 size-7"
           >
             {isDeleting
-              ? <Loader2 className="size-3.5 animate-spin" />
-              : <Trash2 className="size-3.5" />}
+              ? <Icon name="progress_activity" size={14} className="animate-spin" />
+              : <Icon name="delete" size={14} />}
           </Button>
         </div>
       </div>

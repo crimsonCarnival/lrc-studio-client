@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import { useTranslation } from 'react-i18next';
-import { Music, Star, Pencil, Lock, Play } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -139,13 +139,13 @@ export default function ListPage() {
             {playlist.coverImage ? (
               <img src={playlist.coverImage} alt={playlist.name} className="w-full h-full object-cover" />
             ) : (
-              <Music className="size-12 text-muted-foreground" />
+              <Icon name="music_note" size={48} className="text-muted-foreground" />
             )}
           </div>
 
           <div className="flex-1 min-w-0 pb-2">
             <div className="flex items-center gap-2 mb-1">
-              {!playlist.isPublic && <Lock className="size-4 text-muted-foreground" />}
+              {!playlist.isPublic && <Icon name="lock" size={16} className="text-muted-foreground" />}
               <span className="text-xs text-muted-foreground uppercase tracking-widest font-medium">
                 {t('playlists.tab')}
               </span>
@@ -193,13 +193,13 @@ export default function ListPage() {
                   onClick={() => navigate(`/project/${playlist.projects![0].publicId}?list=${listId}`)}
                   className="gap-1.5 rounded-full"
                 >
-                  <Play className="size-4" fill="currentColor" />
+                  <Icon name="play_arrow" size={16} filled />
                   {t('playlists.detail.playAll')}
                 </Button>
               )}
               {isOwner ? (
                 <Button size="sm" variant="outline" onClick={() => setShowEdit(true)} className="gap-1.5">
-                  <Pencil className="size-4" />
+                  <Icon name="edit" size={16} />
                   {t('playlists.detail.edit')}
                 </Button>
               ) : isSaved ? (
@@ -248,7 +248,7 @@ export default function ListPage() {
                   {thumb ? (
                     <img src={thumb} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   ) : (
-                    <Music className="size-4 text-muted-foreground" />
+                    <Icon name="music_note" size={16} className="text-muted-foreground" />
                   )}
                 </div>
 
@@ -264,7 +264,7 @@ export default function ListPage() {
                 </div>
 
                 <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-                  <Star className="size-3" />
+                  <Icon name="star" size={12} />
                   {project.starCount ?? 0}
                 </span>
               </Link>

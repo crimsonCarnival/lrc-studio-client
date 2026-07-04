@@ -3,7 +3,7 @@ import type { TFunction } from 'i18next';
 import { useSearchParams, useNavigate, Navigate } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 
 function SuccessScreen({ navigate, t }: { navigate: NavigateFunction; t: TFunction }) {
@@ -14,7 +14,7 @@ function SuccessScreen({ navigate, t }: { navigate: NavigateFunction; t: TFuncti
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 text-center">
-      <CheckCircle2 className="size-14 text-primary" />
+      <Icon name="check_circle" size={56} className="text-primary" />
       <div className="space-y-1">
         <h1 className="text-xl font-bold text-zinc-100">{t('auth.verification.landingSuccess')}</h1>
         <p className="text-sm text-zinc-400">{t('auth.verification.landingSuccessDesc')}</p>
@@ -58,7 +58,7 @@ export default function VerifyEmailPage() {
   if (!status) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">
-        <Loader2 className="size-10 animate-spin text-primary" />
+        <Icon name="progress_activity" size={40} className="animate-spin text-primary" />
       </div>
     );
   }
@@ -76,7 +76,7 @@ export default function VerifyEmailPage() {
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 text-center">
-      <XCircle className="size-14 text-red-400" />
+      <Icon name="cancel" size={56} className="text-red-400" />
       <div className="space-y-1">
         <h1 className="text-xl font-bold text-zinc-100">{t('auth.verification.landingError')}</h1>
         <p className="text-sm text-zinc-400">{getMessage()}</p>

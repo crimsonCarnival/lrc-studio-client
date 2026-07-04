@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Save } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import toast from 'react-hot-toast';
@@ -102,7 +102,7 @@ export default function EmailSection() {
         className="h-9 rounded-xl font-bold gap-2 text-sm"
         size="sm"
       >
-        {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+        {saving ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="save" size={16} />}
         {t('profile.save')}
       </Button>
 

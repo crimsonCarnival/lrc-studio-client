@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldAlert, Loader2, Fingerprint } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import {
   AlertDialog,
@@ -102,7 +102,7 @@ export default function SudoPasswordModal() {
         <AlertDialogHeader>
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 bg-gradient-to-br from-amber-500 to-amber-700 shadow-amber-500/20">
-              <ShieldAlert className="size-5 text-white" />
+              <Icon name="gpp_bad" size={20} className="text-white" />
             </div>
             <AlertDialogTitle className="text-lg font-semibold text-zinc-100">
               {t('admin.sudo.title')}
@@ -134,7 +134,7 @@ export default function SudoPasswordModal() {
                 disabled={!password || submitting}
                 className="w-full py-2.5 font-semibold text-sm rounded-xl transition-all bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {submitting && <Loader2 className="size-4 animate-spin" />}
+                {submitting && <Icon name="progress_activity" size={16} className="animate-spin" />}
                 {t('admin.sudo.confirm')}
               </button>
             </form>
@@ -155,7 +155,7 @@ export default function SudoPasswordModal() {
               disabled={submitting}
               className="w-full py-2.5 font-semibold text-sm rounded-xl transition-all bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              <Fingerprint className="size-4" />
+              <Icon name="fingerprint" size={16} />
               {t('admin.sudo.usePasskey')}
             </button>
           )}

@@ -3,7 +3,7 @@ import type { ComponentProps, RefObject } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { Button } from '@ui/button';
-import { MoreHorizontal } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useTranslation } from 'react-i18next';
 import EditorLineItem from '../line/EditorLineItem';
 import SelectionActionBar from './SelectionActionBar';
@@ -403,7 +403,7 @@ export default function VirtualizedLineList({
               onClick={onBulkMenu}
               className="bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 text-xs h-8 rounded-full px-3"
             >
-              <MoreHorizontal className="size-3.5 mr-1.5" />
+              <Icon name="more_horiz" size={14} className="mr-1.5" />
               {t('editor.selection.actions') || 'Selection Actions'}
               <span className="ml-1.5 bg-primary/20 px-1.5 rounded-full text-[10px] font-bold">
                 {selectedLines.size}

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import type { FormEvent } from 'react';
 import type { TFunction } from 'i18next';
-import { ArrowLeft, Eye, EyeOff, Loader2, Lightbulb, Fingerprint } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { AnimatePresence, m } from 'framer-motion';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
@@ -93,7 +93,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
             {identifierData.accountName || identifierData.identifier}
           </p>
           <p className="text-xs text-zinc-500 flex items-center gap-1 group-hover:text-primary transition-colors">
-            <ArrowLeft className="size-3" />
+            <Icon name="arrow_back" size={12} />
             {t('auth.notYou')}
           </p>
         </div>
@@ -114,7 +114,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
             <div className="relative">
               <div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
                 <Tip content={t('auth.tips.loginPassword')}>
-                  <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
+                  <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
                 </Tip>
               </div>
               <FloatingInput
@@ -139,7 +139,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                   className="absolute right-3 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center text-zinc-400 hover:text-zinc-300 transition-colors rounded-lg z-10 focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
                   aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                 >
-                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  {showPassword ? <Icon name="visibility_off" size={16} /> : <Icon name="visibility" size={16} />}
                 </m.button>
               )}
             </div>
@@ -175,7 +175,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
             className="h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 mt-1 disabled:cursor-not-allowed focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
           >
             {loading
-              ? <Loader2 className="size-4 animate-spin" />
+              ? <Icon name="progress_activity" size={16} className="animate-spin" />
               : t('auth.loginAction')
             }
           </m.button>
@@ -190,10 +190,10 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
             className="flex items-center justify-center gap-2 h-12 lg:h-10 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-normal text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 disabled:cursor-not-allowed focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none border border-zinc-700"
           >
             {passkeyLoading ? (
-              <Loader2 className="size-4 animate-spin" />
+              <Icon name="progress_activity" size={16} className="animate-spin" />
             ) : (
               <>
-                <Fingerprint className="size-4 text-primary" />
+                <Icon name="fingerprint" size={16} className="text-primary" />
                 {t('auth.passkeyManagement.tryPasskey')}
               </>
             )}

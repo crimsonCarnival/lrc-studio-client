@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router-dom';
-import { Check, X, Fingerprint, Loader2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { AvatarBadge } from './auth-shared';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -78,7 +78,7 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
           disabled={loading}
           className="h-11 w-full bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-sm rounded-xl gap-2"
         >
-          {loading ? <Loader2 className="size-4 animate-spin" /> : <Fingerprint className="size-4" />}
+          {loading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="fingerprint" size={16} />}
           {t('auth.savedAccount.createPasskey')}
         </Button>
         <Button
@@ -87,7 +87,7 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
           variant="outline"
           className="h-11 w-full border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800/50 font-normal text-sm rounded-xl gap-2"
         >
-          <Check className="size-4" />
+          <Icon name="check" size={16} />
           {t('auth.savedAccount.save')}
         </Button>
         <Button
@@ -96,7 +96,7 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
           disabled={loading}
           className="h-11 w-full text-zinc-500 hover:text-zinc-300 font-normal text-sm rounded-xl gap-2 mt-1"
         >
-          <X className="size-4" />
+          <Icon name="close" size={16} />
           {t('auth.savedAccount.skip')}
         </Button>
       </div>

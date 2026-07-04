@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { PlaylistCard } from './PlaylistCard';
 import { PlaylistModal } from './PlaylistModal';
@@ -91,7 +91,7 @@ export function PlaylistGrid({ accountName, isOwner }: { accountName: string; is
       {isOwner && (
         <div className="flex justify-end mb-4">
           <Button size="sm" onClick={() => setShowModal(true)} className="flex items-center gap-1.5">
-            <Plus className="size-4" />
+            <Icon name="add" size={16} />
             {t('playlists.new')}
           </Button>
         </div>

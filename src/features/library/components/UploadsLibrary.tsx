@@ -10,7 +10,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
-import { Cloud, Video, Trash2, Loader2, Music2, Clock, Edit2, Check, X, AlertCircle } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import useConfirm from '@/shared/hooks/useConfirm';
@@ -29,7 +29,7 @@ interface Upload {
 function SourceIcon({ source }: { source?: string }) {
   if (source === 'youtube') return <svg preserveAspectRatio="xMidYMid" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" /><path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" className="size-4 text-red-400" /></svg>;
 
-  return <Cloud className="size-4 text-blue-400" />;
+  return <Icon name="cloud" size={16} className="text-blue-400" />;
 }
 
 function SourceLabel({ source, t }: { source?: string; t: TFunction }) {
@@ -149,7 +149,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
       ) : error ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
           <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
-            <AlertCircle className="size-7 text-zinc-500" />
+            <Icon name="error" size={28} className="text-zinc-500" />
           </div>
           <p className="text-sm text-zinc-400 font-medium">{t('common.loadError')}</p>
           <button onClick={fetchUploads} className="text-xs text-primary hover:text-primary/70 transition-colors font-medium">
@@ -159,7 +159,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
       ) : items.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
           <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
-            <Music2 className="size-7 text-zinc-500" />
+            <Icon name="music_note" size={28} className="text-zinc-500" />
           </div>
           <p className="text-sm text-zinc-400 font-medium">{dt('uploads.empty')}</p>
           <p className="text-xs text-zinc-500">{dt('uploads.emptyHint')}</p>
@@ -209,7 +209,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
                   )}
                   {(upload.duration ?? 0) > 0 && (
                     <span className="text-xs text-zinc-500 flex items-center gap-1">
-                      <Clock className="size-3" />
+                      <Icon name="schedule" size={12} />
                       {formatTime(upload.duration ?? 0)}
                     </span>
                   )}
@@ -239,9 +239,9 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
                       className="text-primary/70 hover:text-primary hover:bg-primary/10 size-7"
                     >
                       {savingTitle ? (
-                        <Loader2 className="size-3.5 animate-spin" />
+                        <Icon name="progress_activity" size={14} className="animate-spin" />
                       ) : (
-                        <Check className="size-3.5" />
+                        <Icon name="check" size={14} />
                       )}
                     </Button>
                     <Button
@@ -251,7 +251,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
                       disabled={savingTitle}
                       className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700 size-7"
                     >
-                      <X className="size-3.5" />
+                      <Icon name="close" size={14} />
                     </Button>
                   </>
                 ) : (
@@ -262,7 +262,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
                       onClick={(e) => handleStartEdit(e, upload)}
                       className="text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 size-7"
                     >
-                      <Edit2 className="size-3.5" />
+                      <Icon name="edit" size={14} />
                     </Button>
                     <Button
                       variant="ghost"
@@ -272,8 +272,8 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
                       className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10 size-7"
                     >
                       {deletingId === upload.id
-                        ? <Loader2 className="size-3.5 animate-spin" />
-                        : <Trash2 className="size-3.5" />}
+                        ? <Icon name="progress_activity" size={14} className="animate-spin" />
+                        : <Icon name="delete" size={14} />}
                     </Button>
                   </>
                 )}

@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@ui/input';
-import { Loader2, Search } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import toast from 'react-hot-toast';
 import { lyricsSearch } from '@features/editor/services/lyricsSearch.service';
 import LyricsResultCard from './LyricsResultCard';
@@ -121,7 +121,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
     <div className="flex flex-col gap-2 w-full">
       {!selectedSong && (
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none" />
+          <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
           <Input
             value={query}
             onChange={handleQueryChange}
@@ -129,7 +129,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
             className="pl-8 lg:pl-8 pr-8 lg:pr-8 bg-zinc-900 border-zinc-700"
           />
           {isSearching && (
-            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-400 animate-spin pointer-events-none" />
+            <Icon name="progress_activity" size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 animate-spin pointer-events-none" />
           )}
         </div>
       )}

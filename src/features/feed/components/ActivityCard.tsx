@@ -2,20 +2,20 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { Star, GitFork, Globe, Repeat2, ListMusic, UserPlus } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useIntersectionLoader } from '../hooks/useIntersectionLoader';
 import { ReactionBar } from '@features/reactions/components/ReactionBar';
 import { useCardReactions } from '@features/reactions/hooks/useCardReactions';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { UserHoverCard } from '@ui/UserHoverCard';
 
-const TYPE_ICONS: Record<string, typeof Star> = {
-  PROJECT_PUBLISHED: Globe,
-  PROJECT_STARRED:   Star,
-  PROJECT_FORKED:    GitFork,
-  PROJECT_BOOSTED:   Repeat2,
-  PLAYLIST_CREATED:  ListMusic,
-  USER_FOLLOWED:     UserPlus,
+const TYPE_ICON_NAMES: Record<string, string> = {
+  PROJECT_PUBLISHED: 'language',
+  PROJECT_STARRED:   'star',
+  PROJECT_FORKED:    'call_split',
+  PROJECT_BOOSTED:   'repeat',
+  PLAYLIST_CREATED:  'queue_music',
+  USER_FOLLOWED:     'person_add',
 };
 
 const TYPE_I18N_KEY: Record<string, string> = {
@@ -82,7 +82,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
   const { t } = useTranslation();
   const tk = t as (key: string, options?: object) => unknown;
   const { id, actor, type, publicId, projectTitle, coverImage, targetPath, createdAt } = activity;
-  const Icon       = TYPE_ICONS[type] ?? Star;
+  const iconName   = TYPE_ICON_NAMES[type] ?? 'star';
   const i18nKey    = TYPE_I18N_KEY[type] ?? 'project_starred';
   const actionText = pick(tk(`feed.action.${i18nKey}`, { returnObjects: true }), id);
 
@@ -154,7 +154,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
         </p>
       </div>
 
-      <Icon className="w-4 h-4 text-zinc-600 shrink-0 mt-0.5" />
+      <Icon name={iconName} size={16} className="text-zinc-600 shrink-0 mt-0.5" />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { Sparkles } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 interface AdminXpTabProps {
   onAdjustXP: (action: string, amount: number, target: string, userId?: string, userIds?: string[]) => Promise<void>;
@@ -36,7 +36,7 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
       {/* Header */}
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <Sparkles className="size-4 text-amber-400" />
+          <Icon name="auto_awesome" size={16} className="text-amber-400" />
           <h2 className="text-sm font-semibold text-zinc-200">{t('admin.xp.sectionTitle')}</h2>
         </div>
         <p className="text-xs text-zinc-500">{t('admin.xp.sectionDescription')}</p>
@@ -90,7 +90,7 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
             disabled={xpBulkSaving}
             className="flex items-center gap-2 h-9 px-5 text-sm font-semibold rounded-xl bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors disabled:opacity-50"
           >
-            <Sparkles className="size-3.5" />
+            <Icon name="auto_awesome" size={14} />
             {t('admin.xp.grantXp')}
           </button>
           <button

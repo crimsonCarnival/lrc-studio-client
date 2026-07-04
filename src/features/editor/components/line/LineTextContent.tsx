@@ -1,7 +1,7 @@
 import { memo, useState, Fragment } from 'react';
 import type { RefObject } from 'react';
 import { parseRubyMarkup, hasKanji, isKanji, hasCJK, toHiragana, toKatakana } from '@/shared/utils/furigana';
-import { Brush, Eraser } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { ReadingInput } from './ReadingInput';
 import { Tip } from '@ui/tip';
 import { useTranslation } from 'react-i18next';
@@ -126,7 +126,7 @@ const LineTextContent = memo(({
     <div className={`flex flex-col gap-1 group/text min-w-0 w-full ${editorMode === 'words' ? 'pt-0.5' : ''}`}>
       {hasSingerSplit && (
         <div className="flex items-center gap-1.5 mb-1 bg-zinc-900/50 p-1 rounded-md border border-zinc-800/50 self-start">
-          <Brush className="size-3 text-zinc-500 ml-1" />
+          <Icon name="brush" size={12} className="text-zinc-500 ml-1" />
           <div className="w-px h-3 bg-zinc-700/50 mx-0.5" />
           {line.singers!.map((singer, idx) => {
             const globalIdx = singerColorIndex(singer, roster);
@@ -148,7 +148,7 @@ const LineTextContent = memo(({
               activePaintSinger === -1 ? 'bg-zinc-700 ring-1 ring-zinc-500' : 'hover:bg-zinc-800 text-zinc-500'
             }`}
           >
-            <Eraser className="size-3" />
+            <Icon name="ink_eraser" size={12} />
           </button>
         </div>
       )}

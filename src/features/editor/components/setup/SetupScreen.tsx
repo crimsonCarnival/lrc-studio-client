@@ -13,10 +13,7 @@ import { TagsSelector } from '@ui/tags-selector';
 import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { getMyMusicLibrary } from '@/features/editor/music-library.service';
 import { parseRawLyricsText } from '@/features/editor/utils/parseRawLyrics';
-import {
-  FolderOpen, Upload, Check, ArrowRight,
-  Link2, Loader2, Lock, Search
-} from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useSetupContext } from '@/features/editor/SetupContext';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { lyrics as lyricsApi, uploads as uploadsApi, songMetadata as songMetadataApi, getAccessToken } from '@/app/api';
@@ -524,7 +521,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     disabled={metaSearching}
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
                   >
-                    {metaSearching && <Loader2 className="size-3 animate-spin" />}
+                    {metaSearching && <Icon name="progress_activity" size={12} className="animate-spin" />}
                     {t('setup.fetchInfo')}
                   </button>
                 </Tip>
@@ -637,9 +634,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-zinc-700/50 bg-transparent text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
               >
                 {imageUploading ? (
-                  <Loader2 className="size-4 animate-spin" />
+                  <Icon name="progress_activity" size={16} className="animate-spin" />
                 ) : (
-                  <Upload className="size-4" />
+                  <Icon name="upload" size={16} />
                 )}
               </button>
               <input
@@ -721,7 +718,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 {audioReady ? (
                   <div className="flex-1 flex flex-col items-center justify-center gap-3 py-4 bg-zinc-900/30 rounded-xl border border-zinc-800/50 min-h-[140px]">
                     <div className="size-11 rounded-full bg-green-500/15 flex items-center justify-center ring-4 ring-green-500/5">
-                      <Check className="size-6 text-green-400" />
+                      <Icon name="check" size={24} className="text-green-400" />
                     </div>
                     <div className="text-center px-4">
                       <p className="text-sm font-semibold text-zinc-200">{t('setup.audioReady')}</p>
@@ -740,7 +737,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                         className="h-8 px-4 text-xs font-semibold gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50"
                       >
                         {t('setup.nextLyrics')}
-                        <ArrowRight className="size-3" />
+                        <Icon name="arrow_forward" size={12} />
                       </Button>
                     </div>
                   </div>
@@ -767,7 +764,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                               onClick={() => audioInputRef.current?.click()}
                               className="size-11 flex items-center justify-center rounded-xl bg-zinc-800 text-zinc-400 hover:text-primary hover:bg-zinc-700/50 transition-all shrink-0 border border-zinc-700/40 cursor-pointer"
                             >
-                              <FolderOpen className="size-5" />
+                              <Icon name="folder_open" size={20} />
                               <input ref={audioInputRef} id="setup-audio-input" type="file" accept="audio/*" onChange={handleAudioFile} className="hidden" />
                             </button>
                           </Tip>
@@ -781,20 +778,20 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                               onKeyDown={handleYtKeyDown}
                               className="pl-12 bg-transparent border-none text-sm h-11 focus:ring-0 focus-visible:ring-0 outline-none"
                             />
-                            {!ytUrl && <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-500 pointer-events-none" />}
+                            {!ytUrl && <Icon name="link" size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />}
                           </div>
                           <Button
                             onClick={handleLoadUrl}
                             disabled={!ytUrl.trim() || ytLoading}
                             className={`h-11 px-4 text-zinc-950 font-bold text-xs rounded-xl shrink-0 ${detectedUrlType === 'cdn' ? 'bg-blue-500 hover:bg-blue-400' : 'bg-primary hover:bg-primary-dim'}`}
                           >
-                            {ytLoading ? <Loader2 className="size-4 animate-spin" /> : t('player.load')}
+                            {ytLoading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : t('player.load')}
                           </Button>
                         </div>
 
                         {!user && (
                           <p className="text-[11px] text-zinc-500 px-1 flex items-center gap-1.5 shrink-0">
-                            <Lock className="size-3 text-zinc-600 shrink-0" />
+                            <Icon name="lock" size={12} className="text-zinc-600 shrink-0" />
                             {t('setup.guestUploadNote')}{' '}
                             <button onClick={() => navigate('/auth?action=signup')} className="text-primary hover:text-primary/80 underline underline-offset-2 font-medium">
                               {t('auth.signUp')}
@@ -825,7 +822,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 {parsedLines ? (
                   <div className="flex-1 flex flex-col items-center justify-center gap-3 py-4 bg-zinc-900/30 rounded-xl border border-zinc-800/50 min-h-[140px]">
                     <div className="size-11 rounded-full bg-green-500/15 flex items-center justify-center ring-4 ring-green-500/5">
-                      <Check className="size-6 text-green-400" />
+                      <Icon name="check" size={24} className="text-green-400" />
                     </div>
                     <div className="text-center px-4">
                       <p className="text-sm font-semibold text-zinc-200">{t('setup.lyricsReady')}</p>
@@ -874,7 +871,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                           htmlFor="setup-lyrics-input"
                           className="flex items-center gap-2 px-3 py-2.5 cursor-pointer group transition-colors rounded-xl bg-zinc-800/40 border border-zinc-700/40 hover:border-primary/30 hover:bg-zinc-800/80 shrink-0"
                         >
-                          <Upload className="size-4 text-zinc-500 group-hover:text-primary transition-colors" />
+                          <Icon name="upload" size={16} className="text-zinc-500 group-hover:text-primary transition-colors" />
                           <span className="text-sm font-medium text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('setup.importFile')}</span>
                           <span className="text-[10px] text-zinc-500 ml-1 hidden sm:inline">.lrc, .srt, .txt</span>
                           <input ref={lyricsInputRef} id="setup-lyrics-input" type="file" accept=".lrc,.srt,.txt" onChange={handleLyricsFile} className="hidden" />
@@ -893,7 +890,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                             }}
                             className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors text-xs font-medium shrink-0 w-full"
                           >
-                            <Search className="size-3.5 shrink-0 text-zinc-500" />
+                            <Icon name="search" size={14} className="shrink-0 text-zinc-500" />
                             <span className="truncate">
                               {t('lyricsSearch.searchFor')} &ldquo;{[songName, songArtist].filter(Boolean).join(' - ')}&rdquo;
                             </span>

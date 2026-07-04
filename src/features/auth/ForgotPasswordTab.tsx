@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 export default function ForgotPasswordTab({ onBackToLogin }: { onBackToLogin?: () => void }) {
@@ -78,7 +78,7 @@ export default function ForgotPasswordTab({ onBackToLogin }: { onBackToLogin?: (
           onClick={onBackToLogin}
           className="flex items-center gap-2 mb-6 text-sm font-semibold text-zinc-500 hover:text-primary transition-colors"
         >
-          <ArrowLeft className="size-4" />
+          <Icon name="arrow_back" size={16} />
           {t('auth.backToLogin')}
         </button>
       )}

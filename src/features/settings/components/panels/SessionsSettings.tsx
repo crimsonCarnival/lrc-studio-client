@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Monitor, Smartphone, Tablet, Loader2, ShieldOff } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { auth } from '@/app/api';
 import { formatInTimezone } from '@/shared/utils/date';
@@ -26,9 +26,9 @@ type RequestConfirm = (
 ) => void;
 
 function DeviceIcon({ deviceType, className = 'size-4 text-zinc-400' }: { deviceType?: string; className?: string }) {
-  if (deviceType === 'mobile') return <Smartphone className={className} />;
-  if (deviceType === 'tablet') return <Tablet className={className} />;
-  return <Monitor className={className} />;
+  if (deviceType === 'mobile') return <Icon name="smartphone" className={className} />;
+  if (deviceType === 'tablet') return <Icon name="tablet" className={className} />;
+  return <Icon name="desktop_windows" className={className} />;
 }
 
 export default function SessionsSettings() {
@@ -96,7 +96,7 @@ export default function SessionsSettings() {
   if (loading) {
     return (
       <div className="flex justify-center py-8">
-        <Loader2 className="size-5 animate-spin text-zinc-500" />
+        <Icon name="progress_activity" size={20} className="animate-spin text-zinc-500" />
       </div>
     );
   }
@@ -125,9 +125,9 @@ export default function SessionsSettings() {
             className="text-red-400 hover:text-red-300 hover:bg-red-500/10 text-xs h-8 flex-shrink-0"
           >
             {revokingAll ? (
-              <Loader2 className="size-3.5 animate-spin" />
+              <Icon name="progress_activity" size={14} className="animate-spin" />
             ) : (
-              <><ShieldOff className="size-3.5 mr-1.5" />{t('profile.sessions.revokeAllOthers')}</>
+              <><Icon name="no_encryption" size={14} className="mr-1.5" />{t('profile.sessions.revokeAllOthers')}</>
             )}
           </Button>
         )}
@@ -190,7 +190,7 @@ export default function SessionsSettings() {
                   className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 text-xs h-8 flex-shrink-0"
                 >
                   {revokingId === session.id ? (
-                    <Loader2 className="size-3.5 animate-spin" />
+                    <Icon name="progress_activity" size={14} className="animate-spin" />
                   ) : (
                     t('profile.sessions.signOut')
                   )}

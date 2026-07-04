@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import type { TFunction } from 'i18next';
 import { Trans } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Loader2, Zap, Lightbulb } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { z } from 'zod';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
@@ -90,7 +90,7 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
           <div className="relative">
             <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
               <Tip content={t('auth.tips.identifier')}>
-                <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
+                <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
               </Tip>
             </div>
             <FloatingInput
@@ -114,8 +114,8 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
           className="h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-sm rounded-xl gap-2 disabled:opacity-40 transition-all duration-200 mt-1"
         >
           {loading
-            ? <Loader2 className="size-4 animate-spin" />
-            : <>{t('auth.continue')} <ArrowRight className="size-4" /></>
+            ? <Icon name="progress_activity" size={16} className="animate-spin" />
+            : <>{t('auth.continue')} <Icon name="arrow_forward" size={16} /></>
           }
         </Button>
 
@@ -140,7 +140,7 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
             onClick={() => navigate('/project/new')}
             className="group flex items-center justify-center gap-2 py-1 text-xs font-semibold text-zinc-500 hover:text-primary transition-all duration-300"
           >
-            <Zap className="size-3.5 text-zinc-600 group-hover:text-primary group-hover:fill-primary/20 transition-all" />
+            <Icon name="bolt" size={14} className="text-zinc-600 group-hover:text-primary group-hover:fill-primary/20 transition-all" />
             {t('auth.guestMode')}
           </button>
         </div>

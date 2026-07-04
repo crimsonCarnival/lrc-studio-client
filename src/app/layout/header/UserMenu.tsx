@@ -2,10 +2,7 @@ import { useState } from 'react';
 import type { NavigateFunction } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
-import {
-  UploadCloud, Settings as SettingsIcon, LogOut, BookOpen,
-  ShieldAlert, User, Globe, Search, Compass, Trophy, Inbox,
-} from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
@@ -75,30 +72,30 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
 
           <div className="p-1 border-b border-zinc-800/60">
             <PopoverItem onClick={() => navigate('/search')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-              <span className="flex items-center gap-2"><Search className="size-4 text-zinc-400" />{t('search.title')}</span>
+              <span className="flex items-center gap-2"><Icon name="search" size={16} className="text-zinc-400" />{t('search.title')}</span>
             </PopoverItem>
             <PopoverItem onClick={() => navTo('/explore')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-              <span className="flex items-center gap-2"><Compass className="size-4 text-zinc-400" />{t('explore.nav')}</span>
+              <span className="flex items-center gap-2"><Icon name="explore" size={16} className="text-zinc-400" />{t('explore.nav')}</span>
             </PopoverItem>
             <PopoverItem onClick={() => navTo('/feed')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-              <span className="flex items-center gap-2"><Globe className="size-4 text-zinc-400" />{t('feed.title')}</span>
+              <span className="flex items-center gap-2"><Icon name="language" size={16} className="text-zinc-400" />{t('feed.title')}</span>
             </PopoverItem>
           </div>
 
           <div className="p-1 border-b border-zinc-800/60">
             <PopoverItem onClick={() => { navigate(user?.accountName ? `/${user.accountName}` : '/'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-              <User className="size-4 text-zinc-400" />{t('profile.title')}
+              <Icon name="person" size={16} className="text-zinc-400" />{t('profile.title')}
             </PopoverItem>
             <PopoverItem onClick={() => navTo('/library')} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">
-              <span className="flex items-center gap-2"><BookOpen className="size-4 text-zinc-400" />{t('library.title')}</span>
+              <span className="flex items-center gap-2"><Icon name="menu_book" size={16} className="text-zinc-400" />{t('library.title')}</span>
               {counts.library > 0 && <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.library}</span>}
             </PopoverItem>
             <PopoverItem onClick={() => navTo('/uploads')} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">
-              <span className="flex items-center gap-2"><UploadCloud className="size-4 text-zinc-400" />{t('uploads.title')}</span>
+              <span className="flex items-center gap-2"><Icon name="cloud_upload" size={16} className="text-zinc-400" />{t('uploads.title')}</span>
               {counts.uploads > 0 && <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.uploads}</span>}
             </PopoverItem>
             <PopoverItem onClick={() => navigate('/leaderboard')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-              <span className="flex items-center gap-2"><Trophy className="size-4 text-warning" />{t('badges.leaderboard.title')}</span>
+              <span className="flex items-center gap-2"><Icon name="emoji_events" size={16} className="text-warning" />{t('badges.leaderboard.title')}</span>
             </PopoverItem>
           </div>
 
@@ -106,20 +103,20 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
             {staff && (
               <>
                 <PopoverItem onClick={() => { navigate('/admin'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2 text-zinc-400 hover:text-zinc-200">
-                  <ShieldAlert className="size-4" />{t('admin.dashboard.title')}
+                  <Icon name="security" size={16} />{t('admin.dashboard.title')}
                 </PopoverItem>
                 <PopoverItem onClick={() => { navigate('/admin?tab=requests'); }} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2 text-zinc-400 hover:text-zinc-200">
-                  <span className="flex items-center gap-2"><Inbox className="size-4" />{t('admin.requests.title')}</span>
+                  <span className="flex items-center gap-2"><Icon name="mail" size={16} />{t('admin.requests.title')}</span>
                   {counts.requests > 0 && <span className="bg-primary/20 text-primary px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.requests}</span>}
                 </PopoverItem>
               </>
             )}
             <PopoverItem onClick={() => { navigate('/settings'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-              <SettingsIcon className="size-4 text-zinc-400" />{t('settings.title')}
+              <Icon name="settings" size={16} className="text-zinc-400" />{t('settings.title')}
             </PopoverItem>
             {setShowKeyboardHelp && (
               <PopoverItem onClick={() => { setShowKeyboardHelp(true); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
-                <BookOpen className="size-4 text-zinc-400" />{t('shortcuts.title')}
+                <Icon name="menu_book" size={16} className="text-zinc-400" />{t('shortcuts.title')}
               </PopoverItem>
             )}
           </div>
@@ -146,7 +143,7 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
               onClick={() => i18n?.changeLanguage(currentLang === 'es' ? 'en' : 'es')}
               className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2"
             >
-              <span className="flex items-center gap-2"><Globe className="size-4 text-zinc-400" />{t('settings.interface.language')}</span>
+              <span className="flex items-center gap-2"><Icon name="language" size={16} className="text-zinc-400" />{t('settings.interface.language')}</span>
               <span className="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold uppercase">{currentLang}</span>
             </PopoverItem>
           </div>
@@ -156,7 +153,7 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
               await logout();
               window.location.href = '/auth/signin?from=logout';
             }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2 text-red-400 hover:text-red-300">
-              <LogOut className="size-4" />{t('auth.signOut')}
+              <Icon name="logout" size={16} />{t('auth.signOut')}
             </PopoverItem>
           </div>
         </PopoverContent>

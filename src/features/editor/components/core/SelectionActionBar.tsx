@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Badge } from '@ui/badge';
 import { Separator } from '@ui/separator';
-import { Eraser, ChevronLeft, ChevronRight, Trash2, X, ChevronsLeft, ChevronsRight, User, Layers } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import { getSingerOptionsForSelection } from '@features/editor/utils/sections';
@@ -71,7 +71,7 @@ export default function SelectionActionBar({
           onClick={handleBulkClearTimestamps}
           className="text-orange-400 hover:bg-orange-500/15 hover:text-orange-300"
         >
-          <Eraser className="size-3.5" />
+          <Icon name="ink_eraser" size={14} />
         </Button>
       </Tip>
       <Tip content={`(-${settings.editor?.nudge?.default || 0.1}s)`}>
@@ -81,7 +81,7 @@ export default function SelectionActionBar({
           onClick={() => handleBulkShift(-(settings.editor?.nudge?.default || 0.1))}
           className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60"
         >
-          <ChevronLeft className="size-3.5" />
+          <Icon name="chevron_left" size={14} />
         </Button>
       </Tip>
       <Tip content={`(+${settings.editor?.nudge?.default || 0.1}s)`}>
@@ -91,7 +91,7 @@ export default function SelectionActionBar({
           onClick={() => handleBulkShift((settings.editor?.nudge?.default || 0.1))}
           className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60"
         >
-          <ChevronRight className="size-3.5" />
+          <Icon name="chevron_right" size={14} />
         </Button>
       </Tip>
       {/* Shift All (larger offset) */}
@@ -105,7 +105,7 @@ export default function SelectionActionBar({
               onClick={() => handleApplyOffset(-shiftAmount)}
               className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60"
             >
-              <ChevronsLeft className="size-3.5" />
+              <Icon name="keyboard_double_arrow_left" size={14} />
             </Button>
           </Tip>
           <Tip content={`${t('editor.shiftAll')} (+${shiftAmount}s)`}>
@@ -115,7 +115,7 @@ export default function SelectionActionBar({
               onClick={() => handleApplyOffset(shiftAmount)}
               className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60"
             >
-              <ChevronsRight className="size-3.5" />
+              <Icon name="keyboard_double_arrow_right" size={14} />
             </Button>
           </Tip>
         </>
@@ -151,7 +151,7 @@ export default function SelectionActionBar({
           onClick={handleBulkDelete}
           className="text-red-400 hover:bg-red-500/15 hover:text-red-300"
         >
-          <Trash2 className="size-3.5" />
+          <Icon name="delete" size={14} />
         </Button>
       </Tip>
       <Separator orientation="vertical" className="h-4 bg-zinc-700/50" />
@@ -162,7 +162,7 @@ export default function SelectionActionBar({
           onClick={clearSelection}
           className="text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/60"
         >
-          <X className="size-3.5" />
+          <Icon name="close" size={14} />
         </Button>
       </Tip>
     </div>
@@ -192,7 +192,7 @@ function SectionAssignButton({ selectedLines, lines, handleMoveToSection }: { se
           onClick={(e) => { e.stopPropagation(); setOpen(p => !p); }}
           className="text-zinc-400 hover:text-primary hover:bg-primary/10"
         >
-          <Layers className="size-3.5" />
+          <Icon name="layers" size={14} />
         </Button>
       </Tip>
       {open && (
@@ -243,7 +243,7 @@ function SingerBulkButton({ selectedLines, handleAssignSinger, songArtists }: { 
           onClick={(e) => { e.stopPropagation(); setOpen(p => !p); }}
           className="text-zinc-400 hover:text-primary hover:bg-primary/10"
         >
-          <User className="size-3.5" />
+          <Icon name="person" size={14} />
         </Button>
       </Tip>
       {open && (

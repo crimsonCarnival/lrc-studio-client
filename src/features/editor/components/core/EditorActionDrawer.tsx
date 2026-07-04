@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ActionDrawer, { DrawerItem } from '@/shared/ui/ActionDrawer';
-import { Play, X, Pencil, Trash2, Eraser, FolderInput, ChevronLeft } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
+
+const PlayIcon = ({ className }: { className?: string }) => <Icon name="play_arrow" className={className} />;
+const XIcon = ({ className }: { className?: string }) => <Icon name="close" className={className} />;
+const PencilIcon = ({ className }: { className?: string }) => <Icon name="edit" className={className} />;
+const Trash2Icon = ({ className }: { className?: string }) => <Icon name="delete" className={className} />;
+const EraserIcon = ({ className }: { className?: string }) => <Icon name="ink_eraser" className={className} />;
+const FolderInputIcon = ({ className }: { className?: string }) => <Icon name="folder_open" className={className} />;
+const ChevronLeftIcon = ({ className }: { className?: string }) => <Icon name="chevron_left" className={className} />;
 import { formatTime } from '@/shared/utils/format-time';
 import { hasKanji } from '@/shared/utils/furigana';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
@@ -74,7 +82,7 @@ export default function EditorActionDrawer({
       {activeDrawer === 'word' && (
         <>
           <DrawerItem
-            icon={Play}
+            icon={PlayIcon}
             label={wordData.word?.time != null ? t('editor.jumpToTime', { time: formatTime(wordData.word.time) }) : t('editor.jumpToWord')}
             onClick={() => {
               if (wordData.word?.time != null && playerRef?.current?.seek) {
@@ -87,7 +95,7 @@ export default function EditorActionDrawer({
 
           {wordData.word?.time != null && (
             <DrawerItem
-              icon={Eraser}
+              icon={EraserIcon}
               label={t('editor.clearTimestamp')}
               variant="danger"
               onClick={() => {
@@ -99,7 +107,7 @@ export default function EditorActionDrawer({
 
           {hasKanji(wordData.word?.word || '') && (
             <DrawerItem
-              icon={Pencil}
+              icon={PencilIcon}
               label={wordData.word?.reading ? t('editor.editReading') : t('editor.addReading')}
               onClick={() => {
                 onClose();
@@ -118,7 +126,7 @@ export default function EditorActionDrawer({
         showSections ? (
           <>
             <DrawerItem
-              icon={ChevronLeft}
+              icon={ChevronLeftIcon}
               label={t('editor.moveToSection')}
               onClick={() => setShowSections(false)}
             />
@@ -136,7 +144,7 @@ export default function EditorActionDrawer({
         ) : (
           <>
             <DrawerItem
-              icon={Play}
+              icon={PlayIcon}
               label={lineData.line?.timestamp != null ? t('editor.jumpToTime', { time: formatTime(lineData.line.timestamp) }) : t('editor.jumpToLine')}
               onClick={() => {
                 if (lineData.line?.timestamp != null && playerRef?.current?.seek) {
@@ -148,7 +156,7 @@ export default function EditorActionDrawer({
             />
             {lineData.line?.timestamp != null && (
               <DrawerItem
-                icon={Eraser}
+                icon={EraserIcon}
                 label={t('editor.clearTimestamp')}
                 variant="danger"
                 onClick={() => {
@@ -159,13 +167,13 @@ export default function EditorActionDrawer({
             )}
             {handleMoveToSection && sections.length > 0 && (
               <DrawerItem
-                icon={FolderInput}
+                icon={FolderInputIcon}
                 label={t('editor.moveToSection')}
                 onClick={() => setShowSections(true)}
               />
             )}
             <DrawerItem
-              icon={Trash2}
+              icon={Trash2Icon}
               label={t('editor.removeLine')}
               variant="danger"
               onClick={() => {
@@ -180,7 +188,7 @@ export default function EditorActionDrawer({
       {activeDrawer === 'bulk' && (
         <>
           <DrawerItem
-            icon={Eraser}
+            icon={EraserIcon}
             label={t('editor.selection.clearTimestamps')}
             variant="danger"
             onClick={() => {
@@ -189,7 +197,7 @@ export default function EditorActionDrawer({
             }}
           />
           <DrawerItem
-            icon={Trash2}
+            icon={Trash2Icon}
             label={t('editor.selection.deleteSelected')}
             variant="danger"
             onClick={() => {
@@ -198,7 +206,7 @@ export default function EditorActionDrawer({
             }}
           />
           <DrawerItem
-            icon={X}
+            icon={XIcon}
             label={t('editor.selection.deselectAll')}
             onClick={() => {
               clearSelection();

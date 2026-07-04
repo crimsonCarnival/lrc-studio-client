@@ -7,7 +7,7 @@ import { useNavigate, useParams, useSearchParams, useLocation } from 'react-rout
 
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import toast from 'react-hot-toast';
-import { Pencil, Trash2, Timer, FolderOpen, Lock, Activity, Music2, ChevronRight } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { ProjectCardContextMenu } from './ProjectCardContextMenu';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
@@ -93,10 +93,10 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
       {isOwner && (
         <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-20 bg-black/40 backdrop-blur-sm rounded-lg p-1">
           <button onClick={handleEdit} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" aria-label={t('profile.editProject')}>
-            <Pencil className="size-3.5" />
+            <Icon name="edit" size={14} />
           </button>
           <button onClick={handleDelete} className="p-1.5 hover:bg-red-500/20 rounded-md text-zinc-400 hover:text-red-400 transition-colors" aria-label={t('profile.deleteProject')}>
-            <Trash2 className="size-3.5" />
+            <Icon name="delete" size={14} />
           </button>
         </div>
       )}
@@ -108,16 +108,16 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
           </>
         ) : (
-          <Music2 className="size-4 text-zinc-600" />
+          <Icon name="music_note" size={16} className="text-zinc-600" />
         )}
         {/* Source indicator */}
         <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
           {isPrivate && (
-            <Lock className="size-3.5 text-zinc-300 drop-shadow-md" aria-label={t('profile.privateProject')} />
+            <Icon name="lock" size={14} className="text-zinc-300 drop-shadow-md" aria-label={t('profile.privateProject')} />
           )}
           {isYoutube
             ? <YoutubeIcon className="size-4 drop-shadow-md" />
-            : hasCover ? <Music2 className="size-3 text-primary/60 drop-shadow-md" /> : null}
+            : hasCover ? <Icon name="music_note" size={12} className="text-primary/60 drop-shadow-md" /> : null}
         </div>
       </div>
 
@@ -131,12 +131,12 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
             <span className="text-[10px] text-zinc-500">{formatRelativeTime(project.createdAt, (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
             <span className="size-0.5 rounded-full bg-zinc-700 shrink-0" />
             <span className="text-[10px] text-zinc-500 flex items-center gap-0.5">
-              <Activity className="size-2.5" />
+              <Icon name="monitoring" size={10} />
               {(project.syncedLineCount || 0)}/{(project.lineCount || 0)}
             </span>
           </div>
         </div>
-        <ChevronRight className="size-3.5 text-zinc-800 group-hover:text-primary group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
+        <Icon name="chevron_right" size={14} className="text-zinc-800 group-hover:text-primary group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
       </div>
     </button>
     </ProjectCardContextMenu>
@@ -439,7 +439,7 @@ export default function ProfilePage() {
             profile.projects.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
                 <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
-                  <FolderOpen className="size-7 text-zinc-500" />
+                  <Icon name="folder_open" size={28} className="text-zinc-500" />
                 </div>
                 <p className="text-sm text-zinc-400 font-medium">{t('profile.noPublicProjects')}</p>
               </div>

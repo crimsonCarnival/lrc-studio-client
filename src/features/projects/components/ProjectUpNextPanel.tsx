@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Music } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
 
 interface UpNextProject {
@@ -49,7 +49,7 @@ export function ProjectUpNextPanel({ playlist, currentpublicId, listId, accountN
                 {thumb ? (
                   <img src={thumb} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 ) : (
-                  <Music className="size-4 text-muted-foreground" />
+                  <Icon name="music_note" size={16} className="text-muted-foreground" />
                 )}
               </div>
               <div className="flex-1 min-w-0">

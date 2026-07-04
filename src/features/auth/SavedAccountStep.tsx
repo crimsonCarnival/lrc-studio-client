@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { KeyboardEvent, MouseEvent } from 'react';
 import type { TFunction } from 'i18next';
-import { LogIn, Loader2, Plus, X, Fingerprint } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { auth } from '@/app/api';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -160,7 +160,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
 
                   <div className="flex items-center gap-1 flex-shrink-0">
                     {isLoading ? (
-                      <Loader2 className="size-4 animate-spin text-zinc-500" />
+                      <Icon name="progress_activity" size={16} className="animate-spin text-zinc-500" />
                     ) : (
                       <>
                         <button
@@ -172,9 +172,9 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
                           title={t('auth.savedAccount.removeAccount')}
                           className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 p-1 rounded-lg text-zinc-600 hover:text-zinc-300 hover:bg-zinc-700 transition-all"
                         >
-                          <X className="size-3.5" />
+                          <Icon name="close" size={14} />
                         </button>
-                        <LogIn className="size-4 text-zinc-600 group-hover:text-zinc-400 transition-colors" />
+                        <Icon name="login" size={16} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />
                       </>
                     )}
                   </div>
@@ -189,7 +189,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
                     aria-label={t('auth.savedAccount.usePasskey')}
                     className="shrink-0 w-[52px] flex items-center justify-center rounded-xl bg-zinc-800/40 hover:bg-zinc-800/70 border border-zinc-700/40 hover:border-primary/50 text-zinc-400 hover:text-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-40 disabled:pointer-events-none"
                   >
-                    <Fingerprint className="size-5" />
+                    <Icon name="fingerprint" size={20} />
                   </button>
                 )}
               </div>
@@ -203,7 +203,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
         onClick={onAddAccount}
         className="flex items-center justify-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors py-1"
       >
-        <Plus className="size-3.5" />
+        <Icon name="add" size={14} />
         {t('auth.savedAccount.addAccount')}
       </button>
 

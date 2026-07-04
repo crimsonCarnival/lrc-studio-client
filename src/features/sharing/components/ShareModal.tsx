@@ -3,7 +3,7 @@ import type { ChangeEvent } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
-import { Copy, Check, AlertCircle, Clock, Calendar, Cloud, Share2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { formatTime } from '@/shared/utils/format-time';
 
@@ -144,7 +144,7 @@ export function SharePanel({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             ) : (
-              <Share2 className="size-5 text-zinc-600" />
+              <Icon name="share" size={20} className="text-zinc-600" />
             )}
           </div>
         </div>
@@ -213,9 +213,9 @@ export function SharePanel({
               <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
             </svg>
           ) : mediaSource === 'cloudinary' ? (
-            <Cloud className="size-3 text-sky-400" />
+            <Icon name="cloud" size={12} className="text-sky-400" />
           ) : (
-            <AlertCircle className="size-3 text-zinc-700" />
+            <Icon name="error" size={12} className="text-zinc-700" />
           )}
           {mediaSource === 'youtube' ? t('share.youtubeIncluded') : (mediaSource === 'cloudinary' ? t('share.mediaIncluded') : t('share.noMedia'))}
         </div>
@@ -224,7 +224,7 @@ export function SharePanel({
             ? 'border-primary/30 bg-primary/5 text-primary'
             : 'border-zinc-800 bg-zinc-900/50 text-zinc-600'
           }`}>
-          <Calendar className="size-3" />
+          <Icon name="calendar_today" size={12} />
           {linesCount} {hasSynced ? t('share.syncedLines') : t('share.lines')}
         </div>
       </div>
@@ -276,7 +276,7 @@ export function SharePanel({
             )}
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
-                <Clock className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-zinc-500" />
+                <Icon name="schedule" size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" />
                 <Input
                   type="text"
                   inputMode="numeric"
@@ -328,7 +328,7 @@ export function SharePanel({
                 : 'bg-zinc-800/80 border-zinc-700/60 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 hover:scale-105 active:scale-95'
               }`}
           >
-            {copied ? <Check className="size-4" strokeWidth={3} /> : <Copy className="size-4" />}
+            {copied ? <Icon name="check" size={16} /> : <Icon name="content_copy" size={16} />}
           </Button>
         </Tip>
       </div>

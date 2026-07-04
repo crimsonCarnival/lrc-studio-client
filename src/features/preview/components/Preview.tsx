@@ -16,7 +16,7 @@ import {
 import { Tip } from '@ui/tip';
 import { SharePanel } from '@features/sharing/components/ShareModal';
 import { useAuthContext } from '@/features/auth/useAuthContext';
-import { Eye, Share2, X, Lock, LockOpen, BookOpen, Plus, PanelRightClose, PanelLeftOpen } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 interface PreviewLineLite {
   secondary?: string;
@@ -184,7 +184,7 @@ export default function Preview(props: PreviewProps) {
           {!viewerMode && (
             <h2 className="text-xs sm:text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2 overflow-hidden flex-1 pb-1">
               <span className="uppercase shrink-0 text-xs sm:text-sm flex items-center gap-1.5">
-                <Eye className="size-3.5" />
+                <Icon name="visibility" size={14} />
                 {t('preview.title')}
               </span>
             </h2>
@@ -199,7 +199,7 @@ export default function Preview(props: PreviewProps) {
                 aria-label={t('app.showEditor')}
                 className="hidden lg:flex flex-shrink-0 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
               >
-                <PanelLeftOpen className="w-4 sm:w-5 h-4 sm:h-5" strokeWidth={1.8} />
+                <Icon name="left_panel_open" size={20} />
               </Button>
             </Tip>
           )}
@@ -213,7 +213,7 @@ export default function Preview(props: PreviewProps) {
                     onClick={() => setShowFuriganaInPreview((v: boolean) => !v)}
                     className={`flex-shrink-0 transition-colors ${showFuriganaInPreview ? 'text-primary bg-primary/10 hover:bg-primary/20' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'}`}
                   >
-                    <BookOpen className="w-4 sm:w-5 h-4 sm:h-5" strokeWidth={1.8} />
+                    <Icon name="menu_book" size={20} />
                   </Button>
                 </Tip>
               )}
@@ -227,7 +227,7 @@ export default function Preview(props: PreviewProps) {
                     aria-label={t('app.hidePreview')}
                     className="hidden lg:flex flex-shrink-0 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
                   >
-                    <PanelRightClose className="w-4 sm:w-5 h-4 sm:h-5" strokeWidth={1.8} />
+                    <Icon name="right_panel_close" size={20} />
                   </Button>
                 </Tip>
               )}
@@ -236,7 +236,7 @@ export default function Preview(props: PreviewProps) {
                 <Tip content={shareModal ? t('share.close') : (isSharedProject ? t('share.viewingShared') : t('app.shareProject'))}>
                   {viewerMode ? (
                     <div className="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10">
-                      <Share2 className="w-4 sm:w-5 h-4 sm:h-5" strokeWidth={1.8} />
+                      <Icon name="share" size={20} />
                     </div>
                   ) : (
                     <Button
@@ -252,8 +252,8 @@ export default function Preview(props: PreviewProps) {
                         }`}
                     >
                       {shareModal
-                        ? <X className="w-4 sm:w-5 h-4 sm:h-5" strokeWidth={2} />
-                        : <Share2 className="w-4 sm:w-5 h-4 sm:h-5" strokeWidth={1.8} />
+                        ? <Icon name="close" size={20} />
+                        : <Icon name="share" size={20} />
                       }
                     </Button>
                   )}
@@ -269,8 +269,8 @@ export default function Preview(props: PreviewProps) {
                     className={`flex-shrink-0 ${sharedReadOnly ? 'text-amber-400 hover:text-amber-300 bg-amber-400/10 hover:bg-amber-400/20' : 'text-emerald-400 hover:text-emerald-300 bg-emerald-400/10 hover:bg-emerald-400/20'}`}
                   >
                     {sharedReadOnly
-                      ? <Lock className="w-4 sm:w-5 h-4 sm:h-5" strokeWidth={1.8} />
-                      : <LockOpen className="w-4 sm:w-5 h-4 sm:h-5" strokeWidth={1.8} />
+                      ? <Icon name="lock" size={20} />
+                      : <Icon name="lock_open" size={20} />
                     }
                   </Button>
                 </Tip>
@@ -310,7 +310,7 @@ export default function Preview(props: PreviewProps) {
                     className={`flex-shrink-0 ${showExportPanel ? 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'}`}
                   >
                     {showExportPanel ? (
-                      <X className="w-4 sm:w-5 h-4 sm:h-5" strokeWidth={2} />
+                      <Icon name="close" size={20} />
                     ) : (
                       <svg className="w-4 sm:w-5 h-4 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -330,7 +330,7 @@ export default function Preview(props: PreviewProps) {
                         size="icon"
                         className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0"
                       >
-                        <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
+                        <Icon name="add" size={20} />
                       </Button>
                     </PopoverTrigger>
                   </Tip>
@@ -421,7 +421,7 @@ export default function Preview(props: PreviewProps) {
         >
           <div className="flex items-center gap-2 px-4 pt-3 pb-1">
             <div className="size-6 rounded-lg bg-gradient-to-br from-primary to-accent-purple flex items-center justify-center flex-shrink-0">
-              <Share2 className="size-3 text-white" strokeWidth={2} />
+              <Icon name="share" size={12} className="text-white" />
             </div>
             <span className="text-xs font-bold text-zinc-100">{t('share.title')}</span>
           </div>

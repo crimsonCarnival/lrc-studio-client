@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Star, GitFork, Music } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useTrendingProjects } from '../hooks/useExplore';
 
 interface ExploreProject {
@@ -37,7 +37,7 @@ export function TrendingProjects({ limit = 6 }: { limit?: number }) {
 
       {loading ? (
         <div className="flex justify-center py-10">
-          <Loader2 className="size-6 animate-spin text-zinc-500" />
+          <Icon name="progress_activity" size={24} className="animate-spin text-zinc-500" />
         </div>
       ) : error || projects.length === 0 ? (
         <p className="text-sm text-zinc-500 text-center py-10">
@@ -59,7 +59,7 @@ export function TrendingProjects({ limit = 6 }: { limit?: number }) {
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 ) : (
-                  <Music className="size-8 text-primary/50" />
+                  <Icon name="music_note" size={32} className="text-primary/50" />
                 )}
               </div>
               <div className="p-3 flex flex-col gap-1">
@@ -71,11 +71,11 @@ export function TrendingProjects({ limit = 6 }: { limit?: number }) {
                 </p>
                 <div className="flex items-center gap-3 mt-0.5">
                   <span className="flex items-center gap-1 text-xs text-zinc-400">
-                    <Star className="size-3" />
+                    <Icon name="star" size={12} />
                     {project.starCount ?? 0}
                   </span>
                   <span className="flex items-center gap-1 text-xs text-zinc-400">
-                    <GitFork className="size-3" />
+                    <Icon name="call_split" size={12} />
                     {project.forkCount ?? 0}
                   </span>
                 </div>

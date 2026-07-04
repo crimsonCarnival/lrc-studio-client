@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Plus } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useTranslation } from 'react-i18next';
 import { ReactionPicker } from './ReactionPicker';
 import { EMOJI_MAP } from './reaction-constants';
@@ -60,7 +60,7 @@ export function ReactionBar({
             aria-label={t('reactions.reactTitle')}
             className="size-[22px] rounded-full border border-dashed border-zinc-700 bg-transparent text-zinc-500 hover:text-zinc-200 hover:border-zinc-500 flex items-center justify-center transition-colors duration-150"
           >
-            <Plus className="size-3" />
+            <Icon name="add" size={12} />
           </button>
           {pickerOpen && (
             <ReactionPicker

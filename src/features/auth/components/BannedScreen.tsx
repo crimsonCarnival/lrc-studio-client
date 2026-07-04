@@ -5,9 +5,8 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useTranslation } from 'react-i18next';
 import { auth } from '@/app/api';
 import { Button } from '@ui/button';
-import { Ban, LogOut, Send, CheckCircle2, RefreshCw, XCircle } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import toast from 'react-hot-toast';
-import { Clock } from 'lucide-react';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
 
@@ -52,7 +51,7 @@ function Countdown({ targetDate, onExpire }: { targetDate: string; onExpire: () 
 
   return (
     <div className="flex items-center gap-1.5 text-red-400 font-mono text-xs mt-1">
-      <Clock className="size-3" />
+      <Icon name="schedule" size={12} />
       <span>{t('admin.banned.remainingTime') || 'Remaining'}: {timeLeft}</span>
     </div>
   );
@@ -87,7 +86,7 @@ export default function BannedScreen() {
         <h2 className="text-2xl font-semibold text-zinc-100 mb-2">{t('admin.banned.expiredTitle') || 'Ban Expired'}</h2>
         <p className="text-zinc-400 text-sm mb-6">{t('admin.banned.expiredDesc') || 'Your ban has expired. Please log in again to continue.'}</p>
         <div className="flex items-center justify-center gap-2 text-emerald-500 text-sm">
-          <RefreshCw className="size-4 animate-spin" /> Redirecting to login in 5 seconds...
+          <Icon name="refresh" size={16} className="animate-spin" /> Redirecting to login in 5 seconds...
         </div>
       </div>
     );
@@ -117,7 +116,7 @@ export default function BannedScreen() {
         <div className="absolute top-0 left-0 right-0 h-1 bg-red-500" />
 
         <div className="size-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
-          <Ban className="size-8 text-red-500" />
+          <Icon name="block" size={32} className="text-red-500" />
         </div>
 
         <h2 className="text-2xl font-semibold text-zinc-100 mb-2">{t('admin.banned.title')}</h2>
@@ -152,7 +151,7 @@ export default function BannedScreen() {
         {currentStatus === 'pending' ? (
           <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-6 mb-6">
             <div className="size-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-              <CheckCircle2 className="size-6 text-emerald-500" />
+              <Icon name="check_circle" size={24} className="text-emerald-500" />
             </div>
             <p className="text-emerald-400 text-sm font-bold uppercase tracking-widest mb-1">{t('admin.banned.underReview')}</p>
             <p className="text-zinc-500 text-xs">{t('admin.banned.reviewSoon')}</p>
@@ -169,7 +168,7 @@ export default function BannedScreen() {
         ) : currentStatus === 'rejected' ? (
           <div className="bg-red-500/5 border border-red-500/10 rounded-2xl p-6 mb-6">
             <div className="size-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-              <XCircle className="size-6 text-red-500" />
+              <Icon name="cancel" size={24} className="text-red-500" />
             </div>
             <p className="text-red-400 text-sm font-bold uppercase tracking-widest mb-1">{t('admin.banned.appealRejected')}</p>
             <p className="text-zinc-500 text-xs leading-relaxed">{t('admin.banned.appealRejectedSub')}</p>
@@ -209,11 +208,11 @@ export default function BannedScreen() {
             >
               {loading ? (
                 <div className="flex items-center gap-2">
-                  <RefreshCw className="size-4 animate-spin" /> {t('admin.banned.submitting')}
+                  <Icon name="refresh" size={16} className="animate-spin" /> {t('admin.banned.submitting')}
                 </div>
               ) : (
                 <span className="flex items-center justify-center gap-2">
-                  <Send className="size-4" /> {t('admin.banned.submitBtn')}
+                  <Icon name="send" size={16} /> {t('admin.banned.submitBtn')}
                 </span>
               )}
             </Button>
@@ -225,7 +224,7 @@ export default function BannedScreen() {
           onClick={logout}
           className="text-zinc-500 hover:text-zinc-300 w-full flex items-center justify-center gap-2"
         >
-          <LogOut className="size-4" /> {t('admin.banned.signOut')}
+          <Icon name="logout" size={16} /> {t('admin.banned.signOut')}
         </Button>
       </div>
     </div>

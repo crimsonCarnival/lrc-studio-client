@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { ChangeEvent, Dispatch, PointerEvent as ReactPointerEvent, SetStateAction } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import { formatTime } from '@/shared/utils/format-time';
@@ -110,7 +110,7 @@ export default function LyricsModeTab({
             size="lg"
             className="h-11 lg:h-9 flex-1"
           >
-            <ChevronUp className="size-4 mr-1" />
+            <Icon name="expand_less" size={16} className="mr-1" />
             <span className="hidden sm:inline">Previous</span>
             <span className="sm:hidden">Prev</span>
           </Button>
@@ -123,7 +123,7 @@ export default function LyricsModeTab({
           >
             <span className="hidden sm:inline">Next</span>
             <span className="sm:hidden">Next</span>
-            <ChevronDown className="size-4 ml-1" />
+            <Icon name="expand_more" size={16} className="ml-1" />
           </Button>
         </div>
       </div>

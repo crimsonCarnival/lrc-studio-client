@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 import type { TFunction } from 'i18next';
-import { BookOpen } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 
@@ -36,7 +36,7 @@ export default function StageControls({
             onClick={() => setShowFurigana((v) => !v)}
             className={`size-8 backdrop-blur-md transition-colors ${showFurigana ? 'text-primary bg-primary/15' : 'text-muted-foreground hover:text-foreground bg-background/40'}`}
           >
-            <BookOpen className="size-4" strokeWidth={1.8} />
+            <Icon name="menu_book" size={16} />
           </Button>
         </Tip>
       )}

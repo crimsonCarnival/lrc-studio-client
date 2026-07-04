@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { UserCircle2, Award, Bell } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import AvatarUpload from './profile/AvatarUpload';
 import ProfileForm from './profile/ProfileForm';
 import AccountNameSection from './profile/AccountNameSection';
@@ -108,7 +108,7 @@ function NotificationPrefsSection() {
   return (
     <section className="space-y-4">
       <div className="flex items-center gap-2">
-        <Bell className="size-3.5 text-zinc-500" />
+        <Icon name="notifications" size={14} className="text-zinc-500" />
         <SectionHeading>{t('profile.notifications')}</SectionHeading>
       </div>
       <div className="space-y-3">
@@ -158,7 +158,7 @@ function ShowcaseSection() {
   return (
     <section className="space-y-4">
       <div className="flex items-center gap-2">
-        <Award className="size-3.5 text-zinc-500" />
+        <Icon name="military_tech" size={14} className="text-zinc-500" />
         <SectionHeading>{t('badges.showcase.editorTitle')}</SectionHeading>
       </div>
       <ShowcaseEditor
@@ -219,7 +219,7 @@ export default function ProfileSettings({ searchTerm }: { searchTerm?: string })
   return (
     <div className="settings-section space-y-6 animate-fade-in">
       <div className="flex items-center gap-2 mb-2 px-1">
-        <UserCircle2 className="size-4 text-zinc-400" />
+        <Icon name="account_circle" size={16} className="text-zinc-400" />
         <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
           {t('profile.tabs.account')}
         </h3>

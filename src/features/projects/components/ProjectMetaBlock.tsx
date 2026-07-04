@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Music2, GitFork, Star, ExternalLink, CalendarDays, ChevronUp, ChevronDown } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
 
@@ -83,7 +83,7 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
             className="h-8 w-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             aria-label={collapsed ? t('projectView.showMore') : t('projectView.showLess')}
           >
-            {collapsed ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+            {collapsed ? <Icon name="expand_more" size={16} /> : <Icon name="expand_less" size={16} />}
           </button>
         </div>
       </div>
@@ -93,8 +93,8 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
           {/* Stats + reactions */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1"><Star className="size-3.5" />{starCount ?? project.starCount ?? 0}</span>
-              <span className="inline-flex items-center gap-1"><GitFork className="size-3.5" />{project.forkCount ?? 0}</span>
+              <span className="inline-flex items-center gap-1"><Icon name="star" size={14} />{starCount ?? project.starCount ?? 0}</span>
+              <span className="inline-flex items-center gap-1"><Icon name="call_split" size={14} />{project.forkCount ?? 0}</span>
             </div>
             {reactionsSlot}
           </div>
@@ -105,7 +105,7 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
               to={`/project/${project.forkedFrom.publicId}`}
               className="inline-flex items-center gap-1 text-xs text-accent-blue hover:underline w-fit"
             >
-              <ExternalLink className="size-3" />
+              <Icon name="open_in_new" size={12} />
               {t('projectView.forkedFrom')}
               {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
             </Link>
@@ -140,7 +140,7 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
           <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
             {accountName && (
               <div className="flex items-center gap-1.5">
-                <Music2 className="size-3.5" />
+                <Icon name="music_note" size={14} />
                 <Link to={`/${accountName}`} className="text-foreground hover:text-primary transition-colors">
                   {project.user?.displayName || `@${accountName}`}
                 </Link>
@@ -148,7 +148,7 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
             )}
             {formattedDate && (
               <div className="flex items-center gap-1.5">
-                <CalendarDays className="size-3.5" />
+                <Icon name="calendar_month" size={14} />
                 <span>{t('projectView.publishedOn')} {formattedDate}</span>
               </div>
             )}

@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { motion as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { Plus, RefreshCw, Pencil, Trash2, ChevronUp, ChevronDown, X, Music2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
 import { requestsApi } from './services/requests.service';
 
@@ -194,7 +194,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60">
           <div className="flex items-center gap-3">
-            <Music2 className="size-4 text-primary" />
+            <Icon name="music_note" size={16} className="text-primary" />
             <h3 className="text-sm font-semibold text-zinc-200">
               {editing
                 ? t('admin.levels.modal.editTitle', { title: editing.title?.en || editing.id })
@@ -202,7 +202,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
             </h3>
           </div>
           <button type="button" onClick={onClose} className="text-zinc-500 hover:text-zinc-200 transition-colors">
-            <X className="size-4" />
+            <Icon name="close" size={16} />
           </button>
         </div>
 
@@ -378,7 +378,7 @@ function LevelCard({ level, rank, total, onEdit, onDelete, onMove, proposeMode }
             onClick={() => onMove(level, 'up')}
             className="size-5 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-20 transition-colors"
           >
-            <ChevronUp className="size-3.5" />
+            <Icon name="expand_less" size={14} />
           </button>
         )}
         <span className="text-[10px] font-bold text-zinc-400 tabular-nums w-5 text-center">#{rank + 1}</span>
@@ -389,7 +389,7 @@ function LevelCard({ level, rank, total, onEdit, onDelete, onMove, proposeMode }
             onClick={() => onMove(level, 'down')}
             className="size-5 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-20 transition-colors"
           >
-            <ChevronDown className="size-3.5" />
+            <Icon name="expand_more" size={14} />
           </button>
         )}
       </div>
@@ -412,14 +412,14 @@ function LevelCard({ level, rank, total, onEdit, onDelete, onMove, proposeMode }
               onClick={() => onEdit(level)}
               className="size-6 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-200 transition-colors"
             >
-              <Pencil className="size-3" />
+              <Icon name="edit" size={12} />
             </button>
             <button
               type="button"
               onClick={() => onDelete(level)}
               className="size-6 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors"
             >
-              <Trash2 className="size-3" />
+              <Icon name="delete" size={12} />
             </button>
           </div>
         </div>
@@ -546,14 +546,14 @@ export default function AdminLevelsTab({ proposeMode = false }: { proposeMode?: 
           onClick={fetchLevels}
           className="size-8 rounded-xl border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-all"
         >
-          <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <Icon name="refresh" size={14} className={loading ? 'animate-spin' : ''} />
         </button>
         <button
           type="button"
           onClick={() => setFormModal('new')}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-zinc-950 text-xs font-semibold hover:bg-primary/90 transition-colors"
         >
-          <Plus className="size-3.5" />
+          <Icon name="add" size={14} />
           {t('admin.levels.newLevel')}
         </button>
       </div>

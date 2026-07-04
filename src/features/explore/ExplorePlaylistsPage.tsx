@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Loader2, Music } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { usePaginatedPlaylists } from './hooks/useExplore';
 
 interface ExplorePlaylist {
@@ -27,7 +27,7 @@ export default function ExplorePlaylistsPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <Icon name="progress_activity" size={32} className="animate-spin text-primary" />
       </div>
     );
   }
@@ -65,7 +65,7 @@ export default function ExplorePlaylistsPage() {
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                   ) : (
-                    <Music className="size-8 text-primary/50" />
+                    <Icon name="music_note" size={32} className="text-primary/50" />
                   )}
                 </div>
                 <div className="p-3 flex flex-col gap-1">
@@ -92,7 +92,7 @@ export default function ExplorePlaylistsPage() {
               className="mt-2 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loadingMore
-                ? <Loader2 className="size-4 animate-spin" />
+                ? <Icon name="progress_activity" size={16} className="animate-spin" />
                 : t('explore.page.loadMore')}
             </button>
           ) : (

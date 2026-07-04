@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
 import { Tip } from '@/shared/ui/tip';
 import { Skeleton } from '@ui/skeleton';
@@ -102,9 +102,9 @@ function TrendCard({ label, percentage, tip }: { label: ReactNode; percentage: n
         <p className="text-xs text-muted-foreground mb-2">{label}</p>
         <div className="flex items-center justify-center gap-2">
           {isPositive ? (
-            <TrendingUp className="size-5 text-success" />
+            <Icon name="trending_up" size={20} className="text-success" />
           ) : (
-            <TrendingDown className="size-5 text-destructive" />
+            <Icon name="trending_down" size={20} className="text-destructive" />
           )}
           <p className={`text-2xl font-bold ${isPositive ? 'text-success' : 'text-destructive'}`}>
             {percentage > 0 ? '+' : ''}{percentage}%

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Activity as ActivityIcon } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { ActivityCard } from '@/features/feed/components/ActivityCard';
 import { gqlRequest } from '@/app/graphql.client';
 import { Skeleton } from '@ui/skeleton';
@@ -98,7 +98,7 @@ export default function ActionHistory() {
   if (!activities?.length) {
     return (
       <div className="flex flex-col items-center justify-center py-6 text-zinc-500">
-        <ActivityIcon className="size-10 mb-3 opacity-20" strokeWidth={1} />
+        <Icon name="monitoring" size={40} className="mb-3 opacity-20" />
         <p className="text-xs">{t('profile.noHistory')}</p>
       </div>
     );

@@ -4,16 +4,7 @@ import type { TFunction } from 'i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
-import {
-  FileQuestion,
-  FolderSearch,
-  UserX,
-  Ghost,
-  Music,
-  ArrowLeft,
-  Home as HomeIcon,
-  Search,
-} from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 const KNOWN_PREFIXES = new Set([
   '/home', '/library', '/search', '/explore', '/feed',
@@ -94,14 +85,14 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
     switch (type) {
       case 'project':
         return {
-          icon: <FolderSearch className="size-16 text-amber-400" />,
+          icon: <Icon name="folder_search" size={64} className="text-amber-400" />,
           title: identifier
             ? t('error.projectNotFoundWithName', { id: identifier })
             : pickVariant(t, 'error.projectNotFoundTitle'),
           description: pickVariant(t, 'error.projectNotFoundDesc'),
           primaryAction: {
             label: t('app.backToLibrary'),
-            icon: <HomeIcon className="size-5 mr-2" />,
+            icon: <Icon name="home" size={20} className="mr-2" />,
             onClick: () => navigate('/library'),
           },
           searchAction: {
@@ -111,38 +102,38 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
         };
       case 'playlist':
         return {
-          icon: <Music className="size-16 text-violet-400" />,
+          icon: <Icon name="music_note" size={64} className="text-violet-400" />,
           title: pickVariant(t, 'error.playlistNotFoundTitle'),
           description: pickVariant(t, 'error.playlistNotFoundDesc'),
           primaryAction: {
             label: t('app.backHome'),
-            icon: <HomeIcon className="size-5 mr-2" />,
+            icon: <Icon name="home" size={20} className="mr-2" />,
             onClick: () => navigate('/home'),
           },
           searchAction: null,
         };
       case 'upload':
         return {
-          icon: <FileQuestion className="size-16 text-blue-400" />,
+          icon: <Icon name="help" size={64} className="text-blue-400" />,
           title: pickVariant(t, 'error.uploadNotFoundTitle'),
           description: pickVariant(t, 'error.uploadNotFoundDesc'),
           primaryAction: {
             label: t('app.viewUploads'),
-            icon: <HomeIcon className="size-5 mr-2" />,
+            icon: <Icon name="home" size={20} className="mr-2" />,
             onClick: () => navigate('/uploads'),
           },
           searchAction: null,
         };
       case 'user':
         return {
-          icon: <UserX className="size-16 text-rose-400" />,
+          icon: <Icon name="person_off" size={64} className="text-rose-400" />,
           title: identifier
             ? t('error.userNotFoundWithName', { name: `@${identifier}` })
             : pickVariant(t, 'error.userNotFoundTitle'),
           description: pickVariant(t, 'error.userNotFoundDesc'),
           primaryAction: {
             label: t('app.backToDashboard'),
-            icon: <HomeIcon className="size-5 mr-2" />,
+            icon: <Icon name="home" size={20} className="mr-2" />,
             onClick: () => navigate('/home'),
           },
           searchAction: {
@@ -152,12 +143,12 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
         };
       default:
         return {
-          icon: <Ghost className="size-16 text-zinc-500" />,
+          icon: <Icon name="ghost" size={64} className="text-zinc-500" />,
           title: pickVariant(t, 'error.pageNotFoundTitle'),
           description: pickVariant(t, 'error.pageNotFoundDesc'),
           primaryAction: {
             label: t('app.backHome'),
-            icon: <HomeIcon className="size-5 mr-2" />,
+            icon: <Icon name="home" size={20} className="mr-2" />,
             onClick: () => navigate('/home'),
           },
           searchAction: {
@@ -202,7 +193,7 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
             onClick={() => navigate(-1)}
             className="w-full sm:flex-1 h-12 text-base text-zinc-400 hover:text-zinc-100 border border-zinc-800 hover:bg-zinc-800/50"
           >
-            <ArrowLeft className="size-5 mr-2" />
+            <Icon name="arrow_back" size={20} className="mr-2" />
             {t('app.goBack')}
           </Button>
         </div>
@@ -214,7 +205,7 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
             onClick={config.searchAction.onClick}
             className="mt-4 text-zinc-500 hover:text-zinc-300 gap-2"
           >
-            <Search className="size-4" />
+            <Icon name="search" size={16} />
             {config.searchAction.label}
           </Button>
         )}

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { X, Lock, Sparkles, GripVertical } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
 import { BADGE_REGISTRY, RARITY_CONFIG, BADGE_COLORS } from './badge-registry';
 import { useBadgeDefs } from './BadgeDefsContext';
@@ -59,7 +59,7 @@ function EarnedBadgeItem({ badge, isInShowcase, onToggle }: { badge: Badge; isIn
       </span>
       {isInShowcase && (
         <div className="size-4 rounded-full bg-primary flex items-center justify-center shrink-0">
-          <Sparkles className="size-2.5 text-zinc-950" />
+          <Icon name="auto_awesome" size={10} className="text-zinc-950" />
         </div>
       )}
     </button>
@@ -102,7 +102,7 @@ function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop 
       onDrop={() => onDrop(index)}
       className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-zinc-600 bg-zinc-800 group"
     >
-      <GripVertical className="size-3.5 text-zinc-600 cursor-grab active:cursor-grabbing shrink-0" />
+      <Icon name="drag_indicator" size={14} className="text-zinc-600 cursor-grab active:cursor-grabbing shrink-0" />
       <div className="size-7 rounded-lg bg-zinc-700 flex items-center justify-center shrink-0">
         <span className="text-xs font-bold text-zinc-400">{index + 1}</span>
       </div>
@@ -112,7 +112,7 @@ function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop 
         onClick={() => onRemove(badge.id)}
         className="size-6 rounded-full hover:bg-red-500/20 flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors"
       >
-        <X className="size-3.5" />
+        <Icon name="close" size={14} />
       </button>
     </div>
   );
@@ -298,7 +298,7 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
           {/* Locked slots */}
           {nextUnlock && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-zinc-800/50 opacity-40">
-              <Lock className="size-3 text-zinc-500" />
+              <Icon name="lock" size={12} className="text-zinc-500" />
               <span className="text-[10px] text-zinc-500">
                 {t('badges.showcase.lockedSlot', { level: nextUnlock.level, slots: nextUnlock.slots })}
               </span>

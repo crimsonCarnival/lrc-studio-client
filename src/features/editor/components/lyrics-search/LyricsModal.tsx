@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@ui/dialog';
 import { Button } from '@ui/button';
 import { Checkbox } from '@ui/checkbox';
-import { Loader2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 interface LyricsModalProps {
   song?: { title: string; artist: string } | null;
@@ -34,7 +34,7 @@ export default function LyricsModal({ song, lyrics, isLoading, error, onConfirm,
         <div className="flex-1 overflow-y-auto min-h-0 my-4">
           {isLoading && (
             <div className="flex items-center justify-center py-12 gap-2 text-zinc-400">
-              <Loader2 className="size-4 animate-spin" />
+              <Icon name="progress_activity" size={16} className="animate-spin" />
               <span className="text-sm">{t('lyricsSearch.extracting')}</span>
             </div>
           )}

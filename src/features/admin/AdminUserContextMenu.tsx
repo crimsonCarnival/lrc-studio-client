@@ -10,7 +10,7 @@ import {
   ContextMenuSubContent,
   ContextMenuLabel,
 } from '@ui/context-menu';
-import { ExternalLink, Zap, Ban, Undo2, Globe, ShieldAlert, Trash2, UserCheck, EyeOff, Eye } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { ROLE_RANK, userHasPermission, type Role } from '@/features/auth/permissions';
 import { adminShadowBan, adminUnshadowBan } from '@/features/settings/services/preferences.service';
 import toast from 'react-hot-toast';
@@ -100,7 +100,7 @@ export function AdminUserContextMenu({
         <ContextMenuLabel>{user.accountName ?? '—'}</ContextMenuLabel>
 
         <ContextMenuItem onClick={() => window.open(`/u/${user.accountName}`, '_blank')}>
-          <ExternalLink />
+          <Icon name="open_in_new" />
           {t('admin.table.viewProfile', 'View profile')}
         </ContextMenuItem>
 
@@ -111,7 +111,7 @@ export function AdminUserContextMenu({
             {canAssignRoles && assignableRoles.length > 0 && (
               <ContextMenuSub>
                 <ContextMenuSubTrigger>
-                  <UserCheck />
+                  <Icon name="how_to_reg" />
                   {t('admin.table.changeRole', 'Change role')}
                 </ContextMenuSubTrigger>
                 <ContextMenuSubContent>
@@ -129,7 +129,7 @@ export function AdminUserContextMenu({
             )}
 
             <ContextMenuItem onClick={() => handleAdjustXP('grant', 100, 'user', user.id || user._id)}>
-              <Zap />
+              <Icon name="bolt" />
               {t('admin.table.adjustXp', 'Adjust XP')}
             </ContextMenuItem>
 
@@ -137,7 +137,7 @@ export function AdminUserContextMenu({
 
             {user.isDeleted ? (
               <ContextMenuItem onClick={() => handleReactivate(user)}>
-                <Undo2 />
+                <Icon name="undo" />
                 {t('admin.table.reactivate')}
               </ContextMenuItem>
             ) : (
@@ -148,12 +148,12 @@ export function AdminUserContextMenu({
                   </ContextMenuItem>
                 ) : user.ban?.active ? (
                   <ContextMenuItem onClick={() => handleToggleBan(user)}>
-                    <UserCheck />
+                    <Icon name="how_to_reg" />
                     {t('admin.table.unban')}
                   </ContextMenuItem>
                 ) : (
                   <ContextMenuItem variant="destructive" onClick={() => handleToggleBan(user)}>
-                    <Ban />
+                    <Icon name="block" />
                     {t('admin.table.ban')}
                   </ContextMenuItem>
                 )}
@@ -161,12 +161,12 @@ export function AdminUserContextMenu({
                 {canShadowBan && (
                   user.shadowBanned ? (
                     <ContextMenuItem onClick={handleUnshadowBan}>
-                      <Eye />
+                      <Icon name="visibility" />
                       {t('admin.table.unshadowBan')}
                     </ContextMenuItem>
                   ) : (
                     <ContextMenuItem variant="destructive" onClick={handleShadowBan}>
-                      <EyeOff />
+                      <Icon name="visibility_off" />
                       {t('admin.table.shadowBan')}
                     </ContextMenuItem>
                   )
@@ -174,14 +174,14 @@ export function AdminUserContextMenu({
 
                 {user.lastIp && (
                   <ContextMenuItem variant="destructive" onClick={() => handleBlockIpDirect(user)}>
-                    <Globe />
+                    <Icon name="language" />
                     {t('admin.table.blockIp')}
                   </ContextMenuItem>
                 )}
 
                 {user.lastDeviceId && (
                   <ContextMenuItem variant="destructive" onClick={() => handleBlockDeviceDirect(user)}>
-                    <ShieldAlert />
+                    <Icon name="gpp_bad" />
                     {t('admin.table.blockDevice')}
                   </ContextMenuItem>
                 )}
@@ -191,7 +191,7 @@ export function AdminUserContextMenu({
             <ContextMenuSeparator />
 
             <ContextMenuItem variant="destructive" onClick={() => handleDelete(user)}>
-              <Trash2 />
+              <Icon name="delete" />
               {tk('admin.table.delete')}
             </ContextMenuItem>
           </>

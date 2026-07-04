@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Repeat2, Loader2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { projectsService } from '../services/projects.service.js';
 import toast from 'react-hot-toast';
 
@@ -37,8 +37,8 @@ export function BoostButton({ publicId, className = '' }: { publicId: string; cl
       ].join(' ')}
     >
       {loading
-        ? <Loader2 className="size-3 animate-spin" />
-        : <Repeat2 className="size-3" />}
+        ? <Icon name="progress_activity" size={12} className="animate-spin" />
+        : <Icon name="repeat" size={12} />}
       {boosted ? t('projectView.boosted') : t('projectView.boost')}
     </button>
   );

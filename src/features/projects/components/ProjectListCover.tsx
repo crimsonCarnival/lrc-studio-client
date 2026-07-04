@@ -1,4 +1,4 @@
-import { Music } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 /**
  * Displays a project's cover image, or a genre-specific gradient placeholder.
@@ -28,6 +28,11 @@ const GENRE_GRADIENTS: Record<string, string> = {
 
 const DEFAULT_GRADIENT = 'from-zinc-700 to-zinc-600';
 
+// Maps Tailwind size-N class to pixel value.
+const TAILWIND_SIZE_MAP: Record<string, number> = {
+  'size-3': 12, 'size-4': 16, 'size-5': 20, 'size-6': 24, 'size-8': 32,
+};
+
 interface ProjectListCoverProps {
   coverImage?: string | null;
   genre?: string | null;
@@ -37,6 +42,7 @@ interface ProjectListCoverProps {
 
 export function ProjectListCover({ coverImage, genre, className = 'size-9', iconSize = 'size-4' }: ProjectListCoverProps) {
   const gradient = (genre && GENRE_GRADIENTS[genre]) || DEFAULT_GRADIENT;
+  const iconPixelSize = TAILWIND_SIZE_MAP[iconSize] ?? 16;
 
   if (coverImage) {
     return (
@@ -48,7 +54,7 @@ export function ProjectListCover({ coverImage, genre, className = 'size-9', icon
 
   return (
     <div className={`${className} rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0`}>
-      <Music className={`${iconSize} text-white/60`} />
+      <Icon name="music_note" size={iconPixelSize} className="text-white/60" />
     </div>
   );
 }

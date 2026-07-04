@@ -2,7 +2,7 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { TFunction } from 'i18next';
 import type { i18n as I18nInstance } from 'i18next';
-import { Globe, Check, Lightbulb, Music2, X, ArrowRight } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { LazyImage } from '@ui/LazyImage';
 
@@ -17,7 +17,7 @@ export function LangSwitcher({ i18n }: { i18n?: I18nInstance }) {
         <button
           className="flex items-center gap-1 h-8 px-2.5 text-zinc-400 hover:text-zinc-200 bg-zinc-900/60 hover:bg-zinc-800/80 border border-zinc-800/50 rounded-xl transition-colors text-[11px] font-bold"
         >
-          <Globe className="size-3.5" />
+          <Icon name="language" size={14} />
           {currentShort}
         </button>
       </PopoverTrigger>
@@ -33,7 +33,7 @@ export function LangSwitcher({ i18n }: { i18n?: I18nInstance }) {
             >
               <span className="text-[10px] font-bold text-zinc-500 w-6 shrink-0">{short}</span>
               <span className="flex-1 text-left">{label}</span>
-              <Check className={`size-3 shrink-0 ${active ? 'text-primary' : 'invisible'}`} />
+              <Icon name="check" size={12} className={`shrink-0 ${active ? 'text-primary' : 'invisible'}`} />
             </PopoverItem>
           );
         })}
@@ -141,14 +141,14 @@ export function RedirectMessage({ from, t }: { from?: string; t: TFunction }) {
       variant === 'danger' ? 'bg-destructive/10 border-destructive/20 text-destructive' :
       'bg-primary/10 border-primary/20 text-primary'
     }`}>
-      {variant === 'warning' ? <Lightbulb className="size-4 shrink-0" /> : <Music2 className="size-4 shrink-0" />}
+      {variant === 'warning' ? <Icon name="lightbulb" size={16} className="shrink-0" /> : <Icon name="music_note" size={16} className="shrink-0" />}
       <div className="flex-1">{message}</div>
       <button
         onClick={() => setVisible(false)}
         aria-label={t('common.dismiss')}
         className="p-1 hover:bg-white/5 rounded-md transition-colors opacity-60 hover:opacity-100"
       >
-        <X className="size-3.5" />
+        <Icon name="close" size={14} />
       </button>
     </div>
   );
@@ -204,7 +204,7 @@ export function ContextBanner({ redirect, t }: { redirect?: string; t: TFunction
   return (
     <div className="mb-6 flex items-center gap-2 px-3 py-2 bg-zinc-800/40 border border-zinc-700/30 rounded-xl animate-fade-in" style={{ animationDelay: '100ms' }}>
       <div className="size-6 rounded-lg bg-zinc-900 flex items-center justify-center shrink-0">
-        <ArrowRight className="size-3 text-zinc-500" />
+        <Icon name="arrow_forward" size={12} className="text-zinc-500" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[10px] uppercase tracking-wider font-bold text-zinc-500 leading-none">

@@ -1,7 +1,7 @@
 import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Lock, Music, Pencil, Trash2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 interface PlaylistCardData {
   id: string;
@@ -44,10 +44,10 @@ export function PlaylistCard({ playlist, accountName, isOwner, onEdit, onDelete 
       {isOwner && (
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-10 bg-black/40 backdrop-blur-sm rounded-lg p-1">
           <button onClick={handleEdit} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" aria-label={t('playlists.editPlaylist')}>
-            <Pencil className="size-3.5" />
+            <Icon name="edit" size={14} />
           </button>
           <button onClick={handleDelete} className="p-1.5 hover:bg-red-500/20 rounded-md text-zinc-400 hover:text-red-400 transition-colors" aria-label={t('playlists.deletePlaylist')}>
-            <Trash2 className="size-3.5" />
+            <Icon name="delete" size={14} />
           </button>
         </div>
       )}
@@ -60,11 +60,11 @@ export function PlaylistCard({ playlist, accountName, isOwner, onEdit, onDelete 
             className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
-          <Music className="size-8 text-primary/50" />
+          <Icon name="music_note" size={32} className="text-primary/50" />
         )}
         {!playlist.isPublic && (
           <span className="absolute top-2 right-2 bg-zinc-900/80 rounded-lg p-1">
-            <Lock className="size-3 text-muted-foreground" />
+            <Icon name="lock" size={12} className="text-muted-foreground" />
           </span>
         )}
       </div>

@@ -8,7 +8,7 @@ import { isSudoCancelled } from './services/sudo';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { userHasPermission, type Permission } from '@/features/auth/permissions';
 import { Button } from '@ui/button';
-import { ShieldAlert, RefreshCw, Users, History, Award, Zap, Sparkles, Inbox, UsersRound } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import toast from 'react-hot-toast';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import BanUserModal from './BanUserModal';
@@ -79,13 +79,13 @@ export default function AdminDashboard() {
 
   // Tabs are gated by permission — a mod sees only moderation tabs, etc.
   const visibleTabs = useMemo(() => {
-    const defs: { id: string; icon: typeof Users; label: string; perm?: Permission }[] = [
-      { id: 'moderation', icon: ShieldAlert, label: t('admin.dashboard.tabs.moderation'), perm: 'users.view' },
-      { id: 'staff',      icon: UsersRound,  label: t('admin.dashboard.tabs.staff') },
-      { id: 'audit',      icon: History,     label: t('admin.dashboard.tabs.auditLogs'),  perm: 'audit.view' },
-      { id: 'badges',     icon: Award,       label: t('admin.dashboard.tabs.badges'),     perm: 'badges.manage' },
-      { id: 'levels',     icon: Zap,         label: t('admin.dashboard.tabs.levels'),     perm: 'levels.manage' },
-      { id: 'xp',         icon: Sparkles,    label: t('admin.dashboard.tabs.xp'),         perm: 'xp.adjust' },
+    const defs: { id: string; icon: string; label: string; perm?: Permission }[] = [
+      { id: 'moderation', icon: 'gpp_bad', label: t('admin.dashboard.tabs.moderation'), perm: 'users.view' },
+      { id: 'staff',      icon: 'groups',  label: t('admin.dashboard.tabs.staff') },
+      { id: 'audit',      icon: 'history',     label: t('admin.dashboard.tabs.auditLogs'),  perm: 'audit.view' },
+      { id: 'badges',     icon: 'military_tech',       label: t('admin.dashboard.tabs.badges'),     perm: 'badges.manage' },
+      { id: 'levels',     icon: 'bolt',         label: t('admin.dashboard.tabs.levels'),     perm: 'levels.manage' },
+      { id: 'xp',         icon: 'auto_awesome',    label: t('admin.dashboard.tabs.xp'),         perm: 'xp.adjust' },
     ];
     const canProposeBadges = submittable.some(ty => ty.startsWith('badge_'));
     const canProposeLevels = submittable.some(ty => ty.startsWith('level_'));
@@ -98,7 +98,7 @@ export default function AdminDashboard() {
       if (tab.id === 'levels' && canProposeLevels) return true;
       return false;
     });
-    gated.push({ id: 'requests', icon: Inbox, label: t('admin.dashboard.tabs.requests') });
+    gated.push({ id: 'requests', icon: 'inbox', label: t('admin.dashboard.tabs.requests') });
     return gated;
   }, [t, currentUser?.permissions, submittable]);
 
@@ -459,7 +459,7 @@ export default function AdminDashboard() {
       {/* Refresh — the page title now lives in the app header */}
       <div className="flex items-center justify-end mb-4">
         <Button variant="ghost" size="icon" onClick={() => fetchData(true)} className="h-9 w-9 shrink-0">
-          <RefreshCw className={`size-4 text-zinc-500 ${loading ? 'animate-spin' : ''}`} />
+          <Icon name="refresh" size={16} className={`text-zinc-500 ${loading ? 'animate-spin' : ''}`} />
         </Button>
       </div>
 
@@ -478,7 +478,7 @@ export default function AdminDashboard() {
                 : 'border-transparent text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
             }`}
           >
-            <tab.icon className="size-3.5 shrink-0" />
+            <Icon name={tab.icon} size={14} className="shrink-0" />
             {tab.label}
           </button>
         ))}

@@ -7,12 +7,7 @@ import { ToggleGroup, ToggleGroupItem } from '@ui/toggle-group';
 import { Tip } from '@ui/tip';
 import { Badge } from '@ui/badge';
 import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger } from '@ui/popover';
-import {
-  FileText, Pencil, Save, Check, Eraser,
-  Trash2, ListChecks,
-  MoreHorizontal, Plus, X, Loader2, HelpCircle, Languages, Music, Undo2, Redo2, ChevronLeft, ChevronRight, PanelLeftClose, PanelRightOpen
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
@@ -23,19 +18,19 @@ import type { AuthUser } from '@/features/auth/hooks/useAuth';
 
 interface ActionsDropdownProps {
   children: ReactNode;
-  icon?: LucideIcon;
+  icon?: string;
   label?: string;
 }
 
 // Mobile-friendly dropdown for actions that overflow
-const ActionsDropdown = ({ children, icon: Icon = MoreHorizontal, label }: ActionsDropdownProps) => {
+const ActionsDropdown = ({ children, icon = 'more_horiz', label }: ActionsDropdownProps) => {
   const { t } = useTranslation();
   return (
     <Popover>
       <Tip content={label || t('editor.lineOptions')}>
         <PopoverTrigger asChild>
           <Button variant="ghost" size="icon" className="size-9 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800">
-            <Icon className="size-4" />
+            <Icon name={icon} size={16} />
           </Button>
         </PopoverTrigger>
       </Tip>
@@ -181,10 +176,10 @@ export default function EditorToolbar({
               className={`size-8 transition-colors ${isSaving ? 'text-zinc-400' : isAutosaving ? 'text-primary' : 'text-zinc-400'}`}
             >
               {isSaving
-                ? <Loader2 className="size-4 animate-spin" />
+                ? <Icon name="progress_activity" size={16} className="animate-spin" />
                 : isAutosaving
-                  ? <Check className="size-4" />
-                  : <Save className="size-4" />}
+                  ? <Icon name="check" size={16} />
+                  : <Icon name="save" size={16} />}
             </Button>
           </Tip>
         )}
@@ -199,7 +194,7 @@ export default function EditorToolbar({
         <div className="flex items-center gap-2 overflow-hidden flex-1">
           <h2 className="text-xs sm:text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2">
             <span className="uppercase shrink-0 text-xs sm:text-sm flex items-center gap-1.5">
-              <FileText className="size-3.5" />
+              <Icon name="description" size={14} />
               {t('editor.title')}
             </span>
           </h2>
@@ -214,7 +209,7 @@ export default function EditorToolbar({
                 }}
                 className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0 size-7"
               >
-                <Pencil className="size-3.5" />
+                <Icon name="edit" size={14} />
               </Button>
             </Tip>
           )}
@@ -251,7 +246,7 @@ export default function EditorToolbar({
                 aria-label={t('app.showPreview')}
                 className="hidden lg:flex size-7 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 shrink-0"
               >
-                <PanelRightOpen className="size-3.5" />
+                <Icon name="right_panel_open" size={14} />
               </Button>
             </Tip>
           )}
@@ -264,7 +259,7 @@ export default function EditorToolbar({
                 aria-label={t('app.hideEditor')}
                 className="hidden lg:flex size-7 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 shrink-0"
               >
-                <PanelLeftClose className="size-3.5" />
+                <Icon name="left_panel_close" size={14} />
               </Button>
             </Tip>
           )}
@@ -335,7 +330,7 @@ export default function EditorToolbar({
                       onClick={() => handleApplyOffset(-1)}
                       className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60 size-7"
                     >
-                      <ChevronLeft className="size-3.5" />
+                      <Icon name="chevron_left" size={14} />
                     </Button>
                   </Tip>
                   <Tip content={t('editor.shiftAll')}>
@@ -350,7 +345,7 @@ export default function EditorToolbar({
                       onClick={() => handleApplyOffset(1)}
                       className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60 size-7"
                     >
-                      <ChevronRight className="size-3.5" />
+                      <Icon name="chevron_right" size={14} />
                     </Button>
                   </Tip>
                 </div>
@@ -365,7 +360,7 @@ export default function EditorToolbar({
                   onClick={() => setSelectedLines(new Set())}
                   className="size-9 shrink-0 text-primary"
                 >
-                  <X className="size-4" />
+                  <Icon name="close" size={16} />
                 </Button>
               </Tip>
             )}
@@ -380,7 +375,7 @@ export default function EditorToolbar({
                 onClick={() => setSelectedLines(new Set(lines.map((_, i) => i)))}
                 className="size-9 text-zinc-400 shrink-0"
               >
-                <ListChecks className="size-4" />
+                <Icon name="checklist" size={16} />
               </Button>
             </Tip>
 
@@ -391,7 +386,7 @@ export default function EditorToolbar({
                 onClick={handleClearTimestamps}
                 className="size-9 text-zinc-400 shrink-0"
               >
-                <Eraser className="size-4" />
+                <Icon name="ink_eraser" size={16} />
               </Button>
             </Tip>
 
@@ -403,7 +398,7 @@ export default function EditorToolbar({
                   onClick={handleClearAllWordTimestamps}
                   className="size-9 text-zinc-400 shrink-0"
                 >
-                  <Eraser className="size-4" />
+                  <Icon name="ink_eraser" size={16} />
                 </Button>
               </Tip>
             )}
@@ -420,7 +415,7 @@ export default function EditorToolbar({
               disabled={!canUndo}
               className="size-9 text-zinc-400 hover:text-zinc-200 disabled:opacity-30"
             >
-              <Undo2 className="size-4" />
+              <Icon name="undo" size={16} />
             </Button>
           </Tip>
           <Tip content={t('editor.redoTitle') || 'Redo (Ctrl+Y)'}>
@@ -431,7 +426,7 @@ export default function EditorToolbar({
               disabled={!canRedo}
               className="size-9 text-zinc-400 hover:text-zinc-200 disabled:opacity-30"
             >
-              <Redo2 className="size-4" />
+              <Icon name="redo" size={16} />
             </Button>
           </Tip>
           {handleManualSave && (
@@ -480,10 +475,10 @@ export default function EditorToolbar({
                   }`}
               >
                 {isSaving
-                  ? <Loader2 className="size-4 animate-spin" />
+                  ? <Icon name="progress_activity" size={16} className="animate-spin" />
                   : isAutosaving
-                    ? <Check className="size-4" />
-                    : <Save className="size-4" />}
+                    ? <Icon name="check" size={16} />
+                    : <Icon name="save" size={16} />}
               </Button>
             </Tip>
           )}
@@ -497,7 +492,7 @@ export default function EditorToolbar({
             <Tip content={t('lyricsSearch.findLyrics')}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="size-9 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800">
-                  <Music className="size-4" />
+                  <Icon name="music_note" size={16} />
                 </Button>
               </PopoverTrigger>
             </Tip>
@@ -507,21 +502,21 @@ export default function EditorToolbar({
           </Popover>
 
           {/* Secondary Actions Dropdown (Mobile-first) */}
-          <ActionsDropdown icon={MoreHorizontal}>
+          <ActionsDropdown icon="more_horiz">
             <div className="p-1 space-y-0.5">
               <PopoverItem onClick={() => setSelectedLines(new Set(lines.map((_, i) => i)))}>
-                <ListChecks className="size-4" />
+                <Icon name="checklist" size={16} />
                 {t('editor.selection.selectAll')}
               </PopoverItem>
 
               <PopoverItem onClick={handleClearTimestamps}>
-                <Eraser className="size-4" />
+                <Icon name="ink_eraser" size={16} />
                 {t('editor.selection.clearTimestamps')}
               </PopoverItem>
 
               {editorMode === 'words' && (
                 <PopoverItem onClick={handleClearAllWordTimestamps}>
-                  <Eraser className="size-4" />
+                  <Icon name="ink_eraser" size={16} />
                   {t('editor.clearWordTimestamps')}
                 </PopoverItem>
               )}
@@ -531,7 +526,7 @@ export default function EditorToolbar({
                   const current = settings.editor?.display?.readingFormat || 'hiragana';
                   updateSetting('editor.display.readingFormat', current === 'hiragana' ? 'katakana' : 'hiragana');
                 }}>
-                  <Languages className="size-4" />
+                  <Icon name="translate" size={16} />
                   <div className="flex items-center gap-1.5">
                     <span className={`text-xs font-bold ${settings.editor?.display?.readingFormat !== 'katakana' ? 'text-primary' : 'text-zinc-400'
                       }`}>
@@ -550,13 +545,13 @@ export default function EditorToolbar({
 
               {onShowKeyboardHelp && (
                 <PopoverItem onClick={onShowKeyboardHelp} className="text-xs">
-                  <HelpCircle className="size-4" />
+                  <Icon name="help" size={16} />
                   {t('shortcuts.title')}
                 </PopoverItem>
               )}
 
               <PopoverItem onClick={onNewProject} className="text-xs">
-                <Plus className="size-4" />
+                <Icon name="add" size={16} />
                 {t('home.newProject')}
               </PopoverItem>
 
@@ -564,7 +559,7 @@ export default function EditorToolbar({
                 onClick={() => requestConfirm(t('confirm.removeAll'), handleRemoveAllLyrics, { title: t('confirm.removeAllTitle'), variant: 'danger' })}
                 className="text-xs text-red-400"
               >
-                <Trash2 className="size-4" />
+                <Icon name="delete" size={16} />
                 {t('editor.removeAll')}
               </PopoverItem>
             </div>

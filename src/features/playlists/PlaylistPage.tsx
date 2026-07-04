@@ -4,7 +4,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Lock, Pencil, Trash2, Music, Star, GitFork, GripVertical } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { FloatingCombobox } from '@ui/floating-combobox';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -68,7 +68,7 @@ function ProjectRow({ project, isOwner, playlistId, onRemoved, showDragHandle }:
   return (
     <div className="glass rounded-xl p-4 flex items-center gap-4 group">
       {showDragHandle && (
-        <GripVertical className="size-4 text-muted-foreground shrink-0 cursor-grab" />
+        <Icon name="drag_indicator" size={16} className="text-muted-foreground shrink-0 cursor-grab" />
       )}
       <div className="flex-1 min-w-0">
         <Link
@@ -84,10 +84,10 @@ function ProjectRow({ project, isOwner, playlistId, onRemoved, showDragHandle }:
         )}
         <div className="flex items-center gap-3 mt-1">
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Star className="size-3" />{project.starCount ?? 0}
+            <Icon name="star" size={12} />{project.starCount ?? 0}
           </span>
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <GitFork className="size-3" />{project.forkCount ?? 0}
+            <Icon name="call_split" size={12} />{project.forkCount ?? 0}
           </span>
         </div>
       </div>
@@ -226,7 +226,7 @@ export default function PlaylistPage() {
         to={`/${accountName}`}
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 w-fit"
       >
-        <ArrowLeft className="size-4" />
+        <Icon name="arrow_back" size={16} />
         @{accountName}
       </Link>
 
@@ -237,7 +237,7 @@ export default function PlaylistPage() {
           {playlist.coverImage ? (
             <img src={playlist.coverImage} alt={playlist.name} className="absolute inset-0 w-full h-full object-cover" />
           ) : (
-            <Music className="size-12 text-primary/40" />
+            <Icon name="music_note" size={48} className="text-primary/40" />
           )}
         </div>
 
@@ -246,7 +246,7 @@ export default function PlaylistPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-semibold text-foreground">{playlist.name}</h1>
-                {!playlist.isPublic && <Lock className="size-4 text-muted-foreground" />}
+                {!playlist.isPublic && <Icon name="lock" size={16} className="text-muted-foreground" />}
               </div>
               {playlist.description && (
                 <p className="text-sm text-muted-foreground mt-1 max-w-prose">{playlist.description}</p>
@@ -290,7 +290,7 @@ export default function PlaylistPage() {
               {isOwner ? (
                 <>
                   <Button variant="outline" size="sm" onClick={() => setShowEdit(true)} className="flex items-center gap-1.5">
-                    <Pencil className="size-4" />
+                    <Icon name="edit" size={16} />
                     {t('playlists.detail.edit')}
                   </Button>
                   {confirmDelete ? (
@@ -309,7 +309,7 @@ export default function PlaylistPage() {
                       onClick={() => setConfirmDelete(true)}
                       className="text-muted-foreground hover:text-destructive flex items-center gap-1.5"
                     >
-                      <Trash2 className="size-4" />
+                      <Icon name="delete" size={16} />
                       {t('playlists.detail.delete')}
                     </Button>
                   )}

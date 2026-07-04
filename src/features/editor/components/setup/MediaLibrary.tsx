@@ -1,4 +1,4 @@
-import { Cloud, Trash2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { SkeletonMediaItem } from '@ui/skeleton';
 import { useTranslation } from 'react-i18next';
 
@@ -68,7 +68,7 @@ export default function MediaLibrary({
             >
               <div className="size-7 rounded-lg bg-zinc-800 border border-zinc-700/60 flex items-center justify-center shrink-0">
                 {upload.source === 'youtube' ? <svg preserveAspectRatio="xMidYMid" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" /><path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" className="size-3.5 text-red-400" /></svg>
-                  : <Cloud className="size-3.5 text-zinc-400" />}
+                  : <Icon name="cloud" size={14} className="text-zinc-400" />}
               </div>
               <p className={`flex-1 text-xs font-medium truncate ${selectedId === upload.id ? 'text-primary' : 'text-zinc-300 group-hover:text-zinc-100'
                 }`}>
@@ -81,7 +81,7 @@ export default function MediaLibrary({
                 }}
                 className="p-1 rounded opacity-0 group-hover:opacity-100 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all shrink-0"
               >
-                <Trash2 className="size-3.5" />
+                <Icon name="delete" size={14} />
               </button>
             </div>
           ))

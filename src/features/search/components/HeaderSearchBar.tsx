@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, Loader2, ArrowRight } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useHeaderSearch } from '../hooks/useHeaderSearch';
 import { SearchUserCard } from './SearchUserCard';
 import { LazyImage } from '@ui/LazyImage';
@@ -93,9 +93,9 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
   return (
     <div ref={containerRef} className="relative w-full max-w-xs">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none" />
+        <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
         {loading && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 animate-spin" />
+          <Icon name="progress_activity" size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 animate-spin" />
         )}
         <input
           ref={inputRef}
@@ -148,7 +148,7 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
               className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 border-t border-zinc-800/60 text-xs font-medium text-primary hover:text-primary/80 hover:bg-zinc-900/60 transition-colors"
             >
               {t('search.allResults')}
-              <ArrowRight className="size-3" />
+              <Icon name="arrow_forward" size={12} />
             </button>
           )}
         </div>

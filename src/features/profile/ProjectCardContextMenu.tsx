@@ -6,7 +6,7 @@ import {
   ContextMenuItem,
   ContextMenuSeparator,
 } from '@ui/context-menu';
-import { Pencil, Trash2, ExternalLink, Link2, Check } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useState } from 'react';
 import type { Project } from '@/types';
 
@@ -36,12 +36,12 @@ export function ProjectCardContextMenu({ children, project, isOwner, onEdit, onD
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem onClick={() => window.open(`/project/${project.publicId}${isOwner ? '/edit' : ''}`, '_blank')}>
-          <ExternalLink />
+          <Icon name="open_in_new" />
           {t('profile.openInNewTab', 'Open in new tab')}
         </ContextMenuItem>
 
         <ContextMenuItem onClick={handleCopyLink}>
-          {copied ? <Check /> : <Link2 />}
+          {copied ? <Icon name="check" /> : <Icon name="link" />}
           {copied ? t('projectView.actions.copied') : t('projectView.actions.copyLink')}
         </ContextMenuItem>
 
@@ -49,12 +49,12 @@ export function ProjectCardContextMenu({ children, project, isOwner, onEdit, onD
           <>
             <ContextMenuSeparator />
             <ContextMenuItem onClick={() => onEdit(project)}>
-              <Pencil />
+              <Icon name="edit" />
               {t('profile.editProject')}
             </ContextMenuItem>
             <ContextMenuSeparator />
             <ContextMenuItem variant="destructive" onClick={() => onDelete(project)}>
-              <Trash2 />
+              <Icon name="delete" />
               {t('profile.deleteProject')}
             </ContextMenuItem>
           </>

@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from '@ui/dialog';
 import { Button } from '@ui/button';
-import { CheckCircle2, XCircle, Clock, MessageSquareQuote } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
 
@@ -40,7 +40,7 @@ export default function AppealDetailsModal({ isOpen, user, onApprove, onReject, 
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="size-10 bg-yellow-500/10 rounded-full flex items-center justify-center border border-yellow-500/20">
-              <MessageSquareQuote className="size-5 text-yellow-500" />
+              <Icon name="format_quote" size={20} className="text-yellow-500" />
             </div>
             <div>
               <DialogTitle className="text-lg font-bold text-zinc-100">
@@ -67,7 +67,7 @@ export default function AppealDetailsModal({ isOpen, user, onApprove, onReject, 
                 {t('admin.appeal.submittedAt') || 'Submitted At'}
               </span>
               <div className="flex items-center gap-1.5 text-zinc-300 text-xs" suppressHydrationWarning>
-                <Clock className="size-3.5 text-zinc-500" />
+                <Icon name="schedule" size={14} className="text-zinc-500" />
                 {user.appeal?.submittedAt ? formatInTimezone(user.appeal.submittedAt, settings.advanced?.timezone, {}, i18n.resolvedLanguage || i18n.language) : '-'}
               </div>
             </div>
@@ -76,7 +76,7 @@ export default function AppealDetailsModal({ isOpen, user, onApprove, onReject, 
           {/* Appeal Content */}
           <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5 relative">
             <div className="absolute top-3 right-3 opacity-20">
-              <MessageSquareQuote className="size-12 text-zinc-500" />
+              <Icon name="format_quote" size={48} className="text-zinc-500" />
             </div>
             <span className="text-[10px] font-bold text-yellow-500/70 uppercase tracking-widest mb-2 block">
               {t('admin.banned.yourAppealLabel') || 'User Appeal'}
@@ -103,7 +103,7 @@ export default function AppealDetailsModal({ isOpen, user, onApprove, onReject, 
               onClick={() => onReject(user)}
               className="flex-1 bg-zinc-800 hover:bg-red-500/20 text-red-400 border border-red-500/10"
             >
-              <XCircle className="size-4 mr-2" />
+              <Icon name="cancel" size={16} className="mr-2" />
               {t('admin.table.rejectAppeal')}
             </Button>
             <Button
@@ -111,7 +111,7 @@ export default function AppealDetailsModal({ isOpen, user, onApprove, onReject, 
               onClick={() => onApprove(user)}
               className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold"
             >
-              <CheckCircle2 className="size-4 mr-2" />
+              <Icon name="check_circle" size={16} className="mr-2" />
               {t('admin.table.unban')}
             </Button>
           </div>

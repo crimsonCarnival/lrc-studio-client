@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Loader2, Star, GitFork, Music } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { usePaginatedProjects } from './hooks/useExplore';
 
 interface ExploreProject {
@@ -29,7 +29,7 @@ export default function ExploreProjectsPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-primary" />
+        <Icon name="progress_activity" size={32} className="animate-spin text-primary" />
       </div>
     );
   }
@@ -67,7 +67,7 @@ export default function ExploreProjectsPage() {
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                   ) : (
-                    <Music className="size-8 text-primary/50" />
+                    <Icon name="music_note" size={32} className="text-primary/50" />
                   )}
                 </div>
                 <div className="p-3 flex flex-col gap-1">
@@ -79,11 +79,11 @@ export default function ExploreProjectsPage() {
                   </p>
                   <div className="flex items-center gap-3 mt-0.5">
                     <span className="flex items-center gap-1 text-xs text-zinc-400">
-                      <Star className="size-3" />
+                      <Icon name="star" size={12} />
                       {project.starCount ?? 0}
                     </span>
                     <span className="flex items-center gap-1 text-xs text-zinc-400">
-                      <GitFork className="size-3" />
+                      <Icon name="call_split" size={12} />
                       {project.forkCount ?? 0}
                     </span>
                   </div>
@@ -99,7 +99,7 @@ export default function ExploreProjectsPage() {
               className="mt-2 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loadingMore
-                ? <Loader2 className="size-4 animate-spin" />
+                ? <Icon name="progress_activity" size={16} className="animate-spin" />
                 : t('explore.page.loadMore')}
             </button>
           ) : (

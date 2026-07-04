@@ -2,7 +2,7 @@ import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/shared/utils/utils'
 import { Input } from './input'
-import { ChevronDown } from 'lucide-react'
+import { Icon } from '@/shared/ui/Icon'
 
 export interface ComboboxOption {
   value: string
@@ -217,10 +217,10 @@ export function FloatingCombobox({
           {label}
         </label>
       )}
-      <ChevronDown className={cn(
+      <Icon name="expand_more" className={cn(
         "absolute top-1/2 -translate-y-1/2 pointer-events-none",
-        size === 'default' ? "right-3 size-3.5 text-zinc-600" : "right-1.5 size-3 text-zinc-500"
-      )} />
+        size === 'default' ? "right-3 text-zinc-600" : "right-1.5 text-zinc-500"
+      )} size={size === 'default' ? 14 : 12} />
 
       {showDropdown && typeof document !== 'undefined'
         ? createPortal(dropdown, document.body)

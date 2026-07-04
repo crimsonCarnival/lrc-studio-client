@@ -7,7 +7,7 @@ import { enUS, es } from 'date-fns/locale';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projects } from '@/app/api';
-import { Music2, Plus, Search, Play, ChevronRight, Activity, Library as LibraryIcon, Compass, Trophy, Rss } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
 import ProjectSetupModalRaw from '@features/editor/components/setup/ProjectSetupModal';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
@@ -135,7 +135,7 @@ export default function Home() {
             >
               <ThemedShineBorder />
               <div className="size-7 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
-                <Plus className="size-4 text-primary" />
+                <Icon name="add" size={16} className="text-primary" />
               </div>
               <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('home.createNew')}</span>
             </button>
@@ -147,7 +147,7 @@ export default function Home() {
             >
               <ThemedShineBorder />
               <div className="size-7 shrink-0 rounded-lg bg-accent-purple/10 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
-                <LibraryIcon className="size-4 text-accent-purple" />
+                <Icon name="local_library" size={16} className="text-accent-purple" />
               </div>
               <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('home.viewLibrary')}</span>
             </button>
@@ -160,7 +160,7 @@ export default function Home() {
               >
                 <ThemedShineBorder />
                 <div className="size-7 shrink-0 rounded-lg bg-zinc-800 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
-                  <Play className="size-3.5 text-zinc-400 ml-0.5" />
+                  <Icon name="play_arrow" size={14} className="text-zinc-400 ml-0.5" />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">{t('home.resumeLast')}</span>
@@ -197,7 +197,7 @@ export default function Home() {
             </div>
             {items.length > 0 && (
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-600 pointer-events-none" />
+                <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -253,7 +253,7 @@ export default function Home() {
                   >
                     <ThemedShineBorder />
                     <div className="size-8 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
-                      <Compass className="size-4 text-primary" />
+                      <Icon name="explore" size={16} className="text-primary" />
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('explore.nav')}</span>
@@ -268,7 +268,7 @@ export default function Home() {
                   >
                     <ThemedShineBorder />
                     <div className="size-8 shrink-0 rounded-lg bg-warning/10 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
-                      <Trophy className="size-4 text-warning" />
+                      <Icon name="emoji_events" size={16} className="text-warning" />
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('badges.leaderboard.title')}</span>
@@ -283,7 +283,7 @@ export default function Home() {
                   >
                     <ThemedShineBorder />
                     <div className="size-8 shrink-0 rounded-lg bg-accent-blue/10 flex items-center justify-center group-hover:scale-110 motion-reduce:group-hover:scale-100 transition-transform">
-                      <Rss className="size-4 text-accent-blue" />
+                      <Icon name="rss_feed" size={16} className="text-accent-blue" />
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="text-xs font-semibold text-zinc-300 group-hover:text-zinc-100 transition-colors">{t('feed.title')}</span>
@@ -317,13 +317,13 @@ export default function Home() {
                             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
                           </>
                         ) : (
-                          <Music2 className="size-4 text-zinc-600" />
+                          <Icon name="music_note" size={16} className="text-zinc-600" />
                         )}
                         {/* Source indicator */}
                         <div className="absolute top-2 right-2">
                           {project.upload?.source === 'youtube'
                             ? <YoutubeIcon className="size-4 drop-shadow-md" />
-                            : hasCover ? <Music2 className="size-3 text-primary/60" /> : null}
+                            : hasCover ? <Icon name="music_note" size={12} className="text-primary/60" /> : null}
                         </div>
                       </div>
                       {/* Info */}
@@ -336,12 +336,12 @@ export default function Home() {
                             <span className="text-[10px] text-zinc-500">{formatRelativeTime(project.createdAt, (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2))}</span>
                             <span className="size-0.5 rounded-full bg-zinc-700 shrink-0" />
                             <span className="text-[10px] text-zinc-500 flex items-center gap-0.5">
-                              <Activity className="size-2.5" />
+                              <Icon name="monitoring" size={10} />
                               {(project.syncedLineCount || 0)}/{(project.lineCount || 0)}
                             </span>
                           </div>
                         </div>
-                        <ChevronRight className="size-3.5 text-zinc-800 group-hover:text-primary group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
+                        <Icon name="chevron_right" size={14} className="text-zinc-800 group-hover:text-primary group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
                       </div>
                     </button>
                   );

@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { motion as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { Plus, RefreshCw, Scan, Pencil, Trash2, Award, Users, X, Search, UserPlus } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
 import { BadgeChip } from '@/features/badges/BadgeChip';
 import { BADGE_COLORS } from '@/features/badges/badge-registry';
@@ -232,13 +232,13 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60">
           <div className="flex items-center gap-3">
-            <Award className="size-4 text-primary" />
+            <Icon name="military_tech" size={16} className="text-primary" />
             <h3 className="text-sm font-semibold text-zinc-200">
               {editing ? t('admin.badges.editTitle', { name: editing.label?.en || editing.id }) : t('admin.badges.newTitle')}
             </h3>
           </div>
           <button type="button" onClick={onClose} className="text-zinc-600 hover:text-zinc-400 transition-colors">
-            <X className="size-4" />
+            <Icon name="close" size={16} />
           </button>
         </div>
 
@@ -490,11 +490,11 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button type="button" onClick={() => onEdit(def)} className="size-6 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors">
-            <Pencil className="size-3" />
+            <Icon name="edit" size={12} />
           </button>
           {!def.isBuiltin && (
             <button type="button" onClick={() => onDelete(def)} className="size-6 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-zinc-600 hover:text-red-400 transition-colors">
-              <Trash2 className="size-3" />
+              <Icon name="delete" size={12} />
             </button>
           )}
         </div>
@@ -506,7 +506,7 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
           {def.rarity ?? 'common'}
         </span>
         <span className="text-[10px] text-zinc-600 flex items-center gap-1">
-          <Users className="size-3" />
+          <Icon name="group" size={12} />
           {def.holderCount.toLocaleString()} ({(def.holderPct ?? 0).toFixed(1)}%)
         </span>
         <span className="text-[10px] text-amber-600 flex items-center gap-1">⚡ {(def.xpReward ?? 50).toLocaleString()} XP</span>
@@ -530,7 +530,7 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
             onClick={() => onGrant(def)}
             className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-all border border-zinc-700/50"
           >
-            <UserPlus className="size-3" />
+            <Icon name="person_add" size={12} />
             {t('admin.badges.grantToUser')}
           </button>
           <button
@@ -542,7 +542,7 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
             {retroLoading === def.id ? (
               <span className="size-3 rounded-full border border-primary border-t-transparent animate-spin" />
             ) : (
-              <Scan className="size-3" />
+              <Icon name="qr_code_scanner" size={12} />
             )}
             {t('admin.badges.retroactiveScan')}
           </button>
@@ -704,7 +704,7 @@ export default function AdminBadgesTab({ proposeMode = false }: { proposeMode?: 
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-40">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-zinc-600 pointer-events-none" />
+          <Icon name="search" size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
           <input
             className="w-full pl-8 pr-3 py-2 text-xs bg-zinc-900 border border-zinc-800 rounded-xl placeholder:text-zinc-500 focus:border-primary/40 focus:outline-none text-zinc-300"
             placeholder={t('admin.badges.searchPlaceholder')}
@@ -717,14 +717,14 @@ export default function AdminBadgesTab({ proposeMode = false }: { proposeMode?: 
           onClick={fetchDefs}
           className="size-8 rounded-xl border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-all"
         >
-          <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
+          <Icon name="refresh" size={14} className={loading ? 'animate-spin' : ''} />
         </button>
         <button
           type="button"
           onClick={() => setFormModal('new')}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-zinc-950 text-xs font-semibold hover:bg-primary/90 transition-colors"
         >
-          <Plus className="size-3.5" />
+          <Icon name="add" size={14} />
           {t('admin.badges.newBadge')}
         </button>
       </div>

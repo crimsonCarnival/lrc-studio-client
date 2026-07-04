@@ -14,7 +14,7 @@ import SpeedControl from './SpeedControl';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/popover';
-import { Music2, AlertTriangle, Play, Pause, Headphones, FolderOpen, Repeat, SkipBack, SkipForward, Cloud, ChevronDown, Link2, ChevronLeft, ChevronRight, Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { getAccessToken } from '@/app/api';
 import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
@@ -45,13 +45,13 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
         htmlFor={fileInputId}
         className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 cursor-pointer transition-colors"
       >
-        <FolderOpen className="size-4 shrink-0 text-zinc-500" />
+        <Icon name="folder_open" size={16} className="shrink-0 text-zinc-500" />
         {t('player.dropAudio')}
         <input id={fileInputId} type="file" accept="audio/*" onChange={onFileChange} className="hidden" />
       </label>
       <div className="flex gap-1.5 px-1 py-1">
         <div className="relative flex-1">
-          {!ytUrl && <Link2 className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-zinc-500 pointer-events-none" />}
+          {!ytUrl && <Icon name="link" size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />}
           <Input
             value={ytUrl}
             onChange={(e) => { onYtUrlChange(e.target.value); onYtErrorChange(''); }}
@@ -66,7 +66,7 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
           disabled={!ytUrl.trim() || cdnLoading}
           className="h-8 px-3 text-xs shrink-0 bg-zinc-700 hover:bg-zinc-600 border-zinc-600"
         >
-          {cdnLoading ? <Loader2 className="size-3 animate-spin" /> : t('player.load')}
+          {cdnLoading ? <Icon name="progress_activity" size={12} className="animate-spin" /> : t('player.load')}
         </Button>
       </div>
       {getAccessToken() && uploads.length > 0 && (
@@ -80,7 +80,7 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
               <div className="size-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center shrink-0">
                 {upload.source === 'youtube'
                   ? <svg preserveAspectRatio="xMidYMid" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" /><path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" className="size-3 text-red-400" /></svg>
-                  : <Cloud className="size-3 text-blue-400" />}
+                  : <Icon name="cloud" size={12} className="text-blue-400" />}
               </div>
               <span className="text-xs text-zinc-300 truncate group-hover:text-white transition-colors">
                 {upload.title || upload.fileName || t('uploads.untitled')}
@@ -94,7 +94,7 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
           onClick={onClearMedia}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
         >
-          <Trash2 className="size-4 shrink-0" />
+          <Icon name="delete" size={16} className="shrink-0" />
           {t('player.remove')}
         </button>
       </div>
@@ -130,8 +130,8 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
           className="size-7 rounded-full bg-primary flex items-center justify-center shrink-0 active:scale-95 transition-all duration-100 shadow-sm shadow-primary/20"
         >
           {isPlaying
-            ? <Pause className="size-3 text-zinc-950" fill="currentColor" />
-            : <Play className="size-3 text-zinc-950 ml-px" fill="currentColor" />}
+            ? <Icon name="pause" size={12} className="text-zinc-950" />
+            : <Icon name="play_arrow" size={12} className="text-zinc-950" />}
         </button>
 
         {/* Song name (falls back to project title) */}
@@ -176,7 +176,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                   size="icon"
                   className={`size-7 shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
                 >
-                  <ChevronDown className="size-3.5" />
+                  <Icon name="expand_more" size={14} />
                 </Button>
               </PopoverTrigger>
             </Tip>
@@ -213,10 +213,10 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
         {!hasMedia && !viewerMode && (
           <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 mb-2">
             <h2 className="text-xs sm:text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2 overflow-hidden pb-0.5 min-w-0">
-              <span className="uppercase shrink-0 text-xs sm:text-sm flex items-center gap-1.5"><Headphones className="size-3.5" />{t('player.title')}</span>
+              <span className="uppercase shrink-0 text-xs sm:text-sm flex items-center gap-1.5"><Icon name="headphones" size={14} />{t('player.title')}</span>
               {mediaTitle && (
                 <div className="flex items-center gap-2 px-1.5 py-0.5 rounded text-xs min-w-0">
-                  <Music2 className="size-2.5 text-primary shrink-0" strokeWidth={2.5} />
+                  <Icon name="music_note" size={10} className="text-primary shrink-0" />
                   <span className="text-primary normal-case tracking-normal truncate max-w-[300px]">{mediaTitle}</span>
                 </div>
               )}
@@ -249,7 +249,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                 if (file) local.handleFileChange(file);
               }}
             >
-              <FolderOpen className="size-4 text-zinc-400 group-hover:text-primary transition-colors" />
+              <Icon name="folder_open" size={16} className="text-zinc-400 group-hover:text-primary transition-colors" />
               <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">{t('player.dropAudio')}</span>
               <input id="audio-file-input" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
             </label>
@@ -259,7 +259,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
             {/* URL Input (YouTube/CDN) */}
             <div className="flex items-center gap-2 flex-1 max-w-[450px]">
               <div className="relative w-full">
-                {!yt.ytUrl && <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-zinc-500 pointer-events-none" />}
+                {!yt.ytUrl && <Icon name="link" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />}
                 <Input
                   value={yt.ytUrl}
                   onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
@@ -273,7 +273,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                 disabled={cdnLoading}
                 className="h-10 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/50 font-medium shrink-0"
               >
-                {cdnLoading ? <Loader2 className="size-4 animate-spin" /> : t('player.load')}
+                {cdnLoading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : t('player.load')}
               </Button>
             </div>
 
@@ -286,9 +286,9 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       variant="ghost"
                       className="flex items-center gap-2 h-10 px-4 rounded-xl bg-zinc-800/30 hover:bg-zinc-800/60 border border-zinc-700/30 hover:border-zinc-700 transition-all text-zinc-300"
                     >
-                      <Cloud className="size-4 text-blue-400/80" />
+                      <Icon name="cloud" size={16} className="text-blue-400/80" />
                       <span className="text-sm font-medium">{t('uploads.title')}</span>
-                      <ChevronDown className="size-3.5 opacity-50 ml-1" />
+                      <Icon name="expand_more" size={14} className="opacity-50 ml-1" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[320px] max-h-[300px] overflow-y-auto p-1 glass-dark border-zinc-700/50 shadow-2xl" align="end" sideOffset={12}>
@@ -305,7 +305,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                             <div className="size-8 rounded bg-zinc-800 border border-zinc-700 group-hover:border-primary/40 flex items-center justify-center shrink-0">
                               {upload.source === 'youtube'
                                 ? <YoutubeIcon className="size-5" />
-                                : <Cloud className="size-3.5 text-blue-400" />}
+                                : <Icon name="cloud" size={14} className="text-blue-400" />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-zinc-200 truncate group-hover:text-primary transition-colors">
@@ -324,7 +324,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
             {/* Embed-blocked overlay */}
             {yt.ytEmbedBlocked && (
               <div className="absolute inset-x-0 -top-24 mx-2 bg-zinc-900/95 border border-orange-500/30 rounded-xl px-4 py-3 flex items-start gap-3 animate-fade-in shadow-lg">
-                <AlertTriangle className="size-4 text-orange-400 shrink-0 mt-0.5" />
+                <Icon name="warning" size={16} className="text-orange-400 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-zinc-100">{t('player.embeddingDisabled')}</p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">{t('player.embeddingBlockedDesc')}</p>
@@ -417,7 +417,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       onClick={() => seek(currentTime - 0.1)}
                       className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}
                     >
-                      <ChevronLeft className="size-4" />
+                      <Icon name="chevron_left" size={16} />
                     </Button>
                   </Tip>
 
@@ -428,7 +428,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       onClick={() => seek(Math.max(0, currentTime - (settings.playback?.seekTime ?? 5)))}
                       className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}
                     >
-                      <SkipBack className="size-4" />
+                      <Icon name="skip_previous" size={16} />
                     </Button>
                   </Tip>
 
@@ -441,9 +441,9 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       className="rounded-full bg-primary hover:bg-primary-dim text-zinc-950 hover:scale-105 active:scale-95 glow-primary flex-shrink-0 transition-all duration-100"
                     >
                       {isPlaying ? (
-                        <Pause className="size-4" fill="currentColor" />
+                        <Icon name="pause" size={16} />
                       ) : (
-                        <Play className="size-4 ml-0.5" fill="currentColor" />
+                        <Icon name="play_arrow" size={16} />
                       )}
                     </Button>
                   </Tip>
@@ -455,7 +455,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       onClick={() => seek(Math.min(duration, currentTime + (settings.playback?.seekTime ?? 5)))}
                       className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}
                     >
-                      <SkipForward className="size-4" />
+                      <Icon name="skip_next" size={16} />
                     </Button>
                   </Tip>
 
@@ -466,7 +466,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       onClick={() => seek(currentTime + 0.1)}
                       className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}
                     >
-                      <ChevronRight className="size-4" />
+                      <Icon name="chevron_right" size={16} />
                     </Button>
                   </Tip>
                 </div>
@@ -495,7 +495,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                           size="icon"
                           className={`shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
                         >
-                          <RefreshCw className="size-4" />
+                          <Icon name="refresh" size={16} />
                         </Button>
                       </PopoverTrigger>
                     </Tip>
@@ -523,9 +523,9 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                       className="rounded-full bg-primary hover:bg-primary-dim text-zinc-950 hover:scale-105 active:scale-95 glow-primary shrink-0 transition-all duration-100"
                     >
                       {isPlaying ? (
-                        <Pause className="size-4" fill="currentColor" />
+                        <Icon name="pause" size={16} />
                       ) : (
-                        <Play className="size-4 ml-0.5" fill="currentColor" />
+                        <Icon name="play_arrow" size={16} />
                       )}
                     </Button>
                   </Tip>
@@ -564,7 +564,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                           size="icon"
                           className={`size-7 shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
                         >
-                          <ChevronDown className="size-3.5" />
+                          <Icon name="expand_more" size={14} />
                         </Button>
                       </PopoverTrigger>
                     </Tip>
@@ -584,7 +584,6 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                           <span className="text-xs text-zinc-500 w-14 shrink-0">{t('player.volume')}</span>
                           <VolumeControl />
                         </div>
-
                       </div>
                       {!viewerMode && (
                         <ChangeMediaPopoverContent fileInputId="change-media-file-editor-narrow" {...mediaPopoverProps} />
@@ -598,22 +597,22 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                   <div className="flex items-center gap-0.5">
                     <Tip content="-0.1s">
                       <Button variant="ghost" size="icon" onClick={() => seek(currentTime - 0.1)} className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}>
-                        <ChevronLeft className="size-4" />
+                        <Icon name="chevron_left" size={16} />
                       </Button>
                     </Tip>
                     <Tip content={`-${settings.playback?.seekTime ?? 5}s`}>
                       <Button variant="ghost" size="icon" onClick={() => seek(Math.max(0, currentTime - (settings.playback?.seekTime ?? 5)))} className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}>
-                        <SkipBack className="size-4" />
+                        <Icon name="skip_previous" size={16} />
                       </Button>
                     </Tip>
                     <Tip content={`+${settings.playback?.seekTime ?? 5}s`}>
                       <Button variant="ghost" size="icon" onClick={() => seek(Math.min(duration, currentTime + (settings.playback?.seekTime ?? 5)))} className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}>
-                        <SkipForward className="size-4" />
+                        <Icon name="skip_next" size={16} />
                       </Button>
                     </Tip>
                     <Tip content="+0.1s">
                       <Button variant="ghost" size="icon" onClick={() => seek(currentTime + 0.1)} className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}>
-                        <ChevronRight className="size-4" />
+                        <Icon name="chevron_right" size={16} />
                       </Button>
                     </Tip>
                   </div>
@@ -645,20 +644,20 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                     htmlFor="audio-file-compact"
                     className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700/60 text-sm font-medium text-zinc-300 cursor-pointer active:scale-95 transition-all duration-100 shrink-0"
                   >
-                    <FolderOpen className="size-4" />
+                    <Icon name="folder_open" size={16} />
                     {t('player.dropAudio') || 'Load audio'}
                     <input id="audio-file-compact" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
                   </label>
                   <div className="flex-1 flex gap-2">
                     <div className="relative flex-1">
                       {detectedUrlType === 'cdn' ? (
-                        <Cloud className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-blue-400/80 pointer-events-none" />
+                        <Icon name="cloud" size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-400/80 pointer-events-none" />
                       ) : detectedUrlType === 'youtube' ? (
                         <svg className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-red-500/70 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                         </svg>
                       ) : (
-                        <Link2 className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-zinc-500 pointer-events-none" />
+                        <Icon name="link" size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
                       )}
                       <Input
                         type="text"
@@ -687,10 +686,10 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                         className="w-full justify-between bg-zinc-800/50 border-zinc-700/60 hover:bg-zinc-700/60 text-zinc-300 text-xs h-8"
                       >
                         <span className="flex items-center gap-1.5">
-                          <Cloud className="size-3 text-zinc-500" />
+                          <Icon name="cloud" size={12} className="text-zinc-500" />
                           {t('uploads.selectFromUploads')}
                         </span>
-                        <ChevronDown className="size-3 text-zinc-500" />
+                        <Icon name="expand_more" size={12} className="text-zinc-500" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[var(--radix-popover-trigger-width)] max-h-[180px] overflow-y-auto p-1" align="start">
@@ -706,7 +705,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                             <div className="size-8 rounded flex-shrink-0 overflow-hidden bg-zinc-700/50 flex items-center justify-center">
                               {upload.source === 'youtube'
                                 ? <YoutubeIcon className="size-5" />
-                                : <Cloud className="size-3.5 text-blue-400 shrink-0" />}
+                                : <Icon name="cloud" size={14} className="text-blue-400 shrink-0" />}
                             </div>
                             <span className="text-xs font-medium text-zinc-200 truncate">
                               {upload.title || upload.fileName || t('uploads.untitled')}
@@ -734,8 +733,8 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                   className="size-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0 active:scale-95 transition-all duration-100 shadow-lg shadow-primary/20"
                 >
                   {isPlaying
-                    ? <Pause className="size-4 text-zinc-950" fill="currentColor" />
-                    : <Play className="size-4 text-zinc-950 ml-0.5" fill="currentColor" />}
+                    ? <Icon name="pause" size={16} className="text-zinc-950" />
+                    : <Icon name="play_arrow" size={16} className="text-zinc-950" />}
                 </button>
 
                 <div className="flex-1 flex flex-col gap-1">
@@ -778,7 +777,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                   onClick={() => seek(Math.max(0, currentTime - (settings.playback?.seekTime ?? 5)))}
                   className="flex flex-col items-center justify-center size-14 rounded-2xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800 active:scale-95 transition-all duration-100 shrink-0"
                 >
-                  <SkipBack className="size-6" />
+                  <Icon name="skip_previous" size={24} />
                   <span className="text-[10px] font-bold mt-1 text-zinc-500">{settings.playback?.seekTime ?? 5}</span>
                 </button>
 
@@ -810,7 +809,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                     }}
                     className={`flex flex-col items-center justify-center size-14 rounded-2xl transition-all duration-100 shrink-0 active:scale-95 ${loopA != null && loopB != null ? 'text-accent-purple bg-accent-purple/10' : 'text-zinc-400 active:bg-zinc-800'}`}
                   >
-                    <Repeat className="size-6" />
+                    <Icon name="repeat" size={24} />
                     <span className="text-[9px] font-bold mt-1 opacity-60 uppercase tracking-tight">{t('player.loop') || 'Loop'}</span>
                   </button>
                 )}
@@ -823,7 +822,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                   onClick={() => seek(Math.min(duration, currentTime + (settings.playback?.seekTime ?? 5)))}
                   className="flex flex-col items-center justify-center size-14 rounded-2xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800 active:scale-95 transition-all duration-100 shrink-0"
                 >
-                  <SkipForward className="size-6" />
+                  <Icon name="skip_next" size={24} />
                   <span className="text-[10px] font-bold mt-1 text-zinc-500">{settings.playback?.seekTime ?? 5}</span>
                 </button>
 
@@ -841,7 +840,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
                     <Tip content={t('player.changeSong')}>
                       <PopoverTrigger asChild>
                         <button className="flex flex-col items-center justify-center size-14 rounded-2xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800 active:scale-95 transition-all duration-100 shrink-0">
-                          <RefreshCw className="size-6" />
+                          <Icon name="refresh" size={24} />
                           <span className="text-[9px] font-bold mt-1 opacity-60 uppercase tracking-tight">
                             {t('player.changeSong')}
                           </span>

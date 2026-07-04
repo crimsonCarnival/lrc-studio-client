@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { splitArtists } from '@/shared/utils/lrc';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { UploadCloud } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 import { AppBackground } from './layout/AppBackground';
 import { AppHeader } from './layout/header/AppHeader';
@@ -160,7 +160,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         {isDraggingFile && (
           <div className="fixed inset-0 z-overlay flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none transition-all">
             <div className="flex flex-col items-center gap-4 text-primary animate-pulse">
-              <UploadCloud className="size-20" />
+              <Icon name="cloud_upload" size={80} />
               <h2 className="text-3xl font-semibold tracking-tight text-center px-4">
                 {t('player.dropAudio') || 'Drop your audio or lyrics file here'}
               </h2>

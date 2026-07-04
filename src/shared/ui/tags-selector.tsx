@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import { X, Search, ChevronDown, Plus } from 'lucide-react'
+import { Icon } from '@/shared/ui/Icon'
 import { cn } from '@/shared/utils/utils'
 import {
   TAGS_CATALOG,
@@ -176,7 +176,7 @@ export function TagsSelector({ value, onChange, genre, className }: TagsSelector
                 className="hover:text-primary/60 transition-colors leading-none"
                 aria-label={`Remove ${tag}`}
               >
-                <X className="size-2.5" />
+                <Icon name="close" size={10} />
               </button>
             </span>
           ))}
@@ -193,8 +193,10 @@ export function TagsSelector({ value, onChange, genre, className }: TagsSelector
               {value.length}/{MAX_TAGS}
             </span>
           )}
-          <ChevronDown
-            className={cn('size-3.5 text-zinc-400 transition-transform duration-150', open && 'rotate-180')}
+          <Icon
+            name="expand_more"
+            size={14}
+            className={cn('text-zinc-400 transition-transform duration-150', open && 'rotate-180')}
           />
         </div>
       </div>
@@ -210,7 +212,7 @@ export function TagsSelector({ value, onChange, genre, className }: TagsSelector
           >
             <div className="shrink-0 p-2 border-b border-zinc-800/80">
               <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-zinc-500 pointer-events-none" />
+                <Icon name="search" size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
                 <input
                   ref={searchRef}
                   value={query}
@@ -288,7 +290,7 @@ export function TagsSelector({ value, onChange, genre, className }: TagsSelector
                   onClick={addCustom}
                   className="mt-2 w-full flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-zinc-300 border border-dashed border-zinc-700/60 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all"
                 >
-                  <Plus className="size-3 shrink-0" />
+                  <Icon name="add" size={12} className="shrink-0" />
                   {t('setup.tagsAdd', { tag: trimmedQuery })}
                 </button>
               )}

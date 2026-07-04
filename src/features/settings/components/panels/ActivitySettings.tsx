@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Activity } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import ActionHistory from './profile/ActionHistory';
 import ActivityHeatmap from './profile/ActivityHeatmap';
 
@@ -26,7 +26,7 @@ export default function ActivitySettings({ searchTerm }: { searchTerm?: string }
   return (
     <div className="settings-section space-y-6 animate-fade-in">
       <div className="flex items-center gap-2 mb-2 px-1">
-        <Activity className="size-4 text-zinc-400" />
+        <Icon name="monitoring" size={16} className="text-zinc-400" />
         <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
           {t('profile.tabs.activity')}
         </h3>

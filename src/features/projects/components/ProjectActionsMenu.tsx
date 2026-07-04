@@ -1,19 +1,12 @@
 import { useState } from 'react';
-import type { ComponentType, ReactNode, CSSProperties } from 'react';
+import type { ReactNode, CSSProperties } from 'react';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import {
-  MoreHorizontal, Pencil, GitFork,
-  Download, Share2, Link2, Check,
-  ChevronRight, ChevronDown, FileText, FileCode,
-  ListPlus, Loader2, Plus,
-} from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Popover, PopoverTrigger, PopoverContent, PopoverItem, PopoverSeparator } from '@ui/popover';
 import { Button } from '@ui/button';
 import { compileLRC as localCompileLRC, compileSRT as localCompileSRT } from '@/shared/utils/lrc';
 import { getPlaylists, addProjectToPlaylist, createPlaylist } from '@features/playlists/playlist.service';
-
-type IconComponent = ComponentType<{ className?: string }>;
 
 interface Playlist {
   id: string;
@@ -44,7 +37,7 @@ function downloadFile(content: string, filename: string) {
 }
 
 interface MenuItemProps {
-  icon?: IconComponent;
+  iconName?: string;
   label: string;
   onClick?: () => void;
   danger?: boolean;
@@ -52,7 +45,7 @@ interface MenuItemProps {
 }
 
 // Expandable submenu item
-function MenuItem({ icon: Icon, label, onClick, danger, children }: MenuItemProps) {
+function MenuItem({ iconName, label, onClick, danger, children }: MenuItemProps) {
   const [open, setOpen] = useState(false);
   const style: CSSProperties | undefined = danger ? { color: 'var(--color-red-400, #f87171)' } : undefined;
 
@@ -61,12 +54,12 @@ function MenuItem({ icon: Icon, label, onClick, danger, children }: MenuItemProp
       <div>
         <PopoverItem style={style} onClick={() => setOpen((v) => !v)} className="justify-between">
           <span className="flex items-center gap-2">
-            {Icon && <Icon className="size-3.5 opacity-70" />}
+            {iconName && <Icon name={iconName} size={14} className="opacity-70" />}
             {label}
           </span>
           {open
-            ? <ChevronDown className="size-3 opacity-50" />
-            : <ChevronRight className="size-3 opacity-50" />}
+            ? <Icon name="expand_more" size={12} className="opacity-50" />
+            : <Icon name="chevron_right" size={12} className="opacity-50" />}
         </PopoverItem>
         {open && (
           <div className="ml-3 pl-2.5 border-l border-zinc-700/50 mt-0.5 mb-0.5">
@@ -79,7 +72,7 @@ function MenuItem({ icon: Icon, label, onClick, danger, children }: MenuItemProp
 
   return (
     <PopoverItem style={style} onClick={onClick}>
-      {Icon && <Icon className="size-3.5 opacity-70" />}
+      {iconName && <Icon name={iconName} size={14} className="opacity-70" />}
       {label}
     </PopoverItem>
   );
@@ -132,19 +125,19 @@ function AddToListMenu({ user, project, t }: { user: User; project: Project; t: 
     <div>
       <PopoverItem onClick={handleToggle} className="justify-between">
         <span className="flex items-center gap-2">
-          <ListPlus className="size-3.5 opacity-70" />
+          <Icon name="playlist_add" size={14} className="opacity-70" />
           {t('projectView.actions.addToList')}
         </span>
         {open
-          ? <ChevronDown className="size-3 opacity-50" />
-          : <ChevronRight className="size-3 opacity-50" />}
+          ? <Icon name="expand_more" size={12} className="opacity-50" />
+          : <Icon name="chevron_right" size={12} className="opacity-50" />}
       </PopoverItem>
 
       {open && (
         <div className="ml-3 pl-2.5 border-l border-zinc-700/50 mt-0.5 mb-0.5">
           {loading && (
             <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-500">
-              <Loader2 className="size-3 animate-spin" />
+              <Icon name="progress_activity" size={12} className="animate-spin" />
               {t('projectView.actions.loadingLists')}
             </div>
           )}
@@ -162,13 +155,13 @@ function AddToListMenu({ user, project, t }: { user: User; project: Project; t: 
               className="justify-between"
             >
               <span className="truncate max-w-[130px]">{pl.name}</span>
-              {added[pl.id] && <Check className="size-3 text-primary shrink-0" />}
+              {added[pl.id] && <Icon name="check" size={12} className="text-primary shrink-0" />}
             </PopoverItem>
           ))}
 
           <PopoverSeparator />
           <PopoverItem onClick={handleNewPlaylist}>
-            <Plus className="size-3.5 opacity-70" />
+            <Icon name="add" size={14} className="opacity-70" />
             {t('projectView.actions.newList')}
           </PopoverItem>
         </div>
@@ -257,7 +250,7 @@ export function ProjectActionsMenu({
           className="size-8 rounded-full shrink-0"
           aria-label={t('projectView.actions.menu')}
         >
-          <MoreHorizontal className="size-4" />
+          <Icon name="more_horiz" size={16} />
         </Button>
       </PopoverTrigger>
 
@@ -266,7 +259,7 @@ export function ProjectActionsMenu({
         {/* Owner: edit */}
         {isOwner && (
           <>
-            <MenuItem icon={Pencil} label={t('projectView.editButton')} onClick={onEdit} />
+            <MenuItem iconName="edit" label={t('projectView.editButton')} onClick={onEdit} />
             <PopoverSeparator />
           </>
         )}
@@ -274,7 +267,7 @@ export function ProjectActionsMenu({
         {/* Non-owner: fork */}
         {!isOwner && canFork && (
           <>
-            <MenuItem icon={GitFork} label={t('projectView.forkButton')} onClick={onFork} />
+            <MenuItem iconName="call_split" label={t('projectView.forkButton')} onClick={onFork} />
           </>
         )}
 
@@ -287,20 +280,20 @@ export function ProjectActionsMenu({
         )}
 
         {/* Export — all users */}
-        <MenuItem icon={Download} label={t('projectView.actions.export')}>
-          <MenuItem icon={FileText} label="LRC (.lrc)" onClick={handleExportLrc} />
-          <MenuItem icon={FileCode} label="SRT (.srt)" onClick={handleExportSrt} />
+        <MenuItem iconName="download" label={t('projectView.actions.export')}>
+          <MenuItem iconName="description" label="LRC (.lrc)" onClick={handleExportLrc} />
+          <MenuItem iconName="code" label="SRT (.srt)" onClick={handleExportSrt} />
         </MenuItem>
 
         {/* Share — all users */}
-        <MenuItem icon={Share2} label={t('projectView.actions.share')}>
+        <MenuItem iconName="share" label={t('projectView.actions.share')}>
           <MenuItem
-            icon={ogCopied ? Check : Share2}
+            iconName={ogCopied ? 'check' : 'share'}
             label={ogCopied ? t('projectView.actions.copied') : t('projectView.actions.shareOg')}
             onClick={handleShareOg}
           />
           <MenuItem
-            icon={linkCopied ? Check : Link2}
+            iconName={linkCopied ? 'check' : 'link'}
             label={linkCopied ? t('projectView.actions.copied') : t('projectView.actions.copyLink')}
             onClick={handleCopyLink}
           />

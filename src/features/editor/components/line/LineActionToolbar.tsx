@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
-import { Pencil, Play, ChevronLeft, ChevronRight, Plus, MoreHorizontal, User, Layers } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import LineActionsPopover from './LineActionsPopover';
 import { getSingerOptionsForSelection } from '../../utils/sections';
 
@@ -150,7 +150,7 @@ const LineActionToolbar = memo(({
                 }}
                 className="text-zinc-500 hover:bg-primary/20 hover:text-primary"
               >
-                <Play className="size-3" fill="currentColor" />
+                <Icon name="play_arrow" size={12} filled />
               </Button>
             </Tip>
 
@@ -170,7 +170,7 @@ const LineActionToolbar = memo(({
                     onClick={(e) => { e.stopPropagation(); shiftTime(lineIndex, -(settings.editor?.nudge?.default || 0.1)); }}
                     className={`transition-colors ${focusedTimestamp?.lineIndex === lineIndex ? 'text-primary hover:text-primary-dim hover:bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60'}`}
                   >
-                    <ChevronLeft className="size-3" />
+                    <Icon name="chevron_left" size={12} />
                   </Button>
                 </Tip>
                 <Tip content={(() => {
@@ -187,7 +187,7 @@ const LineActionToolbar = memo(({
                     onClick={(e) => { e.stopPropagation(); shiftTime(lineIndex, settings.editor?.nudge?.default || 0.1); }}
                     className={`transition-colors ${focusedTimestamp?.lineIndex === lineIndex ? 'text-primary hover:text-primary-dim hover:bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60'}`}
                   >
-                    <ChevronRight className="size-3" />
+                    <Icon name="chevron_right" size={12} />
                   </Button>
                 </Tip>
                 <div className="w-px h-4 bg-zinc-700/50 mx-0.5" />
@@ -198,7 +198,7 @@ const LineActionToolbar = memo(({
                     onClick={(e) => { e.stopPropagation(); handleAddLine(lineIndex); }}
                     className="text-primary/70 hover:text-primary hover:bg-primary/10"
                   >
-                    <Plus className="size-3" />
+                    <Icon name="add" size={12} />
                   </Button>
                 </Tip>
                 <div className="w-px h-4 bg-zinc-700/50 mx-0.5" />
@@ -217,7 +217,7 @@ const LineActionToolbar = memo(({
                     }}
                     className="text-sky-400/70 hover:text-sky-400 hover:bg-sky-500/10"
                   >
-                    <Pencil className="size-3" />
+                    <Icon name="edit" size={12} />
                   </Button>
                 </Tip>
               </>
@@ -240,7 +240,7 @@ const LineActionToolbar = memo(({
               }}
               className="text-sky-400/70 hover:text-sky-400 hover:bg-sky-500/10"
             >
-              <Pencil className="size-3" />
+              <Icon name="edit" size={12} />
             </Button>
           </Tip>
         )}
@@ -253,7 +253,7 @@ const LineActionToolbar = memo(({
                 onClick={(e) => { e.stopPropagation(); handleInsertSection?.(lineIndex - 1); }}
                 className="text-zinc-500 hover:text-primary hover:bg-primary/10"
               >
-                <Layers className="size-3" />
+                <Icon name="layers" size={12} />
               </Button>
             </Tip>
             {!isMobile ? (
@@ -273,7 +273,7 @@ const LineActionToolbar = memo(({
                 onClick={(e) => { e.stopPropagation(); onLineMenu?.(lineIndex, line); }}
                 className="text-zinc-500 active:text-zinc-300"
               >
-                <MoreHorizontal className="size-3" />
+                <Icon name="more_horiz" size={12} />
               </Button>
             )}
           </>
@@ -320,7 +320,7 @@ function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }: 
     <div className="relative">
       <Tip content={t('editor.assignSingerToLines', { count: indices.length })}>
         <Button variant="ghost" size="icon-xs" onClick={(e) => { e.stopPropagation(); setOpen(p => !p); }} className="text-zinc-500 hover:text-primary hover:bg-primary/10">
-          <User className="size-3" />
+          <Icon name="person" size={12} />
         </Button>
       </Tip>
       {open && (

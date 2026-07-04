@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
 import { Button } from '@ui/button';
-import { Volume2, VolumeX, Minus, Plus } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 
 const VolumeControl = memo(function VolumeControl() {
@@ -20,9 +20,9 @@ const VolumeControl = memo(function VolumeControl() {
           aria-label={settings.playback.muted ? t('player.unmute') || 'Unmute' : t('player.mute') || 'Mute'}
         >
         {settings.playback.muted || settings.playback.volume === 0 ? (
-          <VolumeX className="size-5 lg:size-4" />
+          <Icon name="volume_off" size={20} className="lg:size-4" />
         ) : (
-          <Volume2 className="size-5 lg:size-4" />
+          <Icon name="volume_up" size={20} className="lg:size-4" />
         )}
         </Button>
       </Tip>
@@ -56,7 +56,7 @@ const VolumeControl = memo(function VolumeControl() {
             className="size-11 rounded-full bg-zinc-800/60 flex items-center justify-center text-zinc-500 active:bg-zinc-700 active:text-zinc-200 active:scale-95 transition-all duration-100"
             aria-label={t('player.decreaseVolume')}
           >
-            <Minus className="size-5 lg:size-4" />
+            <Icon name="remove" size={20} className="lg:size-4" />
           </button>
         </Tip>
         <Tip content={t('player.increaseVolume')}>
@@ -65,7 +65,7 @@ const VolumeControl = memo(function VolumeControl() {
             className="size-11 rounded-full bg-zinc-800/60 flex items-center justify-center text-zinc-500 active:bg-zinc-700 active:text-zinc-200 active:scale-95 transition-all duration-100"
             aria-label={t('player.increaseVolume')}
           >
-            <Plus className="size-5 lg:size-4" />
+            <Icon name="add" size={20} className="lg:size-4" />
           </button>
         </Tip>
       </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Users, Globe, ShieldAlert } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import AdminUsersTab from './AdminUsersTab';
 import AdminIpsTab from './AdminIpsTab';
 import AdminDevicesTab from './AdminDevicesTab';
@@ -70,10 +70,10 @@ export default function AdminModerationTab(props: AdminModerationTabProps) {
   const defaultView: ModerationView = canViewUsers ? 'users' : canBlockNetwork ? 'ips' : 'users';
   const [view, setView] = useState<ModerationView>(defaultView);
 
-  const subNav: { id: ModerationView; icon: typeof Users; label: string; visible: boolean }[] = [
-    { id: 'users',   icon: Users,       label: t('admin.moderation.viewUsers'),   visible: canViewUsers },
-    { id: 'ips',     icon: Globe,       label: t('admin.moderation.viewIps'),     visible: canBlockNetwork },
-    { id: 'devices', icon: ShieldAlert, label: t('admin.moderation.viewDevices'), visible: canBlockNetwork },
+  const subNav: { id: ModerationView; icon: string; label: string; visible: boolean }[] = [
+    { id: 'users',   icon: 'group',     label: t('admin.moderation.viewUsers'),   visible: canViewUsers },
+    { id: 'ips',     icon: 'language',  label: t('admin.moderation.viewIps'),     visible: canBlockNetwork },
+    { id: 'devices', icon: 'gpp_bad',   label: t('admin.moderation.viewDevices'), visible: canBlockNetwork },
   ];
 
   const visibleNav = subNav.filter(n => n.visible);
@@ -92,7 +92,7 @@ export default function AdminModerationTab(props: AdminModerationTabProps) {
                 : 'border-transparent text-zinc-500 hover:text-zinc-300'
             }`}
           >
-            <nav.icon className="size-3.5 shrink-0" />
+            <Icon name={nav.icon} size={14} className="shrink-0" />
             {nav.label}
           </button>
         ))}

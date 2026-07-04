@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate } from 'react-router-dom';
-import { Loader2, Rss } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { useFeed } from './hooks/useFeed';
@@ -48,7 +48,7 @@ export default function FeedPage() {
       {activities.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
           <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
-            <Rss className="size-7 text-zinc-500" />
+            <Icon name="rss_feed" size={28} className="text-zinc-500" />
           </div>
           <p className="text-sm text-zinc-400 font-medium">{emptyTitle}</p>
           <p className="text-xs text-zinc-500">{emptyCta}</p>
@@ -66,7 +66,7 @@ export default function FeedPage() {
               className="mt-2 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loadingMore
-                ? <Loader2 className="size-4 animate-spin" />
+                ? <Icon name="progress_activity" size={16} className="animate-spin" />
                 : t('feed.loadMore')}
             </button>
           )}

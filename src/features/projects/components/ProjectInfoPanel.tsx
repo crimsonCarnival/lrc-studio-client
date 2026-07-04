@@ -2,9 +2,7 @@ import { useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  Star, GitFork, Pencil, Check, Music2, CalendarDays, ExternalLink,
-} from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { ProjectActionsMenu } from './ProjectActionsMenu';
 import { BoostButton } from './BoostButton';
@@ -208,7 +206,7 @@ export default function ProjectInfoPanel({
           {isOwner ? (
             <>
               <PanelButton onClick={onEdit} palette={palette} variant="outline">
-                <Pencil className="size-3.5" />
+                <Icon name="edit" size={14} />
                 {t('projectView.editButton')}
               </PanelButton>
               {ctaSlot}
@@ -222,7 +220,7 @@ export default function ProjectInfoPanel({
                   active={isStarred}
                   palette={palette}
                 >
-                  <Star className={`size-3.5 ${isStarred ? 'fill-current' : ''}`} />
+                  <Icon name="star" size={14} filled={isStarred} />
                   {isStarred ? t('projectView.unstarButton') : t('projectView.starButton')}
                 </PanelButton>
               )}
@@ -237,12 +235,12 @@ export default function ProjectInfoPanel({
                       border: `1px solid ${palette ? `${palette.accent}44` : 'hsl(var(--primary) / 0.2)'}`,
                     }}
                   >
-                    <Check className="size-3.5" />
+                    <Icon name="check" size={14} />
                     {t('projectView.forkedBadge')}
                   </span>
                 ) : (
                   <PanelButton onClick={onFork} palette={palette}>
-                    <GitFork className="size-3.5" />
+                    <Icon name="call_split" size={14} />
                     {t('projectView.forkButton')}
                   </PanelButton>
                 )
@@ -261,11 +259,11 @@ export default function ProjectInfoPanel({
           style={{ color: palette?.faded ?? 'hsl(var(--muted-foreground))' }}
         >
           <span className="inline-flex items-center gap-1.5">
-            <Star className="size-3.5" />
+            <Icon name="star" size={14} />
             <span style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}>{starCount ?? 0}</span>
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <GitFork className="size-3.5" />
+            <Icon name="call_split" size={14} />
             <span style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}>{project?.forkCount ?? 0}</span>
           </span>
           {reactionsSlot && <div>{reactionsSlot}</div>}
@@ -278,7 +276,7 @@ export default function ProjectInfoPanel({
             className="inline-flex items-center gap-1 text-xs hover:underline w-fit"
             style={{ color: palette?.accent ?? 'hsl(var(--accent-blue))' }}
           >
-            <ExternalLink className="size-3" />
+            <Icon name="open_in_new" size={12} />
             {t('projectView.forkedFrom')}
             {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
           </Link>
@@ -337,7 +335,7 @@ export default function ProjectInfoPanel({
         >
           {accountName && (
             <div className="flex items-center gap-1.5">
-              <Music2 className="size-3" />
+              <Icon name="music_note" size={12} />
               <Link
                 to={`/${accountName}`}
                 className="hover:underline"
@@ -349,7 +347,7 @@ export default function ProjectInfoPanel({
           )}
           {formattedDate && (
             <div className="flex items-center gap-1.5">
-              <CalendarDays className="size-3" />
+              <Icon name="calendar_month" size={12} />
               <span>
                 {t('projectView.publishedOn')} {formattedDate}
               </span>

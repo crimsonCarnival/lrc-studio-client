@@ -3,7 +3,7 @@ import type { ChangeEvent, FormEvent } from 'react';
 import { Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Zap, ArrowRight, ArrowLeft, Lightbulb } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { AnimatePresence, m as M } from 'framer-motion';
 import { z } from 'zod';
 import { FloatingInput } from '@ui/floating-input';
@@ -262,7 +262,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
               <div className="relative">
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
                   <Tip content={t('auth.tips.displayName')}>
-                    <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
+                    <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
                   </Tip>
                 </div>
                 <FloatingInput
@@ -299,7 +299,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
                     <Tip content={t('auth.tips.accountName')}>
-                      <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
+                      <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
                     </Tip>
                   </div>
                 </div>
@@ -317,7 +317,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
               className={`h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-base lg:text-sm rounded-xl transition-all duration-200 mt-2 flex items-center justify-center gap-2 ${focusRingCls}`}
             >
               {t('auth.continue')}
-              <ArrowRight className="size-4" />
+              <Icon name="arrow_forward" size={16} />
             </M.button>
 
             <div className="flex flex-col gap-4 mt-2">
@@ -338,7 +338,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                 onClick={() => navigate('/project/new')}
                 className="group flex items-center justify-center gap-2 py-1 text-xs font-semibold text-zinc-500 hover:text-primary transition-all duration-300"
               >
-                <Zap className="size-3.5 text-zinc-600 group-hover:text-primary group-hover:fill-primary/20 transition-all" />
+                <Icon name="bolt" size={14} className="text-zinc-600 group-hover:text-primary group-hover:fill-primary/20 transition-all" />
                 {t('auth.guestMode')}
               </button>
             </div>
@@ -360,7 +360,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
               <div className="relative">
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
                   <Tip content={t('auth.tips.email')}>
-                    <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
+                    <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
                   </Tip>
                 </div>
                 <FloatingInput
@@ -382,7 +382,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
               <div className="relative">
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1">
                   <Tip content={t('auth.tips.password')}>
-                    <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
+                    <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
                   </Tip>
                   {password && (
                     <M.button
@@ -392,7 +392,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                       className={`h-9 w-9 flex items-center justify-center text-zinc-400 hover:text-zinc-300 transition-colors rounded-lg ${focusRingCls}`}
                       aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                     >
-                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      {showPassword ? <Icon name="visibility_off" size={16} /> : <Icon name="visibility" size={16} />}
                     </M.button>
                   )}
                 </div>
@@ -416,7 +416,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
               <div className="relative">
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1">
                   <Tip content={t('auth.tips.confirmPassword')}>
-                    <Lightbulb className="size-4 text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
+                    <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
                   </Tip>
                   {confirmPassword && (
                     <M.button
@@ -425,7 +425,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                       whileTap={{ scale: 0.95 }}
                       className={`h-9 w-9 flex items-center justify-center text-zinc-400 hover:text-zinc-300 transition-colors rounded-lg ${focusRingCls}`}
                     >
-                      {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      {showConfirm ? <Icon name="visibility_off" size={16} /> : <Icon name="visibility" size={16} />}
                     </M.button>
                   )}
                 </div>
@@ -449,7 +449,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                 onClick={handleBack}
                 className={`h-12 lg:h-10 flex items-center justify-center gap-2 px-4 rounded-xl border border-zinc-700/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 font-semibold text-sm transition-all ${focusRingCls}`}
               >
-                <ArrowLeft className="size-4" />
+                <Icon name="arrow_back" size={16} />
               </button>
               <M.button
                 type="submit"

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Loader2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useSuggestedUsers } from '../hooks/useExplore';
 import { followUser, unfollowUser } from '@/features/profile/profile.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -51,7 +51,7 @@ export function SuggestedUsers({ limit = 8 }: { limit?: number }) {
 
       {loading ? (
         <div className="flex justify-center py-10">
-          <Loader2 className="size-6 animate-spin text-zinc-500" />
+          <Icon name="progress_activity" size={24} className="animate-spin text-zinc-500" />
         </div>
       ) : error || users.length === 0 ? (
         <p className="text-sm text-zinc-500 text-center py-10">

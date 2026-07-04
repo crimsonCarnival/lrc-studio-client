@@ -6,7 +6,7 @@ import { Kbd, KbdGroup } from '@ui/kbd';
 import { useSettings } from '@/features/settings/useSettings';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@ui/dialog';
-import { X, Headphones, FileText, Eye, ListChecks, UserCircle } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { KEY_SYMBOLS } from '@features/settings/key-symbols';
 import { matchKey } from '@/shared/utils/keyboard';
 
@@ -23,12 +23,18 @@ const resolveShortcut = (shortcut: string): string[] => {
   return shortcut.split('+').map((k) => SYMBOLS[k] ?? k);
 };
 
+const HeadphonesIcon = ({ className }: { className?: string }) => <Icon name="headphones" className={className} />;
+const FileTextIcon = ({ className }: { className?: string }) => <Icon name="description" className={className} />;
+const EyeIcon = ({ className }: { className?: string }) => <Icon name="visibility" className={className} />;
+const ListChecksIcon = ({ className }: { className?: string }) => <Icon name="checklist" className={className} />;
+const UserCircleIcon = ({ className }: { className?: string }) => <Icon name="account_circle" className={className} />;
+
 const HELP_TABS = [
-  { id: 'player', icon: Headphones, labelKey: 'shortcuts.tabs.player' },
-  { id: 'editor', icon: FileText,   labelKey: 'shortcuts.tabs.editor' },
-  { id: 'preview', icon: Eye,       labelKey: 'shortcuts.tabs.preview' },
-  { id: 'sections', icon: ListChecks, labelKey: 'editor.help.sectionsTab' },
-  { id: 'singers', icon: UserCircle, labelKey: 'editor.help.singersTab' },
+  { id: 'player', icon: HeadphonesIcon, labelKey: 'shortcuts.tabs.player' },
+  { id: 'editor', icon: FileTextIcon,   labelKey: 'shortcuts.tabs.editor' },
+  { id: 'preview', icon: EyeIcon,       labelKey: 'shortcuts.tabs.preview' },
+  { id: 'sections', icon: ListChecksIcon, labelKey: 'editor.help.sectionsTab' },
+  { id: 'singers', icon: UserCircleIcon, labelKey: 'editor.help.singersTab' },
 ];
 
 interface HelpItem {
@@ -135,14 +141,14 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
               onPointerDown={(e) => e.stopPropagation()}
               className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800"
             >
-              <X className="size-4" />
+              <Icon name="close" size={16} />
             </Button>
           </div>
 
           {/* Tabs */}
           <div className="flex px-3 pt-2 gap-0.5 bg-zinc-950/40">
             {HELP_TABS.map((tab) => {
-              const Icon = tab.icon;
+              const TabIcon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <Button
@@ -155,7 +161,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
                       : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
                   }`}
                 >
-                  <Icon className="size-3.5" />
+                  <TabIcon className="size-3.5" />
                   {tk(tab.labelKey)}
                 </Button>
               );

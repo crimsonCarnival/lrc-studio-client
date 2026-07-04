@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import type { ComponentType, ReactNode } from 'react';
 import { m, LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { createPortal } from 'react-dom';
 
 interface ActionDrawerProps {
@@ -66,7 +66,7 @@ export default function ActionDrawer({
                     onClick={onClose}
                     className="p-2 -mr-2 text-zinc-400 hover:text-zinc-200 bg-zinc-900 rounded-full transition-colors"
                   >
-                    <X className="size-5" />
+                    <Icon name="close" size={20} />
                   </button>
                 )}
               </div>

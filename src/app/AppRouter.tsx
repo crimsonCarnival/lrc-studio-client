@@ -7,7 +7,7 @@ import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-do
 import type { NavigateFunction } from 'react-router-dom';
 import type { TFunction } from 'i18next';
 import { SkeletonList, SkeletonEditor, SkeletonPreview, SkeletonSetup } from '@ui/skeleton';
-import { Loader2, GripVertical } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Reorder } from 'framer-motion';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { useEditorActivity } from '@/features/auth/hooks/useSessionSocket';
@@ -65,7 +65,7 @@ type RouterLayoutState = Record<string, any>;
 
 function RequireAdmin({ children }: { children: ReactNode }) {
   const { user, loading } = useAuthContext();
-  if (loading) return <div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>;
+  if (loading) return <div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin" /></div>;
   if (!user) return <Navigate to="/auth/signin" replace />;
   // Any staff member (holds at least one permission) may reach the dashboard;
   // individual tabs/actions are gated by their specific permission.
@@ -154,7 +154,7 @@ const PanelReorderGroup = React.memo(function PanelReorderGroup({
               >
                 {/* Drag Handle - Hidden visually but functional */}
                 <div className={`absolute -top-4 left-1/2 -translate-x-1/2 opacity-0 transition-all duration-300 z-50 cursor-grab active:cursor-grabbing bg-zinc-800 backdrop-blur-xl border border-zinc-600/50 rounded-xl p-2 shadow-2xl pointer-events-auto max-lg:hidden hover:scale-110 hover:border-primary/50 group/handle ${draggingItem === item || lockLayout ? 'hidden' : ''}`}>
-                  <GripVertical className="size-5 text-zinc-400 group-hover/handle:text-primary transition-colors" />
+                  <Icon name="drag_indicator" size={20} className="text-zinc-400 group-hover/handle:text-primary transition-colors" />
                 </div>
 
                 <Suspense fallback={isEditor ? <SkeletonEditor /> : <SkeletonPreview />}>
@@ -262,7 +262,7 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">
-      <Loader2 className="size-10 animate-spin text-primary" />
+      <Icon name="progress_activity" size={40} className="animate-spin text-primary" />
       <p className="text-sm font-medium animate-pulse">
         {t('project.cloning') || 'Cloning project...'}
       </p>
@@ -577,7 +577,7 @@ export function AppRouter({
         </EditorContainer>
       } />
       <Route path="home" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin" /></div>}>
           <Home />
         </Suspense>
       } />
@@ -610,73 +610,73 @@ export function AppRouter({
         </div>
       } />
       <Route path="project/:publicId" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <PublicProjectViewPage />
         </Suspense>
       } />
       <Route path=":accountName/lists/:listId" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <ListPage />
         </Suspense>
       } />
       <Route path=":accountName" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <ProfilePage />
         </Suspense>
       } />
       <Route path="profile/:accountName" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <ProfilePage />
         </Suspense>
       } />
       <Route path="profile/:accountName/playlists/:listId" element={<LegacyListRedirect />} />
       <Route path="settings/:tab?" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <SettingsPage />
         </Suspense>
       } />
       <Route index element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin" /></div>}>
           <GuestLanding />
         </Suspense>
       } />
       <Route path="verify-email" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <VerifyEmailPage />
         </Suspense>
       } />
       <Route path="feed" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <FeedPage />
         </Suspense>
       } />
       <Route path="search" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin" /></div>}>
           <SearchPage />
         </Suspense>
       } />
       <Route path="explore" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <ExplorePage />
         </Suspense>
       } />
       <Route path="explore/projects" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <ExploreProjectsPage />
         </Suspense>
       } />
       <Route path="explore/playlists" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <ExplorePlaylistsPage />
         </Suspense>
       } />
       <Route path="leaderboard" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <LeaderboardPage />
         </Suspense>
       } />
       <Route path="notifications" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Loader2 className="size-8 animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <NotificationsPage />
         </Suspense>
       } />

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Check, Upload as UploadIcon, Loader2 } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { FloatingTextarea } from '@ui/floating-textarea';
@@ -198,7 +198,7 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
             {isEdit ? t('playlists.modal.titleEdit') : t('playlists.modal.titleCreate')}
           </h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
-            <X className="size-5" />
+            <Icon name="close" size={20} />
           </button>
         </div>
 
@@ -253,9 +253,9 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
                     className="shrink-0 size-9 flex items-center justify-center rounded-lg border border-border bg-zinc-800/50 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors disabled:opacity-50"
                   >
                     {imageUploading ? (
-                      <Loader2 className="size-4 animate-spin" />
+                      <Icon name="progress_activity" size={16} className="animate-spin" />
                     ) : (
-                      <UploadIcon className="size-4" />
+                      <Icon name="upload" size={16} />
                     )}
                   </button>
                   <input
@@ -275,7 +275,7 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
                   {form.tags.map(tag => (
                     <span key={tag} className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/15 text-primary">
                       {tag}
-                      <button onClick={() => removeTag(tag)}><X className="size-3" /></button>
+                      <button onClick={() => removeTag(tag)}><Icon name="close" size={12} /></button>
                     </span>
                   ))}
                   {form.tags.length < 10 && (
@@ -336,7 +336,7 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
                       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${selected ? 'bg-primary/10' : 'hover:bg-white/5'}`}
                     >
                       <span className={`size-4 rounded border flex items-center justify-center shrink-0 ${selected ? 'bg-primary border-primary' : 'border-border'}`}>
-                        {selected && <Check className="size-3 text-zinc-950" />}
+                        {selected && <Icon name="check" size={12} className="text-zinc-950" />}
                       </span>
                       <span className="flex-1 min-w-0">
                         <span className="text-sm text-foreground line-clamp-1">{p.title || t('playlists.modal.untitled')}</span>

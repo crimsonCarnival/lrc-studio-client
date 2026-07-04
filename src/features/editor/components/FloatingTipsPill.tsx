@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Lightbulb } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 export function FloatingTipsPill() {
   const { t } = useTranslation();
@@ -23,7 +23,7 @@ export function FloatingTipsPill() {
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none animate-fade-in">
       <div className="flex items-center gap-2 px-4 py-2 bg-zinc-950/80 border border-zinc-800/60 rounded-full backdrop-blur-xl shadow-xl pointer-events-auto cursor-help transition-all hover:border-zinc-700/60 hover:bg-zinc-900/80">
-        <Lightbulb className="size-3.5 text-amber-400/80 shrink-0" />
+        <Icon name="lightbulb" size={14} className="text-amber-400/80 shrink-0" />
         <p className="text-[11px] font-medium text-zinc-400 whitespace-nowrap max-w-[320px] truncate">
           {tips[tipIndex]}
         </p>

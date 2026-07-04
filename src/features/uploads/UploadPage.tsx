@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { useSettings } from '@/features/settings/useSettings';
-import { ChevronLeft } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
@@ -124,7 +124,7 @@ export const UploadPage = () => {
             className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0"
             aria-label={t('common.back')}
           >
-            <ChevronLeft className="size-4" />
+            <Icon name="chevron_left" size={16} />
           </Button>
           <h1 className="text-2xl font-semibold text-zinc-100">{t('uploads.uploadAudio')}</h1>
         </div>

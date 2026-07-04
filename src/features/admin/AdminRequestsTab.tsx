@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { motion as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { Check, X, RefreshCw, Inbox, Clock, Plus, History } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { requestsApi, type StaffRequest } from './services/requests.service';
 import { isSudoCancelled } from './services/sudo';
 import { getSocket } from '@/app/socket.client';
@@ -223,7 +223,7 @@ export default function AdminRequestsTab() {
           onClick={fetchAll}
           className="size-8 rounded-xl border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-all"
         >
-          <RefreshCw className="size-3.5" />
+          <Icon name="refresh" size={14} />
         </button>
         {composerTypes.length > 0 && (
           <button
@@ -231,7 +231,7 @@ export default function AdminRequestsTab() {
             onClick={() => setComposerOpen(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-zinc-950 text-xs font-semibold hover:bg-primary/90 transition-colors"
           >
-            <Plus className="size-3.5" />
+            <Icon name="add" size={14} />
             {t('admin.requests.newRequest')}
           </button>
         )}
@@ -246,7 +246,7 @@ export default function AdminRequestsTab() {
       {canReview && (
         <section className="flex flex-col gap-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-1.5">
-            <Inbox className="size-3" /> {t('admin.requests.toReview')}
+            <Icon name="inbox" size={12} /> {t('admin.requests.toReview')}
           </p>
           {pending.length === 0 ? (
             <p className="text-sm text-zinc-500 py-6 text-center">{t('admin.requests.noneToReview')}</p>
@@ -261,7 +261,7 @@ export default function AdminRequestsTab() {
                       onClick={() => decide(req, 'approve')}
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 disabled:opacity-50 transition-colors"
                     >
-                      <Check className="size-3" /> {t('admin.requests.approve')}
+                      <Icon name="check" size={12} /> {t('admin.requests.approve')}
                     </button>
                     <button
                       type="button"
@@ -269,7 +269,7 @@ export default function AdminRequestsTab() {
                       onClick={() => decide(req, 'reject')}
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
                     >
-                      <X className="size-3" /> {t('admin.requests.reject')}
+                      <Icon name="close" size={12} /> {t('admin.requests.reject')}
                     </button>
                   </div>
                 </RequestRow>
@@ -282,7 +282,7 @@ export default function AdminRequestsTab() {
       {canSubmit && (
         <section className="flex flex-col gap-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-1.5">
-            <Clock className="size-3" /> {t('admin.requests.mine')}
+            <Icon name="schedule" size={12} /> {t('admin.requests.mine')}
           </p>
           {mine.length === 0 ? (
             <p className="text-sm text-zinc-500 py-6 text-center">{t('admin.requests.noneMine')}</p>
@@ -297,7 +297,7 @@ export default function AdminRequestsTab() {
       {canReview && reviewed.length > 0 && (
         <section className="flex flex-col gap-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 flex items-center gap-1.5">
-            <History className="size-3" /> {t('admin.requests.reviewedHistory')}
+            <Icon name="history" size={12} /> {t('admin.requests.reviewedHistory')}
           </p>
           <AnimatePresence>
             {reviewed.map(req => <RequestRow key={req.id} req={req} />)}

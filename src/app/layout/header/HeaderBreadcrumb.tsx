@@ -1,10 +1,10 @@
 import { useState, useRef, startTransition } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Pencil, ArrowLeft, ExternalLink, Settings2 } from 'lucide-react';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
+import { Icon } from '@/shared/ui/Icon';
 
 interface ForkedFrom {
   publicId?: string;
@@ -86,7 +86,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
                   aria-label={t('editor.projectSettings')}
                   className="size-6 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors shrink-0 cursor-pointer"
                 >
-                  <Settings2 className="size-3.5" />
+                  <Icon name="tune" size={14} />
                 </button>
               </Tip>
             )}
@@ -119,13 +119,13 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
                 <span className="text-xs font-medium text-zinc-400 group-hover:text-zinc-200 truncate transition-colors max-w-[120px] sm:max-w-[200px]">
                   {mediaTitle || t('setup.projectNamePlaceholder')}
                 </span>
-                <Pencil className="size-3 text-zinc-600 group-hover:text-zinc-400 transition-colors shrink-0" />
+                <Icon name="edit" size={12} className="text-zinc-600 group-hover:text-zinc-400 transition-colors shrink-0" />
               </button>
             )}
             {forkedFrom?.publicId && (
               <Tip content={forkedFrom.accountName ? t('share.forkedFrom', { username: forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject')}>
                 <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-accent-blue/10 border border-accent-blue/20 text-[9px] font-bold text-accent-blue uppercase shrink-0 cursor-help transition-colors hover:bg-accent-blue/20">
-                  <ExternalLink className="size-2.5" />
+                  <Icon name="open_in_new" size={10} />
                   <span className="hidden xs:inline">{t('share.forkedBadge')}</span>
                 </div>
               </Tip>
@@ -146,7 +146,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
                 className="flex items-center gap-1.5 min-w-0 group py-1 -my-1"
                 aria-label={t('common.back')}
               >
-                <ArrowLeft className="size-3.5 text-zinc-500 group-hover:text-zinc-200 transition-colors shrink-0" />
+                <Icon name="arrow_back" size={14} className="text-zinc-500 group-hover:text-zinc-200 transition-colors shrink-0" />
                 <span className="text-xs font-semibold text-zinc-200 group-hover:text-zinc-100 truncate uppercase tracking-wide transition-colors">
                   {breadcrumbTitle}
                 </span>

@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { m as M, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion';
 import { z } from 'zod';
-import { AlertCircle, ArrowRight, Loader2, User } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { auth } from '@/app/api';
@@ -116,7 +116,7 @@ export default function SetAccountNameModal() {
           >
             <div className="flex flex-col items-center text-center mb-6">
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <User className="size-6 text-primary" />
+                <Icon name="person" size={24} className="text-primary" />
               </div>
               <h2 className="text-xl font-bold text-zinc-100 font-sans tracking-tight mb-2">
                 {t('auth.setAccountName.title')}
@@ -144,7 +144,7 @@ export default function SetAccountNameModal() {
 
                 {error ? (
                   <div className="flex items-start gap-1.5 text-red-400 mt-1">
-                    <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
+                    <Icon name="error" size={14} className="shrink-0 mt-0.5" />
                     <p className="text-xs leading-relaxed">{error}</p>
                   </div>
                 ) : (
@@ -170,11 +170,11 @@ export default function SetAccountNameModal() {
                   className="sm:w-2/3 h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-medium"
                 >
                   {loading ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <Icon name="progress_activity" size={16} className="animate-spin" />
                   ) : (
                     <>
                       {t('auth.setAccountName.saveUsername')}
-                      <ArrowRight className="size-4 ml-1.5" />
+                      <Icon name="arrow_forward" size={16} className="ml-1.5" />
                     </>
                   )}
                 </Button>

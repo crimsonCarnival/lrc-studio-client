@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
-import { MoreHorizontal, ArrowUpToLine, ArrowDownToLine, CopyPlus, Eraser, Trash2, Layers, ChevronRight } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 
 interface LineData {
@@ -41,7 +41,7 @@ function LineActionsPopover({ lineIndex, line, handleAddLine, handleClearLine, h
             onClick={(e) => e.stopPropagation()}
             className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60"
           >
-            <MoreHorizontal className="size-3" />
+            <Icon name="more_horiz" size={12} />
           </Button>
         </PopoverTrigger>
       </Tip>
@@ -54,21 +54,21 @@ function LineActionsPopover({ lineIndex, line, handleAddLine, handleClearLine, h
           onClick={() => handleAddLine(lineIndex, null, { before: true })}
           className="hover:bg-sky-500/10 hover:text-sky-400"
         >
-          <ArrowUpToLine className="size-3.5" />
+          <Icon name="vertical_align_top" size={14} />
           {t('editor.insertLineAbove')}
         </PopoverItem>
         <PopoverItem
           onClick={() => handleAddLine(lineIndex)}
           className="hover:bg-primary/10 hover:text-primary"
         >
-          <ArrowDownToLine className="size-3.5" />
+          <Icon name="vertical_align_bottom" size={14} />
           {t('editor.insertLineBelow')}
         </PopoverItem>
         <PopoverItem
           onClick={() => handleAddLine(lineIndex, { ...line, id: crypto.randomUUID() })}
           className="hover:bg-zinc-700/60"
         >
-          <CopyPlus className="size-3.5" />
+          <Icon name="post_add" size={14} />
           {t('editor.duplicateLine')}
         </PopoverItem>
         {line.timestamp != null && (
@@ -76,7 +76,7 @@ function LineActionsPopover({ lineIndex, line, handleAddLine, handleClearLine, h
             onClick={() => handleClearLine(lineIndex)}
             className="hover:bg-orange-500/10 hover:text-orange-400"
           >
-            <Eraser className="size-3.5" />
+            <Icon name="ink_eraser" size={14} />
             {t('editor.clearTimestamp')}
           </PopoverItem>
         )}
@@ -92,7 +92,7 @@ function LineActionsPopover({ lineIndex, line, handleAddLine, handleClearLine, h
                   onClick={() => { handleMoveToSection([lineIndex], index); setShowSections(false); }}
                   className="hover:bg-primary/10 hover:text-primary pl-5"
                 >
-                  <Layers className="size-3" />
+                  <Icon name="layers" size={12} />
                   {formatSectionLabel(sl.label, t)}
                 </PopoverItem>
               ))}
@@ -102,9 +102,9 @@ function LineActionsPopover({ lineIndex, line, handleAddLine, handleClearLine, h
               onClick={() => setShowSections(true)}
               className="hover:bg-primary/10 hover:text-primary"
             >
-              <Layers className="size-3.5" />
+              <Icon name="layers" size={14} />
               {t('editor.moveToSection')}
-              <ChevronRight className="size-3 ml-auto" />
+              <Icon name="chevron_right" size={12} className="ml-auto" />
             </PopoverItem>
           )
         )}
@@ -112,7 +112,7 @@ function LineActionsPopover({ lineIndex, line, handleAddLine, handleClearLine, h
           onClick={() => handleDeleteLine(lineIndex)}
           className="hover:bg-red-500/10 hover:text-red-400"
         >
-          <Trash2 className="size-3.5" />
+          <Icon name="delete" size={14} />
           {t('editor.removeLine')}
         </PopoverItem>
       </PopoverContent>

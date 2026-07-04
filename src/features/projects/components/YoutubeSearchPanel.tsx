@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { ChangeEvent, KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, X, Loader2, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { youtube } from '@/features/player/services/youtube.service';
 import { Skeleton } from '@ui/skeleton';
 import { LazyImage } from '@ui/LazyImage';
@@ -143,7 +143,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
     return (
       <div className="flex flex-col h-full animate-fade-in items-center justify-center p-6 gap-5 text-center">
         <div className="size-12 rounded-full bg-orange-500/15 flex items-center justify-center">
-          <AlertTriangle className="size-6 text-orange-400" />
+          <Icon name="warning" size={24} className="text-orange-400" />
         </div>
         <div className="flex flex-col gap-1.5">
           <p className="text-sm font-semibold text-zinc-100">{t('player.embeddingDisabled')}</p>
@@ -158,7 +158,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
             rel="noopener noreferrer"
             className="w-full py-2 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm font-medium text-zinc-200 transition-colors flex items-center justify-center gap-2"
           >
-            <Search className="size-3.5" />
+            <Icon name="search" size={14} />
             Find another version
           </a>
           <button
@@ -189,7 +189,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
           />
           {query && (
             <button aria-label={t('common.clear')} onClick={() => { if (debounceRef.current) clearTimeout(debounceRef.current); userEditedRef.current = true; setQuery(''); setResults([]); setSearched(false); }} className="text-zinc-500 hover:text-zinc-300 transition-colors">
-              <X className="size-4" />
+              <Icon name="close" size={16} />
             </button>
           )}
         </div>
@@ -199,11 +199,11 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
           disabled={!query.trim() || loading}
           className="h-9 px-4 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold flex items-center gap-2 transition-colors shrink-0"
         >
-          {loading ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
+          {loading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="search" size={16} />}
         </button>
         {onClose && (
           <button aria-label={t('common.close')} onClick={onClose} className="size-9 rounded-xl flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors shrink-0">
-            <X className="size-4" />
+            <Icon name="close" size={16} />
           </button>
         )}
       </div>
@@ -270,7 +270,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
                     <p className="text-xs text-zinc-500 truncate">{item.channelTitle}</p>
                     {item.embeddable === false && (
                       <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-orange-400 bg-orange-500/10 border border-orange-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
-                        <AlertTriangle className="size-2.5" />
+                        <Icon name="warning" size={10} />
                         No embed
                       </span>
                     )}
@@ -278,7 +278,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
                 </div>
 
                 <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center pr-1">
-                  <ExternalLink className="size-3.5 text-zinc-500" />
+                  <Icon name="open_in_new" size={14} className="text-zinc-500" />
                 </div>
               </button>
             ))}

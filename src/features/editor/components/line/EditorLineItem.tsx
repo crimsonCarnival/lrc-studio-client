@@ -6,7 +6,7 @@ import { serializeToRubyMarkup, parseRubyMarkup, isKanji, hasKanji } from '@/sha
 import { Checkbox } from '@ui/checkbox';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
-import { GripVertical, Trash2, Check } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import LineTextEditingForm from './LineTextEditingForm';
 import { useLineGestures } from '../../hooks/useLineGestures';
@@ -389,7 +389,7 @@ const EditorLineItem = React.memo(({
                 onClick={(e) => { e.stopPropagation(); handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); }}
                 className="text-zinc-500 hover:text-primary px-1 flex items-center self-center"
                 aria-label={t('editor.done')}
-              ><Check className="size-4" /></button>
+              ><Icon name="check" size={16} /></button>
             </Tip>
           </div>
         ) : (
@@ -425,7 +425,7 @@ const EditorLineItem = React.memo(({
                 onClick={(e) => { e.stopPropagation(); handleDeleteLine(i); }}
                 className="text-zinc-600 hover:text-destructive px-1 flex items-center"
                 aria-label={t('editor.deleteSection')}
-              ><Trash2 className="size-3.5" /></button>
+              ><Icon name="delete" size={14} /></button>
             </Tip>
           </div>
         )}
@@ -509,7 +509,7 @@ const EditorLineItem = React.memo(({
           <div
             className="cursor-grab active:cursor-grabbing text-zinc-800 hover:text-zinc-500 transition-colors p-0.5 -ml-1 select-none"
           >
-            <GripVertical className="size-3" />
+            <Icon name="drag_indicator" size={12} />
           </div>
         </Tip>
         {(settings.editor?.showLineNumbers ?? true) && (

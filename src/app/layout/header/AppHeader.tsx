@@ -4,10 +4,7 @@ import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
-  Search,
-  PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Settings2,
-} from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { HeaderSearchBar } from '@/features/search/components/HeaderSearchBar';
 import { Tip } from '@ui/tip';
 import { UserMenu } from './UserMenu';
@@ -183,7 +180,7 @@ export function AppHeader({
                     aria-label={t('search.title')}
                     className={`${iconBtn} ${searchOpen ? 'text-primary bg-primary/10' : ''}`}
                   >
-                    <Search className="size-3.5" />
+                    <Icon name="search" size={14} />
                   </button>
                 </Tip>
               </div>

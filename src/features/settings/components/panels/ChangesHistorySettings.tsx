@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { History } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import AccountNameHistory from './profile/AccountNameHistory';
 import EmailHistory from './profile/EmailHistory';
 
@@ -28,7 +28,7 @@ export default function ChangesHistorySettings({ searchTerm }: { searchTerm?: st
   return (
     <div className="settings-section space-y-6 animate-fade-in">
       <div className="flex items-center gap-2 px-1">
-        <History className="size-4 text-zinc-400" />
+        <Icon name="history" size={16} className="text-zinc-400" />
         <h3 className="font-heading text-[13px] font-semibold tracking-tight text-zinc-200 contrast-more:text-white">
           {t('profile.tabs.history') || 'Changes History'}
         </h3>

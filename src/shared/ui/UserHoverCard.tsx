@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react'
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Music2, BadgeCheck, Star, FolderOpen, Users, Trophy } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { BadgeChip } from '@/features/badges/BadgeChip';
 import { LazyImage } from '@ui/LazyImage';
 import { OnlineDot } from '@ui/OnlineDot';
@@ -197,7 +197,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                 <Link to={`/${accountName}`} onClick={() => setOpen(false)} className="text-sm font-semibold text-foreground hover:underline leading-tight truncate max-w-[130px]">
                   {profile?.displayName || accountName}
                 </Link>
-                {profile?.isVerified && <BadgeCheck className="size-3.5 text-primary shrink-0" />}
+                {profile?.isVerified && <Icon name="verified" size={14} className="text-primary shrink-0" />}
                 {isFollowingMe && !isFollowedByMe && (
                   <span className="text-[9px] font-bold uppercase tracking-wider bg-zinc-700/60 text-zinc-400 px-1.5 py-0.5 rounded">
                     {t('profile.followsYou')}
@@ -225,7 +225,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
           {/* Activity */}
           {activity && (
             <div className="mx-4 mb-3 flex items-center gap-1.5 text-xs text-primary/80 bg-primary/8 rounded-lg px-2.5 py-1.5">
-              <Music2 className="size-3 shrink-0 animate-pulse" />
+              <Icon name="music_note" size={12} className="shrink-0 animate-pulse" />
               <span className="truncate">{t('profile.syncingActivity', { song: activity.songName || activity.projectTitle })}</span>
             </div>
           )}
@@ -239,14 +239,14 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
           {profile && (
             <div className="border-t border-border/40 grid grid-cols-5 divide-x divide-border/30">
               {[
-                { icon: Users,     value: profile.followerCount,      label: t('profile.followers') },
-                { icon: Users,     value: profile.followingCount,      label: t('profile.followingLabel') },
-                { icon: FolderOpen,value: profile.projectCount,        label: t('profile.projectsLabel') },
-                { icon: Star,      value: profile.totalStarsReceived,  label: t('profile.starsLabel') },
-                { icon: Trophy,    value: profile.progression?.level ?? 0, label: t('profile.levelLabel') },
-              ].map(({ icon: Icon, value, label }) => (
+                { iconName: 'group',     value: profile.followerCount,      label: t('profile.followers') },
+                { iconName: 'group',     value: profile.followingCount,      label: t('profile.followingLabel') },
+                { iconName: 'folder_open',value: profile.projectCount,        label: t('profile.projectsLabel') },
+                { iconName: 'star',      value: profile.totalStarsReceived,  label: t('profile.starsLabel') },
+                { iconName: 'emoji_events',    value: profile.progression?.level ?? 0, label: t('profile.levelLabel') },
+              ].map(({ iconName, value, label }) => (
                 <div key={label} className="flex flex-col items-center py-2.5 px-0.5 gap-0.5">
-                  <Icon className="size-3 text-zinc-500 mb-0.5" />
+                  <Icon name={iconName} size={12} className="text-zinc-500 mb-0.5" />
                   <span className="text-xs font-bold text-foreground">{value}</span>
                   <span className="text-[8px] text-muted-foreground leading-none text-center">{label}</span>
                 </div>

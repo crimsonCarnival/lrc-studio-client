@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react';
-import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Trophy, Timer, Music2, Star, GitFork, Loader2, ChevronDown, Flame, Music, WholeWord, Mic2, ListMusic, FolderOpen, Sparkles } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
 import { BadgeList } from '@/features/badges/BadgeList';
 import { Tip } from '@ui/tip';
 import { getLeaderboard } from './leaderboard.service';
-
-type IconComponent = ComponentType<{ className?: string }>;
 
 interface LeaderEntry {
   id?: string;
@@ -68,11 +65,11 @@ const PODIUM: Record<number, PodiumStyle> = {
   3: { accent: 'border-l-orange-500', medal: '🥉', glow: 'bg-orange-500/5', ring: 'ring-1 ring-orange-500/20', label: 'text-orange-400' },
 };
 
-function StatChip({ icon: Icon, value, tooltip, color = 'text-zinc-500' }: { icon: IconComponent; value: string | number; tooltip: string; color?: string }) {
+function StatChip({ iconName, value, tooltip, color = 'text-zinc-500' }: { iconName: string; value: string | number; tooltip: string; color?: string }) {
   return (
     <Tip content={tooltip} side="top">
       <div className="flex items-center gap-1">
-        <Icon className={`size-3 shrink-0 ${color}`} />
+        <Icon name={iconName} size={12} className={`shrink-0 ${color}`} />
         <span className={`text-[11px] tabular-nums font-medium ${color}`}>{value}</span>
       </div>
     </Tip>
@@ -150,14 +147,14 @@ function LeaderboardRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
 
         {/* Inline stats - 7 secondary metrics grouped neutrally */}
         <div className="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-1">
-          <StatChip icon={ListMusic} value={formatCount(entry.stats?.syncedLines ?? 0)} tooltip={t('badges.leaderboard.syncedLines', 'Synced Lines')} color="text-zinc-500" />
-          <StatChip icon={WholeWord} value={formatCount(entry.stats?.wordsSynced ?? 0)} tooltip={t('badges.leaderboard.wordsSynced', 'Words Synced')} color="text-zinc-500" />
-          <StatChip icon={Mic2} value={formatCount(entry.stats?.karaokeLines ?? 0)} tooltip={t('badges.leaderboard.karaokeLines', 'Karaoke Lines')} color="text-zinc-500" />
-          <StatChip icon={Star} value={formatCount(entry.totalStarsReceived ?? 0)} tooltip={t('badges.leaderboard.stars')} color="text-zinc-500" />
-          <StatChip icon={GitFork} value={formatCount(entry.totalForksReceived ?? 0)} tooltip={t('badges.leaderboard.forks')} color="text-zinc-500" />
-          <StatChip icon={FolderOpen} value={formatCount(entry.projectCount ?? 0)} tooltip={t('badges.leaderboard.projects')} color="text-zinc-500" />
+          <StatChip iconName="queue_music" value={formatCount(entry.stats?.syncedLines ?? 0)} tooltip={t('badges.leaderboard.syncedLines', 'Synced Lines')} color="text-zinc-500" />
+          <StatChip iconName="spellcheck" value={formatCount(entry.stats?.wordsSynced ?? 0)} tooltip={t('badges.leaderboard.wordsSynced', 'Words Synced')} color="text-zinc-500" />
+          <StatChip iconName="mic" value={formatCount(entry.stats?.karaokeLines ?? 0)} tooltip={t('badges.leaderboard.karaokeLines', 'Karaoke Lines')} color="text-zinc-500" />
+          <StatChip iconName="star" value={formatCount(entry.totalStarsReceived ?? 0)} tooltip={t('badges.leaderboard.stars')} color="text-zinc-500" />
+          <StatChip iconName="call_split" value={formatCount(entry.totalForksReceived ?? 0)} tooltip={t('badges.leaderboard.forks')} color="text-zinc-500" />
+          <StatChip iconName="folder_open" value={formatCount(entry.projectCount ?? 0)} tooltip={t('badges.leaderboard.projects')} color="text-zinc-500" />
           <div className="w-px h-3 bg-zinc-800 mx-1" />
-          <StatChip icon={Timer} value={formatTime(entry.stats?.minutesSynced, entry.stats?.secondsSynced)} tooltip={t('badges.leaderboard.musicSynced')} color="text-zinc-400 font-medium" />
+          <StatChip iconName="timer" value={formatTime(entry.stats?.minutesSynced, entry.stats?.secondsSynced)} tooltip={t('badges.leaderboard.musicSynced')} color="text-zinc-400 font-medium" />
         </div>
       </div>
 
@@ -167,7 +164,7 @@ function LeaderboardRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
         {(entry.rankScore ?? 0) > 0 && (
           <Tip content={t('badges.leaderboard.rankScore', 'Rank Score')} side="top">
             <div className="flex items-center gap-1 bg-primary/8 border border-primary/20 px-2 py-0.5 rounded-full">
-              <Sparkles className="size-3 text-primary/70" />
+              <Icon name="auto_awesome" size={12} className="text-primary/70" />
               <span className="text-[11px] tabular-nums font-bold text-primary/80">
                 {Math.round(entry.rankScore!).toLocaleString()}
               </span>
@@ -178,7 +175,7 @@ function LeaderboardRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
         {(entry.streak?.current ?? 0) > 0 && (
           <Tip content={t('badges.leaderboard.streak')} side="top">
             <div className="flex items-center gap-1 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full">
-              <Flame className="size-3 text-orange-500" />
+              <Icon name="local_fire_department" size={12} className="text-orange-500" />
               <span className="text-[11px] tabular-nums font-bold text-orange-500">{entry.streak!.current}d</span>
             </div>
           </Tip>
@@ -233,7 +230,7 @@ export default function LeaderboardPage() {
 
         <div className="relative flex items-start gap-4">
           <div className="size-12 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center flex-shrink-0">
-            <Trophy className="size-6 text-warning" />
+            <Icon name="emoji_events" size={24} className="text-warning" />
           </div>
           <div>
             <h1 className="text-2xl font-heading font-semibold text-foreground">
@@ -258,7 +255,7 @@ export default function LeaderboardPage() {
         </div>
       ) : users.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-          <Timer className="size-10 text-zinc-700" />
+          <Icon name="timer" size={40} className="text-zinc-700" />
           <p className="text-sm text-muted-foreground">{t('badges.leaderboard.empty')}</p>
         </div>
       ) : (
@@ -278,7 +275,7 @@ export default function LeaderboardPage() {
                 disabled={loadingMore}
                 className="gap-1.5"
               >
-                {loadingMore ? <Loader2 className="size-3.5 animate-spin" /> : <ChevronDown className="size-3.5" />}
+                {loadingMore ? <Icon name="progress_activity" size={14} className="animate-spin" /> : <Icon name="expand_more" size={14} />}
                 {t('common.loadMore')}
               </Button>
             </div>

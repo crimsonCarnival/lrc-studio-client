@@ -4,7 +4,7 @@ import { Input } from '@ui/input';
 import { FloatingCombobox } from '@ui/floating-combobox';
 import { useLanguageOptions } from '@features/editor/hooks/useLanguageOptions';
 import { Tip } from '@ui/tip';
-import { Plus, X, User, Scissors } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 interface Translation {
   text?: string;
@@ -172,7 +172,7 @@ function LineTextEditingForm({
               onClick={handleSplitAtColon}
               className="shrink-0 text-zinc-500 hover:text-primary px-1"
             >
-              <Scissors className="size-3" />
+              <Icon name="content_cut" size={12} />
             </button>
           </Tip>
         )}
@@ -206,7 +206,7 @@ function LineTextEditingForm({
             className="flex-1 bg-zinc-800 border-zinc-600/50 text-xs text-zinc-500 h-6 italic"
           />
           <button type="button" onClick={() => removeTranslation(idx)} className="text-zinc-600 hover:text-zinc-400 shrink-0 px-0.5">
-            <X className="size-3" />
+            <Icon name="close" size={12} />
           </button>
         </div>
       ))}
@@ -215,7 +215,7 @@ function LineTextEditingForm({
         onClick={addTranslation}
         className="flex items-center gap-1 text-[10px] text-zinc-600 hover:text-zinc-400 self-start px-0.5 py-0.5"
       >
-        <Plus className="size-2.5" /> {t('editor.addTranslation')}
+        <Icon name="add" size={10} /> {t('editor.addTranslation')}
       </button>
 
       {/* Singer slots — dynamic, up to 4 — now using FloatingCombobox */}
@@ -232,7 +232,7 @@ function LineTextEditingForm({
 
           return (
             <div key={idx} className="flex items-center gap-1">
-              <User className="size-3 text-zinc-600 shrink-0" />
+              <Icon name="person" size={12} className="text-zinc-600 shrink-0" />
               <FloatingCombobox
                 label=""
                 value={name}
@@ -249,7 +249,7 @@ function LineTextEditingForm({
                     onClick={() => removeSinger(idx)}
                     className="text-zinc-700 hover:text-zinc-400 shrink-0 px-0.5"
                   >
-                    <X className="size-3" />
+                    <Icon name="close" size={12} />
                   </button>
                 </Tip>
               )}

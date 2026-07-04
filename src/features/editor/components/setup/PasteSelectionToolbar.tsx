@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Users, Check } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { Popover, PopoverTrigger, PopoverContent, PopoverItem, PopoverSeparator } from '@ui/popover';
 import { ToggleGroup, ToggleGroupItem } from '@ui/toggle-group';
 import { Button } from '@ui/button';
@@ -67,7 +67,7 @@ export default function PasteSelectionToolbar({ value, selection, singers, onApp
             type="button"
             className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-600 text-zinc-200 rounded-full transition-colors outline-none"
           >
-            <Plus className="size-3.5" /> {t('editor.insertSectionAbove')}
+            <Icon name="add" size={14} /> {t('editor.insertSectionAbove')}
           </button>
         </PopoverTrigger>
         <PopoverContent align="start" className="lg:min-w-56">
@@ -126,13 +126,13 @@ export default function PasteSelectionToolbar({ value, selection, singers, onApp
                   type="button"
                   className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-600 text-zinc-200 rounded-full transition-colors outline-none"
                 >
-                  <Users className="size-3.5" /> {t('editor.assignSinger')}
+                  <Icon name="group" size={14} /> {t('editor.assignSinger')}
                 </button>
               </PopoverTrigger>
               <PopoverContent align="start">
                 {singers.map((name) => (
                   <PopoverItem key={name} onClick={() => toggleSinger(name)}>
-                    <Check className={`size-3.5 ${draft.includes(name) ? 'opacity-100' : 'opacity-0'}`} />
+                    <Icon name="check" size={14} className={draft.includes(name) ? 'opacity-100' : 'opacity-0'} />
                     {name}
                   </PopoverItem>
                 ))}

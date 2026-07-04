@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutList, Music2, BookOpen, UploadCloud } from 'lucide-react';
 import useHapticFeedback from '../../shared/hooks/useHapticFeedback.js';
+import { Icon } from '@/shared/ui/Icon';
 
 interface AppMobileNavProps {
   mobileTab: string;
@@ -22,10 +22,10 @@ export function AppMobileNav({ mobileTab, setMobileTab, activepublicId, isReady 
   if (!isReady) return null;
 
   const tabs = [
-    { id: 'editor',  label: t('app.tab.editor'),   Icon: LayoutList  },
-    { id: 'preview', label: t('app.tab.preview'),  Icon: Music2      },
-    { id: 'library', label: t('library.title'),               Icon: BookOpen    },
-    { id: 'uploads', label: t('uploads.title'),               Icon: UploadCloud },
+    { id: 'editor',  label: t('app.tab.editor'),   iconName: 'view_list'    },
+    { id: 'preview', label: t('app.tab.preview'),  iconName: 'music_note'   },
+    { id: 'library', label: t('library.title'),    iconName: 'menu_book'    },
+    { id: 'uploads', label: t('uploads.title'),    iconName: 'cloud_upload' },
   ];
 
   const isActive = (id: string) => {
@@ -50,7 +50,7 @@ export function AppMobileNav({ mobileTab, setMobileTab, activepublicId, isReady 
 
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-nav h-14 pb-safe bg-zinc-900/95 backdrop-blur-md border-t border-zinc-700/50 flex items-stretch gap-2 px-1">
-      {tabs.map(({ id, label, Icon }) => {
+      {tabs.map(({ id, label, iconName }) => {
         const active = isActive(id);
         return (
           <button
@@ -61,7 +61,7 @@ export function AppMobileNav({ mobileTab, setMobileTab, activepublicId, isReady 
             }`}
             aria-label={label}
           >
-            <Icon className="size-6" strokeWidth={active ? 2.5 : 1.8} />
+            <Icon name={iconName} size={24} filled={active} />
             <span>{label}</span>
             {active && (
               <div className="absolute bottom-1 size-1 rounded-full bg-primary" />

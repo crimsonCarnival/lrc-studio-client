@@ -6,7 +6,7 @@ import { Tip } from '@ui/tip';
 import { InlineTimestampEdit } from '../line/InlineTimestampEdit';
 import { TimestampBadge } from '../line/TimestampBadge';
 import { StampedWordChip } from './StampedWordChip';
-import { MoreHorizontal, Eraser } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 
 // Per-singer chip color sets [bg, border, text] for stamped and unstamped word chips
 const WORD_SINGER_CHIP = [
@@ -170,7 +170,7 @@ export default function WordsModeColumn({
                         onClick={(e) => { e.stopPropagation(); handleClearWordTimestamp(lineIndex, wi); }}
                         className="opacity-0 group-hover/word:opacity-100 text-zinc-600 hover:text-red-400 transition-all p-0.5 -ml-0.5"
                       >
-                        <Eraser className="size-2.5" />
+                        <Icon name="ink_eraser" size={10} />
                       </button>
                     )}
                     {isMobile && isFocusedWord && (
@@ -179,7 +179,7 @@ export default function WordsModeColumn({
                         onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, false); }}
                         className="text-primary-dim bg-primary/10 rounded-full p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
                       >
-                        <MoreHorizontal className="size-3" />
+                        <Icon name="more_horiz" size={12} />
                       </button>
                     )}
                   </div>
@@ -201,7 +201,7 @@ export default function WordsModeColumn({
                         onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, false); }}
                         className="text-primary-dim bg-primary/10 rounded-full p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
                       >
-                        <MoreHorizontal className="size-3" />
+                        <Icon name="more_horiz" size={12} />
                       </button>
                     )}
                   </div>
@@ -252,7 +252,7 @@ export default function WordsModeColumn({
                     onClick={(e) => { e.stopPropagation(); handleClearWordTimestamp(lineIndex, wi, 'secondaryWords'); }}
                     className="opacity-0 group-hover/sword:opacity-100 text-zinc-600 hover:text-red-400 transition-all p-0.5 -ml-0.5"
                   >
-                    <Eraser className="size-2.5" />
+                    <Icon name="ink_eraser" size={10} />
                   </button>
                 )}
                 {isMobile && isFocusedSecondaryWord && (
@@ -261,7 +261,7 @@ export default function WordsModeColumn({
                     onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, true); }}
                     className="text-accent-blue bg-accent-blue/10 rounded-full p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
                   >
-                    <MoreHorizontal className="size-3" />
+                    <Icon name="more_horiz" size={12} />
                   </button>
                 )}
               </div>
@@ -283,7 +283,7 @@ export default function WordsModeColumn({
                     onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, true); }}
                     className="text-accent-blue bg-accent-blue/10 rounded-full p-1 -ml-1 animate-in fade-in zoom-in-50 duration-200"
                   >
-                    <MoreHorizontal className="size-3" />
+                    <Icon name="more_horiz" size={12} />
                   </button>
                 )}
               </div>

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { History } from 'lucide-react';
+import { Icon } from '@/shared/ui/Icon';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
@@ -12,7 +12,7 @@ export default function AccountNameHistory() {
   if (!user?.previousAccountNames?.length) {
     return (
       <div className="flex flex-col items-center justify-center py-6 text-zinc-500">
-        <History className="size-10 mb-3 opacity-20" strokeWidth={1} />
+        <Icon name="history" size={40} className="mb-3 opacity-20" />
         <p className="text-xs">{t('profile.noHistory')}</p>
       </div>
     );
