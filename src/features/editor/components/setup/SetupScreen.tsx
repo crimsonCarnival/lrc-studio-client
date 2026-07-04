@@ -491,8 +491,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
       <div className="flex-1 min-h-0 px-6 overflow-y-auto lg:overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-7xl mx-auto pb-3 lg:h-[calc(100%-1rem)] lg:pb-0">
 
-          {/* Project info — swapped to the right column on desktop */}
-          <div className="glass rounded-2xl flex flex-col p-5 gap-4 self-start lg:self-auto lg:overflow-y-auto lg:scrollbar-thin relative lg:order-2">
+          {/* Project info — left column on desktop */}
+          <div className="glass rounded-2xl flex flex-col p-5 gap-4 self-start lg:self-auto lg:overflow-y-auto lg:scrollbar-thin relative lg:order-1">
 
             {/* Project name */}
             <FloatingInput
@@ -659,8 +659,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
             </div>
           </div>
 
-          {/* Media + Lyrics — swapped to the left column on desktop */}
-          <div className="glass rounded-2xl flex flex-col p-5 gap-0 overflow-hidden relative lg:order-1">
+          {/* Media + Lyrics — right column on desktop */}
+          <div className="glass rounded-2xl flex flex-col p-5 gap-0 overflow-hidden relative lg:order-2">
 
             {/* Rollback notice — shown when project was missing media */}
             {prefill && (
