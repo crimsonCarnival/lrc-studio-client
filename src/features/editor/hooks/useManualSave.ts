@@ -162,7 +162,7 @@ export function useManualSave({
     const finalMetadata = overrides.metadata !== undefined ? overrides.metadata : projectMetadata;
     let finalTitle = overrides.title !== undefined ? overrides.title : (mediaTitle || '');
     const GENERIC_TITLES = ['Sin título', 'Untitled', '無題'];
-    if (!finalTitle || GENERIC_TITLES.includes(finalTitle)) {
+    if (GENERIC_TITLES.includes(finalTitle)) {
       const { songName, songArtists, songArtist } = finalMetadata || {};
       const artistStr = Array.isArray(songArtists) && songArtists.length > 0 ? songArtists.join(', ') : (songArtist || '');
       if (songName) finalTitle = artistStr ? `${songName} - ${artistStr}` : songName;

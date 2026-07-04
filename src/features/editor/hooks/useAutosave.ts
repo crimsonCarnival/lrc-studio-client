@@ -248,9 +248,8 @@ export function useAutosave({
         }
       }
 
-      const GENERIC_TITLES = ['Sin título', 'Untitled', '無題'];
       const derivedTitle = (() => {
-        if (mediaTitle && !GENERIC_TITLES.includes(mediaTitle)) return mediaTitle;
+        if (mediaTitle) return mediaTitle;
         const { songName, songArtists, songArtist } = projectMetadata || {};
         const artistStr = Array.isArray(songArtists) && songArtists.length > 0 ? songArtists.join(', ') : (songArtist || '');
         if (songName) return artistStr ? `${songName} - ${artistStr}` : songName;
