@@ -12,6 +12,7 @@ export function Icon({ name, size = 20, filled = false, className }: IconProps) 
       style={{
         fontSize: size,
         fontVariationSettings: `'FILL' ${filled ? 1 : 0}, 'wght' 400, 'GRAD' 0, 'opsz' 24`,
+        verticalAlign: 'middle',
       }}
     >
       {name}

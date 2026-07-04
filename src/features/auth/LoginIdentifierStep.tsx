@@ -7,7 +7,6 @@ import { Icon } from '@/shared/ui/Icon';
 import { z } from 'zod';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
-import { Tip } from '@ui/tip';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import { auth } from '@/app/api';
 import { FieldError, RedirectMessage, ContextBanner, GoogleButton } from './auth-shared';
@@ -88,11 +87,6 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <div className="relative">
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
-              <Tip content={t('auth.tips.identifier')}>
-                <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
-              </Tip>
-            </div>
             <FloatingInput
               ref={inputRef}
               id="auth-identifier"
@@ -102,7 +96,6 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
               onChange={(e) => { setIdentifier(e.target.value); setError(''); }}
               autoComplete="username"
               error={!!error}
-              className="pr-10"
             />
           </div>
           <FieldError message={error} />

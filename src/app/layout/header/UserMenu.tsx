@@ -126,14 +126,16 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
             <div className="px-3 py-2 flex items-center justify-between gap-2">
               <span className="text-sm font-medium text-zinc-300">{t('settings.interface.theme')}</span>
               <div className="flex items-center gap-1.5">
-                {THEMES.map(({ id, label, swatch }) => (
+                {THEMES.map(({ id, label, iconName }) => (
                   <Tip key={id} content={label}>
                     <button
                       onClick={() => updateSetting?.('interface.theme', id)}
                       aria-label={label}
                       aria-pressed={currentTheme === id}
-                      className={`size-4 rounded-full shrink-0 transition-all ${swatch} ${currentTheme === id ? 'ring-2 ring-primary ring-offset-1 ring-offset-zinc-900' : 'opacity-70 hover:opacity-100'}`}
-                    />
+                      className={`size-7 flex items-center justify-center rounded-lg transition-all ${currentTheme === id ? 'text-primary bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'}`}
+                    >
+                      <Icon name={iconName} size={14} />
+                    </button>
                   </Tip>
                 ))}
               </div>

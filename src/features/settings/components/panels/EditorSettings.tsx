@@ -204,7 +204,7 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
           className="w-20"
         />
       </SettingRow>
-      <SettingRow iconName="snap_to_grid" label={t('settings.editor.srtSnap')} description={t('settings.editor.srtSnapDesc')}>
+      <SettingRow iconName="grid_on" label={t('settings.editor.srtSnap')} description={t('settings.editor.srtSnapDesc')}>
         <Toggle
           id="toggle-srt-snap"
           checked={settings.editor?.srt?.snapToNextLine ?? false}

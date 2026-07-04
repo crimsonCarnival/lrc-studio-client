@@ -121,7 +121,7 @@ export default function PlaybackSettings({ settings, updateSetting, searchTerm }
             onChange={handleShowWaveformChange}
           />
         </SettingRow>
-        <SettingRow iconName="snap_to_grid" label={t('settings.playback.waveformSnap')} description={t('settings.playback.waveformSnapDesc')}>
+        <SettingRow iconName="grid_on" label={t('settings.playback.waveformSnap')} description={t('settings.playback.waveformSnapDesc')}>
           <Toggle
             id="toggle-waveform-snap"
             checked={settings.playback?.waveformSnap ?? false}
