@@ -95,8 +95,15 @@ export function useProjectActions({
       setRestoredMedia(uploadToRestoredMedia(project.upload));
       if (project.upload?.source === 'youtube' && project.upload?.uploadUrl) {
         setProjectYtUrl?.(project.upload.uploadUrl);
+        // A YouTube project has no Cloudinary upload — clear any uploadedAudio
+        // left over from a previously loaded project, or Auto Stamp (and anything
+        // else keyed on uploadId) would target the old project's audio.
+        setUploadedAudio?.(null);
       } else if (project.upload?.source === 'cloudinary') {
         setUploadedAudio?.(project.upload);
+      } else {
+        // No upload / other source (lyrics-only project): same stale-state risk.
+        setUploadedAudio?.(null);
       }
       if (project.upload?.id) {
         sessionUploadIdRef.current = project.upload.id;

@@ -102,7 +102,7 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
   );
 });
 
-export default function PlayerControls({ variant }: { variant: 'editor' | 'header' | 'mobile' }) {
+export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 'editor' | 'header' | 'mobile', youtubeAudioUrl?: string | null }) {
   const {
     source, isPlaying, currentTime, duration, playbackSpeed,
     hasMedia, loopA, loopB, mediaTitle, songName,
@@ -348,15 +348,15 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
           </div>
         )}
 
-        {/* Local audio waveform */}
-        {source === 'local' && local.localUrl && (
+        {/* Audio waveform (Local or YouTube ASR) */}
+        {(source === 'local' && local.localUrl || source === 'youtube' && youtubeAudioUrl) && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
             <Suspense fallback={null}>
               <WaveformDisplay
                 showWaveform={settings.playback?.showWaveform}
                 waveformSnap={settings.playback?.waveformSnap}
                 audioRef={audioRef}
-                localUrl={local.localUrl}
+                localUrl={source === 'youtube' ? youtubeAudioUrl : local.localUrl}
                 lines={lines}
                 playbackPosition={playbackPosition ?? 0}
                 duration={duration}
@@ -369,7 +369,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
           </div>
         )}
 
-        {source !== 'local' && hasMedia && (
+        {source !== 'local' && !youtubeAudioUrl && hasMedia && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto px-4">
             <PlaybackProgress
               playbackPosition={playbackPosition ?? 0}

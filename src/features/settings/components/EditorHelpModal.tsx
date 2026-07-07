@@ -73,7 +73,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
   const tabContent: Record<string, HelpGroup[]> = {
     player: [
       { section: t('shortcuts.sections.playback'), items: [
-        { keys: resolveShortcut(settings.shortcuts?.playPause?.[0] || 'Enter'),            desc: t('shortcuts.playPause') },
+        { keys: resolveShortcut(settings.shortcuts?.playPause?.[0] || 'Space'),            desc: t('shortcuts.playPause') },
         { keys: resolveShortcut(settings.shortcuts?.seekBackward?.[0] || 'ArrowLeft'), desc: t('shortcuts.seekBackward', { val: seekTime }) },
         { keys: resolveShortcut(settings.shortcuts?.seekForward?.[0] || 'ArrowRight'), desc: t('shortcuts.seekForward', { val: seekTime }) },
         { keys: resolveShortcut(settings.shortcuts?.mute?.[0] || 'm'),                    desc: t('shortcuts.mute') },
@@ -83,7 +83,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
     ],
     editor: [
       { section: t('editor.syncModeOnly'), items: [
-        { keys: resolveShortcut(settings.shortcuts?.mark?.[0] || 'Space'),       desc: t('shortcuts.mark') },
+        { keys: resolveShortcut(settings.shortcuts?.mark?.[0] || 'Enter'),       desc: t('shortcuts.mark') },
         { keys: resolveShortcut(settings.shortcuts?.nudgeLeft?.[0] || 'Alt+ArrowLeft'),  desc: t('shortcuts.nudgeLeft', { val: nudge }) },
         { keys: resolveShortcut(settings.shortcuts?.nudgeRight?.[0] || 'Alt+ArrowRight'), desc: t('shortcuts.nudgeRight', { val: nudge }) },
       ]},

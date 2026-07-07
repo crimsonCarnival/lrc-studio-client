@@ -1,11 +1,13 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState, useCallback } from 'react';
 import type { ComponentProps } from 'react';
 import { useEditor } from '@features/editor/hooks/useEditor';
 import { useEditorActionDrawer } from '@features/editor/hooks/useEditorActionDrawer';
+import { useAutoStamp, type AutoStampPhase } from '@features/editor/hooks/useAutoStamp';
 import EditorToolbar from './EditorToolbar';
 import EditorPasteArea from '../setup/EditorPasteArea';
 import VirtualizedLineList from './VirtualizedLineList';
 import EditorActionDrawer from './EditorActionDrawer';
+import AutoStampModal from './AutoStampModal';
 import PlayerControls from '@/features/player/components/PlayerControls';
 import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
 import { Tip } from '@ui/tip';
@@ -17,8 +19,13 @@ import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
+import type { UploadedAudio } from '@/shared/hooks/useAppState';
 
 const EMPTY_ARTISTS: string[] = [];
+
+// Phases during which an Auto Stamp job is actively running server-side —
+// the toolbar button stays disabled and re-clicking would race the in-flight job.
+const AUTO_STAMP_RUNNING_PHASES: ReadonlySet<AutoStampPhase> = new Set(['starting', 'fetching_audio', 'extracting_audio', 'transcribing', 'aligning', 'applying']);
 
 interface EditorProps {
   user?: AuthUser | null;
@@ -57,6 +64,11 @@ interface EditorProps {
   onHideEditor?: () => void;
   previewHidden?: boolean;
   onShowPreview?: () => void;
+  // Auto Stamp (#9): the persisted Cloudinary upload (if any) and a media-availability
+  // flag used as the render-time button-enable signal. The raw local File itself is
+  // read imperatively off playerRef.getAudioBlob() at job start (see getLocalFile below).
+  uploadedAudio?: UploadedAudio | null;
+  hasMedia?: boolean;
 }
 
 export default function Editor({
@@ -92,6 +104,8 @@ export default function Editor({
   onHideEditor,
   previewHidden,
   onShowPreview,
+  uploadedAudio,
+  hasMedia,
 }: EditorProps) {
   "use no memo";
   const { t } = useTranslation();
@@ -195,6 +209,100 @@ export default function Editor({
 
   const { activeDrawer, wordData, lineData, openWord, openLine, openBulk, close: closeDrawer } = useEditorActionDrawer();
 
+  // ——— Auto Stamp (#9) ———
+  // uploadId: the persisted Cloudinary Upload id. `local:*` ids are client-side
+  // placeholders assigned while a background upload hasn't been persisted yet
+  // (see useLocalAudio) — the server can't resolve them, so they're treated as absent.
+  const uploadId = useMemo(() => {
+    const id = uploadedAudio?.id;
+    return id && !id.startsWith('local:') ? id : null;
+  }, [uploadedAudio]);
+
+  // getLocalFile: reads the raw local audio File imperatively off the player's
+  // exposed blob ref (PlayerEngine's getAudioBlob() returns the File set by
+  // useLocalAudio, or null for YouTube). A getter instead of a cached value so
+  // useAutoStamp.start() always sees the freshest blob at job start — same-type
+  // media swaps don't change any reactive state a cache could be keyed on.
+  const getLocalFile = useCallback(
+    () => (playerRef?.current?.getAudioBlob?.() as File | undefined) ?? null,
+    [playerRef],
+  );
+
+  // getYoutubeUrl: same imperative pattern as getLocalFile — read the loaded
+  // YouTube URL off the player at job start (null when source isn't YouTube).
+  const getYoutubeUrl = useCallback(
+    () => (playerRef?.current?.getYoutubeUrl?.() as string | null) ?? null,
+    [playerRef],
+  );
+
+  const autoStamp = useAutoStamp({
+    lines,
+    setLines,
+    uploadId,
+    getLocalFile,
+    getYoutubeUrl,
+    fuzzyTolerance: settings.autoStamp?.fuzzyTolerance ?? 0.75,
+    applyMode: (settings.autoStamp?.applyMode as 'all' | 'empty-only') ?? 'empty-only',
+    editorMode,
+  });
+
+  const [autoStampDismissed, setAutoStampDismissed] = useState(false);
+
+  const handleAutoStampStart = useCallback(() => {
+    setAutoStampDismissed(false);
+    autoStamp.start();
+    // autoStamp is a fresh object every render (its own methods are individually
+    // memoized) — depending on the whole object would defeat that stability.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStamp.start]);
+
+  const handleAutoStampCancel = useCallback(() => {
+    autoStamp.cancel();
+    setAutoStampDismissed(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStamp.cancel]);
+
+  const handleAutoStampClose = useCallback(() => {
+    setAutoStampDismissed(true);
+  }, []);
+
+  const handleAutoStampJump = useCallback((index: number) => {
+    setActiveLineIndex(index);
+  }, [setActiveLineIndex]);
+
+  // If the user closed/dismissed the modal while a job was still running in the
+  // background, a result requiring explicit confirmation (overwrite conflict or
+  // index-drift) must not be silently stranded: force the modal back open so the
+  // user isn't stuck unable to apply or discard it. Derived directly at render
+  // time (not via an effect + setState) to avoid an extra render pass.
+  const autoStampOpen = (autoStamp.phase !== 'idle' && !autoStampDismissed) || autoStamp.pendingResult != null;
+  // Button-enable signal: `hasMedia` is the freshest render-time approximation for
+  // "a local file might exist" (refs can't be read during render). It's true for
+  // YouTube-only media too, but that's acceptable — start() re-checks the actual
+  // sources and fails safely with asr_no_audio if no bytes are available.
+  const autoStampHasAudio = !!uploadId || !!hasMedia;
+  const autoStampRunning = AUTO_STAMP_RUNNING_PHASES.has(autoStamp.phase);
+
+  // Manual timestamp edits invalidate a line's Auto Stamp confidence badge —
+  // clear it so the highlight doesn't linger on a value the user has since fixed.
+  const handleSetTimestampWithConfidence = useCallback((index: number, type: string, value: number) => {
+    handleSetTimestamp(index, type, value);
+    autoStamp.clearConfidence(index);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleSetTimestamp, autoStamp.clearConfidence]);
+
+  const shiftTimeWithConfidence = useCallback((index: number, delta: number) => {
+    shiftTime(index, delta);
+    autoStamp.clearConfidence(index);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shiftTime, autoStamp.clearConfidence]);
+
+  const handleMarkWithConfidence = useCallback((opts?: { forceAdvance?: boolean }) => {
+    handleMark(opts);
+    autoStamp.clearConfidence(activeLineIndex);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleMark, autoStamp.clearConfidence, activeLineIndex]);
+
   // #3: the in-editor player docks at the top (below the toolbar) or bottom, persisted
   // as a global editor setting. The same dock block renders in whichever slot is active.
   const playerPosition = settings.editor?.playerPosition === 'top' ? 'top' : 'bottom';
@@ -204,7 +312,7 @@ export default function Editor({
         playerPosition === 'top' ? 'mb-3 border-b pb-3' : 'mt-3 border-t pt-3'
       }`}
     >
-      <PlayerControls variant="editor" />
+      <PlayerControls variant="editor" youtubeAudioUrl={autoStamp.youtubeAudioUrl} />
       {(() => {
         const symbols = KEY_SYMBOLS as Record<string, string>;
         const rangeKey = settings.shortcuts?.rangeSelect?.[0] || 'Shift';
@@ -222,11 +330,11 @@ export default function Editor({
             {selectedLines.size > 0
               ? selectionHintText
               : editorMode === 'srt'
-                ? (awaitingEndMark != null ? t('editor.markEndInstruction').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Space') : t('editor.markInstructionSRT').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Space'))
+                ? (awaitingEndMark != null ? t('editor.markEndInstruction').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Enter') : t('editor.markInstructionSRT').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Enter'))
                 : editorMode === 'words'
-                  ? t('editor.markInstructionWords').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Space')
-                  : t('editor.markInstruction').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Space')
-            }
+                  ? t('editor.markInstructionWords').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Enter')
+                  : t('editor.markInstruction').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Enter')
+              }
           </p>
         );
       })()}
@@ -276,6 +384,9 @@ export default function Editor({
         onHideEditor={onHideEditor}
         previewHidden={previewHidden}
         onShowPreview={onShowPreview}
+        autoStampHasAudio={autoStampHasAudio}
+        autoStampRunning={autoStampRunning}
+        onAutoStamp={handleAutoStampStart}
       />
 
       {playerPosition === 'top' && playerDock}
@@ -353,13 +464,13 @@ export default function Editor({
           handleAssignSinger={handleAssignSinger}
           songArtists={combinedSingers}
           playerRef={playerRef}
-          shiftTime={shiftTime}
+          shiftTime={shiftTimeWithConfidence}
           handleAddLine={handleAddLine}
           handleClearLine={handleClearLine}
           handleDeleteLine={handleDeleteLine}
           listRef={listRef}
           handleApplyOffset={handleApplyOffset}
-          handleMark={handleMark}
+          handleMark={handleMarkWithConfidence}
           handleBulkClearTimestamps={handleBulkClearTimestamps}
           handleBulkShift={handleBulkShift}
           handleBulkDelete={handleBulkDelete}
@@ -369,7 +480,7 @@ export default function Editor({
           activeWordIndex={activeWordIndex}
           handleClearWordTimestamp={handleClearWordTimestamp}
           handleSetActiveWordIndex={handleSetActiveWordIndex}
-          handleSetTimestamp={handleSetTimestamp}
+          handleSetTimestamp={handleSetTimestampWithConfidence}
           handleSetWordReading={handleSetWordReading}
           handleCycleWordSinger={handleCycleWordSinger}
           handleSetWordSinger={handleSetWordSinger}
@@ -381,6 +492,7 @@ export default function Editor({
           onBulkMenu={openBulk}
           modifiedLines={modifiedLines}
           onToggleLineMode={handleToggleLineMode}
+          confidenceByIndex={autoStamp.confidenceByIndex}
         />
       </div>
       </div>
@@ -407,6 +519,21 @@ export default function Editor({
       />
 
       {confirmModal}
+
+      <AutoStampModal
+        open={autoStampOpen}
+        phase={autoStamp.phase}
+        errorCode={autoStamp.errorCode}
+        pendingResult={autoStamp.pendingResult}
+        confidenceByIndex={autoStamp.confidenceByIndex}
+        lines={lines}
+        confidenceThreshold={settings.autoStamp?.confidenceThreshold ?? 0.8}
+        onCancel={handleAutoStampCancel}
+        onApply={autoStamp.applyPending}
+        onDiscard={autoStamp.discardPending}
+        onClose={handleAutoStampClose}
+        onJumpToLine={handleAutoStampJump}
+      />
     </div>
   );
 }

@@ -167,7 +167,10 @@ const WaveformDisplay = ({
       if (audioRef.current) ws.setTime(audioRef.current.currentTime);
     });
 
-    ws.load(localUrl);
+    // load() rejects with AbortError if the instance is destroyed mid-fetch
+    // (source change / unmount) — swallow it so it doesn't surface as an
+    // unhandled promise rejection.
+    ws.load(localUrl).catch(() => { });
 
     return () => {
       try {
@@ -229,7 +232,8 @@ const WaveformDisplay = ({
       if (existingActive) {
         // Only update if boundary values have changed to save CPU cycles
         if (existingActive.start !== activeLine.timestamp || existingActive.end !== nextTs) {
-          existingActive.update({
+          // wavesurfer v7 renamed region.update() to setOptions()
+          existingActive.setOptions({
             start: activeLine.timestamp,
             end: nextTs,
           });

@@ -28,6 +28,9 @@ export interface EditorLine {
   mode?: 'solo' | 'duet' | 'split';
   label?: string;
   id?: string | number;
+  /** Tracks whether this line's timestamp was set by ASR ('asr') or manually ('manual').
+   *  null = legacy/unknown lines (treated as manual). Cleared when timestamp is removed. */
+  source?: 'manual' | 'asr' | null;
   // Lines carry other presentation fields preserved across spreads.
   [key: string]: unknown;
 }
@@ -155,6 +158,7 @@ export function clearAllTimestamps(lines: EditorLine[], isSrt?: boolean, isWords
   return lines.map((l) => ({
     ...l,
     timestamp: null,
+    source: null,
     ...(isSrt && { endTime: null }),
     ...(isWords && l.words && { words: l.words.map((w) => ({ ...w, time: null })) }),
   }));
@@ -169,6 +173,7 @@ export function clearLineTimestamp(lines: EditorLine[], index: number, isSrt?: b
       ? {
           ...l,
           timestamp: null,
+          source: null,
           ...(isSrt && { endTime: null }),
           ...(isWords && l.words && { words: l.words.map((w) => ({ ...w, time: null })) }),
         }
@@ -218,6 +223,7 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
     if (line) {
       updated[focusedTimestamp.lineIndex] = {
         ...line,
+        source: 'manual',
         ...(focusedTimestamp.type === 'start'
           ? { timestamp: time }
           : { endTime: Math.max(line.timestamp ?? 0, time) }),
@@ -239,14 +245,14 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
     if (line.timestamp == null) {
       if (!words.length) {
         // No words at all — stamp line only and advance
-        updated[activeLineIndex] = { ...line, timestamp: time };
+        updated[activeLineIndex] = { ...line, timestamp: time, source: 'manual' };
         const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
         return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
       }
       // Stamp line.timestamp + words[0] in one press
       const newWords = [...words];
       newWords[0] = { ...newWords[0], time };
-      updated[activeLineIndex] = { ...line, timestamp: time, [wordField]: newWords };
+      updated[activeLineIndex] = { ...line, timestamp: time, source: 'manual', [wordField]: newWords };
       if (newWords.length === 1) {
         const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
         return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
@@ -293,7 +299,7 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
         };
       }
 
-      updated[activeLineIndex] = { ...updated[activeLineIndex], timestamp: time };
+      updated[activeLineIndex] = { ...updated[activeLineIndex], timestamp: time, source: 'manual' };
 
       if (skipBlank) {
         const result = stampBlanks(updated, activeLineIndex, time, true);
@@ -329,7 +335,7 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
 
     // SRT first mark on line (set start time)
     const updated = [...lines];
-    updated[activeLineIndex] = { ...updated[activeLineIndex], timestamp: time };
+    updated[activeLineIndex] = { ...updated[activeLineIndex], timestamp: time, source: 'manual' };
     return {
       nextLines: updated,
       nextActiveLineIndex: null,
@@ -339,7 +345,7 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
 
   // LRC mode
   let updated = [...lines];
-  updated[activeLineIndex] = { ...updated[activeLineIndex], timestamp: time };
+  updated[activeLineIndex] = { ...updated[activeLineIndex], timestamp: time, source: 'manual' };
 
   if (skipBlank) {
     const result = stampBlanks(updated, activeLineIndex, time, false);

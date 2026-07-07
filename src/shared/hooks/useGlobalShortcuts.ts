@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
+import { useLocation } from 'react-router-dom';
 import { matchKey } from '@/shared/utils/keyboard';
 import type { AppSettings } from '@/features/settings/settings.types';
 
@@ -18,6 +19,7 @@ interface GlobalShortcutsOptions {
   settings: AppSettings;
   updateSetting: (path: string, value: unknown) => void;
   playerRef: RefObject<ShortcutPlayerHandle | null>;
+  isReady?: boolean;
 }
 
 /**
@@ -32,6 +34,8 @@ export function useGlobalShortcuts({
   updateSetting,
   playerRef,
 }: GlobalShortcutsOptions) {
+  const location = useLocation();
+
   // ——— App + player shortcuts ———
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -46,7 +50,7 @@ export function useGlobalShortcuts({
       } else if (matchKey(e, settings.shortcuts?.showHelp?.[0] || '?')) {
         setShowKeyboardHelp((prev) => !prev);
         // ——— Player shortcuts ———
-      } else if (matchKey(e, settings.shortcuts?.playPause?.[0] || 'Enter')) {
+      } else if (matchKey(e, settings.shortcuts?.playPause?.[0] || 'Space')) {
         e.preventDefault();
         playerRef.current?.togglePlay?.();
       } else if (matchKey(e, settings.shortcuts?.seekBackward?.[0] || 'ArrowLeft')) {
@@ -61,16 +65,22 @@ export function useGlobalShortcuts({
         e.preventDefault();
         updateSetting('playback.muted', !settings.playback?.muted);
       } else if (matchKey(e, settings.shortcuts?.speedUp?.[0] || '+')) {
+        if (!playerRef.current) return;
+        const isEditorPage = /^\/project\/[^/]+\/edit$/.test(location.pathname) || location.pathname === '/project/local';
+        if (!isEditorPage) return;
         e.preventDefault();
-        playerRef.current?.adjustSpeed?.(settings.editor?.nudge?.default ?? 0.1);
+        playerRef.current.adjustSpeed?.(0.05);
       } else if (matchKey(e, settings.shortcuts?.speedDown?.[0] || '-')) {
+        if (!playerRef.current) return;
+        const isEditorPage = /^\/project\/[^/]+\/edit$/.test(location.pathname) || location.pathname === '/project/local';
+        if (!isEditorPage) return;
         e.preventDefault();
-        playerRef.current?.adjustSpeed?.(-(settings.editor?.nudge?.default ?? 0.1));
+        playerRef.current.adjustSpeed?.(-0.05);
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [undo, redo, settings, updateSetting, playerRef, setShowKeyboardHelp]);
+  }, [undo, redo, settings, updateSetting, playerRef, setShowKeyboardHelp, location.pathname]);
 
   // ——— Block disruptive browser shortcuts + Ctrl+S → manual save ———
   useEffect(() => {

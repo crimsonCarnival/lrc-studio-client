@@ -11,6 +11,7 @@ import ExportSettings from './panels/ExportSettings';
 import InterfaceSettings from './panels/InterfaceSettings';
 import ShortcutsSettings from './panels/ShortcutsSettings';
 import AdvancedSettings from './panels/AdvancedSettings';
+import AutoStampSettings from './panels/AutoStampSettings';
 import ProfileSettings from './panels/ProfileSettings';
 import SecuritySettings from './panels/SecuritySettings';
 import ConnectionsSettings from './panels/ConnectionsSettings';
@@ -52,6 +53,7 @@ function SettingsPanelContent({ activeTab, settings, updateSetting, validateShor
     case 'interface':   return <InterfaceSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
     case 'shortcuts':   return <ShortcutsSettings settings={settings} updateSetting={updateSetting} validateShortcut={validateShortcut} searchTerm={searchTerm} />;
     case 'advanced':    return <AdvancedSettings settings={settings} updateSetting={updateSetting} isGuest={isGuest} searchTerm={searchTerm} />;
+    case 'autoStamp':   return <AutoStampSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
     default:            return null;
   }
 }
@@ -82,6 +84,7 @@ const TABS: TabMeta[] = [
   { id: 'editor', labelKey: 'settings.editor.label', iconName: 'description', group: 'preferences', searchable: true },
   { id: 'export', labelKey: 'settings.export.label', iconName: 'download', group: 'preferences', searchable: true },
   { id: 'interface', labelKey: 'settings.interface.label', iconName: 'desktop_windows', group: 'preferences', searchable: true },
+  { id: 'autoStamp', labelKey: 'settings.autoStamp.title', iconName: 'auto_awesome', group: 'preferences', searchable: true },
 
   // Advanced
   { id: 'shortcuts', labelKey: 'settings.shortcuts.label', fallback: 'Shortcuts', iconName: 'keyboard', group: 'advanced', searchable: true },

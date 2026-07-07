@@ -9,6 +9,7 @@ import EditorLineItem from '../line/EditorLineItem';
 import SelectionActionBar from './SelectionActionBar';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
+import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
 
 const ESTIMATED_LINE_HEIGHT = 52;
 const LINE_GAP = 4;
@@ -83,6 +84,7 @@ interface VirtualizedLineListProps {
   onBulkMenu?: () => void;
   modifiedLines?: Set<number>;
   onToggleLineMode?: LineItemProps['onToggleLineMode'];
+  confidenceByIndex?: Map<number, ConfidenceInfo>;
 }
 
 export default function VirtualizedLineList({
@@ -150,6 +152,7 @@ export default function VirtualizedLineList({
   onBulkMenu,
   modifiedLines,
   onToggleLineMode,
+  confidenceByIndex,
 }: VirtualizedLineListProps) {
   const { t } = useTranslation();
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
@@ -370,6 +373,7 @@ export default function VirtualizedLineList({
                   onLineMenu={onLineMenu}
                   isModified={modifiedLines?.has(i)}
                   onToggleLineMode={onToggleLineMode}
+                  confidenceInfo={confidenceByIndex?.get(i)}
                 />
               </div>
             );

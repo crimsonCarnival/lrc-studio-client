@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { splitArtists } from '@/shared/utils/lrc';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -97,6 +97,23 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
 
   const isSetupPage = location.pathname === '/project/new';
 
+  // Media loads report their title asynchronously (YT onReady fires 1-3s after
+  // player creation) through closures captured at load time. Read the CURRENT
+  // title from a ref at fire time so a stale closure can't overwrite a name the
+  // user set in the meantime (e.g. setup completes with a project name, then
+  // the YT title arrives late and clobbers it).
+  const mediaTitleRef = useRef(mediaTitle);
+  useEffect(() => { mediaTitleRef.current = mediaTitle; });
+
+  const handleMediaTitleChange = useCallback((newTitle: string) => {
+    const current = mediaTitleRef.current;
+    // Media title only ever fills an empty/placeholder slot — an explicit
+    // project name (setup, naming modal, header edit) always wins.
+    if (!current || current === t('library.untitled') || current === 'Untitled') {
+      setMediaTitle(newTitle);
+    }
+  }, [setMediaTitle, t]);
+
   const isPublicProjectView = /^\/project\/[^/]+$/.test(location.pathname) &&
     !['new', 'local'].includes(location.pathname.split('/')[2] ?? '');
   const isFullWidthPage = isSetupPage || isPublicProjectView;
@@ -135,12 +152,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         onMediaChange={handleMediaChange}
         onYtUrlChange={handleYtUrlChange}
         onMediaUpload={handleMediaUpload}
-        onTitleChange={(newTitle: string) => {
-          const isSetupPhase = location.pathname === '/project/new';
-          if (isSetupPhase || !mediaTitle || mediaTitle === t('library.untitled') || mediaTitle === 'Untitled') {
-            setMediaTitle(newTitle);
-          }
-        }}
+        onTitleChange={handleMediaTitleChange}
         mediaTitle={mediaTitle}
         initialMedia={restoredMedia as Parameters<typeof PlayerEngineProvider>[0]['initialMedia']}
         initialSeek={restoredPosition}

@@ -25,7 +25,7 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
         description={t('settings.shortcuts.markDesc') || 'Key to mark start/end times'}
       >
         <ShortcutInput
-          value={settings.shortcuts?.mark?.[0] || 'Space'}
+          value={settings.shortcuts?.mark?.[0] || 'Enter'}
           onChange={handleShortcutChange('mark')}
           onValidate={(v) => validateShortcut(v, 'mark')}
           conflict={conflictMap['mark']}

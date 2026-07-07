@@ -85,6 +85,10 @@ interface EditorToolbarProps {
   onHideEditor?: () => void;
   previewHidden?: boolean;
   onShowPreview?: () => void;
+  // Auto Stamp (#9)
+  autoStampHasAudio?: boolean;
+  autoStampRunning?: boolean;
+  onAutoStamp?: () => void;
 }
 
 export default function EditorToolbar({
@@ -123,6 +127,9 @@ export default function EditorToolbar({
   onHideEditor,
   previewHidden,
   onShowPreview,
+  autoStampHasAudio,
+  autoStampRunning,
+  onAutoStamp,
 }: EditorToolbarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -144,6 +151,19 @@ export default function EditorToolbar({
 
     return { synced, total: lyricLines.length, wordCount, charCount, totalWordsInLine, currentWordNum };
   }, [lines, activeLineIndex, activeWordIndex, stampTarget]);
+
+  const isAutoStampComplete = useMemo(() => {
+    const lyricLines = lines.filter(l => l.type !== 'section');
+    if (!lyricLines.length) return false;
+    
+    // Disable the button if ASR has already run and stamped "the ones it found".
+    // If they want to run it again, they should clear timestamps first.
+    if (editorMode === 'words') {
+      return lyricLines.some(l => l.source === 'asr' && l.words && l.words.some(w => w.time != null));
+    }
+    
+    return lyricLines.some(l => l.source === 'asr');
+  }, [lines, editorMode]);
 
   const [lyricsSearchPopoverOpen, setLyricsSearchPopoverOpen] = useState(false);
 
@@ -403,6 +423,20 @@ export default function EditorToolbar({
               </Tip>
             )}
 
+            {onAutoStamp && (
+              <Tip content={!autoStampHasAudio ? t('editor.autoStamp.noAudio') : isAutoStampComplete ? t('editor.autoStamp.complete', 'Already applied') : t('editor.autoStamp.button')}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onAutoStamp}
+                  disabled={!autoStampHasAudio || autoStampRunning || isAutoStampComplete}
+                  className={`size-9 shrink-0 disabled:opacity-40 ${isAutoStampComplete ? 'text-primary/70' : 'text-zinc-400'}`}
+                >
+                  <Icon name={editorMode === 'words' ? 'spellcheck' : 'auto_fix_high'} size={16} />
+                </Button>
+              </Tip>
+            )}
+
           </div>
         </div>
 
@@ -518,6 +552,18 @@ export default function EditorToolbar({
                 <PopoverItem onClick={handleClearAllWordTimestamps}>
                   <Icon name="ink_eraser" size={16} />
                   {t('editor.clearWordTimestamps')}
+                </PopoverItem>
+              )}
+
+              {onAutoStamp && (
+                <PopoverItem
+                  onClick={onAutoStamp}
+                  disabled={!autoStampHasAudio || autoStampRunning}
+                  className="disabled:opacity-40 disabled:pointer-events-none"
+                  title={!autoStampHasAudio ? t('editor.autoStamp.noAudio') : undefined}
+                >
+                  <Icon name="auto_fix_high" size={16} />
+                  {t('editor.autoStamp.button')}
                 </PopoverItem>
               )}
 

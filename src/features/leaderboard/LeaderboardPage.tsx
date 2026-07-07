@@ -17,7 +17,7 @@ interface LeaderEntry {
   badges?: { id: string }[];
   progression?: { level?: number };
   streak?: { current?: number };
-  stats?: { karaokeLines?: number; minutesSynced?: number; secondsSynced?: number; syncedLines?: number; wordsSynced?: number };
+  stats?: { karaokeLines?: number; minutesSynced?: number; secondsSynced?: number; syncedLines?: number; aiSyncedLines?: number; wordsSynced?: number; aiWordsSynced?: number };
   totalStarsReceived?: number;
   totalForksReceived?: number;
   projectCount?: number;
@@ -148,7 +148,13 @@ function LeaderboardRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
         {/* Inline stats - 7 secondary metrics grouped neutrally */}
         <div className="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-1">
           <StatChip iconName="queue_music" value={formatCount(entry.stats?.syncedLines ?? 0)} tooltip={t('badges.leaderboard.syncedLines', 'Synced Lines')} color="text-zinc-500" />
+          {(entry.stats?.aiSyncedLines ?? 0) > 0 && (
+            <StatChip iconName="auto_awesome" value={formatCount(entry.stats!.aiSyncedLines!)} tooltip={t('badges.leaderboard.aiSyncedLines', 'AI-Assisted Lines')} color="text-primary/70" />
+          )}
           <StatChip iconName="spellcheck" value={formatCount(entry.stats?.wordsSynced ?? 0)} tooltip={t('badges.leaderboard.wordsSynced', 'Words Synced')} color="text-zinc-500" />
+          {(entry.stats?.aiWordsSynced ?? 0) > 0 && (
+            <StatChip iconName="auto_awesome" value={formatCount(entry.stats!.aiWordsSynced!)} tooltip={t('badges.leaderboard.aiWordsSynced', 'AI-Assisted Words')} color="text-primary/70" />
+          )}
           <StatChip iconName="mic" value={formatCount(entry.stats?.karaokeLines ?? 0)} tooltip={t('badges.leaderboard.karaokeLines', 'Karaoke Lines')} color="text-zinc-500" />
           <StatChip iconName="star" value={formatCount(entry.totalStarsReceived ?? 0)} tooltip={t('badges.leaderboard.stars')} color="text-zinc-500" />
           <StatChip iconName="call_split" value={formatCount(entry.totalForksReceived ?? 0)} tooltip={t('badges.leaderboard.forks')} color="text-zinc-500" />

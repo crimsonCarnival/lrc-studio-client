@@ -34,7 +34,7 @@ export function clearAccessToken(): void {
 export async function request<T = unknown>(path: string, options: RequestInit = {}): Promise<T | null> {
   const headers: Record<string, string> = { ...(options.headers as Record<string, string>) };
 
-  if (options.body) {
+  if (options.body && !(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
 

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 
-import { matchKey } from '@/shared/utils/keyboard';
+
 import useLocalAudio from './hooks/useLocalAudio';
 import useYouTubePlayer from './hooks/useYouTubePlayer';
 import { pushPlaybackEntry, popPrevEntry } from './playback-history';
@@ -37,6 +37,7 @@ export interface PlayerHandle {
   getSpeed: () => number;
   seek: (time: number) => void;
   getAudioBlob: () => Blob | null;
+  getYoutubeUrl: () => string | null;
   loadLocalAudio: (file: File) => void;
   loadYouTube: (url?: string) => void;
   loadFromUrl: (url: string, title?: string) => void;
@@ -86,7 +87,7 @@ function PlayerEngineInner(
   { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef = null, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek = 0, initialSpeed, lines, activeLineIndex = 0, playbackPosition, syncMode = false, onMediaUpload, viewerMode = false, projectMetadata, projectCoverImage, ref, children }: PlayerEngineProps,
 ) {
   const { t } = useTranslation();
-  const { settings, updateSetting } = useSettings();
+  const { settings } = useSettings();
   const haptic = useHapticFeedback();
 
   const MIN_SPEED = settings.playback?.speedBounds?.min ?? 0.25;
@@ -381,39 +382,6 @@ function PlayerEngineInner(
   useLayoutEffect(() => { seekRef.current = seek; });
   useLayoutEffect(() => { applySpeedRef.current = applySpeed; });
 
-  // ——— Player keyboard shortcuts ———
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const tag = document.activeElement?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (document.activeElement as HTMLElement | null)?.isContentEditable) return;
-
-      const seekTime = settings.playback?.seekTime ?? 5;
-      const speedStep = 0.25;
-
-      if (matchKey(e, settings.shortcuts?.playPause?.[0] || 'Enter')) {
-        e.preventDefault();
-        togglePlayRef.current();
-      } else if (matchKey(e, settings.shortcuts?.seekBackward?.[0] || 'ArrowLeft')) {
-        e.preventDefault();
-        seekRef.current(Math.max(0, currentTimeRef.current - seekTime));
-      } else if (matchKey(e, settings.shortcuts?.seekForward?.[0] || 'ArrowRight')) {
-        e.preventDefault();
-        seekRef.current(Math.min(durationRef.current, currentTimeRef.current + seekTime));
-      } else if (matchKey(e, settings.shortcuts?.mute?.[0] || 'm')) {
-        e.preventDefault();
-        updateSetting('playback.muted', !settings.playback?.muted);
-      } else if (matchKey(e, settings.shortcuts?.speedUp?.[0] || '+')) {
-        e.preventDefault();
-        applySpeedRef.current(playbackSpeedRef.current + speedStep);
-      } else if (matchKey(e, settings.shortcuts?.speedDown?.[0] || '-')) {
-        e.preventDefault();
-        applySpeedRef.current(playbackSpeedRef.current - speedStep);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-    // settings.shortcuts and settings.playback are stable config; update handler when they change
-  }, [settings.shortcuts, settings.playback, updateSetting]);
 
   // ——— Expose player API via ref ———
 
@@ -433,7 +401,14 @@ function PlayerEngineInner(
       adjustSpeed: (delta: number) => applySpeed(Math.round((playbackSpeed + delta) * 1000) / 1000),
       getSpeed: () => playbackSpeed,
       seek,
-      getAudioBlob: () => localBlobRef.current || null,
+      // Source-gated: loadYouTube never clears localBlobRef, so an ungated blob
+      // would hand Auto Stamp stale local audio while a YouTube video is playing.
+      getAudioBlob: () => (source === 'local' ? localBlobRef.current || null : null),
+      // Auto Stamp: fresh at job start, same imperative pattern as getAudioBlob.
+      // Only meaningful once the player is actually ready on a YouTube source.
+      // ytUrl keeps the raw pasted string — normalize like the load path does so
+      // leading whitespace can't 400 on the server's anchored URL validation.
+      getYoutubeUrl: () => (source === 'youtube' && yt.ytReady ? yt.ytUrl.trim().split(/\s+/)[0] || null : null),
       loadLocalAudio: (file: File) => local.handleFileChange(file),
       loadYouTube: (url?: string) => yt.loadYouTube(url),
       loadFromUrl: (url: string, title?: string) => local.loadFromUrl(url, title),

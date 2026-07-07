@@ -16,6 +16,7 @@ export interface AppSettings {
   shortcuts: Section;
   advanced: Section;
   import: Section;
+  autoStamp: Section;
 }
 
 export interface SettingsContextValue {

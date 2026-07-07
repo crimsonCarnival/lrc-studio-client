@@ -111,5 +111,10 @@ export const DEFAULT_SETTINGS = {
     autoSaveIndicator: 'normal',
     confirmDestructive: true,
     timezone: 'auto'
+  },
+  autoStamp: {
+    confidenceThreshold: 0.8,
+    fuzzyTolerance: 0.75,
+    applyMode: 'empty-only' // 'all' | 'empty-only'
   }
 };
