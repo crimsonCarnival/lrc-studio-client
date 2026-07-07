@@ -12,6 +12,7 @@ Una aplicación web profesional para sincronizar letras de canciones con audio, 
   - [Fuentes de Audio](#-fuentes-de-audio)
   - [Editor de Modos](#editor-de-modos)
   - [Tiempos y Sincronización](#tiempos-y-sincronización)
+  - [Estampado Automático con IA](#-estampado-automático-con-ia)
   - [Contenido de la Letra](#contenido-de-la-letra)
   - [Importación](#importación)
   - [Exportación](#exportación)
@@ -57,6 +58,20 @@ Una aplicación web profesional para sincronizar letras de canciones con audio, 
 - **Bucle A-B** — Establece puntos de inicio y fin de bucle en la forma de onda o la barra de progreso para practicar una sección repetidamente.
 - **Pausa automática al marcar** — Opcionalmente pausa la reproducción automáticamente después de estampar una línea.
 - **Detección de superposición de marcas de tiempo** — Una insignia visual advierte cuando dos líneas comparten la misma marca de tiempo.
+
+### 🤖 Estampado Automático con IA
+
+- **Transcripción con IA en un clic** — Carga un archivo de audio local o pega una URL de YouTube, luego haz clic en "Auto Stamp" para que la IA transcriba y alinee automáticamente cada línea de letra con marcas de tiempo precisas al milisegundo.
+- **Estampado automático por palabras** — En el Modo Palabras, las marcas de tiempo de la IA se distribuyen por palabra, no solo por línea, generando una pista de karaoke lista con el mínimo esfuerzo manual.
+- **Soporte de audio de YouTube** — El estampado automático funciona con fuentes de YouTube (sin necesidad de archivo local). El audio se extrae en el servidor y la forma de onda resultante se muestra en el editor para revisión.
+- **Seguimiento de progreso en tiempo real** — Una barra de progreso en vivo rastrea cada fase del trabajo (obtener audio → extraer → transcribir → alinear → aplicar) con un porcentaje estimado.
+- **Vista previa línea por línea** — A medida que se aplican las marcas de tiempo, una lista en vivo muestra cada línea emparejada junto con su tiempo asignado para que puedas revisar los resultados antes de confirmarlos.
+- **Puntuación de confianza** — Cada línea estampada recibe una insignia de confianza (✔ coincidente, ≈ parcial, ✗ sin coincidencia). Las líneas con baja confianza se resaltan para revisión manual.
+- **Modos de aplicación** — Elige entre "Solo vacíos" (completar solo líneas sin tiempo) o "Todos" (sobrescribir marcas de tiempo existentes).
+- **Coincidencia difusa** — La tolerancia configurable controla con qué flexibilidad se emparejan las letras con la transcripción, manejando pequeñas discrepancias en letras o errores del ASR.
+- **Protección ante conflictos** — Si has editado líneas desde que comenzó el trabajo, un diálogo de confirmación evita sobrescrituras silenciosas.
+- **Trabajo en segundo plano y cancelación** — Los trabajos se ejecutan en el servidor. Puedes cancelar en cualquier momento; el modal permanece accesible incluso si se cierra durante el trabajo.
+- **Integración con la tabla de clasificación** — Las líneas estampadas con IA se rastrean por separado y reciben un descuento de 0.3× en la tabla de clasificación para preservar el valor de la sincronización manual.
 
 ### Contenido de la Letra
 
@@ -351,6 +366,7 @@ Cuando ejecutas `docker-compose up` sin proporcionar variables de entorno person
 - **Integración de Spotify** — No se conectará sin credenciales reales
 - **Integración de YouTube** — No obtendrá metadatos de video con clave API ficticia
 - **Letras de Genius** — La búsqueda y la importación con un solo clic no funcionarán (requiere un Token de acceso de cliente de Genius)
+- **Estampado Automático con IA** — La transcripción no funcionará sin una clave de API de Groq válida
 - **reCAPTCHA** — Usa la clave pública de prueba de Google (siempre pasa la validación)
 
 ### Habilitando Características Completas
@@ -385,6 +401,9 @@ Para usar todas las características incluido correo electrónico, carga de arch
 
     # Genius API (para búsqueda de letras)
     GENIUS_CLIENT_ACCESS_TOKEN=tu-token-de-acceso-de-cliente-de-genius
+
+    # Groq API (para Estampado Automático con IA)
+    GROQ_API_KEY=tu-clave-api-groq
 
     # reCAPTCHA (para protección contra bots)
     RECAPTCHA_SECRET_KEY=tu-clave-secreta

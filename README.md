@@ -12,6 +12,7 @@ A professional web application for synchronizing song lyrics with audio, with su
   - [Audio Sources](#-audio-sources)
   - [Editor Modes](#editor-modes)
   - [Timing & Synchronization](#timing--synchronization)
+  - [AI Auto Stamp](#-ai-auto-stamp)
   - [Lyric Content](#lyric-content)
   - [Import](#import)
   - [Export](#export)
@@ -57,6 +58,20 @@ A professional web application for synchronizing song lyrics with audio, with su
 - **A-B loop** — Set loop start and end points on the waveform or progress bar to practice a section repeatedly.
 - **Auto-pause on mark** — Optionally pause playback automatically after stamping a line.
 - **Overlapping timestamp detection** — Visual badge warns when two lines share the same timestamp.
+
+### 🤖 AI Auto Stamp
+
+- **One-click AI transcription** — Upload a local audio file or paste a YouTube URL, then click "Auto Stamp" to have the AI automatically transcribe and align every lyric line with millisecond-accurate timestamps.
+- **Word-level auto-stamping** — In Words Mode, AI timestamps are distributed per word, not just per line, giving you a ready-made karaoke track with minimal manual effort.
+- **YouTube audio support** — Auto Stamp works with YouTube sources (no local file needed). Audio is extracted server-side and the resulting waveform is displayed in the editor for review.
+- **Real-time progress tracking** — A live progress bar tracks each phase of the job (fetching audio → extracting → transcribing → aligning → applying) with an estimated percentage.
+- **Line-by-line preview** — As timestamps are applied, a live list shows each matched line alongside its assigned time so you can review results before committing.
+- **Confidence scoring** — Each stamped line receives a confidence badge (✔ matched, ≈ partial, ✗ unmatched). Low-confidence lines are highlighted for manual review.
+- **Apply modes** — Choose between "Empty Only" (fill in only un-timed lines) or "All" (overwrite existing timestamps).
+- **Fuzzy matching** — Configurable tolerance controls how loosely lyrics are matched against the transcription, handling minor lyric discrepancies or ASR errors.
+- **Conflict protection** — If you've edited lines since the job started, a confirmation dialog prevents silent overwrites.
+- **Background job & cancellation** — Jobs run server-side. You can cancel at any time; the modal remains accessible even if dismissed mid-job.
+- **Leaderboard integration** — AI-stamped lines are tracked separately and receive a 0.3× discount on the leaderboard to preserve the value of manual sync.
 
 ### Lyric Content
 
@@ -351,6 +366,7 @@ When you run `docker-compose up` without providing custom environment variables,
 - **Spotify integration** — Won't connect without real credentials
 - **YouTube integration** — Won't fetch video metadata with dummy API key
 - **Genius lyrics** — Search and one-click import won't work (requires a Genius Client Access Token)
+- **AI Auto Stamp** — Transcription won't work without a valid Groq API key
 - **reCAPTCHA** — Uses Google's public test key (always passes validation)
 
 ### Enabling Full Features
@@ -384,6 +400,9 @@ To use all features including email, file uploads, and third-party integrations,
 
     # Genius API (for lyrics search)
     GENIUS_CLIENT_ACCESS_TOKEN=your-genius-client-access-token
+
+    # Groq API (for AI Auto Stamp transcription)
+    GROQ_API_KEY=your-groq-api-key
 
     # reCAPTCHA (for bot protection)
     RECAPTCHA_SECRET_KEY=your-secret-key
