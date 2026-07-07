@@ -213,8 +213,9 @@ export default {
     cancel: "Cancelar",
     close: "Cerrar",
     errors: {
-      asr_no_audio: "No hay ninguna fuente de audio disponible",
+      asr_no_audio: "No hay fuente de audio disponible",
       asr_not_configured: "Auto-marcar no está configurado en este servidor",
+      asr_ytdlp_not_configured: "La extracción de YouTube requiere que yt-dlp esté instalado en el servidor",
       asr_invalid_key: "El servicio de transcripción rechazó la solicitud",
       asr_rate_limited: "El servicio de transcripción está ocupado — inténtalo de nuevo en un minuto",
       asr_timeout: "La transcripción superó el tiempo de espera",

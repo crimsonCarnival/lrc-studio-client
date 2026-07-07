@@ -39,6 +39,7 @@ const RUNNING_PHASE_KEYS: Partial<Record<AutoStampPhase, string>> = {
 const KNOWN_ERRORS = new Set([
   'asr_no_audio',
   'asr_not_configured',
+  'asr_ytdlp_not_configured',
   'asr_invalid_key',
   'asr_rate_limited',
   'asr_timeout',

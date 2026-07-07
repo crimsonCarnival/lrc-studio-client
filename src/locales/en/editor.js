@@ -215,6 +215,7 @@ export default {
     errors: {
       asr_no_audio: "No audio source available",
       asr_not_configured: "Auto Stamp is not configured on this server",
+      asr_ytdlp_not_configured: "YouTube extraction requires yt-dlp to be installed on the server",
       asr_invalid_key: "Transcription service rejected the request",
       asr_rate_limited: "Transcription service is busy — try again in a minute",
       asr_timeout: "Transcription timed out",
