@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -6,27 +5,6 @@ import AvatarUpload from './profile/AvatarUpload';
 import ProfileForm from './profile/ProfileForm';
 import AccountNameSection from './profile/AccountNameSection';
 import EmailSection from './profile/EmailSection';
-import { ShowcaseEditor } from '@/features/badges/ShowcaseEditor';
-import { useAuthContext } from '@/features/auth/useAuthContext';
-import { gqlRequest } from '@/app/graphql.client';
-import { updatePreferences } from '@/features/settings/services/preferences.service';
-import toast from 'react-hot-toast';
-
-interface BadgeDef {
-  id: string;
-  holderCount: number;
-}
-
-interface EnrichedBadge {
-  id: string;
-  rarityPct: number;
-  [key: string]: unknown;
-}
-
-const GET_BADGE_DEFS = /* GraphQL */ `
-  query ProfileBadgeDefinitions { badgeDefinitions { id holderCount } }
-`;
-
 
 
 function SectionHeading({ children }: { children?: ReactNode }) {

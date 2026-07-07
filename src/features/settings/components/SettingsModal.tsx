@@ -402,17 +402,17 @@ function SettingsPanel({
                     </div>
                 </div>
                 <div className={tabPanelClass('badges', activeTab, searchTerm)}>
-                    <div ref={(el) => { (contentScrollRefs.current as any).badges = el; }} className={contentWrapperClass(searchTerm)}>
+                    <div ref={(el) => { contentScrollRefs.current.badges = el; }} className={contentWrapperClass(searchTerm)}>
                         <BadgesSettings searchTerm={searchTerm} />
                     </div>
                 </div>
                 <div className={tabPanelClass('notifications', activeTab, searchTerm)}>
-                    <div ref={(el) => { (contentScrollRefs.current as any).notifications = el; }} className={contentWrapperClass(searchTerm)}>
+                    <div ref={(el) => { contentScrollRefs.current.notifications = el; }} className={contentWrapperClass(searchTerm)}>
                         <NotificationsSettings searchTerm={searchTerm} />
                     </div>
                 </div>
                 <div className={tabPanelClass('privacy', activeTab, searchTerm)}>
-                    <div ref={(el) => { (contentScrollRefs.current as any).privacy = el; }} className={contentWrapperClass(searchTerm)}>
+                    <div ref={(el) => { contentScrollRefs.current.privacy = el; }} className={contentWrapperClass(searchTerm)}>
                         <PrivacySettings searchTerm={searchTerm} />
                     </div>
                 </div>

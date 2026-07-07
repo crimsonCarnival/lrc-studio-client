@@ -57,6 +57,7 @@ export default function BadgesSettings({ searchTerm }: { searchTerm?: string }) 
 
   useEffect(() => {
     if (!user?.badges?.length) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEnrichedBadges([]);
       return;
     }
