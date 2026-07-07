@@ -328,6 +328,7 @@ export function AppRouter({
     setShowKeyboardHelp,
     buildProjectPayload,
     restoredMedia,
+    uploadedAudio,
   } = appState;
 
   usePageTitle(mediaTitle);
@@ -426,6 +427,8 @@ export function AppRouter({
     onHideEditor: handleHideEditor,
     previewHidden: !showPreview,
     onShowPreview: handleShowPreview,
+    uploadedAudio,
+    hasMedia,
   } as unknown as EditorProps), [
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
@@ -443,6 +446,7 @@ export function AppRouter({
     projectMetadata,
     playerSlot,
     handleHideEditor, showPreview, handleShowPreview,
+    uploadedAudio, hasMedia,
   ]);
 
   const previewProps = useMemo(() => ({

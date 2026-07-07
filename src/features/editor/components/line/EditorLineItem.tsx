@@ -20,6 +20,7 @@ import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import { validateLineSingers } from '@features/editor/utils/sections';
 import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
+import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
 
 function getSingers(line: EditorLine): string[] {
   return line.singers || [];
@@ -98,6 +99,7 @@ interface EditorLineItemProps {
   onLineMenu?: (...args: unknown[]) => void;
   isModified?: boolean;
   onToggleLineMode?: (i: number, next: EditorLine) => void;
+  confidenceInfo?: ConfidenceInfo;
 }
 
 const SYNC_FLASH_MS: Record<string, number> = { short: 300, normal: 600, long: 1200 };
@@ -166,6 +168,7 @@ const EditorLineItem = React.memo(({
   onLineMenu,
   isModified,
   onToggleLineMode,
+  confidenceInfo,
 }: EditorLineItemProps) => {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
@@ -320,6 +323,20 @@ const EditorLineItem = React.memo(({
   const staggerDelay = `${Math.min(distanceFromActive * 20, 150)}ms`;
 
   const invalidSingers = sectionLines ? validateLineSingers(sectionLines, i) : [];
+
+  // Auto Stamp (#9): tint the line when it carries a confidence result from the
+  // last run. Status first: only a confident match (status 'matched' AND at/above
+  // the configured threshold) earns the success tint; every other result with a
+  // ConfidenceInfo entry (partial, low, none, or a below-threshold match) gets the
+  // warning tint so nothing needing review slips by untinted. Cleared per-line as
+  // soon as the user edits the timestamp manually (see the *WithConfidence wrappers
+  // in Editor.tsx), so this only ever reflects the *current* auto-stamped value.
+  const confidenceThreshold = settings.autoStamp?.confidenceThreshold ?? 0.8;
+  const confidenceTint = confidenceInfo
+    ? confidenceInfo.status === 'matched' && confidenceInfo.confidence >= confidenceThreshold
+      ? 'success'
+      : 'warning'
+    : null;
 
   // Display number counting only lyric lines, so section markers don't consume
   // a number and leave gaps in the sequence.
@@ -502,6 +519,10 @@ const EditorLineItem = React.memo(({
           ? `${isModified ? 'bg-warning shadow-[0_0_12px_rgba(245,158,11,0.6)]' : 'bg-primary shadow-[0_0_12px_rgba(29,185,84,0.6)]'} opacity-90`
           : `${isModified ? 'bg-warning/60' : 'bg-primary/40'} opacity-60`
           }`} />
+      )}
+      {/* Auto Stamp confidence indicator (only when the line isn't already showing the active/lock bar) */}
+      {!isActive && confidenceTint && (
+        <div className={`absolute left-0 inset-y-0 w-1 z-0 rounded-l-xl opacity-70 ${confidenceTint === 'success' ? 'bg-success' : 'bg-warning'}`} />
       )}
       {/* Drag Handle & Line number */}
       <div className="flex items-center gap-1 shrink-0">

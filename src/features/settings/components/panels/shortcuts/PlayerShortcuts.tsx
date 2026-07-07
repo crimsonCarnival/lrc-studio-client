@@ -20,7 +20,7 @@ export default function PlayerShortcuts({ settings, searchTerm, handleShortcutCh
         description={t('settings.shortcuts.playPauseDesc') || 'Toggle playback'}
       >
         <ShortcutInput
-          value={settings.shortcuts?.playPause?.[0] || 'Enter'}
+          value={settings.shortcuts?.playPause?.[0] || 'Space'}
           onChange={handleShortcutChange('playPause')}
           onValidate={(v) => validateShortcut(v, 'playPause')}
           conflict={conflictMap['playPause']}

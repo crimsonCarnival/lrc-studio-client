@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import useInputMethod from '../hooks/useInputMethod.js';
-import { Dialog, DialogContent } from './dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from './dialog';
 import ActionDrawer from './ActionDrawer';
 
 interface ResponsiveModalProps {
@@ -56,12 +56,18 @@ export const ResponsiveModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent {...dialogProps} {...props}>
+      {/* Radix a11y: DialogContent expects a DialogTitle child and an
+          aria-describedby target; without them it logs console warnings. */}
+      <DialogContent
+        {...(description ? {} : { 'aria-describedby': undefined })}
+        {...dialogProps}
+        {...props}
+      >
         {title && (
-          <h2 className="text-lg font-semibold mb-2">{title}</h2>
+          <DialogTitle className="text-lg font-semibold mb-2">{title}</DialogTitle>
         )}
         {description && (
-          <p className="text-sm text-zinc-500 mb-4">{description}</p>
+          <DialogDescription className="text-sm text-zinc-500 mb-4">{description}</DialogDescription>
         )}
         {children}
       </DialogContent>

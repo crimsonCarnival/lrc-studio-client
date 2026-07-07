@@ -272,6 +272,17 @@ export default {
     dangerZone: "Zona de peligro"
   },
 
+  autoStamp: {
+    title: "Sincronización automática",
+    confidenceThreshold: "Umbral de confianza",
+    confidenceThresholdDesc: "Las líneas por debajo de esta confianza se marcan para revisión",
+    fuzzyTolerance: "Tolerancia de coincidencia difusa",
+    fuzzyToleranceDesc: "Qué tan exactamente deben coincidir las palabras transcritas con tu letra",
+    applyMode: "Modo de aplicación",
+    applyModeAll: "Sincronizar todas las líneas",
+    applyModeEmptyOnly: "Solo sincronizar líneas sin marcar"
+  },
+
   options: {
     themes: {
       dark: "Obsidian (Oscuro)",

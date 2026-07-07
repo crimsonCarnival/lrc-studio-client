@@ -538,10 +538,7 @@ export function useEditor({
         }
       };
 
-      if (matchKey(e, settings.shortcuts?.mark?.[0] || 'Space')) {
-        e.preventDefault();
-        handleMark();
-      } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (matchKey(e, settings.shortcuts?.mark?.[0] || 'Enter')) {
         e.preventDefault();
         handleMark({ forceAdvance: true });
       } else if (matchKey(e, settings.shortcuts?.nudgeLeftFine?.[0] || 'Shift+ArrowLeft')) {
@@ -655,7 +652,7 @@ export function useEditor({
       const line = { ...prevLine, text: plainText };
       if (newSecondary !== undefined) line.secondary = newSecondary || undefined;
       if (newTranslations !== undefined) {
-        const filtered = newTranslations.filter(t => t.text?.trim());
+        const filtered = (newTranslations || []).filter(t => t.text?.trim());
         line.translations = filtered.length > 0 ? filtered : undefined;
       }
       // singers array — cap at 4, strip blanks, guard empty

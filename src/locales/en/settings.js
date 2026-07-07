@@ -272,6 +272,17 @@ export default {
     dangerZone: "Danger Zone"
   },
 
+  autoStamp: {
+    title: "Auto Stamp",
+    confidenceThreshold: "Confidence threshold",
+    confidenceThresholdDesc: "Lines below this confidence are flagged for review",
+    fuzzyTolerance: "Fuzzy match tolerance",
+    fuzzyToleranceDesc: "How closely transcribed words must match your lyrics",
+    applyMode: "Apply mode",
+    applyModeAll: "Stamp all lines",
+    applyModeEmptyOnly: "Only stamp unsynced lines"
+  },
+
   options: {
     themes: {
       dark: "Obsidian (Dark)",
