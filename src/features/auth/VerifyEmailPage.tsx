@@ -5,6 +5,7 @@ import type { NavigateFunction } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 
 function SuccessScreen({ navigate, t }: { navigate: NavigateFunction; t: TFunction }) {
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function VerifyEmailPage() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { setUser } = useAuthContext();
 
   const token = searchParams.get('token');
   const status = searchParams.get('status');   // 'success' | 'error' | null
@@ -43,11 +45,18 @@ export default function VerifyEmailPage() {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data.success) navigate('/verify-email?status=success', { replace: true });
-        else navigate(`/verify-email?status=error&code=${data.error || 'server_error'}`, { replace: true });
+        if (data.success) {
+          // Immediately flip isVerified in the in-memory auth state so the
+          // notification badge on the user avatar disappears right away —
+          // without this the badge persists until the next token refresh cycle.
+          setUser(prev => prev ? { ...prev, isVerified: true } : prev);
+          navigate('/verify-email?status=success', { replace: true });
+        } else {
+          navigate(`/verify-email?status=error&code=${data.error || 'server_error'}`, { replace: true });
+        }
       })
       .catch(() => navigate('/verify-email?status=error&code=server_error', { replace: true }));
-  }, [token, status, navigate]);
+  }, [token, status, navigate, setUser]);
 
   // No token and no status — navigated here without a link, nothing to do
   if (!token && !status) {
