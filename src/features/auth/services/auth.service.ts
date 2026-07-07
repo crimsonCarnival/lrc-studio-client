@@ -158,6 +158,7 @@ export const authService = {
           onlineVisibility
           miniProfileBadgesEnabled
           miniProfileBadgeIds
+          defaultProjectPrivacy
           notifications { follow reaction star fork badge_awarded xp_changed }
         }
       }

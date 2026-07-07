@@ -25,6 +25,9 @@ export interface AuthUser extends Partial<User> {
   _id?: string;
   isGuest?: boolean;
   permissions?: string[];
+  lastIp?: string;
+  lastDevice?: string;
+  lastLoginAt?: string | Date;
   [key: string]: unknown;
 }
 

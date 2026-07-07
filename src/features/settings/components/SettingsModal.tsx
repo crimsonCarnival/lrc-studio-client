@@ -16,6 +16,9 @@ import InterfaceSettings from './panels/InterfaceSettings';
 import ShortcutsSettings from './panels/ShortcutsSettings';
 import AdvancedSettings from './panels/AdvancedSettings';
 import ProfileSettings from './panels/ProfileSettings';
+import BadgesSettings from './panels/BadgesSettings';
+import NotificationsSettings from './panels/NotificationsSettings';
+import PrivacySettings from './panels/PrivacySettings';
 import SecuritySettings from './panels/SecuritySettings';
 import ConnectionsSettings from './panels/ConnectionsSettings';
 import ChangesHistorySettings from './panels/ChangesHistorySettings';
@@ -53,6 +56,9 @@ interface SettingsTab {
 const TABS: SettingsTab[] = [
   // Account & Identity
   { id: 'profile', labelKey: 'profile.tabs.account', iconName: 'person', authOnly: true, group: 'account' },
+  { id: 'badges', labelKey: 'badges.showcase.editorTitle', fallback: 'Badges', iconName: 'military_tech', authOnly: true, group: 'account' },
+  { id: 'notifications', labelKey: 'profile.notifications', fallback: 'Notifications', iconName: 'notifications', authOnly: true, group: 'account' },
+  { id: 'privacy', labelKey: 'profile.privacy', fallback: 'Privacy', iconName: 'visibility_off', authOnly: true, group: 'account' },
   { id: 'security', labelKey: 'profile.sections.security', iconName: 'verified_user', authOnly: true, group: 'account' },
   { id: 'connections', labelKey: 'profile.tabs.connections', iconName: 'link', authOnly: true, group: 'account' },
   { id: 'history', labelKey: 'profile.tabs.history', iconName: 'history', authOnly: true, group: 'account' },
@@ -393,6 +399,21 @@ function SettingsPanel({
                 <div className={tabPanelClass('profile', activeTab, searchTerm)}>
                     <div ref={(el) => { contentScrollRefs.current.profile = el; }} className={contentWrapperClass(searchTerm)}>
                         <ProfileSettings searchTerm={searchTerm} key={user?.id} />
+                    </div>
+                </div>
+                <div className={tabPanelClass('badges', activeTab, searchTerm)}>
+                    <div ref={(el) => { (contentScrollRefs.current as any).badges = el; }} className={contentWrapperClass(searchTerm)}>
+                        <BadgesSettings searchTerm={searchTerm} />
+                    </div>
+                </div>
+                <div className={tabPanelClass('notifications', activeTab, searchTerm)}>
+                    <div ref={(el) => { (contentScrollRefs.current as any).notifications = el; }} className={contentWrapperClass(searchTerm)}>
+                        <NotificationsSettings searchTerm={searchTerm} />
+                    </div>
+                </div>
+                <div className={tabPanelClass('privacy', activeTab, searchTerm)}>
+                    <div ref={(el) => { (contentScrollRefs.current as any).privacy = el; }} className={contentWrapperClass(searchTerm)}>
+                        <PrivacySettings searchTerm={searchTerm} />
                     </div>
                 </div>
                 <div className={tabPanelClass('security', activeTab, searchTerm)}>

@@ -7,6 +7,7 @@ const PREFERENCES_FIELDS = /* GraphQL */ `
   onlineVisibility
   miniProfileBadgesEnabled
   miniProfileBadgeIds
+  defaultProjectPrivacy
   notifications {
     follow
     reaction

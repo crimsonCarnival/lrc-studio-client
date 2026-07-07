@@ -182,10 +182,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     name: prefill?.name || '',
     description: prefill?.description || '',
     tags: prefill?.tags || [],
-    // Public by default for authenticated users. Guests can't
-    // toggle it (disabled when !user), so their drafts stay private until they
-    // sign up and choose to publish.
-    isPublic: !!user,
+    // Public by default for authenticated users, unless specified in preferences.
+    // Guests can't toggle it, so their drafts stay private until they sign up.
+    isPublic: user ? (user.preferences?.defaultProjectPrivacy !== 'private') : false,
     songName: prefill?.songName || '',
     songArtist: prefill?.songArtist || '',
     songAlbum: prefill?.songAlbum || '',

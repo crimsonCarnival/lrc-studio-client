@@ -27,159 +27,7 @@ const GET_BADGE_DEFS = /* GraphQL */ `
   query ProfileBadgeDefinitions { badgeDefinitions { id holderCount } }
 `;
 
-type NotifKey = 'follow' | 'reaction' | 'star' | 'fork' | 'badge_awarded' | 'xp_changed';
 
-const NOTIF_KEYS: NotifKey[] = ['follow', 'reaction', 'star', 'fork', 'badge_awarded', 'xp_changed'];
-
-function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={onToggle}
-      className={`relative shrink-0 w-10 h-6 rounded-full transition-colors ${checked ? 'bg-primary' : 'bg-border'}`}
-    >
-      <span className={`absolute top-1 left-1 size-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
-    </button>
-  );
-}
-
-function NotificationPrefsSection() {
-  const { t } = useTranslation();
-  const { user, setUser } = useAuthContext();
-
-  const notifs = user?.preferences?.notifications;
-
-  const getChecked = (key: NotifKey): boolean => {
-    if (!notifs) return true;
-    return notifs[key] ?? true;
-  };
-
-  const handleToggle = async (key: NotifKey) => {
-    const current = getChecked(key);
-    const next = !current;
-    // Optimistically update UI.
-    setUser(prev => ({
-      ...prev,
-      preferences: {
-        showFollowers: prev?.preferences?.showFollowers ?? true,
-        onlineVisibility: prev?.preferences?.onlineVisibility ?? 'friends',
-        miniProfileBadgesEnabled: prev?.preferences?.miniProfileBadgesEnabled ?? true,
-        miniProfileBadgeIds: prev?.preferences?.miniProfileBadgeIds ?? [],
-        notifications: {
-          follow: prev?.preferences?.notifications?.follow ?? true,
-          reaction: prev?.preferences?.notifications?.reaction ?? true,
-          star: prev?.preferences?.notifications?.star ?? true,
-          fork: prev?.preferences?.notifications?.fork ?? true,
-          badge_awarded: prev?.preferences?.notifications?.badge_awarded ?? true,
-          xp_changed: prev?.preferences?.notifications?.xp_changed ?? true,
-          [key]: next,
-        },
-      },
-    }));
-    try {
-      const updated = await updatePreferences({ notifications: { [key]: next } });
-      setUser(prev => ({ ...prev, preferences: updated }));
-    } catch {
-      // Revert on failure.
-      setUser(prev => ({
-        ...prev,
-        preferences: {
-          showFollowers: prev?.preferences?.showFollowers ?? true,
-          onlineVisibility: prev?.preferences?.onlineVisibility ?? 'friends',
-          miniProfileBadgesEnabled: prev?.preferences?.miniProfileBadgesEnabled ?? true,
-          miniProfileBadgeIds: prev?.preferences?.miniProfileBadgeIds ?? [],
-          notifications: {
-            follow: prev?.preferences?.notifications?.follow ?? true,
-            reaction: prev?.preferences?.notifications?.reaction ?? true,
-            star: prev?.preferences?.notifications?.star ?? true,
-            fork: prev?.preferences?.notifications?.fork ?? true,
-            badge_awarded: prev?.preferences?.notifications?.badge_awarded ?? true,
-            xp_changed: prev?.preferences?.notifications?.xp_changed ?? true,
-            [key]: current,
-          },
-        },
-      }));
-      toast.error(t('profile.saveError'));
-    }
-  };
-
-  return (
-    <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Icon name="notifications" size={14} className="text-zinc-500" />
-        <SectionHeading>{t('profile.notifications')}</SectionHeading>
-      </div>
-      <div className="space-y-3">
-        {NOTIF_KEYS.map(key => (
-          <div key={key} className="flex items-center justify-between gap-4">
-            <p className="text-sm text-foreground font-medium">{t(`profile.notif_${key}`)}</p>
-            <Toggle checked={getChecked(key)} onToggle={() => handleToggle(key)} />
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function ShowcaseSection() {
-  const { t } = useTranslation();
-  const { user, setUser } = useAuthContext();
-  const [enrichedBadges, setEnrichedBadges] = useState<EnrichedBadge[] | null>(null);
-
-  useEffect(() => {
-    if (!user?.badges?.length) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setEnrichedBadges([]);
-      return;
-    }
-    gqlRequest(GET_BADGE_DEFS)
-      .then(({ badgeDefinitions }: { badgeDefinitions: BadgeDef[] }) => {
-        // Total users is not returned here — estimate rarity from holderCount relative to holder list
-        // We use a safe default: show badges without rarity percentage if defs unavailable
-        const defMap = new Map(badgeDefinitions.map(d => [d.id, d]));
-        const maxHolders = Math.max(...badgeDefinitions.map(d => d.holderCount), 1);
-        setEnrichedBadges(
-          (user.badges as Array<{ id: string; [key: string]: unknown }>).map(b => ({
-            ...b,
-            // holderCount / maxHolders gives relative rarity (good enough for filter ordering)
-            rarityPct: defMap.has(b.id)
-              ? (defMap.get(b.id)!.holderCount / Math.max(maxHolders, 1)) * 100
-              : 100,
-          }))
-        );
-      })
-      .catch(() => setEnrichedBadges(user.badges as unknown as EnrichedBadge[]));
-  }, [user?.badges]);
-
-  if (!enrichedBadges) return null;
-
-  return (
-    <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Icon name="military_tech" size={14} className="text-zinc-500" />
-        <SectionHeading>{t('badges.showcase.editorTitle')}</SectionHeading>
-      </div>
-      <ShowcaseEditor
-        userBadges={enrichedBadges}
-        initialShowcase={user?.showcasedBadges ?? []}
-        initialPublic={user?.showcasePublic !== false}
-        showcaseSlots={getShowcaseSlots(user?.progression?.level ?? 0)}
-        level={user?.progression?.level ?? 0}
-        onSaved={(ids: string[], pub: boolean) => setUser(prev => ({ ...prev, showcasedBadges: ids, showcasePublic: pub }))}
-      />
-    </section>
-  );
-}
-
-function getShowcaseSlots(level: number) {
-  if (level >= 100) return 8;
-  if (level >= 75)  return 6;
-  if (level >= 50)  return 5;
-  if (level >= 25)  return 4;
-  return 3;
-}
 
 function SectionHeading({ children }: { children?: ReactNode }) {
   return (
@@ -237,12 +85,7 @@ export default function ProfileSettings({ searchTerm }: { searchTerm?: string })
         {/* Display name + bio + visibility */}
         <ProfileForm />
 
-        <Divider />
 
-        {/* Notification preferences */}
-        <NotificationPrefsSection />
-
-        <Divider />
 
         {/* Email */}
         <section className="space-y-4">
@@ -258,10 +101,7 @@ export default function ProfileSettings({ searchTerm }: { searchTerm?: string })
           <AccountNameSection />
         </section>
 
-        <Divider />
 
-        {/* Achievement Showcase */}
-        <ShowcaseSection />
       </div>
     </div>
   );

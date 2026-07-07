@@ -1164,6 +1164,7 @@ export type UserPreferences = {
   miniProfileBadgesEnabled: Scalars['Boolean']['output'];
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
   notifications: UserPreferencesNotifications;
+  defaultProjectPrivacy: Scalars['String']['output'];
 };
 
 export type UpdatePreferencesNotificationsInput = {
@@ -1181,6 +1182,7 @@ export type UpdatePreferencesInput = {
   miniProfileBadgesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
   notifications?: InputMaybe<UpdatePreferencesNotificationsInput>;
+  defaultProjectPrivacy?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateProjectInput = {
