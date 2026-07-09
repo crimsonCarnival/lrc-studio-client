@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
+import DecryptedText from '@/shared/ui/DecryptedText';
 
 const KNOWN_PREFIXES = new Set([
   '/home', '/library', '/search', '/explore', '/feed',
@@ -69,7 +70,7 @@ interface NotFoundConfig {
 }
 
 export default function NotFoundPage({ type: typeProp, identifier: identifierProp }: { type?: string; identifier?: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -181,7 +182,11 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
           },
         };
     }
-  }, [type, identifier, t, navigate]);
+    // i18n.language isn't read directly above, but react-i18next's `t` reference
+    // isn't guaranteed to change on a language switch — this dependency forces
+    // the variant title/description to recompute (and DecryptedText to re-animate).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, identifier, t, navigate, i18n.language]);
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center animate-fade-in">
@@ -193,7 +198,14 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
         </div>
 
         <h1 className="text-3xl sm:text-4xl font-semibold text-zinc-100 mb-4 tracking-tight font-heading">
-          {config.title}
+          <DecryptedText
+            text={config.title}
+            animateOn="change"
+            animateOnMount
+            sequential
+            revealDirection="center"
+            encryptedClassName="text-zinc-600"
+          />
         </h1>
 
         <p className="text-zinc-400 text-lg mb-10 leading-relaxed">
