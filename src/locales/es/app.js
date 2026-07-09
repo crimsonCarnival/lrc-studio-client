@@ -21,8 +21,18 @@ export default {
   hidePreview: "Ocultar Vista Previa",
   showEditor: "Mostrar Editor",
   showPreview: "Mostrar Vista Previa",
-  unsavedChangesTitle: "Cambios sin guardar",
-  unsavedChangesMessage: "Tienes cambios sin guardar. ¿Qué deseas hacer antes de salir?",
+  unsavedChangesTitle: [
+    "Cambios sin guardar",
+    "¡Espera!",
+    "Guarda tu progreso",
+    "¿Ya te vas?"
+  ],
+  unsavedChangesMessage: [
+    "Tienes cambios sin guardar. ¿Qué deseas hacer antes de salir?",
+    "Hiciste algunos ajustes. ¿Quieres guardarlos antes de salir?",
+    "No pierdas tu ritmo. ¿Guardamos tus ediciones recientes antes de salir?",
+    "Tus últimas sincronizaciones aún no se guardaron. ¿Qué hacemos?"
+  ],
   discard: "Descartar",
   saveAndExit: "Guardar",
   cancel: "Cancelar",

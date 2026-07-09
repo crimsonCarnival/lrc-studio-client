@@ -117,6 +117,7 @@ export default function PlaylistPage() {
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [forbidden, setForbidden] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [hoveringUnsave, setHoveringUnsave] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
@@ -139,7 +140,11 @@ export default function PlaylistPage() {
         setPlaylist(pl);
         setIsSaved(pl.isSavedByMe ?? false);
       })
-      .catch(() => { if (!cancelled) setNotFound(true); })
+      .catch((err: { graphqlErrors?: Array<{ message?: string }> }) => {
+        if (cancelled) return;
+        if (err.graphqlErrors?.[0]?.message === 'forbidden') setForbidden(true);
+        else setNotFound(true);
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [playlistId]);
@@ -208,6 +213,14 @@ export default function PlaylistPage() {
       <div className="flex-1 flex items-center justify-center">
         <LoadingSpinner size="md" />
       </div>
+    );
+  }
+
+  if (forbidden) {
+    return (
+      <Suspense fallback={null}>
+        <NotFoundPage type="forbidden" />
+      </Suspense>
     );
   }
 

@@ -548,6 +548,10 @@ export function AppRouter({
         <EditorContainer loadProject={loadProject} activepublicId={activepublicId} isProjectLoading={isProjectLoading} projectUserId={projectUserId} user={user} navigate={navigate}>
           {loadError === 'project' ? (
             <NotFoundPage type="project" />
+          ) : loadError === 'forbidden' ? (
+            <NotFoundPage type="forbidden" />
+          ) : loadError === 'gone' ? (
+            <NotFoundPage type="gone" />
           ) : isProjectLoading ? (
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4">
               <div className={`${editorColClass} flex flex-col gap-4`}><SkeletonEditor /></div>

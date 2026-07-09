@@ -141,6 +141,30 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
             onClick: () => navigate('/search'),
           },
         };
+      case 'forbidden':
+        return {
+          icon: <Icon name="lock" size={64} className="text-red-400" />,
+          title: pickVariant(t, 'error.forbiddenTitle'),
+          description: pickVariant(t, 'error.forbiddenDesc'),
+          primaryAction: {
+            label: t('app.backHome'),
+            icon: <Icon name="home" size={20} className="mr-2" />,
+            onClick: () => navigate('/home'),
+          },
+          searchAction: null,
+        };
+      case 'gone':
+        return {
+          icon: <Icon name="delete_forever" size={64} className="text-zinc-500" />,
+          title: pickVariant(t, 'error.goneTitle'),
+          description: pickVariant(t, 'error.goneDesc'),
+          primaryAction: {
+            label: t('app.backHome'),
+            icon: <Icon name="home" size={20} className="mr-2" />,
+            onClick: () => navigate('/home'),
+          },
+          searchAction: null,
+        };
       default:
         return {
           icon: <Icon name="ghost" size={64} className="text-zinc-500" />,

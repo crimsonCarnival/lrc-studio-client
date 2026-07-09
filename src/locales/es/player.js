@@ -11,7 +11,11 @@ export default {
   pasteUrl: "Pega la URL de YouTube...",
   pasteCdnUrl: "Pega URL de YouTube o CDN...",
   load: "Cargar",
-  noMedia: "Carga un archivo de audio o enlace de YouTube\npara empezar a sincronizar letras",
+  noMedia: [
+    "Carga un archivo de audio o enlace de YouTube para empezar a sincronizar",
+    "Suelta una pista aquí para comenzar",
+    "Esperando medio..."
+  ],
   speed: "Velocidad",
   customSpeed: "Personalizado",
   invalidUrl: "URL de YouTube inválida. Verifica el enlace.",

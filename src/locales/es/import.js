@@ -1,5 +1,10 @@
 export default {
-  success: "{{count}} líneas importadas",
+  success: [
+    "Se importaron {{count}} líneas correctamente.",
+    "{{count}} líneas listas para sincronizar.",
+    "Se cargaron {{count}} líneas sin problemas.",
+    "Importación completa. Se agregaron {{count}} líneas."
+  ],
   failed: "Error al analizar el archivo de letras",
   noLines: "No se encontraron letras en el archivo",
   tooLarge: "Archivo demasiado grande (máx 5 MB)",

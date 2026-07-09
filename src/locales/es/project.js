@@ -29,8 +29,16 @@ export default {
   privateDescription: "Solo tú puedes ver y editar este proyecto.",
   tags: "Etiquetas",
   tagsPlaceholder: "Agrega etiquetas separadas por comas...",
-  notFoundTitle: "Proyecto no encontrado",
-  notFoundDesc: "El proyecto compartido que buscas no existe o ha caducado.",
+  notFoundTitle: [
+    "Proyecto no encontrado",
+    "Enlace caducado",
+    "Espacio de trabajo faltante"
+  ],
+  notFoundDesc: [
+    "El proyecto compartido que buscas no existe o ha caducado.",
+    "No pudimos localizar este proyecto. Puede que haya sido eliminado.",
+    "Parece que esta sesión ya no está disponible."
+  ],
   forbiddenTitle: "Acceso denegado",
   forbiddenDesc: "No tienes permiso para ver este proyecto.",
   errorTitle: "Error al cargar el proyecto",

@@ -371,6 +371,10 @@ export function useAppState(user?: AuthUserType | null) {
           // Server failed (404, network error, etc.) — stale project ID, clear it
           if (err.status === 404) {
             setLoadError('project');
+          } else if (err.status === 403) {
+            setLoadError('forbidden');
+          } else if (err.status === 410) {
+            setLoadError('gone');
           }
           setActivepublicId(null);
           try {

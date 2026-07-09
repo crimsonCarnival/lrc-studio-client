@@ -10,19 +10,19 @@ import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
 
 interface UploadProject {
   publicId: string;
-  title?: string;
-  updatedAt?: string;
-  createdAt?: string;
+  title?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
 }
 
 interface MediaDetail {
-  source?: string;
-  title?: string;
-  fileName?: string;
-  createdAt?: string;
-  uploadUrl?: string;
-  duration?: number;
-  projects?: UploadProject[];
+  source?: string | null;
+  title?: string | null;
+  fileName?: string | null;
+  createdAt?: string | null;
+  uploadUrl?: string | null;
+  duration?: number | null;
+  projects?: UploadProject[] | null;
 }
 
 export default function UploadDetailView({ onBack }: { onBack: () => void }) {
@@ -39,8 +39,8 @@ export default function UploadDetailView({ onBack }: { onBack: () => void }) {
       try {
         setLoading(true);
         setError('');
-        const data = await uploads.getMedia(id!) as { upload?: MediaDetail } & MediaDetail;
-        setMedia(data.upload ?? data);
+        const data = await uploads.getMedia(id!);
+        setMedia(data.upload ?? null);
       } catch (err) {
         setError((err as { message?: string }).message || 'Failed to load media details');
       } finally {
@@ -61,7 +61,7 @@ export default function UploadDetailView({ onBack }: { onBack: () => void }) {
   }
 
   if (error || !media) {
-    if (error.includes('404')) {
+    if (!error) {
       return <NotFoundPage type="upload" />;
     }
     return (
@@ -120,7 +120,7 @@ export default function UploadDetailView({ onBack }: { onBack: () => void }) {
                 <p className="text-[10px] sm:text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-1">{t('uploads.source')}</p>
                 <p className="text-sm sm:text-base text-zinc-300 truncate">
                   {isYouTube ? (
-                    <a href={media.uploadUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate block">
+                    <a href={media.uploadUrl ?? undefined} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate block">
                       {media.uploadUrl}
                     </a>
                   ) : (

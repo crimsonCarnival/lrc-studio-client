@@ -64,6 +64,32 @@ export default {
     "Looks like this playlist packed up and left."
   ],
 
+  forbiddenTitle: [
+    "Access Denied",
+    "Not Allowed",
+    "Off Limits",
+    "Locked Out"
+  ],
+  forbiddenDesc: [
+    "You don't have permission to view this content.",
+    "This area is restricted to authorized users.",
+    "You'll need different access rights to see this.",
+    "This one's not for you — at least not right now."
+  ],
+
+  goneTitle: [
+    "This Is Gone",
+    "Permanently Removed",
+    "No Longer Available",
+    "Deleted for Good"
+  ],
+  goneDesc: [
+    "This content was permanently deleted and won't come back.",
+    "The link you followed points to something that's been removed for good.",
+    "This project or link has been permanently deleted by its owner.",
+    "Nothing to see here — this one's gone permanently."
+  ],
+
   userNotFoundWithName: "The profile {{name}} doesn't exist or may have been removed.",
   projectNotFoundWithName: "We couldn't find a project matching \"{{id}}\".",
 
