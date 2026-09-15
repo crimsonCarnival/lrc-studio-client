@@ -87,11 +87,9 @@ export const lyricsService = {
         body: JSON.stringify({ lines, duration, srtConfig }),
       });
     } catch (err) {
-      if (isNetworkError(err)) {
-        const result = localInferEndTimes(lines as EditorLine[], duration ?? 0, srtConfig as Parameters<typeof localInferEndTimes>[2]);
-        return { lines: result };
-      }
-      throw err;
+      console.warn('Server inferEndTimes failed, falling back to local:', err);
+      const result = localInferEndTimes(lines as EditorLine[], duration ?? 0, srtConfig as Parameters<typeof localInferEndTimes>[2]);
+      return { lines: result };
     }
   },
 };

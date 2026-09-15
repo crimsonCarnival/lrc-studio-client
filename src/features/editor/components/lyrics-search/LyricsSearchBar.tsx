@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Input } from '@ui/input';
 import { Icon } from '@/shared/ui/Icon';
 import toast from 'react-hot-toast';
-import { lyricsSearch } from '@features/editor/services/lyricsSearch.service';
+import { lyricsSearch } from '@features/editor/services/lyrics-search.service';
 import LyricsResultCard from './LyricsResultCard';
 import LyricsModal from './LyricsModal';
 import { useSettings } from '@/features/settings/useSettings';
