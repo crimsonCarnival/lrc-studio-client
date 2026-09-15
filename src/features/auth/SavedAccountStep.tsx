@@ -21,7 +21,7 @@ interface SavedAccountStepProps {
   t: TFunction;
   savedAccounts: SavedAccount[];
   accountsChecked: boolean;
-  onProceedToPassword: (data: { identifier?: string; [key: string]: unknown }) => void;
+  onProceedToPassword: (data: { identifier?: string;[key: string]: unknown }) => void;
   onGoogleLogin?: (identifier?: string) => void | Promise<void>;
   onAddAccount: () => void;
   onRemoveAccount: (userId: string) => void;
@@ -151,7 +151,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-zinc-100 truncate">{displayName}</p>
                     {account.accountName && account.accountName.toLowerCase() !== displayName.toLowerCase() && (
-                      <p className="text-xs text-zinc-500">@{account.accountName}</p>
+                      <p className="text-xs text-zinc-500">{account.accountName}</p>
                     )}
                     {errors[key] && (
                       <p className="text-xs text-red-400 mt-0.5">{errors[key]}</p>

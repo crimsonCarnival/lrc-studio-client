@@ -62,7 +62,7 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
         <div className="flex flex-col items-center gap-0.5">
           <p className="text-lg font-semibold text-zinc-100 tracking-tight">{displayName}</p>
           {identifierData.accountName && identifierData.accountName.toLowerCase() !== displayName.toLowerCase() && (
-            <p className="text-sm text-zinc-500">@{identifierData.accountName}</p>
+            <p className="text-sm text-zinc-500">{identifierData.accountName}</p>
           )}
         </div>
       </div>

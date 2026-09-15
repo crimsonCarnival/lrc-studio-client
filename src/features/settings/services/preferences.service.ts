@@ -5,6 +5,7 @@ import type { UserPreferences, UpdatePreferencesInput } from '@/types';
 const PREFERENCES_FIELDS = /* GraphQL */ `
   showFollowers
   onlineVisibility
+  lastOnlineVisibility
   miniProfileBadgesEnabled
   miniProfileBadgeIds
   defaultProjectPrivacy
