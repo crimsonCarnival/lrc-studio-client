@@ -783,8 +783,9 @@ export function useAppState(user?: AuthUserType | null) {
       // Never block exit while the project is still being restored from server
       if (isProjectLoadingRef.current) return;
 
-      // Ensure we only prompt on project-related URLs.
-      if (!window.location.pathname.startsWith('/project/')) return;
+      // Ensure we only prompt on editor routes (local, new, or edit).
+      // We do NOT want to prompt on public view pages like /project/123
+      if (!window.location.pathname.match(/^\/project\/(local|new|[^/]+\/edit)$/)) return;
 
       // Block exit while a save / create is in-flight so we don't corrupt state.
       if (isSaving || (isCreatingProjectRef.current && !!activepublicIdRef.current)) {
