@@ -11,8 +11,8 @@ export function SearchUserCard({ user, compact = false }: { user: FollowUser; co
     return (
       <UserHoverCard accountName={accountName} userId={id}>
         <Link
-          to={`/${accountName}`}
-          className="flex items-center gap-2.5 px-3 py-2 hover:bg-zinc-800/60 rounded-lg transition-colors"
+          to={`/profile/${accountName}`}
+          className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-zinc-800/60 rounded-lg transition-colors"
         >
           <div className="size-7 rounded-full overflow-hidden bg-zinc-800 shrink-0">
             {avatarUrl
@@ -21,7 +21,7 @@ export function SearchUserCard({ user, compact = false }: { user: FollowUser; co
           </div>
           <div className="min-w-0">
             <p className="text-sm font-medium text-white truncate">{displayName || accountName}</p>
-            {displayName && <p className="text-xs text-zinc-500 truncate">@{accountName}</p>}
+            {displayName && <p className="text-xs text-zinc-500 truncate">{accountName}</p>}
           </div>
         </Link>
       </UserHoverCard>
@@ -31,8 +31,8 @@ export function SearchUserCard({ user, compact = false }: { user: FollowUser; co
   return (
     <UserHoverCard accountName={accountName} userId={id}>
       <Link
-        to={`/${accountName}`}
-        className="flex items-center gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 hover:bg-zinc-800/50 transition-all"
+        to={`/profile/${accountName}`}
+        className="w-full flex items-center gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 hover:bg-zinc-800/50 transition-all"
       >
         <div className="size-10 rounded-full overflow-hidden bg-zinc-800 shrink-0">
           {avatarUrl
@@ -41,7 +41,7 @@ export function SearchUserCard({ user, compact = false }: { user: FollowUser; co
         </div>
         <div className="min-w-0">
           <p className="font-semibold text-white text-sm truncate">{displayName || accountName}</p>
-          <p className="text-xs text-zinc-400 truncate">@{accountName}</p>
+          <p className="text-xs text-zinc-400 truncate">{accountName}</p>
         </div>
       </Link>
     </UserHoverCard>

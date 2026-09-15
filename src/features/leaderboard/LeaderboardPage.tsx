@@ -36,12 +36,12 @@ function formatTime(min?: number, sec?: number) {
   const m = min ?? 0;
   const s = sec ?? 0;
   if (m <= 0 && s <= 0) return '—';
-  
+
   const totalSeconds = m * 60 + s;
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  
+
   if (hours > 0) {
     if (minutes === 0) return `${hours}h`;
     return `${hours}h ${minutes}m`;
@@ -117,7 +117,7 @@ function LeaderboardRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
 
   return (
     <Link
-      to={`/${entry.accountName}`}
+      to={`/profile/${entry.accountName}`}
       className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-150
         ${p
           ? `border-l-2 ${p.accent} border-t border-r border-b border-zinc-700/30 ${p.glow} hover:border-zinc-600/40`
@@ -142,7 +142,7 @@ function LeaderboardRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
             </span>
           )}
           {badgeIds.length > 0 && <BadgeList ids={badgeIds} max={2} />}
-          <span className="text-[11px] text-zinc-600 font-mono ml-1">@{entry.accountName}</span>
+          <span className="text-[11px] text-zinc-600 font-mono ml-1">{entry.accountName}</span>
         </div>
 
         {/* Inline stats - 7 secondary metrics grouped neutrally */}
@@ -222,76 +222,78 @@ export default function LeaderboardPage() {
         setUsers(prev => [...prev, ...d.users]);
         setHasMore(d.hasMore);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoadingMore(false));
   };
 
   return (
-    <div className="flex-1 flex flex-col px-4 pt-6 pb-16 max-w-3xl mx-auto w-full animate-fade-in">
+    <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="flex flex-col px-4 pt-6 pb-16 max-w-3xl mx-auto w-full animate-fade-in">
 
-      {/* Header card */}
-      <div className="glass rounded-[2rem] p-6 sm:p-8 mb-4 relative overflow-hidden">
-        <div className="absolute -top-16 -right-16 size-48 rounded-full bg-warning/5 blur-3xl pointer-events-none" aria-hidden />
-        <div className="absolute -bottom-12 -left-12 size-36 rounded-full bg-primary/5 blur-3xl pointer-events-none" aria-hidden />
+        {/* Header card */}
+        <div className="glass rounded-[2rem] p-6 sm:p-8 mb-4 relative overflow-hidden">
+          <div className="absolute -top-16 -right-16 size-48 rounded-full bg-warning/5 blur-3xl pointer-events-none" aria-hidden />
+          <div className="absolute -bottom-12 -left-12 size-36 rounded-full bg-primary/5 blur-3xl pointer-events-none" aria-hidden />
 
-        <div className="relative flex items-start gap-4">
-          <div className="size-12 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center flex-shrink-0">
-            <Icon name="emoji_events" size={24} className="text-warning" />
+          <div className="relative flex items-start gap-4">
+            <div className="size-12 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center flex-shrink-0">
+              <Icon name="emoji_events" size={24} className="text-warning" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-heading font-semibold text-foreground">
+                {t('badges.leaderboard.title')}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                {t('badges.leaderboard.subtitle')}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-heading font-semibold text-foreground">
-              {t('badges.leaderboard.title')}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+
+        </div>
+
+        {/* Content */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <LoadingSpinner size="md" />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
+            <p className="text-sm font-medium text-muted-foreground">{t('badges.leaderboard.error')}</p>
+          </div>
+        ) : users.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+            <Icon name="timer" size={40} className="text-zinc-700" />
+            <p className="text-sm text-muted-foreground">{t('badges.leaderboard.empty')}</p>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col gap-1.5">
+              {users.map((entry, i) => (
+                <LeaderboardRow key={entry.id ?? entry.accountName} entry={entry} rank={i + 1} />
+              ))}
+            </div>
+
+            {hasMore && (
+              <div className="flex justify-center mt-6">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="gap-1.5"
+                >
+                  {loadingMore ? <Icon name="progress_activity" size={14} className="animate-spin" /> : <Icon name="expand_more" size={14} />}
+                  {t('common.loadMore')}
+                </Button>
+              </div>
+            )}
+
+            <p className="text-center text-[10px] text-zinc-700 mt-6">
               {t('badges.leaderboard.subtitle')}
             </p>
-          </div>
-        </div>
-
+          </>
+        )}
       </div>
-
-      {/* Content */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <LoadingSpinner size="md" />
-        </div>
-      ) : error ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
-          <p className="text-sm font-medium text-muted-foreground">{t('badges.leaderboard.error')}</p>
-        </div>
-      ) : users.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-          <Icon name="timer" size={40} className="text-zinc-700" />
-          <p className="text-sm text-muted-foreground">{t('badges.leaderboard.empty')}</p>
-        </div>
-      ) : (
-        <>
-          <div className="flex flex-col gap-1.5">
-            {users.map((entry, i) => (
-              <LeaderboardRow key={entry.id ?? entry.accountName} entry={entry} rank={i + 1} />
-            ))}
-          </div>
-
-          {hasMore && (
-            <div className="flex justify-center mt-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="gap-1.5"
-              >
-                {loadingMore ? <Icon name="progress_activity" size={14} className="animate-spin" /> : <Icon name="expand_more" size={14} />}
-                {t('common.loadMore')}
-              </Button>
-            </div>
-          )}
-
-          <p className="text-center text-[10px] text-zinc-700 mt-6">
-            {t('badges.leaderboard.subtitle')}
-          </p>
-        </>
-      )}
     </div>
   );
 }

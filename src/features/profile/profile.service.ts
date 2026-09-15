@@ -6,17 +6,19 @@ const GET_PUBLIC_PROFILE = /* GraphQL */ `
     publicProfile(accountName: $accountName) {
       id accountName displayName avatarUrl bio isVerified isAdmin createdAt
       projectCount totalStarsReceived totalForksReceived
-      followerCount followingCount isFollowedByMe isBlockedByMe showFollowers
+      followerCount followingCount isFollowedByMe isFollowingMe isBlockedByMe showFollowers
       badges { id grantedAt }
       progression { xp level }
       stats { minutesSynced }
       streak { current }
+      lastOnlineAt
+      country
       showcasePublic
       showcasedBadges {
         id label { en es } icon color rarity rarityPct holderCount grantedAt
       }
       projects {
-        id publicId title starCount forkCount coverImage public
+        id publicId title starCount forkCount coverImage public lineCount syncedLineCount
         metadata { songName songArtist songAlbum songYear genre description tags }
         upload { source uploadUrl }
         createdAt updatedAt

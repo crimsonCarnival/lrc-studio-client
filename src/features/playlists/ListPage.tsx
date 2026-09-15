@@ -79,7 +79,7 @@ export default function ListPage() {
 
   const handleSave = useCallback(async () => {
     if (!user) {
-      navigate(`/auth/signin?redirect=${encodeURIComponent(`/${accountName}/lists/${listId}`)}`);
+      navigate(`/auth/signin?redirect=${encodeURIComponent(`/profile/${accountName}/lists/${listId}`)}`);
       return;
     }
     setSaveLoading(true);
@@ -135,7 +135,8 @@ export default function ListPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 overflow-y-auto min-h-0">
+    <div className="flex flex-col">
       {/* Hero band */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0">
@@ -173,7 +174,7 @@ export default function ListPage() {
             )}
 
             <Link
-              to={`/${accountName}`}
+              to={`/profile/${accountName}`}
               className="flex items-center gap-2 w-fit hover:opacity-80 transition-opacity mb-3"
             >
               {playlist.owner?.avatarUrl ? (
@@ -247,41 +248,42 @@ export default function ListPage() {
             {playlist.projects.map((project, index) => {
               const thumb = resolveCoverImage(project);
               return (
-              <Link
-                key={project.id}
-                to={`/project/${project.publicId}?list=${listId}`}
-                className="flex items-center gap-4 px-4 py-3 hover:bg-accent/40 transition-colors group"
-              >
-                <span className="w-6 text-center text-sm text-muted-foreground group-hover:hidden">
-                  {index + 1}
-                </span>
-                <span className="w-6 text-center text-sm hidden group-hover:block">▶</span>
+                <Link
+                  key={project.id}
+                  to={`/project/${project.publicId}?list=${listId}`}
+                  className="flex items-center gap-4 px-4 py-3 hover:bg-accent/40 transition-colors group"
+                >
+                  <span className="w-6 text-center text-sm text-muted-foreground group-hover:hidden">
+                    {index + 1}
+                  </span>
+                  <span className="w-6 text-center text-sm hidden group-hover:block">▶</span>
 
-                <div className="w-16 h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
-                  {thumb ? (
-                    <img src={thumb} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                  ) : (
-                    <Icon name="music_note" size={16} className="text-muted-foreground" />
-                  )}
-                </div>
+                  <div className="w-16 h-10 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
+                    {thumb ? (
+                      <img src={thumb} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                    ) : (
+                      <Icon name="music_note" size={16} className="text-muted-foreground" />
+                    )}
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground line-clamp-1 group-hover:text-primary transition-colors">
-                    {project.title || t('playlists.detail.untitled')}
-                  </p>
-                  {(project.metadata?.songArtist || project.metadata?.songName) && (
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {[project.metadata.songArtist, project.metadata.songName].filter(Boolean).join(' · ')}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                      {project.title || t('playlists.detail.untitled')}
                     </p>
-                  )}
-                </div>
+                    {(project.metadata?.songArtist || project.metadata?.songName) && (
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {[project.metadata.songArtist, project.metadata.songName].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
+                  </div>
 
-                <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-                  <Icon name="star" size={12} />
-                  {project.starCount ?? 0}
-                </span>
-              </Link>
-              ); })}
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                    <Icon name="star" size={12} />
+                    {project.starCount ?? 0}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>
@@ -293,6 +295,7 @@ export default function ListPage() {
           onSave={(updated: Playlist) => { setPlaylist(updated); setShowEdit(false); }}
         />
       )}
+    </div>
     </div>
   );
 }

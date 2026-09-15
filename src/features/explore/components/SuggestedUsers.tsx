@@ -71,7 +71,7 @@ export function SuggestedUsers({ limit = 8 }: { limit?: number }) {
                 className="flex items-center gap-3 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors"
               >
                 <UserHoverCard accountName={u.accountName} userId={u.id}>
-                  <Link to={`/${u.accountName}`} className="flex items-center gap-3 flex-1 min-w-0">
+                  <Link to={`/profile/${u.accountName}`} className="flex items-center gap-3 flex-1 min-w-0">
                     {u.avatarUrl ? (
                       <img
                         src={u.avatarUrl}
@@ -88,7 +88,7 @@ export function SuggestedUsers({ limit = 8 }: { limit?: number }) {
                       <p className="text-sm font-medium text-white truncate">
                         {u.displayName || u.accountName}
                       </p>
-                      <p className="text-xs text-zinc-500 truncate">@{u.accountName}</p>
+                      <p className="text-xs text-zinc-500 truncate">{u.accountName}</p>
                     </div>
                   </Link>
                 </UserHoverCard>

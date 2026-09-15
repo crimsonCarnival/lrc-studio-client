@@ -6,10 +6,12 @@ import { Icon } from '@/shared/ui/Icon';
 import { BadgeChip } from '@/features/badges/BadgeChip';
 import { LazyImage } from '@ui/LazyImage';
 import { OnlineDot } from '@ui/OnlineDot';
+import { CountryFlag } from '@ui/CountryFlag';
 import { usePresence } from '@/shared/hooks/usePresence';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { followUser, unfollowUser } from '@/features/profile/profile.service';
 import { gqlRequest } from '@/app/graphql.client';
+import { formatDistanceToNow } from 'date-fns';
 
 interface MiniProfile {
   id: string;
@@ -24,8 +26,9 @@ interface MiniProfile {
   totalStarsReceived: number;
   isFollowedByMe: boolean;
   isFollowingMe: boolean;
-  progression: { xp: number; level: number } | null;
   miniProfileBadgeIds: string[];
+  lastOnlineAt: string | null;
+  progression: { xp: number; level: number } | null;
 }
 
 const profileCache = new Map<string, MiniProfile>();
@@ -39,6 +42,8 @@ async function fetchMiniProfile(accountName: string): Promise<MiniProfile | null
           id accountName displayName avatarUrl bio isVerified
           followerCount followingCount projectCount totalStarsReceived
           isFollowedByMe isFollowingMe miniProfileBadgeIds
+          country
+          lastOnlineAt
           progression { xp level }
         }
       }
@@ -181,7 +186,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
         >
           {/* Avatar banner */}
           <div className="flex items-end gap-3 p-4 pb-3">
-            <Link to={`/${accountName}`} onClick={() => setOpen(false)} className="relative shrink-0">
+            <Link to={`/profile/${accountName}`} onClick={() => setOpen(false)} className="relative shrink-0">
               {profile?.avatarUrl ? (
                 <LazyImage src={profile.avatarUrl} alt={accountName} className="size-14 rounded-xl object-cover ring-2 ring-zinc-700" />
               ) : (
@@ -194,7 +199,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 flex-wrap">
-                <Link to={`/${accountName}`} onClick={() => setOpen(false)} className="text-sm font-semibold text-foreground hover:underline leading-tight truncate max-w-[130px]">
+                <Link to={`/profile/${accountName}`} onClick={() => setOpen(false)} className="text-sm font-semibold text-foreground hover:underline leading-tight truncate max-w-[130px]">
                   {profile?.displayName || accountName}
                 </Link>
                 {profile?.isVerified && <Icon name="verified" size={14} className="text-primary shrink-0" />}
@@ -204,18 +209,28 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                   </span>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground truncate">@{accountName}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <CountryFlag countryCode={profile?.country} />
+                <p className="text-xs text-muted-foreground truncate">{accountName}</p>
+                {!isOnline && profile?.lastOnlineAt && (
+                  <>
+                    <span className="text-[10px] text-muted-foreground/40">•</span>
+                    <p className="text-[10px] text-muted-foreground whitespace-nowrap">
+                      {t('profile.lastSeen', { time: formatDistanceToNow(new Date(profile.lastOnlineAt), { addSuffix: true }) })}
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
 
             {me && !isSelf && (
               <button
                 onClick={handleFollowToggle}
                 disabled={followPending}
-                className={`shrink-0 text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors disabled:opacity-50 whitespace-nowrap ${
-                  isFollowedByMe
-                    ? 'border border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
-                    : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                }`}
+                className={`shrink-0 text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors disabled:opacity-50 whitespace-nowrap ${isFollowedByMe
+                  ? 'border border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  }`}
               >
                 {followLabel}
               </button>
@@ -239,11 +254,11 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
           {profile && (
             <div className="border-t border-border/40 grid grid-cols-5 divide-x divide-border/30">
               {[
-                { iconName: 'group',     value: profile.followerCount,      label: t('profile.followers') },
-                { iconName: 'group',     value: profile.followingCount,      label: t('profile.followingLabel') },
-                { iconName: 'folder_open',value: profile.projectCount,        label: t('profile.projectsLabel') },
-                { iconName: 'star',      value: profile.totalStarsReceived,  label: t('profile.starsLabel') },
-                { iconName: 'emoji_events',    value: profile.progression?.level ?? 0, label: t('profile.levelLabel') },
+                { iconName: 'group', value: profile.followerCount, label: t('profile.followers') },
+                { iconName: 'group', value: profile.followingCount, label: t('profile.followingLabel') },
+                { iconName: 'folder_open', value: profile.projectCount, label: t('profile.projectsLabel') },
+                { iconName: 'star', value: profile.totalStarsReceived, label: t('profile.starsLabel') },
+                { iconName: 'emoji_events', value: profile.progression?.level ?? 0, label: t('profile.levelLabel') },
               ].map(({ iconName, value, label }) => (
                 <div key={label} className="flex flex-col items-center py-2.5 px-0.5 gap-0.5">
                   <Icon name={iconName} size={12} className="text-zinc-500 mb-0.5" />

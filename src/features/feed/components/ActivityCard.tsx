@@ -11,20 +11,20 @@ import { UserHoverCard } from '@ui/UserHoverCard';
 
 const TYPE_ICON_NAMES: Record<string, string> = {
   PROJECT_PUBLISHED: 'language',
-  PROJECT_STARRED:   'star',
-  PROJECT_FORKED:    'call_split',
-  PROJECT_BOOSTED:   'repeat',
-  PLAYLIST_CREATED:  'queue_music',
-  USER_FOLLOWED:     'person_add',
+  PROJECT_STARRED: 'star',
+  PROJECT_FORKED: 'call_split',
+  PROJECT_BOOSTED: 'repeat',
+  PLAYLIST_CREATED: 'queue_music',
+  USER_FOLLOWED: 'person_add',
 };
 
 const TYPE_I18N_KEY: Record<string, string> = {
   PROJECT_PUBLISHED: 'project_published',
-  PROJECT_STARRED:   'project_starred',
-  PROJECT_FORKED:    'project_forked',
-  PROJECT_BOOSTED:   'project_boosted',
-  PLAYLIST_CREATED:  'playlist_created',
-  USER_FOLLOWED:     'user_followed',
+  PROJECT_STARRED: 'project_starred',
+  PROJECT_FORKED: 'project_forked',
+  PROJECT_BOOSTED: 'project_boosted',
+  PLAYLIST_CREATED: 'playlist_created',
+  USER_FOLLOWED: 'user_followed',
 };
 
 // Project-type activities that support reactions
@@ -48,13 +48,13 @@ function pick(arr: unknown, seed: string): string {
 }
 
 function relativeTime(isoString: string, t: TFunction): string {
-  const diff  = Date.now() - new Date(isoString).getTime();
-  const mins  = Math.floor(diff / 60000);
+  const diff = Date.now() - new Date(isoString).getTime();
+  const mins = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
-  const days  = Math.floor(diff / 86400000);
-  if (mins  < 1)  return t('library.justNow');
-  if (mins  < 60) return t('library.minutesAgo', { count: mins });
-  if (hours < 24) return t('library.hoursAgo',   { count: hours });
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1) return t('library.justNow');
+  if (mins < 60) return t('library.minutesAgo', { count: mins });
+  if (hours < 24) return t('library.hoursAgo', { count: hours });
   return t('library.daysAgo', { count: days });
 }
 
@@ -82,8 +82,8 @@ export function ActivityCard({ activity }: { activity: Activity }) {
   const { t } = useTranslation();
   const tk = t as (key: string, options?: object) => unknown;
   const { id, actor, type, publicId, projectTitle, coverImage, targetPath, createdAt } = activity;
-  const iconName   = TYPE_ICON_NAMES[type] ?? 'star';
-  const i18nKey    = TYPE_I18N_KEY[type] ?? 'project_starred';
+  const iconName = TYPE_ICON_NAMES[type] ?? 'star';
+  const i18nKey = TYPE_I18N_KEY[type] ?? 'project_starred';
   const actionText = pick(tk(`feed.action.${i18nKey}`, { returnObjects: true }), id);
 
   const targetLink = targetPath || (publicId ? `/project/${publicId}` : null);
@@ -96,7 +96,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
   return (
     <div ref={cardRef} className="flex gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors">
       <UserHoverCard accountName={actor.accountName}>
-        <Link to={`/${actor.accountName}`} className="shrink-0 block">
+        <Link to={`/profile/${actor.accountName}`} className="shrink-0 block">
           {actor.avatarUrl ? (
             <img src={actor.avatarUrl} alt={actor.displayName || actor.accountName} referrerPolicy="no-referrer" className="w-9 h-9 rounded-full object-cover" />
           ) : (
@@ -110,7 +110,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm text-zinc-300 leading-snug">
           <UserHoverCard accountName={actor.accountName}>
-            <Link to={`/${actor.accountName}`} className="font-semibold text-white hover:text-primary transition-colors">
+            <Link to={`/profile/${actor.accountName}`} className="font-semibold text-white hover:text-primary transition-colors">
               {actor.displayName || actor.accountName}
             </Link>
           </UserHoverCard>

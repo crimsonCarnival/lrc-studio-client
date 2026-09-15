@@ -156,6 +156,8 @@ export const authService = {
         myPreferences {
           showFollowers
           onlineVisibility
+          lastOnlineVisibility
+          lastOnlineAt
           miniProfileBadgesEnabled
           miniProfileBadgeIds
           defaultProjectPrivacy
@@ -194,6 +196,8 @@ export const authService = {
           google { connected googleId email name pictureUrl }
           showFollowers
           onlineVisibility
+          lastOnlineVisibility
+          lastOnlineAt
           miniProfileBadgesEnabled
           miniProfileBadgeIds
           badges { id grantedAt grantedBy }
@@ -221,6 +225,8 @@ export const authService = {
           bio
           showFollowers
           onlineVisibility
+          lastOnlineVisibility
+          lastOnlineAt
           miniProfileBadgesEnabled
           miniProfileBadgeIds
           lastAccountNameChangedAt

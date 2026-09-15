@@ -7,8 +7,11 @@ import { Icon } from '@/shared/ui/Icon';
 import { LevelBadge } from '@ui/LevelBadge';
 import { BadgeList } from '@/features/badges/BadgeList';
 import { Tip } from '@/shared/ui/tip';
+import { CountryFlag } from '@/shared/ui/CountryFlag';
 import { FollowButton } from './FollowButton';
 import type { PublicUser } from '@/types';
+import { usePresence } from '@/shared/hooks/usePresence';
+import { formatDistanceToNow } from 'date-fns';
 
 function AvatarBadge({ avatarUrl, name, size = 'lg' }: { avatarUrl?: string | null; name: string; size?: 'lg' | 'sm' }) {
   const sizeClass = size === 'lg' ? 'size-24 text-4xl rounded-[1.5rem]' : 'size-16 text-2xl rounded-xl';
@@ -102,6 +105,8 @@ export function ProfileHeader({
 }: ProfileHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const presence = usePresence();
+  const isOnline = presence.isOnline(profile.id);
 
   return (
     <div className="glass rounded-[2rem] p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden mb-6">
@@ -109,9 +114,9 @@ export function ProfileHeader({
         <Tip
           content={(() => {
             const xpForLevel = level * level * 100;
-            const xpForNext  = (level + 1) * (level + 1) * 100;
-            const progress   = xp - xpForLevel;
-            const needed     = xpForNext - xp;
+            const xpForNext = (level + 1) * (level + 1) * 100;
+            const progress = xp - xpForLevel;
+            const needed = xpForNext - xp;
             return `${xp.toLocaleString()} XP · ${needed.toLocaleString()} to Lv.${level + 1} (${Math.round((progress / (xpForNext - xpForLevel)) * 100)}%)`;
           })()}
           side="bottom"
@@ -135,7 +140,18 @@ export function ProfileHeader({
           </div>
         </div>
 
-        <p className="text-muted-foreground text-sm font-mono mt-1.5">@{profile.accountName}</p>
+        <div className="flex items-center justify-center sm:justify-start gap-1.5 mt-1.5">
+          <CountryFlag countryCode={profile.country} />
+          <p className="text-muted-foreground text-sm font-mono">{profile.accountName}</p>
+          {!isOnline && profile.lastOnlineAt && (
+            <>
+              <span className="text-xs text-muted-foreground/40">•</span>
+              <p className="text-xs text-muted-foreground whitespace-nowrap">
+                {t('profile.lastSeen', { time: formatDistanceToNow(new Date(profile.lastOnlineAt), { addSuffix: true }) })}
+              </p>
+            </>
+          )}
+        </div>
 
         <p className="text-muted-foreground text-sm mt-3 max-w-md">
           {profile.bio || <span className="italic opacity-50">{t('profile.noBio')}</span>}

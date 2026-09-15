@@ -83,62 +83,62 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
 
   return (
     <ProjectCardContextMenu project={project} isOwner={isOwner} onEdit={onEdit} onDelete={onDelete}>
-    <button
-      type="button"
-      onClick={() => navigate(`/project/${publicId}${isOwner ? '/edit' : ''}`)}
-      className="group relative glass rounded-2xl overflow-hidden text-left hover:border-primary/30 transition-all cursor-pointer focus:ring-1 focus:ring-primary/30 outline-none animate-fade-in contrast-more:border-zinc-600 w-full"
-    >
-      <ThemedShineBorder />
+      <button
+        type="button"
+        onClick={() => navigate(`/project/${publicId}${isOwner ? '/edit' : ''}`)}
+        className="group relative glass rounded-2xl overflow-hidden text-left hover:border-primary/30 transition-all cursor-pointer focus:ring-1 focus:ring-primary/30 outline-none animate-fade-in contrast-more:border-zinc-600 w-full"
+      >
+        <ThemedShineBorder />
 
-      {isOwner && (
-        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-20 bg-black/40 backdrop-blur-sm rounded-lg p-1">
-          <button onClick={handleEdit} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" aria-label={t('profile.editProject')}>
-            <Icon name="edit" size={14} />
-          </button>
-          <button onClick={handleDelete} className="p-1.5 hover:bg-red-500/20 rounded-md text-zinc-400 hover:text-red-400 transition-colors" aria-label={t('profile.deleteProject')}>
-            <Icon name="delete" size={14} />
-          </button>
-        </div>
-      )}
-
-      <div className={`relative ${hasCover ? 'h-20' : 'h-12 bg-gradient-to-br from-zinc-900 to-zinc-800/50 flex items-center justify-center'} overflow-hidden`}>
-        {hasCover ? (
-          <>
-            <img src={coverImage ?? ''} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 motion-reduce:group-hover:scale-100 transition-transform duration-500" />
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
-          </>
-        ) : (
-          <Icon name="music_note" size={16} className="text-zinc-600" />
+        {isOwner && (
+          <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-20 bg-black/40 backdrop-blur-sm rounded-lg p-1">
+            <button onClick={handleEdit} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" aria-label={t('profile.editProject')}>
+              <Icon name="edit" size={14} />
+            </button>
+            <button onClick={handleDelete} className="p-1.5 hover:bg-red-500/20 rounded-md text-zinc-400 hover:text-red-400 transition-colors" aria-label={t('profile.deleteProject')}>
+              <Icon name="delete" size={14} />
+            </button>
+          </div>
         )}
-        {/* Source indicator */}
-        <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
-          {isPrivate && (
-            <Icon name="lock" size={14} className="text-zinc-300 drop-shadow-md" aria-label={t('profile.privateProject')} />
-          )}
-          {isYoutube
-            ? <YoutubeIcon className="size-4 drop-shadow-md" />
-            : hasCover ? <Icon name="music_note" size={12} className="text-primary/60 drop-shadow-md" /> : null}
-        </div>
-      </div>
 
-      {/* Info */}
-      <div className="p-3 flex items-start gap-2.5">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-xs font-semibold text-zinc-200 truncate group-hover:text-primary transition-colors leading-snug">
-            {title || t('library.untitled')}
-          </h3>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-[10px] text-zinc-500">{formatRelativeTime(project.createdAt, (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
-            <span className="size-0.5 rounded-full bg-zinc-700 shrink-0" />
-            <span className="text-[10px] text-zinc-500 flex items-center gap-0.5">
-              <Icon name="monitoring" size={10} />
-              {(project.syncedLineCount || 0)}/{(project.lineCount || 0)}
-            </span>
+        <div className={`relative ${hasCover ? 'h-20' : 'h-12 bg-gradient-to-br from-zinc-900 to-zinc-800/50 flex items-center justify-center'} overflow-hidden`}>
+          {hasCover ? (
+            <>
+              <img src={coverImage ?? ''} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 motion-reduce:group-hover:scale-100 transition-transform duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
+            </>
+          ) : (
+            <Icon name="music_note" size={16} className="text-zinc-600" />
+          )}
+          {/* Source indicator */}
+          <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+            {isPrivate && (
+              <Icon name="lock" size={14} className="text-zinc-300 drop-shadow-md" aria-label={t('profile.privateProject')} />
+            )}
+            {isYoutube
+              ? <YoutubeIcon className="size-4 drop-shadow-md" />
+              : hasCover ? <Icon name="music_note" size={12} className="text-primary/60 drop-shadow-md" /> : null}
           </div>
         </div>
-        <Icon name="chevron_right" size={14} className="text-zinc-800 group-hover:text-primary group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
-      </div>
-    </button>
+
+        {/* Info */}
+        <div className="p-3 flex items-start gap-2.5">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-xs font-semibold text-zinc-200 truncate group-hover:text-primary transition-colors leading-snug">
+              {title || t('library.untitled')}
+            </h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] text-zinc-500">{formatRelativeTime(project.createdAt, (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
+              <span className="size-0.5 rounded-full bg-zinc-700 shrink-0" />
+              <span className="text-[10px] text-zinc-500 flex items-center gap-0.5">
+                <Icon name="monitoring" size={10} />
+                {(project.syncedLineCount || 0)}/{(project.lineCount || 0)}
+              </span>
+            </div>
+          </div>
+          <Icon name="chevron_right" size={14} className="text-zinc-800 group-hover:text-primary group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
+        </div>
+      </button>
     </ProjectCardContextMenu>
   );
 }
@@ -163,7 +163,7 @@ function PeopleYouMightKnow({ excludeAccountName }: { excludeAccountName?: strin
         {suggestions.map(u => (
           <UserHoverCard key={u.id} accountName={u.accountName} userId={u.id}>
             <Link
-              to={`/${u.accountName}`}
+              to={`/profile/${u.accountName}`}
               className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors w-full"
             >
               {u.avatarUrl ? (
@@ -175,7 +175,7 @@ function PeopleYouMightKnow({ excludeAccountName }: { excludeAccountName?: strin
               )}
               <div className="min-w-0">
                 <p className="text-xs font-medium text-foreground truncate">{u.displayName || u.accountName}</p>
-                <p className="text-[10px] text-zinc-500 truncate">@{u.accountName}</p>
+                <p className="text-[10px] text-zinc-500 truncate">{u.accountName}</p>
               </div>
             </Link>
           </UserHoverCard>
@@ -211,14 +211,14 @@ export default function ProfilePage() {
   // Silently rewrite legacy /profile/:accountName → /:accountName
   useEffect(() => {
     if (location.pathname.startsWith('/profile/') && accountName) {
-      navigate(`/${accountName}`, { replace: true });
+      navigate(`/profile/${accountName}`, { replace: true });
     }
   }, [location.pathname, accountName, navigate]);
 
   useEffect(() => {
     if (!accountName) {
       if (user?.accountName) {
-        navigate(`/${user.accountName}`, { replace: true });
+        navigate(`/profile/${user.accountName}`, { replace: true });
       } else {
         navigate('/', { replace: true });
       }
@@ -252,13 +252,13 @@ export default function ProfilePage() {
     setFollowLoading(true);
     followUser(profile.accountName)
       .then(() => setIsFollowing(true))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setFollowLoading(false));
   }, [profile, user, isOwner, isFollowing, searchParams, setSearchParams]);
 
   const handleFollow = useCallback(async () => {
     if (!user) {
-      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/${accountName}`)}&intent=follow`);
+      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/profile/${accountName}`)}&intent=follow`);
       return;
     }
     setFollowLoading(true);
@@ -286,7 +286,7 @@ export default function ProfilePage() {
 
   const handleBlock = useCallback(async () => {
     if (!user) {
-      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/${accountName}`)}`);
+      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/profile/${accountName}`)}`);
       return;
     }
     setBlockLoading(true);
@@ -379,191 +379,190 @@ export default function ProfilePage() {
   const minutesSynced = profile.stats?.minutesSynced ?? 0;
   const minutesLabel = minutesSynced > 0
     ? (() => {
-        const h = Math.floor(minutesSynced / 60);
-        const m = minutesSynced % 60;
-        if (h === 0) return `${m}m`;
-        if (m === 0) return `${h}h`;
-        return `${h}h ${m}m`;
-      })()
+      const h = Math.floor(minutesSynced / 60);
+      const m = minutesSynced % 60;
+      if (h === 0) return `${m}m`;
+      if (m === 0) return `${h}h`;
+      return `${h}h ${m}m`;
+    })()
     : null;
   const level = profile.progression?.level ?? 0;
-  const xp    = profile.progression?.xp    ?? 0;
+  const xp = profile.progression?.xp ?? 0;
 
   const hasVisibleShowcase = profile.showcasePublic !== false && (profile.showcasedBadges?.length ?? 0) > 0;
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
-    <div className="flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-5xl mx-auto w-full">
-      <ProfileHeader
-        profile={profile}
-        displayName={displayName}
-        badgeIds={badgeIds}
-        level={level}
-        xp={xp}
-        minutesLabel={minutesLabel}
-        isOwner={isOwner}
-        isFollowing={isFollowing}
-        followLoading={followLoading}
-        onFollow={handleFollow}
-        onUnfollow={handleUnfollow}
-        isBlocked={isBlocked}
-        blockLoading={blockLoading}
-        onBlock={handleBlock}
-        onUnblock={handleUnblock}
-        onOpenFollowers={() => setFollowModal('FOLLOWERS')}
-        onOpenFollowing={() => setFollowModal('FOLLOWING')}
-      />
+      <div className="flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-5xl mx-auto w-full">
+        <ProfileHeader
+          profile={profile}
+          displayName={displayName}
+          badgeIds={badgeIds}
+          level={level}
+          xp={xp}
+          minutesLabel={minutesLabel}
+          isOwner={isOwner}
+          isFollowing={isFollowing}
+          followLoading={followLoading}
+          onFollow={handleFollow}
+          onUnfollow={handleUnfollow}
+          isBlocked={isBlocked}
+          blockLoading={blockLoading}
+          onBlock={handleBlock}
+          onUnblock={handleUnblock}
+          onOpenFollowers={() => setFollowModal('FOLLOWERS')}
+          onOpenFollowing={() => setFollowModal('FOLLOWING')}
+        />
 
-      {/* Two-column layout: main content + showcase sidebar */}
-      <div className={`flex gap-6 items-start ${hasVisibleShowcase || isOwner || (!isOwner && !!user) ? 'flex-col lg:flex-row' : ''}`}>
-        {/* Main content */}
-        <div className="flex-1 min-w-0">
-          {/* Tabs */}
-          <div className="flex gap-1 mb-6 border-b border-border">
-            {['projects', 'playlists'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                  activeTab === tab
+        {/* Two-column layout: main content + showcase sidebar */}
+        <div className={`flex gap-6 items-start ${hasVisibleShowcase || isOwner || (!isOwner && !!user) ? 'flex-col lg:flex-row' : ''}`}>
+          {/* Main content */}
+          <div className="flex-1 min-w-0">
+            {/* Tabs */}
+            <div className="flex gap-1 mb-6 border-b border-border">
+              {['projects', 'playlists'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === tab
                     ? 'border-primary text-foreground'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {t(`profile.publicTabs.${tab}` as 'profile.publicTabs.projects')}
-              </button>
-            ))}
+                    }`}
+                >
+                  {t(`profile.publicTabs.${tab}` as 'profile.publicTabs.projects')}
+                </button>
+              ))}
+            </div>
+
+            {activeTab === 'projects' && (
+              profile.projects.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+                  <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
+                    <Icon name="folder_open" size={28} className="text-zinc-500" />
+                  </div>
+                  <p className="text-sm text-zinc-400 font-medium">{t('profile.noPublicProjects')}</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {profile.projects.map((project) => (
+                    <ProjectCard
+                      key={project.publicId}
+                      project={project}
+                      isOwner={isOwner}
+                      onEdit={handleEditProject}
+                      onDelete={handleDeleteProject}
+                    />
+                  ))}
+                </div>
+              )
+            )}
+
+            {activeTab === 'playlists' && (
+              <PlaylistGrid accountName={profile.accountName} isOwner={isOwner} />
+            )}
           </div>
 
-          {activeTab === 'projects' && (
-            profile.projects.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-                <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
-                  <Icon name="folder_open" size={28} className="text-zinc-500" />
+          {/* Showcase sidebar */}
+          {(hasVisibleShowcase || isOwner || (!isOwner && !!user)) && (
+            <aside className="w-full lg:w-56 shrink-0 flex flex-col gap-4">
+              {hasVisibleShowcase ? (
+                <ShowcasedBadges
+                  badges={profile.showcasedBadges}
+                  maxSlots={profile.showcasedBadges.length}
+                  className=""
+                />
+              ) : isOwner ? (
+                <div className="flex flex-col gap-2 p-4 rounded-xl border border-dashed border-zinc-800">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600">{t('badges.showcase.title')}</p>
+                  <p className="text-xs text-zinc-600">{t('badges.showcase.noShowcase')}</p>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/settings/profile')}
+                    className="text-xs text-primary hover:text-primary/70 transition-colors text-left"
+                  >
+                    {t('badges.showcase.goSetup')}
+                  </button>
                 </div>
-                <p className="text-sm text-zinc-400 font-medium">{t('profile.noPublicProjects')}</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {profile.projects.map((project) => (
-                  <ProjectCard
-                    key={project.publicId}
-                    project={project}
-                    isOwner={isOwner}
-                    onEdit={handleEditProject}
-                    onDelete={handleDeleteProject}
-                  />
-                ))}
-              </div>
-            )
-          )}
+              ) : null}
 
-          {activeTab === 'playlists' && (
-            <PlaylistGrid accountName={profile.accountName} isOwner={isOwner} />
+              {allBadgeIds.length > 0 && (isOwner || profile.showcasePublic !== false) && (
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600 mb-2">{t('badges.showcase.allBadges')}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {allBadgeIds.map(id => <BadgeChip key={id} id={id} />)}
+                  </div>
+                </div>
+              )}
+
+              {!isOwner && !!user && <PeopleYouMightKnow excludeAccountName={accountName} />}
+            </aside>
           )}
         </div>
 
-        {/* Showcase sidebar */}
-        {(hasVisibleShowcase || isOwner || (!isOwner && !!user)) && (
-          <aside className="w-full lg:w-56 shrink-0 flex flex-col gap-4">
-            {hasVisibleShowcase ? (
-              <ShowcasedBadges
-                badges={profile.showcasedBadges}
-                maxSlots={profile.showcasedBadges.length}
-                className=""
-              />
-            ) : isOwner ? (
-              <div className="flex flex-col gap-2 p-4 rounded-xl border border-dashed border-zinc-800">
-                <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600">{t('badges.showcase.title')}</p>
-                <p className="text-xs text-zinc-600">{t('badges.showcase.noShowcase')}</p>
-                <button
-                  type="button"
-                  onClick={() => navigate('/settings/profile')}
-                  className="text-xs text-primary hover:text-primary/70 transition-colors text-left"
-                >
-                  {t('badges.showcase.goSetup')}
-                </button>
-              </div>
-            ) : null}
-
-            {allBadgeIds.length > 0 && (isOwner || profile.showcasePublic !== false) && (
-              <div>
-                <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600 mb-2">{t('badges.showcase.allBadges')}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {allBadgeIds.map(id => <BadgeChip key={id} id={id} />)}
-                </div>
-              </div>
-            )}
-
-            {!isOwner && !!user && <PeopleYouMightKnow excludeAccountName={accountName} />}
-          </aside>
+        {followModal && profile.showFollowers && (
+          <FollowModal
+            accountName={profile.accountName}
+            initialTab={followModal}
+            onClose={() => setFollowModal(null)}
+          />
         )}
+
+        {editingProject && (() => {
+          const meta = (editingProject.metadata || {}) as ProjectMetaLoose;
+          return (
+            <ProjectSetupModal
+              key={editingProject.publicId}
+              isOpen={!!editingProject}
+              onClose={() => setEditingProject(null)}
+              onConfirm={async (data: ProjectSetupConfirm) => {
+                try {
+                  const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic } = data;
+                  const updatedMetadata = {
+                    ...(editingProject.metadata as Record<string, unknown>),
+                    description,
+                    tags,
+                    songName,
+                    songArtist,
+                    songAlbum,
+                    songYear,
+                    genre,
+                  };
+                  await projects.patch(editingProject.publicId, {
+                    title,
+                    coverImage,
+                    public: isPublic,
+                    metadata: updatedMetadata
+                  });
+                  setProfile(prev => prev ? {
+                    ...prev,
+                    projects: prev.projects.map(p =>
+                      p.publicId === editingProject.publicId
+                        ? { ...p, title, coverImage, public: isPublic, metadata: updatedMetadata }
+                        : p
+                    )
+                  } : prev);
+                  setEditingProject(null);
+                  toast.success(t('project.updateSuccess'));
+                } catch {
+                  toast.error(t('project.updateError'));
+                }
+              }}
+              initialName={editingProject.title || ''}
+              initialDescription={meta.description || ''}
+              initialTags={meta.tags || []}
+              initialSongName={meta.songName || ''}
+              initialSongArtist={(meta.songArtists || []).join(', ') || meta.songArtist || ''}
+              initialSongAlbum={meta.songAlbum || ''}
+              initialSongYear={meta.songYear || ''}
+              initialGenre={meta.genre || ''}
+              initialCoverImage={editingProject.coverImage || ''}
+              initialIsPublic={editingProject.public || false}
+              isEditing={true}
+            />
+          );
+        })()}
+        {confirmModal}
       </div>
-
-      {followModal && profile.showFollowers && (
-        <FollowModal
-          accountName={profile.accountName}
-          initialTab={followModal}
-          onClose={() => setFollowModal(null)}
-        />
-      )}
-
-      {editingProject && (() => {
-        const meta = (editingProject.metadata || {}) as ProjectMetaLoose;
-        return (
-        <ProjectSetupModal
-          key={editingProject.publicId}
-          isOpen={!!editingProject}
-          onClose={() => setEditingProject(null)}
-          onConfirm={async (data: ProjectSetupConfirm) => {
-            try {
-              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic } = data;
-              const updatedMetadata = {
-                ...(editingProject.metadata as Record<string, unknown>),
-                description,
-                tags,
-                songName,
-                songArtist,
-                songAlbum,
-                songYear,
-                genre,
-              };
-              await projects.patch(editingProject.publicId, {
-                title,
-                coverImage,
-                public: isPublic,
-                metadata: updatedMetadata
-              });
-              setProfile(prev => prev ? {
-                ...prev,
-                projects: prev.projects.map(p =>
-                  p.publicId === editingProject.publicId
-                    ? { ...p, title, coverImage, public: isPublic, metadata: updatedMetadata }
-                    : p
-                )
-              } : prev);
-              setEditingProject(null);
-              toast.success(t('project.updateSuccess'));
-            } catch {
-              toast.error(t('project.updateError'));
-            }
-          }}
-          initialName={editingProject.title || ''}
-          initialDescription={meta.description || ''}
-          initialTags={meta.tags || []}
-          initialSongName={meta.songName || ''}
-          initialSongArtist={(meta.songArtists || []).join(', ') || meta.songArtist || ''}
-          initialSongAlbum={meta.songAlbum || ''}
-          initialSongYear={meta.songYear || ''}
-          initialGenre={meta.genre || ''}
-          initialCoverImage={editingProject.coverImage || ''}
-          initialIsPublic={editingProject.public || false}
-          isEditing={true}
-        />
-        );
-      })()}
-      {confirmModal}
-    </div>
     </div>
   );
 }

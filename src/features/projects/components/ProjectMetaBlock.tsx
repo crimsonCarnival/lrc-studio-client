@@ -41,8 +41,8 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
 
   const formattedDate = project.createdAt
     ? formatInTimezone(project.createdAt, settings.advanced?.timezone, {
-        year: 'numeric', month: 'short', day: 'numeric',
-      }, i18n.resolvedLanguage || i18n.language)
+      year: 'numeric', month: 'short', day: 'numeric',
+    }, i18n.resolvedLanguage || i18n.language)
     : null;
 
   const meta = project.metadata || {};
@@ -141,7 +141,7 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
             {accountName && (
               <div className="flex items-center gap-1.5">
                 <Icon name="music_note" size={14} />
-                <Link to={`/${accountName}`} className="text-foreground hover:text-primary transition-colors">
+                <Link to={`/profile/${accountName}`} className="text-foreground hover:text-primary transition-colors">
                   {project.user?.displayName || `@${accountName}`}
                 </Link>
               </div>

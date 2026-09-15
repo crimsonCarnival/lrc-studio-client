@@ -50,7 +50,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
   const [tabStates, setTabStates] = useState<Record<Tab, TabState>>({
     FOLLOWERS: { ...INITIAL_TAB_STATE },
     FOLLOWING: { ...INITIAL_TAB_STATE },
-    FRIENDS:   { ...INITIAL_TAB_STATE },
+    FRIENDS: { ...INITIAL_TAB_STATE },
   });
   const [followState, setFollowState] = useState<Record<string, string>>({});
 
@@ -147,7 +147,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
   const TABS: { id: Tab; label: string }[] = [
     { id: 'FOLLOWERS', label: t('profile.followersTitle') },
     { id: 'FOLLOWING', label: t('profile.followingTitle') },
-    { id: 'FRIENDS',   label: t('profile.friendsTitle') },
+    { id: 'FRIENDS', label: t('profile.friendsTitle') },
   ];
 
   const current = tabStates[activeTab];
@@ -167,7 +167,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
       <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.03] transition-colors">
         <UserHoverCard accountName={u.accountName} userId={u.id}>
           <Link
-            to={`/${u.accountName}`}
+            to={`/profile/${u.accountName}`}
             onClick={onClose}
             className="flex items-center gap-3 flex-1 min-w-0"
           >
@@ -188,7 +188,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
                   <Icon name="favorite" size={12} filled className="text-primary/60 shrink-0" />
                 )}
               </p>
-              <p className="text-xs text-muted-foreground truncate">@{u.accountName}</p>
+              <p className="text-xs text-muted-foreground truncate">{u.accountName}</p>
             </div>
           </Link>
         </UserHoverCard>
@@ -246,17 +246,15 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
                 <button
                   key={tab.id}
                   onClick={() => switchTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
+                  className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${activeTab === tab.id
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                    }`}
                 >
                   {tab.label}
                   {count !== null && (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                      activeTab === tab.id ? 'bg-primary/15 text-primary' : 'bg-zinc-800 text-zinc-500'
-                    }`}>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-primary/15 text-primary' : 'bg-zinc-800 text-zinc-500'
+                      }`}>
                       {count}
                     </span>
                   )}
@@ -275,7 +273,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
               <p className="text-sm text-muted-foreground text-center py-10">
                 {activeTab === 'FOLLOWERS' ? t('profile.noFollowers')
                   : activeTab === 'FOLLOWING' ? t('profile.noFollowing')
-                  : t('profile.noFriends')}
+                    : t('profile.noFriends')}
               </p>
             ) : (
               <div className="py-1">
