@@ -75,7 +75,12 @@ function RequireAdmin({ children }: { children: ReactNode }) {
 
 function LegacyListRedirect() {
   const { accountName, listId } = useParams();
-  return <Navigate to={`/${accountName}/lists/${listId}`} replace />;
+  return <Navigate to={`/profile/${accountName}/lists/${listId}`} replace />;
+}
+
+function RedirectWithParams({ to }: { to: (params: Record<string, string>) => string }) {
+  const params = useParams() as Record<string, string>;
+  return <Navigate to={to(params)} replace />;
 }
 
 interface PanelReorderGroupProps {
@@ -460,6 +465,7 @@ export function AppRouter({
     onHidePreview: handleHidePreview,
     editorHidden: !showEditor,
     onShowEditor: handleShowEditor,
+    playerSlot,
   } as unknown as PreviewComponentProps), [
     lines, setLines, playbackPosition,
     mediaTitle, playerRef, duration,
@@ -469,6 +475,7 @@ export function AppRouter({
     isPlaying, playbackSpeed, activepublicId,
     pendingProject, projectMetadata,
     handleHidePreview, showEditor, handleShowEditor,
+    playerSlot,
   ]);
 
   const handleResize = useCallback((e: MouseEvent) => {
@@ -622,21 +629,20 @@ export function AppRouter({
           <PublicProjectViewPage />
         </Suspense>
       } />
-      <Route path=":accountName/lists/:listId" element={
+      <Route path="profile/:accountName/lists/:listId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <ListPage />
         </Suspense>
       } />
-      <Route path=":accountName" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
-          <ProfilePage />
-        </Suspense>
-      } />
+      <Route path=":accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
+      <Route path="u/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
       <Route path="profile/:accountName" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
           <ProfilePage />
         </Suspense>
       } />
+      <Route path=":accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
+      <Route path="u/:accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
       <Route path="profile/:accountName/playlists/:listId" element={<LegacyListRedirect />} />
       <Route path="settings/:tab?" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>

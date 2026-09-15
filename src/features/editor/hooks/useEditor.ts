@@ -783,7 +783,7 @@ export function useEditor({
         const insertAt = before ? Math.max(0, index) : index + 1;
         const base = lineData || {
           text: '',
-          timestamp: prev[index]?.timestamp ?? null,
+          timestamp: null,
           id: crypto.randomUUID(),
           // Inherit default singers from the last section context
           singers: defaultSingers.length ? [...defaultSingers] : undefined,

@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@ui/toggle-group';
 import { Tip } from '@ui/tip';
@@ -133,6 +133,7 @@ export default function EditorToolbar({
 }: EditorToolbarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const hasAnyTimestamp = useMemo(() => lines.some((l) => l.timestamp != null), [lines]);
   const hasJapanese = useMemo(() => lines.some((l) => hasCJK(l.text || '') || hasCJK(l.secondary || '')), [lines]);
 
@@ -186,6 +187,19 @@ export default function EditorToolbar({
     if (!handleManualSave) return null;
     return (
       <div className="flex items-center justify-end gap-1 mb-2 shrink-0">
+        {id && id !== 'local' && (
+          <Tip content={t('app.viewPublicPage') || 'View Public Page'} side="bottom">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(`/project/${id}`)}
+              aria-label={t('app.viewPublicPage') || 'View Public Page'}
+              className="size-8 text-zinc-400 hover:text-zinc-200"
+            >
+              <Icon name="visibility" size={16} />
+            </Button>
+          </Tip>
+        )}
         {handleManualSave && (
           <Tip content={isSaving ? (t('project.saving') || 'Saving…') : isAutosaving ? (t('project.saved') || 'Saved') : (t('project.save') || 'Save')}>
             <Button
@@ -257,6 +271,19 @@ export default function EditorToolbar({
           )}
 
           {/* Panel toggles (desktop) — relocated from the global header (#11/#13) */}
+          {id && id !== 'local' && (
+            <Tip content={t('app.viewPublicPage') || 'View Public Page'} side="bottom">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(`/project/${id}`)}
+                aria-label={t('app.viewPublicPage') || 'View Public Page'}
+                className="hidden lg:flex size-7 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 shrink-0"
+              >
+                <Icon name="visibility" size={14} />
+              </Button>
+            </Tip>
+          )}
           {previewHidden && onShowPreview && (
             <Tip content={t('app.showPreview')} side="bottom">
               <Button

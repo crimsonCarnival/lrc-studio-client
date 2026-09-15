@@ -236,95 +236,99 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
         )}
 
         {/* Unified media loader — shown when no media is loaded */}
-        {!hasMedia && !yt.ytLoading && !viewerMode && (
-          <div className="animate-fade-in w-full max-w-[1000px] mx-auto flex items-center justify-center gap-3">
-            {/* Local Audio */}
-            <label
-              htmlFor="audio-file-input"
-              className="flex items-center gap-2 px-4 py-2 h-10 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/80 border border-zinc-700/50 hover:border-primary/40 transition-all cursor-pointer shadow-sm group"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => {
-                e.preventDefault();
-                const file = e.dataTransfer.files?.[0];
-                if (file) local.handleFileChange(file);
-              }}
-            >
-              <Icon name="folder_open" size={16} className="text-zinc-400 group-hover:text-primary transition-colors" />
-              <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">{t('player.dropAudio')}</span>
-              <input id="audio-file-input" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
-            </label>
+        {!hasMedia && !yt.ytLoading && (
+          <div className="animate-fade-in w-full max-w-[1000px] mx-auto flex flex-col items-center justify-center gap-3 relative">
+            {!viewerMode && (
+              <div className="flex flex-wrap items-center justify-center gap-3 w-full">
+                {/* Local Audio */}
+                <label
+                  htmlFor="audio-file-input"
+                  className="flex items-center gap-2 px-4 py-2 h-10 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/80 border border-zinc-700/50 hover:border-primary/40 transition-all cursor-pointer shadow-sm group"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) local.handleFileChange(file);
+                  }}
+                >
+                  <Icon name="folder_open" size={16} className="text-zinc-400 group-hover:text-primary transition-colors" />
+                  <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition-colors">{t('player.dropAudio')}</span>
+                  <input id="audio-file-input" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
+                </label>
 
-            <div className="w-px h-6 bg-zinc-800/80 mx-1" />
-
-            {/* URL Input (YouTube/CDN) */}
-            <div className="flex items-center gap-2 flex-1 max-w-[450px]">
-              <div className="relative w-full">
-                {!yt.ytUrl && <Icon name="link" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />}
-                <Input
-                  value={yt.ytUrl}
-                  onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleUrlLoad(); }}
-                  placeholder={t('player.pasteUrl') || "Paste YouTube or CDN URL..."}
-                  className="pl-8 bg-zinc-900/50 border-zinc-700/50 text-sm h-10 rounded-xl shadow-inner w-full"
-                />
-              </div>
-              <Button
-                onClick={handleUrlLoad}
-                disabled={cdnLoading}
-                className="h-10 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/50 font-medium shrink-0"
-              >
-                {cdnLoading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : t('player.load')}
-              </Button>
-            </div>
-
-            {getAccessToken() && (
-              <>
                 <div className="w-px h-6 bg-zinc-800/80 mx-1" />
-                <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="flex items-center gap-2 h-10 px-4 rounded-xl bg-zinc-800/30 hover:bg-zinc-800/60 border border-zinc-700/30 hover:border-zinc-700 transition-all text-zinc-300"
-                    >
-                      <Icon name="cloud" size={16} className="text-blue-400/80" />
-                      <span className="text-sm font-medium">{t('uploads.title')}</span>
-                      <Icon name="expand_more" size={14} className="opacity-50 ml-1" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[320px] max-h-[300px] overflow-y-auto p-1 glass-dark border-zinc-700/50 shadow-2xl" align="end" sideOffset={12}>
-                    {(mediaUploads as UploadItem[]).length === 0 ? (
-                      <p className="text-xs text-zinc-500 text-center py-6">{(dt as (k: string) => string)("uploads.empty")}</p>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-1">
-                        {(mediaUploads as UploadItem[]).map((upload) => (
-                          <button
-                            key={upload.id}
-                            onClick={() => handleSelectUpload(upload)}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-zinc-800/80 transition-all group"
-                          >
-                            <div className="size-8 rounded bg-zinc-800 border border-zinc-700 group-hover:border-primary/40 flex items-center justify-center shrink-0">
-                              {upload.source === 'youtube'
-                                ? <YoutubeIcon className="size-5" />
-                                : <Icon name="cloud" size={14} className="text-blue-400" />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-zinc-200 truncate group-hover:text-primary transition-colors">
-                                {upload.title || upload.fileName || t('uploads.untitled')}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </PopoverContent>
-                </Popover>
-              </>
+
+                {/* URL Input (YouTube/CDN) */}
+                <div className="flex items-center gap-2 flex-1 max-w-[450px]">
+                  <div className="relative w-full">
+                    {!yt.ytUrl && <Icon name="link" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />}
+                    <Input
+                      value={yt.ytUrl}
+                      onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleUrlLoad(); }}
+                      placeholder={t('player.pasteUrl') || "Paste YouTube or CDN URL..."}
+                      className="pl-8 bg-zinc-900/50 border-zinc-700/50 text-sm h-10 rounded-xl shadow-inner w-full"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleUrlLoad}
+                    disabled={cdnLoading}
+                    className="h-10 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/50 font-medium shrink-0"
+                  >
+                    {cdnLoading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : t('player.load')}
+                  </Button>
+                </div>
+
+                {getAccessToken() && (
+                  <>
+                    <div className="w-px h-6 bg-zinc-800/80 mx-1" />
+                    <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="flex items-center gap-2 h-10 px-4 rounded-xl bg-zinc-800/30 hover:bg-zinc-800/60 border border-zinc-700/30 hover:border-zinc-700 transition-all text-zinc-300"
+                        >
+                          <Icon name="cloud" size={16} className="text-blue-400/80" />
+                          <span className="text-sm font-medium">{t('uploads.title')}</span>
+                          <Icon name="expand_more" size={14} className="opacity-50 ml-1" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[320px] max-h-[300px] overflow-y-auto p-1 glass-dark border-zinc-700/50 shadow-2xl" align="end" sideOffset={12}>
+                        {(mediaUploads as UploadItem[]).length === 0 ? (
+                          <p className="text-xs text-zinc-500 text-center py-6">{(dt as (k: string) => string)("uploads.empty")}</p>
+                        ) : (
+                          <div className="grid grid-cols-1 gap-1">
+                            {(mediaUploads as UploadItem[]).map((upload) => (
+                              <button
+                                key={upload.id}
+                                onClick={() => handleSelectUpload(upload)}
+                                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left hover:bg-zinc-800/80 transition-all group"
+                              >
+                                <div className="size-8 rounded bg-zinc-800 border border-zinc-700 group-hover:border-primary/40 flex items-center justify-center shrink-0">
+                                  {upload.source === 'youtube'
+                                    ? <YoutubeIcon className="size-5" />
+                                    : <Icon name="cloud" size={14} className="text-blue-400" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-zinc-200 truncate group-hover:text-primary transition-colors">
+                                    {upload.title || upload.fileName || t('uploads.untitled')}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </PopoverContent>
+                    </Popover>
+                  </>
+                )}
+              </div>
             )}
 
-            {/* Embed-blocked overlay */}
+            {/* Embed-blocked banner — inline within player bar */}
             {yt.ytEmbedBlocked && (
-              <div className="absolute inset-x-0 -top-24 mx-2 bg-zinc-900/95 border border-orange-500/30 rounded-xl px-4 py-3 flex items-start gap-3 animate-fade-in shadow-lg">
-                <Icon name="warning" size={16} className="text-orange-400 shrink-0 mt-0.5" />
+              <div className="w-full max-w-[1000px] mx-auto flex items-start gap-3 bg-orange-950/40 border border-orange-500/20 rounded-xl px-4 py-2.5 animate-fade-in">
+                <Icon name="warning" size={14} className="text-orange-400 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-zinc-100">{t('player.embeddingDisabled')}</p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">{t('player.embeddingBlockedDesc')}</p>
@@ -341,7 +345,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
             )}
             {/* Generic error chip */}
             {yt.ytError && !yt.ytEmbedBlocked && (
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded">
+              <div className="w-full max-w-[1000px] mx-auto bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] px-3 py-1.5 rounded-lg text-center">
                 {yt.ytError}
               </div>
             )}
@@ -627,8 +631,8 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
       {/* ─────────────── Compact mobile bar (hidden on desktop) ─────────────── */}
       <div className="lg:hidden w-full overflow-hidden">
         {/* No media */}
-        {!hasMedia && !viewerMode && (
-          <div className="flex flex-col gap-1 px-3 py-2">
+        {!hasMedia && (
+          <div className="flex flex-col gap-1 px-3 py-2 relative">
             {yt.ytLoading ? (
               <div className="flex items-center gap-3 flex-1 py-2">
                 <svg className="size-5 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
@@ -639,45 +643,47 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-2">
-                  <label
-                    htmlFor="audio-file-compact"
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700/60 text-sm font-medium text-zinc-300 cursor-pointer active:scale-95 transition-all duration-100 shrink-0"
-                  >
-                    <Icon name="folder_open" size={16} />
-                    {t('player.dropAudio') || 'Load audio'}
-                    <input id="audio-file-compact" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
-                  </label>
-                  <div className="flex-1 flex gap-2">
-                    <div className="relative flex-1">
-                      {detectedUrlType === 'cdn' ? (
-                        <Icon name="cloud" size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-400/80 pointer-events-none" />
-                      ) : detectedUrlType === 'youtube' ? (
-                        <svg className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-red-500/70 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                        </svg>
-                      ) : (
-                        <Icon name="link" size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
-                      )}
-                      <Input
-                        type="text"
-                        value={yt.ytUrl}
-                        onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
-                        onKeyDown={(e) => e.key === 'Enter' && handleUrlLoad()}
-                        placeholder={t('player.pasteCdnUrl') || 'Paste YouTube or CDN URL...'}
-                        className="flex-1 h-9 pl-6 bg-zinc-800/60 text-zinc-100 placeholder-zinc-500 border-zinc-700 text-xs"
-                      />
-                    </div>
-                    <Button
-                      onClick={handleUrlLoad}
-                      disabled={cdnLoading}
-                      className={`px-3 h-9 text-white text-xs font-medium rounded-lg shrink-0 ${detectedUrlType === 'cdn' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-red-600 hover:bg-red-500'
-                        }`}
+                {!viewerMode && (
+                  <div className="flex items-center gap-2">
+                    <label
+                      htmlFor="audio-file-compact"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700/60 text-sm font-medium text-zinc-300 cursor-pointer active:scale-95 transition-all duration-100 shrink-0"
                     >
-                      {cdnLoading ? '…' : t('player.load')}
-                    </Button>
+                      <Icon name="folder_open" size={16} />
+                      {t('player.dropAudio') || 'Load audio'}
+                      <input id="audio-file-compact" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
+                    </label>
+                    <div className="flex-1 flex gap-2">
+                      <div className="relative flex-1">
+                        {detectedUrlType === 'cdn' ? (
+                          <Icon name="cloud" size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-400/80 pointer-events-none" />
+                        ) : detectedUrlType === 'youtube' ? (
+                          <svg className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-red-500/70 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                          </svg>
+                        ) : (
+                          <Icon name="link" size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                        )}
+                        <Input
+                          type="text"
+                          value={yt.ytUrl}
+                          onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
+                          onKeyDown={(e) => e.key === 'Enter' && handleUrlLoad()}
+                          placeholder={t('player.pasteCdnUrl') || 'Paste YouTube or CDN URL...'}
+                          className="flex-1 h-9 pl-6 bg-zinc-800/60 text-zinc-100 placeholder-zinc-500 border-zinc-700 text-xs"
+                        />
+                      </div>
+                      <Button
+                        onClick={handleUrlLoad}
+                        disabled={cdnLoading}
+                        className={`px-3 h-9 text-white text-xs font-medium rounded-lg shrink-0 ${detectedUrlType === 'cdn' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-red-600 hover:bg-red-500'
+                          }`}
+                      >
+                        {cdnLoading ? '…' : t('player.load')}
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                )}
                 {getAccessToken() && (
                   <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
                     <PopoverTrigger asChild>
@@ -715,6 +721,30 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       )}
                     </PopoverContent>
                   </Popover>
+                )}
+                {/* Embed-blocked banner — inline */}
+                {yt.ytEmbedBlocked && (
+                  <div className="flex items-start gap-2 bg-orange-950/40 border border-orange-500/20 rounded-xl px-3 py-2.5 animate-fade-in">
+                    <Icon name="warning" size={14} className="text-orange-400 shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-zinc-100">{t('player.embeddingDisabled')}</p>
+                      <p className="text-[10px] text-zinc-400 mt-0.5">{t('player.embeddingBlockedDesc')}</p>
+                    </div>
+                    <a
+                      href={yt.ytUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 text-[10px] font-semibold text-orange-400 hover:text-orange-300 transition-colors whitespace-nowrap mt-0.5"
+                    >
+                      {t('player.watchOnYoutube')} ↗
+                    </a>
+                  </div>
+                )}
+                {/* Generic error chip */}
+                {yt.ytError && !yt.ytEmbedBlocked && (
+                  <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] px-2 py-1 rounded-lg text-center w-full">
+                    {yt.ytError}
+                  </div>
                 )}
               </>
             )}

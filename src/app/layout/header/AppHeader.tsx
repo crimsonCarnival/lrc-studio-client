@@ -143,7 +143,7 @@ export function AppHeader({
           />
 
           {/* ── Center: Start Syncing (edit mode only) ── */}
-          {!syncMode && isReady && playerSlot !== 'header' && (
+          {!syncMode && isReady && playerSlot !== 'header' && playerSlot !== 'preview' && (
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('editor:start-syncing'))}
               className="py-1 px-3 h-7 text-xs font-semibold text-zinc-950 bg-primary hover:bg-primary-dim rounded-lg transition-colors shrink-0"

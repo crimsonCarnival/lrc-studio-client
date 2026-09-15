@@ -554,7 +554,7 @@ function PlayerEngineInner(
       )}
       <div
         ref={ytContainerRef}
-        className={`fixed -top-[9999px] -left-[9999px] size-0 opacity-0 pointer-events-none ${source === 'youtube' && yt.ytReady ? '' : 'hidden'}`}
+        className="fixed -top-[9999px] -left-[9999px] size-0 opacity-0 pointer-events-none"
       />
       {children}
     </PlayerContext.Provider>

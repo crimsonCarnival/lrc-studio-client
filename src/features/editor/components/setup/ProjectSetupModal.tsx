@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ChangeEvent, FormEvent, MouseEvent as ReactMouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -12,8 +12,10 @@ import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
-import { PRIMARY_GENRES } from '@features/editor/constants/genre-tags';
+import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { Switch } from '@/shared/ui/switch';
+import toast from 'react-hot-toast';
+import { songMetadata } from '@/app/api';
 
 const EMPTY_TAGS: string[] = [];
 
@@ -130,6 +132,7 @@ export default function ProjectSetupModal({
   const { t } = useTranslation();
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [imageUploading, setImageUploading] = useState(false);
+  const [metaSearching, setMetaSearching] = useState(false);
   const coverImageInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<ProjectSetupForm>(() => ({
     name: initialName || '',
@@ -166,7 +169,6 @@ export default function ProjectSetupModal({
     }
   }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialIsPublic]);
 
-  if (!isOpen) return null;
 
   const addTag = (text: string) => {
     const trimmed = text.trim();
@@ -207,6 +209,34 @@ export default function ProjectSetupModal({
     }
   };
 
+  const handleFetchSongInfo = useCallback(async () => {
+    if (!form.songName.trim() || !form.songArtist.trim() || metaSearching) return;
+    setMetaSearching(true);
+    try {
+      const meta = await songMetadata.lookupTrack(form.songName.trim(), form.songArtist.trim()) as {
+        error?: string; genres?: string[]; name?: string; artist?: string; album?: string; releaseYear?: string; totalTracks?: number; albumArt?: string;
+      };
+      if (meta && !meta.error) {
+        const mappedGenre = matchGenreFromTags(meta.genres || []);
+        setForm(f => ({
+          ...f,
+          songName: meta.name || f.songName,
+          songArtist: meta.artist || f.songArtist,
+          songAlbum: meta.album || f.songAlbum,
+          songYear: meta.releaseYear || f.songYear,
+          ...(mappedGenre ? { genre: mappedGenre } : {}),
+          ...(!f.coverImage && meta.albumArt ? { coverImage: meta.albumArt } : {}),
+        }));
+      } else {
+        toast.error(t('setup.metaSearchFailed') || 'Failed to fetch song info');
+      }
+    } catch {
+      toast.error(t('setup.metaSearchFailed') || 'Failed to fetch song info');
+    } finally {
+      setMetaSearching(false);
+    }
+  }, [form.songName, form.songArtist, metaSearching, t]);
+
   const handleSubmit = (e: FormEvent | ReactMouseEvent) => {
     e.preventDefault();
     const finalTags = form.tagInput.trim() ? [...form.tags, form.tagInput.trim()] : form.tags;
@@ -225,6 +255,7 @@ export default function ProjectSetupModal({
     });
   };
 
+  if (!isOpen) return null;
 
   const modalContent = (
     <>
@@ -281,6 +312,24 @@ export default function ProjectSetupModal({
               </div>
 
               {/* Song Metadata Fields */}
+              <div className="flex items-center justify-between mt-2 -mb-2">
+                <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  {t('setup.songInformation') || 'Song Information'}
+                </span>
+                {form.songName.trim() && form.songArtist.trim() && (
+                  <Tip content={t('setup.fetchSongInfo') || 'Fetch metadata'} side="left">
+                    <button
+                      type="button"
+                      onClick={handleFetchSongInfo}
+                      disabled={metaSearching}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
+                    >
+                      {metaSearching && <Icon name="progress_activity" size={12} className="animate-spin" />}
+                      {t('setup.fetchInfo') || 'Search'}
+                    </button>
+                  </Tip>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="song-name" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">

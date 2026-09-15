@@ -141,7 +141,7 @@ export function EditorLineContextMenu({
           </>
         )}
         {handleInsertSection && (
-          <ContextMenuItem onClick={() => handleInsertSection(lineIndex)}>
+          <ContextMenuItem onClick={() => handleInsertSection(lineIndex - 1)}>
             <Icon name="layers" />
             {t('editor.insertSectionAbove')}
           </ContextMenuItem>

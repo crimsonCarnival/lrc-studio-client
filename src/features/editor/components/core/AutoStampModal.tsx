@@ -243,7 +243,7 @@ export default function AutoStampModal({
                       key={index}
                       type="button"
                       onClick={() => onJumpToLine(index)}
-                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-xs bg-zinc-900/60 border border-zinc-800 hover:border-warning/40 hover:bg-warning/5 transition-colors"
+                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-xs bg-zinc-900/60 border border-zinc-800 hover:border-warning/40 hover:bg-warning/5 transition-colors"
                     >
                       <span className="font-mono tabular-nums text-zinc-600 shrink-0 w-8">
                         #{lyricNumber(lines, index)}
@@ -268,7 +268,7 @@ export default function AutoStampModal({
                       key={index}
                       type="button"
                       onClick={() => onJumpToLine(index)}
-                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-xs bg-zinc-900/60 border border-zinc-800 hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-xs bg-zinc-900/60 border border-zinc-800 hover:border-primary/40 hover:bg-primary/5 transition-colors"
                     >
                       <span className="font-mono tabular-nums text-zinc-500 shrink-0 w-8">
                         #{lyricNumber(lines, index)}
