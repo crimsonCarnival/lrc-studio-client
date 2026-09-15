@@ -44,7 +44,8 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="flex-1 max-w-2xl mx-auto w-full py-6 px-4">
+    <div className="flex-1 overflow-y-auto min-h-0">
+    <div className="max-w-2xl mx-auto w-full py-6 px-4">
       {activities.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
           <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
@@ -72,6 +73,7 @@ export default function FeedPage() {
           )}
         </div>
       )}
+    </div>
     </div>
   );
 }

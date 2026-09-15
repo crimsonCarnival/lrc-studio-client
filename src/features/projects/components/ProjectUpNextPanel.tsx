@@ -28,7 +28,7 @@ export function ProjectUpNextPanel({ playlist, currentpublicId, listId, accountN
           {t('projectView.upNext')}
         </span>
         <Link
-          to={`/${accountName}/lists/${listId}`}
+          to={`/profile/${accountName}/lists/${listId}`}
           className="block text-sm font-semibold text-foreground hover:text-primary transition-colors line-clamp-1 mt-0.5"
         >
           {playlist.name}

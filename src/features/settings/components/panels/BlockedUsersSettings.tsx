@@ -16,7 +16,7 @@ export default function BlockedUsersSettings({ searchTerm }: { searchTerm?: stri
   useEffect(() => {
     getBlockedUsers()
       .then(setUsers)
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
@@ -48,7 +48,7 @@ export default function BlockedUsersSettings({ searchTerm }: { searchTerm?: stri
                 key={u.id}
                 className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/10 p-3"
               >
-                <Link to={`/${u.accountName}`} className="shrink-0">
+                <Link to={`/profile/${u.accountName}`} className="shrink-0">
                   {u.avatarUrl ? (
                     <LazyImage src={u.avatarUrl} alt={name} className="size-9 rounded-lg object-cover" />
                   ) : (
@@ -58,10 +58,10 @@ export default function BlockedUsersSettings({ searchTerm }: { searchTerm?: stri
                   )}
                 </Link>
                 <div className="min-w-0 flex-1">
-                  <Link to={`/${u.accountName}`} className="text-sm text-foreground hover:underline block truncate">
+                  <Link to={`/profile/${u.accountName}`} className="text-sm text-foreground hover:underline block truncate">
                     {name}
                   </Link>
-                  <p className="text-[11px] text-muted-foreground font-mono truncate">@{u.accountName}</p>
+                  <p className="text-[11px] text-muted-foreground font-mono truncate">{u.accountName}</p>
                 </div>
                 <Button
                   variant="outline"

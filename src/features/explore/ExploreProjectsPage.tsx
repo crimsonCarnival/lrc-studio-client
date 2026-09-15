@@ -43,7 +43,8 @@ export default function ExploreProjectsPage() {
   }
 
   return (
-    <div className="flex-1 max-w-4xl mx-auto w-full py-6 px-4 flex flex-col gap-6">
+    <div className="flex-1 overflow-y-auto min-h-0">
+    <div className="max-w-4xl mx-auto w-full py-6 px-4 flex flex-col gap-6">
       <h1 className="text-xl font-semibold text-white">{t('explore.trending.title')}</h1>
 
       {projects.length === 0 ? (
@@ -75,7 +76,7 @@ export default function ExploreProjectsPage() {
                     {project.title}
                   </p>
                   <p className="text-xs text-zinc-500 truncate">
-                    @{project.owner?.accountName ?? project.accountName}
+                    {project.owner?.accountName ?? project.accountName}
                   </p>
                   <div className="flex items-center gap-3 mt-0.5">
                     <span className="flex items-center gap-1 text-xs text-zinc-400">
@@ -107,6 +108,7 @@ export default function ExploreProjectsPage() {
           )}
         </>
       )}
+    </div>
     </div>
   );
 }

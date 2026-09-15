@@ -71,7 +71,8 @@ export default function SearchPage() {
   const query = projects.query || urlQuery;
 
   return (
-    <div className="flex-1 max-w-3xl mx-auto w-full py-6 px-4">
+    <div className="flex-1 overflow-y-auto min-h-0">
+    <div className="max-w-3xl mx-auto w-full py-6 px-4">
       {/* Search input */}
       <div className="relative mb-4">
         <Icon name="search" size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
@@ -162,6 +163,7 @@ export default function SearchPage() {
           )}
         </>
       )}
+    </div>
     </div>
   );
 }

@@ -39,22 +39,22 @@ interface PanelContentProps {
 
 function SettingsPanelContent({ activeTab, settings, updateSetting, validateShortcut, isGuest, userId, focusCard, searchTerm }: PanelContentProps) {
   switch (activeTab) {
-    case 'profile':     return <ProfileSettings key={userId} searchTerm={searchTerm} />;
-    case 'activity':    return <ActivitySettings key={userId} searchTerm={searchTerm} />;
-    case 'stats':       return <StatsSettings key={userId} searchTerm={searchTerm} />;
-    case 'security':    return <SecuritySettings focusCard={focusCard ?? undefined} searchTerm={searchTerm} />;
+    case 'profile': return <ProfileSettings key={userId} searchTerm={searchTerm} />;
+    case 'activity': return <ActivitySettings key={userId} searchTerm={searchTerm} />;
+    case 'stats': return <StatsSettings key={userId} searchTerm={searchTerm} />;
+    case 'security': return <SecuritySettings focusCard={focusCard ?? undefined} searchTerm={searchTerm} />;
     case 'connections': return <ConnectionsSettings searchTerm={searchTerm} />;
-    case 'history':     return <ChangesHistorySettings searchTerm={searchTerm} />;
-    case 'blocked':     return <BlockedUsersSettings key={userId} searchTerm={searchTerm} />;
-    case 'sessions':    return <SessionsSettings />;
-    case 'playback':    return <PlaybackSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
-    case 'editor':      return <EditorSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
-    case 'export':      return <ExportSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
-    case 'interface':   return <InterfaceSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
-    case 'shortcuts':   return <ShortcutsSettings settings={settings} updateSetting={updateSetting} validateShortcut={validateShortcut} searchTerm={searchTerm} />;
-    case 'advanced':    return <AdvancedSettings settings={settings} updateSetting={updateSetting} isGuest={isGuest} searchTerm={searchTerm} />;
-    case 'autoStamp':   return <AutoStampSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
-    default:            return null;
+    case 'history': return <ChangesHistorySettings searchTerm={searchTerm} />;
+    case 'blocked': return <BlockedUsersSettings key={userId} searchTerm={searchTerm} />;
+    case 'sessions': return <SessionsSettings />;
+    case 'playback': return <PlaybackSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
+    case 'editor': return <EditorSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
+    case 'export': return <ExportSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
+    case 'interface': return <InterfaceSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
+    case 'shortcuts': return <ShortcutsSettings settings={settings} updateSetting={updateSetting} validateShortcut={validateShortcut} searchTerm={searchTerm} />;
+    case 'advanced': return <AdvancedSettings settings={settings} updateSetting={updateSetting} isGuest={isGuest} searchTerm={searchTerm} />;
+    case 'autoStamp': return <AutoStampSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
+    default: return null;
   }
 }
 
@@ -92,10 +92,10 @@ const TABS: TabMeta[] = [
 ];
 
 const SHORTCUT_KEYS = [
-  'mark','nudgeLeft','nudgeRight','addLine','deleteLine','clearTimestamp',
-  'switchMode','nudgeLeftFine','nudgeRightFine','deselect','showHelp',
-  'playPause','seekForward','seekBackward','mute','speedUp','speedDown',
-  'addSecondary','addTranslation','toggleTranslation',
+  'mark', 'nudgeLeft', 'nudgeRight', 'addLine', 'deleteLine', 'clearTimestamp',
+  'switchMode', 'nudgeLeftFine', 'nudgeRightFine', 'deselect', 'showHelp',
+  'playPause', 'seekForward', 'seekBackward', 'mute', 'speedUp', 'speedDown',
+  'addSecondary', 'addTranslation', 'toggleTranslation',
 ];
 
 export default function SettingsPage() {
@@ -164,7 +164,7 @@ export default function SettingsPage() {
   // that were omitted from the startup meCore query.
   useEffect(() => {
     if (user && !user.isGuest) refreshUserProfile();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -274,7 +274,7 @@ export default function SettingsPage() {
                   {user.displayName || user.accountName}
                 </p>
                 <p className="text-[11px] text-zinc-500 font-mono truncate mt-0.5 contrast-more:text-zinc-400">
-                  @{user.accountName}
+                  {user.accountName}
                 </p>
               </div>
             </div>
@@ -300,11 +300,10 @@ export default function SettingsPage() {
                   )}
                   <button
                     onClick={() => setTab(entry.id)}
-                    className={`relative flex items-center gap-2.5 px-2.5 py-[7px] rounded-xl text-[13px] font-medium transition-all duration-150 text-left w-full border ${
-                      isActive
+                    className={`relative flex items-center gap-2.5 px-2.5 py-[7px] rounded-xl text-[13px] font-medium transition-all duration-150 text-left w-full border ${isActive
                         ? 'text-primary bg-gradient-to-r from-primary/[.13] to-primary/[.04] border-primary/[.14]'
                         : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'
-                    }`}
+                      }`}
                   >
                     {isActive && (
                       <span className="absolute left-0 top-[22%] h-[56%] w-[3px] bg-primary rounded-r-full shadow-[0_0_8px_rgba(196,167,231,.6)]" aria-hidden="true" />
@@ -330,11 +329,10 @@ export default function SettingsPage() {
                   {showDivider && <div className="w-px h-4 mx-2 bg-zinc-800/60 shrink-0" />}
                   <button
                     onClick={() => setTab(entry.id)}
-                    className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-all -mb-px ${
-                      isActive
+                    className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-all -mb-px ${isActive
                         ? 'text-primary border-primary'
                         : 'text-zinc-500 border-transparent hover:text-zinc-300 hover:border-zinc-600'
-                    }`}
+                      }`}
                   >
                     <Icon name={entry.iconName} size={14} className="shrink-0" />
                     {label}

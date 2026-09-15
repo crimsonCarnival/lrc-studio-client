@@ -795,7 +795,10 @@ export type PublicUser = {
   isAdmin: Scalars['Boolean']['output'];
   isBlockedByMe: Scalars['Boolean']['output'];
   isFollowedByMe: Scalars['Boolean']['output'];
+  isFollowingMe: Scalars['Boolean']['output'];
   isVerified: Scalars['Boolean']['output'];
+  lastOnlineAt?: Maybe<Scalars['String']['output']>;
+  miniProfileBadgeIds: Array<Scalars['String']['output']>;
   progression?: Maybe<UserProgression>;
   projectCount: Scalars['Int']['output'];
   projects: Array<Project>;
@@ -1145,6 +1148,7 @@ export type UpdateProfileInput = {
   email?: InputMaybe<Scalars['String']['input']>;
   showFollowers?: InputMaybe<Scalars['Boolean']['input']>;
   onlineVisibility?: InputMaybe<Scalars['String']['input']>;
+  lastOnlineVisibility?: InputMaybe<Scalars['String']['input']>;
   miniProfileBadgesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
 };
@@ -1161,6 +1165,10 @@ export type UserPreferencesNotifications = {
 export type UserPreferences = {
   showFollowers: Scalars['Boolean']['output'];
   onlineVisibility: Scalars['String']['output'];
+  lastOnlineVisibility: Scalars['String']['output'];
+  country?: Maybe<Scalars['String']['output']>;
+  countryVisibility: Scalars['String']['output'];
+  lastOnlineAt?: Maybe<Scalars['String']['output']>;
   miniProfileBadgesEnabled: Scalars['Boolean']['output'];
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
   notifications: UserPreferencesNotifications;
@@ -1179,6 +1187,9 @@ export type UpdatePreferencesNotificationsInput = {
 export type UpdatePreferencesInput = {
   showFollowers?: InputMaybe<Scalars['Boolean']['input']>;
   onlineVisibility?: InputMaybe<Scalars['String']['input']>;
+  lastOnlineVisibility?: InputMaybe<Scalars['String']['input']>;
+  country?: InputMaybe<Scalars['String']['input']>;
+  countryVisibility?: InputMaybe<Scalars['String']['input']>;
   miniProfileBadgesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
   notifications?: InputMaybe<UpdatePreferencesNotificationsInput>;
@@ -1238,6 +1249,8 @@ export type User = {
   badges: Array<UserBadge>;
   ban?: Maybe<UserBan>;
   bio?: Maybe<Scalars['String']['output']>;
+  country?: Maybe<Scalars['String']['output']>;
+  countryVisibility?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['String']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
   email?: Maybe<Scalars['String']['output']>;
@@ -1257,6 +1270,8 @@ export type User = {
   settings?: Maybe<Settings>;
   showFollowers: Scalars['Boolean']['output'];
   onlineVisibility: Scalars['String']['output'];
+  lastOnlineVisibility: Scalars['String']['output'];
+  lastOnlineAt?: Maybe<Scalars['String']['output']>;
   miniProfileBadgesEnabled: Scalars['Boolean']['output'];
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
   showcaseSlots: Scalars['Int']['output'];
@@ -1507,7 +1522,7 @@ export type GetPublicProfileQueryVariables = Exact<{
 }>;
 
 
-export type GetPublicProfileQuery = { publicProfile: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null, bio: string | null, isVerified: boolean, isAdmin: boolean, createdAt: string | null, projectCount: number, totalStarsReceived: number, totalForksReceived: number, followerCount: number, followingCount: number, isFollowedByMe: boolean, showFollowers: boolean, showcasePublic: boolean, badges: Array<{ id: string, grantedAt: string }>, progression: { xp: number | null, level: number | null } | null, stats: { minutesSynced: number | null } | null, streak: { current: number | null } | null, showcasedBadges: Array<{ id: string, label: string, icon: string, color: string, rarity: string, rarityPct: number, holderCount: number, grantedAt: string }>, projects: Array<{ id: string, publicId: string, title: string | null, starCount: number | null, forkCount: number | null, coverImage: string | null, public: boolean | null, createdAt: string | null, updatedAt: string | null, metadata: { songName: string | null, songArtist: string | null, songAlbum: string | null, songYear: string | null, genre: string | null, description: string | null, tags: Array<string> | null } | null, upload: { source: string, uploadUrl: string | null } | null }> } | null };
+export type GetPublicProfileQuery = { publicProfile: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null, bio: string | null, isVerified: boolean, isAdmin: boolean, createdAt: string | null, projectCount: number, totalStarsReceived: number, totalForksReceived: number, followerCount: number, followingCount: number, isFollowedByMe: boolean, isFollowingMe: boolean, isBlockedByMe: boolean, country: string | null, showFollowers: boolean, showcasePublic: boolean, badges: Array<{ id: string, grantedAt: string }>, progression: { xp: number | null, level: number | null } | null, stats: { minutesSynced: number | null } | null, streak: { current: number | null } | null, showcasedBadges: Array<{ id: string, label: string, icon: string, color: string, rarity: string, rarityPct: number, holderCount: number, grantedAt: string }>, projects: Array<{ id: string, publicId: string, title: string | null, starCount: number | null, forkCount: number | null, coverImage: string | null, public: boolean | null, createdAt: string | null, updatedAt: string | null, metadata: { songName: string | null, songArtist: string | null, songAlbum: string | null, songYear: string | null, genre: string | null, description: string | null, tags: Array<string> | null } | null, upload: { source: string, uploadUrl: string | null } | null }> } | null };
 
 export type FollowUserMutationVariables = Exact<{
   accountName: string;

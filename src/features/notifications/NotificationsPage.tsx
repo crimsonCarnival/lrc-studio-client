@@ -41,7 +41,8 @@ export default function NotificationsPage() {
   const hasAny = sticky.length + badges.length + social.length + system.length > 0;
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 max-w-2xl mx-auto w-full px-4 py-6">
+    <div className="flex-1 overflow-y-auto min-h-0">
+    <div className="flex flex-col max-w-2xl mx-auto w-full px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-zinc-100">{t('notifications.bell')}</h1>
         {hasAny && (
@@ -95,6 +96,7 @@ export default function NotificationsPage() {
           </div>
         </>
       )}
+    </div>
     </div>
   );
 }

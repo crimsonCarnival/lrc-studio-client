@@ -67,7 +67,7 @@ export function TrendingProjects({ limit = 6 }: { limit?: number }) {
                   {project.title}
                 </p>
                 <p className="text-xs text-zinc-500 truncate">
-                  @{project.owner?.accountName ?? project.accountName}
+                  {project.owner?.accountName ?? project.accountName}
                 </p>
                 <div className="flex items-center gap-3 mt-0.5">
                   <span className="flex items-center gap-1 text-xs text-zinc-400">

@@ -28,28 +28,28 @@ export interface NotificationData {
 }
 
 const TYPE_ICON_NAME: Record<string, string> = {
-  star:             'star',
-  fork:             'call_split',
-  follow:           'person_add',
-  reaction:         'sentiment_satisfied',
-  admin_granted:    'verified_user',
+  star: 'star',
+  fork: 'call_split',
+  follow: 'person_add',
+  reaction: 'sentiment_satisfied',
+  admin_granted: 'verified_user',
   password_changed: 'lock',
-  set_password:     'key',
-  verify_email:     'key',
-  ban:              'block',
-  badge_awarded:    'military_tech',
+  set_password: 'key',
+  verify_email: 'key',
+  ban: 'block',
+  badge_awarded: 'military_tech',
   request_submitted: 'inbox',
-  request_reviewed:  'done_all',
-  xp_changed:        'bolt',
-  role_changed:      'manage_accounts',
-  unban:             'undo',
+  request_reviewed: 'done_all',
+  xp_changed: 'bolt',
+  role_changed: 'manage_accounts',
+  unban: 'undo',
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function notificationDestination(notification: NotificationData): string | null {
   const { type, actors, publicId } = notification;
   if ((type === 'star' || type === 'fork' || type === 'reaction') && publicId) return `/project/${publicId}`;
-  if (type === 'follow' && actors?.[0]?.accountName) return `/${actors[0].accountName}`;
+  if (type === 'follow' && actors?.[0]?.accountName) return `/profile/${actors[0].accountName}`;
   if (type === 'admin_granted' || type === 'role_changed') return '/admin';
   if (type === 'xp_changed') return '/settings/profile';
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';
@@ -74,7 +74,7 @@ export function NotificationText({ notification, t }: { notification: Notificati
     actorStr = second ? t('notifications.actorAndOne', { name: firstName, other: second }) : t('notifications.actorAndOther', { name: firstName });
   } else if (actorCount === 3) {
     const second = actors?.[actors.length - 2]?.accountName ?? '';
-    const third  = actors?.[actors.length - 3]?.accountName ?? '';
+    const third = actors?.[actors.length - 3]?.accountName ?? '';
     actorStr = second && third
       ? t('notifications.actorAndTwo', { name: firstName, second, third })
       : t('notifications.actorAndOthers', { name: firstName, count: 2 });

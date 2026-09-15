@@ -25,7 +25,7 @@ function DropdownProjectRow({ project }: { project: SearchProject }) {
   return (
     <Link
       to={`/project/${publicId}`}
-      className="flex items-center gap-2.5 px-3 py-2 hover:bg-zinc-800/60 rounded-lg transition-colors"
+      className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-zinc-800/60 rounded-lg transition-colors"
     >
       {thumb
         ? <LazyImage src={thumb} alt="" className="size-7 rounded object-cover shrink-0" />
@@ -122,7 +122,7 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
                 {t('search.tabs.users')}
               </p>
               {users.map((u: { id: string; [key: string]: unknown }) => (
-                <div key={u.id} onClick={() => setOpen(false)}>
+                <div key={u.id} className="w-full" onClick={() => setOpen(false)}>
                   <SearchUserCard user={u as Parameters<typeof SearchUserCard>[0]['user']} compact />
                 </div>
               ))}
@@ -135,7 +135,7 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
                 {t('search.tabs.projects')}
               </p>
               {projects.map((p: SearchProject) => (
-                <div key={p.id} onClick={() => setOpen(false)}>
+                <div key={p.id} className="w-full" onClick={() => setOpen(false)}>
                   <DropdownProjectRow project={p} />
                 </div>
               ))}

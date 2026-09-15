@@ -41,7 +41,8 @@ export default function ExplorePlaylistsPage() {
   }
 
   return (
-    <div className="flex-1 max-w-4xl mx-auto w-full py-6 px-4 flex flex-col gap-6">
+    <div className="flex-1 overflow-y-auto min-h-0">
+    <div className="max-w-4xl mx-auto w-full py-6 px-4 flex flex-col gap-6">
       <h1 className="text-xl font-semibold text-white">{t('explore.playlists.title')}</h1>
 
       {playlists.length === 0 ? (
@@ -54,7 +55,7 @@ export default function ExplorePlaylistsPage() {
             {playlists.map(playlist => (
               <Link
                 key={playlist.id}
-                to={`/${playlist.owner?.accountName ?? playlist.accountName}/lists/${playlist.id}`}
+                to={`/profile/${playlist.owner?.accountName ?? playlist.accountName}/lists/${playlist.id}`}
                 className="flex flex-col rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors overflow-hidden group"
               >
                 <div className="aspect-video w-full bg-gradient-to-br from-primary/30 to-accent-purple/30 flex items-center justify-center relative shrink-0">
@@ -73,7 +74,7 @@ export default function ExplorePlaylistsPage() {
                     {playlist.name}
                   </p>
                   <p className="text-xs text-zinc-500 truncate">
-                    @{playlist.owner?.accountName ?? playlist.accountName}
+                    {playlist.owner?.accountName ?? playlist.accountName}
                   </p>
                   <p className="text-xs text-zinc-400 mt-0.5">
                     {t('playlists.detail.projects', { count: playlist.projectCount ?? 0 })}
@@ -100,6 +101,7 @@ export default function ExplorePlaylistsPage() {
           )}
         </>
       )}
+    </div>
     </div>
   );
 }
