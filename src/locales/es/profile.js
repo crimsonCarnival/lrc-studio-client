@@ -169,7 +169,7 @@ export default {
   block: "Bloquear",
   unblock: "Desbloquear",
   confirmBlock: "Confirmar bloqueo",
-  blockSuccess: "Bloqueaste a @{{name}}",
+  blockSuccess: "Bloqueaste a {{name}}",
   blockError: "No se pudo bloquear. Inténtalo de nuevo.",
   unblockError: "No se pudo desbloquear. Inténtalo de nuevo.",
   followersTitle: "Seguidores",
@@ -183,7 +183,7 @@ export default {
   publicTabs: {
     projects: "Proyectos",
     playlists: "Listas",
-    showcase:  "Vitrina",
+    showcase: "Vitrina",
   },
   notFound: "Usuario no encontrado.",
   notFoundSub: "Este perfil no existe o puede haber sido eliminado.",

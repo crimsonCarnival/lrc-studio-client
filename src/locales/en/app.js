@@ -41,6 +41,7 @@ export default {
   backToDashboard: "Return to Dashboard",
   backHome: "Return Home",
   goBack: "Go Back",
+  viewPublicPage: "View Public Page",
   tab: {
     editor: "Editor",
     preview: "Preview"

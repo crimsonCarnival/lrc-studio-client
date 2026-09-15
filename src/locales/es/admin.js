@@ -24,7 +24,10 @@ export default {
       active: 'Activos Hoy',
       banned: 'Suspendidos',
       appeals: 'Apelaciones Pendientes',
-      deleted: 'Cuentas Eliminadas'
+      deleted: 'Cuentas Eliminadas',
+      signups: 'Nuevos (24h/7d/30d)',
+      storage: 'Almacenamiento Total',
+      jobs: 'Salud Tareas (24h)'
     },
     tabs: {
       users: 'Gestión de Usuarios',
@@ -59,6 +62,9 @@ export default {
     status: 'Estado',
     appeal: 'Apelación',
     joined: 'Se unió',
+    lastActive: 'Última vez',
+    storage: 'Almacenamiento',
+    sync: 'Sincronizado',
     ip: 'Última IP',
     flags: 'Atributos',
     actions: 'Acciones',
@@ -81,6 +87,7 @@ export default {
     banTitle: 'Banear Usuario',
     roleTitle: 'Cambiar Rol de Usuario',
     deleteTitle: 'Eliminar Usuario',
+    delete: 'Eliminar',
     reasonPlaceholder: 'Violación de términos, spam, etc.',
     reasonLabel: 'Razón',
     untilLabel: 'Baneado Hasta',

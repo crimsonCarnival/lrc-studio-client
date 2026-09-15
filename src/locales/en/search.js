@@ -15,7 +15,7 @@ export default {
   resultCount_other: '{{count}} results',
   noResults: 'No public projects found for "{{query}}".',
   noUsers: 'No users found for "{{query}}".',
-  forkedFrom: 'forked from @{{accountName}}',
+  forkedFrom: 'forked from {{accountName}}',
   error: 'Search failed. Try again later.',
   allResults: 'See all results',
   tabs: {

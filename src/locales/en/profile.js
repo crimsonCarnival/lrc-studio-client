@@ -169,7 +169,7 @@ export default {
   block: "Block",
   unblock: "Unblock",
   confirmBlock: "Confirm block",
-  blockSuccess: "Blocked @{{name}}",
+  blockSuccess: "Blocked {{name}}",
   blockError: "Could not block. Try again.",
   unblockError: "Could not unblock. Try again.",
   followersTitle: "Followers",

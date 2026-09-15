@@ -24,7 +24,10 @@ export default {
       active: 'Active Today',
       banned: 'Suspended',
       appeals: 'Pending Appeals',
-      deleted: 'Deleted Accounts'
+      deleted: 'Deleted Accounts',
+      signups: 'Signups (24h/7d/30d)',
+      storage: 'Total Storage',
+      jobs: 'Job Health (24h)'
     },
     tabs: {
       users: 'User Management',
@@ -59,6 +62,9 @@ export default {
     status: 'Status',
     appeal: 'Appeal',
     joined: 'Joined',
+    lastActive: 'Last Active',
+    storage: 'Storage',
+    sync: 'Sync',
     ip: 'Last IP',
     flags: 'Flags',
     actions: 'Actions',
@@ -81,6 +87,7 @@ export default {
     banTitle: 'Ban User',
     roleTitle: 'Change User Role',
     deleteTitle: 'Delete User',
+    delete: 'Delete',
     reasonPlaceholder: 'Violation of terms, spam, etc.',
     reasonLabel: 'Reason',
     untilLabel: 'Banned Until',
