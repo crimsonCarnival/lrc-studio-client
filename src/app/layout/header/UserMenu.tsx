@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { NavigateFunction } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
@@ -36,18 +36,39 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
   const fetchCounts = async () => {
     if (!user) return;
     try {
-      const [pRes, uRes, rRes] = await Promise.all([
+      const [pRes, uRes] = await Promise.all([
         projects.list(),
         uploads.listMedia(),
-        // Staff workflow counts; non-staff users have no reviewable/own requests.
-        staff ? requestsApi.counts().catch(() => ({ pendingReview: 0, myPending: 0 })) : Promise.resolve({ pendingReview: 0, myPending: 0 }),
-      ]) as [{ length?: number } | null, { length?: number } | null, { pendingReview: number; myPending: number }];
-      setCounts({ library: pRes?.length || 0, uploads: uRes?.length || 0, requests: rRes.pendingReview + rRes.myPending });
+      ]) as [{ length?: number } | null, { length?: number } | null];
+      setCounts(prev => ({ ...prev, library: pRes?.length || 0, uploads: uRes?.length || 0 }));
     } catch (err) { console.error('Failed to fetch counts for menu:', err); }
   };
 
+  useEffect(() => {
+    if (staff) {
+      requestsApi.counts()
+        .then(rRes => setCounts(prev => ({ ...prev, requests: rRes.pendingReview + rRes.myPending })))
+        .catch(() => {});
+    }
+  }, [staff]);
+
   return (
     <>
+      {staff && (
+        <Tip content={t('admin.dashboard.title')}>
+          <button
+            onClick={() => navigate('/admin')}
+            className="relative size-8 flex items-center justify-center rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 shrink-0"
+          >
+            <Icon name="security" size={18} />
+            {counts.requests > 0 && (
+               <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground border-2 border-background">
+                 {counts.requests > 99 ? '99+' : counts.requests}
+               </span>
+            )}
+          </button>
+        </Tip>
+      )}
       <NotificationBell />
       <Popover onOpenChange={(open) => { if (open) fetchCounts(); }}>
         <div className="relative flex-shrink-0">
@@ -100,17 +121,7 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
           </div>
 
           <div className="p-1 border-b border-zinc-800/60">
-            {staff && (
-              <>
-                <PopoverItem onClick={() => { navigate('/admin'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2 text-zinc-400 hover:text-zinc-200">
-                  <Icon name="security" size={16} />{t('admin.dashboard.title')}
-                </PopoverItem>
-                <PopoverItem onClick={() => { navigate('/admin?tab=requests'); }} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2 text-zinc-400 hover:text-zinc-200">
-                  <span className="flex items-center gap-2"><Icon name="mail" size={16} />{t('admin.requests.title')}</span>
-                  {counts.requests > 0 && <span className="bg-primary/20 text-primary px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.requests}</span>}
-                </PopoverItem>
-              </>
-            )}
+
             <PopoverItem onClick={() => { navigate('/settings'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <Icon name="settings" size={16} className="text-zinc-400" />{t('settings.title')}
             </PopoverItem>

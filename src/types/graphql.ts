@@ -787,6 +787,7 @@ export type PublicUser = {
   avatarUrl?: Maybe<Scalars['String']['output']>;
   badges: Array<UserBadge>;
   bio?: Maybe<Scalars['String']['output']>;
+  country?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['String']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
   followerCount: Scalars['Int']['output'];
@@ -1280,6 +1281,9 @@ export type User = {
   streak?: Maybe<UserStreak>;
   uploads: Array<Upload>;
   wasJustUnbanned?: Maybe<Scalars['Boolean']['output']>;
+  lastIp?: Maybe<Scalars['String']['output']>;
+  lastDevice?: Maybe<Scalars['String']['output']>;
+  lastLoginAt?: Maybe<Scalars['String']['output']>;
 };
 
 export type UserAppeal = {

@@ -57,28 +57,20 @@ export default function ProfileSettings({ searchTerm }: { searchTerm?: string })
           <SectionHeading>{t('profile.sections.public')}</SectionHeading>
           <AvatarUpload />
         </section>
-
-        <Divider />
-
-        {/* Display name + bio + visibility */}
-        <ProfileForm />
-
-
-
-        {/* Email */}
-        <section className="space-y-4">
-          <SectionHeading>{t('profile.emailSection')}</SectionHeading>
-          <EmailSection />
-        </section>
-
-        <Divider />
-
-        {/* Username */}
-        <section className="space-y-4">
-          <SectionHeading>{t('profile.accountNameSection')}</SectionHeading>
-          <AccountNameSection />
-        </section>
-
+        {/* Display name + bio + visibility + user info + mini profile */}
+        <ProfileForm>
+          {/* User Info */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Icon name="info" size={14} className="text-zinc-500" />
+              <SectionHeading>User Info</SectionHeading>
+            </div>
+            <EmailSection />
+            <AccountNameSection />
+          </section>
+          
+          <Divider />
+        </ProfileForm>
 
       </div>
     </div>

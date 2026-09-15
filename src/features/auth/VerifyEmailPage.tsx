@@ -49,7 +49,7 @@ export default function VerifyEmailPage() {
           // Immediately flip isVerified in the in-memory auth state so the
           // notification badge on the user avatar disappears right away —
           // without this the badge persists until the next token refresh cycle.
-          setUser(prev => prev ? { ...prev, isVerified: true } : prev);
+          setUser(prev => prev ? { ...prev, isVerified: true, pendingEmail: null } : prev);
           navigate('/verify-email?status=success', { replace: true });
         } else {
           navigate(`/verify-email?status=error&code=${data.error || 'server_error'}`, { replace: true });

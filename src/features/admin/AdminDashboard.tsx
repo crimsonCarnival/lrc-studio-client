@@ -489,6 +489,7 @@ export default function AdminDashboard() {
         {activeTab === 'moderation' && (
           <AdminModerationTab
             users={users as ComponentProps<typeof AdminModerationTab>["users"]}
+            page={cursorStack.length + 1}
             currentUser={currentUser}
             search={search}
             setSearch={setSearch}

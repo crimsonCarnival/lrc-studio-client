@@ -77,6 +77,7 @@ export default function AdminStaffTab({
   return (
     <AdminUsersTab
       users={staffUsers as Parameters<typeof AdminUsersTab>[0]['users']}
+      page={1}
       currentUser={currentUser}
       search={search}
       setSearch={setSearch}

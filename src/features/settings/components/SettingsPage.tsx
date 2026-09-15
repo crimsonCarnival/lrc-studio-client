@@ -20,6 +20,7 @@ import BlockedUsersSettings from './panels/BlockedUsersSettings';
 import SessionsSettings from './panels/SessionsSettings';
 import ActivitySettings from './panels/ActivitySettings';
 import StatsSettings from './panels/StatsSettings';
+import PrivacySettings from './panels/PrivacySettings';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import type { AppSettings } from '@/features/settings/settings.types';
@@ -43,6 +44,7 @@ function SettingsPanelContent({ activeTab, settings, updateSetting, validateShor
     case 'activity': return <ActivitySettings key={userId} searchTerm={searchTerm} />;
     case 'stats': return <StatsSettings key={userId} searchTerm={searchTerm} />;
     case 'security': return <SecuritySettings focusCard={focusCard ?? undefined} searchTerm={searchTerm} />;
+    case 'privacy': return <PrivacySettings searchTerm={searchTerm} />;
     case 'connections': return <ConnectionsSettings searchTerm={searchTerm} />;
     case 'history': return <ChangesHistorySettings searchTerm={searchTerm} />;
     case 'blocked': return <BlockedUsersSettings key={userId} searchTerm={searchTerm} />;
@@ -74,6 +76,7 @@ const TABS: TabMeta[] = [
   { id: 'activity', labelKey: 'profile.tabs.activity', iconName: 'monitoring', authOnly: true, group: 'account', searchable: true },
   { id: 'stats', labelKey: 'profile.tabs.stats', iconName: 'bar_chart', authOnly: true, group: 'account', searchable: true },
   { id: 'security', labelKey: 'profile.sections.security', iconName: 'verified_user', authOnly: true, group: 'account', searchable: true },
+  { id: 'privacy', labelKey: 'profile.sections.privacy', fallback: 'Privacy', iconName: 'shield', authOnly: true, group: 'account', searchable: true },
   { id: 'connections', labelKey: 'profile.tabs.connections', iconName: 'link', authOnly: true, group: 'account', searchable: true },
   { id: 'history', labelKey: 'profile.tabs.history', iconName: 'history', authOnly: true, group: 'account', searchable: true },
   { id: 'blocked', labelKey: 'settings.blocked.label', fallback: 'Blocked users', iconName: 'block', authOnly: true, group: 'account', searchable: true },

@@ -487,7 +487,7 @@ export default function AuthPage() {
         >
           <div className="size-8 mb-1.5">
             <LazyImage
-              src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png"
+              src="https://res.cloudinary.com/dzjid2tos/image/upload/w_256,f_auto,q_auto/v1778106770/lrc-logo_dkumwz.png"
               alt="LRC Studio"
               className="size-full object-contain drop-shadow-[0_0_12px_rgba(29,185,84,0.3)]"
             />

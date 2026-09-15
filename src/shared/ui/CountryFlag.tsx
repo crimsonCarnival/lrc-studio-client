@@ -1,8 +1,19 @@
 import { Tip } from './tip';
+import { Icon } from './Icon';
 
 export function CountryFlag({ countryCode }: { countryCode?: string | null }) {
   if (!countryCode) return null;
   
+  if (countryCode === 'LOCAL') {
+    return (
+      <Tip content="Local Network">
+        <div className="flex items-center justify-center bg-zinc-800/50 rounded shadow-[0_0_0_1px_rgba(255,255,255,0.1)] cursor-help" style={{ height: '11px', width: '16px' }}>
+          <Icon name="dns" size={10} className="text-zinc-400" />
+        </div>
+      </Tip>
+    );
+  }
+
   let countryName = countryCode;
   try {
     const displayNames = new Intl.DisplayNames(['en'], { type: 'region' });

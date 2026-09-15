@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { gqlRequest } from '@/app/graphql.client';
 import { Tip } from '@/shared/ui/tip';
@@ -103,6 +103,7 @@ export default function ActivityHeatmap() {
   const { t, i18n } = useTranslation();
   const [data, setData] = useState<HeatDay[] | null>(null);
   const [hovered, setHovered] = useState<GridDay | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -116,6 +117,12 @@ export default function ActivityHeatmap() {
     })();
     return () => { isMounted = false; };
   }, []);
+
+  useEffect(() => {
+    if (data && scrollRef.current) {
+      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+    }
+  }, [data]);
 
   const countsByDate = useMemo(() => {
     const map = new Map<string, number>();
@@ -162,7 +169,7 @@ export default function ActivityHeatmap() {
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      <div className="overflow-x-auto pb-4 custom-scrollbar">
+      <div className="overflow-x-auto pb-4 custom-scrollbar" ref={scrollRef}>
         <div className="min-w-max flex gap-2">
           <div className="grid gap-1 text-[10px] text-muted-foreground mt-6 text-right select-none" style={{ gridTemplateRows: `repeat(${DAYS_PER_WEEK}, 14px)` }}>
             <span className="invisible">Sun</span>

@@ -27,6 +27,7 @@ interface MiniProfile {
   isFollowedByMe: boolean;
   isFollowingMe: boolean;
   miniProfileBadgeIds: string[];
+  country: string | null;
   lastOnlineAt: string | null;
   progression: { xp: number; level: number } | null;
 }
@@ -216,7 +217,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                   <>
                     <span className="text-[10px] text-muted-foreground/40">•</span>
                     <p className="text-[10px] text-muted-foreground whitespace-nowrap">
-                      {t('profile.lastSeen', { time: formatDistanceToNow(new Date(profile.lastOnlineAt), { addSuffix: true }) })}
+                      {(t as (k: string, opts: object) => string)('profile.lastSeen', { time: formatDistanceToNow(new Date(profile.lastOnlineAt), { addSuffix: true }) })}
                     </p>
                   </>
                 )}

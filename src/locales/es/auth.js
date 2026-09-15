@@ -103,6 +103,7 @@ export default {
     googleLoginFailed: "Fallo al iniciar sesión con Google. Intenta de nuevo.",
     googleWrongAccount: "Esa cuenta de Google no coincide con tu cuenta guardada. Inicia sesión con la cuenta correcta.",
     googleDisconnectFailed: "Fallo al desconectar la cuenta de Google. Intenta de nuevo.",
+    recaptcha_failed: "Fallo en la verificación de seguridad. Por favor, recarga e intenta de nuevo.",
   },
   verification: {
     sendSuccess: "Correo de verificación enviado. Revisa tu bandeja de entrada.",

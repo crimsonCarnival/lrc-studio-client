@@ -130,6 +130,9 @@ export const authService = {
           showcasedBadges
           progression { xp level }
           showcaseSlots
+          lastIp
+          lastDevice
+          lastLoginAt
         }
       }
     `);
@@ -157,7 +160,7 @@ export const authService = {
           showFollowers
           onlineVisibility
           lastOnlineVisibility
-          lastOnlineAt
+          countryVisibility
           miniProfileBadgesEnabled
           miniProfileBadgeIds
           defaultProjectPrivacy

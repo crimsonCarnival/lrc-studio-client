@@ -26,7 +26,7 @@ function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void 
   );
 }
 
-export default function ProfileForm() {
+export default function ProfileForm({ children }: { children?: React.ReactNode }) {
   const { t } = useTranslation();
   const { user, setUser } = useAuthContext();
   const [saving, setSaving] = useState(false);
@@ -38,28 +38,16 @@ export default function ProfileForm() {
   const [formData, setFormData] = useState({
     displayName: user?.displayName || '',
     bio: user?.bio || '',
-    showFollowers: prefs?.showFollowers ?? (user?.showFollowers ?? true),
-    onlineVisibility: (prefs?.onlineVisibility ?? user?.onlineVisibility ?? 'friends') as 'everyone' | 'friends' | 'nobody',
-    lastOnlineVisibility: (prefs?.lastOnlineVisibility ?? 'friends') as 'everyone' | 'friends' | 'nobody',
-    countryVisibility: (prefs?.countryVisibility ?? 'nobody') as 'everyone' | 'friends' | 'nobody',
     miniProfileBadgesEnabled: prefs?.miniProfileBadgesEnabled ?? ((user?.miniProfileBadgesEnabled as boolean | undefined) ?? true),
     miniProfileBadgeIds: prefs?.miniProfileBadgeIds ?? ((user?.miniProfileBadgeIds as string[] | undefined) ?? []),
   });
 
-  const baseShowFollowers = prefs?.showFollowers ?? (user?.showFollowers ?? true);
-  const baseOnlineVisibility = (prefs?.onlineVisibility ?? user?.onlineVisibility ?? 'friends') as 'everyone' | 'friends' | 'nobody';
-  const baseLastOnlineVisibility = (prefs?.lastOnlineVisibility ?? 'friends') as 'everyone' | 'friends' | 'nobody';
-  const baseCountryVisibility = (prefs?.countryVisibility ?? 'nobody') as 'everyone' | 'friends' | 'nobody';
   const baseMiniProfileBadgesEnabled = prefs?.miniProfileBadgesEnabled ?? ((user?.miniProfileBadgesEnabled as boolean | undefined) ?? true);
   const baseMiniProfileBadgeIds = prefs?.miniProfileBadgeIds ?? ((user?.miniProfileBadgeIds as string[] | undefined) ?? []);
 
   const isDirty =
     formData.displayName !== (user?.displayName || '') ||
     formData.bio !== (user?.bio || '') ||
-    formData.showFollowers !== baseShowFollowers ||
-    formData.onlineVisibility !== baseOnlineVisibility ||
-    formData.lastOnlineVisibility !== baseLastOnlineVisibility ||
-    formData.countryVisibility !== baseCountryVisibility ||
     formData.miniProfileBadgesEnabled !== baseMiniProfileBadgesEnabled ||
     JSON.stringify(formData.miniProfileBadgeIds) !== JSON.stringify(baseMiniProfileBadgeIds);
 
@@ -72,10 +60,6 @@ export default function ProfileForm() {
       if (formData.bio !== (user?.bio || '')) profileDelta.bio = formData.bio;
 
       const prefsDelta: Record<string, unknown> = {};
-      if (formData.showFollowers !== baseShowFollowers) prefsDelta.showFollowers = formData.showFollowers;
-      if (formData.onlineVisibility !== baseOnlineVisibility) prefsDelta.onlineVisibility = formData.onlineVisibility;
-      if (formData.lastOnlineVisibility !== baseLastOnlineVisibility) prefsDelta.lastOnlineVisibility = formData.lastOnlineVisibility;
-      if (formData.countryVisibility !== baseCountryVisibility) prefsDelta.countryVisibility = formData.countryVisibility;
       if (formData.miniProfileBadgesEnabled !== baseMiniProfileBadgesEnabled) prefsDelta.miniProfileBadgesEnabled = formData.miniProfileBadgesEnabled;
       if (JSON.stringify(formData.miniProfileBadgeIds) !== JSON.stringify(baseMiniProfileBadgeIds)) prefsDelta.miniProfileBadgeIds = formData.miniProfileBadgeIds;
 
@@ -154,87 +138,7 @@ export default function ProfileForm() {
 
       <hr className="border-border/50" />
 
-      <section className="space-y-4">
-        <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-          {t('profile.sections.visibility')}
-        </h4>
-
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm text-foreground font-medium">{t('profile.settings.showFollowers')}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t('profile.settings.showFollowersSub')}</p>
-          </div>
-          <Toggle checked={formData.showFollowers} onToggle={() => setFormData(prev => ({ ...prev, showFollowers: !prev.showFollowers }))} />
-        </div>
-
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm text-foreground font-medium">{t('profile.settings.onlineVisibility')}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {t('profile.settings.onlineVisibilityDesc', 'Who can see your live online status.')}
-            </p>
-          </div>
-          <Select
-            value={formData.onlineVisibility}
-            onValueChange={(val: 'everyone' | 'friends' | 'nobody') => setFormData(prev => ({ ...prev, onlineVisibility: val }))}
-          >
-            <SelectTrigger className="w-[140px] h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="everyone" className="text-xs">{t('profile.settings.visibilityEveryone', 'Everyone')}</SelectItem>
-              <SelectItem value="friends" className="text-xs">{t('profile.settings.visibilityFriends', 'Friends')}</SelectItem>
-              <SelectItem value="nobody" className="text-xs">{t('profile.settings.visibilityNobody', 'Nobody')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm text-foreground font-medium">{t('profile.settings.lastOnlineVisibility', 'Last Online')}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {t('profile.settings.lastOnlineVisibilityDesc', 'Who can see when you were last active.')}
-            </p>
-          </div>
-          <Select
-            value={formData.lastOnlineVisibility}
-            onValueChange={(val: 'everyone' | 'friends' | 'nobody') => setFormData(prev => ({ ...prev, lastOnlineVisibility: val }))}
-          >
-            <SelectTrigger className="w-[140px] h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="everyone" className="text-xs">{t('profile.settings.visibilityEveryone', 'Everyone')}</SelectItem>
-              <SelectItem value="friends" className="text-xs">{t('profile.settings.visibilityFriends', 'Friends')}</SelectItem>
-              <SelectItem value="nobody" className="text-xs">{t('profile.settings.visibilityNobody', 'Nobody')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm text-foreground font-medium">{t('profile.settings.countryVisibility', 'Location (Country)')}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {t('profile.settings.countryVisibilityDesc', 'Who can see what country you are from.')}
-            </p>
-          </div>
-          <Select
-            value={formData.countryVisibility}
-            onValueChange={(val: 'everyone' | 'friends' | 'nobody') => setFormData(prev => ({ ...prev, countryVisibility: val }))}
-          >
-            <SelectTrigger className="w-[140px] h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="everyone" className="text-xs">{t('profile.settings.visibilityEveryone', 'Everyone')}</SelectItem>
-              <SelectItem value="friends" className="text-xs">{t('profile.settings.visibilityFriends', 'Friends')}</SelectItem>
-              <SelectItem value="nobody" className="text-xs">{t('profile.settings.visibilityNobody', 'Nobody')}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </section>
-
-      <hr className="border-border/50" />
+      {children}
 
       <section className="space-y-4">
         <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">

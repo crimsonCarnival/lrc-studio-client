@@ -1,0 +1,5 @@
+# LRC Studio
+
+LRC Studio is a web-based editor for syncing lyrics with music.
+
+For more information, see [LRC Studio](https://lrc-studio.vercel.app/).

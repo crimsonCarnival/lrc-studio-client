@@ -13,20 +13,30 @@ import type { PublicUser } from '@/types';
 import { usePresence } from '@/shared/hooks/usePresence';
 import { formatDistanceToNow } from 'date-fns';
 
-function AvatarBadge({ avatarUrl, name, size = 'lg' }: { avatarUrl?: string | null; name: string; size?: 'lg' | 'sm' }) {
+function AvatarBadge({ avatarUrl, name, isOnline, size = 'lg' }: { avatarUrl?: string | null; name: string; isOnline?: boolean; size?: 'lg' | 'sm' }) {
   const sizeClass = size === 'lg' ? 'size-24 text-4xl rounded-[1.5rem]' : 'size-16 text-2xl rounded-xl';
   if (avatarUrl) {
     return (
-      <LazyImage
-        src={avatarUrl}
-        alt={name}
-        className={`${sizeClass} object-cover border-4 border-border shadow-2xl shadow-primary/20`}
-      />
+      <div className="relative inline-block">
+        <LazyImage
+          src={avatarUrl}
+          alt={name}
+          className={`${sizeClass} object-cover border-4 border-border shadow-2xl shadow-primary/20`}
+        />
+        {isOnline && (
+          <span className="absolute bottom-1 right-1 size-5 rounded-full bg-green-500 border-4 border-background" />
+        )}
+      </div>
     );
   }
   return (
-    <div className={`${sizeClass} bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center border-4 border-border shadow-2xl shadow-primary/20 font-bold text-zinc-950 select-none`}>
-      {(name || '?')[0].toUpperCase()}
+    <div className="relative inline-block">
+      <div className={`${sizeClass} bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center border-4 border-border shadow-2xl shadow-primary/20 font-bold text-zinc-950 select-none`}>
+        {(name || '?')[0].toUpperCase()}
+      </div>
+      {isOnline && (
+        <span className="absolute bottom-1 right-1 size-5 rounded-full bg-green-500 border-4 border-background" />
+      )}
     </div>
   );
 }
@@ -126,7 +136,7 @@ export function ProfileHeader({
       ) : (
         <LevelBadge level={level} className="right-6" />
       )}
-      <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} />
+      <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} isOnline={isOnline} />
 
       <div className="flex-1 text-center sm:text-left">
         <div className="flex flex-col sm:flex-row sm:items-start gap-2">
@@ -147,7 +157,7 @@ export function ProfileHeader({
             <>
               <span className="text-xs text-muted-foreground/40">•</span>
               <p className="text-xs text-muted-foreground whitespace-nowrap">
-                {t('profile.lastSeen', { time: formatDistanceToNow(new Date(profile.lastOnlineAt), { addSuffix: true }) })}
+                {(t as (k: string, opts: object) => string)('profile.lastSeen', { time: formatDistanceToNow(new Date(profile.lastOnlineAt), { addSuffix: true }) })}
               </p>
             </>
           )}

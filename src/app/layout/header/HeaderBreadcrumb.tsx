@@ -62,7 +62,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
         className="size-7 sm:size-8 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
       >
         <LazyImage
-          src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png"
+          src="https://res.cloudinary.com/dzjid2tos/image/upload/w_256,f_auto,q_auto/v1778106770/lrc-logo_dkumwz.png"
           alt="LRC Studio"
           className="size-full object-contain"
         />

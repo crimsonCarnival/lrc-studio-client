@@ -6,6 +6,7 @@ const PREFERENCES_FIELDS = /* GraphQL */ `
   showFollowers
   onlineVisibility
   lastOnlineVisibility
+  countryVisibility
   miniProfileBadgesEnabled
   miniProfileBadgeIds
   defaultProjectPrivacy

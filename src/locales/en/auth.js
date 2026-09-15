@@ -103,6 +103,7 @@ export default {
     googleLoginFailed: "Google sign-in failed. Please try again.",
     googleWrongAccount: "That Google account doesn't match your saved account. Please sign in with the correct account.",
     googleDisconnectFailed: "Failed to disconnect Google account. Please try again.",
+    recaptcha_failed: "Security verification failed. Please refresh and try again.",
   },
   verification: {
     sendSuccess: "Verification email sent. Check your inbox.",

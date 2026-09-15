@@ -11,7 +11,7 @@ import { isStaff } from '@/features/auth/permissions';
 // window.location.reload();
 // });
 import { Toaster } from 'react-hot-toast'
-import 'material-symbols/outlined.css';
+
 import './index.css';
 import '@/app/i18n';
 import { useTranslation } from 'react-i18next';
@@ -236,7 +236,7 @@ if (!window.__reactRoot) {
 window.__reactRoot.render(
   <StrictMode>
     <ErrorBoundary>
-      <GoogleReCaptchaProvider reCaptchaKey={import.meta.env.VITE_RECAPTCHA_KEY}>
+      <GoogleReCaptchaProvider reCaptchaKey={import.meta.env.VITE_RECAPTCHA_KEY} scriptProps={{ defer: true, async: true, appendTo: "head" }}>
         <AuthProvider>
           <LanguageSync />
           <SpeedInsights />

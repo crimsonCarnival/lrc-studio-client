@@ -57,7 +57,7 @@ export default function GuestLanding() {
           >
             <div className="size-7">
               <LazyImage
-                src="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106770/lrc-logo_dkumwz.png"
+                src="https://res.cloudinary.com/dzjid2tos/image/upload/w_256,f_auto,q_auto/v1778106770/lrc-logo_dkumwz.png"
                 alt="LRC Studio"
                 className="size-full object-contain"
               />

@@ -84,17 +84,14 @@ export default function AccountNameSection() {
         )}
       </div>
 
-      <div className={`flex items-stretch rounded-xl border overflow-hidden transition-colors ${error ? 'border-red-500/50' : 'border-border focus-within:border-primary/60'} ${accountNameCooldownDaysLeft > 0 ? 'opacity-50' : ''}`}>
-        <span className="flex items-center px-3 text-muted-foreground text-sm bg-muted/40 select-none border-r border-border shrink-0">@</span>
-        <Input
-          value={value}
-          onChange={handleChange}
-          placeholder={t('profile.accountNamePlaceholder')}
-          disabled={accountNameCooldownDaysLeft > 0}
-          maxLength={30}
-          className={`bg-secondary/30 border-0 rounded-none h-10 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 ${accountNameCooldownDaysLeft > 0 ? 'cursor-not-allowed' : ''}`}
-        />
-      </div>
+      <Input
+        value={value}
+        onChange={handleChange}
+        placeholder={t('profile.accountNamePlaceholder')}
+        disabled={accountNameCooldownDaysLeft > 0}
+        maxLength={30}
+        className={`bg-secondary/30 border border-border rounded-xl h-10 text-sm ${accountNameCooldownDaysLeft > 0 ? 'opacity-50 cursor-not-allowed' : ''} ${error ? 'border-red-500/50 focus-visible:ring-red-500/50' : ''}`}
+      />
       {error && <p className="text-[11px] text-red-400 ml-1">{error}</p>}
 
       <Button

@@ -39,6 +39,7 @@ interface AdminModerationTabProps {
   handleBlockIpDirect: (user: AdminUser) => void;
   handleBlockDeviceDirect: (user: AdminUser) => void;
   onRefresh?: () => void;
+  page: number;
   hasMore?: boolean;
   hasPrev?: boolean;
   totalUsers?: number | null;
@@ -103,6 +104,7 @@ export default function AdminModerationTab(props: AdminModerationTabProps) {
         {view === 'users' && canViewUsers && (
           <AdminUsersTab
             users={props.users as Parameters<typeof AdminUsersTab>[0]['users']}
+            page={props.page}
             currentUser={props.currentUser}
             search={props.search}
             setSearch={props.setSearch}
