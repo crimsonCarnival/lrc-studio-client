@@ -99,7 +99,7 @@ export function AdminUserContextMenu({
       <ContextMenuContent>
         <ContextMenuLabel>{user.accountName ?? '—'}</ContextMenuLabel>
 
-        <ContextMenuItem onClick={() => window.open(`/u/${user.accountName}`, '_blank')}>
+        <ContextMenuItem onClick={() => window.open(`/profile/${user.accountName}`, '_blank')}>
           <Icon name="open_in_new" />
           {t('admin.table.viewProfile', 'View profile')}
         </ContextMenuItem>

@@ -8,6 +8,22 @@ interface AdminStats {
   pendingAppeals?: number;
   bannedUsers?: number;
   deletedUsers?: number;
+  newSignups24h?: number;
+  newSignups7d?: number;
+  newSignups30d?: number;
+  totalStorage?: number;
+  jobHealth?: {
+    succeeded: number;
+    failed: number;
+  };
+}
+
+function formatBytes(bytes = 0) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
 export default function AdminStatsCards({ stats }: { stats?: AdminStats }) {
@@ -21,6 +37,9 @@ export default function AdminStatsCards({ stats }: { stats?: AdminStats }) {
     { label: t('admin.dashboard.stats.appeals'), value: stats?.pendingAppeals, color: 'text-yellow-400' },
     { label: t('admin.dashboard.stats.banned'),  value: stats?.bannedUsers,    color: 'text-red-400' },
     { label: t('admin.dashboard.stats.deleted'), value: stats?.deletedUsers,   color: 'text-zinc-500' },
+    { label: t('admin.dashboard.stats.signups'), value: `${stats?.newSignups24h || 0}/${stats?.newSignups7d || 0}/${stats?.newSignups30d || 0}`, color: 'text-violet-400' },
+    { label: t('admin.dashboard.stats.storage'), value: formatBytes(stats?.totalStorage), color: 'text-amber-400' },
+    { label: t('admin.dashboard.stats.jobs'), value: `${stats?.jobHealth?.succeeded || 0}s/${stats?.jobHealth?.failed || 0}f`, color: 'text-rose-400' },
   ];
 
   return (

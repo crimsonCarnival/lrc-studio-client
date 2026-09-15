@@ -6,6 +6,7 @@ import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
 import { Icon } from '@/shared/ui/Icon';
+import { CountryFlag } from '@/shared/ui/CountryFlag';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { useState as useLocalState } from 'react';
 import { userHasPermission, ROLES, ROLE_RANK, type Role } from '@/features/auth/permissions';
@@ -29,11 +30,27 @@ interface AdminUser {
   lastIp?: string;
   lastDeviceId?: string;
   lastDeviceName?: string;
+  country?: string | null;
+  lastOnlineAt?: string | null;
+  isOnline?: boolean;
+  storageUsed?: number;
+  createdAt?: string;
+  lastUsedAt?: string;
+  stats?: { minutesSynced?: number };
   [key: string]: unknown;
+}
+
+function formatBytes(bytes = 0) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
 interface AdminUsersTabProps {
   users: AdminUser[];
+  page: number;
   currentUser?: { id?: string; _id?: string; role?: string; permissions?: string[] } | null;
   search: string;
   setSearch: (v: string) => void;
@@ -200,149 +217,182 @@ export default function AdminUsersTab({
                     handleBlockDeviceDirect={handleBlockDeviceDirect}
                     onRefresh={onRefresh}
                   >
-                  <div
-                    className={`bg-zinc-800/30 rounded-lg p-4 flex flex-col gap-3 border border-zinc-700/50 ${user.isDeleted ? 'opacity-50' : ''}`}
-                  >
-                    {/* User Info */}
-                    <div className="flex items-center gap-3">
-                      <div className="relative size-10 shrink-0">
-                        <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
-                          {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
+                    <div
+                      className={`bg-zinc-800/30 rounded-lg p-4 flex flex-col gap-3 border border-zinc-700/50 ${user.isDeleted ? 'opacity-50' : ''}`}
+                    >
+                      {/* User Info */}
+                      <div className="flex items-center gap-3">
+                        <div className="relative size-10 shrink-0">
+                          <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
+                            {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
+                          </div>
+                          {(user.isOnline || presence.isOnline(user.id || user._id || '')) && <OnlineDot />}
                         </div>
-                        {presence.isOnline(user.id || user._id || '') && <OnlineDot />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-zinc-200 truncate">{user.displayName || user.accountName}</span>
-                          {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider flex-shrink-0">{t('admin.table.you')}</span>}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-zinc-200 truncate">{user.displayName || user.accountName}</span>
+                            {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider flex-shrink-0">{t('admin.table.you')}</span>}
+                          </div>
+                          <div className="text-xs text-zinc-500 truncate">{user.email}</div>
                         </div>
-                        <div className="text-xs text-zinc-500 truncate">{user.email}</div>
                       </div>
-                    </div>
 
-                    {/* Role and Status */}
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <p className="text-xs font-semibold text-zinc-400 mb-1">{t('admin.table.role')}</p>
-                        <RoleControl user={user} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-semibold text-zinc-400 mb-1">{t('admin.table.status')}</p>
-                        <div className="w-full p-2 rounded text-xs font-medium text-center">
-                          {user.ban?.active ? (
-                            <span className="flex items-center justify-center gap-1 text-red-400">
-                              <Icon name="block" size={12} /> {t('admin.table.banned')}
-                            </span>
-                          ) : (
-                            <span className="flex items-center justify-center gap-1 text-emerald-400">
-                              <Icon name="check_circle" size={12} /> {t('admin.table.active')}
-                            </span>
-                          )}
+                      {/* Role and Status */}
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold text-zinc-400 mb-1">{t('admin.table.role')}</p>
+                          <RoleControl user={user} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold text-zinc-400 mb-1">{t('admin.table.status')}</p>
+                          <div className="w-full p-2 rounded text-xs font-medium text-center">
+                            {user.ban?.active ? (
+                              <span className="flex items-center justify-center gap-1 text-red-400">
+                                <Icon name="block" size={12} /> {t('admin.table.banned')}
+                              </span>
+                            ) : (
+                              <span className="flex items-center justify-center gap-1 text-emerald-400">
+                                <Icon name="check_circle" size={12} /> {t('admin.table.active')}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Projects and Uploads */}
-                    <div className="flex gap-2 text-xs">
-                      <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
-                        <div className="flex items-center justify-center gap-1 text-zinc-300">
-                          <Icon name="bar_chart" size={14} />
-                          <span>{user.projectCount} {t('admin.table.projects')}</span>
+                      {/* Projects and Uploads */}
+                      <div className="flex gap-2 text-xs">
+                        <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
+                          <div className="flex items-center justify-center gap-1 text-zinc-300">
+                            <Icon name="bar_chart" size={14} />
+                            <span>{user.projectCount} {t('admin.table.projects')}</span>
+                          </div>
+                        </div>
+                        <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
+                          <div className="flex items-center justify-center gap-1 text-zinc-300">
+                            <Icon name="music_note" size={14} />
+                            <span>{user.uploadCount} {t('admin.table.uploads')}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
-                        <div className="flex items-center justify-center gap-1 text-zinc-300">
-                          <Icon name="music_note" size={14} />
-                          <span>{user.uploadCount} {t('admin.table.uploads')}</span>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* IP / Device */}
-                    <div className="flex flex-col gap-1 text-xs">
-                      <p className="font-semibold text-zinc-400">{t('admin.table.ip')} / {t('admin.table.lastDevice')}</p>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-zinc-500 text-[10px] break-all">{user.lastIp || '—'}</span>
-                        {user.lastIp && canActOn(user) && (
-                          <Tip content={t('admin.table.blockIp')}>
-                            <button type="button" onClick={() => handleBlockIpDirect(user)} className="text-zinc-600 hover:text-red-400">
-                              <Icon name="language" size={14} />
-                            </button>
-                          </Tip>
-                        )}
+                      {/* Storage and Sync */}
+                      <div className="flex gap-2 text-xs">
+                        <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
+                          <div className="flex flex-col items-center justify-center text-zinc-300">
+                            <span className="font-semibold">{formatBytes(user.storageUsed)}</span>
+                            <span className="text-[9px] uppercase tracking-widest text-zinc-500">{t('admin.table.storage')}</span>
+                          </div>
+                        </div>
+                        <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
+                          <div className="flex flex-col items-center justify-center text-zinc-300">
+                            <span className="font-semibold">{user.stats?.minutesSynced || 0}m</span>
+                            <span className="text-[9px] uppercase tracking-widest text-zinc-500">{t('admin.table.sync')}</span>
+                          </div>
+                        </div>
                       </div>
-                      {user.lastDeviceName && (
-                        <div className="flex items-center gap-1.5">
-                          <Icon name="desktop_windows" size={14} className="text-zinc-600 shrink-0" />
-                          <span className="text-zinc-500 text-[10px] break-all">{user.lastDeviceName}</span>
-                          {user.lastDeviceId && canActOn(user) && (
-                            <Tip content={t('admin.table.blockDevice')}>
-                              <button type="button" onClick={() => handleBlockDeviceDirect(user)} className="text-zinc-600 hover:text-red-400">
-                                <Icon name="gpp_bad" size={14} />
+
+                      {/* Dates */}
+                      <div className="flex gap-2 text-xs">
+                        <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
+                          <div className="flex flex-col items-center justify-center text-zinc-300">
+                            <span className="font-semibold">{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</span>
+                            <span className="text-[9px] uppercase tracking-widest text-zinc-500">{t('admin.table.joined')}</span>
+                          </div>
+                        </div>
+                        <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
+                          <div className="flex flex-col items-center justify-center text-zinc-300">
+                            <span className="font-semibold">{user.lastOnlineAt || user.lastUsedAt || user.updatedAt ? new Date((user.lastOnlineAt || user.lastUsedAt || user.updatedAt) as string).toLocaleDateString() : '—'}</span>
+                            <span className="text-[9px] uppercase tracking-widest text-zinc-500">{t('admin.table.lastActive')}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* IP / Device */}
+                      <div className="flex flex-col gap-1 text-xs">
+                        <p className="font-semibold text-zinc-400">{t('admin.table.ip')} / {t('admin.table.lastDevice')}</p>
+                        <div className="flex items-center gap-2">
+                          <CountryFlag countryCode={user.country} />
+                          <span className="font-mono text-zinc-500 text-[10px] break-all">{user.lastIp || '—'} {user.country && `(${user.country})`}</span>
+                          {user.lastIp && canActOn(user) && (
+                            <Tip content={t('admin.table.blockIp')}>
+                              <button type="button" onClick={() => handleBlockIpDirect(user)} className="text-zinc-600 hover:text-red-400">
+                                <Icon name="language" size={14} />
                               </button>
                             </Tip>
                           )}
                         </div>
-                      )}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {user.isVerified && <Tip content={t('admin.table.verified')}><Icon name="check_circle" size={16} className="text-emerald-500" /></Tip>}
-                        {user.isDeleted && <Tip content={t('admin.table.deleted')}><Icon name="delete" size={16} className="text-red-500" /></Tip>}
+                        {user.lastDeviceName && (
+                          <div className="flex items-center gap-1.5">
+                            <Icon name="desktop_windows" size={14} className="text-zinc-600 shrink-0" />
+                            <span className="text-zinc-500 text-[10px] break-all">{user.lastDeviceName}</span>
+                            {user.lastDeviceId && canActOn(user) && (
+                              <Tip content={t('admin.table.blockDevice')}>
+                                <button type="button" onClick={() => handleBlockDeviceDirect(user)} className="text-zinc-600 hover:text-red-400">
+                                  <Icon name="gpp_bad" size={14} />
+                                </button>
+                              </Tip>
+                            )}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {user.isVerified && <Tip content={t('admin.table.verified')}><Icon name="check_circle" size={16} className="text-emerald-500" /></Tip>}
+                          {user.isDeleted && <Tip content={t('admin.table.deleted')}><Icon name="delete" size={16} className="text-red-500" /></Tip>}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Actions */}
-                    {canActOn(user) && (
-                      <div className="flex flex-col gap-2 pt-2 border-t border-zinc-700/50">
-                        {user.isDeleted ? (
-                          <Button
-                            variant="ghost"
-                            onClick={() => handleReactivate(user)}
-                            className="h-10 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 gap-2 w-full"
-                          >
-                            <Icon name="undo" size={16} /> {t('admin.table.reactivate')}
-                          </Button>
-                        ) : (
-                          <>
-                            {user.appeal?.status === 'pending' ? (
-                              <Button
-                                variant="secondary"
-                                onClick={() => setAppealModal({ isOpen: true, user })}
-                                className="h-10 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/30 gap-2 w-full"
-                              >
-                                <Icon name="info" size={16} /> {t('admin.table.reviewAppeal')}
-                              </Button>
-                            ) : (
-                              !user.ban?.active && (
+                      {/* Actions */}
+                      {canActOn(user) && (
+                        <div className="flex flex-col gap-2 pt-2 border-t border-zinc-700/50">
+                          {user.isDeleted ? (
+                            <Button
+                              variant="ghost"
+                              onClick={() => handleReactivate(user)}
+                              className="h-10 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 gap-2 w-full"
+                            >
+                              <Icon name="undo" size={16} /> {t('admin.table.reactivate')}
+                            </Button>
+                          ) : (
+                            <>
+                              {user.appeal?.status === 'pending' ? (
+                                <Button
+                                  variant="secondary"
+                                  onClick={() => setAppealModal({ isOpen: true, user })}
+                                  className="h-10 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/30 gap-2 w-full"
+                                >
+                                  <Icon name="info" size={16} /> {t('admin.table.reviewAppeal')}
+                                </Button>
+                              ) : (
+                                !user.ban?.active && (
+                                  <Button
+                                    variant="ghost"
+                                    onClick={() => handleToggleBan(user)}
+                                    className="h-10 text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-2 w-full"
+                                  >
+                                    <Icon name="block" size={16} /> {t('admin.table.ban')}
+                                  </Button>
+                                )
+                              )}
+                              {user.ban?.active && user.appeal?.status !== 'pending' && (
                                 <Button
                                   variant="ghost"
                                   onClick={() => handleToggleBan(user)}
-                                  className="h-10 text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-2 w-full"
+                                  className="h-10 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 w-full"
                                 >
-                                  <Icon name="block" size={16} /> {t('admin.table.ban')}
+                                  {t('admin.table.unban')}
                                 </Button>
-                              )
-                            )}
-                            {user.ban?.active && user.appeal?.status !== 'pending' && (
+                              )}
                               <Button
                                 variant="ghost"
-                                onClick={() => handleToggleBan(user)}
-                                className="h-10 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 w-full"
+                                onClick={() => handleDelete(user)}
+                                className="h-10 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 gap-2 w-full"
                               >
-                                {t('admin.table.unban')}
+                                <Icon name="delete" size={16} /> {tk('admin.table.delete')}
                               </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              onClick={() => handleDelete(user)}
-                              className="h-10 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 gap-2 w-full"
-                            >
-                              <Icon name="delete" size={16} /> {tk('admin.table.delete')}
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </AdminUserContextMenu>
                 );
               })
@@ -350,184 +400,207 @@ export default function AdminUsersTab({
           </div>
         ) : (
           // Desktop table layout
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-zinc-800/50 bg-zinc-950/30">
-                <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.user')}</th>
-                <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.role')}</th>
-                <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.status')}</th>
-                <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.projects')} / {t('admin.table.uploads')}</th>
-                <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.ip')} / {t('admin.table.lastDevice')}</th>
-                <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest text-right">{t('admin.table.actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/30">
-              {users.map(user => {
-                const isSelf = user.id === currentUser?.id || user._id === currentUser?._id;
-                return (
-                  <AdminUserContextMenu
-                    key={user.id || user._id}
-                    user={user}
-                    myRank={myRank}
-                    myPermissions={currentUser?.permissions ?? []}
-                    canAssignRoles={canAssignRoles}
-                    assignableRoles={assignableRoles}
-                    handleChangeRole={handleChangeRole}
-                    handleToggleBan={handleToggleBan}
-                    handleReactivate={handleReactivate}
-                    handleDelete={handleDelete}
-                    setAppealModal={setAppealModal}
-                    handleAdjustXP={handleAdjustXP}
-                    handleBlockIpDirect={handleBlockIpDirect}
-                    handleBlockDeviceDirect={handleBlockDeviceDirect}
-                    onRefresh={onRefresh}
-                  >
-                  <tr className={`group hover:bg-zinc-800/30 transition-colors ${user.isDeleted ? 'opacity-50 grayscale-[0.5]' : ''}`}>
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="relative size-10 shrink-0">
-                          <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
-                            {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
-                          </div>
-                          {presence.isOnline(user.id || user._id || '') && <OnlineDot />}
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="border-b border-zinc-800/50 bg-zinc-950/30">
+            <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.user')}</th>
+            <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.role')}</th>
+            <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.status')}</th>
+            <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.projects')} / {t('admin.table.uploads')}</th>
+            <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.storage')} / {t('admin.table.sync')}</th>
+            <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.joined')} / {t('admin.table.lastActive')}</th>
+            <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest">{t('admin.table.ip')} / {t('admin.table.lastDevice')}</th>
+            <th className="p-4 font-semibold text-zinc-500 text-[10px] uppercase tracking-widest text-right">{t('admin.table.actions')}</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-zinc-800/30">
+          {users.map(user => {
+            const isSelf = user.id === currentUser?.id || user._id === currentUser?._id;
+            return (
+              <AdminUserContextMenu
+                key={user.id || user._id}
+                user={user}
+                myRank={myRank}
+                myPermissions={currentUser?.permissions ?? []}
+                canAssignRoles={canAssignRoles}
+                assignableRoles={assignableRoles}
+                handleChangeRole={handleChangeRole}
+                handleToggleBan={handleToggleBan}
+                handleReactivate={handleReactivate}
+                handleDelete={handleDelete}
+                setAppealModal={setAppealModal}
+                handleAdjustXP={handleAdjustXP}
+                handleBlockIpDirect={handleBlockIpDirect}
+                handleBlockDeviceDirect={handleBlockDeviceDirect}
+                onRefresh={onRefresh}
+              >
+                <tr className={`group hover:bg-zinc-800/30 transition-colors ${user.isDeleted ? 'opacity-50 grayscale-[0.5]' : ''}`}>
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="relative size-10 shrink-0">
+                        <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
+                          {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-zinc-200">{user.displayName || user.accountName}</span>
-                            {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider">{t('admin.table.you')}</span>}
-                          </div>
-                          <div className="text-xs text-zinc-500">{user.email}</div>
-                        </div>
+                        {(user.isOnline || presence.isOnline(user.id || user._id || '')) && <OnlineDot />}
                       </div>
-                    </td>
-                    <td className="p-4">
-                      <RoleControl user={user} />
-                    </td>
-                    <td className="p-4">
-                      {user.ban?.active ? (
-                        <div className="flex flex-col">
-                          <span className="flex items-center gap-1.5 text-xs text-red-400 font-medium"><Icon name="block" size={12} /> {t('admin.table.banned')}</span>
-                          <span className="text-[10px] text-zinc-600 line-clamp-1 italic" title={user.ban?.reason}>{user.ban?.reason}</span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-zinc-200">{user.displayName || user.accountName}</span>
+                          {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider">{t('admin.table.you')}</span>}
                         </div>
-                      ) : (
-                        <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium"><Icon name="check_circle" size={12} /> {t('admin.table.active')}</span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-4 text-xs font-medium">
-                        <div className="flex items-center gap-1.5 text-zinc-300">
-                          <Icon name="bar_chart" size={14} className="text-zinc-500" /> {user.projectCount}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-zinc-300">
-                          <Icon name="music_note" size={14} className="text-zinc-500" /> {user.uploadCount}
-                        </div>
+                        <div className="text-xs text-zinc-500">{user.email}</div>
                       </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex flex-col gap-1.5">
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <RoleControl user={user} />
+                  </td>
+                  <td className="p-4">
+                    {user.ban?.active ? (
+                      <div className="flex flex-col">
+                        <span className="flex items-center gap-1.5 text-xs text-red-400 font-medium"><Icon name="block" size={12} /> {t('admin.table.banned')}</span>
+                        <span className="text-[10px] text-zinc-600 line-clamp-1 italic" title={user.ban?.reason}>{user.ban?.reason}</span>
+                      </div>
+                    ) : (
+                      <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium"><Icon name="check_circle" size={12} /> {t('admin.table.active')}</span>
+                    )}
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center gap-4 text-xs font-medium">
+                      <div className="flex items-center gap-1.5 text-zinc-300">
+                        <Icon name="bar_chart" size={14} className="text-zinc-500" /> {user.projectCount}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-zinc-300">
+                        <Icon name="music_note" size={14} className="text-zinc-500" /> {user.uploadCount}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex flex-col gap-1.5 text-xs font-medium">
+                      <div className="flex items-center gap-1.5 text-zinc-300">
+                        <Icon name="cloud" size={14} className="text-zinc-500" /> {formatBytes(user.storageUsed)}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-zinc-300">
+                        <Icon name="timer" size={14} className="text-zinc-500" /> {user.stats?.minutesSynced || 0}m
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex flex-col gap-1.5 text-xs text-zinc-400">
+                      <div className="flex items-center gap-1.5">
+                        <Icon name="person_add" size={14} className="text-zinc-500" /> {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Icon name="history" size={14} className="text-zinc-500" /> {user.lastUsedAt || user.updatedAt ? new Date(user.lastUsedAt || user.updatedAt as string).toLocaleDateString() : '—'}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <CountryFlag countryCode={user.country} />
+                        <span className="font-mono text-[10px] text-zinc-500">{user.lastIp || '—'} {user.country && `(${user.country})`}</span>
+                        {user.lastIp && canActOn(user) && (
+                          <Tip content={t('admin.table.blockIp') as string}>
+                            <button
+                              type="button"
+                              onClick={() => handleBlockIpDirect(user)}
+                              className="text-zinc-600 hover:text-red-400 transition-colors"
+                            >
+                              <Icon name="language" size={12} />
+                            </button>
+                          </Tip>
+                        )}
+                      </div>
+                      {user.lastDeviceName && (
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-[10px] text-zinc-500">{user.lastIp || '—'}</span>
-                          {user.lastIp && canActOn(user) && (
-                            <Tip content={t('admin.table.blockIp') as string}>
+                          <Icon name="desktop_windows" size={12} className="text-zinc-600 shrink-0" />
+                          <span className="text-[10px] text-zinc-500 truncate max-w-[140px]" title={user.lastDeviceName}>{user.lastDeviceName}</span>
+                          {user.lastDeviceId && canActOn(user) && (
+                            <Tip content={t('admin.table.blockDevice')}>
                               <button
                                 type="button"
-                                onClick={() => handleBlockIpDirect(user)}
-                                className="text-zinc-600 hover:text-red-400 transition-colors"
+                                onClick={() => handleBlockDeviceDirect(user)}
+                                className="text-zinc-600 hover:text-red-400 transition-colors shrink-0"
                               >
-                                <Icon name="language" size={12} />
+                                <Icon name="gpp_bad" size={12} />
                               </button>
                             </Tip>
                           )}
                         </div>
-                        {user.lastDeviceName && (
-                          <div className="flex items-center gap-1.5">
-                            <Icon name="desktop_windows" size={12} className="text-zinc-600 shrink-0" />
-                            <span className="text-[10px] text-zinc-500 truncate max-w-[140px]" title={user.lastDeviceName}>{user.lastDeviceName}</span>
-                            {user.lastDeviceId && canActOn(user) && (
-                              <Tip content={t('admin.table.blockDevice')}>
-                                <button
-                                  type="button"
-                                  onClick={() => handleBlockDeviceDirect(user)}
-                                  className="text-zinc-600 hover:text-red-400 transition-colors shrink-0"
-                                >
-                                  <Icon name="gpp_bad" size={12} />
-                                </button>
-                              </Tip>
-                            )}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1.5">
-                          {user.isVerified && <Tip content={t('admin.table.verified')}><Icon name="check_circle" size={14} className="text-emerald-500" /></Tip>}
-                          {user.isDeleted && <Tip content={t('admin.table.deleted')}><Icon name="delete" size={14} className="text-red-500" /></Tip>}
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        {user.isVerified && <Tip content={t('admin.table.verified')}><Icon name="check_circle" size={14} className="text-emerald-500" /></Tip>}
+                        {user.isDeleted && <Tip content={t('admin.table.deleted')}><Icon name="delete" size={14} className="text-red-500" /></Tip>}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      {/* XP popover */}
+                      {xpPopover === (user.id || user._id) && (
+                        <div className="flex items-center gap-1 mr-1">
+                          <input
+                            type="number"
+                            min={1}
+                            value={xpAmount}
+                            onChange={e => setXpAmount(e.target.value)}
+                            className="w-16 h-7 px-2 text-xs rounded bg-zinc-800 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-primary"
+                          />
+                          <button
+                            onClick={() => { handleAdjustXP('grant', Number(xpAmount), 'user', user.id || user._id); setXpPopover(null); }}
+                            className="h-7 px-2 text-[10px] font-bold rounded bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors"
+                          >+XP</button>
+                          <button
+                            onClick={() => { handleAdjustXP('revoke', Number(xpAmount), 'user', user.id || user._id); setXpPopover(null); }}
+                            className="h-7 px-2 text-[10px] font-bold rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors"
+                          >−XP</button>
+                          <button onClick={() => setXpPopover(null)} className="h-7 px-1.5 text-zinc-600 hover:text-zinc-400 text-xs">✕</button>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {/* XP popover */}
-                        {xpPopover === (user.id || user._id) && (
-                          <div className="flex items-center gap-1 mr-1">
-                            <input
-                              type="number"
-                              min={1}
-                              value={xpAmount}
-                              onChange={e => setXpAmount(e.target.value)}
-                              className="w-16 h-7 px-2 text-xs rounded bg-zinc-800 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-primary"
-                            />
-                            <button
-                              onClick={() => { handleAdjustXP('grant', Number(xpAmount), 'user', user.id || user._id); setXpPopover(null); }}
-                              className="h-7 px-2 text-[10px] font-bold rounded bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors"
-                            >+XP</button>
-                            <button
-                              onClick={() => { handleAdjustXP('revoke', Number(xpAmount), 'user', user.id || user._id); setXpPopover(null); }}
-                              className="h-7 px-2 text-[10px] font-bold rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors"
-                            >−XP</button>
-                            <button onClick={() => setXpPopover(null)} className="h-7 px-1.5 text-zinc-600 hover:text-zinc-400 text-xs">✕</button>
-                          </div>
-                        )}
-                        {canActOn(user) && (
-                          <>
-                            <Tip content="Adjust XP" side="top">
-                              <Button variant="ghost" size="icon" onClick={() => { setXpPopover(p => p === (user.id || user._id) ? null : (user.id || user._id) ?? null); }} className="size-8 text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg">
-                                <Icon name="bolt" size={14} />
-                              </Button>
-                            </Tip>
-                            {user.isDeleted ? (
-                              <Button variant="ghost" size="sm" onClick={() => handleReactivate(user)} className="h-8 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 gap-1.5">
-                                <Icon name="undo" size={14} /> {t('admin.table.reactivate')}
-                              </Button>
-                            ) : (
-                              <>
-                                {user.appeal?.status === 'pending' ? (
-                                  <Button variant="secondary" size="sm" onClick={() => setAppealModal({ isOpen: true, user })} className="h-8 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/30 gap-1.5">
-                                    <Icon name="info" size={14} /> {t('admin.table.reviewAppeal')}
-                                  </Button>
-                                ) : (
-                                  !user.ban?.active && (
-                                    <Button variant="ghost" size="sm" onClick={() => handleToggleBan(user)} className="h-8 text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-1.5">
-                                      <Icon name="block" size={14} /> {t('admin.table.ban')}
-                                    </Button>
-                                  )
-                                )}
-                                {user.ban?.active && user.appeal?.status !== 'pending' && (
-                                  <Button variant="ghost" size="sm" onClick={() => handleToggleBan(user)} className="h-8 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10">
-                                    {t('admin.table.unban')}
-                                  </Button>
-                                )}
-                                <Button variant="ghost" size="icon" onClick={() => handleDelete(user)} className="size-8 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg">
-                                  <Icon name="delete" size={16} />
+                      )}
+                      {canActOn(user) && (
+                        <>
+                          <Tip content="Adjust XP" side="top">
+                            <Button variant="ghost" size="icon" onClick={() => { setXpPopover(p => p === (user.id || user._id) ? null : (user.id || user._id) ?? null); }} className="size-8 text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg">
+                              <Icon name="bolt" size={14} />
+                            </Button>
+                          </Tip>
+                          {user.isDeleted ? (
+                            <Button variant="ghost" size="sm" onClick={() => handleReactivate(user)} className="h-8 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 gap-1.5">
+                              <Icon name="undo" size={14} /> {t('admin.table.reactivate')}
+                            </Button>
+                          ) : (
+                            <>
+                              {user.appeal?.status === 'pending' ? (
+                                <Button variant="secondary" size="sm" onClick={() => setAppealModal({ isOpen: true, user })} className="h-8 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/30 gap-1.5">
+                                  <Icon name="info" size={14} /> {t('admin.table.reviewAppeal')}
                                 </Button>
-                              </>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                  </AdminUserContextMenu>
-                );
-              })}
-            </tbody>
+                              ) : (
+                                !user.ban?.active && (
+                                  <Button variant="ghost" size="sm" onClick={() => handleToggleBan(user)} className="h-8 text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-1.5">
+                                    <Icon name="block" size={14} /> {t('admin.table.ban')}
+                                  </Button>
+                                )
+                              )}
+                              {user.ban?.active && user.appeal?.status !== 'pending' && (
+                                <Button variant="ghost" size="sm" onClick={() => handleToggleBan(user)} className="h-8 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10">
+                                  {t('admin.table.unban')}
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(user)} className="size-8 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg">
+                                <Icon name="delete" size={16} />
+                              </Button>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              </AdminUserContextMenu>
+            );
+          })}
+        </tbody>
           </table>
         )}
       </div>
