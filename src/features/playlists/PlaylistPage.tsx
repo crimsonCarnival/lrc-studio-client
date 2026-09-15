@@ -18,6 +18,9 @@ import {
 } from './playlist.service';
 import { PlaylistModal } from './PlaylistModal';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
+import { Popover, PopoverTrigger, PopoverContent } from '@ui/popover';
+import { SharePanel } from '@/features/sharing/components/ShareModal';
+import { incrementPlaylistView, incrementPlaylistShare } from './playlist.service';
 
 interface PlaylistProject {
   id: string;
@@ -37,6 +40,8 @@ interface Playlist {
   isSavedByMe?: boolean;
   savedCount?: number;
   projectCount?: number;
+  viewCount?: number;
+  shareCount?: number;
   sortMode?: string;
   tags?: string[];
   projects: PlaylistProject[];
@@ -149,9 +154,18 @@ export default function PlaylistPage() {
     return () => { cancelled = true; };
   }, [playlistId]);
 
+  useEffect(() => {
+    if (!playlistId || notFound || forbidden || loading) return;
+    const viewedKey = `viewed_playlist_${playlistId}`;
+    if (!sessionStorage.getItem(viewedKey)) {
+      incrementPlaylistView(playlistId).catch(() => {});
+      sessionStorage.setItem(viewedKey, '1');
+    }
+  }, [playlistId, notFound, forbidden, loading]);
+
   const handleSave = useCallback(async () => {
     if (!user) {
-      navigate(`/auth/signin?redirect=${encodeURIComponent(`/${accountName}/lists/${playlistId}`)}`);
+      navigate(`/auth/signin?redirect=${encodeURIComponent(`/profile/${accountName}/lists/${playlistId}`)}`);
       return;
     }
     setSaveLoading(true);
@@ -184,7 +198,7 @@ export default function PlaylistPage() {
     setDeleting(true);
     try {
       await deletePlaylist(playlistId!);
-      navigate(`/${accountName}`, { replace: true });
+      navigate(`/profile/${accountName}`, { replace: true });
     } catch {
       setConfirmDelete(false);
     } finally {
@@ -236,11 +250,11 @@ export default function PlaylistPage() {
     <div className="flex-1 flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-4xl mx-auto w-full">
       {/* Back */}
       <Link
-        to={`/${accountName}`}
+        to={`/profile/${accountName}`}
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 w-fit"
       >
         <Icon name="arrow_back" size={16} />
-        @{accountName}
+        {accountName}
       </Link>
 
       {/* Header */}
@@ -264,10 +278,14 @@ export default function PlaylistPage() {
               {playlist.description && (
                 <p className="text-sm text-muted-foreground mt-1 max-w-prose">{playlist.description}</p>
               )}
-              <p className="text-xs text-muted-foreground mt-2">
-                {t('playlists.detail.projects', { count: playlist.projectCount })}
-                {' · '}
-                {t('playlists.detail.saved', { count: playlist.savedCount })}
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-2">
+                <span>{t('playlists.detail.projects', { count: playlist.projectCount })}</span>
+                <span>·</span>
+                <span>{t('playlists.detail.saved', { count: playlist.savedCount })}</span>
+                <span>·</span>
+                <span className="flex items-center gap-1"><Icon name="visibility" size={12} /> {playlist.viewCount ?? 0}</span>
+                <span>·</span>
+                <span className="flex items-center gap-1"><Icon name="share" size={12} /> {playlist.shareCount ?? 0}</span>
               </p>
               {playlist.tags && playlist.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
@@ -300,6 +318,26 @@ export default function PlaylistPage() {
 
             {/* Actions */}
             <div className="flex flex-col gap-2 shrink-0">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+                    <Icon name="share" size={16} />
+                    {t('projectView.actions.share')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-80 p-0">
+                  <SharePanel
+                    url={window.location.href}
+                    isPublic={playlist.isPublic}
+                    mediaSource="none"
+                    linesCount={playlist.projectCount}
+                    onShare={() => {
+                      if (playlistId) incrementPlaylistShare(playlistId).catch(() => {});
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
+
               {isOwner ? (
                 <>
                   <Button variant="outline" size="sm" onClick={() => setShowEdit(true)} className="flex items-center gap-1.5">

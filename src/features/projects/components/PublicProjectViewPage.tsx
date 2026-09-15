@@ -21,6 +21,7 @@ import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useProjectReactions } from '@features/reactions/hooks/useReactions';
 import { sectionsToFlat } from '@/features/editor/utils/sections';
 import { projects as projectsApi } from '@/app/api';
+import { projectsService } from '@features/projects/services/projects.service';
 
 // Player is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -99,6 +100,16 @@ function PublicProjectViewPageInner() {
       .catch(() => {});
     return () => { cancelled = true; };
   }, [listId]);
+
+  // ── Track view ───────────────────────────────────────────────
+  useEffect(() => {
+    if (!project?.publicId) return;
+    const viewedKey = `viewed_project_${project.publicId}`;
+    if (!sessionStorage.getItem(viewedKey)) {
+      projectsService.incrementView(project.publicId).catch(() => {});
+      sessionStorage.setItem(viewedKey, '1');
+    }
+  }, [project?.publicId]);
 
   // ── Derived data ─────────────────────────────────────────────
   const lines = useMemo(

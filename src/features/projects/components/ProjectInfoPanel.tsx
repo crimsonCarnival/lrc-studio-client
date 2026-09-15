@@ -35,6 +35,8 @@ interface ProjectData {
   forksEnabled?: boolean;
   isForkedByMe?: boolean;
   forkCount?: number;
+  viewCount?: number;
+  shareCount?: number;
   forkedFrom?: { publicId?: string; accountName?: string };
   [key: string]: unknown;
 }
@@ -124,8 +126,8 @@ export default function ProjectInfoPanel({
 
   const formattedDate = project?.createdAt
     ? formatInTimezone(project.createdAt, settings.advanced?.timezone, {
-        year: 'numeric', month: 'short', day: 'numeric',
-      }, i18n.resolvedLanguage || i18n.language)
+      year: 'numeric', month: 'short', day: 'numeric',
+    }, i18n.resolvedLanguage || i18n.language)
     : null;
 
   const panelBg = palette
@@ -266,6 +268,14 @@ export default function ProjectInfoPanel({
             <Icon name="call_split" size={14} />
             <span style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}>{project?.forkCount ?? 0}</span>
           </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Icon name="visibility" size={14} />
+            <span style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}>{project?.viewCount ?? 0}</span>
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Icon name="share" size={14} />
+            <span style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}>{project?.shareCount ?? 0}</span>
+          </span>
           {reactionsSlot && <div>{reactionsSlot}</div>}
         </div>
 
@@ -337,7 +347,7 @@ export default function ProjectInfoPanel({
             <div className="flex items-center gap-1.5">
               <Icon name="music_note" size={12} />
               <Link
-                to={`/${accountName}`}
+                to={`/profile/${accountName}`}
                 className="hover:underline"
                 style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}
               >

@@ -19,6 +19,8 @@ export interface CardProject {
   lineCount?: number;
   starCount?: number;
   forkCount?: number;
+  viewCount?: number;
+  shareCount?: number;
   updatedAt?: string | number;
   metadata?: { genre?: string };
   forkedFrom?: { publicId?: string; accountName?: string };
@@ -222,6 +224,18 @@ function ProjectCard({
                   {project.forkCount}
                 </span>
               )}
+              {(project.viewCount ?? 0) > 0 && (
+                <span className="text-xs text-zinc-500 flex items-center gap-1">
+                  <Icon name="visibility" size={12} />
+                  {project.viewCount}
+                </span>
+              )}
+              {(project.shareCount ?? 0) > 0 && (
+                <span className="text-xs text-zinc-500 flex items-center gap-1">
+                  <Icon name="share" size={12} />
+                  {project.shareCount}
+                </span>
+              )}
             </div>
 
             <Tip content={formatInTimezone(project.updatedAt, timezone, {
@@ -320,6 +334,30 @@ function ProjectCard({
               <span className="text-xs text-zinc-500 flex items-center gap-1">
                 <svg preserveAspectRatio="xMidYMid" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z"/><path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" className="size-3"/></svg>
                 {t('uploads.youtube')}
+              </span>
+            )}
+            {(project.starCount ?? 0) > 0 && (
+              <span className="text-xs text-zinc-500 flex items-center gap-1">
+                <Icon name="star" size={12} />
+                {project.starCount}
+              </span>
+            )}
+            {(project.forkCount ?? 0) > 0 && (
+              <span className="text-xs text-zinc-500 flex items-center gap-1">
+                <Icon name="call_split" size={12} />
+                {project.forkCount}
+              </span>
+            )}
+            {(project.viewCount ?? 0) > 0 && (
+              <span className="text-xs text-zinc-500 flex items-center gap-1">
+                <Icon name="visibility" size={12} />
+                {project.viewCount}
+              </span>
+            )}
+            {(project.shareCount ?? 0) > 0 && (
+              <span className="text-xs text-zinc-500 flex items-center gap-1">
+                <Icon name="share" size={12} />
+                {project.shareCount}
               </span>
             )}
           </div>

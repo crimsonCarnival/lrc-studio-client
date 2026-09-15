@@ -21,6 +21,8 @@ const GET_PROJECTS = /* GraphQL */ `
       }
       forkCount
       starCount
+      viewCount
+      shareCount
       lineCount
       syncedLineCount
       coverImage
@@ -81,6 +83,8 @@ const GET_PROJECT = /* GraphQL */ `
         playbackSpeed
         saveTime
       }
+      viewCount
+      shareCount
       coverImage
       metadata {
         description
@@ -183,6 +187,8 @@ const GET_SHARE = /* GraphQL */ `
       }
       forkCount
       starCount
+      viewCount
+      shareCount
       isStarredByMe
       metadata {
         description
@@ -286,6 +292,18 @@ const BOOST_PROJECT = /* GraphQL */ `
   }
 `;
 
+const INCREMENT_PROJECT_VIEW = /* GraphQL */ `
+  mutation IncrementProjectView($id: ID!) {
+    incrementProjectView(id: $id)
+  }
+`;
+
+const INCREMENT_PROJECT_SHARE = /* GraphQL */ `
+  mutation IncrementProjectShare($id: ID!) {
+    incrementProjectShare(id: $id)
+  }
+`;
+
 function normalizeMetadata(
   metadata: Record<string, unknown> | null | undefined
 ): Record<string, unknown> | null | undefined {
@@ -386,5 +404,23 @@ export const projectsService = {
   async boostProject(publicId: string): Promise<boolean> {
     const data = await gqlRequest<{ boostProject: boolean }>(BOOST_PROJECT, { publicId });
     return data.boostProject;
+  },
+
+  async incrementView(publicId: string): Promise<boolean> {
+    try {
+      const data = await gqlRequest<{ incrementProjectView: boolean }>(INCREMENT_PROJECT_VIEW, { id: publicId });
+      return data.incrementProjectView;
+    } catch {
+      return false; // Fail silently for analytics
+    }
+  },
+
+  async incrementShare(publicId: string): Promise<boolean> {
+    try {
+      const data = await gqlRequest<{ incrementProjectShare: boolean }>(INCREMENT_PROJECT_SHARE, { id: publicId });
+      return data.incrementProjectShare;
+    } catch {
+      return false; // Fail silently for analytics
+    }
   },
 };

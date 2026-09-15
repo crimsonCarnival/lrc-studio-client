@@ -49,6 +49,7 @@ interface SharePanelProps {
   loading?: boolean | string;
   forksEnabled?: boolean;
   onForksEnabledChange?: (enabled: boolean) => void;
+  onShare?: () => void;
 }
 
 export function SharePanel({
@@ -63,6 +64,7 @@ export function SharePanel({
   loading = false,
   forksEnabled,
   onForksEnabledChange,
+  onShare,
 }: SharePanelProps) {
   const { t } = useTranslation();
   const [state, dispatch] = useReducer(shareReducer, {
@@ -115,6 +117,7 @@ export function SharePanel({
     try {
       await navigator.clipboard.writeText(url);
       dispatch({ type: 'SET_COPIED', payload: true });
+      if (onShare) onShare();
       setTimeout(() => dispatch({ type: 'SET_COPIED', payload: false }), 2000);
     } catch {
       inputRef.current?.select();

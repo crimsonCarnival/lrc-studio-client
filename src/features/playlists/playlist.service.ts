@@ -10,7 +10,7 @@ import type { Playlist, CreatePlaylistInput, UpdatePlaylistInput } from '@/types
 const PLAYLIST_FIELDS = /* GraphQL */ `
   fragment PlaylistFields on Playlist {
     id name description coverImage tags isPublic sortMode
-    projectCount savedCount isSavedByMe createdAt updatedAt
+    projectCount savedCount viewCount shareCount isSavedByMe createdAt updatedAt
     owner { id accountName displayName avatarUrl }
     projects {
       id publicId title starCount forkCount coverImage
@@ -74,6 +74,18 @@ const UNSAVE_PLAYLIST = /* GraphQL */ `
   }
 `;
 
+const INCREMENT_PLAYLIST_VIEW = /* GraphQL */ `
+  mutation IncrementPlaylistView($id: ID!) {
+    incrementPlaylistView(id: $id)
+  }
+`;
+
+const INCREMENT_PLAYLIST_SHARE = /* GraphQL */ `
+  mutation IncrementPlaylistShare($id: ID!) {
+    incrementPlaylistShare(id: $id)
+  }
+`;
+
 export const getPlaylists = (accountName: string): Promise<Playlist[]> =>
   gqlRequest<{ playlists: Playlist[] | null }>(GET_PLAYLISTS + PLAYLIST_FIELDS, { accountName }).then((d) => d?.playlists ?? []);
 
@@ -100,3 +112,21 @@ export const savePlaylist = (playlistId: string): Promise<boolean | undefined> =
 
 export const unsavePlaylist = (playlistId: string): Promise<boolean | undefined> =>
   gqlRequest<{ unsavePlaylist: boolean }>(UNSAVE_PLAYLIST, { playlistId }).then((d) => d?.unsavePlaylist);
+
+export async function incrementPlaylistView(id: string): Promise<boolean> {
+  try {
+    const data = await gqlRequest<{ incrementPlaylistView: boolean }>(INCREMENT_PLAYLIST_VIEW, { id });
+    return data.incrementPlaylistView;
+  } catch {
+    return false;
+  }
+}
+
+export async function incrementPlaylistShare(id: string): Promise<boolean> {
+  try {
+    const data = await gqlRequest<{ incrementPlaylistShare: boolean }>(INCREMENT_PLAYLIST_SHARE, { id });
+    return data.incrementPlaylistShare;
+  } catch {
+    return false;
+  }
+}

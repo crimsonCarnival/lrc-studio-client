@@ -7,6 +7,7 @@ import { Popover, PopoverTrigger, PopoverContent, PopoverItem, PopoverSeparator 
 import { Button } from '@ui/button';
 import { compileLRC as localCompileLRC, compileSRT as localCompileSRT } from '@/shared/utils/lrc';
 import { getPlaylists, addProjectToPlaylist, createPlaylist } from '@features/playlists/playlist.service';
+import { projectsService } from '@features/projects/services/projects.service';
 
 interface Playlist {
   id: string;
@@ -205,6 +206,9 @@ export function ProjectActionsMenu({
   const handleCopyLink = async () => {
     try { await navigator.clipboard.writeText(window.location.href); } catch { /* no-op */ }
     setLinkCopied(true);
+    if (project?.publicId) {
+      projectsService.incrementShare(project.publicId).catch(() => {});
+    }
     setTimeout(() => setLinkCopied(false), 2000);
   };
 
@@ -217,6 +221,9 @@ export function ProjectActionsMenu({
     }
     try { await navigator.clipboard.writeText(ogUrl); } catch { /* no-op */ }
     setOgCopied(true);
+    if (project?.publicId) {
+      projectsService.incrementShare(project.publicId).catch(() => {});
+    }
     setTimeout(() => setOgCopied(false), 2000);
   };
 

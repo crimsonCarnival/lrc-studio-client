@@ -10,6 +10,8 @@ interface PlaylistCardData {
   isPublic?: boolean;
   projectCount?: number;
   savedCount?: number;
+  viewCount?: number;
+  shareCount?: number;
   tags?: string[];
 }
 
@@ -38,7 +40,7 @@ export function PlaylistCard({ playlist, accountName, isOwner, onEdit, onDelete 
 
   return (
     <Link
-      to={`/${accountName}/lists/${playlist.id}`}
+      to={`/profile/${accountName}/lists/${playlist.id}`}
       className="glass rounded-2xl overflow-hidden flex flex-col hover:bg-white/5 transition-colors group relative"
     >
       {isOwner && (
@@ -74,10 +76,22 @@ export function PlaylistCard({ playlist, accountName, isOwner, onEdit, onDelete 
         <h3 className="text-sm font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
           {playlist.name}
         </h3>
-        <p className="text-xs text-muted-foreground">
-          {t('playlists.detail.projects', { count: playlist.projectCount })}
-          {' · '}
-          {t('playlists.detail.saved', { count: playlist.savedCount })}
+        <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+          <span>{t('playlists.detail.projects', { count: playlist.projectCount })}</span>
+          <span>·</span>
+          <span>{t('playlists.detail.saved', { count: playlist.savedCount })}</span>
+          {(playlist.viewCount ?? 0) > 0 && (
+            <>
+              <span>·</span>
+              <span className="flex items-center gap-1"><Icon name="visibility" size={10} /> {playlist.viewCount}</span>
+            </>
+          )}
+          {(playlist.shareCount ?? 0) > 0 && (
+            <>
+              <span>·</span>
+              <span className="flex items-center gap-1"><Icon name="share" size={10} /> {playlist.shareCount}</span>
+            </>
+          )}
         </p>
         {playlist.tags && playlist.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1">
