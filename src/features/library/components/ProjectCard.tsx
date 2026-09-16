@@ -278,7 +278,9 @@ function ProjectCard({
     );
   }
 
-  // Grid view: original card layout (for desktop)
+  // Grid view: card layout (for desktop/grid view)
+  const progress = project.lineCount ? Math.min(100, Math.round((((project.syncedLineCount as number) || 0) / (project.lineCount as number)) * 100)) : 0;
+
   return (
     <>
       <div
@@ -291,110 +293,67 @@ function ProjectCard({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="w-full group relative flex items-start gap-3 p-3 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/80 border border-zinc-700/40 hover:border-zinc-600/60 transition-all duration-150 text-left cursor-pointer"
+        className="group glass rounded-2xl overflow-hidden text-left hover:border-primary/40 transition-all cursor-pointer focus:ring-2 focus:ring-primary/30 outline-none flex flex-col h-64 relative"
       >
-        {/* Cover or genre placeholder */}
-        <ProjectListCover
-          coverImage={project.coverImage}
-          genre={project.metadata?.genre}
-          className="size-9 mt-0.5"
-        />
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-zinc-100 truncate">
-              {project.title || project.upload?.fileName || t('library.untitled')}
-            </span>
-            <span className="text-[10px] font-bold uppercase text-zinc-500 bg-zinc-700/50 px-1.5 py-0.5 rounded flex-shrink-0">
-              {project.editorMode}
-            </span>
-            {project.forkedFrom?.publicId && (
-              <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { username: project.forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject')}>
-                <span className="text-[10px] font-bold uppercase text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-1.5 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
-                  <Icon name="open_in_new" size={10} />
-                  {t('share.forkedBadge')}
+        {/* Image/Waveform Header */}
+        <div className="relative h-36 bg-zinc-800/30 border-b border-zinc-800/50 flex items-center justify-center overflow-hidden shrink-0">
+          {project.coverImage ? (
+            <>
+              <img src={project.coverImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 to-transparent" />
+            </>
+          ) : (
+            <div className="flex items-end gap-[3px] h-12 opacity-30 group-hover:opacity-50 transition-opacity">
+              {Array.from({ length: 9 }, (_, i) => (
+                <div key={i} className="w-1.5 rounded-full bg-zinc-300" style={{ height: `${20 + 80 * Math.abs(Math.sin(i * 1.5))}%` }} />
+              ))}
+            </div>
+          )}
+          {/* Badge */}
+          <div className="absolute top-3 left-3 px-2 py-1 bg-zinc-950/60 backdrop-blur-md rounded border border-zinc-700/50 flex items-center gap-1.5 z-10">
+            {project.upload?.source === 'youtube' ? (
+              <><Icon name="play_circle" size={10} className="text-destructive" /><span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceYoutube')}</span></>
+            ) : project.upload?.source === 'cloudinary' ? (
+              <><Icon name="cloud" size={10} className="text-info" /><span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceCloud')}</span></>
+            ) : (
+              <span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceFile')}</span>
+            )}
+          </div>
+        </div>
+        {/* Content */}
+        <div className="p-4 flex flex-col flex-1 relative z-10">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-sm font-bold text-zinc-100 truncate group-hover:text-primary transition-colors flex-1">{project.title || project.upload?.fileName || t('library.untitled')}</h3>
+            {/* Action Buttons (visible on hover) */}
+            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+              <Tip content={t('project.editMetadata')}>
+                <Button variant="ghost" size="icon" onClick={handleEdit} className="text-zinc-500 hover:text-primary hover:bg-primary/10 size-6 bg-zinc-900/80 backdrop-blur">
+                  <Icon name="edit" size={12} />
+                </Button>
+              </Tip>
+              <Button variant="ghost" size="icon" onClick={handleDelete} disabled={isDeleting} className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10 size-6 bg-zinc-900/80 backdrop-blur">
+                {isDeleting ? <Icon name="progress_activity" size={12} className="animate-spin" /> : <Icon name="delete" size={12} />}
+              </Button>
+            </div>
+          </div>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <p className="text-xs text-zinc-400 mt-1 truncate">{(project.metadata as any)?.songArtist || t('home.noArtist')}</p>
+          
+          <div className="mt-auto pt-4 flex flex-col gap-2">
+            <div className="h-[3px] w-full bg-zinc-800 rounded-full overflow-hidden">
+              <div className={`h-full rounded-full transition-all duration-500 ${progress === 100 ? 'bg-success' : 'bg-primary'}`} style={{ width: `${progress}%` }} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold text-zinc-200">
+                {((project.syncedLineCount as number) || 0)} / {((project.lineCount as number) || 0)}
+              </span>
+              <Tip content={formatInTimezone(project.updatedAt, timezone, { dateStyle: 'full', timeStyle: 'long' }, i18n?.resolvedLanguage || i18n?.language)}>
+                <span className="text-[10px] text-zinc-500">
+                  {getRelativeTime(project.updatedAt, t, timezone, i18n?.resolvedLanguage || i18n?.language)}
                 </span>
               </Tip>
-            )}
+            </div>
           </div>
-
-          <div className="flex items-center gap-3 mt-1">
-            <span className="text-xs text-zinc-500 flex items-center gap-1">
-              <Icon name="description" size={12} />
-              {t('library.lines', { count: project.lineCount || 0 })}
-            </span>
-            {project.upload?.duration && (
-              <span className="text-xs text-zinc-500 flex items-center gap-1">
-                <Icon name="schedule" size={12} />
-                {Math.floor(project.upload.duration / 60)}:{String(Math.floor(project.upload.duration % 60)).padStart(2, '0')}
-              </span>
-            )}
-            {project.upload?.source === 'youtube' && (
-              <span className="text-xs text-zinc-500 flex items-center gap-1">
-                <svg preserveAspectRatio="xMidYMid" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z"/><path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" className="size-3"/></svg>
-                {t('uploads.youtube')}
-              </span>
-            )}
-            {(project.starCount ?? 0) > 0 && (
-              <span className="text-xs text-zinc-500 flex items-center gap-1">
-                <Icon name="star" size={12} />
-                {project.starCount}
-              </span>
-            )}
-            {(project.forkCount ?? 0) > 0 && (
-              <span className="text-xs text-zinc-500 flex items-center gap-1">
-                <Icon name="call_split" size={12} />
-                {project.forkCount}
-              </span>
-            )}
-            {(project.viewCount ?? 0) > 0 && (
-              <span className="text-xs text-zinc-500 flex items-center gap-1">
-                <Icon name="visibility" size={12} />
-                {project.viewCount}
-              </span>
-            )}
-            {(project.shareCount ?? 0) > 0 && (
-              <span className="text-xs text-zinc-500 flex items-center gap-1">
-                <Icon name="share" size={12} />
-                {project.shareCount}
-              </span>
-            )}
-          </div>
-
-          <Tip content={formatInTimezone(project.updatedAt, timezone, {
-            dateStyle: 'full',
-            timeStyle: 'long'
-          }, i18n?.resolvedLanguage || i18n?.language)}>
-            <span className="text-[10px] text-zinc-600 mt-1 block">
-              {getRelativeTime(project.updatedAt, t, timezone, i18n?.resolvedLanguage || i18n?.language)}
-            </span>
-          </Tip>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-          <Tip content={t('project.editMetadata')}>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleEdit}
-              className="text-zinc-500 hover:text-primary hover:bg-primary/10 size-7"
-            >
-              <Icon name="edit" size={14} />
-            </Button>
-          </Tip>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10 size-7"
-          >
-            {isDeleting
-              ? <Icon name="progress_activity" size={14} className="animate-spin" />
-              : <Icon name="delete" size={14} />}
-          </Button>
         </div>
       </div>
       {confirmModal}

@@ -195,6 +195,32 @@ input:-webkit-autofill:active {
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
 
+  /* Shadcn standard variables for default dark theme */
+  --background: #232136;
+  --foreground: #e0def4;
+  --card: #2a273f;
+  --card-foreground: #e0def4;
+  --popover: #2a273f;
+  --popover-foreground: #e0def4;
+  --primary: #c4a7e7;
+  --primary-foreground: #232136;
+  --secondary: #393552;
+  --secondary-foreground: #e0def4;
+  --muted: #393552;
+  --muted-foreground: #908caa;
+  --accent: #393552;
+  --accent-foreground: #e0def4;
+  --destructive: #eb6f92;
+  --border: #44415a;
+  --input: #393552;
+  --ring: #c4a7e7;
+  --success: #9ccfd8;
+  --success-foreground: #232136;
+  --info: #31748f;
+  --info-foreground: #e0def4;
+  --warning: #f6c177;
+  --warning-foreground: #232136;
+
   /* ── Spacing scale ── */
   --space-0: 0px;
   --space-px: 1px;

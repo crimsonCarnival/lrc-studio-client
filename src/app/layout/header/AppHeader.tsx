@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, NavLink } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { HeaderSearchBar } from '@/features/search/components/HeaderSearchBar';
 import { Tip } from '@ui/tip';
@@ -131,16 +131,29 @@ export function AppHeader({
         <div className="relative max-w-[1600px] mx-auto w-full px-4 lg:px-6 py-2 sm:py-2.5 flex flex-row items-center justify-between gap-2">
 
           {/* ── Left: Logo + breadcrumb ── */}
-          <HeaderBreadcrumb
-            isReady={isReady}
-            mediaTitle={mediaTitle}
-            setMediaTitle={setMediaTitle}
-            triggerImportSave={triggerImportSave}
-            forkedFrom={forkedFrom}
-            projectCoverImage={projectCoverImage}
-            onLogoClick={goHomeOrWarn}
-            onProjectSettings={isReady && setShowNamingModal ? () => setShowNamingModal(true) : undefined}
-          />
+          <div className="flex items-center gap-4 lg:gap-8">
+            <HeaderBreadcrumb
+              isReady={isReady}
+              mediaTitle={mediaTitle}
+              setMediaTitle={setMediaTitle}
+              triggerImportSave={triggerImportSave}
+              forkedFrom={forkedFrom}
+              projectCoverImage={projectCoverImage}
+              onLogoClick={goHomeOrWarn}
+              onProjectSettings={isReady && setShowNamingModal ? () => setShowNamingModal(true) : undefined}
+            />
+
+            {/* ── Desktop Navigation ── */}
+            {user && !isGuestLanding && (
+              <nav className="hidden lg:flex items-center gap-6">
+                <NavLink to="/home" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.home', 'Inicio')}</NavLink>
+                <NavLink to="/explore" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.explore', 'Explorar')}</NavLink>
+                <NavLink to="/feed" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.feed', 'Feed')}</NavLink>
+                <NavLink to="/leaderboard" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.leaderboard', 'Clasificación')}</NavLink>
+                <NavLink to="/library" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.library', 'Biblioteca')}</NavLink>
+              </nav>
+            )}
+          </div>
 
           {/* ── Center: Start Syncing (edit mode only) ── */}
           {!syncMode && isReady && playerSlot !== 'header' && playerSlot !== 'preview' && (

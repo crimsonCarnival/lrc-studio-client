@@ -103,14 +103,55 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
     setEditingProject(project);
   }, []);
 
+  // Calculate stats
+  const totalProjects = items.length;
+  const completedProjects = items.filter(p => (p.lineCount as number) && (p.syncedLineCount as number) === (p.lineCount as number) && (p.lineCount as number) > 0).length;
+  const totalSyncedLines = items.reduce((acc, p) => acc + ((p.syncedLineCount as number) || 0), 0);
+
   return (
-    <div className="flex flex-col h-full pt-0 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
-      {/* Count */}
-      <div className="flex items-center mb-5">
-        <span className="text-xs text-zinc-500">
-          {!loading && t('library.count', { count: items.length })}
-        </span>
+    <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden pt-8 pb-12 lg:px-12 max-w-7xl mx-auto w-full">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 px-4 lg:px-0">
+        <div>
+          <h1 className="text-3xl font-bold text-zinc-100 mb-2 tracking-tight">Biblioteca</h1>
+          <p className="text-[15px] text-zinc-400">
+            {!loading && `${totalProjects} proyectos · ${completedProjects} completos · ${totalSyncedLines} líneas sincronizadas`}
+          </p>
+        </div>
+        <button
+          className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 px-5 py-2.5 rounded-xl font-medium transition-colors shadow-glow w-fit"
+        >
+          <Icon name="add" size={18} />
+          Nuevo proyecto
+        </button>
       </div>
+
+      {/* Filter Row */}
+      {!loading && !error && items.length > 0 && (
+        <div className="px-4 lg:px-0 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="relative w-full sm:w-64">
+            <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <input 
+              type="text" 
+              placeholder="Buscar..." 
+              className="w-full bg-zinc-900/50 border border-zinc-700/50 rounded-lg pl-10 pr-4 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
+            />
+          </div>
+          <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
+            <div className="flex items-center bg-zinc-800/50 rounded-lg p-1 border border-zinc-700/50 shrink-0">
+              <button className="px-4 py-1.5 rounded-md bg-zinc-700 text-zinc-100 text-sm font-medium shadow-sm transition-colors">Todos</button>
+              <button className="px-4 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 text-sm font-medium transition-colors">En curso</button>
+              <button className="px-4 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 text-sm font-medium transition-colors">Completos</button>
+              <button className="px-4 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 text-sm font-medium transition-colors">Sin empezar</button>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-zinc-400 shrink-0 ml-auto sm:ml-0 cursor-pointer hover:text-zinc-200 transition-colors">
+              <span className="font-medium">Ordenar</span>
+              <span className="text-zinc-300 font-semibold">Editado recientemente</span>
+              <Icon name="expand_more" size={16} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       {loading ? (
@@ -152,8 +193,9 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
         </div>
       ) : (
         // Desktop: Grid view (original layout)
-        <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1 settings-scroll">
-          {items.map((project) => (
+        <div className="flex-1 px-4 lg:px-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
+            {items.map((project) => (
             <ProjectCard
               key={project.publicId}
               project={project}
@@ -167,6 +209,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
               timezone={timezone}
             />
           ))}
+          </div>
         </div>
       )}
 

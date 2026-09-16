@@ -25,14 +25,14 @@ function DropdownProjectRow({ project }: { project: SearchProject }) {
   return (
     <Link
       to={`/project/${publicId}`}
-      className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-zinc-800/60 rounded-lg transition-colors"
+      className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-accent rounded-lg transition-colors"
     >
       {thumb
         ? <LazyImage src={thumb} alt="" className="size-7 rounded object-cover shrink-0" />
         : <div className="size-7 rounded bg-zinc-800 shrink-0" />}
       <div className="min-w-0">
-        <p className="text-sm font-medium text-white truncate">{displayTitle}</p>
-        {artist && <p className="text-xs text-zinc-500 truncate">{artist}</p>}
+        <p className="text-sm font-medium text-foreground truncate">{displayTitle}</p>
+        {artist && <p className="text-xs text-muted-foreground truncate">{artist}</p>}
       </div>
     </Link>
   );
@@ -104,21 +104,21 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
           placeholder={tk('search.placeholder.0')}
-          className="w-full pl-8 pr-8 py-1.5 rounded-xl bg-zinc-900/70 border border-zinc-800/60 focus:border-zinc-700 text-white placeholder:text-zinc-600 focus:outline-none text-xs transition-colors"
+          className="w-full pl-8 pr-8 py-1.5 rounded-xl bg-muted/50 border border-border focus:border-primary text-foreground placeholder:text-muted-foreground focus:outline-none text-xs transition-colors"
         />
       </div>
 
       {showDropdown && (
-        <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 w-72 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl z-[200] overflow-hidden">
+        <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 w-72 bg-card border border-border rounded-xl shadow-2xl z-[200] overflow-hidden">
           {!hasResults && !loading && query.trim() && (
-            <p className="px-3 py-4 text-xs text-zinc-500 text-center">
+            <p className="px-3 py-4 text-xs text-muted-foreground text-center">
               {t('search.noResults', { query })}
             </p>
           )}
 
           {users.length > 0 && (
             <div className="pt-2 pb-1">
-              <p className="px-3 pb-1 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider">
+              <p className="px-3 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                 {t('search.tabs.users')}
               </p>
               {users.map((u: { id: string; [key: string]: unknown }) => (
@@ -130,8 +130,8 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
           )}
 
           {projects.length > 0 && (
-            <div className={`pt-2 pb-1 ${users.length > 0 ? 'border-t border-zinc-800/60' : ''}`}>
-              <p className="px-3 pb-1 text-[10px] font-semibold text-zinc-600 uppercase tracking-wider">
+            <div className={`pt-2 pb-1 ${users.length > 0 ? 'border-t border-border/60' : ''}`}>
+              <p className="px-3 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                 {t('search.tabs.projects')}
               </p>
               {projects.map((p: SearchProject) => (
@@ -145,7 +145,7 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
           {(hasResults || total > 0) && (
             <button
               onClick={goToAll}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 border-t border-zinc-800/60 text-xs font-medium text-primary hover:text-primary/80 hover:bg-zinc-900/60 transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 border-t border-border/60 text-xs font-medium text-primary hover:text-primary/80 hover:bg-accent transition-colors"
             >
               {t('search.allResults')}
               <Icon name="arrow_forward" size={12} />

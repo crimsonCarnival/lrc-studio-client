@@ -20,6 +20,9 @@ import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import type { UploadedAudio } from '@/shared/hooks/useAppState';
+import { Icon } from '@/shared/ui/Icon';
+import { linesToRawText } from '@/features/editor/utils/sections';
+import { serializeToRubyMarkup } from '@/shared/utils/furigana';
 
 const EMPTY_ARTISTS: string[] = [];
 
@@ -342,11 +345,68 @@ export default function Editor({
   ) : null;
 
 
+  const syncProgress = useMemo(() => {
+    const lyricLines = lines.filter(l => l.type !== 'section');
+    if (!lyricLines.length) return null;
+    const synced = lyricLines.filter(l => l.timestamp != null).length;
+    const wordCount = lyricLines.reduce((acc, l) => acc + (l.text ? l.text.trim().split(/\s+/).filter(Boolean).length : 0), 0);
+    const charCount = lyricLines.reduce((acc, l) => acc + (l.text ? l.text.length : 0), 0);
+    const activeLine = lines[activeLineIndex];
+    const activeWords = stampTarget === 'secondary' ? activeLine?.secondaryWords : activeLine?.words;
+    const totalWordsInLine = activeWords?.length || 0;
+    const currentWordNum = activeWordIndex !== -1 ? Math.min(activeWordIndex + 1, totalWordsInLine) : 0;
+    return { synced, total: lyricLines.length, wordCount, charCount, totalWordsInLine, currentWordNum };
+  }, [lines, activeLineIndex, activeWordIndex, stampTarget]);
+
   return (
     <div
       onMouseLeave={handleLineHoverEnd}
-      className={`lg:glass lg:rounded-2xl lg:overflow-hidden rounded-none p-3 sm:p-5 flex ${compact ? 'flex-row gap-2' : 'flex-col'} flex-1 animate-fade-in min-h-0 relative`}
+      className={`p-4 sm:p-6 flex ${compact ? 'flex-row gap-2' : 'flex-col'} flex-1 animate-fade-in min-h-0 relative`}
     >
+      <div className="flex items-center justify-between gap-3 w-full mb-4 z-raised">
+        <div className="flex items-center gap-2 overflow-hidden flex-1">
+          <h2 className="text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2">
+            <span className="uppercase shrink-0 text-sm flex items-center gap-1.5">
+              <Icon name="description" size={16} />
+              {t('editor.title')}
+            </span>
+          </h2>
+          {syncMode && lines.length > 0 && (
+            <Tip content={t('editor.backToEdit')}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setRawText(linesToRawText(lines, (l) => serializeToRubyMarkup(l.words) || l.text || ''));
+                  setSyncMode(false);
+                }}
+                className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 flex-shrink-0 size-8 rounded-full"
+              >
+                <Icon name="edit" size={16} />
+              </Button>
+            </Tip>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {syncProgress && (
+            <Tip content={t('editor.wordCharCount', { words: syncProgress.wordCount, chars: syncProgress.charCount })}>
+              <div className={`text-[10px] font-mono tabular-nums px-3 py-1 rounded-full border bg-zinc-900/50 flex items-center gap-1.5 cursor-default ${syncProgress.synced === syncProgress.total ? 'text-primary border-primary/20' : 'text-zinc-500 border-zinc-800/60'
+                }`}>
+                <div className={`size-1.5 rounded-full flex-shrink-0 ${syncProgress.synced === syncProgress.total ? 'bg-primary shadow-glow' : 'bg-zinc-700'
+                  }`} />
+                {editorMode === 'words' && syncProgress.totalWordsInLine > 0 ? (
+                  <span>{syncProgress.currentWordNum}/{syncProgress.totalWordsInLine}</span>
+                ) : (
+                  <span>{syncProgress.synced}/{syncProgress.total}</span>
+                )}
+                <span className="text-zinc-600 hidden sm:inline">·</span>
+                <span className="text-zinc-600 hidden sm:inline">{t('editor.wordCount', { count: syncProgress.wordCount })}</span>
+              </div>
+            </Tip>
+          )}
+        </div>
+      </div>
 
       <EditorToolbar
         user={user}
@@ -388,13 +448,6 @@ export default function Editor({
         autoStampRunning={autoStampRunning}
         onAutoStamp={handleAutoStampStart}
       />
-
-      {playerPosition === 'top' && playerDock}
-
-      {/* Visual separator between toolbar and lyrics list */}
-      {syncMode && lines.length > 0 && (
-        <div className="h-px bg-gradient-to-r from-transparent via-zinc-800/80 to-transparent mb-3 -mx-1 flex-shrink-0" />
-      )}
 
       <div className="flex flex-col flex-1 min-h-0 min-w-0">
       <ResponsiveModal

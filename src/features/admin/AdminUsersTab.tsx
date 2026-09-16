@@ -301,7 +301,7 @@ export default function AdminUsersTab({
                         </div>
                         <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
                           <div className="flex flex-col items-center justify-center text-zinc-300">
-                            <span className="font-semibold">{user.lastOnlineAt || user.lastUsedAt || user.updatedAt ? new Date((user.lastOnlineAt || user.lastUsedAt || user.updatedAt) as string).toLocaleDateString() : '—'}</span>
+                            <span className="font-semibold">{user.lastOnlineAt || user.lastUsedAt ? new Date((user.lastOnlineAt || user.lastUsedAt) as string).toLocaleDateString() : '—'}</span>
                             <span className="text-[9px] uppercase tracking-widest text-zinc-500">{t('admin.table.lastActive')}</span>
                           </div>
                         </div>
@@ -491,7 +491,7 @@ export default function AdminUsersTab({
                         <Icon name="person_add" size={14} className="text-zinc-500" /> {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Icon name="history" size={14} className="text-zinc-500" /> {user.lastUsedAt || user.updatedAt ? new Date(user.lastUsedAt || user.updatedAt as string).toLocaleDateString() : '—'}
+                        <Icon name="history" size={14} className="text-zinc-500" /> {user.lastOnlineAt || user.lastUsedAt ? new Date((user.lastOnlineAt || user.lastUsedAt) as string).toLocaleDateString() : '—'}
                       </div>
                     </div>
                   </td>

@@ -153,7 +153,7 @@ const PanelReorderGroup = React.memo(function PanelReorderGroup({
                 layout={!isMobile ? true : undefined}
                 dragListener={isDesktop && !lockLayout}
                 whileDrag={{ zIndex: 50, boxShadow: "0px 20px 40px rgba(0,0,0,0.4)", opacity: 0.8 }}
-                className={`flex-1 flex flex-col min-h-0 ${isEditor ? 'gap-4' : ''} ${mobileTab !== item ? 'max-lg:hidden' : ''} relative group/reorder lg:border-2 lg:rounded-2xl border-0 rounded-none ${isEditor ? borderClasses.editor : borderClasses.preview} transition-colors duration-200 overflow-hidden lg:bg-zinc-900/50 lg:backdrop-blur-sm bg-zinc-950`}
+                className={`flex-1 flex flex-col min-h-0 ${isEditor ? 'gap-4' : ''} ${mobileTab !== item ? 'max-lg:hidden' : ''} relative group/reorder lg:border border-0 rounded-none ${isEditor ? borderClasses.editor : borderClasses.preview} transition-colors duration-200 overflow-hidden lg:bg-zinc-900/40 lg:backdrop-blur-xl lg:rounded-3xl bg-zinc-950`}
                 onDragStart={() => setDraggingItem(item)}
                 onDragEnd={() => setDraggingItem(null)}
               >
@@ -408,7 +408,7 @@ export function AppRouter({
       if (isFocused && !lockLayout) {
         return 'border-primary/40 shadow-[0_0_20px_rgba(29,185,84,0.15)] ring-1 ring-primary/20 transition-all duration-300';
       }
-      return 'border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300';
+      return 'border-zinc-800/60 hover:border-zinc-700/60 transition-all duration-300 shadow-xl shadow-black/20';
     };
     return { editor: base('editor'), preview: base('preview') };
   }, [draggingItem, isResizing, isHoveringDivider, focusMode, lockLayout]);

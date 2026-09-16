@@ -500,19 +500,20 @@ const EditorLineItem = React.memo(({
       onDragEnd={handleDragEnd}
       onDrop={(e) => handleDrop(e, i)}
       style={{ animationDelay: staggerDelay }}
-      className={`outline-none flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-3 sm:gap-4 px-4 py-3 sm:px-3 sm:py-2 rounded-xl sm:rounded-lg transition-colors duration-300 ease-out cursor-pointer group relative overflow-hidden animate-preview-line-in ${selectedLines.has(i)
+      className={`outline-none flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-3 sm:gap-4 px-4 py-3 sm:px-5 sm:py-3 rounded-2xl sm:rounded-full transition-all duration-300 ease-out cursor-pointer group relative overflow-visible animate-preview-line-in ${selectedLines.has(i)
         ? `bg-primary/15 border border-${isModified ? 'warning' : 'primary'}/40 ring-1 ring-${isModified ? 'warning' : 'primary'}/20`
         : isActive
           ? isLocked
-            ? `bg-primary/10 border border-${isModified ? 'warning' : 'primary'}/30`
+            ? `bg-primary/15 border border-${isModified ? 'warning' : 'primary'}/30 shadow-glow`
             : `bg-primary/5 border border-${isModified ? 'warning' : 'primary'}/20 border-dashed`
           : dragOverIndex === i
             ? 'bg-accent-blue/10 border border-accent-blue/30'
             : (upcomingDepth ?? 0) > 0
               ? `bg-primary/${upcomingDepth === 1 ? '5' : upcomingDepth === 2 ? '3' : '2'} border border-primary/${upcomingDepth === 1 ? '15' : '10'} border-dashed`
-              : `hover:bg-zinc-800/40 border border-${isModified ? 'warning/30' : 'transparent'}`
+              : `bg-zinc-900/50 hover:bg-zinc-800/60 border border-zinc-800/50 hover:border-${isModified ? 'warning/30' : 'zinc-700/50'} shadow-sm`
         } ${dragIndex === i ? 'opacity-40' : ''} ${justSynced ? 'ring-2 ring-primary/60 animate-just-synced' : ''}`}
-    >
+      >
+
       {/* Lock/unlock indicator */}
       {isActive && (
         <div className={`absolute left-0 inset-y-0 w-1 z-0 rounded-l-xl animate-bar-grow ${isLocked
