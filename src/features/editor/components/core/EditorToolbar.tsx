@@ -8,7 +8,7 @@ import { Tip } from '@ui/tip';
 import { Badge } from '@ui/badge';
 import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger } from '@ui/popover';
 import { Icon } from '@/shared/ui/Icon';
-import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
+import { hasCJK } from '@/shared/utils/furigana';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
 import { flatToSections, linesToRawText } from '@/features/editor/utils/sections';
@@ -89,6 +89,7 @@ interface EditorToolbarProps {
   autoStampHasAudio?: boolean;
   autoStampRunning?: boolean;
   onAutoStamp?: () => void;
+  playerPosition?: 'top' | 'bottom';
 }
 
 import { usePlayer } from '@/features/player/PlayerContext';
@@ -102,7 +103,6 @@ export default function EditorToolbar({
   syncMode,
   lines,
   setSelectedLines,
-  selectedLines,
   handleClearTimestamps,
   handleClearAllWordTimestamps,
   requestConfirm,
@@ -113,25 +113,20 @@ export default function EditorToolbar({
   buildProjectPayload,
   handleRemoveAllLyrics,
   isAutosaving,
-  pendingSyncs = 0,
   isSaving,
-  overlappingLines,
   onNewProject,
   onShowKeyboardHelp,
-  activeLineIndex,
-  activeWordIndex,
-  stampTarget,
   undo,
   redo,
   canUndo,
   canRedo,
-  handleApplyOffset,
-  onHideEditor,
-  previewHidden,
-  onShowPreview,
   autoStampHasAudio,
   autoStampRunning,
   onAutoStamp,
+  playerPosition = 'bottom',
+  onHideEditor,
+  previewHidden,
+  onShowPreview,
 }: EditorToolbarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -141,22 +136,6 @@ export default function EditorToolbar({
   const { isPlaying, togglePlay } = usePlayer();
   const hasAnyTimestamp = useMemo(() => lines.some((l) => l.timestamp != null), [lines]);
   const hasJapanese = useMemo(() => lines.some((l) => hasCJK(l.text || '') || hasCJK(l.secondary || '')), [lines]);
-
-  const syncProgress = useMemo(() => {
-    const lyricLines = lines.filter(l => l.type !== 'section');
-    if (!lyricLines.length) return null;
-    const synced = lyricLines.filter(l => l.timestamp != null).length;
-    const wordCount = lyricLines.reduce((acc, l) => acc + (l.text ? l.text.trim().split(/\s+/).filter(Boolean).length : 0), 0);
-    const charCount = lyricLines.reduce((acc, l) => acc + (l.text ? l.text.length : 0), 0);
-
-    // Active line word progress for Words mode
-    const activeLine = lines[activeLineIndex];
-    const activeWords = stampTarget === 'secondary' ? activeLine?.secondaryWords : activeLine?.words;
-    const totalWordsInLine = activeWords?.length || 0;
-    const currentWordNum = activeWordIndex !== -1 ? Math.min(activeWordIndex + 1, totalWordsInLine) : 0;
-
-    return { synced, total: lyricLines.length, wordCount, charCount, totalWordsInLine, currentWordNum };
-  }, [lines, activeLineIndex, activeWordIndex, stampTarget]);
 
   const isAutoStampComplete = useMemo(() => {
     const lyricLines = lines.filter(l => l.type !== 'section');
@@ -227,7 +206,7 @@ export default function EditorToolbar({
   }
 
   return (
-    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 sm:gap-4 px-4 py-2 bg-zinc-900/60 backdrop-blur-xl border border-zinc-700/50 rounded-full shadow-2xl overflow-visible transition-all">
+    <div className={`absolute ${playerPosition === 'bottom' ? 'bottom-28' : 'bottom-6'} left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 sm:gap-4 px-4 py-2 bg-zinc-900/60 backdrop-blur-xl border border-zinc-700/50 rounded-full shadow-2xl overflow-visible transition-all`}>
       {/* ── Left: Undo / Redo / Play ── */}
       <div className="flex items-center gap-1 shrink-0">
         <Tip content={t('editor.undoTitle') || 'Undo (Ctrl+Z)'}>
@@ -329,6 +308,18 @@ export default function EditorToolbar({
 
       {/* ── Right: More Actions / Search ── */}
       <div className="flex items-center gap-1 shrink-0">
+        {onHideEditor && onShowPreview && (
+          <Tip content={previewHidden ? (t('editor.showPreview') || 'Show preview') : (t('editor.hideEditor') || 'Hide editor')}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={previewHidden ? onShowPreview : onHideEditor}
+              className="size-9 rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors"
+            >
+              <Icon name={previewHidden ? 'visibility' : 'visibility_off'} size={18} />
+            </Button>
+          </Tip>
+        )}
         <Popover open={lyricsSearchPopoverOpen} onOpenChange={setLyricsSearchPopoverOpen}>
           <Tip content={t('lyricsSearch.findLyrics')}>
             <PopoverTrigger asChild>

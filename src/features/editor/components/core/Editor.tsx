@@ -447,6 +447,7 @@ export default function Editor({
         autoStampHasAudio={autoStampHasAudio}
         autoStampRunning={autoStampRunning}
         onAutoStamp={handleAutoStampStart}
+        playerPosition={playerPosition}
       />
 
       <div className="flex flex-col flex-1 min-h-0 min-w-0">
