@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { TFunction } from 'i18next';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { formatDistanceToNow } from 'date-fns';
-import { enUS, es } from 'date-fns/locale';
+import { formatInTimezone } from '@/shared/utils/date';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projects } from '@/app/api';
@@ -11,7 +10,6 @@ import { Icon } from '@/shared/ui/Icon';
 import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
 import ProjectSetupModalRaw from '@features/editor/components/setup/ProjectSetupModal';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
-import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 
 // ProjectSetupModal is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,6 +30,7 @@ interface HomeProject {
   coverImage?: string;
   metadata?: ProjectMeta;
   createdAt?: string | number;
+  updatedAt?: string | number;
   syncedLineCount?: number;
   lineCount?: number;
   public?: boolean;
@@ -46,19 +45,6 @@ interface DynamicTranslation {
   i18n: { resolvedLanguage?: string; language?: string };
 }
 
-const DATE_FNS_LOCALES: Record<string, typeof enUS> = { en: enUS, es };
-
-function formatRelativeTime(dateStr?: string | number, locale = 'en') {
-  try {
-    return formatDistanceToNow(new Date(dateStr!), {
-      addSuffix: true,
-      locale: DATE_FNS_LOCALES[locale] ?? enUS,
-    });
-  } catch {
-    return '';
-  }
-}
-
 
 export default function Home() {
   const { t, dt, i18n } = useDynamicTranslation() as DynamicTranslation;
@@ -66,8 +52,11 @@ export default function Home() {
   const { user } = useAuthContext();
 
   const [items, setItems] = useState<HomeProject[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterTab, setFilterTab] = useState<'all' | 'inProgress' | 'completed' | 'notStarted'>('all');
+  const [sortBy, setSortBy] = useState<'edited' | 'created' | 'title'>('edited');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [editingProject, setEditingProject] = useState<HomeProject | null>(null);
 
   const fetchProjects = useCallback(async () => {
@@ -94,12 +83,42 @@ export default function Home() {
   const filteredProjects = items.filter(p => {
     const titleMatch = (p.title || '').toLowerCase().includes(searchQuery.toLowerCase());
     const tagsMatch = p.metadata?.tags?.some(tag => (tag || '').toLowerCase().includes(searchQuery.toLowerCase())) || false;
-    return titleMatch || tagsMatch;
+    const matchesSearch = titleMatch || tagsMatch;
+
+    if (!matchesSearch) return false;
+
+    const progress = p.lineCount ? Math.min(100, Math.round(((p.syncedLineCount || 0) / p.lineCount) * 100)) : 0;
+
+    if (filterTab === 'inProgress') {
+      return progress > 0 && progress < 100;
+    }
+    if (filterTab === 'completed') {
+      return progress === 100;
+    }
+    if (filterTab === 'notStarted') {
+      return progress === 0;
+    }
+    return true;
+  }).sort((a, b) => {
+    if (sortBy === 'edited') {
+      const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime();
+      const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime();
+      return bTime - aTime;
+    }
+    if (sortBy === 'created') {
+      const aTime = new Date(a.createdAt || 0).getTime();
+      const bTime = new Date(b.createdAt || 0).getTime();
+      return bTime - aTime;
+    }
+    if (sortBy === 'title') {
+      return (a.title || '').localeCompare(b.title || '');
+    }
+    return 0;
   });
 
   const lastProject = items.length > 0 ? items[0] : null;
   const username = user?.displayName || user?.accountName || 'Creator';
-  const reducedMotion = useReducedMotion();
+  const timezone = (user as unknown as { settings?: { advanced?: { timezone?: string } } })?.settings?.advanced?.timezone || 'auto';
 
   return (
     <div className="h-full flex flex-col overflow-y-auto overflow-x-hidden pt-8 pb-12 lg:px-12 max-w-7xl mx-auto w-full">
@@ -131,8 +150,12 @@ export default function Home() {
             onClick={() => navigate(`/project/${lastProject.publicId}/edit`)}
           >
             <div className="flex flex-col sm:flex-row sm:items-center gap-5 flex-1 min-w-0">
-              <div className="size-24 rounded-2xl bg-zinc-800/50 border border-zinc-700/50 flex items-center justify-center shrink-0 shadow-inner-highlight">
-                <Icon name="equalizer" className="text-primary/70" size={36} />
+              <div className="size-24 rounded-2xl bg-zinc-800/50 border border-zinc-700/50 flex items-center justify-center shrink-0 shadow-inner-highlight overflow-hidden relative">
+                {lastProject.coverImage ? (
+                  <img src={lastProject.coverImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <Icon name="equalizer" className="text-primary/70" size={36} />
+                )}
               </div>
               <div className="flex flex-col flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-1">
@@ -156,7 +179,12 @@ export default function Home() {
                     <span className="text-xs font-medium text-zinc-300">
                       {(lastProject.syncedLineCount || 0)} / {(lastProject.lineCount || 0)} {t('home.lines')}
                     </span>
-                    <span className="text-xs text-zinc-500">· {t('home.edited')} {formatRelativeTime(lastProject.createdAt, (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2))}</span>
+                    <span className="text-xs text-zinc-500 flex flex-col items-end gap-1">
+                      <span>{t('home.created')} {formatInTimezone(lastProject.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2))}</span>
+                      {(lastProject.updatedAt && lastProject.updatedAt !== lastProject.createdAt) && (
+                        <span>{t('home.edited')} {formatInTimezone(lastProject.updatedAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2))}</span>
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -170,21 +198,63 @@ export default function Home() {
 
       {/* ── Tus proyectos ── */}
       <div className="px-4 lg:px-0 animate-fade-in flex-1 flex flex-col min-h-0">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h2 className="text-sm font-bold text-zinc-300">{t('home.yourProjects')}</h2>
-          <div className="flex items-center gap-1 sm:gap-4">
-            <div className="flex items-center bg-zinc-800/50 rounded-lg p-1 border border-zinc-700/50">
-              <button className="px-3 py-1.5 rounded-md bg-zinc-700 text-zinc-100 text-xs font-medium shadow-sm transition-colors">{t('home.all')}</button>
-              <button className="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 text-xs font-medium transition-colors">{t('home.inProgress')}</button>
-              <button className="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 text-xs font-medium transition-colors">{t('home.completed')}</button>
+        <div className="flex flex-col gap-4 mb-6 relative z-10">
+          <div className="flex items-end justify-between">
+            <h2 className="text-2xl font-semibold text-zinc-100 tracking-tight">{t('home.yourProjects')}</h2>
+            
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-colors ${
+              isSearchFocused ? 'border-primary/50 bg-zinc-900' : 'border-zinc-800 bg-zinc-900/50'
+            }`}>
+              <Icon name="search" size={14} className={isSearchFocused ? 'text-primary' : 'text-zinc-500'} />
+              <input 
+                type="text" 
+                placeholder={t('home.search')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                className="bg-transparent border-none outline-none text-xs text-zinc-200 placeholder:text-zinc-600 w-32 focus:w-48 transition-all"
+              />
             </div>
-            <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block" />
-            <button 
-              onClick={() => navigate('/library')}
-              className="text-xs font-medium text-primary hover:text-primary-dim transition-colors hidden sm:block"
-            >
-              {t('home.viewLibrary')}
-            </button>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 w-full relative">
+            <div className="flex gap-1 overflow-x-auto hide-scrollbar">
+              {['all', 'inProgress', 'completed', 'notStarted'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setFilterTab(tab as 'all' | 'inProgress' | 'completed' | 'notStarted')}
+                  className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${filterTab === tab
+                    ? 'border-primary text-zinc-100'
+                    : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                    }`}
+                >
+                  {(t as (k: string) => string)(`home.${tab}`)}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 relative shrink-0 ml-auto sm:ml-0 mb-1 sm:mb-0">
+              <div className="relative flex items-center">
+                <Icon name="sort" size={14} className="absolute left-3 text-zinc-400 pointer-events-none" />
+                <select 
+                  className="appearance-none bg-transparent hover:bg-zinc-800 text-xs text-zinc-400 hover:text-zinc-200 transition-colors pl-8 pr-8 py-1.5 rounded-lg outline-none cursor-pointer border-none"
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value as 'edited' | 'created' | 'title')}
+                >
+                  <option value="edited" className="bg-zinc-900">{t('home.sortBy')} {t('home.recentlyEdited')}</option>
+                  <option value="created" className="bg-zinc-900">{t('home.sortBy')} {t('home.recentlyCreated')}</option>
+                  <option value="title" className="bg-zinc-900">{t('home.sortBy')} {t('home.titleAZ')}</option>
+                </select>
+                <Icon name="expand_more" size={14} className="absolute right-2 text-zinc-400 pointer-events-none" />
+              </div>
+              <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block" />
+              <button 
+                onClick={() => navigate('/library')}
+                className="text-xs font-medium text-primary hover:text-primary-dim transition-colors hidden sm:block"
+              >
+                {t('home.viewLibrary')}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -216,10 +286,8 @@ export default function Home() {
                    <div className="absolute top-3 left-3 px-2 py-1 bg-zinc-950/60 backdrop-blur-md rounded border border-zinc-700/50 flex items-center gap-1.5">
                      {project.upload?.source === 'youtube' ? (
                        <><Icon name="play_circle" size={10} className="text-destructive" /><span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceYoutube')}</span></>
-                     ) : project.upload?.source === 'cloudinary' ? (
-                       <><Icon name="cloud" size={10} className="text-info" /><span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceCloud')}</span></>
                      ) : (
-                       <span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceFile')}</span>
+                       <><Icon name="description" size={10} className="text-info" /><span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceFile')}</span></>
                      )}
                    </div>
                 </div>
@@ -233,12 +301,19 @@ export default function Home() {
                       <div className={`h-full rounded-full transition-all duration-500 ${progress === 100 ? 'bg-success' : 'bg-primary'}`} style={{ width: `${progress}%` }} />
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-zinc-200">
+                      <span className="text-[10px] font-bold text-zinc-200 mt-auto">
                         {(project.syncedLineCount || 0)} / {(project.lineCount || 0)}
                       </span>
-                      <span className="text-[10px] text-zinc-500">
-                        {formatRelativeTime(project.createdAt, (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2))}
-                      </span>
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span className="text-[10px] text-zinc-500">
+                          {t('home.created')} {formatInTimezone(project.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2))}
+                        </span>
+                        {(project.updatedAt && project.updatedAt !== project.createdAt) && (
+                          <span className="text-[10px] text-zinc-500">
+                            {t('home.edited')} {formatInTimezone(project.updatedAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2))}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -254,10 +329,8 @@ export default function Home() {
              <div className="size-12 rounded-full bg-zinc-800/80 group-hover:bg-primary/20 flex items-center justify-center mb-4 transition-colors">
                <Icon name="add" size={24} className="text-zinc-400 group-hover:text-primary transition-colors" />
              </div>
-             <h3 className="text-sm font-bold text-zinc-200 mb-2">Empieza otro</h3>
-             <p className="text-xs text-zinc-400 max-w-[200px]">
-               Pega un enlace de YouTube o sube un audio y te llevamos al editor.
-             </p>
+             <h3 className="text-zinc-100 font-medium text-sm leading-tight mb-1">{t('home.startAnother')}</h3>
+             <p className="text-zinc-400 text-xs">{t('home.startAnotherDesc')}</p>
           </button>
         </div>
       </div>

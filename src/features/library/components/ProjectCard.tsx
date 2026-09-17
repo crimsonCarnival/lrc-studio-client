@@ -17,10 +17,12 @@ export interface CardProject {
   coverImage?: string;
   editorMode?: string;
   lineCount?: number;
+  syncedLineCount?: number;
   starCount?: number;
   forkCount?: number;
   viewCount?: number;
   shareCount?: number;
+  createdAt?: string | number;
   updatedAt?: string | number;
   metadata?: { genre?: string };
   forkedFrom?: { publicId?: string; accountName?: string };
@@ -186,7 +188,7 @@ function ProjectCard({
                 {project.editorMode}
               </span>
               {project.forkedFrom?.publicId && (
-                <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { username: project.forkedFrom.accountName, defaultValue: `Forked from {{username}}` }) : t('share.forkedProject')}>
+                <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { username: project.forkedFrom.accountName }) : t('share.forkedProject')}>
                   <span className="text-[10px] font-bold uppercase text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-1.5 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
                     <Icon name="open_in_new" size={10} />
                     {t('share.forkedBadge')}
@@ -343,15 +345,20 @@ function ProjectCard({
             <div className="h-[3px] w-full bg-zinc-800 rounded-full overflow-hidden">
               <div className={`h-full rounded-full transition-all duration-500 ${progress === 100 ? 'bg-success' : 'bg-primary'}`} style={{ width: `${progress}%` }} />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-zinc-200">
+            <div className="flex items-center justify-between mt-auto">
+              <span className="text-[10px] font-bold text-zinc-200 mt-auto">
                 {((project.syncedLineCount as number) || 0)} / {((project.lineCount as number) || 0)}
               </span>
-              <Tip content={formatInTimezone(project.updatedAt, timezone, { dateStyle: 'full', timeStyle: 'long' }, i18n?.resolvedLanguage || i18n?.language)}>
+              <div className="flex flex-col items-end gap-0.5">
                 <span className="text-[10px] text-zinc-500">
-                  {getRelativeTime(project.updatedAt, t, timezone, i18n?.resolvedLanguage || i18n?.language)}
+                  {t('home.created')} {formatInTimezone(project.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}
                 </span>
-              </Tip>
+                {(project.updatedAt && project.updatedAt !== project.createdAt) && (
+                  <span className="text-[10px] text-zinc-500">
+                    {t('home.edited')} {formatInTimezone(project.updatedAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>

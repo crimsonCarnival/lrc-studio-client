@@ -66,6 +66,11 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [, confirmModal] = useConfirm() as [unknown, ReactNode];
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterTab, setFilterTab] = useState<'all' | 'inProgress' | 'completed' | 'notStarted'>('all');
+  const [sortBy, setSortBy] = useState<'edited' | 'created' | 'title'>('edited');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
   const fetchProjects = useCallback(async () => {
     setError(false);
     try {
@@ -103,51 +108,112 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
     setEditingProject(project);
   }, []);
 
-  // Calculate stats
   const totalProjects = items.length;
   const completedProjects = items.filter(p => (p.lineCount as number) && (p.syncedLineCount as number) === (p.lineCount as number) && (p.lineCount as number) > 0).length;
   const totalSyncedLines = items.reduce((acc, p) => acc + ((p.syncedLineCount as number) || 0), 0);
+
+  const filteredProjects = items.filter(p => {
+    const titleMatch = (p.title || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const tagsMatch = p.metadata?.tags?.some(tag => (tag || '').toLowerCase().includes(searchQuery.toLowerCase())) || false;
+    const matchesSearch = titleMatch || tagsMatch;
+
+    if (!matchesSearch) return false;
+
+    const progress = p.lineCount ? Math.min(100, Math.round((((p.syncedLineCount as number) || 0) / (p.lineCount as number)) * 100)) : 0;
+
+    if (filterTab === 'inProgress') {
+      return progress > 0 && progress < 100;
+    }
+    if (filterTab === 'completed') {
+      return progress === 100;
+    }
+    if (filterTab === 'notStarted') {
+      return progress === 0;
+    }
+    return true;
+  }).sort((a, b) => {
+    if (sortBy === 'edited') {
+      const aTime = new Date((a.updatedAt as string) || (a.createdAt as string) || 0).getTime();
+      const bTime = new Date((b.updatedAt as string) || (b.createdAt as string) || 0).getTime();
+      return bTime - aTime;
+    }
+    if (sortBy === 'created') {
+      const aTime = new Date((a.createdAt as string) || 0).getTime();
+      const bTime = new Date((b.createdAt as string) || 0).getTime();
+      return bTime - aTime;
+    }
+    if (sortBy === 'title') {
+      return (a.title || '').localeCompare(b.title || '');
+    }
+    return 0;
+  });
 
   return (
     <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden pt-8 pb-12 lg:px-12 max-w-7xl mx-auto w-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 px-4 lg:px-0">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-100 mb-2 tracking-tight">Biblioteca</h1>
+          <h1 className="text-3xl font-bold text-zinc-100 mb-2 tracking-tight">{t('library.title')}</h1>
           <p className="text-[15px] text-zinc-400">
-            {!loading && `${totalProjects} proyectos · ${completedProjects} completos · ${totalSyncedLines} líneas sincronizadas`}
+            {!loading && t('library.stats', { total: totalProjects, completed: completedProjects, lines: totalSyncedLines })}
           </p>
         </div>
         <button
           className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 px-5 py-2.5 rounded-xl font-medium transition-colors shadow-glow w-fit"
         >
           <Icon name="add" size={18} />
-          Nuevo proyecto
+          {t('home.createNew')}
         </button>
       </div>
 
       {/* Filter Row */}
       {!loading && !error && items.length > 0 && (
-        <div className="px-4 lg:px-0 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="relative w-full sm:w-64">
-            <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
-            <input 
-              type="text" 
-              placeholder="Buscar..." 
-              className="w-full bg-zinc-900/50 border border-zinc-700/50 rounded-lg pl-10 pr-4 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
-            />
-          </div>
-          <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
-            <div className="flex items-center bg-zinc-800/50 rounded-lg p-1 border border-zinc-700/50 shrink-0">
-              <button className="px-4 py-1.5 rounded-md bg-zinc-700 text-zinc-100 text-sm font-medium shadow-sm transition-colors">Todos</button>
-              <button className="px-4 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 text-sm font-medium transition-colors">En curso</button>
-              <button className="px-4 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 text-sm font-medium transition-colors">Completos</button>
-              <button className="px-4 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200 text-sm font-medium transition-colors">Sin empezar</button>
+        <div className="px-4 lg:px-0 mb-6 flex flex-col gap-4 relative z-10">
+          <div className="flex items-end justify-between">
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-colors ${
+              isSearchFocused ? 'border-primary/50 bg-zinc-900' : 'border-zinc-800 bg-zinc-900/50'
+            }`}>
+              <Icon name="search" size={14} className={isSearchFocused ? 'text-primary' : 'text-zinc-500'} />
+              <input 
+                type="text" 
+                placeholder={t('home.search')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                className="bg-transparent border-none outline-none text-xs text-zinc-200 placeholder:text-zinc-600 w-32 focus:w-48 transition-all"
+              />
             </div>
-            <div className="flex items-center gap-2 text-sm text-zinc-400 shrink-0 ml-auto sm:ml-0 cursor-pointer hover:text-zinc-200 transition-colors">
-              <span className="font-medium">Ordenar</span>
-              <span className="text-zinc-300 font-semibold">Editado recientemente</span>
-              <Icon name="expand_more" size={16} />
+          </div>
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 w-full mb-6 relative">
+            <div className="flex gap-1 overflow-x-auto hide-scrollbar">
+              {['all', 'inProgress', 'completed', 'notStarted'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setFilterTab(tab as 'all' | 'inProgress' | 'completed' | 'notStarted')}
+                  className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${filterTab === tab
+                    ? 'border-primary text-zinc-100'
+                    : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                    }`}
+                >
+                  {(t as (k: string) => string)(`home.${tab}`)}
+                </button>
+              ))}
+            </div>
+            
+            <div className="relative flex items-center shrink-0 ml-auto sm:ml-0 mb-1 sm:mb-0">
+              <Icon name="sort" size={14} className="absolute left-3 text-zinc-400 pointer-events-none" />
+              <select 
+                className="appearance-none bg-transparent hover:bg-zinc-800 text-xs text-zinc-400 hover:text-zinc-200 transition-colors pl-8 pr-8 py-1.5 rounded-lg outline-none cursor-pointer border-none"
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as 'edited' | 'created' | 'title')}
+              >
+                <option value="edited" className="bg-zinc-900">{t('home.sortBy')} {t('home.recentlyEdited')}</option>
+                <option value="created" className="bg-zinc-900">{t('home.sortBy')} {t('home.recentlyCreated')}</option>
+                <option value="title" className="bg-zinc-900">{t('home.sortBy')} {t('home.titleAZ')}</option>
+              </select>
+              <Icon name="expand_more" size={14} className="absolute right-2 text-zinc-400 pointer-events-none" />
             </div>
           </div>
         </div>
@@ -185,7 +251,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
         // Mobile: List view with swipe gestures
         <div className="flex-1 min-h-0 overflow-y-auto pr-1 settings-scroll">
           <ProjectList
-            projects={items}
+            projects={filteredProjects}
             onDelete={handleDelete}
             onFavorite={handleFavorite}
             onSelect={onOpenProject}
@@ -195,7 +261,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
         // Desktop: Grid view (original layout)
         <div className="flex-1 px-4 lg:px-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
-            {items.map((project) => (
+            {filteredProjects.map((project) => (
             <ProjectCard
               key={project.publicId}
               project={project}
