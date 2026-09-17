@@ -12,6 +12,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { followUser, unfollowUser } from '@/features/profile/profile.service';
 import { gqlRequest } from '@/app/graphql.client';
 import { formatDistanceToNow } from 'date-fns';
+import { es as esLocale, enUS as enLocale } from 'date-fns/locale';
 
 interface MiniProfile {
   id: string;
@@ -66,7 +67,8 @@ const OPEN_DELAY = 280;
 const CLOSE_DELAY = 120;
 
 export function UserHoverCard({ accountName, userId, children }: UserHoverCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language.startsWith('es') ? esLocale : enLocale;
   const { user: me } = useAuthContext();
   const presence = usePresence();
   const triggerRef = useRef<HTMLSpanElement>(null);
@@ -217,7 +219,12 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                   <>
                     <span className="text-[10px] text-muted-foreground/40">•</span>
                     <p className="text-[10px] text-muted-foreground whitespace-nowrap">
-                      {(t as (k: string, opts: object) => string)('profile.lastSeen', { time: formatDistanceToNow(new Date(profile.lastOnlineAt), { addSuffix: true }) })}
+                      {(() => {
+                        const isNumeric = /^\d+$/.test(profile.lastOnlineAt as string);
+                        const date = new Date(isNumeric ? Number(profile.lastOnlineAt) : profile.lastOnlineAt);
+                        if (Number.isNaN(date.getTime())) return null;
+                        return (t as (k: string, opts: object) => string)('profile.lastSeen', { time: formatDistanceToNow(date, { addSuffix: true, locale: dateLocale }) });
+                      })()}
                     </p>
                   </>
                 )}
