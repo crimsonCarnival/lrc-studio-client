@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
-import { BadgeList } from '@/features/badges/BadgeList';
-import { Tip } from '@ui/tip';
 import { getLeaderboard } from './leaderboard.service';
 
 interface LeaderEntry {
@@ -43,14 +41,14 @@ function formatTime(min?: number, sec?: number) {
   const seconds = totalSeconds % 60;
 
   if (hours > 0) {
-    if (minutes === 0) return `${hours}h`;
-    return `${hours}h ${minutes}m`;
+    if (minutes === 0) return `${hours} h`;
+    return `${hours} h ${minutes} m`;
   }
   if (minutes > 0) {
-    if (seconds === 0) return `${minutes}m`;
-    return `${minutes}m ${seconds}s`;
+    if (seconds === 0) return `${minutes} m`;
+    return `${minutes} m ${seconds} s`;
   }
-  return `${seconds}s`;
+  return `${seconds} s`;
 }
 
 function formatCount(n?: number) {
@@ -60,33 +58,23 @@ function formatCount(n?: number) {
 }
 
 const PODIUM: Record<number, PodiumStyle> = {
-  1: { accent: 'border-l-warning', medal: '🥇', glow: 'bg-warning/8', ring: 'ring-1 ring-warning/30', label: 'text-warning' },
-  2: { accent: 'border-l-zinc-400', medal: '🥈', glow: 'bg-zinc-400/5', ring: 'ring-1 ring-zinc-400/20', label: 'text-zinc-300' },
-  3: { accent: 'border-l-orange-500', medal: '🥉', glow: 'bg-orange-500/5', ring: 'ring-1 ring-orange-500/20', label: 'text-orange-400' },
+  1: { accent: 'text-warning', medal: 'emoji_events', glow: 'bg-warning/10', ring: 'ring-2 ring-warning', label: 'text-warning' },
+  2: { accent: 'text-zinc-300', medal: 'emoji_events', glow: 'bg-zinc-300/10', ring: 'ring-2 ring-zinc-300', label: 'text-zinc-200' },
+  3: { accent: 'text-orange-500', medal: 'emoji_events', glow: 'bg-orange-500/10', ring: 'ring-2 ring-orange-500', label: 'text-orange-400' },
 };
-
-function StatChip({ iconName, value, tooltip, color = 'text-zinc-500' }: { iconName: string; value: string | number; tooltip: string; color?: string }) {
-  return (
-    <Tip content={tooltip} side="top">
-      <div className="flex items-center gap-1">
-        <Icon name={iconName} size={12} className={`shrink-0 ${color}`} />
-        <span className={`text-[11px] tabular-nums font-medium ${color}`}>{value}</span>
-      </div>
-    </Tip>
-  );
-}
 
 function RankBadge({ pos }: { pos: number }) {
   const p = PODIUM[pos];
   if (p) {
     return (
-      <span className="text-base leading-none w-7 text-center select-none" aria-label={`Rank ${pos}`}>
-        {p.medal}
-      </span>
+      <div className="flex items-center justify-center">
+        <Icon name={p.medal} size={18} className={p.accent} />
+        <span className={`ml-1 text-sm font-bold ${p.accent}`}>{pos}</span>
+      </div>
     );
   }
   return (
-    <span className="text-xs tabular-nums w-7 text-center text-zinc-600 font-mono font-semibold" aria-label={`Rank ${pos}`}>
+    <span className="text-sm tabular-nums w-full text-center text-zinc-500 font-mono font-semibold" aria-label={`Rank ${pos}`}>
       {pos}
     </span>
   );
@@ -98,106 +86,26 @@ function UserAvatar({ avatarUrl, name, ring }: { avatarUrl?: string; name?: stri
       <LazyImage
         src={avatarUrl}
         alt={name}
-        className={`size-9 rounded-xl object-cover flex-shrink-0 ${ring ?? ''}`}
+        className={`size-10 rounded-full object-cover flex-shrink-0 ${ring ?? ''}`}
       />
     );
   }
   return (
-    <div className={`size-9 rounded-xl bg-gradient-to-br from-primary/70 to-accent-blue flex items-center justify-center flex-shrink-0 font-bold text-zinc-950 text-sm select-none ${ring ?? ''}`}>
+    <div className={`size-10 rounded-full bg-gradient-to-br from-primary/80 to-accent-blue flex items-center justify-center flex-shrink-0 font-bold text-zinc-950 text-sm select-none ${ring ?? ''}`}>
       {(name || '?')[0].toUpperCase()}
     </div>
   );
 }
 
-function LeaderboardRow({ entry, rank }: { entry: LeaderEntry; rank: number }) {
-  const { t } = useTranslation();
-  const p = PODIUM[rank];
-  const name = entry.displayName || entry.accountName;
-  const badgeIds = (entry.badges ?? []).map(b => b.id);
-
-  return (
-    <Link
-      to={`/profile/${entry.accountName}`}
-      className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all duration-150
-        ${p
-          ? `border-l-2 ${p.accent} border-t border-r border-b border-zinc-700/30 ${p.glow} hover:border-zinc-600/40`
-          : 'border border-zinc-800/50 bg-zinc-800/20 hover:bg-zinc-800/50 hover:border-zinc-700/40'
-        }`}
-    >
-      {/* Rank */}
-      <RankBadge pos={rank} />
-
-      {/* Avatar */}
-      <UserAvatar avatarUrl={entry.avatarUrl} name={name} ring={p?.ring} />
-
-      {/* Identity & Stats */}
-      <div className="flex-1 min-w-0 flex flex-col justify-center py-1">
-        <div className="flex items-center gap-1.5 flex-wrap mb-1">
-          <span className={`text-sm font-semibold truncate transition-colors group-hover:text-primary ${p ? p.label : 'text-zinc-200'}`}>
-            {name}
-          </span>
-          {(entry.progression?.level ?? 0) > 0 && (
-            <span className="text-[9px] font-bold text-zinc-600 border border-zinc-800 px-1 py-0.5 rounded tabular-nums shrink-0">
-              Lv.{entry.progression!.level}
-            </span>
-          )}
-          {badgeIds.length > 0 && <BadgeList ids={badgeIds} max={2} />}
-          <span className="text-[11px] text-zinc-600 font-mono ml-1">{entry.accountName}</span>
-        </div>
-
-        {/* Inline stats - 7 secondary metrics grouped neutrally */}
-        <div className="hidden sm:flex flex-wrap items-center gap-x-3 gap-y-1">
-          <StatChip iconName="queue_music" value={formatCount(entry.stats?.syncedLines ?? 0)} tooltip={t('badges.leaderboard.syncedLines', 'Synced Lines')} color="text-zinc-500" />
-          {(entry.stats?.aiSyncedLines ?? 0) > 0 && (
-            <StatChip iconName="auto_awesome" value={formatCount(entry.stats!.aiSyncedLines!)} tooltip={t('badges.leaderboard.aiSyncedLines', 'AI-Assisted Lines')} color="text-primary/70" />
-          )}
-          <StatChip iconName="spellcheck" value={formatCount(entry.stats?.wordsSynced ?? 0)} tooltip={t('badges.leaderboard.wordsSynced', 'Words Synced')} color="text-zinc-500" />
-          {(entry.stats?.aiWordsSynced ?? 0) > 0 && (
-            <StatChip iconName="auto_awesome" value={formatCount(entry.stats!.aiWordsSynced!)} tooltip={t('badges.leaderboard.aiWordsSynced', 'AI-Assisted Words')} color="text-primary/70" />
-          )}
-          <StatChip iconName="mic" value={formatCount(entry.stats?.karaokeLines ?? 0)} tooltip={t('badges.leaderboard.karaokeLines', 'Karaoke Lines')} color="text-zinc-500" />
-          <StatChip iconName="star" value={formatCount(entry.totalStarsReceived ?? 0)} tooltip={t('badges.leaderboard.stars')} color="text-zinc-500" />
-          <StatChip iconName="call_split" value={formatCount(entry.totalForksReceived ?? 0)} tooltip={t('badges.leaderboard.forks')} color="text-zinc-500" />
-          <StatChip iconName="folder_open" value={formatCount(entry.projectCount ?? 0)} tooltip={t('badges.leaderboard.projects')} color="text-zinc-500" />
-          <div className="w-px h-3 bg-zinc-800 mx-1" />
-          <StatChip iconName="timer" value={formatTime(entry.stats?.minutesSynced, entry.stats?.secondsSynced)} tooltip={t('badges.leaderboard.musicSynced')} color="text-zinc-400 font-medium" />
-        </div>
-      </div>
-
-      {/* Right-side badges: rankScore + streak */}
-      <div className="shrink-0 ml-2 flex flex-col items-end gap-1.5">
-        {/* Rank score — always rendered when > 0 */}
-        {(entry.rankScore ?? 0) > 0 && (
-          <Tip content={t('badges.leaderboard.rankScore', 'Rank Score')} side="top">
-            <div className="flex items-center gap-1 bg-primary/8 border border-primary/20 px-2 py-0.5 rounded-full">
-              <Icon name="auto_awesome" size={12} className="text-primary/70" />
-              <span className="text-[11px] tabular-nums font-bold text-primary/80">
-                {Math.round(entry.rankScore!).toLocaleString()}
-              </span>
-            </div>
-          </Tip>
-        )}
-        {/* Streak chip */}
-        {(entry.streak?.current ?? 0) > 0 && (
-          <Tip content={t('badges.leaderboard.streak')} side="top">
-            <div className="flex items-center gap-1 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full">
-              <Icon name="local_fire_department" size={12} className="text-orange-500" />
-              <span className="text-[11px] tabular-nums font-bold text-orange-500">{entry.streak!.current}d</span>
-            </div>
-          </Tip>
-        )}
-      </div>
-    </Link>
-  );
-}
-
 export default function LeaderboardPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<LeaderEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState(false);
+  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'all'>('all');
 
   const PAGE_SIZE = 25;
 
@@ -228,27 +136,40 @@ export default function LeaderboardPage() {
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
-      <div className="flex flex-col px-4 pt-6 pb-16 max-w-3xl mx-auto w-full animate-fade-in">
-
-        {/* Header card */}
-        <div className="glass rounded-[2rem] p-6 sm:p-8 mb-4 relative overflow-hidden">
-          <div className="absolute -top-16 -right-16 size-48 rounded-full bg-warning/5 blur-3xl pointer-events-none" aria-hidden />
-          <div className="absolute -bottom-12 -left-12 size-36 rounded-full bg-primary/5 blur-3xl pointer-events-none" aria-hidden />
-
-          <div className="relative flex items-start gap-4">
-            <div className="size-12 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center flex-shrink-0">
-              <Icon name="emoji_events" size={24} className="text-warning" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-heading font-semibold text-foreground">
-                {t('badges.leaderboard.title')}
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                {t('badges.leaderboard.subtitle')}
-              </p>
-            </div>
+      <div className="flex flex-col px-4 pt-8 pb-16 max-w-5xl mx-auto w-full animate-fade-in">
+        
+        {/* Header section */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-heading font-semibold text-foreground">
+              {t('badges.leaderboard.title', 'Clasificación')}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              {t('badges.leaderboard.subtitle', 'Ordenada por minutos de audio efectivamente sincronizados.')}
+            </p>
           </div>
-
+          
+          {/* Tabs */}
+          <div className="flex p-1 gap-1">
+            <button 
+              onClick={() => setTimeFilter('week')}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timeFilter === 'week' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
+            >
+              {t('badges.leaderboard.thisWeek', 'Esta semana')}
+            </button>
+            <button 
+              onClick={() => setTimeFilter('month')}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timeFilter === 'month' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
+            >
+              {t('badges.leaderboard.thisMonth', 'Este mes')}
+            </button>
+            <button 
+              onClick={() => setTimeFilter('all')}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timeFilter === 'all' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
+            >
+              {t('badges.leaderboard.allTime', 'Histórico')}
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -266,15 +187,69 @@ export default function LeaderboardPage() {
             <p className="text-sm text-muted-foreground">{t('badges.leaderboard.empty')}</p>
           </div>
         ) : (
-          <>
-            <div className="flex flex-col gap-1.5">
-              {users.map((entry, i) => (
-                <LeaderboardRow key={entry.id ?? entry.accountName} entry={entry} rank={i + 1} />
-              ))}
+          <div className="glass rounded-2xl overflow-hidden border border-zinc-800/60">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="border-b border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                    <th className="py-4 px-4 w-16 text-center">#</th>
+                    <th className="py-4 px-4">{t('badges.leaderboard.creator', 'CREADOR')}</th>
+                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.projectsCol', 'PROYECTOS')}</th>
+                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.linesCol', 'LÍNEAS')}</th>
+                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.starsCol', 'ESTRELLAS')}</th>
+                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.syncedCol', 'SINCRONIZADO')}</th>
+                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.xpCol', 'XP')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800/50">
+                  {users.map((entry, i) => {
+                    return (
+                      <tr 
+                        key={entry.id ?? entry.accountName} 
+                        className="hover:bg-zinc-800/30 transition-colors group cursor-pointer"
+                        onClick={() => navigate(`/profile/${entry.accountName}`)}
+                      >
+                        <td className="py-3 px-4 text-center">
+                          <RankBadge pos={i + 1} />
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-4">
+                            <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} ring={PODIUM[i + 1]?.ring} />
+                            <div className="flex flex-col">
+                              <span className={`font-semibold text-[15px] ${PODIUM[i + 1] ? PODIUM[i + 1].label : 'text-zinc-100'}`}>
+                                {entry.displayName || entry.accountName}
+                              </span>
+                              <span className="text-xs text-zinc-500 mt-0.5">
+                                @{entry.accountName}
+                                {(entry.progression?.level ?? 0) > 0 && ` · Nv. ${entry.progression!.level}`}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-right tabular-nums text-zinc-400 text-[15px]">
+                          {formatCount(entry.projectCount ?? 0)}
+                        </td>
+                        <td className="py-3 px-4 text-right tabular-nums text-zinc-200 font-semibold text-[15px]">
+                          {formatCount(entry.stats?.syncedLines ?? 0)}
+                        </td>
+                        <td className="py-3 px-4 text-right tabular-nums text-zinc-400 text-[15px]">
+                          {PODIUM[i + 1] && i < 3 ? <span className="text-warning font-semibold">{formatCount(entry.totalStarsReceived ?? 0)}</span> : formatCount(entry.totalStarsReceived ?? 0)}
+                        </td>
+                        <td className="py-3 px-4 text-right tabular-nums text-zinc-200 font-bold text-[15px]">
+                          {formatTime(entry.stats?.minutesSynced, entry.stats?.secondsSynced)}
+                        </td>
+                        <td className="py-3 px-4 text-right tabular-nums text-primary/80 font-bold text-[15px]">
+                          {Math.round(entry.rankScore ?? 0).toLocaleString()}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
 
             {hasMore && (
-              <div className="flex justify-center mt-6">
+              <div className="border-t border-zinc-800/50 p-4 flex justify-center bg-zinc-900/20">
                 <Button
                   variant="outline"
                   size="sm"
@@ -287,11 +262,7 @@ export default function LeaderboardPage() {
                 </Button>
               </div>
             )}
-
-            <p className="text-center text-[10px] text-zinc-700 mt-6">
-              {t('badges.leaderboard.subtitle')}
-            </p>
-          </>
+          </div>
         )}
       </div>
     </div>

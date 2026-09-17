@@ -1,5 +1,6 @@
 export default {
   title: "Biblioteca",
+  stats: "{{total}} proyectos · {{completed}} completos · {{lines}} líneas sincronizadas",
   count_one: "{{count}} sesión",
   count_other: "{{count}} sesiones",
   empty: "No hay sesiones guardadas",

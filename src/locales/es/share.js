@@ -53,6 +53,7 @@ export default {
   linkCopied: "¡Copiado!",
   secondsPlaceholder: "Segundos...",
   forkedProject: "Proyecto bifurcado",
-  forkedBadge: "Bifurcado",
+  forkedBadge: "Derivado",
+  forkedFrom: "Derivado de {{username}}",
   verifying: "Verificando tu sesión...",
 };

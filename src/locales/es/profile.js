@@ -102,6 +102,12 @@ export default {
   },
   activity: {
     history: "Historial de acciones",
+    empty: "No hay actividad reciente",
+    ownerEmpty: "Ver mi actividad",
+  },
+  badges: {
+    title: "Insignias",
+    count: "{{count}} de {{total}}",
   },
   stats: {
     addictionLevel: "Nivel de adicción",
@@ -141,8 +147,12 @@ export default {
       mostSynced: "Tu proyecto con más líneas sincronizadas.",
       largestProject: "Tu proyecto con más líneas de letra.",
     },
+    projects: "Proyectos",
+    syncedTime: "Sincronizados",
+    stars: "Estrellas recibidas",
+    followers: "Seguidores",
+    following: "Siguiendo"
   },
-
   editProfile: "Editar perfil",
   statsProjects_one: "{{count}} proyecto",
   statsProjects_other: "{{count}} proyectos",
@@ -183,8 +193,11 @@ export default {
   noPublicProjects: "Aún no hay proyectos públicos.",
   publicTabs: {
     projects: "Proyectos",
+    projectsWithCount: "Proyectos {{count}}",
     playlists: "Listas",
+    playlistsWithCount: "Listas {{count}}",
     showcase: "Vitrina",
+    activity: "Actividad",
   },
   notFound: "Usuario no encontrado.",
   notFoundSub: "Este perfil no existe o puede haber sido eliminado.",
@@ -229,5 +242,6 @@ export default {
   openInNewTab: "Abrir en nueva pestaña",
   privateProject: "Proyecto privado",
   avatarAlt: "Avatar",
-  peopleYouMightKnow: "Personas que podrías conocer"
+  peopleYouMightKnow: "Personas que quizás conozcas",
+  lastSeen: "Visto por última vez {{time}}"
 };

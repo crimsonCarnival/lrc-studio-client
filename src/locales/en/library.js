@@ -1,5 +1,6 @@
 export default {
   title: "Library",
+  stats: "{{total}} projects · {{completed}} completed · {{lines}} lines synced",
   count_one: "{{count}} project",
   count_other: "{{count}} projects",
   empty: "No saved projects yet",

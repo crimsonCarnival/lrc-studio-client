@@ -54,5 +54,6 @@ export default {
   secondsPlaceholder: "Seconds...",
   forkedProject: "Forked project",
   forkedBadge: "Forked",
+  forkedFrom: "Forked from {{username}}",
   verifying: "Verifying your session...",
 }

@@ -102,6 +102,12 @@ export default {
   },
   activity: {
     history: "Action History",
+    empty: "No recent activity",
+    ownerEmpty: "View my activity",
+  },
+  badges: {
+    title: "Badges",
+    count: "{{count}} of {{total}}",
   },
   stats: {
     addictionLevel: "Current Addiction Level",
@@ -141,6 +147,11 @@ export default {
       mostSynced: "Your project with the most synced lines.",
       largestProject: "Your project with the most lyric lines.",
     },
+    projects: "Projects",
+    syncedTime: "Synced",
+    stars: "Stars Received",
+    followers: "Followers",
+    following: "Following"
   },
 
   editProfile: "Edit Profile",
@@ -183,8 +194,11 @@ export default {
   noPublicProjects: "No public projects yet.",
   publicTabs: {
     projects: "Projects",
+    projectsWithCount: "Projects {{count}}",
     playlists: "Playlists",
+    playlistsWithCount: "Playlists {{count}}",
     showcase: "Showcase",
+    activity: "Activity",
   },
   notFound: "User not found.",
   notFoundSub: "This profile doesn't exist or may have been removed.",
@@ -229,5 +243,6 @@ export default {
   openInNewTab: "Open in new tab",
   privateProject: "Private project",
   avatarAlt: "Avatar",
-  peopleYouMightKnow: "People you might know"
+  peopleYouMightKnow: "People you might know",
+  lastSeen: "Last seen {{time}}"
 };

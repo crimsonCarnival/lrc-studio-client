@@ -146,11 +146,11 @@ export function AppHeader({
             {/* ── Desktop Navigation ── */}
             {user && !isGuestLanding && (
               <nav className="hidden lg:flex items-center gap-6">
-                <NavLink to="/home" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.home', 'Inicio')}</NavLink>
-                <NavLink to="/explore" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.explore', 'Explorar')}</NavLink>
+                <NavLink to="/home" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.home', 'Home')}</NavLink>
+                <NavLink to="/explore" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.explore', 'Explore')}</NavLink>
                 <NavLink to="/feed" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.feed', 'Feed')}</NavLink>
-                <NavLink to="/leaderboard" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.leaderboard', 'Clasificación')}</NavLink>
-                <NavLink to="/library" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.library', 'Biblioteca')}</NavLink>
+                <NavLink to="/leaderboard" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.leaderboard', 'Leaderboard')}</NavLink>
+                <NavLink to="/library" className={({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.library', 'Library')}</NavLink>
               </nav>
             )}
           </div>
