@@ -36,7 +36,7 @@ interface FocusedTimestamp {
   wordIndex?: number;
 }
 
-interface WordsModeColumnProps {
+export interface WordsModeColumnProps {
   line: WordLine;
   lineIndex: number;
   isSynced: boolean;
@@ -59,12 +59,11 @@ interface WordsModeColumnProps {
   onWordMenu?: (lineIndex: number, wi: number, w: Word, isSecondary: boolean) => void;
 }
 
-export default function WordsModeColumn({
+export function WordsModeTimestamp({
   line,
   lineIndex,
   isSynced,
   isActive,
-  isMobile,
   settings,
   editingTimestamp,
   setEditingTimestamp,
@@ -72,13 +71,9 @@ export default function WordsModeColumn({
   setFocusedTimestamp,
   stampTarget,
   handleStampTargetToggle,
-  activeWordIndex,
   handleSetTimestamp,
   handleTimestampWheel,
   nudgeIndicator,
-  handleWordClick,
-  handleClearWordTimestamp,
-  onWordMenu,
 }: WordsModeColumnProps) {
   const { t } = useTranslation();
 
@@ -132,6 +127,24 @@ export default function WordsModeColumn({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+export function WordsModeChips({
+  line,
+  lineIndex,
+  isMobile,
+  focusedTimestamp,
+  stampTarget,
+  activeWordIndex,
+  handleWordClick,
+  handleClearWordTimestamp,
+  onWordMenu,
+}: WordsModeColumnProps) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col gap-1 w-full">
       {/* Word chips */}
       {stampTarget !== 'secondary' && (
         <div className="flex flex-wrap gap-x-1 gap-y-1 w-full pr-2 min-h-[22px] items-end content-start">

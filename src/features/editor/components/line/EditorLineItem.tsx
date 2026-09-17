@@ -12,7 +12,7 @@ import LineTextEditingForm from './LineTextEditingForm';
 import { useLineGestures } from '../../hooks/useLineGestures';
 import LrcModeColumn from '../modes/LrcModeColumn';
 import SrtModeColumn from '../modes/SrtModeColumn';
-import WordsModeColumn from '../modes/WordsModeColumn';
+import { WordsModeTimestamp, WordsModeChips } from '../modes/WordsModeColumn';
 import LineTextContent from './LineTextContent';
 import LineActionToolbar from './LineActionToolbar';
 import SectionPickerDropdown from './SectionPickerDropdown';
@@ -564,8 +564,8 @@ const EditorLineItem = React.memo(({
         style={{ width: editorMode === 'words' ? '240px' : '92px', flexShrink: 0 }}
       >
         {editorMode === 'words' ? (
-          <WordsModeColumn
-            line={line as ComponentProps<typeof WordsModeColumn>['line']}
+          <WordsModeTimestamp
+            line={line as ComponentProps<typeof WordsModeTimestamp>['line']}
             lineIndex={i}
             isSynced={isSynced}
             isActive={isActive}
@@ -581,8 +581,8 @@ const EditorLineItem = React.memo(({
             handleSetTimestamp={handleSetTimestamp}
             handleTimestampWheel={handleTimestampWheel}
             nudgeIndicator={nudgeIndicator}
-            handleWordClick={handleWordClick as ComponentProps<typeof WordsModeColumn>['handleWordClick']}
-            handleClearWordTimestamp={handleClearWordTimestamp as ComponentProps<typeof WordsModeColumn>['handleClearWordTimestamp']}
+            handleWordClick={handleWordClick as ComponentProps<typeof WordsModeTimestamp>['handleWordClick']}
+            handleClearWordTimestamp={handleClearWordTimestamp as ComponentProps<typeof WordsModeTimestamp>['handleClearWordTimestamp']}
             onWordMenu={onWordMenu}
           />
         ) : editorMode === 'srt' ? (
@@ -619,17 +619,14 @@ const EditorLineItem = React.memo(({
         )}
         {isModified && (
           <div
-            className={`absolute -right-2 size-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.5)] animate-in fade-in zoom-in duration-300 z-10 ${
-              editorMode === 'words' ? 'top-3' : 'top-1/2 -translate-y-1/2'
-            }`}
+            className={`absolute -right-2 size-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.5)] animate-in fade-in zoom-in duration-300 z-10 top-1/2 -translate-y-1/2`}
           />
         )}
       </span>
 
-
       {/* Lyrics text container */}
       <div
-        className="flex-1 min-w-0 flex items-start gap-2 overflow-x-hidden pb-0.5 mt-0.5 select-text"
+        className={`flex-1 min-w-0 flex ${editorMode === 'words' ? 'flex-col' : 'items-start'} gap-2 overflow-x-hidden pb-0.5 mt-0.5 select-text`}
         data-no-drag
         onDoubleClick={() => {
           setEditingLineIndex(i);
@@ -660,6 +657,30 @@ const EditorLineItem = React.memo(({
           handleSetWordSinger={handleSetWordSinger as ComponentProps<typeof LineTextContent>['handleSetWordSinger']}
           songSingers={projectSingers}
         />
+        
+        {editorMode === 'words' && (
+          <WordsModeChips
+            line={line as ComponentProps<typeof WordsModeChips>['line']}
+            lineIndex={i}
+            isSynced={isSynced}
+            isActive={isActive}
+            isMobile={isMobile}
+            settings={settings}
+            editingTimestamp={editingTimestamp}
+            setEditingTimestamp={setEditingTimestamp}
+            focusedTimestamp={focusedTimestamp ?? null}
+            setFocusedTimestamp={setFocusedTimestamp}
+            stampTarget={stampTarget}
+            handleStampTargetToggle={handleStampTargetToggle}
+            activeWordIndex={activeWordIndex}
+            handleSetTimestamp={handleSetTimestamp}
+            handleTimestampWheel={handleTimestampWheel}
+            nudgeIndicator={nudgeIndicator}
+            handleWordClick={handleWordClick as ComponentProps<typeof WordsModeChips>['handleWordClick']}
+            handleClearWordTimestamp={handleClearWordTimestamp as ComponentProps<typeof WordsModeChips>['handleClearWordTimestamp']}
+            onWordMenu={onWordMenu}
+          />
+        )}
 
         <ResponsiveModal
           open={editingLineIndex === i}
