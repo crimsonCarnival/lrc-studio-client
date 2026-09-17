@@ -414,29 +414,60 @@ export default function ProfilePage() {
           onOpenFollowing={() => setFollowModal('FOLLOWING')}
         />
 
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-8">
+          <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
+            <span className="text-2xl font-bold text-zinc-100">{profile.projectCount}</span>
+            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.projects', { defaultValue: 'Projects' })}</span>
+          </div>
+          <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
+            <span className="text-2xl font-bold text-zinc-100">{minutesLabel || '0 m'}</span>
+            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.syncedTime', { defaultValue: 'Synced' })}</span>
+          </div>
+          <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
+            <span className="text-2xl font-bold text-zinc-100">{profile.totalStarsReceived}</span>
+            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.stars', { defaultValue: 'Stars Received' })}</span>
+          </div>
+          <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
+            <span className="text-2xl font-bold text-zinc-100">{profile.followerCount}</span>
+            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.followers', { defaultValue: 'Followers' })}</span>
+          </div>
+          <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
+            <span className="text-2xl font-bold text-zinc-100">{profile.followingCount}</span>
+            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.following', { defaultValue: 'Following' })}</span>
+          </div>
+        </div>
+
         {/* Two-column layout: main content + showcase sidebar */}
         <div className={`flex gap-6 items-start ${hasVisibleShowcase || isOwner || (!isOwner && !!user) ? 'flex-col lg:flex-row' : ''}`}>
           {/* Main content */}
           <div className="flex-1 min-w-0">
             {/* Tabs */}
             <div className="flex gap-1 mb-6 border-b border-border">
-              {['projects', 'playlists'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === tab
-                    ? 'border-primary text-foreground'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                    }`}
-                >
-                  {t(`profile.publicTabs.${tab}` as 'profile.publicTabs.projects')}
-                </button>
-              ))}
+              {['projects', 'playlists', 'activity'].map((tab) => {
+                const tAny = t as (k: string, opts?: object) => string;
+                let label = tAny(`profile.publicTabs.${tab}`);
+                if (tab === 'projects') label = tAny('profile.publicTabs.projectsWithCount', { defaultValue: `Projects ${profile.projectCount}`, count: profile.projectCount });
+                if (tab === 'playlists') label = tAny('profile.publicTabs.playlistsWithCount', { defaultValue: `Playlists 0`, count: 0 });
+                
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === tab
+                      ? 'border-primary text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                      }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
 
             {activeTab === 'projects' && (
               profile.projects.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+                <div className="flex flex-col items-center justify-center gap-3 py-16 text-center glass rounded-2xl">
                   <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
                     <Icon name="folder_open" size={28} className="text-zinc-500" />
                   </div>
@@ -460,36 +491,79 @@ export default function ProfilePage() {
             {activeTab === 'playlists' && (
               <PlaylistGrid accountName={profile.accountName} isOwner={isOwner} />
             )}
+
+            {activeTab === 'activity' && (
+              <div className="flex flex-col items-center justify-center gap-3 py-16 text-center glass rounded-2xl">
+                <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
+                  <Icon name="monitoring" size={28} className="text-zinc-500" />
+                </div>
+                <p className="text-sm text-zinc-400 font-medium">
+                  {isOwner ? (
+                    <button onClick={() => navigate('/settings/activity')} className="text-primary hover:underline transition-colors">
+                      {t('profile.activity.ownerEmpty', { defaultValue: 'Ver mi actividad' })}
+                    </button>
+                  ) : (
+                    t('profile.activity.empty', { defaultValue: 'No hay actividad reciente' })
+                  )}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Showcase sidebar */}
           {(hasVisibleShowcase || isOwner || (!isOwner && !!user)) && (
-            <aside className="w-full lg:w-56 shrink-0 flex flex-col gap-4">
-              {hasVisibleShowcase ? (
-                <ShowcasedBadges
-                  badges={profile.showcasedBadges}
-                  maxSlots={profile.showcasedBadges.length}
-                  className=""
-                />
-              ) : isOwner ? (
-                <div className="flex flex-col gap-2 p-4 rounded-xl border border-dashed border-zinc-800">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600">{t('badges.showcase.title')}</p>
-                  <p className="text-xs text-zinc-600">{t('badges.showcase.noShowcase')}</p>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/settings/profile')}
-                    className="text-xs text-primary hover:text-primary/70 transition-colors text-left"
-                  >
-                    {t('badges.showcase.goSetup')}
-                  </button>
+            <aside className="w-full lg:w-72 shrink-0 flex flex-col gap-6">
+              
+              {/* Vitrina block */}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">{t('badges.showcase.title', { defaultValue: 'Vitrina' })}</h3>
+                  {isOwner && (
+                    <button onClick={() => navigate('/settings/profile')} className="text-xs text-primary hover:text-primary-dim transition-colors">
+                      {t('profile.showcase.configure', { defaultValue: 'Configurar' })}
+                    </button>
+                  )}
                 </div>
-              ) : null}
+                
+                {hasVisibleShowcase ? (
+                  <ShowcasedBadges
+                    badges={profile.showcasedBadges}
+                    maxSlots={profile.showcasedBadges.length}
+                    className=""
+                  />
+                ) : isOwner ? (
+                  <div className="flex flex-col gap-2 p-4 rounded-xl border border-dashed border-zinc-700 bg-zinc-900/30">
+                    <p className="text-xs text-zinc-500 font-medium">{t('badges.showcase.noShowcase')}</p>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/settings/profile')}
+                      className="text-xs text-primary hover:text-primary/80 transition-colors text-left"
+                    >
+                      {t('badges.showcase.goSetup')}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
 
+              {/* Insignias block */}
               {allBadgeIds.length > 0 && (isOwner || profile.showcasePublic !== false) && (
-                <div>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-600 mb-2">{t('badges.showcase.allBadges')}</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {allBadgeIds.map(id => <BadgeChip key={id} id={id} />)}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">{t('profile.badges.title', { defaultValue: 'Insignias' })}</h3>
+                    <span className="text-xs text-zinc-500 font-medium">
+                      {t('profile.badges.count', { defaultValue: '{{count}} de {{total}}', count: allBadgeIds.length, total: 18 })}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {allBadgeIds.map(id => (
+                      <div key={id} className="glass rounded-xl p-3 flex items-center gap-3">
+                        <BadgeChip id={id} />
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="text-sm font-bold text-zinc-200 truncate">{(t as (k: string) => string)(`badges.${id}.label`)}</span>
+                          <span className="text-xs text-zinc-500 truncate">{(t as (k: string) => string)(`badges.${id}.tip`)}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

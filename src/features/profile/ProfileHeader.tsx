@@ -12,30 +12,31 @@ import { FollowButton } from './FollowButton';
 import type { PublicUser } from '@/types';
 import { usePresence } from '@/shared/hooks/usePresence';
 import { formatDistanceToNow } from 'date-fns';
+import { es as esLocale, enUS as enLocale } from 'date-fns/locale';
 
 function AvatarBadge({ avatarUrl, name, isOnline, size = 'lg' }: { avatarUrl?: string | null; name: string; isOnline?: boolean; size?: 'lg' | 'sm' }) {
-  const sizeClass = size === 'lg' ? 'size-24 text-4xl rounded-[1.5rem]' : 'size-16 text-2xl rounded-xl';
+  const sizeClass = size === 'lg' ? 'size-28 sm:size-32 text-5xl rounded-[1.5rem]' : 'size-16 text-2xl rounded-xl';
   if (avatarUrl) {
     return (
-      <div className="relative inline-block">
+      <div className="relative inline-block shrink-0">
         <LazyImage
           src={avatarUrl}
           alt={name}
-          className={`${sizeClass} object-cover border-4 border-border shadow-2xl shadow-primary/20`}
+          className={`${sizeClass} object-cover border border-border shadow-inner-highlight`}
         />
         {isOnline && (
-          <span className="absolute bottom-1 right-1 size-5 rounded-full bg-green-500 border-4 border-background" />
+          <span className="absolute -bottom-1 -right-1 size-5 rounded-full bg-green-500 border-[3px] border-zinc-900" />
         )}
       </div>
     );
   }
   return (
-    <div className="relative inline-block">
-      <div className={`${sizeClass} bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center border-4 border-border shadow-2xl shadow-primary/20 font-bold text-zinc-950 select-none`}>
+    <div className="relative inline-block shrink-0">
+      <div className={`${sizeClass} bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center border border-border shadow-inner-highlight font-bold text-zinc-950 select-none`}>
         {(name || '?')[0].toUpperCase()}
       </div>
       {isOnline && (
-        <span className="absolute bottom-1 right-1 size-5 rounded-full bg-green-500 border-4 border-background" />
+        <span className="absolute -bottom-1 -right-1 size-5 rounded-full bg-green-500 border-[3px] border-zinc-900" />
       )}
     </div>
   );
@@ -100,7 +101,6 @@ export function ProfileHeader({
   badgeIds,
   level,
   xp,
-  minutesLabel,
   isOwner,
   isFollowing,
   followLoading,
@@ -110,165 +110,119 @@ export function ProfileHeader({
   blockLoading,
   onBlock,
   onUnblock,
-  onOpenFollowers,
-  onOpenFollowing,
 }: ProfileHeaderProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateLocale = i18n.language.startsWith('es') ? esLocale : enLocale;
   const navigate = useNavigate();
   const presence = usePresence();
   const isOnline = presence.isOnline(profile.id);
 
+  const xpForLevel = level * level * 100;
+  const xpForNext = (level + 1) * (level + 1) * 100;
+  const progress = xp - xpForLevel;
+  const needed = xpForNext - xp;
+  const xpTip = `${xp.toLocaleString()} XP · ${needed.toLocaleString()} to Lv.${level + 1} (${Math.round((progress / (xpForNext - xpForLevel)) * 100)}%)`;
+
+  const copyProfileLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    // Ideally a toast would go here, but this is a lightweight solution
+  };
+
   return (
-    <div className="glass rounded-[2rem] p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden mb-6">
-      {isOwner ? (
-        <Tip
-          content={(() => {
-            const xpForLevel = level * level * 100;
-            const xpForNext = (level + 1) * (level + 1) * 100;
-            const progress = xp - xpForLevel;
-            const needed = xpForNext - xp;
-            return `${xp.toLocaleString()} XP · ${needed.toLocaleString()} to Lv.${level + 1} (${Math.round((progress / (xpForNext - xpForLevel)) * 100)}%)`;
-          })()}
-          side="bottom"
-        >
-          <LevelBadge level={level} className="right-6" />
-        </Tip>
-      ) : (
-        <LevelBadge level={level} className="right-6" />
-      )}
+    <div className="glass rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden mb-6">
       <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} isOnline={isOnline} />
 
-      <div className="flex-1 text-center sm:text-left">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-2">
-          <div>
+      <div className="flex-1 min-w-0 w-full text-center sm:text-left flex flex-col pt-1">
+        
+        {/* Row 1: Name, Badges, Level, and Action Buttons */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap justify-center sm:justify-start">
+            <h1 className="text-2xl sm:text-3xl font-bold text-zinc-100 truncate">{displayName}</h1>
             <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-              <h1 className="text-2xl font-semibold text-foreground">{displayName}</h1>
+              {badgeIds.length > 0 && <BadgeList ids={badgeIds} max={3} />}
+              <Tip content={xpTip} side="bottom">
+                <span className="bg-primary/20 text-primary-light border border-primary/30 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider cursor-default shadow-glow">
+                  {t('profile.levelLabel', { defaultValue: 'Nivel' })} {level}
+                </span>
+              </Tip>
             </div>
-            {badgeIds.length > 0 && (
-              <BadgeList ids={badgeIds} max={3} className="mt-1.5 justify-center sm:justify-start" />
+          </div>
+
+          <div className="flex items-center justify-center sm:justify-start xl:justify-end gap-2 shrink-0">
+            {isOwner ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/settings')}
+                className="bg-zinc-800/50 hover:bg-zinc-700 text-zinc-200 border-zinc-700"
+              >
+                <Icon name="edit" size={16} className="mr-2 opacity-70" />
+                {t('profile.editProfile')}
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2">
+                {!isBlocked && (
+                  <FollowButton
+                    isFollowing={isFollowing}
+                    followLoading={followLoading}
+                    onFollow={onFollow}
+                    onUnfollow={onUnfollow}
+                  />
+                )}
+                <BlockControl
+                  isBlocked={isBlocked}
+                  blockLoading={blockLoading}
+                  onBlock={onBlock}
+                  onUnblock={onUnblock}
+                />
+              </div>
             )}
+            <Tip content={t('share.title', { defaultValue: 'Share' })}>
+              <Button variant="outline" size="icon-sm" onClick={copyProfileLink} className="bg-zinc-800/50 hover:bg-zinc-700 border-zinc-700">
+                <Icon name="share" size={16} className="opacity-70" />
+              </Button>
+            </Tip>
           </div>
         </div>
 
-        <div className="flex items-center justify-center sm:justify-start gap-1.5 mt-1.5">
-          <CountryFlag countryCode={profile.country} />
-          <p className="text-muted-foreground text-sm font-mono">{profile.accountName}</p>
+        {/* Row 2: Handle, Country, Last Online */}
+        <div className="flex items-center justify-center sm:justify-start gap-2 mt-2 flex-wrap">
+          <p className="text-zinc-400 font-medium">@{profile.accountName}</p>
+          {(profile.country || (!isOnline && profile.lastOnlineAt)) && (
+            <span className="text-zinc-600 px-1">•</span>
+          )}
+          {profile.country && <CountryFlag countryCode={profile.country} />}
           {!isOnline && profile.lastOnlineAt && (
-            <>
-              <span className="text-xs text-muted-foreground/40">•</span>
-              <p className="text-xs text-muted-foreground whitespace-nowrap">
-                {(t as (k: string, opts: object) => string)('profile.lastSeen', { time: formatDistanceToNow(new Date(profile.lastOnlineAt), { addSuffix: true }) })}
-              </p>
-            </>
+            <p className="text-xs text-zinc-500 whitespace-nowrap">
+              {(() => {
+                const isNumeric = /^\d+$/.test(profile.lastOnlineAt as string);
+                const date = new Date(isNumeric ? Number(profile.lastOnlineAt) : profile.lastOnlineAt);
+                if (Number.isNaN(date.getTime())) return null;
+                return (t as (k: string, opts: object) => string)('profile.lastSeen', { time: formatDistanceToNow(date, { addSuffix: true, locale: dateLocale }) });
+              })()}
+            </p>
           )}
         </div>
 
-        <p className="text-muted-foreground text-sm mt-3 max-w-md">
-          {profile.bio || <span className="italic opacity-50">{t('profile.noBio')}</span>}
+        {/* Row 3: Bio */}
+        <p className="text-zinc-300 text-sm mt-3 max-w-2xl leading-relaxed">
+          {profile.bio ? (
+            profile.bio
+          ) : isOwner ? (
+            <span className="italic text-zinc-500">
+              {t('profile.noBio')} <button onClick={() => navigate('/settings')} className="text-primary hover:underline">{t('profile.addBio', { defaultValue: 'Añade una' })}</button>
+            </span>
+          ) : (
+            <span className="italic text-zinc-500">{t('profile.noBio')}</span>
+          )}
         </p>
 
-        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 mt-4 text-sm text-muted-foreground">
-          {profile.showFollowers && profile.followerCount > 0 ? (
-            <button
-              onClick={onOpenFollowers}
-              className="hover:text-foreground transition-colors"
-            >
-              {t('profile.statsFollowers', { count: profile.followerCount })}
-            </button>
-          ) : (
-            <span>{t('profile.statsFollowers', { count: profile.followerCount })}</span>
-          )}
-          <span className="opacity-30">·</span>
-          {profile.showFollowers && profile.followingCount > 0 ? (
-            <button
-              onClick={onOpenFollowing}
-              className="hover:text-foreground transition-colors"
-            >
-              {t('profile.statsFollowing', { count: profile.followingCount })}
-            </button>
-          ) : (
-            <span>{t('profile.statsFollowing', { count: profile.followingCount })}</span>
-          )}
-          <span className="opacity-30">·</span>
-          <span>{t('profile.statsProjects', { count: profile.projectCount })}</span>
-          <span className="opacity-30">·</span>
-          <span>{t('profile.statsStars', { count: profile.totalStarsReceived })}</span>
-          {minutesLabel && (
-            <>
-              <span className="opacity-30">·</span>
-              <span className="flex items-center gap-1">
-                <Icon name="timer" size={14} className="text-accent-blue" />
-                {minutesLabel}
-                <span className="text-xs opacity-50">¹</span>
-              </span>
-            </>
-          )}
-          {isOwner && (
-            <>
-              <span className="opacity-30">·</span>
-              <button
-                onClick={() => navigate('/settings')}
-                className="flex items-center gap-1 hover:text-foreground transition-colors"
-              >
-                <Icon name="settings" size={14} />
-                {t('profile.editProfile')}
-              </button>
-            </>
-          )}
-        </div>
-
-        {minutesLabel && (
-          <p className="text-[10.5px] text-muted-foreground mt-1 opacity-50">
-            ¹ {t('badges.leaderboard.minutesSyncedNote')}
-          </p>
-        )}
-
         {profile.totalForksReceived > 0 && (
-          <p className="text-xs text-muted-foreground mt-2 opacity-70">
+          <p className="text-xs text-primary/70 mt-3 font-medium">
             {t('profile.forkBadge', { count: profile.totalForksReceived })}
           </p>
         )}
       </div>
-
-      {isOwner ? (
-        <div className="absolute top-4 right-24 flex items-center gap-1.5">
-          <Tip content={t('profile.tabs.activity')}>
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={() => navigate('/settings/activity')}
-            >
-              <Icon name="monitoring" size={16} />
-            </Button>
-          </Tip>
-          <Tip content={t('profile.tabs.stats')}>
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={() => navigate('/settings/stats')}
-            >
-              <Icon name="bar_chart" size={16} />
-            </Button>
-          </Tip>
-        </div>
-      ) : (
-        <div className="absolute top-4 right-24 flex items-center gap-1.5">
-          {!isBlocked && (
-            <FollowButton
-              isFollowing={isFollowing}
-              followLoading={followLoading}
-              onFollow={onFollow}
-              onUnfollow={onUnfollow}
-            />
-          )}
-          <BlockControl
-            isBlocked={isBlocked}
-            blockLoading={blockLoading}
-            onBlock={onBlock}
-            onUnblock={onUnblock}
-          />
-        </div>
-      )}
     </div>
   );
 }
