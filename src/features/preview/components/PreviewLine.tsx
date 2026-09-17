@@ -139,7 +139,7 @@ export default function PreviewLine({
   }
 
   const isActive = i === displayedActiveIndex || (isDualLine && i === displayLines[0].originalIndex);
-  const isPast = line.timestamp != null && line.timestamp < playbackPosition && !isActive;
+  const isPast = line.timestamp != null && i < displayedActiveIndex;
   const isLocked = lockedLineIndex === i;
 
   const focusContrast = settings.interface?.focusContrast ?? 'medium';

@@ -280,11 +280,8 @@ export default function VirtualizedLineList({
         className="h-full overflow-y-auto pr-1 mask-edges"
       >
         <div
-          style={{
-            height: virtualizer.getTotalSize(),
-            width: '100%',
-            position: 'relative',
-          }}
+          style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}
+          className="px-1 sm:px-0"
         >
           {virtualizer.getVirtualItems().map((virtualRow) => {
             const i = virtualRow.index;
