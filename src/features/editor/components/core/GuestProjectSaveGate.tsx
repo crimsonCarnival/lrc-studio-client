@@ -145,7 +145,7 @@ export default function GuestProjectSaveGate() {
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-zinc-950/95 backdrop-blur-sm gap-4">
-      <Icon name="progress_activity" size={40} className="animate-spin text-primary" />
+      <Icon name="autorenew" size={40} className="animate-spin text-primary" />
       <p className="text-base font-medium text-zinc-200">{t('editor.savingProject')}</p>
       {displayAttempt > 0 && (
         <p className="text-sm text-zinc-500">

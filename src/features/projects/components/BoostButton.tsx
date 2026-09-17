@@ -37,7 +37,7 @@ export function BoostButton({ publicId, className = '' }: { publicId: string; cl
       ].join(' ')}
     >
       {loading
-        ? <Icon name="progress_activity" size={12} className="animate-spin" />
+        ? <Icon name="autorenew" size={12} className="animate-spin" />
         : <Icon name="repeat" size={12} />}
       {boosted ? t('projectView.boosted') : t('projectView.boost')}
     </button>

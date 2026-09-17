@@ -94,7 +94,7 @@ export default function AvatarUpload() {
           aria-label={t('profile.changeAvatar')}
         >
           {uploading ? (
-            <Icon name="progress_activity" size={24} className="animate-spin text-primary" />
+            <Icon name="autorenew" size={24} className="animate-spin text-primary" />
           ) : user?.avatarUrl && user.avatarUrl.length > 0 ? (
             <LazyImage src={user.avatarUrl} alt={t('profile.avatarAlt')} className="size-full object-cover" />
           ) : (
@@ -139,7 +139,7 @@ export default function AvatarUpload() {
                     disabled={uploading || !urlValue.trim().startsWith('http')}
                     className="rounded-xl h-8 text-[11px] font-bold"
                   >
-                    {uploading ? <Icon name="progress_activity" size={14} className="animate-spin" /> : t('common.apply') || 'Apply'}
+                    {uploading ? <Icon name="autorenew" size={14} className="animate-spin" /> : t('common.apply') || 'Apply'}
                   </Button>
                   <Button
                     size="sm"

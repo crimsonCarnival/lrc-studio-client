@@ -29,7 +29,7 @@ export default function ExploreProjectsPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Icon name="progress_activity" size={32} className="animate-spin text-primary" />
+        <Icon name="autorenew" size={32} className="animate-spin text-primary" />
       </div>
     );
   }
@@ -100,7 +100,7 @@ export default function ExploreProjectsPage() {
               className="mt-2 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loadingMore
-                ? <Icon name="progress_activity" size={16} className="animate-spin" />
+                ? <Icon name="autorenew" size={16} className="animate-spin" />
                 : t('explore.page.loadMore')}
             </button>
           ) : (

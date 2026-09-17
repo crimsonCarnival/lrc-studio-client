@@ -138,7 +138,7 @@ function AddToListMenu({ user, project, t }: { user: User; project: Project; t: 
         <div className="ml-3 pl-2.5 border-l border-zinc-700/50 mt-0.5 mb-0.5">
           {loading && (
             <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-500">
-              <Icon name="progress_activity" size={12} className="animate-spin" />
+              <Icon name="autorenew" size={12} className="animate-spin" />
               {t('projectView.actions.loadingLists')}
             </div>
           )}

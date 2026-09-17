@@ -257,7 +257,7 @@ export default function LeaderboardPage() {
                   disabled={loadingMore}
                   className="gap-1.5"
                 >
-                  {loadingMore ? <Icon name="progress_activity" size={14} className="animate-spin" /> : <Icon name="expand_more" size={14} />}
+                  {loadingMore ? <Icon name="autorenew" size={14} className="animate-spin" /> : <Icon name="expand_more" size={14} />}
                   {t('common.loadMore')}
                 </Button>
               </div>

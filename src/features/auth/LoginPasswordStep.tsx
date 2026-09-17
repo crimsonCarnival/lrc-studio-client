@@ -175,7 +175,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
             className="h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 mt-1 disabled:cursor-not-allowed focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none"
           >
             {loading
-              ? <Icon name="progress_activity" size={16} className="animate-spin" />
+              ? <Icon name="autorenew" size={16} className="animate-spin" />
               : t('auth.loginAction')
             }
           </m.button>
@@ -190,7 +190,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
             className="flex items-center justify-center gap-2 h-12 lg:h-10 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-normal text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 disabled:cursor-not-allowed focus:ring-2 focus:ring-zinc-500 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none border border-zinc-700"
           >
             {passkeyLoading ? (
-              <Icon name="progress_activity" size={16} className="animate-spin" />
+              <Icon name="autorenew" size={16} className="animate-spin" />
             ) : (
               <>
                 <Icon name="fingerprint" size={16} className="text-primary" />

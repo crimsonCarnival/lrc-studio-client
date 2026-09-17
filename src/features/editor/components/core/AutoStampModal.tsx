@@ -141,7 +141,7 @@ export default function AutoStampModal({
 
           return (
             <div className="flex flex-col gap-4 items-center py-4">
-              <Icon name="progress_activity" size={32} className="animate-spin text-primary" />
+              <Icon name="autorenew" size={32} className="animate-spin text-primary" />
               
               <div className="w-full flex flex-col gap-1.5 mt-2">
                 <div className="flex justify-between items-center text-xs font-mono text-zinc-400 px-1">

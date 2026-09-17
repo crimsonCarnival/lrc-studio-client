@@ -129,7 +129,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
             className="pl-8 lg:pl-8 pr-8 lg:pr-8 bg-zinc-900 border-zinc-700"
           />
           {isSearching && (
-            <Icon name="progress_activity" size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 animate-spin pointer-events-none" />
+            <Icon name="autorenew" size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 animate-spin pointer-events-none" />
           )}
         </div>
       )}

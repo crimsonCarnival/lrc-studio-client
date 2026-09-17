@@ -67,7 +67,7 @@ export default function FeedPage() {
               className="mt-2 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loadingMore
-                ? <Icon name="progress_activity" size={16} className="animate-spin" />
+                ? <Icon name="autorenew" size={16} className="animate-spin" />
                 : t('feed.loadMore')}
             </button>
           )}

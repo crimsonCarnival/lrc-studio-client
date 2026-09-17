@@ -520,7 +520,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     disabled={metaSearching}
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
                   >
-                    {metaSearching && <Icon name="progress_activity" size={12} className="animate-spin" />}
+                    {metaSearching && <Icon name="autorenew" size={12} className="animate-spin" />}
                     {t('setup.fetchInfo')}
                   </button>
                 </Tip>
@@ -633,7 +633,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-zinc-700/50 bg-transparent text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
               >
                 {imageUploading ? (
-                  <Icon name="progress_activity" size={16} className="animate-spin" />
+                  <Icon name="autorenew" size={16} className="animate-spin" />
                 ) : (
                   <Icon name="upload" size={16} />
                 )}
@@ -784,7 +784,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                             disabled={!ytUrl.trim() || ytLoading}
                             className={`h-11 px-4 text-zinc-950 font-bold text-xs rounded-xl shrink-0 ${detectedUrlType === 'cdn' ? 'bg-blue-500 hover:bg-blue-400' : 'bg-primary hover:bg-primary-dim'}`}
                           >
-                            {ytLoading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : t('player.load')}
+                            {ytLoading ? <Icon name="autorenew" size={16} className="animate-spin" /> : t('player.load')}
                           </Button>
                         </div>
 

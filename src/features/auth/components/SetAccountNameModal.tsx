@@ -170,7 +170,7 @@ export default function SetAccountNameModal() {
                   className="sm:w-2/3 h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-medium"
                 >
                   {loading ? (
-                    <Icon name="progress_activity" size={16} className="animate-spin" />
+                    <Icon name="autorenew" size={16} className="animate-spin" />
                   ) : (
                     <>
                       {t('auth.setAccountName.saveUsername')}

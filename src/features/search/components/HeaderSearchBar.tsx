@@ -95,7 +95,7 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
       <div className="relative">
         <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
         {loading && (
-          <Icon name="progress_activity" size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 animate-spin" />
+          <Icon name="autorenew" size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 animate-spin" />
         )}
         <input
           ref={inputRef}

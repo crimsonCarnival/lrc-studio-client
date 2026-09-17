@@ -194,7 +194,7 @@ export default function EditorToolbar({
               className={`size-8 transition-colors ${isSaving ? 'text-zinc-400' : isAutosaving ? 'text-primary' : 'text-zinc-400'}`}
             >
               {isSaving
-                ? <Icon name="progress_activity" size={16} className="animate-spin" />
+                ? <Icon name="autorenew" size={16} className="animate-spin" />
                 : isAutosaving
                   ? <Icon name="check" size={16} />
                   : <Icon name="save" size={16} />}
@@ -375,7 +375,7 @@ export default function EditorToolbar({
                 }}
                 disabled={isSaving}
               >
-                {isSaving ? <Icon name="progress_activity" size={16} className="animate-spin" /> : isAutosaving ? <Icon name="check" size={16} className="text-primary" /> : <Icon name="save" size={16} />}
+                {isSaving ? <Icon name="autorenew" size={16} className="animate-spin" /> : isAutosaving ? <Icon name="check" size={16} className="text-primary" /> : <Icon name="save" size={16} />}
                 {isSaving ? t('project.saving') : isAutosaving ? t('project.saved') : t('project.save')}
               </PopoverItem>
             )}

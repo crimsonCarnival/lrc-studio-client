@@ -51,7 +51,7 @@ export function SuggestedUsers({ limit = 8 }: { limit?: number }) {
 
       {loading ? (
         <div className="flex justify-center py-10">
-          <Icon name="progress_activity" size={24} className="animate-spin text-zinc-500" />
+          <Icon name="autorenew" size={24} className="animate-spin text-zinc-500" />
         </div>
       ) : error || users.length === 0 ? (
         <p className="text-sm text-zinc-500 text-center py-10">

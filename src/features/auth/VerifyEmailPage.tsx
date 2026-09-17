@@ -67,7 +67,7 @@ export default function VerifyEmailPage() {
   if (!status) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">
-        <Icon name="progress_activity" size={40} className="animate-spin text-primary" />
+        <Icon name="autorenew" size={40} className="animate-spin text-primary" />
       </div>
     );
   }

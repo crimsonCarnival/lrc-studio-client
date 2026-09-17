@@ -78,7 +78,7 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
           disabled={loading}
           className="h-11 w-full bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-sm rounded-xl gap-2"
         >
-          {loading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="fingerprint" size={16} />}
+          {loading ? <Icon name="autorenew" size={16} className="animate-spin" /> : <Icon name="fingerprint" size={16} />}
           {t('auth.savedAccount.createPasskey')}
         </Button>
         <Button

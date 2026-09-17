@@ -66,7 +66,7 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
           disabled={!ytUrl.trim() || cdnLoading}
           className="h-8 px-3 text-xs shrink-0 bg-zinc-700 hover:bg-zinc-600 border-zinc-600"
         >
-          {cdnLoading ? <Icon name="progress_activity" size={12} className="animate-spin" /> : t('player.load')}
+          {cdnLoading ? <Icon name="autorenew" size={12} className="animate-spin" /> : t('player.load')}
         </Button>
       </div>
       {getAccessToken() && uploads.length > 0 && (
@@ -275,7 +275,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                     disabled={cdnLoading}
                     className="h-10 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/50 font-medium shrink-0"
                   >
-                    {cdnLoading ? <Icon name="progress_activity" size={16} className="animate-spin" /> : t('player.load')}
+                    {cdnLoading ? <Icon name="autorenew" size={16} className="animate-spin" /> : t('player.load')}
                   </Button>
                 </div>
 

@@ -65,7 +65,7 @@ type RouterLayoutState = Record<string, any>;
 
 function RequireAdmin({ children }: { children: ReactNode }) {
   const { user, loading } = useAuthContext();
-  if (loading) return <div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin" /></div>;
+  if (loading) return <div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin" /></div>;
   if (!user) return <Navigate to="/auth/signin" replace />;
   // Any staff member (holds at least one permission) may reach the dashboard;
   // individual tabs/actions are gated by their specific permission.
@@ -267,7 +267,7 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">
-      <Icon name="progress_activity" size={40} className="animate-spin text-primary" />
+      <Icon name="autorenew" size={40} className="animate-spin text-primary" />
       <p className="text-sm font-medium animate-pulse">
         {t('project.cloning') || 'Cloning project...'}
       </p>
@@ -592,7 +592,7 @@ export function AppRouter({
         </EditorContainer>
       } />
       <Route path="home" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin" /></div>}>
           <Home />
         </Suspense>
       } />
@@ -625,19 +625,19 @@ export function AppRouter({
         </div>
       } />
       <Route path="project/:publicId" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
           <PublicProjectViewPage />
         </Suspense>
       } />
       <Route path="profile/:accountName/lists/:listId" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
           <ListPage />
         </Suspense>
       } />
       <Route path=":accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
       <Route path="u/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
       <Route path="profile/:accountName" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
           <ProfilePage />
         </Suspense>
       } />
@@ -645,52 +645,52 @@ export function AppRouter({
       <Route path="u/:accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
       <Route path="profile/:accountName/playlists/:listId" element={<LegacyListRedirect />} />
       <Route path="settings/:tab?" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
           <SettingsPage />
         </Suspense>
       } />
       <Route index element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin" /></div>}>
           <GuestLanding />
         </Suspense>
       } />
       <Route path="verify-email" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
           <VerifyEmailPage />
         </Suspense>
       } />
       <Route path="feed" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
           <FeedPage />
         </Suspense>
       } />
       <Route path="search" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin" /></div>}>
           <SearchPage />
         </Suspense>
       } />
       <Route path="explore" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
           <ExplorePage />
         </Suspense>
       } />
       <Route path="explore/projects" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
           <ExploreProjectsPage />
         </Suspense>
       } />
       <Route path="explore/playlists" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
           <ExplorePlaylistsPage />
         </Suspense>
       } />
       <Route path="leaderboard" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
           <LeaderboardPage />
         </Suspense>
       } />
       <Route path="notifications" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="progress_activity" size={32} className="animate-spin text-primary" /></div>}>
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
           <NotificationsPage />
         </Suspense>
       } />

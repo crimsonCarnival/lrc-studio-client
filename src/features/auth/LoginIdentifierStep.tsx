@@ -107,7 +107,7 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
           className="h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-sm rounded-xl gap-2 disabled:opacity-40 transition-all duration-200 mt-1"
         >
           {loading
-            ? <Icon name="progress_activity" size={16} className="animate-spin" />
+            ? <Icon name="autorenew" size={16} className="animate-spin" />
             : <>{t('auth.continue')} <Icon name="arrow_forward" size={16} /></>
           }
         </Button>

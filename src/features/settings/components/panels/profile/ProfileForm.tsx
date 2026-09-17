@@ -201,7 +201,7 @@ export default function ProfileForm({ children }: { children?: React.ReactNode }
               disabled={saving}
               className="bg-primary hover:bg-primary-dim text-zinc-950 font-semibold rounded-lg h-8 px-4 text-xs gap-1.5"
             >
-              {saving && <Icon name="progress_activity" size={12} className="animate-spin" />}
+              {saving && <Icon name="autorenew" size={12} className="animate-spin" />}
               {t('profile.save')}
             </Button>
           </div>

@@ -128,7 +128,7 @@ export default function SearchPage() {
           )}
 
           {projects.loading && (
-            <div className="flex justify-center py-16"><Icon name="progress_activity" size={24} className="animate-spin text-primary" /></div>
+            <div className="flex justify-center py-16"><Icon name="autorenew" size={24} className="animate-spin text-primary" /></div>
           )}
           {!projects.loading && projects.error && (
             <p className="text-center py-16 text-zinc-400 text-sm">{t('search.error')}</p>
@@ -148,7 +148,7 @@ export default function SearchPage() {
       {urlTab === 'users' && (
         <>
           {users.loading && (
-            <div className="flex justify-center py-16"><Icon name="progress_activity" size={24} className="animate-spin text-primary" /></div>
+            <div className="flex justify-center py-16"><Icon name="autorenew" size={24} className="animate-spin text-primary" /></div>
           )}
           {!users.loading && users.error && (
             <p className="text-center py-16 text-zinc-400 text-sm">{t('search.error')}</p>

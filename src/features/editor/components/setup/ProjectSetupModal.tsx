@@ -324,7 +324,7 @@ export default function ProjectSetupModal({
                       disabled={metaSearching}
                       className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
                     >
-                      {metaSearching && <Icon name="progress_activity" size={12} className="animate-spin" />}
+                      {metaSearching && <Icon name="autorenew" size={12} className="animate-spin" />}
                       {t('setup.fetchInfo') || 'Search'}
                     </button>
                   </Tip>
@@ -475,7 +475,7 @@ export default function ProjectSetupModal({
                     className="shrink-0 size-9 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
                   >
                     {imageUploading ? (
-                      <Icon name="progress_activity" size={16} className="animate-spin" />
+                      <Icon name="autorenew" size={16} className="animate-spin" />
                     ) : (
                       <Icon name="upload" size={16} />
                     )}

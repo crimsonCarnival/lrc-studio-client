@@ -134,7 +134,7 @@ export default function SudoPasswordModal() {
                 disabled={!password || submitting}
                 className="w-full py-2.5 font-semibold text-sm rounded-xl transition-all bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {submitting && <Icon name="progress_activity" size={16} className="animate-spin" />}
+                {submitting && <Icon name="autorenew" size={16} className="animate-spin" />}
                 {t('admin.sudo.confirm')}
               </button>
             </form>

@@ -160,7 +160,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
 
                   <div className="flex items-center gap-1 flex-shrink-0">
                     {isLoading ? (
-                      <Icon name="progress_activity" size={16} className="animate-spin text-zinc-500" />
+                      <Icon name="autorenew" size={16} className="animate-spin text-zinc-500" />
                     ) : (
                       <>
                         <button

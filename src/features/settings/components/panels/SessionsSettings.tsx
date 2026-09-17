@@ -96,7 +96,7 @@ export default function SessionsSettings() {
   if (loading) {
     return (
       <div className="flex justify-center py-8">
-        <Icon name="progress_activity" size={20} className="animate-spin text-zinc-500" />
+        <Icon name="autorenew" size={20} className="animate-spin text-zinc-500" />
       </div>
     );
   }
@@ -125,7 +125,7 @@ export default function SessionsSettings() {
             className="text-red-400 hover:text-red-300 hover:bg-red-500/10 text-xs h-8 flex-shrink-0"
           >
             {revokingAll ? (
-              <Icon name="progress_activity" size={14} className="animate-spin" />
+              <Icon name="autorenew" size={14} className="animate-spin" />
             ) : (
               <><Icon name="no_encryption" size={14} className="mr-1.5" />{t('profile.sessions.revokeAllOthers')}</>
             )}
@@ -190,7 +190,7 @@ export default function SessionsSettings() {
                   className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 text-xs h-8 flex-shrink-0"
                 >
                   {revokingId === session.id ? (
-                    <Icon name="progress_activity" size={14} className="animate-spin" />
+                    <Icon name="autorenew" size={14} className="animate-spin" />
                   ) : (
                     t('profile.sessions.signOut')
                   )}

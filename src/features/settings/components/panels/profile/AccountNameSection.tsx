@@ -100,7 +100,7 @@ export default function AccountNameSection() {
         className="h-9 rounded-xl font-bold gap-2 text-sm"
         size="sm"
       >
-        {saving ? <Icon name="progress_activity" size={16} className="animate-spin" /> : <Icon name="save" size={16} />}
+        {saving ? <Icon name="autorenew" size={16} className="animate-spin" /> : <Icon name="save" size={16} />}
         {t('profile.save')}
       </Button>
 

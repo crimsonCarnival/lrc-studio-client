@@ -253,7 +253,7 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
                     className="shrink-0 size-9 flex items-center justify-center rounded-lg border border-border bg-zinc-800/50 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors disabled:opacity-50"
                   >
                     {imageUploading ? (
-                      <Icon name="progress_activity" size={16} className="animate-spin" />
+                      <Icon name="autorenew" size={16} className="animate-spin" />
                     ) : (
                       <Icon name="upload" size={16} />
                     )}
