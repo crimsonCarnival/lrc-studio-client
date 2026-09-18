@@ -24,6 +24,8 @@ interface EditorActionDrawerProps {
   handleDeleteLine: (lineIndex: number) => void;
   handleBulkClearTimestamps: () => void;
   handleBulkDelete: () => void;
+  handleBulkSingTogether?: () => void;
+  handleBulkSplitSingers?: () => void;
   clearSelection: () => void;
   lines?: EditorLine[];
   handleMoveToSection?: (indices: number[], sectionIndex: number) => void;
@@ -42,6 +44,8 @@ export default function EditorActionDrawer({
   handleDeleteLine,
   handleBulkClearTimestamps,
   handleBulkDelete,
+  handleBulkSingTogether,
+  handleBulkSplitSingers,
   clearSelection,
   lines,
   handleMoveToSection,
@@ -177,6 +181,26 @@ export default function EditorActionDrawer({
 
       {activeDrawer === 'bulk' && (
         <>
+          {handleBulkSingTogether && (
+            <DrawerItem
+              iconName="group"
+              label={t('editor.duetMode') || 'Sing together'}
+              onClick={() => {
+                handleBulkSingTogether();
+                onClose();
+              }}
+            />
+          )}
+          {handleBulkSplitSingers && (
+            <DrawerItem
+              iconName="call_split"
+              label={t('editor.splitMode') || 'Split by singer'}
+              onClick={() => {
+                handleBulkSplitSingers();
+                onClose();
+              }}
+            />
+          )}
           <DrawerItem
             iconName="ink_eraser"
             label={t('editor.selection.clearTimestamps')}

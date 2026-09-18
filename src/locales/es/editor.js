@@ -4,6 +4,9 @@ export default {
   sync: "Sincronizar",
   lyrics: "Letras",
   preview: "Vista previa",
+  showPreview: "Mostrar vista previa",
+  hideEditor: "Ocultar editor",
+  lyricInputPlaceholder: "Escribe la letra...",
   toast: {
     allRemoved: "Todas las letras eliminadas"
   },
@@ -66,10 +69,13 @@ export default {
   secondaryText: "Líricas secundarias",
   translationText: "Traducción",
   modeLRC: "LRC",
+  modeTooltipLRC: "Letras línea por línea (estándar)",
   modeLRCDesc: "Formato estándar de letras con marcas de línea",
   modeSRT: "SRT",
+  modeTooltipSRT: "Formato de subtítulos (tiempos de inicio y fin)",
   modeSRTDesc: "Formato de subtítulos con tiempos de inicio y fin",
   modeWords: "Palabras",
+  modeTooltipWords: "Marcas palabra por palabra (avanzado)",
   modeWordsDesc: "Marcas por palabra para sincronización karaoke",
   syncProgress: "{{synced}}/{{total}}",
   wordBadgeHint: "{{count}} marcas de tiempo de palabras — cambia al modo Palabras para sincronizar",
@@ -159,7 +165,7 @@ export default {
   stampWordTip: "Marcar \"{{word}}\" ({{current}}/{{total}})",
   langPlaceholder: "Idioma",
   enterLyricsPlaceholder: "Introduce la letra...",
-  clickToPaintSinger: "Haz clic para pintar cantante",
+
   splitAtColon: "Separar '{{name}}' como cantante",
   maxSingers: "Máximo 4 cantantes",
   rightClickToAssignSinger: "Clic derecho para asignar cantante",
@@ -172,7 +178,7 @@ export default {
     sectionsManual: "Entrada manual: Puedes insertar secciones usando el botón '+' junto a cualquier línea o haciendo clic derecho en el modo Palabras.",
     sectionsDropdown: "Edición rápida: Cambia el tipo de sección usando el menú desplegable del editor. Ajusta la profundidad para anidar secciones.",
     singersIntro: "Asignar cantantes a líneas o palabras individuales ayuda a crear duetos o partes con colores.",
-    singersPaint: "Modo pintura: Selecciona un cantante de la paleta sobre una línea, luego haz clic en palabras para asignarlas rápidamente.",
+
     singersShortcuts: "Atajos de teclado: Presiona 1-4 para asignar la línea activa al cantante 1-4. Presiona 0 para limpiar.",
     singersSplit: "División rápida: Usa el ícono de tijeras para dividir automáticamente 'Nombre: Letra' en una atribución de cantante."
   },

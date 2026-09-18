@@ -208,7 +208,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
   return (
     <>
       {/* ─────────────── Desktop full bar content (hidden on mobile) ─────────────── */}
-      <div className={`max-lg:hidden animate-fade-in flex flex-col items-center w-full min-w-0 ${variant === 'editor' ? 'overflow-hidden @container/ebar' : 'overflow-visible'}`}>
+      <div className={`max-lg:hidden animate-fade-in flex flex-col items-center w-full min-w-0 ${variant === 'editor' ? 'overflow-hidden' : 'overflow-visible'}`}>
         {/* Header */}
         {!hasMedia && !viewerMode && (
           <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 mb-2">
@@ -389,7 +389,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
         {hasMedia && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
             {/* Wide layout (≥480px container): absolute-centered cluster, full controls */}
-            <div className={`${variant === 'editor' ? '@[680px]/ebar:flex hidden' : 'flex'} items-center gap-2 w-full min-h-[48px] pb-1.5 lg:pb-2`}>
+            <div className={`${variant === 'editor' ? 'xl:flex hidden' : 'flex'} items-center gap-2 w-full min-h-[48px] pb-1.5 lg:pb-2`}>
 
               {/* Left spacer — balances the right actions so the transport stays centered.
                   (Album art now lives next to the project title in the header.) */}
@@ -496,10 +496,10 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       <PopoverTrigger asChild>
                         <Button
                           variant="ghost"
-                          size="icon"
-                          className={`shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING}`}
+                          size="sm"
+                          className={`shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING} flex items-center gap-2`}
                         >
-                          <Icon name="refresh" size={16} />
+                          <Icon name="library_music" size={16} />
                         </Button>
                       </PopoverTrigger>
                     </Tip>
@@ -514,7 +514,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
 
             {/* Narrow editor layout (<480px container): inline flex, no absolute positioning */}
             {variant === 'editor' && (
-              <div className="@[680px]/ebar:hidden flex flex-col gap-1 w-full min-w-0 pb-1.5 transition-all">
+              <div className="xl:hidden flex flex-col gap-1 w-full min-w-0 pb-1.5 transition-all">
                 {/* Row 1: play + scrubber + time + overflow */}
                 <div className="flex items-center gap-2 w-full min-w-0">
                   {/* Play/Pause */}
@@ -597,7 +597,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                 </div>
 
                 {/* Row 2 (≥360px only): nudge buttons + secondary actions */}
-                <div className="@[360px]/ebar:flex hidden items-center justify-between gap-1 px-1 min-w-0">
+                <div className="flex items-center justify-between gap-1 px-1 min-w-0">
                   <div className="flex items-center gap-0.5">
                     <Tip content="-0.1s">
                       <Button variant="ghost" size="icon" onClick={() => seek(currentTime - 0.1)} className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}>
@@ -870,7 +870,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                     <Tip content={t('player.changeSong')}>
                       <PopoverTrigger asChild>
                         <button className="flex flex-col items-center justify-center size-14 rounded-2xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800 active:scale-95 transition-all duration-100 shrink-0">
-                          <Icon name="refresh" size={24} />
+                          <Icon name="library_music" size={24} />
                           <span className="text-[9px] font-bold mt-1 opacity-60 uppercase tracking-tight">
                             {t('player.changeSong')}
                           </span>

@@ -140,7 +140,7 @@ const LineActionToolbar = memo(({
             <Tip content={t('editor.jumpSync')}>
               <Button
                 variant="ghost"
-                size="icon-xs"
+                size="icon-sm"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (playerRef?.current?.seek) {
@@ -150,7 +150,7 @@ const LineActionToolbar = memo(({
                 }}
                 className="text-zinc-500 hover:bg-primary/20 hover:text-primary"
               >
-                <Icon name="play_arrow" size={12} filled />
+                <Icon name="play_arrow" size={16} filled />
               </Button>
             </Tip>
 
@@ -166,11 +166,11 @@ const LineActionToolbar = memo(({
                 })()}>
                   <Button
                     variant="ghost"
-                    size="icon-xs"
+                    size="icon-sm"
                     onClick={(e) => { e.stopPropagation(); shiftTime(lineIndex, -(settings.editor?.nudge?.default || 0.1)); }}
                     className={`transition-colors ${focusedTimestamp?.lineIndex === lineIndex ? 'text-primary hover:text-primary-dim hover:bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60'}`}
                   >
-                    <Icon name="chevron_left" size={12} />
+                    <Icon name="chevron_left" size={16} />
                   </Button>
                 </Tip>
                 <Tip content={(() => {
@@ -183,29 +183,29 @@ const LineActionToolbar = memo(({
                 })()}>
                   <Button
                     variant="ghost"
-                    size="icon-xs"
+                    size="icon-sm"
                     onClick={(e) => { e.stopPropagation(); shiftTime(lineIndex, settings.editor?.nudge?.default || 0.1); }}
                     className={`transition-colors ${focusedTimestamp?.lineIndex === lineIndex ? 'text-primary hover:text-primary-dim hover:bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60'}`}
                   >
-                    <Icon name="chevron_right" size={12} />
+                    <Icon name="chevron_right" size={16} />
                   </Button>
                 </Tip>
                 <div className="w-px h-4 bg-zinc-700/50 mx-0.5" />
                 <Tip content={t('editor.addLine')}>
                   <Button
                     variant="ghost"
-                    size="icon-xs"
+                    size="icon-sm"
                     onClick={(e) => { e.stopPropagation(); handleAddLine(lineIndex); }}
                     className="text-primary/70 hover:text-primary hover:bg-primary/10"
                   >
-                    <Icon name="add" size={12} />
+                    <Icon name="add" size={16} />
                   </Button>
                 </Tip>
                 <div className="w-px h-4 bg-zinc-700/50 mx-0.5" />
                 <Tip content={t('editor.editLine')}>
                   <Button
                     variant="ghost"
-                    size="icon-xs"
+                    size="icon-sm"
                     onClick={(e) => {
                       e.stopPropagation();
                       setEditingLineIndex(lineIndex);
@@ -217,7 +217,7 @@ const LineActionToolbar = memo(({
                     }}
                     className="text-sky-400/70 hover:text-sky-400 hover:bg-sky-500/10"
                   >
-                    <Icon name="edit" size={12} />
+                    <Icon name="edit" size={16} />
                   </Button>
                 </Tip>
               </>
@@ -228,7 +228,7 @@ const LineActionToolbar = memo(({
           <Tip content={t('editor.editLine')}>
             <Button
               variant="ghost"
-              size="icon-xs"
+              size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 setEditingLineIndex(lineIndex);
@@ -240,7 +240,7 @@ const LineActionToolbar = memo(({
               }}
               className="text-sky-400/70 hover:text-sky-400 hover:bg-sky-500/10"
             >
-              <Icon name="edit" size={12} />
+              <Icon name="edit" size={16} />
             </Button>
           </Tip>
         )}
@@ -249,11 +249,11 @@ const LineActionToolbar = memo(({
             <Tip content={t('editor.insertSectionAbove')}>
               <Button
                 variant="ghost"
-                size="icon-xs"
+                size="icon-sm"
                 onClick={(e) => { e.stopPropagation(); handleInsertSection?.(lineIndex - 1); }}
                 className="text-zinc-500 hover:text-primary hover:bg-primary/10"
               >
-                <Icon name="layers" size={12} />
+                <Icon name="layers" size={16} />
               </Button>
             </Tip>
             {!isMobile ? (
@@ -269,11 +269,11 @@ const LineActionToolbar = memo(({
             ) : (
               <Button
                 variant="ghost"
-                size="icon-xs"
+                size="icon-sm"
                 onClick={(e) => { e.stopPropagation(); onLineMenu?.(lineIndex, line); }}
                 className="text-zinc-500 active:text-zinc-300"
               >
-                <Icon name="more_horiz" size={12} />
+                <Icon name="more_horiz" size={16} />
               </Button>
             )}
           </>

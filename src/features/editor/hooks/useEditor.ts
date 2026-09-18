@@ -899,6 +899,37 @@ export function useEditor({
     setLines((prev) => applyBulkShift(prev, selectedLines, delta));
   };
 
+  const handleBulkSingTogether = useCallback(() => {
+    setLines((prev) => {
+      const updated = [...prev];
+      for (const idx of selectedLines) {
+        if (idx < 0 || idx >= updated.length) continue;
+        const line = updated[idx];
+        if ((line.singers?.length ?? 0) >= 2) {
+          const words = line.words?.map(w => ({ ...w, singerIndex: undefined })) ?? line.words;
+          updated[idx] = { ...line, words, mode: 'duet' };
+          updated[idx].mode = normalizeLineMode(updated[idx]);
+        }
+      }
+      return updated;
+    });
+  }, [selectedLines, setLines]);
+
+  const handleBulkSplitSingers = useCallback(() => {
+    setLines((prev) => {
+      const updated = [...prev];
+      for (const idx of selectedLines) {
+        if (idx < 0 || idx >= updated.length) continue;
+        const line = updated[idx];
+        if ((line.singers?.length ?? 0) >= 2) {
+          updated[idx] = { ...line, mode: 'split' };
+          updated[idx].mode = normalizeLineMode(updated[idx]);
+        }
+      }
+      return updated;
+    });
+  }, [selectedLines, setLines]);
+
   const handleClearWordTimestamp = useCallback((lineIndex, wordIndex, field = 'words') => {
     setLines((prev) => {
       const updated = [...prev];
@@ -1168,7 +1199,7 @@ export function useEditor({
   }, [setLines, setModifiedLines]);
 
   /**
-   * Directly set a word's singerIndex (used by paint mode, unlike cycle which rotates).
+   * Directly set a word's singerIndex (unlike cycle which rotates).
    * Pass singerIndex=null to remove attribution.
    */
   const handleSetWordSinger = useCallback((lineIndex, wordIndex, singerIndex) => {
@@ -1325,6 +1356,8 @@ export function useEditor({
     handleBulkClearTimestamps,
     handleBulkDelete,
     handleBulkShift,
+    handleBulkSingTogether,
+    handleBulkSplitSingers,
     handleClearWordTimestamp,
     handleSetActiveWordIndex,
     handleSetTimestamp,

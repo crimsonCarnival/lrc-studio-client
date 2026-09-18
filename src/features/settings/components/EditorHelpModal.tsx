@@ -176,7 +176,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
               <div className="text-zinc-300 text-sm space-y-4 leading-relaxed">
                 <p>{t('editor.help.singersIntro')}</p>
                 <ul className="list-disc pl-4 space-y-2 text-zinc-400">
-                  <li>{t('editor.help.singersPaint')}</li>
+
                   <li>{t('editor.help.singersShortcuts')}</li>
                   <li>{t('editor.help.singersSplit')}</li>
                 </ul>

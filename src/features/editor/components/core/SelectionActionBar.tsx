@@ -35,6 +35,8 @@ interface SelectionActionBarProps {
   clearSelection: () => void;
   handleApplyOffset?: (offset: number) => void;
   handleAssignSinger?: (name: string, indices: number[], slot: number) => void;
+  handleBulkSingTogether?: () => void;
+  handleBulkSplitSingers?: () => void;
   handleMoveToSection?: (indices: number[], sectionIndex: number) => void;
   songArtists?: string[];
 }
@@ -49,6 +51,8 @@ export default function SelectionActionBar({
   clearSelection,
   handleApplyOffset,
   handleAssignSinger,
+  handleBulkSingTogether,
+  handleBulkSplitSingers,
   handleMoveToSection,
   songArtists,
 }: SelectionActionBarProps) {
@@ -59,11 +63,10 @@ export default function SelectionActionBar({
   const shiftAmount = settings.editor?.shiftAllAmount || 0.5;
 
   return (
-    <div className="flex items-center justify-center gap-1 px-2 py-1.5 bg-zinc-900/95 border border-primary/30 rounded-lg shadow-lg animate-fade-in backdrop-blur-md">
+    <div className="flex items-center gap-2 px-2 py-1 rounded-xl animate-fade-in">
       <Badge variant="outline" className="text-[10px] font-bold text-primary border-0 bg-transparent tabular-nums px-1.5">
         {selectedLines.size}
       </Badge>
-      <Separator orientation="vertical" className="h-4 bg-zinc-700/50" />
       <Tip content={t('editor.selection.clearTimestamps') || 'Clear timestamps'}>
         <Button
           variant="ghost"
@@ -97,7 +100,6 @@ export default function SelectionActionBar({
       {/* Shift All (larger offset) */}
       {settings.editor?.showShiftAll && handleApplyOffset && (
         <>
-          <Separator orientation="vertical" className="h-4 bg-zinc-700/50" />
           <Tip content={`${t('editor.shiftAll')} (-${shiftAmount}s)`}>
             <Button
               variant="ghost"
@@ -105,7 +107,7 @@ export default function SelectionActionBar({
               onClick={() => handleApplyOffset(-shiftAmount)}
               className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60"
             >
-              <Icon name="keyboard_double_arrow_left" size={14} />
+              <Icon name="keyboard_double_arrow_left" size={16} />
             </Button>
           </Tip>
           <Tip content={`${t('editor.shiftAll')} (+${shiftAmount}s)`}>
@@ -115,7 +117,7 @@ export default function SelectionActionBar({
               onClick={() => handleApplyOffset(shiftAmount)}
               className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60"
             >
-              <Icon name="keyboard_double_arrow_right" size={14} />
+              <Icon name="keyboard_double_arrow_right" size={16} />
             </Button>
           </Tip>
         </>
@@ -124,7 +126,6 @@ export default function SelectionActionBar({
       {/* Singer bulk assignment */}
       {handleAssignSinger && (
         <>
-          <Separator orientation="vertical" className="h-4 bg-zinc-700/50" />
           <SingerBulkButton
             selectedLines={selectedLines}
             handleAssignSinger={handleAssignSinger}
@@ -133,9 +134,36 @@ export default function SelectionActionBar({
         </>
       )}
 
+      {handleBulkSingTogether && handleBulkSplitSingers && (() => {
+        const sectionSingers = lines ? getSingerOptionsForSelection(lines, [...selectedLines], songArtists) : songArtists;
+        return sectionSingers && sectionSingers.length > 1;
+      })() && (
+        <>
+          <Tip content={t('editor.duetMode') || 'Sing together'}>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={handleBulkSingTogether}
+              className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60"
+            >
+              <Icon name="group" size={16} />
+            </Button>
+          </Tip>
+          <Tip content={t('editor.splitMode') || 'Split by singer'}>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={handleBulkSplitSingers}
+              className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700/60"
+            >
+              <Icon name="call_split" size={16} />
+            </Button>
+          </Tip>
+        </>
+      )}
+
       {handleMoveToSection && lines && (
         <>
-          <Separator orientation="vertical" className="h-4 bg-zinc-700/50" />
           <SectionAssignButton
             selectedLines={selectedLines}
             lines={lines}

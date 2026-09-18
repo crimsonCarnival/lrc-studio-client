@@ -4,9 +4,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
-import { useTranslation } from 'react-i18next';
 import EditorLineItem from '../line/EditorLineItem';
-import SelectionActionBar from './SelectionActionBar';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
@@ -60,13 +58,6 @@ interface VirtualizedLineListProps {
   handleDeleteLine: LineItemProps['handleDeleteLine'];
   listRef: RefObject<HTMLDivElement | null>;
   handleMark?: LineItemProps['handleMark'];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleApplyOffset?: (...args: any[]) => void;
-  handleBulkClearTimestamps?: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handleBulkShift?: (...args: any[]) => void;
-  handleBulkDelete?: () => void;
-  clearSelection?: () => void;
   handleToggleLine: LineItemProps['handleToggleLine'];
   updateSetting?: (path: string, value: unknown) => void;
   activeWordIndex: number;
@@ -81,7 +72,6 @@ interface VirtualizedLineListProps {
   playbackPosition?: number | null;
   onWordMenu?: LineItemProps['onWordMenu'];
   onLineMenu?: LineItemProps['onLineMenu'];
-  onBulkMenu?: () => void;
   modifiedLines?: Set<number>;
   onToggleLineMode?: LineItemProps['onToggleLineMode'];
   confidenceByIndex?: Map<number, ConfidenceInfo>;
@@ -131,11 +121,6 @@ export default function VirtualizedLineList({
   handleDeleteLine,
   listRef,
   handleMark,
-  handleApplyOffset,
-  handleBulkClearTimestamps,
-  handleBulkShift,
-  handleBulkDelete,
-  clearSelection,
   handleToggleLine,
   activeWordIndex,
   handleClearWordTimestamp,
@@ -149,12 +134,10 @@ export default function VirtualizedLineList({
   playbackPosition,
   onWordMenu,
   onLineMenu,
-  onBulkMenu,
   modifiedLines,
   onToggleLineMode,
   confidenceByIndex,
 }: VirtualizedLineListProps) {
-  const { t } = useTranslation();
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
 
@@ -213,6 +196,30 @@ export default function VirtualizedLineList({
       if (el) virtualizer.measureElement(el as HTMLElement);
     });
   }, [displayedActiveIndex, virtualizer, listRef]);
+
+  // Force-measure drag target so if we add a drop gap (e.g. mt-12), it expands
+  const prevDragOverIndexRef = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const prev = prevDragOverIndexRef.current;
+    prevDragOverIndexRef.current = dragOverIndex ?? null;
+    const toMeasure = new Set([dragOverIndex, prev].filter((x): x is number => x != null && x >= 0));
+    toMeasure.forEach(idx => {
+      const el = listRef.current?.querySelector(`[data-index="${idx}"]`);
+      if (el) virtualizer.measureElement(el as HTMLElement);
+    });
+  }, [dragOverIndex, virtualizer, listRef]);
+
+  // Force-measure dragged item
+  const prevDragIndexRef = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const prev = prevDragIndexRef.current;
+    prevDragIndexRef.current = dragIndex ?? null;
+    const toMeasure = new Set([dragIndex, prev].filter((x): x is number => x != null && x >= 0));
+    toMeasure.forEach(idx => {
+      const el = listRef.current?.querySelector(`[data-index="${idx}"]`);
+      if (el) virtualizer.measureElement(el as HTMLElement);
+    });
+  }, [dragIndex, virtualizer, listRef]);
 
   // Auto-scroll to active line via virtualizer
   const prevActiveRef = useCallback((idx: number) => {
@@ -277,7 +284,7 @@ export default function VirtualizedLineList({
       <div
         ref={listRef}
         onMouseLeave={handleLineHoverEnd}
-        className="h-full overflow-y-auto pr-1 mask-edges"
+        className="h-full overflow-y-auto pr-1 mask-edges pb-32"
       >
         <div
           style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}
@@ -304,6 +311,8 @@ export default function VirtualizedLineList({
                   left: 0,
                   width: '100%',
                   transform: `translateY(${virtualRow.start}px)`,
+                  paddingTop: dragOverIndex === i ? 52 : 0,
+                  transition: 'padding-top 0.2s ease-out',
                 }}
               >
                 <EditorLineItem
@@ -380,38 +389,6 @@ export default function VirtualizedLineList({
         <ScrollProgress containerRef={listRef} className="absolute bottom-0 inset-x-0 h-[2px]" />
       </div>
 
-        <div className="hidden xl:block relative z-20">
-          <SelectionActionBar
-            selectedLines={selectedLines}
-            lines={lines}
-            settings={settings}
-            handleBulkClearTimestamps={handleBulkClearTimestamps as ComponentProps<typeof SelectionActionBar>['handleBulkClearTimestamps']}
-            handleBulkShift={handleBulkShift as ComponentProps<typeof SelectionActionBar>['handleBulkShift']}
-            handleBulkDelete={handleBulkDelete as ComponentProps<typeof SelectionActionBar>['handleBulkDelete']}
-            clearSelection={clearSelection as ComponentProps<typeof SelectionActionBar>['clearSelection']}
-            handleApplyOffset={handleApplyOffset as ComponentProps<typeof SelectionActionBar>['handleApplyOffset']}
-            handleAssignSinger={handleAssignSinger}
-            handleMoveToSection={handleMoveToSection as ComponentProps<typeof SelectionActionBar>['handleMoveToSection']}
-            songArtists={songArtists}
-          />
-        </div>
-
-        {typeof window !== 'undefined' && window.innerWidth < 1024 && selectedLines.size > 0 && onBulkMenu && (
-          <div className="flex flex-row gap-2 pt-2 border-t border-zinc-800/50 items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onBulkMenu}
-              className="bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 text-xs h-8 rounded-full px-3"
-            >
-              <Icon name="more_horiz" size={14} className="mr-1.5" />
-              {t('editor.selection.actions') || 'Selection Actions'}
-              <span className="ml-1.5 bg-primary/20 px-1.5 rounded-full text-[10px] font-bold">
-                {selectedLines.size}
-              </span>
-            </Button>
-          </div>
-        )}
     </div>
   );
 }

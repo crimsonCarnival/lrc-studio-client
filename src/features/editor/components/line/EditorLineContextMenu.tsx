@@ -27,6 +27,8 @@ interface Props {
   handleMoveToSection?: (indices: number[], target: number) => void;
   handleInsertSection?: (i: number) => void;
   onToggleDepth?: (i: number) => void;
+  handleAssignSinger?: (name: string, indices: number[], slot: number) => void;
+  songArtists?: string[];
 }
 
 export function EditorLineContextMenu({
@@ -42,6 +44,8 @@ export function EditorLineContextMenu({
   handleMoveToSection,
   handleInsertSection,
   onToggleDepth,
+  handleAssignSinger,
+  songArtists,
 }: Props) {
   const { t } = useTranslation();
 
@@ -110,10 +114,32 @@ export function EditorLineContextMenu({
               </ContextMenuSubContent>
             </ContextMenuSub>
           )}
+          {handleAssignSinger && songArtists && songArtists.length > 0 && (
+            <ContextMenuSub>
+              <ContextMenuSubTrigger>
+                <Icon name="person" />
+                {t('editor.assignSingerToLines', { count: selectedCount, defaultValue: 'Assign Singer' })}
+              </ContextMenuSubTrigger>
+              <ContextMenuSubContent>
+                {songArtists.map(artist => (
+                  <ContextMenuItem key={artist} onClick={() => handleAssignSinger(artist, [...selectedLines], 0)}>
+                    <Icon name="person" />
+                    {artist}
+                  </ContextMenuItem>
+                ))}
+                <ContextMenuSeparator />
+                <ContextMenuItem onClick={() => handleAssignSinger('', [...selectedLines], 0)}>
+                  <Icon name="person_off" />
+                  {t('editor.clearSingers', 'Clear Singers')}
+                </ContextMenuItem>
+              </ContextMenuSubContent>
+            </ContextMenuSub>
+          )}
           <ContextMenuSeparator />
           <ContextMenuItem variant="destructive" onClick={() => [...selectedLines].forEach(i => handleDeleteLine(i))}>
             <Icon name="delete" />
             {t('editor.selection.removeN', { count: selectedCount, defaultValue: 'Remove {{count}} lines' })}
+            <span className="ml-auto text-xs tracking-widest opacity-60">Del</span>
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -133,10 +159,12 @@ export function EditorLineContextMenu({
             <ContextMenuItem onClick={() => handleAddLine(lineIndex)}>
               <Icon name="vertical_align_bottom" />
               {t('editor.insertLineBelow')}
+              <span className="ml-auto text-xs tracking-widest opacity-60">Alt+N</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => handleAddLine(lineIndex, { ...line, id: crypto.randomUUID() })}>
               <Icon name="post_add" />
               {t('editor.duplicateLine')}
+              <span className="ml-auto text-xs tracking-widest opacity-60">Ctrl+D</span>
             </ContextMenuItem>
           </>
         )}
@@ -168,10 +196,32 @@ export function EditorLineContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
         )}
+        {handleAssignSinger && songArtists && songArtists.length > 0 && (
+          <ContextMenuSub>
+            <ContextMenuSubTrigger>
+              <Icon name="person" />
+              {t('editor.assignSingerToLines', { count: 1, defaultValue: 'Assign Singer' })}
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent>
+              {songArtists.map(artist => (
+                <ContextMenuItem key={artist} onClick={() => handleAssignSinger(artist, [lineIndex], 0)}>
+                  <Icon name="person" />
+                  {artist}
+                </ContextMenuItem>
+              ))}
+              <ContextMenuSeparator />
+              <ContextMenuItem onClick={() => handleAssignSinger('', [lineIndex], 0)}>
+                <Icon name="person_off" />
+                {t('editor.clearSingers', 'Clear Singers')}
+              </ContextMenuItem>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+        )}
         <ContextMenuSeparator />
         <ContextMenuItem variant="destructive" onClick={() => handleDeleteLine(lineIndex)}>
           <Icon name="delete" />
           {t('editor.removeLine')}
+          <span className="ml-auto text-xs tracking-widest opacity-60">Del</span>
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

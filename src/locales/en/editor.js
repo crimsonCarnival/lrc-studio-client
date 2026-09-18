@@ -66,11 +66,14 @@ export default {
   secondaryText: "Secondary lyrics",
   translationText: "Translation",
   modeLRC: "LRC",
+  modeTooltipLRC: "Line-by-line lyrics (standard)",
   modeLRCDesc: "Standard lyrics format with line timestamps",
   modeSRT: "SRT",
+  modeTooltipSRT: "Subtitle format (start & end times)",
   modeSRTDesc: "Subtitle format with start and end times",
   modeWords: "Words",
-  modeWordsDesc: "Per-word timestamps for karaoke sync",
+  modeTooltipWords: "Word-by-word timestamps (advanced)",
+  modeWordsDesc: "Advanced format with word-by-word sync",
   syncProgress: "{{synced}}/{{total}}",
   wordBadgeHint: "{{count}} word timestamps — switch to Words mode to sync",
   wordCharCount: "{{words}} words · {{chars}} chars",
@@ -148,7 +151,7 @@ export default {
   addSinger: "Add Singer",
   removeSinger: "Remove singer",
   assignSinger: "Assign Singer",
-  clickToPaintSinger: "Click to paint singer",
+
   splitAtColon: "Split '{{name}}' as singer",
   maxSingers: "Max 4 singers",
   help: {
@@ -159,7 +162,7 @@ export default {
     sectionsManual: "Manual entry: You can insert sections using the '+' button next to any line or by right-clicking in Words mode.",
     sectionsDropdown: "Quick edit: Change a section type using the dropdown in the editor. Set depth to nest sections.",
     singersIntro: "Assigning singers to lines or individual words helps create duets or color-coded parts.",
-    singersPaint: "Paint mode: Select a singer from the palette above a line, then click words to quickly assign them.",
+
     singersShortcuts: "Keyboard shortcuts: Press 1-4 to assign the active line to singer 1-4. Press 0 to clear.",
     singersSplit: "Quick split: Use the Scissors icon to automatically split 'Name: Lyrics' into a singer attribution."
   },
@@ -174,6 +177,9 @@ export default {
   stampWordTip: "Stamp \"{{word}}\" ({{current}}/{{total}})",
   langPlaceholder: "Lang",
   enterLyricsPlaceholder: "Enter lyrics...",
+  showPreview: "Show preview",
+  hideEditor: "Hide editor",
+  lyricInputPlaceholder: "Type lyrics...",
   rightClickToAssignSinger: "Right-click to assign singer",
   deleteSection: "Delete section",
   waveformPreview: "Waveform Preview",

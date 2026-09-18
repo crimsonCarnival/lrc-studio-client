@@ -371,11 +371,10 @@ const EditorLineItem = React.memo(({
           setEditingSingers([...singers, '', '', '', ''].slice(0, 4));
         }}
         style={{ animationDelay: staggerDelay }}
-        className={`flex items-center gap-2 px-4 py-1.5 rounded-lg cursor-pointer group animate-preview-line-in ${selectedLines.has(i) ? 'bg-primary/10 border border-primary/30' : 'hover:bg-zinc-800/30 border border-transparent'} ${isRoot ? 'mt-4 mb-2' : ''}`}
+        className={`flex items-end px-4 cursor-pointer group animate-preview-line-in ${selectedLines.has(i) ? 'bg-primary/10' : ''} ${isRoot ? 'mt-8' : 'mt-4'}`}
       >
-        <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/50'}`} />
         {isEditing ? (
-          <div className="flex items-start gap-1.5" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
+          <div className={`flex items-start gap-1.5 px-3 py-1.5 rounded-t-lg border-t border-l border-r border-b-0 relative z-10 ${isRoot ? 'bg-primary/10 border-primary/40' : 'bg-zinc-800/50 border-zinc-700/50'}`} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
             <SectionPickerDropdown
               value={editingText}
               onChange={(v: string) => setEditingText(v)}
@@ -410,10 +409,10 @@ const EditorLineItem = React.memo(({
             </Tip>
           </div>
         ) : (
-          <span className={`px-2 py-0.5 rounded-full border whitespace-nowrap transition-colors ${
+          <span className={`px-4 py-1.5 rounded-t-lg border-t border-l border-r border-b-0 whitespace-nowrap transition-colors relative z-10 ${
             isRoot
-              ? 'text-xs font-bold tracking-widest uppercase text-primary bg-primary/10 border-primary/30 group-hover:border-primary/50'
-              : 'text-[10px] font-semibold tracking-widest uppercase text-zinc-600 bg-zinc-900/40 border-zinc-800 group-hover:text-zinc-400 group-hover:border-zinc-700'
+              ? 'text-xs font-bold tracking-widest uppercase text-primary bg-primary/10 border-primary/40 group-hover:bg-primary/20'
+              : 'text-[10px] font-semibold tracking-widest uppercase text-zinc-400 bg-zinc-800/50 border-zinc-700/50 group-hover:bg-zinc-700/50'
           }`}>
             {(() => {
               const label = formatSectionLabel(line.label, t);
@@ -426,21 +425,21 @@ const EditorLineItem = React.memo(({
             })()}
           </span>
         )}
-        <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-800/50'}`} />
+        <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-700/50'}`} />
         {selectedLines.size === 0 && (
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mb-1 pl-2">
             <Tip content={isRoot ? t('editor.sections.demote') : t('editor.sections.promote')}>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); onToggleDepth?.(i); }}
-                className="text-zinc-600 hover:text-primary text-xs px-1"
+                className="text-zinc-500 hover:text-primary text-xs px-1"
               >{isRoot ? '⇲' : '⇱'}</button>
             </Tip>
             <Tip content={t('editor.deleteSection')}>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); handleDeleteLine(i); }}
-                className="text-zinc-600 hover:text-destructive px-1 flex items-center"
+                className="text-zinc-500 hover:text-destructive px-1 flex items-center"
                 aria-label={t('editor.deleteSection')}
               ><Icon name="delete" size={14} /></button>
             </Tip>
@@ -463,6 +462,8 @@ const EditorLineItem = React.memo(({
       handleDeleteLine={handleDeleteLine}
       handleMoveToSection={handleMoveToSection as unknown as (indices: number[], target: number) => void}
       handleInsertSection={handleInsertSection}
+      handleAssignSinger={handleAssignSinger}
+      songArtists={songArtists}
     >
     <div
       ref={isActive ? activeLineRef : null}
@@ -500,7 +501,7 @@ const EditorLineItem = React.memo(({
       onDragEnd={handleDragEnd}
       onDrop={(e) => handleDrop(e, i)}
       style={{ animationDelay: staggerDelay }}
-      className={`outline-none flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-3 sm:gap-4 px-4 py-3 sm:px-5 sm:py-3 rounded-2xl sm:rounded-full transition-all duration-300 ease-out cursor-pointer group relative overflow-visible animate-preview-line-in ${selectedLines.has(i)
+      className={`outline-none flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-3 sm:gap-4 px-4 py-3 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl transition-all duration-300 ease-out cursor-pointer group relative overflow-visible animate-preview-line-in ${selectedLines.has(i)
         ? `bg-primary/15 border border-${isModified ? 'warning' : 'primary'}/40 ring-1 ring-${isModified ? 'warning' : 'primary'}/20`
         : isActive
           ? isLocked
@@ -516,14 +517,14 @@ const EditorLineItem = React.memo(({
 
       {/* Lock/unlock indicator */}
       {isActive && (
-        <div className={`absolute left-0 inset-y-0 w-1 z-0 rounded-l-xl animate-bar-grow ${isLocked
+        <div className={`absolute left-1 top-2 bottom-2 w-1 z-0 rounded-full animate-bar-grow ${isLocked
           ? `${isModified ? 'bg-warning shadow-[0_0_12px_rgba(245,158,11,0.6)]' : 'bg-primary shadow-[0_0_12px_rgba(29,185,84,0.6)]'} opacity-90`
           : `${isModified ? 'bg-warning/60' : 'bg-primary/40'} opacity-60`
           }`} />
       )}
       {/* Auto Stamp confidence indicator (only when the line isn't already showing the active/lock bar) */}
       {!isActive && confidenceTint && (
-        <div className={`absolute left-0 inset-y-0 w-1 z-0 rounded-l-xl opacity-70 ${confidenceTint === 'success' ? 'bg-success' : 'bg-warning'}`} />
+        <div className={`absolute left-1 top-2 bottom-2 w-1 z-0 rounded-full opacity-70 ${confidenceTint === 'success' ? 'bg-success' : 'bg-warning'}`} />
       )}
       {/* Drag Handle & Line number */}
       <div className="flex items-center gap-1 shrink-0">

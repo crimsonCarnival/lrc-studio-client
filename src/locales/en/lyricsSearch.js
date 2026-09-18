@@ -18,4 +18,5 @@ export default {
     lyricsUnavailable: "Couldn't extract lyrics for this song. The page structure may have changed.",
     generic: 'Something went wrong. Please try again.',
   },
+  maintenance: 'Lyrics search is currently under maintenance.',
 };

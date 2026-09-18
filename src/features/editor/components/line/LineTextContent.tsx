@@ -1,4 +1,4 @@
-import { memo, useState, Fragment } from 'react';
+import { memo, Fragment } from 'react';
 import type { RefObject } from 'react';
 import { parseRubyMarkup, hasKanji, isKanji, hasCJK, toHiragana, toKatakana } from '@/shared/utils/furigana';
 import { Icon } from '@/shared/ui/Icon';
@@ -74,7 +74,6 @@ interface LineTextContentProps {
   wordClickTimerRef: RefObject<ReturnType<typeof setTimeout> | null>;
   handleSaveLineText?: (lineIndex: number, text: string, secondary?: string, translations?: Translation[], singers?: string[]) => void;
   handleCycleWordSinger?: (lineIndex: number, wi: number) => void;
-  handleSetWordSinger: (lineIndex: number, wi: number, singer: number | null) => void;
   songSingers?: string[];
 }
 
@@ -96,14 +95,10 @@ const LineTextContent = memo(({
   wordClickTimerRef,
   handleSaveLineText,
   handleCycleWordSinger,
-  handleSetWordSinger,
   songSingers,
 }: LineTextContentProps) => {
   const { t } = useTranslation();
-  const [activePaintSinger, setActivePaintSinger] = useState<number | null>(null); // null = off, -1 = eraser, 0..3 = singer
-
   const roster = songSingers ?? [];
-
   const hasSingerSplit = (line.singers?.length ?? 0) >= 2 && handleCycleWordSinger;
 
   // Single-singer lines: always inherit singer color regardless of whether a words array exists
@@ -124,34 +119,7 @@ const LineTextContent = memo(({
 
   return (
     <div className={`flex flex-col gap-1 group/text min-w-0 w-full ${editorMode === 'words' ? 'pt-0.5' : ''}`}>
-      {hasSingerSplit && (
-        <div className="flex items-center gap-1.5 mb-1 bg-zinc-900/50 p-1 rounded-md border border-zinc-800/50 self-start">
-          <Icon name="brush" size={12} className="text-zinc-500 ml-1" />
-          <div className="w-px h-3 bg-zinc-700/50 mx-0.5" />
-          {line.singers!.map((singer, idx) => {
-            const globalIdx = singerColorIndex(singer, roster);
-            return (
-              <button
-                key={idx}
-                onClick={(e) => { e.stopPropagation(); setActivePaintSinger(activePaintSinger === idx ? null : idx); }}
-                className={`text-[10px] px-1.5 py-0.5 rounded transition-all select-none ${
-                  activePaintSinger === idx ? 'bg-primary/20 ring-1 ring-primary/50' : 'hover:bg-zinc-800'
-                } ${WORD_SINGER_COLORS[globalIdx]?.split(' ')[0]}`}
-              >
-                {singer}
-              </button>
-            );
-          })}
-          <button
-            onClick={(e) => { e.stopPropagation(); setActivePaintSinger(activePaintSinger === -1 ? null : -1); }}
-            className={`text-[10px] px-1.5 py-0.5 rounded transition-all select-none flex items-center gap-1 ${
-              activePaintSinger === -1 ? 'bg-zinc-700 ring-1 ring-zinc-500' : 'hover:bg-zinc-800 text-zinc-500'
-            }`}
-          >
-            <Icon name="ink_eraser" size={12} />
-          </button>
-        </div>
-      )}
+
       <div className="flex items-center gap-2">
         {(() => {
           const isDuet = line.mode === 'duet' && (line.singers?.length ?? 0) >= 2;
@@ -222,13 +190,8 @@ const LineTextContent = memo(({
                   <ruby
                     className={`group/ruby ${editorMode === 'words' || canHaveReading ? 'cursor-pointer' : 'cursor-default'} ${canHaveReading ? 'hover:text-primary' : ''}`}
                     role={editorMode === 'words' || canHaveReading ? 'button' : undefined}
-                    tabIndex={editorMode === 'words' || canHaveReading || activePaintSinger !== null ? 0 : undefined}
+                    tabIndex={editorMode === 'words' || canHaveReading ? 0 : undefined}
                     onClick={(e) => {
-                      if (activePaintSinger !== null) {
-                        e.stopPropagation();
-                        handleSetWordSinger(lineIndex, wi, activePaintSinger === -1 ? null : activePaintSinger);
-                        return;
-                      }
                       if (editorMode !== 'words' && !canHaveReading) return;
                       e.stopPropagation();
                       if (editorMode === 'words') {
@@ -316,15 +279,9 @@ const LineTextContent = memo(({
                   const globalIdx2 = singerName2 ? singerColorIndex(singerName2, roster) : null;
                   const singerColorClass = globalIdx2 !== null ? (WORD_SINGER_COLORS[globalIdx2] || '') : '';
                   return (
-                    <Tip key={wi} content={activePaintSinger !== null ? t('editor.clickToPaintSinger') : t('editor.rightClickToAssignSinger')}>
+                    <Tip key={wi} content={t('editor.rightClickToAssignSinger')}>
                       <span
-                        className={`transition-colors px-0.5 rounded ${activePaintSinger !== null ? 'cursor-pointer' : 'cursor-context-menu'} select-text ${singerColorClass} hover:bg-white/5`}
-                        onClick={(e) => {
-                          if (activePaintSinger !== null) {
-                            e.stopPropagation();
-                            handleSetWordSinger(lineIndex, wi, activePaintSinger === -1 ? null : activePaintSinger);
-                          }
-                        }}
+                        className={`transition-colors px-0.5 rounded cursor-context-menu select-text ${singerColorClass} hover:bg-white/5`}
                         onContextMenu={(e) => {
                           e.preventDefault();
                           e.stopPropagation();

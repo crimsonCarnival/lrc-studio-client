@@ -7,6 +7,7 @@ import EditorToolbar from './EditorToolbar';
 import EditorPasteArea from '../setup/EditorPasteArea';
 import VirtualizedLineList from './VirtualizedLineList';
 import EditorActionDrawer from './EditorActionDrawer';
+import SelectionActionBar from './SelectionActionBar';
 import AutoStampModal from './AutoStampModal';
 import PlayerControls from '@/features/player/components/PlayerControls';
 import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
@@ -21,10 +22,32 @@ import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import type { UploadedAudio } from '@/shared/hooks/useAppState';
 import { Icon } from '@/shared/ui/Icon';
-import { linesToRawText } from '@/features/editor/utils/sections';
-import { serializeToRubyMarkup } from '@/shared/utils/furigana';
+import { linesToRawText, flatToSections } from '@/features/editor/utils/sections';
+import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
+import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger } from '@ui/popover';
+import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
+import { savePendingProject } from '@/features/editor/services/guest-project-db';
+import { useNavigate } from 'react-router-dom';
 
 const EMPTY_ARTISTS: string[] = [];
+
+const ActionsDropdown = ({ children, icon = 'more_horiz', label }: { children: React.ReactNode; icon?: string; label?: string }) => {
+  const { t } = useTranslation();
+  return (
+    <Popover>
+      <Tip content={label || t('editor.lineOptions')}>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon" className="size-9 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 rounded-full transition-colors">
+            <Icon name={icon} size={18} />
+          </Button>
+        </PopoverTrigger>
+      </Tip>
+      <PopoverContent className="w-56 p-1 bg-zinc-900 border-zinc-800 shadow-xl" align="end">
+        {children}
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 // Phases during which an Auto Stamp job is actively running server-side —
 // the toolbar button stays disabled and re-clicking would race the in-flight job.
@@ -96,7 +119,6 @@ export default function Editor({
   buildProjectPayload,
   handleRemoveAllLyrics,
   isAutosaving,
-  pendingSyncs,
   isSaving,
   compact,
   onNewProject,
@@ -112,6 +134,8 @@ export default function Editor({
 }: EditorProps) {
   "use no memo";
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
   const {
     rawText,
     setRawText,
@@ -166,6 +190,8 @@ export default function Editor({
     handleBulkClearTimestamps,
     handleBulkDelete,
     handleBulkShift,
+    handleBulkSingTogether,
+    handleBulkSplitSingers,
     requestConfirm,
     confirmModal,
     settings,
@@ -177,7 +203,6 @@ export default function Editor({
     handleSetWordReading,
     stampTarget,
     handleStampTargetToggle,
-    overlappingLines,
     modifiedLines,
     clearModifiedLines,
   } = useEditor({
@@ -365,27 +390,69 @@ export default function Editor({
     >
       <div className="flex items-center justify-between gap-3 w-full mb-4 z-raised">
         <div className="flex items-center gap-2 overflow-hidden flex-1">
-          <h2 className="text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2">
+          <h2 className="text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2 mr-2">
             <span className="uppercase shrink-0 text-sm flex items-center gap-1.5">
               <Icon name="description" size={16} />
               {t('editor.title')}
             </span>
           </h2>
           {syncMode && lines.length > 0 && (
-            <Tip content={t('editor.backToEdit')}>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setRawText(linesToRawText(lines, (l) => serializeToRubyMarkup(l.words) || l.text || ''));
-                  setSyncMode(false);
-                }}
-                className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 flex-shrink-0 size-8 rounded-full"
-              >
-                <Icon name="edit" size={16} />
-              </Button>
-            </Tip>
+            <div className="flex items-center gap-1 shrink-0">
+              <Tip content={t('editor.backToEdit')}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setRawText(linesToRawText(lines, (l) => serializeToRubyMarkup(l.words) || l.text || ''));
+                    setSyncMode(false);
+                  }}
+                  className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 flex-shrink-0 size-8 rounded-full"
+                >
+                  <Icon name="edit" size={16} />
+                </Button>
+              </Tip>
+              <div className="w-px h-4 bg-zinc-700/50 mx-1 shrink-0" />
+              <Tip content={t('editor.undoTitle') || 'Undo (Ctrl+Z)'}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={undo}
+                  disabled={!canUndo}
+                  className="size-8 rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 disabled:opacity-30 transition-colors"
+                >
+                  <Icon name="undo" size={16} />
+                </Button>
+              </Tip>
+              <Tip content={t('editor.redoTitle') || 'Redo (Ctrl+Y)'}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={redo}
+                  disabled={!canRedo}
+                  className="size-8 rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 disabled:opacity-30 transition-colors"
+                >
+                  <Icon name="redo" size={16} />
+                </Button>
+              </Tip>
+            </div>
           )}
+        </div>
+
+        <div className="hidden xl:block">
+          <SelectionActionBar
+            selectedLines={selectedLines}
+            lines={lines}
+            settings={settings}
+            handleBulkClearTimestamps={handleBulkClearTimestamps as ComponentProps<typeof SelectionActionBar>['handleBulkClearTimestamps']}
+            handleBulkShift={handleBulkShift as ComponentProps<typeof SelectionActionBar>['handleBulkShift']}
+            handleBulkDelete={handleBulkDelete as ComponentProps<typeof SelectionActionBar>['handleBulkDelete']}
+            handleBulkSingTogether={handleBulkSingTogether}
+            handleBulkSplitSingers={handleBulkSplitSingers}
+            clearSelection={clearSelection as ComponentProps<typeof SelectionActionBar>['clearSelection']}
+            handleApplyOffset={handleApplyOffset as ComponentProps<typeof SelectionActionBar>['handleApplyOffset']}
+            handleMoveToSection={handleMoveToSection as ComponentProps<typeof SelectionActionBar>['handleMoveToSection']}
+            songArtists={combinedSingers}
+          />
         </div>
 
         <div className="flex items-center gap-2">
@@ -405,45 +472,150 @@ export default function Editor({
               </div>
             </Tip>
           )}
+
+          <div className="flex items-center gap-1 shrink-0 ml-2">
+            {onHideEditor && onShowPreview && (
+              <Tip content={previewHidden ? (t('editor.showPreview') || 'Show preview') : (t('editor.hideEditor') || 'Hide editor')}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={previewHidden ? onShowPreview : onHideEditor}
+                  className="size-9 rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors"
+                >
+                  <Icon name={previewHidden ? 'visibility' : 'visibility_off'} size={18} />
+                </Button>
+              </Tip>
+            )}
+            
+            <Tip content={t('lyricsSearch.maintenance', 'Lyrics search is currently under maintenance.')}>
+              <div className="inline-block cursor-not-allowed">
+                <Button variant="ghost" size="icon" disabled className="size-9 rounded-full text-zinc-600">
+                  <Icon name="search" size={18} />
+                </Button>
+              </div>
+            </Tip>
+
+            {handleManualSave && (
+              <Tip content={isSaving ? (t('project.saving') || 'Saving…') : isAutosaving ? (t('project.saved') || 'Saved') : (t('project.save') || 'Save')}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={async () => {
+                    if (!user) {
+                      const payload = buildProjectPayload ? buildProjectPayload() : {};
+                      const idbPayload = {
+                        title: payload.title,
+                        lyrics: { editorMode: payload.editorMode, sections: payload.sections || flatToSections(payload.lines || []) },
+                        state: {
+                          syncMode: payload.syncMode,
+                          activeLineIndex: payload.activeLineIndex,
+                          playbackPosition: payload.playbackPosition,
+                          playbackSpeed: payload.playbackSpeed,
+                          saveTime: payload.saveTime,
+                          timezone: payload.timezone,
+                          utcOffset: payload.utcOffset,
+                        },
+                        metadata: payload.metadata,
+                        ...(payload.ytUrl ? { ytUrl: payload.ytUrl } : {}),
+                        ...(payload.uploadedAudio ? {
+                          uploadUrl: payload.uploadedAudio.uploadUrl,
+                          uploadPublicId: payload.uploadedAudio.publicId || null,
+                          fileName: payload.uploadedAudio.fileName || '',
+                          duration: payload.uploadedAudio.duration || null,
+                        } : {}),
+                      };
+                      try {
+                        await savePendingProject(idbPayload);
+                        navigate(`/auth?action=signin&redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
+                      } catch {
+                        import('react-hot-toast').then(({ default: toast }) => {
+                          toast.error(t('editor.draftSaveFailed'));
+                        });
+                      }
+                    } else {
+                      handleManualSave();
+                    }
+                  }}
+                  disabled={isSaving}
+                  className={`size-9 rounded-full transition-colors ${isSaving ? 'text-zinc-400' : isAutosaving ? 'text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'}`}
+                >
+                  {isSaving ? <Icon name="autorenew" size={18} className="animate-spin" /> : isAutosaving ? <Icon name="check" size={18} /> : <Icon name="save" size={18} />}
+                </Button>
+              </Tip>
+            )}
+
+            <ActionsDropdown icon="more_horiz">
+              <div className="p-1 space-y-0.5">
+
+                <PopoverItem onClick={() => setSelectedLines(new Set(lines.map((_, i) => i)))}>
+                  <Icon name="checklist" size={16} />
+                  {t('editor.selection.selectAll')}
+                </PopoverItem>
+
+                <PopoverItem onClick={handleClearTimestamps}>
+                  <Icon name="ink_eraser" size={16} />
+                  {t('editor.selection.clearTimestamps')}
+                </PopoverItem>
+
+                {editorMode === 'words' && (
+                  <PopoverItem onClick={handleClearAllWordTimestamps}>
+                    <Icon name="ink_eraser" size={16} />
+                    {t('editor.clearWordTimestamps')}
+                  </PopoverItem>
+                )}
+
+                {hasCJK(rawText) && (
+                  <PopoverItem onClick={() => {
+                    const current = settings.editor?.display?.readingFormat || 'hiragana';
+                    updateSetting('editor.display.readingFormat', current === 'hiragana' ? 'katakana' : 'hiragana');
+                  }}>
+                    <Icon name="translate" size={16} />
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-xs font-bold ${settings.editor?.display?.readingFormat !== 'katakana' ? 'text-primary' : 'text-zinc-400'
+                        }`}>
+                        {t('editor.readingFormat.hiragana')}
+                      </span>
+                      <span className="text-zinc-600 text-[10px]">↔</span>
+                      <span className={`text-xs font-bold ${settings.editor?.display?.readingFormat === 'katakana' ? 'text-primary' : 'text-zinc-400'
+                        }`}>
+                        {t('editor.readingFormat.katakana')}
+                      </span>
+                    </div>
+                  </PopoverItem>
+                )}
+
+                <PopoverSeparator className="bg-zinc-800/50" />
+
+                {onShowKeyboardHelp && (
+                  <PopoverItem onClick={onShowKeyboardHelp} className="text-xs">
+                    <Icon name="help" size={16} />
+                    {t('shortcuts.title')}
+                  </PopoverItem>
+                )}
+
+                <PopoverItem onClick={onNewProject} className="text-xs">
+                  <Icon name="add" size={16} />
+                  {t('home.newProject')}
+                </PopoverItem>
+
+                <PopoverItem
+                  onClick={() => requestConfirm(t('confirm.removeAll'), handleRemoveAllLyrics, { title: t('confirm.removeAllTitle'), variant: 'danger' })}
+                  className="text-xs text-red-400"
+                >
+                  <Icon name="delete" size={16} />
+                  {t('editor.removeAll')}
+                </PopoverItem>
+              </div>
+            </ActionsDropdown>
+          </div>
         </div>
       </div>
 
       <EditorToolbar
-        user={user}
         editorMode={editorMode}
         setEditorMode={setEditorMode}
         updateSetting={updateSetting}
-        settings={settings}
-        syncMode={syncMode}
-        undo={undo}
-        redo={redo}
-        canUndo={canUndo}
-        canRedo={canRedo}
         lines={lines}
-        setSelectedLines={setSelectedLines}
-        selectedLines={selectedLines}
-        handleClearTimestamps={handleClearTimestamps}
-        handleClearAllWordTimestamps={handleClearAllWordTimestamps}
-        requestConfirm={requestConfirm}
-        setLines={setLines}
-        setRawText={setRawText}
-        setSyncMode={setSyncMode}
-        handleManualSave={handleManualSave}
-        buildProjectPayload={buildProjectPayload}
-        handleRemoveAllLyrics={handleRemoveAllLyrics}
-        isAutosaving={isAutosaving}
-        pendingSyncs={pendingSyncs}
-        isSaving={isSaving}
-        overlappingLines={overlappingLines}
-        onNewProject={onNewProject}
-        onShowKeyboardHelp={onShowKeyboardHelp}
-        activeLineIndex={activeLineIndex}
-        activeWordIndex={activeWordIndex}
-        stampTarget={stampTarget}
-        handleApplyOffset={handleApplyOffset}
-        onHideEditor={onHideEditor}
-        previewHidden={previewHidden}
-        onShowPreview={onShowPreview}
         autoStampHasAudio={autoStampHasAudio}
         autoStampRunning={autoStampRunning}
         onAutoStamp={handleAutoStampStart}
@@ -567,6 +739,8 @@ export default function Editor({
         handleDeleteLine={handleDeleteLine}
         handleBulkClearTimestamps={handleBulkClearTimestamps}
         handleBulkDelete={handleBulkDelete}
+        handleBulkSingTogether={handleBulkSingTogether}
+        handleBulkSplitSingers={handleBulkSplitSingers}
         clearSelection={clearSelection}
         lines={lines}
         handleMoveToSection={handleMoveToSection}

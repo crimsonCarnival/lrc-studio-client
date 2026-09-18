@@ -1,3 +1,4 @@
+/* global require */
 export default {
   content: [
     "./index.html",
@@ -61,6 +62,7 @@ export default {
       addVariant('data-saver', '@media (prefers-reduced-data: reduce)');
       addVariant('reduce-transparency', '@media (prefers-reduced-transparency: reduce)');
       addVariant('forced-colors', '@media (forced-colors: active)');
-    }
+    },
+    require('@tailwindcss/container-queries'),
   ],
 }
