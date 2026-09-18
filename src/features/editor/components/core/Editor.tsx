@@ -695,12 +695,7 @@ export default function Editor({
           handleClearLine={handleClearLine}
           handleDeleteLine={handleDeleteLine}
           listRef={listRef}
-          handleApplyOffset={handleApplyOffset}
           handleMark={handleMarkWithConfidence}
-          handleBulkClearTimestamps={handleBulkClearTimestamps}
-          handleBulkShift={handleBulkShift}
-          handleBulkDelete={handleBulkDelete}
-          clearSelection={clearSelection}
           handleToggleLine={handleToggleLine}
           updateSetting={updateSetting}
           activeWordIndex={activeWordIndex}
@@ -715,7 +710,6 @@ export default function Editor({
           playbackPosition={playbackPosition}
           onWordMenu={openWord}
           onLineMenu={openLine}
-          onBulkMenu={openBulk}
           modifiedLines={modifiedLines}
           onToggleLineMode={handleToggleLineMode}
           confidenceByIndex={autoStamp.confidenceByIndex}
