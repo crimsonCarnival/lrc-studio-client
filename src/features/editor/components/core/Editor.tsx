@@ -740,7 +740,7 @@ export default function Editor({
         clearSelection={clearSelection}
         lines={lines}
         handleMoveToSection={handleMoveToSection}
-        songArtists={projectSingers}
+        songArtists={combinedSingers}
       />
 
       {confirmModal}
