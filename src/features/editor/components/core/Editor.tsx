@@ -86,6 +86,7 @@ interface EditorProps {
   onOpenProjectSettings?: () => void;
   registerAfterSave?: (cb: (() => void) | null) => void;
   songArtists?: string[];
+  singerColors?: string[];
   playerSlot?: PlayerSlot;
   onHideEditor?: () => void;
   previewHidden?: boolean;
@@ -125,6 +126,7 @@ export default function Editor({
   onShowKeyboardHelp,
   registerAfterSave,
   songArtists = EMPTY_ARTISTS,
+  singerColors,
   playerSlot,
   onHideEditor,
   previewHidden,
@@ -234,7 +236,7 @@ export default function Editor({
     [songArtists, lines],
   );
 
-  const { activeDrawer, wordData, lineData, openWord, openLine, openBulk, close: closeDrawer } = useEditorActionDrawer();
+  const { activeDrawer, wordData, lineData, openWord, openLine, close: closeDrawer } = useEditorActionDrawer();
 
   // ——— Auto Stamp (#9) ———
   // uploadId: the persisted Cloudinary Upload id. `local:*` ids are client-side
@@ -375,11 +377,12 @@ export default function Editor({
     const synced = lyricLines.filter(l => l.timestamp != null).length;
     const wordCount = lyricLines.reduce((acc, l) => acc + (l.text ? l.text.trim().split(/\s+/).filter(Boolean).length : 0), 0);
     const charCount = lyricLines.reduce((acc, l) => acc + (l.text ? l.text.length : 0), 0);
+    const charCountNoSpaces = lyricLines.reduce((acc, l) => acc + (l.text ? l.text.replace(/\s+/g, '').length : 0), 0);
     const activeLine = lines[activeLineIndex];
     const activeWords = stampTarget === 'secondary' ? activeLine?.secondaryWords : activeLine?.words;
     const totalWordsInLine = activeWords?.length || 0;
     const currentWordNum = activeWordIndex !== -1 ? Math.min(activeWordIndex + 1, totalWordsInLine) : 0;
-    return { synced, total: lyricLines.length, wordCount, charCount, totalWordsInLine, currentWordNum };
+    return { synced, total: lyricLines.length, wordCount, charCount, charCountNoSpaces, totalWordsInLine, currentWordNum };
   }, [lines, activeLineIndex, activeWordIndex, stampTarget]);
 
   return (
@@ -455,8 +458,8 @@ export default function Editor({
         </div>
 
         <div className="flex items-center gap-2">
-          {syncProgress && (
-            <Tip content={t('editor.wordCharCount', { words: syncProgress.wordCount, chars: syncProgress.charCount })}>
+          {!selectedLines.size && syncProgress && (
+            <Tip content={t('editor.wordCharCount', '{{words}} words / {{chars}} chars / {{charsNoSp}} no spaces', { words: syncProgress.wordCount, chars: syncProgress.charCount, charsNoSp: syncProgress.charCountNoSpaces })}>
               <div className={`text-[10px] font-mono tabular-nums px-3 py-1 rounded-full border bg-zinc-900/50 flex items-center gap-1.5 cursor-default ${syncProgress.synced === syncProgress.total ? 'text-primary border-primary/20' : 'text-zinc-500 border-zinc-800/60'
                 }`}>
                 <div className={`size-1.5 rounded-full flex-shrink-0 ${syncProgress.synced === syncProgress.total ? 'bg-primary shadow-glow' : 'bg-zinc-700'
@@ -670,6 +673,7 @@ export default function Editor({
           dragOverIndex={dragOverIndex}
           dragIndex={dragIndex}
           projectSingers={combinedSingers}
+          singerColors={singerColors}
           selectedLines={selectedLines}
           settings={settings}
           editingLineIndex={editingLineIndex}
@@ -736,6 +740,7 @@ export default function Editor({
         clearSelection={clearSelection}
         lines={lines}
         handleMoveToSection={handleMoveToSection}
+        songArtists={projectSingers}
       />
 
       {confirmModal}

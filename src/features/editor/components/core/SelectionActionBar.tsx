@@ -134,10 +134,7 @@ export default function SelectionActionBar({
         </>
       )}
 
-      {handleBulkSingTogether && handleBulkSplitSingers && (() => {
-        const sectionSingers = lines ? getSingerOptionsForSelection(lines, [...selectedLines], songArtists) : songArtists;
-        return sectionSingers && sectionSingers.length > 1;
-      })() && (
+      {handleBulkSingTogether && handleBulkSplitSingers && songArtists && songArtists.length > 1 && (
         <>
           <Tip content={t('editor.duetMode') || 'Sing together'}>
             <Button

@@ -77,6 +77,7 @@ interface EditorLineItemProps {
   handleAssignSinger?: (name: string, lineIndices: number[], slot?: number, onlyFirst?: boolean) => void;
   songArtists?: string[];
   projectSingers?: string[];
+  singerColors?: string[];
   playerRef?: PlayerRef;
   shiftTime: (i: number, delta: number) => void;
   handleAddLine?: (i: number) => void;
@@ -145,6 +146,7 @@ const EditorLineItem = React.memo(({
   handleAssignSinger,
   songArtists,
   projectSingers,
+  singerColors,
   playerRef,
   shiftTime,
   handleAddLine,
@@ -369,10 +371,11 @@ const EditorLineItem = React.memo(({
           setEditingSingers([...singers, '', '', '', ''].slice(0, 4));
         }}
         style={{ animationDelay: staggerDelay }}
-        className={`flex items-end px-4 cursor-pointer group animate-preview-line-in ${selectedLines.has(i) ? 'bg-primary/10' : ''} ${isRoot ? 'mt-8' : 'mt-4'}`}
+        className={`relative flex items-end px-4 cursor-pointer group animate-preview-line-in bg-background ${isRoot ? 'pt-8' : 'pt-4'}`}
       >
+        {selectedLines.has(i) && <div className="absolute inset-0 bg-primary/10 pointer-events-none" />}
         {isEditing ? (
-          <div className={`flex items-start gap-1.5 px-3 py-1.5 rounded-t-lg border-t border-l border-r border-b-0 relative z-10 ${isRoot ? 'bg-primary/10 border-primary/40' : 'bg-zinc-800/50 border-zinc-700/50'}`} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } }} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
+          <div className={`flex items-start gap-1.5 px-3 py-1.5 rounded-t-lg border-t border-l border-r border-b-0 relative z-10 ${isRoot ? 'bg-primary/10 border-primary/40' : 'bg-zinc-800/50 border-zinc-700/50'}`} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
             <SectionPickerDropdown
               value={editingText}
               onChange={(v: string) => setEditingText(v)}
@@ -407,25 +410,40 @@ const EditorLineItem = React.memo(({
             </Tip>
           </div>
         ) : (
-          <span className={`px-4 py-1.5 rounded-t-lg border-t border-l border-r border-b-0 whitespace-nowrap transition-colors relative z-10 ${
+          <span className={`px-4 py-1.5 rounded-t-lg border-t border-l border-r border-b-0 whitespace-nowrap transition-colors relative z-10 flex items-center gap-2 ${
             isRoot
               ? 'text-xs font-bold tracking-widest uppercase text-primary bg-primary/10 border-primary/40 group-hover:bg-primary/20'
               : 'text-[10px] font-semibold tracking-widest uppercase text-zinc-400 bg-zinc-800/50 border-zinc-700/50 group-hover:bg-zinc-700/50'
           }`}>
-            {(() => {
-              const label = formatSectionLabel(line.label, t);
-              const lineSingers = getSingers(line);
-              const singersStr = lineSingers.join(' · ');
-              if (singersStr) {
-                return isRoot ? `${label} · ${singersStr}` : `[${label}: ${singersStr}]`;
-              }
-              return label;
-            })()}
+            <span>
+              {(() => {
+                const label = formatSectionLabel(line.label, t);
+                const lineSingers = getSingers(line);
+                const singersStr = lineSingers.join(' · ');
+                if (singersStr) {
+                  return isRoot ? `${label} · ${singersStr}` : `[${label}: ${singersStr}]`;
+                }
+                return label;
+              })()}
+            </span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditingLineIndex(i);
+                setEditingText(line.label || '');
+                const singers = getSingers(line);
+                setEditingSingers([...singers, '', '', '', ''].slice(0, 4));
+              }}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-500 hover:text-primary"
+            >
+              <Icon name="edit" size={14} />
+            </button>
           </span>
         )}
         <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-700/50'}`} />
         {selectedLines.size === 0 && (
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mb-1 pl-2">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-0 bottom-0 mb-1 flex items-center gap-1 pl-6 pr-2 bg-gradient-to-l from-zinc-900 via-zinc-900 to-transparent">
             <Tip content={isRoot ? t('editor.sections.demote') : t('editor.sections.promote')}>
               <button
                 type="button"
@@ -528,7 +546,7 @@ const EditorLineItem = React.memo(({
       <div className="flex items-center gap-1 shrink-0">
         <Tip content={t('editor.dragToReorder')}>
           <div
-            className="cursor-grab active:cursor-grabbing text-zinc-800 hover:text-zinc-500 transition-colors p-0.5 -ml-1 select-none"
+            className="cursor-grab active:cursor-grabbing text-zinc-600 hover:text-zinc-400 transition-colors p-0.5 -ml-1 select-none"
           >
             <Icon name="drag_indicator" size={12} />
           </div>
@@ -545,7 +563,7 @@ const EditorLineItem = React.memo(({
                 className="size-3.5 border-zinc-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
             ) : (
-              <span className="text-[10px] font-mono tabular-nums text-zinc-700/70 select-none text-right">
+              <span className="text-[10px] font-mono tabular-nums text-zinc-500 select-none text-right">
                 {lyricNumber}
               </span>
             )}
@@ -654,6 +672,7 @@ const EditorLineItem = React.memo(({
           handleSaveLineText={handleSaveLineText}
           handleCycleWordSinger={handleCycleWordSinger}
           songSingers={projectSingers}
+          singerColors={singerColors}
         />
         
         {editorMode === 'words' && (

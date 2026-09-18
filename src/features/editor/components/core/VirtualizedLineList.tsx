@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import type { ComponentProps, RefObject } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useVirtualizer, defaultRangeExtractor } from '@tanstack/react-virtual';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
@@ -33,6 +33,7 @@ interface VirtualizedLineListProps {
   dragOverIndex?: number | null;
   dragIndex?: number | null;
   projectSingers?: string[];
+  singerColors?: string[];
   selectedLines: Set<number>;
   settings: AppSettings;
   editingLineIndex: number | null;
@@ -95,6 +96,7 @@ export default function VirtualizedLineList({
   dragOverIndex,
   dragIndex,
   projectSingers,
+  singerColors,
   selectedLines,
   settings,
   editingLineIndex,
@@ -139,6 +141,12 @@ export default function VirtualizedLineList({
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
 
+  const activeSections = useMemo(() => {
+    return lines
+      .map((line, i) => (line.type === 'section' ? i : -1))
+      .filter((i) => i !== -1);
+  }, [lines]);
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: lines.length,
@@ -148,6 +156,26 @@ export default function VirtualizedLineList({
     estimateSize: () => editorMode === 'words' ? 96 : ESTIMATED_LINE_HEIGHT,
     gap: LINE_GAP,
     overscan: 8,
+    rangeExtractor: useCallback((range: import('@tanstack/react-virtual').Range) => {
+      // 1. Get the default range based on current scroll position and overscan
+      const defaultRange = defaultRangeExtractor(range);
+
+      // 2. Find the active sticky section (closest section index <= first visible index)
+      let activeSectionIndex = -1;
+      for (const idx of activeSections) {
+        if (idx <= range.startIndex) activeSectionIndex = idx;
+        else break;
+      }
+
+      // 3. Keep the active section mounted if it's not already in the default range
+      const newRange = new Set(defaultRange);
+      if (activeSectionIndex !== -1) {
+        newRange.add(activeSectionIndex);
+      }
+
+      // 4. Return sorted indices
+      return Array.from(newRange).sort((a, b) => a - b);
+    }, [activeSections]),
   });
 
   // Re-measure all items when the scroll container is resized (e.g. window/panel resize
@@ -298,23 +326,95 @@ export default function VirtualizedLineList({
               ? i - displayedActiveIndex
               : 0;
 
+            const isSection = line.type === 'section';
+
             return (
               <div
                 key={line.id || i}
                 data-index={i}
-                ref={virtualizer.measureElement}
+                ref={isSection ? undefined : virtualizer.measureElement}
                 style={{
                   position: 'absolute',
-                  top: 0,
+                  top: isSection ? virtualRow.start : 0,
+                  bottom: isSection ? 0 : undefined,
                   left: 0,
                   width: '100%',
-                  transform: `translateY(${virtualRow.start}px)`,
+                  transform: isSection ? undefined : `translateY(${virtualRow.start}px)`,
                   paddingTop: dragOverIndex === i ? 52 : 0,
                   transition: 'padding-top 0.2s ease-out',
+                  pointerEvents: isSection ? 'none' : 'auto',
+                  zIndex: isSection ? 20 + i : undefined,
                 }}
               >
-                <EditorLineItem
-                  line={line}
+                {isSection ? (
+                  <div
+                    ref={virtualizer.measureElement}
+                    style={{ position: 'sticky', top: 0, pointerEvents: 'auto' }}
+                  >
+                    <EditorLineItem
+                      line={line}
+                      nextTimestamp={nextTimestamps[i]}
+                      isActive={isActive}
+                      isSynced={isSynced}
+                      activeLineRef={activeLineRef}
+                      virtualRow={virtualRow}
+                      handleLineClick={handleLineClick}
+                      handleLineHover={handleLineHover}
+                      handleDragStart={handleDragStart}
+                      handleDragOver={handleDragOver}
+                      handleDragEnd={handleDragEnd}
+                      handleDrop={handleDrop}
+                      dragOverIndex={dragOverIndex}
+                      dragIndex={dragIndex}
+                      projectSingers={projectSingers}
+                      singerColors={singerColors}
+                      selectedLines={selectedLines}
+                      settings={settings}
+                      editingLineIndex={editingLineIndex}
+                      setEditingLineIndex={setEditingLineIndex}
+                      editingText={editingText}
+                      setEditingText={setEditingText}
+                      editingSecondary={editingSecondary}
+                      setEditingSecondary={setEditingSecondary}
+                      editingTranslations={editingTranslations}
+                      setEditingTranslations={setEditingTranslations}
+                      editingSingers={editingSingers}
+                      setEditingSingers={setEditingSingers}
+                      handleSaveLineText={handleSaveLineText}
+                      handleInsertSection={handleInsertSection}
+                      handleToggleSectionDepth={handleToggleSectionDepth}
+                      handleMoveToSection={handleMoveToSection}
+                      handleAssignSinger={handleAssignSinger}
+                      songArtists={songArtists}
+                      playerRef={playerRef}
+                      shiftTime={shiftTime}
+                      handleAddLine={handleAddLine}
+                      handleClearLine={handleClearLine}
+                      handleDeleteLine={handleDeleteLine}
+                      handleMark={handleMark}
+                      handleToggleLine={handleToggleLine}
+                      activeWordIndex={activeWordIndex}
+                      handleClearWordTimestamp={handleClearWordTimestamp}
+                      handleSetActiveWordIndex={handleSetActiveWordIndex}
+                      handleSetTimestamp={handleSetTimestamp}
+                      handleSetWordReading={handleSetWordReading}
+                      handleCycleWordSinger={handleCycleWordSinger}
+                      stampTarget={stampTarget}
+                      handleStampTargetToggle={handleStampTargetToggle}
+                      playbackPosition={playbackPosition}
+                      onWordMenu={onWordMenu}
+                      onLineMenu={onLineMenu}
+                      isModified={modifiedLines.has(i)}
+                      editorMode={editorMode}
+                      onToggleLineMode={onToggleLineMode}
+                      isSyncedPrevious={i > 0 ? lines[i - 1].timestamp != null : true}
+                      upcomingDepth={upcomingDepth}
+                      lineConfidence={confidenceByIndex.get(i)}
+                    />
+                  </div>
+                ) : (
+                  <EditorLineItem
+                    line={line}
                   nextTimestamp={nextTimestamps[i]}
                   i={i}
                   displayedActiveIndex={displayedActiveIndex}
@@ -331,6 +431,7 @@ export default function VirtualizedLineList({
                   handleLineHoverEnd={handleLineHoverEnd}
                   handleDragStart={handleDragStart}
                   projectSingers={projectSingers}
+                  singerColors={singerColors}
                   handleDragOver={handleDragOver}
                   handleDragEnd={handleDragEnd}
                   handleDrop={handleDrop}
@@ -378,6 +479,7 @@ export default function VirtualizedLineList({
                   onToggleLineMode={onToggleLineMode}
                   confidenceInfo={confidenceByIndex?.get(i)}
                 />
+                )}
               </div>
             );
           })}

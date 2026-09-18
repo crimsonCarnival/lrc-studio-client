@@ -29,6 +29,7 @@ interface EditorActionDrawerProps {
   clearSelection: () => void;
   lines?: EditorLine[];
   handleMoveToSection?: (indices: number[], sectionIndex: number) => void;
+  songArtists?: string[];
 }
 
 export default function EditorActionDrawer({
@@ -49,6 +50,7 @@ export default function EditorActionDrawer({
   clearSelection,
   lines,
   handleMoveToSection,
+  songArtists,
 }: EditorActionDrawerProps) {
   const { t } = useTranslation();
   const [showSections, setShowSections] = useState(false);
@@ -181,7 +183,7 @@ export default function EditorActionDrawer({
 
       {activeDrawer === 'bulk' && (
         <>
-          {handleBulkSingTogether && (
+          {handleBulkSingTogether && songArtists && songArtists.length > 1 && (
             <DrawerItem
               iconName="group"
               label={t('editor.duetMode') || 'Sing together'}
@@ -191,7 +193,7 @@ export default function EditorActionDrawer({
               }}
             />
           )}
-          {handleBulkSplitSingers && (
+          {handleBulkSplitSingers && songArtists && songArtists.length > 1 && (
             <DrawerItem
               iconName="call_split"
               label={t('editor.splitMode') || 'Split by singer'}
