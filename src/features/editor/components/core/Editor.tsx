@@ -154,7 +154,6 @@ export default function Editor({
     handleMoveToSection,
     handleAssignSinger,
     handleCycleWordSinger,
-    handleSetWordSinger,
     dragIndex,
     dragOverIndex,
     selectedLines,
@@ -704,7 +703,6 @@ export default function Editor({
           handleSetTimestamp={handleSetTimestampWithConfidence}
           handleSetWordReading={handleSetWordReading}
           handleCycleWordSinger={handleCycleWordSinger}
-          handleSetWordSinger={handleSetWordSinger}
           stampTarget={stampTarget}
           handleStampTargetToggle={handleStampTargetToggle}
           playbackPosition={playbackPosition}

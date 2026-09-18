@@ -86,7 +86,6 @@ interface EditorLineItemProps {
   handleMark?: (opts?: { forceAdvance?: boolean }) => void;
   handleSetWordReading?: (i: number, wi: number, val: string) => void;
   handleCycleWordSinger?: (i: number, wi: number) => void;
-  handleSetWordSinger?: (i: number, wi: number, slot: number) => void;
   activeWordIndex: number;
   handleClearWordTimestamp?: (i: number, wi: number) => void;
   handleSetActiveWordIndex: (wi: number) => void;
@@ -155,7 +154,6 @@ const EditorLineItem = React.memo(({
   handleMark,
   handleSetWordReading,
   handleCycleWordSinger,
-  handleSetWordSinger,
   activeWordIndex,
   handleClearWordTimestamp,
   handleSetActiveWordIndex,
@@ -655,7 +653,6 @@ const EditorLineItem = React.memo(({
           wordClickTimerRef={wordClickTimerRef as ComponentProps<typeof LineTextContent>['wordClickTimerRef']}
           handleSaveLineText={handleSaveLineText}
           handleCycleWordSinger={handleCycleWordSinger}
-          handleSetWordSinger={handleSetWordSinger as ComponentProps<typeof LineTextContent>['handleSetWordSinger']}
           songSingers={projectSingers}
         />
         

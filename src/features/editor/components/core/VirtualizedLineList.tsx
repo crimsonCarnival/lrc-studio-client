@@ -66,7 +66,6 @@ interface VirtualizedLineListProps {
   handleSetTimestamp: LineItemProps['handleSetTimestamp'];
   handleSetWordReading?: LineItemProps['handleSetWordReading'];
   handleCycleWordSinger?: LineItemProps['handleCycleWordSinger'];
-  handleSetWordSinger?: LineItemProps['handleSetWordSinger'];
   stampTarget?: string;
   handleStampTargetToggle?: LineItemProps['handleStampTargetToggle'];
   playbackPosition?: number | null;
@@ -128,7 +127,6 @@ export default function VirtualizedLineList({
   handleSetTimestamp,
   handleSetWordReading,
   handleCycleWordSinger,
-  handleSetWordSinger,
   stampTarget,
   handleStampTargetToggle,
   playbackPosition,
@@ -370,7 +368,6 @@ export default function VirtualizedLineList({
                   handleSetTimestamp={handleSetTimestamp}
                   handleSetWordReading={handleSetWordReading}
                   handleCycleWordSinger={handleCycleWordSinger}
-                  handleSetWordSinger={handleSetWordSinger}
                   stampTarget={i === activeLineIndex ? stampTarget : 'main'}
                   handleStampTargetToggle={handleStampTargetToggle}
                   playbackPosition={isActive ? playbackPosition : null}
