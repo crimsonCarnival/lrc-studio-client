@@ -166,6 +166,7 @@ export type DisplaySettings = {
   readingFormat?: Maybe<Scalars['String']['output']>;
   showNextLine?: Maybe<Scalars['Boolean']['output']>;
   translationLayout?: Maybe<Scalars['String']['output']>;
+  singerColors?: Maybe<Array<Scalars['String']['output']>>;
 };
 
 export type DisplaySettingsInput = {
@@ -177,6 +178,7 @@ export type DisplaySettingsInput = {
   readingFormat?: InputMaybe<Scalars['String']['input']>;
   showNextLine?: InputMaybe<Scalars['Boolean']['input']>;
   translationLayout?: InputMaybe<Scalars['String']['input']>;
+  singerColors?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type EditorSettings = {
@@ -727,6 +729,7 @@ export type ProjectLyricsInput = {
 export type ProjectMetadata = {
   description?: Maybe<Scalars['String']['output']>;
   genre?: Maybe<Scalars['String']['output']>;
+  singerColors?: Maybe<Array<Scalars['String']['output']>>;
   songAlbum?: Maybe<Scalars['String']['output']>;
   songArtist?: Maybe<Scalars['String']['output']>;
   songLanguage?: Maybe<Scalars['String']['output']>;
@@ -740,6 +743,7 @@ export type ProjectMetadata = {
 export type ProjectMetadataInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   genre?: InputMaybe<Scalars['String']['input']>;
+  singerColors?: InputMaybe<Array<Scalars['String']['input']>>;
   songAlbum?: InputMaybe<Scalars['String']['input']>;
   songArtist?: InputMaybe<Scalars['String']['input']>;
   songLanguage?: InputMaybe<Scalars['String']['input']>;

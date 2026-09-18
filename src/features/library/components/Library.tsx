@@ -286,7 +286,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
           onClose={() => setEditingProject(null)}
           onConfirm={async (data: SetupConfirmData) => {
             try {
-              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic } = data;
+              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic, singerColors } = data;
               const updatedMetadata = {
                 ...editingProject.metadata,
                 description,
@@ -296,6 +296,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
                 songAlbum,
                 songYear,
                 genre,
+                singerColors,
               };
               await projects.patch(editingProject.publicId, {
                 title,

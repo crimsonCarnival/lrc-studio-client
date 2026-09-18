@@ -35,6 +35,7 @@ const GET_SETTINGS = /* GraphQL */ `
           readingFormat
           karaokeFillTrack
           karaokeFillEasing
+          singerColors
         }
         scroll { mode alignment }
       }

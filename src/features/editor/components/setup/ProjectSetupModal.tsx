@@ -92,6 +92,7 @@ export interface ProjectSetupConfirm {
   genre: string;
   coverImage: string;
   isPublic: boolean;
+  singerColors?: string[];
 }
 
 interface ProjectSetupModalProps {
@@ -108,6 +109,7 @@ interface ProjectSetupModalProps {
   initialGenre?: string;
   initialCoverImage?: string;
   initialIsPublic?: boolean;
+  initialSingerColors?: string[];
   isEditing?: boolean;
   sourceInfo?: SourceInfo | null;
 }
@@ -126,6 +128,7 @@ export default function ProjectSetupModal({
   initialGenre = '',
   initialCoverImage = '',
   initialIsPublic = false,
+  initialSingerColors = [],
   isEditing = false,
   sourceInfo = null,
 }: ProjectSetupModalProps) {
@@ -165,9 +168,10 @@ export default function ProjectSetupModal({
         genre: initialGenre || '',
         coverImage: initialCoverImage || '',
         isPublic: initialIsPublic || false,
+        singerColors: initialSingerColors || [],
       });
     }
-  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialIsPublic]);
+  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialIsPublic, initialSingerColors]);
 
 
   const addTag = (text: string) => {
@@ -252,6 +256,7 @@ export default function ProjectSetupModal({
       genre: form.genre,
       coverImage: form.coverImage.trim(),
       isPublic: form.isPublic,
+      singerColors: form.singerColors,
     });
   };
 
@@ -352,6 +357,50 @@ export default function ProjectSetupModal({
                     onChange={(e) => setForm(f => ({ ...f, songArtist: e.target.value }))}
                     className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
                   />
+                </div>
+                <div className="flex flex-col gap-1.5 mt-2">
+                  <Label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                    Singer Colors
+                  </Label>
+                  <p className="text-[11px] text-zinc-500 mb-1">
+                    Customize project-specific colors for singers 1-8. Leave empty to use global defaults.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="flex flex-col items-center gap-1">
+                        <input
+                          type="color"
+                          value={form.singerColors?.[i] || '#888888'}
+                          onChange={(e) => {
+                            setForm((f) => {
+                              const newColors = [...(f.singerColors || Array(8).fill(''))];
+                              newColors[i] = e.target.value;
+                              return { ...f, singerColors: newColors };
+                            });
+                          }}
+                          className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
+                          title={`Singer ${i + 1}`}
+                        />
+                        <span className="text-[10px] text-zinc-500">{i + 1}</span>
+                        {form.singerColors?.[i] && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setForm((f) => {
+                                const newColors = [...(f.singerColors || Array(8).fill(''))];
+                                newColors[i] = '';
+                                return { ...f, singerColors: newColors };
+                              });
+                            }}
+                            className="text-[10px] text-zinc-400 hover:text-red-400"
+                            title="Reset color"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 

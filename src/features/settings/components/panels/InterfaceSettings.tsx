@@ -114,6 +114,26 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             </SelectContent>
           </Select>
         </SettingRow>
+        <SettingRow iconName="palette" label={t('settings.interface.singerColors') || 'Singer Colors'} description={t('settings.interface.singerColorsDesc') || 'Customize the global default colors for singers 1-8.'}>
+          <div className="flex flex-wrap gap-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <input
+                  type="color"
+                  value={settings.editor?.display?.singerColors?.[i] || '#888888'}
+                  onChange={(e) => {
+                    const newColors = [...(settings.editor?.display?.singerColors || Array(8).fill(''))];
+                    newColors[i] = e.target.value;
+                    updateSetting('editor.display.singerColors', newColors);
+                  }}
+                  className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
+                  title={`Singer ${i + 1}`}
+                />
+                <span className="text-[10px] text-zinc-500">{i + 1}</span>
+              </div>
+            ))}
+          </div>
+        </SettingRow>
       </Section>
 
       <Section title={t('settings.interface.scrollSection') || 'Scrolling & Alignment'} iconName="subject" searchTerm={searchTerm}>

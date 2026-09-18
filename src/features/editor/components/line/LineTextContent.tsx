@@ -75,6 +75,7 @@ interface LineTextContentProps {
   handleSaveLineText?: (lineIndex: number, text: string, secondary?: string, translations?: Translation[], singers?: string[]) => void;
   handleCycleWordSinger?: (lineIndex: number, wi: number) => void;
   songSingers?: string[];
+  singerColors?: string[];
 }
 
 const LineTextContent = memo(({
@@ -96,20 +97,37 @@ const LineTextContent = memo(({
   handleSaveLineText,
   handleCycleWordSinger,
   songSingers,
+  singerColors,
 }: LineTextContentProps) => {
   const { t } = useTranslation();
   const roster = songSingers ?? [];
   const hasSingerSplit = (line.singers?.length ?? 0) >= 2 && handleCycleWordSinger;
 
+  const getCustomColorStyle = (hex: string, active: boolean) => ({
+    color: hex,
+    textShadow: active ? `0 0 8px ${hex}80` : undefined,
+  });
+
   // Single-singer lines: always inherit singer color regardless of whether a words array exists
   const lineColorClass = (() => {
     if (line.singers?.length === 1) {
       const idx = singerColorIndex(line.singers[0], roster);
+      const customHex = singerColors?.[idx] || settings?.editor?.display?.singerColors?.[idx];
+      if (customHex) return isActive ? 'font-medium' : '';
       return isActive ? `${WORD_SINGER_COLORS[idx]} font-medium` : WORD_SINGER_COLORS[idx];
     }
     if (isActive) return 'text-zinc-100 font-medium';
     if (isSynced) return line.words?.some(w => w.time != null) ? 'text-zinc-300' : 'text-zinc-100';
     return 'text-zinc-500';
+  })();
+
+  const lineColorStyle = (() => {
+    if (line.singers?.length === 1) {
+      const idx = singerColorIndex(line.singers[0], roster);
+      const customHex = singerColors?.[idx] || settings?.editor?.display?.singerColors?.[idx];
+      if (customHex) return getCustomColorStyle(customHex, isActive);
+    }
+    return undefined;
   })();
 
   const fmtR = (r?: string | null) => {
@@ -132,7 +150,7 @@ const LineTextContent = memo(({
           return (
         <p
           className={`text-[13px] lg:text-xs transition-all duration-300 ease-out ${layoutClass} ${isDuet ? 'bg-clip-text text-transparent' : lineColorClass}`}
-          style={duetStyle}
+          style={isDuet ? duetStyle : lineColorStyle}
         >
           {(line.words?.length ?? 0) > 0
             ? (() => {
@@ -148,7 +166,9 @@ const LineTextContent = memo(({
               const wordSingerIdx = w.singerIndex ?? (line.singers?.length === 1 ? 0 : null);
               const singerName = wordSingerIdx !== null ? line.singers?.[wordSingerIdx] : undefined;
               const globalIdx = singerName ? singerColorIndex(singerName, roster) : null;
-              const singerColorClass = globalIdx !== null ? (WORD_SINGER_COLORS[globalIdx] || '') : '';
+              const customHex = globalIdx !== null ? (singerColors?.[globalIdx] || settings?.editor?.display?.singerColors?.[globalIdx]) : null;
+              const singerColorClass = (globalIdx !== null && !customHex) ? (WORD_SINGER_COLORS[globalIdx] || '') : '';
+              const singerColorStyle = customHex ? getCustomColorStyle(customHex, isActive && wi === activeWordIndex) : undefined;
 
               const spanClass = editorMode === 'words'
                 ? `transition-all px-0.5 rounded ${singerColorClass} ${isActive && wi === activeWordIndex
@@ -160,7 +180,7 @@ const LineTextContent = memo(({
                 : `transition-colors px-0.5 rounded ${singerColorClass} ${canHaveReading ? 'hover:bg-white/5' : ''}`;
 
               const content = (
-                <span className={spanClass}>
+                <span className={spanClass} style={singerColorStyle}>
                   {w.word}
                 </span>
               );
@@ -277,11 +297,14 @@ const LineTextContent = memo(({
                   const wordSingerIdx = w.singerIndex ?? (line.singers?.length === 1 ? 0 : null);
                   const singerName2 = wordSingerIdx !== null ? line.singers?.[wordSingerIdx] : undefined;
                   const globalIdx2 = singerName2 ? singerColorIndex(singerName2, roster) : null;
-                  const singerColorClass = globalIdx2 !== null ? (WORD_SINGER_COLORS[globalIdx2] || '') : '';
+                  const customHex2 = globalIdx2 !== null ? (singerColors?.[globalIdx2] || settings?.editor?.display?.singerColors?.[globalIdx2]) : null;
+                  const singerColorClass = (globalIdx2 !== null && !customHex2) ? (WORD_SINGER_COLORS[globalIdx2] || '') : '';
+                  const singerColorStyle = customHex2 ? getCustomColorStyle(customHex2, isActive) : undefined;
                   return (
                     <Tip key={wi} content={t('editor.rightClickToAssignSinger')}>
                       <span
                         className={`transition-colors px-0.5 rounded cursor-context-menu select-text ${singerColorClass} hover:bg-white/5`}
+                        style={singerColorStyle}
                         onContextMenu={(e) => {
                           e.preventDefault();
                           e.stopPropagation();

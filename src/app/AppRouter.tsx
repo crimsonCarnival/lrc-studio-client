@@ -428,6 +428,7 @@ export function AppRouter({
     onOpenProjectSettings: setShowNamingModal ? () => setShowNamingModal(true) : undefined,
     registerAfterSave,
     songArtists: projectMetadata?.songArtists || [],
+    singerColors: projectMetadata?.singerColors || [],
     playerSlot,
     onHideEditor: handleHideEditor,
     previewHidden: !showPreview,

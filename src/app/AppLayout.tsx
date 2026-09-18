@@ -43,6 +43,8 @@ interface SetupConfirmData {
   songYear?: string | number;
   genre?: string;
   coverImage?: string;
+  isPublic?: boolean;
+  singerColors?: string[];
 }
 
 interface AppLayoutProps {
@@ -118,7 +120,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     !['new', 'local'].includes(location.pathname.split('/')[2] ?? '');
   const isFullWidthPage = isSetupPage || isPublicProjectView;
 
-  const handleProjectConfirm = useCallback(({ name, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage }: SetupConfirmData) => {
+  const handleProjectConfirm = useCallback(({ name, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, singerColors }: SetupConfirmData) => {
     const newTitle = name || mediaTitle || '';
     const songArtists = splitArtists(songArtist);
     const newMetadata = {
@@ -132,6 +134,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
       songAlbum: songAlbum || '',
       songYear: songYear || '',
       genre: genre || '',
+      singerColors: singerColors || [],
     };
     setMediaTitle(newTitle);
     setProjectMetadata(newMetadata);

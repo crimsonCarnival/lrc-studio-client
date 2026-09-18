@@ -17,8 +17,8 @@ interface ProjectMetadata {
   songArtists?: string[];
   songArtist?: string;
   songAlbum?: string;
-  songYear?: string | number;
   genre?: string;
+  singerColors?: string[];
 }
 
 interface AppModalsProps {
@@ -84,6 +84,7 @@ export function AppModals({
         initialSongAlbum={projectMetadata?.songAlbum}
         initialSongYear={projectMetadata?.songYear}
         initialGenre={projectMetadata?.genre || ''}
+        initialSingerColors={projectMetadata?.singerColors || []}
         initialCoverImage={projectCoverImage || ''}
         initialAlbumArt={''}
         isEditing={true}

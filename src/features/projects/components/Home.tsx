@@ -342,11 +342,11 @@ export default function Home() {
         onConfirm={async (data: {
           name?: string; description?: string; tags?: string[];
           songName?: string; songArtist?: string; songAlbum?: string; songYear?: string | number;
-          coverImage?: string; isPublic?: boolean;
+          coverImage?: string; isPublic?: boolean; singerColors?: string[];
         }) => {
           if (!editingProject) return;
           try {
-            const { name: title, description, tags, songName, songArtist, songAlbum, songYear, coverImage, isPublic } = data;
+            const { name: title, description, tags, songName, songArtist, songAlbum, songYear, coverImage, isPublic, singerColors } = data;
             const updatedMetadata = {
               ...editingProject.metadata,
               description,
@@ -355,6 +355,7 @@ export default function Home() {
               songArtist,
               songAlbum,
               songYear,
+              singerColors,
             };
             await projects.patch(editingProject.publicId, {
               title,

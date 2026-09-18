@@ -61,7 +61,9 @@ interface PreviewLineProps {
   hasMedia?: boolean;
   isPlaying?: boolean;
   playbackSpeed?: number;
-  songSingers?: string[];
+  playbackSpeed?: number;
+  roster?: string[];
+  singerColors?: string[];
 }
 
 export default function PreviewLine({
@@ -91,11 +93,17 @@ export default function PreviewLine({
   hasMedia,
   isPlaying,
   playbackSpeed = 1,
-  songSingers,
+  roster: propRoster,
+  singerColors,
 }: PreviewLineProps) {
   const { settings } = useSettings();
   const { t } = useTranslation();
-  const roster = songSingers ?? [];
+  const roster = propRoster ?? [];
+
+  const getCustomColorStyle = (hex: string, active: boolean) => ({
+    color: hex,
+    textShadow: active ? `0 0 8px ${hex}80` : undefined,
+  });
 
   // Section marker — render as a divider chip
   if (line.type === 'section') {
@@ -125,11 +133,17 @@ export default function PreviewLine({
           {singers.length > 0 && (
             <span className="flex items-baseline gap-1.5">
               <span className="text-zinc-600 font-normal">·</span>
-              {singers.map((name, idx) => (
-                <span key={idx} className={WORD_SINGER_PREVIEW_COLORS[singerColorIndex(name, roster)] || 'text-primary'}>
-                  {name}{idx < singers.length - 1 ? ',' : ''}
-                </span>
-              ))}
+              {singers.map((name, idx) => {
+                const globalIdx = singerColorIndex(name, roster);
+                const customHex = singerColors?.[globalIdx];
+                const colorClass = !customHex ? (WORD_SINGER_PREVIEW_COLORS[globalIdx] || 'text-primary') : '';
+                const style = customHex ? getCustomColorStyle(customHex, false) : undefined;
+                return (
+                  <span key={idx} className={colorClass} style={style}>
+                    {name}{idx < singers.length - 1 ? ',' : ''}
+                  </span>
+                );
+              })}
             </span>
           )}
         </div>
@@ -223,6 +237,8 @@ export default function PreviewLine({
               settings={settings} showFuriganaInPreview={showFuriganaInPreview}
               isPlaying={isPlaying} playbackSpeed={playbackSpeed} hasReadings={!!hasReadings}
               roster={roster}
+              singerColors={singerColors}
+              getCustomColorStyle={getCustomColorStyle}
             />
             {line.secondary && renderSecondaryTrack({
               line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings,
@@ -253,6 +269,8 @@ export default function PreviewLine({
             settings={settings} showFuriganaInPreview={showFuriganaInPreview}
             isPlaying={isPlaying} playbackSpeed={playbackSpeed} hasReadings={!!hasReadings}
             roster={roster}
+            singerColors={singerColors}
+            getCustomColorStyle={getCustomColorStyle}
           />
 
           {line.secondary && renderSecondaryTrack({
@@ -318,11 +336,13 @@ interface MainTrackProps {
   playbackSpeed: number;
   hasReadings: boolean;
   roster: string[];
+  singerColors?: string[];
+  getCustomColorStyle: (hex: string, active: boolean) => React.CSSProperties;
 }
 
 // ——— Render main text track with karaoke fill ———
 // Fill effect is ONLY applied when word-level timestamps exist.
-function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying, playbackSpeed, hasReadings, roster }: MainTrackProps) {
+function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying, playbackSpeed, hasReadings, roster, singerColors, getCustomColorStyle }: MainTrackProps) {
   const fillTrack = settings.editor?.display?.karaokeFillTrack ?? 'main';
   const fillEasing = settings.editor?.display?.karaokeFillEasing ?? 'linear';
   const skipMainFill = isActive && fillTrack === 'secondary';
@@ -399,9 +419,11 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
           const singerName = effectiveSingerIdx !== null && effectiveSingerIdx !== undefined
             ? line.singers?.[effectiveSingerIdx]
             : undefined;
-          const wordSingerColor = singerName
-            ? (WORD_SINGER_PREVIEW_COLORS[singerColorIndex(singerName, roster)] || '')
-            : '';
+          
+          const globalIdx = singerName ? singerColorIndex(singerName, roster) : null;
+          const customHex = globalIdx !== null ? singerColors?.[globalIdx] : null;
+          const wordSingerColorClass = (globalIdx !== null && !customHex) ? (WORD_SINGER_PREVIEW_COLORS[globalIdx] || '') : '';
+          const wordSingerColorStyle = customHex ? getCustomColorStyle(customHex, isActive) : undefined;
 
           const wordContent = w.reading && isKanjiWord(w.word) && showFuriganaInPreview
             ? <ruby>{w.word}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{fmtReading(w.reading)}</rt><rp>)</rp></ruby>
@@ -409,12 +431,13 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
 
           return (
             <React.Fragment key={wi}>
-              <span className={`relative inline-block ${wordSingerColor}`}>
-                <span className={isActive ? (wordSingerColor ? 'opacity-50 transition-colors duration-100' : 'text-zinc-500 transition-colors duration-100') : ''}>{wordContent}</span>
+              <span className={`relative inline-block ${wordSingerColorClass}`} style={wordSingerColorStyle}>
+                <span className={isActive ? (wordSingerColorClass || customHex ? 'opacity-50 transition-colors duration-100' : 'text-zinc-500 transition-colors duration-100') : ''}>{wordContent}</span>
                 {isActive && (
                   <span
-                    className={`absolute left-0 top-0 h-full overflow-hidden whitespace-nowrap karaoke-fill-glow karaoke-fill-mask ${wordSingerColor || 'text-primary'}`}
+                    className={`absolute left-0 top-0 h-full overflow-hidden whitespace-nowrap karaoke-fill-glow karaoke-fill-mask ${wordSingerColorClass || (!customHex ? 'text-primary' : '')}`}
                     style={{
+                      ...(customHex ? getCustomColorStyle(customHex, true) : {}),
                       animationName: 'karaoke-fill-anim',
                       animationDuration: `${(endTime! - startTime!) / playbackSpeed}s`,
                       animationTimingFunction: fillEasing,
@@ -442,23 +465,28 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
             return (line.words || []).map((w, wi) => {
               const effIdx = w.singerIndex ?? (line.singers!.length === 1 ? 0 : null);
               const wsName = effIdx !== null ? line.singers![effIdx] : undefined;
-              const singerColor = wsName ? (WORD_SINGER_PREVIEW_COLORS[singerColorIndex(wsName, roster)] || '') : '';
+              const globalIdx = wsName ? singerColorIndex(wsName, roster) : null;
+              const customHex = globalIdx !== null ? singerColors?.[globalIdx] : null;
+              const singerColorClass = (globalIdx !== null && !customHex) ? (WORD_SINGER_PREVIEW_COLORS[globalIdx] || '') : '';
+              const singerColorStyle = customHex ? getCustomColorStyle(customHex, false) : undefined;
               const nextWord = (line.words || [])[wi + 1];
               const addSpace = needsSpaceAfter(w.word, nextWord?.word);
               return (
                 <React.Fragment key={wi}>
-                  <span className={singerColor}>{w.word}</span>
-                  {addSpace ? ' ' : null}
+                  <span className={singerColorClass} style={singerColorStyle}>{w.word}</span>
+                  {addSpace && ' '}
                 </React.Fragment>
               );
             });
           }
-          const singerFallbackColor = !isDuet && (line.singers?.length ?? 0) >= 1
-            ? (WORD_SINGER_PREVIEW_COLORS[singerColorIndex(line.singers![0], roster)] || '')
-            : '';
+          const singerFallbackGlobalIdx = !isDuet && (line.singers?.length ?? 0) >= 1 ? singerColorIndex(line.singers![0], roster) : null;
+          const singerFallbackCustomHex = singerFallbackGlobalIdx !== null ? singerColors?.[singerFallbackGlobalIdx] : null;
+          const singerFallbackColorClass = (singerFallbackGlobalIdx !== null && !singerFallbackCustomHex) ? (WORD_SINGER_PREVIEW_COLORS[singerFallbackGlobalIdx] || '') : '';
+          const singerFallbackStyle = singerFallbackCustomHex ? getCustomColorStyle(singerFallbackCustomHex, false) : undefined;
+
           const plainContent = hasReadings ? renderLineWithReadings(line, fmtReading, showFuriganaInPreview) : mainText;
-          return singerFallbackColor
-            ? <span className={singerFallbackColor}>{plainContent}</span>
+          return (singerFallbackColorClass || singerFallbackStyle)
+            ? <span className={singerFallbackColorClass} style={singerFallbackStyle}>{plainContent}</span>
             : plainContent;
         })()
       }

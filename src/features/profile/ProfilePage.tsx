@@ -590,7 +590,7 @@ export default function ProfilePage() {
               onClose={() => setEditingProject(null)}
               onConfirm={async (data: ProjectSetupConfirm) => {
                 try {
-                  const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic } = data;
+                  const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic, singerColors } = data;
                   const updatedMetadata = {
                     ...(editingProject.metadata as Record<string, unknown>),
                     description,
@@ -600,6 +600,7 @@ export default function ProfilePage() {
                     songAlbum,
                     songYear,
                     genre,
+                    singerColors,
                   };
                   await projects.patch(editingProject.publicId, {
                     title,

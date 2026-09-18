@@ -30,6 +30,7 @@ const GET_PROJECTS = /* GraphQL */ `
         description
         genre
         tags
+        singerColors
         songName
         songArtist
         songAlbum
@@ -90,6 +91,7 @@ const GET_PROJECT = /* GraphQL */ `
         description
         genre
         tags
+        singerColors
         songName
         songArtist
         songAlbum
@@ -194,6 +196,7 @@ const GET_SHARE = /* GraphQL */ `
         description
         genre
         tags
+        singerColors
         songName
         songArtist
         songAlbum
