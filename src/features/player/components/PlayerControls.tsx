@@ -351,41 +351,53 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
             )}
           </div>
         )}
+      </div>
 
-        {/* Audio waveform (Local or YouTube ASR) */}
-        {(source === 'local' && local.localUrl || source === 'youtube' && youtubeAudioUrl) && (
-          <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
-            <Suspense fallback={null}>
-              <WaveformDisplay
-                showWaveform={settings.playback?.showWaveform}
-                waveformSnap={settings.playback?.waveformSnap}
-                audioRef={audioRef}
-                localUrl={source === 'youtube' ? youtubeAudioUrl : local.localUrl}
-                lines={lines}
-                playbackPosition={playbackPosition ?? 0}
-                duration={duration}
-                onSeek={seek}
-                loopA={loopA}
-                loopB={loopB}
-                onLoopChange={handleLoopChange}
-              />
-            </Suspense>
-          </div>
-        )}
+      {/* Shared Audio waveform (Local or YouTube ASR) */}
+      <div className="w-full flex flex-col items-center min-w-0 z-10">
+        {(() => {
+          const canShowWaveform = Boolean((source === 'local' && local.localUrl) || (source === 'youtube' && youtubeAudioUrl));
+          const isShowingWaveform = Boolean(settings.playback?.showWaveform && canShowWaveform);
+          return (
+            <>
+              {canShowWaveform && (
+                <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
+                  <Suspense fallback={null}>
+                    <WaveformDisplay
+                      showWaveform={settings.playback?.showWaveform}
+                      waveformSnap={settings.playback?.waveformSnap}
+                      audioRef={audioRef}
+                      localUrl={source === 'youtube' ? youtubeAudioUrl : local.localUrl}
+                      lines={lines}
+                      playbackPosition={playbackPosition ?? 0}
+                      duration={duration}
+                      onSeek={seek}
+                      loopA={loopA}
+                      loopB={loopB}
+                      onLoopChange={handleLoopChange}
+                    />
+                  </Suspense>
+                </div>
+              )}
 
-        {source !== 'local' && !youtubeAudioUrl && hasMedia && (
-          <div className="animate-fade-in w-full max-w-[1200px] mx-auto px-4">
-            <PlaybackProgress
-              playbackPosition={playbackPosition ?? 0}
-              duration={duration}
-              onSeek={seek}
-              loopA={loopA}
-              loopB={loopB}
-              onLoopChange={handleLoopChange}
-            />
-          </div>
-        )}
+              {!isShowingWaveform && hasMedia && (
+                <div className="animate-fade-in w-full max-w-[1200px] mx-auto px-4">
+                  <PlaybackProgress
+                    playbackPosition={playbackPosition ?? 0}
+                    duration={duration}
+                    onSeek={seek}
+                    loopA={loopA}
+                    loopB={loopB}
+                    onLoopChange={handleLoopChange}
+                  />
+                </div>
+              )}
+            </>
+          );
+        })()}
+      </div>
 
+      <div className={`max-lg:hidden animate-fade-in flex flex-col items-center w-full min-w-0 ${variant === 'editor' ? 'overflow-hidden' : 'overflow-visible'}`}>
         {hasMedia && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
             {/* Wide layout (≥480px container): absolute-centered cluster, full controls */}
