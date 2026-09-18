@@ -129,7 +129,8 @@ export default function Home() {
             {dt('home.welcome', { name: username, context: user?.id })}
           </h1>
           <p className="text-[15px] text-zinc-400">
-            {items.length > 0 ? t('home.projectProgress', { total: items.length, remaining: lastProject?.lineCount ? lastProject.lineCount - (lastProject.syncedLineCount || 0) : '?' }) : dt('home.welcomeSub')}
+            {dt('home.welcomeSub')}
+            {items.length > 0 && ` ${t('home.projectProgress', { total: items.length, remaining: lastProject?.lineCount ? lastProject.lineCount - (lastProject.syncedLineCount || 0) : '?' })}`}
           </p>
         </div>
         <button
