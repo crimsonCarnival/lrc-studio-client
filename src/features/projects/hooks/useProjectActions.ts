@@ -18,6 +18,7 @@ function sanitizeLines(raw) {
       timestamp: typeof l.timestamp === 'number' && isFinite(l.timestamp) ? l.timestamp : null,
       endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
       secondary: typeof l.secondary === 'string' ? l.secondary : '',
+      mode: typeof l.mode === 'string' ? l.mode : undefined,
       singers: Array.isArray(l.singers) ? l.singers : undefined,
       translations: Array.isArray(l.translations) ? l.translations : undefined,
       id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),

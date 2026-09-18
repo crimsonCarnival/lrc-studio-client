@@ -18,5 +18,6 @@ export default {
     lyricsUnavailable: 'No se pudo extraer la letra de esta canción. La estructura de la página puede haber cambiado.',
     generic: 'Algo salió mal. Por favor intenta de nuevo.',
   },
-  maintenance: 'La búsqueda de letras está en mantenimiento ahora mismo.',
+  maintenanceTitle: 'Función en mantenimiento',
+  maintenanceDesc: 'La función de búsqueda de letras está actualmente en mantenimiento y estará disponible pronto. Por favor, pega tus letras manualmente por ahora.',
 };

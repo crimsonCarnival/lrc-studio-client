@@ -79,7 +79,7 @@ export default {
   modeWordsDesc: "Marcas por palabra para sincronización karaoke",
   syncProgress: "{{synced}}/{{total}}",
   wordBadgeHint: "{{count}} marcas de tiempo de palabras — cambia al modo Palabras para sincronizar",
-  wordCharCount: "{{words}} palabras · {{chars}} caracteres",
+  wordCharCount: '{{words}} palabras · {{chars}} caracteres ({{charsNoSp}} sin espacios)',
   wordCount_one: "{{count}} palabra",
   wordCount_other: "{{count}} palabras",
   markInstructionWords: "Presiona Espacio para marcar la siguiente palabra",

@@ -175,7 +175,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   });
 
   const [lyricsTab, setLyricsTab] = useState('write');
-  const [lyricsAutoSearch, setLyricsAutoSearch] = useState<{ q: string; v: number } | null>(null);
+  // const [lyricsAutoSearch, setLyricsAutoSearch] = useState<{ q: string; v: number } | null>(null);
 
 
   const [metadata, setMetadata] = useState<MetadataState>(() => ({
@@ -208,15 +208,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const setLyricsState = useCallback((val: Partial<LyricsState> | ((p: LyricsState) => Partial<LyricsState>)) => setLyrics(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
   const setMetadataState = useCallback((val: Partial<MetadataState> | ((p: MetadataState) => Partial<MetadataState>)) => setMetadata(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
 
-  const handleLyricsSearchImport = useCallback((searchText: string) => {
-    const parsed = searchText.split('\n').reduce<EditorLine[]>((acc, line) => {
-      const text = line.trim();
-      if (text.length > 0) acc.push({ text, timestamp: null });
-      return acc;
-    }, []);
-    setLyricsState({ parsedLines: parsed, text: '', fileName: '' });
-    setLyricsTab('write');
-  }, [setLyricsState]);
+
 
   // Media library state
   const [mediaUploads, setMediaUploads] = useState<UploadItem[]>([]);
@@ -879,23 +871,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     )}
 
                     {lyricsTab === 'search' && (
-                      <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto scrollbar-thin">
-                        {(songName || songArtist) && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const q = [songName, songArtist].filter(Boolean).join(' ').trim();
-                              setLyricsAutoSearch(prev => ({ q, v: (prev?.v ?? 0) + 1 }));
-                            }}
-                            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-800/60 border border-zinc-700/40 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100 transition-colors text-xs font-medium shrink-0 w-full"
-                          >
-                            <Icon name="search" size={14} className="shrink-0 text-zinc-500" />
-                            <span className="truncate">
-                              {t('lyricsSearch.searchFor')} &ldquo;{[songName, songArtist].filter(Boolean).join(' - ')}&rdquo;
-                            </span>
-                          </button>
-                        )}
-                        <LyricsSearchBar onImport={handleLyricsSearchImport} autoSearch={lyricsAutoSearch} showKeepTimestamps={false} />
+                      <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto scrollbar-thin items-center justify-center text-center p-6 text-zinc-400">
+                        <Icon name="build" size={48} className="mb-4 text-zinc-600" />
+                        <h3 className="text-zinc-200 font-semibold mb-2">{t('lyricsSearch.maintenanceTitle', 'Feature under maintenance')}</h3>
+                        <p className="text-sm max-w-sm">{t('lyricsSearch.maintenanceDesc', 'The lyrics search feature is currently undergoing maintenance and will be available soon. Please paste your lyrics manually in the meantime.')}</p>
                       </div>
                     )}
                   </div>

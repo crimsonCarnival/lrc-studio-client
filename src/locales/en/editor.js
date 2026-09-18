@@ -76,7 +76,7 @@ export default {
   modeWordsDesc: "Advanced format with word-by-word sync",
   syncProgress: "{{synced}}/{{total}}",
   wordBadgeHint: "{{count}} word timestamps — switch to Words mode to sync",
-  wordCharCount: "{{words}} words · {{chars}} chars",
+  wordCharCount: "{{words}} words · {{chars}} chars ({{charsNoSp}} no spaces)",
   wordCount_one: "{{count}} word",
   wordCount_other: "{{count}} words",
   markInstructionWords: "Press Space to stamp the next word",
