@@ -18,6 +18,7 @@ import LineActionToolbar from './LineActionToolbar';
 import SectionPickerDropdown from './SectionPickerDropdown';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import { validateLineSingers } from '@features/editor/utils/sections';
+import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/singer-colors';
 import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
@@ -78,6 +79,7 @@ interface EditorLineItemProps {
   songArtists?: string[];
   projectSingers?: string[];
   singerColors?: string[];
+  activeSingers?: string[];
   playerRef?: PlayerRef;
   shiftTime: (i: number, delta: number) => void;
   handleAddLine?: (i: number) => void;
@@ -169,6 +171,7 @@ const EditorLineItem = React.memo(({
   isModified,
   onToggleLineMode,
   confidenceInfo,
+  activeSingers,
 }: EditorLineItemProps) => {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
@@ -362,86 +365,94 @@ const EditorLineItem = React.memo(({
         onToggleDepth={onToggleDepth}
       >
       <div
-        ref={isActive ? activeLineRef : null}
+        ref={isActive ? activeLineRef : undefined}
         onClick={(e) => handleLineClick(i, e)}
-        onDoubleClick={() => {
-          setEditingLineIndex(i);
-          setEditingText(line.label || '');
-          const singers = getSingers(line);
-          setEditingSingers([...singers, '', '', '', ''].slice(0, 4));
-        }}
         style={{ animationDelay: staggerDelay }}
         className={`relative flex items-end px-4 cursor-pointer group animate-preview-line-in bg-background ${isRoot ? 'pt-8' : 'pt-4'}`}
       >
         {selectedLines.has(i) && <div className="absolute inset-0 bg-primary/10 pointer-events-none" />}
-        {isEditing ? (
-          <div className={`flex items-start gap-1.5 px-3 py-1.5 rounded-t-lg border-t border-l border-r border-b-0 relative z-10 ${isRoot ? 'bg-primary/10 border-primary/40' : 'bg-zinc-800/50 border-zinc-700/50'}`} onKeyDown={(e) => { if (e.key === 'Enter') { handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); } if (e.key === 'Escape') setEditingLineIndex(null); }}>
-            <SectionPickerDropdown
-              value={editingText}
-              onChange={(v: string) => setEditingText(v)}
-            />
-            {editingSingers.map((singerVal, idx) => {
-              const isFilled = !!singerVal;
-              const nextEmpty = editingSingers.findIndex(s => !s);
-              if (!isFilled && idx !== nextEmpty) return null;
-              return (
-                <input
-                  key={idx}
-                  value={singerVal}
-                  onChange={(e) => setEditingSingers(prev => { const n = [...prev]; n[idx] = e.target.value; return n; })}
-                  placeholder={idx === 0 ? t('editor.singerOptPlaceholder') : t('editor.singerN', 'Singer {{n}}', { n: idx + 1 })}
-                  list={`section-singers-${i}`}
-                  className={`bg-zinc-800 border border-zinc-600 text-xs text-zinc-400 rounded px-2 py-0.5 w-20 focus:outline-none focus:border-primary/60 ${['', 'italic', 'font-bold', 'font-bold italic'][idx]}`}
+        {(() => {
+          const lineSingers = getSingers(line);
+          const firstSingerColorIdx = lineSingers.length > 0 && singerColors ? singerColorIndex(lineSingers[0], singerColors) : -1;
+          const colorVar = firstSingerColorIdx >= 0 ? SINGER_GRADIENT_STOPS[firstSingerColorIdx] : 'var(--color-zinc-500)';
+          
+          const label = formatSectionLabel(line.label, t);
+          const singersStr = lineSingers.length > 0 ? lineSingers.join(' + ') : t('editor.tagging.noSinger', 'No singer');
+          
+          return isEditing ? (
+            <div className="flex items-center gap-2 relative z-20 pl-2 py-1">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/40 bg-zinc-900 shadow-lg">
+                <SectionPickerDropdown
+                  value={editingText}
+                  onChange={(v: string) => setEditingText(v)}
                 />
-              );
-            })}
-            {songArtists && songArtists.length > 0 && (
-              <datalist id={`section-singers-${i}`}>
-                {songArtists.map((a) => <option key={a} value={a} />)}
-              </datalist>
-            )}
-            <Tip content={t('editor.done')}>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); handleSaveLineText(i, editingText, undefined, undefined, editingSingers); setEditingLineIndex(null); }}
-                className="text-zinc-500 hover:text-primary px-1 flex items-center self-center"
-                aria-label={t('editor.done')}
-              ><Icon name="check" size={16} /></button>
-            </Tip>
-          </div>
-        ) : (
-          <span className={`px-4 py-1.5 rounded-t-lg border-t border-l border-r border-b-0 whitespace-nowrap transition-colors relative z-10 flex items-center gap-2 ${
-            isRoot
-              ? 'text-xs font-bold tracking-widest uppercase text-primary bg-primary/10 border-primary/40 group-hover:bg-primary/20'
-              : 'text-[10px] font-semibold tracking-widest uppercase text-zinc-400 bg-zinc-800/50 border-zinc-700/50 group-hover:bg-zinc-700/50'
-          }`}>
-            <span>
-              {(() => {
-                const label = formatSectionLabel(line.label, t);
-                const lineSingers = getSingers(line);
-                const singersStr = lineSingers.join(' · ');
-                if (singersStr) {
-                  return isRoot ? `${label} · ${singersStr}` : `[${label}: ${singersStr}]`;
-                }
-                return label;
-              })()}
-            </span>
-            <button
-              type="button"
-              onClick={(e) => {
+                <div className="w-px h-4 bg-zinc-700 mx-1" />
+                <div className="flex items-center gap-1">
+                  {editingSingers.map((s, si) => (
+                    <span key={si} className="text-[11px] bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-full pl-2 pr-1 py-0.5 flex items-center gap-1">
+                      {s}
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setEditingSingers(prev => prev.filter((_, idx) => idx !== si)); }}
+                        className="hover:text-destructive opacity-70 hover:opacity-100"
+                      ><Icon name="close" size={10} /></button>
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    placeholder={t('editor.tagging.addSinger', 'Add singer...')}
+                    list="inline-singers-list"
+                    className="text-[11px] bg-zinc-800/50 border border-zinc-700/50 rounded-full px-2 py-0.5 w-24 outline-none focus:border-primary/50 text-zinc-200 placeholder:text-zinc-500"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const val = e.currentTarget.value.trim();
+                        if (val && !editingSingers.includes(val)) {
+                          setEditingSingers(prev => [...prev, val]);
+                        }
+                        e.currentTarget.value = '';
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  {songArtists && songArtists.length > 0 && (
+                    <datalist id="inline-singers-list">
+                      {songArtists.map(a => <option key={a} value={a} />)}
+                    </datalist>
+                  )}
+                </div>
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    handleSaveLineText(i, editingText, undefined, undefined, editingSingers); 
+                    setEditingLineIndex(null); 
+                  }}
+                  className="ml-2 text-primary hover:text-primary/80 transition-colors flex items-center justify-center p-1 rounded-full hover:bg-white/10"
+                >
+                  <Icon name="check" size={16} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <span 
+              className={`pl-2 py-1 flex items-center gap-2 relative z-10 hover:opacity-80 transition-opacity`} 
+              style={{ color: colorVar, borderLeft: `3px solid ${colorVar}` }}
+              onDoubleClick={(e) => {
                 e.stopPropagation();
                 setEditingLineIndex(i);
                 setEditingText(line.label || '');
-                const singers = getSingers(line);
-                setEditingSingers([...singers, '', '', '', ''].slice(0, 4));
+                setEditingSingers(getSingers(line));
               }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-500 hover:text-primary"
+              title={t('editor.doubleClickToEdit', 'Double click to edit')}
             >
-              <Icon name="edit" size={14} />
-            </button>
-          </span>
-        )}
-        <div className={`flex-1 h-px ${isRoot ? 'bg-primary/40' : 'bg-zinc-700/50'}`} />
+              <span className={`text-[10px] font-semibold tracking-widest uppercase opacity-80 select-none`}>
+                {t('editor.tagging.sectionSingerFormat', '{{section}} · {{singer}}', { section: label, singer: singersStr })}
+              </span>
+            </span>
+          );
+        })()}
+        <div className={`flex-1 h-px ml-2 ${isRoot ? 'bg-primary/20' : 'bg-zinc-800'}`} />
+
         {selectedLines.size === 0 && (
           <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-0 bottom-0 mb-1 flex items-center gap-1 pl-6 pr-2 bg-gradient-to-l from-zinc-900 via-zinc-900 to-transparent">
             <Tip content={isRoot ? t('editor.sections.demote') : t('editor.sections.promote')}>
@@ -543,7 +554,7 @@ const EditorLineItem = React.memo(({
         <div className={`absolute left-1 top-2 bottom-2 w-1 z-0 rounded-full opacity-70 ${confidenceTint === 'success' ? 'bg-success' : 'bg-warning'}`} />
       )}
       {/* Drag Handle & Line number */}
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex items-center gap-1 shrink-0 z-10">
         <Tip content={t('editor.dragToReorder')}>
           <div
             className="cursor-grab active:cursor-grabbing text-zinc-600 hover:text-zinc-400 transition-colors p-0.5 -ml-1 select-none"
@@ -572,7 +583,7 @@ const EditorLineItem = React.memo(({
       </div>
 
       <span
-        className={`text-xs font-mono tabular-nums shrink-0 transition-colors relative ${editorMode === 'words' ? 'self-start pt-0.5' : ''} ${isSynced
+        className={`text-xs font-mono tabular-nums shrink-0 transition-colors relative z-10 ${editorMode === 'words' ? 'self-start pt-0.5' : ''} ${isSynced
           ? 'text-primary'
           : isActive
             ? 'text-zinc-400 animate-pulse-glow'
@@ -673,6 +684,7 @@ const EditorLineItem = React.memo(({
           handleCycleWordSinger={handleCycleWordSinger}
           songSingers={projectSingers}
           singerColors={singerColors}
+          activeSingers={activeSingers}
         />
         
         {editorMode === 'words' && (
@@ -787,7 +799,7 @@ const EditorLineItem = React.memo(({
         activeWordIndex={activeWordIndex}
         focusedTimestamp={focusedTimestamp}
       />
-      {/* Progress stripe for active synced line */}
+
       {segmentProgress != null && (
         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zinc-800/50 animate-in fade-in duration-300">
           <div

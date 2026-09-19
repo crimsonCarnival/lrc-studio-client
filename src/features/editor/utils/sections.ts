@@ -232,3 +232,81 @@ export function parseSectionHeader(rawLine: string): { label: string; singers: s
 
   return { label, singers, depth };
 }
+
+/**
+ * Applies a new section label and/or singers to the selected lyric lines by manipulating
+ * `type: 'section'` markers. Modifies the array to wrap the selected lines in the new state,
+ * and restores the original state for lines following the selection.
+ */
+export function applyTagToSelection(
+  lines: EditorLine[],
+  selectedIndices: Set<number>,
+  tag: { label?: string; singers?: string[] }
+): EditorLine[] {
+  if (selectedIndices.size === 0) return lines;
+
+  const updated: EditorLine[] = [];
+  
+  let originalState = { label: undefined as string | undefined, singers: undefined as string[] | undefined, depth: undefined as number | undefined, marker: undefined as EditorLine | undefined };
+  let currentOutputState = { label: undefined as string | undefined, singers: undefined as string[] | undefined, depth: undefined as number | undefined };
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    if (line?.type === 'section') {
+      originalState = { 
+        label: line.label, 
+        singers: Array.isArray(line.singers) ? [...line.singers] : undefined, 
+        depth: line.depth as number | undefined, 
+        marker: line 
+      };
+      
+      if (selectedIndices.has(i)) {
+        const newLabel = tag.label !== undefined ? tag.label : line.label;
+        const newSingers = tag.singers !== undefined ? tag.singers : line.singers;
+        updated.push({ ...line, label: newLabel, singers: newSingers });
+        currentOutputState = { label: newLabel, singers: newSingers, depth: originalState.depth };
+      } else {
+        // Keep empty section markers if they represent the very end of the file
+        if (i === lines.length - 1) {
+          updated.push(line);
+        }
+      }
+    } else {
+      const isSelected = selectedIndices.has(i);
+      const intendedState = isSelected ? {
+        label: tag.label !== undefined ? tag.label : originalState.label,
+        singers: tag.singers !== undefined ? tag.singers : originalState.singers,
+        depth: originalState.depth
+      } : originalState;
+
+      const stateChanged = 
+        intendedState.label !== currentOutputState.label ||
+        JSON.stringify(intendedState.singers) !== JSON.stringify(currentOutputState.singers);
+
+      if (stateChanged) {
+        if (
+          originalState.marker &&
+          originalState.marker.label === intendedState.label &&
+          JSON.stringify(originalState.marker.singers) === JSON.stringify(intendedState.singers)
+        ) {
+           updated.push(originalState.marker);
+        } else {
+           updated.push({
+             type: 'section',
+             label: intendedState.label,
+             singers: intendedState.singers,
+             depth: intendedState.depth ?? 1,
+             timestamp: null,
+             id: crypto.randomUUID()
+           });
+        }
+        currentOutputState = intendedState;
+      }
+      
+      updated.push(line);
+    }
+  }
+  
+  return updated;
+}

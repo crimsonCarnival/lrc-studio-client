@@ -76,6 +76,7 @@ interface LineTextContentProps {
   handleCycleWordSinger?: (lineIndex: number, wi: number) => void;
   songSingers?: string[];
   singerColors?: string[];
+  activeSingers?: string[];
 }
 
 const LineTextContent = memo(({
@@ -98,10 +99,12 @@ const LineTextContent = memo(({
   handleCycleWordSinger,
   songSingers,
   singerColors,
+  activeSingers,
 }: LineTextContentProps) => {
   const { t } = useTranslation();
   const roster = songSingers ?? [];
-  const hasSingerSplit = (line.singers?.length ?? 0) >= 2 && handleCycleWordSinger;
+  const appliedSingers = activeSingers || line.singers;
+  const hasSingerSplit = (appliedSingers?.length ?? 0) >= 2 && handleCycleWordSinger;
 
   const getCustomColorStyle = (hex: string, active: boolean) => ({
     color: hex,
@@ -110,8 +113,8 @@ const LineTextContent = memo(({
 
   // Single-singer lines: always inherit singer color regardless of whether a words array exists
   const lineColorClass = (() => {
-    if (line.singers?.length === 1) {
-      const idx = singerColorIndex(line.singers[0], roster);
+    if (appliedSingers?.length === 1) {
+      const idx = singerColorIndex(appliedSingers[0], roster);
       const customHex = singerColors?.[idx] || settings?.editor?.display?.singerColors?.[idx];
       if (customHex) return isActive ? 'font-medium' : '';
       return isActive ? `${WORD_SINGER_COLORS[idx]} font-medium` : WORD_SINGER_COLORS[idx];
@@ -122,8 +125,8 @@ const LineTextContent = memo(({
   })();
 
   const lineColorStyle = (() => {
-    if (line.singers?.length === 1) {
-      const idx = singerColorIndex(line.singers[0], roster);
+    if (appliedSingers?.length === 1) {
+      const idx = singerColorIndex(appliedSingers[0], roster);
       const customHex = singerColors?.[idx] || settings?.editor?.display?.singerColors?.[idx];
       if (customHex) return getCustomColorStyle(customHex, isActive);
     }
@@ -140,12 +143,12 @@ const LineTextContent = memo(({
 
       <div className="flex items-center gap-2">
         {(() => {
-          const isDuet = line.mode === 'duet' && (line.singers?.length ?? 0) >= 2;
+          const isDuet = line.mode === 'duet' && (appliedSingers?.length ?? 0) >= 2;
           const hasRubyOrSelection = line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null));
           const layoutClass = hasRubyOrSelection ? 'overflow-hidden' : 'break-words whitespace-pre-wrap';
           const lineStyle = hasRubyOrSelection ? { lineHeight: '2.4' } : { lineHeight: '1.6' };
           const duetStyle = isDuet
-            ? { ...lineStyle, backgroundImage: singerGradient(line.singers!, roster) }
+            ? { ...lineStyle, backgroundImage: singerGradient(appliedSingers!, roster) }
             : lineStyle;
           return (
         <p
@@ -163,8 +166,8 @@ const LineTextContent = memo(({
               const rubyFmt = settings?.editor?.display?.readingFormat || 'hiragana';
               const trailingSpace = /[a-zA-Z0-9]/.test(w.word) ? ' ' : null;
 
-              const wordSingerIdx = w.singerIndex ?? (line.singers?.length === 1 ? 0 : null);
-              const singerName = wordSingerIdx !== null ? line.singers?.[wordSingerIdx] : undefined;
+              const wordSingerIdx = w.singerIndex ?? (appliedSingers?.length === 1 ? 0 : null);
+              const singerName = wordSingerIdx !== null ? appliedSingers?.[wordSingerIdx] : undefined;
               const globalIdx = singerName ? singerColorIndex(singerName, roster) : null;
               const customHex = globalIdx !== null ? (singerColors?.[globalIdx] || settings?.editor?.display?.singerColors?.[globalIdx]) : null;
               const singerColorClass = (globalIdx !== null && !customHex) ? (WORD_SINGER_COLORS[globalIdx] || '') : '';
@@ -279,7 +282,7 @@ const LineTextContent = memo(({
             });
             })()
             : (() => {
-              const innerHasSingerSplit = (line.singers?.length ?? 0) >= 2 && handleCycleWordSinger;
+              const innerHasSingerSplit = (appliedSingers?.length ?? 0) >= 2 && handleCycleWordSinger;
               if (innerHasSingerSplit) {
                 // Use existing words array or split from text
                 const displayWords: Word[] = (line.words?.length ?? 0) > 0
@@ -294,8 +297,8 @@ const LineTextContent = memo(({
                   }, []);
 
                 return displayWords.map((w, wi) => {
-                  const wordSingerIdx = w.singerIndex ?? (line.singers?.length === 1 ? 0 : null);
-                  const singerName2 = wordSingerIdx !== null ? line.singers?.[wordSingerIdx] : undefined;
+                  const wordSingerIdx = w.singerIndex ?? (appliedSingers?.length === 1 ? 0 : null);
+                  const singerName2 = wordSingerIdx !== null ? appliedSingers?.[wordSingerIdx] : undefined;
                   const globalIdx2 = singerName2 ? singerColorIndex(singerName2, roster) : null;
                   const customHex2 = globalIdx2 !== null ? (singerColors?.[globalIdx2] || settings?.editor?.display?.singerColors?.[globalIdx2]) : null;
                   const singerColorClass = (globalIdx2 !== null && !customHex2) ? (WORD_SINGER_COLORS[globalIdx2] || '') : '';

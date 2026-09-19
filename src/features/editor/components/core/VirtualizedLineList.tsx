@@ -293,15 +293,28 @@ export default function VirtualizedLineList({
     }
   }, [activeLineIndex]);
 
-  // Pre-compute nextTimestamp for each line
-  const nextTimestamps = useMemo(() => {
-    const result: (number | null)[] = new Array(lines.length).fill(null);
+  // Pre-compute nextTimestamp and active section contexts for each line
+  const { nextTimestamps, activeSingers } = useMemo(() => {
+    const nextTsResult: (number | null)[] = new Array(lines.length).fill(null);
     let lastTs: number | null = null;
     for (let i = lines.length - 1; i >= 0; i--) {
-      result[i] = lastTs;
-      if (lines[i].timestamp != null) lastTs = lines[i].timestamp ?? null;
+      const line = lines[i];
+      nextTsResult[i] = lastTs;
+      if (line.type !== 'section' && line.timestamp != null) {
+        lastTs = line.timestamp;
+      }
     }
-    return result;
+    
+    const singersResult: (string[] | undefined)[] = new Array(lines.length).fill(undefined);
+    let currentSingers: string[] | undefined = undefined;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].type === 'section') {
+        currentSingers = lines[i].singers;
+      }
+      singersResult[i] = currentSingers;
+    }
+
+    return { nextTimestamps: nextTsResult, activeSingers: singersResult };
   }, [lines]);
 
   return (
@@ -354,12 +367,14 @@ export default function VirtualizedLineList({
                     <EditorLineItem
                       line={line}
                       nextTimestamp={nextTimestamps[i]}
+                      i={i}
                       isActive={isActive}
+                      isLocked={isActiveLineLocked && i === activeLineIndex}
                       isSynced={isSynced}
-                      activeLineRef={activeLineRef}
-                      virtualRow={virtualRow}
+                      activeLineRef={undefined}
                       handleLineClick={handleLineClick}
                       handleLineHover={handleLineHover}
+                      handleLineHoverEnd={handleLineHoverEnd}
                       handleDragStart={handleDragStart}
                       handleDragOver={handleDragOver}
                       handleDragEnd={handleDragEnd}
@@ -368,6 +383,7 @@ export default function VirtualizedLineList({
                       dragIndex={dragIndex}
                       projectSingers={projectSingers}
                       singerColors={singerColors}
+                      activeSingers={activeSingers[i]}
                       selectedLines={selectedLines}
                       settings={settings}
                       editingLineIndex={editingLineIndex}
@@ -382,7 +398,6 @@ export default function VirtualizedLineList({
                       setEditingSingers={setEditingSingers}
                       handleSaveLineText={handleSaveLineText}
                       handleInsertSection={handleInsertSection}
-                      handleToggleSectionDepth={handleToggleSectionDepth}
                       handleMoveToSection={handleMoveToSection}
                       handleAssignSinger={handleAssignSinger}
                       songArtists={songArtists}
@@ -397,6 +412,7 @@ export default function VirtualizedLineList({
                       handleClearWordTimestamp={handleClearWordTimestamp}
                       handleSetActiveWordIndex={handleSetActiveWordIndex}
                       handleSetTimestamp={handleSetTimestamp}
+                      setFocusedTimestamp={setFocusedTimestamp}
                       handleSetWordReading={handleSetWordReading}
                       handleCycleWordSinger={handleCycleWordSinger}
                       stampTarget={stampTarget}
@@ -404,12 +420,12 @@ export default function VirtualizedLineList({
                       playbackPosition={playbackPosition}
                       onWordMenu={onWordMenu}
                       onLineMenu={onLineMenu}
-                      isModified={modifiedLines.has(i)}
+                      isModified={modifiedLines?.has(i) || false}
                       editorMode={editorMode}
                       onToggleLineMode={onToggleLineMode}
                       isSyncedPrevious={i > 0 ? lines[i - 1].timestamp != null : true}
                       upcomingDepth={upcomingDepth}
-                      lineConfidence={confidenceByIndex.get(i)}
+                      lineConfidence={confidenceByIndex?.get(i)}
                     />
                   </div>
                 ) : (
@@ -437,6 +453,7 @@ export default function VirtualizedLineList({
                   handleDrop={handleDrop}
                   dragOverIndex={dragOverIndex}
                   dragIndex={dragIndex}
+                  activeSingers={activeSingers[i]}
                   selectedLines={selectedLines}
                   settings={settings}
                   editingLineIndex={editingLineIndex}

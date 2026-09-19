@@ -8,6 +8,7 @@ import EditorPasteArea from '../setup/EditorPasteArea';
 import VirtualizedLineList from './VirtualizedLineList';
 import EditorActionDrawer from './EditorActionDrawer';
 import SelectionActionBar from './SelectionActionBar';
+import TaggingToolbar from './TaggingToolbar';
 import AutoStampModal from './AutoStampModal';
 import PlayerControls from '@/features/player/components/PlayerControls';
 import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
@@ -56,7 +57,7 @@ const AUTO_STAMP_RUNNING_PHASES: ReadonlySet<AutoStampPhase> = new Set(['startin
 interface EditorProps {
   user?: AuthUser | null;
   lines: EditorLine[];
-  setLines: (lines: EditorLine[]) => void;
+  setLines: React.Dispatch<React.SetStateAction<EditorLine[]>>;
   syncMode: boolean;
   setSyncMode: (v: boolean) => void;
   activeLineIndex: number;
@@ -654,6 +655,13 @@ export default function Editor({
 
       {/* Sync Mode View */}
       <div className="relative flex flex-col flex-1 min-h-0">
+        <TaggingToolbar
+          lines={lines}
+          setLines={setLines}
+          selectedLines={selectedLines}
+          songArtists={combinedSingers}
+          clearSelection={clearSelection as () => void}
+        />
         <VirtualizedLineList
           lines={lines}
           displayedActiveIndex={displayedActiveIndex}
