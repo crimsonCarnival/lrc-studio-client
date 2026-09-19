@@ -17,6 +17,7 @@ interface ProjectMetadata {
   songArtists?: string[];
   songArtist?: string;
   songAlbum?: string;
+  songYear?: string | number;
   genre?: string;
   singerColors?: string[];
 }

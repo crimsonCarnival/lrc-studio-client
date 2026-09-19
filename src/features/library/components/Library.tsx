@@ -51,6 +51,7 @@ interface SetupConfirmData {
   genre?: string;
   coverImage?: string;
   isPublic?: boolean;
+  singerColors?: string[];
 }
 
 // onOpenProject receives the project's publicId (ProjectCard.onSelect passes project.publicId).

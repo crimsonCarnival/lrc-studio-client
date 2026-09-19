@@ -78,6 +78,7 @@ interface ProjectSetupForm {
   genre: string;
   coverImage: string;
   isPublic: boolean;
+  singerColors?: string[];
 }
 
 export interface ProjectSetupConfirm {

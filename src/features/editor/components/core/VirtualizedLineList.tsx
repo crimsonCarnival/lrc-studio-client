@@ -362,6 +362,7 @@ export default function VirtualizedLineList({
                 {isSection ? (
                   <div
                     ref={virtualizer.measureElement}
+                    data-index={i}
                     style={{ position: 'sticky', top: 0, pointerEvents: 'auto' }}
                   >
                     <EditorLineItem
@@ -423,9 +424,7 @@ export default function VirtualizedLineList({
                       isModified={modifiedLines?.has(i) || false}
                       editorMode={editorMode}
                       onToggleLineMode={onToggleLineMode}
-                      isSyncedPrevious={i > 0 ? lines[i - 1].timestamp != null : true}
                       upcomingDepth={upcomingDepth}
-                      lineConfidence={confidenceByIndex?.get(i)}
                     />
                   </div>
                 ) : (

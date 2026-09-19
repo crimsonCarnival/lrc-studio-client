@@ -373,7 +373,7 @@ const EditorLineItem = React.memo(({
         {selectedLines.has(i) && <div className="absolute inset-0 bg-primary/10 pointer-events-none" />}
         {(() => {
           const lineSingers = getSingers(line);
-          const firstSingerColorIdx = lineSingers.length > 0 && singerColors ? singerColorIndex(lineSingers[0], singerColors) : -1;
+          const firstSingerColorIdx = lineSingers.length > 0 && projectSingers ? singerColorIndex(lineSingers[0], projectSingers) : -1;
           const colorVar = firstSingerColorIdx >= 0 ? SINGER_GRADIENT_STOPS[firstSingerColorIdx] : 'var(--color-zinc-500)';
           
           const label = formatSectionLabel(line.label, t);

@@ -61,7 +61,6 @@ interface PreviewLineProps {
   hasMedia?: boolean;
   isPlaying?: boolean;
   playbackSpeed?: number;
-  playbackSpeed?: number;
   roster?: string[];
   singerColors?: string[];
 }
