@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -62,9 +62,9 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, songArt
 
   const activePreset = resolvePreset(selectionState.section);
 
-  const applySection = (label: string) => {
+  const applySection = useCallback((label: string) => {
     setLines(prev => applyTagToSelection(prev, selectedLines, { label }));
-  };
+  }, [setLines, selectedLines]);
 
   const applySingers = (singers: string[]) => {
     setLines(prev => applyTagToSelection(prev, selectedLines, { singers }));

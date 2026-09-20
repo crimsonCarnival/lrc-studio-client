@@ -15,7 +15,6 @@ import { OnlineDot } from '@/shared/ui/OnlineDot';
 
 interface AdminUser {
   id?: string;
-  _id?: string;
   displayName?: string;
   accountName?: string;
   email?: string;
@@ -51,7 +50,7 @@ function formatBytes(bytes = 0) {
 interface AdminUsersTabProps {
   users: AdminUser[];
   page: number;
-  currentUser?: { id?: string; _id?: string; role?: string; permissions?: string[] } | null;
+  currentUser?: { id?: string; role?: string; permissions?: string[] } | null;
   search: string;
   setSearch: (v: string) => void;
   roleFilter: string;
@@ -118,7 +117,7 @@ export default function AdminUsersTab({
 
   // Can act on this user: not self, and target rank strictly below mine
   const canActOn = (user: AdminUser) => {
-    const isSelf = user.id === currentUser?.id || user._id === currentUser?._id;
+    const isSelf = user.id === currentUser?.id;
     const targetRank = ROLE_RANK[(user.role as Role) ?? 'user'] ?? 0;
     return !isSelf && targetRank < myRank;
   };
@@ -198,10 +197,10 @@ export default function AdminUsersTab({
               <div className="text-center p-8 text-zinc-500">{t('admin.dashboard.noUsers')}</div>
             ) : (
               users.map(user => {
-                const isSelf = user.id === currentUser?.id || user._id === currentUser?._id;
+                const isSelf = user.id === currentUser?.id;
                 return (
                   <AdminUserContextMenu
-                    key={user.id || user._id}
+                    key={user.id}
                     user={user}
                     myRank={myRank}
                     myPermissions={currentUser?.permissions ?? []}
@@ -226,7 +225,7 @@ export default function AdminUsersTab({
                           <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
                             {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
                           </div>
-                          {(user.isOnline || presence.isOnline(user.id || user._id || '')) && <OnlineDot />}
+                          {(user.isOnline || presence.isOnline(user.id || '')) && <OnlineDot />}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -415,10 +414,10 @@ export default function AdminUsersTab({
         </thead>
         <tbody className="divide-y divide-zinc-800/30">
           {users.map(user => {
-            const isSelf = user.id === currentUser?.id || user._id === currentUser?._id;
+            const isSelf = user.id === currentUser?.id;
             return (
               <AdminUserContextMenu
-                key={user.id || user._id}
+                key={user.id}
                 user={user}
                 myRank={myRank}
                 myPermissions={currentUser?.permissions ?? []}
@@ -441,7 +440,7 @@ export default function AdminUsersTab({
                         <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
                           {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
                         </div>
-                        {(user.isOnline || presence.isOnline(user.id || user._id || '')) && <OnlineDot />}
+                        {(user.isOnline || presence.isOnline(user.id || '')) && <OnlineDot />}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -538,7 +537,7 @@ export default function AdminUsersTab({
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-1">
                       {/* XP popover */}
-                      {xpPopover === (user.id || user._id) && (
+                      {xpPopover === (user.id) && (
                         <div className="flex items-center gap-1 mr-1">
                           <input
                             type="number"
@@ -548,11 +547,11 @@ export default function AdminUsersTab({
                             className="w-16 h-7 px-2 text-xs rounded bg-zinc-800 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-primary"
                           />
                           <button
-                            onClick={() => { handleAdjustXP('grant', Number(xpAmount), 'user', user.id || user._id); setXpPopover(null); }}
+                            onClick={() => { handleAdjustXP('grant', Number(xpAmount), 'user', user.id); setXpPopover(null); }}
                             className="h-7 px-2 text-[10px] font-bold rounded bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors"
                           >+XP</button>
                           <button
-                            onClick={() => { handleAdjustXP('revoke', Number(xpAmount), 'user', user.id || user._id); setXpPopover(null); }}
+                            onClick={() => { handleAdjustXP('revoke', Number(xpAmount), 'user', user.id); setXpPopover(null); }}
                             className="h-7 px-2 text-[10px] font-bold rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors"
                           >−XP</button>
                           <button onClick={() => setXpPopover(null)} className="h-7 px-1.5 text-zinc-600 hover:text-zinc-400 text-xs">✕</button>
@@ -561,7 +560,7 @@ export default function AdminUsersTab({
                       {canActOn(user) && (
                         <>
                           <Tip content="Adjust XP" side="top">
-                            <Button variant="ghost" size="icon" onClick={() => { setXpPopover(p => p === (user.id || user._id) ? null : (user.id || user._id) ?? null); }} className="size-8 text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg">
+                            <Button variant="ghost" size="icon" onClick={() => { setXpPopover(p => p === (user.id) ? null : (user.id) ?? null); }} className="size-8 text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg">
                               <Icon name="bolt" size={14} />
                             </Button>
                           </Tip>

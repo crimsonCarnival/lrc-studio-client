@@ -13,6 +13,7 @@ interface InterfaceSettingsProps {
 
 export default function InterfaceSettings({ settings, updateSetting, searchTerm }: InterfaceSettingsProps) {
   const { t } = useTranslation();
+  const tk = t as (key: string) => string;
   const {
     handleLanguageChange,
     handleActiveHighlightChange,
@@ -114,7 +115,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow iconName="palette" label={(t as any)('settings.interface.singerColors') || 'Singer Colors'} description={(t as any)('settings.interface.singerColorsDesc') || 'Customize the global default colors for singers 1-8.'}>
+        <SettingRow iconName="palette" label={tk('settings.interface.singerColors') || 'Singer Colors'} description={tk('settings.interface.singerColorsDesc') || 'Customize the global default colors for singers 1-8.'}>
           <div className="flex flex-wrap gap-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex flex-col items-center gap-1">

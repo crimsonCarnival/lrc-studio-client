@@ -732,6 +732,7 @@ export type ProjectMetadata = {
   singerColors?: Maybe<Array<Scalars['String']['output']>>;
   songAlbum?: Maybe<Scalars['String']['output']>;
   songArtist?: Maybe<Scalars['String']['output']>;
+  songGenre?: Maybe<Scalars['String']['output']>;
   songLanguage?: Maybe<Scalars['String']['output']>;
   songName?: Maybe<Scalars['String']['output']>;
   songYear?: Maybe<Scalars['String']['output']>;
@@ -746,6 +747,7 @@ export type ProjectMetadataInput = {
   singerColors?: InputMaybe<Array<Scalars['String']['input']>>;
   songAlbum?: InputMaybe<Scalars['String']['input']>;
   songArtist?: InputMaybe<Scalars['String']['input']>;
+  songGenre?: InputMaybe<Scalars['String']['input']>;
   songLanguage?: InputMaybe<Scalars['String']['input']>;
   songName?: InputMaybe<Scalars['String']['input']>;
   songYear?: InputMaybe<Scalars['String']['input']>;
