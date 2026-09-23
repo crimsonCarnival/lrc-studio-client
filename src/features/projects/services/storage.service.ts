@@ -5,8 +5,6 @@ export const STORAGE_KEYS = {
   ACTIVE_PROJECT_ID: 'lrc-syncer-active-project-id',
   SETTINGS: 'lrc-syncer-settings',
   DEVICE_ID: 'lrc_studio_device_id',
-  CLONE_AFTER_AUTH: 'cloneAfterAuth',
-  REDIRECT: 'lrc-syncer-redirect',
   REMEMBER_ME: 'lrc-studio-remember-me',
   HAS_SESSION: 'lrc-studio-has-session',
 } as const;

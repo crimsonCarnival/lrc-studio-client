@@ -270,14 +270,6 @@ export function useAuth() {
     return unsub;
   }, [doLogout, scheduleRefresh, doRefresh]);
 
-  const handlePostAuthClone = useCallback(() => {
-    const clonepublicId = storage.get(STORAGE_KEYS.CLONE_AFTER_AUTH);
-    if (clonepublicId) {
-      storage.remove(STORAGE_KEYS.CLONE_AFTER_AUTH);
-      window.location.href = `/share/${clonepublicId}?clone=1`;
-    }
-  }, []);
-
   const login = useCallback(async ({ identifier, password }) => {
     let recaptchaToken: string | undefined = undefined;
     if (executeRecaptcha) {
@@ -295,10 +287,8 @@ export function useAuth() {
     setState(s => ({ ...s, user: result.user, loading: false }));
     scheduleRefresh();
 
-    handlePostAuthClone();
-
     return result;
-  }, [scheduleRefresh, executeRecaptcha, handlePostAuthClone]);
+  }, [scheduleRefresh, executeRecaptcha]);
 
   // Variant of login that holds the user state — caller must call commitLogin() to finalise.
   // Used by the password login flow so AuthPage can show the "save info?" prompt first.
@@ -315,11 +305,10 @@ export function useAuth() {
     storage.set(STORAGE_KEYS.HAS_SESSION, '1');
     setAuthFlag(true);
     scheduleRefresh();
-    handlePostAuthClone();
     // Single setState: atomically sets heldLoginResult without changing user yet
     setState(s => ({ ...s, heldLoginResult: result }));
     return result;
-  }, [scheduleRefresh, executeRecaptcha, handlePostAuthClone]);
+  }, [scheduleRefresh, executeRecaptcha]);
 
   const commitLogin = useCallback(() => {
     setState(s => {
@@ -342,11 +331,8 @@ export function useAuth() {
     setState(s => ({ ...s, user: result.user, loading: false }));
     scheduleRefresh();
 
-    // Handle post-auth continuation (e.g., after cloning a project)
-    handlePostAuthClone();
-
     return result;
-  }, [scheduleRefresh, executeRecaptcha, handlePostAuthClone]);
+  }, [scheduleRefresh, executeRecaptcha]);
 
   const registerAndHold = useCallback(async ({ accountName, email, password, displayName }) => {
     let recaptchaToken: string | undefined = undefined;
@@ -358,10 +344,9 @@ export function useAuth() {
     storage.set(STORAGE_KEYS.HAS_SESSION, '1');
     setAuthFlag(true);
     scheduleRefresh();
-    handlePostAuthClone();
     setState(s => ({ ...s, heldLoginResult: result }));
     return result;
-  }, [scheduleRefresh, executeRecaptcha, handlePostAuthClone]);
+  }, [scheduleRefresh, executeRecaptcha]);
 
   // ——— Google connect / disconnect / login ———
 
@@ -599,8 +584,7 @@ export function useAuth() {
       setAuthFlag(true);
       setState(s => ({ ...s, user: result.user, loading: false }));
       scheduleRefresh();
-      handlePostAuthClone();
-      
+
       return result.user;
     } catch (err) {
       if ((err as Error).name === 'NotAllowedError') {
@@ -616,7 +600,7 @@ export function useAuth() {
       }
       throw err;
     }
-  }, [scheduleRefresh, handlePostAuthClone]);
+  }, [scheduleRefresh]);
 
   // Re-attempt a silent refresh whenever the tab becomes visible again.
   // The setTimeout-based scheduleRefresh can fire late (or not at all) if

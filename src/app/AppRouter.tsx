@@ -13,7 +13,6 @@ import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { useEditorActivity } from '@/features/auth/hooks/useSessionSocket';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { isStaff } from '@/features/auth/permissions';
-import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
 import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
@@ -226,18 +225,17 @@ function EditorContainer({ loadProject, activepublicId, isProjectLoading, projec
 
 function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigate: NavigateFunction }) {
   const { id } = useParams();
-  const { user } = useAuthContext();
+  const { user, loading } = useAuthContext();
   const { loadProject, t } = appState;
   const ran = useRef(false);
 
   useEffect(() => {
+    if (loading) return;
     if (ran.current) return;
     if (!id) return;
 
     if (!user || user.isGuest) {
-      // Store intention and redirect to login
-      storage.set(STORAGE_KEYS.REDIRECT, `/project/fork/${id}`);
-      storage.set(STORAGE_KEYS.CLONE_AFTER_AUTH, id);
+      // Redirect to login; AuthPage's handleAuthSuccess navigates back to ?redirect= on success
       navigate(`/auth/signin?redirect=${encodeURIComponent(`/project/fork/${id}`)}`);
       return;
     }
@@ -263,7 +261,7 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
     });
     // navigate, loadProject, t are stable; ran.current guards single-execution
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, user]);
+  }, [id, user, loading]);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">

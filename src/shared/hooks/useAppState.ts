@@ -837,25 +837,17 @@ export function useAppState(user?: AuthUserType | null) {
     playerRef,
   });
 
-  // ——— Process Query Parameters (?clone= and ?publicId=) ———
+  // ——— Process Query Parameters (?publicId=) ———
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const cloneId = params.get('clone');
     const projId = params.get('publicId');
-    
-    if (cloneId) {
-      // Redirect legacy clone param to the new dedicated route
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('clone');
-      window.history.replaceState(null, '', newUrl.toString());
-      window.location.href = `/project/fork/${cloneId}`;
-      return;
-    } else if (projId && getAccessToken()) {
+
+    if (projId && getAccessToken()) {
       // Remove query param
       const newUrl = new URL(window.location.href);
       newUrl.searchParams.delete('publicId');
       window.history.replaceState(null, '', newUrl.toString());
-      
+
       loadProject(projId);
     }
   }, [t, loadProject]); // loadProject included as dependency
