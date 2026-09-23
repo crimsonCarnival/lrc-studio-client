@@ -271,6 +271,7 @@ export type FollowUser = {
 export type ForkedFrom = {
   accountName?: Maybe<Scalars['String']['output']>;
   publicId?: Maybe<Scalars['String']['output']>;
+  sourceDeleted?: Maybe<Scalars['Boolean']['output']>;
   userId?: Maybe<Scalars['ID']['output']>;
 };
 
