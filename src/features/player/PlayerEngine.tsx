@@ -169,6 +169,38 @@ function PlayerEngineInner(
     [onTimeUpdate],
   );
 
+  // Poll local audio time at ~60fps via requestAnimationFrame.
+  // The browser's native 'timeupdate' event only fires ~4Hz which causes
+  // choppy karaoke word fills. RAF polling gives per-frame accuracy.
+  const localRafRef = useRef<number | null>(null);
+  const isPlayingRef = useRef(isPlaying);
+  const sourceRefForRaf = useRef(source);
+  useLayoutEffect(() => { isPlayingRef.current = isPlaying; });
+  useLayoutEffect(() => { sourceRefForRaf.current = source; });
+
+  useEffect(() => {
+    if (!isPlaying || source !== 'local') {
+      if (localRafRef.current != null) {
+        cancelAnimationFrame(localRafRef.current);
+        localRafRef.current = null;
+      }
+      return;
+    }
+    const poll = () => {
+      if (audioRef.current && isPlayingRef.current && sourceRefForRaf.current === 'local') {
+        updateTime(audioRef.current.currentTime);
+        localRafRef.current = requestAnimationFrame(poll);
+      }
+    };
+    localRafRef.current = requestAnimationFrame(poll);
+    return () => {
+      if (localRafRef.current != null) {
+        cancelAnimationFrame(localRafRef.current);
+        localRafRef.current = null;
+      }
+    };
+  }, [isPlaying, source, updateTime]);
+
   // Sync A-B loop with current line if loopCurrentLine is enabled
   useEffect(() => {
     if (settings.playback?.loopCurrentLine && lines?.[activeLineIndex] && lines[activeLineIndex].timestamp != null) {

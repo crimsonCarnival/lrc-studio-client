@@ -234,13 +234,9 @@ export default function useYouTubePlayer({
       return;
     }
 
-    let lastPoll = 0;
-    const poll = (timestamp: number) => {
-      if (timestamp - lastPoll >= 50) {
-        lastPoll = timestamp;
-        if (ytPlayerRef.current?.getCurrentTime) {
-          updateTime(ytPlayerRef.current.getCurrentTime());
-        }
+    const poll = () => {
+      if (ytPlayerRef.current?.getCurrentTime) {
+        updateTime(ytPlayerRef.current.getCurrentTime());
       }
       rafIdRef.current = requestAnimationFrame(poll);
     };

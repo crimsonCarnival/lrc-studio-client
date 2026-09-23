@@ -588,14 +588,14 @@ body,
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Keyframes for smooth karaoke fill with overshoot to clear soft-edged masks */
+/* Keyframes for smooth karaoke fill — GPU-driven, used with negative animation-delay for seek */
 @keyframes karaoke-fill-anim {
   from {
     width: 0%;
   }
 
   to {
-    width: calc(100% + 30px);
+    width: 100%;
   }
 }
 
@@ -669,19 +669,17 @@ ruby rt {
 @keyframes preview-line-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
-    filter: blur(2px);
+    transform: translateY(4px);
   }
 
   to {
     opacity: var(--line-opacity, 1);
     transform: translateY(0);
-    filter: blur(0px);
   }
 }
 
 .animate-preview-line-in {
-  animation: preview-line-in 0.45s cubic-bezier(0, 0, 0.2, 1) both;
+  animation: preview-line-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: var(--stagger, 0ms);
 }
 

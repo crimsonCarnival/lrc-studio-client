@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
+import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
 
 /** Inline text color classes for words attributed to a specific singer */
 const WORD_SINGER_PREVIEW_COLORS = [
@@ -42,7 +43,7 @@ interface PreviewLineProps {
   lockedLineIndex: number;
   isDualLine: boolean;
   displayLines: DisplayLine[];
-  playbackPosition: number;
+  playbackPosition?: number | null;
   activeRef?: Ref<HTMLButtonElement>;
   handleLineClick: (line: EditorLine, i: number) => void;
   handleLineHover: (i: number) => void;
@@ -63,6 +64,8 @@ interface PreviewLineProps {
   playbackSpeed?: number;
   roster?: string[];
   singerColors?: string[];
+  nextTimestamp?: number | null;
+  editorMode?: string;
 }
 
 export default function PreviewLine({
@@ -94,6 +97,8 @@ export default function PreviewLine({
   playbackSpeed = 1,
   roster: propRoster,
   singerColors,
+  nextTimestamp,
+  editorMode,
 }: PreviewLineProps) {
   const { settings } = useSettings();
   const { t } = useTranslation();
@@ -119,11 +124,10 @@ export default function PreviewLine({
         <div className={`flex-1 h-px ${isRoot ? 'bg-gradient-to-r from-transparent via-primary/50 to-primary/20' : 'bg-zinc-800/60'}`} />
         {/* No pill: main sections render as a large title, secondary as a normal title (#1).
             Singer names carry their own colors so the lines below don't need labels (#2). */}
-        <div className={`flex items-baseline gap-2 whitespace-nowrap uppercase ${
-          isRoot
+        <div className={`flex items-baseline gap-2 whitespace-nowrap uppercase ${isRoot
             ? 'text-lg sm:text-2xl font-black tracking-[0.15em]'
             : 'text-xs sm:text-sm font-semibold tracking-widest'
-        }`}>
+          }`}>
           <span className={isRoot
             ? 'text-transparent bg-clip-text bg-gradient-to-r from-primary via-fuchsia-400 to-primary'
             : 'text-zinc-500'}>
@@ -151,8 +155,13 @@ export default function PreviewLine({
     );
   }
 
-  const isActive = i === displayedActiveIndex || (isDualLine && i === displayLines[0].originalIndex);
-  const isPast = line.timestamp != null && i < displayedActiveIndex;
+  const isAdLib = line.adLibOf != null;
+  const effectiveTimestamp = line.timestamp ?? line.adLibOf;
+  const adLibEndTime = line.endTime ?? nextTimestamp ?? (effectiveTimestamp != null ? effectiveTimestamp + 5 : null);
+  const isAdLibActive = isAdLib && effectiveTimestamp != null && playbackPosition != null && playbackPosition >= effectiveTimestamp && (adLibEndTime == null || playbackPosition < adLibEndTime);
+
+  const isActive = i === displayedActiveIndex || (isDualLine && i === displayLines[0].originalIndex) || isAdLibActive;
+  const isPast = effectiveTimestamp != null && i < displayedActiveIndex;
   const isLocked = lockedLineIndex === i;
 
   const focusContrast = settings.interface?.focusContrast ?? 'medium';
@@ -185,6 +194,35 @@ export default function PreviewLine({
   // Active translation text for this line
   const activeTranslationText = line.translations?.[activeTranslationIndex]?.text ?? null;
 
+  // Instrumental dots: ONLY appear when an empty line is inserted
+  const isEmptyLine = line.type !== 'section' && (!line.text || line.text.trim() === '');
+
+  const effectiveNextTs = nextTimestamp ?? (line as EditorLine & { nextTimestamp?: number | null }).nextTimestamp ?? null;
+  const gap = (effectiveNextTs != null && line.timestamp != null)
+    ? Math.max(0, effectiveNextTs - line.timestamp)
+    : (line.endTime != null && line.timestamp != null ? Math.max(0, line.endTime - line.timestamp) : 5);
+
+  // End time is a little before the next line
+  const leadTime = effectiveNextTs != null && line.timestamp != null
+    ? Math.min(0.5, Math.max(0.1, gap * 0.15))
+    : 0;
+
+  const baseEnd = line.endTime ?? (effectiveNextTs != null ? effectiveNextTs - leadTime : (line.timestamp != null ? line.timestamp + 5 : null));
+  const segmentEnd = baseEnd != null && effectiveNextTs != null ? Math.min(baseEnd, effectiveNextTs - leadTime) : baseEnd;
+
+  const isWithinWindow = isActive
+    && isEmptyLine
+    && line.timestamp != null
+    && segmentEnd != null
+    && segmentEnd > line.timestamp
+    && playbackPosition != null
+    && playbackPosition >= line.timestamp
+    && playbackPosition < segmentEnd;
+
+  const segmentProgress = isWithinWindow
+    ? Math.min(1, Math.max(0, (playbackPosition! - line.timestamp!) / (segmentEnd! - line.timestamp!)))
+    : null;
+
   const inner = (
     <button
       type="button"
@@ -193,11 +231,13 @@ export default function PreviewLine({
       onMouseEnter={hasMedia ? () => handleLineHover(i) : undefined}
       onMouseLeave={hasMedia ? handleLineHoverEnd : undefined}
       style={{
-        opacity: parallaxOpacity,
+        opacity: isAdLib && !isActive ? parallaxOpacity * 0.5 : parallaxOpacity,
+        transform: isAdLib ? 'scale(0.95)' : undefined,
+        paddingLeft: isAdLib ? '1.5rem' : undefined,
         animationDelay: staggerDelay,
       }}
-      className={`w-full group px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition-opacity duration-100 ease-out flex select-none relative overflow-hidden animate-preview-line-in text-left ${hasMedia ? 'cursor-pointer' : 'cursor-default'
-        } ${translationLayout === 'side-by-side' && activeTranslationText && showTranslationsInPreview
+      className={`w-full group px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition-opacity duration-300 ease-out flex select-none relative overflow-hidden animate-preview-line-in ${hasMedia ? 'cursor-pointer' : 'cursor-default'
+        } ${translationLayout === 'side-by-side' && activeTranslationText && showTranslationsInPreview && !isEmptyLine
           ? 'flex-row items-baseline gap-3 sm:gap-6'
           : 'flex-col'
         } ${settings.interface?.previewAlignment === 'right' ? 'items-end text-right' :
@@ -224,23 +264,37 @@ export default function PreviewLine({
         </div>
       )}
 
-      {/* Singer chips — inline in content flow, not absolute */}
-      {/* Left column for side-by-side: main + secondary */}
-      {translationLayout === 'side-by-side' && activeTranslationText && showTranslationsInPreview ? (
+      {isEmptyLine ? (
+        <div className="w-full flex items-center justify-center min-h-[2rem] sm:min-h-[2.5rem] py-1 sm:py-2">
+          {segmentProgress != null ? (
+            <InstrumentalDots
+              progress={segmentProgress}
+              color="hsl(var(--primary))"
+              dimColor="rgba(255,255,255,0.12)"
+              dotCount={Math.max(2, Math.min(5, Math.round((segmentEnd! - line.timestamp!) / 1.0)))}
+              size={7}
+              gap={6}
+            />
+          ) : (
+            <div className="h-2" />
+          )}
+        </div>
+      ) : translationLayout === 'side-by-side' && activeTranslationText && showTranslationsInPreview ? (
         <>
           <div className="flex-1 min-w-0 flex flex-col">
             <MainTrack
               line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={!!hasWordTimestamps}
-              playbackPosition={playbackPosition} activeFontSizes={activeFontSizes}
+              playbackPosition={playbackPosition ?? 0} activeFontSizes={activeFontSizes}
               inactiveFontSizes={inactiveFontSizes} sizeOption={sizeOption} spacingOption={spacingOption}
               settings={settings} showFuriganaInPreview={showFuriganaInPreview}
               isPlaying={isPlaying} playbackSpeed={playbackSpeed} hasReadings={!!hasReadings}
               roster={roster}
               singerColors={singerColors}
               getCustomColorStyle={getCustomColorStyle}
+              editorMode={editorMode}
             />
             {line.secondary && renderSecondaryTrack({
-              line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings,
+              line, isActive, playbackPosition: playbackPosition ?? 0, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings,
               isPlaying, playbackSpeed
             })}
           </div>
@@ -249,7 +303,7 @@ export default function PreviewLine({
 
           <div className="flex-1 min-w-0">
             <p
-              className={`transition-colors duration-100 w-full font-lyrics break-words overflow-wrap-anywhere hyphens-auto ${isActive
+              className={`transition-colors duration-300 w-full font-lyrics break-words overflow-wrap-anywhere hyphens-auto ${isActive
                 ? `${activeFontSizes[sizeOption]} text-zinc-500 font-medium ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`
                 : `${inactiveFontSizes[sizeOption]} text-zinc-600`
                 }`}
@@ -263,23 +317,24 @@ export default function PreviewLine({
         <>
           <MainTrack
             line={line} isActive={isActive} isPast={isPast} hasWordTimestamps={!!hasWordTimestamps}
-            playbackPosition={playbackPosition} activeFontSizes={activeFontSizes}
+            playbackPosition={playbackPosition ?? 0} activeFontSizes={activeFontSizes}
             inactiveFontSizes={inactiveFontSizes} sizeOption={sizeOption} spacingOption={spacingOption}
             settings={settings} showFuriganaInPreview={showFuriganaInPreview}
             isPlaying={isPlaying} playbackSpeed={playbackSpeed} hasReadings={!!hasReadings}
             roster={roster}
             singerColors={singerColors}
             getCustomColorStyle={getCustomColorStyle}
+            editorMode={editorMode}
           />
 
           {line.secondary && renderSecondaryTrack({
-            line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings,
+            line, isActive, playbackPosition: playbackPosition ?? 0, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings,
             isPlaying, playbackSpeed
           })}
 
           {(activeTranslationText && showTranslationsInPreview) && (
             <p
-              className={`transition-colors duration-100 w-full font-lyrics break-words overflow-wrap-anywhere hyphens-auto ${isActive
+              className={`transition-all duration-500 ease-out w-full font-lyrics break-words overflow-wrap-anywhere hyphens-auto ${isActive
                 ? `${activeFontSizes[sizeOption]} text-zinc-500 font-medium ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`
                 : `${inactiveFontSizes[sizeOption]} text-zinc-600`
                 }`}
@@ -292,6 +347,15 @@ export default function PreviewLine({
       )}
     </button>
   );
+
+  // Ad-lib lines are shown at half-opacity and indented to visually overlap with parent
+  if (isAdLib && !isActive) {
+    return (
+      <div className="pl-6 border-l-2 border-violet-500/30">
+        {inner}
+      </div>
+    );
+  }
 
   if (!hasMedia) return inner;
   // Return without Tip wrapper — TooltipTrigger asChild can override onClick.
@@ -337,15 +401,21 @@ interface MainTrackProps {
   roster: string[];
   singerColors?: string[];
   getCustomColorStyle: (hex: string, active: boolean) => React.CSSProperties;
+  editorMode?: string;
 }
 
 // ——— Render main text track with karaoke fill ———
-// Fill effect is ONLY applied when word-level timestamps exist.
-function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying, playbackSpeed, hasReadings, roster, singerColors, getCustomColorStyle }: MainTrackProps) {
+// Fill effect is applied when word-level timestamps exist or in words mode.
+function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying: _isPlaying, playbackSpeed: _playbackSpeed, hasReadings, roster, singerColors, getCustomColorStyle, editorMode }: MainTrackProps) {
   const fillTrack = settings.editor?.display?.karaokeFillTrack ?? 'main';
-  const fillEasing = settings.editor?.display?.karaokeFillEasing ?? 'linear';
   const skipMainFill = isActive && fillTrack === 'secondary';
-  const effectiveHasWordTimestamps = hasWordTimestamps && !skipMainFill;
+
+  const isWordsMode = editorMode === 'words';
+  let words = line.words || [];
+  if (isWordsMode && words.length === 0 && line.text) {
+    words = line.text.trim().split(/\s+/).map((w) => ({ word: w }));
+  }
+  const effectiveHasWordTimestamps = (hasWordTimestamps || (isWordsMode && line.timestamp != null && words.length > 0)) && !skipMainFill;
   const highlightMode = settings.editor?.display?.activeHighlight;
   // Active = white (fill effect provides green); past/completed = green; future = dim
   const activeClass = `${activeFontSizes[sizeOption]} font-bold font-lyrics text-zinc-100 ${highlightMode === 'glow' ? 'glow-line' : ''} ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`;
@@ -353,14 +423,14 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
   const futureClass = `${inactiveFontSizes[sizeOption]} font-lyrics ${highlightMode === 'dim' ? 'text-zinc-800' : 'text-zinc-600'}`;
 
   // Furigana readings come from word.reading; gated by showFuriganaInPreview
-  const mainText = line.text || '♪';
+  const mainText = line.text || '';
   const readingFmt = settings.editor?.display?.readingFormat || 'hiragana';
   const fmtReading: ReadingFmt = (r) => r ? (readingFmt === 'katakana' ? toKatakana(r) : toHiragana(r)) : r;
 
   // Estimate fill end time for the last timed word to avoid an abrupt 0→100% snap
   let lastWordFillEnd: number | null = null;
   if (effectiveHasWordTimestamps) {
-    const timedWordsList = (line.words || []).filter((w2) => w2.time != null);
+    const timedWordsList = words.filter((w2) => w2.time != null);
     if (timedWordsList.length > 0) {
       const lastTW = timedWordsList[timedWordsList.length - 1];
       if (line.endTime != null && line.endTime > lastTW.time!) {
@@ -371,16 +441,18 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
       } else {
         lastWordFillEnd = lastTW.time! + 0.8;
       }
+    } else if (line.timestamp != null) {
+      const nextTs = (line as { nextTimestamp?: number | null }).nextTimestamp;
+      lastWordFillEnd = line.endTime ?? (nextTs != null ? Math.min(nextTs - 0.2, line.timestamp + 4) : line.timestamp + 3);
     }
   }
 
-  const words = line.words || [];
   const isDuet = line.mode === 'duet' && (line.singers?.length ?? 0) >= 2;
   const duetGradientStyle = isDuet ? { backgroundImage: singerGradient(line.singers!, roster) } : undefined;
 
   return (
     <p
-      className={`transition-colors duration-100 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass} ${isDuet ? 'bg-clip-text !text-transparent' : ''}`}
+      className={`transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass} ${isDuet ? 'bg-clip-text !text-transparent' : ''}`}
       style={{ lineHeight: hasReadings ? '2' : undefined, ...duetGradientStyle }}
     >
       {effectiveHasWordTimestamps
@@ -391,10 +463,11 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
 
           if (startTime == null) {
             // Untimed word: find surrounding timed anchors
-            let prevT = line.timestamp ?? 0;
+            let prevT = line.timestamp ?? line.adLibOf ?? 0;
+            let isPrevFromWord = false;
             let untimedCountBefore = 0;
             for (let j = wi - 1; j >= 0; j--) {
-              if (words[j].time != null) { prevT = words[j].time!; break; }
+              if (words[j].time != null) { prevT = words[j].time!; isPrevFromWord = true; break; }
               untimedCountBefore++;
             }
             let nextT = lastWordFillEnd;
@@ -405,9 +478,16 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
             }
             const totalGapWords = untimedCountBefore + untimedCountAfter + 1;
             const gapDur = Math.max(0.1, (nextT ?? (prevT + 1)) - prevT);
-            const slice = gapDur / (totalGapWords + 1);
-            startTime = prevT + (slice * (untimedCountBefore + 1));
-            endTime = prevT + (slice * (untimedCountBefore + 2));
+            
+            if (isPrevFromWord) {
+              const slice = gapDur / (totalGapWords + 1);
+              startTime = prevT + (slice * (untimedCountBefore + 1));
+              endTime = prevT + (slice * (untimedCountBefore + 2));
+            } else {
+              const slice = gapDur / totalGapWords;
+              startTime = prevT + (slice * untimedCountBefore);
+              endTime = prevT + (slice * (untimedCountBefore + 1));
+            }
           } else {
             // Timed word: ends when next timed word starts
             endTime = words.slice(wi + 1).find((w2) => w2.time != null)?.time ?? lastWordFillEnd;
@@ -418,7 +498,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
           const singerName = effectiveSingerIdx !== null && effectiveSingerIdx !== undefined
             ? line.singers?.[effectiveSingerIdx]
             : undefined;
-          
+
           const globalIdx = singerName ? singerColorIndex(singerName, roster) : null;
           const customHex = globalIdx !== null ? singerColors?.[globalIdx] : null;
           const wordSingerColorClass = (globalIdx !== null && !customHex) ? (WORD_SINGER_PREVIEW_COLORS[globalIdx] || '') : '';
@@ -428,24 +508,27 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
             ? <ruby>{w.word}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{fmtReading(w.reading)}</rt><rp>)</rp></ruby>
             : w.word;
 
+          let progress = 0;
+          if (isActive && startTime != null && endTime != null && playbackPosition != null) {
+            const dur = Math.max(0.01, endTime - startTime);
+            progress = Math.max(0, Math.min(1, (playbackPosition - startTime) / dur));
+          }
+
           return (
             <React.Fragment key={wi}>
               <span className={`relative inline-block ${wordSingerColorClass}`} style={wordSingerColorStyle}>
-                <span className={isActive ? (wordSingerColorClass || customHex ? 'opacity-50 transition-colors duration-100' : 'text-zinc-500 transition-colors duration-100') : ''}>{wordContent}</span>
-                {isActive && (
+                <span className={isActive ? (wordSingerColorClass || customHex ? 'opacity-50 transition-colors duration-300' : 'text-zinc-500 transition-colors duration-300') : ''}>{wordContent}</span>
+                {isActive && progress > 0 && (
                   <span
-                    className={`absolute left-0 top-0 h-full overflow-hidden whitespace-nowrap karaoke-fill-glow karaoke-fill-mask ${wordSingerColorClass || (!customHex ? 'text-primary' : '')}`}
+                    className={`absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none karaoke-fill-glow ${wordSingerColorClass || (!customHex ? 'text-primary' : '')}`}
                     style={{
                       ...(customHex ? getCustomColorStyle(customHex, true) : {}),
-                      animationName: 'karaoke-fill-anim',
-                      animationDuration: `${(endTime! - startTime!) / playbackSpeed}s`,
-                      animationTimingFunction: fillEasing,
-                      animationFillMode: 'both',
-                      animationDelay: `${(startTime! - playbackPosition) / playbackSpeed}s`,
-                      animationPlayState: isPlaying ? 'running' : 'paused',
+                      clipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
+                      WebkitClipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
+                      direction: 'ltr',
+                      textAlign: 'left',
+                      unicodeBidi: 'plaintext',
                     }}
-                    onAnimationStart={(e) => { e.currentTarget.style.willChange = 'width'; }}
-                    onAnimationEnd={(e) => { e.currentTarget.style.willChange = ''; }}
                   >
                     {wordContent}
                   </span>
@@ -505,14 +588,13 @@ interface SecondaryTrackParams {
   playbackSpeed: number;
 }
 
-function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings, isPlaying, playbackSpeed }: SecondaryTrackParams) {
+function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings, isPlaying: _isPlaying, playbackSpeed: _playbackSpeed }: SecondaryTrackParams) {
   const fillTrack = settings?.editor?.display?.karaokeFillTrack ?? 'main';
-  const fillEasing = settings?.editor?.display?.karaokeFillEasing ?? 'linear';
   const hasSecondaryStamps = line.secondaryWords?.some((w) => w.time != null);
   const doFill = isActive && hasSecondaryStamps && (fillTrack === 'secondary' || fillTrack === 'both');
   // secondary stays dim (inactive style) when fillTrack is 'main' — no active styling applied
   const treatAsActive = isActive && fillTrack !== 'main';
-  const baseClass = `transition-colors duration-100 w-full font-lyrics break-words overflow-wrap-anywhere hyphens-auto ${treatAsActive
+  const baseClass = `transition-all duration-500 ease-out w-full font-lyrics break-words overflow-wrap-anywhere hyphens-auto ${treatAsActive
     ? `${activeSecondarySizes[sizeOption]} text-zinc-400 font-medium`
     : `${inactiveSecondarySizes[sizeOption]} text-zinc-600`
     }`;
@@ -545,10 +627,11 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
 
         if (startTime == null) {
           // Untimed word: find surrounding timed anchors
-          let prevT = line.timestamp ?? 0;
+          let prevT = line.timestamp ?? line.adLibOf ?? 0;
+          let isPrevFromWord = false;
           let untimedCountBefore = 0;
           for (let j = wi - 1; j >= 0; j--) {
-            if (secWords[j].time != null) { prevT = secWords[j].time!; break; }
+            if (secWords[j].time != null) { prevT = secWords[j].time!; isPrevFromWord = true; break; }
             untimedCountBefore++;
           }
           let nextT = lastSecWordFillEnd;
@@ -559,33 +642,45 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
           }
           const totalGapWords = untimedCountBefore + untimedCountAfter + 1;
           const gapDur = Math.max(0.1, (nextT ?? (prevT + 1)) - prevT);
-          const slice = gapDur / (totalGapWords + 1);
-          startTime = prevT + (slice * (untimedCountBefore + 1));
-          endTime = prevT + (slice * (untimedCountBefore + 2));
+          
+          if (isPrevFromWord) {
+            const slice = gapDur / (totalGapWords + 1);
+            startTime = prevT + (slice * (untimedCountBefore + 1));
+            endTime = prevT + (slice * (untimedCountBefore + 2));
+          } else {
+            const slice = gapDur / totalGapWords;
+            startTime = prevT + (slice * untimedCountBefore);
+            endTime = prevT + (slice * (untimedCountBefore + 1));
+          }
         } else {
           // Timed word: ends when next timed word starts
           endTime = secWords.slice(wi + 1).find((w2) => w2.time != null)?.time ?? lastSecWordFillEnd;
         }
         const addSpace = wi < secWords.length - 1;
+        let progress = 0;
+        if (isActive && startTime != null && endTime != null && playbackPosition != null) {
+          const dur = Math.max(0.01, endTime - startTime);
+          progress = Math.max(0, Math.min(1, (playbackPosition - startTime) / dur));
+        }
+        
         return (
           <React.Fragment key={wi}>
             <span className="relative inline-block">
               <span className="text-zinc-600 transition-colors duration-100">{w.word}</span>
-              <span
-                className="absolute left-0 top-0 h-full overflow-hidden text-zinc-200 whitespace-nowrap karaoke-fill-mask"
-                style={{
-                  animationName: 'karaoke-fill-anim',
-                  animationDuration: `${(endTime! - startTime!) / playbackSpeed}s`,
-                  animationTimingFunction: fillEasing,
-                  animationFillMode: 'both',
-                  animationDelay: `${(startTime! - playbackPosition) / playbackSpeed}s`,
-                  animationPlayState: isPlaying ? 'running' : 'paused',
-                }}
-                onAnimationStart={(e) => { e.currentTarget.style.willChange = 'width'; }}
-                onAnimationEnd={(e) => { e.currentTarget.style.willChange = ''; }}
-              >
-                {w.word}
-              </span>
+              {isActive && progress > 0 && (
+                <span
+                  className="absolute left-0 top-0 h-full w-full text-zinc-200 whitespace-nowrap pointer-events-none"
+                  style={{
+                    clipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
+                    WebkitClipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
+                    direction: 'ltr',
+                    textAlign: 'left',
+                    unicodeBidi: 'plaintext',
+                  }}
+                >
+                  {w.word}
+                </span>
+              )}
             </span>
             {addSpace ? ' ' : null}
           </React.Fragment>
@@ -621,7 +716,7 @@ function isKanjiWord(word?: string): boolean {
 // ——— Render line text with ruby annotations from word.reading (only on kanji) ———
 function renderLineWithReadings(line: EditorLine, fmtReading: ReadingFmt, showFurigana = true) {
   const words = line.words || [];
-  if (words.length === 0) return line.text || '♪';
+  if (words.length === 0) return line.text || '';
   return words.map((w, i) => {
     const addSpace = needsSpaceAfter(w.word, words[i + 1]?.word);
     if (w.reading && isKanjiWord(w.word) && showFurigana) {
