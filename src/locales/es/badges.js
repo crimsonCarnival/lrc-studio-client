@@ -63,6 +63,9 @@ export default {
     aiSyncedLines: 'Líneas con IA',
     forks:         'Bifurcaciones recibidas',
     minutesSyncedNote: "Solo proyectos propios — sin bifurcaciones",
+    thisWeek:          'Esta semana',
+    thisMonth:         'Este mes',
+    allTime:           'Histórico',
   },
 
   // ─── Etiquetas de insignias integradas (clave: badges.<id>.label) ─────────────

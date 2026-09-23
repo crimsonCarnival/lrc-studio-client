@@ -66,6 +66,9 @@ export default {
     aiSyncedLines:    'AI-assisted lines',
     forks:            'Forks received',
     minutesSyncedNote: "Own projects only — forks excluded",
+    thisWeek:          'This week',
+    thisMonth:         'This month',
+    allTime:           'All time',
   },
 
   // ─── Builtin badge labels (keyed by badge id: badges.<id>.label) ──────────────
