@@ -21,26 +21,20 @@ export function singerColorIndex(name: string, songSingers: string[]): number {
  * Single source of truth so the editor and preview panes resolve a given
  * singer to the SAME palette index.
  *
- * Ordering (first-appearance, deduped):
- *   1. each entry of `songArtists` (already split — used verbatim)
- *   2. each line's `singers`, in document order
+ * Only considers singers explicitly set on lyric lines/sections — the song
+ * artist metadata field is intentionally excluded (artists ≠ on-screen singers).
+ *
+ * Ordering: first-appearance, deduped, document order.
  *
  * @param lines       lines with optional `singers[]`
- * @param songArtists pre-split artist names (optional)
+ * @param _songArtists kept for call-site compat but no longer used
  */
 export function buildSingerRoster(
   lines: { singers?: string[] }[],
-  songArtists?: string[],
+  _songArtists?: string[],
 ): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
-  for (const artist of songArtists ?? []) {
-    const name = artist?.trim();
-    if (name && !seen.has(name)) {
-      seen.add(name);
-      result.push(name);
-    }
-  }
   for (const line of lines ?? []) {
     if (!line.singers) continue;
     for (const s of line.singers) {

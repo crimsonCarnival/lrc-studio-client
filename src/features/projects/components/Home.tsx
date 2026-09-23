@@ -356,7 +356,7 @@ export default function Home() {
               songArtist,
               songAlbum,
               songYear,
-              singerColors,
+              singerColors: (singerColors || []).filter(Boolean),
             };
             await projects.patch(editingProject.publicId, {
               title,

@@ -600,7 +600,7 @@ export default function ProfilePage() {
                     songAlbum,
                     songYear,
                     genre,
-                    singerColors,
+                    singerColors: (singerColors || []).filter(Boolean),
                   };
                   await projects.patch(editingProject.publicId, {
                     title,

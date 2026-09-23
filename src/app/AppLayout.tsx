@@ -1,9 +1,10 @@
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { splitArtists } from '@/shared/utils/lrc';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 
 import { AppBackground } from './layout/AppBackground';
 import { AppHeader } from './layout/header/AppHeader';
@@ -134,7 +135,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
       songAlbum: songAlbum || '',
       songYear: songYear || '',
       genre: genre || '',
-      singerColors: singerColors || [],
+      singerColors: (singerColors || []).filter(Boolean),
     };
     setMediaTitle(newTitle);
     setProjectMetadata(newMetadata);
@@ -143,6 +144,8 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     handleManualSave({ title: newTitle, metadata: newMetadata, ...(coverImage ? { coverImage } : {}) });
     navigate('/project/local');
   }, [mediaTitle, projectMetadata, setMediaTitle, setProjectMetadata, setProjectCoverImage, navigate, handleManualSave, setShowNamingModal]);
+
+  const songSingers = useMemo(() => buildSingerRoster(lines, projectMetadata?.songArtists || []), [lines, projectMetadata?.songArtists]);
 
   return (
     <SafeAreaContainer padding="bottom">
@@ -168,109 +171,110 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         syncMode={syncMode}
 
       >
-      <div className="min-h-screen lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col">
-        <AppBackground />
+        <div className="min-h-screen lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col">
+          <AppBackground />
 
-        {/* Drag overlay */}
-        {isDraggingFile && (
-          <div className="fixed inset-0 z-overlay flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none transition-all">
-            <div className="flex flex-col items-center gap-4 text-primary animate-pulse">
-              <Icon name="cloud_upload" size={80} />
-              <h2 className="text-3xl font-semibold tracking-tight text-center px-4">
-                {t('player.dropAudio') || 'Drop your audio or lyrics file here'}
-              </h2>
+          {/* Drag overlay */}
+          {isDraggingFile && (
+            <div className="fixed inset-0 z-overlay flex items-center justify-center bg-black/80 backdrop-blur-sm pointer-events-none transition-all">
+              <div className="flex flex-col items-center gap-4 text-primary animate-pulse">
+                <Icon name="cloud_upload" size={80} />
+                <h2 className="text-3xl font-semibold tracking-tight text-center px-4">
+                  {t('player.dropAudio') || 'Drop your audio or lyrics file here'}
+                </h2>
+              </div>
+            </div>
+          )}
+
+          <AppHeader
+            user={user as AuthUser | null | undefined}
+            logout={logout ?? (() => { })}
+            isReady={isReady}
+            lines={lines}
+            mediaTitle={mediaTitle}
+            setMediaTitle={setMediaTitle}
+            triggerImportSave={triggerImportSave}
+            buildProjectPayload={buildProjectPayload}
+            hasUnsavedChanges={hasUnsavedChanges}
+            activepublicId={activepublicId}
+            forkedFrom={forkedFrom}
+            setShowKeyboardHelp={setShowKeyboardHelp}
+            setUnsavedModalTarget={setUnsavedModalTarget}
+            settings={settings}
+            updateSetting={updateSetting}
+            i18n={i18n}
+            syncMode={syncMode}
+            setShowNamingModal={setShowNamingModal}
+            playerSlot={playerSlot}
+            projectCoverImage={projectCoverImage}
+          />
+
+          <div
+            className={`relative z-base flex-1 min-h-0 ${isFullWidthPage ? 'px-0' : 'px-0 lg:px-6'} flex flex-col transition-[padding] duration-500 ease-in-out
+            ${location.pathname === '/' ? 'pt-14'
+                : isPublicProjectView ? 'pt-14 lg:pt-0'
+                  : 'pt-14 lg:pt-16'
+              }
+            ${isFullWidthPage
+                ? 'pb-0'
+                : isPlayerMounted && isReady
+                  ? playerSlot === 'mobile'
+                    ? 'pb-[200px]'
+                    : 'pb-6'
+                  : 'pb-20 lg:pb-6'
+              }
+          `}
+            style={{
+              ...(dynamicPb && !isPublicProjectView ? { paddingBottom: dynamicPb } : {}),
+            }}
+          >
+            <div className={`${isFullWidthPage ? 'w-full' : 'max-w-[1600px] mx-auto w-full'} flex-1 flex flex-col min-h-0`}>
+              {children}
             </div>
           </div>
-        )}
 
-        <AppHeader
-          user={user as AuthUser | null | undefined}
-          logout={logout ?? (() => {})}
-          isReady={isReady}
-          lines={lines}
-          mediaTitle={mediaTitle}
-          setMediaTitle={setMediaTitle}
-          triggerImportSave={triggerImportSave}
-          buildProjectPayload={buildProjectPayload}
-          hasUnsavedChanges={hasUnsavedChanges}
-          activepublicId={activepublicId}
-          forkedFrom={forkedFrom}
-          setShowKeyboardHelp={setShowKeyboardHelp}
-          setUnsavedModalTarget={setUnsavedModalTarget}
-          settings={settings}
-          updateSetting={updateSetting}
-          i18n={i18n}
-          syncMode={syncMode}
-          setShowNamingModal={setShowNamingModal}
-          playerSlot={playerSlot}
-          projectCoverImage={projectCoverImage}
-        />
+          <AppPlayer
+            isReady={isReady}
+            isPlayerMounted={isPlayerMounted}
+            isProjectLoading={isProjectLoading}
+            onHeightChange={setPlayerHeight}
+            playerSlot={playerSlot}
+          />
 
-        <div
-          className={`relative z-base flex-1 min-h-0 ${isFullWidthPage ? 'px-0' : 'px-0 lg:px-6'} flex flex-col transition-[padding] duration-500 ease-in-out
-            ${location.pathname === '/' ? 'pt-14'
-              : isPublicProjectView ? 'pt-14 lg:pt-0'
-                : 'pt-14 lg:pt-16'
-            }
-            ${isFullWidthPage
-              ? 'pb-0'
-              : isPlayerMounted && isReady
-                ? playerSlot === 'mobile'
-                  ? 'pb-[200px]'
-                  : 'pb-6'
-                : 'pb-20 lg:pb-6'
-            }
-          `}
-          style={{
-            ...(dynamicPb && !isPublicProjectView ? { paddingBottom: dynamicPb } : {}),
-          }}
-        >
-          <div className={`${isFullWidthPage ? 'w-full' : 'max-w-[1600px] mx-auto w-full'} flex-1 flex flex-col min-h-0`}>
-            {children}
-          </div>
+          <AppMobileNav
+            isReady={isReady}
+            mobileTab={mobileTab}
+            setMobileTab={setMobileTab}
+            activepublicId={activepublicId}
+          />
+
+          <AppModals
+            showKeyboardHelp={showKeyboardHelp}
+            setShowKeyboardHelp={setShowKeyboardHelp}
+            handleManualSave={handleManualSave as () => void | Promise<void>}
+            showNamingModal={showNamingModal}
+            setShowNamingModal={setShowNamingModal}
+            handleProjectConfirm={handleProjectConfirm}
+            mediaTitle={mediaTitle}
+            projectMetadata={projectMetadata}
+            projectCoverImage={projectCoverImage || ''}
+            pendingProject={pendingProject}
+            handleDiscardProject={handleDiscardProject}
+            handleRestoreProject={handleRestoreProject}
+            unsavedModalTarget={layoutState.unsavedModalTarget}
+            setUnsavedModalTarget={layoutState.setUnsavedModalTarget}
+            sourceInfo={{
+              ytUrl: appState.projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : ''),
+              cloudinary: appState.uploadedAudio || (restoredMedia?.type === 'cloudinary' ? {
+                id: restoredMedia.id, uploadUrl: restoredMedia.url,
+                publicId: restoredMedia.publicId, fileName: restoredMedia.fileName,
+                duration: restoredMedia.duration,
+              } : null),
+              title: mediaTitle || appState.projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : '') || '',
+            }}
+            songSingers={songSingers}
+          />
         </div>
-
-        <AppPlayer
-          isReady={isReady}
-          isPlayerMounted={isPlayerMounted}
-          isProjectLoading={isProjectLoading}
-          onHeightChange={setPlayerHeight}
-          playerSlot={playerSlot}
-        />
-
-        <AppMobileNav
-          isReady={isReady}
-          mobileTab={mobileTab}
-          setMobileTab={setMobileTab}
-          activepublicId={activepublicId}
-        />
-
-        <AppModals
-          showKeyboardHelp={showKeyboardHelp}
-          setShowKeyboardHelp={setShowKeyboardHelp}
-          handleManualSave={handleManualSave as () => void | Promise<void>}
-          showNamingModal={showNamingModal}
-          setShowNamingModal={setShowNamingModal}
-          handleProjectConfirm={handleProjectConfirm}
-          mediaTitle={mediaTitle}
-          projectMetadata={projectMetadata}
-          projectCoverImage={projectCoverImage || ''}
-          pendingProject={pendingProject}
-          handleDiscardProject={handleDiscardProject}
-          handleRestoreProject={handleRestoreProject}
-          unsavedModalTarget={layoutState.unsavedModalTarget}
-          setUnsavedModalTarget={layoutState.setUnsavedModalTarget}
-          sourceInfo={{
-            ytUrl: appState.projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : ''),
-            cloudinary: appState.uploadedAudio || (restoredMedia?.type === 'cloudinary' ? {
-              id: restoredMedia.id, uploadUrl: restoredMedia.url,
-              publicId: restoredMedia.publicId, fileName: restoredMedia.fileName,
-              duration: restoredMedia.duration,
-            } : null),
-            title: mediaTitle || appState.projectYtUrl || (restoredMedia?.type === 'youtube' ? restoredMedia.url : '') || '',
-          }}
-        />
-      </div>
       </PlayerEngineProvider>
     </SafeAreaContainer>
   );

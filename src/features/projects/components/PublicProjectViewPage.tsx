@@ -13,15 +13,18 @@ import { ProjectUpNextPanel } from './ProjectUpNextPanel';
 import { usePublicProject } from '../hooks/usePublicProject';
 import { useColorPalette } from '../hooks/useColorPalette';
 import { useStarredPlaylist } from '../hooks/useStarredPlaylist';
-import ImmersiveLyricsDisplay from './ImmersiveLyricsDisplay';
+import ImmersiveLyricsDisplay, { type DisplayLine } from './ImmersiveLyricsDisplay';
 import ProjectInfoPanel from './ProjectInfoPanel';
 import { getPlaylist } from '@features/playlists/playlist.service';
 import { ReactionBar } from '@features/reactions/components/ReactionBar';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useProjectReactions } from '@features/reactions/hooks/useReactions';
 import { sectionsToFlat } from '@/features/editor/utils/sections';
+import type { EditorLine } from '@/features/editor/services/editor.service';
 import { projects as projectsApi } from '@/app/api';
 import { projectsService } from '@features/projects/services/projects.service';
+import { splitArtists } from '@/shared/utils/lrc';
+import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 
 // Player is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -112,13 +115,28 @@ function PublicProjectViewPageInner() {
   }, [project?.publicId]);
 
   // ── Derived data ─────────────────────────────────────────────
-  const lines = useMemo(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    () => sectionsToFlat(project?.lyrics?.sections || []).map((l: any) => ({ ...l, id: l.id || crypto.randomUUID() })),
-    [project],
-  );
+  const lines = useMemo(() => {
+    const raw = sectionsToFlat(project?.lyrics?.sections || []);
+    const result: EditorLine[] = [];
+    let currentSingers: string[] | undefined = undefined;
+    for (const l of raw) {
+      if (l.type === 'section') currentSingers = l.singers as string[] | undefined;
+      result.push({ ...l, id: l.id || crypto.randomUUID(), singers: l.singers ?? currentSingers });
+    }
+    return result;
+  }, [project]);
   const editorMode = project?.lyrics?.editorMode || 'lrc';
   const projectTitle = project?.metadata?.songName || project?.title || '';
+
+  const songArtists = useMemo(
+    () => splitArtists(project?.metadata?.songArtist as string | undefined),
+    [project?.metadata],
+  );
+  const songSingers = useMemo(
+    () => buildSingerRoster(lines, songArtists),
+    [lines, songArtists],
+  );
+  const singerColors = (project?.metadata?.singerColors as string[] | undefined) || [];
 
   const initialMedia = useMemo(() => {
     const upload = project?.upload;
@@ -256,7 +274,7 @@ function PublicProjectViewPageInner() {
         {/* Left: immersive lyrics — ~70% on desktop, full-width on mobile */}
         <div className="flex-1 min-h-0 flex flex-col" style={{ minHeight: '50vh' }}>
           <ImmersiveLyricsDisplay
-            lines={lines}
+            lines={lines as unknown as DisplayLine[]}
             playbackPosition={playbackPosition}
             editorMode={editorMode}
             playerRef={playerRef}
@@ -265,6 +283,8 @@ function PublicProjectViewPageInner() {
             playbackSpeed={playbackSpeed}
             palette={palette}
             showTranslations
+            songSingers={songSingers}
+            singerColors={singerColors}
           />
         </div>
 
@@ -296,6 +316,8 @@ function PublicProjectViewPageInner() {
                 />
               }
               lines={lines}
+              songSingers={songSingers}
+              singerColors={singerColors}
             />
 
             {/* Up-next panel (list context) */}

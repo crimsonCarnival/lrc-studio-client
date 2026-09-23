@@ -38,6 +38,7 @@ interface AppModalsProps {
   unsavedModalTarget?: string | null;
   setUnsavedModalTarget: (v: string | null) => void;
   sourceInfo?: unknown;
+  songSingers?: string[];
 }
 
 /**
@@ -60,6 +61,7 @@ export function AppModals({
   unsavedModalTarget,
   setUnsavedModalTarget,
   sourceInfo,
+  songSingers,
 }: AppModalsProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -90,6 +92,7 @@ export function AppModals({
         initialAlbumArt={''}
         isEditing={true}
         sourceInfo={sourceInfo}
+        songSingers={songSingers}
       />
 
       {pendingProject && (

@@ -97,6 +97,8 @@ interface ProjectInfoPanelProps {
   ctaSlot?: ReactNode;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lines?: any[];
+  songSingers?: string[];
+  singerColors?: string[];
 }
 
 export default function ProjectInfoPanel({
@@ -114,6 +116,8 @@ export default function ProjectInfoPanel({
   reactionsSlot,
   ctaSlot,
   lines,
+  songSingers = [],
+  singerColors = [],
 }: ProjectInfoPanelProps) {
   const { t, i18n } = useTranslation();
   const { settings } = useSettings();
@@ -316,6 +320,34 @@ export default function ProjectInfoPanel({
                 {descExpanded ? t('projectView.showLess') : t('projectView.showMore')}
               </button>
             )}
+          </div>
+        )}
+
+        {/* Singers */}
+        {songSingers && songSingers.length > 0 && (
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: palette?.faded ?? 'hsl(var(--muted-foreground))' }}>
+              {t('projectView.singers')}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {songSingers.map((singer, idx) => {
+                const color = singerColors?.[idx] || (palette?.accent ?? 'hsl(var(--primary))');
+                return (
+                  <span
+                    key={`${singer}-${idx}`}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+                    style={{
+                      background: palette ? `${color}18` : 'hsl(var(--muted) / 0.6)',
+                      border: `1px solid ${color}44`,
+                      color: palette?.fg ?? 'hsl(var(--foreground))',
+                    }}
+                  >
+                    <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                    {singer}
+                  </span>
+                );
+              })}
+            </div>
           </div>
         )}
 

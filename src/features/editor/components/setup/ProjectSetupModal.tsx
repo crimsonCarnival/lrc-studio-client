@@ -113,6 +113,7 @@ interface ProjectSetupModalProps {
   initialSingerColors?: string[];
   isEditing?: boolean;
   sourceInfo?: SourceInfo | null;
+  songSingers?: string[];
 }
 
 export default function ProjectSetupModal({
@@ -132,6 +133,7 @@ export default function ProjectSetupModal({
   initialSingerColors = [],
   isEditing = false,
   sourceInfo = null,
+  songSingers = [],
 }: ProjectSetupModalProps) {
   const { t } = useTranslation();
   const { executeRecaptcha } = useGoogleReCaptcha();
@@ -257,7 +259,7 @@ export default function ProjectSetupModal({
       genre: form.genre,
       coverImage: form.coverImage.trim(),
       isPublic: form.isPublic,
-      singerColors: form.singerColors,
+      singerColors: (form.singerColors || []).filter(Boolean),
     });
   };
 
@@ -367,40 +369,48 @@ export default function ProjectSetupModal({
                     Customize project-specific colors for singers 1-8. Leave empty to use global defaults.
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i} className="flex flex-col items-center gap-1">
-                        <input
-                          type="color"
-                          value={form.singerColors?.[i] || '#888888'}
-                          onChange={(e) => {
-                            setForm((f) => {
-                              const newColors = [...(f.singerColors || Array(8).fill(''))];
-                              newColors[i] = e.target.value;
-                              return { ...f, singerColors: newColors };
-                            });
-                          }}
-                          className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
-                          title={`Singer ${i + 1}`}
-                        />
-                        <span className="text-[10px] text-zinc-500">{i + 1}</span>
-                        {form.singerColors?.[i] && (
-                          <button
-                            type="button"
-                            onClick={() => {
+                    {Array.from({ length: Math.max(8, songSingers.length) }).map((_, i) => {
+                      const singerName = songSingers[i];
+                      const label = singerName || String(i + 1);
+                      // If we have detected singers, but this slot exceeds the count (and > 8), don't render it (though math.max handles this).
+                      // We only render 8 slots if no singers detected, or slots for all detected singers up to N.
+                      if (!singerName && i >= 8) return null;
+                      
+                      return (
+                        <div key={i} className="flex flex-col items-center gap-1">
+                          <input
+                            type="color"
+                            value={form.singerColors?.[i] || '#888888'}
+                            onChange={(e) => {
                               setForm((f) => {
-                                const newColors = [...(f.singerColors || Array(8).fill(''))];
-                                newColors[i] = '';
+                                const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
+                                newColors[i] = e.target.value;
                                 return { ...f, singerColors: newColors };
                               });
                             }}
-                            className="text-[10px] text-zinc-400 hover:text-red-400"
-                            title="Reset color"
-                          >
-                            ×
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                            className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
+                            title={singerName ? `Color for ${singerName}` : `Singer ${i + 1}`}
+                          />
+                          <span className="text-[10px] text-zinc-500 max-w-[60px] truncate" title={label}>{label}</span>
+                          {form.singerColors?.[i] && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setForm((f) => {
+                                  const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
+                                  newColors[i] = '';
+                                  return { ...f, singerColors: newColors };
+                                });
+                              }}
+                              className="text-[10px] text-zinc-400 hover:text-red-400"
+                              title="Reset color"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
