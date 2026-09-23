@@ -26,7 +26,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { linesToRawText, flatToSections } from '@/features/editor/utils/sections';
 import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
 import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger } from '@ui/popover';
-import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
+// import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
 import { useNavigate } from 'react-router-dom';
 
@@ -97,6 +97,8 @@ interface EditorProps {
   // read imperatively off playerRef.getAudioBlob() at job start (see getLocalFile below).
   uploadedAudio?: UploadedAudio | null;
   hasMedia?: boolean;
+  activepublicId?: string | null;
+  onTogglePublicView?: () => void;
 }
 
 export default function Editor({
@@ -134,6 +136,8 @@ export default function Editor({
   onShowPreview,
   uploadedAudio,
   hasMedia,
+  activepublicId,
+  onTogglePublicView,
 }: EditorProps) {
   "use no memo";
   const { t } = useTranslation();
@@ -180,6 +184,7 @@ export default function Editor({
     handleSaveLineText,
     handleToggleLineMode,
     handleDeleteLine,
+    handleToggleAdLib,
     handleAddLine,
     handleDragStart,
     handleDragOver,
@@ -338,9 +343,8 @@ export default function Editor({
   const playerPosition = settings.editor?.playerPosition === 'top' ? 'top' : 'bottom';
   const playerDock = playerSlot === 'editor' ? (
     <DragPointerIsolate
-      className={`relative flex-shrink-0 border-zinc-800/50 -mx-3 sm:-mx-5 px-3 sm:px-5 ${
-        playerPosition === 'top' ? 'mb-3 border-b pb-3' : 'mt-3 border-t pt-3'
-      }`}
+      className={`relative flex-shrink-0 border-zinc-800/50 -mx-3 sm:-mx-5 px-3 sm:px-5 ${playerPosition === 'top' ? 'mb-3 border-b pb-3' : 'mt-3 border-t pt-3'
+        }`}
     >
       <PlayerControls variant="editor" youtubeAudioUrl={autoStamp.youtubeAudioUrl} />
       {(() => {
@@ -364,7 +368,7 @@ export default function Editor({
                 : editorMode === 'words'
                   ? t('editor.markInstructionWords').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Enter')
                   : t('editor.markInstruction').replace(/Space|Espacio/gi, settings.shortcuts?.mark?.[0] || 'Enter')
-              }
+            }
           </p>
         );
       })()}
@@ -489,7 +493,20 @@ export default function Editor({
                 </Button>
               </Tip>
             )}
-            
+
+            {activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && (
+              <Tip content={t('editor.viewAsPublic', 'View as public project')}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onTogglePublicView}
+                  className="size-9 rounded-full text-zinc-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                >
+                  <Icon name="public" size={18} />
+                </Button>
+              </Tip>
+            )}
+
             <Tip content={t('lyricsSearch.maintenance', 'Lyrics search is currently under maintenance.')}>
               <div className="inline-block cursor-not-allowed">
                 <Button variant="ghost" size="icon" disabled className="size-9 rounded-full text-zinc-600">
@@ -626,105 +643,106 @@ export default function Editor({
       />
 
       <div className="flex flex-col flex-1 min-h-0 min-w-0">
-      <ResponsiveModal
-        open={!syncMode}
-        onOpenChange={(open) => {
-          if (!open) {
-            window.dispatchEvent(new CustomEvent('editor:start-syncing'));
-          }
-        }}
-        title={t('editor.editRawText')}
-        dialogProps={{ className: 'max-w-3xl w-[90vw]' }}
-      >
-        <div className="h-[60vh] flex flex-col mt-2 min-h-0">
-          <EditorPasteArea
-            rawText={rawText}
-            setRawText={setRawText}
-            fileInputRef={fileInputRef}
-            handleFileUpload={handleFileUpload}
-            handleUrlImport={handleUrlImport as ComponentProps<typeof EditorPasteArea>['handleUrlImport']}
-            singers={combinedSingers}
-          />
-          <div className="flex justify-end mt-4 pt-4 border-t border-zinc-800 shrink-0">
-            <Button onClick={() => window.dispatchEvent(new CustomEvent('editor:start-syncing'))} className="font-semibold px-6 text-zinc-950 bg-primary hover:bg-primary/90">
-              {t('editor.done')}
-            </Button>
+        <ResponsiveModal
+          open={!syncMode}
+          onOpenChange={(open) => {
+            if (!open) {
+              window.dispatchEvent(new CustomEvent('editor:start-syncing'));
+            }
+          }}
+          title={t('editor.editRawText')}
+          dialogProps={{ className: 'max-w-3xl w-[90vw]' }}
+        >
+          <div className="h-[60vh] flex flex-col mt-2 min-h-0">
+            <EditorPasteArea
+              rawText={rawText}
+              setRawText={setRawText}
+              fileInputRef={fileInputRef}
+              handleFileUpload={handleFileUpload}
+              handleUrlImport={handleUrlImport as ComponentProps<typeof EditorPasteArea>['handleUrlImport']}
+              singers={combinedSingers}
+            />
+            <div className="flex justify-end mt-4 pt-4 border-t border-zinc-800 shrink-0">
+              <Button onClick={() => window.dispatchEvent(new CustomEvent('editor:start-syncing'))} className="font-semibold px-6 text-zinc-950 bg-primary hover:bg-primary/90">
+                {t('editor.done')}
+              </Button>
+            </div>
           </div>
-        </div>
-      </ResponsiveModal>
+        </ResponsiveModal>
 
-      {/* Sync Mode View */}
-      <div className="relative flex flex-col flex-1 min-h-0">
-        <TaggingToolbar
-          lines={lines}
-          setLines={setLines}
-          selectedLines={selectedLines}
-          songArtists={combinedSingers}
-          clearSelection={clearSelection as () => void}
-        />
-        <VirtualizedLineList
-          lines={lines}
-          displayedActiveIndex={displayedActiveIndex}
-          activeLineIndex={activeLineIndex}
-          isActiveLineLocked={isActiveLineLocked}
-          editorMode={editorMode}
-          awaitingEndMark={awaitingEndMark}
-          focusedTimestamp={focusedTimestamp}
-          setFocusedTimestamp={setFocusedTimestamp}
-          handleLineClick={handleLineClick}
-          handleLineHover={handleLineHover}
-          handleLineHoverEnd={handleLineHoverEnd}
-          handleDragStart={handleDragStart}
-          handleDragOver={handleDragOver}
-          handleDragEnd={handleDragEnd}
-          handleDrop={handleDrop}
-          dragOverIndex={dragOverIndex}
-          dragIndex={dragIndex}
-          projectSingers={combinedSingers}
-          singerColors={singerColors}
-          selectedLines={selectedLines}
-          settings={settings}
-          editingLineIndex={editingLineIndex}
-          setEditingLineIndex={setEditingLineIndex}
-          editingText={editingText}
-          setEditingText={setEditingText}
-          editingSecondary={editingSecondary}
-          setEditingSecondary={setEditingSecondary}
-          editingTranslations={editingTranslations as unknown[]}
-          setEditingTranslations={setEditingTranslations as (v: unknown[]) => void}
-          editingSingers={editingSingers}
-          setEditingSingers={setEditingSingers}
-          handleSaveLineText={handleSaveLineText}
-          handleInsertSection={handleInsertSection}
-          handleToggleSectionDepth={handleToggleSectionDepth}
-          handleMoveToSection={handleMoveToSection}
-          handleAssignSinger={handleAssignSinger}
-          songArtists={combinedSingers}
-          playerRef={playerRef}
-          shiftTime={shiftTimeWithConfidence}
-          handleAddLine={handleAddLine}
-          handleClearLine={handleClearLine}
-          handleDeleteLine={handleDeleteLine}
-          listRef={listRef}
-          handleMark={handleMarkWithConfidence}
-          handleToggleLine={handleToggleLine}
-          updateSetting={updateSetting}
-          activeWordIndex={activeWordIndex}
-          handleClearWordTimestamp={handleClearWordTimestamp}
-          handleSetActiveWordIndex={handleSetActiveWordIndex}
-          handleSetTimestamp={handleSetTimestampWithConfidence}
-          handleSetWordReading={handleSetWordReading}
-          handleCycleWordSinger={handleCycleWordSinger}
-          stampTarget={stampTarget}
-          handleStampTargetToggle={handleStampTargetToggle}
-          playbackPosition={playbackPosition}
-          onWordMenu={openWord}
-          onLineMenu={openLine}
-          modifiedLines={modifiedLines}
-          onToggleLineMode={handleToggleLineMode}
-          confidenceByIndex={autoStamp.confidenceByIndex}
-        />
-      </div>
+        {/* Sync Mode View */}
+        <div className="relative flex flex-col flex-1 min-h-0">
+          <TaggingToolbar
+            lines={lines}
+            setLines={setLines}
+            selectedLines={selectedLines}
+            songArtists={combinedSingers}
+            clearSelection={clearSelection as () => void}
+          />
+          <VirtualizedLineList
+            lines={lines}
+            displayedActiveIndex={displayedActiveIndex}
+            activeLineIndex={activeLineIndex}
+            isActiveLineLocked={isActiveLineLocked}
+            editorMode={editorMode}
+            awaitingEndMark={awaitingEndMark}
+            focusedTimestamp={focusedTimestamp}
+            setFocusedTimestamp={setFocusedTimestamp}
+            handleLineClick={handleLineClick}
+            handleLineHover={handleLineHover}
+            handleLineHoverEnd={handleLineHoverEnd}
+            handleDragStart={handleDragStart}
+            handleDragOver={handleDragOver}
+            handleDragEnd={handleDragEnd}
+            handleDrop={handleDrop}
+            dragOverIndex={dragOverIndex}
+            dragIndex={dragIndex}
+            projectSingers={combinedSingers}
+            singerColors={singerColors}
+            selectedLines={selectedLines}
+            settings={settings}
+            editingLineIndex={editingLineIndex}
+            setEditingLineIndex={setEditingLineIndex}
+            editingText={editingText}
+            setEditingText={setEditingText}
+            editingSecondary={editingSecondary}
+            setEditingSecondary={setEditingSecondary}
+            editingTranslations={editingTranslations as unknown[]}
+            setEditingTranslations={setEditingTranslations as (v: unknown[]) => void}
+            editingSingers={editingSingers}
+            setEditingSingers={setEditingSingers}
+            handleSaveLineText={handleSaveLineText}
+            handleInsertSection={handleInsertSection}
+            handleToggleSectionDepth={handleToggleSectionDepth}
+            handleMoveToSection={handleMoveToSection}
+            handleAssignSinger={handleAssignSinger}
+            songArtists={combinedSingers}
+            playerRef={playerRef}
+            shiftTime={shiftTimeWithConfidence}
+            handleAddLine={handleAddLine}
+            handleClearLine={handleClearLine}
+            handleDeleteLine={handleDeleteLine}
+            handleToggleAdLib={handleToggleAdLib}
+            listRef={listRef}
+            handleMark={handleMarkWithConfidence}
+            handleToggleLine={handleToggleLine}
+            updateSetting={updateSetting}
+            activeWordIndex={activeWordIndex}
+            handleClearWordTimestamp={handleClearWordTimestamp}
+            handleSetActiveWordIndex={handleSetActiveWordIndex}
+            handleSetTimestamp={handleSetTimestampWithConfidence}
+            handleSetWordReading={handleSetWordReading}
+            handleCycleWordSinger={handleCycleWordSinger}
+            stampTarget={stampTarget}
+            handleStampTargetToggle={handleStampTargetToggle}
+            playbackPosition={playbackPosition}
+            onWordMenu={openWord}
+            onLineMenu={openLine}
+            modifiedLines={modifiedLines}
+            onToggleLineMode={handleToggleLineMode}
+            confidenceByIndex={autoStamp.confidenceByIndex}
+          />
+        </div>
       </div>
 
       {playerPosition === 'bottom' && playerDock}

@@ -435,6 +435,8 @@ export function AppRouter({
     onShowPreview: handleShowPreview,
     uploadedAudio,
     hasMedia,
+    activepublicId,
+    onTogglePublicView: activepublicId ? () => navigate(`/project/${activepublicId}`) : undefined,
   } as unknown as EditorProps), [
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
@@ -452,7 +454,7 @@ export function AppRouter({
     projectMetadata,
     playerSlot,
     handleHideEditor, showPreview, handleShowPreview,
-    uploadedAudio, hasMedia,
+    uploadedAudio, hasMedia, activepublicId, navigate,
   ]);
 
   const previewProps = useMemo(() => ({
