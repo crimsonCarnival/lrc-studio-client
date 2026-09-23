@@ -17,6 +17,7 @@ import { Tip } from '@ui/tip';
 import { SharePanel } from '@features/sharing/components/ShareModal';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Icon } from '@/shared/ui/Icon';
+import { useSettings } from '@/features/settings/useSettings';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import PlayerControls from '@/features/player/components/PlayerControls';
 
@@ -60,6 +61,7 @@ export default function Preview(props: PreviewProps) {
   // Pre-split song artists (when driven by a project) — threaded into PreviewViewport
   // so its singer roster matches the editor pane. See buildSingerRoster.
   const songArtists = (props.projectMetadata as { songArtists?: string[] } | undefined)?.songArtists;
+  const { updateSetting } = useSettings();
 
   // Privacy state for sharing (default public)
   const [isPublic, setIsPublic] = useState(project?.public ?? true);
@@ -303,6 +305,41 @@ export default function Preview(props: PreviewProps) {
                   ))}
                 </div>
               )}
+
+              {/* Text orientation toggle */}
+              <div className="flex items-center bg-zinc-800/60 rounded-lg p-0.5 border border-zinc-700/40">
+                <Tip content={t('settings.interface.alignLeft', 'Align left')} side="bottom">
+                  <button
+                    type="button"
+                    onClick={() => updateSetting('interface.previewAlignment', 'left')}
+                    className={`p-1 rounded transition-colors ${(settings.interface?.previewAlignment || 'left') === 'left' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
+                    aria-label={t('settings.interface.alignLeft', 'Align left')}
+                  >
+                    <Icon name="format_align_left" size={14} />
+                  </button>
+                </Tip>
+                <Tip content={t('settings.interface.alignCenter', 'Align center')} side="bottom">
+                  <button
+                    type="button"
+                    onClick={() => updateSetting('interface.previewAlignment', 'center')}
+                    className={`p-1 rounded transition-colors ${settings.interface?.previewAlignment === 'center' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
+                    aria-label={t('settings.interface.alignCenter', 'Align center')}
+                  >
+                    <Icon name="format_align_center" size={14} />
+                  </button>
+                </Tip>
+                <Tip content={t('settings.interface.alignRight', 'Align right')} side="bottom">
+                  <button
+                    type="button"
+                    onClick={() => updateSetting('interface.previewAlignment', 'right')}
+                    className={`p-1 rounded transition-colors ${settings.interface?.previewAlignment === 'right' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
+                    aria-label={t('settings.interface.alignRight', 'Align right')}
+                  >
+                    <Icon name="format_align_right" size={14} />
+                  </button>
+                </Tip>
+              </div>
+
               <div className="relative">
                 <Tip content={t('export.title') || 'Export File'}>
                   <Button
