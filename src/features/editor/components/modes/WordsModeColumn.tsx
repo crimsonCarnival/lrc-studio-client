@@ -147,7 +147,7 @@ export function WordsModeChips({
     <div className="flex flex-col gap-1 w-full">
       {/* Word chips */}
       {stampTarget !== 'secondary' && (
-        <div className="flex flex-wrap gap-x-1 gap-y-1 w-full pr-2 min-h-[22px] items-end content-start">
+        <div className="flex flex-wrap gap-x-1.5 gap-y-1.5 w-full pr-2 min-h-[26px] items-center content-start">
           {(() => {
             let wcs = 0;
             return line.words?.map((w, wi) => {
@@ -169,7 +169,7 @@ export function WordsModeChips({
                         lineIndex={lineIndex}
                         wi={wi}
                         onClick={(e) => handleWordClick(e, w, wi)}
-                        className={`text-[11px] px-2.5 py-0.5 rounded-full border leading-none transition-all duration-200 cursor-pointer ${isActiveWord || isFocusedWord
+                        className={`text-[13px] px-3 py-1 rounded-full border leading-none font-medium transition-all duration-200 cursor-pointer ${isActiveWord || isFocusedWord
                           ? 'bg-primary text-zinc-950 border-primary ring-2 ring-primary/40 shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)] animate-pulse-glow'
                           : (w.singerIndex != null ? WORD_SINGER_CHIP[w.singerIndex % WORD_SINGER_CHIP.length].stamped : 'bg-zinc-800 border-primary/30 text-primary/70 hover:border-primary hover:bg-primary/20 hover:text-primary')
                           }`}
@@ -201,7 +201,7 @@ export function WordsModeChips({
                     <button
                       type="button"
                       onClick={(e) => handleWordClick(e, w, wi)}
-                      className={`text-[11px] px-2.5 py-0.5 rounded-full border leading-none transition-all cursor-pointer outline-none focus:ring-2 focus:ring-primary/40 ${isActiveWord || isFocusedWord
+                      className={`text-[13px] px-3 py-1 rounded-full border leading-none font-medium transition-all cursor-pointer outline-none focus:ring-2 focus:ring-primary/40 ${isActiveWord || isFocusedWord
                         ? 'bg-primary text-zinc-950 border-primary shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)] animate-pulse-glow'
                         : (w.singerIndex != null ? WORD_SINGER_CHIP[w.singerIndex % WORD_SINGER_CHIP.length].unstamped : 'bg-zinc-800/50 border-zinc-700/30 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400')
                         }`}
@@ -227,7 +227,7 @@ export function WordsModeChips({
       )}
       {/* Secondary word chips — shown only when stampTarget is 'secondary' */}
       {stampTarget === 'secondary' && hasCJK(line.text || '') && line.secondary && (
-        <div className="flex flex-wrap gap-x-1 gap-y-1 w-full pr-2 min-h-[22px] items-end content-start">
+        <div className="flex flex-wrap gap-x-1.5 gap-y-1.5 w-full pr-2 min-h-[26px] items-center content-start">
           {(() => {
             const secondaryWords: Word[] = line.secondaryWords?.length
               ? line.secondaryWords
@@ -251,7 +251,7 @@ export function WordsModeChips({
                     wi={wi}
                     isSecondary={true}
                     onClick={(e) => handleWordClick(e, w, wi, true)}
-                    className={`text-[11px] px-2.5 py-0.5 rounded-full border leading-none transition-colors cursor-pointer ${isActiveSecondaryWord || isFocusedSecondaryWord
+                    className={`text-[13px] px-3 py-1 rounded-full border leading-none font-medium transition-colors cursor-pointer ${isActiveSecondaryWord || isFocusedSecondaryWord
                       ? 'bg-accent-blue text-zinc-950 border-accent-blue ring-2 ring-accent-blue/40 shadow-[0_0_12px_rgba(var(--accent-blue-rgb),0.5)] animate-pulse-glow'
                       : 'bg-accent-blue/10 border-accent-blue/30 text-accent-blue/70 hover:bg-accent-blue/20 hover:text-accent-blue hover:border-accent-blue'
                       }`}
@@ -283,7 +283,7 @@ export function WordsModeChips({
                 <button
                   type="button"
                   onClick={(e) => handleWordClick(e, w, wi, true)}
-                  className={`text-[11px] px-2.5 py-0.5 rounded-full border leading-none transition-all cursor-pointer outline-none focus:ring-2 focus:ring-accent-blue/40 ${isActiveSecondaryWord || isFocusedSecondaryWord
+                  className={`text-[13px] px-3 py-1 rounded-full border leading-none font-medium transition-all cursor-pointer outline-none focus:ring-2 focus:ring-accent-blue/40 ${isActiveSecondaryWord || isFocusedSecondaryWord
                     ? 'bg-accent-blue text-zinc-900 border-accent-blue shadow-[0_0_12px_rgba(var(--accent-blue-rgb),0.5)] animate-pulse-glow'
                     : 'bg-zinc-800/50 border-zinc-700/30 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-400'
                     }`}

@@ -123,6 +123,8 @@ export default {
   nudgeLine: "Nudge Line ({{delta}}s)",
   nudgeWord: "Nudge Word ({{delta}}s)",
   nudgeEndTime: "Nudge End Time ({{delta}}s)",
+  markAdLib: "Mark as ad-lib",
+  unmarkAdLib: "Unmark ad-lib",
   draftSaveFailed: "Couldn't save draft locally — try a different browser or disable private mode.",
   draftExpired: "Your draft expired. Your edits are still in the editor — save again to keep them.",
   savingProject: "Saving your project…",

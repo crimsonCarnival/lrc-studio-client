@@ -359,6 +359,7 @@ export type LeaderboardUser = {
 };
 
 export type Line = {
+  adLibOf?: Maybe<Scalars['Float']['output']>;
   endTime?: Maybe<Scalars['Float']['output']>;
   id?: Maybe<Scalars['String']['output']>;
   mode?: Maybe<Scalars['String']['output']>;
@@ -373,6 +374,7 @@ export type Line = {
 };
 
 export type LineInput = {
+  adLibOf?: InputMaybe<Scalars['Float']['input']>;
   depth?: InputMaybe<Scalars['Int']['input']>;
   endTime?: InputMaybe<Scalars['Float']['input']>;
   id?: InputMaybe<Scalars['String']['input']>;

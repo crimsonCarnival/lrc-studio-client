@@ -374,6 +374,14 @@ export function useEditor({
           // Not used yet, but ready for future
         } else {
           updated[index] = { ...updated[index], timestamp: numericValue };
+          for (let j = index + 1; j < updated.length; j++) {
+            if (updated[j].type === 'section') break;
+            if (updated[j].adLibOf != null) {
+              updated[j] = { ...updated[j], adLibOf: numericValue };
+            } else {
+              break;
+            }
+          }
         }
         return updated;
       });
@@ -775,6 +783,33 @@ export function useEditor({
       setEditingLineIndex(null);
     }, { title: isSection ? t('confirm.deleteSectionTitle') : t('confirm.deleteLineTitle'), variant: 'danger' });
   };
+
+  /**
+   * Toggle adLibOf on a lyric line.
+   * If the nearest preceding timestamped non-adlib line has a timestamp,
+   * that timestamp becomes the anchor. Toggling again clears it.
+   */
+  const handleToggleAdLib = useCallback((index: number) => {
+    setLines((prev) => {
+      const line = prev[index];
+      if (!line || line.type === 'section') return prev;
+      if (line.adLibOf != null) {
+        const next = [...prev];
+        next[index] = { ...line, adLibOf: null };
+        return next;
+      }
+      let parentTs: number | null = null;
+      for (let j = index - 1; j >= 0; j--) {
+        const c = prev[j];
+        if (c.type === 'section' || c.adLibOf != null) continue;
+        parentTs = c.timestamp ?? 0;
+        break;
+      }
+      const next = [...prev];
+      next[index] = { ...line, adLibOf: parentTs ?? 0 };
+      return next;
+    });
+  }, [setLines]);
 
   const handleAddLine = useCallback(
     (index, lineData = null, { before = false } = {}) => {
@@ -1344,6 +1379,7 @@ export function useEditor({
     handleSaveLineText,
     handleToggleLineMode,
     handleDeleteLine,
+    handleToggleAdLib,
     handleAddLine,
     handleDragStart,
     handleDragOver,

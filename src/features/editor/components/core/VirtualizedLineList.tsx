@@ -75,6 +75,7 @@ interface VirtualizedLineListProps {
   modifiedLines?: Set<number>;
   onToggleLineMode?: LineItemProps['onToggleLineMode'];
   confidenceByIndex?: Map<number, ConfidenceInfo>;
+  handleToggleAdLib?: (lineIndex: number) => void;
 }
 
 export default function VirtualizedLineList({
@@ -137,6 +138,7 @@ export default function VirtualizedLineList({
   modifiedLines,
   onToggleLineMode,
   confidenceByIndex,
+  handleToggleAdLib,
 }: VirtualizedLineListProps) {
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
@@ -304,7 +306,7 @@ export default function VirtualizedLineList({
         lastTs = line.timestamp;
       }
     }
-    
+
     const singersResult: (string[] | undefined)[] = new Array(lines.length).fill(undefined);
     let currentSingers: string[] | undefined = undefined;
     for (let i = 0; i < lines.length; i++) {
@@ -320,70 +322,139 @@ export default function VirtualizedLineList({
   return (
     <div className="flex flex-col flex-1 gap-3 animate-fade-in min-h-0">
       <div className="relative flex-1 min-h-0">
-      <div
-        ref={listRef}
-        onMouseLeave={handleLineHoverEnd}
-        className="h-full overflow-y-auto pr-1 mask-edges pb-32"
-      >
         <div
-          style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}
-          className="px-1 sm:px-0"
+          ref={listRef}
+          onMouseLeave={handleLineHoverEnd}
+          className="h-full overflow-y-auto pr-1 mask-edges pb-32"
         >
-          {virtualizer.getVirtualItems().map((virtualRow) => {
-            const i = virtualRow.index;
-            const line = lines[i];
-            const isActive = i === displayedActiveIndex;
-            const isSynced = line.timestamp != null;
-            // Upcoming depth: 1-3 for the next unsynced lines after active
-            const upcomingDepth = !isSynced && i > displayedActiveIndex && i <= displayedActiveIndex + 3
-              ? i - displayedActiveIndex
-              : 0;
+          <div
+            style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}
+            className="px-1 sm:px-0"
+          >
+            {virtualizer.getVirtualItems().map((virtualRow) => {
+              const i = virtualRow.index;
+              const line = lines[i];
+              const isActive = i === displayedActiveIndex;
+              const isSynced = line.timestamp != null;
+              // Upcoming depth: 1-3 for the next unsynced lines after active
+              const upcomingDepth = !isSynced && i > displayedActiveIndex && i <= displayedActiveIndex + 3
+                ? i - displayedActiveIndex
+                : 0;
 
-            const isSection = line.type === 'section';
+              const isSection = line.type === 'section';
 
-            return (
-              <div
-                key={line.id || i}
-                data-index={i}
-                ref={isSection ? undefined : virtualizer.measureElement}
-                style={{
-                  position: 'absolute',
-                  top: isSection ? virtualRow.start : 0,
-                  bottom: isSection ? 0 : undefined,
-                  left: 0,
-                  width: '100%',
-                  transform: isSection ? undefined : `translateY(${virtualRow.start}px)`,
-                  paddingTop: dragOverIndex === i ? 52 : 0,
-                  transition: 'padding-top 0.2s ease-out',
-                  pointerEvents: isSection ? 'none' : 'auto',
-                  zIndex: isSection ? 20 + i : undefined,
-                }}
-              >
-                {isSection ? (
-                  <div
-                    ref={virtualizer.measureElement}
-                    data-index={i}
-                    style={{ position: 'sticky', top: 0, pointerEvents: 'auto' }}
-                  >
+              return (
+                <div
+                  key={line.id || i}
+                  data-index={i}
+                  ref={isSection ? undefined : virtualizer.measureElement}
+                  style={{
+                    position: 'absolute',
+                    top: isSection ? virtualRow.start : 0,
+                    bottom: isSection ? 0 : undefined,
+                    left: 0,
+                    width: '100%',
+                    transform: isSection ? undefined : `translateY(${virtualRow.start}px)`,
+                    paddingTop: dragOverIndex === i ? 52 : 0,
+                    transition: 'padding-top 0.2s ease-out',
+                    pointerEvents: isSection ? 'none' : 'auto',
+                    zIndex: isSection ? 20 + i : undefined,
+                  }}
+                >
+                  {isSection ? (
+                    <div
+                      ref={virtualizer.measureElement}
+                      data-index={i}
+                      style={{ position: 'sticky', top: 0, pointerEvents: 'auto' }}
+                    >
+                      <EditorLineItem
+                        line={line}
+                        nextTimestamp={nextTimestamps[i]}
+                        i={i}
+                        isActive={isActive}
+                        isLocked={isActiveLineLocked && i === activeLineIndex}
+                        isSynced={isSynced}
+                        activeLineRef={undefined}
+                        handleLineClick={handleLineClick}
+                        handleLineHover={handleLineHover}
+                        handleLineHoverEnd={handleLineHoverEnd}
+                        handleDragStart={handleDragStart}
+                        handleDragOver={handleDragOver}
+                        handleDragEnd={handleDragEnd}
+                        handleDrop={handleDrop}
+                        dragOverIndex={dragOverIndex}
+                        dragIndex={dragIndex}
+                        projectSingers={projectSingers}
+                        singerColors={singerColors}
+                        activeSingers={activeSingers[i]}
+                        selectedLines={selectedLines}
+                        settings={settings}
+                        editingLineIndex={editingLineIndex}
+                        setEditingLineIndex={setEditingLineIndex}
+                        editingText={editingText}
+                        setEditingText={setEditingText}
+                        editingSecondary={editingSecondary}
+                        setEditingSecondary={setEditingSecondary}
+                        editingTranslations={editingTranslations}
+                        setEditingTranslations={setEditingTranslations}
+                        editingSingers={editingSingers}
+                        setEditingSingers={setEditingSingers}
+                        handleSaveLineText={handleSaveLineText}
+                        handleInsertSection={handleInsertSection}
+                        handleMoveToSection={handleMoveToSection}
+                        handleAssignSinger={handleAssignSinger}
+                        songArtists={songArtists}
+                        playerRef={playerRef}
+                        shiftTime={shiftTime}
+                        handleAddLine={handleAddLine}
+                        handleClearLine={handleClearLine}
+                        handleDeleteLine={handleDeleteLine}
+                        handleToggleAdLib={handleToggleAdLib}
+                        handleMark={handleMark}
+                        handleToggleLine={handleToggleLine}
+                        activeWordIndex={activeWordIndex}
+                        handleClearWordTimestamp={handleClearWordTimestamp}
+                        handleSetActiveWordIndex={handleSetActiveWordIndex}
+                        handleSetTimestamp={handleSetTimestamp}
+                        setFocusedTimestamp={setFocusedTimestamp}
+                        handleSetWordReading={handleSetWordReading}
+                        handleCycleWordSinger={handleCycleWordSinger}
+                        stampTarget={stampTarget}
+                        handleStampTargetToggle={handleStampTargetToggle}
+                        playbackPosition={playbackPosition}
+                        onWordMenu={onWordMenu}
+                        onLineMenu={onLineMenu}
+                        isModified={modifiedLines?.has(i) || false}
+                        editorMode={editorMode}
+                        onToggleLineMode={onToggleLineMode}
+                        upcomingDepth={upcomingDepth}
+                      />
+                    </div>
+                  ) : (
                     <EditorLineItem
                       line={line}
                       nextTimestamp={nextTimestamps[i]}
                       i={i}
+                      displayedActiveIndex={displayedActiveIndex}
                       isActive={isActive}
                       isLocked={isActiveLineLocked && i === activeLineIndex}
                       isSynced={isSynced}
+                      editorMode={editorMode}
+                      awaitingEndMark={awaitingEndMark}
+                      focusedTimestamp={focusedTimestamp}
+                      setFocusedTimestamp={setFocusedTimestamp}
                       activeLineRef={undefined}
                       handleLineClick={handleLineClick}
                       handleLineHover={handleLineHover}
                       handleLineHoverEnd={handleLineHoverEnd}
                       handleDragStart={handleDragStart}
+                      projectSingers={projectSingers}
+                      singerColors={singerColors}
                       handleDragOver={handleDragOver}
                       handleDragEnd={handleDragEnd}
                       handleDrop={handleDrop}
                       dragOverIndex={dragOverIndex}
                       dragIndex={dragIndex}
-                      projectSingers={projectSingers}
-                      singerColors={singerColors}
                       activeSingers={activeSingers[i]}
                       selectedLines={selectedLines}
                       settings={settings}
@@ -399,7 +470,9 @@ export default function VirtualizedLineList({
                       setEditingSingers={setEditingSingers}
                       handleSaveLineText={handleSaveLineText}
                       handleInsertSection={handleInsertSection}
+                      onToggleDepth={handleToggleSectionDepth}
                       handleMoveToSection={handleMoveToSection}
+                      sectionLines={lines}
                       handleAssignSinger={handleAssignSinger}
                       songArtists={songArtists}
                       playerRef={playerRef}
@@ -407,100 +480,31 @@ export default function VirtualizedLineList({
                       handleAddLine={handleAddLine}
                       handleClearLine={handleClearLine}
                       handleDeleteLine={handleDeleteLine}
-                      handleMark={handleMark}
+                      handleToggleAdLib={handleToggleAdLib}
                       handleToggleLine={handleToggleLine}
-                      activeWordIndex={activeWordIndex}
+                      handleMark={handleMark}
+                      activeWordIndex={i === activeLineIndex ? activeWordIndex : -1}
                       handleClearWordTimestamp={handleClearWordTimestamp}
                       handleSetActiveWordIndex={handleSetActiveWordIndex}
                       handleSetTimestamp={handleSetTimestamp}
-                      setFocusedTimestamp={setFocusedTimestamp}
                       handleSetWordReading={handleSetWordReading}
                       handleCycleWordSinger={handleCycleWordSinger}
-                      stampTarget={stampTarget}
+                      stampTarget={i === activeLineIndex ? stampTarget : 'main'}
                       handleStampTargetToggle={handleStampTargetToggle}
-                      playbackPosition={playbackPosition}
+                      playbackPosition={isActive ? playbackPosition : null}
+                      upcomingDepth={upcomingDepth}
                       onWordMenu={onWordMenu}
                       onLineMenu={onLineMenu}
-                      isModified={modifiedLines?.has(i) || false}
-                      editorMode={editorMode}
+                      isModified={modifiedLines?.has(i)}
                       onToggleLineMode={onToggleLineMode}
-                      upcomingDepth={upcomingDepth}
+                      confidenceInfo={confidenceByIndex?.get(i)}
                     />
-                  </div>
-                ) : (
-                  <EditorLineItem
-                    line={line}
-                  nextTimestamp={nextTimestamps[i]}
-                  i={i}
-                  displayedActiveIndex={displayedActiveIndex}
-                  isActive={isActive}
-                  isLocked={isActiveLineLocked && i === activeLineIndex}
-                  isSynced={isSynced}
-                  editorMode={editorMode}
-                  awaitingEndMark={awaitingEndMark}
-                  focusedTimestamp={focusedTimestamp}
-                  setFocusedTimestamp={setFocusedTimestamp}
-                  activeLineRef={undefined}
-                  handleLineClick={handleLineClick}
-                  handleLineHover={handleLineHover}
-                  handleLineHoverEnd={handleLineHoverEnd}
-                  handleDragStart={handleDragStart}
-                  projectSingers={projectSingers}
-                  singerColors={singerColors}
-                  handleDragOver={handleDragOver}
-                  handleDragEnd={handleDragEnd}
-                  handleDrop={handleDrop}
-                  dragOverIndex={dragOverIndex}
-                  dragIndex={dragIndex}
-                  activeSingers={activeSingers[i]}
-                  selectedLines={selectedLines}
-                  settings={settings}
-                  editingLineIndex={editingLineIndex}
-                  setEditingLineIndex={setEditingLineIndex}
-                  editingText={editingText}
-                  setEditingText={setEditingText}
-                  editingSecondary={editingSecondary}
-                  setEditingSecondary={setEditingSecondary}
-                  editingTranslations={editingTranslations}
-                  setEditingTranslations={setEditingTranslations}
-                  editingSingers={editingSingers}
-                  setEditingSingers={setEditingSingers}
-                  handleSaveLineText={handleSaveLineText}
-                  handleInsertSection={handleInsertSection}
-                  onToggleDepth={handleToggleSectionDepth}
-                  handleMoveToSection={handleMoveToSection}
-                  sectionLines={lines}
-                  handleAssignSinger={handleAssignSinger}
-                  songArtists={songArtists}
-                  playerRef={playerRef}
-                  shiftTime={shiftTime}
-                  handleAddLine={handleAddLine}
-                  handleClearLine={handleClearLine}
-                  handleDeleteLine={handleDeleteLine}
-                  handleToggleLine={handleToggleLine}
-                  handleMark={handleMark}
-                  activeWordIndex={i === activeLineIndex ? activeWordIndex : -1}
-                  handleClearWordTimestamp={handleClearWordTimestamp}
-                  handleSetActiveWordIndex={handleSetActiveWordIndex}
-                  handleSetTimestamp={handleSetTimestamp}
-                  handleSetWordReading={handleSetWordReading}
-                  handleCycleWordSinger={handleCycleWordSinger}
-                  stampTarget={i === activeLineIndex ? stampTarget : 'main'}
-                  handleStampTargetToggle={handleStampTargetToggle}
-                  playbackPosition={isActive ? playbackPosition : null}
-                  upcomingDepth={upcomingDepth}
-                  onWordMenu={onWordMenu}
-                  onLineMenu={onLineMenu}
-                  isModified={modifiedLines?.has(i)}
-                  onToggleLineMode={onToggleLineMode}
-                  confidenceInfo={confidenceByIndex?.get(i)}
-                />
-                )}
-              </div>
-            );
-          })}
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
         <ScrollProgress containerRef={listRef} className="absolute bottom-0 inset-x-0 h-[2px]" />
       </div>
 

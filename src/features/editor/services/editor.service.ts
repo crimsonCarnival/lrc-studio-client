@@ -31,6 +31,8 @@ export interface EditorLine {
   /** Tracks whether this line's timestamp was set by ASR ('asr') or manually ('manual').
    *  null = legacy/unknown lines (treated as manual). Cleared when timestamp is removed. */
   source?: 'manual' | 'asr' | null;
+  /** When non-null, this line is an ad-lib overlapping the parent line at timestamp=adLibOf. */
+  adLibOf?: number | null;
   // Lines carry other presentation fields preserved across spreads.
   [key: string]: unknown;
 }
@@ -59,6 +61,7 @@ interface EditorSettings {
 interface FocusedTimestamp {
   lineIndex: number;
   type: string;
+  wordIndex?: number;
 }
 
 interface ApplyMarkParams {
@@ -221,13 +224,32 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
     const updated = [...lines];
     const line = updated[focusedTimestamp.lineIndex];
     if (line) {
-      updated[focusedTimestamp.lineIndex] = {
-        ...line,
-        source: 'manual',
-        ...(focusedTimestamp.type === 'start'
-          ? { timestamp: time }
-          : { endTime: Math.max(line.timestamp ?? 0, time) }),
-      };
+      if (focusedTimestamp.type === 'word' || focusedTimestamp.type === 'secondaryWord') {
+        const wordField = focusedTimestamp.type === 'secondaryWord' ? 'secondaryWords' : 'words';
+        const words = (line[wordField] as EditorWord[] | undefined) || [];
+        const wi = focusedTimestamp.wordIndex ?? 0;
+        if (wi >= 0 && wi < words.length) {
+          const newWords = [...words];
+          newWords[wi] = { ...newWords[wi], time };
+          updated[focusedTimestamp.lineIndex] = { ...line, source: 'manual', [wordField]: newWords };
+
+          const nextWordIdx = wi + 1;
+          if (nextWordIdx < words.length) {
+            return { nextLines: updated, nextActiveLineIndex: null, nextAwaitingEndMark: null, nextActiveWordIndex: nextWordIdx };
+          } else {
+            const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, focusedTimestamp.lineIndex, skipBlank, advanceMode) : null;
+            return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
+          }
+        }
+      } else {
+        updated[focusedTimestamp.lineIndex] = {
+          ...line,
+          source: 'manual',
+          ...(focusedTimestamp.type === 'start'
+            ? { timestamp: time }
+            : { endTime: Math.max(line.timestamp ?? 0, time) }),
+        };
+      }
     }
     return { nextLines: updated, nextActiveLineIndex: null, nextAwaitingEndMark: undefined };
   }
@@ -346,6 +368,16 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
   // LRC mode
   let updated = [...lines];
   updated[activeLineIndex] = { ...updated[activeLineIndex], timestamp: time, source: 'manual' };
+  if (updated[activeLineIndex].adLibOf == null) {
+    for (let j = activeLineIndex + 1; j < updated.length; j++) {
+      if (updated[j].type === 'section') break;
+      if (updated[j].adLibOf != null) {
+        updated[j] = { ...updated[j], adLibOf: time };
+      } else {
+        break;
+      }
+    }
+  }
 
   if (skipBlank) {
     const result = stampBlanks(updated, activeLineIndex, time, false);

@@ -26,6 +26,7 @@ interface ToolbarLine {
 interface FocusedTimestamp {
   lineIndex: number;
   type: string;
+  wordIndex?: number;
 }
 
 interface PlayerHandle {
@@ -107,14 +108,27 @@ const LineActionToolbar = memo(({
       {isActive && editingLineIndex !== lineIndex && (
         <Tip content={(() => {
           if (editorMode !== 'words' || line.timestamp == null) return t('editor.mark');
-          if (stampTarget === 'secondary') {
+          const isFocusedOnLineWord = focusedTimestamp?.lineIndex === lineIndex &&
+            (focusedTimestamp.type === 'word' || focusedTimestamp.type === 'secondaryWord') &&
+            focusedTimestamp.wordIndex != null;
+
+          const isSecondary = (isFocusedOnLineWord && focusedTimestamp.type === 'secondaryWord') ||
+            (!isFocusedOnLineWord && stampTarget === 'secondary');
+
+          const targetIdx = isFocusedOnLineWord
+            ? focusedTimestamp.wordIndex!
+            : (activeWordIndex >= 0 ? activeWordIndex : 0);
+
+          if (isSecondary) {
             const secWords = line.secondaryWords ?? (line.secondary?.trim().split(/\s+/).flatMap(w => w ? [{ word: w }] : []) ?? []);
-            const word = secWords[Math.max(0, Math.min(activeWordIndex, secWords.length - 1))]?.word || 'word';
-            return t('editor.stampWordTip', { word, current: Math.max(0, activeWordIndex), total: secWords.length });
+            const curIdx = Math.max(0, Math.min(targetIdx, Math.max(0, secWords.length - 1)));
+            const word = secWords[curIdx]?.word || 'word';
+            return t('editor.stampWordTip', { word, current: secWords.length ? curIdx + 1 : 0, total: secWords.length });
           }
           const priWords = line.words ?? [];
-          const word = priWords[Math.max(0, Math.min(activeWordIndex, priWords.length - 1))]?.word || 'word';
-          return t('editor.stampWordTip', { word, current: Math.max(0, activeWordIndex), total: priWords.length });
+          const curIdx = Math.max(0, Math.min(targetIdx, Math.max(0, priWords.length - 1)));
+          const word = priWords[curIdx]?.word || 'word';
+          return t('editor.stampWordTip', { word, current: priWords.length ? curIdx + 1 : 0, total: priWords.length });
         })()}>
           <Button
             size="icon-sm"
@@ -156,40 +170,66 @@ const LineActionToolbar = memo(({
 
             {selectedLines.size === 0 && (
               <>
-                <Tip content={(() => {
-                  const nudgeVal = settings.editor?.nudge?.default || 0.1;
-                  if (focusedTimestamp?.lineIndex === lineIndex) {
-                    if (editorMode === 'words' && (focusedTimestamp.type === 'word' || focusedTimestamp.type === 'secondaryWord')) return t('editor.nudgeWord', { delta: `-${nudgeVal}` });
-                    if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return t('editor.nudgeEndTime', { delta: `-${nudgeVal}` });
-                  }
-                  return t('editor.nudgeLine', { delta: `-${nudgeVal}` });
-                })()}>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={(e) => { e.stopPropagation(); shiftTime(lineIndex, -(settings.editor?.nudge?.default || 0.1)); }}
-                    className={`transition-colors ${focusedTimestamp?.lineIndex === lineIndex ? 'text-primary hover:text-primary-dim hover:bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60'}`}
-                  >
-                    <Icon name="chevron_left" size={16} />
-                  </Button>
-                </Tip>
-                <Tip content={(() => {
-                  const nudgeVal = settings.editor?.nudge?.default || 0.1;
-                  if (focusedTimestamp?.lineIndex === lineIndex) {
-                    if (editorMode === 'words' && (focusedTimestamp.type === 'word' || focusedTimestamp.type === 'secondaryWord')) return t('editor.nudgeWord', { delta: `+${nudgeVal}` });
-                    if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return t('editor.nudgeEndTime', { delta: `+${nudgeVal}` });
-                  }
-                  return t('editor.nudgeLine', { delta: `+${nudgeVal}` });
-                })()}>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={(e) => { e.stopPropagation(); shiftTime(lineIndex, settings.editor?.nudge?.default || 0.1); }}
-                    className={`transition-colors ${focusedTimestamp?.lineIndex === lineIndex ? 'text-primary hover:text-primary-dim hover:bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60'}`}
-                  >
-                    <Icon name="chevron_right" size={16} />
-                  </Button>
-                </Tip>
+                {editorMode !== 'words' && (
+                  <>
+                    <Tip content={(() => {
+                      const nudgeVal = settings.editor?.nudge?.default || 0.1;
+                      if (focusedTimestamp?.lineIndex === lineIndex) {
+                        if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return t('editor.nudgeEndTime', { delta: `-${nudgeVal}` });
+                      }
+                      return t('editor.nudgeLine', { delta: `-${nudgeVal}` });
+                    })()}>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={(e) => { e.stopPropagation(); shiftTime(lineIndex, -(settings.editor?.nudge?.default || 0.1)); }}
+                        className={`transition-colors ${focusedTimestamp?.lineIndex === lineIndex ? 'text-primary hover:text-primary-dim hover:bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60'}`}
+                      >
+                        <Icon name="chevron_left" size={16} />
+                      </Button>
+                    </Tip>
+                    <Tip content={(() => {
+                      const nudgeVal = settings.editor?.nudge?.default || 0.1;
+                      if (focusedTimestamp?.lineIndex === lineIndex) {
+                        if ((editorMode === 'srt' || editorMode === 'words') && focusedTimestamp.type === 'end') return t('editor.nudgeEndTime', { delta: `+${nudgeVal}` });
+                      }
+                      return t('editor.nudgeLine', { delta: `+${nudgeVal}` });
+                    })()}>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={(e) => { e.stopPropagation(); shiftTime(lineIndex, settings.editor?.nudge?.default || 0.1); }}
+                        className={`transition-colors ${focusedTimestamp?.lineIndex === lineIndex ? 'text-primary hover:text-primary-dim hover:bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/60'}`}
+                      >
+                        <Icon name="chevron_right" size={16} />
+                      </Button>
+                    </Tip>
+                  </>
+                )}
+                {editorMode === 'words' && (line.words?.some(w => w.time != null) || line.secondaryWords?.some(w => w.time != null)) && (
+                  <>
+                    <Tip content={t('editor.nudgeWord', { delta: `-${settings.editor?.nudge?.fine || 0.01}` })}>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={(e) => { e.stopPropagation(); shiftTime(lineIndex, -(settings.editor?.nudge?.fine || 0.01)); }}
+                        className="text-primary/70 hover:text-primary hover:bg-primary/10 transition-colors"
+                      >
+                        <Icon name="keyboard_double_arrow_left" size={16} />
+                      </Button>
+                    </Tip>
+                    <Tip content={t('editor.nudgeWord', { delta: `+${settings.editor?.nudge?.fine || 0.01}` })}>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={(e) => { e.stopPropagation(); shiftTime(lineIndex, settings.editor?.nudge?.fine || 0.01); }}
+                        className="text-primary/70 hover:text-primary hover:bg-primary/10 transition-colors"
+                      >
+                        <Icon name="keyboard_double_arrow_right" size={16} />
+                      </Button>
+                    </Tip>
+                  </>
+                )}
                 <div className="w-px h-4 bg-zinc-700/50 mx-0.5" />
                 <Tip content={t('editor.addLine')}>
                   <Button

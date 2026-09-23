@@ -124,6 +124,7 @@ const GET_PROJECT = /* GraphQL */ `
             text
             timestamp
             endTime
+            adLibOf
             secondary
             singers
             mode
@@ -236,6 +237,7 @@ const GET_SHARE = /* GraphQL */ `
             text
             timestamp
             endTime
+            adLibOf
             secondary
             singers
             mode

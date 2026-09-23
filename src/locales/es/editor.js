@@ -126,6 +126,8 @@ export default {
   nudgeLine: "Ajustar línea ({{delta}}s)",
   nudgeWord: "Ajustar palabra ({{delta}}s)",
   nudgeEndTime: "Ajustar tiempo final ({{delta}}s)",
+  markAdLib: "Marcar como ad-lib",
+  unmarkAdLib: "Desmarcar ad-lib",
   draftSaveFailed: "No se pudo guardar el borrador localmente — intenta con otro navegador o desactiva el modo privado.",
   draftExpired: "Tu borrador expiró. Tus ediciones siguen en el editor — guarda nuevamente para conservarlos.",
   savingProject: "Guardando tu proyecto…",

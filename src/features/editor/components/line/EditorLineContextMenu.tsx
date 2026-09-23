@@ -29,6 +29,7 @@ interface Props {
   onToggleDepth?: (i: number) => void;
   handleAssignSinger?: (name: string, indices: number[], slot: number) => void;
   songArtists?: string[];
+  handleToggleAdLib?: (lineIndex: number) => void;
 }
 
 export function EditorLineContextMenu({
@@ -46,6 +47,7 @@ export function EditorLineContextMenu({
   onToggleDepth,
   handleAssignSinger,
   songArtists,
+  handleToggleAdLib,
 }: Props) {
   const { t } = useTranslation();
 
@@ -216,6 +218,12 @@ export function EditorLineContextMenu({
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>
+        )}
+        {handleToggleAdLib && (
+          <ContextMenuItem onClick={() => handleToggleAdLib(lineIndex)}>
+            <Icon name="queue_music" />
+            {line.adLibOf != null ? t('editor.unmarkAdLib') : t('editor.markAdLib')}
+          </ContextMenuItem>
         )}
         <ContextMenuSeparator />
         <ContextMenuItem variant="destructive" onClick={() => handleDeleteLine(lineIndex)}>

@@ -129,17 +129,15 @@ export default function PreviewViewport({
 
   // Pre-compute nextTimestamp for karaoke fill — O(n) backward pass
   const nextTimestamps = useMemo(() => {
-    const result: Record<number, number> = {};
+    const arr: (number | null)[] = new Array(lines.length).fill(null);
     let nextTs: number | null = null;
-    for (let idx = lines.length - 1; idx >= 0; idx--) {
-      if (lines[idx].timestamp != null) {
-        nextTs = lines[idx].timestamp!;
-      }
-      if (idx < lines.length - 1 && nextTs != null) {
-        result[idx] = nextTs;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      arr[i] = nextTs;
+      if (lines[i].timestamp != null && lines[i].adLibOf == null) {
+        nextTs = lines[i].timestamp!;
       }
     }
-    return result;
+    return arr;
   }, [lines]);
 
   // #6: hide unsynced section groups from the normal preview. A "group" is a section
@@ -254,6 +252,7 @@ export default function PreviewViewport({
             <PreviewLine
               key={i}
               line={{ ...line, nextTimestamp: nextTimestamps[i] ?? null }}
+              nextTimestamp={nextTimestamps[i] ?? null}
               originalIndex={i}
               hasMultipleSingers={hasMultipleSingers}
               sectionNumbers={sectionNumbers}
@@ -319,6 +318,7 @@ export default function PreviewViewport({
               >
                 <PreviewLine
                   line={{ ...line, nextTimestamp: nextTimestamps[i] ?? null }}
+                  nextTimestamp={nextTimestamps[i] ?? null}
                   originalIndex={i}
                   prevLine={i > 0 ? lines[i - 1] : null}
                   hasMultipleSingers={hasMultipleSingers}

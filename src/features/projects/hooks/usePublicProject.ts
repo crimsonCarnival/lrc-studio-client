@@ -6,7 +6,7 @@ const GET_PUBLIC_PROJECT = /* GraphQL */ `
   query GetPublicProject($publicId: String!) {
     publicProject(publicId: $publicId) {
       id publicId title coverImage
-      metadata { description genre tags songName songArtist songAlbum songYear songLanguage trackNumber trackCount }
+      metadata { description genre tags songName songArtist songAlbum songYear songLanguage trackNumber trackCount singerColors }
       upload { id source uploadUrl duration coverImage }
       user { id accountName displayName avatarUrl }
       lyrics {
@@ -17,6 +17,7 @@ const GET_PUBLIC_PROJECT = /* GraphQL */ `
             id text timestamp endTime secondary translation
             singers
             mode
+            adLibOf
             words { word time reading singerIndex }
             secondaryWords { word time singerIndex }
           }
