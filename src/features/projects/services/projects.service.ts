@@ -18,6 +18,7 @@ const GET_PROJECTS = /* GraphQL */ `
         publicId
         userId
         accountName
+        sourceDeleted
       }
       forkCount
       starCount
@@ -76,6 +77,7 @@ const GET_PROJECT = /* GraphQL */ `
         publicId
         userId
         accountName
+        sourceDeleted
       }
       state {
         syncMode
@@ -187,6 +189,7 @@ const GET_SHARE = /* GraphQL */ `
         publicId
         userId
         accountName
+        sourceDeleted
       }
       forkCount
       starCount

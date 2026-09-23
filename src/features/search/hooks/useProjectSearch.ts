@@ -16,6 +16,7 @@ const SEARCH_QUERY = /* GraphQL */ `
         forkedFrom {
           publicId
           accountName
+          sourceDeleted
         }
         metadata {
           songName

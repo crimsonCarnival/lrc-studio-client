@@ -22,7 +22,7 @@ interface MetaProject {
   starCount?: number;
   forkCount?: number;
   user?: { accountName?: string; displayName?: string };
-  forkedFrom?: { publicId?: string; accountName?: string };
+  forkedFrom?: { publicId?: string; accountName?: string; sourceDeleted?: boolean };
 }
 
 interface ProjectMetaBlockProps {
@@ -101,14 +101,25 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
 
           {/* Forked-from */}
           {project.forkedFrom?.publicId && (
-            <Link
-              to={`/project/${project.forkedFrom.publicId}`}
-              className="inline-flex items-center gap-1 text-xs text-accent-blue hover:underline w-fit"
-            >
-              <Icon name="open_in_new" size={12} />
-              {t('projectView.forkedFrom')}
-              {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
-            </Link>
+            project.forkedFrom.sourceDeleted ? (
+              <span
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground w-fit"
+                title={t('projectView.forkedFromSourceDeleted')}
+              >
+                <Icon name="open_in_new" size={12} />
+                {t('projectView.forkedFrom')}
+                {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
+              </span>
+            ) : (
+              <Link
+                to={`/project/${project.forkedFrom.publicId}`}
+                className="inline-flex items-center gap-1 text-xs text-accent-blue hover:underline w-fit"
+              >
+                <Icon name="open_in_new" size={12} />
+                {t('projectView.forkedFrom')}
+                {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
+              </Link>
+            )
           )}
 
           {/* Description */}

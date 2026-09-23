@@ -37,7 +37,7 @@ interface ProjectData {
   forkCount?: number;
   viewCount?: number;
   shareCount?: number;
-  forkedFrom?: { publicId?: string; accountName?: string };
+  forkedFrom?: { publicId?: string; accountName?: string; sourceDeleted?: boolean };
   [key: string]: unknown;
 }
 
@@ -285,15 +285,26 @@ export default function ProjectInfoPanel({
 
         {/* Forked-from */}
         {project?.forkedFrom?.publicId && (
-          <Link
-            to={`/project/${project.forkedFrom.publicId}`}
-            className="inline-flex items-center gap-1 text-xs hover:underline w-fit"
-            style={{ color: palette?.accent ?? 'hsl(var(--accent-blue))' }}
-          >
-            <Icon name="open_in_new" size={12} />
-            {t('projectView.forkedFrom')}
-            {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
-          </Link>
+          project.forkedFrom.sourceDeleted ? (
+            <span
+              className="inline-flex items-center gap-1 text-xs w-fit text-muted-foreground"
+              title={t('projectView.forkedFromSourceDeleted')}
+            >
+              <Icon name="open_in_new" size={12} />
+              {t('projectView.forkedFrom')}
+              {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
+            </span>
+          ) : (
+            <Link
+              to={`/project/${project.forkedFrom.publicId}`}
+              className="inline-flex items-center gap-1 text-xs hover:underline w-fit"
+              style={{ color: palette?.accent ?? 'hsl(var(--accent-blue))' }}
+            >
+              <Icon name="open_in_new" size={12} />
+              {t('projectView.forkedFrom')}
+              {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
+            </Link>
+          )
         )}
 
         {/* Description */}

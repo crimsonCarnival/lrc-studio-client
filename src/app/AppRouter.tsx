@@ -17,6 +17,7 @@ import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
+import { isApiError } from '@/types';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
 const PreviewLazy = lazy(() => import('@features/preview/components/Preview'));
@@ -252,10 +253,16 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
           });
         })
         .catch((err) => {
+          const code = isApiError(err) ? err.graphqlErrors?.[0]?.extensions?.code : undefined;
+          const key = code === 'already_forked' ? 'project.cloneAlreadyForked'
+            : code === 'forks_disabled' ? 'project.cloneForksDisabled'
+            : code === 'quota_exceeded' ? 'project.cloneQuotaExceeded'
+            : code === 'not_found' ? 'project.cloneNotFound'
+            : 'project.cloneFailed';
           console.error('Failed to clone project:', err);
           navigate('/library');
           import('react-hot-toast').then(({ default: toast }) => {
-            toast.error(t('project.cloneFailed') || 'Failed to copy project');
+            toast.error(t(key));
           });
         });
     });

@@ -12,7 +12,7 @@ const HEADER_SEARCH_QUERY = /* GraphQL */ `
         coverImage
         starCount
         forkCount
-        forkedFrom { publicId accountName }
+        forkedFrom { publicId accountName sourceDeleted }
         metadata { songName songArtist }
       }
       total

@@ -10,6 +10,7 @@ export default {
   ctaGuest: "Fork and edit this project by signing up for free.",
   ctaAuth: "Like this project? Fork it to make your own version.",
   forkedFrom: "Forked from",
+  forkedFromSourceDeleted: "Original project no longer available",
   singers: "Singers",
   showMore: "Show more",
   showLess: "Show less",

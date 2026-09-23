@@ -10,6 +10,7 @@ export default {
   ctaGuest: "Regístrate gratis y haz tu propia versión de este proyecto.",
   ctaAuth: "¿Te gusta este proyecto? Copia y edita tu propia versión.",
   forkedFrom: "Copiado de",
+  forkedFromSourceDeleted: "El proyecto original ya no está disponible",
   singers: "Cantantes",
   showMore: "Mostrar más",
   showLess: "Mostrar menos",
