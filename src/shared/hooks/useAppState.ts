@@ -745,6 +745,9 @@ export function useAppState(user?: AuthUserType | null) {
 
 
   const hasUnsavedChanges = useCallback(() => {
+    // Only editor routes (local, new, or edit) can have unsaved changes
+    if (!window.location.pathname.match(/^\/project\/(local|new|[^/]+\/edit)$/)) return false;
+
     // Unsaved local project with actual content
     if (!activepublicId && lines.length > 0) return true;
 
