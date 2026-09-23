@@ -8,6 +8,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
 import { NotificationText, NotificationAvatar, notificationDestination, type NotificationData } from './components/NotificationItem';
 import { appNavigate } from '@/app/navigation';
+import { Icon } from '@/shared/ui/Icon';
 
 // Push events that warrant an on-screen toast. Sticky/system notifications
 // (verify_email, set_password, etc.) arrive on the same channel but should not
@@ -44,7 +45,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   // updater. That nesting was the off-by-two bug: React StrictMode double-invokes
   // updater functions, so the nested setUnreadCount fired twice per dismiss.
   const notificationsRef = useRef<AppNotification[]>([]);
-  useEffect(() => { notificationsRef.current = notifications; }, [notifications]);
+  useEffect(() => {
+    notificationsRef.current = notifications;
+  }, [notifications]);
 
   useEffect(() => {
     if (!user || fetchedRef.current) return;
@@ -54,33 +57,18 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         const data = raw as { notifications?: AppNotification[]; unreadCount?: number };
         const notifs = data.notifications || [];
 
-        // Collect unread badge catch-up notifications before setting state.
-        // Mark them read immediately so they don't re-toast on every subsequent sign-in.
-        const catchUpIds: string[] = [];
+        setNotifications(notifs);
+        setUnreadCount(data.unreadCount ?? notifs.filter(n => !n.read).length);
+
+        // Show toasts for unread badge_awarded notifications that haven't been toasted this session yet
         for (const n of notifs) {
           const notif = n as unknown as NotificationData;
-          if (notif.type === 'badge_awarded' && !notif.read && notif.body) {
-            catchUpIds.push(n._id);
-          }
-        }
-
-        const processedNotifs = catchUpIds.length > 0
-          ? notifs.map(n => catchUpIds.includes(n._id) ? { ...n, read: true } : n)
-          : notifs;
-
-        setNotifications(processedNotifs);
-        setUnreadCount(Math.max(0, (data.unreadCount || 0) - catchUpIds.length));
-
-        if (catchUpIds.length > 0) {
-          request('/notifications/read', { method: 'POST', body: JSON.stringify({ ids: catchUpIds }) }).catch(() => {});
-        }
-
-        // Show toasts for missed badge_awarded notifications (e.g. awarded during registration
-        // before the socket connected). Shown once — they are now marked read above.
-        for (const n of notifs) {
-          const notif = n as unknown as NotificationData;
-          if (!catchUpIds.includes(n._id)) continue;
+          if (notif.type !== 'badge_awarded' || notif.read || !notif.body) continue;
           const badgeId = notif.body as string;
+          const toastKey = `toasted_badge_${badgeId}`;
+          if (sessionStorage.getItem(toastKey)) continue;
+          sessionStorage.setItem(toastKey, '1');
+
           const def = (BADGE_REGISTRY as Record<string, { label?: string } | undefined>)[badgeId];
           const label = def?.label ?? badgeId;
           toast(
@@ -89,7 +77,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
                 className="flex items-center gap-3 cursor-pointer select-none"
                 onClick={() => toast.dismiss(item.id)}
               >
-                <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-lg shrink-0">🏅</div>
+                <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-lg shrink-0">
+                  <Icon name="military_tech" size={20} className="text-amber-400" />
+                </div>
                 <div>
                   <p className="text-xs font-bold text-foreground leading-tight">{t('notifications.badgeUnlocked')}</p>
                   <p className="text-xs text-muted-foreground leading-tight">{label}</p>
@@ -129,13 +119,19 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       setNotifications(prev => {
         const idx = prev.findIndex(n => n._id === notification._id);
         if (idx >= 0) {
+          const prevNotif = prev[idx];
+          if (prevNotif.read && !notification.read) {
+            setUnreadCount(c => c + 1);
+          }
           const next = [...prev];
           next[idx] = notification;
           return next;
         }
+        if (!notification.read) {
+          setUnreadCount(c => c + 1);
+        }
         return [notification, ...prev];
       });
-      if (!notification.read) setUnreadCount(c => c + 1);
 
       // Surface social actions (star/fork/follow/reaction) as a transient toast,
       // mirroring the panel row. Without this, real-time pushes only bumped the
