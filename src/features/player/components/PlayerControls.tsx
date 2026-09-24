@@ -501,6 +501,41 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
               {/* ── Right Section: Actions, Loop ── */}
               <div className="flex-1 min-w-0 flex items-center justify-end gap-2 sm:gap-3">
 
+                {/* A-B Loop: repeat the active line, or clear an active loop */}
+                {!viewerMode && (
+                  <Tip content={loopA != null && loopB != null ? t('player.clearLoop') : t('player.setLoop')}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        if (loopA != null && loopB != null) {
+                          clearLoop();
+                          return;
+                        }
+                        if (!lines?.length) return;
+                        let activeIdx = -1;
+                        for (let i = 0; i < lines.length; i++) {
+                          if (lines[i].timestamp != null && lines[i].timestamp! <= currentTime) activeIdx = i;
+                        }
+                        if (activeIdx < 0) return;
+                        const a = lines[activeIdx].timestamp ?? null;
+                        let b: number | null = lines[activeIdx].endTime ?? null;
+                        if (b == null) {
+                          b = duration;
+                          for (let i = activeIdx + 1; i < lines.length; i++) {
+                            if (lines[i].timestamp != null) { b = lines[i].timestamp ?? null; break; }
+                          }
+                        }
+                        if (a != null && b != null) setLoop({ a, b });
+                      }}
+                      aria-pressed={loopA != null && loopB != null}
+                      className={`shrink-0 ${FOCUS_RING} flex items-center gap-1.5 ${loopA != null && loopB != null ? 'text-accent-purple bg-accent-purple/10 hover:bg-accent-purple/20' : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60'}`}
+                    >
+                      <Icon name="repeat" size={16} />
+                    </Button>
+                  </Tip>
+                )}
+
                 {/* Change Media */}
                 {hasMedia && !viewerMode && (
                   <Popover onOpenChange={(open) => { if (open) fetchUploads(); }}>
