@@ -448,7 +448,7 @@ export default function ProfilePage() {
                 const tAny = t as (k: string, opts?: object) => string;
                 let label = tAny(`profile.publicTabs.${tab}`);
                 if (tab === 'projects') label = tAny('profile.publicTabs.projectsWithCount', { defaultValue: `Projects ${profile.projectCount}`, count: profile.projectCount });
-                if (tab === 'playlists') label = tAny('profile.publicTabs.playlistsWithCount', { defaultValue: `Playlists 0`, count: 0 });
+                if (tab === 'playlists') label = tAny('profile.publicTabs.playlistsWithCount', { defaultValue: `Playlists ${profile.playlistCount}`, count: profile.playlistCount });
                 
                 return (
                   <button

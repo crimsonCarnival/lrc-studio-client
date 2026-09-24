@@ -5,7 +5,7 @@ const GET_PUBLIC_PROFILE = /* GraphQL */ `
   query GetPublicProfile($accountName: String!) {
     publicProfile(accountName: $accountName) {
       id accountName displayName avatarUrl bio isVerified isAdmin createdAt
-      projectCount totalStarsReceived totalForksReceived
+      projectCount playlistCount totalStarsReceived totalForksReceived
       followerCount followingCount isFollowedByMe isFollowingMe isBlockedByMe showFollowers
       badges { id grantedAt }
       progression { xp level }

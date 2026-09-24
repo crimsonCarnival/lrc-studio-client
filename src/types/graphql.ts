@@ -809,6 +809,7 @@ export type PublicUser = {
   isVerified: Scalars['Boolean']['output'];
   lastOnlineAt?: Maybe<Scalars['String']['output']>;
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
+  playlistCount: Scalars['Int']['output'];
   progression?: Maybe<UserProgression>;
   projectCount: Scalars['Int']['output'];
   projects: Array<Project>;
