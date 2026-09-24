@@ -1,0 +1,67 @@
+export default {
+  title: "User Guide",
+  subtitle: "Everything you need to sync, publish and share lyrics in LRC Studio.",
+  backToEditor: "Back to editor",
+  nav: {
+    sync: "Syncing",
+    player: "Player controls",
+    saveUndo: "Save & undo",
+    sections: "Sections & singers",
+    preview: "Live preview",
+    furigana: "Japanese & furigana",
+    share: "Share & export",
+    import: "Importing lyrics",
+  },
+  sections: {
+    sync: {
+      title: "Syncing your lyrics",
+      body1: "Paste or import your lyrics, load audio, then press \"Start Syncing\". Each line becomes active in turn — play the audio and press Enter (or your configured mark key) to stamp the current playback time onto it.",
+      body2: "After a mark, the next line is selected automatically so you can keep syncing without touching the mouse. In SRT mode, a second mark on the same line sets its end time. In Words mode, marks stamp individual words for karaoke-style timing.",
+      shot: "Screenshot: the line list mid-sync, showing timestamps filling in and the active line highlighted.",
+    },
+    player: {
+      title: "Player controls",
+      body1: "Play, pause, seek and adjust playback speed from the transport bar. The nudge buttons (±0.1s and ±5s by default) let you fine-tune position without leaving the keyboard.",
+      body2: "The repeat icon toggles an A-B loop over the active line — its start timestamp to its end time (or the next line's start), so you can play a tricky phrase on repeat while you nail the timing. Click again to clear the loop, or drag its two handles directly on the seek bar to adjust the loop region.",
+      shot: "Screenshot: the desktop transport bar with the A-B loop button active (purple) and the loop region highlighted on the seek bar.",
+    },
+    saveUndo: {
+      title: "Save, undo & redo",
+      body1: "Your work autosaves periodically as you sync. Press Ctrl+S (or the save icon next to Undo/Redo) to save immediately.",
+      body2: "Made a bad mark? Undo (Ctrl+Z) and Redo (Ctrl+Y) step through your recent changes — both are right next to Save in the editor toolbar.",
+      shot: "Screenshot: the Edit / Save / Undo / Redo cluster in the editor toolbar.",
+    },
+    sections: {
+      title: "Sections & singers",
+      body1: "Select one or more lines, then use the tagging bar that appears to mark them as a section — Verse, Chorus, Bridge and so on. Sections are treated distinctly in exports and the live preview.",
+      body2: "For duets, assign a singer to a line or individual words to color-code parts. Keyboard shortcuts 1–4 assign the active line to singer 1–4; 0 clears it.",
+      shot: "Screenshot: a line selection with the section/singer tagging bar open.",
+    },
+    preview: {
+      title: "Live preview",
+      body1: "The Preview panel plays back your synced lyrics karaoke-style in real time as the audio plays — a quick way to sanity-check timing without exporting anything.",
+      body2: "From the preview header you can toggle translations, adjust text alignment, and — for Japanese lyrics — show or hide furigana readings above the kanji.",
+      shot: "Screenshot: the live preview panel highlighting the active line during playback.",
+    },
+    furigana: {
+      title: "Japanese lyrics & furigana",
+      body1: "Paste or type Japanese lyrics and LRC Studio automatically generates word-level readings (furigana) for kanji, shown as small text above each word in the editor and preview.",
+      body2: "Readings aren't always right for context-dependent kanji — double-click a word to open its reading editor and correct it manually.",
+      body3: "Switch how readings are displayed — hiragana or katakana — from the \"⋯\" (More actions) menu in the editor toolbar. In the Preview panel, use the book icon to toggle furigana visibility on or off entirely.",
+      shot1: "Screenshot: a line with auto-generated furigana above the kanji in the editor.",
+      shot2: "Screenshot: the reading editor open after double-clicking a word.",
+      shot3: "Screenshot: the hiragana/katakana toggle in the editor's \"⋯\" menu.",
+    },
+    share: {
+      title: "Share & export",
+      body1: "Use Share to generate a live link to your project — anyone with the link can view it, and if you keep editing, viewers see updates in real time.",
+      body2: "Use Export (right next to Share) to download your work as a standard .lrc, .srt, or plain .txt file, ready to drop into most music players or video editors.",
+      shot: "Screenshot: the Share and Export buttons in the preview header.",
+    },
+    import: {
+      title: "Importing lyrics",
+      body1: "On the lyrics tab, paste raw text directly, search for lyrics by title/artist, or drop in an existing .lrc, .srt, or .txt file — timestamps and section tags already present in the file are preserved.",
+      shot: "Screenshot: the lyrics import tab with the paste area and file-drop zone.",
+    },
+  },
+};

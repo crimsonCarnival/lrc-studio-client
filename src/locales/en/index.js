@@ -30,6 +30,7 @@ import explore from './explore.js';
 import reactions from './reactions.js';
 import badges from './badges.js';
 import nav from './nav.js';
+import guide from './guide.js';
 
 export default {
   translation: {
@@ -65,5 +66,6 @@ export default {
     reactions,
     badges,
     nav,
+    guide,
   }
 };

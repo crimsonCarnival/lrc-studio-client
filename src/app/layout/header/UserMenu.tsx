@@ -130,6 +130,9 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
                 <Icon name="menu_book" size={16} className="text-zinc-400" />{t('shortcuts.title')}
               </PopoverItem>
             )}
+            <PopoverItem onClick={() => { navigate('/guide'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+              <Icon name="auto_stories" size={16} className="text-zinc-400" />{t('guide.title')}
+            </PopoverItem>
           </div>
 
           <div className="p-1 border-b border-zinc-800/60">

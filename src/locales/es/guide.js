@@ -1,0 +1,67 @@
+export default {
+  title: "Guía de uso",
+  subtitle: "Todo lo necesario para sincronizar, publicar y compartir letras en LRC Studio.",
+  backToEditor: "Volver al editor",
+  nav: {
+    sync: "Sincronización",
+    player: "Controles del reproductor",
+    saveUndo: "Guardar y deshacer",
+    sections: "Secciones y cantantes",
+    preview: "Vista previa en vivo",
+    furigana: "Japonés y furigana",
+    share: "Compartir y exportar",
+    import: "Importar letras",
+  },
+  sections: {
+    sync: {
+      title: "Sincroniza tu letra",
+      body1: "Pega o importa tu letra, carga el audio y presiona \"Empezar a sincronizar\". Cada línea se activa por turnos — reproduce el audio y presiona Enter (o tu tecla de marca configurada) para marcar el tiempo actual en ella.",
+      body2: "Tras cada marca, la siguiente línea se selecciona automáticamente para seguir sincronizando sin tocar el ratón. En modo SRT, una segunda marca en la misma línea fija su tiempo final. En modo Palabras, las marcas fijan cada palabra individualmente para un efecto karaoke.",
+      shot: "Captura: la lista de líneas a mitad de sincronización, con marcas de tiempo llenándose y la línea activa resaltada.",
+    },
+    player: {
+      title: "Controles del reproductor",
+      body1: "Reproduce, pausa, avanza y ajusta la velocidad desde la barra de transporte. Los botones de ajuste fino (±0.1s y ±5s por defecto) permiten corregir la posición sin soltar el teclado.",
+      body2: "El ícono de repetición activa un bucle A-B sobre la línea activa — desde su marca de inicio hasta su tiempo final (o el inicio de la siguiente línea), para repetir una frase difícil mientras ajustas el tiempo. Vuelve a pulsarlo para quitar el bucle, o arrastra sus dos controles directamente en la barra de progreso para ajustar la región.",
+      shot: "Captura: la barra de transporte de escritorio con el bucle A-B activo (morado) y la región resaltada en la barra de progreso.",
+    },
+    saveUndo: {
+      title: "Guardar, deshacer y rehacer",
+      body1: "Tu trabajo se guarda automáticamente mientras sincronizas. Presiona Ctrl+S (o el ícono de guardar junto a Deshacer/Rehacer) para guardar de inmediato.",
+      body2: "¿Una marca salió mal? Deshacer (Ctrl+Z) y Rehacer (Ctrl+Y) recorren tus cambios recientes — ambos están justo al lado de Guardar en la barra de herramientas del editor.",
+      shot: "Captura: el grupo Editar / Guardar / Deshacer / Rehacer en la barra de herramientas del editor.",
+    },
+    sections: {
+      title: "Secciones y cantantes",
+      body1: "Selecciona una o más líneas y usa la barra de etiquetado que aparece para marcarlas como una sección — Verso, Coro, Puente, etc. Las secciones se tratan de forma distinta en exportaciones y en la vista previa.",
+      body2: "Para duetos, asigna un cantante a una línea o a palabras individuales para diferenciarlas por color. Los atajos 1–4 asignan la línea activa al cantante 1–4; 0 la limpia.",
+      shot: "Captura: una selección de líneas con la barra de etiquetado de secciones/cantantes abierta.",
+    },
+    preview: {
+      title: "Vista previa en vivo",
+      body1: "El panel de Vista previa reproduce tu letra sincronizada en formato karaoke en tiempo real — una forma rápida de verificar la sincronización sin exportar nada.",
+      body2: "Desde el encabezado de la vista previa puedes activar traducciones, ajustar la alineación del texto y — para letras en japonés — mostrar u ocultar el furigana sobre los kanji.",
+      shot: "Captura: el panel de vista previa resaltando la línea activa durante la reproducción.",
+    },
+    furigana: {
+      title: "Letras en japonés y furigana",
+      body1: "Pega o escribe letras en japonés y LRC Studio genera automáticamente lecturas por palabra (furigana) para los kanji, mostradas como texto pequeño sobre cada palabra en el editor y la vista previa.",
+      body2: "Las lecturas no siempre son correctas para kanji que dependen del contexto — haz doble clic en una palabra para abrir su editor de lectura y corregirla manualmente.",
+      body3: "Cambia cómo se muestran las lecturas — hiragana o katakana — desde el menú \"⋯\" (Más acciones) en la barra de herramientas del editor. En la Vista previa, usa el ícono de libro para mostrar u ocultar el furigana por completo.",
+      shot1: "Captura: una línea con furigana generado automáticamente sobre los kanji en el editor.",
+      shot2: "Captura: el editor de lectura abierto tras hacer doble clic en una palabra.",
+      shot3: "Captura: el interruptor hiragana/katakana en el menú \"⋯\" del editor.",
+    },
+    share: {
+      title: "Compartir y exportar",
+      body1: "Usa Compartir para generar un enlace en vivo a tu proyecto — cualquiera con el enlace puede verlo, y si sigues editando, quienes lo vean verán los cambios en tiempo real.",
+      body2: "Usa Exportar (justo al lado de Compartir) para descargar tu trabajo como .lrc, .srt o .txt estándar, listo para usar en la mayoría de reproductores de música o editores de video.",
+      shot: "Captura: los botones Compartir y Exportar en el encabezado de la vista previa.",
+    },
+    import: {
+      title: "Importar letras",
+      body1: "En la pestaña de letras, pega texto directamente, busca letras por título/artista, o arrastra un archivo .lrc, .srt o .txt existente — las marcas de tiempo y etiquetas de sección que ya tenga se conservan.",
+      shot: "Captura: la pestaña de importación de letras con el área de pegado y la zona de arrastrar archivos.",
+    },
+  },
+};

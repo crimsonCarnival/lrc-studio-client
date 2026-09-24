@@ -332,7 +332,16 @@ export default function GuestLanding() {
                   {t('landing.ctaSignUp')}
                 </Button>
               </div>
-              <p className="text-xs text-zinc-600 contrast-more:text-zinc-400">{t('landing.ctaFooterSub')}</p>
+              <p className="text-xs text-zinc-600 contrast-more:text-zinc-400">
+                {t('landing.ctaFooterSub')}
+                {' · '}
+                <button
+                  onClick={() => navigate('/guide')}
+                  className="underline hover:text-zinc-400 contrast-more:hover:text-zinc-200 transition-colors"
+                >
+                  {t('guide.title')}
+                </button>
+              </p>
             </M.div>
           </div>
         </section>

@@ -48,6 +48,7 @@ const PublicProjectViewPage = lazy(() => import('@features/projects/components/P
 const ListPage = lazy(() => import('@features/playlists/ListPage'));
 const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage'));
 const NotificationsPage = lazy(() => import('@features/notifications/NotificationsPage'));
+const GuidePage = lazy(() => import('@features/guide/GuidePage'));
 
 type EditorProps = ComponentProps<typeof Editor>;
 type PreviewComponentProps = ComponentProps<typeof Preview>;
@@ -702,6 +703,11 @@ export function AppRouter({
       <Route path="notifications" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
           <NotificationsPage />
+        </Suspense>
+      } />
+      <Route path="guide" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><Icon name="autorenew" size={32} className="animate-spin text-primary" /></div>}>
+          <GuidePage />
         </Suspense>
       } />
       <Route path="*" element={<NotFoundPage type="general" />} />
