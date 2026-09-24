@@ -130,16 +130,6 @@ export function GuidedTour({ steps, isOpen, onClose }: { steps: TourStep[]; isOp
         </div>
         <p className="text-xs text-zinc-400 leading-relaxed">{t(step.bodyKey)}</p>
 
-        <a
-          href={`/guide#${step.guideAnchor}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1 self-start"
-        >
-          {t('editor.tour.learnMore')}
-          <Icon name="open_in_new" size={12} />
-        </a>
-
         <div className="flex items-center justify-between gap-2 mt-1">
           <span className="text-[11px] text-zinc-600 tabular-nums">
             {t('editor.tour.stepOf', { current: stepIndex + 1, total: steps.length })}

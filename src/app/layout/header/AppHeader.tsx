@@ -203,18 +203,6 @@ export function AppHeader({
 
             {/* Panel hide/show controls moved into the editor toolbar and preview (#11/#12/#13) */}
 
-            {!isGuestLanding && (
-              <Tip content={t('guide.title')} side="bottom">
-                <button
-                  onClick={() => navigate('/guide')}
-                  aria-label={t('guide.title')}
-                  className={iconBtn}
-                >
-                  <Icon name="auto_stories" size={14} />
-                </button>
-              </Tip>
-            )}
-
             {isEditorPage && isReady && onStartTour && (
               <Tip content={t('editor.tour.replay')} side="bottom">
                 <button
