@@ -419,6 +419,54 @@ export default function Editor({
                   <Icon name="edit" size={16} />
                 </Button>
               </Tip>
+              {handleManualSave && (
+                <Tip content={isSaving ? (t('project.saving') || 'Saving…') : isAutosaving ? (t('project.saved') || 'Saved') : (t('project.save') || 'Save')}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={async () => {
+                      if (!user) {
+                        const payload = buildProjectPayload ? buildProjectPayload() : {};
+                        const idbPayload = {
+                          title: payload.title,
+                          lyrics: { editorMode: payload.editorMode, sections: payload.sections || flatToSections(payload.lines || []) },
+                          state: {
+                            syncMode: payload.syncMode,
+                            activeLineIndex: payload.activeLineIndex,
+                            playbackPosition: payload.playbackPosition,
+                            playbackSpeed: payload.playbackSpeed,
+                            saveTime: payload.saveTime,
+                            timezone: payload.timezone,
+                            utcOffset: payload.utcOffset,
+                          },
+                          metadata: payload.metadata,
+                          ...(payload.ytUrl ? { ytUrl: payload.ytUrl } : {}),
+                          ...(payload.uploadedAudio ? {
+                            uploadUrl: payload.uploadedAudio.uploadUrl,
+                            uploadPublicId: payload.uploadedAudio.publicId || null,
+                            fileName: payload.uploadedAudio.fileName || '',
+                            duration: payload.uploadedAudio.duration || null,
+                          } : {}),
+                        };
+                        try {
+                          await savePendingProject(idbPayload);
+                          navigate(`/auth?action=signin&redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
+                        } catch {
+                          import('react-hot-toast').then(({ default: toast }) => {
+                            toast.error(t('editor.draftSaveFailed'));
+                          });
+                        }
+                      } else {
+                        handleManualSave();
+                      }
+                    }}
+                    disabled={isSaving}
+                    className={`size-8 rounded-full transition-colors ${isSaving ? 'text-zinc-400' : isAutosaving ? 'text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'}`}
+                  >
+                    {isSaving ? <Icon name="autorenew" size={16} className="animate-spin" /> : isAutosaving ? <Icon name="check" size={16} /> : <Icon name="save" size={16} />}
+                  </Button>
+                </Tip>
+              )}
               <div className="w-px h-4 bg-zinc-700/50 mx-1 shrink-0" />
               <Tip content={t('editor.undoTitle') || 'Undo (Ctrl+Z)'}>
                 <Button
@@ -515,55 +563,6 @@ export default function Editor({
                 </Button>
               </div>
             </Tip>
-
-            {handleManualSave && (
-              <Tip content={isSaving ? (t('project.saving') || 'Saving…') : isAutosaving ? (t('project.saved') || 'Saved') : (t('project.save') || 'Save')}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={async () => {
-                    if (!user) {
-                      const payload = buildProjectPayload ? buildProjectPayload() : {};
-                      const idbPayload = {
-                        title: payload.title,
-                        lyrics: { editorMode: payload.editorMode, sections: payload.sections || flatToSections(payload.lines || []) },
-                        state: {
-                          syncMode: payload.syncMode,
-                          activeLineIndex: payload.activeLineIndex,
-                          playbackPosition: payload.playbackPosition,
-                          playbackSpeed: payload.playbackSpeed,
-                          saveTime: payload.saveTime,
-                          timezone: payload.timezone,
-                          utcOffset: payload.utcOffset,
-                        },
-                        metadata: payload.metadata,
-                        ...(payload.ytUrl ? { ytUrl: payload.ytUrl } : {}),
-                        ...(payload.uploadedAudio ? {
-                          uploadUrl: payload.uploadedAudio.uploadUrl,
-                          uploadPublicId: payload.uploadedAudio.publicId || null,
-                          fileName: payload.uploadedAudio.fileName || '',
-                          duration: payload.uploadedAudio.duration || null,
-                        } : {}),
-                      };
-                      try {
-                        await savePendingProject(idbPayload);
-                        navigate(`/auth?action=signin&redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
-                      } catch {
-                        import('react-hot-toast').then(({ default: toast }) => {
-                          toast.error(t('editor.draftSaveFailed'));
-                        });
-                      }
-                    } else {
-                      handleManualSave();
-                    }
-                  }}
-                  disabled={isSaving}
-                  className={`size-9 rounded-full transition-colors ${isSaving ? 'text-zinc-400' : isAutosaving ? 'text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'}`}
-                >
-                  {isSaving ? <Icon name="autorenew" size={18} className="animate-spin" /> : isAutosaving ? <Icon name="check" size={18} /> : <Icon name="save" size={18} />}
-                </Button>
-              </Tip>
-            )}
 
             <ActionsDropdown icon="more_horiz">
               <div className="p-1 space-y-0.5">
