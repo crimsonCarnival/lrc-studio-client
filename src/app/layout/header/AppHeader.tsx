@@ -208,7 +208,7 @@ export function AppHeader({
                 <button
                   onClick={onStartTour}
                   aria-label={t('editor.tour.replay')}
-                  className={`${iconBtn} hidden lg:flex`}
+                  className={iconBtn}
                 >
                   <Icon name="school" size={14} />
                 </button>
