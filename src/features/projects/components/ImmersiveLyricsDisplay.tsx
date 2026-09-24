@@ -173,14 +173,20 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
 
   const duetGradient = isDuet ? singerGradient(line.singers!, songSingers) : undefined;
 
+  // Matches PreviewLine's active-line treatment: a soft rounded highlight card,
+  // a leading play glyph, and the shared font-lyrics stack.
+  const staggerDelay = dist != null ? `${Math.min(dist * 40, 200)}ms` : '0ms';
+
   return (
     <div
       ref={ref}
       onClick={clickable ? onClick : undefined}
+      className={`font-lyrics animate-preview-line-in ${isActive ? 'rounded-lg' : ''}`}
       style={{
         opacity: isAdLib && !isActive ? opacity * 0.5 : opacity,
         transform: `scale(${isAdLib ? 0.9 : 1})`,
         transition: 'opacity 0.4s ease, transform 0.4s ease, color 0.4s ease',
+        animationDelay: staggerDelay,
         cursor: clickable ? 'pointer' : 'default',
         textAlign: alignment,
         color,
@@ -188,12 +194,33 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
         fontSize: `calc(1.25rem * ${sizeFactor})`,
         paddingTop: '0.65em',
         paddingBottom: '0.65em',
+        paddingLeft: isActive && line.timestamp != null && alignment !== 'right' ? '1.6em' : undefined,
+        paddingRight: isActive && line.timestamp != null && alignment === 'right' ? '1.6em' : undefined,
         marginLeft: isAdLib ? (alignment === 'right' ? '0' : '15%') : '0',
         marginRight: isAdLib ? (alignment === 'right' ? '15%' : '0') : '0',
         lineHeight: 1.25,
         position: 'relative',
+        backgroundColor: isActive ? 'rgba(255,255,255,0.04)' : undefined,
       }}
     >
+      {isActive && line.timestamp != null && (
+        <svg
+          aria-hidden
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill={color}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            left: alignment === 'right' ? undefined : '0.15em',
+            right: alignment === 'right' ? '0.15em' : undefined,
+          }}
+        >
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      )}
       {isEmptyLine ? (
         segmentProgress != null ? (
           <div className={`flex ${alignment === 'right' ? 'justify-end' : alignment === 'center' ? 'justify-center' : 'justify-start'} py-2 pointer-events-none`}>
@@ -355,57 +382,63 @@ function SectionDivider({
   const { opacity } = getDistStyle(dist);
   const accent = palette?.accent ?? 'rgba(255,255,255,0.5)';
 
+  // Matches PreviewLine's section-marker treatment: divider lines flanking a large
+  // gradient-clipped uppercase title, singer names as plain colored inline text.
   return (
     <div
+      className="font-lyrics"
       style={{
         opacity: Math.max(0.3, opacity * 0.7),
         transition: 'opacity 0.35s ease',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: alignment === 'right' ? 'flex-end' : alignment === 'center' ? 'center' : 'flex-start',
-        gap: '0.6em',
-        paddingTop: '1.2em',
-        paddingBottom: '0.5em',
+        gap: '1em',
+        paddingTop: '1.4em',
+        paddingBottom: '0.8em',
       }}
     >
+      {alignment !== 'left' && (
+        <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, transparent, ${accent}80, ${accent}30)` }} />
+      )}
       <span
+        className="whitespace-nowrap uppercase"
         style={{
-          fontSize: '0.7rem',
-          fontWeight: 700,
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          color: accent,
+          fontSize: 'clamp(1.1rem, 2vw, 1.5rem)',
+          fontWeight: 900,
+          letterSpacing: '0.14em',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'baseline',
           gap: '0.5rem',
         }}
       >
-        <span>{label || '◆'}</span>
+        <span
+          style={{
+            backgroundImage: `linear-gradient(90deg, ${accent}, #e879f9, ${accent})`,
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            color: 'transparent',
+          }}
+        >
+          {label || '◆'}
+        </span>
         {singers.length > 0 && (
-          <span className="flex items-center gap-1.5 opacity-90 font-medium text-[11px] normal-case tracking-normal">
-            <span className="opacity-50">·</span>
+          <span className="flex items-baseline gap-1.5 text-xs font-semibold tracking-wide normal-case">
+            <span style={{ opacity: 0.4 }}>&middot;</span>
             {singers.map((name, idx) => {
               const globalIdx = singerColorIndex(name, songSingers);
               const customHex = singerColors[globalIdx] || accent;
               return (
-                <span
-                  key={`${name}-${idx}`}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px]"
-                  style={{
-                    background: `${customHex}20`,
-                    border: `1px solid ${customHex}50`,
-                    color: customHex,
-                  }}
-                >
-                  <span className="size-1.5 rounded-full" style={{ backgroundColor: customHex }} />
-                  {name}
+                <span key={`${name}-${idx}`} style={{ color: customHex }}>
+                  {name}{idx < singers.length - 1 ? ',' : ''}
                 </span>
               );
             })}
           </span>
         )}
       </span>
-      <span style={{ flex: 1, maxWidth: alignment === 'center' ? '120px' : undefined, height: 1, background: accent, opacity: 0.25 }} />
+      {alignment !== 'right' && (
+        <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${accent}30, ${accent}80, transparent)` }} />
+      )}
     </div>
   );
 }
