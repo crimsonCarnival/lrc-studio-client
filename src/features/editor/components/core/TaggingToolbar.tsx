@@ -112,7 +112,7 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, songArt
   if (selectedLines.size === 0) {
     if (hasSections) return null;
     return (
-      <div className="flex items-center justify-center px-4 py-2 mb-2 rounded-xl bg-zinc-900/50 border border-zinc-800/50 text-zinc-500 text-sm h-[52px]">
+      <div data-tour="editor-sections-banner" className="flex items-center justify-center px-4 py-2 mb-2 rounded-xl bg-zinc-900/50 border border-zinc-800/50 text-zinc-500 text-sm h-[52px]">
         {t('editor.tagging.selectLinesPrompt', 'Select lines to apply sections or singers')}
       </div>
     );

@@ -343,6 +343,7 @@ export default function Editor({
   const playerPosition = settings.editor?.playerPosition === 'top' ? 'top' : 'bottom';
   const playerDock = playerSlot === 'editor' ? (
     <DragPointerIsolate
+      data-tour="player-controls"
       className={`relative flex-shrink-0 border-zinc-800/50 -mx-3 sm:-mx-5 px-3 sm:px-5 ${playerPosition === 'top' ? 'mb-3 border-b pb-3' : 'mt-3 border-t pt-3'
         }`}
     >
@@ -404,7 +405,7 @@ export default function Editor({
             </span>
           </h2>
           {syncMode && lines.length > 0 && (
-            <div className="flex items-center gap-1 shrink-0">
+            <div data-tour="editor-undo-redo" className="flex items-center gap-1 shrink-0">
               <Tip content={t('editor.backToEdit')}>
                 <Button
                   variant="ghost"
@@ -671,7 +672,7 @@ export default function Editor({
         </ResponsiveModal>
 
         {/* Sync Mode View */}
-        <div className="relative flex flex-col flex-1 min-h-0">
+        <div data-tour="editor-lines" className="relative flex flex-col flex-1 min-h-0">
           <TaggingToolbar
             lines={lines}
             setLines={setLines}

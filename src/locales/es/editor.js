@@ -184,6 +184,40 @@ export default {
     singersShortcuts: "Atajos de teclado: Presiona 1-4 para asignar la línea activa al cantante 1-4. Presiona 0 para limpiar.",
     singersSplit: "División rápida: Usa el ícono de tijeras para dividir automáticamente 'Nombre: Letra' en una atribución de cantante."
   },
+  tour: {
+    replay: "Ver el tutorial",
+    next: "Siguiente",
+    back: "Atrás",
+    skip: "Omitir",
+    done: "Listo",
+    stepOf: "{{current}} de {{total}}",
+    steps: {
+      sync: {
+        title: "Sincroniza tu letra",
+        body: "Reproduce el audio y presiona Enter (o tu tecla de marca) para marcar la línea activa con el tiempo actual. La siguiente línea se selecciona automáticamente."
+      },
+      player: {
+        title: "Controles del reproductor",
+        body: "Reproduce, pausa, avanza y ajusta la velocidad aquí. Usa el bucle A-B para repetir una parte difícil mientras la sincronizas."
+      },
+      saveUndo: {
+        title: "Deshacer, rehacer y guardar",
+        body: "Tu trabajo se guarda automáticamente. Presiona Ctrl+S para guardar manualmente, y usa Deshacer/Rehacer (o Ctrl+Z / Ctrl+Y) si una marca sale mal."
+      },
+      sections: {
+        title: "Secciones y cantantes",
+        body: "Selecciona una o más líneas para marcarlas como una sección (como Coro o Verso) o asignarles un cantante para duetos."
+      },
+      preview: {
+        title: "Vista previa en vivo",
+        body: "Mira tu letra sincronizada en formato karaoke aquí. ¿Sincronizando letras en japonés? Activa el furigana para mostrar la pronunciación sobre los kanji."
+      },
+      share: {
+        title: "Compartir y exportar",
+        body: "¿Listo para publicar? Comparte un enlace en vivo, o exporta tu trabajo como .lrc, .srt o .txt con el botón de al lado."
+      }
+    }
+  },
   waveformPreview: "Vista previa de la onda",
   tapToMarkTimestamp: "Toca para marcar la marca de tiempo",
   currentLine: "Línea actual",

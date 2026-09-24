@@ -168,6 +168,40 @@ export default {
     singersShortcuts: "Keyboard shortcuts: Press 1-4 to assign the active line to singer 1-4. Press 0 to clear.",
     singersSplit: "Quick split: Use the Scissors icon to automatically split 'Name: Lyrics' into a singer attribution."
   },
+  tour: {
+    replay: "Take the tour",
+    next: "Next",
+    back: "Back",
+    skip: "Skip",
+    done: "Done",
+    stepOf: "{{current}} of {{total}}",
+    steps: {
+      sync: {
+        title: "Sync your lyrics",
+        body: "Play the audio and press Enter (or your mark key) to stamp the active line with the current time. The next line is selected automatically."
+      },
+      player: {
+        title: "Player controls",
+        body: "Play, pause, seek and adjust playback speed here. Use the A-B loop to repeat a tricky section while you sync it."
+      },
+      saveUndo: {
+        title: "Undo, redo & save",
+        body: "Your work autosaves as you go. Press Ctrl+S to save manually anytime, and use Undo/Redo (or Ctrl+Z / Ctrl+Y) if a mark goes wrong."
+      },
+      sections: {
+        title: "Sections & singers",
+        body: "Select one or more lines to tag them as a section (like Chorus or Verse) or assign a singer for duets."
+      },
+      preview: {
+        title: "Live preview",
+        body: "Watch your synced lyrics play back karaoke-style here. Syncing Japanese lyrics? Toggle furigana readings so pronunciation shows above kanji."
+      },
+      share: {
+        title: "Share & export",
+        body: "Ready to publish? Share a live link with others, or export your work as .lrc, .srt or .txt from the button right next to it."
+      }
+    }
+  },
   addTranslation: "Add translation",
   insertSectionAbove: "Insert section above",
   assignSingerToLines: "Assign singer to {{count}} lines",

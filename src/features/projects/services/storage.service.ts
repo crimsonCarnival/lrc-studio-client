@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
   DEVICE_ID: 'lrc_studio_device_id',
   REMEMBER_ME: 'lrc-studio-remember-me',
   HAS_SESSION: 'lrc-studio-has-session',
+  TUTORIAL_SEEN: 'lrc-studio-editor-tutorial-seen',
 } as const;
 
 // Error-safe wrappers (localStorage can throw in private browsing / storage-full)

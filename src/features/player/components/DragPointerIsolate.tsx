@@ -11,10 +11,11 @@ import type { ReactNode } from 'react';
 export default function DragPointerIsolate({
   children,
   className,
+  ...rest
 }: {
   children: ReactNode;
   className?: string;
-}) {
+} & Record<`data-${string}`, string>) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function DragPointerIsolate({
   }, []);
 
   return (
-    <div ref={ref} className={className}>
+    <div ref={ref} className={className} {...rest}>
       {children}
     </div>
   );

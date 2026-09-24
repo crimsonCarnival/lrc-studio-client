@@ -182,7 +182,7 @@ export default function Preview(props: PreviewProps) {
 
   return (
     <>
-      <div className="lg:glass relative lg:rounded-2xl lg:overflow-hidden rounded-none p-3 sm:p-5 flex flex-col flex-1 animate-fade-in min-h-0">
+      <div data-tour="preview-panel" className="lg:glass relative lg:rounded-2xl lg:overflow-hidden rounded-none p-3 sm:p-5 flex flex-col flex-1 animate-fade-in min-h-0">
 
         {/* Header */}
         <div className={`flex items-center ${viewerMode ? 'justify-end' : 'justify-between'} mb-2 sm:mb-4 gap-2 sm:gap-4 relative z-raised`}>
@@ -246,6 +246,7 @@ export default function Preview(props: PreviewProps) {
                   ) : (
                     <Button
                       ref={shareTriggerRef}
+                      data-tour="preview-share"
                       variant="ghost"
                       size="icon"
                       onClick={handleShareToggle}

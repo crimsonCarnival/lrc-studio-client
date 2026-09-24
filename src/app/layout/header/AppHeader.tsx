@@ -44,6 +44,7 @@ interface AppHeaderProps {
   setShowNamingModal?: (v: boolean) => void;
   playerSlot?: PlayerSlot;
   projectCoverImage?: string | null;
+  onStartTour?: () => void;
 }
 
 export function AppHeader({
@@ -67,6 +68,7 @@ export function AppHeader({
   setShowNamingModal,
   playerSlot,
   projectCoverImage,
+  onStartTour,
 }: AppHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -200,6 +202,18 @@ export function AppHeader({
             )}
 
             {/* Panel hide/show controls moved into the editor toolbar and preview (#11/#12/#13) */}
+
+            {isEditorPage && isReady && onStartTour && (
+              <Tip content={t('editor.tour.replay')} side="bottom">
+                <button
+                  onClick={onStartTour}
+                  aria-label={t('editor.tour.replay')}
+                  className={`${iconBtn} hidden lg:flex`}
+                >
+                  <Icon name="school" size={14} />
+                </button>
+              </Tip>
+            )}
 
             {/* Auth section — theme/lang live in the user menu for signed-in users (#14),
                 so guests keep the standalone switcher. */}

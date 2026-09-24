@@ -14,6 +14,9 @@ import { AppModals } from './layout/AppModals';
 import { SafeAreaContainer } from '../shared/ui/SafeAreaContainer';
 import { PlayerEngineProvider } from '@/features/player/PlayerEngine';
 import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
+import { useGuidedTour } from '@/features/editor/hooks/useGuidedTour';
+import { GuidedTour } from '@/features/editor/components/GuidedTour';
+import { EDITOR_TOUR_STEPS } from '@/features/editor/tour/tourSteps';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AppSettings } from '@/features/settings/settings.types';
@@ -100,6 +103,8 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
 
   const isSetupPage = location.pathname === '/project/new';
 
+  const { isOpen: isTourOpen, start: startTour, close: closeTour, startIfFirstVisit } = useGuidedTour();
+
   // Media loads report their title asynchronously (YT onReady fires 1-3s after
   // player creation) through closures captured at load time. Read the CURRENT
   // title from a ref at fire time so a stale closure can't overwrite a name the
@@ -120,6 +125,12 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   const isPublicProjectView = /^\/project\/[^/]+$/.test(location.pathname) &&
     !['new', 'local'].includes(location.pathname.split('/')[2] ?? '');
   const isFullWidthPage = isSetupPage || isPublicProjectView;
+
+  useEffect(() => {
+    if (!isLg || isSetupPage || isPublicProjectView) return;
+    if (!isReady || !lines || lines.length === 0) return;
+    startIfFirstVisit();
+  }, [isLg, isSetupPage, isPublicProjectView, isReady, lines, startIfFirstVisit]);
 
   const handleProjectConfirm = useCallback(({ name, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, singerColors }: SetupConfirmData) => {
     const newTitle = name || mediaTitle || '';
@@ -207,7 +218,10 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             setShowNamingModal={setShowNamingModal}
             playerSlot={playerSlot}
             projectCoverImage={projectCoverImage}
+            onStartTour={startTour}
           />
+
+          <GuidedTour steps={EDITOR_TOUR_STEPS} isOpen={isTourOpen} onClose={closeTour} />
 
           <div
             className={`relative z-base flex-1 min-h-0 ${isFullWidthPage ? 'px-0' : 'px-0 lg:px-6'} flex flex-col transition-[padding] duration-500 ease-in-out
