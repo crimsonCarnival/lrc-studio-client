@@ -7,14 +7,44 @@ import { InlineTimestampEdit } from '../line/InlineTimestampEdit';
 import { TimestampBadge } from '../line/TimestampBadge';
 import { StampedWordChip } from './StampedWordChip';
 import { Icon } from '@/shared/ui/Icon';
+import { singerColorIndex } from '@features/editor/utils/singer-colors';
 
-// Per-singer chip color sets [bg, border, text] for stamped and unstamped word chips
+// Per-singer chip color sets [bg, border, text] for stamped and unstamped word chips.
+// Index-aligned with WORD_SINGER_COLORS in LineTextContent.tsx / SINGER_GRADIENT_STOPS
+// so a given singer's global roster index resolves to the same hue everywhere.
 const WORD_SINGER_CHIP = [
   { stamped: 'bg-primary/15 border-primary/40 text-primary/80 hover:border-primary hover:bg-primary/25 hover:text-primary', unstamped: 'bg-primary/8 border-primary/25 text-primary/60 hover:bg-primary/15 hover:text-primary/80' },
   { stamped: 'bg-sky-500/15 border-sky-500/40 text-sky-400/80 hover:border-sky-400 hover:bg-sky-500/25 hover:text-sky-400', unstamped: 'bg-sky-500/8 border-sky-500/25 text-sky-400/60 hover:bg-sky-500/15 hover:text-sky-400/80' },
   { stamped: 'bg-violet-500/15 border-violet-500/40 text-violet-400/80 hover:border-violet-400 hover:bg-violet-500/25 hover:text-violet-400', unstamped: 'bg-violet-500/8 border-violet-500/25 text-violet-400/60 hover:bg-violet-500/15 hover:text-violet-400/80' },
   { stamped: 'bg-amber-500/15 border-amber-500/40 text-amber-400/80 hover:border-amber-400 hover:bg-amber-500/25 hover:text-amber-400', unstamped: 'bg-amber-500/8 border-amber-500/25 text-amber-400/60 hover:bg-amber-500/15 hover:text-amber-400/80' },
+  { stamped: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400/80 hover:border-emerald-400 hover:bg-emerald-500/25 hover:text-emerald-400', unstamped: 'bg-emerald-500/8 border-emerald-500/25 text-emerald-400/60 hover:bg-emerald-500/15 hover:text-emerald-400/80' },
+  { stamped: 'bg-rose-500/15 border-rose-500/40 text-rose-400/80 hover:border-rose-400 hover:bg-rose-500/25 hover:text-rose-400', unstamped: 'bg-rose-500/8 border-rose-500/25 text-rose-400/60 hover:bg-rose-500/15 hover:text-rose-400/80' },
+  { stamped: 'bg-cyan-500/15 border-cyan-500/40 text-cyan-400/80 hover:border-cyan-400 hover:bg-cyan-500/25 hover:text-cyan-400', unstamped: 'bg-cyan-500/8 border-cyan-500/25 text-cyan-400/60 hover:bg-cyan-500/15 hover:text-cyan-400/80' },
+  { stamped: 'bg-fuchsia-500/15 border-fuchsia-500/40 text-fuchsia-400/80 hover:border-fuchsia-400 hover:bg-fuchsia-500/25 hover:text-fuchsia-400', unstamped: 'bg-fuchsia-500/8 border-fuchsia-500/25 text-fuchsia-400/60 hover:bg-fuchsia-500/15 hover:text-fuchsia-400/80' },
 ];
+
+/** Resolves a per-word singer chip's class + optional custom-hex inline style, mirroring LineTextContent's logic. */
+function resolveWordSingerChip(
+  w: Word,
+  appliedSingers: string[] | undefined,
+  roster: string[],
+  singerColors: string[] | undefined,
+  settingsSingerColors: string[] | undefined,
+  stamped: boolean,
+): { className: string; style?: { color: string } } {
+  const wordSingerIdx = w.singerIndex ?? (appliedSingers?.length === 1 ? 0 : null);
+  const singerName = wordSingerIdx !== null ? appliedSingers?.[wordSingerIdx] : undefined;
+  if (!singerName) {
+    return { className: stamped ? '' : '' };
+  }
+  const globalIdx = singerColorIndex(singerName, roster);
+  const customHex = singerColors?.[globalIdx] || settingsSingerColors?.[globalIdx];
+  if (customHex) {
+    return { className: '', style: { color: customHex } };
+  }
+  const chip = WORD_SINGER_CHIP[globalIdx % WORD_SINGER_CHIP.length];
+  return { className: stamped ? chip.stamped : chip.unstamped };
+}
 
 interface Word {
   word: string;
@@ -28,6 +58,7 @@ interface WordLine {
   secondary?: string;
   words?: Word[];
   secondaryWords?: Word[];
+  singers?: string[];
 }
 
 interface FocusedTimestamp {
@@ -57,6 +88,9 @@ export interface WordsModeColumnProps {
   handleWordClick: (e: MouseEvent, w: Word, wi: number, isSecondary?: boolean) => void;
   handleClearWordTimestamp: (lineIndex: number, wi: number, layer?: string) => void;
   onWordMenu?: (lineIndex: number, wi: number, w: Word, isSecondary: boolean) => void;
+  songSingers?: string[];
+  singerColors?: string[];
+  activeSingers?: string[];
 }
 
 export function WordsModeTimestamp({
@@ -141,8 +175,15 @@ export function WordsModeChips({
   handleWordClick,
   handleClearWordTimestamp,
   onWordMenu,
+  settings,
+  songSingers,
+  singerColors,
+  activeSingers,
 }: WordsModeColumnProps) {
   const { t } = useTranslation();
+  const roster = songSingers ?? [];
+  const appliedSingers = activeSingers || line.singers;
+  const settingsSingerColors = settings?.editor?.display?.singerColors;
   return (
     <div className="flex flex-col gap-1 w-full">
       {/* Word chips */}
@@ -157,6 +198,7 @@ export function WordsModeChips({
             // In Words mode, only show the automatic "next word" cursor if no word is manually focused anywhere
             const isFocusedWord = focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'word' && focusedTimestamp?.wordIndex === wi;
             const isActiveWord = wi === activeWordIndex && !focusedTimestamp;
+            const singerChip = resolveWordSingerChip(w, appliedSingers, roster, singerColors, settingsSingerColors, w.time != null);
             return (
               <div key={wKey} className="flex flex-col items-center gap-1">
                 {/* Word chip */}
@@ -171,8 +213,9 @@ export function WordsModeChips({
                         onClick={(e) => handleWordClick(e, w, wi)}
                         className={`text-[13px] px-3 py-1 rounded-full border leading-none font-medium transition-all duration-200 cursor-pointer ${isActiveWord || isFocusedWord
                           ? 'bg-primary text-zinc-950 border-primary ring-2 ring-primary/40 shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)] animate-pulse-glow'
-                          : (w.singerIndex != null ? WORD_SINGER_CHIP[w.singerIndex % WORD_SINGER_CHIP.length].stamped : 'bg-zinc-800 border-primary/30 text-primary/70 hover:border-primary hover:bg-primary/20 hover:text-primary')
+                          : (w.singerIndex != null ? (singerChip.className || 'bg-zinc-800 border-primary/30') : 'bg-zinc-800 border-primary/30 text-primary/70 hover:border-primary hover:bg-primary/20 hover:text-primary')
                           }`}
+                        style={!(isActiveWord || isFocusedWord) ? singerChip.style : undefined}
                       >
                         {displayWord}
                       </StampedWordChip>
@@ -203,8 +246,9 @@ export function WordsModeChips({
                       onClick={(e) => handleWordClick(e, w, wi)}
                       className={`text-[13px] px-3 py-1 rounded-full border leading-none font-medium transition-all cursor-pointer outline-none focus:ring-2 focus:ring-primary/40 ${isActiveWord || isFocusedWord
                         ? 'bg-primary text-zinc-950 border-primary shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)] animate-pulse-glow'
-                        : (w.singerIndex != null ? WORD_SINGER_CHIP[w.singerIndex % WORD_SINGER_CHIP.length].unstamped : 'bg-zinc-800/50 border-zinc-700/30 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400')
+                        : (w.singerIndex != null ? (singerChip.className || 'bg-zinc-800/50 border-zinc-700/30') : 'bg-zinc-800/50 border-zinc-700/30 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400')
                         }`}
+                      style={!(isActiveWord || isFocusedWord) ? singerChip.style : undefined}
                     >
                       {displayWord}
                     </button>

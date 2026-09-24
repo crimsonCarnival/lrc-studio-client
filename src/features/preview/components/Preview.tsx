@@ -61,6 +61,9 @@ export default function Preview(props: PreviewProps) {
   // Pre-split song artists (when driven by a project) — threaded into PreviewViewport
   // so its singer roster matches the editor pane. See buildSingerRoster.
   const songArtists = (props.projectMetadata as { songArtists?: string[] } | undefined)?.songArtists;
+  // Custom per-singer hex overrides — same source AppRouter threads into editorProps,
+  // so Preview resolves the same colors as the Editor for a given singer.
+  const singerColors = (props.projectMetadata as { singerColors?: string[] } | undefined)?.singerColors;
   const { updateSetting } = useSettings();
 
   // Privacy state for sharing (default public)
@@ -458,6 +461,7 @@ export default function Preview(props: PreviewProps) {
             isPlaying={isPlaying}
             playbackSpeed={playbackSpeed}
             songArtists={songArtists}
+            singerColors={singerColors}
           />
         )}
       </div>

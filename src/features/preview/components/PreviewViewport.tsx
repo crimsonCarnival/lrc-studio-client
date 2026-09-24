@@ -44,6 +44,9 @@ interface PreviewViewportProps {
   // Pre-split song artists, threaded from the editor side so the roster (and thus
   // singer color identity) matches the editor pane. Standalone/public path omits this.
   songArtists?: string[];
+  // Custom per-singer hex overrides (Settings → Interface, or per-project). Index-aligned
+  // with the song-wide roster built below.
+  singerColors?: string[];
   // Parent (Preview) still passes extra display-tuning props; allow passthrough until it migrates.
   [key: string]: unknown;
 }
@@ -76,6 +79,7 @@ export default function PreviewViewport({
   playbackSpeed,
   activeTranslationIndex = 0,
   songArtists,
+  singerColors,
 }: PreviewViewportProps) {
   // Own the refs here — the virtualizer needs getScrollElement to return
   // a non-null element on mount for its ResizeObserver to attach properly.
@@ -281,7 +285,8 @@ export default function PreviewViewport({
               totalLines={lines.length}
               editorMode={editorMode}
               hasMedia={hasMedia}
-              songSingers={songSingers}
+              roster={songSingers}
+              singerColors={singerColors}
             />
           ))}
         </div>
@@ -347,7 +352,8 @@ export default function PreviewViewport({
                   totalLines={lines.length}
                   editorMode={editorMode}
                   hasMedia={hasMedia}
-                  songSingers={songSingers}
+                  roster={songSingers}
+                  singerColors={singerColors}
                 />
               </div>
             );

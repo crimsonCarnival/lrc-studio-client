@@ -705,6 +705,9 @@ const EditorLineItem = React.memo(({
               handleWordClick={handleWordClick as ComponentProps<typeof WordsModeChips>['handleWordClick']}
               handleClearWordTimestamp={handleClearWordTimestamp as ComponentProps<typeof WordsModeChips>['handleClearWordTimestamp']}
               onWordMenu={onWordMenu}
+              songSingers={projectSingers}
+              singerColors={singerColors}
+              activeSingers={activeSingers}
             />
           )}
 

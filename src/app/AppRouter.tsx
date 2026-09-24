@@ -474,6 +474,8 @@ export function AppRouter({
     editorHidden: !showEditor,
     onShowEditor: handleShowEditor,
     playerSlot,
+    songArtists: projectMetadata?.songArtists || [],
+    singerColors: projectMetadata?.singerColors || [],
   } as unknown as PreviewComponentProps), [
     lines, setLines, playbackPosition,
     mediaTitle, playerRef, duration,
