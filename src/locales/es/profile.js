@@ -177,6 +177,7 @@ export default {
   confirmUnfollow: "Confirmar dejar de seguir",
   followError: "No se pudo seguir. Inténtalo de nuevo.",
   unfollowError: "No se pudo dejar de seguir. Inténtalo de nuevo.",
+  newFollower: "¡Tienes un nuevo seguidor!",
   block: "Bloquear",
   unblock: "Desbloquear",
   confirmBlock: "Confirmar bloqueo",

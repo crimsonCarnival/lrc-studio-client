@@ -28,6 +28,7 @@ import { enUS, es } from 'date-fns/locale';
 import type { Locale } from 'date-fns';
 import { ProfileHeader } from './ProfileHeader';
 import type { PublicUser, Project } from '@/types';
+import { connectSocket } from '@/app/socket.client';
 
 const DATE_FNS_LOCALES: Record<string, Locale> = { en: enUS, es };
 
@@ -242,6 +243,20 @@ export default function ProfilePage() {
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
   }, [accountName, user?.accountName, navigate]);
+
+  // Live-bump follower count on your own profile when someone else follows you.
+  useEffect(() => {
+    if (!isOwner || !user) return;
+    const socket = connectSocket();
+
+    const onFollowNew = (payload: { followerId: string; followerCount: number }) => {
+      setProfile(prev => prev ? { ...prev, followerCount: payload.followerCount } : prev);
+      toast(t('profile.newFollower'));
+    };
+
+    socket.on('follow:new', onFollowNew);
+    return () => { socket.off('follow:new', onFollowNew); };
+  }, [isOwner, user, t]);
 
   useEffect(() => {
     if (!profile || !user || isOwner || isFollowing) return;
