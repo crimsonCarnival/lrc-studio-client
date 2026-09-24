@@ -11,6 +11,7 @@ export default {
   ctaAuth: "¿Te gusta este proyecto? Copia y edita tu propia versión.",
   forkedFrom: "Copiado de",
   forkedFromSourceDeleted: "El proyecto original ya no está disponible",
+  someoneForked: "Alguien acaba de copiar este proyecto",
   singers: "Cantantes",
   showMore: "Mostrar más",
   showLess: "Mostrar menos",

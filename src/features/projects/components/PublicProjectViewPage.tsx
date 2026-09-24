@@ -19,6 +19,8 @@ import { getPlaylist } from '@features/playlists/playlist.service';
 import { ReactionBar } from '@features/reactions/components/ReactionBar';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useProjectReactions } from '@features/reactions/hooks/useReactions';
+import { connectSocket } from '@/app/socket.client';
+import toast from 'react-hot-toast';
 import { sectionsToFlat } from '@/features/editor/utils/sections';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import { projects as projectsApi } from '@/app/api';
@@ -34,6 +36,7 @@ interface PublicProject {
   publicId?: string;
   isStarredByMe?: boolean;
   starCount?: number;
+  forkCount?: number;
   title?: string;
   metadata?: { songName?: string; [key: string]: unknown };
   lyrics?: { sections?: unknown[]; editorMode?: string };
@@ -84,7 +87,39 @@ function PublicProjectViewPageInner() {
 
   // Derive star state — no effect needed; reset local override when the project changes
   const isStarred = starredOverride ?? project?.isStarredByMe ?? false;
-  const starCount = (project?.starCount ?? 0) + starDelta;
+  const [liveStarCount, setLiveStarCount] = useState<number | null>(null);
+  const [liveForkCount, setLiveForkCount] = useState<number | null>(null);
+  const starCount = liveStarCount ?? ((project?.starCount ?? 0) + starDelta);
+
+  // ── Live socket updates: star count, fork notifications ───────
+  useEffect(() => {
+    const pid = project?.publicId;
+    if (!pid) return;
+    const socket = connectSocket();
+
+    const onStarUpdate = (payload: { publicId: string; starCount: number }) => {
+      if (payload.publicId !== pid) return;
+      // Absolute replace, not additive — avoids double-counting our own optimistic delta.
+      setLiveStarCount(payload.starCount);
+      setStarDelta(0);
+    };
+    const onForked = (payload: { publicId: string }) => {
+      if (payload.publicId !== pid) return;
+      setLiveForkCount((c) => (c ?? project?.forkCount ?? 0) + 1);
+      toast(t('projectView.someoneForked'));
+    };
+
+    socket.on('star:update', onStarUpdate);
+    socket.on('project:forked', onForked);
+    return () => {
+      socket.off('star:update', onStarUpdate);
+      socket.off('project:forked', onForked);
+    };
+  }, [project?.publicId, project?.forkCount, t]);
+
+  const displayProject = project && liveForkCount !== null
+    ? { ...project, forkCount: liveForkCount }
+    : project;
 
   // ── Player / playback state ──────────────────────────────────
   const playerRef = useRef(null);
@@ -296,7 +331,7 @@ function PublicProjectViewPageInner() {
           <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20" />
           <div className="p-4 flex flex-col gap-4">
             <ProjectInfoPanel
-              project={project}
+              project={displayProject!}
               cover={cover}
               palette={palette}
               isOwner={isOwner}

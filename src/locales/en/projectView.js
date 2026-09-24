@@ -11,6 +11,7 @@ export default {
   ctaAuth: "Like this project? Fork it to make your own version.",
   forkedFrom: "Forked from",
   forkedFromSourceDeleted: "Original project no longer available",
+  someoneForked: "Someone just forked this project",
   singers: "Singers",
   showMore: "Show more",
   showLess: "Show less",
