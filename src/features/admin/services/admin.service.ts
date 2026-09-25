@@ -5,6 +5,7 @@ interface BanOptions {
   reason?: string;
   bannedUntil?: string | null;
   banIp?: boolean;
+  banDevice?: boolean;
 }
 
 interface AdjustXPParams {
@@ -24,10 +25,10 @@ export const adminService = {
   // Destructive actions are wrapped in withSudo: if the server demands a fresh
   // sudo grant (403 sudo_required), the password prompt fires and the call is
   // retried automatically. (F24)
-  async banUser(userId: string, { reason, bannedUntil, banIp }: BanOptions): Promise<unknown> {
+  async banUser(userId: string, { reason, bannedUntil, banIp, banDevice }: BanOptions): Promise<unknown> {
     return withSudo(() => request(`/admin/users/${userId}/ban`, {
       method: 'POST',
-      body: JSON.stringify({ reason, bannedUntil, banIp }),
+      body: JSON.stringify({ reason, bannedUntil, banIp, banDevice }),
     }));
   },
 
