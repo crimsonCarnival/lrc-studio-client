@@ -16,7 +16,7 @@ const PANEL_CAP = 8;
 const SOCIAL_TYPES  = new Set(['star', 'fork', 'follow', 'reaction']);
 const BADGE_TYPES   = new Set(['badge_awarded']);
 const REQUEST_TYPES = new Set(['request_submitted', 'request_reviewed']);
-const SYSTEM_TYPES  = new Set(['system', 'admin', 'ban', 'unban', 'password_changed', 'admin_granted', 'xp_changed', 'role_changed']);
+const SYSTEM_TYPES  = new Set(['system', 'admin', 'ban', 'unban', 'password_changed', 'admin_granted', 'xp_changed', 'role_changed', 'streak_warning']);
 const STICKY_TYPES  = new Set(['verify_email', 'set_password']);
 
 function SectionLabel({ label, variant = 'default' }: { label: string; variant?: 'default' | 'action' | 'badge' }) {

@@ -8,6 +8,8 @@ export default {
     legendary: 'Legendary',
   },
 
+  defsLoadError: 'Could not load badge details',
+
   // ─── Showcase ───────────────────────────────────────────────────────────────
   showcase: {
     title:       'Showcase',
@@ -24,6 +26,7 @@ export default {
     noShowcase:   'No badges showcased yet',
     publicToggle: 'Show on profile',
     goSetup:     'Set up your showcase →',
+    configure:   'Configure',
     allBadges:   'All Badges',
     // Pluralized: "3 / 5 slots used"
     slots_one:   '{{count}} / {{max}} slot used',
@@ -69,6 +72,12 @@ export default {
     thisWeek:          'This week',
     thisMonth:         'This month',
     allTime:           'All time',
+    creator:           'CREATOR',
+    projectsCol:       'PROJECTS',
+    linesCol:          'LINES',
+    starsCol:          'STARS',
+    syncedCol:         'SYNCED',
+    xpCol:             'XP',
   },
 
   // ─── Builtin badge labels (keyed by badge id: badges.<id>.label) ──────────────

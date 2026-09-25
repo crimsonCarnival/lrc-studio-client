@@ -99,24 +99,31 @@ function HeatmapSkeleton() {
   );
 }
 
-export default function ActivityHeatmap() {
+/**
+ * Without `days` it fetches the viewer's own heatmap (settings). With `days` it
+ * renders the provided data read-only (public profile; the server only returns
+ * it when the owner opted in).
+ */
+export default function ActivityHeatmap({ days: providedDays }: { days?: HeatDay[] } = {}) {
   const { t, i18n } = useTranslation();
-  const [data, setData] = useState<HeatDay[] | null>(null);
+  const [fetched, setFetched] = useState<HeatDay[] | null>(null);
+  const data = providedDays ?? fetched;
   const [hovered, setHovered] = useState<GridDay | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (providedDays) return;
     let isMounted = true;
     (async () => {
       try {
         const { userActivityHeatmap } = await gqlRequest(GET_ACTIVITY_HEATMAP) as { userActivityHeatmap: HeatDay[] };
-        if (isMounted) setData(userActivityHeatmap);
+        if (isMounted) setFetched(userActivityHeatmap);
       } catch {
-        if (isMounted) setData([]);
+        if (isMounted) setFetched([]);
       }
     })();
     return () => { isMounted = false; };
-  }, []);
+  }, [providedDays]);
 
   useEffect(() => {
     if (data && scrollRef.current) {
@@ -150,6 +157,12 @@ export default function ActivityHeatmap() {
     return labels;
   }, [days, i18n.language]);
 
+  // Sun..Sat short names in the UI language (2024-01-07 was a Sunday).
+  const weekdayLabels = useMemo(() => {
+    const fmt = new Intl.DateTimeFormat(i18n.language || 'en', { weekday: 'short', timeZone: 'UTC' });
+    return Array.from({ length: 7 }, (_, i) => fmt.format(new Date(Date.UTC(2024, 0, 7 + i))));
+  }, [i18n.language]);
+
   const total = useMemo(
     () => (data ?? []).reduce((sum, d) => sum + d.count, 0),
     [data]
@@ -172,13 +185,9 @@ export default function ActivityHeatmap() {
       <div className="overflow-x-auto pb-4 custom-scrollbar" ref={scrollRef}>
         <div className="min-w-max flex gap-2">
           <div className="grid gap-1 text-[10px] text-muted-foreground mt-6 text-right select-none" style={{ gridTemplateRows: `repeat(${DAYS_PER_WEEK}, 14px)` }}>
-            <span className="invisible">Sun</span>
-            <span className="leading-[14px]">Mon</span>
-            <span className="invisible">Tue</span>
-            <span className="leading-[14px]">Wed</span>
-            <span className="invisible">Thu</span>
-            <span className="leading-[14px]">Fri</span>
-            <span className="invisible">Sat</span>
+            {weekdayLabels.map((label, i) => (
+              <span key={i} className={i % 2 === 1 ? 'leading-[14px]' : 'invisible'}>{label}</span>
+            ))}
           </div>
 
           <div className="flex flex-col">
@@ -229,6 +238,7 @@ export default function ActivityHeatmap() {
           ))}
           <span>{t('profile.heatmap.more')}</span>
         </div>
+        <p>{t('profile.heatmap.definition')}</p>
       </div>
     </div>
   );

@@ -54,7 +54,7 @@ export default function PlaybackSettings({ settings, updateSetting, searchTerm }
 
   return (
     <>
-      <Section title={t('settings.playback.speedSection') || 'Playback Speed'} iconName="headphones" searchTerm={searchTerm}>
+      <Section title={t('settings.playback.speedSection')} iconName="headphones" searchTerm={searchTerm}>
         <SettingRow iconName="keyboard_double_arrow_down" label={t('settings.playback.minSpeed')} description={t('settings.playback.minSpeedDesc')}>
           <NumberInput
             min={0.05}
@@ -83,7 +83,7 @@ export default function PlaybackSettings({ settings, updateSetting, searchTerm }
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.playback.seekSection') || 'Seeking & Navigation'} iconName="forward" searchTerm={searchTerm}>
+      <Section title={t('settings.playback.seekSection')} iconName="forward" searchTerm={searchTerm}>
         <SettingRow iconName="restart_alt" label={t('settings.playback.autoRewind')} description={t('settings.playback.autoRewindDesc')}>
           <NumberInput
             min={0}
@@ -113,7 +113,7 @@ export default function PlaybackSettings({ settings, updateSetting, searchTerm }
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.playback.waveformSection') || 'Waveform'} iconName="monitoring" searchTerm={searchTerm}>
+      <Section title={t('settings.playback.waveformSection')} iconName="monitoring" searchTerm={searchTerm}>
         <SettingRow iconName="monitoring" label={t('settings.playback.showWaveform')} description={t('settings.playback.showWaveformDesc')}>
           <Toggle
             id="toggle-waveform"

@@ -11,6 +11,7 @@ import { CountryFlag } from '@/shared/ui/CountryFlag';
 import { FollowButton } from './FollowButton';
 import type { PublicUser } from '@/types';
 import { usePresence } from '@/shared/hooks/usePresence';
+import { useStreakResetHint } from '@/shared/hooks/useStreakResetHint';
 import { formatDistanceToNow } from 'date-fns';
 import { es as esLocale, enUS as enLocale } from 'date-fns/locale';
 
@@ -60,6 +61,8 @@ interface ProfileHeaderProps {
   onUnblock: () => void;
   onOpenFollowers: () => void;
   onOpenFollowing: () => void;
+  /** Owner-only: switches the page into the "view as others" preview. */
+  onViewAsOthers?: () => void;
 }
 
 /** Block toggle with two-step confirm; parent owns isBlocked + the API calls. */
@@ -110,6 +113,7 @@ export function ProfileHeader({
   blockLoading,
   onBlock,
   onUnblock,
+  onViewAsOthers,
 }: ProfileHeaderProps) {
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language.startsWith('es') ? esLocale : enLocale;
@@ -122,6 +126,9 @@ export function ProfileHeader({
   const progress = xp - xpForLevel;
   const needed = xpForNext - xp;
   const xpTip = `${xp.toLocaleString()} XP · ${needed.toLocaleString()} to Lv.${level + 1} (${Math.round((progress / (xpForNext - xpForLevel)) * 100)}%)`;
+  const streakCurrent = profile.streak?.current ?? 0;
+  const streakLongest = profile.streak?.longest ?? 0;
+  const streakResetHint = useStreakResetHint();
 
   const copyProfileLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -142,23 +149,51 @@ export function ProfileHeader({
               {badgeIds.length > 0 && <BadgeList ids={badgeIds} max={3} />}
               <Tip content={xpTip} side="bottom">
                 <span className="bg-primary/20 text-primary-light border border-primary/30 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider cursor-default shadow-glow">
-                  {t('profile.levelLabel', { defaultValue: 'Nivel' })} {level}
+                  {t('profile.levelLabel')} {level}
                 </span>
               </Tip>
+              {(streakCurrent > 0 || streakLongest > 0) && (
+                <Tip
+                  content={<span className="flex flex-col gap-0.5"><span>{t('profile.streakLongest', { count: streakLongest })}</span><span className="text-muted-foreground">{streakResetHint}</span></span>}
+                  side="bottom"
+                >
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border cursor-default ${streakCurrent > 0
+                    ? 'bg-orange-500/15 text-orange-400 border-orange-500/30'
+                    : 'bg-zinc-800/50 text-zinc-500 border-zinc-700'}`}>
+                    <Icon name="local_fire_department" size={14} />
+                    {streakCurrent > 0 ? t('profile.streakDays', { count: streakCurrent }) : t('profile.streakNone')}
+                  </span>
+                </Tip>
+              )}
             </div>
           </div>
 
           <div className="flex items-center justify-center sm:justify-start xl:justify-end gap-2 shrink-0">
             {isOwner ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/settings')}
-                className="bg-zinc-800/50 hover:bg-zinc-700 text-zinc-200 border-zinc-700"
-              >
-                <Icon name="edit" size={16} className="mr-2 opacity-70" />
-                {t('profile.editProfile')}
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/settings')}
+                  className="bg-zinc-800/50 hover:bg-zinc-700 text-zinc-200 border-zinc-700"
+                >
+                  <Icon name="edit" size={16} className="mr-2 opacity-70" />
+                  {t('profile.editProfile')}
+                </Button>
+                {onViewAsOthers && (
+                  <Tip content={t('profile.viewAsOthers')}>
+                    <Button
+                      variant="outline"
+                      size="icon-sm"
+                      onClick={onViewAsOthers}
+                      aria-label={t('profile.viewAsOthers')}
+                      className="bg-zinc-800/50 hover:bg-zinc-700 border-zinc-700"
+                    >
+                      <Icon name="visibility" size={16} className="opacity-70" />
+                    </Button>
+                  </Tip>
+                )}
+              </>
             ) : (
               <div className="flex items-center gap-2">
                 {!isBlocked && (
@@ -177,7 +212,7 @@ export function ProfileHeader({
                 />
               </div>
             )}
-            <Tip content={t('share.title', { defaultValue: 'Share' })}>
+            <Tip content={t('share.title')}>
               <Button variant="outline" size="icon-sm" onClick={copyProfileLink} className="bg-zinc-800/50 hover:bg-zinc-700 border-zinc-700">
                 <Icon name="share" size={16} className="opacity-70" />
               </Button>
@@ -210,7 +245,7 @@ export function ProfileHeader({
             profile.bio
           ) : isOwner ? (
             <span className="italic text-zinc-500">
-              {t('profile.noBio')} <button onClick={() => navigate('/settings')} className="text-primary hover:underline">{t('profile.addBio', { defaultValue: 'Añade una' })}</button>
+              {t('profile.noBio')} <button onClick={() => navigate('/settings')} className="text-primary hover:underline">{t('profile.addBio')}</button>
             </span>
           ) : (
             <span className="italic text-zinc-500">{t('profile.noBio')}</span>

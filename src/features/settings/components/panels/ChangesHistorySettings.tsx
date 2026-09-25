@@ -30,7 +30,7 @@ export default function ChangesHistorySettings({ searchTerm }: { searchTerm?: st
       <div className="flex items-center gap-2 px-1">
         <Icon name="history" size={16} className="text-zinc-400" />
         <h3 className="font-heading text-[13px] font-semibold tracking-tight text-zinc-200 contrast-more:text-white">
-          {t('profile.tabs.history') || 'Changes History'}
+          {t('profile.tabs.history')}
         </h3>
       </div>
 
@@ -38,7 +38,7 @@ export default function ChangesHistorySettings({ searchTerm }: { searchTerm?: st
         {usernameMatches && (
           <div className="rounded-2xl border border-border/50 contrast-more:border-zinc-600 bg-secondary/10 p-5 lg:p-6 hover:border-border transition-all">
             <h4 className="font-heading text-sm font-semibold text-zinc-100 contrast-more:text-white mb-4 border-b border-border/50 contrast-more:border-zinc-600 pb-2">
-              {t('profile.sections.handleHistory') || 'Username history'}
+              {t('profile.sections.handleHistory')}
             </h4>
             <AccountNameHistory />
           </div>
@@ -46,7 +46,7 @@ export default function ChangesHistorySettings({ searchTerm }: { searchTerm?: st
         {emailMatches && (
           <div className="rounded-2xl border border-border/50 contrast-more:border-zinc-600 bg-secondary/10 p-5 lg:p-6 hover:border-border transition-all">
             <h4 className="font-heading text-sm font-semibold text-zinc-100 contrast-more:text-white mb-4 border-b border-border/50 contrast-more:border-zinc-600 pb-2">
-              {t('profile.sections.emailHistory') || 'Email history'}
+              {t('profile.sections.emailHistory')}
             </h4>
             <EmailHistory />
           </div>

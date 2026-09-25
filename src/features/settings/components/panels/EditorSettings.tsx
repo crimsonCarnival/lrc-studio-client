@@ -119,7 +119,7 @@ export default function EditorSettings({ settings, updateSetting, searchTerm }: 
           onChange={handleShowShiftAllChange}
         />
       </SettingRow>
-      <SettingRow iconName="tag" label={t('settings.editor.showLineNumbers') || 'Line numbers'} description={t('settings.editor.showLineNumbersDesc') || 'Show line numbers in the editor'}>
+      <SettingRow iconName="tag" label={t('settings.editor.showLineNumbers')} description={t('settings.editor.showLineNumbersDesc')}>
         <Toggle
           id="toggle-line-numbers"
           checked={settings.editor?.showLineNumbers ?? true}

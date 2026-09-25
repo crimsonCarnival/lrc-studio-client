@@ -128,6 +128,7 @@ export const authService = {
           google { connected googleId email name pictureUrl }
           badges { id grantedAt grantedBy }
           showcasedBadges
+          showcasePublic
           progression { xp level }
           showcaseSlots
           lastIp
@@ -164,7 +165,8 @@ export const authService = {
           miniProfileBadgesEnabled
           miniProfileBadgeIds
           defaultProjectPrivacy
-          notifications { follow reaction star fork badge_awarded xp_changed }
+          showActivityHeatmap
+          notifications { follow reaction star fork badge_awarded xp_changed streak_warning }
         }
       }
     `);
@@ -205,6 +207,7 @@ export const authService = {
           miniProfileBadgeIds
           badges { id grantedAt grantedBy }
           showcasedBadges
+          showcasePublic
           stats { minutesSynced wordsSynced karaokeLines }
           streak { current longest lastActiveDate }
           progression { xp level }

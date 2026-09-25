@@ -58,7 +58,7 @@ export function PlaylistGrid({ accountName, isOwner }: { accountName: string; is
 
   const handleDelete = (playlist: PlaylistItem) => {
     requestConfirm(
-      t('playlists.deleteConfirm', { name: playlist.name, defaultValue: `Delete "${playlist.name}"?` }),
+      t('playlists.deleteConfirm', { name: playlist.name}),
       async () => {
         try {
           await deletePlaylist(playlist.id);
@@ -75,6 +75,10 @@ export function PlaylistGrid({ accountName, isOwner }: { accountName: string; is
   const handleEdit = (playlist: PlaylistItem) => {
     setEditingPlaylist(playlist);
   };
+
+  // The server already hides private playlists from real visitors; this only
+  // matters for the owner's "view as others" preview, where isOwner is false.
+  const visiblePlaylists = isOwner ? playlists : playlists.filter(p => p.isPublic !== false);
 
   if (loading) {
     return (
@@ -97,13 +101,13 @@ export function PlaylistGrid({ accountName, isOwner }: { accountName: string; is
         </div>
       )}
 
-      {playlists.length === 0 ? (
+      {visiblePlaylists.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
           <p className="text-sm">{t('playlists.empty')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {playlists.map(playlist => (
+          {visiblePlaylists.map(playlist => (
             <PlaylistCard
               key={playlist.id}
               playlist={playlist}

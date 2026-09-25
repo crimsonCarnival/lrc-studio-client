@@ -44,7 +44,7 @@ export default function SecuritySettings({ focusCard, searchTerm }: { focusCard?
       <div className="flex items-center gap-2 mb-2 px-1">
         <Icon name="verified_user" size={16} className="text-zinc-400" />
         <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-          {t('profile.sections.security') || 'Security'}
+          {t('profile.sections.security')}
         </h3>
       </div>
 

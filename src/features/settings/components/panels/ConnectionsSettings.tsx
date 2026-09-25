@@ -25,7 +25,7 @@ export default function ConnectionsSettings({ searchTerm }: { searchTerm?: strin
       <div className="flex items-center gap-2 mb-2 px-1">
         <Icon name="link" size={16} className="text-zinc-400" />
         <h3 className="font-heading text-[13px] font-semibold tracking-tight text-zinc-200 contrast-more:text-white">
-          {t('profile.tabs.connections') || 'Connections'}
+          {t('profile.tabs.connections')}
         </h3>
       </div>
 

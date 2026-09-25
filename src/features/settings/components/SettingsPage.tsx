@@ -21,6 +21,7 @@ import SessionsSettings from './panels/SessionsSettings';
 import ActivitySettings from './panels/ActivitySettings';
 import StatsSettings from './panels/StatsSettings';
 import PrivacySettings from './panels/PrivacySettings';
+import BadgesSettings from './panels/BadgesSettings';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import type { AppSettings } from '@/features/settings/settings.types';
@@ -41,6 +42,7 @@ interface PanelContentProps {
 function SettingsPanelContent({ activeTab, settings, updateSetting, validateShortcut, isGuest, userId, focusCard, searchTerm }: PanelContentProps) {
   switch (activeTab) {
     case 'profile': return <ProfileSettings key={userId} searchTerm={searchTerm} />;
+    case 'badges': return <BadgesSettings key={userId} searchTerm={searchTerm} />;
     case 'activity': return <ActivitySettings key={userId} searchTerm={searchTerm} />;
     case 'stats': return <StatsSettings key={userId} searchTerm={searchTerm} />;
     case 'security': return <SecuritySettings focusCard={focusCard ?? undefined} searchTerm={searchTerm} />;
@@ -66,21 +68,21 @@ interface TabMeta {
   iconName: string;
   authOnly?: boolean;
   group: string;
-  searchable: boolean;
-  fallback?: string;
+  searchable: boolean;
 }
 
 const TABS: TabMeta[] = [
   // Account & Identity
   { id: 'profile', labelKey: 'profile.tabs.account', iconName: 'person', authOnly: true, group: 'account', searchable: true },
+  { id: 'badges', labelKey: 'badges.showcase.editorTitle', iconName: 'military_tech', authOnly: true, group: 'account', searchable: true },
   { id: 'activity', labelKey: 'profile.tabs.activity', iconName: 'monitoring', authOnly: true, group: 'account', searchable: true },
   { id: 'stats', labelKey: 'profile.tabs.stats', iconName: 'bar_chart', authOnly: true, group: 'account', searchable: true },
   { id: 'security', labelKey: 'profile.sections.security', iconName: 'verified_user', authOnly: true, group: 'account', searchable: true },
-  { id: 'privacy', labelKey: 'profile.sections.privacy', fallback: 'Privacy', iconName: 'shield', authOnly: true, group: 'account', searchable: true },
+  { id: 'privacy', labelKey: 'profile.sections.privacy', iconName: 'shield', authOnly: true, group: 'account', searchable: true },
   { id: 'connections', labelKey: 'profile.tabs.connections', iconName: 'link', authOnly: true, group: 'account', searchable: true },
   { id: 'history', labelKey: 'profile.tabs.history', iconName: 'history', authOnly: true, group: 'account', searchable: true },
-  { id: 'blocked', labelKey: 'settings.blocked.label', fallback: 'Blocked users', iconName: 'block', authOnly: true, group: 'account', searchable: true },
-  { id: 'sessions', labelKey: 'profile.sessions.title', fallback: 'Sessions', iconName: 'layers', authOnly: true, group: 'account', searchable: false },
+  { id: 'blocked', labelKey: 'settings.blocked.label', iconName: 'block', authOnly: true, group: 'account', searchable: true },
+  { id: 'sessions', labelKey: 'profile.sessions.title', iconName: 'layers', authOnly: true, group: 'account', searchable: false },
 
   // App Preferences
   { id: 'playback', labelKey: 'settings.playback.label', iconName: 'headphones', group: 'preferences', searchable: true },
@@ -90,7 +92,7 @@ const TABS: TabMeta[] = [
   { id: 'autoStamp', labelKey: 'settings.autoStamp.title', iconName: 'auto_awesome', group: 'preferences', searchable: true },
 
   // Advanced
-  { id: 'shortcuts', labelKey: 'settings.shortcuts.label', fallback: 'Shortcuts', iconName: 'keyboard', group: 'advanced', searchable: true },
+  { id: 'shortcuts', labelKey: 'settings.shortcuts.label', iconName: 'keyboard', group: 'advanced', searchable: true },
   { id: 'advanced', labelKey: 'settings.advanced.label', iconName: 'tune', group: 'advanced', searchable: true },
 ];
 
@@ -291,7 +293,7 @@ export default function SettingsPage() {
                 preferences: t('settings.groups.preferences'),
                 advanced: t('settings.groups.advanced'),
               };
-              const label = tk(entry.labelKey) || entry.fallback || entry.id;
+              const label = tk(entry.labelKey);
               const isActive = activeTab === entry.id;
               const showGroupLabel = idx === 0 || visibleTabs[idx - 1].group !== entry.group;
               return (
@@ -324,7 +326,7 @@ export default function SettingsPage() {
         <div className="flex flex-col flex-1 min-h-0 min-w-0">
           <div className="lg:hidden flex overflow-x-auto no-scrollbar border-b border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0 px-2 pt-1 items-center">
             {visibleTabs.map((entry, idx) => {
-              const label = tk(entry.labelKey) || entry.fallback || entry.id;
+              const label = tk(entry.labelKey);
               const isActive = activeTab === entry.id;
               const showDivider = idx > 0 && visibleTabs[idx - 1].group !== entry.group;
               return (

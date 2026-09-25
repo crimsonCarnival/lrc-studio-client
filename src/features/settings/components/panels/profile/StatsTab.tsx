@@ -5,6 +5,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
 import { Tip } from '@/shared/ui/tip';
 import { Skeleton } from '@ui/skeleton';
+import { useStreakResetHint } from '@/shared/hooks/useStreakResetHint';
 
 const GET_CONTENT_STATS = /* GraphQL */ `
   query UserContentStats {
@@ -136,6 +137,7 @@ export default function StatsTab() {
   const { t, i18n } = useTranslation();
   // addictionLevel uses a default-value string fallback.
   const tk = t as (key: string, defaultValue?: string) => string;
+  const streakResetHint = useStreakResetHint();
   const [stats, setStats] = useState<ContentStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -171,7 +173,7 @@ export default function StatsTab() {
   if (error || !stats) {
     return (
       <div className="flex items-center justify-center py-6 text-zinc-500">
-        <p className="text-xs">{error || 'Failed to load stats'}</p>
+        <p className="text-xs">{error || t('common.loadError')}</p>
       </div>
     );
   }
@@ -245,8 +247,8 @@ export default function StatsTab() {
           tip={t('profile.stats.tips.karaokeLines')}
         />
         <div className="col-span-full border-t border-border/50 my-2" />
-        <StatCard label={t('profile.stats.currentStreak')} value={`${stats.currentStreak}d`} tip={t('profile.stats.tips.currentStreak')} />
-        <StatCard label={t('profile.stats.longestStreak')} value={`${stats.longestStreak}d`} tip={t('profile.stats.tips.longestStreak')} />
+        <StatCard label={t('profile.stats.currentStreak')} value={`${stats.currentStreak}d`} tip={<>{t('profile.stats.tips.currentStreak')} {streakResetHint}</>} />
+        <StatCard label={t('profile.stats.longestStreak')} value={`${stats.longestStreak}d`} tip={<>{t('profile.stats.tips.longestStreak')} {streakResetHint}</>} />
 
         <div className="col-span-full border-t border-border/50 my-2" />
         <TrendCard

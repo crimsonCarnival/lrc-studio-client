@@ -16,7 +16,7 @@ export default function ConnectedAccounts() {
       <div className="animate-fade-in bg-secondary/10 border border-border rounded-2xl p-5 hover:border-primary/30 transition-all">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">
-            {t('settings.google.label') || 'Google'}
+            {t('settings.google.label')}
           </h3>
           {user?.google?.connected && user.google.lastUsedAt && (
             <span className="text-[10px] text-zinc-500 font-medium">
@@ -57,7 +57,7 @@ export default function ConnectedAccounts() {
               }}
               className="text-xs font-semibold text-zinc-500 hover:text-red-400 underline transition-colors cursor-pointer self-start ml-1"
             >
-              {t('settings.google.disconnect') || 'Disconnect'}
+              {t('settings.google.disconnect')}
             </button>
           </div>
         ) : (
@@ -66,7 +66,7 @@ export default function ConnectedAccounts() {
             onClick={async () => {
               try {
                 await connectGoogle();
-                toast.success(t('settings.google.connectSuccess') || 'Google connected successfully');
+                toast.success(t('settings.google.connectSuccess'));
               } catch {
                 toast.error(t('settings.google.connectFailed'));
               }

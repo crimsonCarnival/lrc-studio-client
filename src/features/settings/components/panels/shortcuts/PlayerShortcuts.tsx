@@ -13,11 +13,11 @@ export default function PlayerShortcuts({ settings, searchTerm, handleShortcutCh
   const { t } = useTranslation();
 
   return (
-    <Section title={t('settings.shortcuts.playerSection') || 'Player'} iconName="headphones" searchTerm={searchTerm}>
+    <Section title={t('settings.shortcuts.playerSection')} iconName="headphones" searchTerm={searchTerm}>
       <SettingRow
         iconName="play_arrow"
-        label={t('settings.shortcuts.playPauseLabel') || 'Play / Pause'}
-        description={t('settings.shortcuts.playPauseDesc') || 'Toggle playback'}
+        label={t('settings.shortcuts.playPauseLabel')}
+        description={t('settings.shortcuts.playPauseDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.playPause?.[0] || 'Space'}
@@ -28,8 +28,8 @@ export default function PlayerShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="skip_previous"
-        label={t('settings.shortcuts.seekBackwardLabel') || 'Seek Backward'}
-        description={t('settings.shortcuts.seekBackwardDesc', { val: settings.playback?.seekTime ?? 5 }) || `Seek back ${settings.playback?.seekTime ?? 5}s`}
+        label={t('settings.shortcuts.seekBackwardLabel')}
+        description={t('settings.shortcuts.seekBackwardDesc', { val: settings.playback?.seekTime ?? 5 })}
       >
         <ShortcutInput
           value={settings.shortcuts?.seekBackward?.[0] || 'ArrowLeft'}
@@ -40,8 +40,8 @@ export default function PlayerShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="skip_next"
-        label={t('settings.shortcuts.seekForwardLabel') || 'Seek Forward'}
-        description={t('settings.shortcuts.seekForwardDesc', { val: settings.playback?.seekTime ?? 5 }) || `Seek forward ${settings.playback?.seekTime ?? 5}s`}
+        label={t('settings.shortcuts.seekForwardLabel')}
+        description={t('settings.shortcuts.seekForwardDesc', { val: settings.playback?.seekTime ?? 5 })}
       >
         <ShortcutInput
           value={settings.shortcuts?.seekForward?.[0] || 'ArrowRight'}
@@ -52,8 +52,8 @@ export default function PlayerShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="volume_off"
-        label={t('settings.shortcuts.muteLabel') || 'Mute / Unmute'}
-        description={t('settings.shortcuts.muteDesc') || 'Toggle audio mute'}
+        label={t('settings.shortcuts.muteLabel')}
+        description={t('settings.shortcuts.muteDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.mute?.[0] || 'm'}
@@ -64,8 +64,8 @@ export default function PlayerShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="keyboard_double_arrow_up"
-        label={t('settings.shortcuts.speedUpLabel') || 'Speed Up'}
-        description={t('settings.shortcuts.speedUpDesc') || 'Increase playback speed by nudge amount'}
+        label={t('settings.shortcuts.speedUpLabel')}
+        description={t('settings.shortcuts.speedUpDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.speedUp?.[0] || '+'}
@@ -76,8 +76,8 @@ export default function PlayerShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="keyboard_double_arrow_down"
-        label={t('settings.shortcuts.speedDownLabel') || 'Speed Down'}
-        description={t('settings.shortcuts.speedDownDesc') || 'Decrease playback speed by nudge amount'}
+        label={t('settings.shortcuts.speedDownLabel')}
+        description={t('settings.shortcuts.speedDownDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.speedDown?.[0] || '-'}

@@ -17,6 +17,7 @@ import { FollowModal } from './FollowModal';
 import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
 import { BadgeChip } from '@/features/badges/BadgeChip';
 import { ShowcasedBadges } from '@/features/badges/ShowcasedBadges';
+import ActivityHeatmap from '@/features/settings/components/panels/profile/ActivityHeatmap';
 import { projects } from '@/app/api';
 import ProjectSetupModal from '@/features/editor/components/setup/ProjectSetupModal';
 import type { ProjectSetupConfirm } from '@/features/editor/components/setup/ProjectSetupModal';
@@ -44,6 +45,9 @@ function formatRelativeTime(dateStr?: string | null, locale = 'en'): string {
 }
 
 // Project metadata is loosely shaped at this layer; narrow the fields we touch.
+// Stable fallback for the edit modal: it re-syncs its form whenever an initial* prop changes identity.
+const EMPTY_LIST: string[] = [];
+
 interface ProjectMetaLoose {
   description?: string;
   tags?: string[];
@@ -207,7 +211,22 @@ export default function ProfilePage() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [requestConfirm, confirmModal] = useConfirm();
 
-  const isOwner = !!user && !!accountName && user.accountName === accountName;
+  const isSelf = !!user && !!accountName && user.accountName === accountName;
+  // "View as others": a preview of the owner's own profile. The profile is
+  // re-fetched with `asVisitor`, so the server applies the same projection an
+  // anonymous visitor gets (public projects/playlists only, visitor-facing
+  // counts, country/last-seen per privacy settings). Rendering only.
+  const viewAsOthers = isSelf && searchParams.get('view') === 'public';
+  const isOwner = isSelf && !viewAsOthers;
+
+  const setViewAsOthers = useCallback((on: boolean) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (on) next.set('view', 'public');
+      else next.delete('view');
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   // Silently rewrite legacy /profile/:accountName → /:accountName
   useEffect(() => {
@@ -230,8 +249,11 @@ export default function ProfilePage() {
     setLoading(true);
     setNotFound(false);
 
-    getPublicProfile(accountName)
+    // Toggling the preview refetches; ignore a stale response from the other mode.
+    let cancelled = false;
+    getPublicProfile(accountName, viewAsOthers)
       .then((data) => {
+        if (cancelled) return;
         if (!data) {
           setNotFound(true);
         } else {
@@ -240,13 +262,14 @@ export default function ProfilePage() {
           setIsBlocked(data.isBlockedByMe ?? false);
         }
       })
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false));
-  }, [accountName, user?.accountName, navigate]);
+      .catch(() => { if (!cancelled) setNotFound(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [accountName, user?.accountName, navigate, viewAsOthers]);
 
   // Live-bump follower count on your own profile when someone else follows you.
   useEffect(() => {
-    if (!isOwner || !user) return;
+    if (!isSelf || !user) return;
     const socket = connectSocket();
 
     const onFollowNew = (payload: { followerId: string; followerCount: number }) => {
@@ -256,10 +279,10 @@ export default function ProfilePage() {
 
     socket.on('follow:new', onFollowNew);
     return () => { socket.off('follow:new', onFollowNew); };
-  }, [isOwner, user, t]);
+  }, [isSelf, user, t]);
 
   useEffect(() => {
-    if (!profile || !user || isOwner || isFollowing) return;
+    if (!profile || !user || isSelf || isFollowing) return;
     if (searchParams.get('intent') !== 'follow') return;
 
     setSearchParams({}, { replace: true });
@@ -269,7 +292,7 @@ export default function ProfilePage() {
       .then(() => setIsFollowing(true))
       .catch(() => { })
       .finally(() => setFollowLoading(false));
-  }, [profile, user, isOwner, isFollowing, searchParams, setSearchParams]);
+  }, [profile, user, isSelf, isFollowing, searchParams, setSearchParams]);
 
   const handleFollow = useCallback(async () => {
     if (!user) {
@@ -387,8 +410,9 @@ export default function ProfilePage() {
     ...(profile.isVerified && !serverBadgeIds.includes('verified') ? ['verified'] : []),
     ...(profile.isAdmin && !serverBadgeIds.includes('admin') ? ['admin'] : []),
   ];
+  const showcasedBadges = profile.showcasedBadges ?? [];
   // Header shows only showcased badges; fall back to all if none showcased
-  const showcasedIds = (profile.showcasedBadges ?? []).map(b => b.id);
+  const showcasedIds = showcasedBadges.map(b => b.id);
   const badgeIds = showcasedIds.length > 0 ? showcasedIds : allBadgeIds.slice(0, 3);
 
   const minutesSynced = profile.stats?.minutesSynced ?? 0;
@@ -404,11 +428,31 @@ export default function ProfilePage() {
   const level = profile.progression?.level ?? 0;
   const xp = profile.progression?.xp ?? 0;
 
-  const hasVisibleShowcase = profile.showcasePublic !== false && (profile.showcasedBadges?.length ?? 0) > 0;
+  const showcaseVisibleToViewer = profile.showcasePublic !== false;
+  const hasVisibleShowcase = showcaseVisibleToViewer && showcasedBadges.length > 0;
+
+  // In preview mode the server already returned the visitor projection.
+  const visibleProjects = profile.projects;
+  const projectCount = profile.projectCount;
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-5xl mx-auto w-full">
+        {viewAsOthers && (
+          <div className="sticky top-0 z-20 mb-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-primary/10 backdrop-blur-sm px-4 py-2.5">
+            <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <Icon name="visibility" size={16} className="text-primary" />
+              {t('profile.viewingAsOthers')}
+            </span>
+            <button
+              type="button"
+              onClick={() => setViewAsOthers(false)}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              {t('profile.exitViewAsOthers')}
+            </button>
+          </div>
+        )}
         <ProfileHeader
           profile={profile}
           displayName={displayName}
@@ -417,39 +461,42 @@ export default function ProfilePage() {
           xp={xp}
           minutesLabel={minutesLabel}
           isOwner={isOwner}
-          isFollowing={isFollowing}
-          followLoading={followLoading}
+          // Preview shows the visitor's follow/block controls, disabled so the
+          // owner can't follow or block themselves from here.
+          isFollowing={viewAsOthers ? false : isFollowing}
+          followLoading={viewAsOthers || followLoading}
           onFollow={handleFollow}
           onUnfollow={handleUnfollow}
-          isBlocked={isBlocked}
-          blockLoading={blockLoading}
+          isBlocked={viewAsOthers ? false : isBlocked}
+          blockLoading={viewAsOthers || blockLoading}
           onBlock={handleBlock}
           onUnblock={handleUnblock}
           onOpenFollowers={() => setFollowModal('FOLLOWERS')}
           onOpenFollowing={() => setFollowModal('FOLLOWING')}
+          onViewAsOthers={isSelf ? () => setViewAsOthers(true) : undefined}
         />
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-8">
           <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
-            <span className="text-2xl font-bold text-zinc-100">{profile.projectCount}</span>
-            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.projects', { defaultValue: 'Projects' })}</span>
+            <span className="text-2xl font-bold text-zinc-100">{projectCount}</span>
+            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.projects')}</span>
           </div>
           <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
             <span className="text-2xl font-bold text-zinc-100">{minutesLabel || '0 m'}</span>
-            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.syncedTime', { defaultValue: 'Synced' })}</span>
+            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.syncedTime')}</span>
           </div>
           <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
             <span className="text-2xl font-bold text-zinc-100">{profile.totalStarsReceived}</span>
-            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.stars', { defaultValue: 'Stars Received' })}</span>
+            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.stars')}</span>
           </div>
           <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
             <span className="text-2xl font-bold text-zinc-100">{profile.followerCount}</span>
-            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.followers', { defaultValue: 'Followers' })}</span>
+            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.followers')}</span>
           </div>
           <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
             <span className="text-2xl font-bold text-zinc-100">{profile.followingCount}</span>
-            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.following', { defaultValue: 'Following' })}</span>
+            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.following')}</span>
           </div>
         </div>
 
@@ -462,8 +509,8 @@ export default function ProfilePage() {
               {['projects', 'playlists', 'activity'].map((tab) => {
                 const tAny = t as (k: string, opts?: object) => string;
                 let label = tAny(`profile.publicTabs.${tab}`);
-                if (tab === 'projects') label = tAny('profile.publicTabs.projectsWithCount', { defaultValue: `Projects ${profile.projectCount}`, count: profile.projectCount });
-                if (tab === 'playlists') label = tAny('profile.publicTabs.playlistsWithCount', { defaultValue: `Playlists ${profile.playlistCount}`, count: profile.playlistCount });
+                if (tab === 'projects') label = tAny('profile.publicTabs.projectsWithCount', { count: projectCount });
+                if (tab === 'playlists') label = tAny('profile.publicTabs.playlistsWithCount', { count: profile.playlistCount });
                 
                 return (
                   <button
@@ -481,7 +528,7 @@ export default function ProfilePage() {
             </div>
 
             {activeTab === 'projects' && (
-              profile.projects.length === 0 ? (
+              visibleProjects.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-3 py-16 text-center glass rounded-2xl">
                   <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
                     <Icon name="folder_open" size={28} className="text-zinc-500" />
@@ -490,7 +537,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {profile.projects.map((project) => (
+                  {visibleProjects.map((project) => (
                     <ProjectCard
                       key={project.publicId}
                       project={project}
@@ -507,7 +554,13 @@ export default function ProfilePage() {
               <PlaylistGrid accountName={profile.accountName} isOwner={isOwner} />
             )}
 
-            {activeTab === 'activity' && (
+            {activeTab === 'activity' && profile.activityHeatmap && (
+              <div className="glass rounded-2xl p-5">
+                <ActivityHeatmap days={profile.activityHeatmap} />
+              </div>
+            )}
+
+            {activeTab === 'activity' && !profile.activityHeatmap && (
               <div className="flex flex-col items-center justify-center gap-3 py-16 text-center glass rounded-2xl">
                 <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
                   <Icon name="monitoring" size={28} className="text-zinc-500" />
@@ -515,10 +568,10 @@ export default function ProfilePage() {
                 <p className="text-sm text-zinc-400 font-medium">
                   {isOwner ? (
                     <button onClick={() => navigate('/settings/activity')} className="text-primary hover:underline transition-colors">
-                      {t('profile.activity.ownerEmpty', { defaultValue: 'Ver mi actividad' })}
+                      {t('profile.activity.ownerEmpty')}
                     </button>
                   ) : (
-                    t('profile.activity.empty', { defaultValue: 'No hay actividad reciente' })
+                    t('profile.activity.empty')
                   )}
                 </p>
               </div>
@@ -532,18 +585,18 @@ export default function ProfilePage() {
               {/* Vitrina block */}
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">{t('badges.showcase.title', { defaultValue: 'Vitrina' })}</h3>
+                  <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">{t('badges.showcase.title')}</h3>
                   {isOwner && (
-                    <button onClick={() => navigate('/settings/profile')} className="text-xs text-primary hover:text-primary-dim transition-colors">
-                      {t('profile.showcase.configure', { defaultValue: 'Configurar' })}
+                    <button onClick={() => navigate('/settings/badges')} className="text-xs text-primary hover:text-primary-dim transition-colors">
+                      {t('badges.showcase.configure')}
                     </button>
                   )}
                 </div>
-                
+
                 {hasVisibleShowcase ? (
                   <ShowcasedBadges
-                    badges={profile.showcasedBadges}
-                    maxSlots={profile.showcasedBadges.length}
+                    badges={showcasedBadges}
+                    maxSlots={showcasedBadges.length}
                     className=""
                   />
                 ) : isOwner ? (
@@ -551,7 +604,7 @@ export default function ProfilePage() {
                     <p className="text-xs text-zinc-500 font-medium">{t('badges.showcase.noShowcase')}</p>
                     <button
                       type="button"
-                      onClick={() => navigate('/settings/profile')}
+                      onClick={() => navigate('/settings/badges')}
                       className="text-xs text-primary hover:text-primary/80 transition-colors text-left"
                     >
                       {t('badges.showcase.goSetup')}
@@ -561,12 +614,12 @@ export default function ProfilePage() {
               </div>
 
               {/* Insignias block */}
-              {allBadgeIds.length > 0 && (isOwner || profile.showcasePublic !== false) && (
+              {allBadgeIds.length > 0 && (isOwner || showcaseVisibleToViewer) && (
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">{t('profile.badges.title', { defaultValue: 'Insignias' })}</h3>
+                    <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">{t('profile.badges.title')}</h3>
                     <span className="text-xs text-zinc-500 font-medium">
-                      {t('profile.badges.count', { defaultValue: '{{count}} de {{total}}', count: allBadgeIds.length, total: 18 })}
+                      {t('profile.badges.count', { count: allBadgeIds.length, total: 18 })}
                     </span>
                   </div>
                   <div className="flex flex-col gap-2">
@@ -597,7 +650,7 @@ export default function ProfilePage() {
         )}
 
         {editingProject && (() => {
-          const meta = (editingProject.metadata || {}) as ProjectMetaLoose;
+          const meta = (editingProject.metadata || {}) as ProjectMetaLoose & { singers?: string[] | null; singerColors?: string[] | null };
           return (
             <ProjectSetupModal
               key={editingProject.publicId}
@@ -605,7 +658,7 @@ export default function ProfilePage() {
               onClose={() => setEditingProject(null)}
               onConfirm={async (data: ProjectSetupConfirm) => {
                 try {
-                  const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic, singerColors } = data;
+                  const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic, singerColors, singers } = data;
                   const updatedMetadata = {
                     ...(editingProject.metadata as Record<string, unknown>),
                     description,
@@ -615,7 +668,8 @@ export default function ProfilePage() {
                     songAlbum,
                     songYear,
                     genre,
-                    singerColors: (singerColors || []).filter(Boolean),
+                    singerColors: (singerColors || []).map((c) => c || ''),
+                    singers,
                   };
                   await projects.patch(editingProject.publicId, {
                     title,
@@ -639,7 +693,7 @@ export default function ProfilePage() {
               }}
               initialName={editingProject.title || ''}
               initialDescription={meta.description || ''}
-              initialTags={meta.tags || []}
+              initialTags={meta.tags ?? EMPTY_LIST}
               initialSongName={meta.songName || ''}
               initialSongArtist={(meta.songArtists || []).join(', ') || meta.songArtist || ''}
               initialSongAlbum={meta.songAlbum || ''}
@@ -647,6 +701,8 @@ export default function ProfilePage() {
               initialGenre={meta.genre || ''}
               initialCoverImage={editingProject.coverImage || ''}
               initialIsPublic={editingProject.public || false}
+              initialSingerColors={meta.singerColors ?? EMPTY_LIST}
+              initialSingers={meta.singers ?? EMPTY_LIST}
               isEditing={true}
             />
           );

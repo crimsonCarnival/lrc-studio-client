@@ -303,14 +303,14 @@ function SettingsPanel({
                     onClick={handleReset}
                     className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 border-zinc-700 font-medium text-sm rounded-lg h-12"
                 >
-                    {t('settings.reset') || 'Reset'}
+                    {t('settings.reset')}
                 </Button>
                 {!settings.advanced?.autoSave?.enabled && (
                     <Button
                         onClick={handleApply}
                         className="flex-1 bg-primary hover:bg-primary-dim text-zinc-950 font-semibold text-sm rounded-lg h-12"
                     >
-                        {t('settings.applyChanges') || 'Apply'}
+                        {t('settings.applyChanges')}
                     </Button>
                 )}
             </div>
@@ -496,14 +496,14 @@ function SettingsPanel({
                     onClick={handleReset}
                     className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 border-zinc-700 font-medium text-sm rounded-xl h-12"
                 >
-                    {t('settings.reset') || 'Reset to defaults'}
+                    {t('settings.reset')}
                 </Button>
                 {!settings.advanced?.autoSave?.enabled && (
                     <Button
                         onClick={handleApply}
                         className="flex-1 bg-primary hover:bg-primary-dim text-zinc-950 font-semibold text-sm rounded-xl h-12"
                     >
-                        {t('settings.applyChanges') || 'Apply Changes'}
+                        {t('settings.applyChanges')}
                     </Button>
                 )}
             </div>

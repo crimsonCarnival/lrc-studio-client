@@ -58,7 +58,7 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
 
   const matches = blockMatches(searchTerm, [
     tk('profile.privacy'),
-    'privacy', 'security', 'projects', 'ip', 'device', 'login'
+    'privacy', 'security', 'projects', 'ip', 'device', 'login', 'heatmap', 'activity'
   ]);
 
   if (!matches) return null;
@@ -112,6 +112,8 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
   };
 
   const showFollowers = user?.preferences?.showFollowers ?? (user?.showFollowers ?? true);
+  // Privacy-by-default: off unless explicitly enabled (server default is false too).
+  const showActivityHeatmap = user?.preferences?.showActivityHeatmap ?? false;
   const onlineVisibility = (user?.preferences?.onlineVisibility ?? user?.onlineVisibility ?? 'friends') as 'everyone' | 'friends' | 'nobody';
   const lastOnlineVisibility = (user?.preferences?.lastOnlineVisibility ?? 'friends') as 'everyone' | 'friends' | 'nobody';
   const countryVisibility = (user?.preferences?.countryVisibility ?? 'nobody') as 'everyone' | 'friends' | 'nobody';
@@ -130,7 +132,7 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
       <div className="flex items-center gap-2 mb-2 px-1">
         <Icon name="visibility_off" size={16} className="text-zinc-400" />
         <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-          {tk('profile.sections.privacy') || 'Privacy'}
+          {tk('profile.sections.privacy')}
         </h3>
       </div>
 
@@ -196,22 +198,30 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
         <section className="space-y-4">
           <div className="flex items-center gap-2">
             <Icon name="visibility" size={14} className="text-zinc-500" />
-            <SectionHeading>Privacy</SectionHeading>
+            <SectionHeading>{t('profile.sections.privacy')}</SectionHeading>
           </div>
 
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-foreground font-medium">{tk('profile.settings.showFollowers') || 'Show followers & following publicly'}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{tk('profile.settings.showFollowersSub') || 'When off, counts still appear but the list stays private'}</p>
+              <p className="text-sm text-foreground font-medium">{tk('profile.settings.showFollowers')}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{tk('profile.settings.showFollowersSub')}</p>
             </div>
             <Toggle checked={showFollowers} onToggle={() => handlePreferenceChange('showFollowers', !showFollowers)} />
           </div>
 
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm text-foreground font-medium">{tk('profile.settings.showActivityHeatmap')}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{tk('profile.settings.showActivityHeatmapSub')}</p>
+            </div>
+            <Toggle checked={showActivityHeatmap} onToggle={() => handlePreferenceChange('showActivityHeatmap', !showActivityHeatmap)} />
+          </div>
+
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-foreground font-medium">{tk('profile.settings.onlineVisibility') || 'Show online status to mutual follows'}</p>
+              <p className="text-sm text-foreground font-medium">{tk('profile.settings.onlineVisibility')}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {tk('profile.settings.onlineVisibilityDesc') || 'Who can see your live online status.'}
+                {tk('profile.settings.onlineVisibilityDesc')}
               </p>
             </div>
             <RadixSelect
@@ -222,18 +232,18 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="everyone" className="text-xs">{tk('profile.settings.visibilityEveryone') || 'Everyone'}</SelectItem>
-                <SelectItem value="friends" className="text-xs">{tk('profile.settings.visibilityFriends') || 'Friends'}</SelectItem>
-                <SelectItem value="nobody" className="text-xs">{tk('profile.settings.visibilityNobody') || 'Nobody'}</SelectItem>
+                <SelectItem value="everyone" className="text-xs">{tk('profile.settings.visibilityEveryone')}</SelectItem>
+                <SelectItem value="friends" className="text-xs">{tk('profile.settings.visibilityFriends')}</SelectItem>
+                <SelectItem value="nobody" className="text-xs">{tk('profile.settings.visibilityNobody')}</SelectItem>
               </SelectContent>
             </RadixSelect>
           </div>
 
           <div className={`flex items-center justify-between gap-4 ${onlineVisibility === 'nobody' ? 'opacity-50 pointer-events-none' : ''}`}>
             <div>
-              <p className="text-sm text-foreground font-medium">{tk('profile.settings.lastOnlineVisibility') || 'Last Online'}</p>
+              <p className="text-sm text-foreground font-medium">{tk('profile.settings.lastOnlineVisibility')}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {tk('profile.settings.lastOnlineVisibilityDesc') || 'Who can see when you were last active.'}
+                {tk('profile.settings.lastOnlineVisibilityDesc')}
               </p>
             </div>
             <RadixSelect
@@ -245,18 +255,18 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="everyone" className="text-xs">{tk('profile.settings.visibilityEveryone') || 'Everyone'}</SelectItem>
-                <SelectItem value="friends" className="text-xs">{tk('profile.settings.visibilityFriends') || 'Friends'}</SelectItem>
-                <SelectItem value="nobody" className="text-xs">{tk('profile.settings.visibilityNobody') || 'Nobody'}</SelectItem>
+                <SelectItem value="everyone" className="text-xs">{tk('profile.settings.visibilityEveryone')}</SelectItem>
+                <SelectItem value="friends" className="text-xs">{tk('profile.settings.visibilityFriends')}</SelectItem>
+                <SelectItem value="nobody" className="text-xs">{tk('profile.settings.visibilityNobody')}</SelectItem>
               </SelectContent>
             </RadixSelect>
           </div>
 
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-foreground font-medium">{tk('profile.settings.countryVisibility') || 'Location (Country)'}</p>
+              <p className="text-sm text-foreground font-medium">{tk('profile.settings.countryVisibility')}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {tk('profile.settings.countryVisibilityDesc') || 'Who can see what country you are from.'}
+                {tk('profile.settings.countryVisibilityDesc')}
               </p>
             </div>
             <RadixSelect
@@ -267,9 +277,9 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="everyone" className="text-xs">{tk('profile.settings.visibilityEveryone') || 'Everyone'}</SelectItem>
-                <SelectItem value="friends" className="text-xs">{tk('profile.settings.visibilityFriends') || 'Friends'}</SelectItem>
-                <SelectItem value="nobody" className="text-xs">{tk('profile.settings.visibilityNobody') || 'Nobody'}</SelectItem>
+                <SelectItem value="everyone" className="text-xs">{tk('profile.settings.visibilityEveryone')}</SelectItem>
+                <SelectItem value="friends" className="text-xs">{tk('profile.settings.visibilityFriends')}</SelectItem>
+                <SelectItem value="nobody" className="text-xs">{tk('profile.settings.visibilityNobody')}</SelectItem>
               </SelectContent>
             </RadixSelect>
           </div>

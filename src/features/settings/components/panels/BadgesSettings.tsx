@@ -5,6 +5,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { ShowcaseEditor } from '@/features/badges/ShowcaseEditor';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { gqlRequest } from '@/app/graphql.client';
+import toast from 'react-hot-toast';
 
 interface BadgeDef {
   id: string;
@@ -18,7 +19,7 @@ interface EnrichedBadge {
 }
 
 const GET_BADGE_DEFS = /* GraphQL */ `
-  query ProfileBadgeDefinitions { badgeDefinitions { id holderCount } }
+  query ProfileBadgeDefinitions { publicBadgeDefinitions { id holderCount } }
 `;
 
 function getShowcaseSlots(level: number) {
@@ -61,10 +62,10 @@ export default function BadgesSettings({ searchTerm }: { searchTerm?: string }) 
       setEnrichedBadges([]);
       return;
     }
-    gqlRequest(GET_BADGE_DEFS)
-      .then(({ badgeDefinitions }: { badgeDefinitions: BadgeDef[] }) => {
-        const defMap = new Map(badgeDefinitions.map(d => [d.id, d]));
-        const maxHolders = Math.max(...badgeDefinitions.map(d => d.holderCount), 1);
+    gqlRequest<{ publicBadgeDefinitions: BadgeDef[] }>(GET_BADGE_DEFS)
+      .then(({ publicBadgeDefinitions }) => {
+        const defMap = new Map(publicBadgeDefinitions.map(d => [d.id, d]));
+        const maxHolders = Math.max(...publicBadgeDefinitions.map(d => d.holderCount), 1);
         setEnrichedBadges(
           (user.badges as Array<{ id: string; [key: string]: unknown }>).map(b => ({
             ...b,
@@ -74,8 +75,13 @@ export default function BadgesSettings({ searchTerm }: { searchTerm?: string }) 
           }))
         );
       })
-      .catch(() => setEnrichedBadges(user.badges as unknown as EnrichedBadge[]));
-  }, [user?.badges]);
+      .catch((err: unknown) => {
+        console.error('[badges] failed to load badge definitions', err);
+        toast.error(t('badges.defsLoadError'), { id: 'badge-defs-load-error' });
+        // Still let the user manage their showcase, just without rarity data.
+        setEnrichedBadges(user.badges as unknown as EnrichedBadge[]);
+      });
+  }, [user?.badges, t]);
 
   if (!matches || !enrichedBadges) return null;
 
@@ -84,7 +90,7 @@ export default function BadgesSettings({ searchTerm }: { searchTerm?: string }) 
       <div className="flex items-center gap-2 mb-2 px-1">
         <Icon name="military_tech" size={16} className="text-zinc-400" />
         <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-          {t('badges.showcase.editorTitle') || 'Badges'}
+          {t('badges.showcase.editorTitle')}
         </h3>
       </div>
 

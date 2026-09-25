@@ -6,9 +6,9 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { updatePreferences } from '@/features/settings/services/preferences.service';
 import toast from 'react-hot-toast';
 
-type NotifKey = 'follow' | 'reaction' | 'star' | 'fork' | 'badge_awarded' | 'xp_changed';
+type NotifKey = 'follow' | 'reaction' | 'star' | 'fork' | 'badge_awarded' | 'xp_changed' | 'streak_warning';
 
-const NOTIF_KEYS: NotifKey[] = ['follow', 'reaction', 'star', 'fork', 'badge_awarded', 'xp_changed'];
+const NOTIF_KEYS: NotifKey[] = ['follow', 'reaction', 'star', 'fork', 'badge_awarded', 'xp_changed', 'streak_warning'];
 
 function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
   return (
@@ -98,7 +98,7 @@ export default function NotificationsSettings({ searchTerm }: { searchTerm?: str
       <div className="flex items-center gap-2 mb-2 px-1">
         <Icon name="notifications" size={16} className="text-zinc-400" />
         <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-          {t('profile.notifications') || 'Notifications'}
+          {t('profile.notifications')}
         </h3>
       </div>
 

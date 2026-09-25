@@ -50,10 +50,10 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
     try {
       setIsDeactivating(true);
       await deactivateAccount();
-      toast.success(t('settings.advanced.deactivateSuccess') || 'Account deactivated successfully.');
+      toast.success(t('settings.advanced.deactivateSuccess'));
     } catch (err) {
       console.error(err);
-      toast.error(t('settings.advanced.deactivateError') || 'Failed to deactivate account.');
+      toast.error(t('settings.advanced.deactivateError'));
       setIsDeactivating(false);
     }
   };
@@ -109,8 +109,8 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
 
         <SettingRow
           iconName="bolt"
-          label={t('settings.advanced.autoSaveIndicatorDuration') || 'Auto-save Indicator Duration'}
-          description={t('settings.advanced.autoSaveIndicatorDurationDesc') || 'How long the "Saved" indicator stays visible'}
+          label={t('settings.advanced.autoSaveIndicatorDuration')}
+          description={t('settings.advanced.autoSaveIndicatorDurationDesc')}
         >
           <Select
             value={settings.advanced?.autoSaveIndicator ?? 'normal'}
@@ -120,9 +120,9 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
-              <SelectItem value="short">{t('settings.options.durations.short') || 'Short'}</SelectItem>
-              <SelectItem value="normal">{t('settings.options.durations.normal') || 'Normal'}</SelectItem>
-              <SelectItem value="long">{t('settings.options.durations.long') || 'Long'}</SelectItem>
+              <SelectItem value="short">{t('settings.options.durations.short')}</SelectItem>
+              <SelectItem value="normal">{t('settings.options.durations.normal')}</SelectItem>
+              <SelectItem value="long">{t('settings.options.durations.long')}</SelectItem>
             </SelectContent>
           </Select>
         </SettingRow>
@@ -141,8 +141,8 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
 
         <SettingRow
           iconName="language"
-          label={t('settings.advanced.timezone') || 'Timezone'}
-          description={t('settings.advanced.timezoneDesc') || 'Override detected timezone for saved timestamps'}
+          label={t('settings.advanced.timezone')}
+          description={t('settings.advanced.timezoneDesc')}
         >
           <Select
             value={settings.advanced?.timezone ?? 'auto'}
@@ -153,7 +153,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
               <SelectItem value="auto">
-                {t('settings.advanced.timezoneAuto') || 'Auto'} ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+                {t('settings.advanced.timezoneAuto')} ({Intl.DateTimeFormat().resolvedOptions().timeZone})
               </SelectItem>
               {COMMON_TIMEZONES.map((tz) => (
                 <SelectItem key={tz} value={tz}>{tz.replace(/_/g, ' ')}</SelectItem>
@@ -164,11 +164,11 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
       </Section>
 
       {!isGuest && (
-        <Section title={t('settings.advanced.dangerZone') || 'Danger Zone'} iconName="warning" searchTerm={searchTerm}>
+        <Section title={t('settings.advanced.dangerZone')} iconName="warning" searchTerm={searchTerm}>
           <SettingRow
             iconName="person_remove"
-            label={t('settings.advanced.deactivate') || 'Deactivate Account'}
-            description={t('settings.advanced.deactivateDesc') || 'Permanently deactivate your account. This action cannot be undone.'}
+            label={t('settings.advanced.deactivate')}
+            description={t('settings.advanced.deactivateDesc')}
           >
             <Button
               variant="destructive"
@@ -177,7 +177,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
               disabled={isDeactivating}
               className="bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 hover:text-red-400 font-semibold h-8"
             >
-              {isDeactivating ? 'Deactivating...' : (t('settings.advanced.deactivateBtn') || 'Deactivate')}
+              {isDeactivating ? 'Deactivating...' : (t('settings.advanced.deactivateBtn'))}
             </Button>
           </SettingRow>
         </Section>

@@ -35,7 +35,7 @@ export default function ProfileSettings({ searchTerm }: { searchTerm?: string })
     tk('profile.sections.public'), tk('profile.displayName'), tk('profile.bio'),
     tk('profile.emailSection'), tk('profile.email'),
     tk('profile.accountNameSection'), tk('profile.accountName'),
-    tk('profile.showFollowers'), tk('profile.avatar'),
+    tk('profile.settings.showFollowers'), tk('profile.avatar'),
     'avatar', 'photo', 'display name', 'bio', 'email', 'username', 'handle',
     'followers', 'profile', 'public',
   ]);
@@ -63,7 +63,7 @@ export default function ProfileSettings({ searchTerm }: { searchTerm?: string })
           <section className="space-y-6">
             <div className="flex items-center gap-2">
               <Icon name="info" size={14} className="text-zinc-500" />
-              <SectionHeading>User Info</SectionHeading>
+              <SectionHeading>{t('profile.sections.account')}</SectionHeading>
             </div>
             <EmailSection />
             <AccountNameSection />

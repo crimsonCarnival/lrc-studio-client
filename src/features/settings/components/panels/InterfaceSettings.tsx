@@ -28,7 +28,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
 
   return (
     <>
-      <Section title={t('settings.interface.generalSection') || 'General'} iconName="desktop_windows" searchTerm={searchTerm}>
+      <Section title={t('settings.interface.generalSection')} iconName="desktop_windows" searchTerm={searchTerm}>
         <SettingRow iconName="language" label={t('settings.interface.language')} description={t('settings.interface.languageDesc')}>
           <Select
             value={settings.interface?.defaultLanguage ?? 'en'}
@@ -50,7 +50,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             onChange={(v: boolean) => updateSetting('interface.lockLayout', v)}
           />
         </SettingRow>
-        <SettingRow iconName="notifications" label={t('settings.interface.toastPosition') || 'Toast Position'} description={t('settings.interface.toastPositionDesc') || 'Controls where notifications appear on the screen'}>
+        <SettingRow iconName="notifications" label={t('settings.interface.toastPosition')} description={t('settings.interface.toastPositionDesc')}>
           <Select
             value={settings.interface?.toastPosition ?? 'bottom-right'}
             onValueChange={(val) => handleToastPositionChange({ target: { value: val } })}
@@ -59,15 +59,15 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
-              <SelectItem value="bottom-left">{t('settings.options.positions.bottomLeft') || 'Bottom Left'}</SelectItem>
-              <SelectItem value="bottom-center">{t('settings.options.positions.bottomCenter') || 'Bottom Center'}</SelectItem>
-              <SelectItem value="bottom-right">{t('settings.options.positions.bottomRight') || 'Bottom Right'}</SelectItem>
+              <SelectItem value="bottom-left">{t('settings.options.positions.bottomLeft')}</SelectItem>
+              <SelectItem value="bottom-center">{t('settings.options.positions.bottomCenter')}</SelectItem>
+              <SelectItem value="bottom-right">{t('settings.options.positions.bottomRight')}</SelectItem>
             </SelectContent>
           </Select>
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.interface.displaySection') || 'Editor Display'} iconName="palette" searchTerm={searchTerm}>
+      <Section title={t('settings.interface.displaySection')} iconName="palette" searchTerm={searchTerm}>
         <SettingRow iconName="auto_awesome" label={t('settings.interface.activeLineHighlight')} description={t('settings.interface.activeLineHighlightDesc')}>
           <Select
             value={settings.editor?.display?.activeHighlight ?? 'glow'}
@@ -115,7 +115,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow iconName="palette" label={tk('settings.interface.singerColors') || 'Singer Colors'} description={tk('settings.interface.singerColorsDesc') || 'Customize the global default colors for singers 1-8.'}>
+        <SettingRow iconName="palette" label={tk('settings.interface.singerColors')} description={tk('settings.interface.singerColorsDesc')}>
           <div className="flex flex-wrap gap-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex flex-col items-center gap-1">
@@ -128,7 +128,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
                     updateSetting('editor.display.singerColors', newColors);
                   }}
                   className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
-                  title={`Singer ${i + 1}`}
+                  title={t('editor.singerN', { n: i + 1 })}
                 />
                 <span className="text-[10px] text-zinc-500">{i + 1}</span>
               </div>
@@ -137,7 +137,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.interface.scrollSection') || 'Scrolling & Alignment'} iconName="subject" searchTerm={searchTerm}>
+      <Section title={t('settings.interface.scrollSection')} iconName="subject" searchTerm={searchTerm}>
         <SettingRow iconName="subject" label={t('settings.interface.scrollBehavior')} description={t('settings.interface.scrollBehaviorDesc')}>
           <Select
             value={settings.editor?.scroll?.mode ?? 'smooth'}
@@ -185,7 +185,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.interface.lyricsSection') || 'Lyrics & Translations'} iconName="music_note" searchTerm={searchTerm}>
+      <Section title={t('settings.interface.lyricsSection')} iconName="music_note" searchTerm={searchTerm}>
         <SettingRow iconName="view_list" label={t('settings.interface.dualLine')} description={t('settings.interface.dualLineDesc')}>
           <Toggle
             id="toggle-dual-line"
@@ -231,7 +231,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             </SelectContent>
           </Select>
         </SettingRow>
-        <SettingRow iconName="auto_awesome" label={t('settings.interface.karaokeFillEasing') || 'Fill Easing'} description={t('settings.interface.karaokeFillEasingDesc') || 'Controls how the karaoke fill animates across each word'}>
+        <SettingRow iconName="auto_awesome" label={t('settings.interface.karaokeFillEasing')} description={t('settings.interface.karaokeFillEasingDesc')}>
           <Select
             value={settings.editor?.display?.karaokeFillEasing ?? 'linear'}
             onValueChange={(val) => updateSetting('editor.display.karaokeFillEasing', val)}
@@ -240,8 +240,8 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
-              <SelectItem value="linear">{t('settings.interface.fillEasingLinear') || 'Linear (Accurate)'}</SelectItem>
-              <SelectItem value="ease-in-out">{t('settings.interface.fillEasingEaseInOut') || 'Ease In/Out (Smooth)'}</SelectItem>
+              <SelectItem value="linear">{t('settings.interface.fillEasingLinear')}</SelectItem>
+              <SelectItem value="ease-in-out">{t('settings.interface.fillEasingEaseInOut')}</SelectItem>
             </SelectContent>
           </Select>
         </SettingRow>
@@ -261,7 +261,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.interface.previewSection') || 'Preview'} iconName="view_column" searchTerm={searchTerm}>
+      <Section title={t('settings.interface.previewSection')} iconName="view_column" searchTerm={searchTerm}>
         <SettingRow iconName="contrast" label={t('settings.interface.focusContrast')} description={t('settings.interface.focusContrastDesc')}>
           <Select
             value={settings.interface?.focusContrast ?? 'medium'}

@@ -10,6 +10,7 @@ const PREFERENCES_FIELDS = /* GraphQL */ `
   miniProfileBadgesEnabled
   miniProfileBadgeIds
   defaultProjectPrivacy
+  showActivityHeatmap
   notifications {
     follow
     reaction
@@ -17,6 +18,7 @@ const PREFERENCES_FIELDS = /* GraphQL */ `
     fork
     badge_awarded
     xp_changed
+    streak_warning
   }
 `;
 

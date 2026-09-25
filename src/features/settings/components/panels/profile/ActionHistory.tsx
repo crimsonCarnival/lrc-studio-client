@@ -114,7 +114,7 @@ export default function ActionHistory() {
           onClick={loadMore}
           className="w-full text-xs text-zinc-400 hover:text-zinc-300 py-3 transition-colors"
         >
-          {t('common.loadMore') || 'Load more...'}
+          {t('common.loadMore')}
         </button>
       )}
     </div>

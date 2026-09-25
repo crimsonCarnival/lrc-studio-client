@@ -157,6 +157,8 @@ export default {
     alignLeft: "Align Left",
     alignCenter: "Align Center",
     alignRight: "Align Right",
+    singerColors: "Singer Colors",
+    singerColorsDesc: "Customize the global default colors for singers 1-8.",
     focusContrast: "Focus contrast",
     focusContrastDesc: "Opacity fade intensity for inactive lines in the preview panel",
     fontSize: "Editor Font Size",

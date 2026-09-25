@@ -13,11 +13,11 @@ export default function PreviewShortcuts({ settings, searchTerm, handleShortcutC
   const { t } = useTranslation();
 
   return (
-    <Section title={t('settings.shortcuts.previewSection') || 'Preview'} iconName="visibility" searchTerm={searchTerm}>
+    <Section title={t('settings.shortcuts.previewSection')} iconName="visibility" searchTerm={searchTerm}>
       <SettingRow
         iconName="visibility"
-        label={t('settings.shortcuts.toggleTranslationLabel') || 'Toggle Translations'}
-        description={t('settings.shortcuts.toggleTranslationDesc') || 'Show or hide translations in preview'}
+        label={t('settings.shortcuts.toggleTranslationLabel')}
+        description={t('settings.shortcuts.toggleTranslationDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.toggleTranslation?.[0] || 't'}
@@ -28,8 +28,8 @@ export default function PreviewShortcuts({ settings, searchTerm, handleShortcutC
       </SettingRow>
       <SettingRow
         iconName="music_note"
-        label={t('settings.shortcuts.addSecondaryLabel') || 'Add Secondary Lyrics'}
-        description={t('settings.shortcuts.addSecondaryDesc') || 'Open secondary lyrics paste panel'}
+        label={t('settings.shortcuts.addSecondaryLabel')}
+        description={t('settings.shortcuts.addSecondaryDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.addSecondary?.[0] || 'Shift+H'}
@@ -40,8 +40,8 @@ export default function PreviewShortcuts({ settings, searchTerm, handleShortcutC
       </SettingRow>
       <SettingRow
         iconName="translate"
-        label={t('settings.shortcuts.addTranslationLabel') || 'Add Translations'}
-        description={t('settings.shortcuts.addTranslationDesc') || 'Open translation paste panel'}
+        label={t('settings.shortcuts.addTranslationLabel')}
+        description={t('settings.shortcuts.addTranslationDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.addTranslation?.[0] || 'Shift+T'}

@@ -24,7 +24,7 @@ export interface NotificationData {
   read?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string } | null;
+  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string } | null;
 }
 
 const TYPE_ICON_NAME: Record<string, string> = {
@@ -43,6 +43,7 @@ const TYPE_ICON_NAME: Record<string, string> = {
   xp_changed: 'bolt',
   role_changed: 'manage_accounts',
   unban: 'undo',
+  streak_warning: 'local_fire_department',
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -54,8 +55,10 @@ export function notificationDestination(notification: NotificationData): string 
   if (type === 'xp_changed') return '/settings/profile';
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';
   if (type === 'verify_email') return '/settings/profile';
-  if (type === 'badge_awarded') return '/settings/profile';
+  if (type === 'badge_awarded') return '/settings/badges';
   if (type === 'request_submitted' || type === 'request_reviewed') return '/admin?tab=requests';
+  // "Continue working": the user's most recently updated project, else home.
+  if (type === 'streak_warning') return publicId ? `/project/${publicId}/edit` : '/home';
   return null;
 }
 
@@ -127,6 +130,18 @@ export function NotificationText({ notification, t }: { notification: Notificati
     );
   }
   if (type === 'password_changed') return <span>{t('notifications.passwordChanged')}</span>;
+  if (type === 'streak_warning') {
+    return (
+      <span>
+        <Trans
+          i18nKey={projectTitle ? 'notifications.streakWarningProject' : 'notifications.streakWarning'}
+          count={notification.meta?.current ?? 0}
+          values={{ title: projectTitle ?? '' }}
+          components={[<strong key="0" />, <strong key="1" />]}
+        />
+      </span>
+    );
+  }
   if (type === 'badge_awarded') {
     const def = body ? BADGE_REGISTRY[body] : null;
     const label = def ? tk(`badges.${body}.label`, def.label) : (body ?? '');

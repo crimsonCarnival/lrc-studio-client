@@ -793,6 +793,8 @@ export type ProjectStats = {
 
 export type PublicUser = {
   accountName: Scalars['String']['output'];
+  /** Null unless the owner enabled preferences.showActivityHeatmap (server-enforced). */
+  activityHeatmap?: Maybe<Array<ActivityHeatmapDay>>;
   avatarUrl?: Maybe<Scalars['String']['output']>;
   badges: Array<UserBadge>;
   bio?: Maybe<Scalars['String']['output']>;
@@ -977,6 +979,10 @@ export type RetroactiveResult = {
   granted: Scalars['Int']['output'];
   scanned: Scalars['Int']['output'];
 };
+
+export type SaveKind =
+  | 'auto'
+  | 'manual';
 
 export type SaveMediaInput = {
   duration?: InputMaybe<Scalars['Float']['input']>;
@@ -1171,6 +1177,7 @@ export type UserPreferencesNotifications = {
   fork: Scalars['Boolean']['output'];
   badge_awarded: Scalars['Boolean']['output'];
   xp_changed: Scalars['Boolean']['output'];
+  streak_warning: Scalars['Boolean']['output'];
 };
 
 export type UserPreferences = {
@@ -1182,6 +1189,7 @@ export type UserPreferences = {
   lastOnlineAt?: Maybe<Scalars['String']['output']>;
   miniProfileBadgesEnabled: Scalars['Boolean']['output'];
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
+  showActivityHeatmap: Scalars['Boolean']['output'];
   notifications: UserPreferencesNotifications;
   defaultProjectPrivacy: Scalars['String']['output'];
 };
@@ -1193,6 +1201,7 @@ export type UpdatePreferencesNotificationsInput = {
   fork?: InputMaybe<Scalars['Boolean']['input']>;
   badge_awarded?: InputMaybe<Scalars['Boolean']['input']>;
   xp_changed?: InputMaybe<Scalars['Boolean']['input']>;
+  streak_warning?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdatePreferencesInput = {
@@ -1203,6 +1212,7 @@ export type UpdatePreferencesInput = {
   countryVisibility?: InputMaybe<Scalars['String']['input']>;
   miniProfileBadgesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
+  showActivityHeatmap?: InputMaybe<Scalars['Boolean']['input']>;
   notifications?: InputMaybe<UpdatePreferencesNotificationsInput>;
   defaultProjectPrivacy?: InputMaybe<Scalars['String']['input']>;
 };
@@ -1213,6 +1223,7 @@ export type UpdateProjectInput = {
   metadata?: InputMaybe<ProjectMetadataInput>;
   public?: InputMaybe<Scalars['Boolean']['input']>;
   readOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  saveKind?: InputMaybe<SaveKind>;
   state?: InputMaybe<ProjectStateInput>;
   title?: InputMaybe<Scalars['String']['input']>;
   uploadId?: InputMaybe<Scalars['ID']['input']>;
@@ -1285,6 +1296,7 @@ export type User = {
   lastOnlineAt?: Maybe<Scalars['String']['output']>;
   miniProfileBadgesEnabled: Scalars['Boolean']['output'];
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
+  showcasePublic: Scalars['Boolean']['output'];
   showcaseSlots: Scalars['Int']['output'];
   showcasedBadges: Array<Scalars['String']['output']>;
   stats?: Maybe<UserStats>;

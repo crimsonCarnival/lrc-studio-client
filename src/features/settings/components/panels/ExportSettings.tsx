@@ -32,7 +32,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
 
   return (
     <>
-      <Section title={t('settings.export.formatSection') || 'Format & Encoding'} iconName="download" searchTerm={searchTerm}>
+      <Section title={t('settings.export.formatSection')} iconName="download" searchTerm={searchTerm}>
         <SettingRow iconName="wrap_text" label={t('settings.export.lineEndings')} description={t('settings.export.lineEndingsDesc')}>
           <Select
             value={settings.export?.lineEndings ?? 'lf'}
@@ -77,7 +77,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.export.processingSection') || 'Timestamps & Processing'} iconName="tune" searchTerm={searchTerm}>
+      <Section title={t('settings.export.processingSection')} iconName="tune" searchTerm={searchTerm}>
         <SettingRow iconName="schedule" label={t('settings.export.timestampPrecision')} description={t('settings.export.timestampPrecisionDesc')}>
           <span className="text-xs text-zinc-500 italic">{t('settings.export.timestampPrecisionFollowsEditor')}</span>
         </SettingRow>
@@ -104,7 +104,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.export.outputSection') || 'Output Options'} iconName="folder_zip" searchTerm={searchTerm}>
+      <Section title={t('settings.export.outputSection')} iconName="folder_zip" searchTerm={searchTerm}>
         <SettingRow iconName="description" label={t('settings.export.filenamePattern')} description={t('settings.export.filenamePatternDesc')}>
           <Select
             value={settings.export?.defaultFilenamePattern ?? 'fixed'}

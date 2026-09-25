@@ -18,11 +18,11 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
   const { t } = useTranslation();
 
   return (
-    <Section title={t('settings.shortcuts.label') || 'Editor'} iconName="keyboard" searchTerm={searchTerm}>
+    <Section title={t('settings.shortcuts.label')} iconName="keyboard" searchTerm={searchTerm}>
       <SettingRow
         iconName="location_on"
-        label={t('settings.shortcuts.markLabel') || 'Mark Timestamp'}
-        description={t('settings.shortcuts.markDesc') || 'Key to mark start/end times'}
+        label={t('settings.shortcuts.markLabel')}
+        description={t('settings.shortcuts.markDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.mark?.[0] || 'Enter'}
@@ -33,10 +33,9 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="chevron_left"
-        label={t('settings.shortcuts.nudgeLeftLabel') || 'Nudge Left'}
+        label={t('settings.shortcuts.nudgeLeftLabel')}
         description={
-          t('settings.shortcuts.nudgeLeftDesc', { val: settings.editor?.nudge?.default || 0.1 }) ||
-          `Subtract ${settings.editor?.nudge?.default || 0.1}s`
+          t('settings.shortcuts.nudgeLeftDesc', { val: settings.editor?.nudge?.default || 0.1 })
         }
       >
         <ShortcutInput
@@ -48,10 +47,9 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="chevron_right"
-        label={t('settings.shortcuts.nudgeRightLabel') || 'Nudge Right'}
+        label={t('settings.shortcuts.nudgeRightLabel')}
         description={
-          t('settings.shortcuts.nudgeRightDesc', { val: settings.editor?.nudge?.default || 0.1 }) ||
-          `Add ${settings.editor?.nudge?.default || 0.1}s`
+          t('settings.shortcuts.nudgeRightDesc', { val: settings.editor?.nudge?.default || 0.1 })
         }
       >
         <ShortcutInput
@@ -63,8 +61,8 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="add"
-        label={t('settings.shortcuts.addLineLabel') || 'Add Line'}
-        description={t('settings.shortcuts.addLineDesc') || 'Add new line below active line'}
+        label={t('settings.shortcuts.addLineLabel')}
+        description={t('settings.shortcuts.addLineDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.addLine?.[0] || 'Ctrl+Enter'}
@@ -75,8 +73,8 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="delete"
-        label={t('settings.shortcuts.deleteLineLabel') || 'Delete Line'}
-        description={t('settings.shortcuts.deleteLineDesc') || 'Delete active line (or selection)'}
+        label={t('settings.shortcuts.deleteLineLabel')}
+        description={t('settings.shortcuts.deleteLineDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.deleteLine?.[0] || 'Delete'}
@@ -87,8 +85,8 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="ink_eraser"
-        label={t('settings.shortcuts.clearTimestampLabel') || 'Clear Timestamp'}
-        description={t('settings.shortcuts.clearTimestampDesc') || 'Clear timestamp on active line'}
+        label={t('settings.shortcuts.clearTimestampLabel')}
+        description={t('settings.shortcuts.clearTimestampDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.clearTimestamp?.[0] || 'Backspace'}
@@ -99,8 +97,8 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="refresh"
-        label={t('settings.shortcuts.switchModeLabel') || 'Switch Mode'}
-        description={t('settings.shortcuts.switchModeDesc') || 'Toggle LRC/SRT editor mode'}
+        label={t('settings.shortcuts.switchModeLabel')}
+        description={t('settings.shortcuts.switchModeDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.switchMode?.[0] || 'Ctrl+M'}
@@ -111,8 +109,8 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="logout"
-        label={t('settings.shortcuts.deselectLabel') || 'Deselect / Close'}
-        description={t('settings.shortcuts.deselectDesc') || 'Clear selection or close dialogs'}
+        label={t('settings.shortcuts.deselectLabel')}
+        description={t('settings.shortcuts.deselectDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.deselect?.[0] || 'Escape'}
@@ -123,8 +121,8 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="help"
-        label={t('settings.shortcuts.showHelpLabel') || 'Show Shortcuts'}
-        description={t('settings.shortcuts.showHelpDesc') || 'Open the keyboard shortcuts dialog'}
+        label={t('settings.shortcuts.showHelpLabel')}
+        description={t('settings.shortcuts.showHelpDesc')}
       >
         <ShortcutInput
           value={settings.shortcuts?.showHelp?.[0] || '?'}
@@ -135,8 +133,8 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="swap_horiz"
-        label={t('settings.editor.shiftAllAmount') || 'Shift All amount'}
-        description={t('settings.editor.shiftAllAmountDesc') || 'Seconds applied per Shift All button press'}
+        label={t('settings.editor.shiftAllAmount')}
+        description={t('settings.editor.shiftAllAmountDesc')}
       >
         <NumberInput
           min={0.01}
@@ -149,8 +147,8 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="arrow_selector_tool"
-        label={t('settings.shortcuts.rangeSelectLabel') || 'Select a range'}
-        description={t('settings.shortcuts.rangeSelectDesc') || 'Hold + Click to select a continuous block of lines'}
+        label={t('settings.shortcuts.rangeSelectLabel')}
+        description={t('settings.shortcuts.rangeSelectDesc')}
       >
         <ModifierInput
           value={settings.shortcuts?.rangeSelect?.[0] || 'Shift'}
@@ -160,8 +158,8 @@ export default function EditorShortcuts({ settings, searchTerm, handleShortcutCh
       </SettingRow>
       <SettingRow
         iconName="touch_app"
-        label={t('settings.shortcuts.toggleSelectLabel') || 'Pick individual lines'}
-        description={t('settings.shortcuts.toggleSelectDesc') || 'Hold + Click to add/remove single lines from the selection'}
+        label={t('settings.shortcuts.toggleSelectLabel')}
+        description={t('settings.shortcuts.toggleSelectDesc')}
       >
         <ModifierInput
           value={settings.shortcuts?.toggleSelect?.[0] || 'Ctrl'}

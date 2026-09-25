@@ -15,15 +15,6 @@ const SHORTCUT_KEYS = [
   'toggleTranslation', 'addSecondary', 'addTranslation',
 ];
 
-const SHORTCUT_LABELS: Record<string, string> = {
-  mark: 'Mark', nudgeLeft: 'Nudge ←', nudgeRight: 'Nudge →',
-  addLine: 'Add Line', deleteLine: 'Delete', clearTimestamp: 'Clear TS',
-  switchMode: 'Switch Mode', deselect: 'Deselect', showHelp: 'Help',
-  playPause: 'Play/Pause', seekBackward: 'Seek ←', seekForward: 'Seek →',
-  mute: 'Mute', speedUp: 'Speed+', speedDown: 'Speed−',
-  toggleTranslation: 'Toggle Trans.', addSecondary: 'Secondary', addTranslation: 'Translation',
-};
-
 interface ShortcutsSettingsProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   settings: { shortcuts?: Record<string, string[] | undefined>; [key: string]: any };
@@ -50,19 +41,20 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
       if (keys.length > 1) {
         keys.forEach((k) => {
           result[k] = keys.reduce<string[]>((acc, other) => {
-            if (other !== k) acc.push(SHORTCUT_LABELS[other] ?? other);
+            // Every SHORTCUT_KEYS id has a settings.shortcuts.<id>Label key.
+            if (other !== k) acc.push((t as (key: string) => string)(`settings.shortcuts.${other}Label`));
             return acc;
           }, []).join(', ');
         });
       }
     });
     return result;
-  }, [settings.shortcuts]);
+  }, [settings.shortcuts, t]);
 
   const SUB_TABS = [
-    { id: 'editor',  iconName: 'keyboard',    label: t('settings.editor.label') || 'Editor' },
-    { id: 'player',  iconName: 'headphones',  label: t('settings.shortcuts.playerSection') || 'Player' },
-    { id: 'preview', iconName: 'visibility',  label: t('settings.shortcuts.previewSection') || 'Preview' },
+    { id: 'editor',  iconName: 'keyboard',    label: t('settings.editor.label') },
+    { id: 'player',  iconName: 'headphones',  label: t('settings.shortcuts.playerSection') },
+    { id: 'preview', iconName: 'visibility',  label: t('settings.shortcuts.previewSection') },
   ];
 
   // When searching, show all; otherwise show only the active sub-tab

@@ -139,7 +139,7 @@ export default function AvatarUpload() {
                     disabled={uploading || !urlValue.trim().startsWith('http')}
                     className="rounded-xl h-8 text-[11px] font-bold"
                   >
-                    {uploading ? <Icon name="autorenew" size={14} className="animate-spin" /> : t('common.apply') || 'Apply'}
+                    {uploading ? <Icon name="autorenew" size={14} className="animate-spin" /> : t('common.apply')}
                   </Button>
                   <Button
                     size="sm"
@@ -148,7 +148,7 @@ export default function AvatarUpload() {
                     disabled={uploading}
                     className="rounded-xl h-8 text-[11px] font-bold text-zinc-400 hover:text-zinc-200"
                   >
-                    {t('common.cancel') || 'Cancel'}
+                    {t('common.cancel')}
                   </Button>
                 </div>
               </div>
@@ -161,7 +161,7 @@ export default function AvatarUpload() {
                   className="rounded-xl h-8 text-[11px] font-bold bg-primary hover:bg-primary-dim text-zinc-950"
                 >
                   <Icon name="upload" size={12} className="mr-1.5 shrink-0" />
-                  {t('profile.uploadAvatar') || 'Upload file'}
+                  {t('profile.uploadAvatar')}
                 </Button>
                 <Button
                   size="sm"
@@ -171,7 +171,7 @@ export default function AvatarUpload() {
                   className="rounded-xl h-8 text-[11px] font-bold border-zinc-700 bg-zinc-800 text-zinc-200"
                 >
                   <Icon name="link" size={12} className="mr-1.5 shrink-0" />
-                  {t('profile.setAvatarUrl') || 'Set URL'}
+                  {t('profile.setAvatarUrl')}
                 </Button>
                 {user?.avatarUrl && user.avatarUrl.length > 0 && (
                   <Button

@@ -2,15 +2,16 @@ import { gqlRequest } from '@/app/graphql.client';
 import type { PublicUser, FollowListResult, FollowListType } from '@/types';
 
 const GET_PUBLIC_PROFILE = /* GraphQL */ `
-  query GetPublicProfile($accountName: String!) {
-    publicProfile(accountName: $accountName) {
+  query GetPublicProfile($accountName: String!, $asVisitor: Boolean) {
+    publicProfile(accountName: $accountName, asVisitor: $asVisitor) {
       id accountName displayName avatarUrl bio isVerified isAdmin createdAt
       projectCount playlistCount totalStarsReceived totalForksReceived
       followerCount followingCount isFollowedByMe isFollowingMe isBlockedByMe showFollowers
       badges { id grantedAt }
       progression { xp level }
       stats { minutesSynced }
-      streak { current }
+      streak { current longest }
+      activityHeatmap { date count }
       lastOnlineAt
       country
       showcasePublic
@@ -19,7 +20,7 @@ const GET_PUBLIC_PROFILE = /* GraphQL */ `
       }
       projects {
         id publicId title starCount forkCount coverImage public lineCount syncedLineCount
-        metadata { songName songArtist songAlbum songYear genre description tags }
+        metadata { songName songArtist songAlbum songYear genre description tags singers singerColors }
         upload { source uploadUrl }
         createdAt updatedAt
       }
@@ -66,8 +67,9 @@ const GET_FOLLOW_LIST = /* GraphQL */ `
   }
 `;
 
-export async function getPublicProfile(accountName: string): Promise<PublicUser | null> {
-  const data = await gqlRequest<{ publicProfile: PublicUser | null }>(GET_PUBLIC_PROFILE, { accountName });
+/** `asVisitor` asks the server for the anonymous-visitor projection (owner's "view as others" preview). */
+export async function getPublicProfile(accountName: string, asVisitor = false): Promise<PublicUser | null> {
+  const data = await gqlRequest<{ publicProfile: PublicUser | null }>(GET_PUBLIC_PROFILE, { accountName, asVisitor });
   return data?.publicProfile ?? null;
 }
 

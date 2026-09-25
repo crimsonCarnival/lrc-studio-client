@@ -8,6 +8,8 @@ export default {
     legendary: 'Legendario',
   },
 
+  defsLoadError: 'No se pudieron cargar los detalles de las insignias',
+
   // ─── Showcase ───────────────────────────────────────────────────────────────
   showcase: {
     title:           'Vitrina',
@@ -24,6 +26,7 @@ export default {
     noShowcase:      'Aún no hay insignias en la vitrina',
     publicToggle:    'Mostrar en el perfil',
     goSetup:         'Configura tu vitrina →',
+    configure:       'Configurar',
     allBadges:       'Todas las insignias',
     slots_one:       '{{count}} / {{max}} espacio usado',
     slots_other:     '{{count}} / {{max}} espacios usados',
@@ -66,6 +69,12 @@ export default {
     thisWeek:          'Esta semana',
     thisMonth:         'Este mes',
     allTime:           'Histórico',
+    creator:           'CREADOR',
+    projectsCol:       'PROYECTOS',
+    linesCol:          'LÍNEAS',
+    starsCol:          'ESTRELLAS',
+    syncedCol:         'SINCRONIZADO',
+    xpCol:             'XP',
   },
 
   // ─── Etiquetas de insignias integradas (clave: badges.<id>.label) ─────────────

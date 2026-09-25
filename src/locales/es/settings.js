@@ -157,6 +157,8 @@ export default {
     alignLeft: "Alinear a la izquierda",
     alignCenter: "Centrar",
     alignRight: "Alinear a la derecha",
+    singerColors: "Colores de cantantes",
+    singerColorsDesc: "Personaliza los colores predeterminados globales para los cantantes 1-8.",
     fontSize: "Tamaño de fuente del editor",
     fontSizeDesc: "Escala del texto en el área de trabajo",
     spacing: "Espaciado entre líneas",

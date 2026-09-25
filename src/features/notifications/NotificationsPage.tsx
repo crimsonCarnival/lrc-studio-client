@@ -11,8 +11,8 @@ interface AppNotification {
 }
 
 const SOCIAL_TYPES  = new Set(['star', 'fork', 'follow', 'reaction']);
-const BADGE_TYPES   = new Set(['badge_awarded']);
-const SYSTEM_TYPES  = new Set(['system', 'admin', 'ban', 'password_changed', 'admin_granted']);
+const BADGE_TYPES   = new Set(['badge_awarded', 'xp_changed']);
+const SYSTEM_TYPES  = new Set(['system', 'admin', 'ban', 'unban', 'password_changed', 'admin_granted', 'role_changed', 'streak_warning']);
 const STICKY_TYPES  = new Set(['verify_email', 'set_password']);
 
 function SectionLabel({ label, variant = 'default' }: { label: string; variant?: 'default' | 'action' | 'badge' }) {
