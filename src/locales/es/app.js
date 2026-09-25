@@ -8,7 +8,13 @@ export default {
     profile: "Perfil",
     auth: "Autenticación",
     admin: "Panel de Administración",
-    shared: "Proyecto Compartido"
+    shared: "Proyecto Compartido",
+    settings: "Configuración",
+    feed: "Feed",
+    explore: "Explorar",
+    search: "Búsqueda",
+    leaderboard: "Clasificación",
+    notifications: "Notificaciones"
   },
   shareProject: "Compartir",
   focusMode: {

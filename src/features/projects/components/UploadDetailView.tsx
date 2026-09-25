@@ -42,13 +42,13 @@ export default function UploadDetailView({ onBack }: { onBack: () => void }) {
         const data = await uploads.getMedia(id!);
         setMedia(data.upload ?? null);
       } catch (err) {
-        setError((err as { message?: string }).message || 'Failed to load media details');
+        setError((err as { message?: string }).message || t('common.loadError'));
       } finally {
         setLoading(false);
       }
     }
     if (id) loadMedia();
-  }, [id]);
+  }, [id, t]);
 
   if (loading) {
     return (

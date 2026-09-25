@@ -18,6 +18,7 @@ export default {
     lyricsUnavailable: "Couldn't extract lyrics for this song. The page structure may have changed.",
     generic: 'Something went wrong. Please try again.',
   },
+  maintenance: 'Lyrics search is currently under maintenance.',
   maintenanceTitle: 'Feature under maintenance',
   maintenanceDesc: 'The lyrics search feature is currently undergoing maintenance and will be available soon. Please paste your lyrics manually in the meantime.',
 };

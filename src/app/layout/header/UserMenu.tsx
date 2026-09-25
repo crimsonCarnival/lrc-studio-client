@@ -137,11 +137,11 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
             <div className="px-3 py-2 flex items-center justify-between gap-2">
               <span className="text-sm font-medium text-zinc-300">{t('settings.interface.theme')}</span>
               <div className="flex items-center gap-1.5">
-                {THEMES.map(({ id, label, iconName }) => (
-                  <Tip key={id} content={label}>
+                {THEMES.map(({ id, labelKey, iconName }) => (
+                  <Tip key={id} content={t(labelKey)}>
                     <button
                       onClick={() => updateSetting?.('interface.theme', id)}
-                      aria-label={label}
+                      aria-label={t(labelKey)}
                       aria-pressed={currentTheme === id}
                       className={`size-7 flex items-center justify-center rounded-lg transition-all ${currentTheme === id ? 'text-primary bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'}`}
                     >

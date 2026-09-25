@@ -84,7 +84,7 @@ export default function ResetPasswordPage() {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError((err as { body?: { error?: string } }).body?.error || 'Failed to reset password');
+      setError((err as { body?: { error?: string } }).body?.error || t('auth.errors.generic'));
       console.error(err);
     } finally {
       setSubmitting(false);

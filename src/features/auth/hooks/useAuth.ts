@@ -2,6 +2,7 @@ import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react
 import { auth, google as googleApi, setAuthFlag } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import toast from 'react-hot-toast';
+import i18n from 'i18next';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
@@ -140,7 +141,7 @@ export function useAuth() {
         }
         // 401/403 — refresh token is actually dead, force logout
         await doLogout();
-        toast.error('Your session has expired. Please sign in again.', {
+        toast.error(i18n.t('auth.message.sessionExpired'), {
           id: 'session-expired',
           duration: 6000,
         });
@@ -257,7 +258,7 @@ export function useAuth() {
         // 401/403 — refresh token is actually dead, force logout
         await doLogout();
         if (wasAuthedRef.current && !window.location.pathname.startsWith('/auth')) {
-          toast.error('Your session has expired. Please sign in again.', {
+          toast.error(i18n.t('auth.message.sessionExpired'), {
             id: 'session-expired',
             duration: 6000,
           });

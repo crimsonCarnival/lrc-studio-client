@@ -23,7 +23,7 @@ function Countdown({ targetDate, onExpire }: { targetDate: string; onExpire: () 
           expiredFired = true;
           onExpire();
         }
-        return t('admin.banned.expired') || 'Expired';
+        return t('admin.banned.expired');
       }
 
       const d = Math.floor(difference / (1000 * 60 * 60 * 24));
@@ -52,7 +52,7 @@ function Countdown({ targetDate, onExpire }: { targetDate: string; onExpire: () 
   return (
     <div className="flex items-center gap-1.5 text-red-400 font-mono text-xs mt-1">
       <Icon name="schedule" size={12} />
-      <span>{t('admin.banned.remainingTime') || 'Remaining'}: {timeLeft}</span>
+      <span>{t('admin.banned.remainingTime')}: {timeLeft}</span>
     </div>
   );
 }
@@ -83,8 +83,8 @@ export default function BannedScreen() {
   if (isExpired) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-zinc-950 p-4 text-center">
-        <h2 className="text-2xl font-semibold text-zinc-100 mb-2">{t('admin.banned.expiredTitle') || 'Ban Expired'}</h2>
-        <p className="text-zinc-400 text-sm mb-6">{t('admin.banned.expiredDesc') || 'Your ban has expired. Please log in again to continue.'}</p>
+        <h2 className="text-2xl font-semibold text-zinc-100 mb-2">{t('admin.banned.expiredTitle')}</h2>
+        <p className="text-zinc-400 text-sm mb-6">{t('admin.banned.expiredDesc')}</p>
         <div className="flex items-center justify-center gap-2 text-emerald-500 text-sm">
           <Icon name="refresh" size={16} className="animate-spin" /> Redirecting to login in 5 seconds...
         </div>
@@ -124,7 +124,7 @@ export default function BannedScreen() {
         {user.ban?.reason && (
           <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-3 mb-4 text-left">
             <span className="text-[10px] font-bold text-red-500/70 uppercase tracking-widest mb-1 block">
-              {t('admin.banned.reasonLabel') || 'Reason'}
+              {t('admin.banned.reasonLabel')}
             </span>
             <p className="text-sm text-zinc-300 italic">"{user.ban.reason}"</p>
           </div>

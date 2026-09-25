@@ -148,11 +148,11 @@ export function AppHeader({
             {/* ── Desktop Navigation ── */}
             {user && !isGuestLanding && (
               <nav className="hidden lg:flex items-center gap-6">
-                <button type="button" onClick={() => navTo('/home')} className={`text-sm font-medium transition-colors ${location.pathname === '/home' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.home', 'Home')}</button>
-                <button type="button" onClick={() => navTo('/explore')} className={`text-sm font-medium transition-colors ${location.pathname === '/explore' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.explore', 'Explore')}</button>
-                <button type="button" onClick={() => navTo('/feed')} className={`text-sm font-medium transition-colors ${location.pathname === '/feed' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.feed', 'Feed')}</button>
-                <button type="button" onClick={() => navTo('/leaderboard')} className={`text-sm font-medium transition-colors ${location.pathname === '/leaderboard' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.leaderboard', 'Leaderboard')}</button>
-                <button type="button" onClick={() => navTo('/library')} className={`text-sm font-medium transition-colors ${location.pathname === '/library' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.library', 'Library')}</button>
+                <button type="button" onClick={() => navTo('/home')} className={`text-sm font-medium transition-colors ${location.pathname === '/home' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.home')}</button>
+                <button type="button" onClick={() => navTo('/explore')} className={`text-sm font-medium transition-colors ${location.pathname === '/explore' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.explore')}</button>
+                <button type="button" onClick={() => navTo('/feed')} className={`text-sm font-medium transition-colors ${location.pathname === '/feed' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.feed')}</button>
+                <button type="button" onClick={() => navTo('/leaderboard')} className={`text-sm font-medium transition-colors ${location.pathname === '/leaderboard' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.leaderboard')}</button>
+                <button type="button" onClick={() => navTo('/library')} className={`text-sm font-medium transition-colors ${location.pathname === '/library' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.library')}</button>
               </nav>
             )}
           </div>

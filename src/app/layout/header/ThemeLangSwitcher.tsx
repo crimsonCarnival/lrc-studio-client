@@ -47,14 +47,14 @@ export function ThemeLangSwitcher({ currentTheme, updateSetting, i18n }: ThemeLa
           </PopoverTrigger>
         </Tip>
         <PopoverContent className="w-44 p-1" align="end" sideOffset={8}>
-          {THEMES.map(({ id, label, iconName }) => (
+          {THEMES.map(({ id, labelKey, iconName }) => (
             <PopoverItem
               key={id}
               onClick={() => updateSetting?.('interface.theme', id)}
               className={`flex items-center gap-2.5 cursor-pointer text-sm py-2 ${currentTheme === id ? 'text-primary' : ''}`}
             >
               <Icon name={iconName} size={14} className="shrink-0" />
-              <span className="flex-1 text-left">{label}</span>
+              <span className="flex-1 text-left">{t(labelKey)}</span>
               <Icon name="check" size={12} className={`shrink-0 ${currentTheme === id ? 'text-primary' : 'invisible'}`} />
             </PopoverItem>
           ))}

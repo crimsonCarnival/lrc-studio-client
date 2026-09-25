@@ -31,10 +31,10 @@ export default function RegistrationBlockedModal({ isOpen, onClose, errorDetails
             </div>
             <div>
               <DialogTitle className="text-xl font-bold text-zinc-100">
-                {t('auth.registrationBlockedTitle') || 'Registration Restricted'}
+                {t('auth.registrationBlockedTitle')}
               </DialogTitle>
               <DialogDescription className="text-xs text-red-400 font-bold uppercase tracking-wider">
-                {t('auth.securityNotice') || 'Security Violation Detected'}
+                {t('auth.securityNotice')}
               </DialogDescription>
             </div>
           </div>
@@ -45,11 +45,11 @@ export default function RegistrationBlockedModal({ isOpen, onClose, errorDetails
             <div className="flex items-start gap-3">
               <Icon name="warning" size={16} className="text-yellow-500 shrink-0 mt-0.5" />
               <p className="text-sm text-zinc-300 leading-relaxed">
-                {errorDetails || t('auth.registrationBlockedMessage') || 'This email, username, or network has been flagged due to previous policy violations.'}
+                {errorDetails || t('auth.registrationBlockedMessage')}
               </p>
             </div>
             <p className="text-xs text-zinc-500 italic pl-7">
-              {t('auth.registrationBlockedDetail') || 'To maintain platform integrity, we do not allow new accounts to be created using credentials associated with banned users.'}
+              {t('auth.registrationBlockedDetail')}
             </p>
           </div>
         </div>
@@ -60,7 +60,7 @@ export default function RegistrationBlockedModal({ isOpen, onClose, errorDetails
             onClick={onClose}
             className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold h-11 rounded-xl transition-all"
           >
-            {t('common.close') || 'I understand'}
+            {t('common.close')}
           </Button>
         </DialogFooter>
       </DialogContent>

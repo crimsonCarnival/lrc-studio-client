@@ -64,6 +64,7 @@ const PODIUM: Record<number, PodiumStyle> = {
 };
 
 function RankBadge({ pos }: { pos: number }) {
+  const { t } = useTranslation();
   const p = PODIUM[pos];
   if (p) {
     return (
@@ -74,7 +75,7 @@ function RankBadge({ pos }: { pos: number }) {
     );
   }
   return (
-    <span className="text-sm tabular-nums w-full text-center text-zinc-500 font-mono font-semibold" aria-label={`Rank ${pos}`}>
+    <span className="text-sm tabular-nums w-full text-center text-zinc-500 font-mono font-semibold" aria-label={t('common.rankN', { pos })}>
       {pos}
     </span>
   );
@@ -142,10 +143,10 @@ export default function LeaderboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-heading font-semibold text-foreground">
-              {t('badges.leaderboard.title', 'Clasificación')}
+              {t('badges.leaderboard.title')}
             </h1>
             <p className="text-sm text-muted-foreground mt-2">
-              {t('badges.leaderboard.subtitle', 'Ordenada por minutos de audio efectivamente sincronizados.')}
+              {t('badges.leaderboard.subtitle')}
             </p>
           </div>
           
@@ -193,12 +194,12 @@ export default function LeaderboardPage() {
                 <thead>
                   <tr className="border-b border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
                     <th className="py-4 px-4 w-16 text-center">#</th>
-                    <th className="py-4 px-4">{t('badges.leaderboard.creator', 'CREADOR')}</th>
-                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.projectsCol', 'PROYECTOS')}</th>
-                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.linesCol', 'LÍNEAS')}</th>
-                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.starsCol', 'ESTRELLAS')}</th>
-                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.syncedCol', 'SINCRONIZADO')}</th>
-                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.xpCol', 'XP')}</th>
+                    <th className="py-4 px-4">{t('badges.leaderboard.creator')}</th>
+                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.projectsCol')}</th>
+                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.linesCol')}</th>
+                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.starsCol')}</th>
+                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.syncedCol')}</th>
+                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.xpCol')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/50">

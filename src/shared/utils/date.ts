@@ -64,14 +64,14 @@ export function getRelativeTime(dateStr, t, timezone, locale = 'en') {
   const diff = now.getTime() - target.getTime();
   
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return t('library.justNow') || 'Just now';
-  if (mins < 60) return t('library.minutesAgo', { count: mins }) || `${mins}m ago`;
+  if (mins < 1) return t('library.justNow');
+  if (mins < 60) return t('library.minutesAgo', { count: mins });
   
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return t('library.hoursAgo', { count: hours }) || `${hours}h ago`;
+  if (hours < 24) return t('library.hoursAgo', { count: hours });
   
   const days = Math.floor(hours / 24);
-  if (days < 30) return t('library.daysAgo', { count: days }) || `${days}d ago`;
+  if (days < 30) return t('library.daysAgo', { count: days });
 
   return formatInTimezone(dateStr, timezone, {
     year: 'numeric',

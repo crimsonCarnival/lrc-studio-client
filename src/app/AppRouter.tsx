@@ -250,7 +250,7 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
           loadProject(result.publicId);
           navigate(`/project/${result.publicId}/edit`);
           import('react-hot-toast').then(({ default: toast }) => {
-            toast.success(t('project.cloneSuccess') || 'Project copied successfully!');
+            toast.success(t('project.cloneSuccess'));
           });
         })
         .catch((err) => {
@@ -275,7 +275,7 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
     <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">
       <Icon name="autorenew" size={40} className="animate-spin text-primary" />
       <p className="text-sm font-medium animate-pulse">
-        {t('project.cloning') || 'Cloning project...'}
+        {t('project.cloning')}
       </p>
     </div>
   );
@@ -435,6 +435,7 @@ export function AppRouter({
     registerAfterSave,
     songArtists: projectMetadata?.songArtists || [],
     singerColors: projectMetadata?.singerColors || [],
+    declaredSingers: projectMetadata?.singers || [],
     playerSlot,
     onHideEditor: handleHideEditor,
     previewHidden: !showPreview,

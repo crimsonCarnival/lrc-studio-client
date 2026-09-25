@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface LevelBadgeProps {
   level: number;
   /** Tailwind positioning classes — defaults to top-right corner */
@@ -9,6 +11,7 @@ interface LevelBadgeProps {
  * Place inside a `relative` container; it positions itself absolutely.
  */
 export function LevelBadge({ level, className = 'right-6' }: LevelBadgeProps) {
+  const { t } = useTranslation();
   if (!level || level <= 0) return null;
 
   const digits = String(level).length;
@@ -16,7 +19,7 @@ export function LevelBadge({ level, className = 'right-6' }: LevelBadgeProps) {
 
   return (
     <div
-      aria-label={`Level ${level}`}
+      aria-label={t('common.levelN', { level })}
       className={`absolute top-0 flex flex-col items-center justify-start pt-1.5 gap-px select-none pointer-events-none z-10 ${className}`}
       style={{
         width,

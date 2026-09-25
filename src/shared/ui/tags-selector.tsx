@@ -174,7 +174,7 @@ export function TagsSelector({ value, onChange, genre, className }: TagsSelector
                   onChange(value.filter((v) => v !== tag))
                 }}
                 className="hover:text-primary/60 transition-colors leading-none"
-                aria-label={`Remove ${tag}`}
+                aria-label={t('common.removeItem', { name: tag })}
               >
                 <Icon name="close" size={10} />
               </button>

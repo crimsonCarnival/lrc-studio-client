@@ -41,6 +41,8 @@ export default {
   audioFile: "Archivo de audio",
   cloudAudio: "Nube",
   noFiles: "No hay archivos seleccionados",
+  uploadProgress: "Progreso de subida: {{progress}}%",
+  invalidFile: "Archivo no válido: {{name}} no es un archivo de audio",
   uploadSuccess: "Subido correctamente",
   uploadError: "Error al subir el archivo",
   allComplete: "¡Todas las subidas completadas!",

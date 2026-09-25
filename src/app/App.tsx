@@ -45,6 +45,7 @@ interface SetupCompleteData {
   trackNumber?: number | null;
   trackCount?: number | null;
   coverImage?: string;
+  singers?: string[];
 }
 
 interface UiState {
@@ -158,6 +159,7 @@ function AppInner() {
     trackNumber,
     trackCount,
     coverImage: _coverImage,
+    singers,
   }: SetupCompleteData) => {
     setLines(lines);
     setEditorMode(editorMode);
@@ -200,7 +202,7 @@ function AppInner() {
     setMediaTitle(finalTitle);
 
     const songArtists = splitArtists(songArtist);
-    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songArtists, songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}) };
+    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songArtists, songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), singers: singers || [] };
     appState.setProjectMetadata(newMetadata);
 
     if (!user) {

@@ -57,4 +57,5 @@ export default {
   deleteSuccess: "Lista eliminada",
   deleteError: "Error al eliminar la lista",
   deleteTitle: "Eliminar lista",
+  deleteConfirm: "¿Eliminar \"{{name}}\"?",
 };

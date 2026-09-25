@@ -3,6 +3,7 @@ import type { MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent } fro
 import { AnimatePresence, motion } from 'framer-motion';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { Button } from '@ui/button';
+import { useTranslation } from 'react-i18next';
 
 interface FileItemProps {
   file: File;
@@ -15,6 +16,7 @@ interface FileItemProps {
  * delete button with confirmation, and swipe-left-to-delete gesture.
  */
 export const FileItem = ({ file, progress, onDelete }: FileItemProps) => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const { trigger: haptic } = useHapticFeedback();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -89,7 +91,7 @@ export const FileItem = ({ file, progress, onDelete }: FileItemProps) => {
                 className="bg-primary h-1 rounded-full"
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                aria-label={`Upload progress: ${progress}%`}
+                aria-label={t('uploads.uploadProgress', { progress })}
               />
             </motion.div>
           )}
@@ -112,14 +114,14 @@ export const FileItem = ({ file, progress, onDelete }: FileItemProps) => {
               onClick={handleConfirmDelete}
               className="px-2 h-8 text-xs bg-red-600 hover:bg-red-700 rounded text-white font-medium"
             >
-              Delete
+              {t('common.delete')}
             </Button>
             <Button
               type="button"
               onClick={handleCancelDelete}
               className="px-2 h-8 text-xs bg-zinc-700 hover:bg-zinc-600 rounded text-zinc-300 font-medium"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
           </motion.div>
         ) : (
@@ -134,7 +136,7 @@ export const FileItem = ({ file, progress, onDelete }: FileItemProps) => {
               type="button"
               onClick={handleDeleteClick}
               className="p-2 text-zinc-400 hover:text-red-500 transition-colors flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
-              aria-label={`Delete ${file.name}`}
+              aria-label={t('common.deleteItem', { name: file.name })}
             >
               ✕
             </Button>

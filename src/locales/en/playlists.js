@@ -57,4 +57,5 @@ export default {
   deleteSuccess: "Playlist deleted",
   deleteError: "Failed to delete playlist",
   deleteTitle: "Delete Playlist",
+  deleteConfirm: "Delete \"{{name}}\"?",
 };

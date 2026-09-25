@@ -74,7 +74,7 @@ export function useDragAndDrop({
 
       if (['lrc', 'srt', 'txt'].includes(extension)) {
         if (file.size > MAX_IMPORT_FILE_SIZE) {
-          toast.error(t('import.tooLarge') || 'File too large (max 5 MB)');
+          toast.error(t('import.tooLarge'));
           return;
         }
 
@@ -83,7 +83,7 @@ export function useDragAndDrop({
           const { lines: parsedLines } = await lyrics.parse(text, file.name, { preserveEmptyLines: settings?.editor?.preserveEmptyLines ?? false }) as { lines: unknown[] };
 
           if (parsedLines.length === 0) {
-            toast.error(t('import.noLines') || 'No lyrics found in file');
+            toast.error(t('import.noLines'));
             return;
           }
 
@@ -98,21 +98,20 @@ export function useDragAndDrop({
 
           if (linesLength > 0 && settings.advanced?.confirmDestructive) {
             requestConfirm(
-              t('confirm.removeAll') || 'Replace existing lyrics?',
+              t('confirm.removeAll'),
               applyImport,
-              { title: t('confirm.replaceTitle') || 'Replace Lyrics', variant: 'danger' },
+              { title: t('confirm.replaceTitle'), variant: 'danger' },
             );
           } else {
             applyImport();
           }
         } catch (err) {
           console.error('Failed to parse dropped lyrics file', err);
-          toast.error(t('import.failed') || 'Failed to parse lyrics file');
+          toast.error(t('import.failed'));
         }
       } else {
         toast.error(
-          t('import.unsupportedFormat') ||
-            'Unsupported file type. Use .lrc, .srt, or .txt files.',
+          t('import.unsupportedFormat'),
         );
       }
     },

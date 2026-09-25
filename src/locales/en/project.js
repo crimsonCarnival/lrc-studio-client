@@ -31,6 +31,9 @@ export default {
   visibilityPrivate: "Private Project",
   publicDescription: "Anyone can view this project on your profile.",
   privateDescription: "Only you can view and edit this project.",
+  singerColorsDesc: "Customize project-specific colors for singers 1-8. Leave empty to use global defaults.",
+  singerColorFor: "Color for {{name}}",
+  resetColor: "Reset color",
   tags: "Tags",
   tagsPlaceholder: "Add tags separated by commas...",
   notFoundTitle: [

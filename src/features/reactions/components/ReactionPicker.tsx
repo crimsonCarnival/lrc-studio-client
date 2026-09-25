@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { EMOJI_MAP } from './reaction-constants';
 
 interface ReactionPickerProps {
@@ -8,6 +9,7 @@ interface ReactionPickerProps {
 }
 
 export function ReactionPicker({ myReaction, onReact, onClose }: ReactionPickerProps) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [custom, setCustom] = useState('');
@@ -66,7 +68,7 @@ export function ReactionPicker({ myReaction, onReact, onClose }: ReactionPickerP
           disabled={!custom.trim()}
           className="shrink-0 px-2 py-1 text-xs rounded-lg bg-primary/15 text-primary hover:bg-primary/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          Send
+          {t('common.send')}
         </button>
       </div>
     </div>

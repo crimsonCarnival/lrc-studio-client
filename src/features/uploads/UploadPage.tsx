@@ -40,7 +40,7 @@ export const UploadPage = () => {
     // Convert FileList to array and validate audio files
     const audioFiles = Array.from(fileList).filter(file => {
       if (!file.type.startsWith('audio/')) {
-        toast.error((t as (key: string, options?: Record<string, unknown>) => string)('uploads.invalidFormat', { ns: 'uploads' }) || `Invalid file: ${file.name} is not an audio file`);
+        toast.error(t('uploads.invalidFile', { name: file.name }));
         return false;
       }
       return true;
@@ -66,7 +66,7 @@ export const UploadPage = () => {
     e.preventDefault();
 
     if (!files || files.length === 0) {
-      toast.error(t('uploads.noFiles') || 'No files selected');
+      toast.error(t('uploads.noFiles'));
       return;
     }
 
@@ -85,10 +85,10 @@ export const UploadPage = () => {
             duration: result.duration || 0,
           });
           setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
-          toast.success(t('uploads.uploadSuccess') || `${file.name} uploaded successfully`);
+          toast.success(t('uploads.uploadSuccess'));
         } catch (error) {
-          const errorMsg = (error as { message?: string }).message || 'Unknown error';
-          toast.error(t('uploads.uploadError') || `Failed to upload ${file.name}: ${errorMsg}`);
+          const errorMsg = (error as { message?: string }).message || t('uploads.uploadError');
+          toast.error(t('uploads.uploadError'));
           setUploadError(errorMsg);
           setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
         }
@@ -100,7 +100,7 @@ export const UploadPage = () => {
       setUploadError(null);
 
       // Optionally navigate to library or stay on page
-      toast.success(t('uploads.allComplete') || 'All uploads complete!');
+      toast.success(t('uploads.allComplete'));
       // Navigate back after configured delay
       const delayMode = settings?.advanced?.uploadRedirectDelay ?? 'normal';
       const delayMs = ({ fast: 500, normal: 1500, slow: 3000 } as Record<string, number>)[delayMode] || 1500;

@@ -31,6 +31,9 @@ export default {
   visibilityPrivate: "Proyecto privado",
   publicDescription: "Cualquiera puede ver este proyecto en tu perfil.",
   privateDescription: "Solo tú puedes ver y editar este proyecto.",
+  singerColorsDesc: "Personaliza los colores de los cantantes 1-8 solo para este proyecto. Déjalos vacíos para usar los predeterminados globales.",
+  singerColorFor: "Color de {{name}}",
+  resetColor: "Restablecer color",
   tags: "Etiquetas",
   tagsPlaceholder: "Agrega etiquetas separadas por comas...",
   notFoundTitle: [

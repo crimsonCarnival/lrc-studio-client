@@ -20,7 +20,11 @@ interface ProjectMetadata {
   songYear?: string | number;
   genre?: string;
   singerColors?: string[];
+  singers?: string[];
 }
+
+// Stable fallback: ProjectSetupModal re-syncs its form whenever an initial* prop changes identity.
+const EMPTY_SINGERS: string[] = [];
 
 interface AppModalsProps {
   showKeyboardHelp?: boolean;
@@ -88,6 +92,7 @@ export function AppModals({
         initialSongYear={projectMetadata?.songYear}
         initialGenre={projectMetadata?.genre || ''}
         initialSingerColors={projectMetadata?.singerColors || []}
+        initialSingers={projectMetadata?.singers ?? EMPTY_SINGERS}
         initialCoverImage={projectCoverImage || ''}
         initialAlbumArt={''}
         isEditing={true}
@@ -101,7 +106,7 @@ export function AppModals({
             type="button"
             className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-default"
             onClick={handleDiscardProject}
-            aria-label={t('common.discard') || 'Discard'}
+            aria-label={t('common.discard')}
           />
           <div className="relative bg-zinc-900 border border-zinc-700/80 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-elevated animate-fade-in">
             <h3 className="text-lg font-semibold text-zinc-100 mb-4">{t('project.restoreTitle')}</h3>
@@ -126,7 +131,7 @@ export function AppModals({
             type="button"
             className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-default"
             onClick={() => setUnsavedModalTarget(null)}
-            aria-label={t('common.close') || 'Close'}
+            aria-label={t('common.close')}
           />
           <div className="relative bg-zinc-900 border border-zinc-700/80 rounded-2xl p-6 max-w-sm w-full mx-4 shadow-elevated animate-fade-in">
             <h3 className="text-lg font-semibold text-zinc-100 mb-4">{t('confirm.unsavedChangesTitle')}</h3>

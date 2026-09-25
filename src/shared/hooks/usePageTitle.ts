@@ -12,7 +12,7 @@ export function usePageTitle(projectName: string | null = null) {
   const { id, accountName, publicId } = useParams();
 
   useEffect(() => {
-    const appName = t('app.name') || 'LRC Studio';
+    const appName = t('app.name');
     let pageTitle = '';
 
     const path = location.pathname;
@@ -21,37 +21,37 @@ export function usePageTitle(projectName: string | null = null) {
     const cleanPath = path.replace(/^\/|\/$/g, '');
 
     if (cleanPath === 'home' || cleanPath === '') {
-      pageTitle = t('app.titles.home', 'Home');
+      pageTitle = t('app.titles.home');
     } else if (cleanPath === 'library' || cleanPath === 'projects') {
-      pageTitle = t('app.titles.library', 'Library');
+      pageTitle = t('app.titles.library');
     } else if (cleanPath.startsWith('uploads')) {
-      pageTitle = projectName || t('app.titles.uploads', 'Uploads');
+      pageTitle = projectName || t('app.titles.uploads');
     } else if (cleanPath.startsWith('profile/') || cleanPath.startsWith('u/')) {
-      pageTitle = accountName || t('app.titles.profile', 'Profile');
+      pageTitle = accountName || t('app.titles.profile');
     } else if (cleanPath === 'profile') {
-      pageTitle = t('app.titles.profile', 'Profile');
+      pageTitle = t('app.titles.profile');
     } else if (cleanPath.startsWith('auth')) {
-      pageTitle = t('app.titles.auth', 'Auth');
+      pageTitle = t('app.titles.auth');
     } else if (cleanPath === 'admin') {
-      pageTitle = t('app.titles.admin', 'Admin');
+      pageTitle = t('app.titles.admin');
     } else if (cleanPath.startsWith('share/')) {
-      pageTitle = projectName || t('app.titles.shared', 'Shared Project');
+      pageTitle = projectName || t('app.titles.shared');
     } else if (cleanPath === 'project/new') {
-      pageTitle = t('app.titles.newProject', 'New Project');
+      pageTitle = t('app.titles.newProject');
     } else if (cleanPath.startsWith('project/')) {
-      pageTitle = projectName || t('app.titles.library', 'Project');
+      pageTitle = projectName || t('app.titles.library');
     } else if (cleanPath === 'settings') {
-      pageTitle = t('app.titles.settings', 'Settings');
+      pageTitle = t('app.titles.settings');
     } else if (cleanPath === 'feed') {
-      pageTitle = t('app.titles.feed', 'Feed');
+      pageTitle = t('app.titles.feed');
     } else if (cleanPath.startsWith('explore')) {
-      pageTitle = t('app.titles.explore', 'Explore');
+      pageTitle = t('app.titles.explore');
     } else if (cleanPath === 'search') {
-      pageTitle = t('app.titles.search', 'Search');
+      pageTitle = t('app.titles.search');
     } else if (cleanPath === 'leaderboard') {
-      pageTitle = t('app.titles.leaderboard', 'Leaderboard');
+      pageTitle = t('app.titles.leaderboard');
     } else if (cleanPath === 'notifications') {
-      pageTitle = t('app.titles.notifications', 'Notifications');
+      pageTitle = t('app.titles.notifications');
     }
 
     if (pageTitle) {

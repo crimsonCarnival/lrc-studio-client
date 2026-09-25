@@ -1,5 +1,5 @@
 export default {
-  title: "Compartir sesión",
+  title: "Compartir proyecto",
   close: "Cerrar",
   viewingShared: "Viendo sesión compartida",
   shareProject: "Compartir sesión",

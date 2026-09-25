@@ -1,12 +1,15 @@
+import { useTranslation } from 'react-i18next';
+
 interface OnlineDotProps {
   className?: string;
 }
 
 export function OnlineDot({ className = '' }: OnlineDotProps) {
+  const { t } = useTranslation();
   return (
     <span
       className={`absolute bottom-0 right-0 size-2.5 rounded-full bg-green-500 border-2 border-zinc-900 ${className}`}
-      aria-label="Online"
+      aria-label={t('common.online')}
     />
   );
 }

@@ -27,10 +27,19 @@ export default {
   clear: "Clear",
   pagination: {
     previous: "Previous",
+    prevShort: "Prev",
     next: "Next"
   },
   loadMore: "Load more",
   retry: "Retry",
+  send: "Send",
+  delete: "Delete",
+  online: "Online",
+  localNetwork: "Local Network",
+  rankN: "Rank {{pos}}",
+  levelN: "Level {{level}}",
+  removeItem: "Remove {{name}}",
+  deleteItem: "Delete {{name}}",
   loadError: "Failed to load. Please try again.",
   shareLinkNotFound: "Share link not found."
 };

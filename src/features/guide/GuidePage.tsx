@@ -15,12 +15,8 @@ export default function GuidePage() {
 
   useEffect(() => {
     const hash = initialHashRef.current;
-    // eslint-disable-next-line no-console
-    console.log('[guide] initialHashRef:', hash, 'window.location.hash:', window.location.hash);
     if (!hash) return;
     const el = document.getElementById(hash.slice(1));
-    // eslint-disable-next-line no-console
-    console.log('[guide] target element found:', !!el);
     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
 

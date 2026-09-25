@@ -413,7 +413,7 @@ export default function AuthPage() {
             className="flex flex-col gap-2"
           >
             <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-1">
-              Live preview
+              {t('guide.nav.preview')}
             </p>
             <div className="rounded-xl border border-zinc-800/50 overflow-hidden bg-zinc-950/50 backdrop-blur-sm">
               <div className="flex items-center gap-2 px-3 py-2 bg-zinc-900/60 border-b border-zinc-800/40">
