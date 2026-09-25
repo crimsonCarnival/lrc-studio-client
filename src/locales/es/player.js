@@ -37,6 +37,15 @@ export default {
   increaseVolume: "Subir volumen",
   saveMediaRefFailed: "Error al guardar referencia multimedia",
   embeddingDisabled: "Inserción deshabilitada",
+  noEmbed: "Sin inserción",
+  ytErrors: {
+    invalidId: "ID de video no válido",
+    html5: "Error del reproductor HTML5",
+    notFound: "Video no encontrado o privado",
+    notEmbeddable: "El video no se puede insertar",
+    generic: "Error de YouTube (código {{code}})"
+  },
+  findAnotherVersion: "Buscar otra versión",
   embeddingDisabledDesc: "El propietario de este video ha desactivado la reproducción en sitios externos. No se reproducirá audio en el editor.",
   seekPlayback: "Buscar en la reproducción",
   embeddingBlockedDesc: "El propietario de este video bloquea la reproducción externa. Usa un archivo de audio directo.",

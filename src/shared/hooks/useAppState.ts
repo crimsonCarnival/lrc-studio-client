@@ -47,6 +47,8 @@ export interface ProjectMetadata {
   songLanguage?: string;
   trackNumber?: number;
   trackCount?: number;
+  /** Song-level singer roster offered when tagging sections/lines. */
+  singers?: string[];
   [key: string]: unknown;
 }
 
@@ -304,6 +306,9 @@ export function useAppState(user?: AuthUserType | null) {
           setActiveLineIndex(project.state?.activeLineIndex || 0);
           setEditorModeRaw(project.lyrics?.editorMode || 'lrc');
           setRestoredMedia(uploadToRestoredMedia(project.upload));
+          // Mirror loadProject: pre-set the YT url so the player's onYtUrlChange
+          // during hydration isn't mistaken for a user media change.
+          if (project.upload?.source === 'youtube' && project.upload?.uploadUrl) setProjectYtUrl(project.upload.uploadUrl);
           if (project.upload?.id) sessionUploadIdRef.current = project.upload.id;
           if (project.state?.playbackPosition) setRestoredPosition(project.state.playbackPosition);
           if (project.state?.playbackSpeed) setRestoredSpeed(project.state.playbackSpeed);
@@ -324,6 +329,8 @@ export function useAppState(user?: AuthUserType | null) {
               songLanguage: m.songLanguage || '',
               ...(m.trackNumber != null ? { trackNumber: m.trackNumber } : {}),
               ...(m.trackCount != null ? { trackCount: m.trackCount } : {}),
+              ...(Array.isArray(m.singers) ? { singers: m.singers } : {}),
+              ...(Array.isArray(m.singerColors) ? { singerColors: m.singerColors } : {}),
             });
           }
           // ── Rollback to setup if the project has lyrics but no media ──
@@ -731,9 +738,24 @@ export function useAppState(user?: AuthUserType | null) {
     return () => document.removeEventListener('mousedown', handler);
   }, [showLangMenu]);
 
+  // Set when the user switches media; the save runs in an effect after the new
+  // media state has committed, so the save callback sees fresh values instead
+  // of the closure captured before setUploadedAudio/setProjectYtUrl applied.
+  const pendingMediaSaveRef = useRef(false);
+
   const handleYtUrlChange = useCallback((url) => {
     // Clear upload ID cache whenever YouTube URL changes (different media)
-    if (url !== projectYtUrl) sessionUploadIdRef.current = null;
+    if (url !== projectYtUrl) {
+      sessionUploadIdRef.current = null;
+      if (url) {
+        // A YouTube source replaces any Cloudinary upload; otherwise the save
+        // paths would keep resolving the old uploadedAudio and re-save it.
+        setUploadedAudio(null);
+        // Restore paths pre-set projectYtUrl, so reaching here means the user
+        // actually picked different media.
+        if (activepublicIdRef.current) pendingMediaSaveRef.current = true;
+      }
+    }
     setProjectYtUrl(url || '');
   }, [projectYtUrl]);
 
@@ -811,10 +833,27 @@ export function useAppState(user?: AuthUserType | null) {
 
   const handleMediaUpload = useCallback((info) => {
     setUploadedAudio(info);
-    if (activepublicIdRef.current) {
-      triggerImportSave();
-    }
-  }, [triggerImportSave, setUploadedAudio]);
+    // Save paths prefer sessionUploadIdRef over uploadedAudio, and it still
+    // holds the previously loaded upload's id — point it at the new upload
+    // (or clear it for `local:` placeholders so the save persists a real record).
+    const id = info?.id;
+    const realId = id && !String(id).startsWith('local:') ? id : null;
+    // Hydrating a restored project reports the upload it was loaded with —
+    // that's not a change, so don't save (a save here would also overwrite the
+    // saved playback position before the restore seek has happened).
+    const isChange = !realId || realId !== sessionUploadIdRef.current;
+    sessionUploadIdRef.current = realId;
+    if (!isChange) return;
+    // Cloudinary audio replaces any YouTube source.
+    setProjectYtUrl('');
+    if (activepublicIdRef.current) pendingMediaSaveRef.current = true;
+  }, [setUploadedAudio]);
+
+  useEffect(() => {
+    if (!pendingMediaSaveRef.current) return;
+    pendingMediaSaveRef.current = false;
+    triggerImportSave();
+  }, [uploadedAudio, projectYtUrl, triggerImportSave]);
 
   // ——— Loop Current Line ———
   useLoopCurrentLine({

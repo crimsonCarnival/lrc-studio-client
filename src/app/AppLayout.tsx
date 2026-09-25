@@ -49,6 +49,7 @@ interface SetupConfirmData {
   coverImage?: string;
   isPublic?: boolean;
   singerColors?: string[];
+  singers?: string[];
 }
 
 interface AppLayoutProps {
@@ -126,13 +127,22 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     !['new', 'local'].includes(location.pathname.split('/')[2] ?? '');
   const isFullWidthPage = isSetupPage || isPublicProjectView;
 
+  // The editor's PlayerEngine lives here, above the routes, so it survives
+  // navigation (intentional: the header/mobile dock keep playing while
+  // browsing). The public project view mounts its own Player, though, so
+  // entering it — via the editor toggle, a link, back/forward or a direct URL —
+  // must pause the editor's playback or both play at once.
+  useEffect(() => {
+    if (isPublicProjectView) playerRef.current?.pause?.();
+  }, [isPublicProjectView, playerRef]);
+
   useEffect(() => {
     if (!isLg || isSetupPage || isPublicProjectView) return;
     if (!isReady || !lines || lines.length === 0) return;
     startIfFirstVisit();
   }, [isLg, isSetupPage, isPublicProjectView, isReady, lines, startIfFirstVisit]);
 
-  const handleProjectConfirm = useCallback(({ name, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, singerColors }: SetupConfirmData) => {
+  const handleProjectConfirm = useCallback(({ name, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, singerColors, singers }: SetupConfirmData) => {
     const newTitle = name || mediaTitle || '';
     const songArtists = splitArtists(songArtist);
     const newMetadata = {
@@ -146,7 +156,8 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
       songAlbum: songAlbum || '',
       songYear: songYear || '',
       genre: genre || '',
-      singerColors: (singerColors || []).filter(Boolean),
+      singerColors: (singerColors || []).map((c) => c || ''),
+      ...(singers !== undefined ? { singers } : {}),
     };
     setMediaTitle(newTitle);
     setProjectMetadata(newMetadata);
@@ -191,7 +202,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
               <div className="flex flex-col items-center gap-4 text-primary animate-pulse">
                 <Icon name="cloud_upload" size={80} />
                 <h2 className="text-3xl font-semibold tracking-tight text-center px-4">
-                  {t('player.dropAudio') || 'Drop your audio or lyrics file here'}
+                  {t('player.dropAudio')}
                 </h2>
               </div>
             </div>

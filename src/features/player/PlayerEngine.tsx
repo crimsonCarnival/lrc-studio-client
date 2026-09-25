@@ -307,7 +307,7 @@ function PlayerEngineInner(
         });
       } catch (err) {
         console.error('Failed to save CDN upload:', err);
-        toast.error(t('player.saveMediaRefFailed') || 'Failed to save media reference');
+        toast.error(t('player.saveMediaRefFailed'));
       } finally {
         setCdnLoading(false);
       }
@@ -327,27 +327,37 @@ function PlayerEngineInner(
       yt.loadYouTube(undefined);
       return;
     }
-    yt.setYtError(t('player.invalidUrl') || 'Invalid URL. Paste a YouTube or Cloudinary CDN URL.');
+    yt.setYtError(t('player.invalidUrl'));
   }, [yt, detectedUrlType, handleCdnUrlLoad, t]);
 
   const hasMedia = (source === 'local' && local.localUrl) || (source === 'youtube' && yt.ytReady);
 
   const handleSelectUpload = useCallback((upload: UploadItem) => {
     if (upload.source === 'youtube' && upload.uploadUrl) {
-      yt.setYtUrl(upload.uploadUrl);
-      setTimeout(() => yt.loadYouTube(undefined), 0);
+      // Pass the URL explicitly: loadYouTube(undefined) reads `ytUrl` from the
+      // closure of the render that created this callback, i.e. the PREVIOUS url.
+      yt.loadYouTube(upload.uploadUrl);
     } else if (upload.source === 'cloudinary' && upload.uploadUrl) {
-      fetch(upload.uploadUrl)
-        .then((res) => res.blob())
-        .then((blob) => {
-          const file = new File([blob], upload.fileName || 'audio.mp3', { type: blob.type || 'audio/mpeg' });
-          (file as File & { isHosted?: boolean }).isHosted = true;
-          local.handleFileChange(file);
-        })
-        .catch(() => { });
+      // Stream from the CDN (same path as project hydration) instead of
+      // downloading the whole file first, and report the chosen upload so the
+      // project's uploadId is updated and persisted.
+      local.loadFromUrl(upload.uploadUrl, upload.title || upload.fileName);
+      onMediaUpload?.({
+        id: upload.id,
+        uploadUrl: upload.uploadUrl,
+        publicId: upload.publicId ?? null,
+        fileName: upload.fileName,
+        duration: upload.duration ?? null,
+      });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [local, yt, onTitleChange]);
+  }, [local, yt, onMediaUpload]);
+
+  // Switching to local audio leaves the hidden YouTube iframe alive; pause it so
+  // the old video doesn't keep playing underneath the new track.
+  const ytPause = yt.pause;
+  useEffect(() => {
+    if (source === 'local') ytPause();
+  }, [source, ytPause]);
 
   const handleClearMedia = useCallback(() => {
     local.remove();

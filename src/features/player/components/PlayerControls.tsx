@@ -231,7 +231,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
             </svg>
-            <span className="text-sm text-zinc-400">{t('player.loading') || 'Loading…'}</span>
+            <span className="text-sm text-zinc-400">{t('player.loading')}</span>
           </div>
         )}
 
@@ -266,7 +266,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       value={yt.ytUrl}
                       onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
                       onKeyDown={(e) => { if (e.key === 'Enter') handleUrlLoad(); }}
-                      placeholder={t('player.pasteUrl') || "Paste YouTube or CDN URL..."}
+                      placeholder={t('player.pasteUrl')}
                       className="pl-8 bg-zinc-900/50 border-zinc-700/50 text-sm h-10 rounded-xl shadow-inner w-full"
                     />
                   </div>
@@ -448,12 +448,12 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                     </Button>
                   </Tip>
 
-                  <Tip content={isPlaying ? t('shortcuts.playPause') || 'Pause' : t('shortcuts.playPause') || 'Play'}>
+                  <Tip content={isPlaying ? t('shortcuts.playPause') : t('shortcuts.playPause')}>
                     <Button
                       id="play-pause-btn"
                       size="icon"
                       onClick={togglePlay}
-                      aria-label={isPlaying ? t('shortcuts.playPause') || 'Pause' : t('shortcuts.playPause') || 'Play'}
+                      aria-label={isPlaying ? t('shortcuts.playPause') : t('shortcuts.playPause')}
                       className="rounded-full bg-primary hover:bg-primary-dim text-zinc-950 hover:scale-105 active:scale-95 glow-primary flex-shrink-0 transition-all duration-100"
                     >
                       {isPlaying ? (
@@ -565,12 +565,12 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                 {/* Row 1: play + scrubber + time + overflow */}
                 <div className="flex items-center gap-2 w-full min-w-0">
                   {/* Play/Pause */}
-                  <Tip content={isPlaying ? t('shortcuts.playPause') || 'Pause' : t('shortcuts.playPause') || 'Play'}>
+                  <Tip content={isPlaying ? t('shortcuts.playPause') : t('shortcuts.playPause')}>
                     <Button
                       id="play-pause-btn-narrow"
                       size="icon"
                       onClick={togglePlay}
-                      aria-label={isPlaying ? t('shortcuts.playPause') || 'Pause' : t('shortcuts.playPause') || 'Play'}
+                      aria-label={isPlaying ? t('shortcuts.playPause') : t('shortcuts.playPause')}
                       className="rounded-full bg-primary hover:bg-primary-dim text-zinc-950 hover:scale-105 active:scale-95 glow-primary shrink-0 transition-all duration-100"
                     >
                       {isPlaying ? (
@@ -686,7 +686,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-                <span className="text-sm text-zinc-400">{t('player.loading') || 'Loading…'}</span>
+                <span className="text-sm text-zinc-400">{t('player.loading')}</span>
               </div>
             ) : (
               <>
@@ -697,7 +697,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700/60 text-sm font-medium text-zinc-300 cursor-pointer active:scale-95 transition-all duration-100 shrink-0"
                     >
                       <Icon name="folder_open" size={16} />
-                      {t('player.dropAudio') || 'Load audio'}
+                      {t('player.dropAudio')}
                       <input id="audio-file-compact" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
                     </label>
                     <div className="flex-1 flex gap-2">
@@ -716,7 +716,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                           value={yt.ytUrl}
                           onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
                           onKeyDown={(e) => e.key === 'Enter' && handleUrlLoad()}
-                          placeholder={t('player.pasteCdnUrl') || 'Paste YouTube or CDN URL...'}
+                          placeholder={t('player.pasteCdnUrl')}
                           className="flex-1 h-9 pl-6 bg-zinc-800/60 text-zinc-100 placeholder-zinc-500 border-zinc-700 text-xs"
                         />
                       </div>
@@ -806,7 +806,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
               <div className="flex items-center gap-3 w-full">
                 <button
                   onClick={togglePlay}
-                  aria-label={isPlaying ? 'Pause' : 'Play'}
+                  aria-label={t('shortcuts.playPause')}
                   className="size-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0 active:scale-95 transition-all duration-100 shadow-lg shadow-primary/20"
                 >
                   {isPlaying
@@ -827,7 +827,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                     )}
                     <input
                       type="range" min={0} max={duration || 0} step={0.1} value={currentTime}
-                      aria-label="Seek" aria-valuenow={Math.round(currentTime)} aria-valuemin={0} aria-valuemax={Math.round(duration)}
+                      aria-label={t('player.seekPlayback')} aria-valuenow={Math.round(currentTime)} aria-valuemin={0} aria-valuemax={Math.round(duration)}
                       onChange={(e) => seek(parseFloat(e.target.value))}
                       className="w-full relative z-raised h-1 appearance-none bg-zinc-800 rounded-full outline-none"
                       style={{ background: `linear-gradient(to right, var(--color-primary) ${duration ? (currentTime / duration) * 100 : 0}%, rgba(255, 255, 255, 0.1) ${duration ? (currentTime / duration) * 100 : 0}%)` }}
@@ -887,7 +887,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                     className={`flex flex-col items-center justify-center size-14 rounded-2xl transition-all duration-100 shrink-0 active:scale-95 ${loopA != null && loopB != null ? 'text-accent-purple bg-accent-purple/10' : 'text-zinc-400 active:bg-zinc-800'}`}
                   >
                     <Icon name="repeat" size={24} />
-                    <span className="text-[9px] font-bold mt-1 opacity-60 uppercase tracking-tight">{t('player.loop') || 'Loop'}</span>
+                    <span className="text-[9px] font-bold mt-1 opacity-60 uppercase tracking-tight">{t('player.loop')}</span>
                   </button>
                 )}
 

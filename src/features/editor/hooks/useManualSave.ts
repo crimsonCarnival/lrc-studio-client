@@ -224,19 +224,23 @@ export function useManualSave({
         if (overrides.coverImage !== undefined) patchData.coverImage = overrides.coverImage;
 
         if (Object.keys(patchData).length > 0) {
+          // Tags this as an explicit save (heatmap). Added after the emptiness
+          // check so it never turns a no-op into a request; the server still
+          // decides whether anything actually changed.
+          const manualPatch = { ...patchData, saveKind: 'manual' as const };
           try {
-            await projects.patch(activepublicIdRef.current, patchData);
+            await projects.patch(activepublicIdRef.current, manualPatch);
             updateServerSnapshot(lastServerSnapshotRef, { title: finalTitle, metadata: finalMetadata, state: patchState, editorMode, lines: payload.lines, uploadId: uploadIdToSave ?? undefined });
-            toast.success(t('project.saved') || 'Project saved', { id: 'manual-save-ok', duration: 2000 });
+            toast.success(t('project.saved'), { id: 'manual-save-ok', duration: 2000 });
           } catch (err) {
             // 401 / 403: access token expired — attempt one silent refresh then retry.
             if (err?.status === 401 || err?.status === 403 || (err?.graphqlErrors && err.message?.includes('Not authorized'))) {
               try {
                 await auth.refresh();
                 // Retry the save with the fresh token (cookies are sent automatically)
-                await projects.patch(activepublicIdRef.current, patchData);
+                await projects.patch(activepublicIdRef.current, manualPatch);
                 updateServerSnapshot(lastServerSnapshotRef, { title: finalTitle, metadata: finalMetadata, state: patchState, editorMode: payload.editorMode, lines: payload.lines, uploadId: uploadIdToSave ?? undefined });
-                toast.success(t('project.saved') || 'Project saved', { id: 'manual-save-ok', duration: 2000 });
+                toast.success(t('project.saved'), { id: 'manual-save-ok', duration: 2000 });
                 return; // retry succeeded
               } catch {
                 // Refresh also failed — emit expiry so useAuth handles logout + toast
@@ -245,7 +249,7 @@ export function useManualSave({
               }
             }
             console.error('[Manual Save] Server error:', err);
-            toast.error(t('project.saveFailed') || 'Failed to save to server');
+            toast.error(t('project.saveFailed'));
           }
         }
         onSaveSuccess?.();
@@ -290,10 +294,10 @@ export function useManualSave({
           updateServerSnapshot(lastServerSnapshotRef, { title: createData.title, metadata: createData.metadata, state: createData.state, editorMode: payload.editorMode, lines: payload.lines, uploadId: uploadIdToSave ?? undefined });
           try { localStorage.setItem(STORAGE_KEYS.ACTIVE_PROJECT_ID, publicId); } catch { /* ignore */ }
           onSaveSuccess?.();
-          toast.success(t('project.created') || 'Project created');
+          toast.success(t('project.created'));
         } catch (err) {
           console.error(err);
-          toast.error(t('project.createFailed') || 'Failed to create project');
+          toast.error(t('project.createFailed'));
         } finally {
           isCreatingProjectRef.current = false;
         }

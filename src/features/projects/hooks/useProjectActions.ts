@@ -289,11 +289,11 @@ export function useProjectActions({
 
   // ── Remove all lyrics ─────────────────────────────────────────────────────
   const handleRemoveAllLyrics = useCallback(() => {
-    requestConfirm(t('confirm.removeLyrics') || 'Are you sure you want to remove all lyrics?', () => {
+    requestConfirm(t('confirm.removeLyrics'), () => {
       setLines([]);
       setActiveLineIndex(0);
-      toast.success(t('editor.toast.allRemoved') || 'All lyrics removed');
-    }, { title: t('confirm.removeLyricsTitle') || 'Remove Lyrics', variant: 'danger' });
+      toast.success(t('editor.toast.allRemoved'));
+    }, { title: t('confirm.removeLyricsTitle'), variant: 'danger' });
   }, [setLines, setActiveLineIndex, requestConfirm, t, toast]);
 
   // ── Reset full app state ──────────────────────────────────────────────────

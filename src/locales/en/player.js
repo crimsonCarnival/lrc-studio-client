@@ -37,6 +37,15 @@ export default {
   increaseVolume: "Increase volume",
   saveMediaRefFailed: "Failed to save media reference",
   embeddingDisabled: "Embedding disabled",
+  noEmbed: "No embed",
+  ytErrors: {
+    invalidId: "Invalid video ID",
+    html5: "HTML5 player error",
+    notFound: "Video not found or private",
+    notEmbeddable: "Video cannot be embedded",
+    generic: "YouTube error (code {{code}})"
+  },
+  findAnotherVersion: "Find another version",
   embeddingDisabledDesc: "This video's owner has disabled playback on external sites. No audio will play in the editor.",
   seekPlayback: "Seek playback",
   embeddingBlockedDesc: "This video's owner blocks external playback. Use a direct audio file instead.",

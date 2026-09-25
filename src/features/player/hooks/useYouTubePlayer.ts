@@ -137,7 +137,7 @@ export default function useYouTubePlayer({
     const urlToLoad = (typeof urlOverride === 'string') ? urlOverride : ytUrl;
     const videoId = extractVideoId(urlToLoad);
     if (!videoId) {
-      setYtError(t('player.invalidUrl') || 'Invalid YouTube URL');
+      setYtError(t('player.invalidUrl'));
       return;
     }
     setYtError('');
@@ -203,15 +203,15 @@ export default function useYouTubePlayer({
           },
           onError: (e) => {
             const errorCodes = {
-              2: 'Invalid video ID',
-              5: 'HTML5 player error',
-              100: 'Video not found or private',
-              101: 'Video cannot be embedded',
-              150: 'Video cannot be embedded',
+              2: t('player.ytErrors.invalidId'),
+              5: t('player.ytErrors.html5'),
+              100: t('player.ytErrors.notFound'),
+              101: t('player.ytErrors.notEmbeddable'),
+              150: t('player.ytErrors.notEmbeddable'),
             };
             const isEmbedBlock = e.data === 101 || e.data === 150;
             setYtEmbedBlocked(isEmbedBlock);
-            setYtError(errorCodes[e.data] || `YouTube error (code ${e.data})`);
+            setYtError(errorCodes[e.data] || t('player.ytErrors.generic', { code: e.data }));
             setYtLoading(false);
             setYtReady(false);
           },

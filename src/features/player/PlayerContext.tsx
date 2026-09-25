@@ -8,6 +8,8 @@ export interface UploadItem {
   fileName?: string;
   source?: string;
   uploadUrl?: string;
+  publicId?: string | null;
+  duration?: number | null;
 }
 
 interface MediaPopoverProps {

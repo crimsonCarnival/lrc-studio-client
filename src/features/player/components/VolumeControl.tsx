@@ -10,14 +10,14 @@ const VolumeControl = memo(function VolumeControl() {
   const { settings, updateSetting } = useSettings();
 
   return (
-    <div className="flex items-center gap-1.5 lg:gap-2" role="group" aria-label={t('player.volume') || 'Volume'}>
-      <Tip content={settings.playback.muted ? t('player.unmute') || 'Unmute' : t('player.mute') || 'Mute'}>
+    <div className="flex items-center gap-1.5 lg:gap-2" role="group" aria-label={t('player.volume')}>
+      <Tip content={settings.playback.muted ? t('player.unmute') : t('player.mute')}>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => updateSetting('playback.muted', !settings.playback.muted)}
           className="rounded-full bg-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 flex-shrink-0 size-11 lg:size-9 active:scale-95 transition-all duration-100"
-          aria-label={settings.playback.muted ? t('player.unmute') || 'Unmute' : t('player.mute') || 'Mute'}
+          aria-label={settings.playback.muted ? t('player.unmute') : t('player.mute')}
         >
         {settings.playback.muted || settings.playback.volume === 0 ? (
           <Icon name="volume_off" size={20} className="lg:size-4" />
@@ -35,7 +35,7 @@ const VolumeControl = memo(function VolumeControl() {
           max={1}
           step={0.01}
           value={settings.playback.volume ?? 0}
-          aria-label={t('player.volume') || 'Volume'}
+          aria-label={t('player.volume')}
           onChange={(e) => {
             const val = parseFloat(e.target.value);
             updateSetting('playback.volume', val);

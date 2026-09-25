@@ -46,7 +46,7 @@ const SpeedControl = memo(function SpeedControl({
   const stepUp = () => applySpeed(Math.round((playbackSpeed + 0.05) * 1000) / 1000);
 
   return (
-    <div className="flex items-center gap-1 sm:gap-0.5 flex-shrink-0" role="group" aria-label={t('player.speed') || 'Playback speed'}>
+    <div className="flex items-center gap-1 sm:gap-0.5 flex-shrink-0" role="group" aria-label={t('player.speed')}>
       {/* Speed down */}
       <Tip content={t('player.decreaseSpeed')}>
         <button
@@ -61,11 +61,11 @@ const SpeedControl = memo(function SpeedControl({
 
       {/* Speed badge + dropdown */}
       <Popover>
-        <Tip content={t('player.speed') || 'Speed'}>
+        <Tip content={t('player.speed')}>
           <PopoverTrigger asChild>
             <Button
               id="speed-btn"
-              aria-label={`${t('player.speed') || 'Speed'}: ${playbackSpeed}x`}
+              aria-label={`${t('player.speed')}: ${playbackSpeed}x`}
               className={`h-9 lg:h-9 px-2.5 sm:px-3 font-mono font-bold rounded-full gap-1 transition-all ${
                 playbackSpeed !== 1
                   ? 'bg-primary text-zinc-950 shadow-lg shadow-primary/30 hover:bg-primary-dim'
@@ -100,7 +100,7 @@ const SpeedControl = memo(function SpeedControl({
           </div>
           <div className="border-t border-zinc-800 p-3 lg:p-2" onPointerDown={(e) => e.stopPropagation()}>
             <label className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mb-2 block">
-              {t('player.customSpeed') || 'Custom'} ({MIN_SPEED}–{MAX_SPEED}x)
+              {t('player.customSpeed')} ({MIN_SPEED}–{MAX_SPEED}x)
             </label>
             <div className="flex gap-1.5">
               <NumberInput

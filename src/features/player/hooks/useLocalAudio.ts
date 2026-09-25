@@ -54,7 +54,7 @@ export default function useLocalAudio({
     if (!file) return;
 
     if (file.size > 150 * 1024 * 1024) {
-      toast.error(t('import.tooLarge') || 'Audio file is too large (max 150MB).');
+      toast.error(t('import.tooLarge'));
       return;
     }
 
@@ -237,6 +237,9 @@ export default function useLocalAudio({
     loadFromUrl: useCallback((url: string, title?: string) => {
       // Abort any pending Cloudinary upload
       uploadAbortRef.current = true;
+      // The previous track's File no longer matches what's playing — drop it so
+      // getAudioBlob() can't hand out stale audio after a media switch.
+      blobRef.current = null;
       // Set the URL directly — browser streams it without downloading the full blob
       setSource('local');
       setLocalUrl(url);
@@ -245,6 +248,6 @@ export default function useLocalAudio({
       if (title) onTitleChange?.(title);
       onMediaChange?.(true);
       onTrackLoad?.({ url, title: title ?? '', type: 'url' });
-    }, [setSource, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, onTrackLoad]),
+    }, [blobRef, setSource, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, onTrackLoad]),
   };
 }
