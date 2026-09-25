@@ -116,12 +116,13 @@ interface BadgeForm {
 // ─── Badge preview chip ───────────────────────────────────────────────────────
 
 function LivePreview({ form }: { form: BadgeForm }) {
+  const { t } = useTranslation();
   const label = form.label?.en || '—';
   if (!form.label?.en) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-full border border-zinc-800 text-zinc-700 text-xs">
         <span>—</span>
-        <span>Preview</span>
+        <span>{t('admin.badges.preview')}</span>
       </div>
     );
   }
@@ -275,7 +276,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                   </span>
                   <input
                     className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
-                    placeholder="English Label"
+                    placeholder={t('admin.placeholderEn', { field: t('admin.badges.label') })}
                     value={form.label.en}
                     onChange={e => set('label', { ...form.label, en: e.target.value })}
                     required
@@ -289,7 +290,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                   </span>
                   <input
                     className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
-                    placeholder="Spanish Label"
+                    placeholder={t('admin.placeholderEs', { field: t('admin.badges.label') })}
                     value={form.label.es}
                     onChange={e => set('label', { ...form.label, es: e.target.value })}
                     maxLength={50}
@@ -304,7 +305,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                 </span>
                 <input
                   className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
-                  placeholder="English Description"
+                  placeholder={t('admin.placeholderEn', { field: t('admin.badges.description') })}
                   value={form.description.en}
                   onChange={e => set('description', { ...form.description, en: e.target.value })}
                   maxLength={200}
@@ -318,7 +319,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
                 </span>
                 <input
                   className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
-                  placeholder="Spanish Description"
+                  placeholder={t('admin.placeholderEs', { field: t('admin.badges.description') })}
                   value={form.description.es}
                   onChange={e => set('description', { ...form.description, es: e.target.value })}
                   maxLength={200}

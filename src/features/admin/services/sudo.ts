@@ -90,7 +90,9 @@ export async function withSudo<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (err) {
-    if ((err as { code?: string })?.code === 'sudo_required') {
+    // REST sends `sudo_required`; GraphQL sends extensions.code `SUDO_REQUIRED`.
+    const code = (err as { code?: string })?.code;
+    if (code === 'sudo_required' || code === 'SUDO_REQUIRED') {
       await promptForPassword(); // rejects if the user cancels the modal
       return fn();               // retry once with the fresh grant
     }

@@ -559,7 +559,7 @@ export default function AdminUsersTab({
                       )}
                       {canActOn(user) && (
                         <>
-                          <Tip content="Adjust XP" side="top">
+                          <Tip content={t('admin.table.adjustXp')} side="top">
                             <Button variant="ghost" size="icon" onClick={() => { setXpPopover(p => p === (user.id) ? null : (user.id) ?? null); }} className="size-8 text-amber-500/70 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg">
                               <Icon name="bolt" size={14} />
                             </Button>

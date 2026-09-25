@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { requestsApi, type StaffRequest } from './services/requests.service';
-import { isSudoCancelled } from './services/sudo';
+import { isSudoCancelled, withSudo } from './services/sudo';
 import { getSocket } from '@/app/socket.client';
 
 // Request types the inline composer can build (simple payloads). Other types
@@ -127,6 +127,7 @@ function RequestRow({ req, children }: { req: StaffRequest; children?: ReactNode
           {tk(`admin.requests.types.${req.type}`)} · {req.requesterName}
           {req.reviewerName ? ` · ${t('admin.requests.byReviewer', { name: req.reviewerName })}` : ''}
         </p>
+        {req.decisionNote && <p className="text-[11px] text-zinc-400 mt-1">{t('admin.requests.decisionNote', { note: req.decisionNote })}</p>}
         {req.error && <p className="text-[11px] text-red-400 mt-1">{req.error}</p>}
       </div>
       <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${STATUS_STYLE[req.status] ?? ''}`}>
@@ -150,6 +151,9 @@ export default function AdminRequestsTab() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  // Reject is two-step so the reviewer can attach an optional note.
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectNote, setRejectNote] = useState('');
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -193,10 +197,16 @@ export default function AdminRequestsTab() {
     return () => { socket.off('notification:push', onPush); };
   }, [fetchAll]);
 
-  const decide = async (req: StaffRequest, decision: 'approve' | 'reject') => {
+  const decide = async (req: StaffRequest, decision: 'approve' | 'reject', note?: string) => {
     setBusy(req.id);
     try {
-      await requestsApi.review(req.id, decision);
+      const trimmed = note?.trim() || undefined;
+      // Approving some types (IP/device block, XP) needs a sudo grant server-side;
+      // withSudo prompts via SudoPasswordModal and retries once. Reject never does.
+      if (decision === 'approve') await withSudo(() => requestsApi.review(req.id, decision, trimmed));
+      else await requestsApi.review(req.id, decision, trimmed);
+      setRejectingId(null);
+      setRejectNote('');
       toast.success(t(decision === 'approve' ? 'admin.requests.approved' : 'admin.requests.rejected'));
       setPending(prev => prev.filter(r => r.id !== req.id));
       fetchAll();
@@ -254,6 +264,33 @@ export default function AdminRequestsTab() {
             <AnimatePresence>
               {pending.map(req => (
                 <RequestRow key={req.id} req={req}>
+                  {rejectingId === req.id ? (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <input
+                        autoFocus
+                        maxLength={500}
+                        value={rejectNote}
+                        onChange={e => setRejectNote(e.target.value)}
+                        placeholder={t('admin.requests.rejectNote')}
+                        className="w-48 bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        disabled={busy === req.id}
+                        onClick={() => decide(req, 'reject', rejectNote)}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+                      >
+                        <Icon name="close" size={12} /> {t('admin.requests.confirmReject')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setRejectingId(null); setRejectNote(''); }}
+                        className="px-2.5 py-1.5 rounded-lg text-[11px] text-zinc-400 border border-zinc-700 hover:text-zinc-200 transition-colors"
+                      >
+                        {t('admin.requests.cancelReject')}
+                      </button>
+                    </div>
+                  ) : (
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       type="button"
@@ -266,12 +303,13 @@ export default function AdminRequestsTab() {
                     <button
                       type="button"
                       disabled={busy === req.id}
-                      onClick={() => decide(req, 'reject')}
+                      onClick={() => { setRejectingId(req.id); setRejectNote(''); }}
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
                     >
                       <Icon name="close" size={12} /> {t('admin.requests.reject')}
                     </button>
                   </div>
+                  )}
                 </RequestRow>
               ))}
             </AnimatePresence>

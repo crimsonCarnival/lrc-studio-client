@@ -44,7 +44,7 @@ export default function AppealDetailsModal({ isOpen, user, onApprove, onReject, 
             </div>
             <div>
               <DialogTitle className="text-lg font-bold text-zinc-100">
-                {t('admin.appeal.modalTitle') || 'Review Appeal'}
+                {t('admin.appeal.modalTitle')}
               </DialogTitle>
               <DialogDescription className="text-xs text-zinc-500 font-medium uppercase tracking-wider">
                 {user.displayName || user.accountName} • {user.email}
@@ -58,13 +58,13 @@ export default function AppealDetailsModal({ isOpen, user, onApprove, onReject, 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-zinc-950/50 border border-zinc-800 rounded-xl p-3">
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">
-                {t('admin.table.reasonLabel') || 'Original Reason'}
+                {t('admin.table.reasonLabel')}
               </span>
-              <p className="text-xs text-zinc-300 italic">"{user.ban?.reason || 'No reason provided'}"</p>
+              <p className="text-xs text-zinc-300 italic">"{user.ban?.reason || t('admin.table.noReason')}"</p>
             </div>
             <div className="bg-zinc-950/50 border border-zinc-800 rounded-xl p-3">
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">
-                {t('admin.appeal.submittedAt') || 'Submitted At'}
+                {t('admin.appeal.submittedAt')}
               </span>
               <div className="flex items-center gap-1.5 text-zinc-300 text-xs" suppressHydrationWarning>
                 <Icon name="schedule" size={14} className="text-zinc-500" />
@@ -79,7 +79,7 @@ export default function AppealDetailsModal({ isOpen, user, onApprove, onReject, 
               <Icon name="format_quote" size={48} className="text-zinc-500" />
             </div>
             <span className="text-[10px] font-bold text-yellow-500/70 uppercase tracking-widest mb-2 block">
-              {t('admin.banned.yourAppealLabel') || 'User Appeal'}
+              {t('admin.banned.yourAppealLabel')}
             </span>
             <div className="text-sm text-zinc-200 leading-relaxed max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
               {user.appeal?.text}
@@ -94,7 +94,7 @@ export default function AppealDetailsModal({ isOpen, user, onApprove, onReject, 
             onClick={onCancel}
             className="flex-1 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
           >
-            {t('common.cancel') || 'Close'}
+            {t('common.cancel')}
           </Button>
 
           <div className="flex gap-2 flex-[2]">

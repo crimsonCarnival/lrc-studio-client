@@ -232,7 +232,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                   </span>
                   <input
                     className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
-                    placeholder="English Title"
+                    placeholder={t('admin.placeholderEn', { field: t('admin.levels.modal.titleField') })}
                     value={form.title.en}
                     onChange={e => setForm(p => ({ ...p, title: { ...p.title, en: e.target.value } }))}
                     required
@@ -257,7 +257,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                   </span>
                   <input
                     className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
-                    placeholder="Spanish Title"
+                    placeholder={t('admin.placeholderEs', { field: t('admin.levels.modal.titleField') })}
                     value={form.title.es}
                     onChange={e => setForm(p => ({ ...p, title: { ...p.title, es: e.target.value } }))}
                     maxLength={60}
@@ -271,7 +271,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                 </span>
                 <input
                   className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
-                  placeholder="English Description"
+                  placeholder={t('admin.placeholderEn', { field: t('admin.levels.modal.descriptionField') })}
                   value={form.description.en}
                   onChange={e => setForm(p => ({ ...p, description: { ...p.description, en: e.target.value } }))}
                   maxLength={200}
@@ -284,7 +284,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                 </span>
                 <input
                   className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
-                  placeholder="Spanish Description"
+                  placeholder={t('admin.placeholderEs', { field: t('admin.levels.modal.descriptionField') })}
                   value={form.description.es}
                   onChange={e => setForm(p => ({ ...p, description: { ...p.description, es: e.target.value } }))}
                   maxLength={200}

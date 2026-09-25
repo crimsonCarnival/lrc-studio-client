@@ -1,4 +1,6 @@
 export default {
+  placeholderEn: '{{field}} in English',
+  placeholderEs: '{{field}} in Spanish',
   sudo: {
     title: 'Confirm your identity',
     description: 'For security, re-enter your password to continue with this action.',
@@ -173,6 +175,10 @@ export default {
     fetchError: 'Failed to load requests',
     actionError: 'Action failed',
     byReviewer: 'by {{name}}',
+    rejectNote: 'Reason for rejection (optional)',
+    confirmReject: 'Confirm rejection',
+    cancelReject: 'Cancel',
+    decisionNote: 'Note: {{note}}',
     newRequest: 'New request',
     status: {
       pending: 'Pending',
@@ -202,7 +208,7 @@ export default {
       cancel: 'Cancel',
       submit: 'Submit request',
       submitting: 'Submitting…',
-      submitted: 'Request submitted',
+      submitted: 'Request submitted for review',
       invalid: 'Please fill in the required fields',
       error: 'Could not submit request',
     },

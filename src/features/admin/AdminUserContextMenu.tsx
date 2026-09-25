@@ -101,7 +101,7 @@ export function AdminUserContextMenu({
 
         <ContextMenuItem onClick={() => window.open(`/profile/${user.accountName}`, '_blank')}>
           <Icon name="open_in_new" />
-          {t('admin.table.viewProfile', 'View profile')}
+          {t('admin.table.viewProfile')}
         </ContextMenuItem>
 
         {canAct && (
@@ -112,7 +112,7 @@ export function AdminUserContextMenu({
               <ContextMenuSub>
                 <ContextMenuSubTrigger>
                   <Icon name="how_to_reg" />
-                  {t('admin.table.changeRole', 'Change role')}
+                  {t('admin.table.changeRole')}
                 </ContextMenuSubTrigger>
                 <ContextMenuSubContent>
                   {assignableRoles.map(r => (
@@ -130,7 +130,7 @@ export function AdminUserContextMenu({
 
             <ContextMenuItem onClick={() => handleAdjustXP('grant', 100, 'user', user.id || user._id)}>
               <Icon name="bolt" />
-              {t('admin.table.adjustXp', 'Adjust XP')}
+              {t('admin.table.adjustXp')}
             </ContextMenuItem>
 
             <ContextMenuSeparator />

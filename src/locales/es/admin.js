@@ -1,4 +1,6 @@
 export default {
+  placeholderEn: '{{field}} en inglés',
+  placeholderEs: '{{field}} en español',
   sudo: {
     title: 'Confirma tu identidad',
     description: 'Por seguridad, vuelve a introducir tu contraseña para continuar con esta acción.',
@@ -173,6 +175,10 @@ export default {
     fetchError: 'No se pudieron cargar las solicitudes',
     actionError: 'La acción falló',
     byReviewer: 'por {{name}}',
+    rejectNote: 'Motivo del rechazo (opcional)',
+    confirmReject: 'Confirmar rechazo',
+    cancelReject: 'Cancelar',
+    decisionNote: 'Nota: {{note}}',
     newRequest: 'Nueva solicitud',
     status: {
       pending: 'Pendiente',
@@ -202,7 +208,7 @@ export default {
       cancel: 'Cancelar',
       submit: 'Enviar solicitud',
       submitting: 'Enviando…',
-      submitted: 'Solicitud enviada',
+      submitted: 'Solicitud enviada para revisión',
       invalid: 'Completa los campos requeridos',
       error: 'No se pudo enviar la solicitud',
     },
