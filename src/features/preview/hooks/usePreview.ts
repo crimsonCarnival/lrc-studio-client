@@ -299,10 +299,10 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
       }
 
       setShowExportPanel(false);
-      toast.success(t('export.success') || 'File downloaded');
+      toast.success(t('export.success'));
     } catch (err) {
       console.error('Export failed', err);
-      toast.error(t('export.failed') || 'Export failed');
+      toast.error(t('export.failed'));
     }
   }, [
     exportFilename, lines, settings, duration, includeTranslations,
@@ -346,7 +346,7 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
       setTimeout(() => setWasCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy', err);
-      toast.error(t('export.copyFailed') || 'Failed to copy to clipboard');
+      toast.error(t('export.copyFailed'));
     }
   }, [
     lines, settings, duration, includeTranslations,

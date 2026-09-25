@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { lyrics } from '@/app/api';
 import { matchKey } from '@/shared/utils/keyboard';
@@ -15,8 +15,11 @@ import {
   detectDuplicateTimestamps,
   normalizeLineMode,
 } from '../services/editor.service';
-import { parseSectionHeader } from '@/features/editor/utils/sections';
-import { getDefaultDepthForLabel } from '../constants/sectionTypes';
+import {
+  parseRawTextLine, alignRawTextItems, rawTextKeyOfLine, rawTextKeyOfItem,
+  computeCollapsedView, collapsedAncestorKeys, indexMapByIdentity, remapIndexSet,
+} from '@/features/editor/utils/sections';
+import { getDefaultDepthForLabel, formatSectionLabelForSerialization } from '../constants/sectionTypes';
 import { useFileImport } from './useFileImport';
 import { useDragReorder } from './useDragReorder';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
@@ -42,7 +45,11 @@ interface UseEditorParams {
   setEditorMode: (mode: string) => void;
   onImport?: () => void;
   clearHistory: () => void;
+  /** Singer names recognized in raw-text `Name: lyric` prefixes (see utils/sections.ts). */
+  singerRoster?: string[];
 }
+
+const EMPTY_ROSTER: string[] = [];
 
 export function useEditor({
   lines,
@@ -57,6 +64,7 @@ export function useEditor({
   setEditorMode,
   onImport,
   clearHistory,
+  singerRoster = EMPTY_ROSTER,
 }: UseEditorParams) {
   const { t } = useTranslation();
   const { settings, updateSetting, updateSettings } = useSettings();
@@ -83,15 +91,107 @@ export function useEditor({
 
   const [requestConfirm, confirmModal] = useConfirm();
 
-  const lastClickedRef = useRef<number | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
 
   const { handleFileUpload, handleUrlImport, fileInputRef } = useFileImport({
     setLines, setEditorMode, setActiveLineIndex, setSyncMode, onImport, settings,
   });
 
+  // ——— Section collapse (view-only; never persisted) ———
+  // Keyed by sectionCollapseKey (marker id) so it survives index shifts. Lives here, not in the
+  // list, because drag (block moves) and range selection must treat a collapsed block as a unit.
+  const [collapsedSections, setCollapsedSections] = useState<ReadonlySet<string>>(() => new Set());
+  const collapsedView = useMemo(() => computeCollapsedView(lines, collapsedSections), [lines, collapsedSections]);
+  const toggleSectionCollapse = useCallback((key: string) => {
+    setCollapsedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+  const expandKeys = useCallback((keys: string[]) => {
+    if (keys.length === 0) return;
+    setCollapsedSections((prev) => {
+      const next = new Set(prev);
+      keys.forEach((k) => next.delete(k));
+      return next;
+    });
+  }, []);
+
+  // Auto-expand: when the active line MOVES into a collapsed block (sync advance, click, jump),
+  // open every collapsed ancestor so the line being synced is visible. Only on change — else the
+  // user could never collapse the section they are in. Adjusted during render (no hidden frame).
+  const [prevActiveForCollapse, setPrevActiveForCollapse] = useState(activeLineIndex);
+  if (prevActiveForCollapse !== activeLineIndex) {
+    setPrevActiveForCollapse(activeLineIndex);
+    if (collapsedView.rowOfLine[activeLineIndex] === -1) {
+      expandKeys(collapsedAncestorKeys(lines, collapsedSections, activeLineIndex));
+    }
+  }
+
+  // Indices a click on `i` stands for: a visible collapsed header = its whole hidden block.
+  const unitIndices = (i: number): number[] => {
+    const end = collapsedView.collapsedHeaders.get(i);
+    if (end == null) return [i];
+    return Array.from({ length: end - i }, (_, k) => i + k);
+  };
+
+  // ——— Index-keyed state follows its lines ———
+  // Selection, modified set, focused timestamp, editing/end-mark/hover/last-click and the
+  // active line are stored as line INDICES. Whenever `lines` changes we remap them old→new:
+  // with the exact map a structural op recorded (drag, tag), else by line identity
+  // (undo/redo, inserts, deletes, raw edits). The active line is only remapped when the change
+  // didn't set it explicitly (marking/delete/import already choose the next active line).
+  const pendingIndexMapRef = useRef<number[] | null>(null);
+  const recordIndexMap = useCallback((indexMap: number[]) => { pendingIndexMapRef.current = indexMap; }, []);
+  const remapPrevLinesRef = useRef(lines);
+  const committedActiveRef = useRef(activeLineIndex);
+  const lastClickedRef = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const prevLines = remapPrevLinesRef.current;
+    if (prevLines === lines) return;
+    remapPrevLinesRef.current = lines;
+    const pending = pendingIndexMapRef.current;
+    pendingIndexMapRef.current = null;
+    const map = pending && pending.length === prevLines.length ? pending : indexMapByIdentity(prevLines, lines);
+    const mapIdx = (i: number | null | undefined) => (i == null ? -1 : map[i] ?? -1);
+    const isIdentity = map.length === lines.length && map.every((j, i) => j === i);
+    if (!isIdentity) {
+      // Syncing derived index state to an external `lines` change — no render-time equivalent
+      // because the change can come from undo/redo in the parent.
+      setSelectedLines((prev) => (prev.size ? remapIndexSet(prev, map) : prev));
+      setModifiedLines((prev) => (prev.size ? remapIndexSet(prev, map) : prev));
+      setFocusedTimestamp((prev) => {
+        if (!prev) return prev;
+        const j = mapIdx(prev.lineIndex);
+        return j >= 0 ? { ...prev, lineIndex: j } : null;
+      });
+      setEditingLineIndex((prev) => (prev == null ? prev : (mapIdx(prev) >= 0 ? mapIdx(prev) : null)));
+      setAwaitingEndMarkFor((prev) => {
+        if (!prev) return prev;
+        const j = mapIdx(prev.lineIndex);
+        return j >= 0 ? { ...prev, lineIndex: j } : null;
+      });
+      setHoveredLineIndex(null);
+      const lc = mapIdx(lastClickedRef.current);
+      lastClickedRef.current = lc >= 0 ? lc : null;
+      if (activeLineIndex === committedActiveRef.current) {
+        const j = mapIdx(activeLineIndex);
+        if (j >= 0 && j !== activeLineIndex) setActiveLineIndex(j);
+      }
+    }
+    committedActiveRef.current = activeLineIndex;
+    // Runs only on `lines` changes; the other values are read at that moment on purpose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lines]);
+  useLayoutEffect(() => { committedActiveRef.current = activeLineIndex; }, [activeLineIndex]);
+
   const { dragIndex, dragOverIndex, handleDragStart, handleDragOver, handleDragEnd, handleDrop } = useDragReorder({
-    setLines, setActiveLineIndex,
+    lines,
+    setLines,
+    recordIndexMap,
+    getCollapsedBlockEnd: (i) => collapsedView.collapsedHeaders.get(i) ?? null,
   });
 
   // Stable refs to avoid recreating handleMark/keyboard effects on every frame
@@ -261,32 +361,43 @@ export function useEditor({
         }
       } catch (err) {
         console.error('Failed to parse lyrics via API', err);
-        toast.error(t('import.failed') || 'Failed to parse lyrics');
+        toast.error(t('import.failed'));
         return;
       }
     }
 
-    const rawLines = rawText.split('\n');
-    const priorBodyLines = lines.filter((l) => l.type !== 'section');
+    const items = rawText.split('\n').map((rawLine) => parseRawTextLine(rawLine, singerRoster));
+    // Pair each parsed item with the prior line it continues (unchanged text → same line,
+    // edited-in-place text → same slot), so timestamps/words/ids survive the raw edit and an
+    // inserted or deleted line doesn't shift the timing of everything after it.
+    const priorMatch = alignRawTextItems(lines.map(rawTextKeyOfLine), items.map(rawTextKeyOfItem));
     const updated: EditorLine[] = [];
-    let oldOrdinal = 0; // index into priorBodyLines, for word/timestamp preservation
 
-    for (const rawLine of rawLines) {
-      const header = parseSectionHeader(rawLine);
-      if (header) {
+    for (let itemIdx = 0; itemIdx < items.length; itemIdx++) {
+      const item = items[itemIdx];
+      const prior = priorMatch[itemIdx] >= 0 ? lines[priorMatch[itemIdx]] : undefined;
+      if (item.kind === 'section') {
+        const oldMarker = prior?.type === 'section' ? prior : undefined;
+        // Keep the stored spelling/depth when the raw form is just its serialization
+        // (labels are title-cased and null depth is written as regular).
+        const keepLabel = oldMarker && formatSectionLabelForSerialization((oldMarker.label ?? '').trim()) === item.label;
+        const keepDepth = oldMarker && ((oldMarker.depth as number | null | undefined) ?? 1) === item.depth;
         updated.push({
+          ...oldMarker,
           type: 'section',
-          label: header.label,
-          singers: header.singers.length ? header.singers : undefined,
+          label: keepLabel ? oldMarker.label : item.label,
+          singers: item.singers.length ? item.singers : (oldMarker?.singers?.length ? undefined : oldMarker?.singers),
           // Preserve structural depth so root dividers (e.g. [Part]) round-trip as roots,
           // not dim children — preview gates root styling on depth === 0.
-          depth: header.depth,
+          depth: keepDepth ? oldMarker.depth : item.depth,
+          timestamp: oldMarker?.timestamp ?? null,
+          id: oldMarker?.id ?? crypto.randomUUID(),
           text: '',
         } as EditorLine);
         continue;
       }
 
-      const { plainText, segments } = parseRubyMarkup(rawLine.trim());
+      const { plainText, segments } = parseRubyMarkup(item.text);
       const isCJKText = hasCJK(plainText);
       const newWords: EditorWord[] = [];
       for (const seg of segments) {
@@ -320,14 +431,20 @@ export function useEditor({
         }
       }
 
-      const old = priorBodyLines[oldOrdinal] || {};
-      oldOrdinal++;
+      const old: EditorLine = prior && prior.type !== 'section' ? prior : {};
       const line: EditorLine = {
         ...old,
         text: plainText,
         timestamp: old.timestamp ?? null,
         id: old.id || crypto.randomUUID(),
       };
+      // No prefix = no singers (every singer is written as a prefix); keep an empty [] as-is.
+      // Delete rather than set `undefined` so an untouched line stays deep-equal (no patch churn).
+      const nextSingers = item.singers ?? (old.singers?.length ? undefined : old.singers);
+      if (nextSingers !== undefined) line.singers = nextSingers;
+      else delete line.singers;
+      // Word-level singer split refers to singer slots — only valid while the roster is unchanged.
+      const sameSingers = JSON.stringify(old.singers ?? []) === JSON.stringify(line.singers ?? []);
       if (newWords.length > 0) {
         if (old.words?.length) {
           let charIdx = 0;
@@ -341,6 +458,9 @@ export function useEditor({
             if (tokIdx < newWords.length) {
               if (oldWord.time != null) newWords[tokIdx].time = oldWord.time;
               if (!newWords[tokIdx].reading && oldWord.reading) newWords[tokIdx].reading = oldWord.reading;
+              if (sameSingers && oldWord.singerIndex != null && newWords[tokIdx].singerIndex == null) {
+                newWords[tokIdx].singerIndex = oldWord.singerIndex;
+              }
             }
             charIdx += [...(oldWord.word || '')].length;
           });
@@ -355,7 +475,7 @@ export function useEditor({
     clearHistory?.();
     setActiveLineIndex(Math.max(0, updated.findIndex((l) => l.type !== 'section' && l.timestamp == null)));
     setSyncMode(true);
-  }, [rawText, lines, clearHistory, t, setLines, setEditorMode, setActiveLineIndex, setSyncMode]);
+  }, [rawText, lines, singerRoster, clearHistory, t, setLines, setEditorMode, setActiveLineIndex, setSyncMode]);
 
 
   // ——— Timestamp operations ———
@@ -611,18 +731,18 @@ export function useEditor({
   );
 
   const handleClearTimestamps = () => {
-    requestConfirm(t('confirm.clearTimestamps') || 'Clear all timestamps?', () => {
+    requestConfirm(t('confirm.clearTimestamps'), () => {
       setLines((prev) => clearAllTimestamps(prev, editorMode === 'srt', editorMode === 'words'));
       setActiveLineIndex(0);
-    }, { title: t('confirm.clearTimestampsTitle') || 'Clear Timestamps', variant: 'default' });
+    }, { title: t('confirm.clearTimestampsTitle'), variant: 'default' });
   };
 
   const handleClearAllWordTimestamps = () => {
-    requestConfirm(t('confirm.clearWordTimestamps') || 'Clear all word timestamps?', () => {
+    requestConfirm(t('confirm.clearWordTimestamps'), () => {
       setLines((prev) => prev.map((l) =>
         l.words ? { ...l, words: l.words.map((w) => ({ ...w, time: null })) } : l
       ));
-    }, { title: t('confirm.clearWordTimestampsTitle') || 'Clear Word Timestamps', variant: 'default' });
+    }, { title: t('confirm.clearWordTimestampsTitle'), variant: 'default' });
   };
 
   const handleClearActiveLineWordTimestamps = () => {
@@ -858,18 +978,22 @@ export function useEditor({
     if (isRange || isToggle) {
       setActiveLineIndex(i);
       if (isRange && lastClickedRef.current != null) {
+        // Both ends are visible rows, so every hidden line in between belongs to a collapsed
+        // header inside the range; only a collapsed header at the far end needs extending.
         const start = Math.min(lastClickedRef.current, i);
-        const end = Math.max(lastClickedRef.current, i);
+        const lastUnit = unitIndices(Math.max(lastClickedRef.current, i));
+        const end = lastUnit[lastUnit.length - 1];
         setSelectedLines((prev) => {
           const next = new Set(prev);
           for (let idx = start; idx <= end; idx++) next.add(idx);
           return next;
         });
       } else if (isToggle) {
+        const unit = unitIndices(i);
         setSelectedLines((prev) => {
           const next = new Set(prev);
-          if (next.has(i)) next.delete(i);
-          else next.add(i);
+          const selecting = !next.has(i);
+          unit.forEach((idx) => (selecting ? next.add(idx) : next.delete(idx)));
           return next;
         });
       }
@@ -894,17 +1018,28 @@ export function useEditor({
     setSelectedLines(new Set());
   }, []);
 
+  // Read via ref so handleToggleLine keeps a stable identity (it's a memoized row prop).
+  const collapsedHeadersRef = useRef(collapsedView.collapsedHeaders);
+  const collapsedSectionsRef = useRef(collapsedSections);
+  useLayoutEffect(() => {
+    collapsedHeadersRef.current = collapsedView.collapsedHeaders;
+    collapsedSectionsRef.current = collapsedSections;
+  });
   const handleToggleLine = useCallback((i) => {
+    const end = collapsedHeadersRef.current.get(i) ?? i + 1; // collapsed header toggles its whole block
     setSelectedLines((prev) => {
       const next = new Set(prev);
-      if (next.has(i)) next.delete(i);
-      else next.add(i);
+      const selecting = !next.has(i);
+      for (let idx = i; idx < end; idx++) {
+        if (selecting) next.add(idx);
+        else next.delete(idx);
+      }
       return next;
     });
   }, []);
 
   const handleBulkClearTimestamps = useCallback(() => {
-    requestConfirm(t('confirm.bulkClear') || 'Clear timestamps for selected lines?', () => {
+    requestConfirm(t('confirm.bulkClear'), () => {
       setLines((prev) =>
         prev.map((l, idx) =>
           selectedLines.has(idx)
@@ -913,11 +1048,11 @@ export function useEditor({
         ),
       );
       clearSelection();
-    }, { title: t('confirm.bulkClearTitle') || 'Clear Selected Timestamps', variant: 'default' });
+    }, { title: t('confirm.bulkClearTitle'), variant: 'default' });
   }, [selectedLines, editorMode, setLines, clearSelection, requestConfirm, t]);
 
   const handleBulkDelete = useCallback(() => {
-    requestConfirm(t('confirm.bulkDelete') || 'Delete selected lines?', () => {
+    requestConfirm(t('confirm.bulkDelete'), () => {
       setLines((prev) => prev.filter((_, idx) => !selectedLines.has(idx)));
       setActiveLineIndex((prev) => {
         let offset = 0;
@@ -927,7 +1062,7 @@ export function useEditor({
         return Math.max(0, prev - offset);
       });
       clearSelection();
-    }, { title: t('confirm.bulkDeleteTitle') || 'Delete Lines', variant: 'danger' });
+    }, { title: t('confirm.bulkDeleteTitle'), variant: 'danger' });
   }, [selectedLines, t, setLines, setActiveLineIndex, clearSelection, requestConfirm]);
 
   const handleBulkShift = (delta) => {
@@ -1124,6 +1259,18 @@ export function useEditor({
   }, [lines, setLines, setEditingLineIndex, setEditingText, setEditingSingers]);
 
   const handleToggleSectionDepth = useCallback((index) => {
+    // Collapse blocks are derived from depth, so they re-evaluate on their own. One edge:
+    // demoting a root right after a collapsed root pulls it INTO that block — expand the
+    // new ancestor(s) so the header just clicked doesn't vanish.
+    // Refs keep this callback stable (it's a memoized row prop).
+    const current = linesRef.current;
+    const marker = current[index];
+    if (marker?.type === 'section') {
+      const currentDepth = marker.depth ?? getDefaultDepthForLabel(marker.label);
+      const simulated = [...current];
+      simulated[index] = { ...marker, depth: currentDepth === 0 ? 1 : 0 };
+      expandKeys(collapsedAncestorKeys(simulated, collapsedSectionsRef.current, index));
+    }
     setLines((prev) => {
       const updated = [...prev];
       if (updated[index] && updated[index].type === 'section') {
@@ -1132,7 +1279,7 @@ export function useEditor({
       }
       return updated;
     });
-  }, [setLines]);
+  }, [setLines, expandKeys]);
 
   // Move a set of line indices to appear directly after a target section marker.
   // indices: number[] of line indices to move (section lines are skipped)
@@ -1363,6 +1510,10 @@ export function useEditor({
     isActiveLineLocked,
     handleLineHover,
     handleLineHoverEnd,
+    collapsedSections,
+    collapsedView,
+    toggleSectionCollapse,
+    recordIndexMap,
     // refs
     listRef,
     fileInputRef,

@@ -67,7 +67,7 @@ export default function SelectionActionBar({
       <Badge variant="outline" className="text-[10px] font-bold text-primary border-0 bg-transparent tabular-nums px-1.5">
         {selectedLines.size}
       </Badge>
-      <Tip content={t('editor.selection.clearTimestamps') || 'Clear timestamps'}>
+      <Tip content={t('editor.selection.clearTimestamps')}>
         <Button
           variant="ghost"
           size="icon-xs"
@@ -136,7 +136,7 @@ export default function SelectionActionBar({
 
       {handleBulkSingTogether && handleBulkSplitSingers && songArtists && songArtists.length > 1 && (
         <>
-          <Tip content={t('editor.duetMode') || 'Sing together'}>
+          <Tip content={t('editor.duetMode')}>
             <Button
               variant="ghost"
               size="icon-xs"
@@ -146,7 +146,7 @@ export default function SelectionActionBar({
               <Icon name="group" size={16} />
             </Button>
           </Tip>
-          <Tip content={t('editor.splitMode') || 'Split by singer'}>
+          <Tip content={t('editor.splitMode')}>
             <Button
               variant="ghost"
               size="icon-xs"
@@ -169,7 +169,7 @@ export default function SelectionActionBar({
         </>
       )}
       <Separator orientation="vertical" className="h-4 bg-zinc-700/50" />
-      <Tip content={t('editor.selection.deleteSelected') || 'Delete selected'}>
+      <Tip content={t('editor.selection.deleteSelected')}>
         <Button
           variant="ghost"
           size="icon-xs"
@@ -180,7 +180,7 @@ export default function SelectionActionBar({
         </Button>
       </Tip>
       <Separator orientation="vertical" className="h-4 bg-zinc-700/50" />
-      <Tip content={t('editor.selection.deselectAll') || 'Deselect all (Esc)'}>
+      <Tip content={t('editor.selection.deselectAll')}>
         <Button
           variant="ghost"
           size="icon-xs"
@@ -247,7 +247,7 @@ function SectionAssignButton({ selectedLines, lines, handleMoveToSection }: { se
 function SingerBulkButton({ selectedLines, handleAssignSinger, songArtists }: { selectedLines: Set<number>; handleAssignSinger: (name: string, indices: number[], slot: number) => void; songArtists?: string[] }) {
   const { t } = useTranslation();
   // singerN uses a default-value string + interpolation.
-  const tk = t as (key: string, defaultValue?: string, options?: Record<string, unknown>) => string;
+  const tk = t as (key: string, options?: Record<string, unknown>) => string;
   const [open, setOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(0);
   const [custom, setCustom] = useState('');
@@ -296,7 +296,7 @@ function SingerBulkButton({ selectedLines, handleAssignSinger, songArtists }: { 
           <p className="px-3 pb-1 text-[10px] text-zinc-600">
             {selectedSlot === 0
               ? t('editor.singer')
-              : tk('editor.singerN', 'Singer {{n}}', { n: selectedSlot + 1 })}
+              : tk('editor.singerN', { n: selectedSlot + 1 })}
           </p>
           {(songArtists?.length ? songArtists : []).map((a) => (
             <button

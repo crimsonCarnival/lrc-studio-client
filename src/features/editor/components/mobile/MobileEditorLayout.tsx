@@ -54,9 +54,9 @@ export default function MobileEditorLayout({
   const [activeMode, setActiveMode] = useState('sync');
 
   const modes = [
-    { id: 'sync', label: t('editor.sync') || 'Sync', iconName: 'music_note' },
-    { id: 'lyrics', label: t('editor.lyrics') || 'Lyrics', iconName: 'mic' },
-    { id: 'preview', label: t('editor.preview') || 'Preview', iconName: 'visibility' },
+    { id: 'sync', label: t('editor.sync'), iconName: 'music_note' },
+    { id: 'lyrics', label: t('editor.lyrics'), iconName: 'mic' },
+    { id: 'preview', label: t('editor.preview'), iconName: 'visibility' },
   ] as const;
 
   const handleModeChange = (modeId: string) => {

@@ -16,8 +16,13 @@ import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/g
 import { Switch } from '@/shared/ui/switch';
 import toast from 'react-hot-toast';
 import { songMetadata } from '@/app/api';
+import SingersInput from './SingersInput';
 
 const EMPTY_TAGS: string[] = [];
+// Must be a stable reference: the form re-syncs whenever an initial* prop changes
+// identity, so an inline `[]` default re-ran that effect on every render (a loop
+// that also reset whatever the user typed) for callers that omit the prop.
+const EMPTY_COLORS: string[] = [];
 
 interface SourceInfo {
   ytUrl?: string;
@@ -79,6 +84,7 @@ interface ProjectSetupForm {
   coverImage: string;
   isPublic: boolean;
   singerColors?: string[];
+  singers: string[];
 }
 
 export interface ProjectSetupConfirm {
@@ -94,6 +100,8 @@ export interface ProjectSetupConfirm {
   coverImage: string;
   isPublic: boolean;
   singerColors?: string[];
+  /** Present only when the caller passed `initialSingers` (i.e. it persists the roster). */
+  singers?: string[];
 }
 
 interface ProjectSetupModalProps {
@@ -111,6 +119,8 @@ interface ProjectSetupModalProps {
   initialCoverImage?: string;
   initialIsPublic?: boolean;
   initialSingerColors?: string[];
+  /** Opt-in: pass to show the singer roster editor; omit where the caller can't persist it. */
+  initialSingers?: string[];
   isEditing?: boolean;
   sourceInfo?: SourceInfo | null;
   songSingers?: string[];
@@ -130,7 +140,8 @@ export default function ProjectSetupModal({
   initialGenre = '',
   initialCoverImage = '',
   initialIsPublic = false,
-  initialSingerColors = [],
+  initialSingerColors = EMPTY_COLORS,
+  initialSingers,
   isEditing = false,
   sourceInfo = null,
   songSingers = [],
@@ -152,6 +163,7 @@ export default function ProjectSetupModal({
     genre: initialGenre || '',
     coverImage: initialCoverImage || '',
     isPublic: initialIsPublic || false,
+    singers: initialSingers || [],
   }));
 
   // Sync form when the modal is opened or when the underlying data changes
@@ -172,9 +184,10 @@ export default function ProjectSetupModal({
         coverImage: initialCoverImage || '',
         isPublic: initialIsPublic || false,
         singerColors: initialSingerColors || [],
+        singers: initialSingers || [],
       });
     }
-  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialIsPublic, initialSingerColors]);
+  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialIsPublic, initialSingerColors, initialSingers]);
 
 
   const addTag = (text: string) => {
@@ -235,10 +248,10 @@ export default function ProjectSetupModal({
           ...(!f.coverImage && meta.albumArt ? { coverImage: meta.albumArt } : {}),
         }));
       } else {
-        toast.error(t('setup.metaSearchFailed') || 'Failed to fetch song info');
+        toast.error(t('setup.metaSearchFailed'));
       }
     } catch {
-      toast.error(t('setup.metaSearchFailed') || 'Failed to fetch song info');
+      toast.error(t('setup.metaSearchFailed'));
     } finally {
       setMetaSearching(false);
     }
@@ -259,7 +272,8 @@ export default function ProjectSetupModal({
       genre: form.genre,
       coverImage: form.coverImage.trim(),
       isPublic: form.isPublic,
-      singerColors: (form.singerColors || []).filter(Boolean),
+      singerColors: (form.singerColors || []).map((c) => c || ''),
+      ...(initialSingers !== undefined ? { singers: form.singers } : {}),
     });
   };
 
@@ -271,7 +285,7 @@ export default function ProjectSetupModal({
         type="button"
         className="fixed inset-0 bg-black/60 z-modal-backdrop animate-fade-in cursor-default"
         onClick={onClose}
-        aria-label={t('common.close') || 'Close'}
+        aria-label={t('common.close')}
       />
       <div className="fixed inset-0 z-modal flex items-center justify-center p-4 pointer-events-none">
         <div
@@ -295,7 +309,7 @@ export default function ProjectSetupModal({
                 <Icon name="auto_awesome" size={16} className="text-white" />
               </div>
               <h3 className="text-lg font-semibold text-zinc-100">
-                {isEditing ? t('setup.settingsTitle') || 'Project Settings' : t('setup.title')}
+                {isEditing ? t('setup.settingsTitle') : t('setup.title')}
               </h3>
             </div>
           </div>
@@ -322,21 +336,25 @@ export default function ProjectSetupModal({
               {/* Song Metadata Fields */}
               <div className="flex items-center justify-between mt-2 -mb-2">
                 <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  {t('setup.songInformation') || 'Song Information'}
+                  {t('setup.songInformation')}
                 </span>
-                {form.songName.trim() && form.songArtist.trim() && (
-                  <Tip content={t('setup.fetchSongInfo') || 'Fetch metadata'} side="left">
-                    <button
+                {/* Always rendered so it's discoverable; disabled until name + artist exist. */}
+                <Tip content={form.songName.trim() && form.songArtist.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')} side="left">
+                  {/* span keeps the tooltip working while the button is disabled */}
+                  <span className="inline-flex">
+                    <Button
                       type="button"
+                      variant="sync"
+                      size="sm"
                       onClick={handleFetchSongInfo}
-                      disabled={metaSearching}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
+                      disabled={metaSearching || !form.songName.trim() || !form.songArtist.trim()}
+                      className="gap-1.5 font-semibold"
                     >
-                      {metaSearching && <Icon name="autorenew" size={12} className="animate-spin" />}
-                      {t('setup.fetchInfo') || 'Search'}
-                    </button>
-                  </Tip>
-                )}
+                      <Icon name={metaSearching ? 'autorenew' : 'search'} size={14} className={metaSearching ? 'animate-spin' : undefined} />
+                      {t('setup.fetchInfo')}
+                    </Button>
+                  </span>
+                </Tip>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
@@ -363,10 +381,10 @@ export default function ProjectSetupModal({
                 </div>
                 <div className="flex flex-col gap-1.5 mt-2">
                   <Label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                    Singer Colors
+                    {t('settings.interface.singerColors')}
                   </Label>
                   <p className="text-[11px] text-zinc-500 mb-1">
-                    Customize project-specific colors for singers 1-8. Leave empty to use global defaults.
+                    {t('project.singerColorsDesc')}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {Array.from({ length: Math.max(8, songSingers.length) }).map((_, i) => {
@@ -389,7 +407,7 @@ export default function ProjectSetupModal({
                               });
                             }}
                             className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
-                            title={singerName ? `Color for ${singerName}` : `Singer ${i + 1}`}
+                            title={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}
                           />
                           <span className="text-[10px] text-zinc-500 max-w-[60px] truncate" title={label}>{label}</span>
                           {form.singerColors?.[i] && (
@@ -403,7 +421,7 @@ export default function ProjectSetupModal({
                                 });
                               }}
                               className="text-[10px] text-zinc-400 hover:text-red-400"
-                              title="Reset color"
+                              title={t('project.resetColor')}
                             >
                               ×
                             </button>
@@ -414,6 +432,14 @@ export default function ProjectSetupModal({
                   </div>
                 </div>
               </div>
+
+              {initialSingers !== undefined && (
+                <SingersInput
+                  value={form.singers}
+                  onChange={(next) => setForm(f => ({ ...f, singers: next }))}
+                  suggestions={songSingers}
+                />
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
@@ -556,13 +582,13 @@ export default function ProjectSetupModal({
                   <div className="flex items-center gap-1.5">
                     {form.isPublic ? <Icon name="language" size={14} className="text-zinc-400" /> : <Icon name="lock" size={14} className="text-zinc-400" />}
                     <span className="text-xs font-semibold text-zinc-300">
-                      {form.isPublic ? t('project.visibilityPublic', 'Public Project') : t('project.visibilityPrivate', 'Private Project')}
+                      {form.isPublic ? t('project.visibilityPublic') : t('project.visibilityPrivate')}
                     </span>
                   </div>
                   <span className="text-[11px] text-zinc-500">
                     {form.isPublic
-                      ? t('project.publicDescription', 'Anyone can view this project on your profile.')
-                      : t('project.privateDescription', 'Only you can view and edit this project.')}
+                      ? t('project.publicDescription')
+                      : t('project.privateDescription')}
                   </span>
                 </div>
                 <Switch

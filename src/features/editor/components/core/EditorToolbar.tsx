@@ -56,7 +56,7 @@ export default function EditorToolbar({
       {/* ── Center: Auto Stamp (Sync Mode) + Modes ── */}
       <div className="flex items-center gap-1.5 shrink-0">
         {onAutoStamp && (
-          <Tip content={!autoStampHasAudio ? t('editor.autoStamp.noAudio') : isAutoStampComplete ? t('editor.autoStamp.complete', 'Already applied') : t('editor.autoStamp.button')}>
+          <Tip content={!autoStampHasAudio ? t('editor.autoStamp.noAudio') : isAutoStampComplete ? t('editor.autoStamp.complete') : t('editor.autoStamp.button')}>
             <Button
               variant="default"
               size="icon"
@@ -85,7 +85,7 @@ export default function EditorToolbar({
             }}
             className={`bg-zinc-800/40 rounded-full border flex-nowrap transition-all duration-300 overflow-hidden ${isExpanded ? 'max-w-[300px] opacity-100 p-1 ml-1 border-zinc-700/50 pointer-events-auto' : 'max-w-0 opacity-0 p-0 ml-0 border-transparent pointer-events-none'}`}
           >
-            <Tip content={t('editor.modeTooltipLRC') || 'Line-by-line lyrics (standard)'}>
+            <Tip content={t('editor.modeTooltipLRC')}>
               <ToggleGroupItem
                 value="lrc"
                 className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full data-[state=on]:bg-primary data-[state=on]:text-zinc-950 data-[state=on]:shadow-[0_0_10px_rgba(var(--color-primary),0.5)] text-zinc-400 hover:text-zinc-200 transition-all"
@@ -93,7 +93,7 @@ export default function EditorToolbar({
                 {t('editor.modeLRC')}
               </ToggleGroupItem>
             </Tip>
-            <Tip content={t('editor.modeTooltipSRT') || 'Subtitle format (start & end times)'}>
+            <Tip content={t('editor.modeTooltipSRT')}>
               <ToggleGroupItem
                 value="srt"
                 className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full data-[state=on]:bg-primary data-[state=on]:text-zinc-950 data-[state=on]:shadow-[0_0_10px_rgba(var(--color-primary),0.5)] text-zinc-400 hover:text-zinc-200 transition-all"
@@ -101,7 +101,7 @@ export default function EditorToolbar({
                 {t('editor.modeSRT')}
               </ToggleGroupItem>
             </Tip>
-            <Tip content={t('editor.modeTooltipWords') || 'Word-by-word timestamps (advanced)'}>
+            <Tip content={t('editor.modeTooltipWords')}>
               <ToggleGroupItem
                 value="words"
                 disabled={!hasAnyTimestamp}

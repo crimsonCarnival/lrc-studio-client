@@ -28,12 +28,12 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
 
     const ext = file.name.split('.').pop()?.toLowerCase();
     if (!ext || !['lrc', 'srt', 'txt'].includes(ext)) {
-      toast.error(t('import.unsupportedFormat') || 'Unsupported file type. Use .lrc, .srt, or .txt files.');
+      toast.error(t('import.unsupportedFormat'));
       e.target.value = '';
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error(t('import.tooLarge') || 'File too large (max 5 MB)');
+      toast.error(t('import.tooLarge'));
       e.target.value = '';
       return;
     }
@@ -51,14 +51,14 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
           }
           setActiveLineIndex(Math.max(0, parsed.findIndex((l) => l.timestamp == null)));
           setSyncMode(true);
-          toast.success(tk('import.success', { count: parsed.length }) || `Imported ${parsed.length} lines`);
+          toast.success(tk('import.success', { count: parsed.length }));
           onImport?.();
         } else {
-          toast.error(t('import.noLines') || 'No lyrics found in file');
+          toast.error(t('import.noLines'));
         }
       } catch (err) {
         console.error('Failed to parse lyrics file', err);
-        toast.error(t('import.failed') || 'Failed to parse lyrics file');
+        toast.error(t('import.failed'));
       }
     };
     reader.readAsText(file);
@@ -71,7 +71,7 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
       parsedUrl = new URL(url);
       if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error();
     } catch {
-      return { error: t('import.invalidUrl') || 'Invalid URL. Use http:// or https://' };
+      return { error: t('import.invalidUrl') };
     }
     try {
       const resp = await fetch(url);
@@ -80,7 +80,7 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
       const filename = parsedUrl.pathname.split('/').pop() || 'lyrics.lrc';
       const { lines: parsed } = await lyrics.parse(text, filename, parseOptions) as { lines: EditorLine[] };
       if (parsed.length === 0) {
-        return { error: t('import.noLines') || 'No lyrics found in file' };
+        return { error: t('import.noLines') };
       }
       setLines(parsed);
       {
@@ -90,11 +90,11 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
       }
       setActiveLineIndex(Math.max(0, parsed.findIndex((l) => l.timestamp == null)));
       setSyncMode(true);
-      toast.success(tk('import.success', { count: parsed.length }) || `Imported ${parsed.length} lines`);
+      toast.success(tk('import.success', { count: parsed.length }));
       onImport?.();
       return { success: true };
     } catch {
-      return { error: t('import.fetchError') || 'Failed to fetch. The server may not allow cross-origin requests.' };
+      return { error: t('import.fetchError') };
     }
   };
 

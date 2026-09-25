@@ -186,7 +186,7 @@ export default function EditorActionDrawer({
           {handleBulkSingTogether && songArtists && songArtists.length > 1 && (
             <DrawerItem
               iconName="group"
-              label={t('editor.duetMode') || 'Sing together'}
+              label={t('editor.duetMode')}
               onClick={() => {
                 handleBulkSingTogether();
                 onClose();
@@ -196,7 +196,7 @@ export default function EditorActionDrawer({
           {handleBulkSplitSingers && songArtists && songArtists.length > 1 && (
             <DrawerItem
               iconName="call_split"
-              label={t('editor.splitMode') || 'Split by singer'}
+              label={t('editor.splitMode')}
               onClick={() => {
                 handleBulkSplitSingers();
                 onClose();

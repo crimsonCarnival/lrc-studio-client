@@ -93,11 +93,11 @@ export function EditorLineContextMenu({
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuLabel>{t('editor.selection.count', { count: selectedCount, defaultValue: '{{count}} lines' })}</ContextMenuLabel>
+          <ContextMenuLabel>{t('editor.selection.count', { count: selectedCount})}</ContextMenuLabel>
           {handleClearLine && (
             <ContextMenuItem onClick={() => selectedLines.forEach(i => handleClearLine!(i))}>
               <Icon name="ink_eraser" />
-              {t('editor.selection.clearTimestamps', 'Clear timestamps')}
+              {t('editor.selection.clearTimestamps')}
             </ContextMenuItem>
           )}
           {handleMoveToSection && sections.length > 0 && (
@@ -120,7 +120,7 @@ export function EditorLineContextMenu({
             <ContextMenuSub>
               <ContextMenuSubTrigger>
                 <Icon name="person" />
-                {t('editor.assignSingerToLines', { count: selectedCount, defaultValue: 'Assign Singer' })}
+                {t('editor.assignSingerToLines', { count: selectedCount})}
               </ContextMenuSubTrigger>
               <ContextMenuSubContent>
                 {songArtists.map(artist => (
@@ -132,7 +132,7 @@ export function EditorLineContextMenu({
                 <ContextMenuSeparator />
                 <ContextMenuItem onClick={() => handleAssignSinger('', [...selectedLines], 0)}>
                   <Icon name="person_off" />
-                  {t('editor.clearSingers', 'Clear Singers')}
+                  {t('editor.clearSingers')}
                 </ContextMenuItem>
               </ContextMenuSubContent>
             </ContextMenuSub>
@@ -140,7 +140,7 @@ export function EditorLineContextMenu({
           <ContextMenuSeparator />
           <ContextMenuItem variant="destructive" onClick={() => [...selectedLines].forEach(i => handleDeleteLine(i))}>
             <Icon name="delete" />
-            {t('editor.selection.removeN', { count: selectedCount, defaultValue: 'Remove {{count}} lines' })}
+            {t('editor.selection.removeN', { count: selectedCount})}
             <span className="ml-auto text-xs tracking-widest opacity-60">Del</span>
           </ContextMenuItem>
         </ContextMenuContent>
@@ -202,7 +202,7 @@ export function EditorLineContextMenu({
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <Icon name="person" />
-              {t('editor.assignSingerToLines', { count: 1, defaultValue: 'Assign Singer' })}
+              {t('editor.assignSingerToLines', { count: 1})}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               {songArtists.map(artist => (
@@ -214,7 +214,7 @@ export function EditorLineContextMenu({
               <ContextMenuSeparator />
               <ContextMenuItem onClick={() => handleAssignSinger('', [lineIndex], 0)}>
                 <Icon name="person_off" />
-                {t('editor.clearSingers', 'Clear Singers')}
+                {t('editor.clearSingers')}
               </ContextMenuItem>
             </ContextMenuSubContent>
           </ContextMenuSub>

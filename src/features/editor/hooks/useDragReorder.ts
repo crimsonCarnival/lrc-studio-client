@@ -1,13 +1,18 @@
 import { useState } from 'react';
 import type { DragEvent, Dispatch, SetStateAction } from 'react';
 import type { EditorLine } from '@/features/editor/services/editor.service';
+import { moveLineBlock } from '@/features/editor/utils/sections';
 
 interface DragReorderOptions {
+  lines: EditorLine[];
   setLines: Dispatch<SetStateAction<EditorLine[]>>;
-  setActiveLineIndex: Dispatch<SetStateAction<number>>;
+  /** Hands the move's old→new index map to useEditor's index-state remapping. */
+  recordIndexMap: (indexMap: number[]) => void;
+  /** Exclusive end of the hidden block when `index` is a collapsed section header, else null. */
+  getCollapsedBlockEnd: (index: number) => number | null;
 }
 
-export function useDragReorder({ setLines, setActiveLineIndex }: DragReorderOptions) {
+export function useDragReorder({ lines, setLines, recordIndexMap, getCollapsedBlockEnd }: DragReorderOptions) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -31,35 +36,16 @@ export function useDragReorder({ setLines, setActiveLineIndex }: DragReorderOpti
   const handleDrop = (e: DragEvent, dropIndex: number) => {
     e.preventDefault();
     if (dragIndex == null || dragIndex === dropIndex) return;
-    setLines((prev) => {
-      // Extract timestamps in their current order to preserve them at these indices
-      const timestamps = prev.map(l => ({
-        timestamp: l.timestamp,
-        endTime: l.endTime,
-      }));
-
-      // Reorder the line objects themselves
-      const updated = [...prev];
-      const [moved] = updated.splice(dragIndex, 1);
-      updated.splice(dropIndex, 0, moved);
-
-      // Re-apply the original timestamps to the new line order
-      return updated.map((line, i) => ({
-        ...line,
-        timestamp: timestamps[i].timestamp,
-        endTime: timestamps[i].endTime,
-      }));
-    });
-    setActiveLineIndex((prevActiveLineIndex) => {
-      if (prevActiveLineIndex === dragIndex) {
-        return dropIndex;
-      } else if (dragIndex < prevActiveLineIndex && dropIndex >= prevActiveLineIndex) {
-        return prevActiveLineIndex - 1;
-      } else if (dragIndex > prevActiveLineIndex && dropIndex <= prevActiveLineIndex) {
-        return prevActiveLineIndex + 1;
-      }
-      return prevActiveLineIndex;
-    });
+    // A collapsed section moves as a unit (header + everything it hides); a dragged line
+    // dropped on a collapsed header lands after that header's whole block.
+    const end = getCollapsedBlockEnd(dragIndex) ?? dragIndex + 1;
+    const dropEnd = getCollapsedBlockEnd(dropIndex) ?? dropIndex + 1;
+    const { lines: next, indexMap } = moveLineBlock(lines, dragIndex, end, dropIndex, dropEnd);
+    if (next !== lines) {
+      // useEditor remaps selection / active line / other index state with this exact map.
+      recordIndexMap(indexMap);
+      setLines(next);
+    }
     setDragIndex(null);
     setDragOverIndex(null);
   };

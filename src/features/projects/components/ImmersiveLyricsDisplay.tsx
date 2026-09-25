@@ -582,8 +582,8 @@ export default function ImmersiveLyricsDisplay({
           type="button"
           onClick={() => handleAlignmentChange('left')}
           className={`p-1.5 rounded transition-all ${alignment === 'left' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
-          title={t('settings.interface.alignLeft', 'Align left')}
-          aria-label={t('settings.interface.alignLeft', 'Align left')}
+          title={t('settings.interface.alignLeft')}
+          aria-label={t('settings.interface.alignLeft')}
         >
           <Icon name="format_align_left" size={15} />
         </button>
@@ -591,8 +591,8 @@ export default function ImmersiveLyricsDisplay({
           type="button"
           onClick={() => handleAlignmentChange('center')}
           className={`p-1.5 rounded transition-all ${alignment === 'center' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
-          title={t('settings.interface.alignCenter', 'Align center')}
-          aria-label={t('settings.interface.alignCenter', 'Align center')}
+          title={t('settings.interface.alignCenter')}
+          aria-label={t('settings.interface.alignCenter')}
         >
           <Icon name="format_align_center" size={15} />
         </button>
@@ -600,8 +600,8 @@ export default function ImmersiveLyricsDisplay({
           type="button"
           onClick={() => handleAlignmentChange('right')}
           className={`p-1.5 rounded transition-all ${alignment === 'right' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
-          title={t('settings.interface.alignRight', 'Align right')}
-          aria-label={t('settings.interface.alignRight', 'Align right')}
+          title={t('settings.interface.alignRight')}
+          aria-label={t('settings.interface.alignRight')}
         >
           <Icon name="format_align_right" size={15} />
         </button>

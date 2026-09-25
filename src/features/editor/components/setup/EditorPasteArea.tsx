@@ -5,6 +5,7 @@ import { Textarea } from '@ui/textarea';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import PasteSelectionToolbar from './PasteSelectionToolbar';
+import RawLyricsSyntaxBar from './RawLyricsSyntaxBar';
 import { getCaretCoords } from '../../utils/textarea-caret';
 
 type Selection = { start: number; end: number };
@@ -116,6 +117,7 @@ export default function EditorPasteArea({
           </div>
         )}
       </div>
+      <RawLyricsSyntaxBar value={rawText} onChange={setRawText} textareaRef={textareaRef} singers={singers} />
       <div className="flex flex-col gap-1.5 shrink-0">
         <div className="flex gap-2">
           <input
@@ -145,11 +147,11 @@ export default function EditorPasteArea({
               value={urlInput}
               onChange={(e) => { setUrlInput(e.target.value); setUrlError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
-              placeholder={t('import.urlPlaceholder') || 'https://example.com/lyrics.lrc'}
+              placeholder={t('import.urlPlaceholder')}
               className="flex-1 bg-zinc-800/40 border border-zinc-700/50 text-zinc-200 text-xs rounded-lg px-2.5 py-2 placeholder:text-zinc-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 min-w-0"
               disabled={urlFetching}
             />
-            <Tip content={t('import.fromUrl') || 'Import from URL'}>
+            <Tip content={t('import.fromUrl')}>
               <Button
                 variant="outline"
                 onClick={handleUrlSubmit}

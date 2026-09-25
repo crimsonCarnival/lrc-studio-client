@@ -83,14 +83,8 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
       if (isYouTubeUrl(term)) {
         const videoId = extractVideoId(term);
         if (videoId) {
-          // Pre-flight embeddability check for pasted URLs
-          try {
-            const { embeddable } = await youtube.checkEmbed(videoId) as { embeddable?: boolean };
-            if (!embeddable) {
-              setUnembeddableWarning({ videoId, url: term, title: term });
-              return;
-            }
-          } catch { /* non-fatal — proceed */ }
+          // Availability (not found / private / embed / age / region) is verified by the
+          // consumer via useYouTubeAvailability, which reports the precise reason.
           onSelect({ videoId, url: term, title: term });
           return;
         }
@@ -159,13 +153,13 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
             className="w-full py-2 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm font-medium text-zinc-200 transition-colors flex items-center justify-center gap-2"
           >
             <Icon name="search" size={14} />
-            Find another version
+            {t('player.findAnotherVersion')}
           </a>
           <button
             onClick={() => setUnembeddableWarning(null)}
             className="w-full py-2 px-4 rounded-xl border border-zinc-700/50 text-sm text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-colors"
           >
-            Go back
+            {t('common.goBack')}
           </button>
         </div>
       </div>
@@ -271,7 +265,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
                     {item.embeddable === false && (
                       <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-orange-400 bg-orange-500/10 border border-orange-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
                         <Icon name="warning" size={10} />
-                        No embed
+                        {t('player.noEmbed')}
                       </span>
                     )}
                   </div>

@@ -296,7 +296,7 @@ export function useSharedProject({
       setShareModalState(finalData);
     } catch {
       setShareModalState(null);
-      toast.error(t('project.shareFailed') || 'Could not generate share link.');
+      toast.error(t('project.shareFailed'));
     }
   }, [lines, editorMode, projectYtUrl, syncMode, mediaTitle, uploadedAudio, duration, t, projectMetadata, activepublicIdRef, setActivepublicId, setShareModalState, executeRecaptcha, lastShareData, restoredMedia]);
 

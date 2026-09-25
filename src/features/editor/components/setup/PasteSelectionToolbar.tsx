@@ -30,8 +30,8 @@ interface PasteSelectionToolbarProps {
  * Lets the user structure pasted lyrics without typing bracket syntax: insert a
  * section before the selection, and — when the selection's governing line is a
  * section header (`[Label]`, `[Label: A & B]` or `[Label | A, B]`) — flip it
- * between main/regular and assign section-level singers. Per-line singers are
- * handled in the structured editor; a textarea can't carry per-line metadata.
+ * between main/regular and assign section-level singers. Per-line singers use the
+ * `Name: lyric` prefix (see RawLyricsSyntaxBar's singer chips).
  */
 export default function PasteSelectionToolbar({ value, selection, singers, onApply }: PasteSelectionToolbarProps) {
   const { t } = useTranslation();

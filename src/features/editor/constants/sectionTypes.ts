@@ -60,15 +60,6 @@ export function isStructuralSection(label) {
 }
 
 /**
- * Whether a label denotes an Intro section (ignoring any trailing serialized number).
- * Intro sections are treated as editor-only metadata and omitted from raw-text serialization.
- */
-export function isIntroLabel(label) {
-  if (!label) return false;
-  return label.trim().toLowerCase().replace(/\s+(i{1,3}|iv|v|vi{0,3}|ix|x{1,2}|\d+)$/, '') === 'intro';
-}
-
-/**
  * Formats and localizes a section label, handling serialized numbers (e.g. "verse 2").
  */
 export function formatSectionLabel(label, t) {

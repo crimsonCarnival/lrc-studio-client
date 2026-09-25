@@ -92,7 +92,7 @@ export default function LyricsModeTab({
             className="flex-1 h-11 flex items-center justify-center gap-2.5 bg-primary/10 border border-primary/40 text-primary rounded-lg font-semibold text-sm active:bg-primary/25 active:scale-95 transition-all"
           >
             <div className="size-3 rounded-full bg-primary shadow-[0_0_12px_rgba(29,185,84,0.6)]" />
-            Mark
+            {t('editor.mark')}
           </button>
           {currentTimestamp != null && (
             <div className="h-11 flex items-center px-3 bg-zinc-900/50 border border-zinc-800 rounded-lg text-xs font-mono text-zinc-400 shrink-0">
@@ -111,8 +111,8 @@ export default function LyricsModeTab({
             className="h-11 lg:h-9 flex-1"
           >
             <Icon name="expand_less" size={16} className="mr-1" />
-            <span className="hidden sm:inline">Previous</span>
-            <span className="sm:hidden">Prev</span>
+            <span className="hidden sm:inline">{t('common.pagination.previous')}</span>
+            <span className="sm:hidden">{t('common.pagination.prevShort')}</span>
           </Button>
           <Button
             onClick={handleNextLine}
@@ -121,8 +121,8 @@ export default function LyricsModeTab({
             size="lg"
             className="h-11 lg:h-9 flex-1"
           >
-            <span className="hidden sm:inline">Next</span>
-            <span className="sm:hidden">Next</span>
+            <span className="hidden sm:inline">{t('common.pagination.next')}</span>
+            <span className="sm:hidden">{t('common.pagination.next')}</span>
             <Icon name="expand_more" size={16} className="ml-1" />
           </Button>
         </div>
@@ -131,7 +131,7 @@ export default function LyricsModeTab({
       {/* Lines list */}
       <div className="flex-1 min-h-0 flex flex-col">
         <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
-          All Lines
+          {t('editor.allLines')}
         </h3>
         <div className="flex-1 overflow-y-auto space-y-1.5">
           {lines.map((line, lineIndex) => (

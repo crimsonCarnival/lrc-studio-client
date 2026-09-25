@@ -5,6 +5,8 @@ import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import EditorLineItem from '../line/EditorLineItem';
+import { sectionCollapseKey } from '@/features/editor/utils/sections';
+import type { CollapsedView } from '@/features/editor/utils/sections';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
@@ -76,6 +78,10 @@ interface VirtualizedLineListProps {
   onToggleLineMode?: LineItemProps['onToggleLineMode'];
   confidenceByIndex?: Map<number, ConfidenceInfo>;
   handleToggleAdLib?: (lineIndex: number) => void;
+  /** Collapsed section keys (sectionCollapseKey) and the derived visible-row view. */
+  collapsedSections: ReadonlySet<string>;
+  collapsedView: CollapsedView;
+  onToggleSectionCollapse: (key: string) => void;
 }
 
 export default function VirtualizedLineList({
@@ -139,19 +145,34 @@ export default function VirtualizedLineList({
   onToggleLineMode,
   confidenceByIndex,
   handleToggleAdLib,
+  collapsedSections,
+  collapsedView,
+  onToggleSectionCollapse,
 }: VirtualizedLineListProps) {
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
 
+  // ——— Section collapse (state + auto-expand live in useEditor; see computeCollapsedView) ———
+  // rows[r] = line index rendered at virtual row r. Everything outside the virtualizer keeps
+  // using ORIGINAL line indices (actions, selection, drag, marking); only the virtualizer
+  // and its DOM `data-index` speak row indices. rowOfLine is the inverse (-1 = hidden).
+  const { rows, rowOfLine, blockLyricCounts } = collapsedView;
+
   const activeSections = useMemo(() => {
-    return lines
-      .map((line, i) => (line.type === 'section' ? i : -1))
-      .filter((i) => i !== -1);
-  }, [lines]);
+    const result: number[] = [];
+    rows.forEach((lineIdx, r) => { if (lines[lineIdx].type === 'section') result.push(r); });
+    return result;
+  }, [rows, lines]);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
-    count: lines.length,
+    count: rows.length,
+    // Key measurements by line identity so collapsing/expanding doesn't reuse another row's size.
+    getItemKey: (r: number) => {
+      const lineIdx = rows[r];
+      const id = lines[lineIdx]?.id;
+      return id ? `id:${id}` : `idx:${lineIdx}`;
+    },
     getScrollElement: () => listRef.current,
     // Words mode items are taller (word chips wrap); a larger estimate reduces
     // first-render overlap while ResizeObserver corrects the true height.
@@ -197,6 +218,15 @@ export default function VirtualizedLineList({
     return () => ro.disconnect();
   }, [virtualizer, listRef]);
 
+  // DOM rows carry the virtual ROW index in data-index; translate a line index to its row
+  // element (null when the line is hidden inside a collapsed section or not rendered).
+  const measureLine = useCallback((lineIdx: number) => {
+    const row = lineIdx >= 0 && lineIdx < rowOfLine.length ? rowOfLine[lineIdx] : -1;
+    if (row < 0) return;
+    const el = listRef.current?.querySelector(`[data-index="${row}"]`);
+    if (el) virtualizer.measureElement(el as HTMLElement);
+  }, [rowOfLine, virtualizer, listRef]);
+
   // Force-measure editing item synchronously before paint so subsequent items
   // don't overlap during the one frame before ResizeObserver fires.
   const prevEditingLineIndexRef = useRef<number | null>(null);
@@ -204,11 +234,8 @@ export default function VirtualizedLineList({
     const prev = prevEditingLineIndexRef.current;
     prevEditingLineIndexRef.current = editingLineIndex;
     const toMeasure = new Set([editingLineIndex, prev].filter((x): x is number => x !== null));
-    toMeasure.forEach(idx => {
-      const el = listRef.current?.querySelector(`[data-index="${idx}"]`);
-      if (el) virtualizer.measureElement(el as HTMLElement);
-    });
-  }, [editingLineIndex, virtualizer, listRef]);
+    toMeasure.forEach(measureLine);
+  }, [editingLineIndex, measureLine]);
 
   // The active line grows when selected (highlight box padding + text wrapping), but the
   // virtualizer only self-measures via ResizeObserver — which doesn't fire on the one frame
@@ -219,11 +246,8 @@ export default function VirtualizedLineList({
     const prev = prevActiveLineIndexRef.current;
     prevActiveLineIndexRef.current = displayedActiveIndex;
     const toMeasure = new Set([displayedActiveIndex, prev].filter((x): x is number => x != null && x >= 0));
-    toMeasure.forEach(idx => {
-      const el = listRef.current?.querySelector(`[data-index="${idx}"]`);
-      if (el) virtualizer.measureElement(el as HTMLElement);
-    });
-  }, [displayedActiveIndex, virtualizer, listRef]);
+    toMeasure.forEach(measureLine);
+  }, [displayedActiveIndex, measureLine]);
 
   // Force-measure drag target so if we add a drop gap (e.g. mt-12), it expands
   const prevDragOverIndexRef = useRef<number | null>(null);
@@ -231,11 +255,8 @@ export default function VirtualizedLineList({
     const prev = prevDragOverIndexRef.current;
     prevDragOverIndexRef.current = dragOverIndex ?? null;
     const toMeasure = new Set([dragOverIndex, prev].filter((x): x is number => x != null && x >= 0));
-    toMeasure.forEach(idx => {
-      const el = listRef.current?.querySelector(`[data-index="${idx}"]`);
-      if (el) virtualizer.measureElement(el as HTMLElement);
-    });
-  }, [dragOverIndex, virtualizer, listRef]);
+    toMeasure.forEach(measureLine);
+  }, [dragOverIndex, measureLine]);
 
   // Force-measure dragged item
   const prevDragIndexRef = useRef<number | null>(null);
@@ -243,20 +264,19 @@ export default function VirtualizedLineList({
     const prev = prevDragIndexRef.current;
     prevDragIndexRef.current = dragIndex ?? null;
     const toMeasure = new Set([dragIndex, prev].filter((x): x is number => x != null && x >= 0));
-    toMeasure.forEach(idx => {
-      const el = listRef.current?.querySelector(`[data-index="${idx}"]`);
-      if (el) virtualizer.measureElement(el as HTMLElement);
-    });
-  }, [dragIndex, virtualizer, listRef]);
+    toMeasure.forEach(measureLine);
+  }, [dragIndex, measureLine]);
 
-  // Auto-scroll to active line via virtualizer
+  // Auto-scroll to active line via virtualizer (line index → row; hidden lines don't scroll)
   const prevActiveRef = useCallback((idx: number) => {
     if (scrollAlignment === 'none') return;
-    virtualizer.scrollToIndex(idx, {
+    const row = idx < rowOfLine.length ? rowOfLine[idx] : -1;
+    if (row < 0) return;
+    virtualizer.scrollToIndex(row, {
       align: scrollAlignment === 'start' ? 'start' : scrollAlignment === 'end' ? 'end' : 'center',
       behavior: scrollMode,
     });
-  }, [virtualizer, scrollAlignment, scrollMode]);
+  }, [virtualizer, scrollAlignment, scrollMode, rowOfLine]);
 
   // Handle visualViewport resize (keyboard opening)
   useEffect(() => {
@@ -266,8 +286,9 @@ export default function VirtualizedLineList({
       if (editingLineIndex !== null) {
         // Scroll the editing line into view when the keyboard opens/resizes
         setTimeout(() => {
-          if (editingLineIndex !== null) {
-            virtualizer.scrollToIndex(editingLineIndex, { align: 'center', behavior: 'smooth' });
+          const row = editingLineIndex !== null && editingLineIndex < rowOfLine.length ? rowOfLine[editingLineIndex] : -1;
+          if (row >= 0) {
+            virtualizer.scrollToIndex(row, { align: 'center', behavior: 'smooth' });
           }
         }, 150);
       }
@@ -279,7 +300,7 @@ export default function VirtualizedLineList({
       window.visualViewport?.removeEventListener('resize', handleViewportChange);
       window.visualViewport?.removeEventListener('scroll', handleViewportChange);
     };
-  }, [editingLineIndex, virtualizer]);
+  }, [editingLineIndex, virtualizer, rowOfLine]);
 
   // Keep a stable ref to the latest scroll callback so the effect below doesn't
   // need it in deps (avoids re-firing when virtualizer identity changes).
@@ -332,8 +353,9 @@ export default function VirtualizedLineList({
             className="px-1 sm:px-0"
           >
             {virtualizer.getVirtualItems().map((virtualRow) => {
-              const i = virtualRow.index;
+              const i = rows[virtualRow.index]; // original line index — used for every action
               const line = lines[i];
+              if (!line) return null;
               const isActive = i === displayedActiveIndex;
               const isSynced = line.timestamp != null;
               // Upcoming depth: 1-3 for the next unsynced lines after active
@@ -346,7 +368,7 @@ export default function VirtualizedLineList({
               return (
                 <div
                   key={line.id || i}
-                  data-index={i}
+                  data-index={virtualRow.index}
                   ref={isSection ? undefined : virtualizer.measureElement}
                   style={{
                     position: 'absolute',
@@ -364,7 +386,7 @@ export default function VirtualizedLineList({
                   {isSection ? (
                     <div
                       ref={virtualizer.measureElement}
-                      data-index={i}
+                      data-index={virtualRow.index}
                       style={{ position: 'sticky', top: 0, pointerEvents: 'auto' }}
                     >
                       <EditorLineItem
@@ -428,6 +450,10 @@ export default function VirtualizedLineList({
                         editorMode={editorMode}
                         onToggleLineMode={onToggleLineMode}
                         upcomingDepth={upcomingDepth}
+                        onToggleDepth={handleToggleSectionDepth}
+                        sectionLineCount={blockLyricCounts.get(i) ?? 0}
+                        isCollapsed={collapsedSections.has(sectionCollapseKey(line, i))}
+                        onToggleCollapse={onToggleSectionCollapse}
                       />
                     </div>
                   ) : (

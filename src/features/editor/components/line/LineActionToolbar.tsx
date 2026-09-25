@@ -333,7 +333,7 @@ const LineActionToolbar = memo(({
 function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }: { selectedLines: Set<number>; handleAssignSinger?: (name: string, indices: number[], slot: number) => void; songArtists?: string[] }) {
   const { t } = useTranslation();
   // singerN uses a default-value string + interpolation.
-  const tk = t as (key: string, defaultValue?: string, options?: Record<string, unknown>) => string;
+  const tk = t as (key: string, options?: Record<string, unknown>) => string;
   const [open, setOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(0);
   const [custom, setCustom] = useState('');
@@ -343,9 +343,9 @@ function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }: 
 
   const ROLE_LABELS = [
     { label: t('editor.singer'), className: '' },
-    { label: tk('editor.singerN', 'Singer {{n}}', { n: 2 }), className: 'italic' },
-    { label: tk('editor.singerN', 'Singer {{n}}', { n: 3 }), className: 'font-bold' },
-    { label: tk('editor.singerN', 'Singer {{n}}', { n: 4 }), className: 'font-bold italic' },
+    { label: tk('editor.singerN', { n: 2 }), className: 'italic' },
+    { label: tk('editor.singerN', { n: 3 }), className: 'font-bold' },
+    { label: tk('editor.singerN', { n: 4 }), className: 'font-bold italic' },
   ];
 
   const assignName = (name: string) => {

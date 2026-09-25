@@ -23,8 +23,8 @@ import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import type { UploadedAudio } from '@/shared/hooks/useAppState';
 import { Icon } from '@/shared/ui/Icon';
-import { linesToRawText, flatToSections } from '@/features/editor/utils/sections';
-import { serializeToRubyMarkup, hasCJK } from '@/shared/utils/furigana';
+import { linesToRawText, flatToSections, rawLineText } from '@/features/editor/utils/sections';
+import { hasCJK } from '@/shared/utils/furigana';
 import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger } from '@ui/popover';
 // import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
@@ -88,6 +88,8 @@ interface EditorProps {
   registerAfterSave?: (cb: (() => void) | null) => void;
   songArtists?: string[];
   singerColors?: string[];
+  /** Song-level singer roster from project metadata (project setup), offered as picker choices. */
+  declaredSingers?: string[];
   playerSlot?: PlayerSlot;
   onHideEditor?: () => void;
   previewHidden?: boolean;
@@ -130,6 +132,7 @@ export default function Editor({
   registerAfterSave,
   songArtists = EMPTY_ARTISTS,
   singerColors,
+  declaredSingers = EMPTY_ARTISTS,
   playerSlot,
   onHideEditor,
   previewHidden,
@@ -142,6 +145,16 @@ export default function Editor({
   "use no memo";
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  // Singers tagged in the lyrics first (their order drives color identity, shared with
+  // the preview), then declared-but-unused singers appended so they're offered as choices
+  // without shifting any existing singer's color. Also the roster the raw-text editor
+  // recognizes in `Name: lyric` prefixes.
+  const combinedSingers = useMemo(() => {
+    const roster = buildSingerRoster(lines, songArtists);
+    const extra = declaredSingers.filter((s) => s && !roster.includes(s));
+    return extra.length ? [...roster, ...extra] : roster;
+  }, [songArtists, lines, declaredSingers]);
 
   const {
     rawText,
@@ -172,6 +185,10 @@ export default function Editor({
     isActiveLineLocked,
     handleLineHover,
     handleLineHoverEnd,
+    collapsedSections,
+    collapsedView,
+    toggleSectionCollapse,
+    recordIndexMap,
     listRef,
     fileInputRef,
     handleFileUpload,
@@ -225,6 +242,7 @@ export default function Editor({
     setEditorMode,
     onImport,
     clearHistory,
+    singerRoster: combinedSingers,
   });
 
   // Register teardown / post-save hooks
@@ -236,11 +254,6 @@ export default function Editor({
       if (registerAfterSave) registerAfterSave(null);
     };
   }, [registerAfterSave, clearModifiedLines]);
-
-  const combinedSingers = useMemo(
-    () => buildSingerRoster(lines, songArtists),
-    [songArtists, lines],
-  );
 
   const { activeDrawer, wordData, lineData, openWord, openLine, close: closeDrawer } = useEditorActionDrawer();
 
@@ -354,7 +367,6 @@ export default function Editor({
         const toggleKey = settings.shortcuts?.toggleSelect?.[0] || 'Ctrl';
         const deselectKey = settings.shortcuts?.deselect?.[0] || 'Escape';
         const selectionHintText = t('editor.selection.hint', {
-          defaultValue: '{{range}}+Click: range · {{toggle}}+Click: toggle · {{deselect}}: deselect',
           range: symbols[rangeKey] ?? rangeKey,
           toggle: symbols[toggleKey] ?? toggleKey,
           deselect: symbols[deselectKey] ?? deselectKey
@@ -411,7 +423,7 @@ export default function Editor({
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    setRawText(linesToRawText(lines, (l) => serializeToRubyMarkup(l.words) || l.text || ''));
+                    setRawText(linesToRawText(lines, rawLineText, combinedSingers));
                     setSyncMode(false);
                   }}
                   className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 flex-shrink-0 size-8 rounded-full"
@@ -420,7 +432,7 @@ export default function Editor({
                 </Button>
               </Tip>
               {handleManualSave && (
-                <Tip content={isSaving ? (t('project.saving') || 'Saving…') : isAutosaving ? (t('project.saved') || 'Saved') : (t('project.save') || 'Save')}>
+                <Tip content={isSaving ? (t('project.saving')) : isAutosaving ? (t('project.saved')) : (t('project.save'))}>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -468,7 +480,7 @@ export default function Editor({
                 </Tip>
               )}
               <div className="w-px h-4 bg-zinc-700/50 mx-1 shrink-0" />
-              <Tip content={t('editor.undoTitle') || 'Undo (Ctrl+Z)'}>
+              <Tip content={t('editor.undoTitle')}>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -479,7 +491,7 @@ export default function Editor({
                   <Icon name="undo" size={16} />
                 </Button>
               </Tip>
-              <Tip content={t('editor.redoTitle') || 'Redo (Ctrl+Y)'}>
+              <Tip content={t('editor.redoTitle')}>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -513,7 +525,7 @@ export default function Editor({
 
         <div className="flex items-center gap-2">
           {!selectedLines.size && syncProgress && (
-            <Tip content={t('editor.wordCharCount', '{{words}} words / {{chars}} chars / {{charsNoSp}} no spaces', { words: syncProgress.wordCount, chars: syncProgress.charCount, charsNoSp: syncProgress.charCountNoSpaces })}>
+            <Tip content={t('editor.wordCharCount', { words: syncProgress.wordCount, chars: syncProgress.charCount, charsNoSp: syncProgress.charCountNoSpaces })}>
               <div className={`text-[10px] font-mono tabular-nums px-3 py-1 rounded-full border bg-zinc-900/50 flex items-center gap-1.5 cursor-default ${syncProgress.synced === syncProgress.total ? 'text-primary border-primary/20' : 'text-zinc-500 border-zinc-800/60'
                 }`}>
                 <div className={`size-1.5 rounded-full flex-shrink-0 ${syncProgress.synced === syncProgress.total ? 'bg-primary shadow-glow' : 'bg-zinc-700'
@@ -531,7 +543,7 @@ export default function Editor({
 
           <div className="flex items-center gap-1 shrink-0 ml-2">
             {onHideEditor && onShowPreview && (
-              <Tip content={previewHidden ? (t('editor.showPreview') || 'Show preview') : (t('editor.hideEditor') || 'Hide editor')}>
+              <Tip content={previewHidden ? (t('editor.showPreview')) : (t('editor.hideEditor'))}>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -544,7 +556,7 @@ export default function Editor({
             )}
 
             {activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && (
-              <Tip content={t('editor.viewAsPublic', 'View as public project')}>
+              <Tip content={t('editor.viewAsPublic')}>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -556,7 +568,7 @@ export default function Editor({
               </Tip>
             )}
 
-            <Tip content={t('lyricsSearch.maintenance', 'Lyrics search is currently under maintenance.')}>
+            <Tip content={t('lyricsSearch.maintenance')}>
               <div className="inline-block cursor-not-allowed">
                 <Button variant="ghost" size="icon" disabled className="size-9 rounded-full text-zinc-600">
                   <Icon name="search" size={18} />
@@ -676,6 +688,7 @@ export default function Editor({
             lines={lines}
             setLines={setLines}
             selectedLines={selectedLines}
+            recordIndexMap={recordIndexMap}
             songArtists={combinedSingers}
             clearSelection={clearSelection as () => void}
           />
@@ -741,6 +754,9 @@ export default function Editor({
             modifiedLines={modifiedLines}
             onToggleLineMode={handleToggleLineMode}
             confidenceByIndex={autoStamp.confidenceByIndex}
+            collapsedSections={collapsedSections}
+            collapsedView={collapsedView}
+            onToggleSectionCollapse={toggleSectionCollapse}
           />
         </div>
       </div>

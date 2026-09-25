@@ -21,8 +21,11 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import YoutubeSearchPanel from '@features/projects/components/YoutubeSearchPanel';
+import { useYouTubeAvailability, YT_UNAVAILABLE_KEYS } from '@/features/player/hooks/useYouTubeAvailability';
 import toast from 'react-hot-toast';
 import MediaLibrary from './MediaLibrary';
+import SingersInput from './SingersInput';
+import RawLyricsSyntaxBar from './RawLyricsSyntaxBar';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 
@@ -50,6 +53,7 @@ interface Prefill {
   trackNumber?: number | string;
   trackCount?: number | string;
   coverImage?: string;
+  singers?: string[];
 }
 
 interface UploadItem {
@@ -66,7 +70,6 @@ interface AudioState {
   tab: string;
   source: string | null;
   ytUrl: string;
-  ytLoading: boolean;
   selectedUpload: UploadItem | null;
 }
 
@@ -91,6 +94,7 @@ interface MetadataState {
   trackNumber: number | string;
   trackCount: number | string;
   coverImage: string;
+  singers: string[];
 }
 
 interface MusicEntry {
@@ -137,6 +141,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   const audioInputRef = useRef<HTMLInputElement | null>(null);
   const lyricsInputRef = useRef<HTMLInputElement | null>(null);
+  const lyricsTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const projectNameInputRef = useRef<HTMLInputElement | null>(null);
   const autoLoadPendingRef = useRef(false);
 
@@ -153,7 +158,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     tab: 'youtube',
     source: null,
     ytUrl: initialPendingYtUrl || '',
-    ytLoading: false,
     selectedUpload: null,
   }));
 
@@ -194,14 +198,15 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     trackNumber: prefill?.trackNumber ?? '',
     trackCount: prefill?.trackCount ?? '',
     coverImage: prefill?.coverImage || '',
+    singers: prefill?.singers || [],
   }));
 
   const [musicLibrary, setMusicLibrary] = useState<MusicEntry[]>([]);
   const [metaSearching, setMetaSearching] = useState(false);
 
-  const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, ytLoading, selectedUpload } = audio;
+  const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
-  const { name: projectName, description: projectDescription, tags: projectTags, isPublic, songName, songArtist, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage } = metadata;
+  const { name: projectName, description: projectDescription, tags: projectTags, isPublic, songName, songArtist, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, singers } = metadata;
 
   // State setters
   const setAudioState = useCallback((val: Partial<AudioState> | ((p: AudioState) => Partial<AudioState>)) => setAudio(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
@@ -271,6 +276,18 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     return 'unknown';
   })();
 
+  // ── YouTube availability ──
+  // The editor plays through the IFrame API, so private / removed / non-embeddable
+  // videos are unusable: verify before marking the audio ready (which gates Continue).
+  const { check: ytCheck, verify: verifyYouTube, reset: clearYtCheck } = useYouTubeAvailability();
+  const ytLoading = ytCheck.state === 'checking';
+
+  const loadYouTubeVerified = useCallback(async (videoId: string, url: string, onReady: Partial<AudioState>) => {
+    if (await verifyYouTube(videoId) !== 'playable') return; // blocked, or superseded by a newer selection
+    playerRef?.current?.loadYouTube?.(url);
+    setAudioState({ ready: true, source: 'youtube', selectedUpload: null, ...onReady });
+  }, [verifyYouTube, playerRef, setAudioState]);
+
   // ── Audio handlers ──
 
   const handleAudioFile = (e: ChangeEvent<HTMLInputElement>) => {
@@ -305,10 +322,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     const videoId = trimmed.match(YT_PATTERN)?.[1] || (trimmed.length === 11 ? trimmed : null);
     if (!videoId) { toast.error(t('player.invalidUrl')); return; }
 
-    setAudioState({ ytLoading: true });
-    if (playerRef?.current?.loadYouTube) playerRef.current.loadYouTube(trimmed);
-    setAudioState({ ready: true, name: t('setup.youtubeVideo'), source: 'youtube', selectedUpload: null, ytLoading: false, ytUrl: '' });
-  }, [ytUrl, detectedUrlType, playerRef, setAudioState, saveUploadRecord, t]);
+    loadYouTubeVerified(videoId, trimmed, { name: t('setup.youtubeVideo'), ytUrl: '' });
+  }, [ytUrl, detectedUrlType, playerRef, setAudioState, saveUploadRecord, loadYouTubeVerified, t]);
 
   const handleLoadUrlRef = useRef(handleLoadUrl);
   useLayoutEffect(() => { handleLoadUrlRef.current = handleLoadUrl; });
@@ -322,6 +337,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   }, [ytUrl]);
 
   const handleSelectUpload = (upload: UploadItem) => {
+    clearYtCheck();
     setAudioState({
       selectedUpload: upload,
       name: upload.title || upload.fileName || 'Media',
@@ -428,11 +444,11 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const handleProceed = () => {
     let finalLines = parsedLines;
     if (!finalLines) {
-      finalLines = parseRawLyricsText(lyricsText);
+      finalLines = parseRawLyricsText(lyricsText, singers);
     }
     const parsedTrackNumber = parseInt(String(trackNumber), 10);
     const parsedTrackCount = parseInt(String(trackCount), 10);
-    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim() });
+    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers });
   };
 
   const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -504,19 +520,23 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                 {t('setup.songInformation')}
               </h3>
-              {songName.trim() && songArtist.trim() && (
-                <Tip content={t('setup.fetchSongInfo')} side="left">
-                  <button
+              {/* Always rendered so it's discoverable; disabled until name + artist exist. */}
+              <Tip content={songName.trim() && songArtist.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')} side="left">
+                {/* span keeps the tooltip working while the button is disabled */}
+                <span className="inline-flex">
+                  <Button
                     type="button"
+                    variant="sync"
+                    size="sm"
                     onClick={handleFetchSongInfo}
-                    disabled={metaSearching}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/30 hover:bg-primary/10 transition-colors disabled:opacity-50"
+                    disabled={metaSearching || !songName.trim() || !songArtist.trim()}
+                    className="gap-1.5 font-semibold"
                   >
-                    {metaSearching && <Icon name="autorenew" size={12} className="animate-spin" />}
+                    <Icon name={metaSearching ? 'autorenew' : 'search'} size={14} className={metaSearching ? 'animate-spin' : undefined} />
                     {t('setup.fetchInfo')}
-                  </button>
-                </Tip>
-              )}
+                  </Button>
+                </span>
+              </Tip>
             </div>
 
             {/* Row 1: Song Name + Artist */}
@@ -532,6 +552,11 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 options={artistOptions}
                 maxLength={300}
               />
+            </div>
+
+            {/* Singers — the song-level roster offered when tagging sections/lines */}
+            <div className="shrink-0">
+              <SingersInput value={singers} onChange={(next) => setMetadataState({ singers: next })} />
             </div>
 
             {/* Row 2: Album + Year */}
@@ -693,7 +718,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   ].map(tab => (
                     <button
                       key={tab.id}
-                      onClick={() => setAudioState({ tab: tab.id })}
+                      onClick={() => { setAudioState({ tab: tab.id }); if (ytCheck.state !== 'idle') clearYtCheck(); }}
                       className={`flex-1 h-7 rounded-lg text-[11px] font-semibold transition-all ${
                         audioTab === tab.id
                           ? 'bg-zinc-800 text-zinc-100 shadow-sm'
@@ -705,6 +730,19 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   ))}
                 </div>
 
+                {!audioReady && ytCheck.state === 'checking' && (
+                  <div role="status" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/60 text-xs text-zinc-300 shrink-0">
+                    <Icon name="autorenew" size={14} className="animate-spin text-primary shrink-0" />
+                    {t('setup.ytChecking')}
+                  </div>
+                )}
+                {!audioReady && ytCheck.state === 'unavailable' && (
+                  <div role="alert" className="flex items-start gap-2 px-3 py-2 rounded-xl bg-destructive/10 border border-destructive/30 text-xs text-destructive shrink-0">
+                    <Icon name="error" size={14} className="shrink-0 mt-px" />
+                    {(t as TkFn)(YT_UNAVAILABLE_KEYS[ytCheck.reason])}
+                  </div>
+                )}
+
                 {/* Audio ready state */}
                 {audioReady ? (
                   <div className="flex-1 flex flex-col items-center justify-center gap-3 py-4 bg-zinc-900/30 rounded-xl border border-zinc-800/50 min-h-[140px]">
@@ -714,11 +752,17 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     <div className="text-center px-4">
                       <p className="text-sm font-semibold text-zinc-200">{t('setup.audioReady')}</p>
                       <p className="text-xs text-zinc-400 truncate max-w-xs mt-0.5">{audioName}</p>
+                      {audioSource === 'youtube' && ytCheck.state === 'unverified' && (
+                        <p role="status" className="flex items-center justify-center gap-1.5 text-xs text-warning mt-2 max-w-xs">
+                          <Icon name="warning" size={12} className="shrink-0" />
+                          {t('setup.ytCheckFailed')}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
-                        onClick={() => { setAudioState({ ready: false, name: '', ytUrl: '', selectedUpload: null, source: null }); }}
+                        onClick={() => { setAudioState({ ready: false, name: '', ytUrl: '', selectedUpload: null, source: null }); clearYtCheck(); }}
                         className="h-8 px-3 text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 rounded-lg"
                       >
                         {t('setup.changeAudio')}
@@ -738,9 +782,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                       <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-zinc-800/50">
                         <YoutubeSearchPanel
                           initialQuery={[songName, songArtist].filter(Boolean).join(' ').trim()}
-                          onSelect={({ url, title }: { url: string; title?: string }) => {
-                            setAudioState({ ytUrl: url, source: 'youtube', ready: true, name: title || t('setup.youtubeVideo'), selectedUpload: null });
-                            playerRef?.current?.loadYouTube?.(url);
+                          onSelect={({ videoId, url, title }: { videoId: string; url: string; title?: string }) => {
+                            loadYouTubeVerified(videoId, url, { ytUrl: url, name: title || t('setup.youtubeVideo') });
                           }}
                         />
                       </div>
@@ -765,7 +808,10 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                               label={t('setup.urlPlaceholder')}
                               hasIcon={true}
                               value={ytUrl}
-                              onChange={(e) => setAudioState({ ytUrl: e.target.value })}
+                              onChange={(e) => {
+                                setAudioState({ ytUrl: e.target.value });
+                                if (ytCheck.state === 'unavailable') clearYtCheck();
+                              }}
                               onKeyDown={handleYtKeyDown}
                               className="pl-12 bg-transparent border-none text-sm h-11 focus:ring-0 focus-visible:ring-0 outline-none"
                             />
@@ -853,10 +899,17 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     {lyricsTab === 'write' && (
                       <>
                         <Textarea
+                          ref={lyricsTextareaRef}
                           value={lyricsText}
                           onChange={(e) => setLyricsState({ text: e.target.value })}
                           placeholder={t('setup.pasteLyricsDesc')}
                           className="flex-1 min-h-0 bg-zinc-900/50 border-zinc-700/50 text-zinc-200 placeholder:text-zinc-500 resize-none text-sm p-3 leading-relaxed focus:border-primary/50 overflow-y-auto scrollbar-thin rounded-xl"
+                        />
+                        <RawLyricsSyntaxBar
+                          value={lyricsText}
+                          onChange={(text) => setLyricsState({ text })}
+                          textareaRef={lyricsTextareaRef}
+                          singers={singers}
                         />
                         <label
                           htmlFor="setup-lyrics-input"
@@ -873,8 +926,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     {lyricsTab === 'search' && (
                       <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto scrollbar-thin items-center justify-center text-center p-6 text-zinc-400">
                         <Icon name="build" size={48} className="mb-4 text-zinc-600" />
-                        <h3 className="text-zinc-200 font-semibold mb-2">{t('lyricsSearch.maintenanceTitle', 'Feature under maintenance')}</h3>
-                        <p className="text-sm max-w-sm">{t('lyricsSearch.maintenanceDesc', 'The lyrics search feature is currently undergoing maintenance and will be available soon. Please paste your lyrics manually in the meantime.')}</p>
+                        <h3 className="text-zinc-200 font-semibold mb-2">{t('lyricsSearch.maintenanceTitle')}</h3>
+                        <p className="text-sm max-w-sm">{t('lyricsSearch.maintenanceDesc')}</p>
                       </div>
                     )}
                   </div>

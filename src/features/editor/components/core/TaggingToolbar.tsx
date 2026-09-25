@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import type { KeyboardEvent } from 'react';
+import type { Dispatch, KeyboardEvent, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { SECTION_TYPES } from '@features/editor/constants/sectionTypes';
@@ -21,16 +21,17 @@ function resolvePreset(val: string | undefined | null): string | null {
 
 interface TaggingToolbarProps {
   lines: EditorLine[];
-  setLines: (updater: (prev: EditorLine[]) => EditorLine[]) => void;
+  setLines: Dispatch<SetStateAction<EditorLine[]>>;
   selectedLines: Set<number>;
+  /** Hands the tag's old→new index map to useEditor's index-state remapping. */
+  recordIndexMap: (indexMap: number[]) => void;
   songArtists?: string[];
   clearSelection: () => void;
 }
 
-export default function TaggingToolbar({ lines, setLines, selectedLines, songArtists = [], clearSelection }: TaggingToolbarProps) {
+export default function TaggingToolbar({ lines, setLines, selectedLines, recordIndexMap, songArtists = [], clearSelection }: TaggingToolbarProps) {
   const { t } = useTranslation();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tk = t as (key: string, defaultValue?: string, options?: any) => string;
+  const tk = t as (key: string, defaultValueOrOptions?: string | Record<string, unknown>) => string;
 
   const [singerInput, setSingerInput] = useState('');
 
@@ -62,13 +63,19 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, songArt
 
   const activePreset = resolvePreset(selectionState.section);
 
-  const applySection = useCallback((label: string) => {
-    setLines(prev => applyTagToSelection(prev, selectedLines, { label }));
-  }, [setLines, selectedLines]);
+  // Tagging inserts/drops section markers, shifting indices. Computed from the rendered
+  // `lines` (not inside a setLines updater) so its exact old→new map can be handed to
+  // useEditor, which remaps the selection, active line and other index state — otherwise a
+  // following Delete would hit whatever lines slid into the old indices.
+  const applyTag = useCallback((tag: { label?: string; singers?: string[] }) => {
+    const { lines: next, indexMap } = applyTagToSelection(lines, selectedLines, tag);
+    recordIndexMap(indexMap);
+    setLines(next);
+  }, [lines, selectedLines, setLines, recordIndexMap]);
 
-  const applySingers = (singers: string[]) => {
-    setLines(prev => applyTagToSelection(prev, selectedLines, { singers }));
-  };
+  const applySection = useCallback((label: string) => applyTag({ label }), [applyTag]);
+
+  const applySingers = (singers: string[]) => applyTag({ singers });
 
   const handleAddSinger = (name: string) => {
     const trimmed = name.trim();
@@ -113,7 +120,7 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, songArt
     if (hasSections) return null;
     return (
       <div data-tour="editor-sections-banner" className="flex items-center justify-center px-4 py-2 mb-2 rounded-xl bg-zinc-900/50 border border-zinc-800/50 text-zinc-500 text-sm h-[52px]">
-        {t('editor.tagging.selectLinesPrompt', 'Select lines to apply sections or singers')}
+        {t('editor.tagging.selectLinesPrompt')}
       </div>
     );
   }
@@ -121,7 +128,7 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, songArt
   return (
     <div className="flex flex-col gap-2 px-3 py-2 mb-2 rounded-xl bg-zinc-900 border border-zinc-700 shadow-sm animate-fade-in">
       <div className="flex items-center justify-between text-xs font-semibold text-zinc-400 px-1">
-        <span>{tk('editor.tagging.taggingNLines', 'Tagging {{count}} line(s)', { count: selectedLines.size })}</span>
+        <span>{tk('editor.tagging.taggingNLines', { count: selectedLines.size })}</span>
         <button onClick={clearSelection} className="hover:text-zinc-200 transition-colors">
           <Icon name="close" size={14} />
         </button>
@@ -154,7 +161,7 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, songArt
         {/* Singers */}
         <div className="flex flex-wrap gap-1 items-center flex-1">
           {selectionState.singers === null ? (
-            <span className="text-xs text-zinc-500 italic px-2">{t('editor.tagging.mixedSingers', 'Mixed singers')}</span>
+            <span className="text-xs text-zinc-500 italic px-2">{t('editor.tagging.mixedSingers')}</span>
           ) : (
             selectionState.singers.map(singer => {
               const colorIdx = singerColorIndex(singer, songArtists);
@@ -188,7 +195,7 @@ export default function TaggingToolbar({ lines, setLines, selectedLines, songArt
                   handleAddSinger(singerInput);
                 }
               }}
-              placeholder={t('editor.tagging.addSinger', 'Add singer...')}
+              placeholder={t('editor.addSinger')}
               list="tagging-singers-list"
               className="h-7 w-32 px-3 text-[13px] rounded-[14px] border bg-zinc-800 border-zinc-600 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-primary/60 transition-colors ml-1"
             />

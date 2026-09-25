@@ -148,22 +148,25 @@ export default function PreviewViewport({
   // marker plus the lines under it (and a leading anonymous group for lines before the
   // first marker). A group with no timestamp anywhere is still being edited — don't show
   // its header or its lines in the preview until at least one line is synced.
+  // An unlabeled, singer-less marker (e.g. the one tagging inserts after a partial
+  // selection to end the new section) means "back to no section", so its lines rejoin
+  // the shared unsectioned group instead of forming a new, hidden-until-synced group —
+  // otherwise tagging a few lines made every unsynced line after them vanish.
   const visibleLines = useMemo(() => {
-    type Group = { items: { line: PreviewLineData; originalIndex: number }[]; hasTs: boolean };
-    const groups: Group[] = [];
-    let g: Group | null = null;
+    type Group = { hasTs: boolean };
+    const unsectioned: Group = { hasTs: false };
+    const owners: Group[] = [];
+    let g: Group = unsectioned;
     lines.forEach((line, idx) => {
       if (line.type === 'section') {
-        g = { items: [{ line, originalIndex: idx }], hasTs: line.timestamp != null };
-        groups.push(g);
-      } else {
-        if (!g) { g = { items: [], hasTs: false }; groups.push(g); }
-        g.items.push({ line, originalIndex: idx });
-        if (line.timestamp != null) g.hasTs = true;
+        const isAnonymous = !line.label?.trim() && !(Array.isArray(line.singers) && line.singers.length > 0);
+        g = isAnonymous ? unsectioned : { hasTs: false };
       }
+      owners[idx] = g;
+      if (line.timestamp != null) g.hasTs = true;
     });
     const result: { line: PreviewLineData; originalIndex: number }[] = [];
-    for (const grp of groups) if (grp.hasTs) result.push(...grp.items);
+    lines.forEach((line, idx) => { if (owners[idx].hasTs) result.push({ line, originalIndex: idx }); });
     return result;
   }, [lines]);
 

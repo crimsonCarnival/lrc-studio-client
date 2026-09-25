@@ -17,7 +17,7 @@ import LineTextContent from './LineTextContent';
 import LineActionToolbar from './LineActionToolbar';
 import SectionPickerDropdown from './SectionPickerDropdown';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
-import { validateLineSingers } from '@features/editor/utils/sections';
+import { validateLineSingers, sectionCollapseKey } from '@features/editor/utils/sections';
 import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/singer-colors';
 import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
@@ -103,6 +103,10 @@ interface EditorLineItemProps {
   onToggleLineMode?: (i: number, next: EditorLine) => void;
   confidenceInfo?: ConfidenceInfo;
   handleToggleAdLib?: (lineIndex: number) => void;
+  /** Section markers only: number of lyric lines until the next marker (0 = no chevron). */
+  sectionLineCount?: number;
+  isCollapsed?: boolean;
+  onToggleCollapse?: (key: string) => void;
 }
 
 const SYNC_FLASH_MS: Record<string, number> = { short: 300, normal: 600, long: 1200 };
@@ -174,6 +178,9 @@ const EditorLineItem = React.memo(({
   confidenceInfo,
   activeSingers,
   handleToggleAdLib,
+  sectionLineCount = 0,
+  isCollapsed = false,
+  onToggleCollapse,
 }: EditorLineItemProps) => {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
@@ -365,13 +372,26 @@ const EditorLineItem = React.memo(({
           className={`relative flex items-end px-4 cursor-pointer group animate-preview-line-in bg-background ${isRoot ? 'pt-8' : 'pt-4'}`}
         >
           {selectedLines.has(i) && <div className="absolute inset-0 bg-primary/10 pointer-events-none" />}
+          {onToggleCollapse && sectionLineCount > 0 && (
+            <Tip content={isCollapsed ? t('editor.expandSection') : t('editor.collapseSection')}>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onToggleCollapse(sectionCollapseKey(line, i)); }}
+                aria-expanded={!isCollapsed}
+                aria-label={isCollapsed ? t('editor.expandSection') : t('editor.collapseSection')}
+                className="relative z-10 -ml-3 mr-0.5 mb-1 p-0.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors flex items-center"
+              >
+                <Icon name={isCollapsed ? 'chevron_right' : 'expand_more'} size={16} />
+              </button>
+            </Tip>
+          )}
           {(() => {
             const lineSingers = getSingers(line);
             const firstSingerColorIdx = lineSingers.length > 0 && projectSingers ? singerColorIndex(lineSingers[0], projectSingers) : -1;
             const colorVar = firstSingerColorIdx >= 0 ? SINGER_GRADIENT_STOPS[firstSingerColorIdx] : 'var(--color-zinc-500)';
 
             const label = formatSectionLabel(line.label, t);
-            const singersStr = lineSingers.length > 0 ? lineSingers.join(' + ') : t('editor.tagging.noSinger', 'No singer');
+            const singersStr = lineSingers.length > 0 ? lineSingers.join(' + ') : t('editor.tagging.noSinger');
 
             return isEditing ? (
               <div className="flex items-center gap-2 relative z-20 pl-2 py-1">
@@ -393,7 +413,7 @@ const EditorLineItem = React.memo(({
                     ))}
                     <input
                       type="text"
-                      placeholder={t('editor.tagging.addSinger', 'Add singer...')}
+                      placeholder={t('editor.addSinger')}
                       list="inline-singers-list"
                       className="text-[11px] bg-zinc-800/50 border border-zinc-700/50 rounded-full px-2 py-0.5 w-24 outline-none focus:border-primary/50 text-zinc-200 placeholder:text-zinc-500"
                       onKeyDown={(e) => {
@@ -437,11 +457,16 @@ const EditorLineItem = React.memo(({
                   setEditingText(line.label || '');
                   setEditingSingers(getSingers(line));
                 }}
-                title={t('editor.doubleClickToEdit', 'Double click to edit')}
+                title={t('editor.doubleClickToEdit')}
               >
                 <span className={`text-[10px] font-semibold tracking-widest uppercase opacity-80 select-none`}>
-                  {t('editor.tagging.sectionSingerFormat', '{{section}} · {{singer}}', { section: label, singer: singersStr })}
+                  {t('editor.tagging.sectionSingerFormat', { section: label, singer: singersStr })}
                 </span>
+                {isCollapsed && (
+                  <span className="text-[10px] font-medium normal-case tracking-normal px-1.5 py-px rounded-full bg-zinc-800 text-zinc-400 select-none">
+                    {t('editor.hiddenLines', { count: sectionLineCount })}
+                  </span>
+                )}
               </span>
             );
           })()}
@@ -719,7 +744,7 @@ const EditorLineItem = React.memo(({
                 setEditingLineIndex(null);
               }
             }}
-            title={t('editor.editLine', 'Edit Line')}
+            title={t('editor.editLine')}
           >
             <div className="pt-2">
               <LineTextEditingForm

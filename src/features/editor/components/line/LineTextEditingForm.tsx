@@ -74,7 +74,7 @@ function LineTextEditingForm({
 }: LineTextEditingFormProps) {
   const { t } = useTranslation();
   // Some keys use default-value/interpolation forms; bypass strict key checking.
-  const tk = t as (key: string, defaultValue?: string, options?: Record<string, unknown>) => string;
+  const tk = t as (key: string, options?: Record<string, unknown>) => string;
   const languageOptions = useLanguageOptions();
 
   // Combined autocomplete options: project singers + song artists, deduped
@@ -166,7 +166,7 @@ function LineTextEditingForm({
           className="w-full bg-zinc-800 border-primary/50 text-xs text-zinc-100 h-7"
         />
         {splitParsed && (
-          <Tip content={tk('editor.splitAtColon', 'Split "{{name}}" as singer', { name: splitParsed.name })}>
+          <Tip content={tk('editor.splitAtColon', { name: splitParsed.name })}>
             <button
               type="button"
               onClick={handleSplitAtColon}
@@ -228,7 +228,7 @@ function LineTextEditingForm({
 
           const roleLabel = idx === 0
             ? t('editor.singer')
-            : tk('editor.singerN', 'Singer {{n}}', { n: idx + 1 });
+            : tk('editor.singerN', { n: idx + 1 });
 
           return (
             <div key={idx} className="flex items-center gap-1">

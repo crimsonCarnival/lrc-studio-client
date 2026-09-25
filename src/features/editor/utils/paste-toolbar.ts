@@ -9,7 +9,7 @@
  * linesToRawText. These helpers keep that encoding in one place and operate on a
  * line array so callers never juggle char offsets.
  */
-import { parseSectionHeader } from './sections';
+import { parseSectionHeader, parseSingerPrefix } from './sections';
 import { formatSectionLabelForSerialization } from '../constants/sectionTypes';
 
 export interface LineSelection {
@@ -93,6 +93,43 @@ export function setHeaderDepth(lines: string[], idx: number, depth: number): str
   const next = [...lines];
   next[idx] = buildHeaderLine(parsed.label, parsed.singers, depth);
   return next;
+}
+
+/**
+ * Toggle `name` on the textarea line containing `caret`: on a section header it toggles the
+ * header's singer roster; on a lyric line it toggles the `Name & Other: ` prefix. Returns the
+ * new value and a caret that keeps its distance from the end of the edited line.
+ */
+export function toggleSingerAtCaret(
+  value: string,
+  caret: number,
+  name: string,
+  roster: readonly string[],
+): { value: string; caret: number } {
+  const lineStart = caret <= 0 ? 0 : value.lastIndexOf('\n', caret - 1) + 1;
+  const nl = value.indexOf('\n', caret);
+  const lineEnd = nl === -1 ? value.length : nl;
+  const line = value.slice(lineStart, lineEnd);
+  const toggle = (list: string[]) => (list.includes(name) ? list.filter((s) => s !== name) : [...list, name]);
+
+  let nextLine: string;
+  const header = parseSectionHeader(line);
+  if (header) {
+    nextLine = buildHeaderLine(header.label, toggle(header.singers), header.depth);
+  } else {
+    const indent = line.match(/^\s*/)?.[0] ?? '';
+    const body = line.slice(indent.length);
+    const prefix = parseSingerPrefix(body, roster);
+    const singers = toggle(prefix?.singers ?? []);
+    const rest = prefix ? prefix.rest : body;
+    nextLine = `${indent}${singers.length ? `${singers.join(' & ')}: ` : ''}${rest}`;
+  }
+
+  const fromEnd = lineEnd - caret;
+  return {
+    value: value.slice(0, lineStart) + nextLine + value.slice(lineEnd),
+    caret: Math.max(lineStart, lineStart + nextLine.length - fromEnd),
+  };
 }
 
 /**
