@@ -15,6 +15,9 @@ import { ThemedShineBorder } from '@ui/themed-shine-border';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ProjectSetupModal = ProjectSetupModalRaw as any;
 
+// Stable fallback: ProjectSetupModal re-syncs its form whenever an initial* prop changes identity.
+const EMPTY_LIST: string[] = [];
+
 interface ProjectMeta {
   tags?: string[];
   description?: string;
@@ -22,6 +25,8 @@ interface ProjectMeta {
   songArtist?: string;
   songAlbum?: string;
   songYear?: string | number;
+  singers?: string[];
+  singerColors?: string[];
 }
 
 interface HomeProject {
@@ -45,6 +50,15 @@ interface DynamicTranslation {
   i18n: { resolvedLanguage?: string; language?: string };
 }
 
+type HomeFilterTab = 'all' | 'inProgress' | 'completed' | 'notStarted';
+const FILTER_TABS: HomeFilterTab[] = ['all', 'inProgress', 'completed', 'notStarted'];
+
+function statusOf(p: HomeProject): Exclude<HomeFilterTab, 'all'> {
+  const progress = p.lineCount ? Math.min(100, Math.round(((p.syncedLineCount || 0) / p.lineCount) * 100)) : 0;
+  if (progress === 100) return 'completed';
+  if (progress === 0) return 'notStarted';
+  return 'inProgress';
+}
 
 export default function Home() {
   const { t, dt, i18n } = useDynamicTranslation() as DynamicTranslation;
@@ -54,7 +68,7 @@ export default function Home() {
   const [items, setItems] = useState<HomeProject[]>([]);
   const [, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterTab, setFilterTab] = useState<'all' | 'inProgress' | 'completed' | 'notStarted'>('all');
+  const [filterTab, setFilterTab] = useState<HomeFilterTab>('all');
   const [sortBy, setSortBy] = useState<'edited' | 'created' | 'title'>('edited');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [editingProject, setEditingProject] = useState<HomeProject | null>(null);
@@ -80,26 +94,19 @@ export default function Home() {
     fetchProjects();
   }, [fetchProjects]);
 
-  const filteredProjects = items.filter(p => {
+  const searchMatched = items.filter(p => {
     const titleMatch = (p.title || '').toLowerCase().includes(searchQuery.toLowerCase());
     const tagsMatch = p.metadata?.tags?.some(tag => (tag || '').toLowerCase().includes(searchQuery.toLowerCase())) || false;
-    const matchesSearch = titleMatch || tagsMatch;
+    return titleMatch || tagsMatch;
+  });
 
-    if (!matchesSearch) return false;
+  // Tab counts are derived from the same search-filtered list the grid renders, so a
+  // badge always equals the number of cards its tab shows. The server's `projects`
+  // query ignores limit/offset and returns the user's full list (capped at 100).
+  const tabCounts: Record<HomeFilterTab, number> = { all: searchMatched.length, inProgress: 0, completed: 0, notStarted: 0 };
+  for (const p of searchMatched) tabCounts[statusOf(p)]++;
 
-    const progress = p.lineCount ? Math.min(100, Math.round(((p.syncedLineCount || 0) / p.lineCount) * 100)) : 0;
-
-    if (filterTab === 'inProgress') {
-      return progress > 0 && progress < 100;
-    }
-    if (filterTab === 'completed') {
-      return progress === 100;
-    }
-    if (filterTab === 'notStarted') {
-      return progress === 0;
-    }
-    return true;
-  }).sort((a, b) => {
+  const filteredProjects = searchMatched.filter(p => filterTab === 'all' || statusOf(p) === filterTab).sort((a, b) => {
     if (sortBy === 'edited') {
       const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime();
       const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime();
@@ -220,16 +227,23 @@ export default function Home() {
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 w-full relative">
             <div className="flex gap-1 overflow-x-auto hide-scrollbar">
-              {['all', 'inProgress', 'completed', 'notStarted'].map((tab) => (
+              {FILTER_TABS.map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setFilterTab(tab as 'all' | 'inProgress' | 'completed' | 'notStarted')}
-                  className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${filterTab === tab
+                  onClick={() => setFilterTab(tab)}
+                  aria-pressed={filterTab === tab}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${filterTab === tab
                     ? 'border-primary text-zinc-100'
                     : 'border-transparent text-zinc-400 hover:text-zinc-200'
                     }`}
                 >
                   {(t as (k: string) => string)(`home.${tab}`)}
+                  <span className={`min-w-5 px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums leading-none ${filterTab === tab
+                    ? 'bg-primary/20 text-primary'
+                    : 'bg-zinc-800 text-zinc-500'
+                    }`}>
+                    {tabCounts[tab]}
+                  </span>
                 </button>
               ))}
             </div>
@@ -343,11 +357,11 @@ export default function Home() {
         onConfirm={async (data: {
           name?: string; description?: string; tags?: string[];
           songName?: string; songArtist?: string; songAlbum?: string; songYear?: string | number;
-          coverImage?: string; isPublic?: boolean; singerColors?: string[];
+          coverImage?: string; isPublic?: boolean; singerColors?: string[]; singers?: string[];
         }) => {
           if (!editingProject) return;
           try {
-            const { name: title, description, tags, songName, songArtist, songAlbum, songYear, coverImage, isPublic, singerColors } = data;
+            const { name: title, description, tags, songName, songArtist, songAlbum, songYear, coverImage, isPublic, singerColors, singers } = data;
             const updatedMetadata = {
               ...editingProject.metadata,
               description,
@@ -356,7 +370,8 @@ export default function Home() {
               songArtist,
               songAlbum,
               songYear,
-              singerColors: (singerColors || []).filter(Boolean),
+              singerColors: (singerColors || []).map((c) => c || ''),
+              singers,
             };
             await projects.patch(editingProject.publicId, {
               title,
@@ -384,6 +399,8 @@ export default function Home() {
         initialSongYear={editingProject?.metadata?.songYear || ''}
         initialCoverImage={editingProject?.coverImage || ''}
         initialIsPublic={editingProject?.public || false}
+        initialSingerColors={editingProject?.metadata?.singerColors ?? EMPTY_LIST}
+        initialSingers={editingProject?.metadata?.singers ?? EMPTY_LIST}
         initialAlbumArt={''}
         isEditing={true}
       />

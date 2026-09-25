@@ -12,7 +12,7 @@ interface StarUser {
 // then keeps it in sync with star/unstar actions.
 export function useStarredPlaylist(user: StarUser | null | undefined) {
   const { t } = useTranslation();
-  const playlistName = t('projectView.newPlaylist', { defaultValue: 'Starred Projects' });
+  const playlistName = t('projectView.actions.newPlaylist');
   const playlistIdRef = useRef<string | null>(null);
   const resolving = useRef(false);
 

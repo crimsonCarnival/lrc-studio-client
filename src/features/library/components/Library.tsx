@@ -20,6 +20,9 @@ const ProjectSetupModal = ProjectSetupModalRaw as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ProjectList = ProjectListRaw as any;
 
+// Stable fallback: ProjectSetupModal re-syncs its form whenever an initial* prop changes identity.
+const EMPTY_LIST: string[] = [];
+
 interface ProjectMeta {
   description?: string;
   tags?: string[];
@@ -28,6 +31,8 @@ interface ProjectMeta {
   songAlbum?: string;
   songYear?: string | number;
   genre?: string;
+  singers?: string[];
+  singerColors?: string[];
   [key: string]: unknown;
 }
 
@@ -52,6 +57,7 @@ interface SetupConfirmData {
   coverImage?: string;
   isPublic?: boolean;
   singerColors?: string[];
+  singers?: string[];
 }
 
 // onOpenProject receives the project's publicId (ProjectCard.onSelect passes project.publicId).
@@ -287,7 +293,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
           onClose={() => setEditingProject(null)}
           onConfirm={async (data: SetupConfirmData) => {
             try {
-              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic, singerColors } = data;
+              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic, singerColors, singers } = data;
               const updatedMetadata = {
                 ...editingProject.metadata,
                 description,
@@ -298,6 +304,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
                 songYear,
                 genre,
                 singerColors,
+                singers,
               };
               await projects.patch(editingProject.publicId, {
                 title,
@@ -326,6 +333,8 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
           initialGenre={editingProject?.metadata?.genre || ''}
           initialCoverImage={editingProject?.coverImage || ''}
           initialIsPublic={editingProject?.public || false}
+          initialSingerColors={editingProject?.metadata?.singerColors ?? EMPTY_LIST}
+          initialSingers={editingProject?.metadata?.singers ?? EMPTY_LIST}
           initialAlbumArt={''}
           isEditing={true}
         />

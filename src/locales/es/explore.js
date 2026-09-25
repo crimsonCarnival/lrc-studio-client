@@ -28,5 +28,9 @@ export default {
     title: 'Explorar',
     noMore: 'No hay más resultados.',
     loadMore: 'Cargar más',
+    searchPlaceholder: 'Buscar proyectos por título, artista, álbum o etiqueta…',
+    searchLabel: 'Buscar proyectos',
+    clearSearch: 'Limpiar búsqueda',
+    seeAllResults: 'Ver los {{count}} resultados',
   },
 };
