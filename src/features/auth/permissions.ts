@@ -6,18 +6,23 @@ import { useAuthContext } from './useAuthContext';
 
 export const WILDCARD = '*';
 
-export type Permission =
-  | 'users.view'
-  | 'users.ban'
-  | 'users.delete'
-  | 'users.role'
-  | 'users.shadowban'
-  | 'network.block'
-  | 'audit.view'
-  | 'stats.view'
-  | 'badges.manage'
-  | 'levels.manage'
-  | 'xp.adjust';
+// Full catalog, in the same order as server/src/shared/permissions.ts.
+// Used to render the "Manage permissions" page's permission list.
+export const PERMISSIONS = [
+  'users.view',
+  'users.ban',
+  'users.delete',
+  'users.role',
+  'network.block',
+  'audit.view',
+  'stats.view',
+  'badges.manage',
+  'levels.manage',
+  'xp.adjust',
+  'users.shadowban',
+] as const;
+
+export type Permission = (typeof PERMISSIONS)[number];
 
 export const ROLES = ['user', 'mod', 'admin', 'superadmin'] as const;
 export type Role = (typeof ROLES)[number];

@@ -111,4 +111,25 @@ export const adminService = {
       body: JSON.stringify({ action, amount, target, userId, userIds }),
     }));
   },
+
+  // Superadmin-only permissions management. The server independently
+  // enforces superadmin (requireSuperadmin, checked on the literal `role`)
+  // for all three of these — this client is UI convenience only.
+  async getPermissionsCatalog(): Promise<unknown> {
+    return request('/admin/permissions');
+  },
+
+  async updateRolePreset(role: string, permissions: string[]): Promise<unknown> {
+    return withSudo(() => request(`/admin/permissions/roles/${role}`, {
+      method: 'PUT',
+      body: JSON.stringify({ permissions }),
+    }));
+  },
+
+  async updateUserPermissions(userId: string, permissions: string[]): Promise<unknown> {
+    return withSudo(() => request(`/admin/permissions/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ permissions }),
+    }));
+  },
 };

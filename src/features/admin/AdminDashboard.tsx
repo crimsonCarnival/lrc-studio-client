@@ -21,6 +21,7 @@ import AdminBadgesTab from './AdminBadgesTab';
 import AdminLevelsTab from './AdminLevelsTab';
 import AdminXpTab from './AdminXpTab';
 import AdminRequestsTab from './AdminRequestsTab';
+import AdminPermissionsTab from './AdminPermissionsTab';
 import { requestsApi } from './services/requests.service';
 import SudoPasswordModal from './SudoPasswordModal';
 
@@ -62,6 +63,11 @@ export default function AdminDashboard() {
   // Loose alias for interpolation calls with numeric values (typed-i18n options are strict).
   const tk = t as (k: string, o?: Record<string, unknown>) => string;
   const { user: currentUser } = useAuthContext();
+  // "Manage permissions" is superadmin-only — gated on the literal role, not
+  // a permission (granting/revoking permissions is the escalation surface
+  // that page edits, so it can't be gated by a permission itself). The
+  // server independently re-checks this on every request; this is UX only.
+  const isSuperadmin = currentUser?.role === 'superadmin';
   // Request types this user may submit — drives propose-mode tab visibility.
   const [submittable, setSubmittable] = useState<string[]>([]);
   useEffect(() => {
@@ -86,6 +92,7 @@ export default function AdminDashboard() {
       { id: 'badges',     icon: 'military_tech',       label: t('admin.dashboard.tabs.badges'),     perm: 'badges.manage' },
       { id: 'levels',     icon: 'bolt',         label: t('admin.dashboard.tabs.levels'),     perm: 'levels.manage' },
       { id: 'xp',         icon: 'auto_awesome',    label: t('admin.dashboard.tabs.xp'),         perm: 'xp.adjust' },
+      { id: 'permissions', icon: 'admin_panel_settings', label: t('admin.dashboard.tabs.permissions') },
     ];
     const canProposeBadges = submittable.some(ty => ty.startsWith('badge_'));
     const canProposeLevels = submittable.some(ty => ty.startsWith('level_'));
@@ -93,6 +100,7 @@ export default function AdminDashboard() {
     const gated = defs.filter(tab => {
       if (tab.id === 'moderation') return userHasPermission(currentUser?.permissions, 'users.view') || userHasPermission(currentUser?.permissions, 'network.block');
       if (tab.id === 'staff') return !isNetworkOnly; // all staff except network-only roles
+      if (tab.id === 'permissions') return isSuperadmin;
       if (tab.perm && userHasPermission(currentUser?.permissions, tab.perm)) return true;
       if (tab.id === 'badges' && canProposeBadges) return true;
       if (tab.id === 'levels' && canProposeLevels) return true;
@@ -100,7 +108,7 @@ export default function AdminDashboard() {
     });
     gated.push({ id: 'requests', icon: 'inbox', label: t('admin.dashboard.tabs.requests') });
     return gated;
-  }, [t, currentUser?.permissions, submittable]);
+  }, [t, currentUser?.permissions, submittable, isSuperadmin]);
 
   // If the URL points at a tab the user can't access, fall back to the first
   // permitted one.
@@ -556,6 +564,10 @@ export default function AdminDashboard() {
 
         {activeTab === 'requests' && (
           <AdminRequestsTab />
+        )}
+
+        {activeTab === 'permissions' && (
+          <AdminPermissionsTab isSuperadmin={isSuperadmin} />
         )}
       </div>
 
