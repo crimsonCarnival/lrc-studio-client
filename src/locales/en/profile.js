@@ -93,7 +93,7 @@ export default {
     title: "Activity",
     activities: "activities",
     totalActivities: "activities in the last year",
-    definition: "Counts creating projects, manual saves that change a project (up to 5 per day; autosaves don't count), publishing, starring, forking, boosting, creating playlists and following (UTC days). Not the same as the streak.",
+    definition: "Counts days you created or edited a project (each project counts once per day, however many times it's saved), publishing, starring, forking, boosting, creating playlists and following (UTC days). Not the same as the streak.",
     less: "Less",
     more: "More",
     tip0: "No activity",

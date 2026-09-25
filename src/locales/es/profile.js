@@ -93,7 +93,7 @@ export default {
     title: "Actividad",
     activities: "actividades",
     totalActivities: "actividades en el último año",
-    definition: "Cuenta proyectos creados, guardados manuales que cambian un proyecto (hasta 5 por día; los autoguardados no cuentan), publicaciones, estrellas, bifurcaciones, impulsos, listas creadas y seguimientos (días UTC). No es lo mismo que la racha.",
+    definition: "Cuenta los días en que creaste o editaste un proyecto (cada proyecto cuenta una vez por día, sin importar cuántas veces se guarde), publicaciones, estrellas, bifurcaciones, impulsos, listas creadas y seguimientos (días UTC). No es lo mismo que la racha.",
     less: "Menos",
     more: "Más",
     tip0: "Sin actividad",
