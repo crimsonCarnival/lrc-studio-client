@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useMemo, forwardRef, useState } from 'react';
-import type { KeyboardEvent, RefObject } from 'react';
+import type { CSSProperties, KeyboardEvent, RefObject } from 'react';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
 import { useTranslation } from 'react-i18next';
@@ -173,15 +173,13 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
 
   const duetGradient = isDuet ? singerGradient(line.singers!, songSingers) : undefined;
 
-  // Matches PreviewLine's active-line treatment: a soft rounded highlight card,
-  // a leading play glyph, and the shared font-lyrics stack.
   const staggerDelay = dist != null ? `${Math.min(dist * 40, 200)}ms` : '0ms';
 
   return (
     <div
       ref={ref}
       onClick={clickable ? onClick : undefined}
-      className={`font-lyrics animate-preview-line-in ${isActive ? 'rounded-lg' : ''}`}
+      className="font-lyrics animate-preview-line-in"
       style={{
         opacity: isAdLib && !isActive ? opacity * 0.5 : opacity,
         transform: `scale(${isAdLib ? 0.9 : 1})`,
@@ -194,33 +192,12 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
         fontSize: `calc(1.25rem * ${sizeFactor})`,
         paddingTop: '0.65em',
         paddingBottom: '0.65em',
-        paddingLeft: isActive && line.timestamp != null && alignment !== 'right' ? '1.6em' : undefined,
-        paddingRight: isActive && line.timestamp != null && alignment === 'right' ? '1.6em' : undefined,
         marginLeft: isAdLib ? (alignment === 'right' ? '0' : '15%') : '0',
         marginRight: isAdLib ? (alignment === 'right' ? '15%' : '0') : '0',
         lineHeight: 1.25,
         position: 'relative',
-        backgroundColor: isActive ? 'rgba(255,255,255,0.04)' : undefined,
       }}
     >
-      {isActive && line.timestamp != null && (
-        <svg
-          aria-hidden
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill={color}
-          style={{
-            position: 'absolute',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            left: alignment === 'right' ? undefined : '0.15em',
-            right: alignment === 'right' ? '0.15em' : undefined,
-          }}
-        >
-          <path d="M8 5v14l11-7z" />
-        </svg>
-      )}
       {isEmptyLine ? (
         segmentProgress != null ? (
           <div className={`flex ${alignment === 'right' ? 'justify-end' : alignment === 'center' ? 'justify-center' : 'justify-start'} py-2 pointer-events-none`}>
@@ -382,8 +359,23 @@ function SectionDivider({
   const { opacity } = getDistStyle(dist);
   const accent = palette?.accent ?? 'rgba(255,255,255,0.5)';
 
-  // Matches PreviewLine's section-marker treatment: divider lines flanking a large
-  // gradient-clipped uppercase title, singer names as plain colored inline text.
+  // The title is colored exclusively by the section's custom singer colors — solid for
+  // one, a clipped gradient for several — and left uncolored when none are set.
+  const singerHexes = singers
+    .map((name) => singerColors[singerColorIndex(name, songSingers)])
+    .filter((hex): hex is string => !!hex);
+  const titleStyle: CSSProperties = singerHexes.length > 1
+    ? {
+        backgroundImage: `linear-gradient(90deg, ${singerHexes.join(', ')})`,
+        WebkitBackgroundClip: 'text',
+        backgroundClip: 'text',
+        color: 'transparent',
+      }
+    : singerHexes.length === 1
+      ? { color: singerHexes[0] }
+      : {};
+
+  // Divider lines flanking a large uppercase title, singer names as plain colored inline text.
   return (
     <div
       className="font-lyrics"
@@ -411,14 +403,7 @@ function SectionDivider({
           gap: '0.5rem',
         }}
       >
-        <span
-          style={{
-            backgroundImage: `linear-gradient(90deg, ${accent}, #e879f9, ${accent})`,
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            color: 'transparent',
-          }}
-        >
+        <span style={titleStyle}>
           {label || '◆'}
         </span>
         {singers.length > 0 && (
@@ -426,9 +411,9 @@ function SectionDivider({
             <span style={{ opacity: 0.4 }}>&middot;</span>
             {singers.map((name, idx) => {
               const globalIdx = singerColorIndex(name, songSingers);
-              const customHex = singerColors[globalIdx] || accent;
+              const customHex = singerColors[globalIdx];
               return (
-                <span key={`${name}-${idx}`} style={{ color: customHex }}>
+                <span key={`${name}-${idx}`} style={customHex ? { color: customHex } : undefined}>
                   {name}{idx < singers.length - 1 ? ',' : ''}
                 </span>
               );

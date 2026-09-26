@@ -321,6 +321,66 @@ function PublicProjectViewPageInner() {
             songSingers={songSingers}
             singerColors={singerColors}
           />
+
+          {/* ── Player bar, docked at the bottom of the lyrics panel ── */}
+          <div
+            className="flex-shrink-0 w-full"
+            style={{
+              borderTop: `1px solid ${palette?.faded ?? 'hsl(var(--border))'}44`,
+              background: palette ? `${palette.bgDeep}e0` : 'hsl(var(--card) / 0.8)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+            }}
+          >
+            <div className="px-4 sm:px-6 py-3">
+              {!hasMedia && !initialMedia
+                ? <p className="text-xs text-center py-2" style={{ color: palette?.faded ?? 'hsl(var(--muted-foreground))' }}>{t('projectView.noAudio')}</p>
+                : null}
+
+              <Player
+                ref={playerRef}
+                mediaTitle={mediaTitle}
+                onTimeUpdate={setPlaybackPosition}
+                onPlayingChange={setIsPlaying}
+                onSpeedChange={setPlaybackSpeed}
+                onDurationChange={() => {}}
+                onMediaChange={setHasMedia}
+                onYtUrlChange={() => {}}
+                onTitleChange={setMediaTitle}
+                initialMedia={initialMedia}
+                initialSeek={initialSeek}
+                initialSpeed={1}
+                lines={lines}
+                playbackPosition={playbackPosition}
+                syncMode={false}
+                onMediaUpload={() => {}}
+                projectMetadata={meta}
+                viewerMode
+              />
+
+              {/* Prev / next in playlist context */}
+              {listId && (prevTrack || nextTrack) && (
+                <div className="flex items-center justify-between mt-2">
+                  <button
+                    disabled={!prevTrack}
+                    onClick={() => goToTrack(prevTrack)}
+                    className="h-7 px-2.5 text-[11px] disabled:opacity-30 transition-opacity"
+                    style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}
+                  >
+                    {t('projectView.prevTrack')}
+                  </button>
+                  <button
+                    disabled={!nextTrack}
+                    onClick={() => goToTrack(nextTrack)}
+                    className="h-7 px-2.5 text-[11px] disabled:opacity-30 transition-opacity"
+                    style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}
+                  >
+                    {t('projectView.nextTrack')}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Right: info panel — fixed width on desktop, stacked below on mobile */}
@@ -365,66 +425,6 @@ function PublicProjectViewPageInner() {
               />
             )}
           </div>
-        </div>
-      </div>
-
-      {/* ── Fixed player bar ────────────────────────────────── */}
-      <div
-        className="flex-shrink-0 w-full"
-        style={{
-          borderTop: `1px solid ${palette?.faded ?? 'hsl(var(--border))'}44`,
-          background: palette ? `${palette.bgDeep}e0` : 'hsl(var(--card) / 0.8)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-        }}
-      >
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-3">
-          {!hasMedia && !initialMedia
-            ? <p className="text-xs text-center py-2" style={{ color: palette?.faded ?? 'hsl(var(--muted-foreground))' }}>{t('projectView.noAudio')}</p>
-            : null}
-
-          <Player
-            ref={playerRef}
-            mediaTitle={mediaTitle}
-            onTimeUpdate={setPlaybackPosition}
-            onPlayingChange={setIsPlaying}
-            onSpeedChange={setPlaybackSpeed}
-            onDurationChange={() => {}}
-            onMediaChange={setHasMedia}
-            onYtUrlChange={() => {}}
-            onTitleChange={setMediaTitle}
-            initialMedia={initialMedia}
-            initialSeek={initialSeek}
-            initialSpeed={1}
-            lines={lines}
-            playbackPosition={playbackPosition}
-            syncMode={false}
-            onMediaUpload={() => {}}
-            projectMetadata={meta}
-            viewerMode
-          />
-
-          {/* Prev / next in playlist context */}
-          {listId && (prevTrack || nextTrack) && (
-            <div className="flex items-center justify-between mt-2">
-              <button
-                disabled={!prevTrack}
-                onClick={() => goToTrack(prevTrack)}
-                className="h-7 px-2.5 text-[11px] disabled:opacity-30 transition-opacity"
-                style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}
-              >
-                {t('projectView.prevTrack')}
-              </button>
-              <button
-                disabled={!nextTrack}
-                onClick={() => goToTrack(nextTrack)}
-                className="h-7 px-2.5 text-[11px] disabled:opacity-30 transition-opacity"
-                style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}
-              >
-                {t('projectView.nextTrack')}
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
