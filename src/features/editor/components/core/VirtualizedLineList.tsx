@@ -368,7 +368,16 @@ export default function VirtualizedLineList({
               return (
                 <div
                   key={line.id || i}
-                  data-index={virtualRow.index}
+                  // Sections deliberately stretch (top:start + bottom:0) so their header can
+                  // stick over their block, which makes this wrapper as tall as the whole
+                  // list. It must therefore never be measurable: `data-index` is what both
+                  // measureElement and measureLine's querySelector resolve a row by, so
+                  // leaving it here fed the stretched height back in as row 0's size. Total
+                  // size then grew every re-measure — past a few collapse/expand toggles it
+                  // reached millions of px and every row scrolled out of reach, which looked
+                  // like the lyrics vanishing. Sections carry the attribute on the inner,
+                  // sticky element instead — the one that actually has the row's height.
+                  data-index={isSection ? undefined : virtualRow.index}
                   ref={isSection ? undefined : virtualizer.measureElement}
                   style={{
                     position: 'absolute',
