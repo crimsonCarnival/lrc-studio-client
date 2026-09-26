@@ -221,7 +221,7 @@ export default function LeaderboardPage() {
                                 {entry.displayName || entry.accountName}
                               </span>
                               <span className="text-xs text-zinc-500 mt-0.5">
-                                @{entry.accountName}
+                                {entry.accountName}
                                 {(entry.progression?.level ?? 0) > 0 && ` · Nv. ${entry.progression!.level}`}
                               </span>
                             </div>
