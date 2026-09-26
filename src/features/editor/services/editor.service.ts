@@ -27,7 +27,7 @@ export interface EditorLine {
   singers?: string[];
   mode?: 'solo' | 'duet' | 'split';
   label?: string;
-  id?: string | number;
+  id?: string;
   /** Tracks whether this line's timestamp was set by ASR ('asr') or manually ('manual').
    *  null = legacy/unknown lines (treated as manual). Cleared when timestamp is removed. */
   source?: 'manual' | 'asr' | null;

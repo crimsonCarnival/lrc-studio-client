@@ -8,18 +8,26 @@ import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 
 const _defaultTzFormatter = new Intl.DateTimeFormat();
-const _tzFormatters = new Map();
-function _getTzFormatter(tz) {
-  if (!_tzFormatters.has(tz)) {
-    _tzFormatters.set(tz, new DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'shortOffset' }));
+const _tzFormatters = new Map<string, Intl.DateTimeFormat>();
+function _getTzFormatter(tz: string): Intl.DateTimeFormat {
+  let formatter = _tzFormatters.get(tz);
+  if (!formatter) {
+    formatter = new DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'shortOffset' });
+    _tzFormatters.set(tz, formatter);
   }
-  return _tzFormatters.get(tz);
+  return formatter;
 }
 
 // ── Utilities ────────────────────────────────────────────────────────────────
 
-function toLocalISOString(date, utcOffset) {
-  const [sign, hh, mm] = utcOffset.match(/([+-])(\d{2}):(\d{2})/).slice(1);
+const UTC_OFFSET = /([+-])(\d{2}):(\d{2})/;
+
+function toLocalISOString(date: Date, utcOffset: string): string {
+  const match = utcOffset.match(UTC_OFFSET);
+  // A malformed offset used to throw here mid-save. UTC is the safe fallback:
+  // a timestamp in the wrong zone beats losing the save entirely.
+  if (!match) return date.toISOString();
+  const [sign, hh, mm] = match.slice(1);
   const offsetMs = (sign === '-' ? -1 : 1) * (Number(hh) * 60 + Number(mm)) * 60000;
   const local = new Date(date.getTime() + offsetMs);
   return local.toISOString().replace('Z', utcOffset);
@@ -27,9 +35,64 @@ function toLocalISOString(date, utcOffset) {
 
 import deepEqual from 'fast-deep-equal';
 import { flatToSections, flatIndexToSectionPos } from '../utils/sections';
-const cloneValue = (v) => structuredClone(v);
+import type { EditorLine } from '@/features/editor/services/editor.service';
 
-function buildLyricsPatch(prev, nextMode, nextLines) {
+const cloneValue = <T,>(v: T): T => structuredClone(v);
+
+/** Editor/playback state persisted alongside a project. */
+export type ProjectSaveState = {
+  syncMode?: boolean;
+  activeLineIndex?: number;
+  playbackPosition?: number;
+  playbackSpeed?: number;
+  /** Null when the project has never been saved — the snapshot keeps that distinct from "unset". */
+  saveTime?: string | null;
+  timezone?: string;
+  utcOffset?: string;
+};
+
+/**
+ * The last state known to be on the server. Every patch is a diff against this,
+ * so it must be a deep clone — holding live references would make the diff
+ * compare a value against itself and silently drop changes.
+ */
+export type ProjectSnapshot = {
+  title?: string;
+  metadata?: Record<string, unknown>;
+  state?: ProjectSaveState;
+  editorMode?: string;
+  lines?: EditorLine[];
+  uploadId?: string | null;
+};
+
+/**
+ * Either a full `sections` replace or a positional single-line patch — never
+ * both. `null` from buildLyricsPatch means "lyrics unchanged, send nothing".
+ */
+type LyricsPatch = {
+  editorMode?: string;
+  sections?: ReturnType<typeof flatToSections>;
+  sectionIdx?: number;
+  lineIdx?: number;
+  line?: EditorLine;
+};
+
+export type ProjectPatch = {
+  title?: string;
+  metadata?: Record<string, unknown>;
+  uploadId?: string | null;
+  lyrics?: LyricsPatch;
+  state?: ProjectSaveState;
+  /** Set from explicit save overrides, not from the diff. */
+  public?: boolean;
+  coverImage?: string | null;
+};
+
+function buildLyricsPatch(
+  prev: ProjectSnapshot | null | undefined,
+  nextMode: string | undefined,
+  nextLines: EditorLine[],
+): LyricsPatch | null {
   const nextSections = flatToSections(nextLines);
   if (!prev) return { editorMode: nextMode, sections: nextSections };
   const prevLines = Array.isArray(prev.lines) ? prev.lines : [];
@@ -52,9 +115,22 @@ function buildLyricsPatch(prev, nextMode, nextLines) {
     : { sectionIdx: pos.sectionIdx, lineIdx: pos.lineIdx, line: nextLines[changedIdx] };
 }
 
-export function buildProjectPatch({ prevSnapshot, title, metadata, state, uploadId, editorMode, lines }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const patch: Record<string, any> = {};
+export type BuildProjectPatchArgs = {
+  prevSnapshot: ProjectSnapshot | null | undefined;
+  title?: string;
+  metadata?: Record<string, unknown>;
+  state: ProjectSaveState;
+  uploadId?: string | null;
+  editorMode?: string;
+  lines: EditorLine[];
+};
+
+/**
+ * Diffs the current editor state against the last server snapshot and returns
+ * only what changed. An empty object means there is nothing to save.
+ */
+export function buildProjectPatch({ prevSnapshot, title, metadata, state, uploadId, editorMode, lines }: BuildProjectPatchArgs): ProjectPatch {
+  const patch: ProjectPatch = {};
   if (!prevSnapshot || prevSnapshot.title !== title) patch.title = title;
   if (!prevSnapshot || !deepEqual(prevSnapshot.metadata, metadata)) patch.metadata = metadata;
   if (uploadId !== undefined && (!prevSnapshot || prevSnapshot.uploadId !== uploadId)) patch.uploadId = uploadId;
@@ -76,7 +152,15 @@ export function buildProjectPatch({ prevSnapshot, title, metadata, state, upload
   return patch;
 }
 
-export function updateServerSnapshot(ref, { title, metadata, state, editorMode, lines, uploadId }) {
+/**
+ * Records what the server now holds, after a successful save. Deep-clones the
+ * values so later in-place edits to the live objects can't retroactively change
+ * the baseline the next diff is taken against.
+ */
+export function updateServerSnapshot(
+  ref: { current: ProjectSnapshot | null },
+  { title, metadata, state, editorMode, lines, uploadId }: Omit<BuildProjectPatchArgs, 'prevSnapshot'>,
+): void {
   const prev = ref.current;
   ref.current = {
     title,
@@ -227,7 +311,13 @@ export function useManualSave({
           // Tags this as an explicit save (heatmap). Added after the emptiness
           // check so it never turns a no-op into a request; the server still
           // decides whether anything actually changed.
-          const manualPatch = { ...patchData, saveKind: 'manual' as const };
+          // `as` is load-bearing here, not laziness: EditorLine is deliberately
+          // permissive (optional `text`, optional `word` on EditorWord, an index
+          // signature) while the generated UpdateProjectInput requires those
+          // fields. The values we send always have them — sanitizeLines and the
+          // editor guarantee it — but the two types don't express that. Tightening
+          // EditorLine/EditorWord to match is the real fix and a separate change.
+          const manualPatch = { ...patchData, saveKind: 'manual' as const } as Parameters<typeof projects.patch>[1];
           try {
             await projects.patch(activepublicIdRef.current, manualPatch);
             updateServerSnapshot(lastServerSnapshotRef, { title: finalTitle, metadata: finalMetadata, state: patchState, editorMode, lines: payload.lines, uploadId: uploadIdToSave ?? undefined });
