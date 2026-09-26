@@ -173,7 +173,7 @@ export function GoogleButton({ onClick, t }: { onClick?: () => void; t: TFunctio
 }
 
 
-export function ContextBanner({ redirect, t }: { redirect?: string; t: TFunction }) {
+export function ContextBanner({ redirect, t, onDismiss }: { redirect?: string; t: TFunction; onDismiss?: () => void }) {
   if (!redirect) return null;
 
   // Decode and clean up the redirect path for display
@@ -214,6 +214,17 @@ export function ContextBanner({ redirect, t }: { redirect?: string; t: TFunction
           {displayPath}
         </p>
       </div>
+      {onDismiss && (
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label={t('auth.context.dismiss')}
+          title={t('auth.context.dismiss')}
+          className="shrink-0 size-6 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/40 transition-colors"
+        >
+          <Icon name="close" size={14} />
+        </button>
+      )}
     </div>
   );
 }

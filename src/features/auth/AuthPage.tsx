@@ -1,5 +1,8 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
-import { LazyMotion, domAnimation, m as M } from 'framer-motion';
+// domMax (not domAnimation) because the sign-in ↔ sign-up side swap uses the
+// `layout` prop, which domAnimation does not include. This route is lazy-loaded,
+// so the extra feature bundle never reaches the editor.
+import { LazyMotion, domMax, m as M } from 'framer-motion';
 import { useSearchParams, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -18,6 +21,14 @@ import { rememberedAccounts } from '@/features/auth/services/remembered-accounts
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
 import { auth } from '@/app/api';
 import SmoothWavyCanvas from '@features/landing/SmoothWavyCanvas';
+import AuthShowcase from './components/AuthShowcase';
+import SavePasswordModal from './SavePasswordModal';
+import {
+  shouldOfferCredentialSave,
+  storePasswordCredential,
+  dismissCredentialPrompt,
+  requestStoredCredential,
+} from '@/features/auth/services/credential-manager.service';
 import type { ComponentProps } from 'react';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import type { RememberedAccount } from '@/features/auth/services/remembered-accounts.service';
@@ -33,6 +44,9 @@ type View =
   | 'login-prompt';
 
 type SavedAccount = ReturnType<typeof rememberedAccounts.getAll>[number];
+
+/** Shared by both panels so they cross at the same rate and never desync. */
+const SIDE_SWAP = { duration: 0.45, ease: [0.16, 1, 0.3, 1] } as const;
 
 interface IdentifierData {
   identifier?: string;
@@ -71,8 +85,43 @@ export default function AuthPage() {
     return 'login-identifier';
   });
 
+  const isRegister = view === 'register';
   const [identifierData, setIdentifierData] = useState<IdentifierData | null>(null);
   const [fromSavedAccount, setFromSavedAccount] = useState(false);
+
+  // Credential offered to the browser's password manager after a successful
+  // password auth. Held in a ref, never in state or storage — it exists only
+  // between "login succeeded" and "user answered the save prompt", and is
+  // wiped the moment either resolves.
+  const pendingCredentialRef = useRef<{ id: string; password: string } | null>(null);
+  const [credentialPrompt, setCredentialPrompt] = useState<{ id: string } | null>(null);
+  // Password the browser handed back for a saved account, used to pre-fill the
+  // password step. Cleared whenever the user leaves that step.
+  const [prefillPassword, setPrefillPassword] = useState<string | undefined>(undefined);
+
+  const clearPendingCredential = useCallback(() => {
+    pendingCredentialRef.current = null;
+    setCredentialPrompt(null);
+  }, []);
+
+  // Wrap the auth calls so the password is captured without changing any child
+  // component's signature — the forms already hand it to us here.
+  const loginCapturing = useCallback(async (creds: { identifier?: string; password: string }) => {
+    const result = await loginAndHold(creds as Parameters<typeof loginAndHold>[0]);
+    if (creds.identifier && creds.password) {
+      pendingCredentialRef.current = { id: creds.identifier, password: creds.password };
+    }
+    return result;
+  }, [loginAndHold]);
+
+  const registerCapturing = useCallback(async (data: { email?: string; accountName?: string; password: string }) => {
+    const result = await registerAndHold(data as Parameters<typeof registerAndHold>[0]);
+    const id = data.email || data.accountName;
+    if (id && data.password) {
+      pendingCredentialRef.current = { id, password: data.password };
+    }
+    return result;
+  }, [registerAndHold]);
 
   // Validate saved accounts against the server on mount. Accounts that no longer
   // exist (deleted/renamed) are removed from storage and state immediately so the
@@ -224,6 +273,7 @@ export default function AuthPage() {
 
   const handleBack = useCallback(() => {
     setIdentifierData(null);
+    setPrefillPassword(undefined);
     if (fromSavedAccount) {
       setFromSavedAccount(false);
       setView('login-saved-account');
@@ -232,7 +282,7 @@ export default function AuthPage() {
     }
   }, [fromSavedAccount]);
 
-  const handleAuthSuccess = useCallback(() => {
+  const finishAuth = useCallback(() => {
     const redirectTo = searchParams.get('redirect');
     // Commit first: user + heldLoginResult update atomically before navigation so
     // ProtectedRoute never sees a null user at the destination.
@@ -249,6 +299,61 @@ export default function AuthPage() {
       navigate('/home', { replace: true });
     }
   }, [commitLogin, searchParams, navigate]);
+
+  /**
+   * Last gate before leaving the auth page. If we captured a password and the
+   * browser can store it, offer that first; otherwise go straight through.
+   * Google and passkey flows never set a pending credential, so they skip it.
+   */
+  const handleAuthSuccess = useCallback(() => {
+    const cred = pendingCredentialRef.current;
+    if (cred && shouldOfferCredentialSave()) {
+      setCredentialPrompt({ id: cred.id });
+      return; // finishAuth runs once the user answers
+    }
+    clearPendingCredential();
+    finishAuth();
+  }, [finishAuth, clearPendingCredential]);
+
+  const handleSaveCredential = useCallback(async () => {
+    const cred = pendingCredentialRef.current;
+    if (cred) {
+      const u = (heldLoginResult as HeldResult)?.user;
+      // Never block the sign-in on this — storePasswordCredential swallows its
+      // own failures and reports false.
+      await storePasswordCredential({
+        id: cred.id,
+        password: cred.password,
+        name: u?.displayName ?? u?.accountName ?? undefined,
+        iconURL: u?.avatarUrl ?? undefined,
+      });
+    }
+    clearPendingCredential();
+    finishAuth();
+  }, [heldLoginResult, clearPendingCredential, finishAuth]);
+
+  const handleSkipCredential = useCallback(() => {
+    clearPendingCredential();
+    finishAuth();
+  }, [clearPendingCredential, finishAuth]);
+
+  const handleNeverAskCredential = useCallback(() => {
+    dismissCredentialPrompt();
+    clearPendingCredential();
+    finishAuth();
+  }, [clearPendingCredential, finishAuth]);
+
+  /**
+   * Drops the "continuing to X" intent. The URL is the source of truth for the
+   * post-auth destination, so removing the param is what actually cancels it —
+   * hiding the banner alone would still redirect on success.
+   */
+  const handleDismissRedirect = useCallback(() => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('redirect');
+    const query = next.toString();
+    navigate(`${location.pathname}${query ? `?${query}` : ''}`, { replace: true });
+  }, [searchParams, navigate, location.pathname]);
 
   // Wraps loginWithGoogle with a hard-redirect fallback: if auth.me() fails after
   // the OAuth popup completes, the server cookies are already set, so we can still
@@ -274,10 +379,19 @@ export default function AuthPage() {
     }
   }, [loginWithGoogle, handleAuthSuccess, searchParams, t]);
 
-  const handleSavedAccountProceed = useCallback((data: IdentifierData) => {
+  const handleSavedAccountProceed = useCallback(async (data: IdentifierData) => {
     setIdentifierData(data);
     setFromSavedAccount(true);
     setView('login-password');
+    // Ask the browser whether it has a password saved for this account and, if
+    // so, pre-fill it. Deliberately stops short of auto-submitting — the user
+    // should see what is about to be sent. Silent failure is fine: they just
+    // type it as before.
+    const cred = await requestStoredCredential();
+    const wanted = data.identifier ?? data.accountName;
+    if (cred && (!wanted || cred.id === wanted)) {
+      setPrefillPassword(cred.password);
+    }
   }, []);
 
   const handleAddAccount = useCallback(() => {
@@ -376,7 +490,7 @@ export default function AuthPage() {
   }, [navigate, searchParams]);
 
   return (
-    <LazyMotion features={domAnimation}>
+    <LazyMotion features={domMax}>
       <div className="size-screen flex relative overflow-hidden font-sans">
       <div className="wavy-canvas-container absolute inset-0">
         <SmoothWavyCanvas />
@@ -387,96 +501,13 @@ export default function AuthPage() {
         <LangSwitcher i18n={i18n} />
       </div>
 
-      {/* ── Left branding panel (hidden on mobile) ─────────────────────── */}
-      <div className="hidden lg:flex flex-col w-[420px] xl:w-[460px] shrink-0 relative p-8 h-screen overflow-hidden">
-        {/* Subtle left-side glow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/4 via-transparent to-accent-purple/3 pointer-events-none" />
-
-        <div className="relative flex-1 flex flex-col justify-between">
-          {/* Top: headline */}
-          <M.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <h2 className="font-heading text-zinc-100 leading-tight contrast-more:text-white"
-                style={{ fontSize: 'clamp(2rem, 3.5vw, 3rem)' }}>
-              {t('auth.tagline')}
-            </h2>
-          </M.div>
-
-          {/* Center: lyric companion */}
-          <M.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.25, ease: 'easeOut' }}
-            className="flex flex-col gap-2"
-          >
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-1">
-              {t('guide.nav.preview')}
-            </p>
-            <div className="rounded-xl border border-zinc-800/50 overflow-hidden bg-zinc-950/50 backdrop-blur-sm">
-              <div className="flex items-center gap-2 px-3 py-2 bg-zinc-900/60 border-b border-zinc-800/40">
-                <div className="flex gap-1">
-                  <div className="size-2 rounded-full bg-zinc-800" />
-                  <div className="size-2 rounded-full bg-zinc-800" />
-                  <div className="size-2 rounded-full bg-zinc-800" />
-                </div>
-                <span className="text-[9px] font-mono text-zinc-500">untitled.lrc</span>
-              </div>
-              <div className="p-2.5 space-y-0.5">
-                {[
-                  { ts: '[00:00.00]', text: 'The stars align above the city', active: false },
-                  { ts: '[00:14.20]', text: 'Midnight echoes through the halls', active: true },
-                  { ts: '[00:28.80]', text: 'She sang a melody that broke', active: false },
-                ].map((line, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs ${
-                      line.active ? 'bg-primary/8 border border-primary/20' : ''
-                    }`}
-                  >
-                    <span className={`font-mono text-[8px] shrink-0 ${line.active ? 'text-primary' : 'text-zinc-800'}`}>
-                      {line.ts}
-                    </span>
-                    <span className={`truncate ${line.active ? 'text-zinc-200' : 'text-zinc-600'}`}>
-                      {line.text}
-                    </span>
-                    {line.active && (
-                      <span className="size-1 rounded-full bg-primary ml-auto shrink-0 animate-pulse" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Waveform */}
-            <div className="px-3 py-2 rounded-xl border border-zinc-800/30 bg-zinc-950/40 backdrop-blur-sm">
-              <div className="flex items-end gap-0.5 h-6">
-                {Array.from({ length: 36 }, (_, i) => (
-                  <div
-                    key={i}
-                    className="flex-1 rounded-full bg-primary/20"
-                    style={{
-                      height: `${20 + 70 * Math.abs(Math.sin(i * 0.5))}%`,
-                      transformOrigin: 'bottom',
-                      animation: `waveBar ${0.8 + (i % 5) * 0.14}s ease-in-out ${i * 0.022}s infinite`,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </M.div>
-
-          {/* Bottom footer */}
-          <p className="text-[9px] text-zinc-800 shrink-0" suppressHydrationWarning>
-            &copy; {new Date().getFullYear()} LRC Studio
-          </p>
-        </div>
-      </div>
-
       {/* ── Right form panel ────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 py-4 h-screen overflow-hidden relative">
+      {/* `m-auto` on the inner column rather than `justify-center` on the
+          scroller: with justify-center, content taller than the viewport gets
+          its top clipped and cannot be scrolled back to. Auto margins centre
+          when there is room and collapse when there isn't. */}
+      <div className="flex-1 flex flex-col px-4 sm:px-8 py-6 h-screen overflow-y-auto scrollbar-thin relative">
+        <div className="m-auto w-full flex flex-col items-center">
 
         {/* Logo above form */}
         <M.div
@@ -499,10 +530,30 @@ export default function AuthPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="w-full max-w-[400px] flex-shrink"
+          className="w-full max-w-[420px] lg:max-w-[980px] flex-shrink"
         >
-          {/* Card */}
-          <div className="bg-zinc-900/80 backdrop-blur-2xl border border-zinc-800/50 contrast-more:border-zinc-600 rounded-2xl shadow-card p-7 sm:p-8 relative overflow-hidden">
+          {/* Card — one column on mobile, showcase + form side by side from lg up */}
+          <div className="bg-zinc-900/80 backdrop-blur-2xl border border-zinc-800/50 contrast-more:border-zinc-600 rounded-2xl shadow-card relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row lg:items-stretch">
+
+              {/* Showcase. `order` flips on register; `layout="position"` FLIPs it
+                  across rather than cutting, and position-only avoids the scale
+                  distortion that plain `layout` would apply to the form's inputs. */}
+              <M.div
+                layout="position"
+                transition={SIDE_SWAP}
+                className={`hidden lg:block lg:w-[46%] shrink-0 p-8 border-zinc-800/50 ${
+                  isRegister ? 'lg:order-2 lg:border-l' : 'lg:order-1 lg:border-r'
+                }`}
+              >
+                <AuthShowcase t={t} variant={isRegister ? 'editor' : 'preview'} />
+              </M.div>
+
+              <M.div
+                layout="position"
+                transition={SIDE_SWAP}
+                className={`flex-1 min-w-0 p-7 sm:p-8 ${isRegister ? 'lg:order-1' : 'lg:order-2'}`}
+              >
 
             {view === 'login-saved-account' && (savedAccounts.length > 0 || !accountsChecked) && (
               <SavedAccountStep
@@ -525,6 +576,7 @@ export default function AuthPage() {
                 onGoogleLogin={() => handleGoogleLogin()}
                 from={searchParams.get('from') || undefined}
                 redirect={redirect}
+                onDismissRedirect={handleDismissRedirect}
               />
             )}
 
@@ -533,10 +585,11 @@ export default function AuthPage() {
                 t={t}
                 identifierData={identifierData}
                 onBack={handleBack}
-                onLogin={loginAndHold}
+                onLogin={loginCapturing}
                 onGoogleLogin={() => handleGoogleLogin(identifierData?.identifier)}
                 onSuccess={handlePasswordSuccess}
                 onSwitchToForgotPassword={() => switchView('forgot-password')}
+                prefillPassword={prefillPassword}
               />
             )}
 
@@ -554,16 +607,19 @@ export default function AuthPage() {
               <SignUpForm
                 t={t}
                 onSwitchToLogin={() => switchView('login-identifier')}
-                onRegister={registerAndHold}
+                onRegister={registerCapturing}
                 onGoogleLogin={() => handleGoogleLogin()}
                 onSuccess={handleRegisterSuccess}
                 redirect={redirect}
+                onDismissRedirect={handleDismissRedirect}
               />
             )}
 
             {view === 'forgot-password' && (
               <ForgotPasswordTab onBackToLogin={() => switchView('login-identifier')} />
             )}
+              </M.div>
+            </div>
           </div>
 
           {/* reCAPTCHA Notice */}
@@ -578,8 +634,26 @@ export default function AuthPage() {
               />
             </p>
           </div>
+
+          {/* Footer — moved here from the removed side panel */}
+          <p className="mt-2 text-center text-[9px] text-zinc-700 shrink-0" suppressHydrationWarning>
+            &copy; {new Date().getFullYear()} {t('app.name')}
+          </p>
         </M.div>
+        </div>
       </div>
+
+      {credentialPrompt && (
+        <SavePasswordModal
+          open
+          identifier={credentialPrompt.id}
+          displayName={(heldLoginResult as HeldResult)?.user?.displayName ?? identifierData?.displayName}
+          avatarUrl={(heldLoginResult as HeldResult)?.user?.avatarUrl ?? identifierData?.avatarUrl}
+          onSave={handleSaveCredential}
+          onSkip={handleSkipCredential}
+          onNeverAsk={handleNeverAskCredential}
+        />
+      )}
     </div>
     </LazyMotion>
   );

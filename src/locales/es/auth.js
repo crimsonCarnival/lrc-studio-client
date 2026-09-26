@@ -132,7 +132,21 @@ export default {
     home: "Inicio",
     settings: "Ajustes",
     changePassword: "Cambiar Contraseña",
-    app: "LRC Studio"
+    app: "LRC Studio",
+    dismiss: "No continuar ahí"
+  },
+  showcase: {
+    previewLabel: "Vista previa en vivo",
+    editorLabel: "En el editor",
+    autoStamp: "Auto-marcar",
+    markKey: "ESPACIO"
+  },
+  savePassword: {
+    title: "¿Guardar tu contraseña?",
+    description: "La guardará el gestor de contraseñas de tu navegador, así iniciar sesión la próxima vez es un solo toque. LRC Studio nunca conserva una copia.",
+    save: "Guardar contraseña",
+    notNow: "Ahora no",
+    never: "No preguntar más"
   },
   message: {
     logout: "Has cerrado sesión correctamente.",

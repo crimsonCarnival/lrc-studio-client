@@ -132,7 +132,21 @@ export default {
     home: "Home",
     settings: "Settings",
     changePassword: "Change Password",
-    app: "LRC Studio"
+    app: "LRC Studio",
+    dismiss: "Don't continue there"
+  },
+  showcase: {
+    previewLabel: "Live preview",
+    editorLabel: "In the editor",
+    autoStamp: "Auto Stamp",
+    markKey: "SPACE"
+  },
+  savePassword: {
+    title: "Save your password?",
+    description: "Your browser's password manager will store it, so signing in next time is one tap. LRC Studio never keeps a copy.",
+    save: "Save password",
+    notNow: "Not now",
+    never: "Never ask"
   },
   message: {
     logout: "You have been signed out successfully.",

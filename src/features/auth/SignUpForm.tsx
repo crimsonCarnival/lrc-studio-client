@@ -96,9 +96,10 @@ interface SignUpFormProps {
   onGoogleLogin: () => void;
   onSuccess?: (result: unknown) => void;
   redirect?: string;
+  onDismissRedirect?: () => void;
 }
 
-export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSuccess, redirect }: SignUpFormProps) {
+export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSuccess, redirect, onDismissRedirect }: SignUpFormProps) {
   const navigate = useNavigate();
   const { trigger: haptic } = useHapticFeedback();
 
@@ -219,7 +220,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
 
   return (
     <div className="animate-fade-in font-sans">
-      <ContextBanner redirect={redirect} t={t} />
+      <ContextBanner redirect={redirect} t={t} onDismiss={onDismissRedirect} />
 
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight font-sans">

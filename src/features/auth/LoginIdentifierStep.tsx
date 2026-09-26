@@ -33,11 +33,12 @@ interface LoginIdentifierStepProps {
   onGoogleLogin: () => void;
   from?: string;
   redirect?: string;
+  onDismissRedirect?: () => void;
 }
 
 // ─── Login Step 1 — Identifier ─────────────────────────────────────────────
 
-export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onGoogleLogin, from, redirect }: LoginIdentifierStepProps) {
+export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onGoogleLogin, from, redirect, onDismissRedirect }: LoginIdentifierStepProps) {
   const navigate = useNavigate();
   const [identifier, setIdentifier] = useState('');
   const [error, setError] = useState('');
@@ -71,7 +72,7 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
   return (
     <div className="animate-fade-in">
       <RedirectMessage from={from} t={t} />
-      <ContextBanner redirect={redirect} t={t} />
+      <ContextBanner redirect={redirect} t={t} onDismiss={onDismissRedirect} />
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight font-sans">
           <Trans

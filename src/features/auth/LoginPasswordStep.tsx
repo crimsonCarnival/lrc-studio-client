@@ -28,12 +28,14 @@ interface LoginPasswordStepProps {
   onGoogleLogin: () => void;
   onSuccess?: (result: unknown) => void;
   onSwitchToForgotPassword: () => void;
+  /** Password handed back by the browser's credential manager, if it had one saved. */
+  prefillPassword?: string;
 }
 
 // ─── Login Step 2 — Password ───────────────────────────────────────────────
 
-export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, onGoogleLogin, onSuccess, onSwitchToForgotPassword }: LoginPasswordStepProps) {
-  const [password, setPassword] = useState('');
+export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, onGoogleLogin, onSuccess, onSwitchToForgotPassword, prefillPassword }: LoginPasswordStepProps) {
+  const [password, setPassword] = useState(prefillPassword ?? '');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -109,6 +111,19 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        {/* Present but not shown: password managers need a username field beside
+            the password one to associate the credential with an account. Without
+            it browsers either skip the save prompt or store an unlabelled entry. */}
+        <input
+          type="text"
+          name="username"
+          autoComplete="username"
+          value={identifierData.identifier ?? identifierData.accountName ?? ''}
+          readOnly
+          tabIndex={-1}
+          aria-hidden="true"
+          className="sr-only"
+        />
         {identifierData.hasPassword !== false && (
           <div className="flex flex-col gap-1.5">
             <div className="relative">
