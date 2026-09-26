@@ -10,6 +10,8 @@ import EditorActionDrawer from './EditorActionDrawer';
 import SelectionActionBar from './SelectionActionBar';
 import TaggingToolbar from './TaggingToolbar';
 import AutoStampModal from './AutoStampModal';
+import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
+import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
 import PlayerControls from '@/features/player/components/PlayerControls';
 import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
 import { Tip } from '@ui/tip';
@@ -193,6 +195,7 @@ export default function Editor({
     fileInputRef,
     handleFileUpload,
     handleUrlImport,
+    handleTextImport,
     shiftTime,
     handleMark,
     handleClearLine,
@@ -295,6 +298,34 @@ export default function Editor({
   });
 
   const [autoStampDismissed, setAutoStampDismissed] = useState(false);
+  const [lyricsSearchOpen, setLyricsSearchOpen] = useState(false);
+
+  /**
+   * Replaces the project's lyrics with a search result. Goes through the shared
+   * import path, so a synced (LRC) result lands with its timestamps intact and
+   * the change is undoable and saved like any other import.
+   */
+  const applyLyricsSearchImport = useCallback(async (text: string, keepTimestamps: boolean) => {
+    const ok = await handleTextImport(keepTimestamps ? text : stripLrcTimestamps(text));
+    if (ok) setLyricsSearchOpen(false);
+  }, [handleTextImport]);
+
+  const handleLyricsSearchImport = useCallback((text: string, keepTimestamps: boolean) => {
+    // Importing REPLACES every line. In the editor (unlike setup) that can throw
+    // away real work, so confirm first whenever there is anything to lose. Undo
+    // still covers it, but silently wiping a synced project is not acceptable.
+    const hasWork = lines.some(l =>
+      l.type !== 'section' && (l.timestamp != null || (typeof l.text === 'string' && l.text.trim() !== '')));
+    if (hasWork) {
+      requestConfirm(
+        t('confirm.replaceLyrics'),
+        () => { void applyLyricsSearchImport(text, keepTimestamps); },
+        { title: t('confirm.replaceLyricsTitle'), variant: 'danger' },
+      );
+      return;
+    }
+    void applyLyricsSearchImport(text, keepTimestamps);
+  }, [lines, requestConfirm, t, applyLyricsSearchImport]);
 
   const handleAutoStampStart = useCallback(() => {
     setAutoStampDismissed(false);
@@ -568,12 +599,15 @@ export default function Editor({
               </Tip>
             )}
 
-            <Tip content={t('lyricsSearch.maintenance')}>
-              <div className="inline-block cursor-not-allowed">
-                <Button variant="ghost" size="icon" disabled className="size-9 rounded-full text-zinc-600">
-                  <Icon name="search" size={18} />
-                </Button>
-              </div>
+            <Tip content={t('lyricsSearch.findLyrics')}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setLyricsSearchOpen(true)}
+                className="size-9 rounded-full text-zinc-400 hover:text-primary hover:bg-primary/10 transition-colors"
+              >
+                <Icon name="search" size={18} />
+              </Button>
             </Tip>
 
             <ActionsDropdown icon="more_horiz">
@@ -784,6 +818,15 @@ export default function Editor({
         handleMoveToSection={handleMoveToSection}
         songArtists={combinedSingers}
       />
+
+      <ResponsiveModal
+        open={lyricsSearchOpen}
+        onOpenChange={setLyricsSearchOpen}
+        title={t('lyricsSearch.findLyrics')}
+        description={t('lyricsSearch.replaceDesc')}
+      >
+        <LyricsSearchBar onImport={handleLyricsSearchImport} />
+      </ResponsiveModal>
 
       {confirmModal}
 

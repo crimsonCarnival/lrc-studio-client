@@ -22,6 +22,29 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
   const fileInputRef = useRef<HTMLInputElement>(null);
   const parseOptions = { preserveEmptyLines: settings?.editor?.preserveEmptyLines ?? false };
 
+  /**
+   * Parse lyrics text and load it into the editor. `filename` only carries the
+   * extension, which is what the server parser uses to pick LRC vs SRT vs TXT.
+   * Returns the parsed line count, or 0 when the text yielded nothing.
+   *
+   * Shared by every import path (file, URL, lyrics search) so they all agree on
+   * editor mode detection, cursor placement and the post-import save trigger.
+   */
+  const applyImportedText = async (text: string, filename: string): Promise<number> => {
+    const { lines: parsed } = await lyrics.parse(text, filename, parseOptions) as { lines: EditorLine[] };
+    if (parsed.length === 0) return 0;
+
+    setLines(parsed);
+    const isSrt = filename.toLowerCase().endsWith('.srt');
+    const hasWords = !isSrt && parsed.some(l => (l.words?.length ?? 0) > 0);
+    setEditorMode(isSrt ? 'srt' : hasWords ? 'words' : 'lrc');
+    // Park the cursor on the first unsynced line so syncing can start immediately.
+    setActiveLineIndex(Math.max(0, parsed.findIndex((l) => l.timestamp == null)));
+    setSyncMode(true);
+    onImport?.();
+    return parsed.length;
+  };
+
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -41,18 +64,9 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
-        const { lines: parsed } = await lyrics.parse(evt.target?.result as string, file.name, parseOptions) as { lines: EditorLine[] };
-        if (parsed.length > 0) {
-          setLines(parsed);
-          {
-            const isSrt = file.name.toLowerCase().endsWith('.srt');
-            const hasWords = !isSrt && parsed.some(l => (l.words?.length ?? 0) > 0);
-            setEditorMode(isSrt ? 'srt' : hasWords ? 'words' : 'lrc');
-          }
-          setActiveLineIndex(Math.max(0, parsed.findIndex((l) => l.timestamp == null)));
-          setSyncMode(true);
-          toast.success(tk('import.success', { count: parsed.length }));
-          onImport?.();
+        const count = await applyImportedText(evt.target?.result as string, file.name);
+        if (count > 0) {
+          toast.success(tk('import.success', { count }));
         } else {
           toast.error(t('import.noLines'));
         }
@@ -78,25 +92,37 @@ export function useFileImport({ setLines, setEditorMode, setActiveLineIndex, set
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const text = await resp.text();
       const filename = parsedUrl.pathname.split('/').pop() || 'lyrics.lrc';
-      const { lines: parsed } = await lyrics.parse(text, filename, parseOptions) as { lines: EditorLine[] };
-      if (parsed.length === 0) {
+      const count = await applyImportedText(text, filename);
+      if (count === 0) {
         return { error: t('import.noLines') };
       }
-      setLines(parsed);
-      {
-        const isSrt = filename.toLowerCase().endsWith('.srt');
-        const hasWords = !isSrt && parsed.some(l => (l.words?.length ?? 0) > 0);
-        setEditorMode(isSrt ? 'srt' : hasWords ? 'words' : 'lrc');
-      }
-      setActiveLineIndex(Math.max(0, parsed.findIndex((l) => l.timestamp == null)));
-      setSyncMode(true);
-      toast.success(tk('import.success', { count: parsed.length }));
-      onImport?.();
+      toast.success(tk('import.success', { count }));
       return { success: true };
     } catch {
       return { error: t('import.fetchError') };
     }
   };
 
-  return { handleFileUpload, handleUrlImport, fileInputRef };
+  /**
+   * Import lyrics text that is already in hand (the lyrics search). Treated as
+   * LRC so timestamps survive when the provider returned synced lyrics; plain
+   * text parses fine under the same parser.
+   */
+  const handleTextImport = async (text: string): Promise<boolean> => {
+    try {
+      const count = await applyImportedText(text, 'lyrics.lrc');
+      if (count === 0) {
+        toast.error(t('import.noLines'));
+        return false;
+      }
+      toast.success(tk('import.success', { count }));
+      return true;
+    } catch (err) {
+      console.error('Failed to parse imported lyrics', err);
+      toast.error(t('import.failed'));
+      return false;
+    }
+  };
+
+  return { handleFileUpload, handleUrlImport, handleTextImport, fileInputRef };
 }

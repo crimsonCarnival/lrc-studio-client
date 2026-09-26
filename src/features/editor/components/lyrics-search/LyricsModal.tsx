@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@ui/button';
 import { Checkbox } from '@ui/checkbox';
 import { Icon } from '@/shared/ui/Icon';
+import type { LyricsProvider } from '@features/editor/services/lyrics-search.service';
 
 interface LyricsModalProps {
   song?: { title: string; artist: string } | null;
@@ -14,9 +15,19 @@ interface LyricsModalProps {
   keepTimestamps?: boolean;
   onKeepTimestampsChange?: (checked: boolean | 'indeterminate') => void;
   showKeepTimestamps?: boolean;
+  /** True when `lyrics` is LRC rather than plain text. */
+  synced?: boolean;
+  /** Which provider answered — shown as attribution. */
+  provider?: LyricsProvider;
 }
 
-export default function LyricsModal({ song, lyrics, isLoading, error, onConfirm, onClose, keepTimestamps, onKeepTimestampsChange, showKeepTimestamps = true }: LyricsModalProps) {
+const PROVIDER_LABEL: Record<LyricsProvider, string> = {
+  lrclib: 'LRCLIB',
+  lyricfind: 'LyricFind',
+  lyricsovh: 'lyrics.ovh',
+};
+
+export default function LyricsModal({ song, lyrics, isLoading, error, onConfirm, onClose, keepTimestamps, onKeepTimestampsChange, showKeepTimestamps = true, synced, provider }: LyricsModalProps) {
   const { t } = useTranslation();
 
   return (
@@ -30,6 +41,16 @@ export default function LyricsModal({ song, lyrics, isLoading, error, onConfirm,
             {song ? `${song.title} — ${song.artist}` : t('lyricsSearch.previewDesc')}
           </DialogDescription>
         </DialogHeader>
+
+        {synced && !isLoading && !error && (
+          <div className="flex items-start gap-2 mt-3 px-3 py-2 rounded-lg bg-primary/10 border border-primary/25">
+            <Icon name="schedule" size={16} className="text-primary mt-0.5 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-primary">{t('lyricsSearch.syncedTitle')}</p>
+              <p className="text-[11px] text-zinc-400 leading-snug">{t('lyricsSearch.syncedDesc')}</p>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto min-h-0 my-4">
           {isLoading && (
@@ -49,6 +70,12 @@ export default function LyricsModal({ song, lyrics, isLoading, error, onConfirm,
             </pre>
           )}
         </div>
+
+        {provider && lyrics && !isLoading && (
+          <p className="text-[10px] text-zinc-500 pb-2">
+            {t('lyricsSearch.providedBy', { provider: PROVIDER_LABEL[provider] ?? provider })}
+          </p>
+        )}
 
         <div className="flex items-center justify-between gap-2 pt-2 border-t border-zinc-800">
           {showKeepTimestamps ? (

@@ -16,6 +16,8 @@ export default {
   bulkDeleteTitle: "Delete Lines",
   removeAll: "Remove all lyrics?",
   removeAllTitle: "Remove All Lyrics",
+  replaceLyrics: "This replaces every line in the project, including any timestamps you have already synced. You can undo it afterwards.",
+  replaceLyricsTitle: "Replace Lyrics",
   removeMedia: "Remove the currently loaded media?",
   removeMediaTitle: "Remove Media",
   deleteProject: "Delete \"{{title}}\"? This cannot be undone.",

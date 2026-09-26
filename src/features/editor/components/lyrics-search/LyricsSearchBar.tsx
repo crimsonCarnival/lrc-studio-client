@@ -5,24 +5,22 @@ import { Input } from '@ui/input';
 import { Icon } from '@/shared/ui/Icon';
 import toast from 'react-hot-toast';
 import { lyricsSearch } from '@features/editor/services/lyrics-search.service';
+import type { LyricsSearchHit, LyricsExtractResult } from '@features/editor/services/lyrics-search.service';
 import LyricsResultCard from './LyricsResultCard';
 import LyricsModal from './LyricsModal';
 import { useSettings } from '@/features/settings/useSettings';
 
-interface SongResult {
-  id: string;
-  title: string;
-  artist: string;
-  [key: string]: unknown;
-}
+type SongResult = LyricsSearchHit;
 
 interface LyricsSearchBarProps {
   onImport: (lyricsText: string, keepTimestamps: boolean) => void;
   autoSearch?: { q?: string } | null;
   showKeepTimestamps?: boolean;
+  /** Loaded media length in seconds. Sent to the server to disambiguate covers/remasters/live cuts. */
+  mediaDuration?: number | null;
 }
 
-export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestamps }: LyricsSearchBarProps) {
+export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestamps, mediaDuration }: LyricsSearchBarProps) {
   const { t } = useTranslation();
   const { settings } = useSettings();
   const [query, setQuery] = useState('');
@@ -30,6 +28,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
   const [isSearching, setIsSearching] = useState(false);
   const [selectedSong, setSelectedSong] = useState<SongResult | null>(null);
   const [lyrics, setLyrics] = useState<string | null>(null);
+  const [extracted, setExtracted] = useState<LyricsExtractResult | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
   const [keepTimestamps, setKeepTimestamps] = useState(false);
@@ -40,7 +39,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setIsSearching(true);
     try {
-      const data = await lyricsSearch.search(term.trim()) as { results: SongResult[] };
+      const data = await lyricsSearch.search(term.trim());
       setResults(data.results);
     } catch (e) {
       const err = e as { status?: number };
@@ -81,12 +80,23 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
   const handleSelectSong = useCallback(async (song: SongResult) => {
     setSelectedSong(song);
     setLyrics(null);
+    setExtracted(null);
     setExtractError(null);
     setIsExtracting(true);
 
     try {
-      const data = await lyricsSearch.extract(song.title, song.artist) as { lyrics: string };
+      const data = await lyricsSearch.extract(song.title, song.artist, {
+        id: song.id,
+        album: song.album,
+        // The hit's own duration is the better signal when present (it describes
+        // the specific recording); fall back to whatever media is loaded.
+        duration: song.duration ?? mediaDuration,
+      });
       setLyrics(data.lyrics);
+      setExtracted(data);
+      // Timed lyrics arrived — keeping them is the only sensible default. The
+      // user can still untick to import as plain text.
+      if (data.synced) setKeepTimestamps(true);
     } catch (e) {
       const err = e as { status?: number };
       if (err.status === 429) {
@@ -99,12 +109,13 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
     } finally {
       setIsExtracting(false);
     }
-  }, [t]);
+  }, [t, mediaDuration]);
 
   const handleConfirm = useCallback((lyricsText: string) => {
     onImport(lyricsText, keepTimestamps);
     setSelectedSong(null);
     setLyrics(null);
+    setExtracted(null);
     setQuery('');
     setResults(null);
     setKeepTimestamps(false);
@@ -113,6 +124,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
   const handleCloseModal = useCallback(() => {
     setSelectedSong(null);
     setLyrics(null);
+    setExtracted(null);
     setExtractError(null);
     setKeepTimestamps(false);
   }, []);
@@ -140,11 +152,12 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
             <p className="text-xs text-zinc-500 text-center py-4">{t('lyricsSearch.noResults')}</p>
           ) : (
             results.map((song) => (
+              // No per-card loading state: this list unmounts as soon as a song
+              // is picked, and LyricsModal opens straight into its own spinner.
               <LyricsResultCard
                 key={song.id}
                 song={song}
                 onClick={(s) => handleSelectSong(s as SongResult)}
-                isLoading={isExtracting && (selectedSong as SongResult | null)?.id === song.id}
               />
             ))
           )}
@@ -157,6 +170,8 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
           lyrics={lyrics}
           isLoading={isExtracting}
           error={extractError}
+          synced={extracted?.synced}
+          provider={extracted?.provider}
           onConfirm={handleConfirm}
           onClose={handleCloseModal}
           keepTimestamps={keepTimestamps}

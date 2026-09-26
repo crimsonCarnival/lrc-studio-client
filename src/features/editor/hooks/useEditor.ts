@@ -93,7 +93,7 @@ export function useEditor({
 
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  const { handleFileUpload, handleUrlImport, fileInputRef } = useFileImport({
+  const { handleFileUpload, handleUrlImport, handleTextImport, fileInputRef } = useFileImport({
     setLines, setEditorMode, setActiveLineIndex, setSyncMode, onImport, settings,
   });
 
@@ -1521,6 +1521,7 @@ export function useEditor({
     handleConfirmLyrics,
     handleFileUpload,
     handleUrlImport,
+    handleTextImport,
     shiftTime,
     handleMark,
     handleClearLine,

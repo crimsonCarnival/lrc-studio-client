@@ -27,6 +27,7 @@ import MediaLibrary from './MediaLibrary';
 import SingersInput from './SingersInput';
 import RawLyricsSyntaxBar from './RawLyricsSyntaxBar';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
+import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 
 const MAX_IMPORT_FILE_SIZE = 2 * 1024 * 1024;
@@ -378,6 +379,37 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
       setLyricsState({ parsedLines: lines, fileName: file.name, editorMode: ext === 'srt' ? 'srt' : 'lrc', text: '' });
     } catch { toast.error(t('import.failed')); }
   };
+
+  /**
+   * Import from the lyrics search. When the provider returned synced LRC and the
+   * user kept the timestamps, parse it straight into lines — that skips manual
+   * syncing entirely. Otherwise drop plain text into the textarea so they can
+   * still edit before syncing.
+   */
+  const handleLyricsSearchImport = useCallback(async (text: string, keepTimestamps: boolean) => {
+    if (keepTimestamps) {
+      try {
+        const { lines } = await lyricsApi.parse(text, 'lyrics.lrc') as { lines: EditorLine[] };
+        if (lines.length > 0) {
+          setLyricsState({ parsedLines: lines, fileName: '', editorMode: 'lrc', text: '' });
+          toast.success(t('lyricsSearch.importedSynced', { count: lines.length }));
+          return;
+        }
+      } catch {
+        // Not parseable as LRC after all — fall through and import as plain text
+        // rather than failing the import outright.
+      }
+    }
+    setLyricsState({ parsedLines: null, fileName: '', text: stripLrcTimestamps(text) });
+  }, [setLyricsState, t]);
+
+  // Seed the search box from the metadata the user already filled in, so opening
+  // the tab shows results instead of an empty field. Memoised: LyricsSearchBar
+  // re-runs its search whenever this object's identity changes.
+  const lyricsAutoSearch = useMemo(() => {
+    const q = [songName, songArtist].filter(Boolean).join(' ').trim();
+    return q ? { q } : null;
+  }, [songName, songArtist]);
 
   // ── Metadata handlers ──
 
@@ -924,10 +956,11 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     )}
 
                     {lyricsTab === 'search' && (
-                      <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto scrollbar-thin items-center justify-center text-center p-6 text-zinc-400">
-                        <Icon name="build" size={48} className="mb-4 text-zinc-600" />
-                        <h3 className="text-zinc-200 font-semibold mb-2">{t('lyricsSearch.maintenanceTitle')}</h3>
-                        <p className="text-sm max-w-sm">{t('lyricsSearch.maintenanceDesc')}</p>
+                      <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto scrollbar-thin">
+                        <LyricsSearchBar
+                          onImport={handleLyricsSearchImport}
+                          autoSearch={lyricsAutoSearch}
+                        />
                       </div>
                     )}
                   </div>

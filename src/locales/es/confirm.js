@@ -16,6 +16,8 @@ export default {
   bulkDeleteTitle: "Eliminar líneas",
   removeAll: "¿Eliminar todas las letras?",
   removeAllTitle: "Eliminar todas las letras",
+  replaceLyrics: "Esto reemplaza todas las líneas del proyecto, incluidas las marcas de tiempo que ya hayas sincronizado. Puedes deshacerlo después.",
+  replaceLyricsTitle: "Reemplazar la letra",
   removeMedia: "¿Eliminar el contenido multimedia cargado?",
   removeMediaTitle: "Eliminar contenido",
   deleteProject: "¿Eliminar \"{{title}}\"? No se puede deshacer.",
