@@ -24,6 +24,7 @@ import AdminRequestsTab from './AdminRequestsTab';
 import AdminPermissionsTab from './AdminPermissionsTab';
 import { requestsApi } from './services/requests.service';
 import SudoPasswordModal from './SudoPasswordModal';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface AdminUser {
   id?: string;
@@ -467,7 +468,7 @@ export default function AdminDashboard() {
       {/* Refresh — the page title now lives in the app header */}
       <div className="flex items-center justify-end mb-4">
         <Button variant="ghost" size="icon" onClick={() => fetchData(true)} className="h-9 w-9 shrink-0">
-          <Icon name="refresh" size={16} className={`text-zinc-500 ${loading ? 'animate-spin' : ''}`} />
+          {loading ? <LogoLoader size={16} /> : <Icon name="refresh" size={16} className="text-zinc-500" />}
         </Button>
       </div>
 

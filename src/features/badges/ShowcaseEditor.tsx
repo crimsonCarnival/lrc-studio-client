@@ -5,6 +5,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
 import { BADGE_REGISTRY, RARITY_CONFIG, BADGE_COLORS } from './badge-registry';
 import { useBadgeDefs } from './BadgeDefsContext';
+import { LogoLoader } from '@ui/LogoLoader';
 
 const UPDATE_SHOWCASE = /* GraphQL */ `
   mutation UpdateShowcase($badgeIds: [String!]!, $showcasePublic: Boolean) {
@@ -326,7 +327,7 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
           className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-primary text-zinc-950 text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors"
         >
           {saving && (
-            <span className="size-3.5 rounded-full border-2 border-zinc-950 border-t-transparent animate-spin" />
+            <LogoLoader size={14} />
           )}
           {t('badges.showcase.save')}
         </button>

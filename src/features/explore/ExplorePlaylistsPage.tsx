@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { usePaginatedPlaylists } from './hooks/useExplore';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface ExplorePlaylist {
   id: string;
@@ -27,7 +28,7 @@ export default function ExplorePlaylistsPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Icon name="autorenew" size={32} className="animate-spin text-primary" />
+        <LogoLoader size={32} className="text-primary" />
       </div>
     );
   }
@@ -93,7 +94,7 @@ export default function ExplorePlaylistsPage() {
               className="mt-2 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loadingMore
-                ? <Icon name="autorenew" size={16} className="animate-spin" />
+                ? <LogoLoader size={16} />
                 : t('explore.page.loadMore')}
             </button>
           ) : (

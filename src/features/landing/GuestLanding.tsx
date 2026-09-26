@@ -8,6 +8,7 @@ import { Button } from '@ui/button';
 import SmoothWavyCanvas from './SmoothWavyCanvas';
 import { LangSwitcher } from '@/features/auth/auth-shared';
 import { LazyImage } from '@ui/LazyImage';
+import { LOGO_URL } from '@/shared/constants/brand';
 
 const LYRIC_LINES = [
   { ts: '[00:00.00]', text: 'The stars align above the city lights', active: false },
@@ -57,7 +58,7 @@ export default function GuestLanding() {
           >
             <div className="size-7">
               <LazyImage
-                src="https://res.cloudinary.com/dzjid2tos/image/upload/w_256,f_auto,q_auto/v1778106770/lrc-logo_dkumwz.png"
+                src={LOGO_URL}
                 alt="LRC Studio"
                 className="size-full object-contain"
               />

@@ -31,6 +31,7 @@ import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger 
 // import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
 import { useNavigate } from 'react-router-dom';
+import { LogoLoader } from '@ui/LogoLoader';
 
 const EMPTY_ARTISTS: string[] = [];
 
@@ -515,7 +516,7 @@ export default function Editor({
                     disabled={isSaving}
                     className={`size-8 rounded-full transition-colors ${isSaving ? 'text-zinc-400' : isAutosaving ? 'text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'}`}
                   >
-                    {isSaving ? <Icon name="autorenew" size={16} className="animate-spin" /> : isAutosaving ? <Icon name="check" size={16} /> : <Icon name="save" size={16} />}
+                    {isSaving ? <LogoLoader size={16} /> : isAutosaving ? <Icon name="check" size={16} /> : <Icon name="save" size={16} />}
                   </Button>
                 </Tip>
               )}

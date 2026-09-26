@@ -7,6 +7,7 @@ import { Button } from '@ui/button';
 import PasteSelectionToolbar from './PasteSelectionToolbar';
 import RawLyricsSyntaxBar from './RawLyricsSyntaxBar';
 import { getCaretCoords } from '../../utils/textarea-caret';
+import { LogoLoader } from '@ui/LogoLoader';
 
 type Selection = { start: number; end: number };
 type PillPos = { x: number; y: number; below: boolean };
@@ -159,10 +160,7 @@ export default function EditorPasteArea({
                 className="py-2 bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:border-zinc-600 text-zinc-300 rounded-lg h-auto text-xs px-2.5 flex-shrink-0"
               >
               {urlFetching ? (
-                <svg className="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
+                <LogoLoader size={16} />
               ) : (
                 <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />

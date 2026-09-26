@@ -4,6 +4,7 @@ import { Button } from '@ui/button';
 import { Checkbox } from '@ui/checkbox';
 import { Icon } from '@/shared/ui/Icon';
 import type { LyricsProvider } from '@features/editor/services/lyrics-search.service';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface LyricsModalProps {
   song?: { title: string; artist: string } | null;
@@ -55,7 +56,7 @@ export default function LyricsModal({ song, lyrics, isLoading, error, onConfirm,
         <div className="flex-1 overflow-y-auto min-h-0 my-4">
           {isLoading && (
             <div className="flex items-center justify-center py-12 gap-2 text-zinc-400">
-              <Icon name="autorenew" size={16} className="animate-spin" />
+              <LogoLoader size={16} />
               <span className="text-sm">{t('lyricsSearch.extracting')}</span>
             </div>
           )}

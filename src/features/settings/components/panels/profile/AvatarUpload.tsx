@@ -9,6 +9,7 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { authService } from '@/features/auth/services/auth.service';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { LogoLoader } from '@ui/LogoLoader';
 
 export default function AvatarUpload() {
   const { t } = useTranslation();
@@ -94,7 +95,7 @@ export default function AvatarUpload() {
           aria-label={t('profile.changeAvatar')}
         >
           {uploading ? (
-            <Icon name="autorenew" size={24} className="animate-spin text-primary" />
+            <LogoLoader size={24} className="text-primary" />
           ) : user?.avatarUrl && user.avatarUrl.length > 0 ? (
             <LazyImage src={user.avatarUrl} alt={t('profile.avatarAlt')} className="size-full object-cover" />
           ) : (
@@ -139,7 +140,7 @@ export default function AvatarUpload() {
                     disabled={uploading || !urlValue.trim().startsWith('http')}
                     className="rounded-xl h-8 text-[11px] font-bold"
                   >
-                    {uploading ? <Icon name="autorenew" size={14} className="animate-spin" /> : t('common.apply')}
+                    {uploading ? <LogoLoader size={14} /> : t('common.apply')}
                   </Button>
                   <Button
                     size="sm"

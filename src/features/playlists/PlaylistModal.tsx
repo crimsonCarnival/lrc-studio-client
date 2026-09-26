@@ -10,6 +10,7 @@ import { createPlaylist, updatePlaylist, addProjectToPlaylist, removeProjectFrom
 import { gqlRequest } from '@/app/graphql.client';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
+import { LogoLoader } from '@ui/LogoLoader';
 
 const GET_MY_PROJECTS = /* GraphQL */ `
   query GetMyProjects {
@@ -253,7 +254,7 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
                     className="shrink-0 size-9 flex items-center justify-center rounded-lg border border-border bg-zinc-800/50 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors disabled:opacity-50"
                   >
                     {imageUploading ? (
-                      <Icon name="autorenew" size={16} className="animate-spin" />
+                      <LogoLoader size={16} />
                     ) : (
                       <Icon name="upload" size={16} />
                     )}

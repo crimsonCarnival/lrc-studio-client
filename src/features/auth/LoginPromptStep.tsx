@@ -6,6 +6,7 @@ import { Button } from '@ui/button';
 import { AvatarBadge } from './auth-shared';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { toast } from 'react-hot-toast';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface IdentifierData {
   displayName?: string;
@@ -78,7 +79,7 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
           disabled={loading}
           className="h-11 w-full bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-sm rounded-xl gap-2"
         >
-          {loading ? <Icon name="autorenew" size={16} className="animate-spin" /> : <Icon name="fingerprint" size={16} />}
+          {loading ? <LogoLoader size={16} /> : <Icon name="fingerprint" size={16} />}
           {t('auth.savedAccount.createPasskey')}
         </Button>
         <Button

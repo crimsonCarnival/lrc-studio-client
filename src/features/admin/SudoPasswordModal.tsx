@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
 } from '@ui/alert-dialog';
 import { onSudoPrompt, submitSudoPassword, submitSudoPasskey, cancelSudo, getSudoFactors } from './services/sudo';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface SudoFactors {
   hasPassword: boolean;
@@ -134,7 +135,7 @@ export default function SudoPasswordModal() {
                 disabled={!password || submitting}
                 className="w-full py-2.5 font-semibold text-sm rounded-xl transition-all bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {submitting && <Icon name="autorenew" size={16} className="animate-spin" />}
+                {submitting && <LogoLoader size={16} />}
                 {t('admin.sudo.confirm')}
               </button>
             </form>

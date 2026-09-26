@@ -9,6 +9,7 @@ import { FloatingInput } from '@ui/floating-input';
 import { auth } from '@/app/api';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import { useAuthContext } from '@/features/auth/AuthContext';
+import { LogoLoader } from '@ui/LogoLoader';
 
 const identifierSchema = z.string()
   .min(3, 'auth.validation.accountNamePattern')
@@ -170,7 +171,7 @@ export default function SetAccountNameModal() {
                   className="sm:w-2/3 h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-medium"
                 >
                   {loading ? (
-                    <Icon name="autorenew" size={16} className="animate-spin" />
+                    <LogoLoader size={16} />
                   ) : (
                     <>
                       {t('auth.setAccountName.saveUsername')}

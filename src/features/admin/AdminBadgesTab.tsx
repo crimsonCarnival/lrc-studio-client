@@ -9,6 +9,7 @@ import { gqlRequest } from '@/app/graphql.client';
 import { BadgeChip } from '@/features/badges/BadgeChip';
 import { BADGE_COLORS } from '@/features/badges/badge-registry';
 import { requestsApi } from './services/requests.service';
+import { LogoLoader } from '@ui/LogoLoader';
 
 // Typed i18next rejects arbitrary string keys / object interpolation values.
 type TkFn = (k: string, o?: Record<string, unknown>) => string;
@@ -434,7 +435,7 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
               disabled={saving}
               className="flex-1 px-4 py-2 rounded-lg bg-primary text-zinc-950 text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
-              {saving && <span className="size-3.5 rounded-full border-2 border-zinc-950 border-t-transparent animate-spin" />}
+              {saving && <LogoLoader size={14} />}
               {editing ? t('admin.badges.update') : t('admin.badges.create')}
             </button>
           </div>
@@ -541,7 +542,7 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
             className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-zinc-800 hover:bg-primary/20 text-zinc-400 hover:text-primary transition-all border border-zinc-700/50 disabled:opacity-50"
           >
             {retroLoading === def.id ? (
-              <span className="size-3 rounded-full border border-primary border-t-transparent animate-spin" />
+              <LogoLoader size={12} />
             ) : (
               <Icon name="qr_code_scanner" size={12} />
             )}
@@ -718,7 +719,7 @@ export default function AdminBadgesTab({ proposeMode = false }: { proposeMode?: 
           onClick={fetchDefs}
           className="size-8 rounded-xl border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-all"
         >
-          <Icon name="refresh" size={14} className={loading ? 'animate-spin' : ''} />
+          {loading ? <LogoLoader size={14} /> : <Icon name="refresh" size={14} />}
         </button>
         <button
           type="button"
@@ -746,7 +747,7 @@ export default function AdminBadgesTab({ proposeMode = false }: { proposeMode?: 
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <LogoLoader size={32} />
         </div>
       ) : (
         <div className="flex flex-col gap-6">
