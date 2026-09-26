@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
-import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface SyncLine {
   id?: string | number;
@@ -56,11 +56,7 @@ export default function SyncModeTab({
     <div className="flex flex-col h-full gap-4 p-4">
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center min-h-44">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-            className="size-8 border-2 border-primary/30 border-t-primary rounded-full"
-          />
+          <LogoLoader size={32} />
         </div>
       ) : (
         <>

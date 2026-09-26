@@ -8,6 +8,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { requestsApi, type StaffRequest } from './services/requests.service';
 import { isSudoCancelled, withSudo } from './services/sudo';
 import { getSocket } from '@/app/socket.client';
+import { LogoLoader } from '@ui/LogoLoader';
 
 // Request types the inline composer can build (simple payloads). Other types
 // (badges/levels) are submitted from their own tabs.
@@ -220,7 +221,7 @@ export default function AdminRequestsTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <LogoLoader size={32} />
       </div>
     );
   }

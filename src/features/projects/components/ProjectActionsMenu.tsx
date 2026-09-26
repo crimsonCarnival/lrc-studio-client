@@ -8,6 +8,7 @@ import { Button } from '@ui/button';
 import { compileLRC as localCompileLRC, compileSRT as localCompileSRT } from '@/shared/utils/lrc';
 import { getPlaylists, addProjectToPlaylist, createPlaylist } from '@features/playlists/playlist.service';
 import { projectsService } from '@features/projects/services/projects.service';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface Playlist {
   id: string;
@@ -138,7 +139,7 @@ function AddToListMenu({ user, project, t }: { user: User; project: Project; t: 
         <div className="ml-3 pl-2.5 border-l border-zinc-700/50 mt-0.5 mb-0.5">
           {loading && (
             <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-zinc-500">
-              <Icon name="autorenew" size={12} className="animate-spin" />
+              <LogoLoader size={12} />
               {t('projectView.actions.loadingLists')}
             </div>
           )}

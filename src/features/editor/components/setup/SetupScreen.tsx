@@ -29,6 +29,7 @@ import RawLyricsSyntaxBar from './RawLyricsSyntaxBar';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
 import type { EditorLine } from '@/features/editor/services/editor.service';
+import { LogoLoader } from '@ui/LogoLoader';
 
 const MAX_IMPORT_FILE_SIZE = 2 * 1024 * 1024;
 
@@ -564,7 +565,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     disabled={metaSearching || !songName.trim() || !songArtist.trim()}
                     className="gap-1.5 font-semibold"
                   >
-                    <Icon name={metaSearching ? 'autorenew' : 'search'} size={14} className={metaSearching ? 'animate-spin' : undefined} />
+                    {metaSearching ? <LogoLoader size={14} /> : <Icon name="search" size={14} />}
                     {t('setup.fetchInfo')}
                   </Button>
                 </span>
@@ -682,7 +683,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-zinc-700/50 bg-transparent text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
               >
                 {imageUploading ? (
-                  <Icon name="autorenew" size={16} className="animate-spin" />
+                  <LogoLoader size={16} />
                 ) : (
                   <Icon name="upload" size={16} />
                 )}
@@ -764,7 +765,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
                 {!audioReady && ytCheck.state === 'checking' && (
                   <div role="status" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-zinc-900/60 border border-zinc-800/60 text-xs text-zinc-300 shrink-0">
-                    <Icon name="autorenew" size={14} className="animate-spin text-primary shrink-0" />
+                    <LogoLoader size={14} className="text-primary shrink-0" />
                     {t('setup.ytChecking')}
                   </div>
                 )}
@@ -854,7 +855,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                             disabled={!ytUrl.trim() || ytLoading}
                             className={`h-11 px-4 text-zinc-950 font-bold text-xs rounded-xl shrink-0 ${detectedUrlType === 'cdn' ? 'bg-blue-500 hover:bg-blue-400' : 'bg-primary hover:bg-primary-dim'}`}
                           >
-                            {ytLoading ? <Icon name="autorenew" size={16} className="animate-spin" /> : t('player.load')}
+                            {ytLoading ? <LogoLoader size={16} /> : t('player.load')}
                           </Button>
                         </div>
 

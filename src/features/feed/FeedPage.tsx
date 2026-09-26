@@ -6,6 +6,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { useFeed } from './hooks/useFeed';
 import { ActivityCard } from './components/ActivityCard';
+import { LogoLoader } from '@ui/LogoLoader';
 
 // Stable pick per page load — empty state variants shouldn't flip on re-render
 function pickRandom(arr: unknown): string {
@@ -67,7 +68,7 @@ export default function FeedPage() {
               className="mt-2 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loadingMore
-                ? <Icon name="autorenew" size={16} className="animate-spin" />
+                ? <LogoLoader size={16} />
                 : t('feed.loadMore')}
             </button>
           )}

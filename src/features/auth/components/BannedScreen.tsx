@@ -9,6 +9,7 @@ import { Icon } from '@/shared/ui/Icon';
 import toast from 'react-hot-toast';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
+import { LogoLoader } from '@ui/LogoLoader';
 
 function Countdown({ targetDate, onExpire }: { targetDate: string; onExpire: () => void }) {
   const { t } = useTranslation();
@@ -86,7 +87,7 @@ export default function BannedScreen() {
         <h2 className="text-2xl font-semibold text-zinc-100 mb-2">{t('admin.banned.expiredTitle')}</h2>
         <p className="text-zinc-400 text-sm mb-6">{t('admin.banned.expiredDesc')}</p>
         <div className="flex items-center justify-center gap-2 text-emerald-500 text-sm">
-          <Icon name="refresh" size={16} className="animate-spin" /> Redirecting to login in 5 seconds...
+          <LogoLoader size={16} /> Redirecting to login in 5 seconds...
         </div>
       </div>
     );
@@ -208,7 +209,7 @@ export default function BannedScreen() {
             >
               {loading ? (
                 <div className="flex items-center gap-2">
-                  <Icon name="refresh" size={16} className="animate-spin" /> {t('admin.banned.submitting')}
+                  <LogoLoader size={16} /> {t('admin.banned.submitting')}
                 </div>
               ) : (
                 <span className="flex items-center justify-center gap-2">

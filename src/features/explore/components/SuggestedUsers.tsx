@@ -6,6 +6,7 @@ import { useSuggestedUsers } from '../hooks/useExplore';
 import { followUser, unfollowUser } from '@/features/profile/profile.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { UserHoverCard } from '@ui/UserHoverCard';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface SuggestedUser {
   id: string;
@@ -51,7 +52,7 @@ export function SuggestedUsers({ limit = 8 }: { limit?: number }) {
 
       {loading ? (
         <div className="flex justify-center py-10">
-          <Icon name="autorenew" size={24} className="animate-spin text-zinc-500" />
+          <LogoLoader size={24} className="text-zinc-500" />
         </div>
       ) : error || users.length === 0 ? (
         <p className="text-sm text-zinc-500 text-center py-10">

@@ -8,6 +8,7 @@ import { Tip } from '@ui/tip';
 import { useTranslation } from 'react-i18next';
 import useConfirm from '@/shared/hooks/useConfirm';
 import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
+import { LogoLoader } from '@ui/LogoLoader';
 
 const SWIPE_THRESHOLD = 60;
 
@@ -270,7 +271,7 @@ function ProjectCard({
               className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10 size-7"
             >
               {isDeleting
-                ? <Icon name="autorenew" size={14} className="animate-spin" />
+                ? <LogoLoader size={14} />
                 : <Icon name="delete" size={14} />}
             </Button>
           </div>
@@ -334,7 +335,7 @@ function ProjectCard({
                 </Button>
               </Tip>
               <Button variant="ghost" size="icon" onClick={handleDelete} disabled={isDeleting} className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10 size-6 bg-zinc-900/80 backdrop-blur">
-                {isDeleting ? <Icon name="autorenew" size={12} className="animate-spin" /> : <Icon name="delete" size={12} />}
+                {isDeleting ? <LogoLoader size={12} /> : <Icon name="delete" size={12} />}
               </Button>
             </div>
           </div>

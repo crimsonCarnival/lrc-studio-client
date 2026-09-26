@@ -7,6 +7,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import PasswordStrength from './components/PasswordStrength';
 import { authService } from '@/features/auth/services/auth.service';
 import toast from 'react-hot-toast';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface ValidateTokenResult {
   valid?: boolean;
@@ -95,7 +96,7 @@ export default function ResetPasswordPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full size-12 border-b-2 border-primary mx-auto"></div>
+          <LogoLoader size={48} className="mx-auto" />
           <p className="mt-4 text-zinc-400">{t('auth.resetPassword.validating')}</p>
         </div>
       </div>
@@ -212,11 +213,7 @@ export default function ResetPasswordPage() {
           >
             {submitting ? (
               <div className="flex items-center gap-2 justify-center">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                  className="size-4 border-2 border-white/30 border-t-white rounded-full"
-                />
+                <LogoLoader size={16} />
                 <span>{t('auth.resetPassword.sendingLink')}</span>
               </div>
             ) : (

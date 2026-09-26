@@ -8,6 +8,7 @@ import { formatTime } from '@/shared/utils/format-time';
 import type { AutoStampPhase, ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
 import type { StampResultDto } from '@/features/editor/services/asr.service';
 import type { EditorLine } from '@/features/editor/services/editor.service';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface AutoStampModalProps {
   open: boolean;
@@ -145,7 +146,7 @@ export default function AutoStampModal({
 
           return (
             <div className="flex flex-col gap-4 items-center py-4">
-              <Icon name="autorenew" size={32} className="animate-spin text-primary" />
+              <LogoLoader size={32} className="text-primary" />
               
               <div className="w-full flex flex-col gap-1.5 mt-2">
                 <div className="flex justify-between items-center text-xs font-mono text-zinc-400 px-1">

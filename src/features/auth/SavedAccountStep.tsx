@@ -7,6 +7,7 @@ import { translateAuthError } from '@/shared/utils/auth-errors';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { AvatarBadge } from './auth-shared';
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface SavedAccount {
   userId: string;
@@ -160,7 +161,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
 
                   <div className="flex items-center gap-1 flex-shrink-0">
                     {isLoading ? (
-                      <Icon name="autorenew" size={16} className="animate-spin text-zinc-500" />
+                      <LogoLoader size={16} className="text-zinc-500" />
                     ) : (
                       <>
                         <button

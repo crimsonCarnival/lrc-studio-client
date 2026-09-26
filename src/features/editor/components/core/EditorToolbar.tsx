@@ -5,6 +5,7 @@ import { ToggleGroup, ToggleGroupItem } from '@ui/toggle-group';
 import { Tip } from '@ui/tip';
 import { Icon } from '@/shared/ui/Icon';
 import type { EditorLine } from '@/features/editor/services/editor.service';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface EditorToolbarProps {
   editorMode: string;
@@ -96,7 +97,7 @@ export default function EditorToolbar({
                   : 'bg-gradient-to-br from-primary to-emerald-500 text-zinc-950 hover:scale-105 active:scale-95'
             }`}
           >
-            <Icon name={autoStampRunning ? 'progress_activity' : isWordsMode ? 'spellcheck' : 'auto_fix_high'} size={18} className={autoStampRunning ? 'animate-spin' : undefined} />
+            {autoStampRunning ? <LogoLoader size={18} /> : <Icon name={isWordsMode ? 'spellcheck' : 'auto_fix_high'} size={18} />}
             <span className="hidden sm:inline whitespace-nowrap">
               {isWordsMode ? t('editor.autoStamp.buttonWords') : t('editor.autoStamp.button')}
             </span>

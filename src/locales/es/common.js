@@ -1,6 +1,7 @@
 export default {
   paste: "Pegar Letra",
   apply: "Aplicar",
+  loading: "Cargando…",
   copied: "Copiado",
   saved: "Guardado",
   global: "Global",

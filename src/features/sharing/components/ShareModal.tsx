@@ -6,6 +6,7 @@ import { Input } from '@ui/input';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { formatTime } from '@/shared/utils/format-time';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface ShareState {
   copied: boolean;
@@ -140,7 +141,7 @@ export function SharePanel({
     return (
       <div className="flex flex-col items-center justify-center gap-4 p-8 animate-fade-in min-h-[280px]">
         <div className="relative">
-          <div className="size-12 rounded-full border-2 border-zinc-800 border-t-primary animate-spin" />
+          <LogoLoader size={48} />
           <div className="absolute inset-0 flex items-center justify-center">
             {isRecaptcha ? (
               <svg className="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -6,6 +6,7 @@ import { useProjectSearch } from './hooks/useProjectSearch';
 import { useUserSearch } from './hooks/useUserSearch';
 import { SearchProjectCard } from './components/SearchProjectCard';
 import { SearchUserCard } from './components/SearchUserCard';
+import { LogoLoader } from '@ui/LogoLoader';
 
 const SORT_OPTIONS = [
   { value: 'RELEVANCE', key: 'relevance' },
@@ -128,7 +129,7 @@ export default function SearchPage() {
           )}
 
           {projects.loading && (
-            <div className="flex justify-center py-16"><Icon name="autorenew" size={24} className="animate-spin text-primary" /></div>
+            <div className="flex justify-center py-16"><LogoLoader size={24} className="text-primary" /></div>
           )}
           {!projects.loading && projects.error && (
             <p className="text-center py-16 text-zinc-400 text-sm">{t('search.error')}</p>
@@ -148,7 +149,7 @@ export default function SearchPage() {
       {urlTab === 'users' && (
         <>
           {users.loading && (
-            <div className="flex justify-center py-16"><Icon name="autorenew" size={24} className="animate-spin text-primary" /></div>
+            <div className="flex justify-center py-16"><LogoLoader size={24} className="text-primary" /></div>
           )}
           {!users.loading && users.error && (
             <p className="text-center py-16 text-zinc-400 text-sm">{t('search.error')}</p>

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { LogoLoader } from '@ui/LogoLoader';
 
 function SuccessScreen({ navigate, t }: { navigate: NavigateFunction; t: TFunction }) {
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function VerifyEmailPage() {
   if (!status) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">
-        <Icon name="autorenew" size={40} className="animate-spin text-primary" />
+        <LogoLoader size={40} className="text-primary" />
       </div>
     );
   }

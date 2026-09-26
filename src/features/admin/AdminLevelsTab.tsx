@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
 import { requestsApi } from './services/requests.service';
+import { LogoLoader } from '@ui/LogoLoader';
 
 // Typed i18next rejects arbitrary string keys; alias for dynamic req/stat labels.
 type TkFn = (key: string) => string;
@@ -330,7 +331,7 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
               disabled={saving}
               className="flex-1 px-4 py-2 rounded-lg bg-primary text-zinc-950 text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
-              {saving && <span className="size-3.5 rounded-full border-2 border-zinc-950 border-t-transparent animate-spin" />}
+              {saving && <LogoLoader size={14} />}
               {editing ? t('admin.levels.modal.update') : t('admin.levels.modal.create')}
             </button>
           </div>
@@ -546,7 +547,7 @@ export default function AdminLevelsTab({ proposeMode = false }: { proposeMode?: 
           onClick={fetchLevels}
           className="size-8 rounded-xl border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-all"
         >
-          <Icon name="refresh" size={14} className={loading ? 'animate-spin' : ''} />
+          {loading ? <LogoLoader size={14} /> : <Icon name="refresh" size={14} />}
         </button>
         <button
           type="button"
@@ -573,7 +574,7 @@ export default function AdminLevelsTab({ proposeMode = false }: { proposeMode?: 
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <LogoLoader size={32} />
         </div>
       ) : (
         <div className="flex flex-col gap-2">

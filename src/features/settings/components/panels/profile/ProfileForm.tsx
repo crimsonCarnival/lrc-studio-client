@@ -11,6 +11,7 @@ import { authService } from '@/features/auth/services/auth.service';
 import { updatePreferences } from '@/features/settings/services/preferences.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { BadgeChip } from '@/features/badges/BadgeChip';
+import { LogoLoader } from '@ui/LogoLoader';
 
 function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
   return (
@@ -201,7 +202,7 @@ export default function ProfileForm({ children }: { children?: React.ReactNode }
               disabled={saving}
               className="bg-primary hover:bg-primary-dim text-zinc-950 font-semibold rounded-lg h-8 px-4 text-xs gap-1.5"
             >
-              {saving && <Icon name="autorenew" size={12} className="animate-spin" />}
+              {saving && <LogoLoader size={12} />}
               {t('profile.save')}
             </Button>
           </div>

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { projectsService } from '../services/projects.service.js';
 import toast from 'react-hot-toast';
+import { LogoLoader } from '@ui/LogoLoader';
 
 export function BoostButton({ publicId, className = '' }: { publicId: string; className?: string }) {
   const { t } = useTranslation();
@@ -37,7 +38,7 @@ export function BoostButton({ publicId, className = '' }: { publicId: string; cl
       ].join(' ')}
     >
       {loading
-        ? <Icon name="autorenew" size={12} className="animate-spin" />
+        ? <LogoLoader size={12} />
         : <Icon name="repeat" size={12} />}
       {boosted ? t('projectView.boosted') : t('projectView.boost')}
     </button>

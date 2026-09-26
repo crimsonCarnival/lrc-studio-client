@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface AdminXpTabProps {
   onAdjustXP: (action: string, amount: number, target: string, userId?: string, userIds?: string[]) => Promise<void>;
@@ -101,7 +102,7 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
             {t('admin.xp.revokeXp')}
           </button>
           {xpBulkSaving && (
-            <span className="self-center size-4 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
+            <LogoLoader size={16} className="self-center" />
           )}
         </div>
       </div>
