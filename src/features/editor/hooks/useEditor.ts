@@ -381,7 +381,23 @@ export function useEditor({
         // Keep the stored spelling/depth when the raw form is just its serialization
         // (labels are title-cased and null depth is written as regular).
         const keepLabel = oldMarker && formatSectionLabelForSerialization((oldMarker.label ?? '').trim()) === item.label;
-        const keepDepth = oldMarker && ((oldMarker.depth as number | null | undefined) ?? 1) === item.depth;
+        // parseSectionHeader derives depth purely from indentation, so flush-left reads as 0
+        // — a STRUCTURAL ROOT, whose collapse block runs to the next root, i.e. to the end of
+        // the song. Taken literally, any section typed unindented here became a root, and
+        // collapsing it hid every later section and lyric.
+        //
+        // Indentation is only meaningful in one direction: indented definitely means child,
+        // flush-left is ambiguous between "this is a root" and "I just didn't indent it". So
+        // resolve the ambiguous case from what we already know rather than from the text —
+        // an existing marker keeps its stored depth (preserving a deliberately promoted
+        // root), and a brand-new one falls back to its label, matching what parseRawLyrics
+        // does for the setup textarea. [Part] stays a root; [Chorus] does not become one.
+        const itemDepth = item.depth > 0
+          ? 1
+          : oldMarker
+            ? ((oldMarker.depth as number | null | undefined) ?? getDefaultDepthForLabel(oldMarker.label))
+            : getDefaultDepthForLabel(item.label);
+        const keepDepth = oldMarker && ((oldMarker.depth as number | null | undefined) ?? 1) === itemDepth;
         updated.push({
           ...oldMarker,
           type: 'section',
@@ -389,7 +405,7 @@ export function useEditor({
           singers: item.singers.length ? item.singers : (oldMarker?.singers?.length ? undefined : oldMarker?.singers),
           // Preserve structural depth so root dividers (e.g. [Part]) round-trip as roots,
           // not dim children — preview gates root styling on depth === 0.
-          depth: keepDepth ? oldMarker.depth : item.depth,
+          depth: keepDepth ? oldMarker.depth : itemDepth,
           timestamp: oldMarker?.timestamp ?? null,
           id: oldMarker?.id ?? crypto.randomUUID(),
           text: '',
