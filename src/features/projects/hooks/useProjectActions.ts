@@ -5,38 +5,8 @@ import { updateServerSnapshot } from '@/features/editor/hooks/useManualSave';
 import { sectionsToFlat, flatToSections } from '@/features/editor/utils/sections';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
+import { sanitizeLines } from '@/shared/utils/sanitize-lines';
 
-function sanitizeLines(raw) {
-  return (raw || []).flatMap((l) => {
-    if (!(l && typeof l === 'object')) return [];
-    if (l.type === 'section') {
-      return [{ type: 'section', label: l.label || '', depth: l.depth, singers: Array.isArray(l.singers) ? l.singers : undefined, timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
-    }
-    if (typeof l.text !== 'string') return [];
-    return [{
-      text: l.text,
-      timestamp: typeof l.timestamp === 'number' && isFinite(l.timestamp) ? l.timestamp : null,
-      endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
-      secondary: typeof l.secondary === 'string' ? l.secondary : '',
-      mode: typeof l.mode === 'string' ? l.mode : undefined,
-      singers: Array.isArray(l.singers) ? l.singers : undefined,
-      translations: Array.isArray(l.translations) ? l.translations : undefined,
-      id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
-      words: Array.isArray(l.words)
-        ? l.words.flatMap((w) => {
-            const word = typeof w.word === 'string' ? w.word : '';
-            return word ? [{ word, time: typeof w.time === 'number' && isFinite(w.time) ? w.time : null, ...(w.singerIndex != null ? { singerIndex: w.singerIndex } : {}), ...(typeof w.reading === 'string' && w.reading ? { reading: w.reading } : {}) }] : [];
-          })
-        : undefined,
-      secondaryWords: Array.isArray(l.secondaryWords)
-        ? l.secondaryWords.flatMap((w) => {
-            const word = typeof w.word === 'string' ? w.word : '';
-            return word ? [{ word, time: typeof w.time === 'number' && isFinite(w.time) ? w.time : null }] : [];
-          })
-        : undefined,
-    }];
-  });
-}
 
 /**
  * CRUD-level project actions: load, restore, discard, reset, and media handlers.

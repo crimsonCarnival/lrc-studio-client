@@ -8,6 +8,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { useProjectSocket } from './useProjectSocket';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
+import { sanitizeLines } from '@/shared/utils/sanitize-lines';
 
 // Legacy URL-encoded share fallbacks
 async function decompressFromBase64(str) {
@@ -15,37 +16,7 @@ async function decompressFromBase64(str) {
   const bytes = Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
   return new Promise((res, rej) => decompress(bytes, (err, data) => err ? rej(err) : res(new TextDecoder().decode(data))));
 }
-function expandSharePayload(raw) { return raw; } // v1 format passthrough
 
-function sanitizeLines(raw) {
-  return (raw || []).flatMap((l) => {
-    if (!(l && typeof l === 'object')) return [];
-    if (l.type === 'section') {
-      return [{ type: 'section', label: l.label || '', timestamp: typeof l.timestamp === 'number' ? l.timestamp : null, id: typeof l.id === 'string' ? l.id : crypto.randomUUID() }];
-    }
-    if (typeof l.text !== 'string') return [];
-    return [{
-      text: l.text,
-      timestamp: typeof l.timestamp === 'number' && isFinite(l.timestamp) ? l.timestamp : null,
-      endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
-      secondary: typeof l.secondary === 'string' ? l.secondary : '',
-      translations: Array.isArray(l.translations) ? l.translations : undefined,
-      id: typeof l.id === 'string' ? l.id : crypto.randomUUID(),
-      words: Array.isArray(l.words)
-        ? l.words.flatMap((w) => {
-            const word = typeof w.word === 'string' ? w.word : '';
-            return word ? [{ word, time: typeof w.time === 'number' && isFinite(w.time) ? w.time : null, ...(typeof w.reading === 'string' && w.reading ? { reading: w.reading } : {}) }] : [];
-          })
-        : undefined,
-      secondaryWords: Array.isArray(l.secondaryWords)
-        ? l.secondaryWords.flatMap((w) => {
-            const word = typeof w.word === 'string' ? w.word : '';
-            return word ? [{ word, time: typeof w.time === 'number' && isFinite(w.time) ? w.time : null }] : [];
-          })
-        : undefined,
-    }];
-  });
-}
 
 /**
  * Manages shared-project state: URL-hash decode on mount, read-only fork guard,
@@ -167,12 +138,12 @@ export function useSharedProject({
           });
         })
         .catch(() => decompressFromBase64(encoded)
-          .then((text) => { const raw = JSON.parse(text as string); restoreProject(raw.v === 1 ? expandSharePayload(raw) : raw); })
+          .then((text) => { const raw = JSON.parse(text as string); restoreProject(raw); })
           .catch((err) => console.error('Failed to decode shared project URL', err)))
         .finally(() => setIsProjectLoading(false));
     } else {
       decompressFromBase64(encoded)
-        .then((text) => { const raw = JSON.parse(text as string); restoreProject(raw.v === 1 ? expandSharePayload(raw) : raw); })
+        .then((text) => { const raw = JSON.parse(text as string); restoreProject(raw); })
         .catch((err) => console.error('Failed to decode shared project URL', err));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
