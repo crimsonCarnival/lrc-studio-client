@@ -19,14 +19,35 @@ export const SECTION_TYPES = [
 ];
 
 /**
+ * Strips a trailing ordinal ("Verse 2", "Part III") so the label can be matched
+ * against a preset id.
+ */
+function presetIdForLabel(label) {
+  return label.trim().toLowerCase().replace(/\s+(i{1,3}|iv|v|vi{0,3}|ix|x{1,2}|\d+)$/, '');
+}
+
+/**
+ * The depth of the preset this label names, or `null` when the label is custom.
+ *
+ * Distinct from getDefaultDepthForLabel, which collapses "custom label" and
+ * "known depth-1 preset" into the same answer. Callers that must NOT guess about
+ * custom labels — the stored-depth repair in sections.ts — need to tell those
+ * two apart, because a custom label at depth 0 is indistinguishable from one the
+ * user promoted on purpose.
+ */
+export function getPresetDepthForLabel(label) {
+  if (!label) return null;
+  const preset = SECTION_TYPES.find(s => s.id === presetIdForLabel(label));
+  return preset ? preset.depth : null;
+}
+
+/**
  * Returns the default depth for a given label string.
  * Falls back to 1 (child) for unknown labels.
  */
 export function getDefaultDepthForLabel(label) {
   if (!label) return 1;
-  const base = label.trim().toLowerCase().replace(/\s+(i{1,3}|iv|v|vi{0,3}|ix|x{1,2}|\d+)$/, '');
-  const preset = SECTION_TYPES.find(s => s.id === base);
-  return preset?.depth ?? 1;
+  return getPresetDepthForLabel(label) ?? 1;
 }
 
 /**

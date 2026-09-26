@@ -6,7 +6,7 @@
  * Nested format: [{label, depth, singers, lines:[{text,...},...]}]
  */
 import type { EditorLine } from '@/features/editor/services/editor.service';
-import { formatSectionLabelForSerialization, isStructuralSection } from '@/features/editor/constants/sectionTypes';
+import { formatSectionLabelForSerialization, isStructuralSection, getPresetDepthForLabel } from '@/features/editor/constants/sectionTypes';
 import { serializeToRubyMarkup } from '@/shared/utils/furigana';
 
 interface Section {
@@ -54,6 +54,26 @@ export function flatToSections(lines: any[]): any[] {
 }
 
 /**
+ * Repairs a stored section depth on load.
+ *
+ * A bug in the Raw Lyrics rebuild used to write depth 0 — a structural root —
+ * for any section typed flush-left, which made collapsing it hide every later
+ * section and line. Projects saved during that period still carry the bad depth,
+ * so fix it where the stored form becomes editor lines.
+ *
+ * Only labels naming a known depth-1 preset are repaired. Those are
+ * unambiguous: nobody promotes a [Chorus] to a structural root above other
+ * sections. A CUSTOM label at depth 0 is left exactly as stored, because the
+ * bug and a deliberate promotion produce identical data ({label:'Hook',depth:0})
+ * and guessing would destroy real structure. Those stay user-fixable via the
+ * section's demote action.
+ */
+function repairStoredSectionDepth(depth: number | null, label: string | null): number | null {
+  if (depth !== 0) return depth;
+  return getPresetDepthForLabel(label) === 1 ? 1 : depth;
+}
+
+/**
  * Convert nested sections back to flat lines (with section marker objects).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,7 +88,7 @@ export function sectionsToFlat(sections: any[]): EditorLine[] {
       flat.push({
         type: 'section',
         label: sec.label ?? null,
-        depth: sec.depth ?? null,
+        depth: repairStoredSectionDepth(sec.depth ?? null, sec.label ?? null),
         id: sec.id ?? null,
         singers: sec.singers,
         timestamp: sec.timestamp ?? null,
