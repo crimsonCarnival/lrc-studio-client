@@ -5,6 +5,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { youtube } from '@/features/player/services/youtube.service';
 import { Skeleton } from '@ui/skeleton';
 import { LazyImage } from '@ui/LazyImage';
+import { LogoLoader } from '@ui/LogoLoader';
 
 function YtIcon({ className }: { className?: string }) {
   return (
@@ -193,7 +194,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
           disabled={!query.trim() || loading}
           className="h-9 px-4 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold flex items-center gap-2 transition-colors shrink-0"
         >
-          {loading ? <Icon name="autorenew" size={16} className="animate-spin" /> : <Icon name="search" size={16} />}
+          {loading ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
         </button>
         {onClose && (
           <button aria-label={t('common.close')} onClick={onClose} className="size-9 rounded-xl flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors shrink-0">

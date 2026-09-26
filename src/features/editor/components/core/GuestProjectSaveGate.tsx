@@ -8,6 +8,7 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { getPendingProject, clearPendingProject } from '@/features/editor/services/guest-project-db';
 import { projectsService } from '@/features/projects/services/projects.service';
 import { uploadsService } from '@/features/projects/services/uploads.service';
+import { LogoLoader } from '@ui/LogoLoader';
 
 const BACKOFF_INTERVALS_MS = [2000, 4000, 8000, 16000, 32000];
 const STEADY_INTERVAL_MS = 30000;
@@ -145,7 +146,7 @@ export default function GuestProjectSaveGate() {
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-zinc-950/95 backdrop-blur-sm gap-4">
-      <Icon name="autorenew" size={40} className="animate-spin text-primary" />
+      <LogoLoader size={40} className="text-primary" />
       <p className="text-base font-medium text-zinc-200">{t('editor.savingProject')}</p>
       {displayAttempt > 0 && (
         <p className="text-sm text-zinc-500">

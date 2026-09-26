@@ -14,6 +14,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import useConfirm from '@/shared/hooks/useConfirm';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface Upload {
   id: string;
@@ -239,7 +240,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
                       className="text-primary/70 hover:text-primary hover:bg-primary/10 size-7"
                     >
                       {savingTitle ? (
-                        <Icon name="autorenew" size={14} className="animate-spin" />
+                        <LogoLoader size={14} />
                       ) : (
                         <Icon name="check" size={14} />
                       )}
@@ -272,7 +273,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
                       className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10 size-7"
                     >
                       {deletingId === upload.id
-                        ? <Icon name="autorenew" size={14} className="animate-spin" />
+                        ? <LogoLoader size={14} />
                         : <Icon name="delete" size={14} />}
                     </Button>
                   </>

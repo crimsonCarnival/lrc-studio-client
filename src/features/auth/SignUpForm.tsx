@@ -14,6 +14,7 @@ import { auth } from '@/app/api';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import RegistrationBlockedModal from './RegistrationBlockedModal';
 import { FieldError, ContextBanner, GoogleButton } from './auth-shared';
+import { LogoLoader } from '@ui/LogoLoader';
 
 const step1Schema = z.object({
   displayName: z.string().min(1, 'auth.validation.fieldRequired'),
@@ -461,9 +462,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                 {loading
                   ? (
                     <div className="flex items-center gap-2 justify-center">
-                      <M.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity }}
-                        className="size-4 border-2 border-white/30 border-t-white rounded-full"
-                      />
+                      <LogoLoader size={16} />
                       <span>{t('auth.registerActionLoading')}</span>
                     </div>
                   )

@@ -17,6 +17,7 @@ import { Switch } from '@/shared/ui/switch';
 import toast from 'react-hot-toast';
 import { songMetadata } from '@/app/api';
 import SingersInput from './SingersInput';
+import { LogoLoader } from '@ui/LogoLoader';
 
 const EMPTY_TAGS: string[] = [];
 // Must be a stable reference: the form re-syncs whenever an initial* prop changes
@@ -350,7 +351,7 @@ export default function ProjectSetupModal({
                       disabled={metaSearching || !form.songName.trim() || !form.songArtist.trim()}
                       className="gap-1.5 font-semibold"
                     >
-                      <Icon name={metaSearching ? 'autorenew' : 'search'} size={14} className={metaSearching ? 'animate-spin' : undefined} />
+                      {metaSearching ? <LogoLoader size={14} /> : <Icon name="search" size={14} />}
                       {t('setup.fetchInfo')}
                     </Button>
                   </span>
@@ -561,7 +562,7 @@ export default function ProjectSetupModal({
                     className="shrink-0 size-9 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
                   >
                     {imageUploading ? (
-                      <Icon name="autorenew" size={16} className="animate-spin" />
+                      <LogoLoader size={16} />
                     ) : (
                       <Icon name="upload" size={16} />
                     )}

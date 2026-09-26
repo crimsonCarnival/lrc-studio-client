@@ -13,6 +13,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
 import { auth } from '@/app/api';
 import toast from 'react-hot-toast';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface Passkey {
   id: string;
@@ -133,7 +134,7 @@ export default function PasskeySection() {
     <div className="flex flex-col gap-2">
       {loading ? (
         <div className="flex items-center justify-center p-4">
-          <Icon name="autorenew" size={16} className="animate-spin text-muted-foreground" />
+          <LogoLoader size={16} className="text-muted-foreground" />
         </div>
       ) : passkeys.length === 0 ? (
         <div className="flex items-center justify-between bg-secondary/30 border border-border rounded-xl px-3 h-11">
@@ -165,7 +166,7 @@ export default function PasskeySection() {
                 className="size-8 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 shrink-0"
                 title={t('auth.passkeyManagement.delete')}
               >
-                {deletingId === passkey.id ? <Icon name="autorenew" size={14} className="animate-spin" /> : <Trash2Icon className="size-3.5" />}
+                {deletingId === passkey.id ? <LogoLoader size={14} /> : <Trash2Icon className="size-3.5" />}
               </Button>
             </div>
           );
@@ -179,7 +180,7 @@ export default function PasskeySection() {
           disabled={registering || loading}
           className="rounded-lg h-7 text-[11px] font-bold gap-1.5"
         >
-          {registering ? <Icon name="autorenew" size={12} className="animate-spin" /> : <FingerprintIcon className="size-3" />}
+          {registering ? <LogoLoader size={12} /> : <FingerprintIcon className="size-3" />}
           {t('auth.passkeyManagement.add')}
         </Button>
       </div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { usePaginatedProjects } from './hooks/useExplore';
 import { useProjectSearch } from '@/features/search/hooks/useProjectSearch';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface ExploreProject {
   id: string;
@@ -103,7 +104,7 @@ export default function ExploreProjectsPage() {
       {isSearching ? (
         search.loading ? (
           <div className="flex justify-center py-20">
-            <Icon name="autorenew" size={32} className="animate-spin text-primary" />
+            <LogoLoader size={32} className="text-primary" />
           </div>
         ) : search.error ? (
           <div className="flex items-center justify-center text-zinc-400 text-sm py-20">
@@ -130,7 +131,7 @@ export default function ExploreProjectsPage() {
         )
       ) : loading ? (
         <div className="flex justify-center py-20">
-          <Icon name="autorenew" size={32} className="animate-spin text-primary" />
+          <LogoLoader size={32} className="text-primary" />
         </div>
       ) : error || projects.length === 0 ? (
         <div className="flex items-center justify-center text-zinc-500 text-sm py-20">
@@ -149,7 +150,7 @@ export default function ExploreProjectsPage() {
               className="mt-2 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loadingMore
-                ? <Icon name="autorenew" size={16} className="animate-spin" />
+                ? <LogoLoader size={16} />
                 : t('explore.page.loadMore')}
             </button>
           ) : (

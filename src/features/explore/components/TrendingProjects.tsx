@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { useTrendingProjects } from '../hooks/useExplore';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface ExploreProject {
   id: string;
@@ -37,7 +38,7 @@ export function TrendingProjects({ limit = 6 }: { limit?: number }) {
 
       {loading ? (
         <div className="flex justify-center py-10">
-          <Icon name="autorenew" size={24} className="animate-spin text-zinc-500" />
+          <LogoLoader size={24} className="text-zinc-500" />
         </div>
       ) : error || projects.length === 0 ? (
         <p className="text-sm text-zinc-500 text-center py-10">

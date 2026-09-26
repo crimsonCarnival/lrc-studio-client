@@ -9,6 +9,7 @@ import type { LyricsSearchHit, LyricsExtractResult } from '@features/editor/serv
 import LyricsResultCard from './LyricsResultCard';
 import LyricsModal from './LyricsModal';
 import { useSettings } from '@/features/settings/useSettings';
+import { LogoLoader } from '@ui/LogoLoader';
 
 type SongResult = LyricsSearchHit;
 
@@ -141,7 +142,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
             className="pl-8 lg:pl-8 pr-8 lg:pr-8 bg-zinc-900 border-zinc-700"
           />
           {isSearching && (
-            <Icon name="autorenew" size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 animate-spin pointer-events-none" />
+            <LogoLoader size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
           )}
         </div>
       )}

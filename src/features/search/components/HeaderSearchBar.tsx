@@ -7,6 +7,7 @@ import { useHeaderSearch } from '../hooks/useHeaderSearch';
 import { SearchUserCard } from './SearchUserCard';
 import { LazyImage } from '@ui/LazyImage';
 import { Link } from 'react-router-dom';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface SearchProject {
   id: string;
@@ -95,7 +96,7 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
       <div className="relative">
         <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
         {loading && (
-          <Icon name="autorenew" size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 animate-spin" />
+          <LogoLoader size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500" />
         )}
         <input
           ref={inputRef}

@@ -837,6 +837,24 @@ audio::-webkit-media-controls-panel {
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* ── Logo loader: the logo fills up from the bottom over a dimmed copy ── */
+@keyframes logo-fill {
+  0%   { clip-path: inset(100% 0 0 0); }
+  70%  { clip-path: inset(0 0 0 0); opacity: 1; }
+  100% { clip-path: inset(0 0 0 0); opacity: 0; }
+}
+
+.logo-loader-track {
+  filter: grayscale(1);
+  opacity: 0.2;
+}
+
+/* Base state is fully filled so reduced motion (animation collapsed) shows the whole logo. */
+.logo-loader-fill {
+  clip-path: inset(0 0 0 0);
+  animation: logo-fill 1.4s cubic-bezier(0.45, 0, 0.3, 1) infinite;
+}
+
 /* ── Skeleton loading shimmer ── */
 @keyframes skeleton-shimmer {
   0% {
@@ -1190,4 +1208,4 @@ input[type="range"]::-moz-range-thumb {
 }
 input[type="range"]::-moz-range-thumb:hover {
   transform: scale(1.2);
-}
+}

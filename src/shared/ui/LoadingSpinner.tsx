@@ -1,21 +1,9 @@
-import { motion } from 'framer-motion';
+import { LogoLoader } from './LogoLoader';
 
 type SpinnerSize = 'sm' | 'md' | 'lg';
 
+const SIZES: Record<SpinnerSize, number> = { sm: 24, md: 32, lg: 48 };
+
 export function LoadingSpinner({ size = 'md' }: { size?: SpinnerSize }) {
-  const sizes: Record<SpinnerSize, string> = {
-    sm: 'size-6 border border-primary/30',
-    md: 'size-8 border-2 border-primary/30',
-    lg: 'size-12 border-2 border-primary/30',
-  };
-
-  const sizeClass = sizes[size] || sizes.md;
-
-  return (
-    <motion.div
-      animate={{ rotate: 360 }}
-      transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-      className={`${sizeClass} border-t-primary rounded-full`}
-    />
-  );
+  return <LogoLoader size={SIZES[size] ?? SIZES.md} />;
 }

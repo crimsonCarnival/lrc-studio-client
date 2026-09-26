@@ -7,6 +7,7 @@ import { Input } from '@ui/input';
 import toast from 'react-hot-toast';
 import { authService } from '@/features/auth/services/auth.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface ApiError {
   message?: string;
@@ -100,7 +101,7 @@ export default function AccountNameSection() {
         className="h-9 rounded-xl font-bold gap-2 text-sm"
         size="sm"
       >
-        {saving ? <Icon name="autorenew" size={16} className="animate-spin" /> : <Icon name="save" size={16} />}
+        {saving ? <LogoLoader size={16} /> : <Icon name="save" size={16} />}
         {t('profile.save')}
       </Button>
 

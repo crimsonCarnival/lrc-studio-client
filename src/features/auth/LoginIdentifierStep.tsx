@@ -10,6 +10,7 @@ import { FloatingInput } from '@ui/floating-input';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import { auth } from '@/app/api';
 import { FieldError, RedirectMessage, ContextBanner, GoogleButton } from './auth-shared';
+import { LogoLoader } from '@ui/LogoLoader';
 
 const identifierSchema = z.string().refine(
   (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || /^[a-z0-9_-]{3,30}$/.test(v.toLowerCase()),
@@ -108,7 +109,7 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
           className="h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-sm rounded-xl gap-2 disabled:opacity-40 transition-all duration-200 mt-1"
         >
           {loading
-            ? <Icon name="autorenew" size={16} className="animate-spin" />
+            ? <LogoLoader size={16} />
             : <>{t('auth.continue')} <Icon name="arrow_forward" size={16} /></>
           }
         </Button>

@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
 import { getLeaderboard } from './leaderboard.service';
+import { LogoLoader } from '@ui/LogoLoader';
 
 interface LeaderEntry {
   id?: string;
@@ -258,7 +259,7 @@ export default function LeaderboardPage() {
                   disabled={loadingMore}
                   className="gap-1.5"
                 >
-                  {loadingMore ? <Icon name="autorenew" size={14} className="animate-spin" /> : <Icon name="expand_more" size={14} />}
+                  {loadingMore ? <LogoLoader size={14} /> : <Icon name="expand_more" size={14} />}
                   {t('common.loadMore')}
                 </Button>
               </div>

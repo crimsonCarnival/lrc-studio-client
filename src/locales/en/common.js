@@ -1,6 +1,7 @@
 export default {
   paste: "Paste",
   apply: "Apply",
+  loading: "Loading…",
   copied: "Copied",
   saved: "Saved",
   global: "Global",

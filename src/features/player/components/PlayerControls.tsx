@@ -18,6 +18,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { getAccessToken } from '@/app/api';
 import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
+import { LogoLoader } from '@ui/LogoLoader';
 
 const FOCUS_RING = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none';
 
@@ -66,7 +67,7 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
           disabled={!ytUrl.trim() || cdnLoading}
           className="h-8 px-3 text-xs shrink-0 bg-zinc-700 hover:bg-zinc-600 border-zinc-600"
         >
-          {cdnLoading ? <Icon name="autorenew" size={12} className="animate-spin" /> : t('player.load')}
+          {cdnLoading ? <LogoLoader size={12} /> : t('player.load')}
         </Button>
       </div>
       {getAccessToken() && uploads.length > 0 && (
@@ -227,10 +228,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
         {/* Loading placeholder while YouTube initialises */}
         {!hasMedia && yt.ytLoading && (
           <div className="flex items-center justify-center gap-3 py-6 animate-fade-in">
-            <svg className="size-5 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-            </svg>
+            <LogoLoader size={20} />
             <span className="text-sm text-zinc-400">{t('player.loading')}</span>
           </div>
         )}
@@ -275,7 +273,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                     disabled={cdnLoading}
                     className="h-10 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/50 font-medium shrink-0"
                   >
-                    {cdnLoading ? <Icon name="autorenew" size={16} className="animate-spin" /> : t('player.load')}
+                    {cdnLoading ? <LogoLoader size={16} /> : t('player.load')}
                   </Button>
                 </div>
 
@@ -682,10 +680,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
           <div className="flex flex-col gap-1 px-3 py-2 relative">
             {yt.ytLoading ? (
               <div className="flex items-center gap-3 flex-1 py-2">
-                <svg className="size-5 text-primary animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
+                <LogoLoader size={20} />
                 <span className="text-sm text-zinc-400">{t('player.loading')}</span>
               </div>
             ) : (
