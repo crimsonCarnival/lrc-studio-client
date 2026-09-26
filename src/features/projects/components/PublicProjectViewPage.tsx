@@ -306,25 +306,28 @@ function PublicProjectViewPageInner() {
       {/* ── Main content: 2-col (lyrics | info panel) ────────── */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
 
-        {/* Left: immersive lyrics — ~70% on desktop, full-width on mobile */}
-        <div className="flex-1 min-h-0 flex flex-col" style={{ minHeight: '50vh' }}>
-          <ImmersiveLyricsDisplay
-            lines={lines as unknown as DisplayLine[]}
-            playbackPosition={playbackPosition}
-            editorMode={editorMode}
-            playerRef={playerRef}
-            hasMedia={hasMedia}
-            isPlaying={isPlaying}
-            playbackSpeed={playbackSpeed}
-            palette={palette}
-            showTranslations
-            songSingers={songSingers}
-            singerColors={singerColors}
-          />
+        {/* Left: lyrics + player — ~70% on desktop. On mobile the wrapper dissolves
+            (display: contents) so the order-* classes put the player below the info panel. */}
+        <div className="contents lg:flex lg:flex-1 lg:min-h-0 lg:flex-col">
+          <div className="order-1 flex-1 min-h-0 flex flex-col" style={{ minHeight: '50vh' }}>
+            <ImmersiveLyricsDisplay
+              lines={lines as unknown as DisplayLine[]}
+              playbackPosition={playbackPosition}
+              editorMode={editorMode}
+              playerRef={playerRef}
+              hasMedia={hasMedia}
+              isPlaying={isPlaying}
+              playbackSpeed={playbackSpeed}
+              palette={palette}
+              showTranslations
+              songSingers={songSingers}
+              singerColors={singerColors}
+            />
+          </div>
 
-          {/* ── Player bar, docked at the bottom of the lyrics panel ── */}
+          {/* ── Player bar: bottom of the lyrics panel on desktop, bottom of the page on mobile ── */}
           <div
-            className="flex-shrink-0 w-full"
+            className="order-3 flex-shrink-0 w-full"
             style={{
               borderTop: `1px solid ${palette?.faded ?? 'hsl(var(--border))'}44`,
               background: palette ? `${palette.bgDeep}e0` : 'hsl(var(--card) / 0.8)',
@@ -386,7 +389,7 @@ function PublicProjectViewPageInner() {
         {/* Right: info panel — fixed width on desktop, stacked below on mobile */}
         <div
           ref={rightPanelRef}
-          className="relative lg:w-80 xl:w-96 lg:flex-shrink-0 overflow-y-auto scrollbar-none"
+          className="order-2 lg:order-none relative lg:w-80 xl:w-96 lg:flex-shrink-0 overflow-y-auto scrollbar-none"
         >
           <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20" />
           <div className="p-4 flex flex-col gap-4">
