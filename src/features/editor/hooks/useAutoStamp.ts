@@ -42,7 +42,9 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
   const [phase, setPhase] = useState<AutoStampPhase>('idle');
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [pendingResult, setPendingResult] = useState<StampResultDto[] | null>(null);
-  const [confidenceByIndex, setConfidenceByIndex] = useState<Map<number, ConfidenceInfo>>(new Map());
+  // Keyed by line id, not by position: a badge must stay on its own line after a
+  // drag reorder, an insert or a delete. Position keys silently mislabelled lines.
+  const [confidenceById, setConfidenceById] = useState<Map<string, ConfidenceInfo>>(new Map());
   const [youtubeAudioUrl, setYoutubeAudioUrl] = useState<string | null>(null);
   const jobIdRef = useRef<string | null>(null);
   const jobSourceRef = useRef<'youtube' | 'upload' | 'local' | null>(null);
@@ -78,18 +80,33 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
     (result: StampResultDto[]) => {
       const current = linesRef.current;
       const byIndex = new Map(result.map((r) => [r.index, r]));
-      const conf = new Map<number, ConfidenceInfo>();
+      const conf = new Map<string, ConfidenceInfo>();
       const isWordsMode = editorMode === 'words';
+
+      // `id` is optional on EditorLine (server-parsed lines can arrive without
+      // one), so mint one here for any line we're about to record confidence
+      // for. Returns the id plus the line to keep, which is the original object
+      // whenever it already had an id.
+      const ensureId = (line: EditorLine): [string, EditorLine] => {
+        const existing = line.id != null ? String(line.id) : '';
+        if (existing) return [existing, line];
+        const id = crypto.randomUUID();
+        return [id, { ...line, id }];
+      };
+
       const next = current.map((line, i) => {
         const r = byIndex.get(i);
         if (!r || line.type === 'section') return line;
         if (r.timestamp === null) {
           // Unmatched line: never stamp, but surface it for review ('none' count/filter).
-          conf.set(i, { confidence: r.confidence, status: r.status });
-          return line;
+          const [id, withId] = ensureId(line);
+          conf.set(id, { confidence: r.confidence, status: r.status });
+          return withId;
         }
         if (applyMode === 'empty-only' && line.timestamp != null) return line;
-        conf.set(i, { confidence: r.confidence, status: r.status });
+        const [id, withId] = ensureId(line);
+        line = withId;
+        conf.set(id, { confidence: r.confidence, status: r.status });
 
         // Merge word-level timestamps by position (only overwrite `time`, preserve reading/singerIndex).
         let mergedWords: EditorLine['words'] = line.words;
@@ -111,7 +128,7 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
         };
       });
       setLines(next); // single call → single undo entry
-      setConfidenceByIndex(conf);
+      setConfidenceById(conf);
       setPendingResult(null);
       setPhase('completed');
     },
@@ -284,15 +301,16 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
     setPhase('idle');
   }, []);
 
-  const clearConfidence = useCallback((lineIndex?: number) => {
-    setConfidenceByIndex((prev) => {
-      if (lineIndex === undefined) return new Map();
-      if (!prev.has(lineIndex)) return prev;
+  /** Omit `lineId` to clear every badge. Unknown ids are a no-op. */
+  const clearConfidence = useCallback((lineId?: string) => {
+    setConfidenceById((prev) => {
+      if (lineId === undefined) return new Map();
+      if (!prev.has(lineId)) return prev;
       const next = new Map(prev);
-      next.delete(lineIndex);
+      next.delete(lineId);
       return next;
     });
   }, []);
 
-  return { phase, errorCode, pendingResult, confidenceByIndex, youtubeAudioUrl, start, cancel, applyPending, discardPending, clearConfidence };
+  return { phase, errorCode, pendingResult, confidenceById, youtubeAudioUrl, start, cancel, applyPending, discardPending, clearConfidence };
 }

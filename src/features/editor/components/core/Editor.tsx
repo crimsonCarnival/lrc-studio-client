@@ -364,23 +364,32 @@ export default function Editor({
 
   // Manual timestamp edits invalidate a line's Auto Stamp confidence badge —
   // clear it so the highlight doesn't linger on a value the user has since fixed.
+  // Confidence is keyed by line id, so resolve the index to an id before clearing.
+  const confidenceIdAt = useCallback((index: number): string | undefined => {
+    const id = lines[index]?.id;
+    return id != null ? String(id) : undefined;
+  }, [lines]);
+
   const handleSetTimestampWithConfidence = useCallback((index: number, type: string, value: number) => {
     handleSetTimestamp(index, type, value);
-    autoStamp.clearConfidence(index);
+    const id = confidenceIdAt(index);
+    if (id) autoStamp.clearConfidence(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleSetTimestamp, autoStamp.clearConfidence]);
+  }, [handleSetTimestamp, confidenceIdAt, autoStamp.clearConfidence]);
 
   const shiftTimeWithConfidence = useCallback((index: number, delta: number) => {
     shiftTime(index, delta);
-    autoStamp.clearConfidence(index);
+    const id = confidenceIdAt(index);
+    if (id) autoStamp.clearConfidence(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shiftTime, autoStamp.clearConfidence]);
+  }, [shiftTime, confidenceIdAt, autoStamp.clearConfidence]);
 
   const handleMarkWithConfidence = useCallback((opts?: { forceAdvance?: boolean }) => {
     handleMark(opts);
-    autoStamp.clearConfidence(activeLineIndex);
+    const id = confidenceIdAt(activeLineIndex);
+    if (id) autoStamp.clearConfidence(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleMark, autoStamp.clearConfidence, activeLineIndex]);
+  }, [handleMark, confidenceIdAt, autoStamp.clearConfidence, activeLineIndex]);
 
   // #3: the in-editor player docks at the top (below the toolbar) or bottom, persisted
   // as a global editor setting. The same dock block renders in whichever slot is active.
@@ -787,7 +796,7 @@ export default function Editor({
             onLineMenu={openLine}
             modifiedLines={modifiedLines}
             onToggleLineMode={handleToggleLineMode}
-            confidenceByIndex={autoStamp.confidenceByIndex}
+            confidenceById={autoStamp.confidenceById}
             collapsedSections={collapsedSections}
             collapsedView={collapsedView}
             onToggleSectionCollapse={toggleSectionCollapse}
@@ -835,7 +844,7 @@ export default function Editor({
         phase={autoStamp.phase}
         errorCode={autoStamp.errorCode}
         pendingResult={autoStamp.pendingResult}
-        confidenceByIndex={autoStamp.confidenceByIndex}
+        confidenceById={autoStamp.confidenceById}
         lines={lines}
         confidenceThreshold={settings.autoStamp?.confidenceThreshold ?? 0.8}
         onCancel={handleAutoStampCancel}

@@ -76,7 +76,7 @@ interface VirtualizedLineListProps {
   onLineMenu?: LineItemProps['onLineMenu'];
   modifiedLines?: Set<number>;
   onToggleLineMode?: LineItemProps['onToggleLineMode'];
-  confidenceByIndex?: Map<number, ConfidenceInfo>;
+  confidenceById?: Map<string, ConfidenceInfo>;
   handleToggleAdLib?: (lineIndex: number) => void;
   /** Collapsed section keys (sectionCollapseKey) and the derived visible-row view. */
   collapsedSections: ReadonlySet<string>;
@@ -143,7 +143,7 @@ export default function VirtualizedLineList({
   onLineMenu,
   modifiedLines,
   onToggleLineMode,
-  confidenceByIndex,
+  confidenceById,
   handleToggleAdLib,
   collapsedSections,
   collapsedView,
@@ -523,7 +523,7 @@ export default function VirtualizedLineList({
                       onLineMenu={onLineMenu}
                       isModified={modifiedLines?.has(i)}
                       onToggleLineMode={onToggleLineMode}
-                      confidenceInfo={confidenceByIndex?.get(i)}
+                      confidenceInfo={line.id != null ? confidenceById?.get(String(line.id)) : undefined}
                     />
                   )}
                 </div>

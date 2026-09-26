@@ -14,7 +14,7 @@ interface AutoStampModalProps {
   phase: AutoStampPhase;
   errorCode: string | null;
   pendingResult: StampResultDto[] | null;
-  confidenceByIndex: Map<number, ConfidenceInfo>;
+  confidenceById: Map<string, ConfidenceInfo>;
   lines: EditorLine[];
   confidenceThreshold: number;
   onCancel: () => void;
@@ -64,7 +64,7 @@ export default function AutoStampModal({
   phase,
   errorCode,
   pendingResult,
-  confidenceByIndex,
+  confidenceById,
   lines,
   confidenceThreshold,
   onCancel,
@@ -82,27 +82,31 @@ export default function AutoStampModal({
 
   const statusCounts = useMemo(() => {
     const counts = { matched: 0, partial: 0, low: 0, none: 0 };
-    confidenceByIndex.forEach((info) => {
+    confidenceById.forEach((info) => {
       counts[info.status] += 1;
     });
     return counts;
-  }, [confidenceByIndex]);
+  }, [confidenceById]);
 
-  const uncertainLines = useMemo(() => {
+  // Confidence is keyed by line id, but this list shows line numbers and jumps to
+  // a position — so resolve ids against the *current* lines. Walking `lines` also
+  // yields document order for free, and keeps the rows correct after a reorder.
+  const confidenceEntries = useMemo(() => {
     const entries: { index: number; info: ConfidenceInfo }[] = [];
-    confidenceByIndex.forEach((info, index) => {
-      if (info.confidence < confidenceThreshold) entries.push({ index, info });
+    lines.forEach((line, index) => {
+      if (line.id == null) return;
+      const info = confidenceById.get(String(line.id));
+      if (info) entries.push({ index, info });
     });
-    return entries.sort((a, b) => a.index - b.index);
-  }, [confidenceByIndex, confidenceThreshold]);
+    return entries;
+  }, [lines, confidenceById]);
 
-  const appliedLines = useMemo(() => {
-    const entries: { index: number; info: ConfidenceInfo }[] = [];
-    confidenceByIndex.forEach((info, index) => {
-      entries.push({ index, info });
-    });
-    return entries.sort((a, b) => a.index - b.index);
-  }, [confidenceByIndex]);
+  const uncertainLines = useMemo(
+    () => confidenceEntries.filter((e) => e.info.confidence < confidenceThreshold),
+    [confidenceEntries, confidenceThreshold],
+  );
+
+  const appliedLines = confidenceEntries;
 
 
   const runningPhaseKey = RUNNING_PHASE_KEYS[phase];
