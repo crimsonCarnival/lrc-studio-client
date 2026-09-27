@@ -330,30 +330,22 @@ export default function Home() {
                       <Icon name="description" size={11} />
                       {(project.syncedLineCount || 0)} / {(project.lineCount || 0)} {t('home.lines')}
                     </span>
-                    {(project.starCount ?? 0) > 0 && (
-                      <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                        <Icon name="star" size={11} />
-                        {project.starCount}
-                      </span>
-                    )}
-                    {(project.forkCount ?? 0) > 0 && (
-                      <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                        <Icon name="call_split" size={11} />
-                        {project.forkCount}
-                      </span>
-                    )}
-                    {(project.viewCount ?? 0) > 0 && (
-                      <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                        <Icon name="visibility" size={11} />
-                        {project.viewCount}
-                      </span>
-                    )}
-                    {(project.shareCount ?? 0) > 0 && (
-                      <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                        <Icon name="share" size={11} />
-                        {project.shareCount}
-                      </span>
-                    )}
+                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                      <Icon name="star" size={11} />
+                      {project.starCount ?? 0}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                      <Icon name="call_split" size={11} />
+                      {project.forkCount ?? 0}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                      <Icon name="visibility" size={11} />
+                      {project.viewCount ?? 0}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                      <Icon name="share" size={11} />
+                      {project.shareCount ?? 0}
+                    </span>
                   </div>
 
                   <div className="mt-auto pt-4 flex flex-col gap-2">
