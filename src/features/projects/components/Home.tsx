@@ -8,6 +8,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projects } from '@/app/api';
 import { Icon } from '@/shared/ui/Icon';
 import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
+import { Tip } from '@ui/tip';
 import ProjectSetupModalRaw from '@features/editor/components/setup/ProjectSetupModal';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 
@@ -310,14 +311,15 @@ export default function Home() {
                      )}
                    </div>
                    {project.public && (
-                     <button
-                       type="button"
-                       onClick={(e) => { e.stopPropagation(); navigate(`/project/${project.publicId}`); }}
-                       title={t('home.viewPublic')}
-                       className="absolute top-3 right-3 p-1.5 bg-zinc-950/60 backdrop-blur-md rounded border border-zinc-700/50 text-zinc-300 hover:text-primary hover:border-primary/40 transition-colors"
-                     >
-                       <Icon name="open_in_new" size={12} />
-                     </button>
+                     <Tip content={t('home.viewPublic')}>
+                       <button
+                         type="button"
+                         onClick={(e) => { e.stopPropagation(); navigate(`/project/${project.publicId}`); }}
+                         className="absolute top-3 right-3 p-1.5 bg-zinc-950/60 backdrop-blur-md rounded border border-zinc-700/50 text-zinc-300 hover:text-primary hover:border-primary/40 transition-colors"
+                       >
+                         <Icon name="open_in_new" size={12} />
+                       </button>
+                     </Tip>
                    )}
                 </div>
                 {/* Content */}
@@ -326,26 +328,36 @@ export default function Home() {
                   <p className="text-xs text-zinc-400 mt-1 truncate">{project.metadata?.songArtist || t('home.noArtist')}</p>
 
                   <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2">
-                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                      <Icon name="description" size={11} />
-                      {(project.syncedLineCount || 0)} / {(project.lineCount || 0)} {t('home.lines')}
-                    </span>
-                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                      <Icon name="star" size={11} />
-                      {project.starCount ?? 0}
-                    </span>
-                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                      <Icon name="call_split" size={11} />
-                      {project.forkCount ?? 0}
-                    </span>
-                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                      <Icon name="visibility" size={11} />
-                      {project.viewCount ?? 0}
-                    </span>
-                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
-                      <Icon name="share" size={11} />
-                      {project.shareCount ?? 0}
-                    </span>
+                    <Tip content={t('home.statLinesTip')}>
+                      <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
+                        <Icon name="description" size={11} />
+                        {(project.syncedLineCount || 0)} / {(project.lineCount || 0)} {t('home.lines')}
+                      </span>
+                    </Tip>
+                    <Tip content={t('home.statStarsTip')}>
+                      <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
+                        <Icon name="star" size={11} />
+                        {project.starCount ?? 0}
+                      </span>
+                    </Tip>
+                    <Tip content={t('home.statForksTip')}>
+                      <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
+                        <Icon name="call_split" size={11} />
+                        {project.forkCount ?? 0}
+                      </span>
+                    </Tip>
+                    <Tip content={t('home.statViewsTip')}>
+                      <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
+                        <Icon name="visibility" size={11} />
+                        {project.viewCount ?? 0}
+                      </span>
+                    </Tip>
+                    <Tip content={t('home.statSharesTip')}>
+                      <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
+                        <Icon name="share" size={11} />
+                        {project.shareCount ?? 0}
+                      </span>
+                    </Tip>
                   </div>
 
                   <div className="mt-auto pt-4 flex flex-col gap-2">
