@@ -80,6 +80,7 @@ export default {
   sourceYoutube: "YOUTUBE",
   sourceCloud: "NUBE",
   sourceFile: "ARCHIVO",
+  viewPublic: "Ver página pública",
   searchProjects: [
     "Buscar proyectos...",
     "Encuentra un proyecto...",

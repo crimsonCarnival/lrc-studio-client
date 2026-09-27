@@ -39,6 +39,10 @@ interface HomeProject {
   syncedLineCount?: number;
   lineCount?: number;
   public?: boolean;
+  starCount?: number;
+  forkCount?: number;
+  viewCount?: number;
+  shareCount?: number;
   upload?: { source?: string };
   [key: string]: unknown;
 }
@@ -281,10 +285,10 @@ export default function Home() {
                 key={project.publicId}
                 type="button"
                 onClick={() => navigate(`/project/${project.publicId}/edit`)}
-                className="group glass rounded-2xl overflow-hidden text-left hover:border-primary/40 transition-all cursor-pointer focus:ring-2 focus:ring-primary/30 outline-none flex flex-col h-64"
+                className="group glass rounded-2xl overflow-hidden text-left hover:border-primary/40 transition-all cursor-pointer focus:ring-2 focus:ring-primary/30 outline-none flex flex-col h-80"
               >
                 {/* Image/Waveform Header */}
-                <div className="relative h-36 bg-zinc-800/30 border-b border-zinc-800/50 flex items-center justify-center overflow-hidden">
+                <div className="relative h-36 bg-zinc-800/30 border-b border-zinc-800/50 flex items-center justify-center overflow-hidden shrink-0">
                    {project.coverImage ? (
                      <>
                         <img src={project.coverImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700" />
@@ -300,17 +304,58 @@ export default function Home() {
                    {/* Badge */}
                    <div className="absolute top-3 left-3 px-2 py-1 bg-zinc-950/60 backdrop-blur-md rounded border border-zinc-700/50 flex items-center gap-1.5">
                      {project.upload?.source === 'youtube' ? (
-                       <><Icon name="play_circle" size={10} className="text-destructive" /><span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceYoutube')}</span></>
+                       <><YoutubeIcon className="size-3" /><span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceYoutube')}</span></>
                      ) : (
                        <><Icon name="description" size={10} className="text-info" /><span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceFile')}</span></>
                      )}
                    </div>
+                   {project.public && (
+                     <button
+                       type="button"
+                       onClick={(e) => { e.stopPropagation(); navigate(`/project/${project.publicId}`); }}
+                       title={t('home.viewPublic')}
+                       className="absolute top-3 right-3 p-1.5 bg-zinc-950/60 backdrop-blur-md rounded border border-zinc-700/50 text-zinc-300 hover:text-primary hover:border-primary/40 transition-colors"
+                     >
+                       <Icon name="open_in_new" size={12} />
+                     </button>
+                   )}
                 </div>
                 {/* Content */}
                 <div className="p-4 flex flex-col flex-1">
                   <h3 className="text-sm font-bold text-zinc-100 truncate group-hover:text-primary transition-colors">{project.title || t('library.untitled')}</h3>
                   <p className="text-xs text-zinc-400 mt-1 truncate">{project.metadata?.songArtist || t('home.noArtist')}</p>
-                  
+
+                  <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2">
+                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                      <Icon name="description" size={11} />
+                      {(project.syncedLineCount || 0)} / {(project.lineCount || 0)} {t('home.lines')}
+                    </span>
+                    {(project.starCount ?? 0) > 0 && (
+                      <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                        <Icon name="star" size={11} />
+                        {project.starCount}
+                      </span>
+                    )}
+                    {(project.forkCount ?? 0) > 0 && (
+                      <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                        <Icon name="call_split" size={11} />
+                        {project.forkCount}
+                      </span>
+                    )}
+                    {(project.viewCount ?? 0) > 0 && (
+                      <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                        <Icon name="visibility" size={11} />
+                        {project.viewCount}
+                      </span>
+                    )}
+                    {(project.shareCount ?? 0) > 0 && (
+                      <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                        <Icon name="share" size={11} />
+                        {project.shareCount}
+                      </span>
+                    )}
+                  </div>
+
                   <div className="mt-auto pt-4 flex flex-col gap-2">
                     <div className="h-[3px] w-full bg-zinc-800 rounded-full overflow-hidden">
                       <div className={`h-full rounded-full transition-all duration-500 ${progress === 100 ? 'bg-success' : 'bg-primary'}`} style={{ width: `${progress}%` }} />
@@ -339,7 +384,7 @@ export default function Home() {
           {/* Start another CTA Card */}
           <button
             onClick={() => navigate('/project/new')}
-            className="group relative rounded-2xl border border-dashed border-zinc-700 hover:border-primary/50 bg-transparent hover:bg-zinc-800/20 transition-all flex flex-col items-center justify-center p-6 h-64 text-center"
+            className="group relative rounded-2xl border border-dashed border-zinc-700 hover:border-primary/50 bg-transparent hover:bg-zinc-800/20 transition-all flex flex-col items-center justify-center p-6 h-80 text-center"
           >
              <div className="size-12 rounded-full bg-zinc-800/80 group-hover:bg-primary/20 flex items-center justify-center mb-4 transition-colors">
                <Icon name="add" size={24} className="text-zinc-400 group-hover:text-primary transition-colors" />
