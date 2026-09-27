@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useRef, useState, useEffect, useLayoutEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
@@ -87,9 +87,36 @@ function PublicProjectViewPageInner() {
 
   // Derive star state — no effect needed; reset local override when the project changes
   const isStarred = starredOverride ?? project?.isStarredByMe ?? false;
-  const [liveStarCount, setLiveStarCount] = useState<number | null>(null);
-  const [liveForkCount, setLiveForkCount] = useState<number | null>(null);
-  const starCount = liveStarCount ?? ((project?.starCount ?? 0) + starDelta);
+  // Each live counter is tagged with the publicId it was computed for, rather than
+  // reset in an effect on navigation. This page has three differently-shaped live-
+  // counter mechanisms: star and fork counts are pushed over Socket.IO as they
+  // happen elsewhere, while the view count is pulled once per publicId from the
+  // "Track view" registerView response below. (View isn't socket-pushed because a
+  // view is registered by the viewer's own request — only that viewer needs to see
+  // it immediately; the owner's page doesn't subscribe to other people's views.)
+  // Tagging with pid — instead of clearing the state in an effect keyed on
+  // project?.publicId — means a stale count from the previous project can never
+  // render even for a single frame while navigating in place (e.g. the up-next
+  // panel), since the value is only used when its pid matches the current project.
+  type LiveCount = { pid: string; count: number } | null;
+  const [liveStarCount, setLiveStarCount] = useState<LiveCount>(null);
+  const [liveForkCount, setLiveForkCount] = useState<LiveCount>(null);
+  const [liveViewCount, setLiveViewCount] = useState<LiveCount>(null);
+  const viewRegisteredForRef = useRef<string | null>(null);
+  // Tracks the most recently rendered publicId so an in-flight registerView
+  // call can tell, at resolution time, whether the user has since navigated
+  // to a different project — see the "Track view" effect below. Synced in a
+  // layout effect (not during render) since refs must not be written while
+  // rendering, and it must be current before any paint-triggered network
+  // callback could read it.
+  const latestPublicIdRef = useRef<string | null | undefined>(project?.publicId);
+  useLayoutEffect(() => {
+    latestPublicIdRef.current = project?.publicId;
+  }, [project?.publicId]);
+  const liveStarValue = liveStarCount && liveStarCount.pid === project?.publicId ? liveStarCount.count : null;
+  const liveForkValue = liveForkCount && liveForkCount.pid === project?.publicId ? liveForkCount.count : null;
+  const liveViewValue = liveViewCount && liveViewCount.pid === project?.publicId ? liveViewCount.count : null;
+  const starCount = liveStarValue ?? ((project?.starCount ?? 0) + starDelta);
 
   // ── Live socket updates: star count, fork notifications ───────
   useEffect(() => {
@@ -100,12 +127,15 @@ function PublicProjectViewPageInner() {
     const onStarUpdate = (payload: { publicId: string; starCount: number }) => {
       if (payload.publicId !== pid) return;
       // Absolute replace, not additive — avoids double-counting our own optimistic delta.
-      setLiveStarCount(payload.starCount);
+      setLiveStarCount({ pid, count: payload.starCount });
       setStarDelta(0);
     };
     const onForked = (payload: { publicId: string }) => {
       if (payload.publicId !== pid) return;
-      setLiveForkCount((c) => (c ?? project?.forkCount ?? 0) + 1);
+      setLiveForkCount((prev) => ({
+        pid,
+        count: (prev?.pid === pid ? prev.count : (project?.forkCount ?? 0)) + 1,
+      }));
       toast(t('projectView.someoneForked'));
     };
 
@@ -117,8 +147,12 @@ function PublicProjectViewPageInner() {
     };
   }, [project?.publicId, project?.forkCount, t]);
 
-  const displayProject = project && liveForkCount !== null
-    ? { ...project, forkCount: liveForkCount }
+  const displayProject = project && (liveForkValue !== null || liveViewValue !== null)
+    ? {
+        ...project,
+        ...(liveForkValue !== null ? { forkCount: liveForkValue } : {}),
+        ...(liveViewValue !== null ? { viewCount: liveViewValue } : {}),
+      }
     : project;
 
   // ── Player / playback state ──────────────────────────────────
@@ -140,13 +174,28 @@ function PublicProjectViewPageInner() {
   }, [listId]);
 
   // ── Track view ───────────────────────────────────────────────
+  // The ref only absorbs StrictMode's double effect invocation; real
+  // deduplication (per viewer, per UTC day, owner excluded) is the server's
+  // job now. The old sessionStorage guard was per-tab, so reopening the
+  // project in a new tab counted again.
+  //
+  // Staleness is decided at *resolution* time by comparing against
+  // latestPublicIdRef, not by a `cancelled` flag captured in this run's
+  // cleanup. Under StrictMode, React mounts, cleans up, and remounts this
+  // effect synchronously before the network call can resolve — a cleanup-
+  // based `cancelled` flag would be flipped by that synthetic unmount and
+  // permanently discard this run's own eventual result, even though it's
+  // the only call that ever fires (the remount is skipped by the
+  // viewRegisteredForRef gate below). Comparing pids instead lets this run's
+  // result land normally, while still discarding it if the user has since
+  // navigated to a different project.
   useEffect(() => {
-    if (!project?.publicId) return;
-    const viewedKey = `viewed_project_${project.publicId}`;
-    if (!sessionStorage.getItem(viewedKey)) {
-      projectsService.incrementView(project.publicId).catch(() => {});
-      sessionStorage.setItem(viewedKey, '1');
-    }
+    const pid = project?.publicId;
+    if (!pid || viewRegisteredForRef.current === pid) return;
+    viewRegisteredForRef.current = pid;
+    projectsService.registerView(pid).then((res) => {
+      if (res && latestPublicIdRef.current === pid) setLiveViewCount({ pid, count: res.viewCount });
+    });
   }, [project?.publicId]);
 
   // ── Derived data ─────────────────────────────────────────────
