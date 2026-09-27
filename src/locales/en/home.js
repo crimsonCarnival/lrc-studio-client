@@ -80,6 +80,7 @@ export default {
   sourceYoutube: "YOUTUBE",
   sourceCloud: "CLOUD",
   sourceFile: "FILE",
+  viewPublic: "View public page",
   searchProjects: [
     "Search projects...",
     "Find a project...",
