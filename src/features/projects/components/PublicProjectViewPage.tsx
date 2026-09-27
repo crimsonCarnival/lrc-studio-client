@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useRef, useState, useEffect, useLayoutEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
@@ -91,6 +91,16 @@ function PublicProjectViewPageInner() {
   const [liveForkCount, setLiveForkCount] = useState<number | null>(null);
   const [liveViewCount, setLiveViewCount] = useState<number | null>(null);
   const viewRegisteredForRef = useRef<string | null>(null);
+  // Tracks the most recently rendered publicId so an in-flight registerView
+  // call can tell, at resolution time, whether the user has since navigated
+  // to a different project — see the "Track view" effect below. Synced in a
+  // layout effect (not during render) since refs must not be written while
+  // rendering, and it must be current before any paint-triggered network
+  // callback could read it.
+  const latestPublicIdRef = useRef<string | null | undefined>(project?.publicId);
+  useLayoutEffect(() => {
+    latestPublicIdRef.current = project?.publicId;
+  }, [project?.publicId]);
   const starCount = liveStarCount ?? ((project?.starCount ?? 0) + starDelta);
 
   // ── Live socket updates: star count, fork notifications ───────
@@ -150,15 +160,24 @@ function PublicProjectViewPageInner() {
   // deduplication (per viewer, per UTC day, owner excluded) is the server's
   // job now. The old sessionStorage guard was per-tab, so reopening the
   // project in a new tab counted again.
+  //
+  // Staleness is decided at *resolution* time by comparing against
+  // latestPublicIdRef, not by a `cancelled` flag captured in this run's
+  // cleanup. Under StrictMode, React mounts, cleans up, and remounts this
+  // effect synchronously before the network call can resolve — a cleanup-
+  // based `cancelled` flag would be flipped by that synthetic unmount and
+  // permanently discard this run's own eventual result, even though it's
+  // the only call that ever fires (the remount is skipped by the
+  // viewRegisteredForRef gate below). Comparing pids instead lets this run's
+  // result land normally, while still discarding it if the user has since
+  // navigated to a different project.
   useEffect(() => {
     const pid = project?.publicId;
     if (!pid || viewRegisteredForRef.current === pid) return;
     viewRegisteredForRef.current = pid;
-    let cancelled = false;
     projectsService.registerView(pid).then((res) => {
-      if (!cancelled && res) setLiveViewCount(res.viewCount);
+      if (res && latestPublicIdRef.current === pid) setLiveViewCount(res.viewCount);
     });
-    return () => { cancelled = true; };
   }, [project?.publicId]);
 
   // ── Derived data ─────────────────────────────────────────────
