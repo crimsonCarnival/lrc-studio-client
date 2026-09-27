@@ -23,6 +23,9 @@ export default {
   boosted: '¡Impulsado!',
   boostFailed: 'No se pudo impulsar',
   publishedOn: 'Publicado',
+  viewersNow: "Viendo ahora",
+  viewersAnonymous: "{{count}} más viendo",
+  viewersAnonymous_one: "1 más viendo",
   actions: {
     menu: 'Más opciones',
     edit: 'Editar',
