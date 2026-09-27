@@ -87,9 +87,21 @@ function PublicProjectViewPageInner() {
 
   // Derive star state — no effect needed; reset local override when the project changes
   const isStarred = starredOverride ?? project?.isStarredByMe ?? false;
-  const [liveStarCount, setLiveStarCount] = useState<number | null>(null);
-  const [liveForkCount, setLiveForkCount] = useState<number | null>(null);
-  const [liveViewCount, setLiveViewCount] = useState<number | null>(null);
+  // Each live counter is tagged with the publicId it was computed for, rather than
+  // reset in an effect on navigation. This page has three differently-shaped live-
+  // counter mechanisms: star and fork counts are pushed over Socket.IO as they
+  // happen elsewhere, while the view count is pulled once per publicId from the
+  // "Track view" registerView response below. (View isn't socket-pushed because a
+  // view is registered by the viewer's own request — only that viewer needs to see
+  // it immediately; the owner's page doesn't subscribe to other people's views.)
+  // Tagging with pid — instead of clearing the state in an effect keyed on
+  // project?.publicId — means a stale count from the previous project can never
+  // render even for a single frame while navigating in place (e.g. the up-next
+  // panel), since the value is only used when its pid matches the current project.
+  type LiveCount = { pid: string; count: number } | null;
+  const [liveStarCount, setLiveStarCount] = useState<LiveCount>(null);
+  const [liveForkCount, setLiveForkCount] = useState<LiveCount>(null);
+  const [liveViewCount, setLiveViewCount] = useState<LiveCount>(null);
   const viewRegisteredForRef = useRef<string | null>(null);
   // Tracks the most recently rendered publicId so an in-flight registerView
   // call can tell, at resolution time, whether the user has since navigated
@@ -101,7 +113,10 @@ function PublicProjectViewPageInner() {
   useLayoutEffect(() => {
     latestPublicIdRef.current = project?.publicId;
   }, [project?.publicId]);
-  const starCount = liveStarCount ?? ((project?.starCount ?? 0) + starDelta);
+  const liveStarValue = liveStarCount && liveStarCount.pid === project?.publicId ? liveStarCount.count : null;
+  const liveForkValue = liveForkCount && liveForkCount.pid === project?.publicId ? liveForkCount.count : null;
+  const liveViewValue = liveViewCount && liveViewCount.pid === project?.publicId ? liveViewCount.count : null;
+  const starCount = liveStarValue ?? ((project?.starCount ?? 0) + starDelta);
 
   // ── Live socket updates: star count, fork notifications ───────
   useEffect(() => {
@@ -112,12 +127,15 @@ function PublicProjectViewPageInner() {
     const onStarUpdate = (payload: { publicId: string; starCount: number }) => {
       if (payload.publicId !== pid) return;
       // Absolute replace, not additive — avoids double-counting our own optimistic delta.
-      setLiveStarCount(payload.starCount);
+      setLiveStarCount({ pid, count: payload.starCount });
       setStarDelta(0);
     };
     const onForked = (payload: { publicId: string }) => {
       if (payload.publicId !== pid) return;
-      setLiveForkCount((c) => (c ?? project?.forkCount ?? 0) + 1);
+      setLiveForkCount((prev) => ({
+        pid,
+        count: (prev?.pid === pid ? prev.count : (project?.forkCount ?? 0)) + 1,
+      }));
       toast(t('projectView.someoneForked'));
     };
 
@@ -129,11 +147,11 @@ function PublicProjectViewPageInner() {
     };
   }, [project?.publicId, project?.forkCount, t]);
 
-  const displayProject = project && (liveForkCount !== null || liveViewCount !== null)
+  const displayProject = project && (liveForkValue !== null || liveViewValue !== null)
     ? {
         ...project,
-        ...(liveForkCount !== null ? { forkCount: liveForkCount } : {}),
-        ...(liveViewCount !== null ? { viewCount: liveViewCount } : {}),
+        ...(liveForkValue !== null ? { forkCount: liveForkValue } : {}),
+        ...(liveViewValue !== null ? { viewCount: liveViewValue } : {}),
       }
     : project;
 
@@ -176,7 +194,7 @@ function PublicProjectViewPageInner() {
     if (!pid || viewRegisteredForRef.current === pid) return;
     viewRegisteredForRef.current = pid;
     projectsService.registerView(pid).then((res) => {
-      if (res && latestPublicIdRef.current === pid) setLiveViewCount(res.viewCount);
+      if (res && latestPublicIdRef.current === pid) setLiveViewCount({ pid, count: res.viewCount });
     });
   }, [project?.publicId]);
 
