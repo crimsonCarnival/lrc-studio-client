@@ -89,6 +89,8 @@ function PublicProjectViewPageInner() {
   const isStarred = starredOverride ?? project?.isStarredByMe ?? false;
   const [liveStarCount, setLiveStarCount] = useState<number | null>(null);
   const [liveForkCount, setLiveForkCount] = useState<number | null>(null);
+  const [liveViewCount, setLiveViewCount] = useState<number | null>(null);
+  const viewRegisteredForRef = useRef<string | null>(null);
   const starCount = liveStarCount ?? ((project?.starCount ?? 0) + starDelta);
 
   // ── Live socket updates: star count, fork notifications ───────
@@ -117,8 +119,12 @@ function PublicProjectViewPageInner() {
     };
   }, [project?.publicId, project?.forkCount, t]);
 
-  const displayProject = project && liveForkCount !== null
-    ? { ...project, forkCount: liveForkCount }
+  const displayProject = project && (liveForkCount !== null || liveViewCount !== null)
+    ? {
+        ...project,
+        ...(liveForkCount !== null ? { forkCount: liveForkCount } : {}),
+        ...(liveViewCount !== null ? { viewCount: liveViewCount } : {}),
+      }
     : project;
 
   // ── Player / playback state ──────────────────────────────────
@@ -140,13 +146,19 @@ function PublicProjectViewPageInner() {
   }, [listId]);
 
   // ── Track view ───────────────────────────────────────────────
+  // The ref only absorbs StrictMode's double effect invocation; real
+  // deduplication (per viewer, per UTC day, owner excluded) is the server's
+  // job now. The old sessionStorage guard was per-tab, so reopening the
+  // project in a new tab counted again.
   useEffect(() => {
-    if (!project?.publicId) return;
-    const viewedKey = `viewed_project_${project.publicId}`;
-    if (!sessionStorage.getItem(viewedKey)) {
-      projectsService.incrementView(project.publicId).catch(() => {});
-      sessionStorage.setItem(viewedKey, '1');
-    }
+    const pid = project?.publicId;
+    if (!pid || viewRegisteredForRef.current === pid) return;
+    viewRegisteredForRef.current = pid;
+    let cancelled = false;
+    projectsService.registerView(pid).then((res) => {
+      if (!cancelled && res) setLiveViewCount(res.viewCount);
+    });
+    return () => { cancelled = true; };
   }, [project?.publicId]);
 
   // ── Derived data ─────────────────────────────────────────────

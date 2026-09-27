@@ -303,9 +303,12 @@ const BOOST_PROJECT = /* GraphQL */ `
   }
 `;
 
-const INCREMENT_PROJECT_VIEW = /* GraphQL */ `
-  mutation IncrementProjectView($id: ID!) {
-    incrementProjectView(id: $id)
+const REGISTER_PROJECT_VIEW = /* GraphQL */ `
+  mutation RegisterProjectView($publicId: ID!) {
+    registerProjectView(publicId: $publicId) {
+      counted
+      viewCount
+    }
   }
 `;
 
@@ -417,12 +420,20 @@ export const projectsService = {
     return data.boostProject;
   },
 
-  async incrementView(publicId: string): Promise<boolean> {
+  /**
+   * Register a view. Returns the post-call count so the page can show it
+   * without a refetch, or null when the project is gone. Never throws —
+   * a failed view registration must not break the page.
+   */
+  async registerView(publicId: string): Promise<{ counted: boolean; viewCount: number } | null> {
     try {
-      const data = await gqlRequest<{ incrementProjectView: boolean }>(INCREMENT_PROJECT_VIEW, { id: publicId });
-      return data.incrementProjectView;
+      const data = await gqlRequest<{ registerProjectView: { counted: boolean; viewCount: number } | null }>(
+        REGISTER_PROJECT_VIEW,
+        { publicId }
+      );
+      return data.registerProjectView;
     } catch {
-      return false; // Fail silently for analytics
+      return null; // Fail silently for analytics
     }
   },
 
