@@ -94,6 +94,7 @@ interface ProjectInfoPanelProps {
   onFork?: () => void;
   onEdit?: () => void;
   reactionsSlot?: ReactNode;
+  viewersSlot?: ReactNode;
   ctaSlot?: ReactNode;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lines?: any[];
@@ -114,6 +115,7 @@ export default function ProjectInfoPanel({
   onFork,
   onEdit,
   reactionsSlot,
+  viewersSlot,
   ctaSlot,
   lines,
   songSingers = [],
@@ -282,6 +284,7 @@ export default function ProjectInfoPanel({
           </span>
           {reactionsSlot && <div>{reactionsSlot}</div>}
         </div>
+        {viewersSlot && <div className="mt-2">{viewersSlot}</div>}
 
         {/* Forked-from */}
         {project?.forkedFrom?.publicId && (
