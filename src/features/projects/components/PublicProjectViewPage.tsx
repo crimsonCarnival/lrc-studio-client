@@ -15,6 +15,8 @@ import { useColorPalette } from '../hooks/useColorPalette';
 import { useStarredPlaylist } from '../hooks/useStarredPlaylist';
 import ImmersiveLyricsDisplay, { type DisplayLine } from './ImmersiveLyricsDisplay';
 import ProjectInfoPanel from './ProjectInfoPanel';
+import { useProjectViewers } from '../hooks/useProjectViewers';
+import { ViewerBadges } from './ViewerBadges';
 import { getPlaylist } from '@features/playlists/playlist.service';
 import { ReactionBar } from '@features/reactions/components/ReactionBar';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
@@ -195,6 +197,10 @@ function PublicProjectViewPageInner() {
 
   // ── Ownership ────────────────────────────────────────────────
   const isOwner = !!(user && project?.user?.id && user.id === project.user.id);
+
+  // The owner gate here is UI-only. The server independently refuses to send
+  // the roster to anyone who is not the owner.
+  const { viewers, anonymousCount } = useProjectViewers(project?.publicId ?? null, isOwner);
 
   // ── Prev / next within list ──────────────────────────────────
   const { prevTrack, nextTrack } = useMemo(() => {
@@ -413,6 +419,7 @@ function PublicProjectViewPageInner() {
                   disabled={!user}
                 />
               }
+              viewersSlot={isOwner ? <ViewerBadges viewers={viewers} anonymousCount={anonymousCount} /> : undefined}
               lines={lines}
               songSingers={songSingers}
               singerColors={singerColors}

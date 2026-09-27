@@ -38,7 +38,11 @@ export function ViewerBadges({ viewers, anonymousCount }: {
                     className="w-6 h-6 rounded-full object-cover ring-2 ring-background"
                   />
                 ) : (
-                  <span className="w-6 h-6 rounded-full ring-2 ring-background bg-muted text-muted-foreground text-[10px] font-semibold flex items-center justify-center uppercase">
+                  <span
+                    role="img"
+                    aria-label={viewer.displayName || viewer.accountName}
+                    className="w-6 h-6 rounded-full ring-2 ring-background bg-muted text-muted-foreground text-[10px] font-semibold flex items-center justify-center uppercase"
+                  >
                     {(viewer.displayName || viewer.accountName || '?').charAt(0)}
                   </span>
                 )}
@@ -47,7 +51,10 @@ export function ViewerBadges({ viewers, anonymousCount }: {
           ))}
 
           {overflow > 0 && (
-            <span className="-ml-1.5 w-6 h-6 rounded-full ring-2 ring-background bg-muted text-muted-foreground text-[10px] font-semibold flex items-center justify-center tabular-nums">
+            <span
+              aria-label={t('projectView.viewersMore', { count: overflow })}
+              className="-ml-1.5 w-6 h-6 rounded-full ring-2 ring-background bg-muted text-muted-foreground text-[10px] font-semibold flex items-center justify-center tabular-nums"
+            >
               +{overflow}
             </span>
           )}
