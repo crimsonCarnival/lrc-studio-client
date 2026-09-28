@@ -4,6 +4,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { usePaginatedProjects } from './hooks/useExplore';
 import { useProjectSearch } from '@/features/search/hooks/useProjectSearch';
 import { LogoLoader } from '@ui/LogoLoader';
+import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 
 interface ExploreProject {
   id: string;
@@ -19,41 +20,51 @@ interface ExploreProject {
 }
 
 function ExploreProjectCard({ project }: { project: ExploreProject }) {
+  const menuProject = { ...project, publicId: project.publicId ?? project.id };
   return (
-    <Link
-      to={`/project/${project.publicId ?? project.id}`}
-      className="flex flex-col rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors overflow-hidden group"
-    >
-      <div className="aspect-video w-full bg-gradient-to-br from-primary/30 to-violet-500/30 flex items-center justify-center relative shrink-0">
-        {project.coverImage || project.upload?.uploadUrl ? (
-          <img
-            src={project.coverImage ?? project.upload?.uploadUrl ?? undefined}
-            alt={project.title ?? ''}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        ) : (
-          <Icon name="music_note" size={32} className="text-primary/50" />
-        )}
-      </div>
-      <div className="p-3 flex flex-col gap-1">
-        <p className="text-sm font-semibold text-white line-clamp-1 group-hover:text-primary transition-colors">
-          {project.title}
-        </p>
-        <p className="text-xs text-zinc-500 truncate">
-          {project.user?.accountName ?? project.owner?.accountName ?? project.accountName}
-        </p>
-        <div className="flex items-center gap-3 mt-0.5">
-          <span className="flex items-center gap-1 text-xs text-zinc-400">
-            <Icon name="star" size={12} />
-            {project.starCount ?? 0}
-          </span>
-          <span className="flex items-center gap-1 text-xs text-zinc-400">
-            <Icon name="call_split" size={12} />
-            {project.forkCount ?? 0}
-          </span>
+    <ProjectMenu project={menuProject} isOwner={false}>
+      <Link
+        to={`/project/${project.publicId ?? project.id}`}
+        className="flex flex-col rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors overflow-hidden group"
+      >
+        <div className="aspect-video w-full bg-gradient-to-br from-primary/30 to-violet-500/30 flex items-center justify-center relative shrink-0">
+          {project.coverImage || project.upload?.uploadUrl ? (
+            <img
+              src={project.coverImage ?? project.upload?.uploadUrl ?? undefined}
+              alt={project.title ?? ''}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <Icon name="music_note" size={32} className="text-primary/50" />
+          )}
         </div>
-      </div>
-    </Link>
+        <div className="p-3 flex flex-col gap-1">
+          <p className="text-sm font-semibold text-white line-clamp-1 group-hover:text-primary transition-colors">
+            {project.title}
+          </p>
+          <p className="text-xs text-zinc-500 truncate">
+            {project.user?.accountName ?? project.owner?.accountName ?? project.accountName}
+          </p>
+          <div className="flex items-center justify-between mt-0.5">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1 text-xs text-zinc-400">
+                <Icon name="star" size={12} />
+                {project.starCount ?? 0}
+              </span>
+              <span className="flex items-center gap-1 text-xs text-zinc-400">
+                <Icon name="call_split" size={12} />
+                {project.forkCount ?? 0}
+              </span>
+            </div>
+            <ProjectMenuButton
+              project={menuProject}
+              isOwner={false}
+              className="p-1 -m-1 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-colors"
+            />
+          </div>
+        </div>
+      </Link>
+    </ProjectMenu>
   );
 }
 

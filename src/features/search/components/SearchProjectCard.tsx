@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { ProjectListCover } from '@/features/projects/components/ProjectListCover';
+import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 import type { Project } from '@/types';
 
 export function SearchProjectCard({ project }: { project: Project }) {
@@ -11,34 +12,37 @@ export function SearchProjectCard({ project }: { project: Project }) {
   const artist = metadata?.songArtist;
 
   return (
-    <Link
-      to={`/project/${publicId}`}
-      className="flex gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 hover:bg-zinc-800/50 transition-all"
-    >
-      <ProjectListCover coverImage={coverImage} genre={metadata?.genre} className="size-12" />
+    <ProjectMenu project={project} isOwner={false}>
+      <Link
+        to={`/project/${publicId}`}
+        className="flex gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 hover:bg-zinc-800/50 transition-all"
+      >
+        <ProjectListCover coverImage={coverImage} genre={metadata?.genre} className="size-12" />
 
-      <div className="flex-1 min-w-0">
-        <p className="font-semibold text-white text-sm truncate">{displayTitle}</p>
-        {artist && (
-          <p className="text-xs text-zinc-400 truncate mt-0.5">{artist}</p>
-        )}
-        {forkedFrom?.accountName && (
-          <p className="text-[10px] text-zinc-600 mt-0.5">
-            {t('search.forkedFrom', { accountName: forkedFrom.accountName })}
-          </p>
-        )}
-      </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-white text-sm truncate">{displayTitle}</p>
+          {artist && (
+            <p className="text-xs text-zinc-400 truncate mt-0.5">{artist}</p>
+          )}
+          {forkedFrom?.accountName && (
+            <p className="text-[10px] text-zinc-600 mt-0.5">
+              {t('search.forkedFrom', { accountName: forkedFrom.accountName })}
+            </p>
+          )}
+        </div>
 
-      <div className="flex flex-col items-end gap-1.5 shrink-0">
-        <div className="flex items-center gap-1 text-xs text-zinc-500">
-          <Icon name="star" size={12} />
-          <span>{starCount ?? 0}</span>
+        <div className="flex flex-col items-end gap-1.5 shrink-0">
+          <ProjectMenuButton project={project} isOwner={false} className="p-1 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-colors" />
+          <div className="flex items-center gap-1 text-xs text-zinc-500">
+            <Icon name="star" size={12} />
+            <span>{starCount ?? 0}</span>
+          </div>
+          <div className="flex items-center gap-1 text-xs text-zinc-500">
+            <Icon name="call_split" size={12} />
+            <span>{forkCount ?? 0}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1 text-xs text-zinc-500">
-          <Icon name="call_split" size={12} />
-          <span>{forkCount ?? 0}</span>
-        </div>
-      </div>
-    </Link>
+      </Link>
+    </ProjectMenu>
   );
 }
