@@ -97,6 +97,14 @@ export function ProjectMenuButton({ className, ...actions }: ProjectMenuActions 
             type="button"
             aria-label={t('common.moreActions')}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            // Radix's DropdownMenuTrigger onKeyDown calls preventDefault() for
+            // Enter/Space/ArrowDown but never stopPropagation(), so the keydown
+            // still bubbles to the card root's own onKeyDown (which fires on
+            // exactly those keys and navigates). Stop it here — propagation
+            // only, never preventDefault, or Radix's own menu-open handling
+            // (composed via composeEventHandlers with checkForDefaultPrevented)
+            // gets suppressed and the button stops working entirely.
+            onKeyDown={(e) => { if (['Enter', ' ', 'ArrowDown'].includes(e.key)) e.stopPropagation(); }}
             className={className ?? 'p-1 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/50 transition-colors'}
           >
             <Icon name="more_vert" size={16} />
