@@ -103,9 +103,6 @@ export const DEFAULT_SETTINGS = {
     focusPreview: ['Ctrl+2'],
     focusPlayback: ['Ctrl+3'],
   },
-  import: {
-    expandRepeats: true
-  },
   advanced: {
     autoSave: { enabled: true, timeInterval: 60 },
     autoSaveIndicator: 'normal',

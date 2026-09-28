@@ -8,6 +8,7 @@ import { DEFAULT_SETTINGS } from './settings-defaults';
 import { SettingsContext } from './settings-context-value';
 import { settings as settingsApi, getAccessToken } from '@/app/api';
 import type { AppSettings, SettingsContextValue } from './settings.types';
+import i18next from 'i18next';
 
 const STORAGE_KEY = 'lrc-syncer-settings';
 
@@ -175,21 +176,29 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
     settingsApi.get().then((remote: any) => {
       isSyncingRef.current = true;
-      setSettings(() => {
-        // Server is the source of truth for a logged-in user. Rebase on
-        // DEFAULT_SETTINGS (NOT the current local state) so a previous
-        // account's leftover localStorage can't bleed into this session.
-        // Empty remote = brand-new user (no server doc) = pure defaults.
-        const base = structuredClone(DEFAULT_SETTINGS);
-        const merged = remote && Object.keys(remote).length > 0
-          ? deepMerge(base, remote)
-          : base;
-        // Persist immediately (save effect is suppressed via isSyncingRef)
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* ignore */ }
-        // Update last saved snapshot since we just synced from server
-        lastSavedToServerRef.current = structuredClone(merged);
-        return merged;
-      });
+      // Server is the source of truth for a logged-in user. Rebase on
+      // DEFAULT_SETTINGS (NOT the current local state) so a previous
+      // account's leftover localStorage can't bleed into this session.
+      // Empty remote = brand-new user (no server doc) = pure defaults.
+      const base = structuredClone(DEFAULT_SETTINGS);
+      const merged = remote && Object.keys(remote).length > 0
+        ? deepMerge(base, remote)
+        : base;
+      // Persist immediately (save effect is suppressed via isSyncingRef)
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* ignore */ }
+      // Update last saved snapshot since we just synced from server
+      lastSavedToServerRef.current = structuredClone(merged);
+      setSettings(() => merged);
+
+      // i18next's detection order is querystring -> localStorage -> navigator,
+      // so it never consults the account. Without this, a language chosen on one
+      // device is stored on the server and then ignored on every other one.
+      // An explicit ?hl= still wins: useThemeSync applies it and we defer here.
+      const accountLang = (merged as AppSettings)?.interface?.defaultLanguage;
+      const hasHlParam = new URLSearchParams(window.location.search).has('hl');
+      if (accountLang && !hasHlParam && i18next.language !== accountLang) {
+        void i18next.changeLanguage(accountLang);
+      }
       // Clear the sync flag after React processes the state update
       queueMicrotask(() => { isSyncingRef.current = false; });
     }).catch(() => { /* ignore */ }).finally(() => {

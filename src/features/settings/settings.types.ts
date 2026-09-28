@@ -15,7 +15,6 @@ export interface AppSettings {
   playback: Section;
   shortcuts: Section;
   advanced: Section;
-  import: Section;
   autoStamp: Section;
 }
 
