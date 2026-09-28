@@ -5,7 +5,7 @@ import { Tip } from '@ui/tip';
 interface AdminStats {
   totalUsers?: number;
   activeUsers?: number;
-  activeUserNames?: string[];
+  activeUsersSample?: { name: string; avatarUrl: string | null }[];
   totalProjects?: number;
   totalUploads?: number;
   pendingAppeals?: number;
@@ -32,17 +32,40 @@ function formatBytes(bytes = 0) {
 export default function AdminStatsCards({ stats }: { stats?: AdminStats }) {
   const { t } = useTranslation();
 
-  const activeNames = stats?.activeUserNames ?? [];
+  const activeSample = stats?.activeUsersSample ?? [];
   const activeCount = stats?.activeUsers ?? 0;
   // The server caps the sample, so a busy day shows the most recent ones plus a
   // count of the rest rather than an unbounded list.
-  const activeTip: ReactNode = activeNames.length > 0
+  const activeTip: ReactNode = activeSample.length > 0
     ? (
-      <span className="block max-w-[220px] text-left">
-        {activeNames.join(', ')}
-        {activeCount > activeNames.length
-          ? ` ${t('admin.dashboard.stats.activeMore', { count: activeCount - activeNames.length })}`
-          : ''}
+      <span className="block max-w-[240px] text-left">
+        <span className="flex flex-col gap-1">
+          {activeSample.map((u) => (
+            <span key={u.name} className="flex items-center gap-1.5">
+              {u.avatarUrl ? (
+                <img
+                  src={u.avatarUrl}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                  className="size-4 rounded-full object-cover shrink-0"
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="size-4 rounded-full bg-muted text-muted-foreground text-[8px] font-semibold flex items-center justify-center uppercase shrink-0"
+                >
+                  {u.name.charAt(0)}
+                </span>
+              )}
+              <span className="truncate">{u.name}</span>
+            </span>
+          ))}
+        </span>
+        {activeCount > activeSample.length && (
+          <span className="block mt-1 text-muted-foreground">
+            {t('admin.dashboard.stats.activeMore', { count: activeCount - activeSample.length })}
+          </span>
+        )}
       </span>
     )
     : t('admin.dashboard.stats.activeTip');
