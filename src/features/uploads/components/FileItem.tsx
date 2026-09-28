@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { Button } from '@ui/button';
 import { useTranslation } from 'react-i18next';
+import { useConfirmDestructive } from '@/shared/hooks/useConfirm';
 
 interface FileItemProps {
   file: File;
@@ -20,6 +21,7 @@ export const FileItem = ({ file, progress, onDelete }: FileItemProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { trigger: haptic } = useHapticFeedback();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const confirmDestructive = useConfirmDestructive();
   const touchStartRef = useRef({ x: 0, time: 0 });
 
   // Touch handlers for swipe-left to delete
@@ -40,12 +42,15 @@ export const FileItem = ({ file, progress, onDelete }: FileItemProps) => {
     // Swipe left: startX - endX > 60px threshold, quick movement
     if (startX - endX > 60 && timeDiff < 500) {
       haptic('medium');
+      // With confirmations disabled the swipe IS the decision.
+      if (!confirmDestructive) { onDelete?.(); return; }
       setDeleteConfirm(true);
     }
   };
 
   const handleDeleteClick = (e: ReactMouseEvent) => {
     e.stopPropagation?.();
+    if (!confirmDestructive) { onDelete?.(); return; }
     setDeleteConfirm(true);
   };
 
