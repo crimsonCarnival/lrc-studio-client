@@ -21,6 +21,7 @@ import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/popover';
 import { SharePanel } from '@/features/sharing/components/ShareModal';
 import { incrementPlaylistView, incrementPlaylistShare } from './playlist.service';
+import { useConfirmDestructive } from '@/shared/hooks/useConfirm';
 
 interface PlaylistProject {
   id: string;
@@ -128,6 +129,7 @@ export default function PlaylistPage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const confirmDestructive = useConfirmDestructive();
   const [deleting, setDeleting] = useState(false);
 
   const isOwner = !!user && user.accountName === accountName;
@@ -357,7 +359,12 @@ export default function PlaylistPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setConfirmDelete(true)}
+                      onClick={() => {
+                        // With confirmations disabled the first click deletes,
+                        // rather than arming a second one nobody asked for.
+                        if (!confirmDestructive) { void handleDelete(); return; }
+                        setConfirmDelete(true);
+                      }}
                       className="text-muted-foreground hover:text-destructive flex items-center gap-1.5"
                     >
                       <Icon name="delete" size={16} />

@@ -26,6 +26,21 @@ import { requestsApi } from './services/requests.service';
 import SudoPasswordModal from './SudoPasswordModal';
 import { LogoLoader } from '@ui/LogoLoader';
 
+/*
+ * Note on `advanced.confirmDestructive`: this surface deliberately confirms
+ * UNCONDITIONALLY and does not consult that setting.
+ *
+ * The setting is a personal convenience toggle for actions on your own data
+ * (deleting your project, your upload, your playlist). These actions destroy or
+ * restrict OTHER people's accounts and are irreversible. The server already
+ * requires a sudo grant for them, but sudo proves who you are, not that you
+ * meant this particular target — within a 5-minute sudo window a single stray
+ * click would otherwise ban or delete the wrong user.
+ *
+ * If you are here to "make this honour the setting" for consistency: that is
+ * the consistency we are declining.
+ */
+
 interface AdminUser {
   id?: string;
   _id?: string;

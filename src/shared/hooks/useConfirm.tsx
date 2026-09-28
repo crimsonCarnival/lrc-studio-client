@@ -29,6 +29,20 @@ type RequestConfirm = (message: string, action: () => void, options?: ConfirmOpt
  *   requestConfirm('Are you sure?', () => { doThing(); }, { variant: 'danger', title: 'Delete Project' });
  *   // Render {confirmModal} somewhere in the JSX tree
  */
+/**
+ * Whether destructive actions should ask for confirmation at all.
+ *
+ * `confirmDestructive` is a policy, not a property of this hook's modal:
+ * surfaces that confirm inline (a button that morphs into "Confirm", a
+ * swipe-to-delete row) or that drive their own ConfirmModal must honour it
+ * too, or the setting silently means "confirm in some places". Those surfaces
+ * keep their own UI and just consult this.
+ */
+export function useConfirmDestructive(): boolean {
+  const { settings } = useSettings();
+  return settings.advanced?.confirmDestructive !== false;
+}
+
 export default function useConfirm(): [RequestConfirm, ReactElement] {
   const { settings } = useSettings();
   const [config, setConfig] = useState<ConfirmConfig>({
