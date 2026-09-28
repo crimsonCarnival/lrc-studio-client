@@ -35,7 +35,7 @@ export function ProjectCardContextMenu({ children, project, isOwner, onEdit, onD
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={() => window.open(`/project/${project.publicId}${isOwner ? '/edit' : ''}`, '_blank')}>
+        <ContextMenuItem onClick={() => window.open(`/project/${project.publicId}`, '_blank')}>
           <Icon name="open_in_new" />
           {t('profile.openInNewTab')}
         </ContextMenuItem>
