@@ -42,5 +42,6 @@ export default {
   removeItem: "Quitar {{name}}",
   deleteItem: "Eliminar {{name}}",
   loadError: "Error al cargar. Por favor, inténtalo de nuevo.",
-  shareLinkNotFound: "Enlace no encontrado."
+  shareLinkNotFound: "Enlace no encontrado.",
+  moreActions: "Más acciones"
 };
