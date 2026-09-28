@@ -262,11 +262,6 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             {/* Display name */}
             <div className="flex flex-col gap-1.5">
               <div className="relative">
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
-                  <Tip content={t('auth.tips.displayName')}>
-                    <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
-                  </Tip>
-                </div>
                 <FloatingInput
                   id="reg-displayName"
                   type="text"
@@ -282,29 +277,20 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
               <FieldError message={fieldErrors.displayName} />
             </div>
 
-            {/* Handle — prefix input, no FloatingInput to avoid label/@ overlap */}
+            {/* Handle */}
             <div className="flex flex-col gap-1.5">
-              <div className="flex items-stretch rounded-xl border border-zinc-700/50 overflow-hidden focus-within:border-primary/60 transition-colors">
-                <span className="flex items-center px-3 text-zinc-500 text-sm bg-zinc-800/40 select-none border-r border-zinc-700/50">
-                  @
-                </span>
-                <div className="relative flex-1">
-                  <input
-                    id="reg-accountName"
-                    type="text"
-                    value={accountName}
-                    onChange={handleAccountNameChange}
-                    autoComplete="username"
-                    maxLength={30}
-                    placeholder={t('auth.accountNamePlaceholder')}
-                    className="w-full h-12 bg-transparent px-3 text-sm text-zinc-100 placeholder:text-zinc-600 outline-none"
-                  />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
-                    <Tip content={t('auth.tips.accountName')}>
-                      <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
-                    </Tip>
-                  </div>
-                </div>
+              <div className="relative">
+                <FloatingInput
+                  id="reg-accountName"
+                  type="text"
+                  label={t('auth.accountName')}
+                  value={accountName}
+                  onChange={handleAccountNameChange}
+                  autoComplete="username"
+                  maxLength={30}
+                  error={!!fieldErrors.accountName}
+                  className={focusRingCls}
+                />
               </div>
               {fieldErrors.accountName
                 ? <FieldError message={fieldErrors.accountName} />
@@ -360,11 +346,6 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             {/* Email */}
             <div className="flex flex-col gap-1.5">
               <div className="relative">
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
-                  <Tip content={t('auth.tips.email')}>
-                    <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
-                  </Tip>
-                </div>
                 <FloatingInput
                   id="reg-email"
                   type="email"
@@ -383,9 +364,6 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             <div className="flex flex-col gap-1.5">
               <div className="relative">
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1">
-                  <Tip content={t('auth.tips.password')}>
-                    <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
-                  </Tip>
                   {password && (
                     <M.button
                       type="button"
@@ -417,9 +395,6 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             <div className="flex flex-col gap-1.5">
               <div className="relative">
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1">
-                  <Tip content={t('auth.tips.confirmPassword')}>
-                    <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
-                  </Tip>
                   {confirmPassword && (
                     <M.button
                       type="button"

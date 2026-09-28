@@ -128,11 +128,6 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
         {identifierData.hasPassword !== false && (
           <div className="flex flex-col gap-1.5">
             <div className="relative">
-              <div className="absolute right-10 top-1/2 -translate-y-1/2 z-10">
-                <Tip content={t('auth.tips.loginPassword')}>
-                  <Icon name="lightbulb" size={16} className="text-zinc-500 cursor-help hover:text-amber-400 transition-colors" />
-                </Tip>
-              </div>
               <FloatingInput
                 ref={inputRef}
                 id="auth-password"
