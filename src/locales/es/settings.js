@@ -289,10 +289,6 @@ export default {
     themes: {
       dark: "Obsidian (Oscuro)",
       light: "Pure (Claro)",
-      cobalt: "Cobalto",
-      velvet: "Terciopelo",
-      sage: "Salvia",
-      system: "Sistema"
     },
     highlights: {
       glow: "Efecto resplandor",

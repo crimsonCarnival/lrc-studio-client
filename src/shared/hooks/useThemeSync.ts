@@ -9,7 +9,6 @@ export function useThemeSync(theme?: string) {
   // 1. Apply theme — dark (default) or light
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove('theme-cobalt', 'theme-velvet', 'theme-sage');
     if (theme === 'light') {
       root.classList.remove('dark');
     } else {

@@ -289,10 +289,6 @@ export default {
     themes: {
       dark: "Obsidian (Dark)",
       light: "Pure (Light)",
-      cobalt: "Cobalt",
-      velvet: "Velvet",
-      sage: "Sage",
-      system: "Follow System"
     },
     highlights: {
       glow: "Glow Effect",
