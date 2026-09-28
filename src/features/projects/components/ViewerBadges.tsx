@@ -52,6 +52,7 @@ export function ViewerBadges({ viewers, anonymousCount }: {
 
           {overflow > 0 && (
             <span
+              role="img"
               aria-label={t('projectView.viewersMore', { count: overflow })}
               className="-ml-1.5 w-6 h-6 rounded-full ring-2 ring-background bg-muted text-muted-foreground text-[10px] font-semibold flex items-center justify-center tabular-nums"
             >

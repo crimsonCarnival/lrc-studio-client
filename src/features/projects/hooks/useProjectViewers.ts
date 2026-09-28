@@ -52,6 +52,10 @@ export function useProjectViewers(publicId: string | null | undefined, isOwner: 
       socket.off('connect', announce);
       socket.off('viewers:update', onRoster);
       socket.emit('viewers:leave', publicId);
+      // Symmetric with viewers:watch above. Deps include isOwner, so this also
+      // fires on an isOwner flip, not just on unmount/project change — the
+      // owner-room subscription must be dropped in both cases.
+      socket.emit('viewers:unwatch', publicId);
       setViewers([]);
       setAnonymousCount(0);
     };

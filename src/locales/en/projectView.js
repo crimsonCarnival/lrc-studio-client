@@ -24,10 +24,10 @@ export default {
   boostFailed: 'Could not boost',
   publishedOn: 'Published',
   viewersNow: "Watching now",
-  viewersAnonymous: "{{count}} more watching",
   viewersAnonymous_one: "1 more watching",
-  viewersMore: "{{count}} more viewers",
+  viewersAnonymous_other: "{{count}} more watching",
   viewersMore_one: "1 more viewer",
+  viewersMore_other: "{{count}} more viewers",
   actions: {
     menu: 'More options',
     edit: 'Edit',
