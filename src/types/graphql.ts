@@ -301,14 +301,6 @@ export type HistorySettingsInput = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
-export type ImportSettings = {
-  expandRepeats?: Maybe<Scalars['Boolean']['output']>;
-};
-
-export type ImportSettingsInput = {
-  expandRepeats?: InputMaybe<Scalars['Boolean']['input']>;
-};
-
 export type InterfaceSettings = {
   defaultLanguage?: Maybe<Scalars['String']['output']>;
   editorWidth?: Maybe<Scalars['Float']['output']>;
@@ -1037,7 +1029,6 @@ export type Settings = {
   advanced?: Maybe<AdvancedSettings>;
   editor?: Maybe<EditorSettings>;
   export?: Maybe<ExportSettings>;
-  import?: Maybe<ImportSettings>;
   interface?: Maybe<InterfaceSettings>;
   playback?: Maybe<PlaybackSettings>;
   shortcuts?: Maybe<ShortcutsSettings>;
@@ -1234,7 +1225,6 @@ export type UpdateSettingsInput = {
   advanced?: InputMaybe<AdvancedSettingsInput>;
   editor?: InputMaybe<EditorSettingsInput>;
   export?: InputMaybe<ExportSettingsInput>;
-  import?: InputMaybe<ImportSettingsInput>;
   interface?: InputMaybe<InterfaceSettingsInput>;
   playback?: InputMaybe<PlaybackSettingsInput>;
   shortcuts?: InputMaybe<ShortcutsSettingsInput>;
@@ -1757,7 +1747,7 @@ export type UserContentStatsQuery = { userContentStats: { totalProjects: number,
 export type GetSettingsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetSettingsQuery = { settings: { playback: { volume: number | null, muted: boolean | null, showWaveform: boolean | null, waveformSnap: boolean | null, loopCurrentLine: boolean | null, speedPresets: Array<number> | null, seekTime: number | null, seekPlays: boolean | null, autoRewindOnPause: { enabled: boolean | null, seconds: number | null } | null, speedBounds: { min: number | null, max: number | null } | null } | null, editor: { autoPauseOnMark: boolean | null, showShiftAll: boolean | null, shiftAllAmount: number | null, showLineNumbers: boolean | null, timestampPrecision: string | null, nudge: { fine: number | null, coarse: number | null, default: number | null } | null, autoAdvance: { enabled: boolean | null, skipBlank: boolean | null, mode: string | null } | null, srt: { defaultSubtitleDuration: number | null, minSubtitleGap: number | null, snapToNextLine: boolean | null } | null, history: { limit: number | null, groupingThresholdMs: number | null } | null, display: { activeHighlight: string | null, showNextLine: boolean | null, dualLine: boolean | null, languageLayout: string | null, translationLayout: string | null, readingFormat: string | null, karaokeFillTrack: string | null, karaokeFillEasing: string | null } | null, scroll: { mode: string | null, alignment: string | null } | null } | null, export: { lineEndings: string | null, copyFormat: string | null, downloadFormat: string | null, timestampPrecision: string | null, defaultFilenamePattern: string | null, includeMetadata: boolean | null, stripEmptyLines: boolean | null, normalizeTimestamps: boolean | null, wordTimestampPrecision: string | null } | null, interface: { theme: string | null, defaultLanguage: string | null, fontSize: string | null, spacing: string | null, previewAlignment: string | null, focusMode: string | null, layoutSwap: boolean | null, playerTop: boolean | null, editorWidth: number | null, lockLayout: boolean | null, mobileTab: string | null, toastPosition: string | null } | null, shortcuts: { mark: Array<string> | null, nudgeLeft: Array<string> | null, nudgeRight: Array<string> | null, nudgeLeftFine: Array<string> | null, nudgeRightFine: Array<string> | null, addLine: Array<string> | null, deleteLine: Array<string> | null, clearTimestamp: Array<string> | null, switchMode: Array<string> | null, deselect: Array<string> | null, showHelp: Array<string> | null, rangeSelect: Array<string> | null, toggleSelect: Array<string> | null, playPause: Array<string> | null, seekForward: Array<string> | null, seekBackward: Array<string> | null, mute: Array<string> | null, speedUp: Array<string> | null, speedDown: Array<string> | null, addSecondary: Array<string> | null, addTranslation: Array<string> | null, toggleTranslation: Array<string> | null, focusSync: Array<string> | null, focusPreview: Array<string> | null, focusPlayback: Array<string> | null } | null, import: { expandRepeats: boolean | null } | null, advanced: { confirmDestructive: boolean | null, timezone: string | null, autoSave: { enabled: boolean | null, timeInterval: number | null } | null } | null } | null };
+export type GetSettingsQuery = { settings: { playback: { volume: number | null, muted: boolean | null, showWaveform: boolean | null, waveformSnap: boolean | null, loopCurrentLine: boolean | null, speedPresets: Array<number> | null, seekTime: number | null, seekPlays: boolean | null, autoRewindOnPause: { enabled: boolean | null, seconds: number | null } | null, speedBounds: { min: number | null, max: number | null } | null } | null, editor: { autoPauseOnMark: boolean | null, showShiftAll: boolean | null, shiftAllAmount: number | null, showLineNumbers: boolean | null, timestampPrecision: string | null, nudge: { fine: number | null, coarse: number | null, default: number | null } | null, autoAdvance: { enabled: boolean | null, skipBlank: boolean | null, mode: string | null } | null, srt: { defaultSubtitleDuration: number | null, minSubtitleGap: number | null, snapToNextLine: boolean | null } | null, history: { limit: number | null, groupingThresholdMs: number | null } | null, display: { activeHighlight: string | null, showNextLine: boolean | null, dualLine: boolean | null, languageLayout: string | null, translationLayout: string | null, readingFormat: string | null, karaokeFillTrack: string | null, karaokeFillEasing: string | null } | null, scroll: { mode: string | null, alignment: string | null } | null } | null, export: { lineEndings: string | null, copyFormat: string | null, downloadFormat: string | null, timestampPrecision: string | null, defaultFilenamePattern: string | null, includeMetadata: boolean | null, stripEmptyLines: boolean | null, normalizeTimestamps: boolean | null, wordTimestampPrecision: string | null } | null, interface: { theme: string | null, defaultLanguage: string | null, fontSize: string | null, spacing: string | null, previewAlignment: string | null, focusMode: string | null, layoutSwap: boolean | null, playerTop: boolean | null, editorWidth: number | null, lockLayout: boolean | null, mobileTab: string | null, toastPosition: string | null } | null, shortcuts: { mark: Array<string> | null, nudgeLeft: Array<string> | null, nudgeRight: Array<string> | null, nudgeLeftFine: Array<string> | null, nudgeRightFine: Array<string> | null, addLine: Array<string> | null, deleteLine: Array<string> | null, clearTimestamp: Array<string> | null, switchMode: Array<string> | null, deselect: Array<string> | null, showHelp: Array<string> | null, rangeSelect: Array<string> | null, toggleSelect: Array<string> | null, playPause: Array<string> | null, seekForward: Array<string> | null, seekBackward: Array<string> | null, mute: Array<string> | null, speedUp: Array<string> | null, speedDown: Array<string> | null, addSecondary: Array<string> | null, addTranslation: Array<string> | null, toggleTranslation: Array<string> | null, focusSync: Array<string> | null, focusPreview: Array<string> | null, focusPlayback: Array<string> | null } | null, advanced: { confirmDestructive: boolean | null, timezone: string | null, autoSave: { enabled: boolean | null, timeInterval: number | null } | null } | null } | null };
 
 export type UpdateSettingsMutationVariables = Exact<{
   input: UpdateSettingsInput;

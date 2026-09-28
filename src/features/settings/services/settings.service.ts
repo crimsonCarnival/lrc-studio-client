@@ -70,7 +70,6 @@ const GET_SETTINGS = /* GraphQL */ `
         speedUp speedDown addSecondary addTranslation toggleTranslation
         focusSync focusPreview focusPlayback
       }
-      import { expandRepeats }
       advanced {
         autoSave { enabled timeInterval }
         confirmDestructive
