@@ -4,6 +4,7 @@ import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { Tip } from '@ui/tip';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 
 interface Palette {
@@ -563,33 +564,36 @@ export default function ImmersiveLyricsDisplay({
     >
       {/* Floating alignment control */}
       <div className="absolute top-3 right-4 z-20 flex items-center bg-zinc-950/70 backdrop-blur-md rounded-lg p-0.5 border border-zinc-700/50 shadow-lg">
-        <button
-          type="button"
-          onClick={() => handleAlignmentChange('left')}
-          className={`p-1.5 rounded transition-all ${alignment === 'left' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
-          title={t('settings.interface.alignLeft')}
-          aria-label={t('settings.interface.alignLeft')}
-        >
-          <Icon name="format_align_left" size={15} />
-        </button>
-        <button
-          type="button"
-          onClick={() => handleAlignmentChange('center')}
-          className={`p-1.5 rounded transition-all ${alignment === 'center' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
-          title={t('settings.interface.alignCenter')}
-          aria-label={t('settings.interface.alignCenter')}
-        >
-          <Icon name="format_align_center" size={15} />
-        </button>
-        <button
-          type="button"
-          onClick={() => handleAlignmentChange('right')}
-          className={`p-1.5 rounded transition-all ${alignment === 'right' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
-          title={t('settings.interface.alignRight')}
-          aria-label={t('settings.interface.alignRight')}
-        >
-          <Icon name="format_align_right" size={15} />
-        </button>
+        <Tip content={t('settings.interface.alignLeft')}>
+          <button
+            type="button"
+            onClick={() => handleAlignmentChange('left')}
+            className={`p-1.5 rounded transition-all ${alignment === 'left' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
+            aria-label={t('settings.interface.alignLeft')}
+          >
+            <Icon name="format_align_left" size={15} />
+          </button>
+        </Tip>
+        <Tip content={t('settings.interface.alignCenter')}>
+          <button
+            type="button"
+            onClick={() => handleAlignmentChange('center')}
+            className={`p-1.5 rounded transition-all ${alignment === 'center' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
+            aria-label={t('settings.interface.alignCenter')}
+          >
+            <Icon name="format_align_center" size={15} />
+          </button>
+        </Tip>
+        <Tip content={t('settings.interface.alignRight')}>
+          <button
+            type="button"
+            onClick={() => handleAlignmentChange('right')}
+            className={`p-1.5 rounded transition-all ${alignment === 'right' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
+            aria-label={t('settings.interface.alignRight')}
+          >
+            <Icon name="format_align_right" size={15} />
+          </button>
+        </Tip>
       </div>
 
       {/* Top fade */}

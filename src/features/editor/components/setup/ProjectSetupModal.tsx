@@ -397,35 +397,41 @@ export default function ProjectSetupModal({
                       
                       return (
                         <div key={i} className="flex flex-col items-center gap-1">
-                          <input
-                            type="color"
-                            value={form.singerColors?.[i] || '#888888'}
-                            onChange={(e) => {
-                              setForm((f) => {
-                                const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
-                                newColors[i] = e.target.value;
-                                return { ...f, singerColors: newColors };
-                              });
-                            }}
-                            className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
-                            title={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}
-                          />
-                          <span className="text-[10px] text-zinc-500 max-w-[60px] truncate" title={label}>{label}</span>
-                          {form.singerColors?.[i] && (
-                            <button
-                              type="button"
-                              onClick={() => {
+                          <Tip content={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}>
+                            <input
+                              type="color"
+                              value={form.singerColors?.[i] || '#888888'}
+                              onChange={(e) => {
                                 setForm((f) => {
                                   const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
-                                  newColors[i] = '';
+                                  newColors[i] = e.target.value;
                                   return { ...f, singerColors: newColors };
                                 });
                               }}
-                              className="text-[10px] text-zinc-400 hover:text-red-400"
-                              title={t('project.resetColor')}
-                            >
-                              ×
-                            </button>
+                              className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
+                              aria-label={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}
+                            />
+                          </Tip>
+                          <Tip content={label}>
+                            <span className="text-[10px] text-zinc-500 max-w-[60px] truncate">{label}</span>
+                          </Tip>
+                          {form.singerColors?.[i] && (
+                            <Tip content={t('project.resetColor')}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setForm((f) => {
+                                    const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
+                                    newColors[i] = '';
+                                    return { ...f, singerColors: newColors };
+                                  });
+                                }}
+                                className="text-[10px] text-zinc-400 hover:text-red-400"
+                                aria-label={t('project.resetColor')}
+                              >
+                                ×
+                              </button>
+                            </Tip>
                           )}
                         </div>
                       );

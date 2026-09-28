@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Section, SettingRow, Toggle } from '../shared';
 import { useInterfaceSettings } from '../../hooks/useInterfaceSettings';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
+import { Tip } from '@ui/tip';
 type SelectEvent = { target: { value: string } };
 
 interface InterfaceSettingsProps {
@@ -119,17 +120,19 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
           <div className="flex flex-wrap gap-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="flex flex-col items-center gap-1">
-                <input
-                  type="color"
-                  value={settings.editor?.display?.singerColors?.[i] || '#888888'}
-                  onChange={(e) => {
-                    const newColors = [...(settings.editor?.display?.singerColors || Array(8).fill(''))];
-                    newColors[i] = e.target.value;
-                    updateSetting('editor.display.singerColors', newColors);
-                  }}
-                  className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
-                  title={t('editor.singerN', { n: i + 1 })}
-                />
+                <Tip content={t('editor.singerN', { n: i + 1 })}>
+                  <input
+                    type="color"
+                    value={settings.editor?.display?.singerColors?.[i] || '#888888'}
+                    onChange={(e) => {
+                      const newColors = [...(settings.editor?.display?.singerColors || Array(8).fill(''))];
+                      newColors[i] = e.target.value;
+                      updateSetting('editor.display.singerColors', newColors);
+                    }}
+                    className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
+                    aria-label={t('editor.singerN', { n: i + 1 })}
+                  />
+                </Tip>
                 <span className="text-[10px] text-zinc-500">{i + 1}</span>
               </div>
             ))}

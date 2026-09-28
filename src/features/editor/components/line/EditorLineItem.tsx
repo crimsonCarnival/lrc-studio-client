@@ -448,26 +448,27 @@ const EditorLineItem = React.memo(({
                 </div>
               </div>
             ) : (
-              <span
-                className={`pl-2 py-1 flex items-center gap-2 relative z-10 hover:opacity-80 transition-opacity`}
-                style={{ color: colorVar, borderLeft: `3px solid ${colorVar}` }}
-                onDoubleClick={(e) => {
-                  e.stopPropagation();
-                  setEditingLineIndex(i);
-                  setEditingText(line.label || '');
-                  setEditingSingers(getSingers(line));
-                }}
-                title={t('editor.doubleClickToEdit')}
-              >
-                <span className={`text-[10px] font-semibold tracking-widest uppercase opacity-80 select-none`}>
-                  {t('editor.tagging.sectionSingerFormat', { section: label, singer: singersStr })}
-                </span>
-                {isCollapsed && (
-                  <span className="text-[10px] font-medium normal-case tracking-normal px-1.5 py-px rounded-full bg-zinc-800 text-zinc-400 select-none">
-                    {t('editor.hiddenLines', { count: sectionLineCount })}
+              <Tip content={t('editor.doubleClickToEdit')}>
+                <span
+                  className={`pl-2 py-1 flex items-center gap-2 relative z-10 hover:opacity-80 transition-opacity`}
+                  style={{ color: colorVar, borderLeft: `3px solid ${colorVar}` }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    setEditingLineIndex(i);
+                    setEditingText(line.label || '');
+                    setEditingSingers(getSingers(line));
+                  }}
+                >
+                  <span className={`text-[10px] font-semibold tracking-widest uppercase opacity-80 select-none`}>
+                    {t('editor.tagging.sectionSingerFormat', { section: label, singer: singersStr })}
                   </span>
-                )}
-              </span>
+                  {isCollapsed && (
+                    <span className="text-[10px] font-medium normal-case tracking-normal px-1.5 py-px rounded-full bg-zinc-800 text-zinc-400 select-none">
+                      {t('editor.hiddenLines', { count: sectionLineCount })}
+                    </span>
+                  )}
+                </span>
+              </Tip>
             );
           })()}
           <div className={`flex-1 h-px ml-2 ${isRoot ? 'bg-primary/20' : 'bg-zinc-800'}`} />

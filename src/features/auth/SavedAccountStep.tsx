@@ -8,6 +8,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { AvatarBadge } from './auth-shared';
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Tip } from '@ui/tip';
 
 interface SavedAccount {
   userId: string;
@@ -164,17 +165,19 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
                       <LogoLoader size={16} className="text-zinc-500" />
                     ) : (
                       <>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onRemoveAccount(account.userId);
-                          }}
-                          title={t('auth.savedAccount.removeAccount')}
-                          className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 p-1 rounded-lg text-zinc-600 hover:text-zinc-300 hover:bg-zinc-700 transition-all"
-                        >
-                          <Icon name="close" size={14} />
-                        </button>
+                        <Tip content={t('auth.savedAccount.removeAccount')}>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onRemoveAccount(account.userId);
+                            }}
+                            aria-label={t('auth.savedAccount.removeAccount')}
+                            className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 p-1 rounded-lg text-zinc-600 hover:text-zinc-300 hover:bg-zinc-700 transition-all"
+                          >
+                            <Icon name="close" size={14} />
+                          </button>
+                        </Tip>
                         <Icon name="login" size={16} className="text-zinc-600 group-hover:text-zinc-400 transition-colors" />
                       </>
                     )}
@@ -182,16 +185,17 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
                 </div>
 
                 {account.hasPasskey && (
-                  <button
-                    type="button"
-                    onClick={(e) => handlePasskey(e, account)}
-                    disabled={isLoading}
-                    title={t('auth.savedAccount.usePasskey')}
-                    aria-label={t('auth.savedAccount.usePasskey')}
-                    className="shrink-0 w-[52px] flex items-center justify-center rounded-xl bg-zinc-800/40 hover:bg-zinc-800/70 border border-zinc-700/40 hover:border-primary/50 text-zinc-400 hover:text-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-40 disabled:pointer-events-none"
-                  >
-                    <Icon name="fingerprint" size={20} />
-                  </button>
+                  <Tip content={t('auth.savedAccount.usePasskey')}>
+                    <button
+                      type="button"
+                      onClick={(e) => handlePasskey(e, account)}
+                      disabled={isLoading}
+                      aria-label={t('auth.savedAccount.usePasskey')}
+                      className="shrink-0 w-[52px] flex items-center justify-center rounded-xl bg-zinc-800/40 hover:bg-zinc-800/70 border border-zinc-700/40 hover:border-primary/50 text-zinc-400 hover:text-primary transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-40 disabled:pointer-events-none"
+                    >
+                      <Icon name="fingerprint" size={20} />
+                    </button>
+                  </Tip>
                 )}
               </div>
             );
