@@ -8,7 +8,7 @@ import { useNavigate, useParams, useSearchParams, useLocation } from 'react-rout
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
-import { ProjectCardContextMenu } from './ProjectCardContextMenu';
+import { ProjectMenu } from '@/features/projects/components/ProjectMenu';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { getPublicProfile, followUser, unfollowUser, blockUser, unblockUser } from './profile.service';
@@ -87,7 +87,7 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
   };
 
   return (
-    <ProjectCardContextMenu project={project} isOwner={isOwner} onEdit={onEdit} onDelete={onDelete}>
+    <ProjectMenu project={project} isOwner={isOwner} onEdit={onEdit} onDelete={onDelete}>
       <button
         type="button"
         onClick={() => navigate(`/project/${publicId}${isOwner ? '/edit' : ''}`)}
@@ -144,7 +144,7 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
           <Icon name="chevron_right" size={14} className="text-zinc-800 group-hover:text-primary group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
         </div>
       </button>
-    </ProjectCardContextMenu>
+    </ProjectMenu>
   );
 }
 
