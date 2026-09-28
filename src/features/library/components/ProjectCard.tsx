@@ -48,9 +48,9 @@ interface ProjectCardProps {
   i18n?: I18nLike;
   timezone?: string;
   /**
-   * Library renders the signed-in user's own projects, so ownership defaults to true.
-   * A future surface that renders someone else's project through this card MUST pass
-   * this explicitly — the default is only sound while the card stays owner-only.
+   * Fails closed: defaults to false so a future call site that forgets to pass
+   * this never gets an edit link on a project it doesn't own. Every current
+   * owner surface (Library, the mobile ProjectList) passes it explicitly.
    */
   isOwner?: boolean;
 }
@@ -65,7 +65,7 @@ function ProjectCard({
   isDeleting = false,
   i18n,
   timezone,
-  isOwner = true
+  isOwner = false
 }: ProjectCardProps) {
   const { t } = useTranslation();
   const { trigger: haptic } = useHapticFeedback();

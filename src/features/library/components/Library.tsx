@@ -280,6 +280,10 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
               isDeleting={deletingId === project.publicId}
               i18n={i18n}
               timezone={timezone}
+              // projects.list() returns only the signed-in user's own projects —
+              // there's no per-item owner field to check, so this list-level
+              // guarantee is the ownership signal.
+              isOwner
             />
           ))}
           </div>
