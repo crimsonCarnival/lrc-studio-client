@@ -200,7 +200,14 @@ function PublicProjectViewPageInner() {
 
   // The owner gate here is UI-only. The server independently refuses to send
   // the roster to anyone who is not the owner.
-  const { viewers, anonymousCount } = useProjectViewers(project?.publicId ?? null, isOwner);
+  const { viewers: rawViewers, anonymousCount } = useProjectViewers(project?.publicId ?? null, isOwner);
+  // The owner also emits viewers:join for their own project (harmless — see
+  // useProjectViewers), so filter their own entry out of the roster shown to
+  // them. anonymousCount is untouched: it doesn't include the owner's socket.
+  const viewers = useMemo(
+    () => (user ? rawViewers.filter((v) => v.userId !== user.id) : rawViewers),
+    [rawViewers, user],
+  );
 
   // ── Prev / next within list ──────────────────────────────────
   const { prevTrack, nextTrack } = useMemo(() => {
