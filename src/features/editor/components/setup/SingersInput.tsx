@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
+import { Tip } from '@ui/tip';
 
 // Mirror the server limits (project.model.ts MAX_PROJECT_SINGERS / MAX_SINGER_NAME_LENGTH).
 const MAX_SINGERS = 20;
@@ -95,17 +96,18 @@ export default function SingersInput({ value, onChange, suggestions = [] }: Sing
             {pendingSuggestions.map((s) => <option key={s} value={s} />)}
           </datalist>
         )}
-        <Button
-          type="button"
-          variant="sync"
-          size="icon-sm"
-          onClick={commit}
-          disabled={atLimit || !draft.trim()}
-          aria-label={t('setup.addSinger')}
-          title={t('setup.addSinger')}
-        >
-          <Icon name="add" size={16} />
-        </Button>
+        <Tip content={t('setup.addSinger')}>
+          <Button
+            type="button"
+            variant="sync"
+            size="icon-sm"
+            onClick={commit}
+            disabled={atLimit || !draft.trim()}
+            aria-label={t('setup.addSinger')}
+          >
+            <Icon name="add" size={16} />
+          </Button>
+        </Tip>
       </div>
       <p className="text-[11px] text-zinc-500">{t('setup.singersHint')}</p>
     </div>
