@@ -109,10 +109,29 @@ export default function ChangePasswordPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/*
+            Password managers key a saved credential to a username. Without one
+            inside this form they cannot UPDATE the existing entry for this
+            account — which is why the browser re-prompts on every submit and
+            the stored password never changes. Hidden from view, exposed to the
+            manager.
+          */}
+          <input
+            type="text"
+            name="username"
+            autoComplete="username"
+            value={user?.email || user?.accountName || ''}
+            readOnly
+            tabIndex={-1}
+            aria-hidden="true"
+            className="sr-only"
+          />
+
           {!isSetMode && (
             <div>
               <input
                 type="password"
+                autoComplete="current-password"
                 placeholder={t('auth.changePassword.currentPassword')}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
@@ -126,6 +145,7 @@ export default function ChangePasswordPage() {
           <div>
             <input
               type="password"
+              autoComplete="new-password"
               placeholder={t('auth.changePassword.newPassword')}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -139,6 +159,7 @@ export default function ChangePasswordPage() {
           <div>
             <input
               type="password"
+              autoComplete="new-password"
               placeholder={t('auth.changePassword.confirmPassword')}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
