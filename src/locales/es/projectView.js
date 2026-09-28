@@ -24,10 +24,10 @@ export default {
   boostFailed: 'No se pudo impulsar',
   publishedOn: 'Publicado',
   viewersNow: "Viendo ahora",
-  viewersAnonymous: "{{count}} más viendo",
   viewersAnonymous_one: "1 más viendo",
-  viewersMore: "{{count}} espectadores más",
+  viewersAnonymous_other: "{{count}} más viendo",
   viewersMore_one: "1 espectador más",
+  viewersMore_other: "{{count}} espectadores más",
   actions: {
     menu: 'Más opciones',
     edit: 'Editar',
