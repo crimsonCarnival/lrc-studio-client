@@ -412,20 +412,22 @@ export default function ProjectSetupModal({
                           />
                           <span className="text-[10px] text-zinc-500 max-w-[60px] truncate" title={label}>{label}</span>
                           {form.singerColors?.[i] && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setForm((f) => {
-                                  const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
-                                  newColors[i] = '';
-                                  return { ...f, singerColors: newColors };
-                                });
-                              }}
-                              className="text-[10px] text-zinc-400 hover:text-red-400"
-                              title={t('project.resetColor')}
-                            >
-                              ×
-                            </button>
+                            <Tip content={t('project.resetColor')}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setForm((f) => {
+                                    const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
+                                    newColors[i] = '';
+                                    return { ...f, singerColors: newColors };
+                                  });
+                                }}
+                                className="text-[10px] text-zinc-400 hover:text-red-400"
+                                aria-label={t('project.resetColor')}
+                              >
+                                ×
+                              </button>
+                            </Tip>
                           )}
                         </div>
                       );
