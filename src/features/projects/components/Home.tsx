@@ -7,10 +7,8 @@ import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projects } from '@/app/api';
 import { Icon } from '@/shared/ui/Icon';
-import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
-import { Tip } from '@ui/tip';
 import ProjectSetupModalRaw from '@features/editor/components/setup/ProjectSetupModal';
-import { ThemedShineBorder } from '@ui/themed-shine-border';
+import ProjectCard from '@/features/library/components/ProjectCard';
 
 // ProjectSetupModal is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -77,6 +75,24 @@ export default function Home() {
   const [sortBy, setSortBy] = useState<'edited' | 'created' | 'title'>('edited');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [editingProject, setEditingProject] = useState<HomeProject | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Mirrors Library's handlers so both surfaces drive the shared card identically.
+  const handleEdit = useCallback((project: { publicId: string }) => {
+    setEditingProject(project as HomeProject);
+  }, []);
+
+  const handleDelete = useCallback((publicId: string) => {
+    setDeletingId(publicId);
+    try {
+      projects.remove(publicId);
+      setItems((prev) => prev.filter((p) => p.publicId !== publicId));
+    } catch {
+      // ignore — the row stays and the user can retry
+    } finally {
+      setDeletingId(null);
+    }
+  }, []);
 
   const fetchProjects = useCallback(async () => {
     if (!user) {
@@ -279,111 +295,22 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
-          {filteredProjects.map((project) => {
-            const progress = project.lineCount ? Math.min(100, Math.round(((project.syncedLineCount || 0) / project.lineCount) * 100)) : 0;
-            return (
-              <button
-                key={project.publicId}
-                type="button"
-                onClick={() => navigate(`/project/${project.publicId}/edit`)}
-                className="group glass rounded-2xl overflow-hidden text-left hover:border-primary/40 transition-all cursor-pointer focus:ring-2 focus:ring-primary/30 outline-none flex flex-col h-80"
-              >
-                {/* Image/Waveform Header */}
-                <div className="relative h-36 bg-zinc-800/30 border-b border-zinc-800/50 flex items-center justify-center overflow-hidden shrink-0">
-                   {project.coverImage ? (
-                     <>
-                        <img src={project.coverImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 to-transparent" />
-                     </>
-                   ) : (
-                     <div className="flex items-end gap-[3px] h-12 opacity-30 group-hover:opacity-50 transition-opacity">
-                       {Array.from({ length: 9 }, (_, i) => (
-                         <div key={i} className="w-1.5 rounded-full bg-zinc-300" style={{ height: `${20 + 80 * Math.abs(Math.sin(i * 1.5))}%` }} />
-                       ))}
-                     </div>
-                   )}
-                   {/* Badge */}
-                   <div className="absolute top-3 left-3 px-2 py-1 bg-zinc-950/60 backdrop-blur-md rounded border border-zinc-700/50 flex items-center gap-1.5">
-                     {project.upload?.source === 'youtube' ? (
-                       <><YoutubeIcon className="size-3" /><span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceYoutube')}</span></>
-                     ) : (
-                       <><Icon name="description" size={10} className="text-info" /><span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceFile')}</span></>
-                     )}
-                   </div>
-                   {project.public && (
-                     <Tip content={t('home.viewPublic')}>
-                       <button
-                         type="button"
-                         onClick={(e) => { e.stopPropagation(); navigate(`/project/${project.publicId}`); }}
-                         className="absolute top-3 right-3 p-1.5 bg-zinc-950/60 backdrop-blur-md rounded border border-zinc-700/50 text-zinc-300 hover:text-primary hover:border-primary/40 transition-colors"
-                       >
-                         <Icon name="open_in_new" size={12} />
-                       </button>
-                     </Tip>
-                   )}
-                </div>
-                {/* Content */}
-                <div className="p-4 flex flex-col flex-1">
-                  <h3 className="text-sm font-bold text-zinc-100 truncate group-hover:text-primary transition-colors">{project.title || t('library.untitled')}</h3>
-                  <p className="text-xs text-zinc-400 mt-1 truncate">{project.metadata?.songArtist || t('home.noArtist')}</p>
-
-                  <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2">
-                    <Tip content={t('home.statLinesTip')}>
-                      <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
-                        <Icon name="description" size={11} />
-                        {(project.syncedLineCount || 0)} / {(project.lineCount || 0)} {t('home.lines')}
-                      </span>
-                    </Tip>
-                    <Tip content={t('home.statStarsTip')}>
-                      <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
-                        <Icon name="star" size={11} />
-                        {project.starCount ?? 0}
-                      </span>
-                    </Tip>
-                    <Tip content={t('home.statForksTip')}>
-                      <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
-                        <Icon name="call_split" size={11} />
-                        {project.forkCount ?? 0}
-                      </span>
-                    </Tip>
-                    <Tip content={t('home.statViewsTip')}>
-                      <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
-                        <Icon name="visibility" size={11} />
-                        {project.viewCount ?? 0}
-                      </span>
-                    </Tip>
-                    <Tip content={t('home.statSharesTip')}>
-                      <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
-                        <Icon name="share" size={11} />
-                        {project.shareCount ?? 0}
-                      </span>
-                    </Tip>
-                  </div>
-
-                  <div className="mt-auto pt-4 flex flex-col gap-2">
-                    <div className="h-[3px] w-full bg-zinc-800 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full transition-all duration-500 ${progress === 100 ? 'bg-success' : 'bg-primary'}`} style={{ width: `${progress}%` }} />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-zinc-200 mt-auto">
-                        {(project.syncedLineCount || 0)} / {(project.lineCount || 0)}
-                      </span>
-                      <div className="flex flex-col items-end gap-0.5">
-                        <span className="text-[10px] text-zinc-500">
-                          {t('home.created')} {formatInTimezone(project.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2))}
-                        </span>
-                        {(project.updatedAt && project.updatedAt !== project.createdAt) && (
-                          <span className="text-[10px] text-zinc-500">
-                            {t('home.edited')} {formatInTimezone(project.updatedAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2))}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+          {filteredProjects.map((project) => (
+            <ProjectCard
+              key={project.publicId}
+              project={project}
+              onSelect={(publicId) => navigate(`/project/${publicId}/edit`)}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              isListView={false}
+              isDeleting={deletingId === project.publicId}
+              i18n={i18n}
+              timezone={timezone}
+              // projects.list() returns only the signed-in user's own projects,
+              // so the list itself is the ownership signal — same as Library.
+              isOwner
+            />
+          ))}
 
           {/* Start another CTA Card */}
           <button

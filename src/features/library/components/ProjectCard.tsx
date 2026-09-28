@@ -24,9 +24,10 @@ export interface CardProject {
   forkCount?: number;
   viewCount?: number;
   shareCount?: number;
+  public?: boolean;
   createdAt?: string | number;
   updatedAt?: string | number;
-  metadata?: { genre?: string };
+  metadata?: { genre?: string; songArtist?: string };
   forkedFrom?: { publicId?: string; accountName?: string };
   upload?: { fileName?: string; duration?: number; source?: string };
   [key: string]: unknown;
@@ -325,7 +326,7 @@ function ProjectCard({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="group glass rounded-2xl overflow-hidden text-left hover:border-primary/40 transition-all cursor-pointer focus:ring-2 focus:ring-primary/30 outline-none flex flex-col h-64 relative"
+        className="group glass rounded-2xl overflow-hidden text-left hover:border-primary/40 transition-all cursor-pointer focus:ring-2 focus:ring-primary/30 outline-none flex flex-col h-80 relative"
       >
         {/* Image/Waveform Header */}
         <div className="relative h-36 bg-zinc-800/30 border-b border-zinc-800/50 flex items-center justify-center overflow-hidden shrink-0">
@@ -351,6 +352,17 @@ function ProjectCard({
               <span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceFile')}</span>
             )}
           </div>
+          {project.public ? (
+            <Tip content={t('home.viewPublic')}>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(`/project/${project.publicId}`, '_blank'); }}
+                className="absolute top-3 right-3 z-10 p-1.5 bg-zinc-950/60 backdrop-blur-md rounded border border-zinc-700/50 text-zinc-300 hover:text-primary hover:border-primary/40 transition-colors"
+              >
+                <Icon name="open_in_new" size={12} />
+              </button>
+            </Tip>
+          ) : null}
         </div>
         {/* Content */}
         <div className="p-4 flex flex-col flex-1 relative z-10">
@@ -375,17 +387,48 @@ function ProjectCard({
               className="p-1 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-700/50 transition-colors shrink-0 bg-zinc-900/80 backdrop-blur"
             />
           </div>
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          <p className="text-xs text-zinc-400 mt-1 truncate">{(project.metadata as any)?.songArtist || t('home.noArtist')}</p>
-          
+          <p className="text-xs text-zinc-400 mt-1 truncate">{project.metadata?.songArtist || t('home.noArtist')}</p>
+
+          {/* Stats. The synced/total pair lives here rather than beside the
+              progress bar, where it used to be repeated. */}
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2">
+            <Tip content={t('home.statLinesTip')}>
+              <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
+                <Icon name="description" size={11} />
+                {(project.syncedLineCount || 0)} / {(project.lineCount || 0)} {t('home.lines')}
+              </span>
+            </Tip>
+            <Tip content={t('home.statStarsTip')}>
+              <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
+                <Icon name="star" size={11} />
+                {project.starCount ?? 0}
+              </span>
+            </Tip>
+            <Tip content={t('home.statForksTip')}>
+              <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
+                <Icon name="call_split" size={11} />
+                {project.forkCount ?? 0}
+              </span>
+            </Tip>
+            <Tip content={t('home.statViewsTip')}>
+              <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
+                <Icon name="visibility" size={11} />
+                {project.viewCount ?? 0}
+              </span>
+            </Tip>
+            <Tip content={t('home.statSharesTip')}>
+              <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
+                <Icon name="share" size={11} />
+                {project.shareCount ?? 0}
+              </span>
+            </Tip>
+          </div>
+
           <div className="mt-auto pt-4 flex flex-col gap-2">
             <div className="h-[3px] w-full bg-zinc-800 rounded-full overflow-hidden">
               <div className={`h-full rounded-full transition-all duration-500 ${progress === 100 ? 'bg-success' : 'bg-primary'}`} style={{ width: `${progress}%` }} />
             </div>
-            <div className="flex items-center justify-between mt-auto">
-              <span className="text-[10px] font-bold text-zinc-200 mt-auto">
-                {((project.syncedLineCount as number) || 0)} / {((project.lineCount as number) || 0)}
-              </span>
+            <div className="flex items-center justify-end mt-auto">
               <div className="flex flex-col items-end gap-0.5">
                 <span className="text-[10px] text-zinc-500">
                   {t('home.created')} {formatInTimezone(project.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}
