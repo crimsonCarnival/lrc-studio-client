@@ -8,7 +8,7 @@ import { useNavigate, useParams, useSearchParams, useLocation } from 'react-rout
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
-import { ProjectCardContextMenu } from './ProjectCardContextMenu';
+import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { getPublicProfile, followUser, unfollowUser, blockUser, unblockUser } from './profile.service';
@@ -87,7 +87,7 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
   };
 
   return (
-    <ProjectCardContextMenu project={project} isOwner={isOwner} onEdit={onEdit} onDelete={onDelete}>
+    <ProjectMenu project={project} isOwner={isOwner} onEdit={onEdit} onDelete={onDelete}>
       <button
         type="button"
         onClick={() => navigate(`/project/${publicId}${isOwner ? '/edit' : ''}`)}
@@ -141,10 +141,21 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
               </span>
             </div>
           </div>
+          {/* Always-visible ⋮ — sibling of the hover-gated owner cluster above,
+              not inside it, so it stays reachable on touch. Same project/isOwner/
+              onEdit/onDelete as the ProjectMenu wrapper so both triggers offer
+              identical items. */}
+          <ProjectMenuButton
+            project={project}
+            isOwner={isOwner}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            className="p-1 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-700/50 transition-colors shrink-0"
+          />
           <Icon name="chevron_right" size={14} className="text-zinc-800 group-hover:text-primary group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
         </div>
       </button>
-    </ProjectCardContextMenu>
+    </ProjectMenu>
   );
 }
 

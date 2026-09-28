@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
+import { Tip } from '@ui/tip';
 
 // Mirror the server limits (project.model.ts MAX_PROJECT_SINGERS / MAX_SINGER_NAME_LENGTH).
 const MAX_SINGERS = 20;
@@ -67,7 +68,9 @@ export default function SingersInput({ value, onChange, suggestions = [] }: Sing
             key={name}
             className="flex items-center gap-1 h-7 pl-2.5 pr-1 rounded-full bg-zinc-800 border border-zinc-700/60 text-xs text-zinc-200"
           >
-            <span className="max-w-[140px] truncate" title={name}>{name}</span>
+            <Tip content={name}>
+              <span className="max-w-[140px] truncate">{name}</span>
+            </Tip>
             <button
               type="button"
               onClick={() => onChange(value.filter((v) => v !== name))}
@@ -95,17 +98,18 @@ export default function SingersInput({ value, onChange, suggestions = [] }: Sing
             {pendingSuggestions.map((s) => <option key={s} value={s} />)}
           </datalist>
         )}
-        <Button
-          type="button"
-          variant="sync"
-          size="icon-sm"
-          onClick={commit}
-          disabled={atLimit || !draft.trim()}
-          aria-label={t('setup.addSinger')}
-          title={t('setup.addSinger')}
-        >
-          <Icon name="add" size={16} />
-        </Button>
+        <Tip content={t('setup.addSinger')}>
+          <Button
+            type="button"
+            variant="sync"
+            size="icon-sm"
+            onClick={commit}
+            disabled={atLimit || !draft.trim()}
+            aria-label={t('setup.addSinger')}
+          >
+            <Icon name="add" size={16} />
+          </Button>
+        </Tip>
       </div>
       <p className="text-[11px] text-zinc-500">{t('setup.singersHint')}</p>
     </div>

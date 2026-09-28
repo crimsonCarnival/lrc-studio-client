@@ -553,7 +553,7 @@ export default function AuthPage() {
               <M.div
                 layout="position"
                 transition={SIDE_SWAP}
-                className={`flex-1 min-w-0 p-7 sm:p-8 ${isRegister ? 'lg:order-1' : 'lg:order-2'}`}
+                className={`flex-1 min-w-0 p-7 sm:p-8 flex flex-col ${view === 'login-saved-account' ? 'lg:justify-center' : ''} ${isRegister ? 'lg:order-1' : 'lg:order-2'}`}
               >
 
             {view === 'login-saved-account' && (savedAccounts.length > 0 || !accountsChecked) && (

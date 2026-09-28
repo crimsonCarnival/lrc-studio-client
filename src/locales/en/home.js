@@ -80,6 +80,12 @@ export default {
   sourceYoutube: "YOUTUBE",
   sourceCloud: "CLOUD",
   sourceFile: "FILE",
+  viewPublic: "View public page",
+  statLinesTip: "Lines synced",
+  statStarsTip: "Stars received",
+  statForksTip: "Times forked",
+  statViewsTip: "Public page views",
+  statSharesTip: "Times shared",
   searchProjects: [
     "Search projects...",
     "Find a project...",

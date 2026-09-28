@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
+import { Tip } from '@ui/tip';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 
 interface AuditLog {
@@ -91,9 +92,11 @@ export default function AdminAuditTab({ auditLogs }: { auditLogs: AuditLog[] }) 
                   <td className="p-4">
                     <span className="text-xs text-zinc-200 whitespace-nowrap">{log.targetName || '—'}</span>
                   </td>
-                  <td className="p-4 text-xs text-zinc-500 max-w-xs truncate" title={log.details}>
-                    {log.details}
-                  </td>
+                  <Tip content={log.details}>
+                    <td className="p-4 text-xs text-zinc-500 max-w-xs truncate">
+                      {log.details}
+                    </td>
+                  </Tip>
                 </tr>
               ))}
             </tbody>

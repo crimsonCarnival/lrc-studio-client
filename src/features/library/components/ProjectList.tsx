@@ -27,6 +27,9 @@ export default function ProjectList({ projects, onDelete, onFavorite, onSelect }
             onFavorite={onFavorite ? () => onFavorite(project) : undefined}
             onSelect={onSelect ? () => onSelect(project) : undefined}
             isListView={true}
+            // ProjectList is only ever fed Library's own project list (the
+            // signed-in user's projects) — same ownership guarantee as Library.tsx.
+            isOwner
           />
         ))
       ) : (

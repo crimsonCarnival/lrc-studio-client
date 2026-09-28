@@ -42,5 +42,6 @@ export default {
   removeItem: "Remove {{name}}",
   deleteItem: "Delete {{name}}",
   loadError: "Failed to load. Please try again.",
-  shareLinkNotFound: "Share link not found."
+  shareLinkNotFound: "Share link not found.",
+  moreActions: "More actions"
 };

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import useConfirm from '@/shared/hooks/useConfirm';
 import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
 import { LogoLoader } from '@ui/LogoLoader';
+import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 
 const SWIPE_THRESHOLD = 60;
 
@@ -46,6 +47,12 @@ interface ProjectCardProps {
   isDeleting?: boolean;
   i18n?: I18nLike;
   timezone?: string;
+  /**
+   * Fails closed: defaults to false so a future call site that forgets to pass
+   * this never gets an edit link on a project it doesn't own. Every current
+   * owner surface (Library, the mobile ProjectList) passes it explicitly.
+   */
+  isOwner?: boolean;
 }
 
 function ProjectCard({
@@ -57,7 +64,8 @@ function ProjectCard({
   isListView = false,
   isDeleting = false,
   i18n,
-  timezone
+  timezone,
+  isOwner = false
 }: ProjectCardProps) {
   const { t } = useTranslation();
   const { trigger: haptic } = useHapticFeedback();
@@ -160,6 +168,12 @@ function ProjectCard({
   if (isListView) {
     return (
       <>
+        <ProjectMenu
+          project={project}
+          isOwner={isOwner}
+          onEdit={onEdit ? () => onEdit(project) : undefined}
+          onDelete={onDelete ? handleSwipeDelete : undefined}
+        >
         <div
           ref={cardRef}
           role="button"
@@ -252,30 +266,39 @@ function ProjectCard({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-            <Tip content={t('project.editMetadata')}>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Tip content={t('project.editMetadata')}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleEdit}
+                  className="text-zinc-500 hover:text-primary hover:bg-primary/10 size-7"
+                >
+                  <Icon name="edit" size={14} />
+                </Button>
+              </Tip>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={handleEdit}
-                className="text-zinc-500 hover:text-primary hover:bg-primary/10 size-7"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10 size-7"
               >
-                <Icon name="edit" size={14} />
+                {isDeleting
+                  ? <LogoLoader size={14} />
+                  : <Icon name="delete" size={14} />}
               </Button>
-            </Tip>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10 size-7"
-            >
-              {isDeleting
-                ? <LogoLoader size={14} />
-                : <Icon name="delete" size={14} />}
-            </Button>
+            </div>
+            <ProjectMenuButton
+              project={project}
+              isOwner={isOwner}
+              onEdit={onEdit ? () => onEdit(project) : undefined}
+              onDelete={onDelete ? handleSwipeDelete : undefined}
+            />
           </div>
         </div>
+        </ProjectMenu>
         {confirmModal}
       </>
     );
@@ -286,6 +309,12 @@ function ProjectCard({
 
   return (
     <>
+      <ProjectMenu
+        project={project}
+        isOwner={isOwner}
+        onEdit={onEdit ? () => onEdit(project) : undefined}
+        onDelete={onDelete ? handleSwipeDelete : undefined}
+      >
       <div
         ref={cardRef}
         role="button"
@@ -338,6 +367,13 @@ function ProjectCard({
                 {isDeleting ? <LogoLoader size={12} /> : <Icon name="delete" size={12} />}
               </Button>
             </div>
+            <ProjectMenuButton
+              project={project}
+              isOwner={isOwner}
+              onEdit={onEdit ? () => onEdit(project) : undefined}
+              onDelete={onDelete ? handleSwipeDelete : undefined}
+              className="p-1 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-700/50 transition-colors shrink-0 bg-zinc-900/80 backdrop-blur"
+            />
           </div>
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           <p className="text-xs text-zinc-400 mt-1 truncate">{(project.metadata as any)?.songArtist || t('home.noArtist')}</p>
@@ -364,6 +400,7 @@ function ProjectCard({
           </div>
         </div>
       </div>
+      </ProjectMenu>
       {confirmModal}
     </>
   );

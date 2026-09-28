@@ -10,6 +10,7 @@ import { authService } from '@/features/auth/services/auth.service';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Tip } from '@ui/tip';
 
 export default function AvatarUpload() {
   const { t } = useTranslation();
@@ -186,16 +187,18 @@ export default function AvatarUpload() {
                     {t('profile.removeAvatar')}
                   </Button>
                 )}
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setExpanded(false)}
-                  disabled={uploading}
-                  className="rounded-xl size-8 p-0 shrink-0 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800"
-                  title={t('common.close')}
-                >
-                  <Icon name="close" size={16} />
-                </Button>
+                <Tip content={t('common.close')}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setExpanded(false)}
+                    disabled={uploading}
+                    className="rounded-xl size-8 p-0 shrink-0 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800"
+                    aria-label={t('common.close')}
+                  >
+                    <Icon name="close" size={16} />
+                  </Button>
+                </Tip>
               </div>
             )}
           </div>

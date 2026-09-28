@@ -458,7 +458,9 @@ export default function AdminUsersTab({
                     {user.ban?.active ? (
                       <div className="flex flex-col">
                         <span className="flex items-center gap-1.5 text-xs text-red-400 font-medium"><Icon name="block" size={12} /> {t('admin.table.banned')}</span>
-                        <span className="text-[10px] text-zinc-600 line-clamp-1 italic" title={user.ban?.reason}>{user.ban?.reason}</span>
+                        <Tip content={user.ban?.reason}>
+                          <span className="text-[10px] text-zinc-600 line-clamp-1 italic">{user.ban?.reason}</span>
+                        </Tip>
                       </div>
                     ) : (
                       <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium"><Icon name="check_circle" size={12} /> {t('admin.table.active')}</span>
@@ -514,7 +516,9 @@ export default function AdminUsersTab({
                       {user.lastDeviceName && (
                         <div className="flex items-center gap-1.5">
                           <Icon name="desktop_windows" size={12} className="text-zinc-600 shrink-0" />
-                          <span className="text-[10px] text-zinc-500 truncate max-w-[140px]" title={user.lastDeviceName}>{user.lastDeviceName}</span>
+                          <Tip content={user.lastDeviceName}>
+                            <span className="text-[10px] text-zinc-500 truncate max-w-[140px]">{user.lastDeviceName}</span>
+                          </Tip>
                           {user.lastDeviceId && canActOn(user) && (
                             <Tip content={t('admin.table.blockDevice')}>
                               <button

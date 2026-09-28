@@ -14,6 +14,7 @@ import { formatInTimezone } from '@/shared/utils/date';
 import { auth } from '@/app/api';
 import toast from 'react-hot-toast';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Tip } from '@ui/tip';
 
 interface Passkey {
   id: string;
@@ -158,16 +159,18 @@ export default function PasskeySection() {
                   </span>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDelete(passkey.id)}
-                disabled={deletingId === passkey.id}
-                className="size-8 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 shrink-0"
-                title={t('auth.passkeyManagement.delete')}
-              >
-                {deletingId === passkey.id ? <LogoLoader size={14} /> : <Trash2Icon className="size-3.5" />}
-              </Button>
+              <Tip content={t('auth.passkeyManagement.delete')}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDelete(passkey.id)}
+                  disabled={deletingId === passkey.id}
+                  className="size-8 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 shrink-0"
+                  aria-label={t('auth.passkeyManagement.delete')}
+                >
+                  {deletingId === passkey.id ? <LogoLoader size={14} /> : <Trash2Icon className="size-3.5" />}
+                </Button>
+              </Tip>
             </div>
           );
         })

@@ -23,6 +23,11 @@ export default {
   boosted: 'Boosted!',
   boostFailed: 'Could not boost',
   publishedOn: 'Published',
+  viewersNow: "Watching now",
+  viewersAnonymous_one: "1 more watching",
+  viewersAnonymous_other: "{{count}} more watching",
+  viewersMore_one: "1 more viewer",
+  viewersMore_other: "{{count}} more viewers",
   actions: {
     menu: 'More options',
     edit: 'Edit',

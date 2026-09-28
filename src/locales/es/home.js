@@ -80,6 +80,12 @@ export default {
   sourceYoutube: "YOUTUBE",
   sourceCloud: "NUBE",
   sourceFile: "ARCHIVO",
+  viewPublic: "Ver página pública",
+  statLinesTip: "Líneas sincronizadas",
+  statStarsTip: "Estrellas recibidas",
+  statForksTip: "Veces bifurcado",
+  statViewsTip: "Vistas de la página pública",
+  statSharesTip: "Veces compartido",
   searchProjects: [
     "Buscar proyectos...",
     "Encuentra un proyecto...",
