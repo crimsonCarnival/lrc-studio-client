@@ -305,9 +305,11 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/50">
                   {REQ_FIELDS.map(f => (
                     <div key={f.key} className="flex flex-col gap-1">
-                      <span className="text-[10px] text-zinc-400 truncate" title={(t as TkFn)(`admin.levels.req.${f.key}`)}>
-                        {(t as TkFn)(`admin.levels.req.${f.key}`)}
-                      </span>
+                      <Tip content={(t as TkFn)(`admin.levels.req.${f.key}`)}>
+                        <span className="text-[10px] text-zinc-400 truncate">
+                          {(t as TkFn)(`admin.levels.req.${f.key}`)}
+                        </span>
+                      </Tip>
                       <input
                         type="number"
                         min={0}

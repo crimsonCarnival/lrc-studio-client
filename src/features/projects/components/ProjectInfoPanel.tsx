@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
+import { Tip } from '@ui/tip';
 import { ProjectActionsMenu } from './ProjectActionsMenu';
 import { BoostButton } from './BoostButton';
 import { useSettings } from '@/features/settings/useSettings';
@@ -286,14 +287,13 @@ export default function ProjectInfoPanel({
         {/* Forked-from */}
         {project?.forkedFrom?.publicId && (
           project.forkedFrom.sourceDeleted ? (
-            <span
-              className="inline-flex items-center gap-1 text-xs w-fit text-muted-foreground"
-              title={t('projectView.forkedFromSourceDeleted')}
-            >
-              <Icon name="open_in_new" size={12} />
-              {t('projectView.forkedFrom')}
-              {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
-            </span>
+            <Tip content={t('projectView.forkedFromSourceDeleted')}>
+              <span className="inline-flex items-center gap-1 text-xs w-fit text-muted-foreground">
+                <Icon name="open_in_new" size={12} />
+                {t('projectView.forkedFrom')}
+                {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
+              </span>
+            </Tip>
           ) : (
             <Link
               to={`/project/${project.forkedFrom.publicId}`}

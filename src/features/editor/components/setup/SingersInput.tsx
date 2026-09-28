@@ -68,7 +68,9 @@ export default function SingersInput({ value, onChange, suggestions = [] }: Sing
             key={name}
             className="flex items-center gap-1 h-7 pl-2.5 pr-1 rounded-full bg-zinc-800 border border-zinc-700/60 text-xs text-zinc-200"
           >
-            <span className="max-w-[140px] truncate" title={name}>{name}</span>
+            <Tip content={name}>
+              <span className="max-w-[140px] truncate">{name}</span>
+            </Tip>
             <button
               type="button"
               onClick={() => onChange(value.filter((v) => v !== name))}

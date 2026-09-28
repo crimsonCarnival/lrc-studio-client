@@ -412,7 +412,9 @@ export default function ProjectSetupModal({
                               aria-label={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}
                             />
                           </Tip>
-                          <span className="text-[10px] text-zinc-500 max-w-[60px] truncate" title={label}>{label}</span>
+                          <Tip content={label}>
+                            <span className="text-[10px] text-zinc-500 max-w-[60px] truncate">{label}</span>
+                          </Tip>
                           {form.singerColors?.[i] && (
                             <Tip content={t('project.resetColor')}>
                               <button
