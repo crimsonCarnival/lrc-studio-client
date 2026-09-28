@@ -22,10 +22,7 @@ function hexToRgb(hex: string): string {
 
 function readThemeColors(): ThemeColors {
   const s = getComputedStyle(document.documentElement);
-  const isLight = !document.documentElement.classList.contains('dark') &&
-    !document.documentElement.classList.contains('theme-cobalt') &&
-    !document.documentElement.classList.contains('theme-velvet') &&
-    !document.documentElement.classList.contains('theme-sage');
+  const isLight = !document.documentElement.classList.contains('dark');
   return {
     bg: s.getPropertyValue('--color-zinc-950').trim() || '#1a1826',
     primary: hexToRgb(s.getPropertyValue('--color-primary').trim() || '#c4a7e7'),

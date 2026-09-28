@@ -226,7 +226,7 @@ All shortcuts are fully user-configurable via **Settings → Shortcuts**, with c
 
 ### Interface & Themes
 
-- **Themes** — Obsidian (dark), Pure (light), Cobalt, Velvet, Sage, and System (follows OS preference).
+- **Themes** — Obsidian (dark) and Pure (light), both built on the [Rosé Pine](https://rosepinetheme.com) palette: Moon for dark, Dawn for light.
 - **Active line highlight styles** — Glow, Zoom, Color, or Dim.
 - **Translation layout** — Stacked or side-by-side.
 - **Focus mode** — Hides the editor panel for an unobstructed preview.
