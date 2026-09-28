@@ -83,6 +83,7 @@ export const UploadPage = () => {
             publicId: result.public_id,
             fileName: file.name,
             duration: result.duration || 0,
+            sizeBytes: file.size,
           });
           setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
           toast.success(t('uploads.uploadSuccess'));

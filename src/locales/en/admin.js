@@ -29,7 +29,12 @@ export default {
       deleted: 'Deleted Accounts',
       signups: 'Signups (24h/7d/30d)',
       storage: 'Total Storage',
-      jobs: 'Job Health (24h)'
+      jobs: 'Lyrics Jobs (24h)',
+      jobsTip: 'Lyric fetches and end-time inference run in the last 24h: succeeded vs failed. Not background cron jobs.',
+      activeTip: 'Users whose account saw any activity in the last 24h.',
+      activeMore: 'and {{count}} more',
+      storageTip: 'Total bytes across every stored upload.',
+      signupsTip: 'New accounts in the last 24 hours / 7 days / 30 days.'
     },
     tabs: {
       users: 'User Management',

@@ -90,6 +90,9 @@ export default function useLocalAudio({
               fileName: file.name,
               title: file.name.replace(/\.[^/.]+$/, ''),
               duration: result.duration || null,
+              // Without this the admin storage totals stay at zero — nothing
+              // else supplies the byte size.
+              sizeBytes: file.size,
             } as Parameters<typeof uploads.saveMedia>[0]) as { upload?: { id: string } };
             if (!upload) {
               console.warn('Upload not persisted - user may not be authenticated');
