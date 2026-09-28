@@ -8,6 +8,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
 import { requestsApi } from './services/requests.service';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Tip } from '@ui/tip';
 
 // Typed i18next rejects arbitrary string keys; alias for dynamic req/stat labels.
 type TkFn = (key: string) => string;
@@ -214,15 +215,16 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
               {!editing && (
                 <label className="flex flex-col gap-1">
                   <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.levels.modal.levelId')}</span>
-                  <input
-                    className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
-                    placeholder={t('admin.levels.modal.levelIdPlaceholder')}
-                    value={form.id}
-                    onChange={e => setForm(p => ({ ...p, id: e.target.value }))}
-                    required
-                    pattern="^[a-z0-9_-]+$"
-                    title={t('admin.levels.modal.levelIdHint')}
-                  />
+                  <Tip content={t('admin.levels.modal.levelIdHint')}>
+                    <input
+                      className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
+                      placeholder={t('admin.levels.modal.levelIdPlaceholder')}
+                      value={form.id}
+                      onChange={e => setForm(p => ({ ...p, id: e.target.value }))}
+                      required
+                      pattern="^[a-z0-9_-]+$"
+                    />
+                  </Tip>
                 </label>
               )}
 

@@ -397,19 +397,21 @@ export default function ProjectSetupModal({
                       
                       return (
                         <div key={i} className="flex flex-col items-center gap-1">
-                          <input
-                            type="color"
-                            value={form.singerColors?.[i] || '#888888'}
-                            onChange={(e) => {
-                              setForm((f) => {
-                                const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
-                                newColors[i] = e.target.value;
-                                return { ...f, singerColors: newColors };
-                              });
-                            }}
-                            className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
-                            title={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}
-                          />
+                          <Tip content={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}>
+                            <input
+                              type="color"
+                              value={form.singerColors?.[i] || '#888888'}
+                              onChange={(e) => {
+                                setForm((f) => {
+                                  const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
+                                  newColors[i] = e.target.value;
+                                  return { ...f, singerColors: newColors };
+                                });
+                              }}
+                              className="w-8 h-8 rounded cursor-pointer border-none bg-transparent"
+                              aria-label={singerName ? t('project.singerColorFor', { name: singerName }) : t('editor.singerN', { n: i + 1 })}
+                            />
+                          </Tip>
                           <span className="text-[10px] text-zinc-500 max-w-[60px] truncate" title={label}>{label}</span>
                           {form.singerColors?.[i] && (
                             <Tip content={t('project.resetColor')}>
