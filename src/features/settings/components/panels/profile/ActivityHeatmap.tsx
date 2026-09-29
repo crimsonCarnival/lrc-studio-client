@@ -104,7 +104,14 @@ function HeatmapSkeleton() {
  * renders the provided data read-only (public profile; the server only returns
  * it when the owner opted in).
  */
-export default function ActivityHeatmap({ days: providedDays }: { days?: HeatDay[] } = {}) {
+export default function ActivityHeatmap({
+  days: providedDays,
+  cellSize = 14,
+  cellGap = 4,
+}: { days?: HeatDay[]; cellSize?: number; cellGap?: number } = {}) {
+  // One week's horizontal advance. The month labels are absolutely positioned,
+  // so they have to step by exactly this or they drift off their column.
+  const step = cellSize + cellGap;
   const { t, i18n } = useTranslation();
   const [fetched, setFetched] = useState<HeatDay[] | null>(null);
   const data = providedDays ?? fetched;
@@ -184,26 +191,30 @@ export default function ActivityHeatmap({ days: providedDays }: { days?: HeatDay
     <div className="flex flex-col gap-6 w-full">
       <div className="overflow-x-auto pb-4 custom-scrollbar" ref={scrollRef}>
         <div className="min-w-max flex gap-2">
-          <div className="grid gap-1 text-[10px] text-muted-foreground mt-6 text-right select-none" style={{ gridTemplateRows: `repeat(${DAYS_PER_WEEK}, 14px)` }}>
+          <div
+            className="grid text-[10px] text-muted-foreground mt-6 text-right select-none"
+            style={{ gridTemplateRows: `repeat(${DAYS_PER_WEEK}, ${cellSize}px)`, gap: `${cellGap}px` }}
+          >
             {weekdayLabels.map((label, i) => (
-              <span key={i} className={i % 2 === 1 ? 'leading-[14px]' : 'invisible'}>{label}</span>
+              <span key={i} className={i % 2 === 1 ? '' : 'invisible'} style={{ lineHeight: `${cellSize}px` }}>{label}</span>
             ))}
           </div>
 
           <div className="flex flex-col">
             <div className="relative h-6 text-[10px] text-muted-foreground w-full select-none">
               {monthLabels.map((ml, i) => (
-                <div key={i} className="absolute top-0 leading-6" style={{ left: `calc(${ml.col} * 18px)` }}>
+                <div key={i} className="absolute top-0 leading-6" style={{ left: `calc(${ml.col} * ${step}px)` }}>
                   {ml.month}
                 </div>
               ))}
             </div>
             <div
-              className="grid gap-1"
+              className="grid"
               style={{
-                gridTemplateColumns: `repeat(${WEEKS}, 14px)`,
-                gridTemplateRows: `repeat(${DAYS_PER_WEEK}, 14px)`,
+                gridTemplateColumns: `repeat(${WEEKS}, ${cellSize}px)`,
+                gridTemplateRows: `repeat(${DAYS_PER_WEEK}, ${cellSize}px)`,
                 gridAutoFlow: 'column',
+                gap: `${cellGap}px`,
               }}
             >
               {days.map((day) => (
@@ -214,7 +225,8 @@ export default function ActivityHeatmap({ days: providedDays }: { days?: HeatDay
                   <div
                     onMouseEnter={() => !day.isFuture && setHovered(day)}
                     onMouseLeave={() => setHovered(null)}
-                    className={`size-[14px] rounded-sm ${day.isFuture ? 'bg-transparent' : intensityClass(day.count)} transition-colors`}
+                    style={{ width: cellSize, height: cellSize }}
+                    className={`rounded-sm ${day.isFuture ? 'bg-transparent' : intensityClass(day.count)} transition-colors`}
                   />
                 </Tip>
               ))}

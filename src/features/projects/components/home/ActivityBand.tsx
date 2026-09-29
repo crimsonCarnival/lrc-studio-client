@@ -27,13 +27,13 @@ export function ActivityBand() {
   const xp = user?.progression?.xp ?? 0;
 
   return (
-    <section className="flex-1 min-w-0">
+    <section className="flex-1 min-w-0 flex flex-col">
       <div className="flex items-center gap-2 mb-3">
         <Icon name="local_fire_department" size={16} className="text-primary" />
         <h2 className="text-sm font-bold text-zinc-300">{t('home.yourActivity')}</h2>
       </div>
 
-      <div className="glass rounded-2xl p-4 flex flex-col lg:flex-row lg:items-center gap-4">
+      <div className="glass rounded-2xl p-4 flex-1 flex flex-col lg:flex-row lg:items-center gap-4">
         <div className="flex items-center gap-5 shrink-0">
           <Tip content={resetHint}>
             <span className="flex flex-col cursor-default">
@@ -68,7 +68,7 @@ export function ActivityBand() {
         </div>
 
         <div className="flex-1 min-w-0 overflow-x-auto">
-          <ActivityHeatmap />
+          <ActivityHeatmap cellSize={9} cellGap={3} />
         </div>
       </div>
     </section>

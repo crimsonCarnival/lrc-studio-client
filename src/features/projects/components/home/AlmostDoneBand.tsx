@@ -48,20 +48,20 @@ export function AlmostDoneBand({
   if (items.length === 0) return null;
 
   return (
-    <section className="lg:w-2/5 lg:shrink-0">
+    <section className="lg:w-[38%] lg:shrink-0 flex flex-col">
       <div className="flex items-center gap-2 mb-3">
         <Icon name="pending_actions" size={16} className="text-primary" />
         <h2 className="text-sm font-bold text-zinc-300">{t('home.almostDone')}</h2>
         <span className="text-[11px] text-zinc-500">{t('home.almostDoneSub')}</span>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
+      <div className="glass rounded-2xl p-3 flex-1 flex flex-col gap-2">
         {items.map(p => (
           <button
             key={p.publicId}
             type="button"
             onClick={() => onOpen(p.publicId)}
-            className="shrink-0 w-56 sm:w-auto text-left glass rounded-xl p-3 flex items-center gap-3 hover:border-primary/40 transition-colors focus:ring-2 focus:ring-primary/30 outline-none"
+            className="text-left rounded-xl p-3 flex items-center gap-3 bg-zinc-900/40 hover:bg-zinc-800/50 border border-zinc-800 hover:border-primary/40 transition-colors focus:ring-2 focus:ring-primary/30 outline-none"
           >
             <ProjectListCover
               coverImage={p.coverImage}
