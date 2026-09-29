@@ -152,7 +152,7 @@ export default function Home() {
   const timezone = (user as unknown as { settings?: { advanced?: { timezone?: string } } })?.settings?.advanced?.timezone || 'auto';
 
   return (
-    <div className="h-full flex flex-col overflow-y-auto overflow-x-hidden pt-8 pb-12 lg:px-12 max-w-7xl mx-auto w-full">
+    <div className="h-full overflow-y-auto overflow-x-hidden pt-8 pb-12 lg:px-12 max-w-7xl mx-auto w-full">
       {/* ── Greeting & New Project ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 animate-fade-in px-4 lg:px-0">
         <div>
@@ -242,7 +242,7 @@ export default function Home() {
       </div>
 
       {/* ── Tus proyectos ── */}
-      <div className="px-4 lg:px-0 animate-fade-in flex-1 flex flex-col min-h-0">
+      <div className="px-4 lg:px-0 animate-fade-in">
         <div className="flex flex-col gap-4 mb-6 relative z-10">
           <div className="flex items-end justify-between">
             <h2 className="text-2xl font-semibold text-zinc-100 tracking-tight">{t('home.yourProjects')}</h2>
