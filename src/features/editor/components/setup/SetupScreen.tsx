@@ -508,14 +508,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
         <div className="flex items-center justify-between gap-3 max-w-7xl mx-auto">
           <div className="flex items-center gap-3">
             <div className={`size-2 rounded-full bg-primary shrink-0 ${reducedMotion ? '' : 'animate-pulse'}`} />
-            <div>
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">
-                {t('app.name')} · {t('setup.newProject')}
-              </p>
-              <h2 className="font-heading text-zinc-100" style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)' }}>
-                {t('setup.newProjectTitle')}
-              </h2>
-            </div>
+            <h2 className="font-heading text-zinc-100" style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)' }}>
+              {t('setup.newProjectTitle')}
+            </h2>
           </div>
           <Button
             onClick={handleProceed}
@@ -532,7 +527,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-7xl mx-auto pb-3 lg:h-[calc(100%-1rem)] lg:pb-0">
 
           {/* Project info — left column on desktop */}
-          <div className="glass rounded-2xl flex flex-col p-5 gap-4 self-start lg:self-auto lg:overflow-y-auto lg:scrollbar-thin relative lg:order-1">
+          <div className="glass rounded-2xl flex flex-col p-4 gap-3 self-start lg:self-auto lg:overflow-y-auto lg:scrollbar-thin relative lg:order-1">
 
             {/* Project name */}
             <FloatingInput
@@ -616,8 +611,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 maxLength={4} />
             </div>
 
-            {/* Row 3: Track # + Track Count */}
-            <div className="grid grid-cols-2 gap-3 shrink-0">
+            {/* Row 3: Track # + Total + Genre. The two track fields only ever
+                hold 3 digits, so they do not need half a row each. */}
+            <div className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_2fr] gap-3 shrink-0">
               <FloatingInput id="track-number" type="text" label={t('setup.trackNumber')}
                 value={String(trackNumber ?? '')}
                 onChange={(e) => setMetadataState({ trackNumber: e.target.value.replace(/\D/g, '').slice(0, 3) })}
@@ -626,10 +622,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 value={String(trackCount ?? '')}
                 onChange={(e) => setMetadataState({ trackCount: e.target.value.replace(/\D/g, '').slice(0, 3) })}
                 maxLength={3} />
-            </div>
-
-            {/* Row 4: Genre + Tags (tags disabled until genre selected) */}
-            <div className="grid grid-cols-2 gap-3 shrink-0">
               <FloatingCombobox
                 id="song-genre"
                 label={t('setup.songGenre')}
@@ -640,6 +632,20 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 options={genreOptions}
                 maxLength={100}
                 strict
+                className="col-span-2 sm:col-span-1"
+              />
+            </div>
+
+            {/* Row 4: Language + Tags (tags disabled until genre selected) */}
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-3 shrink-0">
+              <FloatingCombobox
+                id="song-language"
+                label={t('setup.songLanguage')}
+                value={songLanguage}
+                onChange={(v: string) => setMetadataState({ songLanguage: v })}
+                options={languageOptions}
+                maxLength={100}
+                strict
               />
               <TagsSelector
                 value={projectTags}
@@ -647,18 +653,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 genre={genre}
               />
             </div>
-
-            {/* Row 5: Language */}
-            <FloatingCombobox
-              id="song-language"
-              label={t('setup.songLanguage')}
-              value={songLanguage}
-              onChange={(v: string) => setMetadataState({ songLanguage: v })}
-              options={languageOptions}
-              maxLength={100}
-              strict
-              className="shrink-0"
-            />
 
             {/* Cover Image + Privacy toggle — same row */}
             <div className="flex items-center gap-2 shrink-0 mt-auto">
