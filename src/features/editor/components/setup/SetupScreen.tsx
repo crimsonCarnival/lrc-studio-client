@@ -572,7 +572,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   placeholder={t('setup.projectNamePlaceholder')}
                   maxLength={200}
                 />
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 items-start">
                   <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
                     onChange={(e) => setMetadataState({ songName: e.target.value })}
                     maxLength={500} />
@@ -630,7 +630,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               filledCount={filledDetails}
               defaultOpen={filledDetails > 0}
             >
-              <div className="grid grid-cols-2 sm:grid-cols-[2fr_1fr_1fr] gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-[2fr_1fr_1fr] gap-3 items-start">
                 <FloatingCombobox
                   id="song-album"
                   label={t('setup.songAlbum')}
@@ -665,7 +665,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
               {/* Three even columns: genre and tags were taking two thirds of a
                   row each for values that are a single short word. */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 items-start">
                 <FloatingCombobox
                   id="song-genre"
                   label={t('setup.songGenre')}
