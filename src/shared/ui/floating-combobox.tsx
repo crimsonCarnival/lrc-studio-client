@@ -4,6 +4,9 @@ import { cn } from '@/shared/utils/utils'
 import { Input } from './input'
 import { Icon } from '@/shared/ui/Icon'
 
+/** Tallest the option list is allowed to get; it shrinks to fit the viewport. */
+const DROPDOWN_MAX_HEIGHT = 240
+
 export interface ComboboxOption {
   value: string
   label?: string
@@ -62,18 +65,46 @@ export function FloatingCombobox({
     if (!focused) setLocalText(labelForValue(value))
   }, [value, focused, labelForValue])
 
-  // Calculate portal position when dropdown opens
+  // Position the portalled dropdown. It is `position: fixed`, so no ancestor
+  // clips it — but the viewport still does, which is why it has to flip above
+  // the field when there is not enough room below it.
   React.useEffect(() => {
-    if (open && wrapperRef.current) {
-      const rect = wrapperRef.current.getBoundingClientRect()
+    if (!open) return
+    const el = wrapperRef.current
+    if (!el) return
+
+    const place = () => {
+      const rect = el.getBoundingClientRect()
+      const GAP = 4
+      const MARGIN = 8 // keep it off the very edge of the viewport
+      const below = window.innerHeight - rect.bottom - GAP - MARGIN
+      const above = rect.top - GAP - MARGIN
+
+      // Prefer below; flip only when below cannot fit the menu AND above is
+      // roomier, so short lists near the bottom still open downwards.
+      const flip = below < Math.min(DROPDOWN_MAX_HEIGHT, above) && above > below
+
       setDropdownStyle({
         position: 'fixed',
-        top: rect.bottom + 4,
         left: rect.left,
         width: rect.width,
         zIndex: 999999,
         pointerEvents: 'auto',
+        maxHeight: Math.max(96, Math.min(DROPDOWN_MAX_HEIGHT, flip ? above : below)),
+        ...(flip
+          ? { bottom: window.innerHeight - rect.top + GAP }
+          : { top: rect.bottom + GAP }),
       })
+    }
+
+    place()
+    // The field moves under the menu when anything scrolls or resizes, and the
+    // original code only measured once, leaving the menu stranded.
+    window.addEventListener('scroll', place, true)
+    window.addEventListener('resize', place)
+    return () => {
+      window.removeEventListener('scroll', place, true)
+      window.removeEventListener('resize', place)
     }
   }, [open])
 
@@ -154,7 +185,7 @@ export function FloatingCombobox({
   const dropdown = showDropdown ? (
     <div
       role="listbox"
-      style={{ ...dropdownStyle, maxHeight: '240px' }}
+      style={dropdownStyle}
       className="bg-zinc-900 border border-zinc-700/60 rounded-xl shadow-xl overflow-y-auto"
     >
       {filtered.map((opt, i) => (

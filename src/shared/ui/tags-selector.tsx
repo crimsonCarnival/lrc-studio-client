@@ -12,6 +12,9 @@ import {
   type PrimaryGenre,
 } from '@features/editor/constants/genre-tags'
 
+/** Tallest the tag list is allowed to get; it shrinks to fit the viewport. */
+const MAX_HEIGHT = 320
+
 interface TagsSelectorProps {
   value: string[]
   onChange: (tags: string[]) => void
@@ -79,17 +82,39 @@ export function TagsSelector({ value, onChange, genre, className }: TagsSelector
   }
 
   React.useEffect(() => {
-    if (open && wrapperRef.current) {
-      const rect = wrapperRef.current.getBoundingClientRect()
-      const available = window.innerHeight - rect.bottom - 8
+    if (!open) return
+    const el = wrapperRef.current
+    if (!el) return
+
+    const place = () => {
+      const rect = el.getBoundingClientRect()
+      const GAP = 4
+      const MARGIN = 8
+      const below = window.innerHeight - rect.bottom - GAP - MARGIN
+      const above = rect.top - GAP - MARGIN
+      // The old code used Math.max(180, available), which forced 180px even
+      // when far less room existed — so the list ran off the bottom instead of
+      // fitting. Flip above the field when that is where the room is.
+      const flip = below < Math.min(MAX_HEIGHT, above) && above > below
+
       setDropdownStyle({
         position: 'fixed',
-        top: rect.bottom + 4,
         left: rect.left,
         width: Math.max(rect.width, 300),
-        maxHeight: Math.max(180, available),
+        maxHeight: Math.max(120, Math.min(MAX_HEIGHT, flip ? above : below)),
         zIndex: 9999,
+        ...(flip
+          ? { bottom: window.innerHeight - rect.top + GAP }
+          : { top: rect.bottom + GAP }),
       })
+    }
+
+    place()
+    window.addEventListener('scroll', place, true)
+    window.addEventListener('resize', place)
+    return () => {
+      window.removeEventListener('scroll', place, true)
+      window.removeEventListener('resize', place)
     }
   }, [open])
 
