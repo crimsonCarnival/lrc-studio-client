@@ -48,14 +48,14 @@ export function AlmostDoneBand({
   if (items.length === 0) return null;
 
   return (
-    <section className="mb-8">
+    <section className="lg:w-2/5 lg:shrink-0">
       <div className="flex items-center gap-2 mb-3">
         <Icon name="pending_actions" size={16} className="text-primary" />
         <h2 className="text-sm font-bold text-zinc-300">{t('home.almostDone')}</h2>
         <span className="text-[11px] text-zinc-500">{t('home.almostDoneSub')}</span>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:overflow-visible">
+      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 sm:grid sm:grid-cols-2 sm:overflow-visible">
         {items.map(p => (
           <button
             key={p.publicId}

@@ -228,16 +228,14 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Almost done: started but unfinished, nearest to completion first ── */}
-      <div className="px-4 lg:px-0">
+      {/* ── Almost done + your activity, side by side on wide screens.
+             AlmostDoneBand renders nothing when no project qualifies, in which
+             case ActivityBand's flex-1 takes the full row on its own. ── */}
+      <div className="px-4 lg:px-0 mb-8 flex flex-col lg:flex-row lg:items-start gap-6">
         <AlmostDoneBand
           projects={items}
           onOpen={(publicId) => navigate(`/project/${publicId}/edit`)}
         />
-      </div>
-
-      {/* ── Your activity: streak, level and the contribution heatmap ── */}
-      <div className="px-4 lg:px-0">
         <ActivityBand />
       </div>
 

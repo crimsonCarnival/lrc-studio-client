@@ -27,7 +27,7 @@ export function ActivityBand() {
   const xp = user?.progression?.xp ?? 0;
 
   return (
-    <section className="mb-8">
+    <section className="flex-1 min-w-0">
       <div className="flex items-center gap-2 mb-3">
         <Icon name="local_fire_department" size={16} className="text-primary" />
         <h2 className="text-sm font-bold text-zinc-300">{t('home.yourActivity')}</h2>
