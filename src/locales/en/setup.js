@@ -11,7 +11,6 @@ export default {
   coverUrlLabel: "Or paste an image URL",
   trackLabel: "Track",
   trackOfAria: "Track number out of total tracks",
-  visibility: "Visibility",
   publicHelp: "Anyone can find this project and open it.",
   privateHelp: "Only you can see this project.",
   visibilityNeedsAccount: "Sign in to publish a project.",

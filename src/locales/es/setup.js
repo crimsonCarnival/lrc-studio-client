@@ -11,7 +11,6 @@ export default {
   coverUrlLabel: "O pega la URL de una imagen",
   trackLabel: "Pista",
   trackOfAria: "Número de pista sobre el total de pistas",
-  visibility: "Visibilidad",
   publicHelp: "Cualquiera puede encontrar este proyecto y abrirlo.",
   privateHelp: "Solo tú puedes ver este proyecto.",
   visibilityNeedsAccount: "Inicia sesión para publicar un proyecto.",
