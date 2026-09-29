@@ -26,7 +26,7 @@ const FEED_QUERY = /* GraphQL */ `
   }
 `;
 
-export function useFeed() {
+export function useFeed(limit = 20) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [hasMore, setHasMore]       = useState(false);
   const [loading, setLoading]       = useState(true);
@@ -39,7 +39,7 @@ export function useFeed() {
       if (offset === 0) setLoading(true);
       else setLoadingMore(true);
 
-      const data = await gqlRequest<{ feed: FeedResult }>(FEED_QUERY, { offset, limit: 20 });
+      const data = await gqlRequest<{ feed: FeedResult }>(FEED_QUERY, { offset, limit });
       const { activities: items, hasMore: more } = data.feed;
 
       setActivities(prev => append ? [...prev, ...items] : items);
@@ -51,7 +51,7 @@ export function useFeed() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, []);
+  }, [limit]);
 
   // Initial fetch
   // eslint-disable-next-line react-hooks/set-state-in-effect

@@ -1,4 +1,13 @@
 export default {
+  almostDone: "Casi listos",
+  almostDoneSub: "primero los más cercanos a terminar",
+  yourActivity: "Tu actividad",
+  streakCurrent: "Racha de días",
+  streakLongest: "Más larga",
+  level: "Nivel",
+  xpTip: "{{xp}} XP en total",
+  following: "De quienes sigues",
+  followingAll: "Ver todo",
   welcome: {
     morning: [
       "¡Buenos días, {{name}}!",

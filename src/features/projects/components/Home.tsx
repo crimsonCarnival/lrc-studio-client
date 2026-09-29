@@ -9,6 +9,9 @@ import { projects } from '@/app/api';
 import { Icon } from '@/shared/ui/Icon';
 import ProjectSetupModalRaw from '@features/editor/components/setup/ProjectSetupModal';
 import ProjectCard from '@/features/library/components/ProjectCard';
+import { AlmostDoneBand } from './home/AlmostDoneBand';
+import { ActivityBand } from './home/ActivityBand';
+import { FollowingBand } from './home/FollowingBand';
 
 // ProjectSetupModal is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -225,6 +228,19 @@ export default function Home() {
         </div>
       )}
 
+      {/* ── Almost done: started but unfinished, nearest to completion first ── */}
+      <div className="px-4 lg:px-0">
+        <AlmostDoneBand
+          projects={items}
+          onOpen={(publicId) => navigate(`/project/${publicId}/edit`)}
+        />
+      </div>
+
+      {/* ── Your activity: streak, level and the contribution heatmap ── */}
+      <div className="px-4 lg:px-0">
+        <ActivityBand />
+      </div>
+
       {/* ── Tus proyectos ── */}
       <div className="px-4 lg:px-0 animate-fade-in flex-1 flex flex-col min-h-0">
         <div className="flex flex-col gap-4 mb-6 relative z-10">
@@ -325,7 +341,12 @@ export default function Home() {
           </button>
         </div>
       </div>
-      
+
+      {/* ── From people you follow: hides itself when the feed is empty ── */}
+      <div className="px-4 lg:px-0">
+        <FollowingBand />
+      </div>
+
       <ProjectSetupModal
         key={editingProject?.publicId || 'none'}
         isOpen={!!editingProject}
