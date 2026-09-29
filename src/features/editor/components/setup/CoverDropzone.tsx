@@ -19,6 +19,9 @@ type CoverDropzoneProps = {
   onChange: (url: string) => void;
   /** Uploads the file and resolves with its URL. Supplied by the caller so each surface keeps its own reCAPTCHA wiring. */
   onUpload: (file: File) => Promise<string>;
+  /** Toggles the caller's URL field. Rendered as a link button under the tile so the URL path stays next to the cover it sets. */
+  onToggleUrl?: () => void;
+  urlOpen?: boolean;
   className?: string;
 };
 
@@ -29,7 +32,7 @@ type CoverDropzoneProps = {
  * path is kept as a secondary input because existing projects store remote
  * cover URLs and some users paste them deliberately.
  */
-export function CoverDropzone({ value, onChange, onUpload, className }: CoverDropzoneProps) {
+export function CoverDropzone({ value, onChange, onUpload, onToggleUrl, urlOpen, className }: CoverDropzoneProps) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -109,6 +112,25 @@ export function CoverDropzone({ value, onChange, onUpload, className }: CoverDro
           </Tip>
         )}
       </div>
+
+      {onToggleUrl && (
+        <Tip content={t('setup.coverUrlLabel')}>
+          <button
+            type="button"
+            onClick={onToggleUrl}
+            aria-expanded={!!urlOpen}
+            aria-label={t('setup.coverUrlLabel')}
+            className={`mt-1 w-[72px] h-6 rounded-lg border flex items-center justify-center gap-1 transition-colors ${
+              urlOpen
+                ? 'border-primary/50 text-primary bg-primary/10'
+                : 'border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'
+            }`}
+          >
+            <Icon name="link" size={12} />
+            <span className="text-[9px] font-bold uppercase tracking-wider">URL</span>
+          </button>
+        </Tip>
+      )}
 
       <input
         type="file"
