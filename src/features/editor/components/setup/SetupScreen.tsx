@@ -5,6 +5,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { FloatingCombobox } from '@/shared/ui/floating-combobox';
+import { CollapsibleSection } from '@/shared/ui/collapsible-section';
+import { TrackNumberField } from '@/shared/ui/track-number-field';
+import { CoverDropzone } from './CoverDropzone';
 import { useLanguageOptions } from '../../hooks/useLanguageOptions';
 import { Textarea } from '@ui/textarea';
 import { Switch } from '@ui/switch';
@@ -127,8 +130,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const reducedMotion = useReducedMotion();
   const [rightTab, setRightTab] = useState('media');
   const { executeRecaptcha } = useGoogleReCaptcha();
-  const [imageUploading, setImageUploading] = useState(false);
-  const coverImageInputRef = useRef<HTMLInputElement | null>(null);
 
   // If arriving with prefill data (rollback from no-media project), start at the media step
   useEffect(() => {
@@ -484,22 +485,19 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers });
   };
 
-  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) return;
-    if (file.size > 5 * 1024 * 1024) return;
-    setImageUploading(true);
-    try {
-      const token = executeRecaptcha ? await executeRecaptcha('upload_cover') : undefined;
-      const url = await uploadsService.uploadCoverImage(file, token) as string;
-      setMetadataState({ coverImage: url });
-    } catch { /* ignore */ }
-    finally {
-      setImageUploading(false);
-      e.target.value = '';
-    }
-  };
+  // Resolves with the uploaded URL and lets failures propagate — CoverDropzone
+  // owns the validation messages and the busy state. The previous version
+  // swallowed every error, so a rejected file looked like a dead button.
+  const uploadCover = useCallback(async (file: File): Promise<string> => {
+    const token = executeRecaptcha ? await executeRecaptcha('upload_cover') : undefined;
+    return await uploadsService.uploadCoverImage(file, token) as string;
+  }, [executeRecaptcha]);
+
+  // Which optional fields already carry a value. Drives both the pill on the
+  // collapsed header and whether it starts open, so a project that already has
+  // metadata never hides it behind a click.
+  const filledDetails = [songAlbum, songYear, String(trackNumber ?? ''), genre, songLanguage]
+    .filter((v) => !!v && String(v).trim() !== '').length + (projectTags.length > 0 ? 1 : 0);
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -529,176 +527,168 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
           {/* Project info — left column on desktop */}
           <div className="glass rounded-2xl flex flex-col p-4 gap-3 self-start lg:self-auto lg:overflow-y-auto lg:scrollbar-thin relative lg:order-1">
 
-            {/* Project name */}
-            <FloatingInput
-              ref={projectNameInputRef}
-              id="project-name"
-              type="text"
-              label={`${t('setup.projectName')} *`}
-              value={projectName}
-              onChange={(e) => setMetadataState({ name: e.target.value })}
-              placeholder={t('setup.projectNamePlaceholder')}
-              maxLength={200}
-            />
-
-            <div className="w-full h-px bg-zinc-800/60 shrink-0" />
-
-            {/* Song info */}
-            <div className="flex items-center justify-between shrink-0">
-              <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                {t('setup.songInformation')}
-              </h3>
-              {/* Always rendered so it's discoverable; disabled until name + artist exist. */}
-              <Tip content={songName.trim() && songArtist.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')} side="left">
-                {/* span keeps the tooltip working while the button is disabled */}
-                <span className="inline-flex">
-                  <Button
-                    type="button"
-                    variant="sync"
-                    size="sm"
-                    onClick={handleFetchSongInfo}
-                    disabled={metaSearching || !songName.trim() || !songArtist.trim()}
-                    className="gap-1.5 font-semibold"
-                  >
-                    {metaSearching ? <LogoLoader size={14} /> : <Icon name="search" size={14} />}
-                    {t('setup.fetchInfo')}
-                  </Button>
-                </span>
-              </Tip>
-            </div>
-
-            {/* Row 1: Song Name + Artist */}
-            <div className="grid grid-cols-2 gap-3 shrink-0">
-              <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
-                onChange={(e) => setMetadataState({ songName: e.target.value })}
-                maxLength={500} />
-              <FloatingCombobox
-                id="song-artist"
-                label={t('setup.songArtist')}
-                value={songArtist}
-                onChange={(v: string) => setMetadataState({ songArtist: v })}
-                options={artistOptions}
-                maxLength={300}
+            {/* Essentials: cover anchors the identity fields beside it */}
+            <div className="flex gap-3 shrink-0">
+              <CoverDropzone
+                value={coverImage}
+                onChange={(url) => setMetadataState({ coverImage: url })}
+                onUpload={uploadCover}
               />
+              <div className="flex-1 min-w-0 flex flex-col gap-3">
+                <FloatingInput
+                  ref={projectNameInputRef}
+                  id="project-name"
+                  type="text"
+                  label={`${t('setup.projectName')} *`}
+                  aria-required
+                  value={projectName}
+                  onChange={(e) => setMetadataState({ name: e.target.value })}
+                  placeholder={t('setup.projectNamePlaceholder')}
+                  maxLength={200}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
+                    onChange={(e) => setMetadataState({ songName: e.target.value })}
+                    maxLength={500} />
+                  <FloatingCombobox
+                    id="song-artist"
+                    label={t('setup.songArtist')}
+                    value={songArtist}
+                    onChange={(v: string) => setMetadataState({ songArtist: v })}
+                    options={artistOptions}
+                    maxLength={300}
+                  />
+                </div>
+              </div>
             </div>
+
+            {/* Autofill. It sits below song name + artist because it needs both;
+                promoting it above them would only show a disabled control. */}
+            <Tip content={songName.trim() && songArtist.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')}>
+              {/* span keeps the tooltip working while the button is disabled */}
+              <span className="block shrink-0">
+                <Button
+                  type="button"
+                  variant="sync"
+                  onClick={handleFetchSongInfo}
+                  disabled={metaSearching || !songName.trim() || !songArtist.trim()}
+                  className="w-full h-10 gap-2 justify-center font-semibold rounded-xl"
+                >
+                  {metaSearching ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
+                  {t('setup.fetchInfo')}
+                </Button>
+              </span>
+            </Tip>
 
             {/* Singers — the song-level roster offered when tagging sections/lines */}
             <div className="shrink-0">
               <SingersInput value={singers} onChange={(next) => setMetadataState({ singers: next })} />
             </div>
 
-            {/* Row 2: Album + Year */}
-            <div className="grid gap-3 shrink-0" style={{ gridTemplateColumns: '3fr 1fr' }}>
-              <FloatingCombobox
-                id="song-album"
-                label={t('setup.songAlbum')}
-                value={songAlbum}
-                onChange={(v: string) => setMetadataState({ songAlbum: v })}
-                onSelect={handleAlbumSelect}
-                options={albumOptions}
-                maxLength={300}
-              />
-              <FloatingInput id="song-year" type="text" label={t('setup.songYear')} value={songYear}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, '').slice(0, 4);
-                  const currentYear = new Date().getFullYear();
-                  if (val.length === 4 && parseInt(val) > currentYear) {
-                    setMetadataState({ songYear: currentYear.toString() });
-                  } else {
-                    setMetadataState({ songYear: val });
-                  }
-                }}
-                maxLength={4} />
-            </div>
+            <CollapsibleSection
+              title={t('setup.moreDetails')}
+              hint={t('setup.moreDetailsHint')}
+              filledCount={filledDetails}
+              defaultOpen={filledDetails > 0}
+            >
+              <div className="grid gap-3" style={{ gridTemplateColumns: '3fr 1fr' }}>
+                <FloatingCombobox
+                  id="song-album"
+                  label={t('setup.songAlbum')}
+                  value={songAlbum}
+                  onChange={(v: string) => setMetadataState({ songAlbum: v })}
+                  onSelect={handleAlbumSelect}
+                  options={albumOptions}
+                  maxLength={300}
+                />
+                <FloatingInput id="song-year" type="text" label={t('setup.songYear')} value={songYear}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                    const currentYear = new Date().getFullYear();
+                    if (val.length === 4 && parseInt(val) > currentYear) {
+                      setMetadataState({ songYear: currentYear.toString() });
+                    } else {
+                      setMetadataState({ songYear: val });
+                    }
+                  }}
+                  maxLength={4} />
+              </div>
 
-            {/* Row 3: Track # + Total + Genre. The two track fields only ever
-                hold 3 digits, so they do not need half a row each. */}
-            <div className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_2fr] gap-3 shrink-0">
-              <FloatingInput id="track-number" type="text" label={t('setup.trackNumber')}
-                value={String(trackNumber ?? '')}
-                onChange={(e) => setMetadataState({ trackNumber: e.target.value.replace(/\D/g, '').slice(0, 3) })}
-                maxLength={3} />
-              <FloatingInput id="track-count" type="text" label={t('setup.trackCount')}
-                value={String(trackCount ?? '')}
-                onChange={(e) => setMetadataState({ trackCount: e.target.value.replace(/\D/g, '').slice(0, 3) })}
-                maxLength={3} />
-              <FloatingCombobox
-                id="song-genre"
-                label={t('setup.songGenre')}
-                value={genre}
-                onChange={(v: string) => {
-                  setMetadataState({ genre: v, tags: [] });
-                }}
-                options={genreOptions}
-                maxLength={100}
-                strict
-                className="col-span-2 sm:col-span-1"
-              />
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-3">
+                <TrackNumberField
+                  id="track"
+                  label={t('setup.trackLabel')}
+                  ariaLabel={t('setup.trackOfAria')}
+                  number={String(trackNumber ?? '')}
+                  count={String(trackCount ?? '')}
+                  onNumberChange={(v) => setMetadataState({ trackNumber: v })}
+                  onCountChange={(v) => setMetadataState({ trackCount: v })}
+                />
+                <FloatingCombobox
+                  id="song-genre"
+                  label={t('setup.songGenre')}
+                  value={genre}
+                  onChange={(v: string) => {
+                    setMetadataState({ genre: v, tags: [] });
+                  }}
+                  options={genreOptions}
+                  maxLength={100}
+                  strict
+                />
+              </div>
 
-            {/* Row 4: Language + Tags (tags disabled until genre selected) */}
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-3 shrink-0">
-              <FloatingCombobox
-                id="song-language"
-                label={t('setup.songLanguage')}
-                value={songLanguage}
-                onChange={(v: string) => setMetadataState({ songLanguage: v })}
-                options={languageOptions}
-                maxLength={100}
-                strict
-              />
-              <TagsSelector
-                value={projectTags}
-                onChange={(tags: string[]) => setMetadataState({ tags })}
-                genre={genre}
-              />
-            </div>
-
-            {/* Cover Image + Privacy toggle — same row */}
-            <div className="flex items-center gap-2 shrink-0 mt-auto">
-              {coverImage ? (
-                <div className="relative w-10 h-10 shrink-0 rounded-xl overflow-hidden border border-zinc-700/50 bg-zinc-800/50">
-                  <img src={coverImage} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-3">
+                <FloatingCombobox
+                  id="song-language"
+                  label={t('setup.songLanguage')}
+                  value={songLanguage}
+                  onChange={(v: string) => setMetadataState({ songLanguage: v })}
+                  options={languageOptions}
+                  maxLength={100}
+                  strict
+                />
+                <div>
+                  <TagsSelector
+                    value={projectTags}
+                    onChange={(tags: string[]) => setMetadataState({ tags })}
+                    genre={genre}
+                  />
+                  {/* The control looked disabled with no reason given */}
+                  {!genre && (
+                    <p className="mt-1 text-[11px] text-zinc-500">{t('setup.tagsNeedGenre')}</p>
+                  )}
                 </div>
-              ) : null}
+              </div>
+
               <FloatingInput
                 id="cover-image"
                 type="text"
-                label={t('setup.coverImage')}
+                label={t('setup.coverUrlLabel')}
                 value={coverImage}
                 onChange={(e) => setMetadataState({ coverImage: e.target.value })}
                 placeholder={t('setup.coverImagePlaceholder')}
-                className="flex-1"
               />
-              <button
-                type="button"
-                onClick={() => coverImageInputRef.current?.click()}
-                disabled={imageUploading}
-                className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-zinc-700/50 bg-transparent text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
-              >
-                {imageUploading ? (
-                  <LogoLoader size={16} />
-                ) : (
-                  <Icon name="upload" size={16} />
-                )}
-              </button>
-              <input
-                type="file"
-                ref={coverImageInputRef}
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
+            </CollapsibleSection>
+
+            {/* Visibility — a bare toggle said nothing about what it does */}
+            <div className="mt-auto shrink-0 pt-3 border-t border-zinc-800/60 flex items-start gap-3">
+              <Switch
+                id="project-public"
+                checked={isPublic}
+                onCheckedChange={(checked: boolean) => setMetadataState({ isPublic: checked })}
+                disabled={!user}
+                className="mt-0.5"
               />
-              <div className="flex flex-col items-center gap-1 shrink-0 pl-1">
-                <Switch
-                  checked={isPublic}
-                  onCheckedChange={(checked: boolean) => setMetadataState({ isPublic: checked })}
-                  disabled={!user}
-                />
-                <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">
+              <label htmlFor="project-public" className="min-w-0 cursor-pointer">
+                <span className="block text-xs font-semibold text-zinc-200">
                   {isPublic ? t('setup.public') : t('setup.private')}
                 </span>
-              </div>
+                <span className="block text-[11px] text-zinc-500 leading-snug">
+                  {!user
+                    ? t('setup.visibilityNeedsAccount')
+                    : isPublic ? t('setup.publicHelp') : t('setup.privateHelp')}
+                </span>
+              </label>
             </div>
           </div>
 
