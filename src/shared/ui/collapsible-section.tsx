@@ -30,6 +30,18 @@ export function CollapsibleSection({
   className,
 }: CollapsibleSectionProps) {
   const [open, setOpen] = React.useState(defaultOpen)
+
+  // defaultOpen only decides the initial state, so content arriving later —
+  // autofill filling album/year/genre while this is collapsed — would land
+  // invisibly and make the fetch button look like it did nothing. Open on the
+  // 0 -> n transition. Adjusting state during render rather than in an effect
+  // avoids rendering the closed state first and then flipping it.
+  const [prevFilled, setPrevFilled] = React.useState(filledCount)
+  if (filledCount !== prevFilled) {
+    setPrevFilled(filledCount)
+    if (prevFilled === 0 && filledCount > 0) setOpen(true)
+  }
+
   const reactId = React.useId()
   const regionId = `${reactId}-region`
 
