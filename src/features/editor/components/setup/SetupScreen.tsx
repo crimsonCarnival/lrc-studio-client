@@ -130,6 +130,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const reducedMotion = useReducedMotion();
   const [rightTab, setRightTab] = useState('media');
   const { executeRecaptcha } = useGoogleReCaptcha();
+  // Cover URL is an escape hatch, not a primary path: hidden until requested.
+  const [showCoverUrl, setShowCoverUrl] = useState(false);
 
   // If arriving with prefill data (rollback from no-media project), start at the media step
   useEffect(() => {
@@ -510,13 +512,35 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               {t('setup.newProjectTitle')}
             </h2>
           </div>
-          <Button
-            onClick={handleProceed}
-            disabled={!canContinue}
-            className="h-9 px-5 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 shadow-glow transition-all text-sm disabled:shadow-none shrink-0"
-          >
-            {t('setup.startToSync')}
-          </Button>
+          <div className="flex items-center gap-4 shrink-0">
+            {/* Visibility lives up here rather than at the foot of the form: it
+                is a property of the project, not another metadata field, and
+                the form below needs the vertical room. */}
+            <Tip content={!user ? t('setup.visibilityNeedsAccount') : isPublic ? t('setup.publicHelp') : t('setup.privateHelp')}>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="project-public"
+                  checked={isPublic}
+                  onCheckedChange={(checked: boolean) => setMetadataState({ isPublic: checked })}
+                  disabled={!user}
+                />
+                <label
+                  htmlFor="project-public"
+                  className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 cursor-pointer select-none"
+                >
+                  {isPublic ? t('setup.public') : t('setup.private')}
+                </label>
+              </div>
+            </Tip>
+
+            <Button
+              onClick={handleProceed}
+              disabled={!canContinue}
+              className="h-9 px-5 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 shadow-glow transition-all text-sm disabled:shadow-none"
+            >
+              {t('setup.startToSync')}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -533,6 +557,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 value={coverImage}
                 onChange={(url) => setMetadataState({ coverImage: url })}
                 onUpload={uploadCover}
+                onToggleUrl={() => setShowCoverUrl((v) => !v)}
+                urlOpen={showCoverUrl}
               />
               <div className="flex-1 min-w-0 flex flex-col gap-3">
                 <FloatingInput
@@ -559,6 +585,19 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     maxLength={300}
                   />
                 </div>
+
+                {/* Sits inside the cover's own row so the URL path is next to
+                    the thing it sets, and costs no height until asked for. */}
+                {showCoverUrl && (
+                  <FloatingInput
+                    id="cover-image"
+                    type="text"
+                    label={t('setup.coverUrlLabel')}
+                    value={coverImage}
+                    onChange={(e) => setMetadataState({ coverImage: e.target.value })}
+                    placeholder={t('setup.coverImagePlaceholder')}
+                  />
+                )}
               </div>
             </div>
 
@@ -591,7 +630,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               filledCount={filledDetails}
               defaultOpen={filledDetails > 0}
             >
-              <div className="grid gap-3" style={{ gridTemplateColumns: '3fr 1fr' }}>
+              <div className="grid grid-cols-2 sm:grid-cols-[2fr_1fr_1fr] gap-3">
                 <FloatingCombobox
                   id="song-album"
                   label={t('setup.songAlbum')}
@@ -600,6 +639,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   onSelect={handleAlbumSelect}
                   options={albumOptions}
                   maxLength={300}
+                  className="col-span-2 sm:col-span-1"
                 />
                 <FloatingInput id="song-year" type="text" label={t('setup.songYear')} value={songYear}
                   onChange={(e) => {
@@ -612,9 +652,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     }
                   }}
                   maxLength={4} />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-3">
                 <TrackNumberField
                   id="track"
                   label={t('setup.trackLabel')}
@@ -624,6 +661,11 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   onNumberChange={(v) => setMetadataState({ trackNumber: v })}
                   onCountChange={(v) => setMetadataState({ trackCount: v })}
                 />
+              </div>
+
+              {/* Three even columns: genre and tags were taking two thirds of a
+                  row each for values that are a single short word. */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <FloatingCombobox
                   id="song-genre"
                   label={t('setup.songGenre')}
@@ -635,9 +677,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   maxLength={100}
                   strict
                 />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-3">
                 <FloatingCombobox
                   id="song-language"
                   label={t('setup.songLanguage')}
@@ -647,7 +686,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   maxLength={100}
                   strict
                 />
-                <div>
+                <div className="col-span-2 sm:col-span-1">
                   <TagsSelector
                     value={projectTags}
                     onChange={(tags: string[]) => setMetadataState({ tags })}
@@ -659,37 +698,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   )}
                 </div>
               </div>
-
-              <FloatingInput
-                id="cover-image"
-                type="text"
-                label={t('setup.coverUrlLabel')}
-                value={coverImage}
-                onChange={(e) => setMetadataState({ coverImage: e.target.value })}
-                placeholder={t('setup.coverImagePlaceholder')}
-              />
             </CollapsibleSection>
 
-            {/* Visibility — a bare toggle said nothing about what it does */}
-            <div className="mt-auto shrink-0 pt-3 border-t border-zinc-800/60 flex items-start gap-3">
-              <Switch
-                id="project-public"
-                checked={isPublic}
-                onCheckedChange={(checked: boolean) => setMetadataState({ isPublic: checked })}
-                disabled={!user}
-                className="mt-0.5"
-              />
-              <label htmlFor="project-public" className="min-w-0 cursor-pointer">
-                <span className="block text-xs font-semibold text-zinc-200">
-                  {isPublic ? t('setup.public') : t('setup.private')}
-                </span>
-                <span className="block text-[11px] text-zinc-500 leading-snug">
-                  {!user
-                    ? t('setup.visibilityNeedsAccount')
-                    : isPublic ? t('setup.publicHelp') : t('setup.privateHelp')}
-                </span>
-              </label>
-            </div>
           </div>
 
           {/* Media + Lyrics — right column on desktop */}
