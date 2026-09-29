@@ -37,6 +37,7 @@ function FloatingInput({ className, label, value, error, hasIcon, onFocus, onBlu
           props.onChange?.(e)
         }}
         placeholder=" "
+        aria-invalid={error || undefined}
         className={cn(
           "h-12 w-full bg-transparent border-zinc-700/50 text-zinc-100 focus:border-primary/60 focus:ring-0 rounded-xl transition-all px-4 pt-2",
           error && "border-destructive/50 focus:border-destructive/80",
@@ -44,6 +45,9 @@ function FloatingInput({ className, label, value, error, hasIcon, onFocus, onBlu
         )}
       />
       <label
+        // Without this the input has no accessible name at all: the label is
+        // only positioned next to it visually, which a screen reader cannot see.
+        htmlFor={props.id}
         className={cn(
           "absolute top-1/2 -translate-y-1/2 text-sm text-zinc-500 pointer-events-none transition-all duration-200 ease-out",
           hasIcon ? "left-12" : "left-4",

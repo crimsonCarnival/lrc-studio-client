@@ -47,6 +47,10 @@ export function FloatingCombobox({
   placeholder,
 }: FloatingComboboxProps) {
   const wrapperRef = React.useRef<HTMLDivElement>(null)
+  // Stable id for the portalled listbox so the input can point at it. useId
+  // covers the callers that do not pass an id of their own.
+  const reactId = React.useId()
+  const listboxId = `${id || reactId}-listbox`
   const [focused, setFocused] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   const [activeIndex, setActiveIndex] = React.useState(-1)
@@ -185,6 +189,8 @@ export function FloatingCombobox({
   const dropdown = showDropdown ? (
     <div
       role="listbox"
+      id={listboxId}
+      aria-label={label}
       style={dropdownStyle}
       className="bg-zinc-900 border border-zinc-700/60 rounded-xl shadow-xl overflow-y-auto"
     >
@@ -193,6 +199,7 @@ export function FloatingCombobox({
           key={`${opt.value ?? opt.label ?? ''}-${i}`}
           type="button"
           role="option"
+          id={`${listboxId}-opt-${i}`}
           aria-selected={i === activeIndex}
           onMouseDown={(e) => {
             e.preventDefault()
@@ -229,6 +236,16 @@ export function FloatingCombobox({
         placeholder={placeholder || " "}
         maxLength={maxLength}
         autoComplete="off"
+        // The listbox already exists in the DOM; without these it is invisible
+        // to assistive tech, which hears a plain text input with no options.
+        role="combobox"
+        aria-expanded={showDropdown}
+        aria-controls={listboxId}
+        aria-autocomplete="list"
+        aria-activedescendant={
+          showDropdown && activeIndex >= 0 ? `${listboxId}-opt-${activeIndex}` : undefined
+        }
+        aria-invalid={error || undefined}
         className={cn(
           'w-full focus:ring-0 transition-all',
           size === 'default' && 'h-12 bg-transparent border-zinc-700/50 text-zinc-100 focus:border-primary/60 rounded-xl px-4 pt-2 pr-9',
@@ -238,6 +255,7 @@ export function FloatingCombobox({
       />
       {size === 'default' && label && (
         <label
+          htmlFor={id}
           className={cn(
             'absolute top-1/2 -translate-y-1/2 left-4 text-sm text-zinc-500 pointer-events-none transition-all duration-200 ease-out',
             (focused || hasValue || value) &&
