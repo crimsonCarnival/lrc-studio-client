@@ -1,6 +1,5 @@
 import { request } from '@/app/api.client';
 import { gqlRequest } from '@/app/graphql.client';
-import { isApiError } from '@/types';
 import type { Upload, SaveMediaInput } from '@/types';
 
 interface CloudinarySignature {
@@ -162,34 +161,17 @@ export const uploadsService = {
   },
 
   async saveMedia(input: SaveMediaInput): Promise<{ upload: Upload }> {
-    try {
-      const data = await gqlRequest<{ saveMedia: Upload }>(/* GraphQL */ `
-        mutation SaveMedia($input: SaveMediaInput!) {
-          saveMedia(input: $input) {
-            id
-            source
-            fileName
-            title
-          }
+    const data = await gqlRequest<{ saveMedia: Upload }>(/* GraphQL */ `
+      mutation SaveMedia($input: SaveMediaInput!) {
+        saveMedia(input: $input) {
+          id
+          source
+          fileName
+          title
         }
-      `, { input });
-      // Return upload directly (both GraphQL and normalized REST response)
-      return { upload: data.saveMedia };
-    } catch (err) {
-      // Fallback to REST for unauthenticated requests or GraphQL errors
-      console.warn('GraphQL saveMedia failed, falling back to REST:', isApiError(err) ? err.message : String(err));
-      try {
-        const restData = await request<{ upload: Upload }>('/uploads/media', {
-          method: 'POST',
-          body: JSON.stringify(input),
-        });
-        // REST returns { upload }, extract just the upload for consistency
-        return { upload: restData!.upload };
-      } catch (restErr) {
-        console.error('REST fallback also failed:', restErr);
-        throw err;
       }
-    }
+    `, { input });
+    return { upload: data.saveMedia };
   },
 
   async deleteMedia(id: string): Promise<boolean> {

@@ -1,6 +1,4 @@
 import { gqlRequest } from '@/app/graphql.client';
-import { request } from '@/app/api.client';
-import { isApiError } from '@/types';
 import type { Project, CreateProjectInput, UpdateProjectInput } from '@/types';
 
 const GET_PROJECTS = /* GraphQL */ `
@@ -352,15 +350,8 @@ export const projectsService = {
   },
 
   async get(id: string): Promise<{ project: Project | null }> {
-    try {
-      const data = await gqlRequest<{ project: Project | null }>(GET_PROJECT, { id });
-      return { project: data.project };
-    } catch (err) {
-      if (isApiError(err) && err.graphqlErrors?.some((e) => e.message.includes('Cannot query field'))) {
-        return (await request<{ project: Project | null }>(`/projects/${id}`)) ?? { project: null };
-      }
-      throw err;
-    }
+    const data = await gqlRequest<{ project: Project | null }>(GET_PROJECT, { id });
+    return { project: data.project };
   },
 
   async update(id: string, input: UpdateProjectInput, { signal, headers }: RequestOpts = {}): Promise<{ project: Project }> {
@@ -379,20 +370,8 @@ export const projectsService = {
   },
 
   async getShare(id: string): Promise<{ project: Project | null }> {
-    try {
-      const data = await gqlRequest<{ getShare: Project | null }>(GET_SHARE, { id });
-      return { project: data.getShare };
-    } catch (err) {
-      // Fallback to REST for any GraphQL error (schema issues, etc.)
-      const message = isApiError(err) ? err.message : String(err);
-      console.warn('GraphQL getShare failed, falling back to REST:', message);
-      try {
-        return (await request<{ project: Project | null }>(`/projects/share/${id}`)) ?? { project: null };
-      } catch (restErr) {
-        console.error('REST fallback also failed:', restErr);
-        throw err; // Throw original GraphQL error
-      }
-    }
+    const data = await gqlRequest<{ getShare: Project | null }>(GET_SHARE, { id });
+    return { project: data.getShare };
   },
 
   async clone(id: string): Promise<Project> {
