@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { gqlRequest } from '@/app/graphql.client';
 import { Tip } from '@/shared/ui/tip';
@@ -132,10 +132,16 @@ export default function ActivityHeatmap({
     return () => { isMounted = false; };
   }, [providedDays]);
 
-  useEffect(() => {
-    if (data && scrollRef.current) {
-      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
-    }
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!data || !el) return;
+    const toEnd = () => { el.scrollLeft = el.scrollWidth - el.clientWidth; };
+    toEnd();
+    // The panel around it can still be resolving its width on first paint, so
+    // re-pin once the element's own box changes rather than trusting one pass.
+    const ro = new ResizeObserver(toEnd);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [data]);
 
   const countsByDate = useMemo(() => {
