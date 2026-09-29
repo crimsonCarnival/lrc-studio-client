@@ -983,6 +983,7 @@ export type SaveMediaInput = {
   source: Scalars['String']['input'];
   title?: InputMaybe<Scalars['String']['input']>;
   uploadUrl?: InputMaybe<Scalars['String']['input']>;
+  sizeBytes?: InputMaybe<Scalars['Float']['input']>;
 };
 
 export type ScrollSettings = {
