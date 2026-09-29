@@ -257,7 +257,9 @@ export function FloatingCombobox({
         <label
           htmlFor={id}
           className={cn(
-            'absolute top-1/2 -translate-y-1/2 left-4 text-sm text-zinc-500 pointer-events-none transition-all duration-200 ease-out',
+            // top-6 = half of h-12, not top-1/2: see floating-input.tsx. The
+            // wrapper stretches with its grid row; the field does not.
+            'absolute top-6 -translate-y-1/2 left-4 text-sm text-zinc-500 pointer-events-none transition-all duration-200 ease-out',
             (focused || hasValue || value) &&
               '-top-[2px] px-1.5 text-[10px] uppercase tracking-wider text-primary font-bold bg-zinc-900 rounded-sm leading-none py-0.5 left-3',
             (focused || hasValue || value) && error && 'text-destructive'
@@ -266,9 +268,11 @@ export function FloatingCombobox({
           {label}
         </label>
       )}
+      {/* Pinned to the control's own height for the same reason as the label:
+          top-1/2 followed the stretched wrapper and drifted below the field. */}
       <Icon name="expand_more" className={cn(
-        "absolute top-1/2 -translate-y-1/2 pointer-events-none",
-        size === 'default' ? "right-3 text-zinc-600" : "right-1.5 text-zinc-500"
+        "absolute -translate-y-1/2 pointer-events-none",
+        size === 'default' ? "top-6 right-3 text-zinc-600" : "top-3 right-1.5 text-zinc-500"
       )} size={size === 'default' ? 14 : 12} />
 
       {showDropdown && typeof document !== 'undefined'

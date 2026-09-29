@@ -49,7 +49,10 @@ function FloatingInput({ className, label, value, error, hasIcon, onFocus, onBlu
         // only positioned next to it visually, which a screen reader cannot see.
         htmlFor={props.id}
         className={cn(
-          "absolute top-1/2 -translate-y-1/2 text-sm text-zinc-500 pointer-events-none transition-all duration-200 ease-out",
+          // top-6 is half of the input's h-12, NOT top-1/2: the wrapper stretches
+          // to the tallest cell in a grid row, and centring on it drops the
+          // label below the field's own border.
+          "absolute top-6 -translate-y-1/2 text-sm text-zinc-500 pointer-events-none transition-all duration-200 ease-out",
           hasIcon ? "left-12" : "left-4",
           // The background here must match the modal background EXACTLY to 'break' the border seamlessly
           // We use the theme variable for zinc-900 to ensure consistency across the project
