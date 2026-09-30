@@ -98,6 +98,35 @@ export default function MobileEditorLayout({
     setLines?.(updatedLines);
   };
 
+  // Line actions for the long-press menu. The desktop editor gets these from
+  // useEditor; the mobile layout only receives lines/setLines, so the subset it
+  // can honour is built here rather than plumbing the whole editor hook through.
+  const handleDeleteLine = (lineIndex: number) => {
+    const next = (lines ?? []).filter((_, i) => i !== lineIndex);
+    setLines?.(next);
+    setActiveLineIndex?.((current) => Math.max(0, Math.min(current, next.length - 1)));
+  };
+
+  const handleClearLine = (lineIndex: number) => {
+    const next = [...(lines ?? [])];
+    next[lineIndex] = { ...next[lineIndex], timestamp: null, endTime: null };
+    setLines?.(next);
+  };
+
+  const handleAddLine = (lineIndex: number, _line?: EditorLine | null, opts?: { before?: boolean }) => {
+    const next = [...(lines ?? [])];
+    const at = opts?.before ? lineIndex : lineIndex + 1;
+    next.splice(at, 0, { text: '', timestamp: null });
+    setLines?.(next);
+    setActiveLineIndex?.(at);
+  };
+
+  const handleInsertSection = (lineIndex: number) => {
+    const next = [...(lines ?? [])];
+    next.splice(lineIndex, 0, { type: 'section', label: '', text: '' });
+    setLines?.(next);
+  };
+
   return (
     <div className="flex flex-col h-full max-lg:pb-20 overflow-hidden" data-testid="mobile-editor-layout">
       {/* Sticky mode tabs at top */}
@@ -154,6 +183,10 @@ export default function MobileEditorLayout({
                 activeLineIndex={activeLineIndex ?? 0}
                 setActiveLineIndex={setActiveLineIndex ?? (() => {})}
                 onEditLine={handleEditLine}
+                handleDeleteLine={handleDeleteLine}
+                handleClearLine={handleClearLine}
+                handleAddLine={handleAddLine}
+                handleInsertSection={handleInsertSection}
               />
             </div>
           )}

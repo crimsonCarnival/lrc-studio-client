@@ -4,19 +4,21 @@ import { Icon } from '@/shared/ui/Icon';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import { formatTime } from '@/shared/utils/format-time';
+import { EditorLineContextMenu } from '@features/editor/components/line/EditorLineContextMenu';
+import type { EditorLine } from '@features/editor/services/editor.service';
 
-interface LyricsLine {
-  id?: string | number;
-  text?: string;
-  timestamp?: number | null;
-  type?: string;
-}
+/** Long-press acts on the pressed line alone; the mobile tab has no multi-select. */
+const NO_SELECTION: Set<number> = new Set();
 
 interface LyricsModeTabProps {
-  lines: LyricsLine[];
+  lines: EditorLine[];
   activeLineIndex: number;
   setActiveLineIndex: Dispatch<SetStateAction<number>>;
   onEditLine?: (lineIndex: number, newText: string) => void;
+  handleDeleteLine?: (lineIndex: number) => void;
+  handleClearLine?: (lineIndex: number) => void;
+  handleAddLine?: (lineIndex: number, line?: EditorLine | null, opts?: { before?: boolean }) => void;
+  handleInsertSection?: (lineIndex: number) => void;
 }
 
 export default function LyricsModeTab({
@@ -24,6 +26,10 @@ export default function LyricsModeTab({
   activeLineIndex,
   setActiveLineIndex,
   onEditLine,
+  handleDeleteLine,
+  handleClearLine,
+  handleAddLine,
+  handleInsertSection,
 }: LyricsModeTabProps) {
   const { t } = useTranslation();
   const [editText, setEditText] = useState(lines[activeLineIndex]?.text || '');
@@ -135,28 +141,42 @@ export default function LyricsModeTab({
         </h3>
         <div className="flex-1 overflow-y-auto space-y-1.5">
           {lines.map((line, lineIndex) => (
-            <button
+            <EditorLineContextMenu
               key={line.id ?? lineIndex}
-              data-line-index={lineIndex}
-              onClick={() => setActiveLineIndex(lineIndex)}
-              className={`w-full text-left p-2.5 rounded-lg transition-colors text-sm ${
-                lineIndex === activeLineIndex
-                  ? 'bg-primary/10 border border-primary text-primary font-medium'
-                  : 'bg-zinc-900/50 border border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900/70'
-              }`}
+              line={line}
+              lineIndex={lineIndex}
+              isSection={line.type === 'section'}
+              selectedLines={NO_SELECTION}
+              sectionLines={lines}
+              handleDeleteLine={handleDeleteLine ?? (() => {})}
+              handleClearLine={handleClearLine}
+              handleAddLine={handleAddLine}
+              handleInsertSection={handleInsertSection}
             >
-              <div className="flex items-start justify-between gap-2 min-w-0">
-                <span className="text-xs text-zinc-500 flex-shrink-0">
-                  {String(lineIndex + 1).padStart(2, '0')}
-                </span>
-                <span className="flex-1 truncate">{line.text || '(empty)'}</span>
-                {line.timestamp != null && (
-                  <span className="text-xs font-mono text-zinc-500 flex-shrink-0">
-                    {formatTime(line.timestamp)}
+              <button
+                data-line-index={lineIndex}
+                onClick={() => setActiveLineIndex(lineIndex)}
+                // touch-callout suppresses iOS's own press-and-hold sheet, which
+                // otherwise wins the gesture before the menu can open.
+                className={`w-full text-left p-2.5 rounded-lg transition-colors text-sm [-webkit-touch-callout:none] ${
+                  lineIndex === activeLineIndex
+                    ? 'bg-primary/10 border border-primary text-primary font-medium'
+                    : 'bg-zinc-900/50 border border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900/70'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2 min-w-0">
+                  <span className="text-xs text-zinc-500 flex-shrink-0">
+                    {String(lineIndex + 1).padStart(2, '0')}
                   </span>
-                )}
-              </div>
-            </button>
+                  <span className="flex-1 truncate">{line.text || '(empty)'}</span>
+                  {line.timestamp != null && (
+                    <span className="text-xs font-mono text-zinc-500 flex-shrink-0">
+                      {formatTime(line.timestamp)}
+                    </span>
+                  )}
+                </div>
+              </button>
+            </EditorLineContextMenu>
           ))}
         </div>
       </div>
