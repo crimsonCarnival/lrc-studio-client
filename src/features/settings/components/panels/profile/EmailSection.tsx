@@ -84,14 +84,14 @@ export default function EmailSection() {
       {user?.pendingEmail ? (
         <div className="flex items-center gap-2 text-[11px] text-amber-500/90 ml-1">
           <span>{t('auth.verification.pendingNotice', { email: user.pendingEmail })}</span>
-          <button onClick={handleResend} disabled={resending} className="relative underline hover:no-underline font-semibold shrink-0 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-2.5">
+          <button onClick={handleResend} disabled={resending} className="relative underline hover:no-underline font-semibold shrink-0 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-4">
             {resending ? t('auth.verification.resendLoading') : t('auth.verification.resendButton')}
           </button>
         </div>
       ) : user?.email && !user?.isVerified ? (
         <div className="flex items-center gap-2 text-[11px] text-amber-500/90 ml-1">
           <span>{t('auth.verification.unverifiedNotice')}</span>
-          <button onClick={handleResend} disabled={resending} className="relative underline hover:no-underline font-semibold shrink-0 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-2.5">
+          <button onClick={handleResend} disabled={resending} className="relative underline hover:no-underline font-semibold shrink-0 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-4">
             {resending ? t('auth.verification.resendLoading') : t('auth.verification.resendButton')}
           </button>
         </div>
@@ -100,7 +100,7 @@ export default function EmailSection() {
       <Button
         onClick={handleSave}
         disabled={saving || !!error || value === (user?.email || '') || value === (user?.pendingEmail || '')}
-        className="h-9 rounded-xl font-bold gap-2 text-sm"
+        className="h-9 coarse:h-11 rounded-xl font-bold gap-2 text-sm"
         size="sm"
       >
         {saving ? <LogoLoader size={16} /> : <Icon name="save" size={16} />}

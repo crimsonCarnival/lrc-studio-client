@@ -200,7 +200,7 @@ export default function ProfileForm({ children }: { children?: React.ReactNode }
               size="sm"
               onClick={handleSave}
               disabled={saving}
-              className="bg-primary hover:bg-primary-dim text-zinc-950 font-semibold rounded-lg h-8 px-4 text-xs gap-1.5"
+              className="bg-primary hover:bg-primary-dim text-zinc-950 font-semibold rounded-lg h-8 coarse:h-11 px-4 text-xs gap-1.5"
             >
               {saving && <LogoLoader size={12} />}
               {t('profile.save')}

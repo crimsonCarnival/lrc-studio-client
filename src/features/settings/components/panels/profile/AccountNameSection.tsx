@@ -98,7 +98,7 @@ export default function AccountNameSection() {
       <Button
         onClick={handleSave}
         disabled={saving || !!error || value === (user?.accountName || '') || accountNameCooldownDaysLeft > 0}
-        className="h-9 rounded-xl font-bold gap-2 text-sm"
+        className="h-9 coarse:h-11 rounded-xl font-bold gap-2 text-sm"
         size="sm"
       >
         {saving ? <LogoLoader size={16} /> : <Icon name="save" size={16} />}

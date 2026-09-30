@@ -118,7 +118,7 @@ export default function AvatarUpload() {
           <Button
             size="sm"
             onClick={() => setExpanded(true)}
-            className="rounded-xl h-8 text-[11px] font-bold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/60"
+            className="rounded-xl h-8 coarse:h-11 text-[11px] font-bold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/60"
           >
             {t('profile.changeAvatar')}
           </Button>
@@ -139,7 +139,7 @@ export default function AvatarUpload() {
                     size="sm"
                     onClick={handleApplyUrl}
                     disabled={uploading || !urlValue.trim().startsWith('http')}
-                    className="rounded-xl h-8 text-[11px] font-bold"
+                    className="rounded-xl h-8 coarse:h-11 text-[11px] font-bold"
                   >
                     {uploading ? <LogoLoader size={14} /> : t('common.apply')}
                   </Button>
@@ -148,7 +148,7 @@ export default function AvatarUpload() {
                     variant="ghost"
                     onClick={() => { setUrlMode(false); setUrlValue(''); }}
                     disabled={uploading}
-                    className="rounded-xl h-8 text-[11px] font-bold text-zinc-400 hover:text-zinc-200"
+                    className="rounded-xl h-8 coarse:h-11 text-[11px] font-bold text-zinc-400 hover:text-zinc-200"
                   >
                     {t('common.cancel')}
                   </Button>
@@ -160,7 +160,7 @@ export default function AvatarUpload() {
                   size="sm"
                   onClick={handleAvatarClick}
                   disabled={uploading}
-                  className="rounded-xl h-8 text-[11px] font-bold bg-primary hover:bg-primary-dim text-zinc-950"
+                  className="rounded-xl h-8 coarse:h-11 text-[11px] font-bold bg-primary hover:bg-primary-dim text-zinc-950"
                 >
                   <Icon name="upload" size={12} className="mr-1.5 shrink-0" />
                   {t('profile.uploadAvatar')}
@@ -170,7 +170,7 @@ export default function AvatarUpload() {
                   variant="outline"
                   onClick={() => { setUrlMode(true); setUrlValue(user?.avatarUrl || ''); }}
                   disabled={uploading}
-                  className="rounded-xl h-8 text-[11px] font-bold border-zinc-700 bg-zinc-800 text-zinc-200"
+                  className="rounded-xl h-8 coarse:h-11 text-[11px] font-bold border-zinc-700 bg-zinc-800 text-zinc-200"
                 >
                   <Icon name="link" size={12} className="mr-1.5 shrink-0" />
                   {t('profile.setAvatarUrl')}
@@ -181,7 +181,7 @@ export default function AvatarUpload() {
                     variant="ghost"
                     onClick={handleRemoveAvatar}
                     disabled={uploading}
-                    className="rounded-xl h-8 text-[11px] font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    className="rounded-xl h-8 coarse:h-11 text-[11px] font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10"
                   >
                     <Icon name="delete" size={14} className="mr-1.5 shrink-0" />
                     {t('profile.removeAvatar')}
