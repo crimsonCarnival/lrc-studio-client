@@ -59,7 +59,7 @@ function ExploreProjectCard({ project }: { project: ExploreProject }) {
             <ProjectMenuButton
               project={menuProject}
               isOwner={false}
-              className="p-1 coarse:p-3 -m-1 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-colors"
+              className="p-1 coarse:p-3.5 -m-1 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-colors"
             />
           </div>
         </div>
