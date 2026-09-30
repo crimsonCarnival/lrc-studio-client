@@ -58,7 +58,7 @@ export default function AdminDevicesTab({
             className="bg-zinc-900 border-zinc-800 h-10"
           />
         </div>
-        <Button type="submit" disabled={!deviceForm.deviceId} className={`bg-primary hover:bg-primary-dim text-zinc-950 gap-2 ${isMobile ? 'w-full h-10' : ''}`}>
+        <Button type="submit" disabled={!deviceForm.deviceId} className={`bg-primary hover:bg-primary-dim text-zinc-950 gap-2 ${isMobile ? 'w-full h-10 coarse:h-11' : ''}`}>
           <Icon name="block" size={16} /> {t('admin.table.ban')}
         </Button>
       </form>

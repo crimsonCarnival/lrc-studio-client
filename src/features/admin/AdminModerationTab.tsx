@@ -87,7 +87,7 @@ export default function AdminModerationTab(props: AdminModerationTabProps) {
           <button
             key={nav.id}
             onClick={() => setView(nav.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-t-md border-b-2 -mb-px transition-colors whitespace-nowrap ${
+            className={`flex items-center gap-1.5 px-3 py-2 coarse:py-3.5 text-xs font-semibold rounded-t-md border-b-2 -mb-px transition-colors whitespace-nowrap ${
               view === nav.id
                 ? 'border-primary/70 text-primary bg-primary/5'
                 : 'border-transparent text-zinc-500 hover:text-zinc-300'
