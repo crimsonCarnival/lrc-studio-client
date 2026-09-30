@@ -226,6 +226,15 @@ export default function SettingsPage() {
 
   const isSearchable = activeTabMeta?.searchable ?? false;
 
+  // The mobile tab strip is ~2000px wide against a 390px viewport, so landing
+  // on a deep tab (e.g. /settings/advanced) left the selected one ~1600px off
+  // screen with nothing appearing selected at all. Keep it in view.
+  const mobileTabsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const active = mobileTabsRef.current?.querySelector('[data-active="true"]');
+    active?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }, [activeTab]);
+
   return (
     <div className="flex-1 flex flex-col min-h-0 animate-fade-in">
 
@@ -325,7 +334,7 @@ export default function SettingsPage() {
 
         {/* Mobile/tablet: horizontal scrollable tab bar + content */}
         <div className="flex flex-col flex-1 min-h-0 min-w-0">
-          <div className="lg:hidden flex overflow-x-auto no-scrollbar border-b border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0 px-2 pt-1 items-center">
+          <div ref={mobileTabsRef} className="lg:hidden flex overflow-x-auto no-scrollbar border-b border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0 px-2 pt-1 items-center">
             {visibleTabs.map((entry, idx) => {
               const label = tk(entry.labelKey);
               const isActive = activeTab === entry.id;
@@ -335,6 +344,8 @@ export default function SettingsPage() {
                   {showDivider && <div className="w-px h-4 mx-2 bg-zinc-800/60 shrink-0" />}
                   <button
                     onClick={() => setTab(entry.id)}
+                    data-active={isActive}
+                    aria-current={isActive ? 'page' : undefined}
                     className={`flex items-center gap-1.5 px-3 py-2.5 coarse:py-3.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-all -mb-px ${isActive
                         ? 'text-primary border-primary'
                         : 'text-zinc-500 border-transparent hover:text-zinc-300 hover:border-zinc-600'
