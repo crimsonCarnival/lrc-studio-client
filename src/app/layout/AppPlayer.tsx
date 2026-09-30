@@ -12,10 +12,13 @@ interface AppPlayerProps {
 }
 
 /**
- * Docked player bar — mobile only, pinned above the tab bar.
+ * Docked player bar, pinned above the tab bar.
  * Hidden during setup phase but stays mounted to keep the engine alive.
  * Media state is owned by PlayerEngineProvider (mounted above this in AppLayout).
- * Only renders when playerSlot === 'mobile'; the editor and header own the other slots.
+ *
+ * Owns the 'mobile' and 'preview' slots — 'preview' meaning the editor is
+ * hidden, where this dock is the only player. The editor and header render
+ * their own, so those two slots bail out below.
  */
 export function AppPlayer({
   isReady,
@@ -40,7 +43,7 @@ export function AppPlayer({
   }, [onHeightChange]);
 
   if (!isPlayerMounted) return null;
-  // Editor and header own their respective slots; dock is only for mobile
+  // Editor and header render their own controls; this dock owns the rest.
   if (playerSlot === 'editor' || playerSlot === 'header') return null;
 
   return (

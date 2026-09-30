@@ -18,8 +18,6 @@ import { SharePanel } from '@features/sharing/components/ShareModal';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Icon } from '@/shared/ui/Icon';
 import { useSettings } from '@/features/settings/useSettings';
-import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
-import PlayerControls from '@/features/player/components/PlayerControls';
 
 interface PreviewLineLite {
   secondary?: string;
@@ -51,7 +49,6 @@ interface PreviewProps {
   onHidePreview?: () => void;
   editorHidden?: boolean;
   onShowEditor?: () => void;
-  playerSlot?: PlayerSlot;
   [key: string]: unknown;
 }
 
@@ -148,7 +145,7 @@ export default function Preview(props: PreviewProps) {
     handleCopy,
   }: UsePreviewResult = usePreview(props);
 
-  const { lines, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, isPlaying, playbackSpeed, onHidePreview, editorHidden, onShowEditor, playerSlot } = props;
+  const { lines, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, isPlaying, playbackSpeed, onHidePreview, editorHidden, onShowEditor } = props;
 
   const shareTriggerRef = useRef<HTMLButtonElement>(null);
   const sharePanelRef = useRef<HTMLDivElement>(null);
@@ -397,13 +394,6 @@ export default function Preview(props: PreviewProps) {
             </div>
           )}
         </div>
-
-        {/* Player (when editor is hidden) */}
-        {playerSlot === 'preview' && (
-          <div className="w-full max-w-xl mx-auto px-2 mb-4 flex justify-center z-raised">
-            <PlayerControls variant="header" />
-          </div>
-        )}
 
         {/* Viewport */}
         {showExportPanel ? (
