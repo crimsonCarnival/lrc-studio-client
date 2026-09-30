@@ -192,7 +192,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
           aria-label={t('home.searchYoutube')}
           onClick={() => runSearch(query)}
           disabled={!query.trim() || loading}
-          className="h-9 px-4 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold flex items-center gap-2 transition-colors shrink-0"
+          className="h-9 coarse:h-11 px-4 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold flex items-center gap-2 transition-colors shrink-0"
         >
           {loading ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
         </button>

@@ -271,7 +271,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                   <Button
                     onClick={handleUrlLoad}
                     disabled={cdnLoading}
-                    className="h-10 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/50 font-medium shrink-0"
+                    className="h-10 coarse:h-11 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/50 font-medium shrink-0"
                   >
                     {cdnLoading ? <LogoLoader size={16} /> : t('player.load')}
                   </Button>
@@ -284,7 +284,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       <PopoverTrigger asChild>
                         <Button
                           variant="ghost"
-                          className="flex items-center gap-2 h-10 px-4 rounded-xl bg-zinc-800/30 hover:bg-zinc-800/60 border border-zinc-700/30 hover:border-zinc-700 transition-all text-zinc-300"
+                          className="flex items-center gap-2 h-10 coarse:h-11 px-4 rounded-xl bg-zinc-800/30 hover:bg-zinc-800/60 border border-zinc-700/30 hover:border-zinc-700 transition-all text-zinc-300"
                         >
                           <Icon name="cloud" size={16} className="text-blue-400/80" />
                           <span className="text-sm font-medium">{t('uploads.title')}</span>
@@ -718,7 +718,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       <Button
                         onClick={handleUrlLoad}
                         disabled={cdnLoading}
-                        className={`px-3 h-9 text-white text-xs font-medium rounded-lg shrink-0 ${detectedUrlType === 'cdn' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-red-600 hover:bg-red-500'
+                        className={`px-3 h-9 coarse:h-11 text-white text-xs font-medium rounded-lg shrink-0 ${detectedUrlType === 'cdn' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-red-600 hover:bg-red-500'
                           }`}
                       >
                         {cdnLoading ? '…' : t('player.load')}

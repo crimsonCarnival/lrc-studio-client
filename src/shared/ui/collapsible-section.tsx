@@ -52,7 +52,7 @@ export function CollapsibleSection({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={regionId}
-        className="w-full flex items-center gap-2 py-2 text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 group"
+        className="w-full flex items-center gap-2 py-2 coarse:py-3.5 text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 group"
       >
         <Icon
           name="chevron_right"

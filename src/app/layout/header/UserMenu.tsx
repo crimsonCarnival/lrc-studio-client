@@ -58,7 +58,7 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
         <Tip content={t('admin.dashboard.title')}>
           <button
             onClick={() => navigate('/admin')}
-            className="relative size-8 flex items-center justify-center rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 shrink-0"
+            className="relative size-8 coarse:size-11 flex items-center justify-center rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 shrink-0"
           >
             <Icon name="security" size={18} />
             {counts.requests > 0 && (

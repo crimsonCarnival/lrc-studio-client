@@ -60,7 +60,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
     <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink">
       <button
         onClick={onLogoClick}
-        className="size-7 sm:size-8 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+        className="size-7 sm:size-8 coarse:size-11 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
       >
         <LazyImage
           src={LOGO_URL}

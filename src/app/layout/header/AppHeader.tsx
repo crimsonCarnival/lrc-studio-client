@@ -121,7 +121,7 @@ export function AppHeader({
     }
   };
 
-  const iconBtn = 'size-8 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors rounded-lg flex-shrink-0 cursor-pointer';
+  const iconBtn = 'size-8 coarse:size-11 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors rounded-lg flex-shrink-0 cursor-pointer';
 
   // Guest landing page has its own embedded nav — don't render the app header there
   if (isGuestLanding) return null;

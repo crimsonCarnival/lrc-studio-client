@@ -536,7 +536,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
             <Button
               onClick={handleProceed}
               disabled={!canContinue}
-              className="h-9 px-5 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 shadow-glow transition-all text-sm disabled:shadow-none"
+              className="h-9 coarse:h-11 px-5 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 shadow-glow transition-all text-sm disabled:shadow-none"
             >
               {t('setup.startToSync')}
             </Button>
@@ -611,7 +611,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   variant="sync"
                   onClick={handleFetchSongInfo}
                   disabled={metaSearching || !songName.trim() || !songArtist.trim()}
-                  className="w-full h-10 gap-2 justify-center font-semibold rounded-xl"
+                  className="w-full h-10 coarse:h-12 gap-2 justify-center font-semibold rounded-xl"
                 >
                   {metaSearching ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
                   {t('setup.fetchInfo')}
@@ -723,7 +723,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   key={tab}
                   type="button"
                   onClick={() => setRightTab(tab)}
-                  className={`px-4 py-2 text-xs font-bold border-b-2 -mb-px transition-colors capitalize ${
+                  className={`px-4 py-2 coarse:py-3.5 text-xs font-bold border-b-2 -mb-px transition-colors capitalize ${
                     rightTab === tab
                       ? 'border-primary text-primary'
                       : 'border-transparent text-zinc-500 hover:text-zinc-300'
@@ -746,7 +746,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     <button
                       key={tab.id}
                       onClick={() => { setAudioState({ tab: tab.id }); if (ytCheck.state !== 'idle') clearYtCheck(); }}
-                      className={`flex-1 h-7 rounded-lg text-[11px] font-semibold transition-all ${
+                      className={`flex-1 h-7 coarse:h-11 rounded-lg text-[11px] font-semibold transition-all ${
                         audioTab === tab.id
                           ? 'bg-zinc-800 text-zinc-100 shadow-sm'
                           : 'text-zinc-500 hover:text-zinc-300'
@@ -790,13 +790,13 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                       <Button
                         variant="ghost"
                         onClick={() => { setAudioState({ ready: false, name: '', ytUrl: '', selectedUpload: null, source: null }); clearYtCheck(); }}
-                        className="h-8 px-3 text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 rounded-lg"
+                        className="h-8 coarse:h-11 px-3 text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 rounded-lg"
                       >
                         {t('setup.changeAudio')}
                       </Button>
                       <Button
                         onClick={() => setRightTab('lyrics')}
-                        className="h-8 px-4 text-xs font-semibold gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50"
+                        className="h-8 coarse:h-11 px-4 text-xs font-semibold gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50"
                       >
                         {t('setup.nextLyrics')}
                         <Icon name="arrow_forward" size={12} />
@@ -896,7 +896,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     <Button
                       variant="ghost"
                       onClick={() => { setLyricsState({ parsedLines: null, fileName: '', text: '' }); }}
-                      className="h-8 px-3 text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 rounded-lg"
+                      className="h-8 coarse:h-11 px-3 text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 rounded-lg"
                     >
                       {t('setup.changeLyrics')}
                     </Button>
@@ -912,7 +912,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                         <button
                           key={tab.id}
                           onClick={() => setLyricsTab(tab.id)}
-                          className={`flex-1 h-7 rounded-lg text-[11px] font-semibold transition-all ${
+                          className={`flex-1 h-7 coarse:h-11 rounded-lg text-[11px] font-semibold transition-all ${
                             lyricsTab === tab.id
                               ? 'bg-zinc-800 text-zinc-100 shadow-sm'
                               : 'text-zinc-500 hover:text-zinc-300'
