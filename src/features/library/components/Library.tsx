@@ -15,10 +15,7 @@ import ProjectListRaw from './ProjectList';
 // ProjectSetupModal is still untyped JS; cast until it is migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ProjectSetupModal = ProjectSetupModalRaw as any;
-// ProjectList's typed handler signatures (project vs publicId) differ from this
-// page's; cast until both are reconciled.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const ProjectList = ProjectListRaw as any;
+const ProjectList = ProjectListRaw;
 
 // Stable fallback: ProjectSetupModal re-syncs its form whenever an initial* prop changes identity.
 const EMPTY_LIST: string[] = [];
