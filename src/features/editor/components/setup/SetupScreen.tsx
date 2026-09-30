@@ -504,15 +504,18 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Page header */}
-      <div className="shrink-0 px-6 pt-4 pb-3">
-        <div className="flex items-center justify-between gap-3 max-w-7xl mx-auto">
-          <div className="flex items-center gap-3">
+      <div className="shrink-0 px-4 sm:px-6 pt-4 pb-3">
+        {/* Wraps below sm: title, visibility and the primary action do not fit
+            on one 390px row, and the action was the part that fell off the
+            right edge — the one control the screen exists to reach. */}
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 min-w-0">
             <div className={`size-2 rounded-full bg-primary shrink-0 ${reducedMotion ? '' : 'animate-pulse'}`} />
             <h2 className="font-heading text-zinc-100" style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)' }}>
               {t('setup.newProjectTitle')}
             </h2>
           </div>
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-4 shrink-0 max-sm:w-full max-sm:justify-between">
             {/* Visibility lives up here rather than at the foot of the form: it
                 is a property of the project, not another metadata field, and
                 the form below needs the vertical room. */}
@@ -536,7 +539,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
             <Button
               onClick={handleProceed}
               disabled={!canContinue}
-              className="h-9 coarse:h-11 px-5 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 shadow-glow transition-all text-sm disabled:shadow-none"
+              className="h-9 coarse:h-11 px-5 shrink-0 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 shadow-glow transition-all text-sm disabled:shadow-none"
             >
               {t('setup.startToSync')}
             </Button>
