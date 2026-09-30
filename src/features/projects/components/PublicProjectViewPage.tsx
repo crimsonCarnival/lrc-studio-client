@@ -371,7 +371,9 @@ function PublicProjectViewPageInner() {
         {/* Left: lyrics + player — ~70% on desktop. On mobile the wrapper dissolves
             (display: contents) so the order-* classes put the player below the info panel. */}
         <div className="contents lg:flex lg:flex-1 lg:min-h-0 lg:flex-col">
-          <div className="order-1 flex-1 min-h-0 flex flex-col" style={{ minHeight: '50vh' }}>
+          {/* pb clears the bar pinned to the bottom below lg, so the closing
+              lines are not left underneath it. */}
+          <div className="order-1 flex-1 min-h-0 flex flex-col max-lg:pb-64" style={{ minHeight: '50vh' }}>
             <ImmersiveLyricsDisplay
               lines={lines as unknown as DisplayLine[]}
               playbackPosition={playbackPosition}
@@ -389,7 +391,12 @@ function PublicProjectViewPageInner() {
 
           {/* ── Player bar: bottom of the lyrics panel on desktop, bottom of the page on mobile ── */}
           <div
-            className="order-3 flex-shrink-0 w-full"
+            // Below lg the page scrolls as one column and the bar sat ~2100px
+            // down, past the whole lyric sheet. `sticky` cannot help: its
+            // containing block ends where the bar does, so there is nothing to
+            // stick within. Pinned to the viewport instead; the lyric panel
+            // carries matching bottom padding so nothing hides behind it.
+            className="order-3 flex-shrink-0 w-full max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-30"
             style={{
               borderTop: `1px solid ${palette?.faded ?? 'hsl(var(--border))'}44`,
               background: palette ? `${palette.bgDeep}e0` : 'hsl(var(--card) / 0.8)',

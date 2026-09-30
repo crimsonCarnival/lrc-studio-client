@@ -267,12 +267,25 @@ export default function useYouTubePlayer({
     onYtUrlChangeRef.current?.('');
   }, [containerRef, setSource]);
 
-  const play = useCallback(() => { ytPlayerRef.current?.playVideo(); }, []);
-  const pause = useCallback(() => { ytPlayerRef.current?.pauseVideo(); }, []);
+  // Guard the method, not just the ref. The iframe API attaches its methods
+  // after the player object exists, so `ytPlayerRef.current?.pauseVideo()`
+  // threw "pauseVideo is not a function" during that window and took the whole
+  // player — and the public project view with it — into the error boundary.
+  // setSpeed, getCurrentTime and the volume effect below already did this.
+  const play = useCallback(() => {
+    const p = ytPlayerRef.current;
+    if (typeof p?.playVideo === 'function') p.playVideo();
+  }, []);
+
+  const pause = useCallback(() => {
+    const p = ytPlayerRef.current;
+    if (typeof p?.pauseVideo === 'function') p.pauseVideo();
+  }, []);
 
   const seek = useCallback((time: number) => {
-    if (ytPlayerRef.current) {
-      ytPlayerRef.current.seekTo(time, true);
+    const p = ytPlayerRef.current;
+    if (typeof p?.seekTo === 'function') {
+      p.seekTo(time, true);
       updateTime(time);
     }
   }, [updateTime]);
