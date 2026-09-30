@@ -49,7 +49,9 @@ const VolumeControl = memo(function VolumeControl() {
       </div>
 
       {/* Mobile Controls */}
-      <div className="lg:hidden flex items-center gap-1">
+      {/* The -/+ stepper adds 88px to a transport row that already overflows at
+          390px, and a phone has hardware volume keys. Mute stays. */}
+      <div className="hidden sm:flex lg:hidden items-center gap-1">
         <Tip content={t('player.decreaseVolume')}>
           <button
             onClick={() => updateSetting('playback.volume', Math.max(0, settings.playback.volume - 0.1))}
