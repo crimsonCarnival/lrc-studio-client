@@ -139,6 +139,10 @@ export default function MobileEditorLayout({
                 setActiveLineIndex={setActiveLineIndex ?? (() => {})}
                 playerRef={playerRef}
                 duration={duration}
+                // Routes the waveform tap through the same editor:mark event the
+                // mark button and the player use. It was never wired, so the
+                // "tap to timestamp" area had never marked anything.
+                onMark={() => window.dispatchEvent(new Event('editor:mark'))}
               />
             </div>
           )}

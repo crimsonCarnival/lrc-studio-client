@@ -20,6 +20,7 @@ interface SyncModeTabProps {
   lines: SyncLine[];
   activeLineIndex: number;
   setActiveLineIndex: (index: number) => void;
+  /** Accepted for call-site compatibility; the mark handler reads playback position itself. */
   playerRef?: { current?: PlayerHandle | null };
   onMark?: () => void;
   duration?: number;
@@ -31,7 +32,6 @@ export default function SyncModeTab({
   lines,
   activeLineIndex,
   setActiveLineIndex,
-  playerRef,
   onMark,
   duration,
   isLoading = false,
@@ -40,13 +40,14 @@ export default function SyncModeTab({
   const currentTimestamp = useMemo(() => formatTime(playbackPosition), [playbackPosition]);
   const durationFormatted = useMemo(() => formatTime(duration ?? 0), [duration]);
 
+  // Gating this on playerRef.current.currentTime made the tap a no-op for
+  // YouTube sources: that player lives behind a Proxy/WeakMap and does not
+  // surface currentTime on the ref, so the guard failed silently and the whole
+  // mobile sync affordance did nothing. onMark reads the playback position
+  // itself, so it never needed the check.
   const handleWaveformTap = useCallback(() => {
-    // Calculate position within waveform for future integration with wavesurfer.js
-    if (playerRef?.current?.currentTime !== undefined) {
-      // Tap-to-mark functionality would go here
-      onMark?.();
-    }
-  }, [playerRef, onMark]);
+    onMark?.();
+  }, [onMark]);
 
   const handleLineClick = useCallback((index: number) => {
     setActiveLineIndex(index);
