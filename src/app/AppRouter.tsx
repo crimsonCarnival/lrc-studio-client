@@ -476,7 +476,6 @@ export function AppRouter({
     onHidePreview: handleHidePreview,
     editorHidden: !showEditor,
     onShowEditor: handleShowEditor,
-    playerSlot,
     songArtists: projectMetadata?.songArtists || [],
     singerColors: projectMetadata?.singerColors || [],
   } as unknown as PreviewComponentProps), [
@@ -488,7 +487,6 @@ export function AppRouter({
     isPlaying, playbackSpeed, activepublicId,
     pendingProject, projectMetadata,
     handleHidePreview, showEditor, handleShowEditor,
-    playerSlot,
   ]);
 
   const handleResize = useCallback((e: MouseEvent) => {
