@@ -502,7 +502,13 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     .filter((v) => !!v && String(v).trim() !== '').length + (projectTags.length > 0 ? 1 : 0);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    // max-h-[100dvh] is load-bearing: h-full resolves against an ancestor that
+    // is taller than the window here, so the column came out 808px tall in a
+    // 700px viewport. Its inner scroller then saw scrollHeight === clientHeight,
+    // reported itself already at the bottom, and the last ~100px — the media
+    // panel's Change / Next buttons — were simply cut off with no way to reach
+    // them. dvh rather than vh so a collapsing mobile URL bar is accounted for.
+    <div className="flex flex-col h-full max-h-[100dvh] overflow-hidden">
       {/* Page header */}
       <div className="shrink-0 px-4 sm:px-6 pt-4 pb-3">
         {/* Wraps below sm: title, visibility and the primary action do not fit
