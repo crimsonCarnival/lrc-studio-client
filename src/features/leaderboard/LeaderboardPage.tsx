@@ -155,19 +155,19 @@ export default function LeaderboardPage() {
           <div className="flex p-1 gap-1">
             <button 
               onClick={() => setTimeFilter('week')}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timeFilter === 'week' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
+              className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'week' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
             >
               {t('badges.leaderboard.thisWeek')}
             </button>
             <button 
               onClick={() => setTimeFilter('month')}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timeFilter === 'month' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
+              className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'month' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
             >
               {t('badges.leaderboard.thisMonth')}
             </button>
             <button 
               onClick={() => setTimeFilter('all')}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timeFilter === 'all' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
+              className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'all' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
             >
               {t('badges.leaderboard.allTime')}
             </button>

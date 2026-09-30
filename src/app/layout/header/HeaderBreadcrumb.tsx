@@ -114,7 +114,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
                   startTransition(() => setEditingProjectName(true));
                   requestAnimationFrame(() => projectNameInputRef.current?.focus());
                 }}
-                className="flex items-center gap-1 min-w-0 group py-1 -my-1"
+                className="flex items-center gap-1 min-w-0 group py-1 coarse:py-3.5 -my-1"
                 aria-label={t('setup.projectNamePlaceholder')}
               >
                 <span className="text-xs font-medium text-zinc-400 group-hover:text-zinc-200 truncate transition-colors max-w-[120px] sm:max-w-[200px]">
@@ -144,7 +144,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
               <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-1.5 min-w-0 group py-1 -my-1"
+                className="flex items-center gap-1.5 min-w-0 group py-1 coarse:py-3.5 -my-1"
                 aria-label={t('common.back')}
               >
                 <Icon name="arrow_back" size={14} className="text-zinc-500 group-hover:text-zinc-200 transition-colors shrink-0" />

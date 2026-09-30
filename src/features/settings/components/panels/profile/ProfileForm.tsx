@@ -172,7 +172,7 @@ export default function ProfileForm({ children }: { children?: React.ReactNode }
                     type="button"
                     onClick={() => toggleMiniProfileBadge(id)}
                     disabled={atCap}
-                    className={`rounded-full coarse:p-2 transition-all outline-none focus-visible:ring-2 ring-primary/50 ${selected ? 'ring-2 ring-primary scale-105' : ''} ${atCap ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`rounded-full coarse:p-2.5 transition-all outline-none focus-visible:ring-2 ring-primary/50 ${selected ? 'ring-2 ring-primary scale-105' : ''} ${atCap ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <BadgeChip id={id} />
                   </button>

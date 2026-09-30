@@ -213,7 +213,7 @@ export function NotificationItem({ notification }: { notification: NotificationD
         {!read && <span className="w-2 h-2 rounded-full bg-primary" aria-hidden="true" />}
         <button
           onClick={(e) => { e.stopPropagation(); dismiss(_id); }}
-          className="p-1 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors"
+          className="p-1 coarse:p-3.5 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors"
           aria-label={t('notifications.dismiss')}
         >
           <Icon name="close" size={14} />
