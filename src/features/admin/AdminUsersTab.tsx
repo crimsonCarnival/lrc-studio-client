@@ -133,7 +133,7 @@ export default function AdminUsersTab({
           value={user.role ?? 'user'}
           onChange={(e) => handleChangeRole(user, e.target.value)}
           onClick={(e) => e.stopPropagation()}
-          className="bg-zinc-800 text-zinc-200 rounded px-1.5 py-1 coarse:py-2.5 text-[10px] font-semibold uppercase tracking-wider border border-zinc-700 focus:border-primary outline-none cursor-pointer"
+          className="bg-zinc-800 text-zinc-200 rounded px-1.5 py-1 coarse:py-3.5 text-[10px] font-semibold uppercase tracking-wider border border-zinc-700 focus:border-primary outline-none cursor-pointer"
         >
           {options.map(r => <option key={r} value={r}>{tk(`admin.table.${r}`)}</option>)}
         </select>

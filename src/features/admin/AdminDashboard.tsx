@@ -482,7 +482,7 @@ export default function AdminDashboard() {
     <div className="flex flex-col h-full pt-0 p-6 overflow-y-auto custom-scrollbar">
       {/* Refresh — the page title now lives in the app header */}
       <div className="flex items-center justify-end mb-4">
-        <Button variant="ghost" size="icon" onClick={() => fetchData(true)} className="h-9 w-9 shrink-0">
+        <Button variant="ghost" size="icon" onClick={() => fetchData(true)} className="h-9 w-9 coarse:h-11 coarse:w-11 shrink-0">
           {loading ? <LogoLoader size={16} /> : <Icon name="refresh" size={16} className="text-zinc-500" />}
         </Button>
       </div>
