@@ -212,7 +212,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
             <div className="relative flex items-center shrink-0 ml-auto sm:ml-0 mb-1 sm:mb-0">
               <Icon name="sort" size={14} className="absolute left-3 text-zinc-400 pointer-events-none" />
               <select 
-                className="appearance-none bg-transparent hover:bg-zinc-800 text-xs text-zinc-400 hover:text-zinc-200 transition-colors pl-8 pr-8 py-1.5 rounded-lg outline-none cursor-pointer border-none"
+                className="appearance-none bg-transparent hover:bg-zinc-800 text-xs coarse:min-h-11 text-zinc-400 hover:text-zinc-200 transition-colors pl-8 pr-8 py-1.5 rounded-lg outline-none cursor-pointer border-none"
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as 'edited' | 'created' | 'title')}
               >

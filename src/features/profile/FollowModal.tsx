@@ -246,7 +246,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
                 <button
                   key={tab.id}
                   onClick={() => switchTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${activeTab === tab.id
+                  className={`flex items-center gap-1.5 px-3 py-2.5 coarse:py-3.5 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${activeTab === tab.id
                     ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                     }`}

@@ -68,7 +68,8 @@ interface TabMeta {
   iconName: string;
   authOnly?: boolean;
   group: string;
-  searchable: boolean;
+  searchable: boolean;
+
 }
 
 const TABS: TabMeta[] = [
@@ -334,7 +335,7 @@ export default function SettingsPage() {
                   {showDivider && <div className="w-px h-4 mx-2 bg-zinc-800/60 shrink-0" />}
                   <button
                     onClick={() => setTab(entry.id)}
-                    className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-all -mb-px ${isActive
+                    className={`flex items-center gap-1.5 px-3 py-2.5 coarse:py-3.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-all -mb-px ${isActive
                         ? 'text-primary border-primary'
                         : 'text-zinc-500 border-transparent hover:text-zinc-300 hover:border-zinc-600'
                       }`}
