@@ -179,7 +179,7 @@ export function AppHeader({
           <div className="flex-1" />
 
           {/* ── Right: Controls ── */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-1.5 coarse:gap-0.5 flex-shrink-0">
 
             {/* Search — inline in header */}
             {!isGuestLanding && (

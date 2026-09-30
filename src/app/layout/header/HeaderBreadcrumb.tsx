@@ -137,7 +137,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
             <span className="text-zinc-700 shrink-0 hidden sm:inline">/</span>
             {isSettingsPage ? (
               // Settings keeps its own guarded back button in-page, so the header shows the title only.
-              <span className="text-xs font-semibold text-zinc-200 truncate uppercase tracking-wide">
+              <span className="text-xs font-semibold text-zinc-200 truncate uppercase tracking-wide max-w-[20vw] sm:max-w-none">
                 {breadcrumbTitle}
               </span>
             ) : (
@@ -148,7 +148,10 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
                 aria-label={t('common.back')}
               >
                 <Icon name="arrow_back" size={14} className="text-zinc-500 group-hover:text-zinc-200 transition-colors shrink-0" />
-                <span className="text-xs font-semibold text-zinc-200 group-hover:text-zinc-100 truncate uppercase tracking-wide transition-colors">
+                {/* Capped on narrow screens: the header's action icons are
+                    44px each on touch, and without a ceiling here the last two
+                    (notifications, user menu) get pushed off-screen. */}
+                <span className="text-xs font-semibold text-zinc-200 group-hover:text-zinc-100 truncate uppercase tracking-wide transition-colors max-w-[20vw] sm:max-w-none">
                   {breadcrumbTitle}
                 </span>
               </button>
