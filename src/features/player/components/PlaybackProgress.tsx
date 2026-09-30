@@ -164,12 +164,19 @@ export default function PlaybackProgress({
       </div>
 
       {/* Ruler with time labels */}
-      <div className="w-full h-5 relative select-none mt-1.5 px-0.5">
-        {rulerTicks.map(({ t: tickTime, pct }) => (
+      {/* overflow-hidden so the end labels cannot widen the row: each is centred
+          on its tick, so the first and last hang half outside the track. */}
+      <div className="w-full h-5 relative select-none mt-1.5 px-0.5 overflow-hidden">
+        {rulerTicks.map(({ t: tickTime, pct }, idx) => (
           <div
             key={tickTime}
             className="absolute top-0 flex flex-col items-center"
-            style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
+            style={{
+              left: `${pct}%`,
+              // Pull the outer labels inside the track instead of centring them
+              // on a tick that sits on the very edge.
+              transform: `translateX(${idx === 0 ? '0' : idx === rulerTicks.length - 1 ? '-100%' : '-50%'})`,
+            }}
           >
             <div className="w-px h-1.5 bg-zinc-700/60" />
             <span className="text-[9px] text-zinc-500 font-mono tabular-nums mt-0.5 leading-none whitespace-nowrap">

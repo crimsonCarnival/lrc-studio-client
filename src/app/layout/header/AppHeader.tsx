@@ -208,7 +208,7 @@ export function AppHeader({
                 <button
                   onClick={onStartTour}
                   aria-label={t('editor.tour.replay')}
-                  className={iconBtn}
+                  className={`${iconBtn} max-sm:hidden`}
                 >
                   <Icon name="school" size={14} />
                 </button>

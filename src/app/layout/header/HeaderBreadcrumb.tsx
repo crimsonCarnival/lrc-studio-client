@@ -117,7 +117,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
                 className="flex items-center gap-1 min-w-0 group py-1 coarse:py-3.5 -my-1"
                 aria-label={t('setup.projectNamePlaceholder')}
               >
-                <span className="text-xs font-medium text-zinc-400 group-hover:text-zinc-200 truncate transition-colors max-w-[120px] sm:max-w-[200px]">
+                <span className="text-xs font-medium text-zinc-400 group-hover:text-zinc-200 truncate transition-colors max-w-[16vw] sm:max-w-[200px]">
                   {mediaTitle || t('setup.projectNamePlaceholder')}
                 </span>
                 <Icon name="edit" size={12} className="text-zinc-600 group-hover:text-zinc-400 transition-colors shrink-0" />
