@@ -686,7 +686,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
             ) : (
               <>
                 {!viewerMode && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <label
                       htmlFor="audio-file-compact"
                       className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700/60 text-sm font-medium text-zinc-300 cursor-pointer active:scale-95 transition-all duration-100 shrink-0"
@@ -695,8 +695,8 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       {t('player.dropAudio')}
                       <input id="audio-file-compact" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
                     </label>
-                    <div className="flex-1 flex gap-2">
-                      <div className="relative flex-1">
+                    <div className="flex-1 flex gap-2 min-w-0 basis-56">
+                      <div className="relative flex-1 min-w-0">
                         {detectedUrlType === 'cdn' ? (
                           <Icon name="cloud" size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-400/80 pointer-events-none" />
                         ) : detectedUrlType === 'youtube' ? (
