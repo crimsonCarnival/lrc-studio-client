@@ -1,4 +1,5 @@
 export default {
+  rename: "Renombrar",
   title: "Subidas",
   count_one: "{{count}} archivo",
   count_other: "{{count}} archivos",

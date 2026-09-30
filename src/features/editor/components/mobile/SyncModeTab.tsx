@@ -2,14 +2,11 @@ import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
 import { LogoLoader } from '@ui/LogoLoader';
+import { EditorLineContextMenu } from '@features/editor/components/line/EditorLineContextMenu';
+import type { EditorLine } from '@features/editor/services/editor.service';
 
-interface SyncLine {
-  id?: string | number;
-  text?: string;
-  type?: string;
-  timestamp?: number | null;
-  [key: string]: unknown;
-}
+/** Long-press acts on the pressed line alone; this tab has no multi-select. */
+const NO_SELECTION: Set<number> = new Set();
 
 interface PlayerHandle {
   currentTime?: number;
@@ -17,7 +14,7 @@ interface PlayerHandle {
 
 interface SyncModeTabProps {
   playbackPosition: number;
-  lines: SyncLine[];
+  lines: EditorLine[];
   activeLineIndex: number;
   setActiveLineIndex: (index: number) => void;
   /** Accepted for call-site compatibility; the mark handler reads playback position itself. */
@@ -25,6 +22,10 @@ interface SyncModeTabProps {
   onMark?: () => void;
   duration?: number;
   isLoading?: boolean;
+  handleDeleteLine?: (lineIndex: number) => void;
+  handleClearLine?: (lineIndex: number) => void;
+  handleAddLine?: (lineIndex: number, line?: EditorLine | null, opts?: { before?: boolean }) => void;
+  handleInsertSection?: (lineIndex: number) => void;
 }
 
 export default function SyncModeTab({
@@ -35,6 +36,10 @@ export default function SyncModeTab({
   onMark,
   duration,
   isLoading = false,
+  handleDeleteLine,
+  handleClearLine,
+  handleAddLine,
+  handleInsertSection,
 }: SyncModeTabProps) {
   const { t } = useTranslation();
   const currentTimestamp = useMemo(() => formatTime(playbackPosition), [playbackPosition]);
@@ -100,26 +105,40 @@ export default function SyncModeTab({
             </h3>
             <div className="space-y-1.5 px-2">
               {lines.map((line, lineIndex) => (
-                <button
+                <EditorLineContextMenu
                   key={line.id ?? lineIndex}
-                  onClick={() => handleLineClick(lineIndex)}
-                  className={`w-full text-left p-2 rounded-lg transition-colors text-sm ${
-                    lineIndex === activeLineIndex
-                      ? 'bg-primary/10 border border-primary text-primary'
-                      : line.timestamp != null
-                        ? 'bg-zinc-900/50 border border-zinc-800 text-zinc-300 hover:border-zinc-700'
-                        : 'bg-zinc-950/50 border border-zinc-800/50 text-zinc-500 hover:border-zinc-700/50'
-                  }`}
+                  line={line}
+                  lineIndex={lineIndex}
+                  isSection={line.type === 'section'}
+                  selectedLines={NO_SELECTION}
+                  sectionLines={lines}
+                  handleDeleteLine={handleDeleteLine ?? (() => {})}
+                  handleClearLine={handleClearLine}
+                  handleAddLine={handleAddLine}
+                  handleInsertSection={handleInsertSection}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="flex-1 truncate">{line.text || t('editor.emptyLine')}</span>
-                    {line.timestamp != null && (
-                      <span className="text-xs font-mono text-zinc-400 flex-shrink-0">
-                        {formatTime(line.timestamp)}
-                      </span>
-                    )}
-                  </div>
-                </button>
+                  <button
+                    onClick={() => handleLineClick(lineIndex)}
+                    // touch-callout keeps iOS's press-and-hold sheet from taking
+                    // the gesture before the context menu opens.
+                    className={`w-full text-left p-2 rounded-lg transition-colors text-sm [-webkit-touch-callout:none] ${
+                      lineIndex === activeLineIndex
+                        ? 'bg-primary/10 border border-primary text-primary'
+                        : line.timestamp != null
+                          ? 'bg-zinc-900/50 border border-zinc-800 text-zinc-300 hover:border-zinc-700'
+                          : 'bg-zinc-950/50 border border-zinc-800/50 text-zinc-500 hover:border-zinc-700/50'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="flex-1 truncate">{line.text || t('editor.emptyLine')}</span>
+                      {line.timestamp != null && (
+                        <span className="text-xs font-mono text-zinc-400 flex-shrink-0">
+                          {formatTime(line.timestamp)}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                </EditorLineContextMenu>
               ))}
             </div>
           </div>

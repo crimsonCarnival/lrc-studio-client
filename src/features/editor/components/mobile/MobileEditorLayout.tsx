@@ -172,6 +172,10 @@ export default function MobileEditorLayout({
                 // mark button and the player use. It was never wired, so the
                 // "tap to timestamp" area had never marked anything.
                 onMark={() => window.dispatchEvent(new Event('editor:mark'))}
+                handleDeleteLine={handleDeleteLine}
+                handleClearLine={handleClearLine}
+                handleAddLine={handleAddLine}
+                handleInsertSection={handleInsertSection}
               />
             </div>
           )}

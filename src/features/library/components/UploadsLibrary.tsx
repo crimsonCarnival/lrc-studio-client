@@ -11,6 +11,7 @@ import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { Icon } from '@/shared/ui/Icon';
+import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem } from '@ui/context-menu';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import useConfirm from '@/shared/hooks/useConfirm';
@@ -168,11 +169,14 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
       ) : (
         <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1 settings-scroll">
           {items.map((upload) => (
+            <ContextMenu key={upload.id}>
+              <ContextMenuTrigger asChild>
             <button
-              key={upload.id}
               type="button"
               onClick={() => onSelect?.(upload)}
-              className="w-full group relative flex items-start gap-3 p-3 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/80 border border-zinc-700/40 hover:border-zinc-600/60 transition-all duration-150 text-left cursor-pointer"
+              // touch-callout so iOS's press-and-hold sheet does not take the
+              // gesture before the context menu opens.
+              className="w-full group relative flex items-start gap-3 p-3 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/80 border border-zinc-700/40 hover:border-zinc-600/60 transition-all duration-150 text-left cursor-pointer [-webkit-touch-callout:none]"
             >
               {/* Thumbnail or source icon */}
               <div className="size-9 rounded-lg bg-zinc-700/50 flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden">
@@ -280,6 +284,22 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
                 )}
               </div>
             </button>
+              </ContextMenuTrigger>
+              {/* Same two actions the hover icons offer, reachable by long-press */}
+              <ContextMenuContent>
+                <ContextMenuItem onClick={(e) => handleStartEdit(e as unknown as MouseEvent, upload)}>
+                  <Icon name="edit" />
+                  {t('uploads.rename')}
+                </ContextMenuItem>
+                <ContextMenuItem
+                  variant="destructive"
+                  onClick={(e) => handleDelete(e as unknown as MouseEvent, upload.id, upload.title || upload.fileName)}
+                >
+                  <Icon name="delete" />
+                  {t('common.delete')}
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
           ))}
         </div>
       )}
