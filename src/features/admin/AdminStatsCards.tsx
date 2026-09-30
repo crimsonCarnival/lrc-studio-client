@@ -84,13 +84,13 @@ export default function AdminStatsCards({ stats }: { stats?: AdminStats }) {
   ];
 
   return (
-    <div className="flex items-stretch bg-zinc-900/60 border border-zinc-800/60 rounded-xl mb-5 overflow-hidden contrast-more:border-zinc-600">
+    // Five equal flex cells left ~78px each on a phone, so every label wrapped
+    // onto two lines. Grid below lg; the gap over a tinted container draws the
+    // dividers, which the old absolutely-positioned rule could not do in a grid.
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:items-stretch gap-px bg-zinc-800/60 border border-zinc-800/60 rounded-xl mb-5 overflow-hidden contrast-more:border-zinc-600">
       {cells.map((cell, i) => {
         const body = (
-          <div className="flex flex-col items-center justify-center flex-1 py-4 px-2 gap-1 relative h-full">
-            {i > 0 && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-8 bg-zinc-800/70 contrast-more:bg-zinc-600" />
-            )}
+          <div className="flex flex-col items-center justify-center flex-1 py-4 px-2 gap-1 relative h-full bg-zinc-900/60">
             <span className={`font-heading text-xl sm:text-2xl font-bold leading-none tabular-nums ${cell.color}`}>
               {cell.value ?? '—'}
             </span>
@@ -101,7 +101,7 @@ export default function AdminStatsCards({ stats }: { stats?: AdminStats }) {
         );
         return cell.tip
           ? <Tip key={i} content={cell.tip}>{body}</Tip>
-          : <div key={i} className="flex flex-1">{body}</div>;
+          : <div key={i} className="flex lg:flex-1">{body}</div>;
       })}
     </div>
   );

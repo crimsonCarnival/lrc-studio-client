@@ -91,7 +91,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
                   value={String(settings.advanced?.autoSave?.timeInterval ?? 30)}
                   onValueChange={(val) => handleAutoSaveTimeIntervalChange({ target: { value: val } })}
                 >
-                  <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+                  <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -116,7 +116,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
             value={settings.advanced?.autoSaveIndicator ?? 'normal'}
             onValueChange={(val) => updateSetting('advanced.autoSaveIndicator', val)}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -148,7 +148,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
             value={settings.advanced?.timezone ?? 'auto'}
             onValueChange={(val) => handleTimezoneChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 max-w-[200px]">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 max-w-[200px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -175,7 +175,7 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
               size="sm"
               onClick={handleDeactivate}
               disabled={isDeactivating}
-              className="bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 hover:text-red-400 font-semibold h-8"
+              className="bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 hover:text-red-400 font-semibold h-8 coarse:h-11"
             >
               {isDeactivating ? 'Deactivating...' : (t('settings.advanced.deactivateBtn'))}
             </Button>

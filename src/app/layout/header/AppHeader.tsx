@@ -121,7 +121,7 @@ export function AppHeader({
     }
   };
 
-  const iconBtn = 'size-8 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors rounded-lg flex-shrink-0 cursor-pointer';
+  const iconBtn = 'size-8 coarse:size-11 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors rounded-lg flex-shrink-0 cursor-pointer';
 
   // Guest landing page has its own embedded nav — don't render the app header there
   if (isGuestLanding) return null;
@@ -179,7 +179,7 @@ export function AppHeader({
           <div className="flex-1" />
 
           {/* ── Right: Controls ── */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-1.5 coarse:gap-0.5 flex-shrink-0">
 
             {/* Search — inline in header */}
             {!isGuestLanding && (
@@ -208,7 +208,7 @@ export function AppHeader({
                 <button
                   onClick={onStartTour}
                   aria-label={t('editor.tour.replay')}
-                  className={iconBtn}
+                  className={`${iconBtn} max-sm:hidden`}
                 >
                   <Icon name="school" size={14} />
                 </button>

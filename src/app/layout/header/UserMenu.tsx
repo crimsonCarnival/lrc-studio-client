@@ -58,7 +58,7 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
         <Tip content={t('admin.dashboard.title')}>
           <button
             onClick={() => navigate('/admin')}
-            className="relative size-8 flex items-center justify-center rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 shrink-0"
+            className="relative size-8 coarse:size-11 flex items-center justify-center rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 shrink-0"
           >
             <Icon name="security" size={18} />
             {counts.requests > 0 && (
@@ -72,7 +72,7 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
       <NotificationBell />
       <Popover onOpenChange={(open) => { if (open) fetchCounts(); }}>
         <div className="relative flex-shrink-0">
-          <PopoverTrigger className="relative z-[110] size-8 rounded-full overflow-hidden bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-all focus:ring-2 focus:ring-primary/50 cursor-pointer outline-none block">
+          <PopoverTrigger className="relative z-[110] size-8 coarse:size-11 rounded-full overflow-hidden bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-all focus:ring-2 focus:ring-primary/50 cursor-pointer outline-none block">
             {user?.avatarUrl
               ? <LazyImage src={user.avatarUrl} alt={user?.displayName || user?.accountName || user?.email || ''} className="size-full object-cover" />
               : <div className="size-full flex items-center justify-center bg-gradient-to-br from-primary/50 to-accent-purple/50 text-white font-bold text-sm">

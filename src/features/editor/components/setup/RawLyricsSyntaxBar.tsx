@@ -89,10 +89,10 @@ export default function RawLyricsSyntaxBar({ value, onChange, textareaRef, singe
 
       {helpOpen && (
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-2.5 text-[11px] text-zinc-400 flex flex-col gap-1.5 max-h-56 overflow-y-auto scrollbar-thin">
-          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 items-baseline">
+          <dl className="grid grid-cols-1 sm:grid-cols-[minmax(0,auto)_1fr] gap-x-3 gap-y-1 items-baseline min-w-0">
             {examples.map(({ code, desc }) => (
               <div key={code} className="contents">
-                <dt><code className="font-mono text-zinc-200 bg-zinc-800/80 rounded px-1.5 py-px whitespace-nowrap">{code}</code></dt>
+                <dt className="min-w-0"><code className="font-mono text-zinc-200 bg-zinc-800/80 rounded px-1.5 py-px break-all sm:whitespace-nowrap">{code}</code></dt>
                 <dd>{desc}</dd>
               </div>
             ))}

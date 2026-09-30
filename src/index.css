@@ -34,6 +34,15 @@
 }
 @custom-variant dark (&:is(.dark *));
 
+/* Input-capability variants. These answer "can this user hover / is the pointer
+   imprecise", which is NOT the same question as "is the screen small" — use the
+   sm:/md:/lg: breakpoints for that. Pairing them is what lets a touch target be
+   enlarged without also enlarging it on a narrow desktop window.
+   `coarse` covers phones, tablets and touchscreens; `fine` covers mouse/trackpad. */
+@custom-variant coarse (@media (pointer: coarse));
+@custom-variant fine (@media (pointer: fine));
+@custom-variant can-hover (@media (hover: hover));
+
 /* Select — remove native arrow, inject custom chevron with proper spacing */
 select {
   -webkit-appearance: none;

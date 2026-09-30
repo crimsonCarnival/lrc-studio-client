@@ -20,7 +20,7 @@ function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void 
       role="switch"
       aria-checked={checked}
       onClick={onToggle}
-      className={`relative shrink-0 w-10 h-6 rounded-full transition-colors ${checked ? 'bg-primary' : 'bg-border'}`}
+      className={`relative shrink-0 w-10 h-6 rounded-full transition-colors coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-2.5 ${checked ? 'bg-primary' : 'bg-border'}`}
     >
       <span className={`absolute top-1 left-1 size-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
     </button>
@@ -172,7 +172,7 @@ export default function ProfileForm({ children }: { children?: React.ReactNode }
                     type="button"
                     onClick={() => toggleMiniProfileBadge(id)}
                     disabled={atCap}
-                    className={`rounded-full transition-all outline-none focus-visible:ring-2 ring-primary/50 ${selected ? 'ring-2 ring-primary scale-105' : ''} ${atCap ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={`rounded-full coarse:p-2.5 transition-all outline-none focus-visible:ring-2 ring-primary/50 ${selected ? 'ring-2 ring-primary scale-105' : ''} ${atCap ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <BadgeChip id={id} />
                   </button>
@@ -200,7 +200,7 @@ export default function ProfileForm({ children }: { children?: React.ReactNode }
               size="sm"
               onClick={handleSave}
               disabled={saving}
-              className="bg-primary hover:bg-primary-dim text-zinc-950 font-semibold rounded-lg h-8 px-4 text-xs gap-1.5"
+              className="bg-primary hover:bg-primary-dim text-zinc-950 font-semibold rounded-lg h-8 coarse:h-11 px-4 text-xs gap-1.5"
             >
               {saving && <LogoLoader size={12} />}
               {t('profile.save')}

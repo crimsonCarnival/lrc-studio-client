@@ -35,7 +35,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.interface?.defaultLanguage ?? 'en'}
             onValueChange={(val) => handleLanguageChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -56,7 +56,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.interface?.toastPosition ?? 'bottom-right'}
             onValueChange={(val) => handleToastPositionChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -74,7 +74,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.editor?.display?.activeHighlight ?? 'glow'}
             onValueChange={(val) => handleActiveHighlightChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -90,7 +90,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.interface?.fontSize ?? 'normal'}
             onValueChange={(val) => handleFontSizeChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -106,7 +106,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.interface?.spacing ?? 'normal'}
             onValueChange={(val) => handleSpacingChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -146,7 +146,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.editor?.scroll?.mode ?? 'smooth'}
             onValueChange={(val) => handleScrollModeChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -160,7 +160,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.editor?.scroll?.alignment ?? 'center'}
             onValueChange={(val) => handleScrollAlignmentChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -176,7 +176,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.interface?.previewAlignment ?? 'left'}
             onValueChange={(val) => handlePreviewAlignmentChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -210,7 +210,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.editor?.display?.translationLayout ?? 'side-by-side'}
             onValueChange={(val) => handleTranslationLayoutChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -224,7 +224,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.editor?.display?.karaokeFillTrack ?? 'main'}
             onValueChange={(val) => updateSetting('editor.display.karaokeFillTrack', val)}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -239,7 +239,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.editor?.display?.karaokeFillEasing ?? 'linear'}
             onValueChange={(val) => updateSetting('editor.display.karaokeFillEasing', val)}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -253,7 +253,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.editor?.display?.readingFormat ?? 'hiragana'}
             onValueChange={(val) => updateSetting('editor.display.readingFormat', val)}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -270,7 +270,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             value={settings.interface?.focusContrast ?? 'medium'}
             onValueChange={(val) => updateSetting('interface.focusContrast', val)}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">

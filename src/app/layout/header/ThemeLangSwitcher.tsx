@@ -22,7 +22,7 @@ function getLangLabel(code: string, currentLang: string): string {
   return `${native} (${translated})`;
 }
 
-const iconBtn = 'size-8 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors rounded-lg flex-shrink-0 cursor-pointer';
+const iconBtn = 'size-8 coarse:size-11 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors rounded-lg flex-shrink-0 cursor-pointer';
 
 interface ThemeLangSwitcherProps {
   currentTheme: string;

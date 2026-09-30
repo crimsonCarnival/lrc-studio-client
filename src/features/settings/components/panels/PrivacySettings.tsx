@@ -15,7 +15,7 @@ function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void 
       role="switch"
       aria-checked={checked}
       onClick={onToggle}
-      className={`relative shrink-0 w-10 h-6 rounded-full transition-colors ${checked ? 'bg-primary' : 'bg-border'}`}
+      className={`relative shrink-0 w-10 h-6 rounded-full transition-colors coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-2.5 ${checked ? 'bg-primary' : 'bg-border'}`}
     >
       <span className={`absolute top-1 left-1 size-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
     </button>

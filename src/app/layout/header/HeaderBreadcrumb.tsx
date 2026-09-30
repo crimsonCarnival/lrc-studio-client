@@ -60,7 +60,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
     <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink">
       <button
         onClick={onLogoClick}
-        className="size-7 sm:size-8 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+        className="size-7 sm:size-8 coarse:size-11 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
       >
         <LazyImage
           src={LOGO_URL}
@@ -114,10 +114,10 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
                   startTransition(() => setEditingProjectName(true));
                   requestAnimationFrame(() => projectNameInputRef.current?.focus());
                 }}
-                className="flex items-center gap-1 min-w-0 group py-1 -my-1"
+                className="flex items-center gap-1 min-w-0 group py-1 coarse:py-3.5 -my-1"
                 aria-label={t('setup.projectNamePlaceholder')}
               >
-                <span className="text-xs font-medium text-zinc-400 group-hover:text-zinc-200 truncate transition-colors max-w-[120px] sm:max-w-[200px]">
+                <span className="text-xs font-medium text-zinc-400 group-hover:text-zinc-200 truncate transition-colors max-w-[16vw] sm:max-w-[200px]">
                   {mediaTitle || t('setup.projectNamePlaceholder')}
                 </span>
                 <Icon name="edit" size={12} className="text-zinc-600 group-hover:text-zinc-400 transition-colors shrink-0" />
@@ -137,18 +137,21 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
             <span className="text-zinc-700 shrink-0 hidden sm:inline">/</span>
             {isSettingsPage ? (
               // Settings keeps its own guarded back button in-page, so the header shows the title only.
-              <span className="text-xs font-semibold text-zinc-200 truncate uppercase tracking-wide">
+              <span className="text-xs font-semibold text-zinc-200 truncate uppercase tracking-wide max-w-[20vw] sm:max-w-none">
                 {breadcrumbTitle}
               </span>
             ) : (
               <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-1.5 min-w-0 group py-1 -my-1"
+                className="flex items-center gap-1.5 min-w-0 group py-1 coarse:py-3.5 -my-1"
                 aria-label={t('common.back')}
               >
                 <Icon name="arrow_back" size={14} className="text-zinc-500 group-hover:text-zinc-200 transition-colors shrink-0" />
-                <span className="text-xs font-semibold text-zinc-200 group-hover:text-zinc-100 truncate uppercase tracking-wide transition-colors">
+                {/* Capped on narrow screens: the header's action icons are
+                    44px each on touch, and without a ceiling here the last two
+                    (notifications, user menu) get pushed off-screen. */}
+                <span className="text-xs font-semibold text-zinc-200 group-hover:text-zinc-100 truncate uppercase tracking-wide transition-colors max-w-[20vw] sm:max-w-none">
                   {breadcrumbTitle}
                 </span>
               </button>

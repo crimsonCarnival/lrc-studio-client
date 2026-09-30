@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useRef } from 'react';
+import { useMemo, useCallback, useRef, useState, useLayoutEffect } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
@@ -75,17 +75,33 @@ export default function PlaybackProgress({
     window.addEventListener('mouseup', onUp);
   }, [duration, loopA, loopB, onLoopChange, pctToTime, clientXToPct]);
 
+  // Label density has to follow the track's real width, not a fixed count: on a
+  // phone the old "up to 12 labels" rule asked for ~576px of labels inside a
+  // 358px track, so the end ones collided with their neighbours.
+  const rulerRef = useRef<HTMLDivElement>(null);
+  const [rulerWidth, setRulerWidth] = useState(0);
+  useLayoutEffect(() => {
+    const el = rulerRef.current;
+    if (!el) return;
+    const measure = () => setRulerWidth(el.clientWidth);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const rulerTicks = useMemo(() => {
     if (!duration || duration <= 0) return [];
-    // Pick interval so we have ~8-12 labels max
+    // ~56px per label keeps "00:00.00" from touching its neighbour.
+    const maxLabels = Math.max(2, Math.floor((rulerWidth || 600) / 56));
     const intervals = [5, 10, 15, 30, 60, 120, 300];
-    const interval = intervals.find(iv => duration / iv <= 12) ?? 300;
+    const interval = intervals.find(iv => duration / iv <= maxLabels - 1) ?? 300;
     const ticks: { t: number; pct: number }[] = [];
     for (let time = 0; time <= duration; time += interval) {
       ticks.push({ t: time, pct: (time / duration) * 100 });
     }
     return ticks;
-  }, [duration]);
+  }, [duration, rulerWidth]);
 
   const playbackPct = duration > 0 ? Math.min(100, (playbackPosition / duration) * 100) : 0;
   const loopAPct = loopA != null && duration > 0 ? (loopA / duration) * 100 : null;
@@ -164,12 +180,19 @@ export default function PlaybackProgress({
       </div>
 
       {/* Ruler with time labels */}
-      <div className="w-full h-5 relative select-none mt-1.5 px-0.5">
-        {rulerTicks.map(({ t: tickTime, pct }) => (
+      {/* overflow-hidden so the end labels cannot widen the row: each is centred
+          on its tick, so the first and last hang half outside the track. */}
+      <div ref={rulerRef} className="w-full h-5 relative select-none mt-1.5 px-0.5 overflow-hidden">
+        {rulerTicks.map(({ t: tickTime, pct }, idx) => (
           <div
             key={tickTime}
             className="absolute top-0 flex flex-col items-center"
-            style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
+            style={{
+              left: `${pct}%`,
+              // Pull the outer labels inside the track instead of centring them
+              // on a tick that sits on the very edge.
+              transform: `translateX(${idx === 0 ? '0' : idx === rulerTicks.length - 1 ? '-100%' : '-50%'})`,
+            }}
           >
             <div className="w-px h-1.5 bg-zinc-700/60" />
             <span className="text-[9px] text-zinc-500 font-mono tabular-nums mt-0.5 leading-none whitespace-nowrap">

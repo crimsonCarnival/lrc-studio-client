@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { splitArtists } from '@/shared/utils/lrc';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -14,6 +14,7 @@ import { AppModals } from './layout/AppModals';
 import { SafeAreaContainer } from '../shared/ui/SafeAreaContainer';
 import { PlayerEngineProvider } from '@/features/player/PlayerEngine';
 import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { useGuidedTour } from '@/features/editor/hooks/useGuidedTour';
 import { GuidedTour } from '@/features/editor/components/GuidedTour';
 import { EDITOR_TOUR_STEPS } from '@/features/editor/tour/tourSteps';
@@ -82,14 +83,8 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   const { settings, updateSetting } = settingsState;
   const { focusMode, hideEditor, hidePreview, mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
 
-  // Track lg breakpoint reactively so dynamic padding formula is correct on resize
-  const [isLg, setIsLg] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
-  useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)');
-    const handler = (e: MediaQueryListEvent) => setIsLg(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
+  // Reactive so the dynamic padding formula stays correct on resize.
+  const isLg = useBreakpoint('lg');
 
   const inputMethod = useInputMethod();
   const isTouch = inputMethod === 'touch';

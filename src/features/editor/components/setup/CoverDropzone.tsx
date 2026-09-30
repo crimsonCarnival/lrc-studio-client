@@ -120,7 +120,7 @@ export function CoverDropzone({ value, onChange, onUpload, onToggleUrl, urlOpen,
             onClick={onToggleUrl}
             aria-expanded={!!urlOpen}
             aria-label={t('setup.coverUrlLabel')}
-            className={`mt-1 w-[72px] h-6 rounded-lg border flex items-center justify-center gap-1 transition-colors ${
+            className={`mt-1 w-[72px] h-6 coarse:h-11 rounded-lg border flex items-center justify-center gap-1 transition-colors ${
               urlOpen
                 ? 'border-primary/50 text-primary bg-primary/10'
                 : 'border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'

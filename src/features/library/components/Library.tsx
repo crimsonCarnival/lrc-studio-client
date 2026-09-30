@@ -15,10 +15,7 @@ import ProjectListRaw from './ProjectList';
 // ProjectSetupModal is still untyped JS; cast until it is migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ProjectSetupModal = ProjectSetupModalRaw as any;
-// ProjectList's typed handler signatures (project vs publicId) differ from this
-// page's; cast until both are reconciled.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const ProjectList = ProjectListRaw as any;
+const ProjectList = ProjectListRaw;
 
 // Stable fallback: ProjectSetupModal re-syncs its form whenever an initial* prop changes identity.
 const EMPTY_LIST: string[] = [];
@@ -212,7 +209,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
             <div className="relative flex items-center shrink-0 ml-auto sm:ml-0 mb-1 sm:mb-0">
               <Icon name="sort" size={14} className="absolute left-3 text-zinc-400 pointer-events-none" />
               <select 
-                className="appearance-none bg-transparent hover:bg-zinc-800 text-xs text-zinc-400 hover:text-zinc-200 transition-colors pl-8 pr-8 py-1.5 rounded-lg outline-none cursor-pointer border-none"
+                className="appearance-none bg-transparent hover:bg-zinc-800 text-xs coarse:min-h-11 text-zinc-400 hover:text-zinc-200 transition-colors pl-8 pr-8 py-1.5 rounded-lg outline-none cursor-pointer border-none"
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as 'edited' | 'created' | 'title')}
               >

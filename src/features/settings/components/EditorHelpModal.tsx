@@ -119,7 +119,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
         aria-describedby={undefined}
       >
         <DialogTitle className="sr-only">{t('shortcuts.title')}</DialogTitle>
-        <div className="flex flex-col">
+        <div className="flex flex-col w-full min-w-0">
           {/* Header */}
           <div
             className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-zinc-800/60 cursor-grab active:cursor-grabbing select-none"
@@ -140,7 +140,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
           </div>
 
           {/* Tabs */}
-          <div className="flex px-3 pt-2 gap-0.5 bg-zinc-950/40">
+          <div className="flex px-3 pt-2 gap-0.5 bg-zinc-950/40 overflow-x-auto no-scrollbar min-w-0">
             {HELP_TABS.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -148,7 +148,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
                   key={tab.id}
                   variant="ghost"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex flex-col items-center gap-0.5 px-4 py-2 h-auto text-[10px] font-medium rounded-lg transition-colors ${
+                  className={`flex flex-col items-center gap-0.5 shrink-0 px-4 py-2 h-auto text-[10px] font-medium rounded-lg transition-colors ${
                     isActive
                       ? 'bg-zinc-800 text-zinc-100'
                       : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
@@ -162,7 +162,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
           </div>
 
           {/* Content */}
-          <div className="px-5 pt-4 pb-5 space-y-5 overflow-y-auto max-h-[60vh]">
+          <div className="px-5 pt-4 pb-5 space-y-5 overflow-y-auto max-h-[60vh] min-w-0">
             {activeTab === 'sections' ? (
               <div className="text-zinc-300 text-sm space-y-4 leading-relaxed">
                 <p>{t('editor.help.sectionsIntro')}</p>

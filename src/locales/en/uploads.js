@@ -1,4 +1,5 @@
 export default {
+  rename: "Rename",
   title: "Uploads",
   count_one: "{{count}} file",
   count_other: "{{count}} files",

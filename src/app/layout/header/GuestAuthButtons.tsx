@@ -67,7 +67,7 @@ export function GuestAuthButtons({ isReady, lines, mediaTitle, buildProjectPaylo
       <div className="relative hidden sm:flex items-center flex-shrink-0">
         <button
           onClick={() => goToAuth('signin')}
-          className="h-8 px-3 text-xs font-normal text-zinc-300 hover:text-zinc-100 bg-zinc-800/70 hover:bg-zinc-700/80 border border-zinc-800/50 rounded-xl transition-colors"
+          className="h-8 coarse:h-11 px-3 coarse:px-4 text-xs font-normal text-zinc-300 hover:text-zinc-100 bg-zinc-800/70 hover:bg-zinc-700/80 border border-zinc-800/50 rounded-xl transition-colors"
         >
           {t('auth.signIn')}
         </button>
@@ -75,7 +75,7 @@ export function GuestAuthButtons({ isReady, lines, mediaTitle, buildProjectPaylo
       <div className="relative flex items-center flex-shrink-0">
         <button
           onClick={() => goToAuth('signup')}
-          className="h-8 px-3 text-xs font-normal text-zinc-950 bg-primary hover:bg-primary/90 rounded-xl transition-colors"
+          className="h-8 coarse:h-11 px-3 coarse:px-4 text-xs font-normal text-zinc-950 bg-primary hover:bg-primary/90 rounded-xl transition-colors"
         >
           {t('auth.signUp')}
         </button>

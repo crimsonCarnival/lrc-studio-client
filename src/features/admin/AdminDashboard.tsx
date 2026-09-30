@@ -482,7 +482,7 @@ export default function AdminDashboard() {
     <div className="flex flex-col h-full pt-0 p-6 overflow-y-auto custom-scrollbar">
       {/* Refresh — the page title now lives in the app header */}
       <div className="flex items-center justify-end mb-4">
-        <Button variant="ghost" size="icon" onClick={() => fetchData(true)} className="h-9 w-9 shrink-0">
+        <Button variant="ghost" size="icon" onClick={() => fetchData(true)} className="h-9 w-9 coarse:h-11 coarse:w-11 shrink-0">
           {loading ? <LogoLoader size={16} /> : <Icon name="refresh" size={16} className="text-zinc-500" />}
         </Button>
       </div>
@@ -496,7 +496,7 @@ export default function AdminDashboard() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 coarse:py-3.5 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
               activeTab === tab.id
                 ? 'border-primary text-primary'
                 : 'border-transparent text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'

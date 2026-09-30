@@ -141,7 +141,7 @@ export function EditorLineContextMenu({
           <ContextMenuItem variant="destructive" onClick={() => [...selectedLines].forEach(i => handleDeleteLine(i))}>
             <Icon name="delete" />
             {t('editor.selection.removeN', { count: selectedCount})}
-            <span className="ml-auto text-xs tracking-widest opacity-60">Del</span>
+            <span className="ml-auto text-xs tracking-widest opacity-60 coarse:hidden">Del</span>
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -161,12 +161,12 @@ export function EditorLineContextMenu({
             <ContextMenuItem onClick={() => handleAddLine(lineIndex)}>
               <Icon name="vertical_align_bottom" />
               {t('editor.insertLineBelow')}
-              <span className="ml-auto text-xs tracking-widest opacity-60">Alt+N</span>
+              <span className="ml-auto text-xs tracking-widest opacity-60 coarse:hidden">Alt+N</span>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => handleAddLine(lineIndex, { ...line, id: crypto.randomUUID() })}>
               <Icon name="post_add" />
               {t('editor.duplicateLine')}
-              <span className="ml-auto text-xs tracking-widest opacity-60">Ctrl+D</span>
+              <span className="ml-auto text-xs tracking-widest opacity-60 coarse:hidden">Ctrl+D</span>
             </ContextMenuItem>
           </>
         )}
@@ -229,7 +229,7 @@ export function EditorLineContextMenu({
         <ContextMenuItem variant="destructive" onClick={() => handleDeleteLine(lineIndex)}>
           <Icon name="delete" />
           {t('editor.removeLine')}
-          <span className="ml-auto text-xs tracking-widest opacity-60">Del</span>
+          <span className="ml-auto text-xs tracking-widest opacity-60 coarse:hidden">Del</span>
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

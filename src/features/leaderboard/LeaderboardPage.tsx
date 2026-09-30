@@ -155,19 +155,19 @@ export default function LeaderboardPage() {
           <div className="flex p-1 gap-1">
             <button 
               onClick={() => setTimeFilter('week')}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timeFilter === 'week' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
+              className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'week' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
             >
               {t('badges.leaderboard.thisWeek')}
             </button>
             <button 
               onClick={() => setTimeFilter('month')}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timeFilter === 'month' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
+              className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'month' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
             >
               {t('badges.leaderboard.thisMonth')}
             </button>
             <button 
               onClick={() => setTimeFilter('all')}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${timeFilter === 'all' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
+              className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'all' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
             >
               {t('badges.leaderboard.allTime')}
             </button>
@@ -190,7 +190,53 @@ export default function LeaderboardPage() {
           </div>
         ) : (
           <div className="glass rounded-2xl overflow-hidden border border-zinc-800/60">
-            <div className="overflow-x-auto">
+            {/* Stacked cards below lg. The table needs 700px of columns, so on a
+                phone it was a 390px window onto a wider grid: the last four
+                stats sat off-screen behind a horizontal drag. */}
+            <ul className="lg:hidden divide-y divide-zinc-800/50">
+              {users.map((entry, i) => {
+                const stats: [string, string][] = [
+                  [t('badges.leaderboard.syncedCol'), formatTime(entry.stats?.minutesSynced, entry.stats?.secondsSynced)],
+                  [t('badges.leaderboard.linesCol'), formatCount(entry.stats?.syncedLines ?? 0)],
+                  [t('badges.leaderboard.projectsCol'), formatCount(entry.projectCount ?? 0)],
+                  [t('badges.leaderboard.starsCol'), formatCount(entry.totalStarsReceived ?? 0)],
+                  [t('badges.leaderboard.xpCol'), Math.round(entry.rankScore ?? 0).toLocaleString()],
+                ];
+                return (
+                  <li key={entry.id ?? entry.accountName}>
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/profile/${entry.accountName}`)}
+                      className="w-full text-left px-4 py-3.5 hover:bg-zinc-800/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="shrink-0"><RankBadge pos={i + 1} /></div>
+                        <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} ring={PODIUM[i + 1]?.ring} />
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className={`font-semibold text-sm truncate ${PODIUM[i + 1] ? PODIUM[i + 1].label : 'text-zinc-100'}`}>
+                            {entry.displayName || entry.accountName}
+                          </span>
+                          <span className="text-xs text-zinc-500 truncate">
+                            {entry.accountName}
+                            {(entry.progression?.level ?? 0) > 0 && ` · Nv. ${entry.progression!.level}`}
+                          </span>
+                        </div>
+                      </div>
+                      <dl className="mt-2.5 grid grid-cols-3 gap-y-2 gap-x-2 pl-1">
+                        {stats.map(([label, value]) => (
+                          <div key={label} className="min-w-0">
+                            <dt className="text-[9px] font-bold uppercase tracking-wider text-zinc-500 truncate">{label}</dt>
+                            <dd className="text-xs font-semibold text-zinc-200 tabular-nums truncate">{value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[700px]">
                 <thead>
                   <tr className="border-b border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider">

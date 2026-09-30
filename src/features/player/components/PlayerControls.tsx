@@ -271,7 +271,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                   <Button
                     onClick={handleUrlLoad}
                     disabled={cdnLoading}
-                    className="h-10 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/50 font-medium shrink-0"
+                    className="h-10 coarse:h-11 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/50 font-medium shrink-0"
                   >
                     {cdnLoading ? <LogoLoader size={16} /> : t('player.load')}
                   </Button>
@@ -284,7 +284,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       <PopoverTrigger asChild>
                         <Button
                           variant="ghost"
-                          className="flex items-center gap-2 h-10 px-4 rounded-xl bg-zinc-800/30 hover:bg-zinc-800/60 border border-zinc-700/30 hover:border-zinc-700 transition-all text-zinc-300"
+                          className="flex items-center gap-2 h-10 coarse:h-11 px-4 rounded-xl bg-zinc-800/30 hover:bg-zinc-800/60 border border-zinc-700/30 hover:border-zinc-700 transition-all text-zinc-300"
                         >
                           <Icon name="cloud" size={16} className="text-blue-400/80" />
                           <span className="text-sm font-medium">{t('uploads.title')}</span>
@@ -686,7 +686,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
             ) : (
               <>
                 {!viewerMode && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <label
                       htmlFor="audio-file-compact"
                       className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700/60 text-sm font-medium text-zinc-300 cursor-pointer active:scale-95 transition-all duration-100 shrink-0"
@@ -695,8 +695,8 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       {t('player.dropAudio')}
                       <input id="audio-file-compact" type="file" accept="audio/*" onChange={local.handleFileChange} className="hidden" />
                     </label>
-                    <div className="flex-1 flex gap-2">
-                      <div className="relative flex-1">
+                    <div className="flex-1 flex gap-2 min-w-0 basis-56">
+                      <div className="relative flex-1 min-w-0">
                         {detectedUrlType === 'cdn' ? (
                           <Icon name="cloud" size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-blue-400/80 pointer-events-none" />
                         ) : detectedUrlType === 'youtube' ? (
@@ -718,7 +718,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       <Button
                         onClick={handleUrlLoad}
                         disabled={cdnLoading}
-                        className={`px-3 h-9 text-white text-xs font-medium rounded-lg shrink-0 ${detectedUrlType === 'cdn' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-red-600 hover:bg-red-500'
+                        className={`px-3 h-9 coarse:h-11 text-white text-xs font-medium rounded-lg shrink-0 ${detectedUrlType === 'cdn' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-red-600 hover:bg-red-500'
                           }`}
                       >
                         {cdnLoading ? '…' : t('player.load')}

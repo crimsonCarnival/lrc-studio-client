@@ -133,7 +133,7 @@ export default function AdminUsersTab({
           value={user.role ?? 'user'}
           onChange={(e) => handleChangeRole(user, e.target.value)}
           onClick={(e) => e.stopPropagation()}
-          className="bg-zinc-800 text-zinc-200 rounded px-1.5 py-1 text-[10px] font-semibold uppercase tracking-wider border border-zinc-700 focus:border-primary outline-none cursor-pointer"
+          className="bg-zinc-800 text-zinc-200 rounded px-1.5 py-1 coarse:py-3.5 text-[10px] font-semibold uppercase tracking-wider border border-zinc-700 focus:border-primary outline-none cursor-pointer"
         >
           {options.map(r => <option key={r} value={r}>{tk(`admin.table.${r}`)}</option>)}
         </select>
@@ -154,7 +154,7 @@ export default function AdminUsersTab({
             placeholder={t('admin.dashboard.searchPlaceholder')}
             value={search}
             onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-            className="bg-zinc-950 border-zinc-800 focus:border-primary !pl-10 h-10 text-sm"
+            className="bg-zinc-950 border-zinc-800 focus:border-primary !pl-10 h-10 coarse:h-11 text-sm"
           />
           <Icon name="filter_list" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
         </div>
@@ -164,7 +164,7 @@ export default function AdminUsersTab({
               value={roleFilter}
               aria-label={t('admin.dashboard.filters.filterByRole')}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className={`bg-zinc-950 border border-zinc-800 rounded-lg px-3 text-sm text-zinc-300 outline-none focus:border-primary ${isMobile ? 'h-10 flex-1' : ''}`}
+              className={`bg-zinc-950 border border-zinc-800 rounded-lg px-3 coarse:min-h-11 text-sm text-zinc-300 outline-none focus:border-primary ${isMobile ? 'h-10 flex-1' : ''}`}
             >
               <option value="">{t('admin.dashboard.filters.allRoles')}</option>
               <option value="superadmin">{t('admin.table.superadmin')}</option>
@@ -177,7 +177,7 @@ export default function AdminUsersTab({
             value={statusFilter}
             aria-label={t('admin.dashboard.filters.filterByStatus')}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className={`bg-zinc-950 border border-zinc-800 rounded-lg px-3 text-sm text-zinc-300 outline-none focus:border-primary ${isMobile ? 'h-10 flex-1' : ''}`}
+            className={`bg-zinc-950 border border-zinc-800 rounded-lg px-3 coarse:min-h-11 text-sm text-zinc-300 outline-none focus:border-primary ${isMobile ? 'h-10 flex-1' : ''}`}
           >
             <option value="">{t('admin.dashboard.filters.allStatuses')}</option>
             <option value="active">{t('admin.dashboard.filters.active')}</option>
@@ -314,7 +314,7 @@ export default function AdminUsersTab({
                           <span className="font-mono text-zinc-500 text-[10px] break-all">{user.lastIp || '—'} {user.country && `(${user.country})`}</span>
                           {user.lastIp && canActOn(user) && (
                             <Tip content={t('admin.table.blockIp')}>
-                              <button type="button" onClick={() => handleBlockIpDirect(user)} className="text-zinc-600 hover:text-red-400">
+                              <button type="button" onClick={() => handleBlockIpDirect(user)} className="relative text-zinc-600 hover:text-red-400 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-3.5">
                                 <Icon name="language" size={14} />
                               </button>
                             </Tip>
@@ -326,7 +326,7 @@ export default function AdminUsersTab({
                             <span className="text-zinc-500 text-[10px] break-all">{user.lastDeviceName}</span>
                             {user.lastDeviceId && canActOn(user) && (
                               <Tip content={t('admin.table.blockDevice')}>
-                                <button type="button" onClick={() => handleBlockDeviceDirect(user)} className="text-zinc-600 hover:text-red-400">
+                                <button type="button" onClick={() => handleBlockDeviceDirect(user)} className="relative text-zinc-600 hover:text-red-400 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-3.5">
                                   <Icon name="gpp_bad" size={14} />
                                 </button>
                               </Tip>
@@ -346,7 +346,7 @@ export default function AdminUsersTab({
                             <Button
                               variant="ghost"
                               onClick={() => handleReactivate(user)}
-                              className="h-10 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 gap-2 w-full"
+                              className="h-10 coarse:h-11 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 gap-2 w-full"
                             >
                               <Icon name="undo" size={16} /> {t('admin.table.reactivate')}
                             </Button>
@@ -356,7 +356,7 @@ export default function AdminUsersTab({
                                 <Button
                                   variant="secondary"
                                   onClick={() => setAppealModal({ isOpen: true, user })}
-                                  className="h-10 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/30 gap-2 w-full"
+                                  className="h-10 coarse:h-11 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border-yellow-500/30 gap-2 w-full"
                                 >
                                   <Icon name="info" size={16} /> {t('admin.table.reviewAppeal')}
                                 </Button>
@@ -365,7 +365,7 @@ export default function AdminUsersTab({
                                   <Button
                                     variant="ghost"
                                     onClick={() => handleToggleBan(user)}
-                                    className="h-10 text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-2 w-full"
+                                    className="h-10 coarse:h-11 text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-2 w-full"
                                   >
                                     <Icon name="block" size={16} /> {t('admin.table.ban')}
                                   </Button>
@@ -375,7 +375,7 @@ export default function AdminUsersTab({
                                 <Button
                                   variant="ghost"
                                   onClick={() => handleToggleBan(user)}
-                                  className="h-10 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 w-full"
+                                  className="h-10 coarse:h-11 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 w-full"
                                 >
                                   {t('admin.table.unban')}
                                 </Button>
@@ -383,7 +383,7 @@ export default function AdminUsersTab({
                               <Button
                                 variant="ghost"
                                 onClick={() => handleDelete(user)}
-                                className="h-10 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 gap-2 w-full"
+                                className="h-10 coarse:h-11 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 gap-2 w-full"
                               >
                                 <Icon name="delete" size={16} /> {tk('admin.table.delete')}
                               </Button>

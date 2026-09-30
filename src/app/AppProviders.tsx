@@ -32,6 +32,25 @@ export function AppProviders({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // On touch devices a long press opens our own context menus, but the browser
+  // fires its native `contextmenu` for the same gesture, so both appeared at
+  // once. Radix only prevents the event on its triggers, which leaves every
+  // gap, padding and background showing the browser menu instead.
+  //
+  // Suppressed for coarse pointers only: on desktop the native menu is expected
+  // (back, reload, inspect), and text fields keep it everywhere so copy and
+  // paste still work while editing lyrics.
+  useEffect(() => {
+    if (!window.matchMedia?.('(pointer: coarse)').matches) return;
+    const suppress = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('input, textarea, [contenteditable="true"]')) return;
+      e.preventDefault();
+    };
+    document.addEventListener('contextmenu', suppress);
+    return () => document.removeEventListener('contextmenu', suppress);
+  }, []);
+
   useSessionSocket();
 
   return (

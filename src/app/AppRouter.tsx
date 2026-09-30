@@ -14,6 +14,7 @@ import { useEditorActivity } from '@/features/auth/hooks/useSessionSocket';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { isStaff } from '@/features/auth/permissions';
 import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
@@ -365,13 +366,7 @@ export function AppRouter({
   const handleHidePreview = useCallback(() => { setHidePreview(true); setHideEditor(false); }, [setHidePreview, setHideEditor]);
   const handleShowPreview = useCallback(() => { setHidePreview(false); }, [setHidePreview]);
 
-  const [isLgRouter, setIsLgRouter] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024);
-  useEffect(() => {
-    const mql = window.matchMedia('(min-width: 1024px)');
-    const handler = (e: MediaQueryListEvent) => setIsLgRouter(e.matches);
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
+  const isLgRouter = useBreakpoint('lg');
   const routerInputMethod = useInputMethod();
   const playerSlot = usePlayerSlot({
     hideEditor: hideEditor ?? false,

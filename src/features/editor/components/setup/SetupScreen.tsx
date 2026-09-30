@@ -502,17 +502,26 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     .filter((v) => !!v && String(v).trim() !== '').length + (projectTags.length > 0 ? 1 : 0);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    // max-h-[100dvh] is load-bearing: h-full resolves against an ancestor that
+    // is taller than the window here, so the column came out 808px tall in a
+    // 700px viewport. Its inner scroller then saw scrollHeight === clientHeight,
+    // reported itself already at the bottom, and the last ~100px — the media
+    // panel's Change / Next buttons — were simply cut off with no way to reach
+    // them. dvh rather than vh so a collapsing mobile URL bar is accounted for.
+    <div className="flex flex-col h-full max-h-[100dvh] overflow-hidden">
       {/* Page header */}
-      <div className="shrink-0 px-6 pt-4 pb-3">
-        <div className="flex items-center justify-between gap-3 max-w-7xl mx-auto">
-          <div className="flex items-center gap-3">
+      <div className="shrink-0 px-4 sm:px-6 pt-4 pb-3">
+        {/* Wraps below sm: title, visibility and the primary action do not fit
+            on one 390px row, and the action was the part that fell off the
+            right edge — the one control the screen exists to reach. */}
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 min-w-0">
             <div className={`size-2 rounded-full bg-primary shrink-0 ${reducedMotion ? '' : 'animate-pulse'}`} />
             <h2 className="font-heading text-zinc-100" style={{ fontSize: 'clamp(1.05rem, 2vw, 1.3rem)' }}>
               {t('setup.newProjectTitle')}
             </h2>
           </div>
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-4 shrink-0 max-sm:w-full max-sm:justify-between">
             {/* Visibility lives up here rather than at the foot of the form: it
                 is a property of the project, not another metadata field, and
                 the form below needs the vertical room. */}
@@ -536,7 +545,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
             <Button
               onClick={handleProceed}
               disabled={!canContinue}
-              className="h-9 px-5 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 shadow-glow transition-all text-sm disabled:shadow-none"
+              className="h-9 coarse:h-11 px-5 shrink-0 bg-primary hover:bg-primary-dim text-zinc-950 font-bold rounded-xl gap-2 shadow-glow transition-all text-sm disabled:shadow-none"
             >
               {t('setup.startToSync')}
             </Button>
@@ -611,7 +620,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   variant="sync"
                   onClick={handleFetchSongInfo}
                   disabled={metaSearching || !songName.trim() || !songArtist.trim()}
-                  className="w-full h-10 gap-2 justify-center font-semibold rounded-xl"
+                  className="w-full h-10 coarse:h-12 gap-2 justify-center font-semibold rounded-xl"
                 >
                   {metaSearching ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
                   {t('setup.fetchInfo')}
@@ -723,7 +732,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   key={tab}
                   type="button"
                   onClick={() => setRightTab(tab)}
-                  className={`px-4 py-2 text-xs font-bold border-b-2 -mb-px transition-colors capitalize ${
+                  className={`px-4 py-2 coarse:py-3.5 text-xs font-bold border-b-2 -mb-px transition-colors capitalize ${
                     rightTab === tab
                       ? 'border-primary text-primary'
                       : 'border-transparent text-zinc-500 hover:text-zinc-300'
@@ -746,7 +755,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     <button
                       key={tab.id}
                       onClick={() => { setAudioState({ tab: tab.id }); if (ytCheck.state !== 'idle') clearYtCheck(); }}
-                      className={`flex-1 h-7 rounded-lg text-[11px] font-semibold transition-all ${
+                      className={`flex-1 h-7 coarse:h-11 rounded-lg text-[11px] font-semibold transition-all ${
                         audioTab === tab.id
                           ? 'bg-zinc-800 text-zinc-100 shadow-sm'
                           : 'text-zinc-500 hover:text-zinc-300'
@@ -790,13 +799,13 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                       <Button
                         variant="ghost"
                         onClick={() => { setAudioState({ ready: false, name: '', ytUrl: '', selectedUpload: null, source: null }); clearYtCheck(); }}
-                        className="h-8 px-3 text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 rounded-lg"
+                        className="h-8 coarse:h-11 px-3 text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 rounded-lg"
                       >
                         {t('setup.changeAudio')}
                       </Button>
                       <Button
                         onClick={() => setRightTab('lyrics')}
-                        className="h-8 px-4 text-xs font-semibold gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50"
+                        className="h-8 coarse:h-11 px-4 text-xs font-semibold gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 hover:border-primary/50"
                       >
                         {t('setup.nextLyrics')}
                         <Icon name="arrow_forward" size={12} />
@@ -896,7 +905,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     <Button
                       variant="ghost"
                       onClick={() => { setLyricsState({ parsedLines: null, fileName: '', text: '' }); }}
-                      className="h-8 px-3 text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 rounded-lg"
+                      className="h-8 coarse:h-11 px-3 text-xs text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 rounded-lg"
                     >
                       {t('setup.changeLyrics')}
                     </Button>
@@ -912,7 +921,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                         <button
                           key={tab.id}
                           onClick={() => setLyricsTab(tab.id)}
-                          className={`flex-1 h-7 rounded-lg text-[11px] font-semibold transition-all ${
+                          className={`flex-1 h-7 coarse:h-11 rounded-lg text-[11px] font-semibold transition-all ${
                             lyricsTab === tab.id
                               ? 'bg-zinc-800 text-zinc-100 shadow-sm'
                               : 'text-zinc-500 hover:text-zinc-300'
