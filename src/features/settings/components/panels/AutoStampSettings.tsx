@@ -56,7 +56,7 @@ export default function AutoStampSettings({ settings, updateSetting, searchTerm 
           value={settings.autoStamp?.applyMode ?? 'empty-only'}
           onValueChange={(val) => updateSetting('autoStamp.applyMode', val)}
         >
-          <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+          <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-zinc-900 border-zinc-700">

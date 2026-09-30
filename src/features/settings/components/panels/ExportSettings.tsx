@@ -38,7 +38,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
             value={settings.export?.lineEndings ?? 'lf'}
             onValueChange={(val) => handleLineEndingsChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -52,7 +52,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
             value={settings.export?.copyFormat ?? 'lrc'}
             onValueChange={(val) => handleCopyFormatChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -66,7 +66,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
             value={settings.export?.downloadFormat ?? 'lrc'}
             onValueChange={(val) => handleDownloadFormatChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -86,7 +86,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
             value={settings.export?.wordTimestampPrecision ?? 'hundredths'}
             onValueChange={(val) => handleWordTimestampPrecisionChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">
@@ -110,7 +110,7 @@ export default function ExportSettings({ settings, updateSetting, searchTerm }: 
             value={settings.export?.defaultFilenamePattern ?? 'fixed'}
             onValueChange={(val) => handleFilenamePatternChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 w-auto">
+            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-zinc-900 border-zinc-700">

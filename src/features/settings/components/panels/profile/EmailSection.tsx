@@ -84,14 +84,14 @@ export default function EmailSection() {
       {user?.pendingEmail ? (
         <div className="flex items-center gap-2 text-[11px] text-amber-500/90 ml-1">
           <span>{t('auth.verification.pendingNotice', { email: user.pendingEmail })}</span>
-          <button onClick={handleResend} disabled={resending} className="underline hover:no-underline font-semibold shrink-0">
+          <button onClick={handleResend} disabled={resending} className="relative underline hover:no-underline font-semibold shrink-0 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-2.5">
             {resending ? t('auth.verification.resendLoading') : t('auth.verification.resendButton')}
           </button>
         </div>
       ) : user?.email && !user?.isVerified ? (
         <div className="flex items-center gap-2 text-[11px] text-amber-500/90 ml-1">
           <span>{t('auth.verification.unverifiedNotice')}</span>
-          <button onClick={handleResend} disabled={resending} className="underline hover:no-underline font-semibold shrink-0">
+          <button onClick={handleResend} disabled={resending} className="relative underline hover:no-underline font-semibold shrink-0 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-2.5">
             {resending ? t('auth.verification.resendLoading') : t('auth.verification.resendButton')}
           </button>
         </div>

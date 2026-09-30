@@ -236,7 +236,7 @@ export default function SettingsPage() {
           variant="ghost"
           size="icon"
           onClick={() => guardedNavigate(-1)}
-          className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-full size-8 shrink-0"
+          className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-full size-8 coarse:size-11 shrink-0"
         >
           <Icon name="arrow_back" size={16} />
         </Button>
