@@ -47,6 +47,8 @@ interface UseEditorParams {
   clearHistory: () => void;
   /** Singer names recognized in raw-text `Name: lyric` prefixes (see utils/sections.ts). */
   singerRoster?: string[];
+  /** Drives handleMark's time source — see the comment above its body. */
+  isPlaying?: boolean;
 }
 
 const EMPTY_ROSTER: string[] = [];
@@ -65,6 +67,7 @@ export function useEditor({
   onImport,
   clearHistory,
   singerRoster = EMPTY_ROSTER,
+  isPlaying = false,
 }: UseEditorParams) {
   const { t } = useTranslation();
   const { settings, updateSetting, updateSettings } = useSettings();
@@ -202,12 +205,14 @@ export function useEditor({
   const selectedLinesRef = useRef(selectedLines);
   const activeWordIndexRef = useRef(0);
   const stampTargetRef = useRef('main');
+  const isPlayingRef = useRef(isPlaying);
   useEffect(() => {
     linesRef.current = lines;
     playbackPositionRef.current = playbackPosition;
     activeLineIndexRef.current = activeLineIndex;
     focusedTimestampRef.current = focusedTimestamp;
     selectedLinesRef.current = selectedLines;
+    isPlayingRef.current = isPlaying;
     activeWordIndexRef.current = activeWordIndex;
     stampTargetRef.current = stampTarget;
   });
@@ -616,7 +621,15 @@ export function useEditor({
     const currentLines = linesRef.current;
     const idx = activeLineIndexRef.current;
     if (idx >= currentLines.length) return;
-    const time = playerRef?.current?.getCurrentTime?.() ?? playbackPositionRef.current;
+    // Paused: use the exact value on screen. getCurrentTime() can disagree with
+    // playbackPosition by a rounding step even at rest, so marking could stamp a
+    // few hundredths off from the number the user is looking at. Playing: prefer
+    // the live read — playbackPosition lags behind it by however often the
+    // player reports time (polled for YouTube), and marking wants the freshest
+    // sample it can get, not the last tick.
+    const time = isPlayingRef.current
+      ? (playerRef?.current?.getCurrentTime?.() ?? playbackPositionRef.current)
+      : playbackPositionRef.current;
 
     if (settings.editor?.autoPauseOnMark) {
       playerRef?.current?.pause?.();

@@ -66,15 +66,25 @@ export default function MobileEditorLayout({
   const linesRef = useRef(lines);
   const activeLineIndexRef = useRef(activeLineIndex);
   const editorModeRef = useRef(editorMode);
+  const playbackPositionRef = useRef(playbackPosition);
+  const isPlayingRef = useRef(isPlaying);
   useLayoutEffect(() => { linesRef.current = lines; }, [lines]);
   useLayoutEffect(() => { activeLineIndexRef.current = activeLineIndex; }, [activeLineIndex]);
   useLayoutEffect(() => { editorModeRef.current = editorMode; }, [editorMode]);
+  useLayoutEffect(() => { playbackPositionRef.current = playbackPosition; }, [playbackPosition]);
+  useLayoutEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
 
   // Handle editor:mark events from the mobile mark button and the player's mark button
   useEffect(() => {
     if (!syncMode) return;
     const handler = () => {
-      const time = playerRef?.current?.getCurrentTime?.() ?? 0;
+      // Paused: match the number on screen exactly — getCurrentTime() can read a
+      // rounding step off from playbackPosition even at rest. Playing: prefer the
+      // live read, since playbackPosition only updates as often as the player
+      // reports time (polled for YouTube) and marking wants the freshest sample.
+      const time = isPlayingRef.current
+        ? (playerRef?.current?.getCurrentTime?.() ?? playbackPositionRef.current ?? 0)
+        : (playbackPositionRef.current ?? 0);
       const result = applyMark({
         lines: linesRef.current ?? [],
         activeLineIndex: activeLineIndexRef.current ?? 0,

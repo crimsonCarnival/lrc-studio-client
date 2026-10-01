@@ -104,6 +104,7 @@ interface EditorProps {
   hasMedia?: boolean;
   activepublicId?: string | null;
   onTogglePublicView?: () => void;
+  isPlaying?: boolean;
 }
 
 export default function Editor({
@@ -144,6 +145,7 @@ export default function Editor({
   hasMedia,
   activepublicId,
   onTogglePublicView,
+  isPlaying,
 }: EditorProps) {
   "use no memo";
   const { t } = useTranslation();
@@ -247,6 +249,7 @@ export default function Editor({
     onImport,
     clearHistory,
     singerRoster: combinedSingers,
+    isPlaying,
   });
 
   // Register teardown / post-save hooks

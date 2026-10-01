@@ -500,7 +500,10 @@ export default function ImmersiveLyricsDisplay({
 
   const hasSyncedLines = useMemo(() => lines.some((l) => l.timestamp != null), [lines]);
 
-  // Auto-scroll: keep active line at ~20% from top of container
+  // Auto-scroll: hold the active line in the middle of the container, matching
+  // the editor and preview panes (both centre via the virtualizer). This used
+  // to anchor at 20% from the top, which put the active line high on screen and
+  // left the last lines unreachable as the container ran out of scroll.
   useEffect(() => {
     if (currentIndex === lastScrolledIndex.current) return;
     if (currentIndex < 0 || !containerRef.current || !activeRef.current) return;
@@ -511,7 +514,7 @@ export default function ImmersiveLyricsDisplay({
     const active = activeRef.current;
 
     const raf = requestAnimationFrame(() => {
-      const target = active.offsetTop - container.clientHeight * 0.20 + active.clientHeight / 2;
+      const target = active.offsetTop - container.clientHeight / 2 + active.clientHeight / 2;
       container.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
     });
 
@@ -617,8 +620,10 @@ export default function ImmersiveLyricsDisplay({
       >
         <style>{`.immersive-scroll::-webkit-scrollbar { display: none; }`}</style>
 
-        {/* Top/bottom padding so first & last lines can reach 20% position */}
-        <div className="px-6 sm:px-10 lg:px-14" style={{ paddingTop: '20vh', paddingBottom: '35vh' }}>
+        {/* Half a screen at each end so the first and last lines can both reach
+            the centre. The old 20vh/35vh pair was sized for the 20% anchor and
+            left the closing lines short of it — the scroll simply ran out. */}
+        <div className="px-6 sm:px-10 lg:px-14" style={{ paddingTop: '50dvh', paddingBottom: '50dvh' }}>
           {lines.map((line, i) => {
             const isActive = i === currentIndex;
             const dist = currentIndex >= 0 ? Math.abs(i - currentIndex) : null;

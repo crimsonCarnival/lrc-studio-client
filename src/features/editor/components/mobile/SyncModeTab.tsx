@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Icon } from '@/shared/ui/Icon';
 import { EditorLineContextMenu } from '@features/editor/components/line/EditorLineContextMenu';
 import type { EditorLine } from '@features/editor/services/editor.service';
 
@@ -66,34 +67,33 @@ export default function SyncModeTab({
         </div>
       ) : (
         <>
-          {/* Waveform area - placeholder for wavesurfer.js */}
+          {/* The mark surface. This used to be a 160px box captioned "waveform
+              preview", but no waveform is ever drawn here — not for YouTube,
+              which has none, and not for local audio either, since this tab
+              never mounted WaveSurfer. It advertised a view that did not exist
+              and cost a third of the screen. It now shows the thing that
+              actually matters while syncing — the running time — and is itself
+              the tap target. */}
           <button
             type="button"
             data-testid="waveform-area"
             onClick={handleWaveformTap}
-            className="w-full min-h-44 h-40 bg-gradient-to-b from-zinc-800 to-zinc-900 rounded-lg border border-zinc-700/50 flex items-center justify-center cursor-pointer hover:border-zinc-600/50 transition-colors"
+            className="w-full rounded-xl border border-zinc-700/50 bg-gradient-to-b from-zinc-800/80 to-zinc-900 px-4 py-5 flex flex-col items-center justify-center gap-1 active:scale-[0.99] active:border-primary/60 transition-all [-webkit-touch-callout:none]"
           >
-            <div className="text-center text-zinc-400">
-              <div className="text-sm font-medium mb-2">{t('editor.waveformPreview')}</div>
-              <div className="text-xs text-zinc-500">{t('editor.tapToMarkTimestamp')}</div>
-            </div>
-          </button>
-
-          {/* Current timestamp display with duration */}
-          <div className="flex flex-col items-center justify-center gap-2">
             <div
               data-testid="current-time-display"
-              className="text-3xl font-mono font-bold text-primary tracking-wider"
+              className="text-4xl font-mono font-bold text-primary tracking-wider tabular-nums leading-none"
             >
               {currentTimestamp}
             </div>
-            <div
-              data-testid="duration-display"
-              className="text-center text-sm text-zinc-400"
-            >
+            <div data-testid="duration-display" className="text-sm text-zinc-400 tabular-nums">
               / {durationFormatted}
             </div>
-          </div>
+            <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-zinc-400">
+              <Icon name="ads_click" size={14} />
+              {t('editor.tapToMarkTimestamp')}
+            </div>
+          </button>
 
           {/* Lines overview with sync status */}
           <div className="flex flex-col gap-2">
