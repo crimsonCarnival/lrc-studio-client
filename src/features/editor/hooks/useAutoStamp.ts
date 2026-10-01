@@ -103,7 +103,16 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
           conf.set(id, { confidence: r.confidence, status: r.status });
           return withId;
         }
-        if (applyMode === 'empty-only' && line.timestamp != null) return line;
+        // In Words mode "already stamped" has to mean the WORDS are stamped, not
+        // the line. The normal workflow is: rough-sync the line first, switch to
+        // Words mode, then run Auto Stamp to fill per-word times — at that point
+        // every line already has line.timestamp, so gating on it here skipped
+        // every line and merged no words at all. Auto Stamp looked like it did
+        // nothing for the entire mode.
+        const alreadyStamped = isWordsMode
+          ? (line.words?.some((w) => w.time != null) ?? false)
+          : line.timestamp != null;
+        if (applyMode === 'empty-only' && alreadyStamped) return line;
         const [id, withId] = ensureId(line);
         line = withId;
         conf.set(id, { confidence: r.confidence, status: r.status });
@@ -119,11 +128,17 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
           }));
         }
 
+        // empty-only's promise is "fill what's missing, keep what's set" — in
+        // Words mode that has to hold at the line level too. A line that was
+        // already rough-synced (the normal pre-condition for running this at
+        // all) must not have ITS timestamp silently replaced by the ASR's own
+        // just because its words were the part that was actually missing.
+        const keepOwnTiming = isWordsMode && applyMode === 'empty-only' && line.timestamp != null;
+
         return {
           ...line,
-          timestamp: r.timestamp,
+          ...(keepOwnTiming ? {} : { timestamp: r.timestamp, ...(r.endTime !== null ? { endTime: r.endTime } : {}) }),
           source: 'asr' as const,
-          ...(r.endTime !== null ? { endTime: r.endTime } : {}),
           ...(mergedWords !== undefined ? { words: mergedWords } : {}),
         };
       });
