@@ -124,9 +124,13 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   const lineSingerIdx = !isDuet && (line.singers?.length ?? 0) >= 1 ? singerColorIndex(line.singers![0], songSingers) : null;
   const lineSingerHex = lineSingerIdx !== null ? singerColors[lineSingerIdx] : null;
 
-  let color = isActive ? fg : dist === 1 ? nearer : faded;
-  if (lineSingerHex) {
-    color = isActive ? lineSingerHex : `${lineSingerHex}99`;
+  // Active is always white — palette.fg (cover-art accent) and singer colors
+  // only apply to inactive lines, where they're the point: telling lines apart
+  // at a glance. On the active line they fought the karaoke fill, which is
+  // already the color doing the work there.
+  let color = isActive ? '#fff' : dist === 1 ? nearer : faded;
+  if (lineSingerHex && !isActive) {
+    color = `${lineSingerHex}99`;
   }
 
   const isWithinWindow = isActive
