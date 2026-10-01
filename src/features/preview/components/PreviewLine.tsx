@@ -405,17 +405,17 @@ interface MainTrackProps {
 }
 
 // ——— Render main text track with karaoke fill ———
-// Fill effect is applied when word-level timestamps exist or in words mode.
-function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying: _isPlaying, playbackSpeed: _playbackSpeed, hasReadings, roster, singerColors, getCustomColorStyle, editorMode }: MainTrackProps) {
+// Fill effect requires real per-word timestamps — never synthesized from plain
+// text. It used to also activate for any Words-mode line with a line-level
+// timestamp, even before a single word was stamped: the words were split from
+// line.text with no `.time` on any of them, so the fill interpolated blindly
+// across the whole line as if evenly spaced, which is not what was recorded.
+function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying: _isPlaying, playbackSpeed: _playbackSpeed, hasReadings, roster, singerColors, getCustomColorStyle, editorMode: _editorMode }: MainTrackProps) {
   const fillTrack = settings.editor?.display?.karaokeFillTrack ?? 'main';
   const skipMainFill = isActive && fillTrack === 'secondary';
 
-  const isWordsMode = editorMode === 'words';
-  let words = line.words || [];
-  if (isWordsMode && words.length === 0 && line.text) {
-    words = line.text.trim().split(/\s+/).map((w) => ({ word: w }));
-  }
-  const effectiveHasWordTimestamps = (hasWordTimestamps || (isWordsMode && line.timestamp != null && words.length > 0)) && !skipMainFill;
+  const words = line.words || [];
+  const effectiveHasWordTimestamps = hasWordTimestamps && !skipMainFill;
   const highlightMode = settings.editor?.display?.activeHighlight;
   // Active = white (fill effect provides green); past/completed = green; future = dim
   const activeClass = `${activeFontSizes[sizeOption]} font-bold font-lyrics text-zinc-100 ${highlightMode === 'glow' ? 'glow-line' : ''} ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`;
