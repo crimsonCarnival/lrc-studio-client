@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
+import { useSettings } from '@/features/settings/useSettings';
 
 interface Palette {
   fg?: string;
@@ -73,6 +74,8 @@ interface ImmersiveLineProps {
   songSingers?: string[];
   singerColors?: string[];
   alignment?: 'left' | 'center' | 'right';
+  /** Settings.editor.display.activeHighlight — the same preference PreviewLine reads. */
+  activeHighlight?: string;
 }
 
 // ── Single lyric line ────────────────────────────────────────
@@ -92,6 +95,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
     songSingers = [],
     singerColors = [],
     alignment = 'left',
+    activeHighlight,
   },
   ref,
 ) {
@@ -118,6 +122,14 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   const effectiveTimestamp = line.timestamp ?? line.adLibOf;
   const isAdLibActive = isAdLib && effectiveTimestamp != null && playbackPosition >= effectiveTimestamp && (segmentEnd == null || playbackPosition < segmentEnd);
   const isActive = dist === 0 || isAdLibActive;
+
+  // The viewer's own activeHighlight preference (same setting PreviewLine
+  // reads) — this component used to ignore it entirely, so a public project
+  // view never matched what the viewer picked for their own editor/preview.
+  // 'glow' and 'zoom' decorate the active line; 'dim' pushes inactive lines
+  // further back than the default distance fade; 'color' is today's baseline.
+  const isDimMode = activeHighlight === 'dim';
+  const effectiveOpacity = !isActive && isDimMode ? opacity * 0.6 : opacity;
 
   // Singer color attribution
   const isDuet = line.mode === 'duet' && (line.singers?.length ?? 0) >= 2;
@@ -186,13 +198,16 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
       onClick={clickable ? onClick : undefined}
       className="font-lyrics animate-preview-line-in"
       style={{
-        opacity: isAdLib && !isActive ? opacity * 0.5 : opacity,
-        transform: `scale(${isAdLib ? 0.9 : 1})`,
-        transition: 'opacity 0.4s ease, transform 0.4s ease, color 0.4s ease',
+        opacity: isAdLib && !isActive ? effectiveOpacity * 0.5 : effectiveOpacity,
+        transform: `scale(${(isAdLib ? 0.9 : 1) * (isActive && activeHighlight === 'zoom' ? 1.05 : 1)})`,
+        transition: 'opacity 0.4s ease, transform 0.4s ease, color 0.4s ease, text-shadow 0.4s ease',
         animationDelay: staggerDelay,
         cursor: clickable ? 'pointer' : 'default',
         textAlign: alignment,
         color,
+        textShadow: isActive && activeHighlight === 'glow'
+          ? '0 0 20px color-mix(in srgb, var(--color-primary) 50%, transparent)'
+          : undefined,
         fontWeight: weight,
         fontSize: `calc(1.25rem * ${sizeFactor})`,
         paddingTop: '0.65em',
@@ -464,6 +479,12 @@ export default function ImmersiveLyricsDisplay({
   initialAlignment,
 }: ImmersiveLyricsDisplayProps) {
   const { t } = useTranslation();
+  // The viewer's own preference — reads from SettingsContext (localStorage for a
+  // guest, synced for a signed-in viewer), never the project owner's. This is
+  // the public view, so "whoever is looking at it" is the only sensible owner
+  // of a display preference.
+  const { settings } = useSettings();
+  const activeHighlight = settings.editor?.display?.activeHighlight;
   const containerRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLDivElement>(null);
   const lastScrolledIndex = useRef(-2);
@@ -665,6 +686,7 @@ export default function ImmersiveLyricsDisplay({
                 songSingers={songSingers}
                 singerColors={singerColors}
                 alignment={alignment}
+                activeHighlight={activeHighlight}
               />
             );
           })}
