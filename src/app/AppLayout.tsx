@@ -98,6 +98,13 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     : undefined;
 
   const isSetupPage = location.pathname === '/project/new';
+  // Same route set AppHeader treats as the editor (its own copy of this regex).
+  // The editor builds its own clamped-to-viewport layout below lg (tabs pinned,
+  // content scrolls internally via h-full -> flex-1 -> overflow-y-auto), which
+  // only works if something upstream actually clamps to the viewport. Every
+  // other route relies on min-h-screen so the page scrolls normally under the
+  // fixed header/nav; only the editor needs the dvh clamp this early.
+  const isEditorPage = /^\/project\/(local|new|[^/]+\/edit)$/.test(location.pathname);
 
   const { isOpen: isTourOpen, start: startTour, close: closeTour, startIfFirstVisit } = useGuidedTour();
 
@@ -188,7 +195,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         syncMode={syncMode}
 
       >
-        <div className="min-h-screen lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col">
+        <div className={`${isEditorPage ? 'h-dvh' : 'min-h-screen'} lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col`}>
           <AppBackground />
 
           {/* Drag overlay */}
