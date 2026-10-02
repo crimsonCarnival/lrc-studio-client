@@ -47,6 +47,7 @@ const KNOWN_ERRORS = new Set([
   'asr_network',
   'asr_empty_transcript',
   'asr_unsupported_audio',
+  'asr_youtube_disabled',
   'asr_youtube_blocked',
   'asr_youtube_unavailable',
   'asr_youtube_too_long',

@@ -308,6 +308,7 @@ export default {
       asr_network: "Error de red durante la transcripción",
       asr_empty_transcript: "No se detectó voz en el audio",
       asr_unsupported_audio: "Este archivo de audio no es compatible",
+      asr_youtube_disabled: "Auto-marcar no admite fuentes de YouTube — sube el archivo de audio en su lugar",
       asr_youtube_blocked: "YouTube bloqueó la solicitud — sube el archivo de audio en su lugar",
       asr_youtube_unavailable: "Este video de YouTube no está disponible (privado, eliminado o restringido por región)",
       asr_youtube_too_long: "El video es demasiado largo para Auto Stamp (máximo 20 minutos)",

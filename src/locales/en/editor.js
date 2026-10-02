@@ -308,6 +308,7 @@ export default {
       asr_network: "Network error during transcription",
       asr_empty_transcript: "No speech detected in the audio",
       asr_unsupported_audio: "This audio file is not supported",
+      asr_youtube_disabled: "Auto Stamp doesn't support YouTube sources — upload the audio file instead",
       asr_youtube_blocked: "YouTube blocked the request — upload the audio file instead",
       asr_youtube_unavailable: "This YouTube video is unavailable (private, removed, or region-locked)",
       asr_youtube_too_long: "Video is too long for Auto Stamp (20 minutes max)",
