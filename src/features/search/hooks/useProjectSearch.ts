@@ -1,5 +1,10 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState } from 'react';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { gqlRequest } from '@/app/graphql.client';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
+
+/** Search results change slowly; going back to a recent search should not refetch. */
+export const SEARCH_STALE_MS = 30_000;
 import type { SearchResult, Project, SearchSort } from '@/types';
 
 const SEARCH_QUERY = /* GraphQL */ `
@@ -31,54 +36,31 @@ const SEARCH_QUERY = /* GraphQL */ `
   }
 `;
 
+const NO_RESULTS: Project[] = [];
+
 export function useProjectSearch() {
-  const [query, setQuery]     = useState('');
-  const [sortBy, setSortBy]   = useState<SearchSort>('RELEVANCE');
-  const [results, setResults] = useState<Project[]>([]);
-  const [total, setTotal]     = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState<unknown>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Monotonic id of the latest search; responses from superseded searches are dropped
-  // so a slow earlier request can't overwrite results for the current query.
-  const requestIdRef = useRef(0);
+  const [query, setQuery]   = useState('');
+  const [sortBy, setSortBy] = useState<SearchSort>('RELEVANCE');
+  // The request follows the settled text; a sort change applies immediately.
+  const term = useDebouncedValue(query, 300).trim();
 
-  const search = useCallback(async (q: string, sort: SearchSort = 'RELEVANCE') => {
-    const requestId = ++requestIdRef.current;
-    if (!q.trim()) {
-      setResults([]);
-      setTotal(0);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await gqlRequest<{ searchProjects: SearchResult }>(SEARCH_QUERY, { query: q, sortBy: sort, offset: 0, limit: 20 });
-      if (requestId !== requestIdRef.current) return;
-      setResults(data.searchProjects.projects);
-      setTotal(data.searchProjects.total);
-    } catch (err) {
-      if (requestId === requestIdRef.current) setError(err);
-    } finally {
-      if (requestId === requestIdRef.current) setLoading(false);
-    }
-  }, []);
+  // Each (term, sort) is its own cache entry, so a slow response for an earlier
+  // search can never land on the current one, and retyping a recent search is instant.
+  const search = useQuery({
+    queryKey: ['search', 'projects', term, sortBy],
+    queryFn: async () => (await gqlRequest<{ searchProjects: SearchResult }>(SEARCH_QUERY, { query: term, sortBy, offset: 0, limit: 20 })).searchProjects,
+    enabled: !!term,
+    staleTime: SEARCH_STALE_MS,
+    // Keep the previous results on screen while the next search loads.
+    placeholderData: keepPreviousData,
+  });
 
-  const handleQueryChange = useCallback((q: string) => {
-    setQuery(q);
-    // Enter the loading state during the debounce window so consumers don't flash an
-    // empty "no results" state before the request is even sent.
-    if (q.trim()) setLoading(true);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => search(q, sortBy), 300);
-  }, [search, sortBy]);
+  const typed = query.trim();
+  const results = typed && term ? search.data?.projects ?? NO_RESULTS : NO_RESULTS;
+  const total = typed && term ? search.data?.total ?? 0 : 0;
+  // Also loading during the debounce window, so consumers don't flash an empty
+  // "no results" state before the request is even sent.
+  const loading = !!typed && (typed !== term || search.isFetching);
 
-  const handleSortChange = useCallback((sort: SearchSort) => {
-    setSortBy(sort);
-    if (query.trim()) search(query, sort);
-  }, [search, query]);
-
-  return { query, sortBy, results, total, loading, error, handleQueryChange, handleSortChange };
+  return { query, sortBy, results, total, loading, error: search.error, handleQueryChange: setQuery, handleSortChange: setSortBy };
 }

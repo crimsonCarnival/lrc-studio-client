@@ -1,4 +1,5 @@
 import { gqlRequest } from '@/app/graphql.client';
+import { projectsChanged, projectRemoved } from '@/app/cache-sync';
 import type { Project, CreateProjectInput, UpdateProjectInput } from '@/types';
 
 const GET_PROJECTS = /* GraphQL */ `
@@ -341,6 +342,7 @@ interface RequestOpts {
 export const projectsService = {
   async create(input: CreateProjectInput): Promise<Project> {
     const data = await gqlRequest<{ createProject: Project }>(CREATE_PROJECT, { input: normalizeInput(input) });
+    projectsChanged();
     return data.createProject;
   },
 
@@ -356,6 +358,7 @@ export const projectsService = {
 
   async update(id: string, input: UpdateProjectInput, { signal, headers }: RequestOpts = {}): Promise<{ project: Project }> {
     const data = await gqlRequest<{ updateProject: Project }>(UPDATE_PROJECT, { id, input: normalizeInput(input) }, { signal, headers });
+    projectsChanged();
     return { project: data.updateProject };
   },
 
@@ -366,6 +369,7 @@ export const projectsService = {
 
   async remove(id: string): Promise<boolean> {
     const data = await gqlRequest<{ deleteProject: boolean }>(DELETE_PROJECT, { id });
+    if (data.deleteProject) projectRemoved(id);
     return data.deleteProject;
   },
 
@@ -376,16 +380,19 @@ export const projectsService = {
 
   async clone(id: string): Promise<Project> {
     const data = await gqlRequest<{ cloneProject: Project }>(CLONE_PROJECT, { id });
+    projectsChanged();
     return data.cloneProject;
   },
 
   async star(id: string): Promise<Project> {
     const data = await gqlRequest<{ starProject: Project }>(STAR_PROJECT, { id });
+    projectsChanged();
     return data.starProject;
   },
 
   async unstar(id: string): Promise<Project> {
     const data = await gqlRequest<{ unstarProject: Project }>(UNSTAR_PROJECT, { id });
+    projectsChanged();
     return data.unstarProject;
   },
 

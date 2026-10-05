@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useRef } from 'react';
+import { useCachedList } from '@/shared/hooks/useCachedList';
 import type { ChangeEvent, KeyboardEvent, MouseEvent, SyntheticEvent } from 'react';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useTranslation } from 'react-i18next';
@@ -44,9 +45,10 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
   const { t, i18n } = useTranslation();
   const { settings } = useSettings();
   const timezone = settings.advanced?.timezone;
-  const [items, setItems] = useState<Upload[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { items, loading, error, reload: fetchUploads, setItems } = useCachedList<Upload>(
+    ['uploads', 'mine'],
+    () => uploadsApi.listMedia() as Promise<Upload[]>,
+  );
   const [requestConfirm, confirmModal] = useConfirm();
   const { dt } = useDynamicTranslation();
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -54,21 +56,6 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
   const [savingTitle, setSavingTitle] = useState(false);
   const editInputRef = useRef<HTMLInputElement>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const fetchUploads = useCallback(async () => {
-    setError(false);
-    try {
-      const uploads = await uploadsApi.listMedia() as Upload[];
-      setItems(uploads || []);
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { fetchUploads(); }, [fetchUploads]);
 
   const handleDelete = (e: MouseEvent, uploadId: string, title?: string) => {
     e.stopPropagation();

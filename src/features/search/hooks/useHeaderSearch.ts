@@ -1,6 +1,12 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { gqlRequest } from '@/app/graphql.client';
 import type { SearchResult, FollowUser, Project } from '@/types';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
+import { SEARCH_STALE_MS } from './useProjectSearch';
+
+const NO_PROJECTS: Project[] = [];
+const NO_USERS: FollowUser[] = [];
 
 const HEADER_SEARCH_QUERY = /* GraphQL */ `
   query HeaderSearch($query: String!, $pLimit: Int, $uLimit: Int) {
@@ -27,53 +33,30 @@ const HEADER_SEARCH_QUERY = /* GraphQL */ `
 `;
 
 export function useHeaderSearch({ projectLimit = 5, userLimit = 3 }: { projectLimit?: number; userLimit?: number } = {}) {
-  const [query, setQuery]       = useState('');
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [users, setUsers]       = useState<FollowUser[]>([]);
-  const [total, setTotal]       = useState(0);
-  const [loading, setLoading]   = useState(false);
-  const debounceRef             = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [query, setQuery] = useState('');
+  const term = useDebouncedValue(query, 300).trim();
 
-  const search = useCallback(async (q: string) => {
-    if (!q.trim()) {
-      setProjects([]);
-      setUsers([]);
-      setTotal(0);
-      return;
-    }
-    setLoading(true);
-    try {
-      const data = await gqlRequest<{ searchProjects: SearchResult; searchUsers: FollowUser[] }>(HEADER_SEARCH_QUERY, {
-        query: q,
-        pLimit: projectLimit,
-        uLimit: userLimit,
-      });
-      setProjects(data.searchProjects.projects);
-      setTotal(data.searchProjects.total);
-      setUsers(data.searchUsers);
-    } catch {
-      // silently clear on error — full page search shows errors
-      setProjects([]);
-      setUsers([]);
-      setTotal(0);
-    } finally {
-      setLoading(false);
-    }
-  }, [projectLimit, userLimit]);
+  const search = useQuery({
+    queryKey: ['search', 'header', term, projectLimit, userLimit],
+    queryFn: () => gqlRequest<{ searchProjects: SearchResult; searchUsers: FollowUser[] }>(HEADER_SEARCH_QUERY, {
+      query: term,
+      pLimit: projectLimit,
+      uLimit: userLimit,
+    }),
+    enabled: !!term,
+    staleTime: SEARCH_STALE_MS,
+    placeholderData: keepPreviousData,
+  });
 
-  const handleQueryChange = useCallback((q: string) => {
-    setQuery(q);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => search(q), 300);
-  }, [search]);
+  // Empty while the box is empty and on error — the full search page shows errors.
+  const data = query.trim() && term && !search.isError ? search.data : undefined;
+  const projects = data?.searchProjects.projects ?? NO_PROJECTS;
+  const users = data?.searchUsers ?? NO_USERS;
+  const total = data?.searchProjects.total ?? 0;
+  const loading = !!term && search.isFetching;
 
-  const clear = useCallback(() => {
-    setQuery('');
-    setProjects([]);
-    setUsers([]);
-    setTotal(0);
-    clearTimeout(debounceRef.current);
-  }, []);
+  const clear = useCallback(() => setQuery(''), []);
+  const handleQueryChange = setQuery;
 
   const hasResults = projects.length > 0 || users.length > 0;
 

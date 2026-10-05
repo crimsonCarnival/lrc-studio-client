@@ -11,7 +11,8 @@ import { Icon } from '@/shared/ui/Icon';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
-import { getPublicProfile, followUser, unfollowUser, blockUser, unblockUser } from './profile.service';
+import { followUser, unfollowUser, blockUser, unblockUser } from './profile.service';
+import { useProfile } from './profile.queries';
 import { useSuggestedUsers } from '@/features/explore/hooks/useExplore';
 import { FollowModal } from './FollowModal';
 import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
@@ -208,14 +209,9 @@ export default function ProfilePage() {
   const { accountName } = useParams();
   const { user } = useAuthContext();
 
-  const [profile, setProfile] = useState<PublicUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState('projects');
 
-  const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
-  const [isBlocked, setIsBlocked] = useState(false);
   const [blockLoading, setBlockLoading] = useState(false);
   const [followModal, setFollowModal] = useState<'FOLLOWERS' | 'FOLLOWING' | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -229,6 +225,20 @@ export default function ProfilePage() {
   // counts, country/last-seen per privacy settings). Rendering only.
   const viewAsOthers = isSelf && searchParams.get('view') === 'public';
   const isOwner = isSelf && !viewAsOthers;
+
+  // Toggling the preview switches cache key, so each mode keeps its own copy.
+  const { profile, loading, notFound, setProfile } = useProfile(accountName, viewAsOthers);
+  // Follow/block state lives on the cached profile, so it cannot drift from it.
+  const isFollowing = profile?.isFollowedByMe ?? false;
+  const isBlocked = profile?.isBlockedByMe ?? false;
+  const setIsFollowing = useCallback(
+    (value: boolean) => setProfile(prev => prev ? { ...prev, isFollowedByMe: value } : prev),
+    [setProfile],
+  );
+  const setIsBlocked = useCallback(
+    (value: boolean) => setProfile(prev => prev ? { ...prev, isBlockedByMe: value } : prev),
+    [setProfile],
+  );
 
   const setViewAsOthers = useCallback((on: boolean) => {
     setSearchParams(prev => {
@@ -247,36 +257,13 @@ export default function ProfilePage() {
   }, [location.pathname, accountName, navigate]);
 
   useEffect(() => {
-    if (!accountName) {
-      if (user?.accountName) {
-        navigate(`/profile/${user.accountName}`, { replace: true });
-      } else {
-        navigate('/', { replace: true });
-      }
-      return;
+    if (accountName) return;
+    if (user?.accountName) {
+      navigate(`/profile/${user.accountName}`, { replace: true });
+    } else {
+      navigate('/', { replace: true });
     }
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    setNotFound(false);
-
-    // Toggling the preview refetches; ignore a stale response from the other mode.
-    let cancelled = false;
-    getPublicProfile(accountName, viewAsOthers)
-      .then((data) => {
-        if (cancelled) return;
-        if (!data) {
-          setNotFound(true);
-        } else {
-          setProfile(data);
-          setIsFollowing(data.isFollowedByMe ?? false);
-          setIsBlocked(data.isBlockedByMe ?? false);
-        }
-      })
-      .catch(() => { if (!cancelled) setNotFound(true); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [accountName, user?.accountName, navigate, viewAsOthers]);
+  }, [accountName, user?.accountName, navigate]);
 
   // Live-bump follower count on your own profile when someone else follows you.
   useEffect(() => {
@@ -290,7 +277,7 @@ export default function ProfilePage() {
 
     socket.on('follow:new', onFollowNew);
     return () => { socket.off('follow:new', onFollowNew); };
-  }, [isSelf, user, t]);
+  }, [isSelf, user, t, setProfile]);
 
   useEffect(() => {
     if (!profile || !user || isSelf || isFollowing) return;
@@ -303,7 +290,7 @@ export default function ProfilePage() {
       .then(() => setIsFollowing(true))
       .catch(() => { })
       .finally(() => setFollowLoading(false));
-  }, [profile, user, isSelf, isFollowing, searchParams, setSearchParams]);
+  }, [profile, user, isSelf, isFollowing, searchParams, setSearchParams, setIsFollowing]);
 
   const handleFollow = useCallback(async () => {
     if (!user) {
@@ -319,7 +306,7 @@ export default function ProfilePage() {
       toast.error(t('profile.followError'));
     }
     setFollowLoading(false);
-  }, [user, accountName, navigate, t]);
+  }, [user, accountName, navigate, t, setIsFollowing, setProfile]);
 
   const handleUnfollow = useCallback(async () => {
     setFollowLoading(true);
@@ -331,7 +318,7 @@ export default function ProfilePage() {
       toast.error(t('profile.unfollowError'));
     }
     setFollowLoading(false);
-  }, [accountName, t]);
+  }, [accountName, t, setIsFollowing, setProfile]);
 
   const handleBlock = useCallback(async () => {
     if (!user) {
@@ -350,7 +337,7 @@ export default function ProfilePage() {
       toast.error(t('profile.blockError'));
     }
     setBlockLoading(false);
-  }, [user, accountName, navigate, t]);
+  }, [user, accountName, navigate, t, setIsBlocked, setIsFollowing, setProfile]);
 
   const handleUnblock = useCallback(async () => {
     setBlockLoading(true);
@@ -362,7 +349,7 @@ export default function ProfilePage() {
       toast.error(t('profile.unblockError'));
     }
     setBlockLoading(false);
-  }, [accountName, t]);
+  }, [accountName, t, setIsBlocked, setProfile]);
 
   const handleDeleteProject = useCallback((project: Project) => {
     requestConfirm(
@@ -382,7 +369,7 @@ export default function ProfilePage() {
       },
       { title: t('confirm.deleteProjectTitle'), variant: 'danger' }
     );
-  }, [requestConfirm, t]);
+  }, [requestConfirm, t, setProfile]);
 
   const handleEditProject = useCallback((project: Project) => {
     setEditingProject(project);

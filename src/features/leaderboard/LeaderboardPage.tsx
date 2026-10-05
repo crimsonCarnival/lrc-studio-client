@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
@@ -102,39 +103,29 @@ function UserAvatar({ avatarUrl, name, ring }: { avatarUrl?: string; name?: stri
 export default function LeaderboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [users, setUsers] = useState<LeaderEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-  const [error, setError] = useState(false);
   const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'all'>('all');
 
   const PAGE_SIZE = 25;
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    getLeaderboard(PAGE_SIZE, 0)
-      .then((data) => {
-        const d = data as { users: LeaderEntry[]; hasMore: boolean };
-        setUsers(d.users);
-        setHasMore(d.hasMore);
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const loadMore = () => {
-    setLoadingMore(true);
-    getLeaderboard(PAGE_SIZE, users.length)
-      .then((data) => {
-        const d = data as { users: LeaderEntry[]; hasMore: boolean };
-        setUsers(prev => [...prev, ...d.users]);
-        setHasMore(d.hasMore);
-      })
-      .catch(() => { })
-      .finally(() => setLoadingMore(false));
-  };
+  const query = useInfiniteQuery({
+    queryKey: ['leaderboard', PAGE_SIZE],
+    // Rank scores are recomputed hourly on the server.
+    staleTime: 60_000,
+    queryFn: ({ pageParam }) => getLeaderboard(PAGE_SIZE, pageParam),
+    initialPageParam: 0,
+    // The server pages by offset, so the cursor is the count loaded so far.
+    getNextPageParam: (lastPage, pages) =>
+      lastPage.hasMore ? pages.reduce((n, page) => n + page.users.length, 0) : undefined,
+  });
+  const users = useMemo(
+    () => (query.data?.pages.flatMap((page) => page.users) ?? []) as LeaderEntry[],
+    [query.data],
+  );
+  const loading = query.isPending;
+  const error = query.isError;
+  const hasMore = query.hasNextPage;
+  const loadingMore = query.isFetchingNextPage;
+  const loadMore = () => { void query.fetchNextPage(); };
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">

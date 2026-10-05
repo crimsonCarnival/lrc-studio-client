@@ -1,4 +1,8 @@
 import { gqlRequest } from '@/app/graphql.client';
+import { playlistsChanged } from '@/app/cache-sync';
+
+/** Pass-through for a successful playlist write: tells the cache, returns the result. */
+const changed = <T>(value: T): T => { playlistsChanged(); return value; };
 import type { Playlist, CreatePlaylistInput, UpdatePlaylistInput } from '@/types';
 
 // Shared selection as a real GraphQL fragment. Defining it as a fragment (not a
@@ -93,19 +97,19 @@ export const getPlaylist = (id: string): Promise<Playlist | null> =>
   gqlRequest<{ playlist: Playlist | null }>(GET_PLAYLIST + PLAYLIST_FIELDS, { id }).then((d) => d?.playlist ?? null);
 
 export const createPlaylist = (input: CreatePlaylistInput): Promise<Playlist | undefined> =>
-  gqlRequest<{ createPlaylist: Playlist }>(CREATE_PLAYLIST + PLAYLIST_FIELDS, { input }).then((d) => d?.createPlaylist);
+  gqlRequest<{ createPlaylist: Playlist }>(CREATE_PLAYLIST + PLAYLIST_FIELDS, { input }).then((d) => d?.createPlaylist).then(changed);
 
 export const updatePlaylist = (id: string, input: UpdatePlaylistInput): Promise<Playlist | undefined> =>
-  gqlRequest<{ updatePlaylist: Playlist }>(UPDATE_PLAYLIST + PLAYLIST_FIELDS, { id, input }).then((d) => d?.updatePlaylist);
+  gqlRequest<{ updatePlaylist: Playlist }>(UPDATE_PLAYLIST + PLAYLIST_FIELDS, { id, input }).then((d) => d?.updatePlaylist).then(changed);
 
 export const deletePlaylist = (id: string): Promise<boolean | undefined> =>
-  gqlRequest<{ deletePlaylist: boolean }>(DELETE_PLAYLIST, { id }).then((d) => d?.deletePlaylist);
+  gqlRequest<{ deletePlaylist: boolean }>(DELETE_PLAYLIST, { id }).then((d) => d?.deletePlaylist).then(changed);
 
 export const addProjectToPlaylist = (playlistId: string, publicId: string): Promise<Playlist | undefined> =>
-  gqlRequest<{ addProjectToPlaylist: Playlist }>(ADD_PROJECT_TO_PLAYLIST + PLAYLIST_FIELDS, { playlistId, publicId }).then((d) => d?.addProjectToPlaylist);
+  gqlRequest<{ addProjectToPlaylist: Playlist }>(ADD_PROJECT_TO_PLAYLIST + PLAYLIST_FIELDS, { playlistId, publicId }).then((d) => d?.addProjectToPlaylist).then(changed);
 
 export const removeProjectFromPlaylist = (playlistId: string, publicId: string): Promise<Playlist | undefined> =>
-  gqlRequest<{ removeProjectFromPlaylist: Playlist }>(REMOVE_PROJECT_FROM_PLAYLIST + PLAYLIST_FIELDS, { playlistId, publicId }).then((d) => d?.removeProjectFromPlaylist);
+  gqlRequest<{ removeProjectFromPlaylist: Playlist }>(REMOVE_PROJECT_FROM_PLAYLIST + PLAYLIST_FIELDS, { playlistId, publicId }).then((d) => d?.removeProjectFromPlaylist).then(changed);
 
 export const savePlaylist = (playlistId: string): Promise<boolean | undefined> =>
   gqlRequest<{ savePlaylist: boolean }>(SAVE_PLAYLIST, { playlistId }).then((d) => d?.savePlaylist);

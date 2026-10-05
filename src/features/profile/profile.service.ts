@@ -1,4 +1,5 @@
 import { gqlRequest } from '@/app/graphql.client';
+import { followChanged, blockChanged } from '@/app/cache-sync';
 import type { PublicUser, FollowListResult, FollowListType } from '@/types';
 
 const GET_PUBLIC_PROFILE = /* GraphQL */ `
@@ -75,21 +76,25 @@ export async function getPublicProfile(accountName: string, asVisitor = false): 
 
 export async function followUser(accountName: string): Promise<boolean> {
   const data = await gqlRequest<{ follow: boolean }>(FOLLOW_USER, { accountName });
+  followChanged(accountName, true);
   return data?.follow ?? false;
 }
 
 export async function unfollowUser(accountName: string): Promise<boolean> {
   const data = await gqlRequest<{ unfollow: boolean }>(UNFOLLOW_USER, { accountName });
+  followChanged(accountName, false);
   return data?.unfollow ?? false;
 }
 
 export async function blockUser(accountName: string): Promise<boolean> {
   const data = await gqlRequest<{ blockUser: boolean }>(BLOCK_USER, { accountName });
+  blockChanged();
   return data?.blockUser ?? false;
 }
 
 export async function unblockUser(accountName: string): Promise<boolean> {
   const data = await gqlRequest<{ unblockUser: boolean }>(UNBLOCK_USER, { accountName });
+  blockChanged();
   return data?.unblockUser ?? false;
 }
 
