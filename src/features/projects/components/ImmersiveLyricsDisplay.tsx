@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useMemo, forwardRef, useState } from 'react';
+import { useRef, useEffect, useCallback, useMemo, forwardRef, useState, Fragment } from 'react';
 import type { CSSProperties, KeyboardEvent, RefObject } from 'react';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
@@ -7,6 +7,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 import { useSettings } from '@/features/settings/useSettings';
+import { hasCJK, hasKanji, toHiragana, toKatakana } from '@/shared/utils/furigana';
 
 interface Palette {
   fg?: string;
@@ -31,8 +32,15 @@ export interface DisplayLine {
   translations?: unknown[];
   singers?: string[];
   mode?: string;
-  words?: Array<{ word: string; time?: number | null; singerIndex?: number }>;
+  words?: DisplayWord[];
   [key: string]: unknown;
+}
+
+interface DisplayWord {
+  word: string;
+  time?: number | null;
+  reading?: string | null;
+  singerIndex?: number;
 }
 
 interface PlayerHandle {
@@ -76,6 +84,8 @@ interface ImmersiveLineProps {
   alignment?: 'left' | 'center' | 'right';
   /** Settings.editor.display.activeHighlight — the same preference PreviewLine reads. */
   activeHighlight?: string;
+  /** Settings.editor.display.readingFormat — script used for furigana. */
+  readingFormat?: string;
 }
 
 // ── Single lyric line ────────────────────────────────────────
@@ -96,6 +106,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
     singerColors = [],
     alignment = 'left',
     activeHighlight,
+    readingFormat,
   },
   ref,
 ) {
@@ -163,10 +174,16 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
 
   // Words mode and word karaoke fill
   const isWordsMode = editorMode === 'words';
-  let words: Array<{ word: string; time?: number | null; singerIndex?: number }> = Array.isArray(line.words) ? line.words : [];
+  let words: DisplayWord[] = Array.isArray(line.words) ? line.words : [];
   if (isWordsMode && words.length === 0 && line.text) {
     words = line.text.trim().split(/\s+/).map((w: string) => ({ word: w }));
   }
+
+  // Furigana lives on word.reading and only annotates kanji, as in PreviewLine.
+  const hasReadings = words.some(w => w.reading && hasKanji(w.word));
+  const renderWord = (w: DisplayWord) => w.reading && hasKanji(w.word)
+    ? <ruby>{w.word}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{readingFormat === 'katakana' ? toKatakana(w.reading) : toHiragana(w.reading)}</rt><rp>)</rp></ruby>
+    : w.word;
   const hasWordTimestamps = words.some(w => w.time != null);
   const effectiveHasWordTimestamps = (hasWordTimestamps || (isWordsMode && line.timestamp != null && words.length > 0));
 
@@ -214,7 +231,8 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
         paddingBottom: '0.65em',
         marginLeft: isAdLib ? (alignment === 'right' ? '0' : '15%') : '0',
         marginRight: isAdLib ? (alignment === 'right' ? '15%' : '0') : '0',
-        lineHeight: 1.25,
+        // Ruby text needs headroom or it collides with the line above on wrap.
+        lineHeight: hasReadings ? 1.9 : 1.25,
         position: 'relative',
       }}
     >
@@ -295,7 +313,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
                     transition: 'opacity 0.3s ease, color 0.3s ease',
                   }}
                 >
-                  {w.word}
+                  {renderWord(w)}
                 </span>
                 {isWordFilled && progress > 0 && (
                   <span
@@ -310,7 +328,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
                       unicodeBidi: 'plaintext',
                     }}
                   >
-                    {w.word}
+                    {renderWord(w)}
                   </span>
                 )}
               </span>
@@ -322,7 +340,13 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
           className={isDuet ? 'bg-clip-text text-transparent' : ''}
           style={isDuet ? { backgroundImage: duetGradient } : undefined}
         >
-          {line.text}
+          {hasReadings
+            ? words.map((w, wi) => {
+                const next = words[wi + 1]?.word;
+                const addSpace = !!next && !hasCJK(w.word.slice(-1)) && !hasCJK(next.slice(0, 1));
+                return <Fragment key={wi}>{renderWord(w)}{addSpace ? ' ' : null}</Fragment>;
+              })
+            : line.text}
         </span>
       )}
 
@@ -687,6 +711,7 @@ export default function ImmersiveLyricsDisplay({
                 singerColors={singerColors}
                 alignment={alignment}
                 activeHighlight={activeHighlight}
+                readingFormat={settings.editor?.display?.readingFormat}
               />
             );
           })}

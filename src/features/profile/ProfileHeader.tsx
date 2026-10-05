@@ -59,8 +59,6 @@ interface ProfileHeaderProps {
   blockLoading: boolean;
   onBlock: () => void;
   onUnblock: () => void;
-  onOpenFollowers: () => void;
-  onOpenFollowing: () => void;
   /** Owner-only: switches the page into the "view as others" preview. */
   onViewAsOthers?: () => void;
 }
