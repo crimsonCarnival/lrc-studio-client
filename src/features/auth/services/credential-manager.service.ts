@@ -111,3 +111,31 @@ export async function requestStoredCredential(): Promise<{ id: string; password:
     return null;
   }
 }
+
+/**
+ * True if the browser's password manager already holds exactly this id+password
+ * for this origin. Used right before offering our save prompt — without it, a
+ * sign-in using a password the browser just autofilled (or one we pre-filled
+ * from `requestStoredCredential`) still asked to "save" something already saved.
+ *
+ * `mediation: 'silent'` never shows any browser UI: it resolves to null rather
+ * than prompting whenever it can't answer unambiguously (multiple credentials,
+ * none at all, or the user previously dismissed the account chooser enough
+ * times that the browser is cooling it down) — exactly the "stay invisible or
+ * give up" behavior this check needs.
+ */
+export async function isCredentialAlreadyStored(id: string, password: string): Promise<boolean> {
+  if (typeof window === 'undefined' || !window.isSecureContext) return false;
+  if (!navigator.credentials || typeof navigator.credentials.get !== 'function') return false;
+  try {
+    const cred = await navigator.credentials.get({
+      password: true,
+      mediation: 'silent',
+    } as CredentialRequestOptions);
+    if (!cred) return false;
+    const { id: storedId, password: storedPassword } = cred as unknown as { id?: string; password?: string };
+    return storedId === id && storedPassword === password;
+  } catch {
+    return false;
+  }
+}
