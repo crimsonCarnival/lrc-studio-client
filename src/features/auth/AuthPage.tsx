@@ -28,6 +28,7 @@ import {
   storePasswordCredential,
   dismissCredentialPrompt,
   requestStoredCredential,
+  isCredentialAlreadyStored,
 } from '@/features/auth/services/credential-manager.service';
 import type { ComponentProps } from 'react';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
@@ -302,15 +303,27 @@ export default function AuthPage() {
   }, [commitLogin, searchParams, navigate]);
 
   /**
-   * Last gate before leaving the auth page. If we captured a password and the
-   * browser can store it, offer that first; otherwise go straight through.
-   * Google and passkey flows never set a pending credential, so they skip it.
+   * Last gate before leaving the auth page. If we captured a password, the
+   * browser can store it, and it isn't already stored, offer that first;
+   * otherwise go straight through. Google and passkey flows never set a
+   * pending credential, so they skip it.
    */
   const handleAuthSuccess = useCallback(() => {
     const cred = pendingCredentialRef.current;
     if (cred && shouldOfferCredentialSave()) {
-      setCredentialPrompt({ id: cred.id });
-      return; // finishAuth runs once the user answers
+      // Covers both paths that can hand back an already-saved password: the
+      // saved-account chooser pre-filling it from requestStoredCredential,
+      // and the browser's own native autofill on a plain identifier+password
+      // form, which our code never sees happen.
+      isCredentialAlreadyStored(cred.id, cred.password).then((alreadyStored) => {
+        if (alreadyStored) {
+          clearPendingCredential();
+          finishAuth();
+        } else {
+          setCredentialPrompt({ id: cred.id });
+        }
+      });
+      return; // finishAuth runs once the check resolves or the user answers
     }
     clearPendingCredential();
     finishAuth();
