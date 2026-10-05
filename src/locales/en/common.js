@@ -2,6 +2,7 @@ export default {
   paste: "Paste",
   apply: "Apply",
   loading: "Loading…",
+  serverWakingUp: "Server is waking up… this can take up to a minute.",
   copied: "Copied",
   saved: "Saved",
   global: "Global",

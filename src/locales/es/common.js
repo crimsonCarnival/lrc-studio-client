@@ -2,6 +2,7 @@ export default {
   paste: "Pegar Letra",
   apply: "Aplicar",
   loading: "Cargando…",
+  serverWakingUp: "El servidor se está reactivando… puede tardar hasta un minuto.",
   copied: "Copiado",
   saved: "Guardado",
   global: "Global",
