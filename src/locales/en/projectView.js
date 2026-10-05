@@ -15,6 +15,8 @@ export default {
   singers: "Singers",
   showMore: "Show more",
   showLess: "Show less",
+  collapseInfo: "Hide project details",
+  expandInfo: "Show project details",
   upNext: "Up next",
   noAudio: "No audio attached to this project.",
   prevTrack: "Previous",

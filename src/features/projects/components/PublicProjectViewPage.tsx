@@ -4,6 +4,9 @@ import { useTranslation } from 'react-i18next';
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import { SettingsProvider } from '@/features/settings/SettingsContext';
 import { TooltipProvider } from '@ui/tooltip';
+import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
+import { Icon } from '@/shared/ui/Icon';
 import { Spinner } from '@ui/skeleton';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
@@ -11,7 +14,6 @@ import PlayerRaw from '@features/player/components/Player';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { ProjectUpNextPanel } from './ProjectUpNextPanel';
 import { usePublicProject } from '../hooks/usePublicProject';
-import { useColorPalette } from '../hooks/useColorPalette';
 import { useStarredPlaylist } from '../hooks/useStarredPlaylist';
 import ImmersiveLyricsDisplay, { type DisplayLine } from './ImmersiveLyricsDisplay';
 import ProjectInfoPanel from './ProjectInfoPanel';
@@ -54,6 +56,8 @@ interface PublicProject {
   user?: { id?: string; accountName?: string };
   [key: string]: unknown;
 }
+
+const INFO_COLLAPSED_KEY = 'lrc_project_info_collapsed';
 
 interface UpNextPlaylist {
   projects?: { publicId: string }[];
@@ -242,7 +246,19 @@ function PublicProjectViewPageInner() {
   (usePageTitle as (title?: string | null) => void)(mediaTitle);
 
   const cover = resolveCoverImage(project);
-  const palette = useColorPalette(cover);
+
+  // Details panel collapse — a viewer preference, remembered across projects.
+  // On desktop it hides the whole right column so lyrics and player take the
+  // full width; below lg the column is stacked, so the card folds in place.
+  const [infoCollapsed, setInfoCollapsed] = useState(() => {
+    try { return localStorage.getItem(INFO_COLLAPSED_KEY) === '1'; } catch { return false; }
+  });
+  const toggleInfoCollapsed = useCallback(() => {
+    setInfoCollapsed((prev) => {
+      try { localStorage.setItem(INFO_COLLAPSED_KEY, prev ? '0' : '1'); } catch { /* still applies for this session */ }
+      return !prev;
+    });
+  }, []);
 
   // ── Ownership ────────────────────────────────────────────────
   const isOwner = !!(user && project?.user?.id && user.id === project.user.id);
@@ -328,36 +344,18 @@ function PublicProjectViewPageInner() {
 
   const meta = project.metadata || {};
 
-  // Palette-driven page background (transitions when navigating between projects)
-  const pageBg = palette
-    ? `linear-gradient(180deg, ${palette.bgDeep} 0%, ${palette.bg} 40%, ${palette.bgDeep} 100%)`
-    : 'hsl(var(--background))';
-
   return (
-    <div
-      className="flex-1 flex flex-col min-h-0 overflow-hidden"
-      style={{ background: pageBg, transition: 'background 0.8s ease' }}
-    >
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-background">
       {/* ── Guest CTA strip ─────────────────────────────────── */}
       {!user && (
-        <div
-          className="w-full flex-shrink-0"
-          style={{
-            borderBottom: `1px solid ${palette?.faded ?? 'hsl(var(--border))'}44`,
-            background: palette ? `${palette.bg}cc` : 'hsl(var(--card) / 0.6)',
-          }}
-        >
+        <div className="w-full flex-shrink-0 border-b border-border bg-card/60">
           <div className="flex items-center gap-3 px-4 py-2.5 max-w-screen-xl mx-auto">
-            <p className="text-xs flex-1 min-w-0 truncate" style={{ color: palette?.faded ?? 'hsl(var(--muted-foreground))' }}>
+            <p className="text-xs flex-1 min-w-0 truncate text-muted-foreground">
               {t('projectView.ctaGuest')}
             </p>
             <button
               onClick={handleSignUp}
-              className="shrink-0 h-7 px-3 text-[11px] font-medium rounded-full border transition-colors"
-              style={{
-                color: palette?.fg ?? 'hsl(var(--foreground))',
-                borderColor: palette?.faded ?? 'hsl(var(--border))',
-              }}
+              className="shrink-0 h-7 px-3 text-[11px] font-medium rounded-full border border-border text-foreground transition-colors"
             >
               {t('projectView.signUpButton')}
             </button>
@@ -373,7 +371,24 @@ function PublicProjectViewPageInner() {
         <div className="contents lg:flex lg:flex-1 lg:min-h-0 lg:flex-col">
           {/* pb clears the bar pinned to the bottom below lg, so the closing
               lines are not left underneath it. */}
-          <div className="order-1 flex-1 min-h-0 flex flex-col max-lg:pb-64" style={{ minHeight: '50vh' }}>
+          <div className="relative order-1 flex-1 min-h-0 flex flex-col max-lg:pb-64" style={{ minHeight: '50vh' }}>
+            {/* Desktop only: the column that holds the card's own toggle is hidden. */}
+            {infoCollapsed && (
+              <div className="hidden lg:block absolute top-14 right-4 z-20">
+                <Tip content={t('projectView.expandInfo')}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={toggleInfoCollapsed}
+                    aria-expanded={false}
+                    aria-label={t('projectView.expandInfo')}
+                    className="size-8 rounded-lg bg-card/70 backdrop-blur-md border border-border"
+                  >
+                    <Icon name="chevron_left" size={16} />
+                  </Button>
+                </Tip>
+              </div>
+            )}
             <ImmersiveLyricsDisplay
               lines={lines as unknown as DisplayLine[]}
               playbackPosition={playbackPosition}
@@ -382,7 +397,6 @@ function PublicProjectViewPageInner() {
               hasMedia={hasMedia}
               isPlaying={isPlaying}
               playbackSpeed={playbackSpeed}
-              palette={palette}
               showTranslations
               songSingers={songSingers}
               singerColors={singerColors}
@@ -396,17 +410,11 @@ function PublicProjectViewPageInner() {
             // containing block ends where the bar does, so there is nothing to
             // stick within. Pinned to the viewport instead; the lyric panel
             // carries matching bottom padding so nothing hides behind it.
-            className="order-3 flex-shrink-0 w-full max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-30"
-            style={{
-              borderTop: `1px solid ${palette?.faded ?? 'hsl(var(--border))'}44`,
-              background: palette ? `${palette.bgDeep}e0` : 'hsl(var(--card) / 0.8)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-            }}
+            className="order-3 flex-shrink-0 w-full max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-30 border-t border-border bg-card/80 backdrop-blur-lg"
           >
             <div className="px-4 sm:px-6 py-3">
               {!hasMedia && !initialMedia
-                ? <p className="text-xs text-center py-2" style={{ color: palette?.faded ?? 'hsl(var(--muted-foreground))' }}>{t('projectView.noAudio')}</p>
+                ? <p className="text-xs text-center py-2 text-muted-foreground">{t('projectView.noAudio')}</p>
                 : null}
 
               <Player
@@ -436,16 +444,14 @@ function PublicProjectViewPageInner() {
                   <button
                     disabled={!prevTrack}
                     onClick={() => goToTrack(prevTrack)}
-                    className="h-7 px-2.5 text-[11px] disabled:opacity-30 transition-opacity"
-                    style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}
+                    className="h-7 px-2.5 text-[11px] text-foreground disabled:opacity-30 transition-opacity"
                   >
                     {t('projectView.prevTrack')}
                   </button>
                   <button
                     disabled={!nextTrack}
                     onClick={() => goToTrack(nextTrack)}
-                    className="h-7 px-2.5 text-[11px] disabled:opacity-30 transition-opacity"
-                    style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}
+                    className="h-7 px-2.5 text-[11px] text-foreground disabled:opacity-30 transition-opacity"
                   >
                     {t('projectView.nextTrack')}
                   </button>
@@ -458,14 +464,13 @@ function PublicProjectViewPageInner() {
         {/* Right: info panel — fixed width on desktop, stacked below on mobile */}
         <div
           ref={rightPanelRef}
-          className="order-2 lg:order-none relative lg:w-80 xl:w-96 lg:flex-shrink-0 overflow-y-auto scrollbar-none"
+          className={`order-2 lg:order-none relative lg:w-80 xl:w-96 lg:flex-shrink-0 overflow-y-auto scrollbar-none ${infoCollapsed ? 'lg:hidden' : ''}`}
         >
           <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20" />
           <div className="p-4 flex flex-col gap-4">
             <ProjectInfoPanel
               project={displayProject!}
               cover={cover}
-              palette={palette}
               isOwner={isOwner}
               user={user}
               isStarred={isStarred}
@@ -486,6 +491,8 @@ function PublicProjectViewPageInner() {
               lines={lines}
               songSingers={songSingers}
               singerColors={singerColors}
+              collapsed={infoCollapsed}
+              onToggleCollapsed={toggleInfoCollapsed}
             />
 
             {/* Up-next panel (list context) */}
