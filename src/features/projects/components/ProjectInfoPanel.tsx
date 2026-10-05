@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -9,14 +9,6 @@ import { ProjectActionsMenu } from './ProjectActionsMenu';
 import { BoostButton } from './BoostButton';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
-
-interface Palette {
-  fg?: string;
-  faded?: string;
-  nearer?: string;
-  accent?: string;
-  bg?: string;
-}
 
 interface ProjectMeta {
   description?: string;
@@ -42,30 +34,13 @@ interface ProjectData {
   [key: string]: unknown;
 }
 
-// Theming helper — returns inline style overrides when a palette is active
-function themed(palette?: Palette | null, overrides: CSSProperties = {}): CSSProperties {
-  if (!palette) return overrides;
-  return {
-    color: palette.fg,
-    ...overrides,
-  };
-}
-
-function PanelButton({ onClick, disabled, active, children, palette, variant = 'outline' }: {
+function PanelButton({ onClick, disabled, active, children, variant = 'outline' }: {
   onClick?: () => void;
   disabled?: boolean;
   active?: boolean;
   children: ReactNode;
-  palette?: Palette | null;
   variant?: string;
 }) {
-  const base: CSSProperties = {
-    borderColor: palette ? palette.faded : undefined,
-    color: palette ? (active ? palette.fg : palette.nearer) : undefined,
-    background: active && palette ? `${palette.accent}22` : 'transparent',
-    transition: 'all 0.2s ease',
-  };
-
   return (
     <Button
       size="sm"
@@ -73,8 +48,7 @@ function PanelButton({ onClick, disabled, active, children, palette, variant = '
       variant={variant}
       onClick={onClick}
       disabled={disabled}
-      style={base}
-      className="h-8 px-3 text-xs font-medium gap-1.5 rounded-full shrink-0"
+      className={`h-8 px-3 text-xs font-medium gap-1.5 rounded-full shrink-0 transition-all ${active ? 'bg-primary/10 text-foreground' : 'bg-transparent text-muted-foreground'}`}
     >
       {children}
     </Button>
@@ -84,7 +58,6 @@ function PanelButton({ onClick, disabled, active, children, palette, variant = '
 interface ProjectInfoPanelProps {
   project: ProjectData;
   cover?: string | null;
-  palette?: Palette | null;
   isOwner: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   user?: any;
@@ -106,7 +79,6 @@ interface ProjectInfoPanelProps {
 export default function ProjectInfoPanel({
   project,
   cover,
-  palette,
   isOwner,
   user,
   isStarred,
@@ -137,24 +109,8 @@ export default function ProjectInfoPanel({
     }, i18n.resolvedLanguage || i18n.language)
     : null;
 
-  const panelBg = palette
-    ? `${palette.bg}cc`
-    : 'hsl(var(--card) / 0.6)';
-
-  const borderColor = palette
-    ? `${palette.faded}44`
-    : 'hsl(var(--border))';
-
   return (
-    <div
-      className="flex flex-col gap-4 rounded-2xl overflow-hidden"
-      style={{
-        background: panelBg,
-        border: `1px solid ${borderColor}`,
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-      }}
-    >
+    <div className="flex flex-col gap-4 rounded-2xl overflow-hidden bg-card/60 border border-border backdrop-blur-lg">
       {/* Cover art */}
       {cover && (
         <div className="relative w-full aspect-square overflow-hidden rounded-t-2xl">
@@ -169,27 +125,21 @@ export default function ProjectInfoPanel({
           <div
             aria-hidden
             className="absolute inset-x-0 bottom-0 h-1/3"
-            style={{ background: `linear-gradient(to top, ${palette?.bg ?? 'hsl(var(--background))'}, transparent)` }}
+            style={{ background: 'linear-gradient(to top, var(--card), transparent)' }}
           />
         </div>
       )}
 
-      <div className="px-4 pb-4 flex flex-col gap-3">
+      <div className={`px-4 pb-4 flex flex-col gap-3 ${cover ? '' : 'pt-4'}`}>
 
         {/* Title + actions row */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <h1
-              className="font-semibold leading-tight text-base sm:text-lg tracking-tight"
-              style={themed(palette)}
-            >
+            <h1 className="font-semibold leading-tight text-base sm:text-lg tracking-tight text-foreground">
               {project?.title || t('projectView.notFound')}
             </h1>
             {(meta.songName || meta.songArtist) && (
-              <p
-                className="text-xs mt-0.5 leading-snug"
-                style={{ color: palette?.nearer ?? 'hsl(var(--muted-foreground))' }}
-              >
+              <p className="text-xs mt-0.5 leading-snug text-muted-foreground">
                 {meta.songName && <span className="font-medium">{meta.songName}</span>}
                 {meta.songArtist && <span className="before:content-['·'] before:mx-1">{meta.songArtist}</span>}
                 {meta.songAlbum && <span className="before:content-['·'] before:mx-1 italic">{meta.songAlbum}</span>}
@@ -204,7 +154,6 @@ export default function ProjectInfoPanel({
             lines={lines ?? []}
             isOwner={isOwner}
             user={user}
-            palette={palette as { faded: string } | null | undefined}
             onEdit={onEdit}
             onFork={onFork}
           />
@@ -214,7 +163,7 @@ export default function ProjectInfoPanel({
         <div className="flex items-center gap-2 flex-wrap">
           {isOwner ? (
             <>
-              <PanelButton onClick={onEdit} palette={palette} variant="outline">
+              <PanelButton onClick={onEdit} variant="outline">
                 <Icon name="edit" size={14} />
                 {t('projectView.editButton')}
               </PanelButton>
@@ -227,7 +176,6 @@ export default function ProjectInfoPanel({
                   onClick={onStar}
                   disabled={starring}
                   active={isStarred}
-                  palette={palette}
                 >
                   <Icon name="star" size={14} filled={isStarred} />
                   {isStarred ? t('projectView.unstarButton') : t('projectView.starButton')}
@@ -236,19 +184,12 @@ export default function ProjectInfoPanel({
 
               {project?.forksEnabled !== false && (
                 project?.isForkedByMe ? (
-                  <span
-                    className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-full"
-                    style={{
-                      background: palette ? `${palette.accent}22` : 'hsl(var(--primary) / 0.1)',
-                      color: palette?.accent ?? 'hsl(var(--primary))',
-                      border: `1px solid ${palette ? `${palette.accent}44` : 'hsl(var(--primary) / 0.2)'}`,
-                    }}
-                  >
+                  <span className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20">
                     <Icon name="check" size={14} />
                     {t('projectView.forkedBadge')}
                   </span>
                 ) : (
-                  <PanelButton onClick={onFork} palette={palette}>
+                  <PanelButton onClick={onFork}>
                     <Icon name="call_split" size={14} />
                     {t('projectView.forkButton')}
                   </PanelButton>
@@ -263,25 +204,22 @@ export default function ProjectInfoPanel({
         </div>
 
         {/* Stats row */}
-        <div
-          className="flex items-center gap-4 text-xs"
-          style={{ color: palette?.faded ?? 'hsl(var(--muted-foreground))' }}
-        >
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <Icon name="star" size={14} />
-            <span style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}>{starCount ?? 0}</span>
+            <span className="text-foreground">{starCount ?? 0}</span>
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Icon name="call_split" size={14} />
-            <span style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}>{project?.forkCount ?? 0}</span>
+            <span className="text-foreground">{project?.forkCount ?? 0}</span>
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Icon name="visibility" size={14} />
-            <span style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}>{project?.viewCount ?? 0}</span>
+            <span className="text-foreground">{project?.viewCount ?? 0}</span>
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Icon name="share" size={14} />
-            <span style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}>{project?.shareCount ?? 0}</span>
+            <span className="text-foreground">{project?.shareCount ?? 0}</span>
           </span>
           {reactionsSlot && <div>{reactionsSlot}</div>}
         </div>
@@ -300,8 +238,7 @@ export default function ProjectInfoPanel({
           ) : (
             <Link
               to={`/project/${project.forkedFrom.publicId}`}
-              className="inline-flex items-center gap-1 text-xs hover:underline w-fit"
-              style={{ color: palette?.accent ?? 'hsl(var(--accent-blue))' }}
+              className="inline-flex items-center gap-1 text-xs hover:underline w-fit text-primary"
             >
               <Icon name="open_in_new" size={12} />
               {t('projectView.forkedFrom')}
@@ -312,24 +249,14 @@ export default function ProjectInfoPanel({
 
         {/* Description */}
         {description && (
-          <div
-            className="rounded-xl p-3"
-            style={{
-              background: palette ? `${palette.fg}08` : 'hsl(var(--card) / 0.4)',
-              border: `1px solid ${borderColor}`,
-            }}
-          >
-            <p
-              className={`text-xs leading-relaxed whitespace-pre-wrap ${!descExpanded && isLongDescription ? 'line-clamp-4' : ''}`}
-              style={{ color: palette?.nearer ?? 'hsl(var(--muted-foreground))' }}
-            >
+          <div className="rounded-xl p-3 bg-card/40 border border-border">
+            <p className={`text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground ${!descExpanded && isLongDescription ? 'line-clamp-4' : ''}`}>
               {description}
             </p>
             {isLongDescription && (
               <button
                 onClick={() => setDescExpanded((v) => !v)}
-                className="text-xs mt-1 hover:underline"
-                style={{ color: palette?.accent ?? 'hsl(var(--primary))' }}
+                className="text-xs mt-1 hover:underline text-primary"
               >
                 {descExpanded ? t('projectView.showLess') : t('projectView.showMore')}
               </button>
@@ -340,20 +267,19 @@ export default function ProjectInfoPanel({
         {/* Singers */}
         {songSingers && songSingers.length > 0 && (
           <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: palette?.faded ?? 'hsl(var(--muted-foreground))' }}>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               {t('projectView.singers')}
             </span>
             <div className="flex flex-wrap gap-1.5">
               {songSingers.map((singer, idx) => {
-                const color = singerColors?.[idx] || (palette?.accent ?? 'hsl(var(--primary))');
+                const color = singerColors?.[idx] || 'var(--color-primary)';
                 return (
                   <span
                     key={`${singer}-${idx}`}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-foreground"
                     style={{
-                      background: palette ? `${color}18` : 'hsl(var(--muted) / 0.6)',
-                      border: `1px solid ${color}44`,
-                      color: palette?.fg ?? 'hsl(var(--foreground))',
+                      background: `color-mix(in srgb, ${color} 10%, transparent)`,
+                      border: `1px solid color-mix(in srgb, ${color} 27%, transparent)`,
                     }}
                   >
                     <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
@@ -371,12 +297,7 @@ export default function ProjectInfoPanel({
             {meta.tags.map((tag, i) => (
               <span
                 key={`${tag}-${i}`}
-                className="px-2.5 py-0.5 rounded-full text-[11px] font-medium"
-                style={{
-                  background: palette ? `${palette.fg}12` : 'hsl(var(--muted))',
-                  color: palette?.nearer ?? 'hsl(var(--muted-foreground))',
-                  border: `1px solid ${borderColor}`,
-                }}
+                className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-muted text-muted-foreground border border-border"
               >
                 {tag}
               </span>
@@ -385,17 +306,13 @@ export default function ProjectInfoPanel({
         )}
 
         {/* Author + date */}
-        <div
-          className="flex items-center gap-3 flex-wrap text-[11px]"
-          style={{ color: palette?.faded ?? 'hsl(var(--muted-foreground))' }}
-        >
+        <div className="flex items-center gap-3 flex-wrap text-[11px] text-muted-foreground">
           {accountName && (
             <div className="flex items-center gap-1.5">
               <Icon name="music_note" size={12} />
               <Link
                 to={`/profile/${accountName}`}
-                className="hover:underline"
-                style={{ color: palette?.nearer ?? 'hsl(var(--foreground))' }}
+                className="hover:underline text-foreground"
               >
                 {project.user?.displayName || `@${accountName}`}
               </Link>

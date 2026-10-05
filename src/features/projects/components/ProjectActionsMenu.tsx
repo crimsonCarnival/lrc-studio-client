@@ -172,10 +172,6 @@ function AddToListMenu({ user, project, t }: { user: User; project: Project; t: 
   );
 }
 
-interface PalettePartial {
-  faded: string;
-}
-
 interface ProjectActionsMenuProps {
   project: Project;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -184,7 +180,6 @@ interface ProjectActionsMenuProps {
   user?: User | null;
   onEdit?: () => void;
   onFork?: () => void;
-  palette?: PalettePartial | null;
 }
 
 export function ProjectActionsMenu({
@@ -194,7 +189,6 @@ export function ProjectActionsMenu({
   user,
   onEdit,
   onFork,
-  palette,
 }: ProjectActionsMenuProps) {
   const { t } = useTranslation();
   const [linkCopied, setLinkCopied] = useState(false);
@@ -242,10 +236,6 @@ export function ProjectActionsMenu({
     } catch { /* no-op */ }
   };
 
-  const triggerStyle: CSSProperties | undefined = palette
-    ? { color: palette.faded, background: 'transparent', border: `1px solid ${palette.faded}`, borderRadius: '9999px' }
-    : undefined;
-
   const canFork = project?.forksEnabled !== false && !project?.isForkedByMe;
 
   return (
@@ -254,7 +244,6 @@ export function ProjectActionsMenu({
         <Button
           size="icon"
           variant="ghost"
-          style={triggerStyle}
           className="size-8 rounded-full shrink-0"
           aria-label={t('projectView.actions.menu')}
         >

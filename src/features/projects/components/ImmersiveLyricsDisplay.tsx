@@ -9,16 +9,10 @@ import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-
 import { useSettings } from '@/features/settings/useSettings';
 import { hasCJK, hasKanji, toHiragana, toKatakana } from '@/shared/utils/furigana';
 
-interface Palette {
-  fg?: string;
-  faded?: string;
-  nearer?: string;
-  accent?: string;
-  bgDeep?: string;
-  bgGradient?: string;
-  topFade?: string;
-  bottomFade?: string;
-}
+// Theme-token colors: the stage sits on the app background, so text derives
+// from --foreground and stays legible in both the dark and light themes.
+const FG = 'var(--foreground)';
+const fgAlpha = (pct: number) => `color-mix(in srgb, var(--foreground) ${pct}%, transparent)`;
 
 export interface DisplayLine {
   id?: string | number;
@@ -70,7 +64,6 @@ function getDistStyle(dist: number | null) {
 interface ImmersiveLineProps {
   line: DisplayLine;
   dist: number | null;
-  palette?: Palette | null;
   onClick: () => void;
   hasSyncedLines: boolean;
   showTranslations: boolean;
@@ -93,7 +86,6 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   {
     line,
     dist,
-    palette,
     onClick,
     hasSyncedLines,
     showTranslations,
@@ -112,9 +104,8 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
 ) {
   const { opacity, weight, sizeFactor } = getDistStyle(dist);
 
-  const fg = palette?.fg ?? 'rgba(255,255,255,1)';
-  const faded = palette?.faded ?? 'rgba(255,255,255,0.35)';
-  const nearer = palette?.nearer ?? 'rgba(255,255,255,0.65)';
+  const faded = fgAlpha(35);
+  const nearer = fgAlpha(65);
 
   const isEmptyLine = line.type !== 'section' && (!line.text || line.text.trim() === '');
   const effectiveNextTs = nextTimestamp ?? (line as DisplayLine & { nextTimestamp?: number | null }).nextTimestamp ?? null;
@@ -147,11 +138,11 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   const lineSingerIdx = !isDuet && (line.singers?.length ?? 0) >= 1 ? singerColorIndex(line.singers![0], songSingers) : null;
   const lineSingerHex = lineSingerIdx !== null ? singerColors[lineSingerIdx] : null;
 
-  // Active is always white — palette.fg (cover-art accent) and singer colors
-  // only apply to inactive lines, where they're the point: telling lines apart
-  // at a glance. On the active line they fought the karaoke fill, which is
-  // already the color doing the work there.
-  let color = isActive ? '#fff' : dist === 1 ? nearer : faded;
+  // Active is always the plain foreground — singer colors only apply to
+  // inactive lines, where they're the point: telling lines apart at a glance.
+  // On the active line they fought the karaoke fill, which is already the
+  // color doing the work there.
+  let color = isActive ? FG : dist === 1 ? nearer : faded;
   if (lineSingerHex && !isActive) {
     color = `${lineSingerHex}99`;
   }
@@ -241,8 +232,8 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
           <div className={`flex ${alignment === 'right' ? 'justify-end' : alignment === 'center' ? 'justify-center' : 'justify-start'} py-2 pointer-events-none`}>
             <InstrumentalDots
               progress={segmentProgress}
-              color={fg}
-              dimColor="rgba(255,255,255,0.12)"
+              color={FG}
+              dimColor={fgAlpha(12)}
               dotCount={Math.max(2, Math.min(5, Math.round((segmentEnd! - line.timestamp!) / 1.0)))}
               size={7}
               gap={6}
@@ -296,7 +287,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
             const wGlobalIdx = wSingerName ? singerColorIndex(wSingerName, songSingers) : null;
             const wColor = wGlobalIdx !== null && singerColors[wGlobalIdx] ? singerColors[wGlobalIdx] : null;
 
-            const fillHighlightColor = wColor || palette?.accent || fg;
+            const fillHighlightColor = wColor || 'var(--color-primary)';
             const isWordFilled = isActive && startTime != null && endTime != null;
             let progress = 0;
             if (isWordFilled && playbackPosition != null) {
@@ -320,7 +311,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
                     className="absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none karaoke-fill-glow"
                     style={{
                       color: fillHighlightColor,
-                      textShadow: `0 0 12px ${fillHighlightColor}80`,
+                      textShadow: `0 0 12px color-mix(in srgb, ${fillHighlightColor} 50%, transparent)`,
                       clipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
                       WebkitClipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
                       direction: 'ltr',
@@ -384,7 +375,6 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
 interface SectionDividerProps {
   label?: string;
   dist: number | null;
-  palette?: Palette | null;
   singers?: string[];
   songSingers?: string[];
   singerColors?: string[];
@@ -394,14 +384,14 @@ interface SectionDividerProps {
 function SectionDivider({
   label,
   dist,
-  palette,
   singers = [],
   songSingers = [],
   singerColors = [],
   alignment = 'left',
 }: SectionDividerProps) {
   const { opacity } = getDistStyle(dist);
-  const accent = palette?.accent ?? 'rgba(255,255,255,0.5)';
+  const ruleStrong = fgAlpha(25);
+  const ruleSoft = fgAlpha(10);
 
   // The title is colored exclusively by the section's custom singer colors — solid for
   // one, a clipped gradient for several — and left uncolored when none are set.
@@ -434,7 +424,7 @@ function SectionDivider({
       }}
     >
       {alignment !== 'left' && (
-        <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, transparent, ${accent}80, ${accent}30)` }} />
+        <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, transparent, ${ruleStrong}, ${ruleSoft})` }} />
       )}
       <span
         className="whitespace-nowrap uppercase"
@@ -466,7 +456,7 @@ function SectionDivider({
         )}
       </span>
       {alignment !== 'right' && (
-        <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${accent}30, ${accent}80, transparent)` }} />
+        <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${ruleSoft}, ${ruleStrong}, transparent)` }} />
       )}
     </div>
   );
@@ -480,7 +470,6 @@ interface ImmersiveLyricsDisplayProps {
   hasMedia?: boolean;
   isPlaying?: boolean;
   playbackSpeed?: number;
-  palette?: Palette | null;
   showTranslations?: boolean;
   songSingers?: string[];
   singerColors?: string[];
@@ -496,7 +485,6 @@ export default function ImmersiveLyricsDisplay({
   hasMedia,
   isPlaying = false,
   playbackSpeed = 1,
-  palette,
   showTranslations = true,
   songSingers = [],
   singerColors = [],
@@ -580,16 +568,11 @@ export default function ImmersiveLyricsDisplay({
     [playerRef],
   );
 
-  const bg = palette?.bgDeep ?? 'hsl(var(--background))';
-
   // Placeholder states
   if (!lines.length) {
     return (
-      <div
-        className="relative flex-1 min-h-0 flex items-center justify-center"
-        style={{ background: palette?.bgGradient ?? bg }}
-      >
-        <p style={{ color: palette?.faded ?? 'rgba(255,255,255,0.4)', fontSize: '0.9rem', fontStyle: 'italic' }}>
+      <div className="relative flex-1 min-h-0 flex items-center justify-center">
+        <p className="text-sm italic text-muted-foreground">
           {t('editor.pastePlaceholder')}
         </p>
       </div>
@@ -598,11 +581,8 @@ export default function ImmersiveLyricsDisplay({
 
   if (!hasSyncedLines && !hasMedia) {
     return (
-      <div
-        className="relative flex-1 min-h-0 flex items-center justify-center"
-        style={{ background: palette?.bgGradient ?? bg }}
-      >
-        <p style={{ color: palette?.faded ?? 'rgba(255,255,255,0.4)', fontSize: '0.9rem', fontStyle: 'italic' }}>
+      <div className="relative flex-1 min-h-0 flex items-center justify-center">
+        <p className="text-sm italic text-muted-foreground">
           {t('preview.placeholder')}
         </p>
       </div>
@@ -610,10 +590,7 @@ export default function ImmersiveLyricsDisplay({
   }
 
   return (
-    <div
-      className="relative flex-1 min-h-0 overflow-hidden"
-      style={{ background: palette?.bgGradient ?? bg }}
-    >
+    <div className="relative flex-1 min-h-0 overflow-hidden">
       {/* Floating alignment control */}
       <div className="absolute top-3 right-4 z-20 flex items-center bg-zinc-950/70 backdrop-blur-md rounded-lg p-0.5 border border-zinc-700/50 shadow-lg">
         <Tip content={t('settings.interface.alignLeft')}>
@@ -652,13 +629,13 @@ export default function ImmersiveLyricsDisplay({
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 z-10"
-        style={{ height: '18%', background: palette?.topFade ?? `linear-gradient(to bottom, ${bg}, transparent)` }}
+        style={{ height: '18%', background: 'linear-gradient(to bottom, var(--background), transparent)' }}
       />
       {/* Bottom fade */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 z-10"
-        style={{ height: '18%', background: palette?.bottomFade ?? `linear-gradient(to top, ${bg}, transparent)` }}
+        style={{ height: '18%', background: 'linear-gradient(to top, var(--background), transparent)' }}
       />
 
       {/* Scroll container — hides scrollbar visually */}
@@ -683,7 +660,6 @@ export default function ImmersiveLyricsDisplay({
                   key={line.id ?? `s-${i}`}
                   label={line.label}
                   dist={dist}
-                  palette={palette}
                   singers={line.singers}
                   songSingers={songSingers}
                   singerColors={singerColors}
@@ -698,7 +674,6 @@ export default function ImmersiveLyricsDisplay({
                 ref={isActive ? activeRef : null}
                 line={line}
                 dist={dist}
-                palette={palette}
                 onClick={() => handleLineClick(line)}
                 hasSyncedLines={hasSyncedLines}
                 showTranslations={showTranslations}
