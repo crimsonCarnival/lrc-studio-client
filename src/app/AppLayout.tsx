@@ -244,11 +244,19 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
               }
             ${isFullWidthPage
                 ? 'pb-0'
-                : isPlayerMounted && isReady
-                  ? playerSlot === 'mobile'
-                    ? 'pb-[200px]'
-                    : 'pb-6'
-                  : 'pb-20 lg:pb-6'
+                : isPlayerMounted
+                  ? isReady
+                    ? playerSlot === 'mobile'
+                      ? 'pb-[200px]'
+                      : 'pb-6'
+                    // Player will mount on this route but hasn't faded in yet —
+                    // reserve its desktop slot too, so nothing jumps when it does.
+                    : 'pb-20 lg:pb-6'
+                  // No player ever mounts here (Home, Explore, Feed, …). pb-20
+                  // stays: it clears AppMobileNav (lg:hidden), unrelated to the
+                  // player. The lg:pb-6 companion doesn't apply — AppMobileNav
+                  // doesn't exist on desktop — so it was just dead bottom padding.
+                  : 'pb-20'
               }
           `}
             style={{
@@ -260,13 +268,20 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             </div>
           </div>
 
-          <AppPlayer
-            isReady={isReady}
-            isPlayerMounted={isPlayerMounted}
-            isProjectLoading={isProjectLoading}
-            onHeightChange={setPlayerHeight}
-            playerSlot={playerSlot}
-          />
+          {/* Gated here rather than inside AppPlayer: isPlayerMounted is a
+              route-level fact (isProjectPage || isSetupPage), not a transient
+              loading state, so there's nothing to mount on routes where it's
+              false — skip the component entirely instead of instantiating its
+              refs and ResizeObserver just to render null. */}
+          {isPlayerMounted && (
+            <AppPlayer
+              isReady={isReady}
+              isPlayerMounted={isPlayerMounted}
+              isProjectLoading={isProjectLoading}
+              onHeightChange={setPlayerHeight}
+              playerSlot={playerSlot}
+            />
+          )}
 
           <AppMobileNav
             isReady={isReady}
