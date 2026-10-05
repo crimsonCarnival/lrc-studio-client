@@ -4,6 +4,9 @@ import { useTranslation } from 'react-i18next';
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import { SettingsProvider } from '@/features/settings/SettingsContext';
 import { TooltipProvider } from '@ui/tooltip';
+import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
+import { Icon } from '@/shared/ui/Icon';
 import { Spinner } from '@ui/skeleton';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
@@ -53,6 +56,8 @@ interface PublicProject {
   user?: { id?: string; accountName?: string };
   [key: string]: unknown;
 }
+
+const INFO_COLLAPSED_KEY = 'lrc_project_info_collapsed';
 
 interface UpNextPlaylist {
   projects?: { publicId: string }[];
@@ -242,6 +247,19 @@ function PublicProjectViewPageInner() {
 
   const cover = resolveCoverImage(project);
 
+  // Details panel collapse — a viewer preference, remembered across projects.
+  // On desktop it hides the whole right column so lyrics and player take the
+  // full width; below lg the column is stacked, so the card folds in place.
+  const [infoCollapsed, setInfoCollapsed] = useState(() => {
+    try { return localStorage.getItem(INFO_COLLAPSED_KEY) === '1'; } catch { return false; }
+  });
+  const toggleInfoCollapsed = useCallback(() => {
+    setInfoCollapsed((prev) => {
+      try { localStorage.setItem(INFO_COLLAPSED_KEY, prev ? '0' : '1'); } catch { /* still applies for this session */ }
+      return !prev;
+    });
+  }, []);
+
   // ── Ownership ────────────────────────────────────────────────
   const isOwner = !!(user && project?.user?.id && user.id === project.user.id);
 
@@ -353,7 +371,24 @@ function PublicProjectViewPageInner() {
         <div className="contents lg:flex lg:flex-1 lg:min-h-0 lg:flex-col">
           {/* pb clears the bar pinned to the bottom below lg, so the closing
               lines are not left underneath it. */}
-          <div className="order-1 flex-1 min-h-0 flex flex-col max-lg:pb-64" style={{ minHeight: '50vh' }}>
+          <div className="relative order-1 flex-1 min-h-0 flex flex-col max-lg:pb-64" style={{ minHeight: '50vh' }}>
+            {/* Desktop only: the column that holds the card's own toggle is hidden. */}
+            {infoCollapsed && (
+              <div className="hidden lg:block absolute top-14 right-4 z-20">
+                <Tip content={t('projectView.expandInfo')}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={toggleInfoCollapsed}
+                    aria-expanded={false}
+                    aria-label={t('projectView.expandInfo')}
+                    className="size-8 rounded-lg bg-card/70 backdrop-blur-md border border-border"
+                  >
+                    <Icon name="chevron_left" size={16} />
+                  </Button>
+                </Tip>
+              </div>
+            )}
             <ImmersiveLyricsDisplay
               lines={lines as unknown as DisplayLine[]}
               playbackPosition={playbackPosition}
@@ -429,7 +464,7 @@ function PublicProjectViewPageInner() {
         {/* Right: info panel — fixed width on desktop, stacked below on mobile */}
         <div
           ref={rightPanelRef}
-          className="order-2 lg:order-none relative lg:w-80 xl:w-96 lg:flex-shrink-0 overflow-y-auto scrollbar-none"
+          className={`order-2 lg:order-none relative lg:w-80 xl:w-96 lg:flex-shrink-0 overflow-y-auto scrollbar-none ${infoCollapsed ? 'lg:hidden' : ''}`}
         >
           <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20" />
           <div className="p-4 flex flex-col gap-4">
@@ -456,6 +491,8 @@ function PublicProjectViewPageInner() {
               lines={lines}
               songSingers={songSingers}
               singerColors={singerColors}
+              collapsed={infoCollapsed}
+              onToggleCollapsed={toggleInfoCollapsed}
             />
 
             {/* Up-next panel (list context) */}

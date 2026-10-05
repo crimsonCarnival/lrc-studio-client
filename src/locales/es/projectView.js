@@ -15,6 +15,8 @@ export default {
   singers: "Cantantes",
   showMore: "Mostrar más",
   showLess: "Mostrar menos",
+  collapseInfo: "Ocultar detalles del proyecto",
+  expandInfo: "Mostrar detalles del proyecto",
   upNext: "A continuación",
   noAudio: "Este proyecto no tiene audio adjunto.",
   prevTrack: "Anterior",

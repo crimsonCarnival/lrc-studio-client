@@ -74,6 +74,9 @@ interface ProjectInfoPanelProps {
   lines?: any[];
   songSingers?: string[];
   singerColors?: string[];
+  /** Owned by the page: on desktop it also hides the whole column. */
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
 }
 
 export default function ProjectInfoPanel({
@@ -93,10 +96,13 @@ export default function ProjectInfoPanel({
   lines,
   songSingers = [],
   singerColors = [],
+  collapsed,
+  onToggleCollapsed,
 }: ProjectInfoPanelProps) {
   const { t, i18n } = useTranslation();
   const { settings } = useSettings();
   const [descExpanded, setDescExpanded] = useState(false);
+  const collapseLabel = collapsed ? t('projectView.expandInfo') : t('projectView.collapseInfo');
 
   const meta = project?.metadata || {};
   const description = meta.description || '';
@@ -112,7 +118,7 @@ export default function ProjectInfoPanel({
   return (
     <div className="flex flex-col gap-4 rounded-2xl overflow-hidden bg-card/60 border border-border backdrop-blur-lg">
       {/* Cover art */}
-      {cover && (
+      {cover && !collapsed && (
         <div className="relative w-full aspect-square overflow-hidden rounded-t-2xl">
           <img
             src={cover}
@@ -130,7 +136,7 @@ export default function ProjectInfoPanel({
         </div>
       )}
 
-      <div className={`px-4 pb-4 flex flex-col gap-3 ${cover ? '' : 'pt-4'}`}>
+      <div className={`px-4 pb-4 flex flex-col gap-3 ${cover && !collapsed ? '' : 'pt-4'}`}>
 
         {/* Title + actions row */}
         <div className="flex items-start justify-between gap-2">
@@ -157,8 +163,21 @@ export default function ProjectInfoPanel({
             onEdit={onEdit}
             onFork={onFork}
           />
+          <Tip content={collapseLabel}>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={onToggleCollapsed}
+              aria-expanded={!collapsed}
+              aria-label={collapseLabel}
+              className="size-8 rounded-full shrink-0"
+            >
+              <Icon name={collapsed ? 'expand_more' : 'expand_less'} size={16} />
+            </Button>
+          </Tip>
         </div>
 
+        {!collapsed && (<>
         {/* Primary action buttons */}
         <div className="flex items-center gap-2 flex-wrap">
           {isOwner ? (
@@ -327,6 +346,7 @@ export default function ProjectInfoPanel({
             </div>
           )}
         </div>
+        </>)}
 
       </div>
     </div>
