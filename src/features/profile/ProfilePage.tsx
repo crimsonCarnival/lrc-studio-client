@@ -482,8 +482,6 @@ export default function ProfilePage() {
           blockLoading={viewAsOthers || blockLoading}
           onBlock={handleBlock}
           onUnblock={handleUnblock}
-          onOpenFollowers={() => setFollowModal('FOLLOWERS')}
-          onOpenFollowing={() => setFollowModal('FOLLOWING')}
           onViewAsOthers={isSelf ? () => setViewAsOthers(true) : undefined}
         />
 
@@ -501,14 +499,25 @@ export default function ProfilePage() {
             <span className="text-2xl font-bold text-zinc-100">{profile.totalStarsReceived}</span>
             <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.stars')}</span>
           </div>
-          <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
+          {/* The only entry points to the follow list; inert when the owner hides it. */}
+          <button
+            type="button"
+            disabled={!profile.showFollowers}
+            onClick={() => setFollowModal('FOLLOWERS')}
+            className="glass rounded-2xl p-4 flex flex-col justify-between text-left hover:border-primary/20 transition-colors enabled:cursor-pointer"
+          >
             <span className="text-2xl font-bold text-zinc-100">{profile.followerCount}</span>
             <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.followers')}</span>
-          </div>
-          <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
+          </button>
+          <button
+            type="button"
+            disabled={!profile.showFollowers}
+            onClick={() => setFollowModal('FOLLOWING')}
+            className="glass rounded-2xl p-4 flex flex-col justify-between text-left hover:border-primary/20 transition-colors enabled:cursor-pointer"
+          >
             <span className="text-2xl font-bold text-zinc-100">{profile.followingCount}</span>
             <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.following')}</span>
-          </div>
+          </button>
         </div>
 
         {/* Two-column layout: main content + showcase sidebar */}
