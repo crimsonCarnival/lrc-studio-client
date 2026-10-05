@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
@@ -132,7 +133,12 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
     );
   }
 
-  return (
+  // Portaled to document.body. Rendered inline (the previous behavior), this
+  // `fixed inset-0` wrapper centered against some ancestor's box instead of
+  // the viewport — the modal opened ~300px below true center and could run
+  // off the bottom of the screen. Every other modal in the app (Dialog,
+  // ProjectSetupModal, …) is already portaled; this one wasn't.
+  return createPortal(
     <>
       <div
         className="fixed inset-0 z-modal-backdrop bg-black/60 backdrop-blur-sm animate-fade-in cursor-default"
@@ -211,6 +217,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   );
 }
