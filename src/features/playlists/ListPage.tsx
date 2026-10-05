@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useCallback, lazy, Suspense } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
@@ -8,10 +8,10 @@ import { Button } from '@ui/button';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import {
-  getPlaylist,
   savePlaylist,
   unsavePlaylist,
 } from './playlist.service';
+import { usePlaylistDetail } from './playlist.queries';
 import { PlaylistModal } from './PlaylistModal';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 
@@ -44,38 +44,18 @@ export default function ListPage() {
   const { t } = useTranslation();
   const { user } = useAuthContext();
 
-  const [playlist, setPlaylist] = useState<Playlist | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [forbidden, setForbidden] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const { playlist, loading, notFound, forbidden, setPlaylist } = usePlaylistDetail<Playlist>(listId);
+  // Saved state lives on the cached playlist, so it cannot drift from it.
+  const isSaved = playlist?.isSavedByMe ?? false;
+  const setIsSaved = useCallback(
+    (value: boolean) => setPlaylist(prev => prev ? { ...prev, isSavedByMe: value } : prev),
+    [setPlaylist],
+  );
   const [saveLoading, setSaveLoading] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [hoveringUnsave, setHoveringUnsave] = useState(false);
 
   const isOwner = !!user && user.accountName === accountName;
-
-  useEffect(() => {
-    let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!listId) { setNotFound(true); setLoading(false); return; }
-    setLoading(true);
-    getPlaylist(listId)
-      .then((data) => {
-        const pl = data as Playlist | null;
-        if (cancelled) return;
-        if (!pl) { setNotFound(true); return; }
-        setPlaylist(pl);
-        setIsSaved(pl.isSavedByMe ?? false);
-      })
-      .catch((err: { graphqlErrors?: Array<{ message?: string }> }) => {
-        if (cancelled) return;
-        if (err.graphqlErrors?.[0]?.message === 'forbidden') setForbidden(true);
-        else setNotFound(true);
-      })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [listId]);
 
   const handleSave = useCallback(async () => {
     if (!user) {
@@ -93,7 +73,7 @@ export default function ListPage() {
     } finally {
       setSaveLoading(false);
     }
-  }, [user, listId, accountName, navigate]);
+  }, [user, listId, accountName, navigate, setIsSaved, setPlaylist]);
 
   const handleUnsave = useCallback(async () => {
     setSaveLoading(true);
@@ -108,7 +88,7 @@ export default function ListPage() {
     } finally {
       setSaveLoading(false);
     }
-  }, [listId]);
+  }, [listId, setIsSaved, setPlaylist]);
 
   if (loading) {
     return (
@@ -292,7 +272,7 @@ export default function ListPage() {
         <PlaylistModal
           playlist={playlist}
           onClose={() => setShowEdit(false)}
-          onSave={(updated: Playlist) => { setPlaylist(updated); setShowEdit(false); }}
+          onSave={(updated: Playlist) => { setPlaylist(() => updated); setShowEdit(false); }}
         />
       )}
     </div>

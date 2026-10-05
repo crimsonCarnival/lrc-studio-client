@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import type { InfiniteData } from '@tanstack/react-query';
 import { gqlRequest } from '@/app/graphql.client';
 import { getSocket } from '@/app/socket.client';
 import type { FeedResult, Activity } from '@/types';
@@ -26,36 +28,20 @@ const FEED_QUERY = /* GraphQL */ `
   }
 `;
 
+const feedKey = (limit: number) => ['feed', limit] as const;
+const NO_ACTIVITIES: Activity[] = [];
+
 export function useFeed(limit = 20) {
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [hasMore, setHasMore]       = useState(false);
-  const [loading, setLoading]       = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError]           = useState<unknown>(null);
-  const offsetRef = useRef(0);
-
-  const fetchPage = useCallback(async (offset: number, append: boolean) => {
-    try {
-      if (offset === 0) setLoading(true);
-      else setLoadingMore(true);
-
-      const data = await gqlRequest<{ feed: FeedResult }>(FEED_QUERY, { offset, limit });
-      const { activities: items, hasMore: more } = data.feed;
-
-      setActivities(prev => append ? [...prev, ...items] : items);
-      setHasMore(more);
-      offsetRef.current = offset + items.length;
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [limit]);
-
-  // Initial fetch
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { fetchPage(0, false); }, [fetchPage]);
+  const queryClient = useQueryClient();
+  const query = useInfiniteQuery({
+    queryKey: feedKey(limit),
+    queryFn: async ({ pageParam }) => (await gqlRequest<{ feed: FeedResult }>(FEED_QUERY, { offset: pageParam, limit })).feed,
+    initialPageParam: 0,
+    // The server pages by offset, so the cursor is the count loaded so far —
+    // which includes items pushed over the socket below, keeping pages aligned.
+    getNextPageParam: (lastPage, pages) =>
+      lastPage.hasMore ? pages.reduce((n, page) => n + page.activities.length, 0) : undefined,
+  });
 
   // Real-time: prepend new items pushed from the server
   useEffect(() => {
@@ -63,18 +49,23 @@ export function useFeed(limit = 20) {
     if (!socket) return;
 
     const onFeedNew = (activity: Activity) => {
-      setActivities(prev => [activity, ...prev]);
-      offsetRef.current += 1;
+      queryClient.setQueryData<InfiniteData<FeedResult>>(feedKey(limit), (data) => {
+        if (!data) return data;
+        const [first, ...rest] = data.pages;
+        return { ...data, pages: [{ ...first, activities: [activity, ...first.activities] }, ...rest] };
+      });
     };
 
     socket.on('feed:new', onFeedNew);
     return () => { socket.off('feed:new', onFeedNew); };
-  }, []);
+  }, [queryClient, limit]);
 
+  const activities = useMemo(() => query.data?.pages.flatMap((page) => page.activities) ?? NO_ACTIVITIES, [query.data]);
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
+  // Stable identity: consumers hand this to an IntersectionObserver effect.
   const loadMore = useCallback(() => {
-    if (!hasMore || loadingMore) return;
-    fetchPage(offsetRef.current, true);
-  }, [hasMore, loadingMore, fetchPage]);
+    if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  return { activities, hasMore, loading, loadingMore, error, loadMore };
+  return { activities, hasMore: hasNextPage, loading: query.isPending, loadingMore: isFetchingNextPage, error: query.error, loadMore };
 }

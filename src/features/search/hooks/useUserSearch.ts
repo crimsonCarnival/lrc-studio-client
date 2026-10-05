@@ -1,7 +1,10 @@
-import { useState, useCallback, useRef } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { gqlRequest } from '@/app/graphql.client';
 import type { FollowUser } from '@/types';
-import { getCachedResults, cacheResults, getSuggestions } from '../search.cache';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue';
+import { cacheResults, getSuggestions } from '../search.cache';
+import { SEARCH_STALE_MS } from './useProjectSearch';
 
 const SEARCH_USERS_QUERY = /* GraphQL */ `
   query SearchUsers($query: String!, $limit: Int) {
@@ -14,44 +17,30 @@ const SEARCH_USERS_QUERY = /* GraphQL */ `
   }
 `;
 
+const NO_USERS: FollowUser[] = [];
+const NO_SUGGESTIONS: string[] = [];
+
 export function useUserSearch() {
-  const [query, setQuery]                   = useState('');
-  const [results, setResults]               = useState<FollowUser[]>([]);
-  const [loading, setLoading]               = useState(false);
-  const [error, setError]                   = useState<unknown>(null);
-  const [localSuggestions, setLocalSuggestions] = useState<string[]>([]);
-  const debounceRef                         = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [query, setQuery] = useState('');
+  const term = useDebouncedValue(query, 300).trim();
 
-  const search = useCallback(async (q: string) => {
-    if (!q.trim()) { setResults([]); setLocalSuggestions([]); return; }
-    setError(null);
+  const search = useQuery({
+    queryKey: ['search', 'users', term],
+    queryFn: async () => {
+      const { searchUsers } = await gqlRequest<{ searchUsers: FollowUser[] }>(SEARCH_USERS_QUERY, { query: term, limit: 20 });
+      // Feeds the prefix index that getSuggestions reads from.
+      cacheResults(searchUsers);
+      return searchUsers;
+    },
+    enabled: !!term,
+    staleTime: SEARCH_STALE_MS,
+    placeholderData: keepPreviousData,
+  });
 
-    const cached = getCachedResults(q);
-    if (cached) {
-      setResults(cached);
-      setLoading(false);
-      setLocalSuggestions(getSuggestions(q));
-      return;
-    }
+  const results = term ? search.data ?? NO_USERS : NO_USERS;
+  // Recomputed when results arrive, since each response grows the prefix index.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const localSuggestions = useMemo(() => (term ? getSuggestions(term) : NO_SUGGESTIONS), [term, search.data]);
 
-    setLocalSuggestions(getSuggestions(q));
-    setLoading(true);
-    try {
-      const data = await gqlRequest<{ searchUsers: FollowUser[] }>(SEARCH_USERS_QUERY, { query: q, limit: 20 });
-      cacheResults(q, data.searchUsers);
-      setResults(data.searchUsers);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const handleQueryChange = useCallback((q: string) => {
-    setQuery(q);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => search(q), 300);
-  }, [search]);
-
-  return { query, results, loading, error, localSuggestions, handleQueryChange, setQuery };
+  return { query, results, loading: !!term && search.isFetching, error: search.error, localSuggestions, handleQueryChange: setQuery, setQuery };
 }

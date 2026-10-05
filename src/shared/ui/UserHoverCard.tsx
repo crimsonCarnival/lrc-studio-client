@@ -10,6 +10,7 @@ import { CountryFlag } from '@ui/CountryFlag';
 import { usePresence } from '@/shared/hooks/usePresence';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { followUser, unfollowUser } from '@/features/profile/profile.service';
+import { useQuery } from '@tanstack/react-query';
 import { gqlRequest } from '@/app/graphql.client';
 import { formatDistanceToNow } from 'date-fns';
 import { es as esLocale, enUS as enLocale } from 'date-fns/locale';
@@ -33,29 +34,25 @@ interface MiniProfile {
   progression: { xp: number; level: number } | null;
 }
 
-const profileCache = new Map<string, MiniProfile>();
-
 async function fetchMiniProfile(accountName: string): Promise<MiniProfile | null> {
-  if (profileCache.has(accountName)) return profileCache.get(accountName)!;
-  try {
-    const data = await gqlRequest<{ publicProfile: MiniProfile | null }>(/* GraphQL */ `
-      query MiniProfile($accountName: String!) {
-        publicProfile(accountName: $accountName) {
-          id accountName displayName avatarUrl bio isVerified
-          followerCount followingCount projectCount totalStarsReceived
-          isFollowedByMe isFollowingMe miniProfileBadgeIds
-          country
-          lastOnlineAt
-          progression { xp level }
-        }
+  const data = await gqlRequest<{ publicProfile: MiniProfile | null }>(/* GraphQL */ `
+    query MiniProfile($accountName: String!) {
+      publicProfile(accountName: $accountName) {
+        id accountName displayName avatarUrl bio isVerified
+        followerCount followingCount projectCount totalStarsReceived
+        isFollowedByMe isFollowingMe miniProfileBadgeIds
+        country
+        lastOnlineAt
+        progression { xp level }
       }
-    `, { accountName });
-    if (data.publicProfile) profileCache.set(accountName, data.publicProfile);
-    return data.publicProfile;
-  } catch {
-    return null;
-  }
+    }
+  `, { accountName });
+  return data.publicProfile;
 }
+
+// The same people recur across feeds and lists; hovering one again within a
+// minute reuses the card instead of refetching it.
+const MINI_PROFILE_STALE_MS = 60_000;
 
 interface UserHoverCardProps {
   accountName: string;
@@ -77,7 +74,16 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: -9999, left: -9999 });
-  const [profile, setProfile] = useState<MiniProfile | null>(() => profileCache.get(accountName) ?? null);
+  // Fetched on first open. Keyed under 'profile', so a follow made anywhere
+  // updates this card and signing out clears it (see cache-sync).
+  const { data } = useQuery({
+    queryKey: ['profile', accountName, 'mini'],
+    queryFn: () => fetchMiniProfile(accountName),
+    enabled: open,
+    staleTime: MINI_PROFILE_STALE_MS,
+  });
+  const profile = data ?? null;
+  // Optimistic override while a follow request is in flight; the cache holds the settled value.
   const [following, setFollowing] = useState<boolean | null>(null);
   const [followPending, setFollowPending] = useState(false);
 
@@ -101,17 +107,8 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
 
   const startOpen = useCallback(() => {
     clearTimer();
-    timerRef.current = setTimeout(async () => {
-      setOpen(true);
-      if (!profileCache.has(accountName)) {
-        const p = await fetchMiniProfile(accountName);
-        if (p) { setProfile(p); setFollowing(p.isFollowedByMe); }
-      } else {
-        const p = profileCache.get(accountName)!;
-        setProfile(p); setFollowing(p.isFollowedByMe);
-      }
-    }, OPEN_DELAY);
-  }, [accountName, clearTimer]);
+    timerRef.current = setTimeout(() => setOpen(true), OPEN_DELAY);
+  }, [clearTimer]);
 
   const startClose = useCallback(() => {
     clearTimer();
@@ -150,13 +147,13 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
     setFollowPending(true);
     const nowFollowing = !isFollowedByMe;
     setFollowing(nowFollowing);
-    profileCache.delete(accountName);
     try {
       if (nowFollowing) await followUser(accountName);
       else await unfollowUser(accountName);
     } catch {
-      setFollowing(!nowFollowing);
+      // The cache was never updated, so dropping the override reverts the button.
     } finally {
+      setFollowing(null);
       setFollowPending(false);
     }
   };

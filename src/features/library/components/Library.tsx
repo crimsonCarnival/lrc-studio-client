@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useCachedList } from '@/shared/hooks/useCachedList';
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -63,9 +64,10 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
   const { settings } = useSettings();
   const timezone = settings.advanced?.timezone;
   const inputMethod = useInputMethod();
-  const [items, setItems] = useState<ProjectItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { items, loading, error, reload: fetchProjects, setItems } = useCachedList<ProjectItem>(
+    ['projects', 'mine'],
+    () => projects.list() as Promise<ProjectItem[] | null>,
+  );
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [, confirmModal] = useConfirm() as [unknown, ReactNode];
@@ -74,21 +76,6 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
   const [filterTab, setFilterTab] = useState<'all' | 'inProgress' | 'completed' | 'notStarted'>('all');
   const [sortBy, setSortBy] = useState<'edited' | 'created' | 'title'>('edited');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-
-  const fetchProjects = useCallback(async () => {
-    setError(false);
-    try {
-      const list = await projects.list() as ProjectItem[] | null || [];
-      setItems(list);
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { fetchProjects(); }, [fetchProjects]);
 
   const handleDelete = useCallback((publicId: string) => {
     setDeletingId(publicId);
@@ -100,7 +87,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
     } finally {
       setDeletingId(null);
     }
-  }, []);
+  }, [setItems]);
 
   const handleFavorite = useCallback((publicId: string) => {
     // Placeholder for favorite functionality

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
@@ -8,31 +8,17 @@ import { OnlineDot } from '@ui/OnlineDot';
 import { UserHoverCard } from '@ui/UserHoverCard';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { usePresence } from '@/shared/hooks/usePresence';
-import { getFollowList, followUser, unfollowUser } from './profile.service';
+import { useFollowList, useFollowToggle } from './profile.queries';
 
 type Tab = 'FOLLOWERS' | 'FOLLOWING' | 'FRIENDS';
 
 interface FollowListUser {
   id: string;
   accountName: string;
-  displayName?: string;
-  avatarUrl?: string;
+  displayName?: string | null;
+  avatarUrl?: string | null;
   isFollowedByMe?: boolean;
 }
-
-interface TabState {
-  users: FollowListUser[];
-  total: number;
-  offset: number;
-  loading: boolean;
-  loaded: boolean;
-  loadingMore: boolean;
-}
-
-const INITIAL_TAB_STATE: TabState = {
-  users: [], total: 0, offset: 0,
-  loading: false, loaded: false, loadingMore: false,
-};
 
 interface FollowModalProps {
   accountName: string;
@@ -47,102 +33,32 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
   const isOwnProfile = me?.accountName === accountName;
 
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
-  const [tabStates, setTabStates] = useState<Record<Tab, TabState>>({
-    FOLLOWERS: { ...INITIAL_TAB_STATE },
-    FOLLOWING: { ...INITIAL_TAB_STATE },
-    FRIENDS: { ...INITIAL_TAB_STATE },
-  });
-  const [followState, setFollowState] = useState<Record<string, string>>({});
-
-  const updateTab = useCallback((tab: Tab, patch: Partial<TabState>) => {
-    setTabStates(prev => ({ ...prev, [tab]: { ...prev[tab], ...patch } }));
-  }, []);
-
-  const loadTab = useCallback(async (tab: Tab, offset = 0) => {
-    if (offset === 0) {
-      updateTab(tab, { loading: true, users: [], total: 0, offset: 0 });
-    } else {
-      updateTab(tab, { loadingMore: true });
-    }
-    try {
-      const { users, total } = await getFollowList(accountName, tab, offset) as { users: FollowListUser[]; total: number };
-      setTabStates(prev => ({
-        ...prev,
-        [tab]: {
-          ...prev[tab],
-          users: offset === 0 ? users : [...prev[tab].users, ...users],
-          total,
-          offset: offset + users.length,
-          loaded: true,
-          loading: false,
-          loadingMore: false,
-        },
-      }));
-    } catch {
-      updateTab(tab, { loading: false, loadingMore: false });
-    }
-  }, [accountName, updateTab]);
-
-  // Load initial tab
-  const loadedRef = useRef<Set<Tab>>(new Set());
-  useEffect(() => {
-    if (!loadedRef.current.has(activeTab)) {
-      loadedRef.current.add(activeTab);
-      loadTab(activeTab);
-    }
-  }, [activeTab, loadTab]);
+  // A tab is fetched the first time it is opened, then served from the cache.
+  const [visited, setVisited] = useState<Set<Tab>>(() => new Set([initialTab]));
+  const lists = {
+    FOLLOWERS: useFollowList(accountName, 'FOLLOWERS', visited.has('FOLLOWERS')),
+    FOLLOWING: useFollowList(accountName, 'FOLLOWING', visited.has('FOLLOWING')),
+    FRIENDS: useFollowList(accountName, 'FRIENDS', visited.has('FRIENDS')),
+  };
 
   const switchTab = (tab: Tab) => {
     setActiveTab(tab);
-    if (!loadedRef.current.has(tab)) {
-      loadedRef.current.add(tab);
-      loadTab(tab);
-    }
+    setVisited(prev => (prev.has(tab) ? prev : new Set(prev).add(tab)));
   };
 
-  const handleFollow = useCallback(async (targetAccountName: string) => {
-    setFollowState(s => ({ ...s, [targetAccountName]: 'pending' }));
-    try {
-      await followUser(targetAccountName);
-      setFollowState(s => ({ ...s, [targetAccountName]: 'following' }));
-      setTabStates(prev => {
-        const updated = { ...prev };
-        for (const tab of ['FOLLOWERS', 'FOLLOWING', 'FRIENDS'] as Tab[]) {
-          updated[tab] = {
-            ...updated[tab],
-            users: updated[tab].users.map(u =>
-              u.accountName === targetAccountName ? { ...u, isFollowedByMe: true } : u
-            ),
-          };
-        }
-        return updated;
-      });
-    } catch {
-      setFollowState(s => { const n = { ...s }; delete n[targetAccountName]; return n; });
-    }
-  }, []);
-
-  const handleUnfollow = useCallback(async (targetAccountName: string) => {
-    setFollowState(s => ({ ...s, [targetAccountName]: 'pending' }));
-    try {
-      await unfollowUser(targetAccountName);
-      setFollowState(s => ({ ...s, [targetAccountName]: 'unfollowing' }));
-      setTabStates(prev => {
-        const updated = { ...prev };
-        for (const tab of ['FOLLOWERS', 'FOLLOWING', 'FRIENDS'] as Tab[]) {
-          updated[tab] = {
-            ...updated[tab],
-            users: updated[tab].users.map(u =>
-              u.accountName === targetAccountName ? { ...u, isFollowedByMe: false } : u
-            ),
-          };
-        }
-        return updated;
-      });
-    } catch {
-      setFollowState(s => { const n = { ...s }; delete n[targetAccountName]; return n; });
-    }
-  }, []);
+  // The cache holds who is followed; only the in-flight requests are local.
+  const followToggle = useFollowToggle();
+  const [pending, setPending] = useState<Set<string>>(() => new Set());
+  const toggleFollow = (targetAccountName: string, follow: boolean) => {
+    setPending(prev => new Set(prev).add(targetAccountName));
+    followToggle.mutate({ accountName: targetAccountName, follow }, {
+      onSettled: () => setPending(prev => {
+        const next = new Set(prev);
+        next.delete(targetAccountName);
+        return next;
+      }),
+    });
+  };
 
   const TABS: { id: Tab; label: string }[] = [
     { id: 'FOLLOWERS', label: t('profile.followersTitle') },
@@ -150,13 +66,13 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
     { id: 'FRIENDS', label: t('profile.friendsTitle') },
   ];
 
-  const current = tabStates[activeTab];
+  const current = lists[activeTab];
+  const currentUsers: FollowListUser[] = current.data?.pages.flatMap(page => page.users) ?? [];
 
   function UserRow({ u }: { u: FollowListUser }) {
     const isSelf = me?.accountName === u.accountName;
-    const state = followState[u.accountName];
-    const isFollowing = state === 'following' ? true : state === 'unfollowing' ? false : u.isFollowedByMe;
-    const isPending = state === 'pending';
+    const isFollowing = u.isFollowedByMe;
+    const isPending = pending.has(u.accountName);
     const isFriendsTab = activeTab === 'FRIENDS';
 
     const followBtnLabel = isFollowing
@@ -196,7 +112,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
         {me && !isSelf && (
           isFollowing ? (
             <button
-              onClick={() => handleUnfollow(u.accountName)}
+              onClick={() => toggleFollow(u.accountName, false)}
               disabled={isPending}
               className="shrink-0 text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-50 whitespace-nowrap"
             >
@@ -204,7 +120,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
             </button>
           ) : (
             <button
-              onClick={() => handleFollow(u.accountName)}
+              onClick={() => toggleFollow(u.accountName, true)}
               disabled={isPending}
               className="shrink-0 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
             >
@@ -241,7 +157,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
           {/* Tabs */}
           <div className="flex items-center gap-1 px-4 pb-0 shrink-0 border-b border-border/40">
             {TABS.map(tab => {
-              const count = tabStates[tab.id].loaded ? tabStates[tab.id].total : null;
+              const count = lists[tab.id].data?.pages[0]?.total ?? null;
               return (
                 <button
                   key={tab.id}
@@ -265,11 +181,11 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
 
           {/* List */}
           <div className="flex-1 min-h-0 overflow-y-auto">
-            {current.loading ? (
+            {current.isPending ? (
               <div className="flex justify-center py-10">
                 <LoadingSpinner size="sm" />
               </div>
-            ) : current.loaded && current.users.length === 0 ? (
+            ) : current.isSuccess && currentUsers.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-10">
                 {activeTab === 'FOLLOWERS' ? t('profile.noFollowers')
                   : activeTab === 'FOLLOWING' ? t('profile.noFollowing')
@@ -277,16 +193,16 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
               </p>
             ) : (
               <div className="py-1">
-                {current.users.map(u => <UserRow key={u.id} u={u} />)}
+                {currentUsers.map(u => <UserRow key={u.id} u={u} />)}
 
-                {current.users.length < current.total && (
+                {current.hasNextPage && (
                   <div className="flex justify-center py-3">
                     <button
-                      onClick={() => loadTab(activeTab, current.offset)}
-                      disabled={current.loadingMore}
+                      onClick={() => current.fetchNextPage()}
+                      disabled={current.isFetchingNextPage}
                       className="text-sm text-primary hover:underline disabled:opacity-50"
                     >
-                      {current.loadingMore ? <LoadingSpinner size="sm" /> : t('profile.loadMore')}
+                      {current.isFetchingNextPage ? <LoadingSpinner size="sm" /> : t('profile.loadMore')}
                     </button>
                   </div>
                 )}

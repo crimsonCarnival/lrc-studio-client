@@ -9,7 +9,6 @@ import { Button } from '@ui/button';
 import { FloatingCombobox } from '@ui/floating-combobox';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import {
-  getPlaylist,
   savePlaylist,
   unsavePlaylist,
   updatePlaylist,
@@ -21,6 +20,7 @@ import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { Popover, PopoverTrigger, PopoverContent } from '@ui/popover';
 import { SharePanel } from '@/features/sharing/components/ShareModal';
 import { incrementPlaylistView, incrementPlaylistShare } from './playlist.service';
+import { usePlaylistDetail } from './playlist.queries';
 import { useConfirmDestructive } from '@/shared/hooks/useConfirm';
 
 interface PlaylistProject {
@@ -120,11 +120,13 @@ export default function PlaylistPage() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
 
-  const [playlist, setPlaylist] = useState<Playlist | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
-  const [forbidden, setForbidden] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const { playlist, loading, notFound, forbidden, setPlaylist } = usePlaylistDetail<Playlist>(playlistId);
+  // Saved state lives on the cached playlist, so it cannot drift from it.
+  const isSaved = playlist?.isSavedByMe ?? false;
+  const setIsSaved = useCallback(
+    (value: boolean) => setPlaylist(prev => prev ? { ...prev, isSavedByMe: value } : prev),
+    [setPlaylist],
+  );
   const [hoveringUnsave, setHoveringUnsave] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -133,28 +135,6 @@ export default function PlaylistPage() {
   const [deleting, setDeleting] = useState(false);
 
   const isOwner = !!user && user.accountName === accountName;
-
-  useEffect(() => {
-    let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (!playlistId) { setNotFound(true); setLoading(false); return; }
-    setLoading(true);
-    getPlaylist(playlistId)
-      .then(data => {
-        const pl = data as Playlist | null;
-        if (cancelled) return;
-        if (!pl) { setNotFound(true); return; }
-        setPlaylist(pl);
-        setIsSaved(pl.isSavedByMe ?? false);
-      })
-      .catch((err: { graphqlErrors?: Array<{ message?: string }> }) => {
-        if (cancelled) return;
-        if (err.graphqlErrors?.[0]?.message === 'forbidden') setForbidden(true);
-        else setNotFound(true);
-      })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [playlistId]);
 
   useEffect(() => {
     if (!playlistId || notFound || forbidden || loading) return;
@@ -180,7 +160,7 @@ export default function PlaylistPage() {
       setPlaylist(prev => prev ? { ...prev, savedCount: Math.max(0, (prev.savedCount ?? 0) - 1) } : prev);
     }
     setSaveLoading(false);
-  }, [user, playlistId, accountName, navigate]);
+  }, [user, playlistId, accountName, navigate, setIsSaved, setPlaylist]);
 
   const handleUnsave = useCallback(async () => {
     setSaveLoading(true);
@@ -194,7 +174,7 @@ export default function PlaylistPage() {
       setPlaylist(prev => prev ? { ...prev, savedCount: (prev.savedCount ?? 0) + 1 } : prev);
     }
     setSaveLoading(false);
-  }, [playlistId]);
+  }, [playlistId, setIsSaved, setPlaylist]);
 
   const handleDelete = useCallback(async () => {
     setDeleting(true);
@@ -214,7 +194,7 @@ export default function PlaylistPage() {
       projects: prev.projects.filter(p => p.id !== publicId),
       projectCount: Math.max(0, (prev.projectCount ?? 0) - 1),
     } : prev);
-  }, []);
+  }, [setPlaylist]);
 
   const handleSortModeChange = async (value: string) => {
     if (!playlist?.id) return;
@@ -419,7 +399,7 @@ export default function PlaylistPage() {
         <PlaylistModal
           playlist={playlist}
           onClose={() => setShowEdit(false)}
-          onSave={(updated: Playlist) => { setPlaylist(updated); setShowEdit(false); }}
+          onSave={(updated: Playlist) => { setPlaylist(() => updated); setShowEdit(false); }}
         />
       )}
     </div>

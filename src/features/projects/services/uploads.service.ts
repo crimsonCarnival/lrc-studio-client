@@ -1,5 +1,6 @@
 import { request } from '@/app/api.client';
 import { gqlRequest } from '@/app/graphql.client';
+import { uploadsChanged } from '@/app/cache-sync';
 import type { Upload, SaveMediaInput } from '@/types';
 
 interface CloudinarySignature {
@@ -171,6 +172,7 @@ export const uploadsService = {
         }
       }
     `, { input });
+    uploadsChanged();
     return { upload: data.saveMedia };
   },
 
@@ -180,14 +182,17 @@ export const uploadsService = {
         deleteMedia(id: $id)
       }
     `, { id });
+    uploadsChanged();
     return data.deleteMedia;
   },
 
   // updateMedia has no GQL equivalent yet — keep REST
   async updateMedia(id: string, patchData: Record<string, unknown>): Promise<unknown> {
-    return request(`/uploads/media/${encodeURIComponent(id)}`, {
+    const result = await request(`/uploads/media/${encodeURIComponent(id)}`, {
       method: 'PATCH',
       body: JSON.stringify(patchData),
     });
+    uploadsChanged();
+    return result;
   },
 };

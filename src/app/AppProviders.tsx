@@ -1,5 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 import type { ReactNode } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/app/query.client';
 import { SettingsProvider } from '@/features/settings/SettingsContext';
 import { SetupProvider } from '@/features/editor/SetupContext';
 import { TooltipProvider } from '@ui/tooltip';
@@ -53,18 +56,32 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   useSessionSocket();
 
+  // Cached responses are viewer-specific (feed, suggestions, "followed by me"),
+  // so a change of signed-in user must not be served the previous one's data.
+  // resetQueries drops every cached result and refetches whatever is on screen.
+  const { user } = useAuthContext();
+  const viewerId = user?.id ?? null;
+  const lastViewerId = useRef(viewerId);
+  useEffect(() => {
+    if (lastViewerId.current === viewerId) return;
+    lastViewerId.current = viewerId;
+    void queryClient.resetQueries();
+  }, [viewerId]);
+
   return (
-    <SettingsProvider>
-      <SetupProvider>
-        <TooltipProvider>
-          <NotificationsProvider>
-            <BadgeDefsProvider>
-              <SetAccountNameModal />
-              {children}
-            </BadgeDefsProvider>
-          </NotificationsProvider>
-        </TooltipProvider>
-      </SetupProvider>
-    </SettingsProvider>
+    <QueryClientProvider client={queryClient}>
+      <SettingsProvider>
+        <SetupProvider>
+          <TooltipProvider>
+            <NotificationsProvider>
+              <BadgeDefsProvider>
+                <SetAccountNameModal />
+                {children}
+              </BadgeDefsProvider>
+            </NotificationsProvider>
+          </TooltipProvider>
+        </SetupProvider>
+      </SettingsProvider>
+    </QueryClientProvider>
   );
 }

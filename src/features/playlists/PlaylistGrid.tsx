@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useCachedList } from '@/shared/hooks/useCachedList';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -27,22 +28,13 @@ type RequestConfirm = (
 
 export function PlaylistGrid({ accountName, isOwner }: { accountName: string; isOwner?: boolean }) {
   const { t } = useTranslation();
-  const [playlists, setPlaylists] = useState<PlaylistItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { items: playlists, loading, setItems: setPlaylists } = useCachedList<PlaylistItem>(
+    ['playlists', accountName],
+    () => getPlaylists(accountName),
+  );
   const [showModal, setShowModal] = useState(false);
   const [editingPlaylist, setEditingPlaylist] = useState<PlaylistItem | null>(null);
   const [requestConfirm, confirmModal] = useConfirm() as [RequestConfirm, ReactNode];
-
-  useEffect(() => {
-    let cancelled = false;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setLoading(true);
-    getPlaylists(accountName)
-      .then((data: PlaylistItem[]) => { if (!cancelled) setPlaylists(data); })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [accountName]);
 
   function handleSaved(playlist: PlaylistItem) {
     setPlaylists(prev => {
