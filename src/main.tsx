@@ -40,8 +40,8 @@ function LanguageSync() {
   return null;
 }
 import { AuthProvider, useAuthContext } from '@/features/auth/AuthContext'
-import { Spinner } from '@ui/skeleton'
 import { LoadingSpinner } from '@ui/LoadingSpinner'
+import { AppLoadingScreen } from '@ui/AppLoadingScreen'
 import { AppProviders } from './app/AppProviders';
 import { useSettings } from '@/features/settings/useSettings';
 import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
@@ -104,11 +104,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <Spinner size={24} className="text-primary" />
-      </div>
-    );
+    return <AppLoadingScreen />;
   }
 
   // Logged-in users landing on root should go to the home dashboard.
@@ -151,22 +147,14 @@ function RootRoutes() {
   const { user, loading, heldLoginResult } = useAuthContext();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <Spinner size={24} className="text-primary" />
-      </div>
-    );
+    return <AppLoadingScreen />;
   }
 
   // Keep AuthPage mounted while heldLoginResult is set so the save-login prompt can show.
   const showAuthPage = !user || heldLoginResult;
 
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <Spinner size={24} className="text-primary" />
-      </div>
-    }>
+    <Suspense fallback={<AppLoadingScreen />}>
       <Routes>
         <Route path="/share/:id" element={<SharedProjectRoute />} />
 
