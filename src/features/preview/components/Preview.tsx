@@ -6,6 +6,9 @@ import type { UsePreviewResult } from '../hooks/usePreview';
 import ExportPanel from './ExportPanel';
 import PreviewPasteArea from './PreviewPasteArea';
 import PreviewViewport from './PreviewViewport';
+import PlayerControls from '@/features/player/components/PlayerControls';
+import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
+import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import { Button } from '@ui/button';
 import {
   Popover,
@@ -49,12 +52,14 @@ interface PreviewProps {
   onHidePreview?: () => void;
   editorHidden?: boolean;
   onShowEditor?: () => void;
+  /** When 'preview', this panel owns the player dock (editor is hidden). */
+  playerSlot?: PlayerSlot;
   [key: string]: unknown;
 }
 
 export default function Preview(props: PreviewProps) {
   // Accept activepublicId and project as props
-  const { activepublicId, project } = props;
+  const { activepublicId, project, playerSlot } = props;
   // Pre-split song artists (when driven by a project) — threaded into PreviewViewport
   // so its singer roster matches the editor pane. See buildSingerRoster.
   const songArtists = (props.projectMetadata as { songArtists?: string[] } | undefined)?.songArtists;
@@ -453,6 +458,17 @@ export default function Preview(props: PreviewProps) {
             songArtists={songArtists}
             singerColors={singerColors}
           />
+        )}
+        {/* Editor is hidden: this panel owns the player dock, mirroring the Editor's
+            own self-contained playerDock (Editor.tsx) instead of the page-level
+            AppPlayer mobile-style floating bar. */}
+        {playerSlot === 'preview' && (
+          <DragPointerIsolate
+            data-tour="player-controls"
+            className="relative flex-shrink-0 border-zinc-800/50 -mx-3 sm:-mx-5 px-3 sm:px-5 mt-3 border-t pt-3"
+          >
+            <PlayerControls variant="editor" />
+          </DragPointerIsolate>
         )}
       </div>
       {shareModal && shareAnchor && createPortal(

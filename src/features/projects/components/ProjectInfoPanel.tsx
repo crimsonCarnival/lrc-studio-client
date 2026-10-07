@@ -119,11 +119,14 @@ export default function ProjectInfoPanel({
     <div className="flex flex-col gap-4 rounded-2xl overflow-hidden bg-card/60 border border-border backdrop-blur-lg">
       {/* Cover art */}
       {cover && !collapsed && (
-        <div className="relative w-full aspect-square overflow-hidden rounded-t-2xl">
+        <div className="relative w-full aspect-square overflow-hidden rounded-t-2xl bg-card">
+          {/* object-contain, not -cover: a non-square cover (most are square,
+              but nothing guarantees it) must never lose its edges to cropping.
+              Letterboxed on the card's own background instead. */}
           <img
             src={cover}
             alt={project?.title ?? ''}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
             loading="eager"
             decoding="async"
           />
