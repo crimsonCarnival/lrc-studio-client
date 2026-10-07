@@ -17,7 +17,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://lrc-editor-server.onrender.com/$1"
+      "destination": "https://api.lrcstudio.app/$1"
     },
     {
       "source": "/(.*)",
