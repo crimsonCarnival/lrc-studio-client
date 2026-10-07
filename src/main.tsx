@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { setAppNavigate } from '@/app/navigation';
 import { accessFor } from '@/app/route-access';
-import { isAdminHost } from '@/shared/utils/host';
+import { isAdminHost, redirectOffMobileHostIfNeeded } from '@/shared/utils/host';
 import { isStaff } from '@/features/auth/permissions';
 
 // Auto-reload when a new deployment invalidates lazy-loaded chunks
@@ -228,6 +228,10 @@ function AppToaster() {
 }
 
 const rootElement = document.getElementById('root');
+
+// Runs before the first render so a desktop visitor never sees a frame of the
+// phone layout before being sent to the canonical host.
+redirectOffMobileHostIfNeeded();
 
 // Only create root once to prevent HMR issues
 if (!window.__reactRoot) {

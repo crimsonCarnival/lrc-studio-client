@@ -26,3 +26,65 @@ export function isMobileHost(): boolean {
 export function isAdminHost(): boolean {
   return hostname().startsWith('admin.');
 }
+
+/** `www.lrcstudio.app` — the canonical host the mobile variant falls back to. */
+function canonicalHost(): string {
+  // Swap the leading `m.` label rather than hardcoding the domain, so this keeps
+  // working on previews and any future domain without another edit.
+  return window.location.hostname.replace(/^m\./i, 'www.');
+}
+
+/**
+ * Opt-out so the mobile variant stays reachable from a desktop browser. Without
+ * it the layout cannot be opened for testing or debugging on the machines it is
+ * most likely to be developed on. Sticky for the tab, so in-app navigation does
+ * not bounce after the first load.
+ */
+const STAY_PARAM = 'stay';
+const STAY_KEY = 'lrc-stay-on-mobile-host';
+
+function wantsToStay(): boolean {
+  try {
+    if (new URLSearchParams(window.location.search).get(STAY_PARAM) === '1') {
+      sessionStorage.setItem(STAY_KEY, '1');
+      return true;
+    }
+    return sessionStorage.getItem(STAY_KEY) === '1';
+  } catch {
+    // Private mode or blocked storage: fall back to the per-load answer only.
+    return new URLSearchParams(window.location.search).get(STAY_PARAM) === '1';
+  }
+}
+
+/**
+ * True when the mobile host was opened by something that is not a phone.
+ *
+ * "Mobile" here means the same thing `useInputMethod` calls `touch`: a coarse
+ * pointer with no hover. Screen width is deliberately not consulted — a desktop
+ * browser at 400px wide is still a desktop, and the narrow layout is already
+ * served to it responsively on www. A hybrid device (touch laptop) counts as
+ * not-mobile: it has the room and the pointer for the full layout.
+ *
+ * UA sniffing is avoided on purpose; it misreports iPads and every device
+ * released after the string was written.
+ */
+export function shouldLeaveMobileHost(): boolean {
+  if (!isMobileHost()) return false;
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  if (wantsToStay()) return false;
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  const hover = window.matchMedia('(hover: hover)').matches;
+  const isTouchOnly = coarse && !hover;
+  return !isTouchOnly;
+}
+
+/**
+ * Sends a non-phone visitor from `m.` to the canonical host, preserving the
+ * path, query and hash so a shared project link still lands where it should.
+ * `replace` rather than `assign` so Back does not bounce them straight back.
+ */
+export function redirectOffMobileHostIfNeeded(): void {
+  if (!shouldLeaveMobileHost()) return;
+  const { pathname, search, hash } = window.location;
+  window.location.replace(`https://${canonicalHost()}${pathname}${search}${hash}`);
+}
