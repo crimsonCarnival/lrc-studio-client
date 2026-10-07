@@ -61,6 +61,17 @@ function getDistStyle(dist: number | null) {
   return DIST_STYLE[Math.min(dist, DIST_STYLE.length - 1)];
 }
 
+// Base (dist-0) rem size per settings.interface.fontSize — the same setting
+// PreviewLine's ACTIVE_FONT_SIZES reads, so the public view tracks the
+// viewer's own preference instead of a fixed value. Bumped up from the
+// previous flat 1.25rem across the board, per request.
+const BASE_FONT_REM: Record<string, number> = {
+  small: 1.15,
+  normal: 1.4,
+  large: 1.65,
+  xlarge: 1.95,
+};
+
 interface ImmersiveLineProps {
   line: DisplayLine;
   dist: number | null;
@@ -79,6 +90,8 @@ interface ImmersiveLineProps {
   activeHighlight?: string;
   /** Settings.editor.display.readingFormat — script used for furigana. */
   readingFormat?: string;
+  /** Settings.interface.fontSize — same setting PreviewLine reads. */
+  baseFontRem?: number;
 }
 
 // ── Single lyric line ────────────────────────────────────────
@@ -99,6 +112,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
     alignment = 'left',
     activeHighlight,
     readingFormat,
+    baseFontRem = BASE_FONT_REM.normal,
   },
   ref,
 ) {
@@ -217,7 +231,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
           ? '0 0 20px color-mix(in srgb, var(--color-primary) 50%, transparent)'
           : undefined,
         fontWeight: weight,
-        fontSize: `calc(1.25rem * ${sizeFactor})`,
+        fontSize: `calc(${baseFontRem}rem * ${sizeFactor})`,
         paddingTop: '0.65em',
         paddingBottom: '0.65em',
         marginLeft: isAdLib ? (alignment === 'right' ? '0' : '15%') : '0',
@@ -234,9 +248,9 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
               progress={segmentProgress}
               color={FG}
               dimColor={fgAlpha(12)}
-              dotCount={Math.max(2, Math.min(5, Math.round((segmentEnd! - line.timestamp!) / 1.0)))}
-              size={7}
-              gap={6}
+              dotCount={3}
+              size={10}
+              gap={9}
             />
           </div>
         ) : (
@@ -497,6 +511,7 @@ export default function ImmersiveLyricsDisplay({
   // of a display preference.
   const { settings } = useSettings();
   const activeHighlight = settings.editor?.display?.activeHighlight;
+  const baseFontRem = BASE_FONT_REM[settings.interface?.fontSize || 'normal'] ?? BASE_FONT_REM.normal;
   const containerRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLDivElement>(null);
   const lastScrolledIndex = useRef(-2);
@@ -687,6 +702,7 @@ export default function ImmersiveLyricsDisplay({
                 alignment={alignment}
                 activeHighlight={activeHighlight}
                 readingFormat={settings.editor?.display?.readingFormat}
+                baseFontRem={baseFontRem}
               />
             );
           })}
