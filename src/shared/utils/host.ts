@@ -27,6 +27,11 @@ export function isAdminHost(): boolean {
   return hostname().startsWith('admin.');
 }
 
+/** True on the production domain, where the admin host exists (not on previews/localhost). */
+export function canUseAdminHost(): boolean {
+  return /^(www\.|m\.|admin\.)?lrcstudio\.app$/i.test(hostname());
+}
+
 /** Absolute URL for `path` on the admin host, derived by swapping the leading label. */
 export function adminHostUrl(path = '/'): string {
   const host = window.location.hostname.replace(/^(www|m)\./i, '');

@@ -112,22 +112,18 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     return <AppLoadingScreen />;
   }
 
-  // admin.lrcstudio.app lands on the dashboard rather than home. This is a
-  // convenience only — /admin carries the same route-access check here as it
-  // does on www, and every admin action is re-authorised server-side, so
-  // reaching this path from the admin host grants nothing.
-  if (user && isAdminHost() && location.pathname === '/') {
-    return <Navigate to="/admin" replace />;
-  }
-
-  // The admin host only serves the dashboard: any other page belongs on www.
-  if (isAdminHost() && location.pathname !== '/' && !location.pathname.startsWith('/admin')) {
+  // admin.lrcstudio.app serves only the dashboard, at `/` (also `/home` and
+  // `/dashboard`). Any other page belongs on www. Convenience only — access is
+  // still checked below and every admin action is re-authorised server-side.
+  const onAdminHost = isAdminHost();
+  const adminPaths = ['/', '/home', '/dashboard'];
+  if (onAdminHost && !adminPaths.includes(location.pathname) && !location.pathname.startsWith('/auth')) {
     window.location.replace(wwwHostUrl(location.pathname + location.search + location.hash));
     return <AppLoadingScreen />;
   }
 
   // Logged-in users landing on root should go to the home dashboard.
-  if (user && location.pathname === '/') {
+  if (user && !onAdminHost && location.pathname === '/') {
     return <Navigate to="/home" replace />;
   }
 
@@ -135,7 +131,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   // `auth` means any session (including guest sessions, which some pages such
   // as Settings intentionally support); only fully-anonymous visitors are
   // blocked. `admin` additionally requires staff permissions below.
-  const access = accessFor(location.pathname);
+  const access = onAdminHost ? 'admin' : accessFor(location.pathname);
 
   if (access !== 'public' && !user) {
     let redirectUrl = location.pathname + location.search;
@@ -147,6 +143,10 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
   // Staff-only routes: an authenticated non-staff user is bounced home.
   if (access === 'admin' && !isStaff(user?.permissions)) {
+    if (onAdminHost) {
+      window.location.replace(wwwHostUrl('/home'));
+      return <AppLoadingScreen />;
+    }
     return <Navigate to="/home" replace />;
   }
 
