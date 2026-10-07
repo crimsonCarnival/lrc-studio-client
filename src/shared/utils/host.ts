@@ -27,6 +27,23 @@ export function isAdminHost(): boolean {
   return hostname().startsWith('admin.');
 }
 
+/** True on the production domain, where the admin host exists (not on previews/localhost). */
+export function canUseAdminHost(): boolean {
+  return /^(www\.|m\.|admin\.)?lrcstudio\.app$/i.test(hostname());
+}
+
+/** Absolute URL for `path` on the admin host, derived by swapping the leading label. */
+export function adminHostUrl(path = '/'): string {
+  const host = window.location.hostname.replace(/^(www|m)\./i, '');
+  return `${window.location.protocol}//admin.${host}${window.location.port ? `:${window.location.port}` : ''}${path}`;
+}
+
+/** Absolute URL for `path` on the canonical host, leaving the admin host. */
+export function wwwHostUrl(path = '/'): string {
+  const host = window.location.hostname.replace(/^admin\./i, 'www.');
+  return `${window.location.protocol}//${host}${window.location.port ? `:${window.location.port}` : ''}${path}`;
+}
+
 /** `www.lrcstudio.app` — the canonical host the mobile variant falls back to. */
 function canonicalHost(): string {
   // Swap the leading `m.` label rather than hardcoding the domain, so this keeps
