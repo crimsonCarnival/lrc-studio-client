@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { setAppNavigate } from '@/app/navigation';
 import { accessFor } from '@/app/route-access';
+import { isAdminHost } from '@/shared/utils/host';
 import { isStaff } from '@/features/auth/permissions';
 
 // Auto-reload when a new deployment invalidates lazy-loaded chunks
@@ -109,6 +110,14 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (loading) {
     return <AppLoadingScreen />;
+  }
+
+  // admin.lrcstudio.app lands on the dashboard rather than home. This is a
+  // convenience only — /admin carries the same route-access check here as it
+  // does on www, and every admin action is re-authorised server-side, so
+  // reaching this path from the admin host grants nothing.
+  if (user && isAdminHost() && location.pathname === '/') {
+    return <Navigate to="/admin" replace />;
   }
 
   // Logged-in users landing on root should go to the home dashboard.
