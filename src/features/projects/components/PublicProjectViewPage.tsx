@@ -363,15 +363,13 @@ function PublicProjectViewPageInner() {
         </div>
       )}
 
-      {/* ── Main content: 2-col (lyrics | info panel) ────────── */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
+      {/* ── Main content: 2-col (lyrics | info panel), player always full width below ── */}
+      <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
 
-        {/* Left: lyrics + player — ~70% on desktop. On mobile the wrapper dissolves
-            (display: contents) so the order-* classes put the player below the info panel. */}
-        <div className="contents lg:flex lg:flex-1 lg:min-h-0 lg:flex-col">
-          {/* pb clears the bar pinned to the bottom below lg, so the closing
-              lines are not left underneath it. */}
-          <div className="relative order-1 flex-1 min-h-0 flex flex-col max-lg:pb-64" style={{ minHeight: '50vh' }}>
+          {/* Left: lyrics — natural DOM order puts it first both stacked
+              (mobile) and in the row (desktop), so no order-* juggling needed. */}
+          <div className="relative flex-1 min-h-0 flex flex-col max-lg:pb-64" style={{ minHeight: '50vh' }}>
             {/* Desktop only: the column that holds the card's own toggle is hidden. */}
             {infoCollapsed && (
               <div className="hidden lg:block absolute top-14 right-4 z-20">
@@ -403,106 +401,111 @@ function PublicProjectViewPageInner() {
             />
           </div>
 
-          {/* ── Player bar: bottom of the lyrics panel on desktop, bottom of the page on mobile ── */}
+          {/* Right: info panel — fixed width on desktop, stacked below on mobile.
+              Its own min-h-0/overflow-y-auto scrolls internally within the row's
+              bounded height; it never pushes the page itself into scrolling. */}
           <div
-            // Below lg the page scrolls as one column and the bar sat ~2100px
-            // down, past the whole lyric sheet. `sticky` cannot help: its
-            // containing block ends where the bar does, so there is nothing to
-            // stick within. Pinned to the viewport instead; the lyric panel
-            // carries matching bottom padding so nothing hides behind it.
-            className="order-3 flex-shrink-0 w-full max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-30 border-t border-border bg-card/80 backdrop-blur-lg"
+            ref={rightPanelRef}
+            className={`relative min-h-0 lg:w-80 xl:w-96 lg:flex-shrink-0 overflow-y-auto scrollbar-none ${infoCollapsed ? 'lg:hidden' : ''}`}
           >
-            <div className="px-4 sm:px-6 py-3">
-              {!hasMedia && !initialMedia
-                ? <p className="text-xs text-center py-2 text-muted-foreground">{t('projectView.noAudio')}</p>
-                : null}
-
-              <Player
-                ref={playerRef}
-                mediaTitle={mediaTitle}
-                onTimeUpdate={setPlaybackPosition}
-                onPlayingChange={setIsPlaying}
-                onSpeedChange={setPlaybackSpeed}
-                onDurationChange={() => {}}
-                onMediaChange={setHasMedia}
-                onYtUrlChange={() => {}}
-                onTitleChange={setMediaTitle}
-                initialMedia={initialMedia}
-                initialSeek={initialSeek}
-                initialSpeed={1}
+            <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20" />
+            <div className="p-4 flex flex-col gap-4">
+              <ProjectInfoPanel
+                project={displayProject!}
+                cover={cover}
+                isOwner={isOwner}
+                user={user}
+                isStarred={isStarred}
+                starCount={starCount}
+                starring={starring}
+                onStar={handleStar}
+                onFork={handleFork}
+                onEdit={handleEdit}
+                reactionsSlot={
+                  <ReactionBar
+                    reactions={projectReactions}
+                    myReaction={myProjectReaction}
+                    onReact={user ? reactToProject : undefined}
+                    disabled={!user}
+                  />
+                }
+                viewersSlot={isOwner ? <ViewerBadges viewers={viewers} anonymousCount={anonymousCount} /> : undefined}
                 lines={lines}
-                playbackPosition={playbackPosition}
-                syncMode={false}
-                onMediaUpload={() => {}}
-                projectMetadata={meta}
-                viewerMode
+                songSingers={songSingers}
+                singerColors={singerColors}
+                collapsed={infoCollapsed}
+                onToggleCollapsed={toggleInfoCollapsed}
               />
 
-              {/* Prev / next in playlist context */}
-              {listId && (prevTrack || nextTrack) && (
-                <div className="flex items-center justify-between mt-2">
-                  <button
-                    disabled={!prevTrack}
-                    onClick={() => goToTrack(prevTrack)}
-                    className="h-7 px-2.5 text-[11px] text-foreground disabled:opacity-30 transition-opacity"
-                  >
-                    {t('projectView.prevTrack')}
-                  </button>
-                  <button
-                    disabled={!nextTrack}
-                    onClick={() => goToTrack(nextTrack)}
-                    className="h-7 px-2.5 text-[11px] text-foreground disabled:opacity-30 transition-opacity"
-                  >
-                    {t('projectView.nextTrack')}
-                  </button>
-                </div>
+              {/* Up-next panel (list context) */}
+              {listId && playlist && (
+                <ProjectUpNextPanel
+                  playlist={playlist as Parameters<typeof ProjectUpNextPanel>[0]['playlist']}
+                  currentpublicId={publicId}
+                  listId={listId}
+                  accountName={playlist.owner?.accountName || project?.user?.accountName}
+                />
               )}
             </div>
           </div>
         </div>
 
-        {/* Right: info panel — fixed width on desktop, stacked below on mobile */}
+        {/* ── Player bar: now a sibling of the 2-col row, so w-full always means
+            the full page width — not just the lyrics column's share of it. On
+            mobile it was already `fixed` (pinned to the viewport regardless of
+            DOM position), so this only changes desktop placement. ── */}
         <div
-          ref={rightPanelRef}
-          className={`order-2 lg:order-none relative lg:w-80 xl:w-96 lg:flex-shrink-0 overflow-y-auto scrollbar-none ${infoCollapsed ? 'lg:hidden' : ''}`}
+          // Below lg the page scrolls as one column and the bar sat ~2100px
+          // down, past the whole lyric sheet. `sticky` cannot help: its
+          // containing block ends where the bar does, so there is nothing to
+          // stick within. Pinned to the viewport instead; the lyric panel
+          // carries matching bottom padding so nothing hides behind it.
+          className="flex-shrink-0 w-full max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-30 border-t border-border bg-card/80 backdrop-blur-lg"
         >
-          <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20" />
-          <div className="p-4 flex flex-col gap-4">
-            <ProjectInfoPanel
-              project={displayProject!}
-              cover={cover}
-              isOwner={isOwner}
-              user={user}
-              isStarred={isStarred}
-              starCount={starCount}
-              starring={starring}
-              onStar={handleStar}
-              onFork={handleFork}
-              onEdit={handleEdit}
-              reactionsSlot={
-                <ReactionBar
-                  reactions={projectReactions}
-                  myReaction={myProjectReaction}
-                  onReact={user ? reactToProject : undefined}
-                  disabled={!user}
-                />
-              }
-              viewersSlot={isOwner ? <ViewerBadges viewers={viewers} anonymousCount={anonymousCount} /> : undefined}
+          <div className="px-4 sm:px-6 py-3">
+            {!hasMedia && !initialMedia
+              ? <p className="text-xs text-center py-2 text-muted-foreground">{t('projectView.noAudio')}</p>
+              : null}
+
+            <Player
+              ref={playerRef}
+              mediaTitle={mediaTitle}
+              onTimeUpdate={setPlaybackPosition}
+              onPlayingChange={setIsPlaying}
+              onSpeedChange={setPlaybackSpeed}
+              onDurationChange={() => {}}
+              onMediaChange={setHasMedia}
+              onYtUrlChange={() => {}}
+              onTitleChange={setMediaTitle}
+              initialMedia={initialMedia}
+              initialSeek={initialSeek}
+              initialSpeed={1}
               lines={lines}
-              songSingers={songSingers}
-              singerColors={singerColors}
-              collapsed={infoCollapsed}
-              onToggleCollapsed={toggleInfoCollapsed}
+              playbackPosition={playbackPosition}
+              syncMode={false}
+              onMediaUpload={() => {}}
+              projectMetadata={meta}
+              viewerMode
             />
 
-            {/* Up-next panel (list context) */}
-            {listId && playlist && (
-              <ProjectUpNextPanel
-                playlist={playlist as Parameters<typeof ProjectUpNextPanel>[0]['playlist']}
-                currentpublicId={publicId}
-                listId={listId}
-                accountName={playlist.owner?.accountName || project?.user?.accountName}
-              />
+            {/* Prev / next in playlist context */}
+            {listId && (prevTrack || nextTrack) && (
+              <div className="flex items-center justify-between mt-2">
+                <button
+                  disabled={!prevTrack}
+                  onClick={() => goToTrack(prevTrack)}
+                  className="h-7 px-2.5 text-[11px] text-foreground disabled:opacity-30 transition-opacity"
+                >
+                  {t('projectView.prevTrack')}
+                </button>
+                <button
+                  disabled={!nextTrack}
+                  onClick={() => goToTrack(nextTrack)}
+                  className="h-7 px-2.5 text-[11px] text-foreground disabled:opacity-30 transition-opacity"
+                >
+                  {t('projectView.nextTrack')}
+                </button>
+              </div>
             )}
           </div>
         </div>

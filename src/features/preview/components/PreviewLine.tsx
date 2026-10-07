@@ -271,9 +271,9 @@ export default function PreviewLine({
               progress={segmentProgress}
               color="hsl(var(--primary))"
               dimColor="rgba(255,255,255,0.12)"
-              dotCount={Math.max(2, Math.min(5, Math.round((segmentEnd! - line.timestamp!) / 1.0)))}
-              size={7}
-              gap={6}
+              dotCount={3}
+              size={10}
+              gap={9}
             />
           ) : (
             <div className="h-2" />
