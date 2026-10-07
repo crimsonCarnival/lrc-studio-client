@@ -3,6 +3,7 @@ import { auth, google as googleApi, setAuthFlag } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import toast from 'react-hot-toast';
 import i18n from 'i18next';
+import { leaveSubdomainHostOnLogout } from '@/shared/utils/host';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
@@ -118,6 +119,7 @@ export function useAuth() {
     // On next visit, the user sees the account picker and re-enters their password.
     setState({ user: null, loading: false, heldLoginResult: null });
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    leaveSubdomainHostOnLogout();
   }, []);
 
   // Schedule a token refresh at 75% of the access token lifetime (22.5 min for 30 min token).
@@ -528,6 +530,7 @@ export function useAuth() {
     setAuthFlag(false);
     setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    leaveSubdomainHostOnLogout();
   }, [removeStorageKeys]);
 
   const deactivateAccount = useCallback(async () => {
@@ -541,6 +544,7 @@ export function useAuth() {
     setAuthFlag(false);
     setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    leaveSubdomainHostOnLogout();
   }, [removeStorageKeys]);
 
   // ——— WebAuthn / Passkeys ———

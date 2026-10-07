@@ -130,3 +130,14 @@ export function redirectToMobileHostIfNeeded(): void {
   const host = window.location.hostname.replace(/^www\./i, '');
   window.location.replace(`https://m.${host}${pathname}${search}${hash}`);
 }
+
+/**
+ * After logout the `m.` and `admin.` variants hand over to `www.`, where sign-in
+ * (including Google OAuth) is served. `?desktop=1` stops a phone being sent
+ * straight back to `m.` by `redirectToMobileHostIfNeeded`.
+ */
+export function leaveSubdomainHostOnLogout(): void {
+  if (typeof window === 'undefined') return;
+  if (!isMobileHost() && !isAdminHost()) return;
+  window.location.replace(`${wwwHostUrl('/')}?desktop=1`);
+}
