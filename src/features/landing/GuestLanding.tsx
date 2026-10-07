@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LazyMotion, domAnimation, m as M } from 'framer-motion';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
@@ -36,7 +36,6 @@ export default function GuestLanding() {
   const { t, i18n } = useTranslation();
   // Feature/step labels use dynamic keys.
   const tk = t as (key: string) => string;
-  const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
 
@@ -69,18 +68,16 @@ export default function GuestLanding() {
           {/* Right: language + auth */}
           <div className="flex items-center gap-2">
             <LangSwitcher i18n={i18n} />
-            <button
-              onClick={() => navigate('/auth/signin')}
-              className="h-8 px-3 text-xs font-normal text-zinc-300 hover:text-zinc-100 bg-zinc-800/70 hover:bg-zinc-700/80 border border-zinc-800/50 rounded-xl transition-colors"
+            <Link to="/auth/signin"
+              className="inline-flex items-center justify-center h-8 px-3 text-xs font-normal text-zinc-300 hover:text-zinc-100 bg-zinc-800/70 hover:bg-zinc-700/80 border border-zinc-800/50 rounded-xl transition-colors"
             >
               {t('auth.signIn')}
-            </button>
-            <button
-              onClick={() => navigate('/auth/signup')}
-              className="h-8 px-3 text-xs font-normal text-zinc-950 bg-primary hover:bg-primary/90 rounded-xl transition-colors"
+            </Link>
+            <Link to="/auth/signup"
+              className="inline-flex items-center justify-center h-8 px-3 text-xs font-normal text-zinc-950 bg-primary hover:bg-primary/90 rounded-xl transition-colors"
             >
               {t('auth.signUp')}
-            </button>
+            </Link>
           </div>
         </nav>
 
@@ -116,23 +113,21 @@ export default function GuestLanding() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-start gap-3">
-                <Button
+                <Button asChild
                   size="lg"
-                  onClick={() => navigate('/project/new')}
                   className="gap-2 px-7 h-12 font-normal shadow-glow"
-                >
+                ><Link to="/project/new">
                   <Icon name="play_arrow" size={16} />
                   {t('landing.ctaStart')}
-                </Button>
-                <Button
+                </Link></Button>
+                <Button asChild
                   variant="ghost"
                   size="lg"
-                  onClick={() => navigate('/auth/signin')}
                   className="gap-2 px-7 h-12 font-normal text-zinc-400 hover:text-zinc-100"
-                >
+                ><Link to="/auth/signin">
                   {t('landing.ctaSignIn')}
                   <Icon name="arrow_forward" size={16} />
-                </Button>
+                </Link></Button>
               </div>
             </M.div>
 
@@ -325,13 +320,13 @@ export default function GuestLanding() {
                 {t('landing.ctaFooterTitle')}
               </h2>
               <div className="flex flex-col sm:flex-row items-start gap-3">
-                <Button size="lg" onClick={() => navigate('/project/new')} className="gap-2 px-7 h-12 font-normal">
+                <Button asChild size="lg" className="gap-2 px-7 h-12 font-normal"><Link to="/project/new">
                   {t('landing.ctaStart')}
                   <Icon name="arrow_forward" size={16} />
-                </Button>
-                <Button variant="outline" size="lg" onClick={() => navigate('/auth/signup')} className="px-7 h-12 font-normal contrast-more:border-zinc-400">
+                </Link></Button>
+                <Button asChild variant="outline" size="lg" className="px-7 h-12 font-normal contrast-more:border-zinc-400"><Link to="/auth/signup">
                   {t('landing.ctaSignUp')}
-                </Button>
+                </Link></Button>
               </div>
               <p className="text-xs text-zinc-600 contrast-more:text-zinc-400">{t('landing.ctaFooterSub')}</p>
             </M.div>

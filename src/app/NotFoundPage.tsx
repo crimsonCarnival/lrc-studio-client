@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { TFunction } from 'i18next';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
@@ -58,7 +58,7 @@ function pickVariant(t: TFunction, key: string, opts?: object): string {
 interface NotFoundAction {
   label: string;
   icon?: ReactNode;
-  onClick: () => void;
+  to: string;
 }
 
 interface NotFoundConfig {
@@ -94,11 +94,11 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
           primaryAction: {
             label: t('app.backToLibrary'),
             icon: <Icon name="home" size={20} className="mr-2" />,
-            onClick: () => navigate('/library'),
+            to: '/library',
           },
           searchAction: {
             label: t('error.searchAnotherProject'),
-            onClick: () => navigate('/search'),
+            to: '/search',
           },
         };
       case 'playlist':
@@ -109,7 +109,7 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
           primaryAction: {
             label: t('app.backHome'),
             icon: <Icon name="home" size={20} className="mr-2" />,
-            onClick: () => navigate('/home'),
+            to: '/home',
           },
           searchAction: null,
         };
@@ -121,7 +121,7 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
           primaryAction: {
             label: t('app.viewUploads'),
             icon: <Icon name="home" size={20} className="mr-2" />,
-            onClick: () => navigate('/uploads'),
+            to: '/uploads',
           },
           searchAction: null,
         };
@@ -135,11 +135,11 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
           primaryAction: {
             label: t('app.backToDashboard'),
             icon: <Icon name="home" size={20} className="mr-2" />,
-            onClick: () => navigate('/home'),
+            to: '/home',
           },
           searchAction: {
             label: t('error.searchAnotherUser'),
-            onClick: () => navigate('/search'),
+            to: '/search',
           },
         };
       case 'forbidden':
@@ -150,7 +150,7 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
           primaryAction: {
             label: t('app.backHome'),
             icon: <Icon name="home" size={20} className="mr-2" />,
-            onClick: () => navigate('/home'),
+            to: '/home',
           },
           searchAction: null,
         };
@@ -162,7 +162,7 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
           primaryAction: {
             label: t('app.backHome'),
             icon: <Icon name="home" size={20} className="mr-2" />,
-            onClick: () => navigate('/home'),
+            to: '/home',
           },
           searchAction: null,
         };
@@ -174,11 +174,11 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
           primaryAction: {
             label: t('app.backHome'),
             icon: <Icon name="home" size={20} className="mr-2" />,
-            onClick: () => navigate('/home'),
+            to: '/home',
           },
           searchAction: {
             label: t('error.searchContent'),
-            onClick: () => navigate('/search'),
+            to: '/search',
           },
         };
     }
@@ -214,13 +214,15 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
 
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
           <Button
+            asChild
             variant="default"
             size="lg"
-            onClick={config.primaryAction.onClick}
             className="w-full sm:flex-1 h-12 text-base font-semibold glow-primary"
           >
-            {config.primaryAction.icon}
-            {config.primaryAction.label}
+            <Link to={config.primaryAction.to}>
+              {config.primaryAction.icon}
+              {config.primaryAction.label}
+            </Link>
           </Button>
 
           <Button
@@ -236,13 +238,15 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
 
         {config.searchAction && (
           <Button
+            asChild
             variant="ghost"
             size="sm"
-            onClick={config.searchAction.onClick}
             className="mt-4 text-zinc-500 hover:text-zinc-300 gap-2"
           >
-            <Icon name="search" size={16} />
-            {config.searchAction.label}
+            <Link to={config.searchAction.to}>
+              <Icon name="search" size={16} />
+              {config.searchAction.label}
+            </Link>
           </Button>
         )}
       </div>

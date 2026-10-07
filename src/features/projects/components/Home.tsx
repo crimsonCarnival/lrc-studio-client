@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { TFunction } from 'i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { formatInTimezone } from '@/shared/utils/date';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
@@ -164,13 +164,12 @@ export default function Home() {
             {items.length > 0 && ` ${t('home.projectProgress', { total: items.length, remaining: lastProject?.lineCount ? lastProject.lineCount - (lastProject.syncedLineCount || 0) : '?' })}`}
           </p>
         </div>
-        <button
-          onClick={() => navigate('/project/new')}
+        <Link to="/project/new"
           className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 px-5 py-2.5 rounded-xl font-medium transition-colors shadow-glow"
         >
           <Icon name="add" size={18} />
           {t('home.createNew')}
-        </button>
+        </Link>
       </div>
 
       {/* ── Donde lo dejaste ── */}
@@ -298,12 +297,11 @@ export default function Home() {
                 <Icon name="expand_more" size={14} className="absolute right-2 text-zinc-400 pointer-events-none" />
               </div>
               <div className="w-px h-5 bg-zinc-800 mx-1 hidden sm:block" />
-              <button 
-                onClick={() => navigate('/library')}
+              <Link to="/library"
                 className="text-xs font-medium text-primary hover:text-primary-dim transition-colors hidden sm:block"
               >
                 {t('home.viewLibrary')}
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -327,8 +325,7 @@ export default function Home() {
           ))}
 
           {/* Start another CTA Card */}
-          <button
-            onClick={() => navigate('/project/new')}
+          <Link to="/project/new"
             className="group relative rounded-2xl border border-dashed border-zinc-700 hover:border-primary/50 bg-transparent hover:bg-zinc-800/20 transition-all flex flex-col items-center justify-center p-6 h-80 text-center"
           >
              <div className="size-12 rounded-full bg-zinc-800/80 group-hover:bg-primary/20 flex items-center justify-center mb-4 transition-colors">
@@ -336,7 +333,7 @@ export default function Home() {
              </div>
              <h3 className="text-zinc-100 font-medium text-sm leading-tight mb-1">{t('home.startAnother')}</h3>
              <p className="text-zinc-400 text-xs">{t('home.startAnotherDesc')}</p>
-          </button>
+          </Link>
         </div>
       </div>
 

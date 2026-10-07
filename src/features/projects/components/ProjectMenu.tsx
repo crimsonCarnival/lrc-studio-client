@@ -41,9 +41,11 @@ function useProjectMenuItems({ project, isOwner, onEdit, onDelete }: ProjectMenu
 
   return (C: MenuComponents): ReactNode => (
     <>
-      <C.Item onClick={() => window.open(`/project/${project.publicId}`, '_blank')}>
-        <Icon name="open_in_new" />
-        {t('profile.openInNewTab')}
+      <C.Item asChild>
+        <a href={`/project/${project.publicId}`} target="_blank" rel="noopener noreferrer">
+          <Icon name="open_in_new" />
+          {t('profile.openInNewTab')}
+        </a>
       </C.Item>
 
       <C.Item onClick={handleCopyLink}>

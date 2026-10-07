@@ -4,7 +4,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
-import { useNavigate, useLocation, NavLink } from 'react-router-dom';
+import { useNavigate, useLocation, NavLink, Link } from 'react-router-dom';
+import { guardedLinkClick } from './guarded-link-click';
 import { Icon } from '@/shared/ui/Icon';
 import { HeaderSearchBar } from '@/features/search/components/HeaderSearchBar';
 import { Tip } from '@ui/tip';
@@ -116,7 +117,9 @@ export function AppHeader({
   const navTo = (path: string) => {
     if (isEditorPage && hasUnsavedChanges()) {
       setUnsavedModalTarget(path);
-    } else if (location.pathname.startsWith(path)) {
+    } else if (path !== '/home' && location.pathname.startsWith(path)) {
+      // Re-clicking an open section toggles back to the editor. Home is excluded:
+      // it is the landing page, so clicking it again must stay on it.
       navigate(activepublicId ? `/project/${activepublicId}/edit` : '/project/new');
     } else {
       navigate(path);
@@ -150,11 +153,11 @@ export function AppHeader({
             {/* ── Desktop Navigation ── */}
             {user && !isGuestLanding && (
               <nav className="hidden lg:flex items-center gap-6">
-                <button type="button" onClick={() => navTo('/home')} className={`text-sm font-medium transition-colors ${location.pathname === '/home' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.home')}</button>
-                <button type="button" onClick={() => navTo('/explore')} className={`text-sm font-medium transition-colors ${location.pathname === '/explore' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.explore')}</button>
-                <button type="button" onClick={() => navTo('/feed')} className={`text-sm font-medium transition-colors ${location.pathname === '/feed' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.feed')}</button>
-                <button type="button" onClick={() => navTo('/leaderboard')} className={`text-sm font-medium transition-colors ${location.pathname === '/leaderboard' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.leaderboard')}</button>
-                <button type="button" onClick={() => navTo('/library')} className={`text-sm font-medium transition-colors ${location.pathname === '/library' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.library')}</button>
+                <Link to='/home' onClick={(e) => guardedLinkClick(e, () => navTo('/home'))} className={`text-sm font-medium transition-colors ${location.pathname === '/home' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.home')}</Link>
+                <Link to='/explore' onClick={(e) => guardedLinkClick(e, () => navTo('/explore'))} className={`text-sm font-medium transition-colors ${location.pathname === '/explore' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.explore')}</Link>
+                <Link to='/feed' onClick={(e) => guardedLinkClick(e, () => navTo('/feed'))} className={`text-sm font-medium transition-colors ${location.pathname === '/feed' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.feed')}</Link>
+                <Link to='/leaderboard' onClick={(e) => guardedLinkClick(e, () => navTo('/leaderboard'))} className={`text-sm font-medium transition-colors ${location.pathname === '/leaderboard' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.leaderboard')}</Link>
+                <Link to='/library' onClick={(e) => guardedLinkClick(e, () => navTo('/library'))} className={`text-sm font-medium transition-colors ${location.pathname === '/library' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.library')}</Link>
               </nav>
             )}
           </div>
@@ -233,7 +236,6 @@ export function AppHeader({
               <UserMenu
                 user={user}
                 logout={logout}
-                navigate={navigate}
                 navTo={navTo}
                 setShowKeyboardHelp={setShowKeyboardHelp}
                 currentTheme={currentTheme}

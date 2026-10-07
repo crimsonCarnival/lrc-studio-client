@@ -574,9 +574,9 @@ export default function ProfilePage() {
                 </div>
                 <p className="text-sm text-zinc-400 font-medium">
                   {isOwner ? (
-                    <button onClick={() => navigate('/settings/activity')} className="text-primary hover:underline transition-colors">
+                    <Link to="/settings/activity" className="text-primary hover:underline transition-colors">
                       {t('profile.activity.ownerEmpty')}
-                    </button>
+                    </Link>
                   ) : (
                     t('profile.activity.empty')
                   )}
@@ -594,9 +594,9 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-zinc-100 uppercase tracking-wider">{t('badges.showcase.title')}</h3>
                   {isOwner && (
-                    <button onClick={() => navigate('/settings/badges')} className="text-xs text-primary hover:text-primary-dim transition-colors">
+                    <Link to="/settings/badges" className="text-xs text-primary hover:text-primary-dim transition-colors">
                       {t('badges.showcase.configure')}
-                    </button>
+                    </Link>
                   )}
                 </div>
 
@@ -609,13 +609,11 @@ export default function ProfilePage() {
                 ) : isOwner ? (
                   <div className="flex flex-col gap-2 p-4 rounded-xl border border-dashed border-zinc-700 bg-zinc-900/30">
                     <p className="text-xs text-zinc-500 font-medium">{t('badges.showcase.noShowcase')}</p>
-                    <button
-                      type="button"
-                      onClick={() => navigate('/settings/badges')}
+                    <Link to="/settings/badges"
                       className="text-xs text-primary hover:text-primary/80 transition-colors text-left"
                     >
                       {t('badges.showcase.goSetup')}
-                    </button>
+                    </Link>
                   </div>
                 ) : null}
               </div>

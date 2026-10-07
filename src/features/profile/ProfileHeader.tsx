@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { useState } from 'react';
@@ -115,7 +115,6 @@ export function ProfileHeader({
 }: ProfileHeaderProps) {
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language.startsWith('es') ? esLocale : enLocale;
-  const navigate = useNavigate();
   const presence = usePresence();
   const isOnline = presence.isOnline(profile.id);
 
@@ -169,15 +168,14 @@ export function ProfileHeader({
           <div className="flex items-center justify-center sm:justify-start xl:justify-end gap-2 shrink-0">
             {isOwner ? (
               <>
-                <Button
+                <Button asChild
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate('/settings')}
                   className="bg-zinc-800/50 hover:bg-zinc-700 text-zinc-200 border-zinc-700"
-                >
+                ><Link to="/settings">
                   <Icon name="edit" size={16} className="mr-2 opacity-70" />
                   {t('profile.editProfile')}
-                </Button>
+                </Link></Button>
                 {onViewAsOthers && (
                   <Tip content={t('profile.viewAsOthers')}>
                     <Button
@@ -243,7 +241,7 @@ export function ProfileHeader({
             profile.bio
           ) : isOwner ? (
             <span className="italic text-zinc-500">
-              {t('profile.noBio')} <button onClick={() => navigate('/settings')} className="text-primary hover:underline">{t('profile.addBio')}</button>
+              {t('profile.noBio')} <Link to="/settings" className="text-primary hover:underline">{t('profile.addBio')}</Link>
             </span>
           ) : (
             <span className="italic text-zinc-500">{t('profile.noBio')}</span>

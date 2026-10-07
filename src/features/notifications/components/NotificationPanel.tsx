@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useNotificationsContext } from '../NotificationsContext';
 import { NotificationStickySection } from './NotificationStickySection';
 import { NotificationItem } from './NotificationItem';
@@ -33,7 +33,6 @@ function SectionLabel({ label, variant = 'default' }: { label: string; variant?:
 
 export function NotificationPanel() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { notifications, markAllRead } = useNotificationsContext() as unknown as {
     notifications: AppNotification[];
     markAllRead: () => void;
@@ -108,12 +107,11 @@ export function NotificationPanel() {
         )}
       </div>
 
-      <button
-        onClick={() => navigate('/notifications')}
-        className="w-full px-4 py-2.5 border-t border-zinc-800/60 text-xs font-medium text-primary hover:text-primary/80 hover:bg-zinc-800/40 transition-colors text-center rounded-b-xl"
+      <Link to="/notifications"
+        className="block w-full px-4 py-2.5 border-t border-zinc-800/60 text-xs font-medium text-primary hover:text-primary/80 hover:bg-zinc-800/40 transition-colors text-center rounded-b-xl"
       >
         {t('notifications.viewAll')}
-      </button>
+      </Link>
     </div>
   );
 }

@@ -354,13 +354,15 @@ function ProjectCard({
           </div>
           {project.public ? (
             <Tip content={t('home.viewPublic')}>
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(`/project/${project.publicId}`, '_blank'); }}
+              <a
+                href={`/project/${project.publicId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
                 className="absolute top-3 right-3 z-10 p-1.5 bg-zinc-950/60 backdrop-blur-md rounded border border-zinc-700/50 text-zinc-300 hover:text-primary hover:border-primary/40 transition-colors"
               >
                 <Icon name="open_in_new" size={12} />
-              </button>
+              </a>
             </Tip>
           ) : null}
         </div>
