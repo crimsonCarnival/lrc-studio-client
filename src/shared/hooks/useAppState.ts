@@ -13,6 +13,7 @@ import { useAutosave } from '@/features/editor/hooks/useAutosave';
 import { useManualSave, buildProjectPatch, updateServerSnapshot } from '@/features/editor/hooks/useManualSave';
 import { useSharedProject } from '@/features/sharing/hooks/useSharedProject';
 import { useProjectActions } from '@/features/projects/hooks/useProjectActions';
+import { parseDeepLink } from '@/shared/utils/url-params';
 import { lyrics, projects, getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { migrateLines, splitArtists } from '@/shared/utils/lrc';
@@ -155,8 +156,31 @@ export function useAppState(user?: AuthUserType | null) {
 
   const [projectYtUrl, setProjectYtUrl] = useState('');
   const [restoredMedia, setRestoredMedia] = useState<RestoredMedia | null>(null);
-  const [restoredPosition, setRestoredPosition] = useState(0);
+  const [restoredPosition, setRestoredPositionRaw] = useState(0);
   const [restoredSpeed, setRestoredSpeed] = useState(1);
+
+  // ——— URL deep link (?s=, ?loop=) ———
+  // Parsed once from the URL at mount. A deep link is an explicit instruction
+  // from whoever shared the link, so where it specifies a playback position it
+  // outranks the position stored in the project's own saved state. All five
+  // restore paths (localStorage, silent project restore, pendingProject,
+  // useSharedProject, useProjectActions) write through setRestoredPosition, so
+  // the precedence rule lives in that one setter rather than at each call site.
+  //
+  // The suppression is released as soon as the project has lines, which is the
+  // same commit in which a load resolves — early enough that PlayerEngine's
+  // one-shot `initialSeek` effect still sees our value, since that effect only
+  // runs once media is ready and media hydrates from the same resolution.
+  // Held in state, not a ref: the parsed value is immutable for the lifetime of
+  // the mount, and reading a ref during render is not allowed.
+  const [deepLink] = useState(() => parseDeepLink(typeof window !== 'undefined' ? window.location.search : ''));
+  const deepLinkPendingRef = useRef(true);
+  const restoredLoop = deepLink.loop;
+
+  const setRestoredPosition = useCallback((pos: number) => {
+    if (deepLinkPendingRef.current && deepLink.seek !== null) return;
+    setRestoredPositionRaw(pos);
+  }, [deepLink.seek]);
   const [activepublicId, setActivepublicId] = useState(() => {
     try { return localStorage.getItem(STORAGE_KEYS.ACTIVE_PROJECT_ID) || null; } catch { return null; }
   });
@@ -545,19 +569,20 @@ export function useAppState(user?: AuthUserType | null) {
     restoredMedia,
   });
 
-  // Handle Playback Time (s) and Readonly params on mount
+  // Apply the deep-linked playback position once the project has lines, and
+  // release the suppression in setRestoredPosition so ordinary playback can
+  // move the position again. `?readonly=` used to be read here; it had no
+  // producer anywhere in the app and has been removed.
   useEffect(() => {
-    const sParam = searchParams.get('s');
-    if (sParam && !isNaN(Number(sParam))) {
+    if (!deepLinkPendingRef.current || lines.length === 0) return;
+    deepLinkPendingRef.current = false;
+    if (deepLink.seek !== null) {
+      // Synchronising React state with an external system (the URL), which is
+      // what every other restore path in this hook does.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setRestoredPosition(Number(sParam));
+      setRestoredPositionRaw(deepLink.seek);
     }
-    
-    const readonlyParam = searchParams.get('readonly');
-    if (readonlyParam !== null) {
-      setSharedReadOnly(readonlyParam === '1' || readonlyParam === 'true');
-    }
-  }, [searchParams, setRestoredPosition, setSharedReadOnly]);
+  }, [lines.length, deepLink.seek]);
 
   // ——— Manual save, payload building, import-save trigger ———
   const { handleManualSave, triggerImportSave, buildProjectPayload } = useManualSave({
@@ -876,20 +901,6 @@ export function useAppState(user?: AuthUserType | null) {
     playerRef,
   });
 
-  // ——— Process Query Parameters (?publicId=) ———
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const projId = params.get('publicId');
-
-    if (projId && getAccessToken()) {
-      // Remove query param
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('publicId');
-      window.history.replaceState(null, '', newUrl.toString());
-
-      loadProject(projId);
-    }
-  }, [t, loadProject]); // loadProject included as dependency
 
 
 
@@ -945,6 +956,7 @@ export function useAppState(user?: AuthUserType | null) {
     setRestoredMedia,
     restoredPosition,
     restoredSpeed,
+    restoredLoop,
     exportToUrl,
     requestConfirm,
     hasUnsavedChanges,
