@@ -116,7 +116,9 @@ export function AppHeader({
   const navTo = (path: string) => {
     if (isEditorPage && hasUnsavedChanges()) {
       setUnsavedModalTarget(path);
-    } else if (location.pathname.startsWith(path)) {
+    } else if (path !== '/home' && location.pathname.startsWith(path)) {
+      // Re-clicking an open section toggles back to the editor. Home is excluded:
+      // it is the landing page, so clicking it again must stay on it.
       navigate(activepublicId ? `/project/${activepublicId}/edit` : '/project/new');
     } else {
       navigate(path);
