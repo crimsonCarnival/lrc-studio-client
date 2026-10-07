@@ -1,4 +1,5 @@
 import useMediaQuery from './useMediaQuery';
+import { isMobileHost } from '@/shared/utils/host';
 
 /**
  * Tailwind's default breakpoints, in the same units Tailwind uses. Keep this in
@@ -23,7 +24,14 @@ export type Breakpoint = keyof typeof BREAKPOINTS;
  * a 400px-wide browser window.
  */
 export function useBreakpoint(bp: Breakpoint): boolean {
-  return useMediaQuery(`(min-width: ${BREAKPOINTS[bp]})`);
+  const matches = useMediaQuery(`(min-width: ${BREAKPOINTS[bp]})`);
+  // The mobile host is a deliberate request for the narrow layout regardless of
+  // how much room the window actually has, so it reports false for every
+  // breakpoint at or above `lg` — the point where the app goes multi-column.
+  // Smaller breakpoints still answer honestly, since they drive spacing and
+  // type scale rather than the layout switch.
+  if (isMobileHost() && (bp === 'lg' || bp === 'xl' || bp === '2xl')) return false;
+  return matches;
 }
 
 /**
