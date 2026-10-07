@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { isAdminHost } from '@/shared/utils/host';
 import type { Dispatch, SetStateAction } from 'react';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useTranslation } from 'react-i18next';
@@ -94,7 +95,8 @@ export function AppHeader({
 
 
 
-  const isGuestLanding = location.pathname === '/';
+  // On the admin host `/` is the dashboard, not the landing page, so keep the header.
+  const isGuestLanding = location.pathname === '/' && !isAdminHost();
   // Project pages (setup, edit, public view) are fixed-height app layouts that don't
   // window-scroll — the editor and preview panes own their own scroll-progress bars,
   // so the header's window-scroll bar is meaningless noise there.
