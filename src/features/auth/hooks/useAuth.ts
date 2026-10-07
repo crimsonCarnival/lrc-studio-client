@@ -544,6 +544,7 @@ export function useAuth() {
     setAuthFlag(false);
     setState(s => ({ ...s, user: null, loading: false, heldLoginResult: null }));
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+    leaveSubdomainHostOnLogout();
   }, [removeStorageKeys]);
 
   // ——— WebAuthn / Passkeys ———
