@@ -254,9 +254,12 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
                     : 'pb-20 lg:pb-6'
                   // No player ever mounts here (Home, Explore, Feed, …). pb-20
                   // stays: it clears AppMobileNav (lg:hidden), unrelated to the
-                  // player. The lg:pb-6 companion doesn't apply — AppMobileNav
-                  // doesn't exist on desktop — so it was just dead bottom padding.
-                  : 'pb-20'
+                  // player. lg:pb-0 overrides it back down on desktop, where
+                  // that nav doesn't exist — the previous lg:pb-6 here had no
+                  // justification and was dead bottom padding; the one time
+                  // this was 'pb-20' alone (no lg: override), pb-20's 80px
+                  // applied on EVERY width, which is worse, not better.
+                  : 'pb-20 lg:pb-0'
               }
           `}
             style={{
