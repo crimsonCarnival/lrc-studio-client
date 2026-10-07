@@ -105,3 +105,28 @@ export function redirectOffMobileHostIfNeeded(): void {
   const { pathname, search, hash } = window.location;
   window.location.replace(`https://${canonicalHost()}${pathname}${search}${hash}`);
 }
+
+/**
+ * Sends a phone from the canonical host to `m.`, preserving path, query and
+ * hash. Production domain only (previews/localhost are left alone) and the
+ * mirror image of `redirectOffMobileHostIfNeeded`: both use the same
+ * touch-only test, so the two redirects can never ping-pong. `?desktop=1`
+ * opts out for the tab, so the full site stays reachable from a phone.
+ */
+export function redirectToMobileHostIfNeeded(): void {
+  if (typeof window === 'undefined' || !window.matchMedia) return;
+  if (!/^(www\.)?lrcstudio\.app$/i.test(hostname())) return;
+  const KEY = 'lrc-stay-on-desktop-host';
+  const asked = new URLSearchParams(window.location.search).get('desktop') === '1';
+  try {
+    if (asked) sessionStorage.setItem(KEY, '1');
+    if (sessionStorage.getItem(KEY) === '1') return;
+  } catch {
+    if (asked) return;
+  }
+  const isTouchOnly = window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(hover: hover)').matches;
+  if (!isTouchOnly) return;
+  const { pathname, search, hash } = window.location;
+  const host = window.location.hostname.replace(/^www\./i, '');
+  window.location.replace(`https://m.${host}${pathname}${search}${hash}`);
+}
