@@ -45,6 +45,8 @@ interface PreviewProps {
   setShareModal: (v: unknown) => void;
   hasMedia?: boolean;
   viewerMode?: boolean;
+  /** Imperative player handle — forwarded to SharePanel to read the A-B loop. */
+  playerRef?: { current?: { getLoop?: () => { a: number | null; b: number | null } } | null };
   isPlaying?: boolean;
   playbackSpeed?: number;
   // Panel toggles relocated from the header (#12/#13): hide the preview, or
@@ -150,7 +152,7 @@ export default function Preview(props: PreviewProps) {
     handleCopy,
   }: UsePreviewResult = usePreview(props);
 
-  const { lines, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, isPlaying, playbackSpeed, onHidePreview, editorHidden, onShowEditor } = props;
+  const { lines, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, isPlaying, playbackSpeed, playerRef, onHidePreview, editorHidden, onShowEditor } = props;
 
   const shareTriggerRef = useRef<HTMLButtonElement>(null);
   const sharePanelRef = useRef<HTMLDivElement>(null);
@@ -491,6 +493,7 @@ export default function Preview(props: PreviewProps) {
             onForksEnabledChange={activepublicId ? handleForksEnabledChange : undefined}
             playbackPosition={playbackPosition}
             duration={duration}
+            playerRef={playerRef}
           />
         </div>,
         document.body
