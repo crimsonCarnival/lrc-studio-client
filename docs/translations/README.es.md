@@ -2,7 +2,7 @@
 
 Una aplicación web profesional para sincronizar letras de canciones con audio, con soporte para sincronización por palabras estilo karaoke, contenido multilingüe, proyectos en la nube y una plataforma social para compartirlos.
 
-**[lrc-studio.vercel.app](https://lrc-studio.vercel.app)** · [GitHub](https://github.com/crimsonCarnival/lrc-studio) · [README del servidor](../../../server/README.md) · [Documentación (DeepWiki)](https://deepwiki.com/crimsonCarnival/lrc-studio)
+**[lrcstudio.app](https://www.lrcstudio.app)** · [GitHub](https://github.com/crimsonCarnival/lrc-studio) · [README del servidor](../../../server/README.md) · [Documentación (DeepWiki)](https://deepwiki.com/crimsonCarnival/lrc-studio)
 
 > Idiomas: [English (Inglés)](../../README.md)
 
