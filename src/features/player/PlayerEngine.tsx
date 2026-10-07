@@ -70,6 +70,8 @@ export interface PlayerEngineProps {
   onYtUrlChange?: (url: string) => void;
   initialSeek?: number;
   initialSpeed?: number | string;
+  /** A-B loop to install once media is ready — from the `?loop=a-b` deep link. */
+  initialLoop?: { a: number; b: number } | null;
   lines?: EditorLine[];
   activeLineIndex?: number;
   playbackPosition?: number;
@@ -84,7 +86,7 @@ export interface PlayerEngineProps {
 }
 
 function PlayerEngineInner(
-  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef = null, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek = 0, initialSpeed, lines, activeLineIndex = 0, playbackPosition, syncMode = false, onMediaUpload, viewerMode = false, projectMetadata, projectCoverImage, ref, children }: PlayerEngineProps,
+  { onTimeUpdate, onPlayingChange, onSpeedChange, onDurationChange, onMediaChange, playerRef: _legacyRef = null, mediaTitle, onTitleChange, initialMedia, onYtUrlChange, initialSeek = 0, initialSpeed, initialLoop = null, lines, activeLineIndex = 0, playbackPosition, syncMode = false, onMediaUpload, viewerMode = false, projectMetadata, projectCoverImage, ref, children }: PlayerEngineProps,
 ) {
   const { t } = useTranslation();
   const { settings } = useSettings();
@@ -479,10 +481,20 @@ function PlayerEngineInner(
         // eslint-disable-next-line react-hooks/set-state-in-effect
         applySpeed(initialSpeed);
       }
+      // A deep-linked A-B loop. Clamped to the real duration here rather than at
+      // parse time, because duration is not known until the media is ready.
+      if (initialLoop) {
+        const max = durationRef.current || 0;
+        const a = max > 0 ? Math.min(initialLoop.a, max) : initialLoop.a;
+        const b = max > 0 ? Math.min(initialLoop.b, max) : initialLoop.b;
+        if (b > a) {
+          handleLoopChange(a, b);
+        }
+      }
       // Re-pause after seek in case seekTo triggered playback (YouTube quirk)
       if (source === 'youtube') yt.pause();
     }
-  }, [hasMedia, initialSeek, initialSpeed, seek, applySpeed, source, yt, local]);
+  }, [hasMedia, initialSeek, initialSpeed, initialLoop, seek, applySpeed, handleLoopChange, source, yt, local]);
 
   // ——— Unified auto-load effect ———
   // hydratedMediaKeyRef deduplicates within one Player mount so the same media

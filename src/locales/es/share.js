@@ -33,6 +33,7 @@ export default {
   privateDescription: "Solo tú puedes acceder a este proyecto. Otros no podrán verlo.",
   public: "Cualquiera con el enlace",
   includeTime: "Empezar en el tiempo actual",
+  includeLoop: "Incluir bucle A-B",
   by: "por",
   guest: "Invitado",
   visibility: "Visibilidad",

@@ -33,6 +33,7 @@ export default {
   privateDescription: "Only you can access this project.",
   public: "Anyone with link",
   includeTime: "Start at current time",
+  includeLoop: "Include A-B loop",
   by: "by",
   guest: "Guest",
   visibility: "Visibility",

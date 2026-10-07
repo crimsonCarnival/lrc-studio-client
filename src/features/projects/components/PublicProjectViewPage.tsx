@@ -12,6 +12,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import PlayerRaw from '@features/player/components/Player';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
+import { parseDeepLink } from '@/shared/utils/url-params';
 import { ProjectUpNextPanel } from './ProjectUpNextPanel';
 import { usePublicProject } from '../hooks/usePublicProject';
 import { useStarredPlaylist } from '../hooks/useStarredPlaylist';
@@ -71,7 +72,14 @@ function PublicProjectViewPageInner() {
   const { publicId } = useParams();
   const [searchParams] = useSearchParams();
   const listId = searchParams.get('list');
-  const initialSeek = parseInt(searchParams.get('s') || '0', 10) || 0;
+  // Shares the parser with the editor route so `?s=` and `?loop=` mean exactly
+  // the same thing on both. Previously `s` was parsed here with parseInt, which
+  // read `s=1e5` as 1 and discarded any sub-second precision.
+  const { seek: deepLinkSeek, loop: deepLinkLoop } = useMemo(
+    () => parseDeepLink(searchParams),
+    [searchParams]
+  );
+  const initialSeek = deepLinkSeek ?? 0;
 
   const rightPanelRef = useRef<HTMLDivElement>(null);
 
@@ -480,6 +488,7 @@ function PublicProjectViewPageInner() {
               initialMedia={initialMedia}
               initialSeek={initialSeek}
               initialSpeed={1}
+              initialLoop={deepLinkLoop}
               lines={lines}
               playbackPosition={playbackPosition}
               syncMode={false}

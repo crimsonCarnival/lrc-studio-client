@@ -73,7 +73,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     handleManualSave, triggerImportSave, handleDiscardProject, handleRestoreProject, buildProjectPayload,
     handleTimeUpdate, handleDurationChange, handleMediaChange, handleYtUrlChange,
     handleMediaUpload, restoredMedia, restoredPosition,
-    restoredSpeed, hasUnsavedChanges, activepublicId, projectMetadata, setProjectMetadata,
+    restoredSpeed, restoredLoop, hasUnsavedChanges, activepublicId, projectMetadata, setProjectMetadata,
     forkedFrom,
     isProjectLoading, lines, activeLineIndex, playbackPosition, syncMode, pendingProject,
     setIsPlaying, setPlaybackSpeed,
@@ -187,6 +187,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         initialMedia={restoredMedia as Parameters<typeof PlayerEngineProvider>[0]['initialMedia']}
         initialSeek={restoredPosition}
         initialSpeed={restoredSpeed}
+        initialLoop={restoredLoop}
         projectMetadata={projectMetadata}
         projectCoverImage={projectCoverImage ?? undefined}
         lines={lines as Parameters<typeof PlayerEngineProvider>[0]['lines']}

@@ -15,6 +15,7 @@ const SORT_OPTIONS = [
 ];
 
 const TABS = ['projects', 'users'];
+const SORT_VALUES = SORT_OPTIONS.map(o => o.value);
 
 export default function SearchPage() {
   const { t } = useTranslation();
@@ -24,7 +25,9 @@ export default function SearchPage() {
 
   const urlQuery = searchParams.get('q') || '';
   const urlTab   = TABS.includes(searchParams.get('tab') || '') ? searchParams.get('tab')! : 'projects';
-  const urlSort  = searchParams.get('sort') || 'RELEVANCE';
+  // Whitelisted like `tab`: an unrecognised value falls back to the default
+  // instead of being forwarded to the server as an invalid sort enum.
+  const urlSort  = SORT_VALUES.includes(searchParams.get('sort') || '') ? searchParams.get('sort')! : 'RELEVANCE';
 
   const setParam = (key: string, value: string) => {
     setSearchParams(prev => {

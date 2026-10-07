@@ -70,6 +70,7 @@ const ChangePasswordPage = lazy(() => import('@features/auth/ChangePasswordPage'
 // eslint-disable-next-line react-refresh/only-export-components
 function SharedProjectRoute() {
   const { id } = useParams();
+  const location = useLocation();
   const { t } = useTranslation();
   const [publicId, setpublicId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -94,7 +95,10 @@ function SharedProjectRoute() {
       <LoadingSpinner size="sm" />
     </div>
   );
-  return <Navigate to={`/project/${publicId}`} replace />;
+  // Carry the query string and hash across the redirect. Share links built by
+  // the share modal append `?s=<seconds>`, and dropping the search here is what
+  // made every custom-time share link land at 0:00.
+  return <Navigate to={`/project/${publicId}${location.search}${location.hash}`} replace />;
 }
 
 // Protected Route Wrapper

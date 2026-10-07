@@ -1,4 +1,4 @@
-import { useRef, useEffect, useReducer } from 'react';
+import { useRef, useEffect, useReducer, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '@ui/button';
@@ -6,6 +6,7 @@ import { Input } from '@ui/input';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { formatTime } from '@/shared/utils/format-time';
+import { formatLoopParam } from '@/shared/utils/url-params';
 import { LogoLoader } from '@ui/LogoLoader';
 
 interface ShareState {
@@ -13,6 +14,7 @@ interface ShareState {
   privacy: string;
   includeTime: boolean;
   customTime: number;
+  includeLoop: boolean;
   loadingStep: number;
 }
 
@@ -21,6 +23,7 @@ type ShareAction =
   | { type: 'SET_PRIVACY'; payload: string }
   | { type: 'SET_INCLUDE_TIME'; payload: boolean }
   | { type: 'SET_CUSTOM_TIME'; payload: number }
+  | { type: 'SET_INCLUDE_LOOP'; payload: boolean }
   | { type: 'INC_LOADING_STEP' };
 
 /**
@@ -33,6 +36,7 @@ function shareReducer(state: ShareState, action: ShareAction): ShareState {
     case 'SET_PRIVACY': return { ...state, privacy: action.payload };
     case 'SET_INCLUDE_TIME': return { ...state, includeTime: action.payload };
     case 'SET_CUSTOM_TIME': return { ...state, customTime: action.payload };
+    case 'SET_INCLUDE_LOOP': return { ...state, includeLoop: action.payload };
     case 'INC_LOADING_STEP': return { ...state, loadingStep: state.loadingStep + 1 };
     default: return state;
   }
@@ -51,6 +55,13 @@ interface SharePanelProps {
   forksEnabled?: boolean;
   onForksEnabledChange?: (enabled: boolean) => void;
   onShare?: () => void;
+  /**
+   * Read imperatively when the panel opens so the A-B loop can be offered as a
+   * deep link. Deliberately a ref rather than live loop state: subscribing this
+   * panel's parent to PlayerContext would re-render the memoised Preview on
+   * every timeupdate tick.
+   */
+  playerRef?: { current?: { getLoop?: () => { a: number | null; b: number | null } } | null };
 }
 
 export function SharePanel({
@@ -66,6 +77,7 @@ export function SharePanel({
   forksEnabled,
   onForksEnabledChange,
   onShare,
+  playerRef,
 }: SharePanelProps) {
   const { t } = useTranslation();
   const [state, dispatch] = useReducer(shareReducer, {
@@ -73,11 +85,22 @@ export function SharePanel({
     privacy: isPublic ? 'public' : 'private',
     includeTime: false,
     customTime: Math.floor(playbackPosition),
+    includeLoop: false,
     loadingStep: 0,
   });
 
-  const { copied, privacy, includeTime, customTime, loadingStep } = state;
+  const { copied, privacy, includeTime, customTime, includeLoop, loadingStep } = state;
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Snapshot the loop once, when the panel opens. A loop that is set while the
+  // panel is already open is not picked up, which is an acceptable trade for
+  // not subscribing to playback ticks here.
+  const [loopSnapshot, setLoopSnapshot] = useState<{ a: number; b: number } | null>(null);
+  useEffect(() => {
+    const loop = playerRef?.current?.getLoop?.();
+    if (!loop || loop.a == null || loop.b == null || loop.b <= loop.a) return;
+    setLoopSnapshot({ a: loop.a, b: loop.b });
+  }, [playerRef]);
 
   // Sync customTime with playbackPosition initially or when toggled
   useEffect(() => {
@@ -96,10 +119,23 @@ export function SharePanel({
     }
   }, [loading]);
 
-  // Dynamic URL
-  const url = loading ? '' : (includeTime && customTime >= 0
-    ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}s=${customTime}`
-    : (baseUrl || ''));
+  // The time picker is only meaningful when there is media behind the link.
+  // The playlist share panel passes neither a duration nor a position, where a
+  // "start at 0s" toggle was offered but meant nothing.
+  const canIncludeTime = duration > 0 || playbackPosition > 0;
+
+  // Dynamic URL. Parameters are appended with URLSearchParams semantics rather
+  // than string concatenation so the separator is always right.
+  const url = (() => {
+    if (loading) return '';
+    if (!baseUrl) return '';
+    const extra = new URLSearchParams();
+    if (canIncludeTime && includeTime && customTime > 0) extra.set('s', String(customTime));
+    if (loopSnapshot && includeLoop) extra.set('loop', formatLoopParam(loopSnapshot.a, loopSnapshot.b));
+    const query = extra.toString();
+    if (!query) return baseUrl;
+    return `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${query}`;
+  })();
 
   const handlePrivacyToggle = () => {
     const newPrivacy = privacy === 'public' ? 'private' : 'public';
@@ -234,6 +270,7 @@ export function SharePanel({
       </div>
 
       {/* Time Toggle & Picker */}
+      {canIncludeTime && (
       <div className="space-y-3 bg-zinc-900/40 p-3 rounded-xl border border-zinc-800/60">
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 cursor-pointer group">
@@ -303,6 +340,30 @@ export function SharePanel({
           </div>
         )}
       </div>
+      )}
+
+      {/* A-B loop deep link — only offered when a loop is actually set */}
+      {loopSnapshot && (
+        <div className="flex items-center justify-between gap-2 bg-zinc-900/40 p-3 rounded-xl border border-zinc-800/60">
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'SET_INCLUDE_LOOP', payload: !includeLoop })}
+              role="switch"
+              aria-checked={includeLoop}
+              className={`size-8 h-4 rounded-full p-0.5 transition-all duration-300 outline-none focus:ring-2 focus:ring-primary/50 ${includeLoop ? 'bg-primary' : 'bg-zinc-700'}`}
+            >
+              <div className={`size-3 h-3 rounded-full bg-white shadow-sm transition-transform duration-300 ${includeLoop ? 'translate-x-4' : 'translate-x-0'}`} />
+            </button>
+            <span className={`text-[11px] font-bold transition-colors ${includeLoop ? 'text-zinc-200' : 'text-zinc-500'}`}>
+              {t('share.includeLoop')}
+            </span>
+          </label>
+          <span className="text-[10px] font-mono text-primary font-bold">
+            {formatTime(loopSnapshot.a)} – {formatTime(loopSnapshot.b)}
+          </span>
+        </div>
+      )}
 
       {/* Description */}
       <p className="text-[10px] text-zinc-500 leading-relaxed px-1">
