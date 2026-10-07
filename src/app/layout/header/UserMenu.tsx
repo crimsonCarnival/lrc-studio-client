@@ -11,6 +11,7 @@ import { requestsApi } from '@/features/admin/services/requests.service';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isStaff } from '@/features/auth/permissions';
+import { adminHostUrl } from '@/shared/utils/host';
 import { THEMES } from './theme-options';
 
 interface UserMenuProps {
@@ -57,7 +58,11 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
       {staff && (
         <Tip content={t('admin.dashboard.title')}>
           <button
-            onClick={() => navigate('/admin')}
+            onClick={() => {
+              // The dashboard lives on the admin host; fall back to /admin on previews/localhost.
+              if (/^(www\.|m\.)?lrcstudio\.app$/i.test(window.location.hostname)) window.location.assign(adminHostUrl('/admin'));
+              else navigate('/admin');
+            }}
             className="relative size-8 coarse:size-11 flex items-center justify-center rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 shrink-0"
           >
             <Icon name="security" size={18} />

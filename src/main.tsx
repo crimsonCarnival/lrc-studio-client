@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { setAppNavigate } from '@/app/navigation';
 import { accessFor } from '@/app/route-access';
-import { isAdminHost, redirectOffMobileHostIfNeeded } from '@/shared/utils/host';
+import { isAdminHost, wwwHostUrl, redirectOffMobileHostIfNeeded } from '@/shared/utils/host';
 import { isStaff } from '@/features/auth/permissions';
 
 // Auto-reload when a new deployment invalidates lazy-loaded chunks
@@ -118,6 +118,12 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   // reaching this path from the admin host grants nothing.
   if (user && isAdminHost() && location.pathname === '/') {
     return <Navigate to="/admin" replace />;
+  }
+
+  // The admin host only serves the dashboard: any other page belongs on www.
+  if (isAdminHost() && location.pathname !== '/' && !location.pathname.startsWith('/admin')) {
+    window.location.replace(wwwHostUrl(location.pathname + location.search + location.hash));
+    return <AppLoadingScreen />;
   }
 
   // Logged-in users landing on root should go to the home dashboard.
