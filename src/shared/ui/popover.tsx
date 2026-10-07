@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Popover as PopoverPrimitive } from "radix-ui"
+import { Popover as PopoverPrimitive, Slot } from "radix-ui"
 
 import { cn } from "@/shared/utils/utils"
 
@@ -43,9 +43,11 @@ PopoverContent.displayName = PopoverPrimitive.Content.displayName
 
 const PopoverItem = React.forwardRef<
   HTMLButtonElement,
-  React.ComponentPropsWithoutRef<"button">
->(({ className, ...props }, ref) => (
-  <button
+  React.ComponentPropsWithoutRef<"button"> & { asChild?: boolean }
+>(({ className, asChild = false, ...props }, ref) => {
+  const Comp = asChild ? Slot.Root : "button"
+  return (
+  <Comp
     ref={ref}
     data-slot="popover-item"
     className={cn(
@@ -54,7 +56,8 @@ const PopoverItem = React.forwardRef<
     )}
     {...props}
   />
-))
+  )
+})
 PopoverItem.displayName = "PopoverItem"
 
 const PopoverSeparator = React.forwardRef<

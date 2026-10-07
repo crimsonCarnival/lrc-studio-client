@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { Icon } from '@/shared/ui/Icon';
 import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
@@ -28,7 +28,6 @@ interface MediaDetail {
 export default function UploadDetailView({ onBack }: { onBack: () => void }) {
   const { id } = useParams();
   const { t, dt } = useDynamicTranslation();
-  const navigate = useNavigate();
 
   const [media, setMedia] = useState<MediaDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -149,11 +148,9 @@ export default function UploadDetailView({ onBack }: { onBack: () => void }) {
             {media.projects && media.projects.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {media.projects.map(project => (
-                  <button
+                  <Link to={`/project/${project.publicId}/edit`}
                     key={project.publicId}
-                    type="button"
                     className="group relative bg-zinc-900/60 border border-zinc-800 hover:border-primary/50 hover:bg-zinc-800/60 rounded-xl p-4 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer overflow-hidden flex flex-col text-left focus:ring-2 focus:ring-primary/50 outline-none"
-                    onClick={() => navigate(`/project/${project.publicId}/edit`)}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="flex items-start gap-3 relative z-10">
@@ -168,7 +165,7 @@ export default function UploadDetailView({ onBack }: { onBack: () => void }) {
                         </div>
                       </div>
                     </div>
-                  </button>
+                  </Link>
                 ))}
               </div>
             ) : (

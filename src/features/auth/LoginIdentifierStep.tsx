@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import type { FormEvent } from 'react';
 import type { TFunction } from 'i18next';
 import { Trans } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { z } from 'zod';
 import { Button } from '@ui/button';
@@ -40,7 +40,6 @@ interface LoginIdentifierStepProps {
 // ─── Login Step 1 — Identifier ─────────────────────────────────────────────
 
 export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onGoogleLogin, from, redirect, onDismissRedirect }: LoginIdentifierStepProps) {
-  const navigate = useNavigate();
   const [identifier, setIdentifier] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -130,14 +129,12 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
 
           <GoogleButton onClick={onGoogleLogin} t={t} />
 
-          <button
-            type="button"
-            onClick={() => navigate('/project/new')}
+          <Link to="/project/new"
             className="group flex items-center justify-center gap-2 py-1 text-xs font-semibold text-zinc-500 hover:text-primary transition-all duration-300"
           >
             <Icon name="bolt" size={14} className="text-zinc-600 group-hover:text-primary transition-all" />
             {t('auth.guestMode')}
-          </button>
+          </Link>
         </div>
       </form>
     </div>

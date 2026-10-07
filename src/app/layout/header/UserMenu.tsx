@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import type { NavigateFunction } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { guardedLinkClick } from './guarded-link-click';
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -17,7 +18,6 @@ import { THEMES } from './theme-options';
 interface UserMenuProps {
   user: AuthUser;
   logout: () => void | Promise<void>;
-  navigate: NavigateFunction;
   // navTo carries the unsaved-changes guard from AppHeader (project pages warn before leaving).
   navTo: (path: string) => void;
   setShowKeyboardHelp?: (v: boolean) => void;
@@ -27,7 +27,7 @@ interface UserMenuProps {
   i18n?: I18nInstance;
 }
 
-export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, currentTheme, updateSetting, i18n }: UserMenuProps) {
+export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentTheme, updateSetting, i18n }: UserMenuProps) {
   const { t } = useTranslation();
   const currentLang = (i18n?.language || 'en').split('-')[0];
   // Library/upload/request counts are only shown in this menu — own the state here.
@@ -57,21 +57,23 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
     <>
       {staff && (
         <Tip content={t('admin.dashboard.title')}>
-          <button
-            onClick={() => {
-              // The dashboard lives on the admin host; fall back to /admin on previews/localhost.
-              if (canUseAdminHost()) window.location.assign(adminHostUrl('/'));
-              else navigate('/admin');
-            }}
-            className="relative size-8 coarse:size-11 flex items-center justify-center rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 shrink-0"
-          >
-            <Icon name="security" size={18} />
-            {counts.requests > 0 && (
-               <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground border-2 border-background">
-                 {counts.requests > 99 ? '99+' : counts.requests}
-               </span>
-            )}
-          </button>
+          {(() => {
+            const cls = "relative size-8 coarse:size-11 flex items-center justify-center rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 shrink-0";
+            const inner = (
+              <>
+                <Icon name="security" size={18} />
+                {counts.requests > 0 && (
+                   <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground border-2 border-background">
+                     {counts.requests > 99 ? '99+' : counts.requests}
+                   </span>
+                )}
+              </>
+            );
+            // The dashboard lives on the admin host; fall back to /admin on previews/localhost.
+            return canUseAdminHost()
+              ? <a href={adminHostUrl('/')} className={cls} aria-label={t('admin.dashboard.title')}>{inner}</a>
+              : <Link to="/admin" className={cls} aria-label={t('admin.dashboard.title')}>{inner}</Link>;
+          })()}
         </Tip>
       )}
       <NotificationBell />
@@ -97,39 +99,39 @@ export function UserMenu({ user, logout, navigate, navTo, setShowKeyboardHelp, c
           </div>
 
           <div className="p-1 border-b border-zinc-800/60">
-            <PopoverItem onClick={() => navigate('/search')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+            <PopoverItem asChild><Link to="/search" className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <span className="flex items-center gap-2"><Icon name="search" size={16} className="text-zinc-400" />{t('search.title')}</span>
-            </PopoverItem>
-            <PopoverItem onClick={() => navTo('/explore')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+            </Link></PopoverItem>
+            <PopoverItem asChild><Link to="/explore" onClick={(e) => guardedLinkClick(e, () => navTo('/explore'))} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <span className="flex items-center gap-2"><Icon name="explore" size={16} className="text-zinc-400" />{t('explore.nav')}</span>
-            </PopoverItem>
-            <PopoverItem onClick={() => navTo('/feed')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+            </Link></PopoverItem>
+            <PopoverItem asChild><Link to="/feed" onClick={(e) => guardedLinkClick(e, () => navTo('/feed'))} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <span className="flex items-center gap-2"><Icon name="language" size={16} className="text-zinc-400" />{t('feed.title')}</span>
-            </PopoverItem>
+            </Link></PopoverItem>
           </div>
 
           <div className="p-1 border-b border-zinc-800/60">
-            <PopoverItem onClick={() => { navigate(user?.accountName ? `/profile/${user.accountName}` : '/'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+            <PopoverItem asChild><Link to={user?.accountName ? `/profile/${user.accountName}` : '/'} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <Icon name="person" size={16} className="text-zinc-400" />{t('profile.title')}
-            </PopoverItem>
-            <PopoverItem onClick={() => navTo('/library')} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">
+            </Link></PopoverItem>
+            <PopoverItem asChild><Link to="/library" onClick={(e) => guardedLinkClick(e, () => navTo('/library'))} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">
               <span className="flex items-center gap-2"><Icon name="menu_book" size={16} className="text-zinc-400" />{t('library.title')}</span>
               {counts.library > 0 && <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.library}</span>}
-            </PopoverItem>
-            <PopoverItem onClick={() => navTo('/uploads')} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">
+            </Link></PopoverItem>
+            <PopoverItem asChild><Link to="/uploads" onClick={(e) => guardedLinkClick(e, () => navTo('/uploads'))} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">
               <span className="flex items-center gap-2"><Icon name="cloud_upload" size={16} className="text-zinc-400" />{t('uploads.title')}</span>
               {counts.uploads > 0 && <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold">{counts.uploads}</span>}
-            </PopoverItem>
-            <PopoverItem onClick={() => navigate('/leaderboard')} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+            </Link></PopoverItem>
+            <PopoverItem asChild><Link to="/leaderboard" className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <span className="flex items-center gap-2"><Icon name="emoji_events" size={16} className="text-warning" />{t('badges.leaderboard.title')}</span>
-            </PopoverItem>
+            </Link></PopoverItem>
           </div>
 
           <div className="p-1 border-b border-zinc-800/60">
 
-            <PopoverItem onClick={() => { navigate('/settings'); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+            <PopoverItem asChild><Link to="/settings" className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <Icon name="settings" size={16} className="text-zinc-400" />{t('settings.title')}
-            </PopoverItem>
+            </Link></PopoverItem>
             {setShowKeyboardHelp && (
               <PopoverItem onClick={() => { setShowKeyboardHelp(true); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                 <Icon name="menu_book" size={16} className="text-zinc-400" />{t('shortcuts.title')}

@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { AnimatePresence, m as M } from 'framer-motion';
 import { z } from 'zod';
@@ -101,7 +101,6 @@ interface SignUpFormProps {
 }
 
 export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSuccess, redirect, onDismissRedirect }: SignUpFormProps) {
-  const navigate = useNavigate();
   const { trigger: haptic } = useHapticFeedback();
 
   const [step, setStep] = useState(1);
@@ -321,14 +320,12 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                 <div className="flex-1 h-px bg-zinc-800/40" />
               </div>
               <GoogleButton onClick={onGoogleLogin} t={t} />
-              <button
-                type="button"
-                onClick={() => navigate('/project/new')}
+              <Link to="/project/new"
                 className="group flex items-center justify-center gap-2 py-1 text-xs font-semibold text-zinc-500 hover:text-primary transition-all duration-300"
               >
                 <Icon name="bolt" size={14} className="text-zinc-600 group-hover:text-primary transition-all" />
                 {t('auth.guestMode')}
-              </button>
+              </Link>
             </div>
           </M.form>
         )}
