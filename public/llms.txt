@@ -1,5 +1,18 @@
 # LRC Studio
 
-LRC Studio is a web-based editor for syncing lyrics with music.
+> LRC Studio is a free, browser-based lyric synchronization tool. Upload an audio file or paste a YouTube link, add lyrics, and create timestamped .lrc or .srt files in minutes. No installation, and you can start without signing up.
 
-For more information, see [LRC Studio](https://lrc-studio.vercel.app/).
+## Features
+
+- Real-time line sync: tap Space to stamp each lyric line while the track plays, and nudge timestamps with the arrow keys.
+- Word-level timing: karaoke-style highlighting, with Japanese furigana support and singer tagging for duets.
+- Lyrics search: search, preview and import lyrics from the song title and artist.
+- Export: standard .lrc, word-level enhanced .lrc, and .srt subtitles.
+- Accounts: save projects to a personal library, sync across devices, and share projects by link.
+
+## Links
+
+- [Home](https://www.lrcstudio.app/): the editor and landing page
+- [Sign up](https://www.lrcstudio.app/auth/signup): create a free account
+- [Sign in](https://www.lrcstudio.app/auth/signin)
+- [Sitemap](https://www.lrcstudio.app/sitemap.xml)

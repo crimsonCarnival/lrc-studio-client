@@ -5,7 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, useNavi
 import { setAppNavigate } from '@/app/navigation';
 import { accessFor } from '@/app/route-access';
 import { isAdminHost, wwwHostUrl, redirectOffMobileHostIfNeeded, redirectToMobileHostIfNeeded } from '@/shared/utils/host';
-import iconFontUrl from 'material-symbols/material-symbols-outlined.woff2?url';
+import iconFontUrl from '@/assets/fonts/material-symbols-subset.woff2?url';
 import { isStaff } from '@/features/auth/permissions';
 
 // Auto-reload when a new deployment invalidates lazy-loaded chunks

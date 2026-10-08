@@ -8,3 +8,5 @@ Disallow: /profile
 Disallow: /admin
 Disallow: /api/
 Disallow: /graphql
+
+Sitemap: https://www.lrcstudio.app/sitemap.xml
