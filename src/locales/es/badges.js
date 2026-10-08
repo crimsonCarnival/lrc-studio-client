@@ -76,6 +76,7 @@ export default {
     syncedCol:         'SINCRONIZADO',
     xpCol:             'XP',
     rankCol:           'RANGO',
+    resetView:         'Restablecer vista',
     emptyPeriod:       'Nadie ha ganado XP en este periodo todavía.',
     periodNote:        'La clasificación usa el XP ganado en este periodo — las demás columnas son totales históricos.',
     sortControlLabel:  'Ordenar por',

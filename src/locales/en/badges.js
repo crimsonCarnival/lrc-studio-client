@@ -79,6 +79,7 @@ export default {
     syncedCol:         'SYNCED',
     xpCol:             'XP',
     rankCol:           'RANK',
+    resetView:         'Reset view',
     emptyPeriod:       'Nobody earned XP in this period yet.',
     periodNote:        'Ranking uses XP earned in this period — the other columns are lifetime totals.',
     sortControlLabel:  'Sort by',
