@@ -78,6 +78,13 @@ export default {
     starsCol:          'STARS',
     syncedCol:         'SYNCED',
     xpCol:             'XP',
+    rankCol:           'RANK',
+    emptyPeriod:       'Nobody earned XP in this period yet.',
+    periodNote:        'Ranking uses XP earned in this period — the other columns are lifetime totals.',
+    sortControlLabel:  'Sort by',
+    sortByColumn:      'Sort by {{column}}',
+    sortAscending:     'Ascending',
+    sortDescending:    'Descending',
   },
 
   // ─── Builtin badge labels (keyed by badge id: badges.<id>.label) ──────────────

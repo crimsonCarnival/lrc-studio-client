@@ -343,8 +343,10 @@ export type LeaderboardUser = {
   badges: Array<UserBadge>;
   displayName?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  periodXp?: Maybe<Scalars['Int']['output']>;
   progression?: Maybe<UserProgression>;
   projectCount: Scalars['Int']['output'];
+  rankScore?: Maybe<Scalars['Float']['output']>;
   stats?: Maybe<UserStats>;
   streak?: Maybe<UserStreak>;
   totalForksReceived: Scalars['Int']['output'];
@@ -867,9 +869,29 @@ export type QueryGetShareArgs = {
 };
 
 
+export type LeaderboardTimeframe =
+  | 'ALL_TIME'
+  | 'MONTH'
+  | 'WEEK';
+
+export type LeaderboardSort =
+  | 'LINES'
+  | 'PROJECTS'
+  | 'RANK'
+  | 'STARS'
+  | 'TIME_SYNCED'
+  | 'XP';
+
+export type LeaderboardSortDirection =
+  | 'ASC'
+  | 'DESC';
+
 export type QueryLeaderboardArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
+  sortBy?: InputMaybe<LeaderboardSort>;
+  sortDir?: InputMaybe<LeaderboardSortDirection>;
+  timeframe?: InputMaybe<LeaderboardTimeframe>;
 };
 
 

@@ -7,6 +7,7 @@ import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
 import { getLeaderboard } from './leaderboard.service';
+import type { LeaderboardSort, LeaderboardSortDirection, LeaderboardTimeframe } from './leaderboard.service';
 import { LogoLoader } from '@ui/LogoLoader';
 
 interface LeaderEntry {
@@ -15,13 +16,14 @@ interface LeaderEntry {
   displayName?: string;
   avatarUrl?: string;
   badges?: { id: string }[];
-  progression?: { level?: number };
+  progression?: { level?: number; xp?: number };
   streak?: { current?: number };
   stats?: { karaokeLines?: number; minutesSynced?: number; secondsSynced?: number; syncedLines?: number; aiSyncedLines?: number; wordsSynced?: number; aiWordsSynced?: number };
   totalStarsReceived?: number;
   totalForksReceived?: number;
   projectCount?: number;
-  rankScore?: number;
+  rankScore?: number | null;
+  periodXp?: number | null;
 }
 
 interface PodiumStyle {
@@ -31,6 +33,31 @@ interface PodiumStyle {
   ring: string;
   label: string;
 }
+
+type TimeFilter = 'week' | 'month' | 'all';
+
+const TIMEFRAME_BY_FILTER: Record<TimeFilter, LeaderboardTimeframe> = {
+  week: 'WEEK',
+  month: 'MONTH',
+  all: 'ALL_TIME',
+};
+
+/**
+ * Columns the server can sort on, with the locale key used for their label.
+ * `as const` keeps `labelKey` a literal union so i18next's typed `t()` accepts it.
+ */
+const SORT_COLUMNS = [
+  { sort: 'PROJECTS', labelKey: 'badges.leaderboard.projectsCol' },
+  { sort: 'LINES', labelKey: 'badges.leaderboard.linesCol' },
+  { sort: 'STARS', labelKey: 'badges.leaderboard.starsCol' },
+  { sort: 'TIME_SYNCED', labelKey: 'badges.leaderboard.syncedCol' },
+  { sort: 'XP', labelKey: 'badges.leaderboard.xpCol' },
+  // 'RANK' sorts on rankScore, which now has its own column. The '#' cell is
+  // the row's position in the returned order, not a sortable value.
+  { sort: 'RANK', labelKey: 'badges.leaderboard.rankScore' },
+] as const satisfies readonly { sort: LeaderboardSort; labelKey: string }[];
+
+type SortColumnLabelKey = (typeof SORT_COLUMNS)[number]['labelKey'];
 
 function formatTime(min?: number, sec?: number) {
   const m = min ?? 0;
@@ -65,9 +92,9 @@ const PODIUM: Record<number, PodiumStyle> = {
   3: { accent: 'text-orange-500', medal: 'emoji_events', glow: 'bg-orange-500/10', ring: 'ring-2 ring-orange-500', label: 'text-orange-400' },
 };
 
-function RankBadge({ pos }: { pos: number }) {
+function RankBadge({ pos, podium }: { pos: number; podium?: boolean }) {
   const { t } = useTranslation();
-  const p = PODIUM[pos];
+  const p = podium ? PODIUM[pos] : undefined;
   if (p) {
     return (
       <div className="flex items-center justify-center">
@@ -77,7 +104,10 @@ function RankBadge({ pos }: { pos: number }) {
     );
   }
   return (
-    <span className="text-sm tabular-nums w-full text-center text-zinc-500 font-mono font-semibold" aria-label={t('common.rankN', { pos })}>
+    <span
+      className="text-sm tabular-nums w-full text-center text-zinc-500 font-mono font-semibold"
+      aria-label={t('common.rankN', { pos })}
+    >
       {pos}
     </span>
   );
@@ -103,15 +133,23 @@ function UserAvatar({ avatarUrl, name, ring }: { avatarUrl?: string; name?: stri
 export default function LeaderboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'all'>('all');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+  const [sortBy, setSortBy] = useState<LeaderboardSort>('RANK');
+  const [sortDir, setSortDir] = useState<LeaderboardSortDirection>('DESC');
 
   const PAGE_SIZE = 25;
+  const timeframe = TIMEFRAME_BY_FILTER[timeFilter];
+  const isPeriod = timeframe !== 'ALL_TIME';
 
   const query = useInfiniteQuery({
-    queryKey: ['leaderboard', PAGE_SIZE],
+    // timeframe/sort belong in the key: without them, switching a tab or a
+    // column would serve the previous selection's cached rows. A distinct key is
+    // a distinct cache entry, so paging also restarts from initialPageParam.
+    queryKey: ['leaderboard', PAGE_SIZE, timeframe, sortBy, sortDir],
     // Rank scores are recomputed hourly on the server.
     staleTime: 60_000,
-    queryFn: ({ pageParam }) => getLeaderboard(PAGE_SIZE, pageParam),
+    queryFn: ({ pageParam }) =>
+      getLeaderboard({ limit: PAGE_SIZE, offset: pageParam, timeframe, sortBy, sortDir }),
     initialPageParam: 0,
     // The server pages by offset, so the cursor is the count loaded so far.
     getNextPageParam: (lastPage, pages) =>
@@ -127,12 +165,66 @@ export default function LeaderboardPage() {
   const loadingMore = query.isFetchingNextPage;
   const loadMore = () => { void query.fetchNextPage(); };
 
+  // First click on a column sorts it descending; clicking the active one flips.
+  const toggleSort = (column: LeaderboardSort) => {
+    if (column === sortBy) {
+      setSortDir((dir) => (dir === 'DESC' ? 'ASC' : 'DESC'));
+      return;
+    }
+    setSortBy(column);
+    setSortDir('DESC');
+  };
+
+  const ariaSort = (column: LeaderboardSort): 'ascending' | 'descending' | 'none' =>
+    column === sortBy ? (sortDir === 'ASC' ? 'ascending' : 'descending') : 'none';
+
+  const dirLabel = sortDir === 'ASC'
+    ? t('badges.leaderboard.sortAscending')
+    : t('badges.leaderboard.sortDescending');
+
+  // Podium medals mean "top of the ranking". Under any other sort the first
+  // three rows are just the extremes of that column — gold on the three
+  // worst-starred users reads as an award. Only decorate the real ranking.
+  const isRanking = sortBy === 'RANK' && sortDir === 'DESC';
+  const podiumOf = (pos: number) => (isRanking ? PODIUM[pos] : undefined);
+
+  /** XP column value: lifetime XP for all-time, in-window XP for week/month. */
+  const xpOf = (entry: LeaderEntry) => (isPeriod ? entry.periodXp : entry.progression?.xp) ?? 0;
+
+  /** Weighted-percentile ranking score, the basis of the default sort. */
+  const scoreOf = (entry: LeaderEntry) => Math.round(entry.rankScore ?? 0).toLocaleString();
+
+  const sortIcon = (column: LeaderboardSort) => (
+    <Icon
+      name={column === sortBy && sortDir === 'ASC' ? 'expand_less' : 'expand_more'}
+      size={14}
+      className={column === sortBy ? 'text-primary' : 'opacity-0 group-hover/sort:opacity-50 transition-opacity'}
+    />
+  );
+
+  const SortableHeader = ({ column, labelKey }: { column: LeaderboardSort; labelKey: SortColumnLabelKey }) => {
+    const label = t(labelKey);
+    return (
+      <th className="py-4 px-4 text-right" aria-sort={ariaSort(column)}>
+        <button
+          type="button"
+          onClick={() => toggleSort(column)}
+          aria-label={t('badges.leaderboard.sortByColumn', { column: label })}
+          className={`group/sort inline-flex items-center justify-end gap-0.5 min-h-11 w-full rounded-md px-1 text-xs font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${column === sortBy ? 'text-zinc-200' : 'text-zinc-500 hover:text-zinc-300'}`}
+        >
+          <span>{label}</span>
+          {sortIcon(column)}
+        </button>
+      </th>
+    );
+  };
+
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
       <div className="flex flex-col px-4 pt-8 pb-16 max-w-5xl mx-auto w-full animate-fade-in">
-        
+
         {/* Header section */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
           <div>
             <h1 className="text-3xl font-heading font-semibold text-foreground">
               {t('badges.leaderboard.title')}
@@ -141,22 +233,22 @@ export default function LeaderboardPage() {
               {t('badges.leaderboard.subtitle')}
             </p>
           </div>
-          
+
           {/* Tabs */}
           <div className="flex p-1 gap-1">
-            <button 
+            <button
               onClick={() => setTimeFilter('week')}
               className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'week' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
             >
               {t('badges.leaderboard.thisWeek')}
             </button>
-            <button 
+            <button
               onClick={() => setTimeFilter('month')}
               className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'month' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
             >
               {t('badges.leaderboard.thisMonth')}
             </button>
-            <button 
+            <button
               onClick={() => setTimeFilter('all')}
               className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'all' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
             >
@@ -164,6 +256,17 @@ export default function LeaderboardPage() {
             </button>
           </div>
         </div>
+
+        {/* In period mode only the ranking is period-scoped: the other columns
+            are lifetime totals, because the server has no per-period counters
+            for them. Say so rather than letting the numbers imply otherwise. */}
+        {isPeriod ? (
+          <p className="text-xs text-muted-foreground mb-6 sm:text-right">
+            {t('badges.leaderboard.periodNote')}
+          </p>
+        ) : (
+          <div className="mb-6" />
+        )}
 
         {/* Content */}
         {loading ? (
@@ -177,11 +280,39 @@ export default function LeaderboardPage() {
         ) : users.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
             <Icon name="timer" size={40} className="text-zinc-700" />
-            <p className="text-sm text-muted-foreground">{t('badges.leaderboard.empty')}</p>
+            <p className="text-sm text-muted-foreground">{t(isPeriod ? 'badges.leaderboard.emptyPeriod' : 'badges.leaderboard.empty')}</p>
           </div>
         ) : (
           <div className="glass rounded-2xl overflow-hidden border border-zinc-800/60">
-            {/* Stacked cards below lg. The table needs 700px of columns, so on a
+            {/* The stacked card list cannot host table headers, so below lg the
+                same sort state is driven by this column select + direction
+                toggle. */}
+            <div className="lg:hidden flex items-center gap-2 px-4 py-2 border-b border-zinc-800/50">
+              <label htmlFor="leaderboard-sort" className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                {t('badges.leaderboard.sortControlLabel')}
+              </label>
+              <select
+                id="leaderboard-sort"
+                value={sortBy}
+                onChange={(e) => { setSortBy(e.target.value as LeaderboardSort); setSortDir('DESC'); }}
+                className="appearance-none bg-transparent hover:bg-zinc-800 text-xs min-h-11 text-zinc-300 hover:text-zinc-100 transition-colors pl-2 pr-6 rounded-lg outline-none cursor-pointer border-none"
+              >
+                {SORT_COLUMNS.map(({ sort, labelKey }) => (
+                  <option key={sort} value={sort} className="bg-zinc-900">{t(labelKey)}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setSortDir((dir) => (dir === 'DESC' ? 'ASC' : 'DESC'))}
+                aria-label={dirLabel}
+                title={dirLabel}
+                className="ml-auto inline-flex items-center justify-center size-11 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+              >
+                <Icon name={sortDir === 'ASC' ? 'expand_less' : 'expand_more'} size={18} />
+              </button>
+            </div>
+
+            {/* Stacked cards below lg. The table needs 780px of columns, so on a
                 phone it was a 390px window onto a wider grid: the last four
                 stats sat off-screen behind a horizontal drag. */}
             <ul className="lg:hidden divide-y divide-zinc-800/50">
@@ -191,7 +322,8 @@ export default function LeaderboardPage() {
                   [t('badges.leaderboard.linesCol'), formatCount(entry.stats?.syncedLines ?? 0)],
                   [t('badges.leaderboard.projectsCol'), formatCount(entry.projectCount ?? 0)],
                   [t('badges.leaderboard.starsCol'), formatCount(entry.totalStarsReceived ?? 0)],
-                  [t('badges.leaderboard.xpCol'), Math.round(entry.rankScore ?? 0).toLocaleString()],
+                  [t('badges.leaderboard.xpCol'), xpOf(entry).toLocaleString()],
+                  [t('badges.leaderboard.rankScore'), scoreOf(entry)],
                 ];
                 return (
                   <li key={entry.id ?? entry.accountName}>
@@ -199,10 +331,10 @@ export default function LeaderboardPage() {
                       className="block w-full text-left px-4 py-3.5 hover:bg-zinc-800/30 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="shrink-0"><RankBadge pos={i + 1} /></div>
-                        <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} ring={PODIUM[i + 1]?.ring} />
+                        <div className="shrink-0"><RankBadge pos={i + 1} podium={isRanking} /></div>
+                        <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} ring={podiumOf(i + 1)?.ring} />
                         <div className="flex flex-col min-w-0 flex-1">
-                          <span className={`font-semibold text-sm truncate ${PODIUM[i + 1] ? PODIUM[i + 1].label : 'text-zinc-100'}`}>
+                          <span className={`font-semibold text-sm truncate ${podiumOf(i + 1)?.label ?? 'text-zinc-100'}`}>
                             {entry.displayName || entry.accountName}
                           </span>
                           <span className="text-xs text-zinc-500 truncate">
@@ -226,34 +358,35 @@ export default function LeaderboardPage() {
             </ul>
 
             <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[700px]">
+              <table className="w-full text-left border-collapse min-w-[780px]">
                 <thead>
                   <tr className="border-b border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                    <th className="py-4 px-4 w-16 text-center">#</th>
+                    <th className="py-4 px-4 w-16 text-center">
+                      <span aria-hidden="true">#</span>
+                      <span className="sr-only">{t('badges.leaderboard.rankCol')}</span>
+                    </th>
                     <th className="py-4 px-4">{t('badges.leaderboard.creator')}</th>
-                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.projectsCol')}</th>
-                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.linesCol')}</th>
-                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.starsCol')}</th>
-                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.syncedCol')}</th>
-                    <th className="py-4 px-4 text-right">{t('badges.leaderboard.xpCol')}</th>
+                    {SORT_COLUMNS.map(({ sort, labelKey }) => (
+                      <SortableHeader key={sort} column={sort} labelKey={labelKey} />
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/50">
                   {users.map((entry, i) => {
                     return (
-                      <tr 
-                        key={entry.id ?? entry.accountName} 
+                      <tr
+                        key={entry.id ?? entry.accountName}
                         className="hover:bg-zinc-800/30 transition-colors group cursor-pointer"
                         onClick={() => navigate(`/profile/${entry.accountName}`)}
                       >
                         <td className="py-3 px-4 text-center">
-                          <RankBadge pos={i + 1} />
+                          <RankBadge pos={i + 1} podium={isRanking} />
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-4">
-                            <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} ring={PODIUM[i + 1]?.ring} />
+                            <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} ring={podiumOf(i + 1)?.ring} />
                             <div className="flex flex-col">
-                              <span className={`font-semibold text-[15px] ${PODIUM[i + 1] ? PODIUM[i + 1].label : 'text-zinc-100'}`}>
+                              <span className={`font-semibold text-[15px] ${podiumOf(i + 1)?.label ?? 'text-zinc-100'}`}>
                                 {entry.displayName || entry.accountName}
                               </span>
                               <span className="text-xs text-zinc-500 mt-0.5">
@@ -270,13 +403,16 @@ export default function LeaderboardPage() {
                           {formatCount(entry.stats?.syncedLines ?? 0)}
                         </td>
                         <td className="py-3 px-4 text-right tabular-nums text-zinc-400 text-[15px]">
-                          {PODIUM[i + 1] && i < 3 ? <span className="text-warning font-semibold">{formatCount(entry.totalStarsReceived ?? 0)}</span> : formatCount(entry.totalStarsReceived ?? 0)}
+                          {podiumOf(i + 1) ? <span className="text-warning font-semibold">{formatCount(entry.totalStarsReceived ?? 0)}</span> : formatCount(entry.totalStarsReceived ?? 0)}
                         </td>
                         <td className="py-3 px-4 text-right tabular-nums text-zinc-200 font-bold text-[15px]">
                           {formatTime(entry.stats?.minutesSynced, entry.stats?.secondsSynced)}
                         </td>
                         <td className="py-3 px-4 text-right tabular-nums text-primary/80 font-bold text-[15px]">
-                          {Math.round(entry.rankScore ?? 0).toLocaleString()}
+                          {xpOf(entry).toLocaleString()}
+                        </td>
+                        <td className="py-3 px-4 text-right tabular-nums text-zinc-400 text-[15px]">
+                          {scoreOf(entry)}
                         </td>
                       </tr>
                     );
