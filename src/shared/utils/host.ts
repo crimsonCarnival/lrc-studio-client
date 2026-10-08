@@ -132,12 +132,15 @@ export function redirectToMobileHostIfNeeded(): void {
 }
 
 /**
- * After logout the `m.` and `admin.` variants hand over to `www.`, where sign-in
+ * After logout the `admin.` variant hands over to `www.`, where sign-in
  * (including Google OAuth) is served. `?desktop=1` stops a phone being sent
  * straight back to `m.` by `redirectToMobileHostIfNeeded`.
+ *
+ * `m.` stays put: phones belong there, and `wwwHostUrl` does not swap the `m.`
+ * label, so "leaving" reloaded `m./?desktop=1` and could loop.
  */
 export function leaveSubdomainHostOnLogout(): void {
   if (typeof window === 'undefined') return;
-  if (!isMobileHost() && !isAdminHost()) return;
+  if (!isAdminHost()) return;
   window.location.replace(`${wwwHostUrl('/')}?desktop=1`);
 }
