@@ -6,6 +6,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106908/favicon-32x32_c0xrwo.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106908/android-chrome-192x192_ifsskm.png" />
     <link rel="manifest" href="/manifest.json" />
+    <link rel="canonical" href="https://www.lrcstudio.app/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LRC Studio — Professional Lyric Synchronization &amp; Editing</title>
     <meta name="description" content="LRC Studio is a professional tool to sync lyrics to any song (MP3 or YouTube) and export as high-quality .lrc files. Features tap-to-timestamp and live karaoke preview." />
@@ -46,7 +47,41 @@
   </head>
 
     <body class="bg-zinc-950 text-zinc-100 antialiased">
-    <div id="root"></div>
+    <div id="root">
+      <!-- Crawlable copy for clients that don't run JavaScript. React replaces
+           everything inside #root on mount; keep it in sync with the landing page. -->
+      <main style="max-width:44rem;margin:0 auto;padding:3rem 1.25rem;font-family:system-ui,sans-serif;line-height:1.6">
+        <h1>LRC Studio: sync lyrics to music, perfectly</h1>
+        <p>LRC Studio is a free, browser-based lyric synchronization tool. Upload an audio file or paste a YouTube link, add your lyrics, and create timestamped .lrc or .srt files in minutes. You can start without signing up, and there is nothing to install: the editor runs entirely in your browser on desktop, tablet and phone.</p>
+
+        <h2>Everything you need to sync lyrics</h2>
+        <h3>Real-time line sync</h3>
+        <p>Play the track and tap the Space bar to stamp each lyric line at the exact moment it is sung. Made a mistake? Nudge any timestamp forward or back with the arrow keys for frame-perfect precision, or jump back a few seconds and re-stamp the line.</p>
+        <h3>Word-level timing for karaoke</h3>
+        <p>Go beyond whole lines. Stamp individual words to create karaoke-style highlighting where each word lights up as it is sung. Word timing also works with Japanese text, including furigana readings that you can type in romaji and have converted to hiragana or katakana automatically. Multiple singers can be tagged and colour-coded for duets and group songs.</p>
+        <h3>Lyrics search and import</h3>
+        <p>Do not have the lyrics at hand? Enter the song title and artist, then search, preview and import lyrics in one click, with no copy-and-paste between tabs. You can also paste lyrics manually or import an existing .lrc file and fix its timing.</p>
+        <h3>Export anywhere</h3>
+        <p>Export your finished work as a standard .lrc file, a word-level enhanced .lrc, or an .srt subtitle file. The results work with popular music players, media apps, karaoke software and video editors, so your synced lyrics are ready wherever you want to use them.</p>
+
+        <h2>Four steps to synced lyrics</h2>
+        <ol>
+          <li><strong>Set project info.</strong> Enter the project name, song title, artist and album. This powers lyrics search and tags your export with the right metadata.</li>
+          <li><strong>Load your audio.</strong> Paste a YouTube URL or upload an audio file such as MP3, and use the built-in player with loop and seek controls.</li>
+          <li><strong>Import lyrics.</strong> Paste them in, import an .lrc file, or use lyrics search to find them from your song info.</li>
+          <li><strong>Sync and export.</strong> Play the track, press Space on each line, review the result in the live karaoke preview, and export when you are happy with it.</li>
+        </ol>
+
+        <h2>Made for musicians, translators and fans</h2>
+        <p>Whether you are adding lyrics to your own releases, preparing subtitles for a cover or lyric video, translating songs, or building karaoke tracks for friends, LRC Studio keeps the whole workflow in one place. A live preview shows your lyrics scrolling in time with the audio, so you can check the sync before you export anything.</p>
+
+        <h2>Save, share and organise your projects</h2>
+        <p>Create a free account to save your projects, keep them in a personal library, and pick up where you left off on any device. Projects can be shared with a link so friends, collaborators or listeners can follow along with the synced lyrics, and you can build playlists and explore projects from other people.</p>
+
+        <h2>Ready to create your first synced track?</h2>
+        <p><a href="/auth/signup">Create an account</a> or <a href="/auth/signin">sign in</a> to get started. Accounts save your projects and sync across devices.</p>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
