@@ -12,7 +12,9 @@
   font-family: "Material Symbols Outlined";
   font-style: normal;
   font-weight: 100 700;
-  font-display: swap;
+  /* block, not swap: a swap shows the raw ligature name ("auto_fix_high") as text
+     until the font arrives. */
+  font-display: block;
   src: url("../node_modules/material-symbols/material-symbols-outlined.woff2") format("woff2");
 }
 .material-symbols-outlined {
@@ -31,6 +33,13 @@
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: "liga";
+}
+/* Until the icon font is ready (see main.tsx) collapse each icon to a blank 1em
+   square, so the ligature name is never visible and the layout doesn't jump. */
+html.icons-loading .material-symbols-outlined {
+  width: 1em;
+  overflow: hidden;
+  color: transparent;
 }
 @custom-variant dark (&:is(.dark *));
 

@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, useNavi
 import { setAppNavigate } from '@/app/navigation';
 import { accessFor } from '@/app/route-access';
 import { isAdminHost, wwwHostUrl, redirectOffMobileHostIfNeeded, redirectToMobileHostIfNeeded } from '@/shared/utils/host';
+import iconFontUrl from 'material-symbols/material-symbols-outlined.woff2?url';
 import { isStaff } from '@/features/auth/permissions';
 
 // Auto-reload when a new deployment invalidates lazy-loaded chunks
@@ -239,6 +240,28 @@ const rootElement = document.getElementById('root');
 // phone layout before being sent to the canonical host.
 redirectOffMobileHostIfNeeded();
 redirectToMobileHostIfNeeded();
+
+// Hide icon ligature text until the Material Symbols font is usable. The font is
+// preloaded so it starts downloading before the first icon renders; the class
+// is dropped on load, or after a timeout so a failed fetch can't hide icons forever.
+{
+  const root = document.documentElement;
+  root.classList.add('icons-loading');
+  const ready = () => root.classList.remove('icons-loading');
+  const preload = document.createElement('link');
+  preload.rel = 'preload';
+  preload.as = 'font';
+  preload.type = 'font/woff2';
+  preload.crossOrigin = 'anonymous';
+  preload.href = iconFontUrl;
+  document.head.appendChild(preload);
+  if (document.fonts?.load) {
+    document.fonts.load('24px "Material Symbols Outlined"', 'a').then(ready, ready);
+    setTimeout(ready, 3000);
+  } else {
+    ready();
+  }
+}
 
 // Only create root once to prevent HMR issues
 if (!window.__reactRoot) {
