@@ -25,9 +25,22 @@ interface ReadingInputProps {
   readingFormat?: string;
 }
 
+let wanakanaLoad: Promise<void> | undefined;
+/**
+ * wanakana is only needed here, so it loads on first mount as its own chunk
+ * instead of from a CDN <script> on every page. Until it arrives (or if it
+ * fails) the input behaves as plain text.
+ */
+function loadWanakana(): Promise<void> {
+  if (window.wanakana) return Promise.resolve();
+  wanakanaLoad ??= import('wanakana')
+    .then((m) => { window.wanakana = m as unknown as WanaKana; })
+    .catch(() => { wanakanaLoad = undefined; });
+  return wanakanaLoad;
+}
+
 /**
  * Uncontrolled input that binds wanakana romaji→hiragana conversion while mounted.
- * Only activates if the global `window.wanakana` is available (CDN load).
  */
 export function ReadingInput({ defaultValue, onCommit, onCancel, className, style, placeholder, readingFormat }: ReadingInputProps) {
   const ref = useRef<HTMLInputElement>(null);
@@ -39,8 +52,11 @@ export function ReadingInput({ defaultValue, onCommit, onCancel, className, styl
     if (!el) return;
     el.focus();
     const toKana = readingFormat === 'katakana' ? 'toKatakana' : 'toHiragana';
-    window.wanakana?.bind(el, { IMEMode: toKana });
-    return () => { if (el) window.wanakana?.unbind(el); };
+    let cancelled = false;
+    loadWanakana().then(() => {
+      if (!cancelled) window.wanakana?.bind(el, { IMEMode: toKana });
+    });
+    return () => { cancelled = true; window.wanakana?.unbind(el); };
   }, [readingFormat]);
 
   const commit = (val: string, direction = 0) => {
