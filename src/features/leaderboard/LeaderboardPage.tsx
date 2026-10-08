@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { LazyImage } from '@ui/LazyImage';
@@ -400,10 +400,8 @@ export default function LeaderboardPage() {
                 ];
                 return (
                   <li key={entry.id ?? entry.accountName}>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/profile/${entry.accountName}`)}
-                      className="w-full text-left px-4 py-3.5 hover:bg-zinc-800/30 transition-colors"
+                    <Link to={`/profile/${entry.accountName}`}
+                      className="block w-full text-left px-4 py-3.5 hover:bg-zinc-800/30 transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <div className="shrink-0"><RankBadge pos={i + 1} podium={isRanking} /></div>
@@ -426,7 +424,7 @@ export default function LeaderboardPage() {
                           </div>
                         ))}
                       </dl>
-                    </button>
+                    </Link>
                   </li>
                 );
               })}

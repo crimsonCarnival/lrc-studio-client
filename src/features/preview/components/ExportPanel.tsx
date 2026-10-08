@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useSettings } from '@/features/settings/useSettings';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
@@ -54,7 +54,6 @@ export default function ExportPanel({
 }: ExportPanelProps) {
   const { t } = useTranslation();
   const { settings } = useSettings();
-  const navigate = useNavigate();
   const exportPanelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -99,13 +98,11 @@ export default function ExportPanel({
             />
           </div>
           <Tip content={t('export.formatTip')} side="top">
-            <button
-              type="button"
-              onClick={() => navigate('/settings/export')}
-              className="text-sm text-zinc-400 font-mono bg-zinc-800 px-2 py-1.5 rounded-lg border border-zinc-700/50 hover:border-zinc-500 hover:text-zinc-200 transition-colors"
+            <Link to="/settings/export"
+              className="inline-block text-sm text-zinc-400 font-mono bg-zinc-800 px-2 py-1.5 rounded-lg border border-zinc-700/50 hover:border-zinc-500 hover:text-zinc-200 transition-colors"
             >
               .{format}
-            </button>
+            </Link>
           </Tip>
         </div>
 

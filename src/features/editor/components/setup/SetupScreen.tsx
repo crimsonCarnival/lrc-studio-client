@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import type { ChangeEvent, ComponentProps, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { FloatingCombobox } from '@/shared/ui/floating-combobox';
@@ -123,7 +123,6 @@ interface SetupScreenProps {
 export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }: SetupScreenProps) {
   const { t } = useTranslation();
   const { user } = useAuthContext();
-  const navigate = useNavigate();
   const location = useLocation();
   const prefill = (location.state as { prefill?: Prefill } | null)?.prefill || null;
   const { step, setStep } = useSetupContext();
@@ -866,9 +865,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                           <p className="text-[11px] text-zinc-500 px-1 flex items-center gap-1.5 shrink-0">
                             <Icon name="lock" size={12} className="text-zinc-600 shrink-0" />
                             {t('setup.guestUploadNote')}{' '}
-                            <button onClick={() => navigate('/auth?action=signup')} className="text-primary hover:text-primary/80 underline underline-offset-2 font-medium">
+                            <Link to="/auth?action=signup" className="text-primary hover:text-primary/80 underline underline-offset-2 font-medium">
                               {t('auth.signUp')}
-                            </button>{' '}
+                            </Link>{' '}
                             {t('setup.guestUploadNoteKeep')}
                           </p>
                         )}

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { useSettings } from '@/features/settings/useSettings';
@@ -12,10 +12,9 @@ interface StickyNotification {
 function StickyCard({ labelKey, to, createdAt }: { labelKey: 'notifications.verifyEmail' | 'notifications.setPassword'; to: string; createdAt?: string }) {
   const { t, i18n } = useTranslation();
   const { settings } = useSettings();
-  const navigate = useNavigate();
   return (
-    <button
-      onClick={() => navigate(to)}
+    <Link
+      to={to}
       className="w-full mx-3 my-2 flex items-center gap-3 rounded-lg border-l-4 border-primary bg-primary/10 px-4 py-3 hover:bg-primary/15 transition-colors text-left"
       style={{ width: 'calc(100% - 1.5rem)' }}
     >
@@ -26,7 +25,7 @@ function StickyCard({ labelKey, to, createdAt }: { labelKey: 'notifications.veri
           <p className="text-xs text-primary/60">{formatTimeAgo(createdAt, t, settings.advanced?.timezone, i18n.resolvedLanguage || i18n.language)}</p>
         )}
       </div>
-    </button>
+    </Link>
   );
 }
 

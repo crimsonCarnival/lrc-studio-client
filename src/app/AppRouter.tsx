@@ -3,6 +3,7 @@ import {
 } from 'react';
 import type { ComponentProps, ReactNode } from 'react';
 import React from 'react';
+import { isAdminHost, canUseAdminHost, adminHostUrl } from '@/shared/utils/host';
 import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 import type { TFunction } from 'i18next';
@@ -74,6 +75,11 @@ function RequireAdmin({ children }: { children: ReactNode }) {
   // individual tabs/actions are gated by their specific permission.
   if (!isStaff(user.permissions)) return <Navigate to="/home" replace />;
   return children;
+}
+
+function ExternalRedirect({ to }: { to: string }) {
+  useEffect(() => { window.location.replace(to); }, [to]);
+  return null;
 }
 
 function LegacyListRedirect() {
@@ -520,6 +526,14 @@ export function AppRouter({
     }, { once: true });
   }, [isDesktop, lockLayout]);
 
+  const adminPage = (
+    <RequireAdmin>
+      <Suspense fallback={<SkeletonList count={3} />}>
+        <AdminDashboard />
+      </Suspense>
+    </RequireAdmin>
+  );
+
   return (
     <Routes>
       <Route path="uploads" element={
@@ -551,13 +565,18 @@ export function AppRouter({
           />
         </Suspense>
       } />
-      <Route path="admin" element={
-        <RequireAdmin>
-          <Suspense fallback={<SkeletonList count={3} />}>
-            <AdminDashboard />
-          </Suspense>
-        </RequireAdmin>
-      } />
+      {isAdminHost() ? (
+        <>
+          <Route index element={adminPage} />
+          <Route path="home" element={adminPage} />
+          <Route path="dashboard" element={adminPage} />
+          <Route path="admin" element={<Navigate to="/" replace />} />
+        </>
+      ) : canUseAdminHost() ? (
+        <Route path="admin" element={<ExternalRedirect to={adminHostUrl('/')} />} />
+      ) : (
+        <Route path="admin" element={adminPage} />
+      )}
       <Route path="project/fork/:id" element={<ForkHandler appState={appState} navigate={navigate} />} />
       <Route path="project/:id/edit" element={
         <EditorContainer loadProject={loadProject} activepublicId={activepublicId} isProjectLoading={isProjectLoading} projectUserId={projectUserId} user={user} navigate={navigate}>

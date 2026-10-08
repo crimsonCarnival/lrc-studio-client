@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
@@ -31,13 +31,11 @@ export default function PasswordSection() {
             : t('auth.passwordManagement.noPasswordSet')}
         </span>
         {user?.hasPassword && (
-          <button
-            type="button"
-            onClick={() => navigate('/auth?tab=forgot')}
+          <Link to="/auth?tab=forgot"
             className="text-[11px] text-primary hover:underline shrink-0"
           >
             {t('auth.passwordManagement.forgotPasswordLink')}
-          </button>
+          </Link>
         )}
       </div>
 

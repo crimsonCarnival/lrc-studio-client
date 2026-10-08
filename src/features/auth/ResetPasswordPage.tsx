@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -114,12 +114,11 @@ export default function ResetPasswordPage() {
               ? t('auth.resetPassword.errorInvalid')
               : t('auth.resetPassword.errorAlreadyUsed')}
           </p>
-          <button
-            onClick={() => navigate('/auth?tab=forgot')}
-            className="w-full py-2 bg-primary hover:bg-primary-dim text-zinc-950 font-medium rounded"
+          <Link to="/auth?tab=forgot"
+            className="block w-full py-2 text-center bg-primary hover:bg-primary-dim text-zinc-950 font-medium rounded"
           >
             {t('auth.resetPassword.requestNewLink')}
-          </button>
+          </Link>
         </div>
       </div>
     );
@@ -222,12 +221,11 @@ export default function ResetPasswordPage() {
           </motion.button>
         </form>
 
-        <button
-          onClick={() => navigate('/login')}
-          className="w-full text-center text-zinc-400 hover:text-zinc-300 text-sm lg:text-xs"
+        <Link to="/login"
+          className="block w-full text-center text-zinc-400 hover:text-zinc-300 text-sm lg:text-xs"
         >
           {t('auth.resetPassword.backToLogin')}
-        </button>
+        </Link>
       </div>
     </div>
   );

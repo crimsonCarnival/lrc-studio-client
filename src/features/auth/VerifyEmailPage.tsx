@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { TFunction } from 'i18next';
-import { useSearchParams, useNavigate, Navigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Navigate, Link } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -92,12 +92,12 @@ export default function VerifyEmailPage() {
         <p className="text-sm text-zinc-400">{getMessage()}</p>
       </div>
       <div className="flex gap-3">
-        <Button variant="outline" onClick={() => navigate('/')} className="rounded-xl h-10 font-bold px-6">
+        <Button asChild variant="outline" className="rounded-xl h-10 font-bold px-6"><Link to="/">
           {t('auth.verification.goToHome')}
-        </Button>
-        <Button onClick={() => navigate('/settings')} className="rounded-xl h-10 font-bold px-6">
+        </Link></Button>
+        <Button asChild className="rounded-xl h-10 font-bold px-6"><Link to="/settings">
           {t('auth.verification.goToSettings')}
-        </Button>
+        </Link></Button>
       </div>
     </div>
   );

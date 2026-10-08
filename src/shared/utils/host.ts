@@ -27,6 +27,23 @@ export function isAdminHost(): boolean {
   return hostname().startsWith('admin.');
 }
 
+/** True on the production domain, where the admin host exists (not on previews/localhost). */
+export function canUseAdminHost(): boolean {
+  return /^(www\.|m\.|admin\.)?lrcstudio\.app$/i.test(hostname());
+}
+
+/** Absolute URL for `path` on the admin host, derived by swapping the leading label. */
+export function adminHostUrl(path = '/'): string {
+  const host = window.location.hostname.replace(/^(www|m)\./i, '');
+  return `${window.location.protocol}//admin.${host}${window.location.port ? `:${window.location.port}` : ''}${path}`;
+}
+
+/** Absolute URL for `path` on the canonical host, leaving the admin host. */
+export function wwwHostUrl(path = '/'): string {
+  const host = window.location.hostname.replace(/^admin\./i, 'www.');
+  return `${window.location.protocol}//${host}${window.location.port ? `:${window.location.port}` : ''}${path}`;
+}
+
 /** `www.lrcstudio.app` — the canonical host the mobile variant falls back to. */
 function canonicalHost(): string {
   // Swap the leading `m.` label rather than hardcoding the domain, so this keeps
@@ -87,4 +104,40 @@ export function redirectOffMobileHostIfNeeded(): void {
   if (!shouldLeaveMobileHost()) return;
   const { pathname, search, hash } = window.location;
   window.location.replace(`https://${canonicalHost()}${pathname}${search}${hash}`);
+}
+
+/**
+ * Sends a phone from the canonical host to `m.`, preserving path, query and
+ * hash. Production domain only (previews/localhost are left alone) and the
+ * mirror image of `redirectOffMobileHostIfNeeded`: both use the same
+ * touch-only test, so the two redirects can never ping-pong. `?desktop=1`
+ * opts out for the tab, so the full site stays reachable from a phone.
+ */
+export function redirectToMobileHostIfNeeded(): void {
+  if (typeof window === 'undefined' || !window.matchMedia) return;
+  if (!/^(www\.)?lrcstudio\.app$/i.test(hostname())) return;
+  const KEY = 'lrc-stay-on-desktop-host';
+  const asked = new URLSearchParams(window.location.search).get('desktop') === '1';
+  try {
+    if (asked) sessionStorage.setItem(KEY, '1');
+    if (sessionStorage.getItem(KEY) === '1') return;
+  } catch {
+    if (asked) return;
+  }
+  const isTouchOnly = window.matchMedia('(pointer: coarse)').matches && !window.matchMedia('(hover: hover)').matches;
+  if (!isTouchOnly) return;
+  const { pathname, search, hash } = window.location;
+  const host = window.location.hostname.replace(/^www\./i, '');
+  window.location.replace(`https://m.${host}${pathname}${search}${hash}`);
+}
+
+/**
+ * After logout the `m.` and `admin.` variants hand over to `www.`, where sign-in
+ * (including Google OAuth) is served. `?desktop=1` stops a phone being sent
+ * straight back to `m.` by `redirectToMobileHostIfNeeded`.
+ */
+export function leaveSubdomainHostOnLogout(): void {
+  if (typeof window === 'undefined') return;
+  if (!isMobileHost() && !isAdminHost()) return;
+  window.location.replace(`${wwwHostUrl('/')}?desktop=1`);
 }

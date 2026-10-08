@@ -182,14 +182,13 @@ export default function ListPage() {
 
             <div className="flex items-center gap-2">
               {playlist.projects && playlist.projects.length > 0 && (
-                <Button
+                <Button asChild
                   size="sm"
-                  onClick={() => navigate(`/project/${playlist.projects![0].publicId}?list=${listId}`)}
                   className="gap-1.5 rounded-full"
-                >
+                ><Link to={`/project/${playlist.projects![0].publicId}?list=${listId}`}>
                   <Icon name="play_arrow" size={16} filled />
                   {t('playlists.detail.playAll')}
-                </Button>
+                </Link></Button>
               )}
               {isOwner ? (
                 <Button size="sm" variant="outline" onClick={() => setShowEdit(true)} className="gap-1.5">
