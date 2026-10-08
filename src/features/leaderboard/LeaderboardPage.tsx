@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { LazyImage } from '@ui/LazyImage';
@@ -58,6 +58,21 @@ const SORT_COLUMNS = [
 ] as const satisfies readonly { sort: LeaderboardSort; labelKey: string }[];
 
 type SortColumnLabelKey = (typeof SORT_COLUMNS)[number]['labelKey'];
+
+/**
+ * The view lives in the query string (`?period=&sort=&dir=`) so a sorted board
+ * survives a reload and can be linked to, following the same whitelist-and-fall-
+ * back shape SearchPage uses for its own `?tab=`/`?sort=`. An unrecognised value
+ * falls back to the default rather than being forwarded to the server, where a
+ * bad enum would fail variable coercion and 400 the whole request.
+ */
+const TIME_FILTERS = ['week', 'month', 'all'] as const;
+const SORT_VALUES = SORT_COLUMNS.map((c) => c.sort);
+const SORT_DIRS = ['ASC', 'DESC'] as const;
+
+const DEFAULT_FILTER: TimeFilter = 'all';
+const DEFAULT_SORT: LeaderboardSort = 'RANK';
+const DEFAULT_DIR: LeaderboardSortDirection = 'DESC';
 
 function formatTime(min?: number, sec?: number) {
   const m = min ?? 0;
@@ -133,9 +148,52 @@ function UserAvatar({ avatarUrl, name, ring }: { avatarUrl?: string; name?: stri
 export default function LeaderboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
-  const [sortBy, setSortBy] = useState<LeaderboardSort>('RANK');
-  const [sortDir, setSortDir] = useState<LeaderboardSortDirection>('DESC');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const readParam = <T extends string>(key: string, allowed: readonly T[], fallback: T): T => {
+    const raw = searchParams.get(key);
+    return allowed.includes(raw as T) ? (raw as T) : fallback;
+  };
+
+  const timeFilter = readParam('period', TIME_FILTERS, DEFAULT_FILTER);
+  const sortBy = readParam('sort', SORT_VALUES, DEFAULT_SORT);
+  const sortDir = readParam('dir', SORT_DIRS, DEFAULT_DIR);
+  const isDefaultView =
+    timeFilter === DEFAULT_FILTER && sortBy === DEFAULT_SORT && sortDir === DEFAULT_DIR;
+
+  /**
+   * Writes the whole view at once. Values at their default are deleted rather
+   * than written, so the canonical board has a clean URL and a shared link
+   * carries only what the sender actually changed.
+   *
+   * `replace` matches SearchPage: a header click is a refinement, not a
+   * destination. Pushing would make Back undo one sort at a time and strand the
+   * viewer several presses deep in their own filtering — the reset control is
+   * the way out instead.
+   */
+  const setView = (next: {
+    period?: TimeFilter;
+    sort?: LeaderboardSort;
+    dir?: LeaderboardSortDirection;
+  }) => {
+    const period = next.period ?? timeFilter;
+    const sort = next.sort ?? sortBy;
+    const dir = next.dir ?? sortDir;
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      const write = (key: string, value: string, fallback: string) => {
+        if (value === fallback) params.delete(key);
+        else params.set(key, value);
+      };
+      write('period', period, DEFAULT_FILTER);
+      write('sort', sort, DEFAULT_SORT);
+      write('dir', dir, DEFAULT_DIR);
+      return params;
+    }, { replace: true });
+  };
+
+  const resetView = () =>
+    setView({ period: DEFAULT_FILTER, sort: DEFAULT_SORT, dir: DEFAULT_DIR });
 
   const PAGE_SIZE = 25;
   const timeframe = TIMEFRAME_BY_FILTER[timeFilter];
@@ -168,11 +226,10 @@ export default function LeaderboardPage() {
   // First click on a column sorts it descending; clicking the active one flips.
   const toggleSort = (column: LeaderboardSort) => {
     if (column === sortBy) {
-      setSortDir((dir) => (dir === 'DESC' ? 'ASC' : 'DESC'));
+      setView({ dir: sortDir === 'DESC' ? 'ASC' : 'DESC' });
       return;
     }
-    setSortBy(column);
-    setSortDir('DESC');
+    setView({ sort: column, dir: 'DESC' });
   };
 
   const ariaSort = (column: LeaderboardSort): 'ascending' | 'descending' | 'none' =>
@@ -237,23 +294,39 @@ export default function LeaderboardPage() {
           {/* Tabs */}
           <div className="flex p-1 gap-1">
             <button
-              onClick={() => setTimeFilter('week')}
+              onClick={() => setView({ period: 'week' })}
               className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'week' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
             >
               {t('badges.leaderboard.thisWeek')}
             </button>
             <button
-              onClick={() => setTimeFilter('month')}
+              onClick={() => setView({ period: 'month' })}
               className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'month' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
             >
               {t('badges.leaderboard.thisMonth')}
             </button>
             <button
-              onClick={() => setTimeFilter('all')}
+              onClick={() => setView({ period: 'all' })}
               className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'all' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
             >
               {t('badges.leaderboard.allTime')}
             </button>
+
+            {/* The only one-click way back to the canonical board. Without it the
+                sort could be undone only by reloading, since the view is written
+                with `replace` and Back does not step through it. */}
+            {!isDefaultView && (
+              <button
+                type="button"
+                onClick={resetView}
+                title={t('badges.leaderboard.resetView')}
+                aria-label={t('badges.leaderboard.resetView')}
+                className="ml-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 coarse:py-3 min-h-11 min-w-11 sm:min-h-0 sm:min-w-0 text-sm font-medium rounded-md border border-transparent text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+              >
+                <Icon name="restart_alt" size={16} />
+                <span className="hidden sm:inline">{t('badges.leaderboard.resetView')}</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -294,7 +367,7 @@ export default function LeaderboardPage() {
               <select
                 id="leaderboard-sort"
                 value={sortBy}
-                onChange={(e) => { setSortBy(e.target.value as LeaderboardSort); setSortDir('DESC'); }}
+                onChange={(e) => setView({ sort: e.target.value as LeaderboardSort, dir: 'DESC' })}
                 className="appearance-none bg-transparent hover:bg-zinc-800 text-xs min-h-11 text-zinc-300 hover:text-zinc-100 transition-colors pl-2 pr-6 rounded-lg outline-none cursor-pointer border-none"
               >
                 {SORT_COLUMNS.map(({ sort, labelKey }) => (
@@ -303,7 +376,7 @@ export default function LeaderboardPage() {
               </select>
               <button
                 type="button"
-                onClick={() => setSortDir((dir) => (dir === 'DESC' ? 'ASC' : 'DESC'))}
+                onClick={() => setView({ dir: sortDir === 'DESC' ? 'ASC' : 'DESC' })}
                 aria-label={dirLabel}
                 title={dirLabel}
                 className="ml-auto inline-flex items-center justify-center size-11 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
