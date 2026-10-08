@@ -75,6 +75,13 @@ export default {
     starsCol:          'ESTRELLAS',
     syncedCol:         'SINCRONIZADO',
     xpCol:             'XP',
+    rankCol:           'RANGO',
+    emptyPeriod:       'Nadie ha ganado XP en este periodo todavía.',
+    periodNote:        'La clasificación usa el XP ganado en este periodo — las demás columnas son totales históricos.',
+    sortControlLabel:  'Ordenar por',
+    sortByColumn:      'Ordenar por {{column}}',
+    sortAscending:     'Ascendente',
+    sortDescending:    'Descendente',
   },
 
   // ─── Etiquetas de insignias integradas (clave: badges.<id>.label) ─────────────
