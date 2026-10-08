@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "icons": "node scripts/subset-icons.mjs",
+    "predev": "node scripts/subset-icons.mjs",
+    "prebuild": "node scripts/subset-icons.mjs",
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "lint": "eslint .",
@@ -79,6 +82,7 @@
     "globals": "^17.4.0",
     "jsdom": "^29.1.1",
     "postcss": "^8.5.8",
+    "subset-font": "^2.9.0",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.4",
