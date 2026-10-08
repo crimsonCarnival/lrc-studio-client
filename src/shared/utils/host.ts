@@ -38,9 +38,11 @@ export function adminHostUrl(path = '/'): string {
   return `${window.location.protocol}//admin.${host}${window.location.port ? `:${window.location.port}` : ''}${path}`;
 }
 
-/** Absolute URL for `path` on the canonical host, leaving the admin host. */
+/** Absolute URL for `path` on the canonical host, leaving the admin or mobile host. */
 export function wwwHostUrl(path = '/'): string {
-  const host = window.location.hostname.replace(/^admin\./i, 'www.');
+  // Must swap `m.` too: leaving it untouched made the logout redirect land back
+  // on `m.` (`m./?desktop=1`), which reloaded and logged out again, forever.
+  const host = window.location.hostname.replace(/^(admin|m)\./i, 'www.');
   return `${window.location.protocol}//${host}${window.location.port ? `:${window.location.port}` : ''}${path}`;
 }
 
