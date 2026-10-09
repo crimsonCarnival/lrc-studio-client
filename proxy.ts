@@ -1,6 +1,14 @@
 import { next } from '@vercel/functions';
 
 /**
+ * Routing Middleware runs on the Node.js runtime (see `runtime` in `config`
+ * below), but this project's tsconfig targets the browser and does not pull in
+ * @types/node. Declaring just the shape used here keeps proxy.ts type-checked
+ * without adding Node's full global surface to a client bundle's types.
+ */
+declare const process: { env: Record<string, string | undefined> };
+
+/**
  * Vercel Routing Middleware — Open Graph tags for social crawlers.
  *
  * Crawlers do not run JavaScript, so a static SPA unfurls as whatever is in the

@@ -9,18 +9,33 @@
     "target": "esnext",
     "moduleResolution": "bundler",
     "baseUrl": ".",
-    "types": ["vite/client"],
+    "types": [
+      "vite/client"
+    ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@features/*": ["./src/features/*"],
-      "@services/*": ["./src/services/*"],
-      "@ui/*": ["./src/shared/ui/*"],
-      "@shared/*": ["./src/shared/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@features/*": [
+        "./src/features/*"
+      ],
+      "@services/*": [
+        "./src/services/*"
+      ],
+      "@ui/*": [
+        "./src/shared/ui/*"
+      ],
+      "@shared/*": [
+        "./src/shared/*"
+      ]
     },
     "strict": false,
     "strictNullChecks": true,
     "noImplicitAny": false,
     "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "proxy.ts"
+  ]
 }
