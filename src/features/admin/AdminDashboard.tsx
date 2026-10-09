@@ -79,6 +79,24 @@ export default function AdminDashboard() {
   // Loose alias for interpolation calls with numeric values (typed-i18n options are strict).
   const tk = t as (k: string, o?: Record<string, unknown>) => string;
   const { user: currentUser } = useAuthContext();
+
+  /**
+   * True only when the row really is the signed-in admin.
+   *
+   * The previous check was `user.id === currentUser?.id || user._id === currentUser?._id`.
+   * Both sides of the second comparison are always undefined — listUsers
+   * destructures `_id` away and returns `id`, and `toPublic()` behind /me does
+   * the same — so `undefined === undefined` matched every row and every
+   * administrative action (delete, ban, role change) refused with
+   * "you cannot act on your own account".
+   *
+   * uid() already encodes the id/_id duality; the empty-string check is what
+   * keeps two id-less objects from comparing equal again.
+   */
+  const isSelf = (user: AdminUser): boolean => {
+    const target = uid(user);
+    return target !== '' && target === uid(currentUser as AdminUser | null);
+  };
   // "Manage permissions" is superadmin-only — gated on the literal role, not
   // a permission (granting/revoking permissions is the escalation surface
   // that page edits, so it can't be gated by a permission itself). The
@@ -320,7 +338,7 @@ export default function AdminDashboard() {
   };
 
   const handleToggleBan = async (user: AdminUser) => {
-    if (user.id === currentUser?.id || user._id === currentUser?._id) {
+    if (isSelf(user)) {
       toast.error(t('admin.toast.noSelfAction'));
       return;
     }
@@ -375,7 +393,7 @@ export default function AdminDashboard() {
   };
 
   const handleChangeRole = (user: AdminUser, role: string) => {
-    if (user.id === currentUser?.id || user._id === currentUser?._id) {
+    if (isSelf(user)) {
       toast.error(t('admin.toast.noSelfAction'));
       return;
     }
@@ -384,7 +402,7 @@ export default function AdminDashboard() {
   };
 
   const handleDelete = (user: AdminUser) => {
-    if (user.id === currentUser?.id || user._id === currentUser?._id) {
+    if (isSelf(user)) {
       toast.error(t('admin.toast.noSelfAction'));
       return;
     }
