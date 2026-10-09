@@ -21,7 +21,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/tests/setup.js'],
-    include: ['src/**/*.test.jsx', 'src/**/*.test.js', 'src/**/*.spec.jsx', 'src/**/*.spec.js'],
+    // The app is TypeScript; the original globs only matched .js/.jsx, so a
+    // .test.ts file was silently never collected.
+    include: ['src/**/*.test.{js,jsx,ts,tsx}', 'src/**/*.spec.{js,jsx,ts,tsx}'],
     exclude: ['src/tests/setup.js', 'node_modules/**'],
   },
 });
