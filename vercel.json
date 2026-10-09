@@ -1,4 +1,15 @@
 {
+  "proxy": {
+    "entrypoint": "proxy.ts",
+    "matcher": [
+      "/",
+      "/project/:path*",
+      "/profile/:path*",
+      "/u/:path*",
+      "/explore/:path*",
+      "/leaderboard"
+    ]
+  },
   "headers": [
     {
       "source": "/(.*)",
