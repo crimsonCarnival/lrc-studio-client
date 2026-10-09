@@ -1,0 +1,180 @@
+<!doctype html>
+<!--
+  Source for public/og-default.png (1200x630).
+
+  Rendered in a real browser rather than rasterised from SVG so it uses the
+  actual brand font (Stack Sans Notch, the same Google Fonts request index.html
+  makes) — an SVG rasteriser falls back to a system sans and the headline comes
+  out in the wrong typeface.
+
+  Regenerate: serve this directory over http (webfonts do not load from file://),
+  open it at exactly 1200x630 and screenshot the page.
+      cd client/design && python -m http.server 4599
+      -> screenshot http://127.0.0.1:4599/og-card.html at 1200x630
+  Keep it in sync with features/landing/GuestLanding.tsx.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Stack+Sans+Notch:wght@400..700&family=Fira+Sans:wght@400;500;600;700&display=swap"
+    />
+    <style>
+      /* Palette copied from src/index.css (Rosé Pine Moon dark) + the zinc scale. */
+      :root {
+        --background: #232136;
+        --primary: #c4a7e7;
+        --foam: #9ccfd8;
+        --zinc-100: #f4f4f5;
+        --zinc-400: #a1a1aa;
+        --zinc-500: #71717a;
+        --zinc-600: #52525b;
+        --zinc-700: #3f3f46;
+        --font-heading: "Stack Sans Notch", "Noto Serif JP", ui-sans-serif, system-ui, sans-serif;
+        --font-sans: "Fira Sans", ui-sans-serif, system-ui, sans-serif;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1200px; height: 630px; overflow: hidden; }
+      body {
+        background: var(--background);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+      }
+      .glow {
+        position: absolute; border-radius: 50%; pointer-events: none;
+      }
+      .glow-a {
+        width: 860px; height: 660px; right: -170px; top: -210px;
+        background: radial-gradient(closest-side, rgba(196,167,231,0.16), rgba(196,167,231,0));
+      }
+      .glow-b {
+        width: 840px; height: 600px; left: -280px; bottom: -300px;
+        background: radial-gradient(closest-side, rgba(156,207,216,0.10), rgba(156,207,216,0));
+      }
+      .wrap {
+        position: relative; z-index: 1; height: 100%;
+        padding: 52px 74px;
+        display: grid; grid-template-columns: 1fr 420px; gap: 52px; align-items: center;
+      }
+      .nav { position: absolute; top: 52px; left: 74px; display: flex; align-items: center; gap: 10px; }
+      .nav img { width: 34px; height: 29px; object-fit: contain; }
+      .nav span { font-family: var(--font-heading); font-weight: 700; font-size: 18px; color: var(--zinc-100); letter-spacing: -0.2px; }
+
+      .badge {
+        display: inline-flex; align-self: flex-start; align-items: center;
+        padding: 8px 16px; border-radius: 999px;
+        border: 1px solid rgba(196,167,231,0.25); background: rgba(196,167,231,0.05);
+        color: var(--primary); font-size: 14px; font-weight: 600; letter-spacing: 0.2px;
+      }
+      h1 {
+        font-family: var(--font-heading); font-weight: 700;
+        /* Sized so each headline stays on ONE line like the landing. Stack Sans
+           Notch is wider than a system sans fallback, so this is measured
+           against the left column, not eyeballed. */
+        font-size: 58px; line-height: 0.96; letter-spacing: -1.5px;
+        white-space: nowrap;
+        color: var(--zinc-100);
+      }
+      h1.accent { color: var(--primary); }
+      .sub { color: var(--zinc-400); font-size: 20px; line-height: 1.5; max-width: 520px; }
+      .ctas { display: flex; align-items: center; gap: 24px; }
+      .cta {
+        display: inline-flex; align-items: center; justify-content: center;
+        height: 52px; padding: 0 30px; border-radius: 14px;
+        background: var(--primary); color: var(--background);
+        font-size: 18px; font-weight: 600;
+        box-shadow: 0 0 28px rgba(196,167,231,0.22);
+      }
+      .ghost { color: var(--zinc-400); font-size: 18px; }
+      .left { display: flex; flex-direction: column; gap: 26px; padding-top: 26px; }
+      .domain { position: absolute; left: 74px; bottom: 44px; color: var(--foam); font-size: 16px; font-weight: 600; }
+
+      /* Fake editor window — mirrors the hero's companion panel. */
+      .panel {
+        border: 1px solid rgba(63,63,70,0.55); border-radius: 14px; overflow: hidden;
+        background: rgba(9,9,11,0.6);
+      }
+      .titlebar {
+        display: flex; align-items: center; gap: 8px;
+        padding: 10px 16px; background: rgba(24,24,27,0.8);
+        border-bottom: 1px solid rgba(39,39,42,0.7);
+      }
+      .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--zinc-700); }
+      .filename { margin-left: 6px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--zinc-600); }
+      .lines { padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+      .line {
+        display: flex; align-items: center; gap: 12px;
+        padding: 9px 10px; border-radius: 8px; border: 1px solid transparent;
+      }
+      .line.active { background: rgba(196,167,231,0.08); border-color: rgba(196,167,231,0.2); }
+      .ts { font-family: ui-monospace, Consolas, monospace; font-size: 11px; color: var(--zinc-700); flex-shrink: 0; }
+      .line.active .ts { color: var(--primary); }
+      .tx { font-size: 14px; color: var(--zinc-500); white-space: nowrap; }
+      .line.active .tx { color: var(--zinc-100); }
+      .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); margin-left: auto; flex-shrink: 0; }
+      .wave {
+        margin-top: 12px; padding: 14px 16px; border-radius: 14px;
+        border: 1px solid rgba(39,39,42,0.5); background: rgba(9,9,11,0.5);
+        display: flex; align-items: flex-end; gap: 2px; height: 72px;
+      }
+      .wave i { flex: 1; border-radius: 999px; background: rgba(196,167,231,0.25); }
+    </style>
+  </head>
+  <body>
+    <div class="glow glow-a"></div>
+    <div class="glow glow-b"></div>
+
+    <div class="nav">
+      <img src="https://res.cloudinary.com/dzjid2tos/image/upload/w_256,f_auto,q_auto/v1778106770/lrc-logo_dkumwz.png" alt="" />
+      <span>LRC Studio</span>
+    </div>
+
+    <div class="wrap">
+      <div class="left">
+        <span class="badge">Start without signing up</span>
+        <div>
+          <h1>Sync lyrics to music,</h1>
+          <h1 class="accent">perfectly.</h1>
+        </div>
+        <p class="sub">A browser-based lyric synchronization tool. Upload audio, paste lyrics, export .lrc or .srt.</p>
+        <div class="ctas">
+          <span class="cta">Get started</span>
+          <span class="ghost">Sign in</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel">
+          <div class="titlebar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="filename">midnight-city.lrc</span>
+          </div>
+          <div class="lines">
+            <div class="line"><span class="ts">[00:00.00]</span><span class="tx">The stars align above the city lights</span></div>
+            <div class="line active"><span class="ts">[00:14.20]</span><span class="tx">Midnight echoes through the empty halls</span><span class="pulse"></span></div>
+            <div class="line"><span class="ts">[00:28.80]</span><span class="tx">She sang a melody that broke the night</span></div>
+            <div class="line"><span class="ts">[00:42.15]</span><span class="tx">And disappeared before the morning calls</span></div>
+            <div class="line"><span class="ts">[00:56.40]</span><span class="tx">月明かりに照らされた道を</span></div>
+          </div>
+        </div>
+        <div class="wave" id="wave"></div>
+      </div>
+    </div>
+
+    <div class="domain">lrcstudio.app</div>
+
+    <script>
+      // Same 15 + 75*|sin(i*0.47 + 1)| curve as the landing waveform, bottom-aligned.
+      const wave = document.getElementById('wave');
+      for (let i = 0; i < 48; i++) {
+        const bar = document.createElement('i');
+        bar.style.height = (15 + 75 * Math.abs(Math.sin(i * 0.47 + 1))) + '%';
+        wave.appendChild(bar);
+      }
+    </script>
+  </body>
+</html>
