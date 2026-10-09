@@ -1,10 +1,11 @@
 User-agent: *
 Allow: /auth/
 Disallow: /home
-Disallow: /project/
 Disallow: /library
 Disallow: /uploads/
 Disallow: /profile
+Disallow: /settings
+Disallow: /dashboard
 Disallow: /admin
 Disallow: /api/
 Disallow: /graphql
