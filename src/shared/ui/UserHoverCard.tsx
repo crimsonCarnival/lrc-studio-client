@@ -5,7 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { BadgeChip } from '@/features/badges/BadgeChip';
 import { LazyImage } from '@ui/LazyImage';
-import { OnlineDot } from '@ui/OnlineDot';
+import { cn } from '@/shared/utils/utils';
+import toast from 'react-hot-toast';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@ui/dropdown-menu';
 import { CountryFlag } from '@ui/CountryFlag';
 import { usePresence } from '@/shared/hooks/usePresence';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -86,6 +88,9 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
   // Optimistic override while a follow request is in flight; the cache holds the settled value.
   const [following, setFollowing] = useState<boolean | null>(null);
   const [followPending, setFollowPending] = useState(false);
+  const [followHover, setFollowHover] = useState(false);
+  // The ⋯ menu portals outside the card, so leaving the card for it must not close the card.
+  const menuOpenRef = useRef(false);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
@@ -112,7 +117,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
 
   const startClose = useCallback(() => {
     clearTimer();
-    timerRef.current = setTimeout(() => setOpen(false), CLOSE_DELAY);
+    timerRef.current = setTimeout(() => { if (!menuOpenRef.current) setOpen(false); }, CLOSE_DELAY);
   }, [clearTimer]);
 
   const cancelClose = useCallback(() => {
@@ -158,6 +163,25 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
     }
   };
 
+  const displayName = profile?.displayName || accountName;
+  const countryName = (() => {
+    if (!profile?.country) return '';
+    try { return new Intl.DisplayNames([i18n.language || 'en', 'en'], { type: 'region' }).of(profile.country) ?? profile.country; }
+    catch { return profile.country; }
+  })();
+  const lastSeen = (() => {
+    if (isOnline || !profile?.lastOnlineAt) return null;
+    const isNumeric = /^\d+$/.test(profile.lastOnlineAt);
+    const date = new Date(isNumeric ? Number(profile.lastOnlineAt) : profile.lastOnlineAt);
+    if (Number.isNaN(date.getTime())) return null;
+    return (t as (k: string, opts: object) => string)('profile.lastSeen', { time: formatDistanceToNow(date, { addSuffix: true, locale: dateLocale }) });
+  })();
+  const copyProfileLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/profile/${accountName}`)
+      .then(() => toast.success(t('profile.mini.linkCopied')))
+      .catch(() => { /* clipboard unavailable */ });
+  };
+
   // Follow button label
   const followLabel = isFollowedByMe
     ? t('profile.following')
@@ -181,111 +205,165 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
           ref={cardRef}
           onMouseEnter={cancelClose}
           onMouseLeave={startClose}
-          style={{ position: 'absolute', top: pos.top, left: pos.left, zIndex: 9999, width: 332, visibility: pos.top === -9999 ? 'hidden' : 'visible' }}
-          className="bg-zinc-900 border border-zinc-700/60 rounded-2xl shadow-2xl shadow-black/70 flex flex-col overflow-hidden animate-fade-in"
+          role="dialog"
+          aria-busy={!profile}
+          aria-label={profile ? t('profile.mini.cardLabel', { name: displayName }) : t('profile.mini.loading')}
+          style={{ position: 'absolute', top: pos.top, left: pos.left, zIndex: 9999, width: 340, visibility: pos.top === -9999 ? 'hidden' : 'visible' }}
+          className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-[0_18px_40px_rgba(0,0,0,.5)] flex flex-col overflow-hidden animate-fade-in"
         >
-          {/* Avatar banner */}
-          <div className="flex items-end gap-3 p-4 pb-3">
-            <Link to={`/profile/${accountName}`} onClick={() => setOpen(false)} className="relative shrink-0">
-              {profile?.avatarUrl ? (
-                <LazyImage src={profile.avatarUrl} alt={accountName} className="size-14 rounded-xl object-cover ring-2 ring-zinc-700" />
-              ) : (
-                <div className="size-14 rounded-xl bg-gradient-to-br from-primary/80 to-violet-500/50 flex items-center justify-center font-bold text-xl text-zinc-950 select-none ring-2 ring-zinc-700">
-                  {(profile?.displayName || accountName)[0]?.toUpperCase()}
+          {!profile ? (
+            <MiniProfileSkeleton />
+          ) : (
+            <>
+              <div className="flex items-start gap-3.5 px-[18px] pt-[18px] pb-3.5">
+                <Link to={`/profile/${accountName}`} onClick={() => setOpen(false)} className="relative shrink-0">
+                  {profile.avatarUrl ? (
+                    <LazyImage src={profile.avatarUrl} alt={accountName} className="size-14 rounded-2xl object-cover" />
+                  ) : (
+                    <div className="size-14 rounded-2xl bg-gradient-to-br from-primary/80 to-violet-500/50 flex items-center justify-center font-semibold text-[26px] text-zinc-950 select-none">
+                      {displayName[0]?.toUpperCase()}
+                    </div>
+                  )}
+                  {isOnline && <span title={t('common.online')} className="absolute -right-[3px] -bottom-[3px] size-3.5 rounded-full bg-emerald-400 border-[3px] border-zinc-900" />}
+                </Link>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Link to={`/profile/${accountName}`} onClick={() => setOpen(false)} className="text-[17px] font-bold leading-tight text-zinc-100 truncate hover:underline">
+                      {displayName}
+                    </Link>
+                    {profile.isVerified && <Icon name="verified" size={16} className="text-primary shrink-0" aria-label={t('profile.verified')} />}
+                  </div>
+                  <div className="font-mono text-[13px] text-zinc-400 mt-0.5" title={lastSeen ?? undefined}>
+                    @{accountName}
+                    {isFollowingMe && (
+                      <span className="ml-1 px-1.5 py-px rounded-md bg-zinc-800 font-sans text-[11px] font-semibold text-zinc-100">{t('profile.followsYou')}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[13px] text-zinc-400">
+                    {profile.country && (
+                      <span className="flex items-center gap-1.5"><CountryFlag countryCode={profile.country} />{countryName}</span>
+                    )}
+                    <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-violet-200 text-[11px] font-bold font-mono">
+                      {t('profile.levelLabel')} {profile.progression?.level ?? 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {activity && (
+                <div className="mx-[18px] mb-3 flex items-center gap-1.5 text-xs text-primary/80 bg-primary/10 rounded-lg px-2.5 py-1.5">
+                  <Icon name="music_note" size={12} className="shrink-0 animate-pulse" />
+                  <span className="truncate">{t('profile.syncingActivity', { song: activity.songName || activity.projectTitle })}</span>
                 </div>
               )}
-              {isOnline && <OnlineDot />}
-            </Link>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1 flex-wrap">
-                <Link to={`/profile/${accountName}`} onClick={() => setOpen(false)} className="text-sm font-semibold text-foreground hover:underline leading-tight truncate max-w-[130px]">
-                  {profile?.displayName || accountName}
-                </Link>
-                {profile?.isVerified && <Icon name="verified" size={14} className="text-primary shrink-0" />}
-                {isFollowingMe && !isFollowedByMe && (
-                  <span className="text-[9px] font-bold uppercase tracking-wider bg-zinc-700/60 text-zinc-400 px-1.5 py-0.5 rounded">
-                    {t('profile.followsYou')}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <CountryFlag countryCode={profile?.country} />
-                <p className="text-xs text-muted-foreground truncate">{accountName}</p>
-                {!isOnline && profile?.lastOnlineAt && (
-                  <>
-                    <span className="text-[10px] text-muted-foreground/40">•</span>
-                    <p className="text-[10px] text-muted-foreground whitespace-nowrap">
-                      {(() => {
-                        const isNumeric = /^\d+$/.test(profile.lastOnlineAt as string);
-                        const date = new Date(isNumeric ? Number(profile.lastOnlineAt) : profile.lastOnlineAt);
-                        if (Number.isNaN(date.getTime())) return null;
-                        return (t as (k: string, opts: object) => string)('profile.lastSeen', { time: formatDistanceToNow(date, { addSuffix: true, locale: dateLocale }) });
-                      })()}
-                    </p>
-                  </>
-                )}
-              </div>
-            </div>
+              {profile.bio && (
+                <p className="mx-[18px] mb-3 text-[13px] text-zinc-400 line-clamp-2 leading-relaxed">{profile.bio}</p>
+              )}
 
-            {me && !isSelf && (
-              <button
-                onClick={handleFollowToggle}
-                disabled={followPending}
-                className={`shrink-0 text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors disabled:opacity-50 whitespace-nowrap ${isFollowedByMe
-                  ? 'border border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground'
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                  }`}
-              >
-                {followLabel}
-              </button>
-            )}
-          </div>
-
-          {/* Activity */}
-          {activity && (
-            <div className="mx-4 mb-3 flex items-center gap-1.5 text-xs text-primary/80 bg-primary/8 rounded-lg px-2.5 py-1.5">
-              <Icon name="music_note" size={12} className="shrink-0 animate-pulse" />
-              <span className="truncate">{t('profile.syncingActivity', { song: activity.songName || activity.projectTitle })}</span>
-            </div>
-          )}
-
-          {/* Bio */}
-          {profile?.bio && (
-            <p className="mx-4 mb-3 text-xs text-muted-foreground line-clamp-2 leading-relaxed">{profile.bio}</p>
-          )}
-
-          {/* Stats grid */}
-          {profile && (
-            <div className="border-t border-border/40 grid grid-cols-5 divide-x divide-border/30">
-              {[
-                { iconName: 'group', value: profile.followerCount, label: t('profile.followers') },
-                { iconName: 'group', value: profile.followingCount, label: t('profile.followingLabel') },
-                { iconName: 'folder_open', value: profile.projectCount, label: t('profile.projectsLabel') },
-                { iconName: 'star', value: profile.totalStarsReceived, label: t('profile.starsLabel') },
-                { iconName: 'emoji_events', value: profile.progression?.level ?? 0, label: t('profile.levelLabel') },
-              ].map(({ iconName, value, label }) => (
-                <div key={label} className="flex flex-col items-center py-2.5 px-0.5 gap-0.5">
-                  <Icon name={iconName} size={12} className="text-zinc-500 mb-0.5" />
-                  <span className="text-xs font-bold text-foreground">{value}</span>
-                  <span className="text-[8px] text-muted-foreground leading-none text-center">{label}</span>
+              {profile.miniProfileBadgeIds.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 px-[18px] pb-3.5">
+                  {profile.miniProfileBadgeIds.map((id) => <BadgeChip key={id} id={id} />)}
                 </div>
-              ))}
-            </div>
-          )}
+              )}
 
-          {/* Mini profile badges */}
-          {profile && profile.miniProfileBadgeIds.length > 0 && (
-            <div className="border-t border-border/30 px-4 py-2.5 flex items-center gap-1.5 flex-wrap">
-              {profile.miniProfileBadgeIds.map(id => (
-                <BadgeChip key={id} id={id} />
-              ))}
-            </div>
-          )}
+              <nav aria-label={t('profile.mini.stats')} className="grid grid-cols-4 border-t border-zinc-800">
+                {[
+                  { value: profile.followerCount, label: t('profile.mini.followers', { count: profile.followerCount }), to: `/profile/${accountName}` },
+                  { value: profile.followingCount, label: t('profile.mini.following', { count: profile.followingCount }), to: `/profile/${accountName}` },
+                  { value: profile.projectCount, label: t('profile.mini.projects', { count: profile.projectCount }), to: `/profile/${accountName}` },
+                  { value: profile.totalStarsReceived, label: t('profile.mini.stars', { count: profile.totalStarsReceived }) },
+                ].map(({ value, label, to }) => {
+                  const body = (
+                    <>
+                      <b className="block text-[17px] font-extrabold text-zinc-100">{value}</b>
+                      <span className="block text-xs text-zinc-400 mt-px">{label}</span>
+                    </>
+                  );
+                  return to ? (
+                    <Link key={label} to={to} onClick={() => setOpen(false)} className="py-3 text-center hover:bg-zinc-800/50 transition-colors">{body}</Link>
+                  ) : (
+                    <div key={label} className="py-3 text-center">{body}</div>
+                  );
+                })}
+              </nav>
 
+              <div className="flex gap-2 px-[18px] pt-3 pb-4 border-t border-zinc-800">
+                {me && !isSelf && (
+                  <button
+                    type="button"
+                    aria-pressed={isFollowedByMe}
+                    onClick={handleFollowToggle}
+                    onMouseEnter={() => setFollowHover(true)}
+                    onMouseLeave={() => setFollowHover(false)}
+                    disabled={followPending}
+                    className={cn(
+                      'flex-[1.2] h-10 rounded-[10px] text-sm font-bold transition-colors disabled:opacity-50 whitespace-nowrap',
+                      !isFollowedByMe && 'bg-primary text-zinc-950 hover:bg-primary/90',
+                      isFollowedByMe && !followHover && 'border border-zinc-700 bg-zinc-800 text-zinc-100',
+                      isFollowedByMe && followHover && 'border border-red-900/60 bg-red-950/50 text-red-300',
+                    )}
+                  >
+                    {isFollowedByMe ? (followHover ? t('profile.mini.unfollow') : t('profile.following')) : followLabel}
+                  </button>
+                )}
+                <Link
+                  to={`/profile/${accountName}`}
+                  onClick={() => setOpen(false)}
+                  className="flex-1 h-10 grid place-items-center rounded-[10px] border border-zinc-700 text-sm font-semibold text-zinc-100 hover:bg-zinc-800/60 transition-colors"
+                >
+                  {t('profile.mini.viewProfile')}
+                </Link>
+                <DropdownMenu onOpenChange={(o) => { menuOpenRef.current = o; if (!o) startClose(); }}>
+                  <DropdownMenuTrigger asChild>
+                    <button type="button" aria-label={t('profile.mini.moreOptions')} className="size-10 shrink-0 grid place-items-center rounded-[10px] border border-zinc-700 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60">
+                      <Icon name="more_horiz" size={18} />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" onMouseEnter={cancelClose}>
+                    <DropdownMenuItem onClick={copyProfileLink}>
+                      <Icon name="link" />
+                      {t('profile.mini.copyLink')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </>
+          )}
         </div>,
         document.body
       )}
+    </>
+  );
+}
+
+/** Placeholder with the same silhouette as the loaded card. */
+function MiniProfileSkeleton() {
+  const sk = 'bg-zinc-800 rounded-md animate-pulse';
+  return (
+    <>
+      <div className="flex gap-3.5 px-[18px] pt-[18px] pb-3.5">
+        <div className={cn(sk, 'size-14 rounded-2xl shrink-0')} />
+        <div className="flex-1 flex flex-col gap-2 pt-1">
+          <div className={cn(sk, 'h-3.5 w-3/5')} />
+          <div className={cn(sk, 'h-[11px] w-2/5')} />
+          <div className={cn(sk, 'h-[11px] w-1/2')} />
+        </div>
+      </div>
+      <div className="grid grid-cols-4 border-t border-zinc-800">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="py-3 flex flex-col items-center gap-1.5">
+            <div className={cn(sk, 'h-4 w-[22px]')} />
+            <div className={cn(sk, 'h-2.5 w-[52px]')} />
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2 px-[18px] pt-3 pb-4 border-t border-zinc-800">
+        <div className={cn(sk, 'flex-1 h-10 rounded-[10px]')} />
+        <div className={cn(sk, 'flex-1 h-10 rounded-[10px]')} />
+        <div className={cn(sk, 'size-10 rounded-[10px]')} />
+      </div>
     </>
   );
 }
