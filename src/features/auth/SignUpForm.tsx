@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -7,13 +7,15 @@ import { Icon } from '@/shared/ui/Icon';
 import { AnimatePresence, m as M } from 'framer-motion';
 import { z } from 'zod';
 import { FloatingInput } from '@ui/floating-input';
-import { Tip } from '@ui/tip';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { auth } from '@/app/api';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import RegistrationBlockedModal from './RegistrationBlockedModal';
-import { FieldError, ContextBanner, GoogleButton } from './auth-shared';
+import {
+  AuthField, AuthHeading, OrDivider, ContextBanner, GoogleButton,
+  authInputCls, authPrimaryBtnCls, authSecondaryBtnCls,
+} from './auth-shared';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const step1Schema = z.object({
@@ -66,18 +68,19 @@ function generateHandle(displayName: string): string {
 
 // ─── Step indicator ────────────────────────────────────────────────────────
 
-function StepDots({ step }: { step: number }) {
+function StepIndicator({ step, t }: { step: number; t: TFunction }) {
   return (
-    <div className="flex items-center gap-2 mb-6">
-      {[1, 2].map(n => (
-        <div
-          key={n}
-          className={`h-1 rounded-full transition-all duration-300 ${
-            n === step ? 'w-6 bg-primary' : 'w-3 bg-zinc-700'
-          }`}
-        />
-      ))}
-    </div>
+    <p className="flex items-center gap-2.5 font-mono text-xs font-medium text-foreground/65">
+      <span className="inline-flex gap-1" aria-hidden="true">
+        {[1, 2].map(n => (
+          <span
+            key={n}
+            className={`w-6 h-[3px] rounded-sm transition-colors duration-300 ${n <= step ? 'bg-primary' : 'bg-zinc-700'}`}
+          />
+        ))}
+      </span>
+      {t('auth.stepOf', { step, total: 2 })}
+    </p>
   );
 }
 
@@ -90,6 +93,8 @@ interface RegisterData {
   password: string;
 }
 
+export type SignUpIdentity = { displayName: string; accountName: string };
+
 interface SignUpFormProps {
   t: TFunction;
   onSwitchToLogin: () => void;
@@ -98,9 +103,11 @@ interface SignUpFormProps {
   onSuccess?: (result: unknown) => void;
   redirect?: string;
   onDismissRedirect?: () => void;
+  /** Mirrors the step-1 fields out so the page can render the live "how you'll appear" card. */
+  onIdentityChange?: (identity: SignUpIdentity) => void;
 }
 
-export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSuccess, redirect, onDismissRedirect }: SignUpFormProps) {
+export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSuccess, redirect, onDismissRedirect, onIdentityChange }: SignUpFormProps) {
   const { trigger: haptic } = useHapticFeedback();
 
   const [step, setStep] = useState(1);
@@ -124,6 +131,10 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
   const [blockedMessage, setBlockedMessage] = useState('');
 
   const tk = t as TranslateFn;
+
+  useEffect(() => {
+    onIdentityChange?.({ displayName, accountName });
+  }, [displayName, accountName, onIdentityChange]);
 
   const handleDisplayNameChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -216,31 +227,40 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
     }
   };
 
-  const focusRingCls = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none';
+  const toggleBtnCls = 'absolute right-1.5 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center text-foreground/65 hover:text-zinc-100 transition-colors rounded-lg';
+
+  const loginLink = (
+    <p className="text-sm text-foreground/65">
+      {t('auth.hasAccount')}{' '}
+      <button type="button" onClick={onSwitchToLogin} className="font-semibold text-primary hover:underline">
+        {t('auth.login')}
+      </button>
+    </p>
+  );
 
   return (
-    <div className="animate-fade-in font-sans">
-      <ContextBanner redirect={redirect} t={t} onDismiss={onDismissRedirect} />
+    <div className="animate-fade-in flex flex-col gap-[22px]">
+      {redirect && (
+        <div className="-mb-[22px]">
+          <ContextBanner redirect={redirect} t={t} onDismiss={onDismissRedirect} />
+        </div>
+      )}
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight font-sans">
-          <Trans i18nKey="auth.registerWelcome" components={[<span key="0" className="font-heading" />]} />
-        </h1>
-        <p className="text-sm text-zinc-500 mt-1">
-          {step === 1
-            ? t('auth.registerSubtitle')
-            : t('auth.registerSubtitleStep2')}
-        </p>
+      <div className="flex flex-col gap-3.5">
+        <StepIndicator step={step} t={t} />
+        <AuthHeading
+          title={<Trans i18nKey="auth.registerWelcome" components={[<span key="0" />]} />}
+          subtitle={step === 1 ? t('auth.registerSubtitle') : t('auth.registerSubtitleStep2')}
+        />
       </div>
-
-      <StepDots step={step} />
 
       <AnimatePresence>
         {error && (
           <M.div
+            role="alert"
             initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}
-            className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-sm text-red-400"
+            className="p-3 rounded-[10px] bg-destructive/10 border border-destructive/30 text-sm text-destructive"
           >
             {error}
           </M.div>
@@ -250,35 +270,28 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
       {/* ── Step 1: Identity ── */}
       <AnimatePresence mode="wait">
         {step === 1 && (
-          <M.form
+          <M.div
             key="step1"
             initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 16 }} transition={{ duration: 0.18 }}
-            onSubmit={handleNext}
-            noValidate
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-[22px]"
           >
-            {/* Display name */}
-            <div className="flex flex-col gap-1.5">
-              <div className="relative">
+            <form onSubmit={handleNext} noValidate className="flex flex-col gap-[22px]">
+              <AuthField error={fieldErrors.displayName}>
                 <FloatingInput
                   id="reg-displayName"
                   type="text"
                   label={t('auth.displayName')}
                   value={displayName}
                   onChange={handleDisplayNameChange}
-                  autoComplete="name"
+                  autoComplete="nickname"
                   maxLength={50}
                   error={!!fieldErrors.displayName}
-                  className={`pr-10 ${focusRingCls}`}
+                  className={authInputCls}
                 />
-              </div>
-              <FieldError message={fieldErrors.displayName} />
-            </div>
+              </AuthField>
 
-            {/* Handle */}
-            <div className="flex flex-col gap-1.5">
-              <div className="relative">
+              <AuthField error={fieldErrors.accountName} hint={t('auth.accountNameHint')}>
                 <FloatingInput
                   id="reg-accountName"
                   type="text"
@@ -286,48 +299,35 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                   value={accountName}
                   onChange={handleAccountNameChange}
                   autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
                   maxLength={30}
                   error={!!fieldErrors.accountName}
-                  className={focusRingCls}
+                  className={`${authInputCls} font-mono`}
                 />
-              </div>
-              {fieldErrors.accountName
-                ? <FieldError message={fieldErrors.accountName} />
-                : accountName && (
-                  <p className="text-[11px] text-zinc-600 ml-1">{t('auth.accountNameHint')}</p>
-                )}
-            </div>
+              </AuthField>
 
-            <M.button
-              type="submit"
-              whileTap={{ scale: 0.98 }}
-              className={`h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-base lg:text-sm rounded-xl transition-all duration-200 mt-2 flex items-center justify-center gap-2 ${focusRingCls}`}
-            >
-              {t('auth.continue')}
-              <Icon name="arrow_forward" size={16} />
-            </M.button>
-
-            <div className="flex flex-col gap-4 mt-2">
-              <p className="text-xs text-zinc-500 text-center">
-                {t('auth.hasAccount')}{' '}
-                <button type="button" onClick={onSwitchToLogin} className="text-primary hover:text-primary-dim hover:underline font-semibold transition-colors">
-                  {t('auth.login')}
-                </button>
-              </p>
-              <div className="flex items-center gap-3 px-8">
-                <div className="flex-1 h-px bg-zinc-800/40" />
-                <span className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.2em] leading-none">{t('common.or')}</span>
-                <div className="flex-1 h-px bg-zinc-800/40" />
-              </div>
-              <GoogleButton onClick={onGoogleLogin} t={t} />
-              <Link to="/project/new"
-                className="group flex items-center justify-center gap-2 py-1 text-xs font-semibold text-zinc-500 hover:text-primary transition-all duration-300"
+              <button
+                type="submit"
+                disabled={loading || !displayName.trim()}
+                className={authPrimaryBtnCls}
               >
-                <Icon name="bolt" size={14} className="text-zinc-600 group-hover:text-primary transition-all" />
-                {t('auth.guestMode')}
+                {loading ? <LogoLoader size={16} /> : t('auth.continue')}
+              </button>
+            </form>
+
+            <OrDivider t={t} />
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <GoogleButton onClick={onGoogleLogin} t={t} short />
+              <Link to="/project/new" className={`${authSecondaryBtnCls} bg-transparent`}>
+                <Icon name="bolt" size={16} />
+                {t('auth.guestShort')}
               </Link>
             </div>
-          </M.form>
+
+            {loginLink}
+          </M.div>
         )}
 
         {/* ── Step 2: Credentials ── */}
@@ -338,117 +338,89 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
             exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.18 }}
             onSubmit={handleSubmit}
             noValidate
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-[22px]"
           >
-            {/* Email */}
-            <div className="flex flex-col gap-1.5">
-              <div className="relative">
-                <FloatingInput
-                  id="reg-email"
-                  type="email"
-                  label={t('auth.email')}
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); setFieldErrors(p => ({ ...p, email: undefined })); }}
-                  autoComplete="email"
-                  error={!!fieldErrors.email}
-                  className={`pr-10 ${focusRingCls}`}
-                />
-              </div>
-              <FieldError message={fieldErrors.email} />
-            </div>
+            <AuthField error={fieldErrors.email}>
+              <FloatingInput
+                id="reg-email"
+                label={t('auth.email')}
+                type="email"
+                value={email}
+                onChange={(e) => { setEmail(e.target.value); setFieldErrors(p => ({ ...p, email: undefined })); }}
+                autoComplete="email"
+                error={!!fieldErrors.email}
+                className={authInputCls}
+              />
+            </AuthField>
 
-            {/* Password */}
-            <div className="flex flex-col gap-1.5">
+            <AuthField error={fieldErrors.password}>
               <div className="relative">
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1">
-                  {password && (
-                    <M.button
-                      type="button"
-                      onClick={() => { haptic('light'); setShowPassword(!showPassword); }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`h-9 w-9 flex items-center justify-center text-zinc-400 hover:text-zinc-300 transition-colors rounded-lg ${focusRingCls}`}
-                      aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                    >
-                      {showPassword ? <Icon name="visibility_off" size={16} /> : <Icon name="visibility" size={16} />}
-                    </M.button>
-                  )}
-                </div>
                 <FloatingInput
                   id="reg-password"
-                  type={showPassword ? 'text' : 'password'}
                   label={t('auth.password')}
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setFieldErrors(p => ({ ...p, password: undefined })); }}
                   autoComplete="new-password"
                   error={!!fieldErrors.password}
-                  className={`pr-20 ${focusRingCls}`}
+                  className={`${authInputCls} pr-12`}
                 />
+                {password && (
+                  <button
+                    type="button"
+                    onClick={() => { haptic('light'); setShowPassword(!showPassword); }}
+                    className={toggleBtnCls}
+                    aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                  >
+                    <Icon name={showPassword ? 'visibility_off' : 'visibility'} size={16} />
+                  </button>
+                )}
               </div>
               <PasswordStrength password={password} />
-              <FieldError message={fieldErrors.password} />
-            </div>
+            </AuthField>
 
-            {/* Confirm password */}
-            <div className="flex flex-col gap-1.5">
+            <AuthField error={fieldErrors.confirmPassword}>
               <div className="relative">
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1">
-                  {confirmPassword && (
-                    <M.button
-                      type="button"
-                      onClick={() => { haptic('light'); setShowConfirm(!showConfirm); }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`h-9 w-9 flex items-center justify-center text-zinc-400 hover:text-zinc-300 transition-colors rounded-lg ${focusRingCls}`}
-                    >
-                      {showConfirm ? <Icon name="visibility_off" size={16} /> : <Icon name="visibility" size={16} />}
-                    </M.button>
-                  )}
-                </div>
                 <FloatingInput
                   id="reg-confirm-password"
-                  type={showConfirm ? 'text' : 'password'}
                   label={t('auth.confirmPassword')}
+                  type={showConfirm ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => { setConfirmPassword(e.target.value); setFieldErrors(p => ({ ...p, confirmPassword: undefined })); }}
                   autoComplete="new-password"
                   error={!!fieldErrors.confirmPassword}
-                  className={`pr-20 ${focusRingCls}`}
+                  className={`${authInputCls} pr-12`}
                 />
+                {confirmPassword && (
+                  <button
+                    type="button"
+                    onClick={() => { haptic('light'); setShowConfirm(!showConfirm); }}
+                    className={toggleBtnCls}
+                    aria-label={showConfirm ? t('auth.hidePassword') : t('auth.showPassword')}
+                  >
+                    <Icon name={showConfirm ? 'visibility_off' : 'visibility'} size={16} />
+                  </button>
+                )}
               </div>
-              <FieldError message={fieldErrors.confirmPassword} />
-            </div>
+            </AuthField>
 
-            <div className="flex gap-3 mt-2">
+            <div className="flex gap-2.5">
               <button
                 type="button"
                 onClick={handleBack}
-                className={`h-12 lg:h-10 flex items-center justify-center gap-2 px-4 rounded-xl border border-zinc-700/50 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 font-semibold text-sm transition-all ${focusRingCls}`}
+                aria-label={t('common.back')}
+                className={`${authSecondaryBtnCls} w-12 shrink-0 bg-transparent`}
               >
                 <Icon name="arrow_back" size={16} />
               </button>
-              <M.button
-                type="submit"
-                disabled={loading}
-                whileTap={{ scale: 0.98 }}
-                className={`flex-1 h-12 lg:h-10 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-base lg:text-sm rounded-xl disabled:opacity-40 transition-all duration-200 disabled:cursor-not-allowed ${focusRingCls}`}
-              >
+              <button type="submit" disabled={loading} className={authPrimaryBtnCls}>
                 {loading
-                  ? (
-                    <div className="flex items-center gap-2 justify-center">
-                      <LogoLoader size={16} />
-                      <span>{t('auth.registerActionLoading')}</span>
-                    </div>
-                  )
-                  : t('auth.registerAction')
-                }
-              </M.button>
+                  ? <><LogoLoader size={16} /><span>{t('auth.registerActionLoading')}</span></>
+                  : t('auth.registerAction')}
+              </button>
             </div>
 
-            <p className="text-xs text-zinc-500 text-center mt-2">
-              {t('auth.hasAccount')}{' '}
-              <button type="button" onClick={onSwitchToLogin} className="text-primary hover:text-primary-dim hover:underline font-semibold transition-colors">
-                {t('auth.login')}
-              </button>
-            </p>
+            {loginLink}
           </M.form>
         )}
       </AnimatePresence>

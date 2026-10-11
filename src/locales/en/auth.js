@@ -1,5 +1,4 @@
 export default {
-  loginWelcome: "Welcome to <0>LRC Studio</0>",
   googleContinue: "Continue with Google",
   loginWelcomeBack: "Welcome back, <0>{{name}}</0>!",
   loginSubtitle: "Enter your username or email to continue.",
@@ -8,7 +7,10 @@ export default {
   notYou: "Not you? Change account",
   continue: "Continue",
   registerWelcome: "<0>Create your account</0>",
-  registerSubtitle: "Choose a display name to get started.",
+  registerSubtitle: "Choose how your name shows on the songs you publish.",
+  stepOf: "Step {{step}} of {{total}}",
+  googleShort: "Google",
+  guestShort: "Guest",
   registerSubtitleStep2: "Add your email and a secure password.",
   confirmPassword: "Confirm password",
   securePassword: "Secure password",
@@ -42,7 +44,6 @@ export default {
   account: "Account",
   user: "User",
   signUpToSave: "Sign up to save your project to the cloud",
-  tagline: "Sync lyrics to music, your way",
   featureSync: "Timestamp lyrics in real time",
   featureSyncDesc: "Tap to timestamp lines or words in real-time",
   featureExport: "Export standard .lrc files",
@@ -125,10 +126,13 @@ export default {
     dismiss: "Don't continue there"
   },
   showcase: {
-    previewLabel: "Live preview",
-    editorLabel: "In the editor",
-    autoStamp: "Auto Stamp",
-    markKey: "SPACE"
+    signinNote: "Your projects pick up where you left them, on any device you sign in from.",
+    signupNote: "An account saves your projects and syncs them across devices. Guests can still sync and export everything.",
+    howYouAppear: "How you'll appear",
+    yourName: "Your name",
+    yourHandle: "username",
+    cardTitle: "Your first song",
+    cardMeta: "Artist · Album · Year"
   },
   savePassword: {
     title: "Save your password?",
@@ -216,8 +220,12 @@ export default {
     skip: "Skip for now",
     logIn: "Log in as {{name}}",
     switchAccount: "Use a different account",
-    continueAs: "Continue as",
-    addAccount: "Add another account",
+    welcomeBack: "Welcome back",
+    pickAccount: "Pick an account saved on this device.",
+    addAccount: "Use another account",
+    backToSaved: "Back to saved accounts",
+    backToName: "Back to {{name}}",
+    removeNamed: "Remove {{name}} from this device",
     removeAccount: "Forget this account",
     forgetAll: "Forget all accounts",
     usePasswordInstead: "Use password instead",
