@@ -357,6 +357,20 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     }
   };
 
+  const handleSelectUploadRef = useRef(handleSelectUpload);
+  useLayoutEffect(() => { handleSelectUploadRef.current = handleSelectUpload; });
+
+  // Arriving from the uploads library ("Create project"): preselect that upload once the list is in.
+  const requestedUploadId = (location.state as { uploadId?: string } | null)?.uploadId;
+  const requestedUploadAppliedRef = useRef(false);
+  useEffect(() => {
+    if (!requestedUploadId || requestedUploadAppliedRef.current) return;
+    const upload = mediaUploads.find((u) => u.id === requestedUploadId);
+    if (!upload) return;
+    requestedUploadAppliedRef.current = true;
+    handleSelectUploadRef.current(upload);
+  }, [requestedUploadId, mediaUploads]);
+
   const handleDeleteUpload = async (uploadId: string) => {
     try {
       await uploadsApi.deleteMedia(uploadId);

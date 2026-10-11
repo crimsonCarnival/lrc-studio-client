@@ -11,5 +11,8 @@ export default {
   justNow: "Just now",
   minutesAgo: "{{count}}m ago",
   hoursAgo: "{{count}}h ago",
-  daysAgo: "{{count}}d ago"
+  daysAgo: "{{count}}d ago",
+  tabProjects: "Projects",
+  tabUploads: "Uploads",
+  switchLabel: "Library sections"
 };
