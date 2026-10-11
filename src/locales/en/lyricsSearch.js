@@ -16,6 +16,8 @@ export default {
   syncedBadge: 'Synced',
   syncedTitle: 'These lyrics are already timed',
   syncedDesc: 'Import them as-is and skip syncing — you can still adjust any line afterwards.',
+  lineCount_one: '{{count}} line',
+  lineCount_other: '{{count}} lines',
   providedBy: 'Provided by {{provider}}',
   replaceDesc: 'Importing replaces the lyrics currently in this project.',
   importedSynced: 'Imported {{count}} timed lines — no syncing needed',

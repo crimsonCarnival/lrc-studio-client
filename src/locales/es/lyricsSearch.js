@@ -16,6 +16,8 @@ export default {
   syncedBadge: 'Sincronizada',
   syncedTitle: 'Esta letra ya viene con tiempos',
   syncedDesc: 'Impórtala tal cual y sáltate la sincronización — podrás ajustar cualquier línea después.',
+  lineCount_one: '{{count}} línea',
+  lineCount_other: '{{count}} líneas',
   providedBy: 'Proporcionado por {{provider}}',
   replaceDesc: 'Al importar se reemplaza la letra que tiene este proyecto.',
   importedSynced: 'Se importaron {{count}} líneas con tiempos — no hace falta sincronizar',
