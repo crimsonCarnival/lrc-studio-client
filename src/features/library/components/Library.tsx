@@ -12,6 +12,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import ProjectCard from './ProjectCard.jsx';
 import ProjectListRaw from './ProjectList';
+import { LibrarySwitch } from './LibrarySwitch';
 
 // ProjectSetupModal is still untyped JS; cast until it is migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -141,6 +142,10 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
 
   return (
     <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden pt-8 pb-12 lg:px-12 max-w-7xl mx-auto w-full">
+      <div className="px-4 lg:px-0 mb-6">
+        <LibrarySwitch active="projects" />
+      </div>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 px-4 lg:px-0">
         <div>

@@ -23,7 +23,7 @@ import { projects } from '@/app/api';
 import ProjectSetupModal from '@/features/editor/components/setup/ProjectSetupModal';
 import type { ProjectSetupConfirm } from '@/features/editor/components/setup/ProjectSetupModal';
 import useConfirm from '@/shared/hooks/useConfirm';
-import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
+import { WaveformBars } from '@/shared/ui/WaveformBars';
 import { ThemedShineBorder } from '@ui/themed-shine-border';
 import { formatDistanceToNow } from 'date-fns';
 import { enUS, es } from 'date-fns/locale';
@@ -74,6 +74,12 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
   const isYoutube = upload?.source === 'youtube';
   const isPrivate = isOwner && isPublic === false;
   const hasCover = !!coverImage;
+  const meta = (project.metadata || {}) as ProjectMetaLoose;
+  const artist = (meta.songArtists || []).join(', ') || meta.songArtist || '';
+  const synced = project.syncedLineCount || 0;
+  const total = project.lineCount || 0;
+  const percent = total > 0 ? Math.min(100, Math.round((synced / total) * 100)) : 0;
+  const complete = total > 0 && synced >= total;
 
   const handleEdit = (e: ReactMouseEvent) => {
     e.preventDefault();
@@ -107,39 +113,40 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
           </div>
         )}
 
-        <div className={`relative ${hasCover ? 'h-20' : 'h-12 bg-gradient-to-br from-zinc-900 to-zinc-800/50 flex items-center justify-center'} overflow-hidden`}>
-          {hasCover ? (
+        <div className="relative h-32 bg-zinc-800/50 overflow-hidden px-5">
+          {hasCover && (
             <>
-              <img src={coverImage ?? ''} alt="" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 motion-reduce:group-hover:scale-100 transition-transform duration-500" />
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" />
+              <img src={coverImage ?? ''} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 motion-reduce:group-hover:scale-100 transition-transform duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 to-transparent" />
             </>
-          ) : (
-            <Icon name="music_note" size={16} className="text-zinc-600" />
           )}
-          {/* Source indicator */}
-          <div className="absolute top-2 right-2 flex items-center gap-1.5 z-10">
+          <WaveformBars seed={title || publicId} count={26} minHeight={20} className="relative" />
+          <span className={`absolute left-3 top-3 px-2.5 py-1 rounded-full bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide ${isYoutube ? 'text-red-300' : 'text-blue-300'}`}>
+            {isYoutube ? t('uploads.youtube') : t('uploads.cloudAudio')}
+          </span>
+          <div className="absolute right-3 top-3 flex items-center gap-1.5 z-10">
             {isPrivate && (
               <Icon name="lock" size={14} className="text-zinc-300 drop-shadow-md" aria-label={t('profile.privateProject')} />
             )}
-            {isYoutube
-              ? <YoutubeIcon className="size-4 drop-shadow-md" />
-              : hasCover ? <Icon name="music_note" size={12} className="text-primary/60 drop-shadow-md" /> : null}
+            <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${complete ? 'bg-teal-900/60 text-teal-300' : 'bg-zinc-950/80 text-zinc-100'}`}>
+              {complete ? t('profile.projectComplete') : `${percent}%`}
+            </span>
           </div>
         </div>
 
         {/* Info */}
-        <div className="p-3 flex items-start gap-2.5">
+        <div className="p-4 flex items-start gap-2.5">
           <div className="flex-1 min-w-0">
-            <h3 className="text-xs font-semibold text-zinc-200 truncate group-hover:text-primary transition-colors leading-snug">
+            <h3 className="text-[15px] font-bold uppercase text-zinc-100 truncate group-hover:text-primary transition-colors leading-snug">
               {title || t('library.untitled')}
             </h3>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] text-zinc-500">{formatRelativeTime(project.createdAt, (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
-              <span className="size-0.5 rounded-full bg-zinc-700 shrink-0" />
-              <span className="text-[10px] text-zinc-500 flex items-center gap-0.5">
-                <Icon name="monitoring" size={10} />
-                {(project.syncedLineCount || 0)}/{(project.lineCount || 0)}
-              </span>
+            {artist && <p className="text-[13px] text-zinc-400 truncate mt-0.5">{artist}</p>}
+            <div className="h-1 rounded-full bg-zinc-800 mt-3 overflow-hidden" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
+              <div className={`h-full rounded-full ${complete ? 'bg-teal-400' : 'bg-primary'}`} style={{ width: `${percent}%` }} />
+            </div>
+            <div className="flex items-center justify-between gap-2 mt-2 text-xs text-zinc-400">
+              <span className="font-mono">{t('profile.projectLines', { done: synced, total })}</span>
+              <span>{formatRelativeTime(project.updatedAt || project.createdAt, (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
             </div>
           </div>
           {/* Always-visible ⋮ — sibling of the hover-gated owner cluster above,
@@ -153,7 +160,6 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
             onDelete={onDelete}
             className="p-1 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-700/50 transition-colors shrink-0"
           />
-          <Icon name="chevron_right" size={14} className="text-zinc-800 group-hover:text-primary group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0 transition-all mt-0.5 shrink-0" />
         </div>
       </button>
     </ProjectMenu>
@@ -470,42 +476,36 @@ export default function ProfilePage() {
           onBlock={handleBlock}
           onUnblock={handleUnblock}
           onViewAsOthers={isSelf ? () => setViewAsOthers(true) : undefined}
-        />
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 mb-8">
-          <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
-            <span className="text-2xl font-bold text-zinc-100">{projectCount}</span>
-            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.projects')}</span>
-          </div>
-          <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
-            <span className="text-2xl font-bold text-zinc-100">{minutesLabel || '0 m'}</span>
-            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.syncedTime')}</span>
-          </div>
-          <div className="glass rounded-2xl p-4 flex flex-col justify-between hover:border-primary/20 transition-colors">
-            <span className="text-2xl font-bold text-zinc-100">{profile.totalStarsReceived}</span>
-            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.stars')}</span>
-          </div>
-          {/* The only entry points to the follow list; inert when the owner hides it. */}
-          <button
-            type="button"
-            disabled={!profile.showFollowers}
-            onClick={() => setFollowModal('FOLLOWERS')}
-            className="glass rounded-2xl p-4 flex flex-col justify-between text-left hover:border-primary/20 transition-colors enabled:cursor-pointer"
-          >
-            <span className="text-2xl font-bold text-zinc-100">{profile.followerCount}</span>
-            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.followers')}</span>
-          </button>
-          <button
-            type="button"
-            disabled={!profile.showFollowers}
-            onClick={() => setFollowModal('FOLLOWING')}
-            className="glass rounded-2xl p-4 flex flex-col justify-between text-left hover:border-primary/20 transition-colors enabled:cursor-pointer"
-          >
-            <span className="text-2xl font-bold text-zinc-100">{profile.followingCount}</span>
-            <span className="text-xs font-medium text-zinc-500 mt-1">{t('profile.stats.following')}</span>
-          </button>
-        </div>
+        >
+          <dl className="grid grid-cols-2 md:grid-cols-5 m-0">
+            {[
+              { value: projectCount, label: t('profile.stats.projects') },
+              { value: minutesLabel || '0 m', label: t('profile.stats.syncedTime') },
+              { value: profile.totalStarsReceived, label: t('profile.stats.stars') },
+            ].map((stat) => (
+              <div key={stat.label} className="px-5 sm:px-8 py-4 border-r border-b md:border-b-0 border-border last:border-r-0 flex flex-col-reverse">
+                <dt className="text-xs font-medium text-zinc-500 mt-0.5">{stat.label}</dt>
+                <dd className="m-0 text-2xl font-extrabold text-zinc-100">{stat.value}</dd>
+              </div>
+            ))}
+            {/* The only entry points to the follow list; inert when the owner hides it. */}
+            {([
+              { key: 'FOLLOWERS', value: profile.followerCount, label: t('profile.stats.followers') },
+              { key: 'FOLLOWING', value: profile.followingCount, label: t('profile.stats.following') },
+            ] as const).map((stat) => (
+              <button
+                key={stat.key}
+                type="button"
+                disabled={!profile.showFollowers}
+                onClick={() => setFollowModal(stat.key)}
+                className="px-5 sm:px-8 py-4 border-r border-border last:border-r-0 flex flex-col-reverse text-left enabled:cursor-pointer enabled:hover:bg-zinc-800/30 transition-colors"
+              >
+                <span className="text-xs font-medium text-zinc-500 mt-0.5">{stat.label}</span>
+                <span className="text-2xl font-extrabold text-zinc-100">{stat.value}</span>
+              </button>
+            ))}
+          </dl>
+        </ProfileHeader>
 
         {/* Two-column layout: main content + showcase sidebar */}
         <div className={`flex gap-6 items-start ${hasVisibleShowcase || isOwner || (!isOwner && !!user) ? 'flex-col lg:flex-row' : ''}`}>
@@ -626,6 +626,9 @@ export default function ProfilePage() {
                     <span className="text-xs text-zinc-500 font-medium">
                       {t('profile.badges.count', { count: allBadgeIds.length, total: 18 })}
                     </span>
+                  </div>
+                  <div className="h-1 rounded-full bg-zinc-800 overflow-hidden">
+                    <div className="h-full rounded-full bg-teal-400" style={{ width: `${Math.min(100, Math.round((allBadgeIds.length / 18) * 100))}%` }} />
                   </div>
                   <div className="flex flex-col gap-2">
                     {allBadgeIds.map(id => (

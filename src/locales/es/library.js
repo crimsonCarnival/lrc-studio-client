@@ -11,5 +11,8 @@ export default {
   justNow: "Ahora mismo",
   minutesAgo: "hace {{count}}m",
   hoursAgo: "hace {{count}}h",
-  daysAgo: "hace {{count}}d"
+  daysAgo: "hace {{count}}d",
+  tabProjects: "Proyectos",
+  tabUploads: "Subidas",
+  switchLabel: "Secciones de la biblioteca"
 };

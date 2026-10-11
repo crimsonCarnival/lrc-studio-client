@@ -203,6 +203,8 @@ export default {
   noFollowing: "Aún no sigue a nadie.",
   noFriends: "Aún no hay amigos mutuos. Sigue a alguien que ya te siga.",
   noPublicProjects: "Aún no hay proyectos públicos.",
+  projectComplete: "Completo",
+  projectLines: "{{done}}/{{total}} líneas",
   publicTabs: {
     projects: "Proyectos",
     projectsWithCount: "Proyectos {{count}}",
