@@ -38,6 +38,10 @@ function collect(text) {
   // Icon names appear as string literals or JSX text, so only those count;
   // this keeps ordinary words in comments and identifiers from pulling glyphs in.
   for (const [, w] of text.matchAll(/(?:['"`>])([a-z0-9_]+)(?=['"`<])/g)) if (allNames.has(w)) used.add(w);
+  // index.d.ts lists canonical names only, but the font also ships legacy aliases as ligatures
+  // (expand_more, emoji_events, smartphone, ...). Take anything passed to an icon prop as-is:
+  // a word that is not a ligature just adds a few plain letters.
+  for (const [, w] of text.matchAll(/(?:<Icon[^>]*?\bname=|\biconName[:=]\s*|\bicon:\s*|\bmedal:\s*)\{?['"]([a-z0-9_]+)['"]/g)) used.add(w);
 }
 scan(join(root, 'src'));
 collect(readFileSync(join(root, 'index.html'), 'utf8'));
