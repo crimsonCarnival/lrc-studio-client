@@ -12,16 +12,19 @@ export default {
   viewProfile: "View profile",
   levelShort: "Lv. {{level}}",
   pages: {
+    stats: { title: "Stats & activity", lead: "Only you can see this page." },
+    security: { title: "Sign-in", lead: "How you sign in and where you're signed in." },
+    editor: { title: "Editor", lead: "How you stamp, adjust and see each line's timing." },
+    export: { title: "Export", lead: "How the files you download or copy are generated." },
+    interface: { title: "Interface", lead: "Language, editor appearance and how lyrics look." },
     profile: { title: "Public profile", lead: "What others see when they visit your profile." },
     badges: { title: "Showcase & badges", lead: "Pick up to {{slots}} achievements to show on your profile." },
-    activity: { title: "Activity" },
-    stats: { title: "Stats & activity" },
-    security: { title: "Sign-in" },
     privacy: { title: "Privacy", lead: "Control what others can see. Changes are saved instantly." },
     playback: { title: "Playback", lead: "How audio sounds and is navigated in the editor." },
     autoStamp: { title: "Auto Stamp", lead: "How lyrics are fitted to the audio when you sync automatically." },
   },
 
+  security: { methodsSection: "Sign-in methods" },
   groups: {
     account: 'Account',
     preferences: 'Preferences',
@@ -89,6 +92,13 @@ export default {
   },
 
   editor: {
+    markSection: "When marking a time",
+    timingSection: "Timing adjustment",
+    displaySection: "Display",
+    importSection: "Import LRC",
+    nudgeStep: "Nudge step",
+    nudgeStepDesc: "How far each key press moves a time (Alt + ← / →)",
+    nudgeFineUnit: "s fine",
     label: "Editor",
     nudgeIncrement: "Nudge Increment",
     nudgeIncrementDesc: "Standard amount to shift timestamps (in seconds)",
@@ -127,6 +137,12 @@ export default {
   },
 
   export: {
+    previewNote: "Preview using a sample project. Updates with the settings below.",
+    previewLabel: "Exported file preview",
+    previewLine: "[lyrics line {{n}}]",
+    previewMediaName: "[audio name]",
+    followsEditorDesc: "Uses the same precision as the editor: {{precision}}",
+    changeInEditor: "Change in Editor →",
     label: "Export",
     lineEndings: "Line Endings",
     lineEndingsDesc: "Format of newlines in exported files",
@@ -155,6 +171,12 @@ export default {
   },
 
   interface: {
+    editorLyricsSection: "Lyrics in the editor",
+    previewLabel: "Preview",
+    previewPrev: "[Previous lyrics line]",
+    previewNow: "[Line playing now]",
+    previewNext: "[Next lyrics line]",
+    resetColors: "Reset",
     label: "Interface",
     theme: "Color Theme",
     themeDesc: "Change the visual appearance of the application",
@@ -347,6 +369,9 @@ export default {
       srt: "SubRip (.srt)"
     },
     positions: {
+      topLeft: "Top left",
+      topCenter: "Top center",
+      topRight: "Top right",
       bottomLeft: "Bottom Left",
       bottomCenter: "Bottom Center",
       bottomRight: "Bottom Right"

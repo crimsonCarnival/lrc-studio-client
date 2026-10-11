@@ -12,16 +12,19 @@ export default {
   viewProfile: "Ver perfil",
   levelShort: "Nv. {{level}}",
   pages: {
+    stats: { title: "Estadísticas y actividad", lead: "Solo tú ves esta página." },
+    security: { title: "Inicio de sesión", lead: "Cómo entras a tu cuenta y dónde tienes la sesión abierta." },
+    editor: { title: "Editor", lead: "Cómo marcas, ajustas y ves los tiempos de cada línea." },
+    export: { title: "Exportar", lead: "Cómo se generan los archivos que descargas o copias." },
+    interface: { title: "Interfaz", lead: "Idioma, apariencia del editor y cómo se ve la letra." },
     profile: { title: "Perfil público", lead: "Lo que ven los demás cuando visitan tu perfil." },
     badges: { title: "Vitrina e insignias", lead: "Elige hasta {{slots}} logros para mostrar en tu perfil." },
-    activity: { title: "Actividad" },
-    stats: { title: "Estadísticas y actividad" },
-    security: { title: "Inicio de sesión" },
     privacy: { title: "Privacidad", lead: "Controla qué ven los demás. Los cambios se guardan al instante." },
     playback: { title: "Reproducción", lead: "Cómo suena y se navega el audio en el editor." },
     autoStamp: { title: "Sincronización automática", lead: "Cómo se ajusta la letra al audio cuando sincronizas automáticamente." },
   },
 
+  security: { methodsSection: "Métodos de acceso" },
   groups: {
     account: 'Cuenta',
     preferences: 'Preferencias',
@@ -89,6 +92,13 @@ export default {
   },
 
   editor: {
+    markSection: "Al marcar un tiempo",
+    timingSection: "Ajuste de tiempos",
+    displaySection: "Visualización",
+    importSection: "Importar LRC",
+    nudgeStep: "Paso de ajuste",
+    nudgeStepDesc: "Cuánto mueve un tiempo cada pulsación (Alt + ← / →)",
+    nudgeFineUnit: "s fino",
     label: "Editor",
     nudgeIncrement: "Incremento de ajuste",
     nudgeIncrementDesc: "Cantidad estándar para desplazar tiempos (en segundos)",
@@ -127,6 +137,12 @@ export default {
   },
 
   export: {
+    previewNote: "Vista previa con un proyecto de ejemplo. Se actualiza con los ajustes de abajo.",
+    previewLabel: "Vista previa del archivo exportado",
+    previewLine: "[línea {{n}} de la letra]",
+    previewMediaName: "[nombre del audio]",
+    followsEditorDesc: "Usa la misma precisión que el editor: {{precision}}",
+    changeInEditor: "Cambiar en Editor →",
     label: "Exportar",
     lineEndings: "Finales de línea",
     lineEndingsDesc: "Formato de saltos de línea en los archivos exportados",
@@ -155,6 +171,12 @@ export default {
   },
 
   interface: {
+    editorLyricsSection: "Letra en el editor",
+    previewLabel: "Vista previa",
+    previewPrev: "[Línea anterior de la letra]",
+    previewNow: "[Línea que suena ahora]",
+    previewNext: "[Línea siguiente de la letra]",
+    resetColors: "Restablecer",
     label: "Interfaz",
     theme: "Tema de color",
     themeDesc: "Cambia la apariencia visual de la aplicación",
@@ -347,9 +369,12 @@ export default {
       srt: "SubRip (.srt)"
     },
     positions: {
+      topLeft: "Arriba a la izquierda",
+      topCenter: "Arriba al centro",
+      topRight: "Arriba a la derecha",
       bottomLeft: "Abajo a la izquierda",
       bottomCenter: "Abajo al centro",
-      bottomRight: "Abajo a la derecha"
+      bottomRight: "Abajo a la derecha",
     },
     speeds: {
       fast: "Rápido",

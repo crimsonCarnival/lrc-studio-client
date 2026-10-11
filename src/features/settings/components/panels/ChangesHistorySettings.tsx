@@ -1,57 +1,40 @@
 import { useTranslation } from 'react-i18next';
-import { Icon } from '@/shared/ui/Icon';
-import AccountNameHistory from './profile/AccountNameHistory';
-import EmailHistory from './profile/EmailHistory';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { useSettings } from '@/features/settings/useSettings';
+import { formatInTimezone } from '@/shared/utils/date';
+import { Section, SettingRow } from '../shared';
 
-function blockMatches(searchTerm: string | undefined, labels: string[]) {
-  if (!searchTerm) return true;
-  const q = searchTerm.toLowerCase();
-  return labels.some(l => l.toLowerCase().includes(q));
-}
+interface HistoryEntry { from: string; to: string; changedAt: string }
 
+/** Past handle and email changes, one row per change. */
 export default function ChangesHistorySettings({ searchTerm }: { searchTerm?: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { user } = useAuthContext();
+  const { settings } = useSettings();
+  const locale = i18n.resolvedLanguage || i18n.language;
 
-  const usernameMatches = blockMatches(searchTerm, [
-    t('profile.tabs.history'), t('profile.sections.handleHistory'),
-    t('profile.accountName'),
-    'history', 'username', 'handle', 'changes',
-  ]);
-  const emailMatches = blockMatches(searchTerm, [
-    t('profile.tabs.history'), t('profile.sections.emailHistory'),
-    t('profile.email'),
-    'history', 'email', 'changes',
-  ]);
+  const date = (iso: string) => formatInTimezone(iso, settings.advanced?.timezone, { year: 'numeric', month: 'short', day: 'numeric' }, locale);
 
-  if (!usernameMatches && !emailMatches) return null;
+  const groups: { title: string; entries: HistoryEntry[] }[] = [
+    { title: t('profile.accountName'), entries: (user?.previousAccountNames ?? []) as HistoryEntry[] },
+    { title: t('profile.email'), entries: (user?.emailHistory ?? []) as HistoryEntry[] },
+  ];
 
   return (
-    <div className="settings-section space-y-6 animate-fade-in">
-      <div className="flex items-center gap-2 px-1">
-        <Icon name="history" size={16} className="text-zinc-400" />
-        <h3 className="font-heading text-[13px] font-semibold tracking-tight text-zinc-200 contrast-more:text-white">
-          {t('profile.tabs.history')}
-        </h3>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {usernameMatches && (
-          <div className="rounded-2xl border border-border/50 contrast-more:border-zinc-600 bg-secondary/10 p-5 lg:p-6 hover:border-border transition-all">
-            <h4 className="font-heading text-sm font-semibold text-zinc-100 contrast-more:text-white mb-4 border-b border-border/50 contrast-more:border-zinc-600 pb-2">
-              {t('profile.sections.handleHistory')}
-            </h4>
-            <AccountNameHistory />
-          </div>
-        )}
-        {emailMatches && (
-          <div className="rounded-2xl border border-border/50 contrast-more:border-zinc-600 bg-secondary/10 p-5 lg:p-6 hover:border-border transition-all">
-            <h4 className="font-heading text-sm font-semibold text-zinc-100 contrast-more:text-white mb-4 border-b border-border/50 contrast-more:border-zinc-600 pb-2">
-              {t('profile.sections.emailHistory')}
-            </h4>
-            <EmailHistory />
-          </div>
-        )}
-      </div>
-    </div>
+    <Section title={t('profile.tabs.history')} searchTerm={searchTerm}>
+      {groups.flatMap(({ title, entries }) => entries.length === 0
+        ? [(
+          <SettingRow key={title} label={title} description={t('profile.noHistoryYet')} />
+        )]
+        : entries.map((entry) => (
+          <SettingRow
+            key={`${title}-${entry.changedAt}`}
+            label={title}
+            description={<span className="font-mono">{t('profile.changedFrom', { from: entry.from, to: entry.to })}</span>}
+          >
+            <span className="text-[13px] text-zinc-400">{date(entry.changedAt)}</span>
+          </SettingRow>
+        )))}
+    </Section>
   );
 }

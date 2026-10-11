@@ -14,10 +14,6 @@ import AdvancedSettings from './panels/AdvancedSettings';
 import AutoStampSettings from './panels/AutoStampSettings';
 import ProfileSettings from './panels/ProfileSettings';
 import SecuritySettings from './panels/SecuritySettings';
-import ConnectionsSettings from './panels/ConnectionsSettings';
-import ChangesHistorySettings from './panels/ChangesHistorySettings';
-import SessionsSettings from './panels/SessionsSettings';
-import ActivitySettings from './panels/ActivitySettings';
 import StatsSettings from './panels/StatsSettings';
 import PrivacySettings from './panels/PrivacySettings';
 import BadgesSettings from './panels/BadgesSettings';
@@ -43,13 +39,9 @@ function SettingsPanelContent({ activeTab, settings, updateSetting, validateShor
   switch (activeTab) {
     case 'profile': return <ProfileSettings key={userId} searchTerm={searchTerm} />;
     case 'badges': return <BadgesSettings key={userId} searchTerm={searchTerm} />;
-    case 'activity': return <ActivitySettings key={userId} searchTerm={searchTerm} />;
     case 'stats': return <StatsSettings key={userId} searchTerm={searchTerm} />;
     case 'security': return <SecuritySettings focusCard={focusCard ?? undefined} searchTerm={searchTerm} />;
     case 'privacy': return <PrivacySettings searchTerm={searchTerm} />;
-    case 'connections': return <ConnectionsSettings searchTerm={searchTerm} />;
-    case 'history': return <ChangesHistorySettings searchTerm={searchTerm} />;
-    case 'sessions': return <SessionsSettings />;
     case 'playback': return <PlaybackSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
     case 'editor': return <EditorSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
     case 'export': return <ExportSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
@@ -73,15 +65,11 @@ interface TabMeta {
 
 const TABS: TabMeta[] = [
   // Account & Identity
-  { id: 'profile', labelKey: 'profile.tabs.account', iconName: 'person', authOnly: true, group: 'account', searchable: true },
-  { id: 'badges', labelKey: 'badges.showcase.editorTitle', iconName: 'military_tech', authOnly: true, group: 'account', searchable: true },
-  { id: 'activity', labelKey: 'profile.tabs.activity', iconName: 'monitoring', authOnly: true, group: 'account', searchable: true },
-  { id: 'stats', labelKey: 'profile.tabs.stats', iconName: 'bar_chart', authOnly: true, group: 'account', searchable: true },
-  { id: 'security', labelKey: 'profile.sections.security', iconName: 'verified_user', authOnly: true, group: 'account', searchable: true },
+  { id: 'profile', labelKey: 'settings.pages.profile.title', iconName: 'person', authOnly: true, group: 'account', searchable: true },
+  { id: 'badges', labelKey: 'settings.pages.badges.title', iconName: 'military_tech', authOnly: true, group: 'account', searchable: true },
+  { id: 'stats', labelKey: 'settings.pages.stats.title', iconName: 'bar_chart', authOnly: true, group: 'account', searchable: true },
+  { id: 'security', labelKey: 'settings.pages.security.title', iconName: 'verified_user', authOnly: true, group: 'account', searchable: true },
   { id: 'privacy', labelKey: 'profile.sections.privacy', iconName: 'shield', authOnly: true, group: 'account', searchable: true },
-  { id: 'connections', labelKey: 'profile.tabs.connections', iconName: 'link', authOnly: true, group: 'account', searchable: true },
-  { id: 'history', labelKey: 'profile.tabs.history', iconName: 'history', authOnly: true, group: 'account', searchable: true },
-  { id: 'sessions', labelKey: 'profile.sessions.title', iconName: 'layers', authOnly: true, group: 'account', searchable: false },
 
   // App Preferences
   { id: 'playback', labelKey: 'settings.playback.label', iconName: 'headphones', group: 'preferences', searchable: true },
@@ -95,10 +83,13 @@ const TABS: TabMeta[] = [
   { id: 'advanced', labelKey: 'settings.advanced.label', iconName: 'tune', group: 'advanced', searchable: true },
 ];
 
-// Panels whose header offers "reset to defaults" for just their own settings.
-const RESET_KEYS: Record<string, string[]> = {
-  playback: ['speedBounds', 'speedPresets', 'autoRewindOnPause', 'seekTime', 'seekPlays', 'showWaveform', 'waveformSnap'],
-  autoStamp: [],
+// Panels whose header offers "reset to defaults": the dotted setting paths each page owns.
+const RESET_PATHS: Record<string, string[]> = {
+  playback: ['playback.speedBounds', 'playback.speedPresets', 'playback.autoRewindOnPause', 'playback.seekTime', 'playback.seekPlays', 'playback.showWaveform', 'playback.waveformSnap'],
+  autoStamp: ['autoStamp'],
+  editor: ['editor.autoPauseOnMark', 'editor.nudge', 'editor.autoAdvance', 'editor.preserveEmptyLines', 'editor.showShiftAll', 'editor.shiftAllAmount', 'editor.showLineNumbers', 'editor.timestampPrecision', 'editor.syncFlashDuration', 'editor.lyricsSearchSpeed', 'editor.srt'],
+  export: ['export'],
+  interface: ['interface.fontSize', 'interface.spacing', 'interface.previewAlignment', 'interface.focusContrast', 'interface.lockLayout', 'interface.toastPosition', 'editor.display', 'editor.scroll'],
 };
 
 const SHORTCUT_KEYS = [
@@ -218,13 +209,9 @@ export default function SettingsPage() {
   };
 
   const handleResetSection = () => {
-    if (activeTab === 'autoStamp') {
-      updateSetting('autoStamp', structuredClone(DEFAULT_SETTINGS.autoStamp));
-      return;
-    }
-    const defaults = (DEFAULT_SETTINGS as Record<string, Record<string, unknown>>)[activeTab] ?? {};
-    for (const key of RESET_KEYS[activeTab] ?? []) {
-      updateSetting(`${activeTab}.${key}`, structuredClone(defaults[key]));
+    for (const path of RESET_PATHS[activeTab] ?? []) {
+      const value = path.split('.').reduce<unknown>((acc, key) => (acc as Record<string, unknown> | undefined)?.[key], DEFAULT_SETTINGS);
+      updateSetting(path, structuredClone(value));
     }
   };
 
@@ -254,7 +241,7 @@ export default function SettingsPage() {
   const pageTitle = t(`settings.pages.${activeTab}.title`, { defaultValue: tk(activeTabMeta?.labelKey ?? '') });
   const showcaseSlots = user?.showcaseSlots ?? 3;
   const pageLead = t(`settings.pages.${activeTab}.lead`, { defaultValue: '', slots: showcaseSlots });
-  const canReset = activeTab in RESET_KEYS;
+  const canReset = activeTab in RESET_PATHS;
   const level = user?.progression?.level ?? 0;
 
   const navItem = (entry: TabMeta) => {

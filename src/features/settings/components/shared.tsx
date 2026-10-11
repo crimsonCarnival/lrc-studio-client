@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/shared/utils/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
 import { Kbd } from '@ui/kbd';
 import { KEY_SYMBOLS } from '../key-symbols';
 
@@ -59,9 +60,11 @@ interface SectionProps {
   children?: ReactNode;
   searchTerm?: string;
   color?: string;
+  /** Rendered at the right of the section title (e.g. a bulk action button). */
+  action?: ReactNode;
 }
 
-export function Section({ title, children, searchTerm }: SectionProps) {
+export function Section({ title, children, searchTerm, action }: SectionProps) {
   const filteredChildren = React.Children.map(children, (child) => {
     if (!React.isValidElement(child)) return child;
 
@@ -97,14 +100,70 @@ export function Section({ title, children, searchTerm }: SectionProps) {
   return (
     <section className={`settings-section ${searchTerm ? 'animate-fade-in' : ''}`}>
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900 px-6 pb-2 pt-4 contrast-more:border-zinc-600">
-        <h2 className="text-xs font-bold uppercase tracking-[.09em] text-primary pb-1">
-          {title}
-        </h2>
+        <div className="flex items-center justify-between gap-3 pb-1">
+          <h2 className="text-xs font-bold uppercase tracking-[.09em] text-primary">{title}</h2>
+          {action}
+        </div>
         <div className="flex flex-col">
           {filteredChildren}
         </div>
       </div>
     </section>
+  );
+}
+
+/** Dropdown with the settings look; pass `SettingOption`s as children. */
+export function SettingSelect({ value, onValueChange, label, children, className }: {
+  value: string;
+  onValueChange: (value: string) => void;
+  label?: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <Select value={value} onValueChange={onValueChange}>
+      <SelectTrigger
+        aria-label={label}
+        className={cn('bg-zinc-950 border-zinc-700 text-sm text-zinc-100 focus:border-primary/50 h-11 w-auto min-w-[170px] rounded-[10px]', className)}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className="bg-zinc-900 border-zinc-700">{children}</SelectContent>
+    </Select>
+  );
+}
+export const SettingOption = SelectItem;
+
+/** Row with a leading icon chip, used for sign-in methods and sessions. */
+export function IconRow({ icon, iconClassName, title, badge, description, children, className }: {
+  icon: ReactNode;
+  iconClassName?: string;
+  title: ReactNode;
+  badge?: ReactNode;
+  description?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn('flex flex-wrap items-center justify-between gap-x-5 gap-y-3 py-4 [&+&]:border-t [&+&]:border-zinc-800', className)}>
+      <div className="flex flex-1 basis-72 min-w-0 items-center gap-3.5">
+        <span className={cn('size-11 shrink-0 grid place-items-center rounded-xl bg-zinc-800 text-primary', iconClassName)}>{icon}</span>
+        <div className="min-w-0">
+          <p className="text-[15px] font-semibold text-zinc-100 flex items-center gap-1.5 flex-wrap">{title}{badge}</p>
+          {description && <div className="text-[13px] text-zinc-400 mt-[3px] leading-relaxed">{description}</div>}
+        </div>
+      </div>
+      {children != null && <div className="shrink-0 flex items-center gap-3.5">{children}</div>}
+    </div>
+  );
+}
+
+/** Small pill used next to row titles ("Conectado", "Este dispositivo"). */
+export function Chip({ children, tone = 'violet' }: { children: ReactNode; tone?: 'violet' | 'teal' }) {
+  return (
+    <span className={cn('px-2 py-0.5 rounded-full text-[11px] font-bold', tone === 'teal' ? 'bg-teal-950 text-teal-300' : 'bg-zinc-800 text-violet-200')}>
+      {children}
+    </span>
   );
 }
 
@@ -153,7 +212,7 @@ export function SegmentedControl<T extends string>({ value, options, onChange, l
 }
 
 /** Numeric input with a trailing unit (×, s, …). */
-export function UnitInput({ value, onChange, unit, label, min, max, step = 1, disabled }: {
+export function UnitInput({ value, onChange, unit, label, min, max, step = 1, disabled, className }: {
   value: number;
   onChange: (value: number) => void;
   unit: string;
@@ -162,6 +221,7 @@ export function UnitInput({ value, onChange, unit, label, min, max, step = 1, di
   max?: number;
   step?: number;
   disabled?: boolean;
+  className?: string;
 }) {
   // Keep the raw text while typing so "0." / "" don't fight the controlled number.
   const [draft, setDraft] = useState<string | null>(null);
@@ -172,7 +232,7 @@ export function UnitInput({ value, onChange, unit, label, min, max, step = 1, di
     setDraft(null);
   };
   return (
-    <label className="flex items-center gap-1.5 h-11 w-[104px] px-3 rounded-[10px] bg-zinc-950 border border-zinc-700 text-zinc-400 focus-within:border-primary/60">
+    <label className={cn('flex items-center gap-1.5 h-11 w-[104px] px-3 rounded-[10px] bg-zinc-950 border border-zinc-700 text-zinc-400 focus-within:border-primary/60', disabled && 'opacity-50', className)}>
       <span className="sr-only">{label}</span>
       <input
         type="text"

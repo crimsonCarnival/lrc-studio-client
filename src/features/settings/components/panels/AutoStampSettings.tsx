@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Section, SettingRow, PercentSlider } from '../shared';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
+import { Section, SettingRow, PercentSlider, SettingSelect, SettingOption } from '../shared';
 import { cn } from '@/shared/utils/utils';
 
 interface AutoStampSettingsProps {
@@ -80,18 +79,10 @@ export default function AutoStampSettings({ settings, updateSetting, searchTerm 
           label={t('settings.autoStamp.applyMode')}
           description={t('settings.autoStamp.applyModeDesc')}
         >
-          <Select
-            value={settings.autoStamp?.applyMode ?? 'empty-only'}
-            onValueChange={(val) => updateSetting('autoStamp.applyMode', val)}
-          >
-            <SelectTrigger className="bg-zinc-950 border-zinc-700 text-sm text-zinc-100 focus:border-primary/50 h-11 w-auto min-w-52">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-700">
-              <SelectItem value="all">{t('settings.autoStamp.applyModeAll')}</SelectItem>
-              <SelectItem value="empty-only">{t('settings.autoStamp.applyModeEmptyOnly')}</SelectItem>
-            </SelectContent>
-          </Select>
+          <SettingSelect value={settings.autoStamp?.applyMode ?? 'empty-only'} onValueChange={(val) => updateSetting('autoStamp.applyMode', val)}>
+              <SettingOption value="all">{t('settings.autoStamp.applyModeAll')}</SettingOption>
+              <SettingOption value="empty-only">{t('settings.autoStamp.applyModeEmptyOnly')}</SettingOption>
+            </SettingSelect>
         </SettingRow>
       </Section>
     </>

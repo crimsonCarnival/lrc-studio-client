@@ -84,33 +84,24 @@ function SyncTimeDisplay({ minutes, seconds }: { minutes: number; seconds: numbe
   );
 }
 
-function StatCard({ label, value, tip, accent = false, className = '' }: { label: ReactNode; value: ReactNode; tip: ReactNode; accent?: boolean; className?: string }) {
+function StatCard({ label, value, tip, accent = false }: { label: ReactNode; value: ReactNode; tip: ReactNode; accent?: boolean }) {
   return (
     <Tip content={tip}>
-      <div className={`rounded-lg border border-border/50 bg-secondary/20 p-4 text-center cursor-default ${className}`}>
-        <p className="text-xs text-muted-foreground mb-2">{label}</p>
-        <p className={`text-2xl font-bold ${accent ? 'text-accent' : 'text-foreground'}`}>{value}</p>
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 cursor-default">
+        <p className={`text-2xl font-extrabold leading-tight ${accent ? 'text-primary' : 'text-zinc-100'}`}>{value}</p>
+        <p className="text-[13px] text-zinc-400 mt-1 leading-snug">{label}</p>
       </div>
     </Tip>
   );
 }
 
-function TrendCard({ label, percentage, tip }: { label: ReactNode; percentage: number; tip: ReactNode }) {
-  const isPositive = percentage >= 0;
+function ProjectStatCard({ label, title, count, tip, linesLabel }: { label: ReactNode; title: ReactNode; count: ReactNode; tip: ReactNode; linesLabel: string }) {
   return (
     <Tip content={tip}>
-      <div className="rounded-lg border border-border/50 bg-secondary/20 p-4 text-center cursor-default">
-        <p className="text-xs text-muted-foreground mb-2">{label}</p>
-        <div className="flex items-center justify-center gap-2">
-          {isPositive ? (
-            <Icon name="trending_up" size={20} className="text-success" />
-          ) : (
-            <Icon name="trending_down" size={20} className="text-destructive" />
-          )}
-          <p className={`text-2xl font-bold ${isPositive ? 'text-success' : 'text-destructive'}`}>
-            {percentage > 0 ? '+' : ''}{percentage}%
-          </p>
-        </div>
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 cursor-default min-w-0">
+        <p className="text-[13px] text-zinc-400 mb-1">{label}</p>
+        <p className="text-[17px] font-extrabold text-zinc-100 truncate">{title}</p>
+        <p className="text-[13px] text-zinc-400 mt-0.5">{count} {linesLabel}</p>
       </div>
     </Tip>
   );
@@ -118,15 +109,11 @@ function TrendCard({ label, percentage, tip }: { label: ReactNode; percentage: n
 
 function StatsSkeleton() {
   return (
-    <div className="space-y-6">
-      {Array.from({ length: 4 }, (_, row) => (
-        <div key={row} className="grid grid-cols-3 gap-3">
-          {Array.from({ length: 3 }, (_, i) => (
-            <div key={i} className="rounded-lg border border-border/50 bg-secondary/20 p-4 text-center space-y-2">
-              <Skeleton className="h-3 w-16 mx-auto" />
-              <Skeleton className="h-7 w-12 mx-auto" />
-            </div>
-          ))}
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2.5 mt-5">
+      {Array.from({ length: 8 }, (_, i) => (
+        <div key={i} className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 space-y-2">
+          <Skeleton className="h-7 w-16" />
+          <Skeleton className="h-3 w-24" />
         </div>
       ))}
     </div>
@@ -173,136 +160,61 @@ export default function StatsTab() {
   if (error || !stats) {
     return (
       <div className="flex items-center justify-center py-6 text-zinc-500">
-        <p className="text-xs">{error || t('common.loadError')}</p>
+        <p className="text-sm">{error || t('common.loadError')}</p>
       </div>
     );
   }
 
+  const trendUp = stats.syncTrendPercentage >= 0;
+  const grid = 'grid gap-2.5 grid-cols-[repeat(auto-fit,minmax(150px,1fr))]';
+
   return (
-    <div className="space-y-6">
-      {/* Addiction Title Banner */}
-      <div className="bg-primary/10 border border-primary/20 p-4 rounded-xl flex items-center justify-between mb-8 shadow-sm">
-        <div className="flex flex-col">
-          <span className="text-sm text-primary/80 font-medium uppercase tracking-wider">{tk('profile.stats.addictionLevel')}</span>
-          <span className="text-2xl font-bold text-foreground">
+    <div>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[.08em] text-primary">{tk('profile.stats.addictionLevel')}</p>
+          <p className="text-[26px] font-extrabold text-zinc-100 mt-1">
             {stats.addictionTitle?.[i18n.language === 'es' ? 'es' : 'en']}
-          </span>
+          </p>
         </div>
+        <Tip content={t('profile.stats.tips.syncTrend')}>
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-[10px] font-bold cursor-default ${trendUp ? 'bg-teal-950 text-teal-300' : 'bg-red-950 text-red-300'}`}>
+            <Icon name={trendUp ? 'trending_up' : 'trending_down'} size={18} />
+            {(t as (k: string, o?: object) => string)('profile.stats.trendChip', { value: `${stats.syncTrendPercentage > 0 ? '+' : ''}${stats.syncTrendPercentage}` })}
+          </div>
+        </Tip>
       </div>
 
-      {/* Primary metrics */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className={`${grid} mt-[22px]`}>
+        <StatCard label={t('profile.stats.musicSynced')} value={<SyncTimeDisplay minutes={stats.musicSyncedMinutes} seconds={stats.musicSyncedSeconds} />} tip={t('profile.stats.tips.musicSynced')} />
+        <StatCard label={t('profile.stats.totalLinesSynced')} value={stats.syncedLines} tip={t('profile.stats.tips.totalLinesSynced')} />
+        <StatCard label={t('profile.stats.wordsTimestamped')} value={stats.wordsTimestamped} tip={t('profile.stats.tips.wordsTimestamped')} />
+        <StatCard label={t('profile.stats.karaokeLines')} value={stats.karaokeLines} tip={t('profile.stats.tips.karaokeLines')} />
+        <StatCard label={t('profile.stats.fullySynced')} value={`${stats.fullySyncedProjects} / ${stats.totalProjects}`} tip={t('profile.stats.tips.fullySynced')} />
+        <StatCard label={t('profile.stats.avgProjectCompletion')} value={`${stats.averageProjectCompletion}%`} tip={t('profile.stats.tips.avgProjectCompletion')} />
+        <StatCard label={t('profile.stats.avgLinesPerProject')} value={stats.averageLinesPerProject} tip={t('profile.stats.tips.avgLinesPerProject')} />
         <StatCard
-          label={t('profile.stats.musicSynced')}
-          value={<SyncTimeDisplay minutes={stats.musicSyncedMinutes} seconds={stats.musicSyncedSeconds} />}
-          tip={t('profile.stats.tips.musicSynced')}
-        />
-        <StatCard
-          label={t('profile.stats.totalLinesSynced')}
-          value={stats.syncedLines}
-          tip={t('profile.stats.tips.totalLinesSynced')}
-        />
-        <StatCard
-          label={t('profile.stats.completionPercentage')}
-          value={`${stats.completionPercentage}%`}
-          tip={t('profile.stats.tips.completionPercentage')}
-          accent
-        />
-      </div>
-
-      {/* Secondary metrics */}
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard
-          label={t('profile.stats.projectsCreated')}
-          value={stats.totalProjects}
-          tip={t('profile.stats.tips.projectsCreated')}
-        />
-        <StatCard
-          label={t('profile.stats.avgLinesPerProject')}
-          value={stats.averageLinesPerProject}
-          tip={t('profile.stats.tips.avgLinesPerProject')}
-        />
-        <StatCard
-          label={t('profile.stats.fullySynced')}
-          value={stats.fullySyncedProjects}
-          tip={t('profile.stats.tips.fullySynced')}
+          label={t('profile.stats.streakCurrentLongest')}
+          value={`${stats.currentStreak} d · ${stats.longestStreak} d`}
+          tip={<>{t('profile.stats.tips.currentStreak')} {streakResetHint}</>}
         />
       </div>
 
-      {/* Additional metrics */}
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard
-          label={t('profile.stats.avgProjectCompletion')}
-          value={`${stats.averageProjectCompletion}%`}
-          tip={t('profile.stats.tips.avgProjectCompletion')}
-        />
-        <StatCard
-          label={t('profile.stats.wordsTimestamped')}
-          value={stats.wordsTimestamped}
-          tip={t('profile.stats.tips.wordsTimestamped')}
-        />
-        <StatCard
-          label={t('profile.stats.karaokeLines')}
-          value={stats.karaokeLines}
-          tip={t('profile.stats.tips.karaokeLines')}
-        />
-        <div className="col-span-full border-t border-border/50 my-2" />
-        <StatCard label={t('profile.stats.currentStreak')} value={`${stats.currentStreak}d`} tip={<>{t('profile.stats.tips.currentStreak')} {streakResetHint}</>} />
-        <StatCard label={t('profile.stats.longestStreak')} value={`${stats.longestStreak}d`} tip={<>{t('profile.stats.tips.longestStreak')} {streakResetHint}</>} />
-
-        <div className="col-span-full border-t border-border/50 my-2" />
-        <TrendCard
-          label={t('profile.stats.syncTrend')}
-          percentage={stats.syncTrendPercentage}
-          tip={t('profile.stats.tips.syncTrend')}
-        />
+      <div className="grid gap-2.5 grid-cols-[repeat(auto-fit,minmax(220px,1fr))] mt-2.5">
+        {stats.mostSyncedProject && (
+          <ProjectStatCard label={t('profile.stats.mostSynced')} title={stats.mostSyncedProject.title} count={stats.mostSyncedProject.count} linesLabel={t('profile.stats.linesUnit')} tip={t('profile.stats.tips.mostSynced')} />
+        )}
+        {stats.largestProject && (
+          <ProjectStatCard label={t('profile.stats.largestProject')} title={stats.largestProject.title} count={stats.largestProject.count} linesLabel={t('profile.stats.linesUnit')} tip={t('profile.stats.tips.largestProject')} />
+        )}
+        <Tip content={t('profile.stats.tips.starsReceived')}>
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3.5 cursor-default min-w-0">
+            <p className="text-[13px] text-zinc-400 mb-1">{t('profile.stats.community')}</p>
+            <p className="text-[17px] font-extrabold text-zinc-100">{t('profile.stats.communityValue', { stars: stats.starsReceived, forks: stats.forksReceived })}</p>
+            <p className="text-[13px] text-zinc-400 mt-0.5">{t('profile.stats.publicProjectsCount', { count: stats.publicProjects })}</p>
+          </div>
+        </Tip>
       </div>
-
-      {/* Projects info */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          label={t('profile.stats.publicProjects')}
-          value={stats.publicProjects}
-          tip={t('profile.stats.tips.publicProjects')}
-        />
-        <StatCard
-          label={t('profile.stats.starsReceived')}
-          value={stats.starsReceived}
-          tip={t('profile.stats.tips.starsReceived')}
-        />
-      </div>
-
-      {/* Special projects */}
-      {(stats.mostSyncedProject || stats.largestProject) && (
-        <div className="grid grid-cols-2 gap-3">
-          {stats.mostSyncedProject && (
-            <Tip content={t('profile.stats.tips.mostSynced')}>
-              <div className="rounded-lg border border-border/50 bg-secondary/20 p-4 cursor-default">
-                <p className="text-xs text-muted-foreground mb-2">{t('profile.stats.mostSynced')}</p>
-                <p className="font-semibold text-foreground truncate">{stats.mostSyncedProject.title}</p>
-                <p className="text-xs text-accent mt-1">{stats.mostSyncedProject.count} lines</p>
-              </div>
-            </Tip>
-          )}
-          {stats.largestProject && (
-            <Tip content={t('profile.stats.tips.largestProject')}>
-              <div className="rounded-lg border border-border/50 bg-secondary/20 p-4 cursor-default">
-                <p className="text-xs text-muted-foreground mb-2">{t('profile.stats.largestProject')}</p>
-                <p className="font-semibold text-foreground truncate">{stats.largestProject.title}</p>
-                <p className="text-xs text-accent mt-1">{stats.largestProject.count} lines</p>
-              </div>
-            </Tip>
-          )}
-        </div>
-      )}
-
-      {/* Forks metric */}
-      <StatCard
-        label={t('profile.stats.forksReceived')}
-        value={stats.forksReceived}
-        tip={t('profile.stats.tips.forksReceived')}
-        className="col-span-1"
-      />
     </div>
   );
 }
