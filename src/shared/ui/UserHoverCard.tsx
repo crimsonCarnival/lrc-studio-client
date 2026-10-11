@@ -235,7 +235,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                     {profile.isVerified && <Icon name="verified" size={16} className="text-primary shrink-0" aria-label={t('profile.verified')} />}
                   </div>
                   <div className="font-mono text-[13px] text-zinc-400 mt-0.5" title={lastSeen ?? undefined}>
-                    @{accountName}
+                    {accountName}
                     {isFollowingMe && (
                       <span className="ml-1 px-1.5 py-px rounded-md bg-zinc-800 font-sans text-[11px] font-semibold text-zinc-100">{t('profile.followsYou')}</span>
                     )}

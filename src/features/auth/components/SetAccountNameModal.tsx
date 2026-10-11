@@ -18,7 +18,7 @@ const identifierSchema = z.string()
 
 function normaliseIdentifier(raw: string) {
   const trimmed = raw.trim();
-  return trimmed.startsWith('@') ? trimmed.slice(1).toLowerCase() : trimmed;
+  return trimmed;
 }
 
 export default function SetAccountNameModal() {

@@ -154,7 +154,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
                   <span className="min-w-0 flex-1">
                     <span className="block text-base font-bold text-zinc-100 truncate">{displayName}</span>
                     {account.accountName && (
-                      <span className="block font-mono text-[13px] text-foreground/65 truncate">@{account.accountName}</span>
+                      <span className="block font-mono text-[13px] text-foreground/65 truncate">{account.accountName}</span>
                     )}
                   </span>
                   {isLoading

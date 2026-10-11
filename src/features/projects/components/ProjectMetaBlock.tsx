@@ -107,7 +107,7 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
                 <span className="inline-flex items-center gap-1 text-xs text-muted-foreground w-fit">
                   <Icon name="open_in_new" size={12} />
                   {t('projectView.forkedFrom')}
-                  {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
+                  {project.forkedFrom.accountName ? ` ${project.forkedFrom.accountName}` : ''}
                 </span>
               </Tip>
             ) : (
@@ -117,7 +117,7 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
               >
                 <Icon name="open_in_new" size={12} />
                 {t('projectView.forkedFrom')}
-                {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
+                {project.forkedFrom.accountName ? ` ${project.forkedFrom.accountName}` : ''}
               </Link>
             )
           )}
@@ -153,7 +153,7 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
               <div className="flex items-center gap-1.5">
                 <Icon name="music_note" size={14} />
                 <Link to={`/profile/${accountName}`} className="text-foreground hover:text-primary transition-colors">
-                  {project.user?.displayName || `@${accountName}`}
+                  {project.user?.displayName || accountName}
                 </Link>
               </div>
             )}

@@ -56,7 +56,7 @@ export default {
     usernameMinLength: "Username must be at least 3 characters",
     usernamePattern: "Only letters, numbers, hyphens, dots, double dots and underscores",
     accountNamePattern: "Username must be 3–30 characters: lowercase letters, numbers, _ or -",
-    identifierInvalid: "Enter a valid email or username (e.g. @yourname)",
+    identifierInvalid: "Enter a valid email or username (e.g. yourname)",
     emailOrHandleRequired: "Enter an email or username",
     emailInvalid: "Please enter a valid email address",
     fieldRequired: "This field is required",

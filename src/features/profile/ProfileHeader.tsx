@@ -231,7 +231,7 @@ export function ProfileHeader({
 
         {/* Row 2: Handle, Country, Last Online */}
         <div className="flex items-center justify-center sm:justify-start gap-2 mt-2 flex-wrap">
-          <p className="text-zinc-400 font-medium">@{profile.accountName}</p>
+          <p className="text-zinc-400 font-medium">{profile.accountName}</p>
           {(profile.country || (!isOnline && profile.lastOnlineAt)) && (
             <span className="text-zinc-600 px-1">•</span>
           )}
