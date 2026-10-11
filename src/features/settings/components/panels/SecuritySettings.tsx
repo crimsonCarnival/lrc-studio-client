@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import PasskeySection from '../PasskeySection';
 import PasswordSection from '../PasswordSection';
+import SecurityInfoCard from './SecurityInfoCard';
 
 function blockMatches(searchTerm: string | undefined, labels: string[]) {
   if (!searchTerm) return true;
@@ -98,6 +99,8 @@ export default function SecuritySettings({ focusCard, searchTerm }: { focusCard?
             </div>
           </div>
         )}
+
+        <SecurityInfoCard />
       </div>
     </div>
   );

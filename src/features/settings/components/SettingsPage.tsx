@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { useSettings } from '@/features/settings/useSettings';
@@ -16,7 +16,6 @@ import ProfileSettings from './panels/ProfileSettings';
 import SecuritySettings from './panels/SecuritySettings';
 import ConnectionsSettings from './panels/ConnectionsSettings';
 import ChangesHistorySettings from './panels/ChangesHistorySettings';
-import BlockedUsersSettings from './panels/BlockedUsersSettings';
 import SessionsSettings from './panels/SessionsSettings';
 import ActivitySettings from './panels/ActivitySettings';
 import StatsSettings from './panels/StatsSettings';
@@ -24,6 +23,7 @@ import PrivacySettings from './panels/PrivacySettings';
 import BadgesSettings from './panels/BadgesSettings';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
+import { cn } from '@/shared/utils/utils';
 import type { AppSettings } from '@/features/settings/settings.types';
 
 type Settings = AppSettings;
@@ -49,7 +49,6 @@ function SettingsPanelContent({ activeTab, settings, updateSetting, validateShor
     case 'privacy': return <PrivacySettings searchTerm={searchTerm} />;
     case 'connections': return <ConnectionsSettings searchTerm={searchTerm} />;
     case 'history': return <ChangesHistorySettings searchTerm={searchTerm} />;
-    case 'blocked': return <BlockedUsersSettings key={userId} searchTerm={searchTerm} />;
     case 'sessions': return <SessionsSettings />;
     case 'playback': return <PlaybackSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
     case 'editor': return <EditorSettings settings={settings} updateSetting={updateSetting} searchTerm={searchTerm} />;
@@ -82,7 +81,6 @@ const TABS: TabMeta[] = [
   { id: 'privacy', labelKey: 'profile.sections.privacy', iconName: 'shield', authOnly: true, group: 'account', searchable: true },
   { id: 'connections', labelKey: 'profile.tabs.connections', iconName: 'link', authOnly: true, group: 'account', searchable: true },
   { id: 'history', labelKey: 'profile.tabs.history', iconName: 'history', authOnly: true, group: 'account', searchable: true },
-  { id: 'blocked', labelKey: 'settings.blocked.label', iconName: 'block', authOnly: true, group: 'account', searchable: true },
   { id: 'sessions', labelKey: 'profile.sessions.title', iconName: 'layers', authOnly: true, group: 'account', searchable: false },
 
   // App Preferences
@@ -96,6 +94,12 @@ const TABS: TabMeta[] = [
   { id: 'shortcuts', labelKey: 'settings.shortcuts.label', iconName: 'keyboard', group: 'advanced', searchable: true },
   { id: 'advanced', labelKey: 'settings.advanced.label', iconName: 'tune', group: 'advanced', searchable: true },
 ];
+
+// Panels whose header offers "reset to defaults" for just their own settings.
+const RESET_KEYS: Record<string, string[]> = {
+  playback: ['speedBounds', 'speedPresets', 'autoRewindOnPause', 'seekTime', 'seekPlays', 'showWaveform', 'waveformSnap'],
+  autoStamp: [],
+};
 
 const SHORTCUT_KEYS = [
   'mark', 'nudgeLeft', 'nudgeRight', 'addLine', 'deleteLine', 'clearTimestamp',
@@ -213,6 +217,17 @@ export default function SettingsPage() {
     savedSettingsRef.current = settings;
   };
 
+  const handleResetSection = () => {
+    if (activeTab === 'autoStamp') {
+      updateSetting('autoStamp', structuredClone(DEFAULT_SETTINGS.autoStamp));
+      return;
+    }
+    const defaults = (DEFAULT_SETTINGS as Record<string, Record<string, unknown>>)[activeTab] ?? {};
+    for (const key of RESET_KEYS[activeTab] ?? []) {
+      updateSetting(`${activeTab}.${key}`, structuredClone(defaults[key]));
+    }
+  };
+
   const guardedNavigate = (target: string | number) => {
     if (isDirty && !settings.advanced?.autoSave?.enabled) {
       pendingNavRef.current = target;
@@ -235,105 +250,68 @@ export default function SettingsPage() {
     active?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
   }, [activeTab]);
 
+  // Page heading: dedicated copy when the design has it, otherwise the tab label.
+  const pageTitle = t(`settings.pages.${activeTab}.title`, { defaultValue: tk(activeTabMeta?.labelKey ?? '') });
+  const showcaseSlots = user?.showcaseSlots ?? 3;
+  const pageLead = t(`settings.pages.${activeTab}.lead`, { defaultValue: '', slots: showcaseSlots });
+  const canReset = activeTab in RESET_KEYS;
+  const level = user?.progression?.level ?? 0;
+
+  const navItem = (entry: TabMeta) => {
+    const isActive = activeTab === entry.id;
+    return (
+      <button
+        key={entry.id}
+        onClick={() => setTab(entry.id)}
+        aria-current={isActive ? 'page' : undefined}
+        className={cn(
+          'flex items-center gap-3 min-h-10 px-3 rounded-[10px] text-sm text-left w-full transition-colors',
+          isActive
+            ? 'bg-zinc-800/70 text-zinc-100 font-semibold shadow-[inset_3px_0_0_var(--color-primary)]'
+            : 'text-zinc-400 font-medium hover:bg-zinc-900 hover:text-zinc-100',
+        )}
+      >
+        <Icon name={entry.iconName} size={16} className="shrink-0" />
+        {tk(entry.labelKey)}
+      </button>
+    );
+  };
+
+  const searchField = (
+    <div className="relative">
+      <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none z-10" />
+      <input
+        type="search"
+        aria-label={t('settings.search')}
+        placeholder={t('settings.search')}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full h-10 bg-zinc-900 border border-zinc-800 contrast-more:border-zinc-600 rounded-[10px] pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-primary/50 transition-colors"
+      />
+    </div>
+  );
+
   return (
     <div className="flex-1 flex flex-col min-h-0 animate-fade-in">
 
-      {/* Page-level bar — keeps the guarded back button (preserves the unsaved-changes
-          prompt) + search. The page title now lives in the app header. */}
-      <div className="flex items-center gap-3 px-4 h-13 py-2.5 border-b border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0 bg-background/95 backdrop-blur-sm z-20">
+      {/* Mobile/tablet bar — guarded back button (keeps the unsaved-changes prompt) + search.
+          On desktop the sidebar carries the search and the app header carries navigation. */}
+      <div className="lg:hidden flex items-center gap-3 px-4 h-13 py-2.5 border-b border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0 bg-background/95 backdrop-blur-sm z-20">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => guardedNavigate(-1)}
+          aria-label={t('common.back')}
           className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-full size-8 coarse:size-11 shrink-0"
         >
           <Icon name="arrow_back" size={16} />
         </Button>
-        {isSearchable && (
-          <div className="relative w-48 sm:w-64 md:w-72 ml-auto">
-            <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none z-10" />
-            <input
-              type="text"
-              placeholder={t('settings.search')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-8 bg-zinc-900/60 border border-zinc-800 contrast-more:border-zinc-600 rounded-full pl-8 pr-7 text-sm text-zinc-200 placeholder:text-zinc-500 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-colors"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
-                aria-label={t('settings.clearSearch')}
-              >
-                <Icon name="close" size={12} />
-              </button>
-            )}
-          </div>
-        )}
+        {isSearchable && <div className="w-48 sm:w-64 md:w-72 ml-auto">{searchField}</div>}
       </div>
 
       <div className="flex flex-1 min-h-0">
-        {/* Desktop sidebar */}
-        <aside className="hidden lg:flex flex-col w-52 border-r border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0 overflow-y-auto">
-          {/* User identity block */}
-          {user && !isGuest && (
-            <div className="flex items-center gap-3 px-4 py-4 border-b border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0">
-              <div className="size-10 rounded-xl flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/80 to-accent-blue flex items-center justify-center font-bold text-zinc-950 text-sm select-none">
-                {user.avatarUrl
-                  ? <LazyImage src={user.avatarUrl} alt="" className="size-full object-cover" />
-                  : (user.displayName || user.accountName || '?')[0].toUpperCase()
-                }
-              </div>
-              <div className="min-w-0">
-                <p className="font-heading text-[14px] font-semibold text-zinc-100 truncate leading-tight contrast-more:text-white">
-                  {user.displayName || user.accountName}
-                </p>
-                <p className="text-[11px] text-zinc-500 font-mono truncate mt-0.5 contrast-more:text-zinc-400">
-                  {user.accountName}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Nav */}
-          <nav className="px-2 py-3 flex flex-col gap-0.5">
-            {visibleTabs.map((entry, idx) => {
-              const GROUP_LABELS: Record<string, string> = {
-                account: t('settings.groups.account'),
-                preferences: t('settings.groups.preferences'),
-                advanced: t('settings.groups.advanced'),
-              };
-              const label = tk(entry.labelKey);
-              const isActive = activeTab === entry.id;
-              const showGroupLabel = idx === 0 || visibleTabs[idx - 1].group !== entry.group;
-              return (
-                <div key={entry.id}>
-                  {showGroupLabel && (
-                    <p className="text-[9px] font-bold uppercase tracking-[.13em] text-zinc-600 contrast-more:text-zinc-400 px-2.5 pt-3 pb-1.5">
-                      {GROUP_LABELS[entry.group] || entry.group}
-                    </p>
-                  )}
-                  <button
-                    onClick={() => setTab(entry.id)}
-                    className={`relative flex items-center gap-2.5 px-2.5 py-[7px] rounded-xl text-[13px] font-medium transition-all duration-150 text-left w-full border ${isActive
-                        ? 'text-primary bg-gradient-to-r from-primary/[.13] to-primary/[.04] border-primary/[.14]'
-                        : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border-transparent'
-                      }`}
-                  >
-                    {isActive && (
-                      <span className="absolute left-0 top-[22%] h-[56%] w-[3px] bg-primary rounded-r-full shadow-[0_0_8px_rgba(196,167,231,.6)]" aria-hidden="true" />
-                    )}
-                    <Icon name={entry.iconName} size={14} className={`shrink-0 ${isActive ? 'text-primary' : 'text-zinc-500'}`} />
-                    {label}
-                  </button>
-                </div>
-              );
-            })}
-          </nav>
-        </aside>
-
-        {/* Mobile/tablet: horizontal scrollable tab bar + content */}
         <div className="flex flex-col flex-1 min-h-0 min-w-0">
+          {/* Mobile/tablet: horizontal scrollable tab bar */}
           <div ref={mobileTabsRef} className="lg:hidden flex overflow-x-auto no-scrollbar border-b border-zinc-800/60 contrast-more:border-zinc-600 flex-shrink-0 px-2 pt-1 items-center">
             {visibleTabs.map((entry, idx) => {
               const label = tk(entry.labelKey);
@@ -362,20 +340,81 @@ export default function SettingsPage() {
           {/* Panel content */}
           <div className="flex-1 min-h-0 flex flex-col relative">
             <div className="flex-1 min-h-0 overflow-y-auto settings-scroll pb-28">
-              <div ref={panelRef} className={`${activeTab === 'stats' ? 'w-full max-w-none' : 'max-w-2xl'} mx-auto px-4 sm:px-6 lg:px-8 py-6`}>
-                {isSearchable && searchTerm && !hasResults && (
-                  <p className="text-sm text-zinc-500 text-center py-16">{t('settings.searchNoResults')}</p>
-                )}
-                <SettingsPanelContent
-                  activeTab={activeTab}
-                  settings={settings}
-                  updateSetting={updateSetting}
-                  validateShortcut={validateShortcut}
-                  isGuest={isGuest}
-                  userId={user?.id}
-                  focusCard={focusCard}
-                  searchTerm={isSearchable ? searchTerm : ''}
-                />
+              <div className="max-w-[1180px] mx-auto px-4 sm:px-6 lg:px-6 py-6 lg:py-8 flex gap-10 items-start">
+                {/* Desktop sidebar */}
+                <aside className="hidden lg:flex flex-col gap-0.5 w-[230px] shrink-0 sticky top-0">
+                  {user && !isGuest && (
+                    <Link to={`/profile/${user.accountName}`} className="flex items-center gap-3 px-3 pb-4 pt-1 text-zinc-100 no-underline">
+                      <div className="size-10 rounded-xl flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/80 to-accent-blue flex items-center justify-center font-bold text-zinc-950 text-sm select-none">
+                        {user.avatarUrl
+                          ? <LazyImage src={user.avatarUrl} alt="" className="size-full object-cover" />
+                          : (user.displayName || user.accountName || '?')[0].toUpperCase()
+                        }
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-heading text-[15px] font-bold truncate leading-tight">{user.displayName || user.accountName}</p>
+                        <p className="text-[13px] text-zinc-400 font-mono truncate mt-0.5">@{user.accountName}</p>
+                      </div>
+                    </Link>
+                  )}
+                  <div className="mb-1.5">{searchField}</div>
+                  <nav aria-label={t('settings.title')} className="flex flex-col gap-0.5">
+                    {visibleTabs.map((entry, idx) => {
+                      const showGroupLabel = idx === 0 || visibleTabs[idx - 1].group !== entry.group;
+                      return (
+                        <div key={entry.id} className="flex flex-col gap-0.5">
+                          {showGroupLabel && (
+                            <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 contrast-more:text-zinc-400 px-3 pt-3.5 pb-1.5">
+                              {tk(`settings.groups.${entry.group}`)}
+                            </p>
+                          )}
+                          {navItem(entry)}
+                        </div>
+                      );
+                    })}
+                  </nav>
+                </aside>
+
+                <div ref={panelRef} className="flex-1 min-w-0 flex flex-col gap-5">
+                  <div className="flex flex-wrap items-end justify-between gap-4">
+                    <div className="min-w-0">
+                      <h1 className="text-[32px] font-extrabold tracking-tight leading-tight text-zinc-100">{pageTitle}</h1>
+                      {pageLead && <p className="text-[15px] text-zinc-400 mt-1.5">{pageLead}</p>}
+                    </div>
+                    {canReset && (
+                      <Button variant="outline" onClick={handleResetSection} className="h-11 rounded-xl border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-100 font-semibold">
+                        {t('settings.resetSection')}
+                      </Button>
+                    )}
+                    {activeTab === 'profile' && user?.accountName && (
+                      <Button asChild variant="outline" className="h-11 rounded-xl border-zinc-700 bg-zinc-900 text-zinc-100 font-semibold">
+                        <Link to={`/profile/${user.accountName}`}>
+                          <Icon name="visibility" size={16} />
+                          {t('settings.viewProfile')}
+                        </Link>
+                      </Button>
+                    )}
+                    {activeTab === 'badges' && (
+                      <span className="px-3 py-1.5 rounded-full bg-zinc-800 text-violet-200 text-[13px] font-bold font-mono">
+                        {t('settings.levelShort', { level })}
+                      </span>
+                    )}
+                  </div>
+
+                  {isSearchable && searchTerm && !hasResults && (
+                    <p className="text-sm text-zinc-500 text-center py-16">{t('settings.searchNoResults')}</p>
+                  )}
+                  <SettingsPanelContent
+                    activeTab={activeTab}
+                    settings={settings}
+                    updateSetting={updateSetting}
+                    validateShortcut={validateShortcut}
+                    isGuest={isGuest}
+                    userId={user?.id}
+                    focusCard={focusCard}
+                    searchTerm={isSearchable ? searchTerm : ''}
+                  />
+                </div>
               </div>
             </div>
 

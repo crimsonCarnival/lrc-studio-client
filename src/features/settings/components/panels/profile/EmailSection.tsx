@@ -61,35 +61,42 @@ export default function EmailSection() {
     }
   };
 
+  const verified = !!user?.email && !!user?.isVerified && !user?.pendingEmail;
+  const changed = value !== (user?.email || '') && value !== (user?.pendingEmail || '');
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-1.5 ml-1">
-        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block">
-          {t('profile.emailSection')}
-        </label>
-        {user?.email && (!user?.isVerified || user?.pendingEmail) && (
-          <span className="size-2 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
+    <section className="settings-section rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+      <h2 className="text-[17px] font-bold text-zinc-100">{t('profile.emailSection')}</h2>
+      <p className="text-sm text-zinc-400 mt-1.5">{t('profile.emailPrivateDesc')}</p>
+
+      <div className="flex flex-wrap gap-2.5 mt-4">
+        <label htmlFor="settings-email" className="sr-only">{t('profile.emailSection')}</label>
+        <Input
+          id="settings-email"
+          type="email"
+          value={value}
+          onChange={(e) => { setValue(e.target.value); setError(''); }}
+          placeholder={t('profile.email')}
+          className="flex-1 basis-64 bg-zinc-950 border border-zinc-700 rounded-[10px] h-11 text-[15px]"
+        />
+        {user?.email && (
+          <span className={`flex items-center gap-1.5 px-3 h-11 rounded-[10px] text-[13px] font-semibold ${verified ? 'bg-teal-950 text-teal-300' : 'bg-amber-950 text-amber-300'}`}>
+            <Icon name={verified ? 'check' : 'schedule'} size={16} />
+            {verified ? t('profile.verified') : t('profile.unverified')}
+          </span>
         )}
       </div>
-
-      <Input
-        type="email"
-        value={value}
-        onChange={(e) => { setValue(e.target.value); setError(''); }}
-        placeholder={t('profile.email')}
-        className="bg-secondary/30 border-border rounded-xl h-10 text-sm"
-      />
-      {error && <p className="text-[11px] text-red-400 ml-1">{error}</p>}
+      {error && <p className="text-[13px] text-red-400 mt-2">{error}</p>}
 
       {user?.pendingEmail ? (
-        <div className="flex items-center gap-2 text-[11px] text-amber-500/90 ml-1">
+        <div className="flex items-center gap-2 text-[13px] text-amber-500/90 mt-3">
           <span>{t('auth.verification.pendingNotice', { email: user.pendingEmail })}</span>
           <button onClick={handleResend} disabled={resending} className="relative underline hover:no-underline font-semibold shrink-0 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-4">
             {resending ? t('auth.verification.resendLoading') : t('auth.verification.resendButton')}
           </button>
         </div>
       ) : user?.email && !user?.isVerified ? (
-        <div className="flex items-center gap-2 text-[11px] text-amber-500/90 ml-1">
+        <div className="flex items-center gap-2 text-[13px] text-amber-500/90 mt-3">
           <span>{t('auth.verification.unverifiedNotice')}</span>
           <button onClick={handleResend} disabled={resending} className="relative underline hover:no-underline font-semibold shrink-0 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-4">
             {resending ? t('auth.verification.resendLoading') : t('auth.verification.resendButton')}
@@ -97,16 +104,12 @@ export default function EmailSection() {
         </div>
       ) : null}
 
-      <Button
-        onClick={handleSave}
-        disabled={saving || !!error || value === (user?.email || '') || value === (user?.pendingEmail || '')}
-        className="h-9 coarse:h-11 rounded-xl font-bold gap-2 text-sm"
-        size="sm"
-      >
-        {saving ? <LogoLoader size={16} /> : <Icon name="save" size={16} />}
-        {t('profile.save')}
-      </Button>
-
-    </div>
+      {changed && (
+        <Button onClick={handleSave} disabled={saving || !!error} className="h-10 coarse:h-11 rounded-xl font-bold gap-2 text-sm mt-3" size="sm">
+          {saving ? <LogoLoader size={16} /> : <Icon name="save" size={16} />}
+          {t('profile.save')}
+        </Button>
+      )}
+    </section>
   );
 }

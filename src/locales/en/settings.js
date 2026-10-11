@@ -8,6 +8,20 @@ export default {
   applyChanges: "Apply Changes",
   unsavedChanges: "Unsaved changes",
 
+  resetSection: "Reset to defaults",
+  viewProfile: "View profile",
+  levelShort: "Lv. {{level}}",
+  pages: {
+    profile: { title: "Public profile", lead: "What others see when they visit your profile." },
+    badges: { title: "Showcase & badges", lead: "Pick up to {{slots}} achievements to show on your profile." },
+    activity: { title: "Activity" },
+    stats: { title: "Stats & activity" },
+    security: { title: "Sign-in" },
+    privacy: { title: "Privacy", lead: "Control what others can see. Changes are saved instantly." },
+    playback: { title: "Playback", lead: "How audio sounds and is navigated in the editor." },
+    autoStamp: { title: "Auto Stamp", lead: "How lyrics are fitted to the audio when you sync automatically." },
+  },
+
   groups: {
     account: 'Account',
     preferences: 'Preferences',
@@ -44,6 +58,12 @@ export default {
   },
 
   playback: {
+    speedRange: "Allowed range",
+    speedRangeDesc: "Lowest and highest speed you can play at",
+    speedRangeTo: "to",
+    removePreset: "Remove {{value}}",
+    addPreset: "Add",
+    waveformSnapNeedsWaveform: "requires the waveform to be shown",
     label: "Playback",
     autoRewind: "Auto-Rewind on Pause",
     autoRewindDesc: "Automatically rewind the audio by a few seconds when pausing",
@@ -62,7 +82,7 @@ export default {
     autoPauseOnMark: "Auto-Pause on Mark",
     autoPauseOnMarkDesc: "Automatically pause playback when marking a line timestamp",
     speedPresets: "Playback speed presets",
-    speedPresetsDesc: "Comma-separated list of playback speeds (up to 6)",
+    speedPresetsDesc: "Shown in the player menu · {{count}} of {{max}}",
     speedSection: "Speed",
     seekSection: "Seeking & Navigation",
     waveformSection: "Waveform"
@@ -275,14 +295,21 @@ export default {
   },
 
   autoStamp: {
+    precisionSection: "Precision",
+    applySection: "Application",
+    sampleTitle: "Example with this threshold",
+    sampleLine: "[Sample line {{n}}]",
+    sampleApplied: "Applied",
+    sampleReview: "Review",
+    applyModeDesc: "Lines you already stamped by hand are left alone",
     title: "Auto Stamp",
     confidenceThreshold: "Confidence threshold",
-    confidenceThresholdDesc: "Lines below this confidence are flagged for review",
-    fuzzyTolerance: "Fuzzy match tolerance",
-    fuzzyToleranceDesc: "How closely transcribed words must match your lyrics",
-    applyMode: "Apply mode",
-    applyModeAll: "Stamp all lines",
-    applyModeEmptyOnly: "Only stamp unsynced lines"
+    confidenceThresholdDesc: "Lines below this are flagged for you to review",
+    fuzzyTolerance: "Match tolerance",
+    fuzzyToleranceDesc: "How similar heard words must be to your lyrics. Lower accepts more differences",
+    applyMode: "Which lines get synced",
+    applyModeAll: "All lines",
+    applyModeEmptyOnly: "Only unsynced lines"
   },
 
   options: {
