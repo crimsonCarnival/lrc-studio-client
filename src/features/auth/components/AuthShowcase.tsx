@@ -54,7 +54,7 @@ function SignUpShowcase({ t, displayName, accountName }: Omit<SignUpProps, 'vari
         <AvatarBadge username={displayName.trim() || undefined} size="md" />
         <span className="min-w-0">
           <span className="block text-[19px] font-bold text-zinc-100 truncate">{shownName}</span>
-          <span className="block font-mono text-sm text-foreground/65 truncate">@{shownHandle}</span>
+          <span className="block font-mono text-sm text-foreground/65 truncate">{shownHandle}</span>
         </span>
       </div>
 

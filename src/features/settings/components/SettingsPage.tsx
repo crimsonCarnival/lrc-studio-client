@@ -341,7 +341,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-heading text-[15px] font-bold truncate leading-tight">{user.displayName || user.accountName}</p>
-                        <p className="text-[13px] text-zinc-400 font-mono truncate mt-0.5">@{user.accountName}</p>
+                        <p className="text-[13px] text-zinc-400 font-mono truncate mt-0.5">{user.accountName}</p>
                       </div>
                     </Link>
                   )}

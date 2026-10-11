@@ -79,8 +79,7 @@ export default function AccountNameSection() {
       <label htmlFor={inputId} className="block text-[13px] font-bold text-zinc-100 mb-2">
         {t('profile.accountName')}
       </label>
-      <div className="relative">
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" aria-hidden="true">@</span>
+      <div>
         <Input
           id={inputId}
           value={value}
@@ -88,7 +87,7 @@ export default function AccountNameSection() {
           placeholder={t('profile.accountNamePlaceholder')}
           disabled={accountNameCooldownDaysLeft > 0}
           maxLength={30}
-          className={`bg-zinc-950 border border-zinc-700 rounded-[10px] h-11 text-[15px] pl-8 ${accountNameCooldownDaysLeft > 0 ? 'opacity-50 cursor-not-allowed' : ''} ${error ? 'border-red-500/50 focus-visible:ring-red-500/50' : ''}`}
+          className={`bg-zinc-950 border border-zinc-700 rounded-[10px] h-11 text-[15px] ${accountNameCooldownDaysLeft > 0 ? 'opacity-50 cursor-not-allowed' : ''} ${error ? 'border-red-500/50 focus-visible:ring-red-500/50' : ''}`}
         />
       </div>
       {error ? (

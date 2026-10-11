@@ -254,7 +254,7 @@ export default function ProjectInfoPanel({
               <span className="inline-flex items-center gap-1 text-xs w-fit text-muted-foreground">
                 <Icon name="open_in_new" size={12} />
                 {t('projectView.forkedFrom')}
-                {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
+                {project.forkedFrom.accountName ? ` ${project.forkedFrom.accountName}` : ''}
               </span>
             </Tip>
           ) : (
@@ -264,7 +264,7 @@ export default function ProjectInfoPanel({
             >
               <Icon name="open_in_new" size={12} />
               {t('projectView.forkedFrom')}
-              {project.forkedFrom.accountName ? ` @${project.forkedFrom.accountName}` : ''}
+              {project.forkedFrom.accountName ? ` ${project.forkedFrom.accountName}` : ''}
             </Link>
           )
         )}
@@ -336,7 +336,7 @@ export default function ProjectInfoPanel({
                 to={`/profile/${accountName}`}
                 className="hover:underline text-foreground"
               >
-                {project.user?.displayName || `@${accountName}`}
+                {project.user?.displayName || accountName}
               </Link>
             </div>
           )}

@@ -56,7 +56,7 @@ export default {
     usernameMinLength: "El nombre de usuario debe tener al menos 3 caracteres",
     usernamePattern: "Solo letras, números, guiones, puntos, dobles puntos y guiones bajos",
     accountNamePattern: "El usuario debe tener 3–30 caracteres: minúsculas, números, _ o -",
-    identifierInvalid: "Ingresa un correo válido o tu usuario (ej. @usuario)",
+    identifierInvalid: "Ingresa un correo válido o tu usuario (ej. usuario)",
     emailOrHandleRequired: "Ingresa un correo o nombre de usuario",
     emailInvalid: "Ingresa un correo electrónico válido",
     fieldRequired: "Este campo es obligatorio",
