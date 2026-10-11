@@ -1,15 +1,16 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import type { TFunction } from 'i18next';
-import { Trans } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { z } from 'zod';
-import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { translateAuthError } from '@/shared/utils/auth-errors';
 import { auth } from '@/app/api';
-import { FieldError, RedirectMessage, ContextBanner, GoogleButton } from './auth-shared';
+import {
+  AuthField, AuthHeading, OrDivider, RedirectMessage, ContextBanner, GoogleButton,
+  authInputCls, authPrimaryBtnCls,
+} from './auth-shared';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const identifierSchema = z.string().refine(
@@ -35,15 +36,18 @@ interface LoginIdentifierStepProps {
   from?: string;
   redirect?: string;
   onDismissRedirect?: () => void;
+  /** Present only when remembered accounts exist — returns to the account picker. */
+  onBackToSavedAccounts?: () => void;
+  /** Label for that back control; names the account when there is exactly one. */
+  backLabel?: string;
 }
 
 // ─── Login Step 1 — Identifier ─────────────────────────────────────────────
 
-export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onGoogleLogin, from, redirect, onDismissRedirect }: LoginIdentifierStepProps) {
+export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onGoogleLogin, from, redirect, onDismissRedirect, onBackToSavedAccounts, backLabel }: LoginIdentifierStepProps) {
   const [identifier, setIdentifier] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -70,73 +74,70 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
   };
 
   return (
-    <div className="animate-fade-in">
-      <RedirectMessage from={from} t={t} />
-      <ContextBanner redirect={redirect} t={t} onDismiss={onDismissRedirect} />
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-zinc-100 tracking-tight font-sans">
-          <Trans
-            i18nKey="auth.loginWelcome"
-            components={[<span key="0" className="font-heading" />]}
-          />
-        </h1>
-        <p className="text-sm text-zinc-500 mt-1.5 font-sans">
-          {t('auth.loginSubtitle')}
-        </p>
-      </div>
+    <div className="animate-fade-in flex flex-col gap-6">
+      {onBackToSavedAccounts && (
+        <button
+          type="button"
+          onClick={onBackToSavedAccounts}
+          className="self-start -ml-2.5 -mb-2 h-10 px-2.5 rounded-lg inline-flex items-center gap-2 text-sm font-semibold text-primary hover:bg-zinc-900 transition-colors"
+        >
+          <Icon name="arrow_back" size={16} />
+          {backLabel}
+        </button>
+      )}
 
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <div className="relative">
-            <FloatingInput
-              ref={inputRef}
-              id="auth-identifier"
-              type="text"
-              label={t('auth.handleOrEmail')}
-              value={identifier}
-              onChange={(e) => { setIdentifier(e.target.value); setError(''); }}
-              autoComplete="username"
-              error={!!error}
-            />
-          </div>
-          <FieldError message={error} />
+      {(from || redirect) && (
+        <div className="-mb-6">
+          <RedirectMessage from={from} t={t} />
+          <ContextBanner redirect={redirect} t={t} onDismiss={onDismissRedirect} />
         </div>
+      )}
 
-        <Button
+      <AuthHeading title={t('auth.signIn')} subtitle={t('auth.loginSubtitle')} />
+
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
+        <AuthField error={error}>
+          <FloatingInput
+            id="auth-identifier"
+            type="text"
+            label={t('auth.handleOrEmail')}
+            value={identifier}
+            onChange={(e) => { setIdentifier(e.target.value); setError(''); }}
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            error={!!error}
+            className={authInputCls}
+          />
+        </AuthField>
+
+        <button
           type="submit"
           disabled={loading || !normaliseIdentifier(identifier)}
-          className="h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-sm rounded-xl gap-2 disabled:opacity-40 transition-all duration-200 mt-1"
+          className={authPrimaryBtnCls}
         >
-          {loading
-            ? <LogoLoader size={16} />
-            : <>{t('auth.continue')} <Icon name="arrow_forward" size={16} /></>
-          }
-        </Button>
-
-        <div className="flex flex-col gap-4 mt-2">
-          <p className="text-xs text-zinc-500 text-center">
-            {t('auth.noAccount')}{' '}
-            <button type="button" onClick={onSwitchToRegister} className="text-primary hover:text-primary-dim hover:underline font-semibold transition-colors">
-              {t('auth.register')}
-            </button>
-          </p>
-
-          <div className="flex items-center gap-3 px-8">
-            <div className="flex-1 h-px bg-zinc-800/40" />
-            <span className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.2em] leading-none">{t('common.or')}</span>
-            <div className="flex-1 h-px bg-zinc-800/40" />
-          </div>
-
-          <GoogleButton onClick={onGoogleLogin} t={t} />
-
-          <Link to="/project/new"
-            className="group flex items-center justify-center gap-2 py-1 text-xs font-semibold text-zinc-500 hover:text-primary transition-all duration-300"
-          >
-            <Icon name="bolt" size={14} className="text-zinc-600 group-hover:text-primary transition-all" />
-            {t('auth.guestMode')}
-          </Link>
-        </div>
+          {loading ? <LogoLoader size={16} /> : t('auth.continue')}
+        </button>
       </form>
+
+      <OrDivider t={t} />
+
+      <div className="flex flex-col gap-2.5">
+        <GoogleButton onClick={onGoogleLogin} t={t} />
+        <Link
+          to="/project/new"
+          className="h-11 inline-flex items-center justify-center text-[15px] font-semibold text-foreground/80 hover:text-primary transition-colors"
+        >
+          {t('auth.guestMode')}
+        </Link>
+      </div>
+
+      <p className="text-sm text-foreground/65">
+        {t('auth.noAccount')}{' '}
+        <button type="button" onClick={onSwitchToRegister} className="font-semibold text-primary hover:underline">
+          {t('auth.register')}
+        </button>
+      </p>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 export default {
-  loginWelcome: "Bienvenido a <0>LRC Studio</0>",
   googleContinue: "Continuar con Google",
   loginWelcomeBack: "¡Bienvenido de nuevo, <0>{{name}}</0>!",
   loginSubtitle: "Ingresa tu usuario o correo para continuar.",
@@ -8,7 +7,10 @@ export default {
   notYou: "¿No eres tú? Cambiar cuenta",
   continue: "Continuar",
   registerWelcome: "<0>Crea tu cuenta</0>",
-  registerSubtitle: "Elige un nombre visible para comenzar.",
+  registerSubtitle: "Elige cómo aparece tu nombre en las canciones que publiques.",
+  stepOf: "Paso {{step}} de {{total}}",
+  googleShort: "Google",
+  guestShort: "Invitado",
   registerSubtitleStep2: "Añade tu correo y una contraseña segura.",
   confirmPassword: "Confirmar contraseña",
   securePassword: "Contraseña segura",
@@ -42,7 +44,6 @@ export default {
   account: "Cuenta",
   user: "Usuario",
   signUpToSave: "Regístrate para guardar tu proyecto en la nube",
-  tagline: "Sincroniza letras con música, a tu manera",
   featureSync: "Sincroniza letras en tiempo real",
   featureSyncDesc: "Toca para marcar cada línea mientras suena la música",
   featureExport: "Exporta archivos .lrc estándar",
@@ -125,10 +126,13 @@ export default {
     dismiss: "No continuar ahí"
   },
   showcase: {
-    previewLabel: "Vista previa en vivo",
-    editorLabel: "En el editor",
-    autoStamp: "Auto-marcar",
-    markKey: "ESPACIO"
+    signinNote: "Tus proyectos siguen donde los dejaste, en cualquier dispositivo donde inicies sesión.",
+    signupNote: "Una cuenta guarda tus proyectos y los sincroniza entre dispositivos. Como invitado igual puedes sincronizar y exportar todo.",
+    howYouAppear: "Así te verán",
+    yourName: "Tu nombre",
+    yourHandle: "usuario",
+    cardTitle: "Tu primera canción",
+    cardMeta: "Artista · Álbum · Año"
   },
   savePassword: {
     title: "¿Guardar tu contraseña?",
@@ -216,8 +220,12 @@ export default {
     skip: "Ahora no",
     logIn: "Iniciar sesión como {{name}}",
     switchAccount: "Usar una cuenta diferente",
-    continueAs: "Continuar como",
-    addAccount: "Agregar otra cuenta",
+    welcomeBack: "Hola de nuevo",
+    pickAccount: "Elige una cuenta guardada en este dispositivo.",
+    addAccount: "Usar otra cuenta",
+    backToSaved: "Volver a cuentas guardadas",
+    backToName: "Volver a {{name}}",
+    removeNamed: "Quitar a {{name}} de este dispositivo",
     removeAccount: "Olvidar esta cuenta",
     forgetAll: "Olvidar todas las cuentas",
     usePasswordInstead: "Usar contraseña",

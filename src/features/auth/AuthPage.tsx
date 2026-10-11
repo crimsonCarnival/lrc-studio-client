@@ -3,7 +3,7 @@ import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react
 // `layout` prop, which domAnimation does not include. This route is lazy-loaded,
 // so the extra feature bundle never reaches the editor.
 import { LazyMotion, domMax, m as M } from 'framer-motion';
-import { useSearchParams, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useSearchParams, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { toast } from 'react-hot-toast';
@@ -33,6 +33,7 @@ import {
 import type { ComponentProps } from 'react';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import type { RememberedAccount } from '@/features/auth/services/remembered-accounts.service';
+import type { SignUpIdentity } from './SignUpForm';
 import { LOGO_URL } from '@/shared/constants/brand';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -90,6 +91,8 @@ export default function AuthPage() {
   const isRegister = view === 'register';
   const [identifierData, setIdentifierData] = useState<IdentifierData | null>(null);
   const [fromSavedAccount, setFromSavedAccount] = useState(false);
+  // Step-1 sign-up fields, mirrored here only to feed the showcase card.
+  const [signUpIdentity, setSignUpIdentity] = useState<SignUpIdentity>({ displayName: '', accountName: '' });
 
   // Credential offered to the browser's password manager after a successful
   // password auth. Held in a ref, never in state or storage — it exists only
@@ -503,71 +506,63 @@ export default function AuthPage() {
     navigate(`/auth/${targetAction}${redirectSuffix}`, { replace: true });
   }, [navigate, searchParams]);
 
+  // With exactly one remembered account the back control can name it, which
+  // reads better than the generic label and tells the user where it leads.
+  const soleSaved = savedAccounts.length === 1 ? savedAccounts[0] : null;
+  const soleSavedName = soleSaved?.displayName || soleSaved?.accountName || soleSaved?.identifier;
+  const backToSavedLabel = soleSavedName
+    ? t('auth.savedAccount.backToName', { name: soleSavedName })
+    : t('auth.savedAccount.backToSaved');
+  const backToSaved = savedAccounts.length > 0 ? () => setView('login-saved-account') : undefined;
+
+  const panelPad = 'px-6 sm:px-10 lg:px-16 pt-28 pb-10';
+
   return (
     <LazyMotion features={domMax}>
-      <div className="size-screen flex relative overflow-hidden font-sans">
-      <div className="wavy-canvas-container absolute inset-0">
+      {/* The page scrolls as a whole, so a form taller than the viewport is
+          never clipped; the grid is at least one viewport tall so both panels
+          stretch edge to edge. */}
+      <div className="h-dvh overflow-y-auto bg-zinc-950 text-zinc-100 font-sans">
+      <div className="wavy-canvas-container fixed inset-0 pointer-events-none">
         <SmoothWavyCanvas />
       </div>
+      <div className="relative min-h-full grid grid-cols-1 md:grid-cols-2">
 
-      {/* Language switcher — top right */}
-      <div className="fixed top-4 right-4 z-raised">
-        <LangSwitcher i18n={i18n} />
-      </div>
-
-      {/* ── Right form panel ────────────────────────────────────────────── */}
-      {/* `m-auto` on the inner column rather than `justify-center` on the
-          scroller: with justify-center, content taller than the viewport gets
-          its top clipped and cannot be scrolled back to. Auto margins centre
-          when there is room and collapse when there isn't. */}
-      <div className="flex-1 flex flex-col px-4 sm:px-8 py-6 h-screen overflow-y-auto scrollbar-thin relative">
-        <div className="m-auto w-full flex flex-col items-center">
-
-        {/* Logo above form */}
-        <M.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col items-center mb-4 shrink-0"
+        {/* Brand and language stay pinned to the page corners; the panels
+            swap sides underneath them. */}
+        <Link
+          to="/"
+          className="absolute top-9 left-6 sm:left-10 lg:left-16 z-raised flex items-center gap-2.5 text-[17px] font-bold tracking-tight text-zinc-100 hover:opacity-80 transition-opacity"
         >
-          <div className="size-8 mb-1.5">
-            <LazyImage
-              src={LOGO_URL}
-              alt="LRC Studio"
-              className="size-full object-contain drop-shadow-[0_0_12px_rgba(29,185,84,0.3)]"
-            />
-          </div>
-          <p className="text-xs font-bold text-zinc-100 font-heading tracking-tight">{t('app.name')}</p>
-        </M.div>
+          <LazyImage src={LOGO_URL} alt="" className="size-7 object-contain" />
+          {t('app.name')}
+        </Link>
+        <div className="absolute top-8 right-6 sm:right-10 lg:right-16 z-raised">
+          <LangSwitcher i18n={i18n} />
+        </div>
 
-        <M.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="w-full max-w-[420px] lg:max-w-[980px] flex-shrink"
+        {/* Showcase. `order` flips on register; `layout="position"` FLIPs it
+            across rather than cutting, and position-only avoids the scale
+            distortion that plain `layout` would apply to its contents. */}
+        <M.aside
+          layout="position"
+          transition={SIDE_SWAP}
+          className={`hidden md:flex flex-col min-w-0 bg-zinc-900/70 backdrop-blur-xl border-zinc-800 ${panelPad} ${
+            isRegister ? 'md:order-2 md:border-l' : 'md:order-1 md:border-r'
+          }`}
         >
-          {/* Card — one column on mobile, showcase + form side by side from lg up */}
-          <div className="bg-zinc-900/80 backdrop-blur-2xl border border-zinc-800/50 contrast-more:border-zinc-600 rounded-2xl shadow-card relative overflow-hidden">
-            <div className="flex flex-col lg:flex-row lg:items-stretch">
+          {isRegister
+            ? <AuthShowcase t={t} variant="signup" displayName={signUpIdentity.displayName} accountName={signUpIdentity.accountName} />
+            : <AuthShowcase t={t} variant="signin" />}
+        </M.aside>
 
-              {/* Showcase. `order` flips on register; `layout="position"` FLIPs it
-                  across rather than cutting, and position-only avoids the scale
-                  distortion that plain `layout` would apply to the form's inputs. */}
-              <M.div
-                layout="position"
-                transition={SIDE_SWAP}
-                className={`hidden lg:block lg:w-[46%] shrink-0 p-8 border-zinc-800/50 ${
-                  isRegister ? 'lg:order-2 lg:border-l' : 'lg:order-1 lg:border-r'
-                }`}
-              >
-                <AuthShowcase t={t} variant={isRegister ? 'editor' : 'preview'} />
-              </M.div>
-
-              <M.div
-                layout="position"
-                transition={SIDE_SWAP}
-                className={`flex-1 min-w-0 p-7 sm:p-8 flex flex-col ${view === 'login-saved-account' ? 'lg:justify-center' : ''} ${isRegister ? 'lg:order-1' : 'lg:order-2'}`}
-              >
+        <M.main
+          layout="position"
+          transition={SIDE_SWAP}
+          className={`min-w-0 flex flex-col gap-8 ${panelPad} ${isRegister ? 'md:order-1' : 'md:order-2'}`}
+        >
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-full max-w-[400px]">
 
             {view === 'login-saved-account' && (savedAccounts.length > 0 || !accountsChecked) && (
               <SavedAccountStep
@@ -579,6 +574,7 @@ export default function AuthPage() {
                 onAddAccount={handleAddAccount}
                 onRemoveAccount={handleRemoveAccount}
                 onPasskeySuccess={handleAuthSuccess}
+                onSwitchToRegister={() => switchView('register')}
               />
             )}
 
@@ -591,6 +587,8 @@ export default function AuthPage() {
                 from={searchParams.get('from') || undefined}
                 redirect={redirect}
                 onDismissRedirect={handleDismissRedirect}
+                onBackToSavedAccounts={backToSaved}
+                backLabel={backToSavedLabel}
               />
             )}
 
@@ -626,35 +624,26 @@ export default function AuthPage() {
                 onSuccess={handleRegisterSuccess}
                 redirect={redirect}
                 onDismissRedirect={handleDismissRedirect}
+                onIdentityChange={setSignUpIdentity}
               />
             )}
 
             {view === 'forgot-password' && (
               <ForgotPasswordTab onBackToLogin={() => switchView('login-identifier')} />
             )}
-              </M.div>
             </div>
           </div>
 
-          {/* reCAPTCHA Notice */}
-          <div className="mt-3 px-4 text-center animate-fade-in text-center shrink-0" style={{ animationDelay: '500ms' }}>
-            <p className="text-[9px] leading-relaxed text-zinc-600">
-              <Trans
-                i18nKey="auth.recaptchaNotice"
-                components={[
-                  <a key="0" href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="text-zinc-500 hover:text-zinc-300 underline underline-offset-2 transition-colors" />,
-                  <a key="1" href="https://policies.google.com/terms" target="_blank" rel="noreferrer" className="text-zinc-500 hover:text-zinc-300 underline underline-offset-2 transition-colors" />
-                ]}
-              />
-            </p>
-          </div>
-
-          {/* Footer — moved here from the removed side panel */}
-          <p className="mt-2 text-center text-[9px] text-zinc-700 shrink-0" suppressHydrationWarning>
-            &copy; {new Date().getFullYear()} {t('app.name')}
+          <p className="text-xs text-foreground/45">
+            <Trans
+              i18nKey="auth.recaptchaNotice"
+              components={[
+                <a key="0" href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="text-foreground/65 hover:text-zinc-100 underline underline-offset-2 transition-colors" />,
+                <a key="1" href="https://policies.google.com/terms" target="_blank" rel="noreferrer" className="text-foreground/65 hover:text-zinc-100 underline underline-offset-2 transition-colors" />
+              ]}
+            />
           </p>
-        </M.div>
-        </div>
+        </M.main>
       </div>
 
       {credentialPrompt && (
