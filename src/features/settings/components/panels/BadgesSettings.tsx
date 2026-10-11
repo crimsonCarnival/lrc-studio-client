@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon } from '@/shared/ui/Icon';
 import { ShowcaseEditor } from '@/features/badges/ShowcaseEditor';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { gqlRequest } from '@/app/graphql.client';
 import toast from 'react-hot-toast';
+import { updatePreferences } from '@/features/settings/services/preferences.service';
+import { SettingRow, SettingsPanelCard, Toggle } from '../shared';
 
 interface BadgeDef {
   id: string;
@@ -28,14 +28,6 @@ function getShowcaseSlots(level: number) {
   if (level >= 50)  return 5;
   if (level >= 25)  return 4;
   return 3;
-}
-
-function SectionHeading({ children }: { children?: ReactNode }) {
-  return (
-    <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-      {children}
-    </h4>
-  );
 }
 
 function blockMatches(searchTerm: string | undefined, labels: string[]) {
@@ -85,31 +77,35 @@ export default function BadgesSettings({ searchTerm }: { searchTerm?: string }) 
 
   if (!matches || !enrichedBadges) return null;
 
-  return (
-    <div className="settings-section space-y-6 animate-fade-in">
-      <div className="flex items-center gap-2 mb-2 px-1">
-        <Icon name="military_tech" size={16} className="text-zinc-400" />
-        <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-          {t('badges.showcase.editorTitle')}
-        </h3>
-      </div>
+  const prefs = user?.preferences;
+  const quickEnabled = prefs?.miniProfileBadgesEnabled ?? ((user?.miniProfileBadgesEnabled as boolean | undefined) ?? true);
 
-      <div className="rounded-2xl border border-border/50 bg-secondary/10 p-5 lg:p-6 space-y-6">
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Icon name="military_tech" size={14} className="text-zinc-500" />
-            <SectionHeading>{t('badges.showcase.editorTitle')}</SectionHeading>
-          </div>
-          <ShowcaseEditor
-            userBadges={enrichedBadges}
-            initialShowcase={user?.showcasedBadges ?? []}
-            initialPublic={user?.showcasePublic !== false}
-            showcaseSlots={getShowcaseSlots(user?.progression?.level ?? 0)}
-            level={user?.progression?.level ?? 0}
-            onSaved={(ids: string[], pub: boolean) => setUser(prev => prev ? ({ ...prev, showcasedBadges: ids, showcasePublic: pub }) : prev)}
-          />
-        </section>
-      </div>
-    </div>
+  const handleQuickToggle = async (value: boolean) => {
+    const prevPrefs = user?.preferences;
+    setUser(prev => prev ? ({ ...prev, preferences: { ...prev.preferences, miniProfileBadgesEnabled: value } } as typeof prev) : prev);
+    try {
+      const updated = await updatePreferences({ miniProfileBadgesEnabled: value });
+      setUser(prev => prev ? ({ ...prev, preferences: { ...prev.preferences, ...updated } } as typeof prev) : prev);
+    } catch {
+      setUser(prev => prev ? ({ ...prev, preferences: prevPrefs } as typeof prev) : prev);
+      toast.error(t('profile.saveError'));
+    }
+  };
+
+  return (
+    <>
+      <ShowcaseEditor
+        userBadges={enrichedBadges}
+        initialShowcase={user?.showcasedBadges ?? []}
+        initialPublic={user?.showcasePublic !== false}
+        showcaseSlots={getShowcaseSlots(user?.progression?.level ?? 0)}
+        onSaved={(ids: string[], pub: boolean) => setUser(prev => prev ? ({ ...prev, showcasedBadges: ids, showcasePublic: pub }) : prev)}
+      />
+      <SettingsPanelCard>
+        <SettingRow label={t('badges.showcase.quickProfile')} description={t('badges.showcase.quickProfileDesc')}>
+          <Toggle label={t('badges.showcase.quickProfile')} checked={quickEnabled} onChange={handleQuickToggle} />
+        </SettingRow>
+      </SettingsPanelCard>
+    </>
   );
 }

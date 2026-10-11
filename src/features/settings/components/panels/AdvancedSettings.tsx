@@ -1,13 +1,12 @@
-import { useTranslation } from 'react-i18next';
-import { Section, SettingRow, Toggle } from '../shared';
-import { useAdvancedSettings } from '../../hooks/useAdvancedSettings';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { Icon } from '@/shared/ui/Icon';
-
-import { Button } from '@ui/button';
-import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { Section, SettingRow, Toggle, SettingSelect, SettingOption } from '../shared';
+import { useAdvancedSettings } from '../../hooks/useAdvancedSettings';
+import { Icon } from '@/shared/ui/Icon';
+import { Button } from '@ui/button';
+import { Input } from '@ui/input';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 
 const COMMON_TIMEZONES = [
   'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
@@ -33,8 +32,10 @@ interface AdvancedSettingsProps {
 
 export default function AdvancedSettings({ settings, updateSetting, searchTerm, isGuest }: AdvancedSettingsProps) {
   const { t } = useTranslation();
-  const { deactivateAccount } = useAuthContext();
+  const { user, deactivateAccount } = useAuthContext();
   const [isDeactivating, setIsDeactivating] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [typed, setTyped] = useState('');
   const {
     handleAutoSaveToggle,
     handleAutoSaveTimeIntervalChange,
@@ -42,11 +43,13 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
     handleTimezoneChange,
   } = useAdvancedSettings(updateSetting);
 
-  const handleDeactivate = async () => {
-    if (!window.confirm(t('settings.advanced.deactivateConfirm'))) {
-      return;
-    }
+  const handle = user?.accountName ?? '';
+  // Typing the handle is the guard against an accidental, irreversible deactivation.
+  const confirmed = !!handle && typed.trim() === handle;
+  const autoSaveOn = settings.advanced?.autoSave?.enabled ?? false;
 
+  const handleDeactivate = async () => {
+    if (!confirmed) return;
     try {
       setIsDeactivating(true);
       await deactivateAccount();
@@ -60,126 +63,109 @@ export default function AdvancedSettings({ settings, updateSetting, searchTerm, 
 
   return (
     <>
-      <Section title={t('settings.advanced.label')} iconName="tune" searchTerm={searchTerm}>
+      <Section title={t('settings.advanced.saveSection')} searchTerm={searchTerm}>
         {isGuest ? (
-          /* Guests: show Auto Save row as locked with a note */
-          <SettingRow iconName="save" label={t('settings.advanced.autoSave')} description={t('settings.advanced.autoSaveDesc')}>
+          <SettingRow label={t('settings.advanced.autoSave')} description={t('settings.advanced.autoSaveDesc')}>
             <div className="flex items-center gap-2">
               <Icon name="lock" size={14} className="text-zinc-500 shrink-0" />
-              <span className="text-[11px] text-zinc-500 italic">
-                {t('settings.advanced.autoSaveGuestNote')}
-              </span>
+              <span className="text-xs text-zinc-500 italic">{t('settings.advanced.autoSaveGuestNote')}</span>
             </div>
           </SettingRow>
         ) : (
           <>
-            <SettingRow iconName="save" label={t('settings.advanced.autoSave')} description={t('settings.advanced.autoSaveDesc')}>
-              <Toggle
-                id="toggle-auto-save"
-                checked={settings.advanced?.autoSave?.enabled ?? false}
-                onChange={handleAutoSaveToggle}
-              />
+            <SettingRow label={t('settings.advanced.autoSave')} description={t('settings.advanced.autoSaveDesc')}>
+              <Toggle id="toggle-auto-save" label={t('settings.advanced.autoSave')} checked={autoSaveOn} onChange={handleAutoSaveToggle} />
             </SettingRow>
-
-            {settings.advanced?.autoSave?.enabled && (
-              <SettingRow
-                iconName="timer"
-                label={t('settings.advanced.autoSaveInterval')}
-                description={t('settings.advanced.autoSaveIntervalDesc')}
-              >
-                <Select
+            {autoSaveOn && (
+              <SettingRow nested label={t('settings.advanced.autoSaveInterval')} description={t('settings.advanced.autoSaveIntervalDesc')}>
+                <SettingSelect
+                  label={t('settings.advanced.autoSaveInterval')}
                   value={String(settings.advanced?.autoSave?.timeInterval ?? 30)}
                   onValueChange={(val) => handleAutoSaveTimeIntervalChange({ target: { value: val } })}
                 >
-                  <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-zinc-700">
-                    <SelectItem value="5">{t('settings.advanced.autoSaveSeconds', { count: 5 })}</SelectItem>
-                    <SelectItem value="10">{t('settings.advanced.autoSaveSeconds', { count: 10 })}</SelectItem>
-                    <SelectItem value="30">{t('settings.advanced.autoSaveSeconds', { count: 30 })}</SelectItem>
-                    <SelectItem value="60">{t('settings.advanced.autoSaveSeconds', { count: 60 })}</SelectItem>
-                    <SelectItem value="120">{t('settings.advanced.autoSaveSeconds', { count: 120 })}</SelectItem>
-                  </SelectContent>
-                </Select>
+                  {[5, 10, 30, 60, 120].map((n) => (
+                    <SettingOption key={n} value={String(n)}>{t('settings.advanced.autoSaveSeconds', { count: n })}</SettingOption>
+                  ))}
+                </SettingSelect>
               </SettingRow>
             )}
           </>
         )}
 
-        <SettingRow
-          iconName="bolt"
-          label={t('settings.advanced.autoSaveIndicatorDuration')}
-          description={t('settings.advanced.autoSaveIndicatorDurationDesc')}
-        >
-          <Select
+        <SettingRow label={t('settings.advanced.autoSaveIndicatorDuration')} description={t('settings.advanced.autoSaveIndicatorDurationDesc')}>
+          <SettingSelect
+            label={t('settings.advanced.autoSaveIndicatorDuration')}
             value={settings.advanced?.autoSaveIndicator ?? 'normal'}
             onValueChange={(val) => updateSetting('advanced.autoSaveIndicator', val)}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 w-auto">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-700">
-              <SelectItem value="short">{t('settings.options.durations.short')}</SelectItem>
-              <SelectItem value="normal">{t('settings.options.durations.normal')}</SelectItem>
-              <SelectItem value="long">{t('settings.options.durations.long')}</SelectItem>
-            </SelectContent>
-          </Select>
+            <SettingOption value="short">{t('settings.options.durations.short')}</SettingOption>
+            <SettingOption value="normal">{t('settings.options.durations.normal')}</SettingOption>
+            <SettingOption value="long">{t('settings.options.durations.long')}</SettingOption>
+          </SettingSelect>
         </SettingRow>
 
-        <SettingRow
-          iconName="gpp_bad"
-          label={t('settings.advanced.confirmDestructive')}
-          description={t('settings.advanced.confirmDestructiveDesc')}
-        >
-          <Toggle
-            id="toggle-confirm-destructive"
-            checked={settings.advanced?.confirmDestructive ?? true}
-            onChange={handleConfirmDestructiveChange}
-          />
+        <SettingRow label={t('settings.advanced.confirmDestructive')} description={t('settings.advanced.confirmDestructiveDesc')}>
+          <Toggle id="toggle-confirm-destructive" label={t('settings.advanced.confirmDestructive')} checked={settings.advanced?.confirmDestructive ?? true} onChange={handleConfirmDestructiveChange} />
         </SettingRow>
+      </Section>
 
-        <SettingRow
-          iconName="language"
-          label={t('settings.advanced.timezone')}
-          description={t('settings.advanced.timezoneDesc')}
-        >
-          <Select
+      <Section title={t('settings.advanced.regionSection')} searchTerm={searchTerm}>
+        <SettingRow label={t('settings.advanced.timezone')} description={t('settings.advanced.timezoneDesc')}>
+          <SettingSelect
+            label={t('settings.advanced.timezone')}
+            className="max-w-[260px]"
             value={settings.advanced?.timezone ?? 'auto'}
             onValueChange={(val) => handleTimezoneChange({ target: { value: val } })}
           >
-            <SelectTrigger className="bg-zinc-900 border-zinc-700 text-xs text-zinc-200 focus:border-primary/50 h-8 coarse:h-11 max-w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-700">
-              <SelectItem value="auto">
-                {t('settings.advanced.timezoneAuto')} ({Intl.DateTimeFormat().resolvedOptions().timeZone})
-              </SelectItem>
-              {COMMON_TIMEZONES.map((tz) => (
-                <SelectItem key={tz} value={tz}>{tz.replace(/_/g, ' ')}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <SettingOption value="auto">
+              {t('settings.advanced.timezoneAuto')} · {Intl.DateTimeFormat().resolvedOptions().timeZone}
+            </SettingOption>
+            {COMMON_TIMEZONES.map((tz) => (
+              <SettingOption key={tz} value={tz}>{tz.replace(/_/g, ' ')}</SettingOption>
+            ))}
+          </SettingSelect>
         </SettingRow>
       </Section>
 
       {!isGuest && (
-        <Section title={t('settings.advanced.dangerZone')} iconName="warning" searchTerm={searchTerm}>
-          <SettingRow
-            iconName="person_remove"
-            label={t('settings.advanced.deactivate')}
-            description={t('settings.advanced.deactivateDesc')}
-          >
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDeactivate}
-              disabled={isDeactivating}
-              className="bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 hover:text-red-400 font-semibold h-8 coarse:h-11"
-            >
-              {isDeactivating ? 'Deactivating...' : (t('settings.advanced.deactivateBtn'))}
-            </Button>
+        <Section title={t('settings.advanced.dangerZone')} tone="danger" searchTerm={searchTerm}>
+          <SettingRow label={t('settings.advanced.deactivate')} description={t('settings.advanced.deactivateDesc')}>
+            {!confirming && (
+              <Button
+                variant="outline"
+                onClick={() => setConfirming(true)}
+                className="h-11 rounded-[10px] border-red-900/60 bg-transparent text-red-300 hover:bg-red-950/40 font-semibold"
+              >
+                {t('settings.advanced.deactivateBtn')}
+              </Button>
+            )}
           </SettingRow>
+          {confirming && (
+            <div className="mb-4 flex flex-col gap-3 rounded-xl border border-red-950 bg-red-950/20 p-[18px]">
+              <label htmlFor="deactivate-confirm" className="text-sm">
+                {t('settings.advanced.deactivateTypeHandle')} <b className="font-mono">{handle}</b>
+              </label>
+              <Input
+                id="deactivate-confirm"
+                autoComplete="off"
+                value={typed}
+                onChange={(e) => setTyped(e.target.value)}
+                className="max-w-80 bg-zinc-950 border-zinc-700 rounded-[10px] h-11"
+              />
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => { setConfirming(false); setTyped(''); }} className="h-10 rounded-[10px] border-zinc-700 bg-transparent">
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  disabled={!confirmed || isDeactivating}
+                  onClick={handleDeactivate}
+                  className="h-10 rounded-[10px] font-bold bg-red-600 text-white hover:bg-red-500 disabled:bg-red-950 disabled:text-red-300/50"
+                >
+                  {isDeactivating ? t('settings.advanced.deactivating') : t('settings.advanced.deactivateConfirmBtn')}
+                </Button>
+              </div>
+            </div>
+          )}
         </Section>
       )}
     </>

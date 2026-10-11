@@ -574,7 +574,7 @@ export default function ProfilePage() {
                 </div>
                 <p className="text-sm text-zinc-400 font-medium">
                   {isOwner ? (
-                    <Link to="/settings/activity" className="text-primary hover:underline transition-colors">
+                    <Link to="/settings/stats" className="text-primary hover:underline transition-colors">
                       {t('profile.activity.ownerEmpty')}
                     </Link>
                   ) : (
