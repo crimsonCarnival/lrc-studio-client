@@ -79,8 +79,8 @@ const TABS: TabMeta[] = [
   { id: 'autoStamp', labelKey: 'settings.autoStamp.title', iconName: 'auto_awesome', group: 'preferences', searchable: true },
 
   // Advanced
-  { id: 'shortcuts', labelKey: 'settings.shortcuts.label', iconName: 'keyboard', group: 'advanced', searchable: true },
-  { id: 'advanced', labelKey: 'settings.advanced.label', iconName: 'tune', group: 'advanced', searchable: true },
+  { id: 'shortcuts', labelKey: 'settings.pages.shortcuts.title', iconName: 'keyboard', group: 'advanced', searchable: true },
+  { id: 'advanced', labelKey: 'settings.pages.advanced.title', iconName: 'tune', group: 'advanced', searchable: true },
 ];
 
 // Panels whose header offers "reset to defaults": the dotted setting paths each page owns.
@@ -89,6 +89,7 @@ const RESET_PATHS: Record<string, string[]> = {
   autoStamp: ['autoStamp'],
   editor: ['editor.autoPauseOnMark', 'editor.nudge', 'editor.autoAdvance', 'editor.preserveEmptyLines', 'editor.showShiftAll', 'editor.shiftAllAmount', 'editor.showLineNumbers', 'editor.timestampPrecision', 'editor.syncFlashDuration', 'editor.lyricsSearchSpeed', 'editor.srt'],
   export: ['export'],
+  shortcuts: ['shortcuts'],
   interface: ['interface.fontSize', 'interface.spacing', 'interface.previewAlignment', 'interface.focusContrast', 'interface.lockLayout', 'interface.toastPosition', 'editor.display', 'editor.scroll'],
 };
 
@@ -366,11 +367,17 @@ export default function SettingsPage() {
                   <div className="flex flex-wrap items-end justify-between gap-4">
                     <div className="min-w-0">
                       <h1 className="text-[32px] font-extrabold tracking-tight leading-tight text-zinc-100">{pageTitle}</h1>
-                      {pageLead && <p className="text-[15px] text-zinc-400 mt-1.5">{pageLead}</p>}
+                      {activeTab === 'shortcuts' ? (
+                        <p className="text-[15px] text-zinc-400 mt-1.5">
+                          {t('settings.pages.shortcuts.lead')}{' '}
+                          <kbd className="inline-grid place-items-center h-[22px] min-w-[22px] rounded-md border border-zinc-700 bg-zinc-800 font-mono text-[11px] text-zinc-100">?</kbd>{' '}
+                          {t('settings.pages.shortcuts.leadEnd')}
+                        </p>
+                      ) : pageLead && <p className="text-[15px] text-zinc-400 mt-1.5">{pageLead}</p>}
                     </div>
                     {canReset && (
                       <Button variant="outline" onClick={handleResetSection} className="h-11 rounded-xl border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-100 font-semibold">
-                        {t('settings.resetSection')}
+                        {activeTab === 'shortcuts' ? t('settings.shortcuts.resetAll') : t('settings.resetSection')}
                       </Button>
                     )}
                     {activeTab === 'profile' && user?.accountName && (

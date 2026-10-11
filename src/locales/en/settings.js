@@ -12,6 +12,8 @@ export default {
   viewProfile: "View profile",
   levelShort: "Lv. {{level}}",
   pages: {
+    shortcuts: { title: "Keyboard shortcuts", lead: "Click a shortcut and press the new combination. Press", leadEnd: "in the editor to see them." },
+    advanced: { title: "Advanced", lead: "Saving, confirmations, time zone and your account." },
     stats: { title: "Stats & activity", lead: "Only you can see this page." },
     security: { title: "Sign-in", lead: "How you sign in and where you're signed in." },
     editor: { title: "Editor", lead: "How you stamp, adjust and see each line's timing." },
@@ -238,6 +240,18 @@ export default {
   },
 
   shortcuts: {
+    tabAll: "All",
+    filterLabel: "Filter shortcuts",
+    searchLabel: "Search shortcut",
+    searchPlaceholder: "Search action or key…",
+    count_one: "{{count}} shortcut",
+    count_other: "{{count}} shortcuts",
+    resetAll: "Reset all",
+    recording: "Press a combination…",
+    clickSuffix: "+ click",
+    conflictWith: "Same shortcut as {{name}}",
+    changeAria: "Change shortcut for {{name}}: {{keys}}",
+    keys: { space: "Space", delete: "Del" },
     label: "Shortcuts",
     playerSection: "Player",
     previewSection: "Preview",
@@ -291,6 +305,11 @@ export default {
   },
 
   advanced: {
+    saveSection: "Saving",
+    regionSection: "Region",
+    deactivateTypeHandle: "To confirm, type your handle",
+    deactivateConfirmBtn: "Deactivate my account",
+    deactivating: "Deactivating…",
     label: "Advanced",
     autoSave: "Auto-Save",
     autoSaveDesc: "Periodically save your work automatically",

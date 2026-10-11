@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
-import type { KeyboardEvent, ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
+import type { ReactNode } from 'react';
 import { cn } from '@/shared/utils/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
-import { Kbd } from '@ui/kbd';
-import { KEY_SYMBOLS } from '../key-symbols';
-
-const SYMBOLS = KEY_SYMBOLS as Record<string, string>;
 
 export function Toggle({ checked, onChange, id, disabled, label }: { checked?: boolean; onChange?: (checked: boolean) => void; id?: string; disabled?: boolean; label?: string }) {
   return (
@@ -62,9 +57,11 @@ interface SectionProps {
   color?: string;
   /** Rendered at the right of the section title (e.g. a bulk action button). */
   action?: ReactNode;
+  /** `danger` tints the card border and title red (destructive actions). */
+  tone?: 'default' | 'danger';
 }
 
-export function Section({ title, children, searchTerm, action }: SectionProps) {
+export function Section({ title, children, searchTerm, action, tone = 'default' }: SectionProps) {
   const filteredChildren = React.Children.map(children, (child) => {
     if (!React.isValidElement(child)) return child;
 
@@ -99,9 +96,9 @@ export function Section({ title, children, searchTerm, action }: SectionProps) {
 
   return (
     <section className={`settings-section ${searchTerm ? 'animate-fade-in' : ''}`}>
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 px-6 pb-2 pt-4 contrast-more:border-zinc-600">
+      <div className={cn('rounded-2xl border bg-zinc-900 px-6 pb-2 pt-4 contrast-more:border-zinc-600', tone === 'danger' ? 'border-red-950' : 'border-zinc-800')}>
         <div className="flex items-center justify-between gap-3 pb-1">
-          <h2 className="text-xs font-bold uppercase tracking-[.09em] text-primary">{title}</h2>
+          <h2 className={cn('text-xs font-bold uppercase tracking-[.09em]', tone === 'danger' ? 'text-red-300' : 'text-primary')}>{title}</h2>
           {action}
         </div>
         <div className="flex flex-col">
@@ -268,154 +265,5 @@ export function PercentSlider({ value, onChange, label, step = 5, min = 0 }: { v
       />
       <output className="w-12 text-right font-mono text-zinc-100">{value}%</output>
     </label>
-  );
-}
-
-interface ModifierInputProps {
-  value?: string;
-  onChange: (mod: string) => void;
-  validateModifier?: (mod: string) => boolean;
-}
-
-export function ModifierInput({ value, onChange, validateModifier }: ModifierInputProps) {
-  const { t } = useTranslation();
-  const [recording, setRecording] = useState(false);
-  const [error, setError] = useState(false);
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.key === 'Escape') {
-      setRecording(false);
-      return;
-    }
-    let mod: string | null = null;
-    if (e.key === 'Shift') mod = 'Shift';
-    else if (e.key === 'Control') mod = 'Ctrl';
-    else if (e.key === 'Alt') mod = 'Alt';
-    else if (e.key === 'Meta') mod = 'Ctrl';
-    else return;
-
-    if (validateModifier && !validateModifier(mod)) {
-      setError(true);
-      setTimeout(() => setError(false), 800);
-      setRecording(false);
-      return;
-    }
-    onChange(mod);
-    setRecording(false);
-  };
-
-  const displayVal = value ? (SYMBOLS[value] ?? value) : null;
-
-  return (
-    <div className="flex items-center gap-1.5">
-      <button
-        className={`px-2.5 py-1.5 rounded-lg min-w-[70px] flex items-center justify-center gap-0.5 transition-all outline-none ${
-          error
-            ? 'bg-red-500/20 border border-red-500 ring-2 ring-red-500/50'
-            : recording
-            ? 'bg-primary/10 border border-primary ring-2 ring-primary/40'
-            : 'bg-zinc-800/60 border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800'
-        }`}
-        onClick={() => setRecording(true)}
-        onKeyDown={recording ? handleKeyDown : undefined}
-        onBlur={() => setRecording(false)}
-      >
-        {error ? (
-          <span className="text-red-400 text-xs font-medium">{t('settings.shortcuts.input.taken')}</span>
-        ) : recording ? (
-          <span className="text-primary text-xs animate-pulse font-medium">{t('settings.shortcuts.input.modifier')}</span>
-        ) : displayVal ? (
-          <Kbd className="bg-zinc-700/60 text-zinc-200 border border-zinc-600/50 h-auto px-1.5 py-0.5 text-xs">
-            {displayVal}
-          </Kbd>
-        ) : (
-          <span className="text-zinc-500 text-xs">{t('settings.shortcuts.input.none')}</span>
-        )}
-      </button>
-      <span className="text-zinc-500 text-[10px]">{t('settings.shortcuts.input.plusClick')}</span>
-    </div>
-  );
-}
-
-interface ShortcutInputProps {
-  value?: string;
-  onChange: (key: string) => void;
-  onValidate?: (key: string) => boolean;
-  conflict?: string;
-}
-
-export function ShortcutInput({ value, onChange, onValidate, conflict }: ShortcutInputProps) {
-  const { t } = useTranslation();
-  const [recording, setRecording] = useState(false);
-  const [error, setError] = useState(false);
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.key === 'Escape') {
-      setRecording(false);
-      return;
-    }
-    if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) return;
-
-    const keyName = e.code === 'Space' ? 'Space' : e.key.length === 1 ? e.key.toUpperCase() : e.key;
-    const parts: string[] = [];
-    if (e.ctrlKey || e.metaKey) parts.push('Ctrl');
-    if (e.altKey) parts.push('Alt');
-    if (e.shiftKey) parts.push('Shift');
-    parts.push(keyName);
-    const newKey = parts.join('+');
-
-    if (onValidate && !onValidate(newKey)) {
-      setError(true);
-      setTimeout(() => setError(false), 800);
-      setRecording(false);
-      return;
-    }
-    onChange(newKey);
-    setRecording(false);
-  };
-
-  return (
-    <div className="flex flex-col items-end gap-0.5">
-      <button
-        className={`px-2.5 py-1.5 rounded-lg min-w-[80px] flex items-center justify-center gap-0.5 transition-all outline-none ${
-          error
-            ? 'bg-red-500/20 border border-red-500 ring-2 ring-red-500/50'
-            : conflict
-            ? 'border border-amber-500/70 bg-amber-500/10'
-            : recording
-            ? 'bg-primary/10 border border-primary ring-2 ring-primary/40'
-            : 'bg-zinc-800/60 border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800'
-        }`}
-        onClick={() => setRecording(true)}
-        onKeyDown={recording ? handleKeyDown : undefined}
-        onBlur={() => setRecording(false)}
-      >
-        {error ? (
-          <span className="text-red-400 text-xs font-medium">{t('settings.shortcuts.input.taken')}</span>
-        ) : recording ? (
-          <span className="text-primary text-xs animate-pulse font-medium">{t('settings.shortcuts.input.pressKey')}</span>
-        ) : value ? (
-          value.split(/(?<=.)\+/).map((part, idx) => (
-            <React.Fragment key={part}>
-              {idx > 0 && <span className="text-zinc-600 text-[10px] mx-0.5">+</span>}
-              <Kbd className="bg-zinc-700/60 text-zinc-200 border border-zinc-600/50 h-auto px-1.5 py-0.5 text-xs">
-                {SYMBOLS[part] ?? part}
-              </Kbd>
-            </React.Fragment>
-          ))
-        ) : (
-          <span className="text-zinc-500 text-xs">{t('settings.shortcuts.input.none')}</span>
-        )}
-      </button>
-      {conflict && (
-        <span className="text-[10px] text-amber-400 font-medium leading-none">
-          ⚠ {conflict}
-        </span>
-      )}
-    </div>
   );
 }
