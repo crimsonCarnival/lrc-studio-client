@@ -124,6 +124,35 @@ function computeNextIndex(lines: EditorLine[], fromIndex: number, skipBlank?: bo
 }
 
 /**
+ * The time window a word of `lines[lineIndex]` may be placed in: from the line's
+ * own start to where the line stops (its end time, else the start of the next
+ * timed line). `max` is Infinity when nothing bounds the line from above, and
+ * `min` is 0 for a line that has no start yet.
+ */
+export function wordTimeBounds(lines: EditorLine[], lineIndex: number): { min: number; max: number } {
+  const line = lines[lineIndex];
+  const min = line?.timestamp ?? 0;
+  let max = line?.endTime ?? Infinity;
+  if (max === Infinity) {
+    for (let i = lineIndex + 1; i < lines.length; i++) {
+      const next = lines[i];
+      // Ad-libs run alongside their parent line; they do not end it.
+      if (next.type === 'section' || next.adLibOf != null || next.timestamp == null) continue;
+      max = next.timestamp;
+      break;
+    }
+  }
+  // A line whose "end" is not after its start bounds nothing useful.
+  return { min, max: max > min ? max : Infinity };
+}
+
+/** Keeps a word's time inside its line (see wordTimeBounds). */
+export function clampWordTime(lines: EditorLine[], lineIndex: number, time: number): number {
+  const { min, max } = wordTimeBounds(lines, lineIndex);
+  return Math.min(max, Math.max(min, time));
+}
+
+/**
  * Applies a timestamp shift delta to all lines whose indices are in the selection set.
  * Also shifts endTime if present.
  */

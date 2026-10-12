@@ -16,6 +16,8 @@ import {
   clearAllTimestamps,
   clearLineTimestamp,
   detectDuplicateTimestamps,
+  wordTimeBounds,
+  clampWordTime,
 } from './editor.service';
 import type { EditorLine } from './editor.service';
 
@@ -414,5 +416,38 @@ describe('timestamp transforms', () => {
   it('detectDuplicateTimestamps respects the threshold and ignores unsynced lines', () => {
     const lines = [line('one', { timestamp: 1 }), line('two', { timestamp: 1.2 }), line('three')];
     expect(detectDuplicateTimestamps(lines, 0.05).size).toBe(0);
+  });
+});
+
+describe('word time bounds', () => {
+  it('bounds a word by its line start and the next timed line', () => {
+    const lines = [line('one', { timestamp: 10 }), line('two', { timestamp: 12.5 })];
+    expect(wordTimeBounds(lines, 0)).toEqual({ min: 10, max: 12.5 });
+    expect(clampWordTime(lines, 0, 9.9)).toBe(10);
+    expect(clampWordTime(lines, 0, 12.6)).toBe(12.5);
+    expect(clampWordTime(lines, 0, 11)).toBe(11);
+  });
+
+  it('prefers the line end time over the next line', () => {
+    const lines = [line('one', { timestamp: 10, endTime: 11 }), line('two', { timestamp: 12.5 })];
+    expect(wordTimeBounds(lines, 0).max).toBe(11);
+  });
+
+  it('skips sections, untimed lines and ad-libs when looking for the end', () => {
+    const lines: EditorLine[] = [
+      line('one', { timestamp: 10 }),
+      { type: 'section', label: 'Chorus', text: '' },
+      line('untimed'),
+      line('ad-lib', { timestamp: 10.5, adLibOf: 0 }),
+      line('two', { timestamp: 14 }),
+    ];
+    expect(wordTimeBounds(lines, 0).max).toBe(14);
+  });
+
+  it('leaves the last line open-ended and an untimed line starting at zero', () => {
+    const lines = [line('one', { timestamp: 10 }), line('two')];
+    expect(wordTimeBounds(lines, 0)).toEqual({ min: 10, max: Infinity });
+    expect(wordTimeBounds(lines, 1)).toEqual({ min: 0, max: Infinity });
+    expect(clampWordTime(lines, 1, -1)).toBe(0);
   });
 });
