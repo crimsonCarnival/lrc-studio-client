@@ -1,22 +1,30 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useCachedList } from '@/shared/hooks/useCachedList';
-import type { ChangeEvent, KeyboardEvent, MouseEvent, SyntheticEvent } from 'react';
+import type { ChangeEvent, KeyboardEvent, MouseEvent, ReactNode, SyntheticEvent } from 'react';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
+import { Link, useNavigate } from 'react-router-dom';
 import { uploads as uploadsApi } from '@/app/api';
-import { formatTime } from '@/shared/utils/format-time';
 import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
 import { useSettings } from '@/features/settings/useSettings';
-import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { Icon } from '@/shared/ui/Icon';
-import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem } from '@ui/context-menu';
+import { WaveformBars } from '@/shared/ui/WaveformBars';
+import { cn } from '@/shared/utils/utils';
+import { ContextMenu, ContextMenuTrigger, ContextMenuContent } from '@ui/context-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@ui/dropdown-menu';
+import { contextMenuComponents, dropdownMenuComponents, type MenuComponents } from '@ui/menu-components';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import useConfirm from '@/shared/hooks/useConfirm';
 import { LogoLoader } from '@ui/LogoLoader';
+import { LibrarySwitch } from './LibrarySwitch';
+
+interface UploadProject {
+  publicId: string;
+  title?: string | null;
+}
 
 interface Upload {
   id: string;
@@ -26,25 +34,51 @@ interface Upload {
   uploadUrl?: string;
   duration?: number;
   createdAt?: string | number;
+  projects?: UploadProject[] | null;
   [key: string]: unknown;
 }
 
-function SourceIcon({ source }: { source?: string }) {
-  if (source === 'youtube') return <svg preserveAspectRatio="xMidYMid" viewBox="0 0 256 180"><path fill="red" d="M250.346 28.075A32.18 32.18 0 0 0 227.69 5.418C207.824 0 127.87 0 127.87 0S47.912.164 28.046 5.582A32.18 32.18 0 0 0 5.39 28.24c-6.009 35.298-8.34 89.084.165 122.97a32.18 32.18 0 0 0 22.656 22.657c19.866 5.418 99.822 5.418 99.822 5.418s79.955 0 99.82-5.418a32.18 32.18 0 0 0 22.657-22.657c6.338-35.348 8.291-89.1-.164-123.134Z" /><path fill="#FFF" d="m102.421 128.06 66.328-38.418-66.328-38.418z" className="size-4 text-red-400" /></svg>;
+type FilterId = 'all' | 'youtube' | 'cloud' | 'unused';
+type SortId = 'recent' | 'oldest' | 'title';
+type ViewId = 'grid' | 'list';
 
-  return <Icon name="cloud" size={16} className="text-blue-400" />;
+const FILTERS: Record<FilterId, (u: Upload) => boolean> = {
+  all: () => true,
+  youtube: (u) => u.source === 'youtube',
+  cloud: (u) => u.source !== 'youtube',
+  unused: (u) => !u.projects?.length,
+};
+
+const displayTitle = (u: Upload, fallback: string) => u.title || u.fileName || fallback;
+const createdMs = (u: Upload) => (u.createdAt ? new Date(Number(u.createdAt) || u.createdAt).getTime() || 0 : 0);
+
+function formatDuration(seconds?: number) {
+  if (!seconds || Number.isNaN(seconds)) return '—:—';
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-function SourceLabel({ source, t }: { source?: string; t: TFunction }) {
-  if (source === 'youtube') return <>{t('uploads.youtube')}</>;
-  if (source === 'cloudinary') return <>{t('uploads.cloudAudio')}</>;
-  return <>{source}</>;
+function SourceBadge({ source, label, className }: { source?: string; label: ReactNode; className?: string }) {
+  const isYt = source === 'youtube';
+  return (
+    <span className={cn(
+      'flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide',
+      isYt ? 'text-red-300' : 'text-blue-300',
+      className,
+    )}>
+      <Icon name={isYt ? 'play_arrow' : 'cloud'} size={12} />
+      {label}
+    </span>
+  );
 }
 
 export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Upload) => void }) {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const { settings } = useSettings();
   const timezone = settings.advanced?.timezone;
+  const locale = i18n.resolvedLanguage || i18n.language;
   const { items, loading, error, reload: fetchUploads, setItems } = useCachedList<Upload>(
     ['uploads', 'mine'],
     () => uploadsApi.listMedia() as Promise<Upload[]>,
@@ -54,13 +88,42 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [savingTitle, setSavingTitle] = useState(false);
-  const editInputRef = useRef<HTMLInputElement>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const handleDelete = (e: MouseEvent, uploadId: string, title?: string) => {
+  const [filter, setFilter] = useState<FilterId>('all');
+  const [sort, setSort] = useState<SortId>('recent');
+  const [view, setView] = useState<ViewId>('grid');
+  const [query, setQuery] = useState('');
+
+  // One preview player shared by every card, so starting one stops the other.
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  useEffect(() => () => { audioRef.current?.pause(); }, []);
+
+  const untitled = t('uploads.untitled');
+
+  const counts = useMemo(() => ({
+    all: items.length,
+    youtube: items.filter(FILTERS.youtube).length,
+    cloud: items.filter(FILTERS.cloud).length,
+    unused: items.filter(FILTERS.unused).length,
+  }), [items]);
+
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return items
+      .filter(FILTERS[filter])
+      .filter((u) => !q || displayTitle(u, '').toLowerCase().includes(q))
+      .sort((a, b) => {
+        if (sort === 'title') return displayTitle(a, untitled).localeCompare(displayTitle(b, untitled));
+        return sort === 'oldest' ? createdMs(a) - createdMs(b) : createdMs(b) - createdMs(a);
+      });
+  }, [items, filter, query, sort, untitled]);
+
+  const handleDelete = (e: SyntheticEvent, uploadId: string, title?: string) => {
     e.stopPropagation();
     requestConfirm(
-      t('confirm.deleteUpload', { title: title || t('uploads.untitled') }),
+      t('confirm.deleteUpload', { title: title || untitled }),
       async () => {
         setDeletingId(uploadId);
         try {
@@ -76,7 +139,7 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
     );
   };
 
-  const handleStartEdit = (e: MouseEvent, upload: Upload) => {
+  const handleStartEdit = (e: SyntheticEvent, upload: Upload) => {
     e.stopPropagation();
     setEditingId(upload.id);
     setEditTitle(upload.title || upload.fileName || upload.uploadUrl || '');
@@ -121,16 +184,297 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
     }
   };
 
+  const handlePreview = (e: MouseEvent, upload: Upload) => {
+    e.stopPropagation();
+    // YouTube audio can't be played outside the IFrame player, so open the detail page instead.
+    if (upload.source === 'youtube' || !upload.uploadUrl) {
+      onSelect?.(upload);
+      return;
+    }
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.addEventListener('ended', () => setPlayingId(null));
+    }
+    const audio = audioRef.current;
+    if (playingId === upload.id) {
+      audio.pause();
+      setPlayingId(null);
+      return;
+    }
+    audio.src = upload.uploadUrl;
+    setPlayingId(upload.id);
+    audio.play().catch(() => setPlayingId(null));
+  };
+
+  const handleCreateProject = (e: SyntheticEvent, upload: Upload) => {
+    e.stopPropagation();
+    navigate('/project/new', { state: { uploadId: upload.id } });
+  };
+
+  const renderMenu = (upload: Upload) => (C: MenuComponents): ReactNode => (
+    <>
+      <C.Item onClick={(e: SyntheticEvent) => handleStartEdit(e, upload)}>
+        <Icon name="edit" />
+        {t('uploads.rename')}
+      </C.Item>
+      <C.Item
+        variant="destructive"
+        disabled={deletingId === upload.id}
+        onClick={(e: SyntheticEvent) => handleDelete(e, upload.id, upload.title || upload.fileName)}
+      >
+        <Icon name="delete" />
+        {t('common.delete')}
+      </C.Item>
+    </>
+  );
+
+  const titleNode = (upload: Upload, className: string) => editingId === upload.id ? (
+    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+      <Input
+        autoFocus
+        value={editTitle}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => setEditTitle(e.target.value)}
+        onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => handleTitleKeyDown(e, upload.id)}
+        className="text-sm font-semibold h-8 px-2 bg-zinc-800 border-zinc-600"
+        disabled={savingTitle}
+        aria-label={t('uploads.rename')}
+      />
+      <button type="button" aria-label={t('common.save')} onClick={(e) => handleSaveTitle(e, upload.id)} disabled={savingTitle}
+        className="size-8 shrink-0 grid place-items-center rounded-lg text-primary hover:bg-primary/10">
+        {savingTitle ? <LogoLoader size={14} /> : <Icon name="check" size={16} />}
+      </button>
+      <button type="button" aria-label={t('common.cancel')} onClick={handleCancelEdit} disabled={savingTitle}
+        className="size-8 shrink-0 grid place-items-center rounded-lg text-zinc-400 hover:bg-zinc-800">
+        <Icon name="close" size={16} />
+      </button>
+    </div>
+  ) : (
+    <span className={className}>{displayTitle(upload, untitled)}</span>
+  );
+
+  const menuButton = (upload: Upload) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={t('uploads.moreOptions')}
+          onClick={(e) => e.stopPropagation()}
+          className="size-8 grid place-items-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 shrink-0 coarse:size-11"
+        >
+          <Icon name="more_vert" size={18} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">{renderMenu(upload)(dropdownMenuComponents)}</DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const when = (upload: Upload) => upload.createdAt
+    ? getRelativeTime(upload.createdAt, t, timezone, locale)
+    : '';
+  const whenTip = (upload: Upload, child: ReactNode) => upload.createdAt ? (
+    <Tip content={formatInTimezone(upload.createdAt, timezone, { dateStyle: 'full', timeStyle: 'long' }, locale)}>
+      {child as React.ReactElement}
+    </Tip>
+  ) : child;
+
+  const sourceLabel = (upload: Upload) => upload.source === 'youtube'
+    ? t('uploads.youtube')
+    : upload.source === 'cloudinary' ? t('uploads.cloudAudio') : upload.source;
+
+  const projectLink = (upload: Upload, size: 'card' | 'row') => {
+    const project = upload.projects?.[0];
+    if (!project) return null;
+    const extra = (upload.projects?.length ?? 1) - 1;
+    return (
+      <Link
+        to={`/project/${project.publicId}/edit`}
+        onClick={(e) => e.stopPropagation()}
+        className={cn('flex items-center gap-1.5 font-semibold text-teal-300 hover:text-teal-200 min-w-0', size === 'card' ? 'text-[13px]' : 'text-[13px]')}
+      >
+        <Icon name="music_note" size={14} className="shrink-0" />
+        <span className="truncate uppercase">{project.title || untitled}</span>
+        {extra > 0 && <span className="text-zinc-500 font-medium shrink-0">+{extra}</span>}
+      </Link>
+    );
+  };
+
+  const playButton = (upload: Upload, className: string, iconSize = 14) => (
+    <button
+      type="button"
+      aria-label={playingId === upload.id ? t('uploads.pausePreview') : t('uploads.preview')}
+      onClick={(e) => handlePreview(e, upload)}
+      className={className}
+    >
+      <Icon name={playingId === upload.id ? 'pause' : 'play_arrow'} size={iconSize} />
+    </button>
+  );
+
+  const renderCard = (upload: Upload) => (
+    <ContextMenu key={upload.id}>
+      <ContextMenuTrigger asChild>
+        <article
+          onClick={() => onSelect?.(upload)}
+          className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-2xl overflow-hidden flex flex-col cursor-pointer transition-colors [-webkit-touch-callout:none]"
+        >
+          <div className="relative h-36 bg-zinc-800/60 px-6">
+            <WaveformBars seed={displayTitle(upload, upload.id)} />
+            <SourceBadge source={upload.source} label={sourceLabel(upload)} className="absolute left-3 top-3" />
+            <span className="absolute right-3 bottom-3 px-2 py-0.5 rounded-md bg-zinc-950/80 text-zinc-100 font-mono text-xs">
+              {formatDuration(upload.duration)}
+            </span>
+            {playButton(upload, 'absolute left-3 bottom-2.5 size-9 rounded-full bg-zinc-100 text-zinc-900 grid place-items-center hover:bg-white coarse:size-11')}
+          </div>
+          <div className="p-4 flex flex-col gap-1.5 flex-1">
+            <div className="flex items-start gap-2">
+              <div className="flex-1 min-w-0 min-h-[2.6rem]">
+                {titleNode(upload, 'text-base font-bold leading-snug line-clamp-2 text-zinc-100')}
+              </div>
+              <div className="-mr-1.5 -mt-1">{menuButton(upload)}</div>
+            </div>
+            {whenTip(upload, (
+              <span className="text-[13px] text-zinc-400 w-fit">{t('uploads.uploadedWhen', { when: when(upload) })}</span>
+            ))}
+            <div className="mt-auto pt-3 border-t border-zinc-800 flex items-center justify-between gap-2 min-h-[2.75rem]">
+              {upload.projects?.length ? projectLink(upload, 'card') : (
+                <>
+                  <span className="text-[13px] text-zinc-400">{t('uploads.noProject')}</span>
+                  <button
+                    type="button"
+                    onClick={(e) => handleCreateProject(e, upload)}
+                    className="h-8 px-2.5 rounded-lg border border-zinc-700 text-primary text-[13px] font-semibold hover:bg-zinc-800 shrink-0"
+                  >
+                    + {t('uploads.createProject')}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </article>
+      </ContextMenuTrigger>
+      <ContextMenuContent>{renderMenu(upload)(contextMenuComponents)}</ContextMenuContent>
+    </ContextMenu>
+  );
+
+  const ROW_GRID = 'grid grid-cols-[48px_minmax(0,3fr)_110px_90px_minmax(0,2fr)_120px_44px] gap-4 items-center px-4';
+
+  const renderRow = (upload: Upload) => (
+    <ContextMenu key={upload.id}>
+      <ContextMenuTrigger asChild>
+        <div role="row" onClick={() => onSelect?.(upload)} className={cn(ROW_GRID, 'py-2.5 border-b border-zinc-800/70 last:border-b-0 hover:bg-zinc-800/30 cursor-pointer [-webkit-touch-callout:none]')}>
+          {playButton(upload, 'size-11 rounded-xl bg-zinc-800 text-primary grid place-items-center hover:bg-zinc-700')}
+          <div role="cell" className="min-w-0">{titleNode(upload, 'block font-semibold truncate text-zinc-100')}</div>
+          <span role="cell" className="text-[13px] text-zinc-200">{sourceLabel(upload)}</span>
+          <span role="cell" className="font-mono text-[13px] text-zinc-400">{formatDuration(upload.duration)}</span>
+          <div role="cell" className="min-w-0">
+            {upload.projects?.length
+              ? projectLink(upload, 'row')
+              : <span className="text-[13px] text-zinc-400">{t('uploads.noProject')}</span>}
+          </div>
+          <span role="cell" className="text-[13px] text-zinc-400">{when(upload)}</span>
+          <div role="cell">{menuButton(upload)}</div>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>{renderMenu(upload)(contextMenuComponents)}</ContextMenuContent>
+    </ContextMenu>
+  );
+
+  const filterTabs = (Object.keys(FILTERS) as FilterId[]).map((id) => (
+    <button
+      key={id}
+      type="button"
+      role="tab"
+      aria-selected={filter === id}
+      onClick={() => setFilter(id)}
+      className={cn(
+        'h-9 px-3.5 rounded-full border text-sm font-semibold transition-colors coarse:h-11',
+        filter === id
+          ? 'bg-primary border-primary text-primary-foreground'
+          : 'border-zinc-800 text-zinc-200 hover:border-zinc-600',
+      )}
+    >
+      {t(`uploads.filters.${id}`)} <span className="opacity-70 font-medium">{counts[id]}</span>
+    </button>
+  ));
+
+  const viewButton = (id: ViewId, icon: string, label: string) => (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={view === id}
+      onClick={() => setView(id)}
+      className={cn('size-8 grid place-items-center rounded-md coarse:size-10', view === id ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-400 hover:text-zinc-200')}
+    >
+      <Icon name={icon} size={16} />
+    </button>
+  );
+
   return (
-    <div className="flex flex-col h-full pt-0 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
-      {/* Count */}
-      <div className="flex items-center mb-5">
-        <span className="text-xs text-zinc-500">
-          {!loading && t('uploads.count', { count: items.length })}
-        </span>
+    <div className="flex flex-col h-full overflow-y-auto pt-8 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full settings-scroll">
+      <LibrarySwitch active="uploads" />
+
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-7">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-100 tracking-tight">{t('uploads.title')}</h1>
+          <p className="text-[15px] text-zinc-400 mt-2">
+            {!loading && t('uploads.stats', { total: counts.all, used: counts.all - counts.unused, unused: counts.unused })}
+          </p>
+        </div>
+        <div className="flex gap-2.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => navigate('/project/new')}
+            className="h-11 px-4 rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-100 font-semibold text-[15px] flex items-center gap-2 hover:bg-zinc-800"
+          >
+            <Icon name="link" size={18} />
+            {t('uploads.fromLink')}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/project/new')}
+            className="h-11 px-5 rounded-xl bg-primary text-primary-foreground font-bold text-[15px] flex items-center gap-2 hover:bg-primary/90"
+          >
+            <Icon name="upload" size={18} />
+            {t('uploads.uploadAudio')}
+          </button>
+        </div>
       </div>
 
-      {/* Content */}
+      {!loading && !error && items.length > 0 && (
+        <div className="flex items-center justify-between gap-4 flex-wrap mt-8 pb-3.5 border-b border-zinc-800">
+          <div role="tablist" aria-label={t('uploads.filterLabel')} className="flex gap-1.5 flex-wrap">{filterTabs}</div>
+          <div className="flex gap-2.5 items-center flex-wrap">
+            <label className="flex items-center gap-2 h-10 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 focus-within:border-primary/50">
+              <Icon name="search" size={16} />
+              <span className="sr-only">{t('uploads.searchLabel')}</span>
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t('uploads.searchPlaceholder')}
+                className="bg-transparent border-none outline-none text-sm text-zinc-100 placeholder:text-zinc-500 w-44"
+              />
+            </label>
+            <div className="relative flex items-center h-10 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-100">
+              <Icon name="sort" size={16} className="absolute left-3 pointer-events-none text-zinc-400" />
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortId)}
+                aria-label={t('uploads.sort.recent')}
+                className="appearance-none bg-transparent h-full pl-9 pr-4 text-sm outline-none cursor-pointer"
+              >
+                {(['recent', 'oldest', 'title'] as SortId[]).map((id) => (
+                  <option key={id} value={id} className="bg-zinc-900">{t(`uploads.sort.${id}`)}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex p-0.5 rounded-xl bg-zinc-900 border border-zinc-800">
+              {viewButton('grid', 'grid_view', t('uploads.gridView'))}
+              {viewButton('list', 'view_list', t('uploads.listView'))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner size="md" />
@@ -153,141 +497,26 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
           <p className="text-sm text-zinc-400 font-medium">{dt('uploads.empty')}</p>
           <p className="text-xs text-zinc-500">{dt('uploads.emptyHint')}</p>
         </div>
+      ) : shown.length === 0 ? (
+        <div className="mt-7 py-14 px-6 text-center border border-dashed border-zinc-700 rounded-2xl text-zinc-400">
+          {t('uploads.noResults')}
+        </div>
+      ) : view === 'grid' ? (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 mt-7">
+          {shown.map(renderCard)}
+        </div>
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1 settings-scroll">
-          {items.map((upload) => (
-            <ContextMenu key={upload.id}>
-              <ContextMenuTrigger asChild>
-            <button
-              type="button"
-              onClick={() => onSelect?.(upload)}
-              // touch-callout so iOS's press-and-hold sheet does not take the
-              // gesture before the context menu opens.
-              className="w-full group relative flex items-start gap-3 p-3 rounded-xl bg-zinc-800/40 hover:bg-zinc-800/80 border border-zinc-700/40 hover:border-zinc-600/60 transition-all duration-150 text-left cursor-pointer [-webkit-touch-callout:none]"
-            >
-              {/* Thumbnail or source icon */}
-              <div className="size-9 rounded-lg bg-zinc-700/50 flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden">
-                <SourceIcon source={upload.source} />
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  {editingId === upload.id ? (
-                    <Input
-                      ref={editInputRef}
-                      value={editTitle}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => setEditTitle(e.target.value)}
-                      onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => handleTitleKeyDown(e, upload.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-sm font-semibold h-7 px-2 bg-zinc-700 border-zinc-600"
-                      disabled={savingTitle}
-                    />
-                  ) : (
-                    <span className="text-sm font-semibold text-zinc-100 truncate">
-                      {upload.title || upload.fileName || t('uploads.untitled')}
-                    </span>
-                  )}
-                  <span className="text-[10px] font-bold uppercase text-zinc-500 bg-zinc-700/50 px-1.5 py-0.5 rounded flex-shrink-0">
-                    <SourceLabel source={upload.source} t={t} />
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3 mt-1">
-                  {upload.fileName && (
-                    <span className="text-xs text-zinc-500 truncate max-w-[200px]">
-                      {upload.fileName}
-                    </span>
-                  )}
-                  {(upload.duration ?? 0) > 0 && (
-                    <span className="text-xs text-zinc-500 flex items-center gap-1">
-                      <Icon name="schedule" size={12} />
-                      {formatTime(upload.duration ?? 0)}
-                    </span>
-                  )}
-                </div>
-
-                {upload.createdAt && (
-                  <Tip content={formatInTimezone(upload.createdAt, timezone, {
-                    dateStyle: 'full',
-                    timeStyle: 'long'
-                  }, i18n.resolvedLanguage || i18n.language)}>
-                    <span className="text-[10px] text-zinc-600 mt-1 block">
-                      {getRelativeTime(upload.createdAt, t, timezone, i18n.resolvedLanguage || i18n.language)}
-                    </span>
-                  </Tip>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                {editingId === upload.id ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => handleSaveTitle(e, upload.id)}
-                      disabled={savingTitle}
-                      className="text-primary/70 hover:text-primary hover:bg-primary/10 size-7"
-                    >
-                      {savingTitle ? (
-                        <LogoLoader size={14} />
-                      ) : (
-                        <Icon name="check" size={14} />
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleCancelEdit}
-                      disabled={savingTitle}
-                      className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700 size-7"
-                    >
-                      <Icon name="close" size={14} />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => handleStartEdit(e, upload)}
-                      className="text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 size-7"
-                    >
-                      <Icon name="edit" size={14} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => handleDelete(e, upload.id, upload.title || upload.fileName)}
-                      disabled={deletingId === upload.id}
-                      className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10 size-7"
-                    >
-                      {deletingId === upload.id
-                        ? <LogoLoader size={14} />
-                        : <Icon name="delete" size={14} />}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </button>
-              </ContextMenuTrigger>
-              {/* Same two actions the hover icons offer, reachable by long-press */}
-              <ContextMenuContent>
-                <ContextMenuItem onClick={(e) => handleStartEdit(e as unknown as MouseEvent, upload)}>
-                  <Icon name="edit" />
-                  {t('uploads.rename')}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  variant="destructive"
-                  onClick={(e) => handleDelete(e as unknown as MouseEvent, upload.id, upload.title || upload.fileName)}
-                >
-                  <Icon name="delete" />
-                  {t('common.delete')}
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
-          ))}
+        <div className="mt-5 border border-zinc-800 rounded-2xl overflow-x-auto bg-zinc-900">
+          <div role="table" aria-label={t('uploads.title')} className="min-w-[760px]">
+            <div role="row" className={cn(ROW_GRID, 'py-3 border-b border-zinc-800 text-xs font-semibold uppercase tracking-wider text-zinc-400')}>
+              <span role="columnheader" />
+              {(['title', 'source', 'duration', 'project', 'uploaded'] as const).map((c) => (
+                <span key={c} role="columnheader">{t(`uploads.columns.${c}`)}</span>
+              ))}
+              <span role="columnheader" />
+            </div>
+            {shown.map(renderRow)}
+          </div>
         </div>
       )}
       {confirmModal}

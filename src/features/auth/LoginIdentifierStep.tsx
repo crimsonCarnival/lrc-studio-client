@@ -20,7 +20,7 @@ const identifierSchema = z.string().refine(
 
 function normaliseIdentifier(raw: string) {
   const trimmed = raw.trim();
-  return trimmed.startsWith('@') ? trimmed.slice(1).toLowerCase() : trimmed;
+  return trimmed;
 }
 
 function validateIdentifier(value: string) {

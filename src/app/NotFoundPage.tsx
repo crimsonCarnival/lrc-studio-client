@@ -129,7 +129,7 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
         return {
           icon: <Icon name="person_off" size={64} className="text-rose-400" />,
           title: identifier
-            ? t('error.userNotFoundWithName', { name: `@${identifier}` })
+            ? t('error.userNotFoundWithName', { name: identifier })
             : pickVariant(t, 'error.userNotFoundTitle'),
           description: pickVariant(t, 'error.userNotFoundDesc'),
           primaryAction: {

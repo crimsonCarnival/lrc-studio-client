@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Section } from '../shared';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { getBlockedUsers, unblockUser, type BlockedUser } from '@/features/profile/profile.service';
@@ -31,16 +30,22 @@ export default function BlockedUsersSettings({ searchTerm }: { searchTerm?: stri
     setPending(null);
   }, [t]);
 
+  const query = (searchTerm ?? '').toLowerCase();
+  if (query && !`${t('settings.blocked.label')} ${t('settings.blocked.description')} blocked`.toLowerCase().includes(query)) return null;
+
   return (
-    <Section title={t('settings.blocked.label')} iconName="block" searchTerm={searchTerm}>
-      <p className="text-[11px] text-muted-foreground px-1 mb-2">{t('settings.blocked.description')}</p>
+    <section className="settings-section rounded-2xl border border-zinc-800 bg-zinc-900 px-6 py-4">
+      <h2 className="text-xs font-bold uppercase tracking-[.09em] text-primary">{t('settings.blocked.label')}</h2>
+      <p className="text-sm text-zinc-400 mt-1.5">{t('settings.blocked.description')}</p>
 
       {loading ? (
-        <p className="text-xs text-muted-foreground px-1 py-4">{t('settings.blocked.loading')}</p>
+        <p className="text-sm text-zinc-400 py-5">{t('settings.blocked.loading')}</p>
       ) : users.length === 0 ? (
-        <p className="text-xs text-muted-foreground italic px-1 py-4">{t('settings.blocked.empty')}</p>
+        <div className="mt-4 mb-2 p-5 rounded-xl border border-dashed border-zinc-700 text-zinc-400 text-center text-sm">
+          {t('settings.blocked.empty')}
+        </div>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-2 mt-4 mb-2">
           {users.map((u) => {
             const name = u.displayName || u.accountName;
             return (
@@ -76,6 +81,6 @@ export default function BlockedUsersSettings({ searchTerm }: { searchTerm?: stri
           })}
         </ul>
       )}
-    </Section>
+    </section>
   );
 }

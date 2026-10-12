@@ -71,40 +71,40 @@ export default function AccountNameSection() {
     }
   }
 
+  const inputId = 'settings-account-name';
+  const changed = value !== (user?.accountName || '');
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between ml-1">
-        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-          {t('profile.accountNameSection')}
-        </label>
-        {accountNameCooldownDaysLeft > 0 && (
-          <span className="text-[10px] text-amber-500/80 flex items-center gap-1">
-            <Icon name="schedule" size={12} />
-            {t('profile.accountNameCooldown', { days: accountNameCooldownDaysLeft })}
-          </span>
-        )}
+    <div>
+      <label htmlFor={inputId} className="block text-[13px] font-bold text-zinc-100 mb-2">
+        {t('profile.accountName')}
+      </label>
+      <div>
+        <Input
+          id={inputId}
+          value={value}
+          onChange={handleChange}
+          placeholder={t('profile.accountNamePlaceholder')}
+          disabled={accountNameCooldownDaysLeft > 0}
+          maxLength={30}
+          className={`bg-zinc-950 border border-zinc-700 rounded-[10px] h-11 text-[15px] ${accountNameCooldownDaysLeft > 0 ? 'opacity-50 cursor-not-allowed' : ''} ${error ? 'border-red-500/50 focus-visible:ring-red-500/50' : ''}`}
+        />
       </div>
-
-      <Input
-        value={value}
-        onChange={handleChange}
-        placeholder={t('profile.accountNamePlaceholder')}
-        disabled={accountNameCooldownDaysLeft > 0}
-        maxLength={30}
-        className={`bg-secondary/30 border border-border rounded-xl h-10 text-sm ${accountNameCooldownDaysLeft > 0 ? 'opacity-50 cursor-not-allowed' : ''} ${error ? 'border-red-500/50 focus-visible:ring-red-500/50' : ''}`}
-      />
-      {error && <p className="text-[11px] text-red-400 ml-1">{error}</p>}
-
-      <Button
-        onClick={handleSave}
-        disabled={saving || !!error || value === (user?.accountName || '') || accountNameCooldownDaysLeft > 0}
-        className="h-9 coarse:h-11 rounded-xl font-bold gap-2 text-sm"
-        size="sm"
-      >
-        {saving ? <LogoLoader size={16} /> : <Icon name="save" size={16} />}
-        {t('profile.save')}
-      </Button>
-
+      {error ? (
+        <p className="text-[13px] text-red-400 mt-1.5">{error}</p>
+      ) : (
+        <p className="text-[13px] text-zinc-400 mt-1.5">
+          {window.location.host}/profile/{value || '…'} · {accountNameCooldownDaysLeft > 0
+            ? t('profile.accountNameCooldown', { days: accountNameCooldownDaysLeft })
+            : t('profile.accountNameChangeEvery', { days: COOLDOWN_DAYS })}
+        </p>
+      )}
+      {changed && !error && accountNameCooldownDaysLeft === 0 && (
+        <Button onClick={handleSave} disabled={saving} className="h-10 coarse:h-11 rounded-xl font-bold gap-2 text-sm mt-3" size="sm">
+          {saving ? <LogoLoader size={16} /> : <Icon name="save" size={16} />}
+          {t('profile.save')}
+        </Button>
+      )}
     </div>
   );
 }

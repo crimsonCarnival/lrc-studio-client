@@ -163,7 +163,7 @@ export default function ListPage() {
                 <div className="size-5 rounded-full bg-muted" />
               )}
               <span className="text-sm font-medium text-foreground">
-                {playlist.owner?.displayName || `@${playlist.owner?.accountName}`}
+                {playlist.owner?.displayName || playlist.owner?.accountName}
               </span>
             </Link>
 

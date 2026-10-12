@@ -130,6 +130,10 @@ export const uploadsService = {
           publicId
           createdAt
           updatedAt
+          projects {
+            publicId
+            title
+          }
         }
       }
     `, { limit, offset });

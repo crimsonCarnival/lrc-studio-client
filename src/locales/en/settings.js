@@ -8,6 +8,25 @@ export default {
   applyChanges: "Apply Changes",
   unsavedChanges: "Unsaved changes",
 
+  resetSection: "Reset to defaults",
+  viewProfile: "View profile",
+  levelShort: "Lv. {{level}}",
+  pages: {
+    shortcuts: { title: "Keyboard shortcuts", lead: "Click a shortcut and press the new combination. Press", leadEnd: "in the editor to see them." },
+    advanced: { title: "Advanced", lead: "Saving, confirmations, time zone and your account." },
+    stats: { title: "Stats & activity", lead: "Only you can see this page." },
+    security: { title: "Sign-in", lead: "How you sign in and where you're signed in." },
+    editor: { title: "Editor", lead: "How you stamp, adjust and see each line's timing." },
+    export: { title: "Export", lead: "How the files you download or copy are generated." },
+    interface: { title: "Interface", lead: "Language, editor appearance and how lyrics look." },
+    profile: { title: "Public profile", lead: "What others see when they visit your profile." },
+    badges: { title: "Showcase & badges", lead: "Pick up to {{slots}} achievements to show on your profile." },
+    privacy: { title: "Privacy", lead: "Control what others can see. Changes are saved instantly." },
+    playback: { title: "Playback", lead: "How audio sounds and is navigated in the editor." },
+    autoStamp: { title: "Auto Stamp", lead: "How lyrics are fitted to the audio when you sync automatically." },
+  },
+
+  security: { methodsSection: "Sign-in methods" },
   groups: {
     account: 'Account',
     preferences: 'Preferences',
@@ -44,6 +63,12 @@ export default {
   },
 
   playback: {
+    speedRange: "Allowed range",
+    speedRangeDesc: "Lowest and highest speed you can play at",
+    speedRangeTo: "to",
+    removePreset: "Remove {{value}}",
+    addPreset: "Add",
+    waveformSnapNeedsWaveform: "requires the waveform to be shown",
     label: "Playback",
     autoRewind: "Auto-Rewind on Pause",
     autoRewindDesc: "Automatically rewind the audio by a few seconds when pausing",
@@ -62,13 +87,20 @@ export default {
     autoPauseOnMark: "Auto-Pause on Mark",
     autoPauseOnMarkDesc: "Automatically pause playback when marking a line timestamp",
     speedPresets: "Playback speed presets",
-    speedPresetsDesc: "Comma-separated list of playback speeds (up to 6)",
+    speedPresetsDesc: "Shown in the player menu · {{count}} of {{max}}",
     speedSection: "Speed",
     seekSection: "Seeking & Navigation",
     waveformSection: "Waveform"
   },
 
   editor: {
+    markSection: "When marking a time",
+    timingSection: "Timing adjustment",
+    displaySection: "Display",
+    importSection: "Import LRC",
+    nudgeStep: "Nudge step",
+    nudgeStepDesc: "How far each key press moves a time (Alt + ← / →)",
+    nudgeFineUnit: "s fine",
     label: "Editor",
     nudgeIncrement: "Nudge Increment",
     nudgeIncrementDesc: "Standard amount to shift timestamps (in seconds)",
@@ -107,6 +139,12 @@ export default {
   },
 
   export: {
+    previewNote: "Preview using a sample project. Updates with the settings below.",
+    previewLabel: "Exported file preview",
+    previewLine: "[lyrics line {{n}}]",
+    previewMediaName: "[audio name]",
+    followsEditorDesc: "Uses the same precision as the editor: {{precision}}",
+    changeInEditor: "Change in Editor →",
     label: "Export",
     lineEndings: "Line Endings",
     lineEndingsDesc: "Format of newlines in exported files",
@@ -135,6 +173,12 @@ export default {
   },
 
   interface: {
+    editorLyricsSection: "Lyrics in the editor",
+    previewLabel: "Preview",
+    previewPrev: "[Previous lyrics line]",
+    previewNow: "[Line playing now]",
+    previewNext: "[Next lyrics line]",
+    resetColors: "Reset",
     label: "Interface",
     theme: "Color Theme",
     themeDesc: "Change the visual appearance of the application",
@@ -196,6 +240,18 @@ export default {
   },
 
   shortcuts: {
+    tabAll: "All",
+    filterLabel: "Filter shortcuts",
+    searchLabel: "Search shortcut",
+    searchPlaceholder: "Search action or key…",
+    count_one: "{{count}} shortcut",
+    count_other: "{{count}} shortcuts",
+    resetAll: "Reset all",
+    recording: "Press a combination…",
+    clickSuffix: "+ click",
+    conflictWith: "Same shortcut as {{name}}",
+    changeAria: "Change shortcut for {{name}}: {{keys}}",
+    keys: { space: "Space", delete: "Del" },
     label: "Shortcuts",
     playerSection: "Player",
     previewSection: "Preview",
@@ -249,6 +305,11 @@ export default {
   },
 
   advanced: {
+    saveSection: "Saving",
+    regionSection: "Region",
+    deactivateTypeHandle: "To confirm, type your handle",
+    deactivateConfirmBtn: "Deactivate my account",
+    deactivating: "Deactivating…",
     label: "Advanced",
     autoSave: "Auto-Save",
     autoSaveDesc: "Periodically save your work automatically",
@@ -275,14 +336,21 @@ export default {
   },
 
   autoStamp: {
+    precisionSection: "Precision",
+    applySection: "Application",
+    sampleTitle: "Example with this threshold",
+    sampleLine: "[Sample line {{n}}]",
+    sampleApplied: "Applied",
+    sampleReview: "Review",
+    applyModeDesc: "Lines you already stamped by hand are left alone",
     title: "Auto Stamp",
     confidenceThreshold: "Confidence threshold",
-    confidenceThresholdDesc: "Lines below this confidence are flagged for review",
-    fuzzyTolerance: "Fuzzy match tolerance",
-    fuzzyToleranceDesc: "How closely transcribed words must match your lyrics",
-    applyMode: "Apply mode",
-    applyModeAll: "Stamp all lines",
-    applyModeEmptyOnly: "Only stamp unsynced lines"
+    confidenceThresholdDesc: "Lines below this are flagged for you to review",
+    fuzzyTolerance: "Match tolerance",
+    fuzzyToleranceDesc: "How similar heard words must be to your lyrics. Lower accepts more differences",
+    applyMode: "Which lines get synced",
+    applyModeAll: "All lines",
+    applyModeEmptyOnly: "Only unsynced lines"
   },
 
   options: {
@@ -320,6 +388,9 @@ export default {
       srt: "SubRip (.srt)"
     },
     positions: {
+      topLeft: "Top left",
+      topCenter: "Top center",
+      topRight: "Top right",
       bottomLeft: "Bottom Left",
       bottomCenter: "Bottom Center",
       bottomRight: "Bottom Right"

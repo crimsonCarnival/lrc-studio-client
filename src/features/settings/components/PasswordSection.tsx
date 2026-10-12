@@ -4,6 +4,8 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
 import { Button } from '@ui/button';
+import { Icon } from '@/shared/ui/Icon';
+import { IconRow } from './shared';
 
 export default function PasswordSection() {
   const { t, i18n } = useTranslation();
@@ -21,38 +23,28 @@ export default function PasswordSection() {
   const lastChanged = getLastChangedDate();
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between bg-secondary/30 border border-border rounded-xl px-3 min-h-11 py-2 gap-3">
-        <span className="text-sm text-muted-foreground">
-          {user?.hasPassword
-            ? lastChanged
-              ? t('auth.passwordManagement.lastChanged', { date: lastChanged })
-              : t('auth.passwordManagement.button')
-            : t('auth.passwordManagement.noPasswordSet')}
-        </span>
-        {user?.hasPassword && (
-          <Link to="/auth?tab=forgot"
-            className="text-[11px] text-primary hover:underline shrink-0"
-          >
-            {t('auth.passwordManagement.forgotPasswordLink')}
-          </Link>
-        )}
-      </div>
-
-      <div className="flex items-center gap-2 mt-1">
-        <Button
-          size="sm"
-          onClick={() => navigate(user?.hasPassword ? '/change-password?from=password-reset' : '/change-password?mode=set')}
-          className="rounded-lg h-7 text-[11px] font-bold shrink-0"
-        >
-          {user?.hasPassword
-            ? t('auth.passwordManagement.button')
-            : t('auth.passwordManagement.setPassword')}
-        </Button>
-        {!user?.hasPassword && (
-          <span className="size-2 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
-        )}
-      </div>
-    </div>
+    <IconRow
+      icon={<Icon name="lock" size={20} />}
+      title={t('profile.sections.password')}
+      description={user?.hasPassword
+        ? lastChanged
+          ? t('auth.passwordManagement.lastChanged', { date: lastChanged })
+          : t('profile.privacy.passwordDesc')
+        : t('auth.passwordManagement.noPasswordSet')}
+    >
+      {user?.hasPassword && (
+        <Link to="/auth?tab=forgot" className="text-[13px] text-primary underline">
+          {t('auth.passwordManagement.forgotPasswordLink')}
+        </Link>
+      )}
+      <Button
+        variant="outline"
+        onClick={() => navigate(user?.hasPassword ? '/change-password?from=password-reset' : '/change-password?mode=set')}
+        className="h-11 rounded-[10px] border-zinc-700 bg-transparent text-zinc-100 font-semibold"
+      >
+        {user?.hasPassword ? t('auth.passwordManagement.button') : t('auth.passwordManagement.setPassword')}
+        {!user?.hasPassword && <span className="size-2 rounded-full bg-amber-400" aria-hidden="true" />}
+      </Button>
+    </IconRow>
   );
 }

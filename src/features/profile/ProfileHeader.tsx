@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { Icon } from '@/shared/ui/Icon';
 import { LevelBadge } from '@ui/LevelBadge';
 import { BadgeList } from '@/features/badges/BadgeList';
 import { Tip } from '@/shared/ui/tip';
 import { CountryFlag } from '@/shared/ui/CountryFlag';
+import { WaveformBars } from '@/shared/ui/WaveformBars';
 import { FollowButton } from './FollowButton';
 import type { PublicUser } from '@/types';
 import { usePresence } from '@/shared/hooks/usePresence';
@@ -23,7 +25,7 @@ function AvatarBadge({ avatarUrl, name, isOnline, size = 'lg' }: { avatarUrl?: s
         <LazyImage
           src={avatarUrl}
           alt={name}
-          className={`${sizeClass} object-cover border border-border shadow-inner-highlight`}
+          className={`${sizeClass} object-cover border border-border shadow-inner-highlight ring-4 ring-zinc-900`}
         />
         {isOnline && (
           <span className="absolute -bottom-1 -right-1 size-5 rounded-full bg-green-500 border-[3px] border-zinc-900" />
@@ -33,7 +35,7 @@ function AvatarBadge({ avatarUrl, name, isOnline, size = 'lg' }: { avatarUrl?: s
   }
   return (
     <div className="relative inline-block shrink-0">
-      <div className={`${sizeClass} bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center border border-border shadow-inner-highlight font-bold text-zinc-950 select-none`}>
+      <div className={`${sizeClass} bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center border border-border shadow-inner-highlight ring-4 ring-zinc-900 font-bold text-zinc-950 select-none`}>
         {(name || '?')[0].toUpperCase()}
       </div>
       {isOnline && (
@@ -61,6 +63,8 @@ interface ProfileHeaderProps {
   onUnblock: () => void;
   /** Owner-only: switches the page into the "view as others" preview. */
   onViewAsOthers?: () => void;
+  /** Stats strip rendered along the bottom edge of the card. */
+  children?: ReactNode;
 }
 
 /** Block toggle with two-step confirm; parent owns isBlocked + the API calls. */
@@ -112,6 +116,7 @@ export function ProfileHeader({
   onBlock,
   onUnblock,
   onViewAsOthers,
+  children,
 }: ProfileHeaderProps) {
   const { t, i18n } = useTranslation();
   const dateLocale = i18n.language.startsWith('es') ? esLocale : enLocale;
@@ -133,10 +138,18 @@ export function ProfileHeader({
   };
 
   return (
-    <div className="glass rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-6 relative overflow-hidden mb-6">
-      <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} isOnline={isOnline} />
+    <div className="glass rounded-3xl relative overflow-hidden mb-6">
+      {/* Decorative waveform cover */}
+      <div className="h-24 sm:h-28 bg-primary/10 border-b border-border px-6 sm:px-8 overflow-hidden">
+        <WaveformBars seed={profile.accountName || displayName} count={64} minHeight={10} className="justify-end" barClassName="bg-primary/25" />
+      </div>
 
-      <div className="flex-1 min-w-0 w-full text-center sm:text-left flex flex-col pt-1">
+      <div className="px-6 sm:px-8 pb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+      <div className="-mt-14 sm:-mt-16">
+        <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} isOnline={isOnline} />
+      </div>
+
+      <div className="flex-1 min-w-0 w-full text-center sm:text-left flex flex-col pt-1 sm:pt-4">
         
         {/* Row 1: Name, Badges, Level, and Action Buttons */}
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 w-full">
@@ -218,7 +231,7 @@ export function ProfileHeader({
 
         {/* Row 2: Handle, Country, Last Online */}
         <div className="flex items-center justify-center sm:justify-start gap-2 mt-2 flex-wrap">
-          <p className="text-zinc-400 font-medium">@{profile.accountName}</p>
+          <p className="text-zinc-400 font-medium">{profile.accountName}</p>
           {(profile.country || (!isOnline && profile.lastOnlineAt)) && (
             <span className="text-zinc-600 px-1">•</span>
           )}
@@ -254,6 +267,9 @@ export function ProfileHeader({
           </p>
         )}
       </div>
+      </div>
+
+      {children && <div className="border-t border-border">{children}</div>}
     </div>
   );
 }

@@ -1,40 +1,14 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import NumberInput from "@shared/ui/NumberInput";
-import { Section, SettingRow, Toggle } from '../shared';
+import { Section, SettingRow, Toggle, UnitInput } from '../shared';
 import { usePlaybackSettings } from '../../hooks/usePlaybackSettings';
+import { DEFAULT_SETTINGS } from '../../settings-defaults';
 import type { AppSettings } from '@/features/settings/settings.types';
-import { Input } from '@ui/input';
 
-function SpeedPresetsInput({ value, onChange }: { value?: number[]; onChange: (presets: number[]) => void }) {
-  const [localVal, setLocalVal] = useState<string | null>(null);
+const MAX_PRESETS = 6;
+// Offered in this order when "Add" is pressed and not already present.
+const PRESET_CANDIDATES = [2, 0.75, 1.25, 3, 1.75];
 
-  const displayVal = localVal !== null ? localVal : (value || [0.25, 0.5, 0.75, 1, 1.25, 1.5]).join(', ');
-
-  const handleBlur = () => {
-    if (localVal === null) return;
-    const parsed = localVal
-      .split(',')
-      .map(s => parseFloat(s.trim()))
-      .filter(n => !isNaN(n) && n > 0)
-      .slice(0, 6);
-
-    if (parsed.length > 0) {
-      onChange(parsed);
-    }
-    setLocalVal(null);
-  };
-
-  return (
-    <Input
-      value={displayVal}
-      onChange={(e) => setLocalVal(e.target.value)}
-      onBlur={handleBlur}
-      placeholder="0.25, 0.5, 1, 1.5..."
-      className="w-40 bg-zinc-800/60 border-zinc-700/50 h-8 text-xs"
-    />
-  );
-}
+const formatSpeed = (v: number) => `${String(v).replace('.', ',')}×`;
 
 interface PlaybackSettingsProps {
   settings: AppSettings;
@@ -52,78 +26,121 @@ export default function PlaybackSettings({ settings, updateSetting, searchTerm }
     handleWaveformSnapChange,
   } = usePlaybackSettings(settings, updateSetting);
 
+  const presets = settings.playback?.speedPresets ?? DEFAULT_SETTINGS.playback.speedPresets;
+  const showWaveform = settings.playback?.showWaveform ?? true;
+  const setPresets = (next: number[]) => updateSetting('playback.speedPresets', next);
+  const asEvent = (v: number) => ({ target: { value: String(v) } });
+
+  const addPreset = () => {
+    const next = PRESET_CANDIDATES.find((x) => !presets.includes(x));
+    if (next !== undefined) setPresets([...presets, next].sort((a, b) => a - b));
+  };
+
   return (
     <>
-      <Section title={t('settings.playback.speedSection')} iconName="headphones" searchTerm={searchTerm}>
-        <SettingRow iconName="keyboard_double_arrow_down" label={t('settings.playback.minSpeed')} description={t('settings.playback.minSpeedDesc')}>
-          <NumberInput
-            min={0.05}
-            max={(settings.playback?.speedBounds?.max || 3) - 0.05}
-            step={0.05}
-            value={settings.playback?.speedBounds?.min ?? 0.25}
-            onChange={handleMinSpeedChange}
-            className="w-20"
-          />
+      <Section title={t('settings.playback.speedSection')} searchTerm={searchTerm}>
+        <SettingRow label={t('settings.playback.speedRange')} description={t('settings.playback.speedRangeDesc')}>
+          <div className="flex items-center gap-2.5">
+            <UnitInput
+              label={t('settings.playback.minSpeed')}
+              unit="×"
+              step={0.05}
+              min={0.05}
+              value={settings.playback?.speedBounds?.min ?? 0.25}
+              onChange={(v) => handleMinSpeedChange(asEvent(v))}
+            />
+            <span className="text-zinc-500">{t('settings.playback.speedRangeTo')}</span>
+            <UnitInput
+              label={t('settings.playback.maxSpeed')}
+              unit="×"
+              step={0.05}
+              max={10}
+              value={settings.playback?.speedBounds?.max ?? 3}
+              onChange={(v) => handleMaxSpeedChange(asEvent(v))}
+            />
+          </div>
         </SettingRow>
-        <SettingRow iconName="keyboard_double_arrow_up" label={t('settings.playback.maxSpeed')} description={t('settings.playback.maxSpeedDesc')}>
-          <NumberInput
-            min={(settings.playback?.speedBounds?.min || 0.25) + 0.05}
-            max={10}
-            step={0.05}
-            value={settings.playback?.speedBounds?.max ?? 3}
-            onChange={handleMaxSpeedChange}
-            className="w-20"
-          />
-        </SettingRow>
-        <SettingRow iconName="list" label={t('settings.playback.speedPresets')} description={t('settings.playback.speedPresetsDesc')}>
-          <SpeedPresetsInput
-            value={settings.playback?.speedPresets}
-            onChange={(val) => updateSetting('playback.speedPresets', val)}
-          />
+        <SettingRow
+          label={t('settings.playback.speedPresets')}
+          description={t('settings.playback.speedPresetsDesc', { count: presets.length, max: MAX_PRESETS })}
+        >
+          <div className="flex flex-wrap justify-end gap-1.5">
+            {presets.map((v) => (
+              <span key={v} className="flex items-center h-[34px] pl-3 rounded-full bg-zinc-800 text-zinc-100 font-mono text-[13px]">
+                {formatSpeed(v)}
+                <button
+                  type="button"
+                  aria-label={t('settings.playback.removePreset', { value: formatSpeed(v) })}
+                  onClick={() => setPresets(presets.filter((x) => x !== v))}
+                  className="w-[30px] h-[34px] text-zinc-400 hover:text-zinc-100 text-[15px]"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            {presets.length < MAX_PRESETS && (
+              <button
+                type="button"
+                onClick={addPreset}
+                className="h-[34px] px-3 rounded-full border border-dashed border-zinc-700 text-primary text-[13px] font-semibold hover:bg-zinc-800"
+              >
+                + {t('settings.playback.addPreset')}
+              </button>
+            )}
+          </div>
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.playback.seekSection')} iconName="forward" searchTerm={searchTerm}>
-        <SettingRow iconName="restart_alt" label={t('settings.playback.autoRewind')} description={t('settings.playback.autoRewindDesc')}>
-          <NumberInput
+      <Section title={t('settings.playback.seekSection')} searchTerm={searchTerm}>
+        <SettingRow label={t('settings.playback.autoRewind')} description={t('settings.playback.autoRewindDesc')}>
+          <UnitInput
+            label={t('settings.playback.autoRewind')}
+            unit="s"
             min={0}
             max={10}
-            step={1}
             value={settings.playback?.autoRewindOnPause?.seconds ?? 0}
-            onChange={handleAutoRewindChange}
-            className="w-20"
+            onChange={(v) => handleAutoRewindChange(asEvent(v))}
           />
         </SettingRow>
-        <SettingRow iconName="timer" label={t('settings.playback.seekTime')} description={t('settings.playback.seekTimeDesc')}>
-          <NumberInput
+        <SettingRow label={t('settings.playback.seekTime')} description={t('settings.playback.seekTimeDesc')}>
+          <UnitInput
+            label={t('settings.playback.seekTime')}
+            unit="s"
             min={1}
             max={60}
-            step={1}
             value={settings.playback?.seekTime ?? 5}
-            onChange={(e) => updateSetting('playback.seekTime', Math.max(1, parseInt(e.target.value, 10) || 5))}
-            className="w-20"
+            onChange={(v) => updateSetting('playback.seekTime', Math.min(60, Math.max(1, Math.round(v) || 5)))}
           />
         </SettingRow>
-        <SettingRow iconName="play_arrow" label={t('settings.playback.seekPlays')} description={t('settings.playback.seekPlaysDesc')}>
+        <SettingRow label={t('settings.playback.seekPlays')} description={t('settings.playback.seekPlaysDesc')}>
           <Toggle
             id="toggle-seek-plays"
+            label={t('settings.playback.seekPlays')}
             checked={settings.playback?.seekPlays ?? false}
             onChange={(v) => updateSetting('playback.seekPlays', v)}
           />
         </SettingRow>
       </Section>
 
-      <Section title={t('settings.playback.waveformSection')} iconName="monitoring" searchTerm={searchTerm}>
-        <SettingRow iconName="monitoring" label={t('settings.playback.showWaveform')} description={t('settings.playback.showWaveformDesc')}>
+      <Section title={t('settings.playback.waveformSection')} searchTerm={searchTerm}>
+        <SettingRow label={t('settings.playback.showWaveform')} description={t('settings.playback.showWaveformDesc')}>
           <Toggle
             id="toggle-waveform"
-            checked={settings.playback?.showWaveform ?? true}
+            label={t('settings.playback.showWaveform')}
+            checked={showWaveform}
             onChange={handleShowWaveformChange}
           />
         </SettingRow>
-        <SettingRow iconName="grid_on" label={t('settings.playback.waveformSnap')} description={t('settings.playback.waveformSnapDesc')}>
+        <SettingRow
+          nested
+          disabled={!showWaveform}
+          label={t('settings.playback.waveformSnap')}
+          description={<>{t('settings.playback.waveformSnapDesc')}{!showWaveform && ` · ${t('settings.playback.waveformSnapNeedsWaveform')}`}</>}
+        >
           <Toggle
             id="toggle-waveform-snap"
+            label={t('settings.playback.waveformSnap')}
+            disabled={!showWaveform}
             checked={settings.playback?.waveformSnap ?? false}
             onChange={handleWaveformSnapChange}
           />

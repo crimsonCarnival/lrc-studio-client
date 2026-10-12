@@ -1,23 +1,8 @@
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon } from '@/shared/ui/Icon';
 import AvatarUpload from './profile/AvatarUpload';
 import ProfileForm from './profile/ProfileForm';
 import AccountNameSection from './profile/AccountNameSection';
 import EmailSection from './profile/EmailSection';
-
-
-function SectionHeading({ children }: { children?: ReactNode }) {
-  return (
-    <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-      {children}
-    </h4>
-  );
-}
-
-function Divider() {
-  return <hr className="border-border/50" />;
-}
 
 function blockMatches(searchTerm: string | undefined, labels: string[]) {
   if (!searchTerm) return true;
@@ -35,44 +20,19 @@ export default function ProfileSettings({ searchTerm }: { searchTerm?: string })
     tk('profile.sections.public'), tk('profile.displayName'), tk('profile.bio'),
     tk('profile.emailSection'), tk('profile.email'),
     tk('profile.accountNameSection'), tk('profile.accountName'),
-    tk('profile.settings.showFollowers'), tk('profile.avatar'),
-    'avatar', 'photo', 'display name', 'bio', 'email', 'username', 'handle',
-    'followers', 'profile', 'public',
+    tk('profile.avatar'),
+    'avatar', 'photo', 'display name', 'bio', 'email', 'username', 'handle', 'profile', 'public',
   ]);
 
   if (!matches) return null;
 
   return (
-    <div className="settings-section space-y-6 animate-fade-in">
-      <div className="flex items-center gap-2 mb-2 px-1">
-        <Icon name="account_circle" size={16} className="text-zinc-400" />
-        <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-          {t('profile.tabs.account')}
-        </h3>
-      </div>
-
-      <div className="rounded-2xl border border-border/50 bg-secondary/10 p-5 lg:p-6 space-y-6">
-        {/* Avatar */}
-        <section className="space-y-4">
-          <SectionHeading>{t('profile.sections.public')}</SectionHeading>
-          <AvatarUpload />
-        </section>
-        {/* Display name + bio + visibility + user info + mini profile */}
-        <ProfileForm>
-          {/* User Info */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-2">
-              <Icon name="info" size={14} className="text-zinc-500" />
-              <SectionHeading>{t('profile.sections.account')}</SectionHeading>
-            </div>
-            <EmailSection />
-            <AccountNameSection />
-          </section>
-          
-          <Divider />
-        </ProfileForm>
-
-      </div>
-    </div>
+    <>
+      <section className="settings-section rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+        <AvatarUpload />
+        <ProfileForm identifier={<AccountNameSection />} />
+      </section>
+      <EmailSection />
+    </>
   );
 }

@@ -6,6 +6,7 @@ import { gqlRequest } from '@/app/graphql.client';
 import { BADGE_REGISTRY, RARITY_CONFIG, BADGE_COLORS } from './badge-registry';
 import { useBadgeDefs } from './BadgeDefsContext';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Toggle } from '@/features/settings/components/shared';
 
 const UPDATE_SHOWCASE = /* GraphQL */ `
   mutation UpdateShowcase($badgeIds: [String!]!, $showcasePublic: Boolean) {
@@ -30,40 +31,43 @@ interface Badge {
 const EMPTY_BADGES: Badge[] = [];
 const EMPTY_SHOWCASE: string[] = [];
 
+const TOTAL_BADGES = 18;
+
 function EarnedBadgeItem({ badge, isInShowcase, onToggle }: { badge: Badge; isInShowcase: boolean; onToggle: (id: string) => void }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const tk = t as (key: string, defaultValue?: string) => string;
   const dbDefs = useBadgeDefs();
   const def = BADGE_REGISTRY[badge.id] ?? { label: badge.id, icon: '?', color: 'primary' };
   const colorConf = BADGE_COLORS[def.color] ?? BADGE_COLORS.primary;
   const rarity = dbDefs[badge.id]?.rarity ?? badge.rarity ?? 'common';
   const rarityConf = RARITY_CONFIG[rarity] ?? RARITY_CONFIG.common;
+  const rawLabel = def.label as unknown;
+  const fallbackLabel = typeof rawLabel === 'object' && rawLabel !== null
+    ? ((rawLabel as Record<string, string>)[i18n.language === 'es' ? 'es' : 'en'] ?? '')
+    : String(rawLabel);
+  const label = tk(`badges.${badge.id}.label`, fallbackLabel);
 
   return (
-    <button
-      type="button"
-      onClick={() => onToggle(badge.id)}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left group
-        ${isInShowcase
-          ? 'bg-primary/10 border border-primary/30 ring-1 ring-primary/20'
-          : 'bg-zinc-900/60 border border-zinc-800/50 hover:border-zinc-700/70 hover:bg-zinc-800/60'
-        }`}
-    >
-      <div className="flex-1 min-w-0">
-        <p className={`text-xs font-semibold truncate ${isInShowcase ? 'text-primary' : colorConf.text}`}>
-          {def.label}
-        </p>
-        <p className="text-[10px] text-zinc-600 truncate">{tk(`badges.${badge.id}.tip`, def.condition ?? '')}</p>
-      </div>
-      <span className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full border shrink-0 ${rarityConf.className}`}>
-        {tk(rarityConf.labelKey)}
+    <li className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-zinc-950 border border-zinc-800">
+      <span className={`shrink-0 min-w-[84px] text-center px-2 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 ${colorConf.text}`}>
+        {label}
       </span>
-      {isInShowcase && (
-        <div className="size-4 rounded-full bg-primary flex items-center justify-center shrink-0">
-          <Icon name="auto_awesome" size={10} className="text-zinc-950" />
-        </div>
-      )}
-    </button>
+      <span className="flex-1 min-w-0">
+        <span className="block text-[13px] text-zinc-400">{tk(`badges.${badge.id}.tip`, def.condition ?? '')}</span>
+        <span className="block text-xs text-zinc-500 mt-0.5">{tk(rarityConf.labelKey)}</span>
+      </span>
+      <button
+        type="button"
+        aria-pressed={isInShowcase}
+        aria-label={t(isInShowcase ? 'badges.showcase.removeFrom' : 'badges.showcase.addTo', { name: label })}
+        onClick={() => onToggle(badge.id)}
+        className={`shrink-0 size-9 rounded-lg border font-bold text-[15px] transition-colors ${isInShowcase
+          ? 'bg-primary border-primary text-zinc-900'
+          : 'border-zinc-700 text-zinc-100 hover:bg-zinc-800'}`}
+      >
+        {isInShowcase ? '✓' : '+'}
+      </button>
+    </li>
   );
 }
 
@@ -77,23 +81,24 @@ function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop 
 }) {
   const { t } = useTranslation();
   const tk = t as (key: string, defaultValue?: string) => string;
+  const number = (
+    <span className="absolute left-2 top-1.5 text-[11px] font-mono text-zinc-500">{index + 1}</span>
+  );
   if (!badge) {
     return (
       <div
-        className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-dashed border-zinc-800 bg-zinc-950/40 opacity-50"
+        className="relative aspect-square rounded-[14px] border border-dashed border-zinc-700"
         onDragOver={(e) => { e.preventDefault(); onDragOver(index); }}
         onDrop={() => onDrop(index)}
       >
-        <div className="size-7 rounded-lg bg-zinc-800/60 flex items-center justify-center">
-          <span className="text-zinc-500 text-xs font-bold">{index + 1}</span>
-        </div>
-        <span className="text-[10px] text-zinc-500 uppercase tracking-widest">{t('badges.showcase.emptySlot')}</span>
+        {number}
       </div>
     );
   }
 
   const def = BADGE_REGISTRY[badge.id] ?? { label: badge.id, icon: '?', color: 'primary' };
   const colorConf = BADGE_COLORS[def.color] ?? BADGE_COLORS.primary;
+  const label = tk(`badges.${badge.id}.label`, typeof def.label === 'string' ? def.label : badge.id);
 
   return (
     <div
@@ -101,17 +106,15 @@ function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop 
       onDragStart={() => onDragStart(index)}
       onDragOver={(e) => { e.preventDefault(); onDragOver(index); }}
       onDrop={() => onDrop(index)}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-xl border border-zinc-600 bg-zinc-800 group"
+      className={`group relative aspect-square rounded-[14px] flex items-center justify-center border bg-zinc-800/60 cursor-grab active:cursor-grabbing ${colorConf.border}`}
     >
-      <Icon name="drag_indicator" size={14} className="text-zinc-600 cursor-grab active:cursor-grabbing shrink-0" />
-      <div className="size-7 rounded-lg bg-zinc-700 flex items-center justify-center shrink-0">
-        <span className="text-xs font-bold text-zinc-400">{index + 1}</span>
-      </div>
-      <span className={`text-sm font-semibold flex-1 truncate ${colorConf.text}`}>{tk(`badges.${badge.id}.label`, def.label)}</span>
+      {number}
+      <span className={`text-xs font-bold text-center px-1 ${colorConf.text}`}>{label}</span>
       <button
         type="button"
+        aria-label={t('badges.showcase.removeFrom', { name: label })}
         onClick={() => onRemove(badge.id)}
-        className="size-6 rounded-full hover:bg-red-500/20 flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors"
+        className="absolute right-1 top-1 size-6 rounded-full flex items-center justify-center text-zinc-400 hover:text-red-400 hover:bg-red-500/20 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-100 transition-opacity"
       >
         <Icon name="close" size={14} />
       </button>
@@ -124,11 +127,10 @@ interface ShowcaseEditorProps {
   initialShowcase?: string[];
   initialPublic?: boolean;
   showcaseSlots?: number;
-  level?: number;
   onSaved?: (showcase: string[], showcasePublic: boolean) => void;
 }
 
-export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EMPTY_SHOWCASE, initialPublic = true, showcaseSlots = 3, level = 0, onSaved }: ShowcaseEditorProps) {
+export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EMPTY_SHOWCASE, initialPublic = true, showcaseSlots = 3, onSaved }: ShowcaseEditorProps) {
   const { t } = useTranslation();
   // Rarity filter keys are dynamic.
   const tk = t as (key: string) => string;
@@ -205,133 +207,85 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
   const nextUnlock = NEXT_LEVEL_SLOTS[showcaseSlots];
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold text-zinc-200">{t('badges.showcase.editorTitle')}</p>
-          <p className="text-[11px] text-zinc-500 mt-0.5">
-            {t('badges.showcase.slots', { count: showcase.length, max: showcaseSlots })}
-            {nextUnlock && (
-              <span className="ml-1.5 text-zinc-600">
-                · {t('badges.showcase.nextSlot', { level: nextUnlock.level })}
-              </span>
-            )}
-          </p>
+    <>
+      <section className="settings-section rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 className="text-[17px] font-bold text-zinc-100">{t('badges.showcase.yourShowcase')}</h2>
+          <span className="text-[13px] text-zinc-400">
+            {t('badges.showcase.slots', { count: showcase.length, max: showcaseSlots })} · {t('badges.showcase.orderHint')}
+            {nextUnlock && <> · {t('badges.showcase.nextSlot', { level: nextUnlock.level })}</>}
+          </span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800/60 border border-zinc-700/50">
-            <span className="text-[10px] text-zinc-500 uppercase tracking-widest">Lv.</span>
-            <span className="text-sm font-bold text-zinc-200">{level}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Left: Earned badges */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 mr-1">
-              {t('badges.showcase.earned')} ({userBadges.length})
-            </p>
-            {['all', 'legendary', 'epic', 'rare', 'uncommon', 'common'].map(r => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => setRarityFilter(r)}
-                className={`text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full border transition-all
-                  ${rarityFilter === r
-                    ? r === 'all'
-                      ? 'bg-zinc-700 border-zinc-600 text-zinc-200'
-                      : `${RARITY_CONFIG[r]?.className ?? ''} opacity-100`
-                    : 'border-zinc-800 text-zinc-700 hover:text-zinc-500 hover:border-zinc-700'
-                  }`}
-              >
-                {r === 'all' ? t('badges.showcase.filterAll') : tk(RARITY_CONFIG[r]?.labelKey ?? `badges.rarity.${r}`)}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto custom-scrollbar pr-1">
-            {filteredBadges.length === 0 ? (
-              <p className="text-xs text-zinc-600 py-4 text-center">
-                {t('badges.showcase.noBadgesFilter')}
-              </p>
-            ) : (
-              filteredBadges.map(badge => (
-                <EarnedBadgeItem
-                  key={badge.id}
-                  badge={badge}
-                  isInShowcase={showcaseSet.has(badge.id)}
-                  onToggle={toggleBadge}
-                />
-              ))
-            )}
-          </div>
-
-          {userBadges.length === 0 && (
-            <div className="flex flex-col items-center gap-2 py-6 text-center">
-              <span className="text-3xl opacity-30">🏆</span>
-              <p className="text-xs text-zinc-600">{t('badges.showcase.noBadgesYet')}</p>
-            </div>
-          )}
+        <div className="grid gap-2.5 mt-[18px]" style={{ gridTemplateColumns: `repeat(${Math.min(showcaseSlots, 8)}, minmax(0, 1fr))` }}>
+          {slots.map((badge, i) => (
+            <ShowcaseSlot
+              key={i}
+              badge={badge}
+              index={i}
+              onRemove={removeFromShowcase}
+              onDragStart={setDragFrom}
+              onDragOver={setDragOver}
+              onDrop={handleDrop}
+            />
+          ))}
         </div>
 
-        {/* Right: Showcase slots */}
-        <div className="flex flex-col gap-2">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
-            {t('badges.showcase.displayedOn')}
-          </p>
-          <div className="flex flex-col gap-1.5">
-            {slots.map((badge, i) => (
-              <ShowcaseSlot
-                key={i}
+        <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-zinc-800">
+          <div className="flex items-center gap-3">
+            <Toggle checked={showcasePublic} onChange={setShowcasePublic} label={t('badges.showcase.publicToggle')} />
+            <span className="text-sm text-zinc-400">{t('badges.showcase.publicToggle')}</span>
+          </div>
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className="flex items-center gap-2 h-11 px-5 rounded-xl bg-primary text-zinc-950 text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          >
+            {saving && <LogoLoader size={14} />}
+            {t('badges.showcase.save')}
+          </button>
+        </div>
+      </section>
+
+      <section className="settings-section rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-[17px] font-bold text-zinc-100">
+            {t('badges.showcase.earned')}{' '}
+            <span className="text-zinc-400 font-medium">{t('badges.showcase.earnedCount', { count: userBadges.length, total: TOTAL_BADGES })}</span>
+          </h2>
+          <label className="flex items-center gap-2 text-[13px] text-zinc-400">
+            {t('badges.showcase.rarity')}
+            <select
+              value={rarityFilter}
+              onChange={(e) => setRarityFilter(e.target.value)}
+              className="h-9 rounded-[10px] bg-zinc-950 border border-zinc-700 px-3 text-sm text-zinc-100 outline-none focus:border-primary/60 cursor-pointer"
+            >
+              {['all', 'legendary', 'epic', 'rare', 'uncommon', 'common'].map(r => (
+                <option key={r} value={r}>
+                  {r === 'all' ? t('badges.showcase.filterAll') : tk(RARITY_CONFIG[r as keyof typeof RARITY_CONFIG]?.labelKey ?? `badges.rarity.${r}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        {userBadges.length === 0 ? (
+          <p className="text-sm text-zinc-500 py-8 text-center">{t('badges.showcase.noBadgesYet')}</p>
+        ) : filteredBadges.length === 0 ? (
+          <p className="text-sm text-zinc-500 py-8 text-center">{t('badges.showcase.noBadgesFilter')}</p>
+        ) : (
+          <ul className="grid gap-2.5 mt-4 list-none p-0 m-0 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
+            {filteredBadges.map(badge => (
+              <EarnedBadgeItem
+                key={badge.id}
                 badge={badge}
-                index={i}
-                onRemove={removeFromShowcase}
-                onDragStart={setDragFrom}
-                onDragOver={setDragOver}
-                onDrop={handleDrop}
+                isInShowcase={showcaseSet.has(badge.id)}
+                onToggle={toggleBadge}
               />
             ))}
-          </div>
-
-          {/* Locked slots */}
-          {nextUnlock && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed border-zinc-800/50 opacity-40">
-              <Icon name="lock" size={12} className="text-zinc-500" />
-              <span className="text-[10px] text-zinc-500">
-                {t('badges.showcase.lockedSlot', { level: nextUnlock.level, slots: nextUnlock.slots })}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Visibility toggle */}
-      <div className="flex items-center justify-between pt-3 border-t border-zinc-800/50">
-        <label className="flex items-center gap-3 cursor-pointer select-none">
-          <div
-            className={`relative w-9 h-5 rounded-full transition-colors ${showcasePublic ? 'bg-primary' : 'bg-zinc-700'}`}
-            onClick={() => setShowcasePublic(v => !v)}
-          >
-            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${showcasePublic ? 'translate-x-4' : 'translate-x-0.5'}`} />
-          </div>
-          <span className="text-xs text-zinc-400">{t('badges.showcase.publicToggle')}</span>
-        </label>
-
-        <button
-          type="button"
-          onClick={save}
-          disabled={saving}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-lg bg-primary text-zinc-950 text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors"
-        >
-          {saving && (
-            <LogoLoader size={14} />
-          )}
-          {t('badges.showcase.save')}
-        </button>
-      </div>
-    </div>
+          </ul>
+        )}
+      </section>
+    </>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { Section, IconRow, Chip } from '../shared';
 import { Button } from '@ui/button';
 import { auth } from '@/app/api';
 import { formatInTimezone } from '@/shared/utils/date';
@@ -93,114 +94,85 @@ export default function SessionsSettings() {
   };
 
   const locale = i18n.language || 'en';
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-8">
-        <LogoLoader size={20} className="text-zinc-500" />
-      </div>
-    );
-  }
+  const [shownIps, setShownIps] = useState<Set<string>>(() => new Set());
+  const toggleIp = (id: string) => setShownIps((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  // Keep the network prefix, hide the host part (a.b.•••.••• / first groups of IPv6).
+  const maskIp = (ip: string) => {
+    if (ip.includes(':')) return `${ip.split(':').slice(0, 2).join(':')}:••••`;
+    return `${ip.split('.').slice(0, 2).join('.')}.•••.•••`;
+  };
 
   const otherSessions = sessions.filter((s) => !s.isCurrent);
 
   return (
-    <div id="section-sessions" className="space-y-4 scroll-mt-4">
+    <div id="section-sessions" className="scroll-mt-4">
       {confirmModal}
-
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="font-heading text-sm font-semibold text-zinc-100 contrast-more:text-white">
-            {t('profile.sessions.title')}
-          </h3>
-          <p className="text-xs text-zinc-500 mt-0.5 contrast-more:text-zinc-300">
-            {t('profile.sessions.subtitle')}
-          </p>
-        </div>
-        {otherSessions.length > 0 && (
+      <Section
+        title={t('profile.sessions.title')}
+        action={otherSessions.length > 0 ? (
           <Button
-            variant="ghost"
-            size="sm"
+            variant="outline"
             onClick={handleRevokeAllOthers}
             disabled={revokingAll}
-            className="text-red-400 hover:text-red-300 hover:bg-red-500/10 text-xs h-8 flex-shrink-0"
+            className="h-10 rounded-[10px] border-zinc-700 bg-transparent text-zinc-100 font-semibold"
           >
-            {revokingAll ? (
-              <LogoLoader size={14} />
-            ) : (
-              <><Icon name="no_encryption" size={14} className="mr-1.5" />{t('profile.sessions.revokeAllOthers')}</>
-            )}
+            {revokingAll ? <LogoLoader size={14} /> : t('profile.sessions.revokeAllOthers')}
+          </Button>
+        ) : (
+          <Button variant="outline" disabled className="h-10 rounded-[10px] border-zinc-700 bg-transparent text-zinc-500 font-semibold">
+            {t('profile.sessions.revokeAllOthers')}
           </Button>
         )}
-      </div>
-
-      {sessions.length === 0 ? (
-        <p className="text-sm text-zinc-500 py-4 text-center">
-          {t('profile.sessions.noSessions')}
-        </p>
-      ) : (
-        <div className="space-y-2">
-          {sessions.map((session) => (
-            <div
-              key={session.id}
-              className="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/40 border border-zinc-700/40"
-            >
-              <div className="size-9 rounded-lg bg-zinc-700/50 flex items-center justify-center flex-shrink-0">
-                <DeviceIcon deviceType={session.deviceType} />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium text-zinc-200 truncate">
-                    {session.browser || session.deviceName || t('profile.sessions.unknownDevice')}
-                  </span>
-                  {session.isCurrent && (
-                    <span className="text-[10px] font-bold uppercase text-primary bg-primary/10 px-1.5 py-0.5 rounded flex-shrink-0">
-                      {t('profile.sessions.currentBadge')}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                  {session.os && (
-                    <span className="text-[11px] text-zinc-500">{session.os}</span>
-                  )}
-                  {session.ip && (
-                    <span className="text-[11px] text-zinc-600">· {session.ip}</span>
-                  )}
-                  {session.lastUsedAt && (
-                    <span className="text-[11px] text-zinc-600">
-                      · {t('profile.sessions.lastActive')}{' '}
-                      {formatInTimezone(
-                        session.lastUsedAt,
-                        'auto',
-                        { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' },
-                        locale
-                      )}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {!session.isCurrent && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRevoke(session.id)}
-                  disabled={revokingId === session.id}
-                  className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 text-xs h-8 flex-shrink-0"
-                >
-                  {revokingId === session.id ? (
-                    <LogoLoader size={14} />
-                  ) : (
-                    t('profile.sessions.signOut')
-                  )}
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      >
+        {loading ? (
+          <div className="flex justify-center py-8"><LogoLoader size={20} className="text-zinc-500" /></div>
+        ) : sessions.length === 0 ? (
+          <p className="text-sm text-zinc-500 py-6 text-center">{t('profile.sessions.noSessions')}</p>
+        ) : (
+          <div>
+            {sessions.map((session) => (
+              <IconRow
+                key={session.id}
+                icon={<DeviceIcon deviceType={session.deviceType} className="size-5" />}
+                title={[session.browser || session.deviceName || t('profile.sessions.unknownDevice'), session.os].filter(Boolean).join(' · ')}
+                badge={session.isCurrent ? <Chip>{t('profile.sessions.currentBadge')}</Chip> : undefined}
+                description={(
+                  <>
+                    {session.ip && (
+                      <>
+                        IP <span className="font-mono">{shownIps.has(session.id) ? session.ip : maskIp(session.ip)}</span>{' '}
+                        <button type="button" onClick={() => toggleIp(session.id)} className="text-primary text-[13px] px-1">
+                          {shownIps.has(session.id) ? t('profile.sessions.hideIp') : t('profile.sessions.showIp')}
+                        </button>{' · '}
+                      </>
+                    )}
+                    {session.isCurrent ? t('profile.sessions.activeNow') : session.lastUsedAt && (
+                      <>{t('profile.sessions.lastActive')}{' '}
+                        {formatInTimezone(session.lastUsedAt, 'auto', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }, locale)}
+                      </>
+                    )}
+                  </>
+                )}
+              >
+                {!session.isCurrent && (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleRevoke(session.id)}
+                    disabled={revokingId === session.id}
+                    className="h-10 rounded-[10px] border-zinc-700 bg-transparent text-zinc-100 font-semibold"
+                  >
+                    {revokingId === session.id ? <LogoLoader size={14} /> : t('profile.sessions.signOut')}
+                  </Button>
+                )}
+              </IconRow>
+            ))}
+          </div>
+        )}
+      </Section>
     </div>
   );
 }

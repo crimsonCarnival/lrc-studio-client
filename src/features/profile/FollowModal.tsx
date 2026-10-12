@@ -153,7 +153,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
           {/* Header */}
           <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
             <p className="text-sm font-semibold text-foreground">
-              <span className="text-muted-foreground">@</span>{accountName}
+              {accountName}
             </p>
             <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-1 -mr-1">
               <Icon name="close" size={16} />

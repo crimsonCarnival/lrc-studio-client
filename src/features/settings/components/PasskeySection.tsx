@@ -15,6 +15,7 @@ import { auth } from '@/app/api';
 import toast from 'react-hot-toast';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Tip } from '@ui/tip';
+import { IconRow } from './shared';
 
 interface Passkey {
   id: string;
@@ -132,61 +133,58 @@ export default function PasskeySection() {
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      {loading ? (
-        <div className="flex items-center justify-center p-4">
-          <LogoLoader size={16} className="text-muted-foreground" />
-        </div>
-      ) : passkeys.length === 0 ? (
-        <div className="flex items-center justify-between bg-secondary/30 border border-border rounded-xl px-3 h-11">
-          <span className="text-sm text-muted-foreground">
-            {t('auth.passkeyManagement.none')}
-          </span>
-        </div>
-      ) : (
-        passkeys.map((passkey, index) => {
-          const { label, PasskeyIcon } = getPasskeyInfo(passkey, index);
-          return (
-            <div key={passkey.id} className="flex items-center justify-between bg-secondary/30 border border-border rounded-xl px-3 h-11">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <PasskeyIcon className="size-3.5 text-zinc-400 shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm text-foreground truncate font-medium leading-tight">
-                    {label}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground/70 truncate leading-tight">
-                    {t('auth.passkeyManagement.added', { date: formatDate(passkey.createdAt) })}
-                  </span>
-                </div>
-              </div>
-              <Tip content={t('auth.passkeyManagement.delete')}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(passkey.id)}
-                  disabled={deletingId === passkey.id}
-                  className="size-8 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 shrink-0"
-                  aria-label={t('auth.passkeyManagement.delete')}
-                >
-                  {deletingId === passkey.id ? <LogoLoader size={14} /> : <Trash2Icon className="size-3.5" />}
-                </Button>
-              </Tip>
-            </div>
-          );
-        })
-      )}
-
-      <div className="mt-1">
+    <div>
+      <IconRow
+        icon={<FingerprintIcon className="size-5" />}
+        title={t('auth.passkeyManagement.title')}
+        description={`${t('profile.privacy.passkeysDesc')}${!loading && passkeys.length === 0 ? ` ${t('auth.passkeyManagement.none')}` : ''}`}
+      >
         <Button
-          size="sm"
           onClick={handleRegister}
           disabled={registering || loading}
-          className="rounded-lg h-7 text-[11px] font-bold gap-1.5"
+          className="h-11 rounded-[10px] px-5 font-bold gap-2"
         >
-          {registering ? <LogoLoader size={12} /> : <FingerprintIcon className="size-3" />}
+          {registering && <LogoLoader size={14} />}
           {t('auth.passkeyManagement.add')}
         </Button>
-      </div>
+      </IconRow>
+
+      {loading ? (
+        <div className="flex items-center pb-4 pl-[58px]">
+          <LogoLoader size={16} className="text-muted-foreground" />
+        </div>
+      ) : passkeys.length > 0 && (
+        <div className="flex flex-col gap-2 pb-4 sm:pl-[58px]">
+          {passkeys.map((passkey, index) => {
+            const { label, PasskeyIcon } = getPasskeyInfo(passkey, index);
+            return (
+              <div key={passkey.id} className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 h-12">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <PasskeyIcon className="size-4 text-zinc-400 shrink-0" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm text-zinc-100 truncate font-medium leading-tight">{label}</span>
+                    <span className="text-xs text-zinc-500 truncate leading-tight">
+                      {t('auth.passkeyManagement.added', { date: formatDate(passkey.createdAt) })}
+                    </span>
+                  </div>
+                </div>
+                <Tip content={t('auth.passkeyManagement.delete')}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(passkey.id)}
+                    disabled={deletingId === passkey.id}
+                    className="size-8 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 shrink-0"
+                    aria-label={t('auth.passkeyManagement.delete')}
+                  >
+                    {deletingId === passkey.id ? <LogoLoader size={14} /> : <Trash2Icon className="size-4" />}
+                  </Button>
+                </Tip>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
