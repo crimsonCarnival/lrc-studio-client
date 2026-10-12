@@ -16,6 +16,22 @@ export const INACTIVE_FONT_SIZES = {
   xlarge: 'text-xl sm:text-3xl lg:text-4xl',
 };
 
+// Editor preview (review list): denser than the public stage so a section fits
+// on screen next to its timestamps. Same fontSize keys, so the setting still scales it.
+export const REVIEW_ACTIVE_FONT_SIZES = {
+  small: 'text-base sm:text-xl',
+  normal: 'text-lg sm:text-2xl',
+  large: 'text-xl sm:text-3xl',
+  xlarge: 'text-2xl sm:text-4xl',
+};
+
+export const REVIEW_INACTIVE_FONT_SIZES = {
+  small: 'text-sm sm:text-base',
+  normal: 'text-[15px] sm:text-lg',
+  large: 'text-lg sm:text-xl',
+  xlarge: 'text-xl sm:text-2xl',
+};
+
 export const ACTIVE_SECONDARY_SIZES = {
   small: 'text-[10px] sm:text-xs',
   normal: 'text-xs sm:text-sm',

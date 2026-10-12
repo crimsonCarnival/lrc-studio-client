@@ -6,10 +6,11 @@ import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
 import { downloadLRC } from '@/shared/utils/lrc';
 import { lyrics } from '@/app/api';
+import { applyGlobalOffset } from '@/features/editor/services/editor.service';
 import { matchKey } from '@/shared/utils/keyboard';
 import { computeCurrentIndex } from '../lyrics-position';
 import {
-  ACTIVE_FONT_SIZES, INACTIVE_FONT_SIZES,
+  REVIEW_ACTIVE_FONT_SIZES, REVIEW_INACTIVE_FONT_SIZES,
   ACTIVE_SECONDARY_SIZES, INACTIVE_SECONDARY_SIZES,
   WRAPPER_SPACING, ACTIVE_MARGIN,
 } from '../preview.styles';
@@ -26,6 +27,33 @@ interface UsePreviewParams {
   mediaTitle?: string;
   editorMode: string;
   projectMetadata?: ProjectMetadata;
+}
+
+export type ExportFormat = 'lrc' | 'srt';
+
+export interface LineStats {
+  /** Lyric lines, section markers excluded. */
+  total: number;
+  timed: number;
+  /** Index into `lines` of the first lyric line with no timestamp, or -1. */
+  firstUntimedIndex: number;
+}
+
+interface SongInfo {
+  title: string;
+  artist: string;
+}
+
+/** Shifts every time a compiler reads; `applyGlobalOffset` only covers line start/end. */
+function shiftExportLines(lines: EditorLine[], deltaSeconds: number): EditorLine[] {
+  if (!deltaSeconds) return lines;
+  const shiftWords = (words: EditorLine['words']) =>
+    words?.map((w) => (w.time != null ? { ...w, time: Math.max(0, w.time + deltaSeconds) } : w));
+  return applyGlobalOffset(lines, deltaSeconds).map((l) => ({
+    ...l,
+    ...(l.words && { words: shiftWords(l.words) }),
+    ...(l.secondaryWords && { secondaryWords: shiftWords(l.secondaryWords) }),
+  }));
 }
 
 export interface UsePreviewResult {
@@ -54,6 +82,27 @@ export interface UsePreviewResult {
   showFuriganaInPreview: boolean;
   setShowFuriganaInPreview: Dispatch<SetStateAction<boolean>>;
   wasCopied: boolean;
+  exportFormat: ExportFormat;
+  setExportFormat: (format: ExportFormat) => void;
+  /** Raw field value in milliseconds; parsed when the file is built. */
+  exportOffset: string;
+  setExportOffset: Dispatch<SetStateAction<string>>;
+  /** Filename with extension, exactly as it will be downloaded. */
+  exportFileName: string;
+  /** Compiled file for the current options; null while compiling or after a failure. */
+  exportText: string | null;
+  exportPreviewLoading: boolean;
+  exportPreviewFailed: boolean;
+  showTimestamps: boolean;
+  setShowTimestamps: Dispatch<SetStateAction<boolean>>;
+  showSections: boolean;
+  setShowSections: Dispatch<SetStateAction<boolean>>;
+  wordHighlight: boolean;
+  setWordHighlight: Dispatch<SetStateAction<boolean>>;
+  followPlayback: boolean;
+  setFollowPlayback: Dispatch<SetStateAction<boolean>>;
+  lineStats: LineStats;
+  songInfo: SongInfo;
   sizeOption: string;
   spacingOption: string;
   activeFontSizes: unknown;
@@ -67,6 +116,7 @@ export interface UsePreviewResult {
   hasTranslations: boolean;
   hasSecondary: boolean;
   hasWords: boolean;
+  hasWordTimes: boolean;
   hasFurigana: boolean;
   translationLanguages: (string | null)[];
   activeTranslationIndex: number;
@@ -82,7 +132,7 @@ export interface UsePreviewResult {
 export function usePreview(rawProps: unknown): UsePreviewResult {
   const { lines, setLines, playbackPosition, playerRef, duration, mediaTitle, editorMode, projectMetadata } = rawProps as UsePreviewParams;
   const { t } = useTranslation();
-  const { settings } = useSettings();
+  const { settings, updateSetting } = useSettings();
 
   const [showMenu, setShowMenu] = useState(false);
   const [pastingType, setPastingType] = useState<string | null>(null);
@@ -100,6 +150,12 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
   const [activeTranslationIndex, setActiveTranslationIndex] = useState(0);
   const [showFuriganaInPreview, setShowFuriganaInPreview] = useState(true);
   const [wasCopied, setWasCopied] = useState(false);
+  const [exportOffset, setExportOffset] = useState('0');
+  // Session-only view toggles for the review sidebar.
+  const [showTimestamps, setShowTimestamps] = useState(true);
+  const [showSections, setShowSections] = useState(true);
+  const [wordHighlight, setWordHighlight] = useState(true);
+  const [followPlayback, setFollowPlayback] = useState(true);
 
   // Build LRC metadata automatically from projectMetadata
   const metadata = useMemo(() => {
@@ -140,10 +196,27 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
   );
 
   const hasSyncedLines = syncedIndices.length > 0;
-  const { hasTranslations, hasSecondary, hasWords, hasFurigana } = useMemo(() => {
+
+  const lineStats = useMemo<LineStats>(() => {
+    let total = 0;
+    let timed = 0;
+    let firstUntimedIndex = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i];
+      if (l.type === 'section') continue;
+      total++;
+      // Ad-libs inherit their parent's time (see PreviewLine).
+      if (l.timestamp != null || l.adLibOf != null) timed++;
+      else if (firstUntimedIndex === -1) firstUntimedIndex = i;
+    }
+    return { total, timed, firstUntimedIndex };
+  }, [lines]);
+
+  const { hasTranslations, hasSecondary, hasWords, hasWordTimes, hasFurigana } = useMemo(() => {
     let _hasTranslations = false;
     let _hasSecondary = false;
     let _hasWords = false;
+    let _hasWordTimes = false;
     let _hasFurigana = false;
 
     for (let i = 0; i < lines.length; i++) {
@@ -151,16 +224,18 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
       if (!_hasTranslations && (l.translations?.length ?? 0) > 0) _hasTranslations = true;
       if (!_hasSecondary && l.secondary) _hasSecondary = true;
       if (!_hasWords && (l.words?.length ?? 0) > 0) _hasWords = true;
+      if (!_hasWordTimes && l.words?.some((w) => w.time != null)) _hasWordTimes = true;
       if (!_hasFurigana && (l.furigana || l.words?.some((w) => w.reading))) _hasFurigana = true;
 
       // Early exit if we found everything
-      if (_hasTranslations && _hasSecondary && _hasWords && _hasFurigana) break;
+      if (_hasTranslations && _hasSecondary && _hasWords && _hasWordTimes && _hasFurigana) break;
     }
 
     return {
       hasTranslations: _hasTranslations,
       hasSecondary: _hasSecondary,
       hasWords: _hasWords,
+      hasWordTimes: _hasWordTimes,
       hasFurigana: _hasFurigana,
     };
   }, [lines]);
@@ -185,6 +260,7 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
       if (pastingType) return; // paste panel open — don't intercept
+      if (showExportPanel) return; // export dialog open — keys belong to its controls
       if (matchKey(e, settings.shortcuts?.toggleTranslation?.[0] || 't')) {
         e.preventDefault();
         setShowTranslationsInPreview((prev) => !prev);
@@ -200,7 +276,7 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [settings.shortcuts, lines, pastingType, activeTranslationIndex]);
+  }, [settings.shortcuts, lines, pastingType, showExportPanel, activeTranslationIndex]);
 
   const handleSavePaste = () => {
     if (!pastingType) return;
@@ -264,39 +340,82 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
     });
   }, [includeWordTimestamps]);
 
-  const handleExport = useCallback(async () => {
-    const name = (exportFilename || 'lyrics').trim();
-    const exportLines = applyIncludeFlags(prepareExportLines(lines));
+  const exportFormat: ExportFormat = settings.export?.downloadFormat === 'srt' ? 'srt' : 'lrc';
+  // Copy and download both produce the file shown in the dialog, so the two
+  // format settings move together (as they do when the editor mode changes).
+  const setExportFormat = useCallback((format: ExportFormat) => {
+    updateSetting('export.copyFormat', format);
+    updateSetting('export.downloadFormat', format);
+  }, [updateSetting]);
 
+  const exportFileName = `${exportFilename.trim() || 'lyrics'}.${exportFormat}`;
+
+  const lineEndings = settings.export?.lineEndings;
+  const wordPrecision = settings.export?.wordTimestampPrecision;
+  const precision = settings.editor?.timestampPrecision;
+  const srtConfig = settings.editor?.srt;
+
+  // Single source of the exported text: the dialog preview, download and copy
+  // all go through here.
+  const buildExportText = useCallback(async () => {
+    const offsetSeconds = (Number.parseInt(exportOffset, 10) || 0) / 1000;
+    const exportLines = shiftExportLines(applyIncludeFlags(prepareExportLines(lines)), offsetSeconds);
+    const result = (exportFormat === 'srt'
+      ? await lyrics.compileSrt({
+        lines: exportLines,
+        duration,
+        includeTranslations,
+        lineEndings,
+        srtConfig,
+        includeSecondary,
+        exportTranslationIndex: activeTranslationIndex,
+      })
+      : await lyrics.compileLrc({
+        lines: exportLines,
+        includeTranslations,
+        precision,
+        metadata: includeMetadata ? metadata : {},
+        lineEndings,
+        exportTranslationIndex: activeTranslationIndex,
+        includeSecondary,
+        wordPrecision,
+      })) as { output: string };
+    return result.output;
+  }, [
+    lines, exportFormat, exportOffset, duration, includeTranslations,
+    includeSecondary, includeMetadata, metadata, lineEndings, wordPrecision,
+    precision, srtConfig, applyIncludeFlags, prepareExportLines, activeTranslationIndex,
+  ]);
+
+  // Live preview. A result is only current while it was produced by the present
+  // `buildExportText` (its identity changes with any input), which makes
+  // "loading" derivable instead of a flag set from the effect.
+  const [exportResult, setExportResult] = useState<{ build: () => Promise<string>; text: string | null } | null>(null);
+  useEffect(() => {
+    if (!showExportPanel) return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      buildExportText().then(
+        (text) => { if (!cancelled) setExportResult({ build: buildExportText, text }); },
+        (err) => {
+          console.error('Export preview failed', err);
+          if (!cancelled) setExportResult({ build: buildExportText, text: null });
+        },
+      );
+    }, 250);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [showExportPanel, buildExportText]);
+
+  const currentExport = exportResult?.build === buildExportText ? exportResult : null;
+  const exportText = currentExport?.text ?? null;
+  const exportPreviewLoading = showExportPanel && !currentExport;
+  const exportPreviewFailed = !!currentExport && currentExport.text === null;
+
+  const handleExport = useCallback(async () => {
     try {
-      let content = '';
-      if (settings.export?.downloadFormat === 'srt') {
-        const result = await lyrics.compileSrt({
-          lines: exportLines,
-          duration,
-          includeTranslations,
-          lineEndings: settings.export?.lineEndings,
-          srtConfig: settings.editor?.srt,
-          includeSecondary,
-          exportTranslationIndex: activeTranslationIndex,
-        }) as { output: string };
-        content = result.output;
-        downloadLRC(content, `${name}.srt`);
-      } else {
-        const filteredMetadata = includeMetadata ? metadata : {};
-        const result = await lyrics.compileLrc({
-          lines: exportLines,
-          includeTranslations,
-          precision: settings.editor?.timestampPrecision,
-          metadata: filteredMetadata,
-          lineEndings: settings.export?.lineEndings,
-          exportTranslationIndex: activeTranslationIndex,
-          includeSecondary,
-          wordPrecision: settings.export?.wordTimestampPrecision,
-        }) as { output: string };
-        content = result.output;
-        downloadLRC(content, `${name}.lrc`);
-      }
+      // Prefer the text already on screen so the file is exactly what was previewed.
+      const content = exportText ?? await buildExportText();
+      downloadLRC(content, exportFileName);
 
       setShowExportPanel(false);
       toast.success(t('export.success'));
@@ -304,43 +423,11 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
       console.error('Export failed', err);
       toast.error(t('export.failed'));
     }
-  }, [
-    exportFilename, lines, settings, duration, includeTranslations,
-    includeSecondary, includeMetadata, metadata, t,
-    applyIncludeFlags, prepareExportLines, activeTranslationIndex
-  ]);
+  }, [exportText, buildExportText, exportFileName, t]);
 
   const handleCopy = useCallback(async () => {
-    const exportLines = applyIncludeFlags(prepareExportLines(lines));
-
     try {
-      let content = '';
-      if (settings.export?.copyFormat === 'srt') {
-        const result = await lyrics.compileSrt({
-          lines: exportLines,
-          duration,
-          includeTranslations,
-          lineEndings: settings.export?.lineEndings,
-          srtConfig: settings.editor?.srt,
-          includeSecondary,
-          exportTranslationIndex: activeTranslationIndex,
-        }) as { output: string };
-        content = result.output;
-      } else {
-        const filteredMetadata = includeMetadata ? metadata : {};
-        const result = await lyrics.compileLrc({
-          lines: exportLines,
-          includeTranslations,
-          precision: settings.editor?.timestampPrecision,
-          metadata: filteredMetadata,
-          lineEndings: settings.export?.lineEndings,
-          exportTranslationIndex: activeTranslationIndex,
-          includeSecondary,
-          wordPrecision: settings.export?.wordTimestampPrecision,
-        }) as { output: string };
-        content = result.output;
-      }
-
+      const content = exportText ?? await buildExportText();
       await navigator.clipboard.writeText(content);
       setWasCopied(true);
       setTimeout(() => setWasCopied(false), 2000);
@@ -348,11 +435,12 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
       console.error('Failed to copy', err);
       toast.error(t('export.copyFailed'));
     }
-  }, [
-    lines, settings, duration, includeTranslations,
-    includeSecondary, includeMetadata, metadata, t,
-    applyIncludeFlags, prepareExportLines, activeTranslationIndex
-  ]);
+  }, [exportText, buildExportText, t]);
+
+  const songInfo = useMemo<SongInfo>(
+    () => ({ title: metadata.ti || '', artist: metadata.ar || '' }),
+    [metadata],
+  );
 
   return {
     t,
@@ -380,10 +468,28 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
     showFuriganaInPreview,
     setShowFuriganaInPreview,
     wasCopied,
+    exportFormat,
+    setExportFormat,
+    exportOffset,
+    setExportOffset,
+    exportFileName,
+    exportText,
+    exportPreviewLoading,
+    exportPreviewFailed,
+    showTimestamps,
+    setShowTimestamps,
+    showSections,
+    setShowSections,
+    wordHighlight,
+    setWordHighlight,
+    followPlayback,
+    setFollowPlayback,
+    lineStats,
+    songInfo,
     sizeOption,
     spacingOption,
-    activeFontSizes: ACTIVE_FONT_SIZES,
-    inactiveFontSizes: INACTIVE_FONT_SIZES,
+    activeFontSizes: REVIEW_ACTIVE_FONT_SIZES,
+    inactiveFontSizes: REVIEW_INACTIVE_FONT_SIZES,
     activeSecondarySizes: ACTIVE_SECONDARY_SIZES,
     inactiveSecondarySizes: INACTIVE_SECONDARY_SIZES,
     wrapperSpacing: WRAPPER_SPACING,
@@ -393,6 +499,7 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
     hasTranslations,
     hasSecondary,
     hasWords,
+    hasWordTimes,
     hasFurigana,
     translationLanguages,
     activeTranslationIndex,
