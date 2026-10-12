@@ -5,10 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Popover, PopoverTrigger, PopoverContent, PopoverItem, PopoverSeparator } from '@ui/popover';
 import { Button } from '@ui/button';
-import { compileLRC as localCompileLRC, compileSRT as localCompileSRT } from '@/shared/utils/lrc';
 import { getPlaylists, addProjectToPlaylist, createPlaylist } from '@features/playlists/playlist.service';
 import { projectsService } from '@features/projects/services/projects.service';
 import { LogoLoader } from '@ui/LogoLoader';
+import { downloadProjectExport } from './project-export';
 
 interface Playlist {
   id: string;
@@ -26,16 +26,6 @@ interface Project {
 interface User {
   accountName?: string;
   isGuest?: boolean;
-}
-
-function downloadFile(content: string, filename: string) {
-  const blob = new Blob([content], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 interface MenuItemProps {
@@ -180,6 +170,8 @@ interface ProjectActionsMenuProps {
   user?: User | null;
   onEdit?: () => void;
   onFork?: () => void;
+  /** Sizing/shape of the trigger; the two page layouts place it differently. */
+  triggerClassName?: string;
 }
 
 export function ProjectActionsMenu({
@@ -189,14 +181,11 @@ export function ProjectActionsMenu({
   user,
   onEdit,
   onFork,
+  triggerClassName = 'size-8 rounded-full shrink-0',
 }: ProjectActionsMenuProps) {
   const { t } = useTranslation();
   const [linkCopied, setLinkCopied] = useState(false);
   const [ogCopied, setOgCopied] = useState(false);
-
-  const slug = (project?.metadata?.songName || project?.title || 'lyrics')
-    .replace(/[^a-z0-9]/gi, '-')
-    .toLowerCase();
 
   const handleCopyLink = async () => {
     try { await navigator.clipboard.writeText(window.location.href); } catch { /* no-op */ }
@@ -222,20 +211,6 @@ export function ProjectActionsMenu({
     setTimeout(() => setOgCopied(false), 2000);
   };
 
-  const handleExportLrc = () => {
-    try {
-      const output = localCompileLRC(lines ?? [], false, 'hundredths', project?.metadata ?? {}, 'lf', false, undefined, 0);
-      downloadFile(output, `${slug}.lrc`);
-    } catch { /* no-op */ }
-  };
-
-  const handleExportSrt = () => {
-    try {
-      const output = localCompileSRT(lines ?? [], 0, false, 'lf', {}, false, 0);
-      downloadFile(output, `${slug}.srt`);
-    } catch { /* no-op */ }
-  };
-
   const canFork = project?.forksEnabled !== false && !project?.isForkedByMe;
 
   return (
@@ -244,7 +219,7 @@ export function ProjectActionsMenu({
         <Button
           size="icon"
           variant="ghost"
-          className="size-8 rounded-full shrink-0"
+          className={triggerClassName}
           aria-label={t('projectView.actions.menu')}
         >
           <Icon name="more_horiz" size={16} />
@@ -278,8 +253,8 @@ export function ProjectActionsMenu({
 
         {/* Export — all users */}
         <MenuItem iconName="download" label={t('projectView.actions.export')}>
-          <MenuItem iconName="description" label="LRC (.lrc)" onClick={handleExportLrc} />
-          <MenuItem iconName="code" label="SRT (.srt)" onClick={handleExportSrt} />
+          <MenuItem iconName="description" label="LRC (.lrc)" onClick={() => downloadProjectExport('lrc', project, lines ?? [])} />
+          <MenuItem iconName="code" label="SRT (.srt)" onClick={() => downloadProjectExport('srt', project, lines ?? [])} />
         </MenuItem>
 
         {/* Share — all users */}

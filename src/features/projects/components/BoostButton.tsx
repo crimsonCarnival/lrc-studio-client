@@ -26,20 +26,22 @@ export function BoostButton({ publicId, className = '' }: { publicId: string; cl
 
   return (
     <button
+      type="button"
       onClick={handleBoost}
       disabled={boosted || loading}
       className={[
-        'h-7 px-2.5 text-[11px] font-medium gap-1 rounded-lg flex items-center transition-colors',
+        'inline-flex items-center gap-1.5 h-11 px-3.5 rounded-full border text-sm font-semibold shrink-0 transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
         boosted
-          ? 'bg-primary/10 border border-primary/30 text-primary cursor-default'
-          : 'bg-zinc-800/60 border border-zinc-700/50 text-zinc-300 hover:border-zinc-600 hover:text-zinc-100',
+          ? 'bg-primary/10 border-primary/30 text-primary cursor-default'
+          : 'border-border text-foreground hover:bg-muted',
         'disabled:opacity-50',
         className,
       ].join(' ')}
     >
       {loading
-        ? <LogoLoader size={12} />
-        : <Icon name="repeat" size={12} />}
+        ? <LogoLoader size={16} />
+        : <Icon name="repeat" size={16} />}
       {boosted ? t('projectView.boosted') : t('projectView.boost')}
     </button>
   );

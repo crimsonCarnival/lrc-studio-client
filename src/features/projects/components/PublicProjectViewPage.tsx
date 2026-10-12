@@ -10,7 +10,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Spinner } from '@ui/skeleton';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
-import PlayerRaw from '@features/player/components/Player';
+import { PlayerEngineProvider } from '@features/player/PlayerEngine';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { ProjectUpNextPanel } from './ProjectUpNextPanel';
@@ -18,6 +18,8 @@ import { usePublicProject } from '../hooks/usePublicProject';
 import { useStarredPlaylist } from '../hooks/useStarredPlaylist';
 import ImmersiveLyricsDisplay, { type DisplayLine } from './ImmersiveLyricsDisplay';
 import ProjectInfoPanel from './ProjectInfoPanel';
+import PublicPlaybackBar from './PublicPlaybackBar';
+import { ShareOgButton } from './ShareOgButton';
 import { useProjectViewers } from '../hooks/useProjectViewers';
 import { ViewerBadges } from './ViewerBadges';
 import { getPlaylist } from '@features/playlists/playlist.service';
@@ -33,15 +35,13 @@ import { projectsService } from '@features/projects/services/projects.service';
 import { splitArtists } from '@/shared/utils/lrc';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 
-// Player is a large untyped component; alias to bypass prop checking until migrated.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const Player = PlayerRaw as any;
-
 interface PublicProject {
   publicId?: string;
   isStarredByMe?: boolean;
   starCount?: number;
   forkCount?: number;
+  forksEnabled?: boolean;
+  isForkedByMe?: boolean;
   title?: string;
   metadata?: { songName?: string; [key: string]: unknown };
   lyrics?: { sections?: unknown[]; editorMode?: string };
@@ -169,12 +169,11 @@ function PublicProjectViewPageInner() {
       }
     : project;
 
-  // ── Player / playback state ──────────────────────────────────
-  const playerRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [playbackPosition, setPlaybackPosition] = useState(0);
-  const [hasMedia, setHasMedia] = useState(false);
+  // Playback state lives in the player context (PlayerEngineProvider below);
+  // the stage and the playback bar read the clock from there, so a tick never
+  // re-renders this page or the info aside.
+  const [fullLyrics, setFullLyrics] = useState(false);
+  const toggleFullLyrics = useCallback(() => setFullLyrics((v) => !v), []);
 
   // ── Up-next playlist ─────────────────────────────────────────
   const [playlist, setPlaylist] = useState<UpNextPlaylist | null>(null);
@@ -243,7 +242,7 @@ function PublicProjectViewPageInner() {
       return { type: 'youtube', url: upload.uploadUrl };
     if (upload.source === 'cloudinary' && upload.uploadUrl)
       return { type: 'cloudinary', id: upload.id, url: upload.uploadUrl,
-               fileName: upload.fileName ?? null, title: upload.title ?? null,
+               fileName: upload.fileName, title: upload.title,
                duration: upload.duration ?? null, publicId: upload.publicId ?? null };
     return null;
   }, [project]);
@@ -351,8 +350,21 @@ function PublicProjectViewPageInner() {
   }
 
   const meta = project.metadata || {};
+  const canFork = project.forksEnabled !== false && !project.isForkedByMe && !isOwner;
 
   return (
+    <PlayerEngineProvider
+      mediaTitle={mediaTitle}
+      onTitleChange={setMediaTitle}
+      initialMedia={initialMedia}
+      initialSeek={initialSeek}
+      initialSpeed={1}
+      initialLoop={deepLinkLoop}
+      lines={lines}
+      syncMode={false}
+      projectMetadata={meta}
+      viewerMode
+    >
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-background">
       {/* ── Guest CTA strip ─────────────────────────────────── */}
       {!user && (
@@ -377,7 +389,7 @@ function PublicProjectViewPageInner() {
 
           {/* Left: lyrics — natural DOM order puts it first both stacked
               (mobile) and in the row (desktop), so no order-* juggling needed. */}
-          <div className="relative flex-1 min-h-0 flex flex-col max-lg:pb-64" style={{ minHeight: '50vh' }}>
+          <div className="relative flex-1 min-h-0 flex flex-col" style={{ minHeight: '50vh' }}>
             {/* Desktop only: the column that holds the card's own toggle is hidden. */}
             {infoCollapsed && (
               <div className="hidden lg:block absolute top-14 right-4 z-20">
@@ -397,12 +409,8 @@ function PublicProjectViewPageInner() {
             )}
             <ImmersiveLyricsDisplay
               lines={lines as unknown as DisplayLine[]}
-              playbackPosition={playbackPosition}
               editorMode={editorMode}
-              playerRef={playerRef}
-              hasMedia={hasMedia}
-              isPlaying={isPlaying}
-              playbackSpeed={playbackSpeed}
+              fullLyrics={fullLyrics}
               showTranslations
               songSingers={songSingers}
               singerColors={singerColors}
@@ -414,10 +422,12 @@ function PublicProjectViewPageInner() {
               bounded height; it never pushes the page itself into scrolling. */}
           <div
             ref={rightPanelRef}
-            className={`relative min-h-0 lg:w-80 xl:w-96 lg:flex-shrink-0 overflow-y-auto scrollbar-none ${infoCollapsed ? 'lg:hidden' : ''}`}
+            tabIndex={0}
+            aria-label={t('projectView.aboutProject')}
+            className={`lrc-scroll relative min-h-0 lg:w-[400px] xl:w-[460px] lg:flex-shrink-0 overflow-y-auto border-border lg:border-l max-lg:border-t bg-card/40 max-lg:pb-64 ${infoCollapsed ? 'lg:hidden' : ''}`}
           >
             <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20" />
-            <div className="p-4 flex flex-col gap-4">
+            <div className="px-5 pt-6 pb-6 lg:px-7 lg:pt-7 flex flex-col gap-4 min-h-full">
               <ProjectInfoPanel
                 project={displayProject!}
                 cover={cover}
@@ -458,68 +468,53 @@ function PublicProjectViewPageInner() {
           </div>
         </div>
 
-        {/* ── Player bar: now a sibling of the 2-col row, so w-full always means
-            the full page width — not just the lyrics column's share of it. On
-            mobile it was already `fixed` (pinned to the viewport regardless of
-            DOM position), so this only changes desktop placement. ── */}
-        <div
-          // Below lg the page scrolls as one column and the bar sat ~2100px
-          // down, past the whole lyric sheet. `sticky` cannot help: its
-          // containing block ends where the bar does, so there is nothing to
-          // stick within. Pinned to the viewport instead; the lyric panel
-          // carries matching bottom padding so nothing hides behind it.
-          className="flex-shrink-0 w-full max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-30 border-t border-border bg-card/80 backdrop-blur-lg"
+        {/* ── Playback bar: a sibling of the 2-col row, so it spans the page.
+            Below lg it pins itself to the viewport (see PublicPlaybackBar); the
+            info column carries matching bottom padding. ── */}
+        <PublicPlaybackBar
+          lines={lines}
+          hasInitialMedia={!!initialMedia}
+          fullLyrics={fullLyrics}
+          onToggleFullLyrics={toggleFullLyrics}
+          startSlot={canFork ? (
+            <Tip content={t('projectView.forkButton')}>
+              <button
+                type="button"
+                onClick={handleFork}
+                aria-label={t('projectView.forkButton')}
+                className="inline-grid place-items-center size-11 rounded-full border border-border text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              >
+                <Icon name="call_split" size={16} />
+              </button>
+            </Tip>
+          ) : undefined}
+          endSlot={project.publicId ? <ShareOgButton publicId={project.publicId} title={projectTitle} /> : undefined}
         >
-          <div className="px-4 sm:px-6 py-3">
-            {!hasMedia && !initialMedia
-              ? <p className="text-xs text-center py-2 text-muted-foreground">{t('projectView.noAudio')}</p>
-              : null}
-
-            <Player
-              ref={playerRef}
-              mediaTitle={mediaTitle}
-              onTimeUpdate={setPlaybackPosition}
-              onPlayingChange={setIsPlaying}
-              onSpeedChange={setPlaybackSpeed}
-              onDurationChange={() => {}}
-              onMediaChange={setHasMedia}
-              onYtUrlChange={() => {}}
-              onTitleChange={setMediaTitle}
-              initialMedia={initialMedia}
-              initialSeek={initialSeek}
-              initialSpeed={1}
-              initialLoop={deepLinkLoop}
-              lines={lines}
-              playbackPosition={playbackPosition}
-              syncMode={false}
-              onMediaUpload={() => {}}
-              projectMetadata={meta}
-              viewerMode
-            />
-
-            {/* Prev / next in playlist context */}
-            {listId && (prevTrack || nextTrack) && (
-              <div className="flex items-center justify-between mt-2">
-                <button
-                  disabled={!prevTrack}
-                  onClick={() => goToTrack(prevTrack)}
-                  className="h-7 px-2.5 text-[11px] text-foreground disabled:opacity-30 transition-opacity"
-                >
-                  {t('projectView.prevTrack')}
-                </button>
-                <button
-                  disabled={!nextTrack}
-                  onClick={() => goToTrack(nextTrack)}
-                  className="h-7 px-2.5 text-[11px] text-foreground disabled:opacity-30 transition-opacity"
-                >
-                  {t('projectView.nextTrack')}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+          {/* Prev / next in playlist context */}
+          {listId && (prevTrack || nextTrack) && (
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                disabled={!prevTrack}
+                onClick={() => goToTrack(prevTrack)}
+                className="h-9 coarse:h-11 px-2.5 text-xs text-foreground disabled:opacity-30 transition-opacity"
+              >
+                {t('projectView.prevTrack')}
+              </button>
+              <button
+                type="button"
+                disabled={!nextTrack}
+                onClick={() => goToTrack(nextTrack)}
+                className="h-9 coarse:h-11 px-2.5 text-xs text-foreground disabled:opacity-30 transition-opacity"
+              >
+                {t('projectView.nextTrack')}
+              </button>
+            </div>
+          )}
+        </PublicPlaybackBar>
       </div>
     </div>
+    </PlayerEngineProvider>
   );
 }
 

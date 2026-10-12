@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useMemo, forwardRef, useState, Fragment } from 'react';
-import type { CSSProperties, KeyboardEvent, RefObject } from 'react';
+import type { CSSProperties, KeyboardEvent } from 'react';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 import { useSettings } from '@/features/settings/useSettings';
+import { usePlayer } from '@features/player/PlayerContext';
 import { hasCJK, hasKanji, toHiragana, toKatakana } from '@/shared/utils/furigana';
 
 // Theme-token colors: the stage sits on the app background, so text derives
@@ -37,11 +38,6 @@ interface DisplayWord {
   singerIndex?: number;
 }
 
-interface PlayerHandle {
-  seek?: (time?: number | null) => void;
-  play?: () => void;
-}
-
 // Opacity/size lookup by distance from active line
 const DIST_STYLE = [
   // dist 0 — active
@@ -60,6 +56,49 @@ function getDistStyle(dist: number | null) {
   if (dist === null) return DIST_STYLE[2];
   return DIST_STYLE[Math.min(dist, DIST_STYLE.length - 1)];
 }
+
+// Focus stage (the default public view): only the lines around the playhead,
+// stepping down in size and contrast. Keyed by offset from the active line;
+// the dimming is opacity on the foreground token, so it holds in both themes.
+const FOCUS_STYLE: Record<number, { size: string; opacity: number }> = {
+  [-1]: { size: 'clamp(1.125rem, 1.8vw, 1.625rem)', opacity: 0.3 },
+  0: { size: 'clamp(2.5rem, 4.7vw, 4.25rem)', opacity: 1 },
+  1: { size: 'clamp(1.375rem, 2.4vw, 2.125rem)', opacity: 0.72 },
+  2: { size: 'clamp(1.25rem, 2.1vw, 1.875rem)', opacity: 0.42 },
+  3: { size: 'clamp(1.1875rem, 1.95vw, 1.75rem)', opacity: 0.24 },
+};
+
+const isBlank = (line: DisplayLine) => !line.text || line.text.trim() === '';
+
+// The previous line, the active one and the next three. Ad-libs ride along
+// with the line they overlap instead of taking a slot of their own.
+function buildFocusWindow(lines: DisplayLine[], currentIndex: number): { index: number; step: number }[] {
+  const out: { index: number; step: number }[] = [];
+  for (let i = currentIndex - 1; i >= 0; i--) {
+    const line = lines[i];
+    if (line.type === 'section' || line.adLibOf != null || isBlank(line)) continue;
+    out.push({ index: i, step: -1 });
+    break;
+  }
+  if (currentIndex >= 0) out.push({ index: currentIndex, step: 0 });
+  let step = 0;
+  for (let i = currentIndex + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.type === 'section' || isBlank(line)) continue;
+    if (line.adLibOf == null) {
+      if (step === 3) break;
+      step++;
+    }
+    out.push({ index: i, step: Math.max(step, 1) });
+  }
+  return out;
+}
+
+const ALIGN_LABEL_KEYS = {
+  left: 'settings.interface.alignLeft',
+  center: 'settings.interface.alignCenter',
+  right: 'settings.interface.alignRight',
+} as const;
 
 // Base (dist-0) rem size per settings.interface.fontSize — the same setting
 // PreviewLine's ACTIVE_FONT_SIZES reads, so the public view tracks the
@@ -92,6 +131,8 @@ interface ImmersiveLineProps {
   readingFormat?: string;
   /** Settings.interface.fontSize — same setting PreviewLine reads. */
   baseFontRem?: number;
+  /** Offset from the active line on the focus stage; unset in the full-lyrics list. */
+  focusStep?: number;
 }
 
 // ── Single lyric line ────────────────────────────────────────
@@ -113,10 +154,12 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
     activeHighlight,
     readingFormat,
     baseFontRem = BASE_FONT_REM.normal,
+    focusStep,
   },
   ref,
 ) {
   const { opacity, weight, sizeFactor } = getDistStyle(dist);
+  const focus = focusStep != null ? FOCUS_STYLE[focusStep] : null;
 
   const faded = fgAlpha(35);
   const nearer = fgAlpha(65);
@@ -145,7 +188,9 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   // 'glow' and 'zoom' decorate the active line; 'dim' pushes inactive lines
   // further back than the default distance fade; 'color' is today's baseline.
   const isDimMode = activeHighlight === 'dim';
-  const effectiveOpacity = !isActive && isDimMode ? opacity * 0.6 : opacity;
+  const effectiveOpacity = focus
+    ? (isActive ? 1 : focus.opacity)
+    : !isActive && isDimMode ? opacity * 0.6 : opacity;
 
   // Singer color attribution
   const isDuet = line.mode === 'duet' && (line.singers?.length ?? 0) >= 2;
@@ -156,7 +201,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   // inactive lines, where they're the point: telling lines apart at a glance.
   // On the active line they fought the karaoke fill, which is already the
   // color doing the work there.
-  let color = isActive ? FG : dist === 1 ? nearer : faded;
+  let color = isActive || focus ? FG : dist === 1 ? nearer : faded;
   if (lineSingerHex && !isActive) {
     color = `${lineSingerHex}99`;
   }
@@ -218,11 +263,11 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
     <div
       ref={ref}
       onClick={clickable ? onClick : undefined}
-      className="font-lyrics animate-preview-line-in"
+      className={`${focusStep === 0 ? 'font-heading' : 'font-lyrics'} animate-preview-line-in`}
       style={{
         opacity: isAdLib && !isActive ? effectiveOpacity * 0.5 : effectiveOpacity,
         transform: `scale(${(isAdLib ? 0.9 : 1) * (isActive && activeHighlight === 'zoom' ? 1.05 : 1)})`,
-        transition: 'opacity 0.4s ease, transform 0.4s ease, color 0.4s ease, text-shadow 0.4s ease',
+        transition: `opacity 0.4s ease, transform 0.4s ease, color 0.4s ease, text-shadow 0.4s ease${focus ? ', font-size 0.3s ease' : ''}`,
         animationDelay: staggerDelay,
         cursor: clickable ? 'pointer' : 'default',
         textAlign: alignment,
@@ -230,14 +275,17 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
         textShadow: isActive && activeHighlight === 'glow'
           ? '0 0 20px color-mix(in srgb, var(--color-primary) 50%, transparent)'
           : undefined,
-        fontWeight: weight,
-        fontSize: `calc(${baseFontRem}rem * ${sizeFactor})`,
-        paddingTop: '0.65em',
-        paddingBottom: '0.65em',
+        fontWeight: focus ? (focusStep === 0 ? 700 : 600) : weight,
+        fontSize: focus
+          ? `calc(${focus.size} * ${baseFontRem / BASE_FONT_REM.normal})`
+          : `calc(${baseFontRem}rem * ${sizeFactor})`,
+        letterSpacing: focusStep === 0 ? '-0.01em' : undefined,
+        paddingTop: focus ? 0 : '0.65em',
+        paddingBottom: focus ? 0 : '0.65em',
         marginLeft: isAdLib ? (alignment === 'right' ? '0' : '15%') : '0',
         marginRight: isAdLib ? (alignment === 'right' ? '15%' : '0') : '0',
         // Ruby text needs headroom or it collides with the line above on wrap.
-        lineHeight: hasReadings ? 1.9 : 1.25,
+        lineHeight: hasReadings ? 1.9 : focus ? (focusStep === 0 ? 1.02 : 1.2) : 1.25,
         position: 'relative',
       }}
     >
@@ -314,7 +362,9 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
                 <span
                   style={{
                     color: wColor ? `${wColor}bb` : undefined,
-                    opacity: isActive ? 0.35 : undefined,
+                    // The focus stage keeps unsung words at full foreground; the
+                    // accent fill alone marks progress.
+                    opacity: isActive && !focus ? 0.35 : undefined,
                     transition: 'opacity 0.3s ease, color 0.3s ease',
                   }}
                 >
@@ -478,12 +528,9 @@ function SectionDivider({
 
 interface ImmersiveLyricsDisplayProps {
   lines: DisplayLine[];
-  playbackPosition: number;
   editorMode: string;
-  playerRef?: RefObject<PlayerHandle | null>;
-  hasMedia?: boolean;
-  isPlaying?: boolean;
-  playbackSpeed?: number;
+  /** Scrollable list of every line instead of the focus stage. */
+  fullLyrics?: boolean;
   showTranslations?: boolean;
   songSingers?: string[];
   singerColors?: string[];
@@ -493,18 +540,17 @@ interface ImmersiveLyricsDisplayProps {
 // ── Main component ───────────────────────────────────────────
 export default function ImmersiveLyricsDisplay({
   lines,
-  playbackPosition,
   editorMode,
-  playerRef,
-  hasMedia,
-  isPlaying = false,
-  playbackSpeed = 1,
+  fullLyrics = false,
   showTranslations = true,
   songSingers = [],
   singerColors = [],
   initialAlignment,
 }: ImmersiveLyricsDisplayProps) {
   const { t } = useTranslation();
+  // The playback clock is read here, not passed down from the page, so a tick
+  // re-renders this stage and the playback bar but never the info aside.
+  const { currentTime: playbackPosition, hasMedia, isPlaying, playbackSpeed, seek, togglePlay } = usePlayer();
   // The viewer's own preference — reads from SettingsContext (localStorage for a
   // guest, synced for a signed-in viewer), never the project owner's. This is
   // the public view, so "whoever is looking at it" is the only sensible owner
@@ -551,12 +597,21 @@ export default function ImmersiveLyricsDisplay({
   }, [lines]);
 
   const hasSyncedLines = useMemo(() => lines.some((l) => l.timestamp != null), [lines]);
+  // Without timestamps there is no playhead to focus on, so show every line.
+  const showFull = fullLyrics || !hasSyncedLines;
+  const focusWindow = useMemo(
+    () => (showFull ? [] : buildFocusWindow(lines, currentIndex)),
+    [showFull, lines, currentIndex],
+  );
 
   // Auto-scroll: hold the active line in the middle of the container, matching
   // the editor and preview panes (both centre via the virtualizer). This used
   // to anchor at 20% from the top, which put the active line high on screen and
   // left the last lines unreachable as the container ran out of scroll.
   useEffect(() => {
+    // Forget the last position while the list is unmounted, so switching back
+    // to it re-centres on the active line.
+    if (!showFull) { lastScrolledIndex.current = -2; return; }
     if (currentIndex === lastScrolledIndex.current) return;
     if (currentIndex < 0 || !containerRef.current || !activeRef.current) return;
 
@@ -571,16 +626,16 @@ export default function ImmersiveLyricsDisplay({
     });
 
     return () => cancelAnimationFrame(raf);
-  }, [currentIndex]);
+  }, [currentIndex, showFull]);
 
   const handleLineClick = useCallback(
     (line: DisplayLine) => {
-      if (line.timestamp != null && playerRef?.current?.seek) {
-        playerRef.current.seek(line.timestamp);
-        playerRef.current.play?.();
+      if (line.timestamp != null) {
+        seek(line.timestamp);
+        if (!isPlaying) togglePlay();
       }
     },
-    [playerRef],
+    [seek, isPlaying, togglePlay],
   );
 
   // Placeholder states
@@ -604,41 +659,95 @@ export default function ImmersiveLyricsDisplay({
     );
   }
 
+  const alignmentControl = (
+    <div
+      role="group"
+      aria-label={t('projectView.alignment')}
+      className="absolute top-3 right-4 z-20 flex items-center bg-zinc-950/70 backdrop-blur-md rounded-lg p-0.5 border border-zinc-700/50 shadow-lg"
+    >
+      {(['left', 'center', 'right'] as const).map((align) => {
+        const label = t(ALIGN_LABEL_KEYS[align]);
+        return (
+          <Tip key={align} content={label}>
+            <button
+              type="button"
+              onClick={() => handleAlignmentChange(align)}
+              aria-pressed={alignment === align}
+              aria-label={label}
+              className={`grid place-items-center size-7 coarse:size-11 rounded transition-all ${alignment === align ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
+            >
+              <Icon name={`format_align_${align}`} size={15} />
+            </button>
+          </Tip>
+        );
+      })}
+    </div>
+  );
+
+  if (!showFull) {
+    const anchor = currentIndex >= 0 ? currentIndex : focusWindow[0]?.index ?? -1;
+    let section: DisplayLine | undefined;
+    for (let i = anchor; i >= 0 && !section; i--) {
+      if (lines[i].type === 'section') section = lines[i];
+    }
+    const singers = lines[anchor]?.singers ?? section?.singers ?? [];
+
+    return (
+      <div className="relative flex-1 min-h-0 flex flex-col">
+        {alignmentControl}
+        <div className="lrc-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 py-8 lg:px-14 lg:py-10">
+          <div className="my-auto flex flex-col gap-[18px] lg:gap-[22px]">
+            {(section?.label || singers.length > 0) && (
+              <p
+                className="text-[11px] lg:text-xs font-bold uppercase tracking-[0.1em] text-success"
+                style={{ textAlign: alignment }}
+              >
+                {section?.label}
+                {section?.label && singers.length > 0 && ' · '}
+                {singers.map((name, idx) => {
+                  const hex = singerColors[singerColorIndex(name, songSingers)];
+                  return (
+                    <span key={`${name}-${idx}`} style={hex ? { color: hex } : undefined}>
+                      {name}{idx < singers.length - 1 ? ', ' : ''}
+                    </span>
+                  );
+                })}
+              </p>
+            )}
+            {focusWindow.map(({ index, step }) => {
+              const line = lines[index];
+              return (
+                <ImmersiveLine
+                  key={line.id ?? `l-${index}`}
+                  line={line}
+                  dist={Math.abs(step)}
+                  focusStep={step}
+                  onClick={() => handleLineClick(line)}
+                  hasSyncedLines={hasSyncedLines}
+                  showTranslations={showTranslations}
+                  isPlaying={step === 0 && isPlaying}
+                  playbackPosition={playbackPosition}
+                  nextTimestamp={nextTimestamps[index]}
+                  playbackSpeed={playbackSpeed}
+                  editorMode={editorMode}
+                  songSingers={songSingers}
+                  singerColors={singerColors}
+                  alignment={alignment}
+                  activeHighlight={activeHighlight}
+                  readingFormat={settings.editor?.display?.readingFormat}
+                  baseFontRem={baseFontRem}
+                />
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex-1 min-h-0 overflow-hidden">
-      {/* Floating alignment control */}
-      <div className="absolute top-3 right-4 z-20 flex items-center bg-zinc-950/70 backdrop-blur-md rounded-lg p-0.5 border border-zinc-700/50 shadow-lg">
-        <Tip content={t('settings.interface.alignLeft')}>
-          <button
-            type="button"
-            onClick={() => handleAlignmentChange('left')}
-            className={`p-1.5 rounded transition-all ${alignment === 'left' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
-            aria-label={t('settings.interface.alignLeft')}
-          >
-            <Icon name="format_align_left" size={15} />
-          </button>
-        </Tip>
-        <Tip content={t('settings.interface.alignCenter')}>
-          <button
-            type="button"
-            onClick={() => handleAlignmentChange('center')}
-            className={`p-1.5 rounded transition-all ${alignment === 'center' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
-            aria-label={t('settings.interface.alignCenter')}
-          >
-            <Icon name="format_align_center" size={15} />
-          </button>
-        </Tip>
-        <Tip content={t('settings.interface.alignRight')}>
-          <button
-            type="button"
-            onClick={() => handleAlignmentChange('right')}
-            className={`p-1.5 rounded transition-all ${alignment === 'right' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
-            aria-label={t('settings.interface.alignRight')}
-          >
-            <Icon name="format_align_right" size={15} />
-          </button>
-        </Tip>
-      </div>
+      {alignmentControl}
 
       {/* Top fade */}
       <div
