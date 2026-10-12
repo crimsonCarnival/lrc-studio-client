@@ -74,6 +74,12 @@ export interface PlayerContextValue {
   handleUrlLoad: () => void;
   handleSelectUpload: (u: unknown) => void;
   handleClearMedia: () => void;
+  /** The local/CDN url the audio element failed to load, or null. Stale once the source changes. */
+  failedAudioUrl: string | null;
+  /** Asks the audio element to load the same source again. */
+  retryAudio: () => void;
+  /** Keeps playback looping over the cursor line while true, whatever the loopCurrentLine setting says. */
+  setLoopActiveLine: (on: boolean) => void;
 }
 
 export const PlayerContext = createContext<PlayerContextValue | null>(null);

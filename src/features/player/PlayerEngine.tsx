@@ -203,9 +203,12 @@ function PlayerEngineInner(
     };
   }, [isPlaying, source, updateTime]);
 
-  // Sync A-B loop with current line if loopCurrentLine is enabled
+  // Sync A-B loop with current line if loopCurrentLine is enabled, or while a
+  // screen asks for it through context (words mode works on one line at a time).
+  const [loopActiveLine, setLoopActiveLine] = useState(false);
+  const loopLine = settings.playback?.loopCurrentLine || loopActiveLine;
   useEffect(() => {
-    if (settings.playback?.loopCurrentLine && lines?.[activeLineIndex] && lines[activeLineIndex].timestamp != null) {
+    if (loopLine && lines?.[activeLineIndex] && lines[activeLineIndex].timestamp != null) {
       const currentLine = lines[activeLineIndex];
       const a = currentLine.timestamp ?? null;
       let b: number | null = currentLine.endTime ?? null;
@@ -215,12 +218,12 @@ function PlayerEngineInner(
       }
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoop({ a, b });
-    } else if (!settings.playback?.loopCurrentLine) {
+    } else if (!loopLine) {
       // Only clear if it was an auto-loop. For simplicity, we'll just clear it when disabled.
       setLoop({ a: null, b: null });
     }
     // setLoop is a stable useState setter
-  }, [settings.playback?.loopCurrentLine, activeLineIndex, lines, duration]);
+  }, [loopLine, activeLineIndex, lines, duration]);
 
   const updateDuration = useCallback(
     (d: number) => {
@@ -542,6 +545,15 @@ function PlayerEngineInner(
     onClearMedia: handleClearMedia,
   }), [yt.ytUrl, yt.setYtUrl, yt.setYtError, handleUrlLoad, cdnLoading, local.handleFileChange, mediaUploads, handleSelectUpload, handleClearMedia]);
 
+  // Remembers WHICH url failed rather than a boolean: consumers compare it with
+  // the current source, so the error clears by itself as soon as the source
+  // changes (re-upload, another file, YouTube).
+  const [failedAudioUrl, setFailedAudioUrl] = useState<string | null>(null);
+  const retryAudio = useCallback(() => {
+    setFailedAudioUrl(null);
+    audioRef.current?.load();
+  }, [audioRef]);
+
   /* eslint-disable react-hooks/refs -- audioRef is exposed as a stable ref OBJECT (never .current)
      through context so WaveformDisplay can read it; passing the ref identifier here is intentional. */
   const value = useMemo(() => ({
@@ -581,13 +593,16 @@ function PlayerEngineInner(
     handleUrlLoad,
     handleSelectUpload,
     handleClearMedia,
+    failedAudioUrl,
+    retryAudio,
+    setLoopActiveLine,
   }), [
     source, isPlaying, currentTime, duration, playbackSpeed, hasMedia, loop, loopA, loopB,
     mediaTitle, projectMetadata?.songName, projectCoverImage, local, yt, mediaUploads, cdnLoading,
     syncMode, viewerMode, SPEED_PRESETS, MIN_SPEED, MAX_SPEED,
     lines, playbackPosition, detectedUrlType, mediaPopoverProps, fetchUploads,
     togglePlay, seek, applySpeed, setLoop, handleLoopChange, clearLoop,
-    handleUrlLoad, handleSelectUpload, handleClearMedia,
+    handleUrlLoad, handleSelectUpload, handleClearMedia, failedAudioUrl, retryAudio,
   ]);
   /* eslint-enable react-hooks/refs */
 
@@ -602,7 +617,10 @@ function PlayerEngineInner(
           onLoadedMetadata={local.handleLoadedMetadata}
           onPause={local.handlePause}
           onEnded={() => setIsPlaying(false)}
-          onError={(e) => console.error('[audio] load error:', (e.currentTarget as HTMLAudioElement).error, '| src:', (e.currentTarget as HTMLAudioElement).src?.slice(0, 80))}
+          onError={(e) => {
+            console.error('[audio] load error:', (e.currentTarget as HTMLAudioElement).error, '| src:', (e.currentTarget as HTMLAudioElement).src?.slice(0, 80));
+            setFailedAudioUrl(local.localUrl);
+          }}
           className="hidden"
         />
       )}
