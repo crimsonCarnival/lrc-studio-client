@@ -47,6 +47,8 @@ interface AppHeaderProps {
   playerSlot?: PlayerSlot;
   projectCoverImage?: string | null;
   onStartTour?: () => void;
+  /** Which workspace view is showing; the preview replaces the breadcrumb with its back button. */
+  workspaceView?: string;
 }
 
 export function AppHeader({
@@ -71,6 +73,7 @@ export function AppHeader({
   playerSlot,
   projectCoverImage,
   onStartTour,
+  workspaceView,
 }: AppHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -103,6 +106,10 @@ export function AppHeader({
   // so the header's window-scroll bar is meaningless noise there.
   const isProjectPage = location.pathname.startsWith('/project/');
   const isEditorPage = Boolean(location.pathname.match(/^\/project\/(local|new|[^/]+\/edit)$/));
+  // The editor/preview workspace takes over the middle and right of the bar:
+  // it portals its own status badge, tabs and actions into the slots below
+  // (see useHeaderSlot), so the site nav, search and tour button step aside.
+  const isWorkspace = isEditorPage && location.pathname !== '/project/new' && isReady;
 
   const currentTheme = settings?.interface?.theme || 'dark';
 
@@ -133,12 +140,13 @@ export function AppHeader({
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-nav animate-fade-in bg-zinc-950/60 backdrop-blur-2xl">
+      <header className={`fixed top-0 left-0 right-0 z-nav animate-fade-in bg-zinc-950/60 backdrop-blur-2xl ${isWorkspace ? 'border-b border-zinc-800' : ''}`}>
 
-        <div className="relative max-w-[1600px] mx-auto w-full px-4 lg:px-6 py-2 sm:py-2.5 flex flex-row items-center justify-between gap-2">
+        <div className={`relative mx-auto w-full px-4 lg:px-6 py-2 sm:py-2.5 flex flex-row items-center justify-between gap-2 ${isWorkspace ? '' : 'max-w-[1600px]'}`}>
 
           {/* ── Left: Logo + breadcrumb ── */}
-          <div className="flex items-center gap-4 lg:gap-8">
+          <div className={`flex items-center gap-4 lg:gap-8 min-w-0 ${isWorkspace ? 'lg:flex-1' : ''}`}>
+            {!(isWorkspace && workspaceView === 'preview') && (
             <HeaderBreadcrumb
               isReady={isReady}
               mediaTitle={mediaTitle}
@@ -148,10 +156,13 @@ export function AppHeader({
               projectCoverImage={projectCoverImage}
               onLogoClick={goHomeOrWarn}
               onProjectSettings={isReady && setShowNamingModal ? () => setShowNamingModal(true) : undefined}
+              onLibrary={isWorkspace ? () => navTo('/library') : undefined}
             />
+            )}
+            <div id="workspace-header-status" className="empty:hidden flex items-center" />
 
             {/* ── Desktop Navigation ── */}
-            {user && !isGuestLanding && (
+            {user && !isGuestLanding && !isWorkspace && (
               <nav className="hidden lg:flex items-center gap-6">
                 <Link to='/home' onClick={(e) => guardedLinkClick(e, () => navTo('/home'))} className={`text-sm font-medium transition-colors ${location.pathname === '/home' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.home')}</Link>
                 <Link to='/explore' onClick={(e) => guardedLinkClick(e, () => navTo('/explore'))} className={`text-sm font-medium transition-colors ${location.pathname === '/explore' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.explore')}</Link>
@@ -163,7 +174,11 @@ export function AppHeader({
           </div>
 
           {/* ── Center: Start Syncing (edit mode only) ── */}
-          {!syncMode && isReady && playerSlot !== 'header' && playerSlot !== 'preview' && (
+          {/* Workspace tabs / preview title. In flow between the two sides, so it
+              can never sit on top of the actions the way absolute centring did. */}
+          <div id="workspace-header-center" className="empty:hidden max-lg:hidden flex items-center shrink-0" />
+
+          {!syncMode && isReady && !isWorkspace && playerSlot !== 'header' && playerSlot !== 'preview' && (
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('editor:start-syncing'))}
               className="py-1 px-3 h-7 text-xs font-semibold text-zinc-950 bg-primary hover:bg-primary-dim rounded-lg transition-colors shrink-0"
@@ -181,13 +196,14 @@ export function AppHeader({
             </div>
           )}
 
-          <div className="flex-1" />
+          <div className={isWorkspace ? 'flex-1 lg:hidden' : 'flex-1'} />
 
           {/* ── Right: Controls ── */}
-          <div className="flex items-center gap-1.5 coarse:gap-0.5 flex-shrink-0">
+          <div className={`flex items-center gap-2 coarse:gap-1 flex-shrink-0`}>
+            <div id="workspace-header-actions" className="empty:hidden flex items-center gap-2" />
 
             {/* Search — inline in header */}
-            {!isGuestLanding && (
+            {!isGuestLanding && !isWorkspace && (
               <div ref={searchOverlayRef} className="flex items-center gap-1">
                 {searchOpen && (
                   <div className="w-52 sm:w-64">
@@ -208,7 +224,7 @@ export function AppHeader({
 
             {/* Panel hide/show controls moved into the editor toolbar and preview (#11/#12/#13) */}
 
-            {isEditorPage && isReady && onStartTour && (
+            {isEditorPage && isReady && onStartTour && !isWorkspace && (
               <Tip content={t('editor.tour.replay')} side="bottom">
                 <button
                   onClick={onStartTour}
@@ -224,7 +240,7 @@ export function AppHeader({
                 so guests keep the standalone switcher. */}
             {!user ? (
               <>
-                <ThemeLangSwitcher currentTheme={currentTheme} updateSetting={updateSetting} i18n={i18n} />
+                {!isWorkspace && <ThemeLangSwitcher currentTheme={currentTheme} updateSetting={updateSetting} i18n={i18n} />}
                 <GuestAuthButtons
                   isReady={isReady}
                   lines={lines}
