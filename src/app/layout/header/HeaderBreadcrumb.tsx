@@ -23,9 +23,12 @@ interface HeaderBreadcrumbProps {
   onLogoClick: () => void;
   // Opens the project settings modal; shown left of the title on project pages (#10).
   onProjectSettings?: () => void;
+  // Editor workspace only: shows "Library /" before the title. Guarded for
+  // unsaved changes by the parent.
+  onLibrary?: () => void;
 }
 
-export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerImportSave, forkedFrom, projectCoverImage, onLogoClick, onProjectSettings }: HeaderBreadcrumbProps) {
+export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerImportSave, forkedFrom, projectCoverImage, onLogoClick, onProjectSettings, onLibrary }: HeaderBreadcrumbProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,7 +75,16 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
       <div className="flex items-center gap-1.5 min-w-0">
         {isReady ? (
           <>
-            <span className="text-zinc-700 shrink-0">/</span>
+            {onLibrary && (
+              <button
+                type="button"
+                onClick={onLibrary}
+                className="max-sm:hidden shrink-0 py-1 coarse:py-3.5 -my-1 text-sm text-foreground/65 hover:text-foreground transition-colors"
+              >
+                {t('library.title')}
+              </button>
+            )}
+            <span aria-hidden className={`text-foreground/45 shrink-0 ${onLibrary ? 'max-sm:hidden' : ''}`}>/</span>
             {projectCoverImage && (
               <LazyImage
                 src={projectCoverImage}
@@ -117,7 +129,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
                 className="flex items-center gap-1 min-w-0 group py-1 coarse:py-3.5 -my-1"
                 aria-label={t('setup.projectNamePlaceholder')}
               >
-                <span className="text-xs font-medium text-zinc-400 group-hover:text-zinc-200 truncate transition-colors max-w-[16vw] sm:max-w-[200px]">
+                <span className={`truncate transition-colors max-w-[16vw] sm:max-w-[200px] ${onLibrary ? 'text-sm font-semibold text-foreground' : 'text-xs font-medium text-zinc-400 group-hover:text-zinc-200'}`}>
                   {mediaTitle || t('setup.projectNamePlaceholder')}
                 </span>
                 <Icon name="edit" size={12} className="text-zinc-600 group-hover:text-zinc-400 transition-colors shrink-0" />

@@ -4,10 +4,14 @@ import { formatTime } from '@/shared/utils/format-time';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Icon } from '@/shared/ui/Icon';
 import { EditorLineContextMenu } from '@features/editor/components/line/EditorLineContextMenu';
+import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import type { EditorLine } from '@features/editor/services/editor.service';
 
 /** Long-press acts on the pressed line alone; this tab has no multi-select. */
 const NO_SELECTION: Set<number> = new Set();
+
+/** Shown in the time gutter of a line that has not been marked yet. */
+const UNTIMED = '--:--.--';
 
 interface PlayerHandle {
   currentTime?: number;
@@ -21,6 +25,8 @@ interface SyncModeTabProps {
   /** Accepted for call-site compatibility; the mark handler reads playback position itself. */
   playerRef?: { current?: PlayerHandle | null };
   onMark?: () => void;
+  onUndo?: () => void;
+  canUndo?: boolean;
   duration?: number;
   isLoading?: boolean;
   handleDeleteLine?: (lineIndex: number) => void;
@@ -35,6 +41,8 @@ export default function SyncModeTab({
   activeLineIndex,
   setActiveLineIndex,
   onMark,
+  onUndo,
+  canUndo = false,
   duration,
   isLoading = false,
   handleDeleteLine,
@@ -46,104 +54,134 @@ export default function SyncModeTab({
   const currentTimestamp = useMemo(() => formatTime(playbackPosition), [playbackPosition]);
   const durationFormatted = useMemo(() => formatTime(duration ?? 0), [duration]);
 
-  // Gating this on playerRef.current.currentTime made the tap a no-op for
-  // YouTube sources: that player lives behind a Proxy/WeakMap and does not
-  // surface currentTime on the ref, so the guard failed silently and the whole
-  // mobile sync affordance did nothing. onMark reads the playback position
-  // itself, so it never needed the check.
-  const handleWaveformTap = useCallback(() => {
-    onMark?.();
-  }, [onMark]);
+  const { synced, total } = useMemo(() => {
+    let synced = 0;
+    let total = 0;
+    for (const l of lines) {
+      if (l.type === 'section') continue;
+      total++;
+      if (l.timestamp != null) synced++;
+    }
+    return { synced, total };
+  }, [lines]);
+
+  // The number the mark button names: lyric lines only, as the list counts them.
+  const activeLyricNumber = useMemo(
+    () => lines.slice(0, activeLineIndex + 1).filter((l) => l.type !== 'section').length,
+    [lines, activeLineIndex],
+  );
 
   const handleLineClick = useCallback((index: number) => {
     setActiveLineIndex(index);
   }, [setActiveLineIndex]);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-44">
+        <LogoLoader size={32} />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-full gap-4 p-4">
-      {isLoading ? (
-        <div className="flex-1 flex items-center justify-center min-h-44">
-          <LogoLoader size={32} />
+    <div className="flex flex-col min-h-full">
+      {/* How much of the song is timed */}
+      <div
+        role="progressbar"
+        aria-label={t('editor.syncProgressLabel')}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={synced}
+        className="h-1 bg-zinc-800 shrink-0"
+      >
+        <div className="h-full bg-primary transition-[width] duration-300 ease-out" style={{ width: `${total ? (synced / total) * 100 : 0}%` }} />
+      </div>
+
+      <h3 className="px-4 pt-3 text-xs font-semibold text-foreground/65 uppercase tracking-widest">
+        {t('editor.linesProgress', { synced, total })}
+      </h3>
+
+      <ol className="flex-1 flex flex-col gap-1 px-3 py-2.5 list-none m-0">
+        {lines.map((line, lineIndex) => {
+          const isSection = line.type === 'section';
+          const isActive = lineIndex === activeLineIndex;
+          const pending = line.timestamp == null;
+          return (
+            <li key={line.id ?? lineIndex}>
+              <EditorLineContextMenu
+                line={line}
+                lineIndex={lineIndex}
+                isSection={isSection}
+                selectedLines={NO_SELECTION}
+                sectionLines={lines}
+                handleDeleteLine={handleDeleteLine ?? (() => {})}
+                handleClearLine={handleClearLine}
+                handleAddLine={handleAddLine}
+                handleInsertSection={handleInsertSection}
+              >
+                {isSection ? (
+                  // A plain div still takes the long-press that opens the section menu.
+                  <div className="px-3 pt-3 pb-1 text-[11px] font-bold uppercase tracking-[0.1em] text-[color-mix(in_srgb,var(--color-success)_50%,var(--foreground))] dark:text-success [-webkit-touch-callout:none]">
+                    {formatSectionLabel(line.label, t)}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleLineClick(lineIndex)}
+                    aria-current={isActive ? 'true' : undefined}
+                    // touch-callout keeps iOS's press-and-hold sheet from taking
+                    // the gesture before the context menu opens.
+                    className={`w-full min-h-11 flex flex-col gap-1 text-left rounded-xl transition-colors [-webkit-touch-callout:none] ${
+                      isActive ? 'p-3.5 bg-zinc-800 ring-1 ring-inset ring-primary/50' : 'px-3 py-2.5 active:bg-zinc-800/50'
+                    }`}
+                  >
+                    <span className={`font-mono text-[11px] tabular-nums ${isActive ? 'text-primary' : 'text-foreground/45'}`}>
+                      {pending ? UNTIMED : formatTime(line.timestamp as number)}
+                    </span>
+                    <span className={`break-words ${isActive ? 'text-xl font-bold text-foreground' : `text-[15px] font-medium ${pending ? 'text-foreground/55' : 'text-foreground'}`}`}>
+                      {line.text || t('editor.emptyLine')}
+                    </span>
+                  </button>
+                )}
+              </EditorLineContextMenu>
+            </li>
+          );
+        })}
+      </ol>
+
+      {/* Mark bar: the running time, the mark button, undo. Sticks to the bottom
+          of the tab's scroll area, above the player bar. */}
+      <div className="sticky bottom-0 z-10 flex flex-col gap-2.5 border-t border-zinc-800 bg-zinc-950 px-4 pt-3 pb-4">
+        <div className="flex justify-between font-mono text-xs tabular-nums">
+          <span data-testid="current-time-display" className="text-foreground">{currentTimestamp}</span>
+          <span data-testid="duration-display" className="text-foreground/65">{durationFormatted}</span>
         </div>
-      ) : (
-        <>
-          {/* The mark surface. This used to be a 160px box captioned "waveform
-              preview", but no waveform is ever drawn here — not for YouTube,
-              which has none, and not for local audio either, since this tab
-              never mounted WaveSurfer. It advertised a view that did not exist
-              and cost a third of the screen. It now shows the thing that
-              actually matters while syncing — the running time — and is itself
-              the tap target. */}
+        <div className="flex items-center gap-2.5">
           <button
             type="button"
             data-testid="waveform-area"
-            onClick={handleWaveformTap}
-            className="w-full rounded-xl border border-zinc-700/50 bg-gradient-to-b from-zinc-800/80 to-zinc-900 px-4 py-5 flex flex-col items-center justify-center gap-1 active:scale-[0.99] active:border-primary/60 transition-all [-webkit-touch-callout:none]"
+            // pointerdown, not click: on a phone the ~100ms between touch and
+            // click is audible as late timestamps.
+            onPointerDown={(e) => { e.preventDefault(); onMark?.(); }}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onMark?.(); } }}
+            disabled={total === 0}
+            className="flex-1 h-16 rounded-[18px] bg-primary text-zinc-950 text-lg font-extrabold flex items-center justify-center gap-2.5 active:scale-[0.98] transition-transform disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
           >
-            <div
-              data-testid="current-time-display"
-              className="text-4xl font-mono font-bold text-primary tracking-wider tabular-nums leading-none"
-            >
-              {currentTimestamp}
-            </div>
-            <div data-testid="duration-display" className="text-sm text-zinc-400 tabular-nums">
-              / {durationFormatted}
-            </div>
-            <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-zinc-400">
-              <Icon name="ads_click" size={14} />
-              {t('editor.tapToMarkTimestamp')}
-            </div>
+            {t('editor.markLineNumber', { number: activeLyricNumber })}
           </button>
-
-          {/* Lines overview with sync status */}
-          <div className="flex flex-col gap-2">
-            <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-widest px-2">
-              {t('editor.linesProgress', {
-                synced: lines.filter((l) => l.type !== 'section' && l.timestamp != null).length,
-                total: lines.filter((l) => l.type !== 'section').length,
-              })}
-            </h3>
-            <div className="space-y-1.5 px-2">
-              {lines.map((line, lineIndex) => (
-                <EditorLineContextMenu
-                  key={line.id ?? lineIndex}
-                  line={line}
-                  lineIndex={lineIndex}
-                  isSection={line.type === 'section'}
-                  selectedLines={NO_SELECTION}
-                  sectionLines={lines}
-                  handleDeleteLine={handleDeleteLine ?? (() => {})}
-                  handleClearLine={handleClearLine}
-                  handleAddLine={handleAddLine}
-                  handleInsertSection={handleInsertSection}
-                >
-                  <button
-                    onClick={() => handleLineClick(lineIndex)}
-                    // touch-callout keeps iOS's press-and-hold sheet from taking
-                    // the gesture before the context menu opens.
-                    className={`w-full text-left p-2 rounded-lg transition-colors text-sm [-webkit-touch-callout:none] ${
-                      lineIndex === activeLineIndex
-                        ? 'bg-primary/10 border border-primary text-primary'
-                        : line.timestamp != null
-                          ? 'bg-zinc-900/50 border border-zinc-800 text-zinc-300 hover:border-zinc-700'
-                          : 'bg-zinc-950/50 border border-zinc-800/50 text-zinc-500 hover:border-zinc-700/50'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="flex-1 truncate">{line.text || t('editor.emptyLine')}</span>
-                      {line.timestamp != null && (
-                        <span className="text-xs font-mono text-zinc-400 flex-shrink-0">
-                          {formatTime(line.timestamp)}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                </EditorLineContextMenu>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+          {onUndo && (
+            <button
+              type="button"
+              onClick={onUndo}
+              disabled={!canUndo}
+              aria-label={t('editor.undo')}
+              className="size-14 shrink-0 grid place-items-center rounded-full border border-zinc-700 text-foreground active:bg-zinc-800 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+            >
+              <Icon name="undo" size={20} />
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

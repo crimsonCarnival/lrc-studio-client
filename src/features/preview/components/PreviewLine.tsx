@@ -8,6 +8,7 @@ import type { EditorLine, EditorWord } from '@/features/editor/services/editor.s
 import type { AppSettings } from '@/features/settings/settings.types';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
+import { formatTimestamp } from '@/shared/utils/lrc';
 
 /** Inline text color classes for words attributed to a specific singer */
 const WORD_SINGER_PREVIEW_COLORS = [
@@ -20,6 +21,9 @@ const WORD_SINGER_PREVIEW_COLORS = [
   'text-cyan-400',      // singer 6
   'text-fuchsia-400',   // singer 7
 ];
+
+/** Gutter text for a line that has not been timed yet. */
+const UNTIMED_TIMESTAMP = '--:--.--';
 
 type SizeMap = Record<string, string>;
 type ReadingFmt = (r?: string) => string | undefined;
@@ -66,6 +70,11 @@ interface PreviewLineProps {
   singerColors?: string[];
   nextTimestamp?: number | null;
   editorMode?: string;
+  /** 'review' = editor preview rows (timestamp gutter, raised active row); 'stage' = public viewer. */
+  variant?: 'stage' | 'review';
+  showTimestamps?: boolean;
+  /** When false the per-word karaoke fill is skipped and lines highlight as a whole. */
+  wordHighlight?: boolean;
 }
 
 export default function PreviewLine({
@@ -99,10 +108,14 @@ export default function PreviewLine({
   singerColors,
   nextTimestamp,
   editorMode,
+  variant = 'stage',
+  showTimestamps = false,
+  wordHighlight = true,
 }: PreviewLineProps) {
   const { settings } = useSettings();
   const { t } = useTranslation();
   const roster = propRoster ?? [];
+  const isReview = variant === 'review';
 
   const getCustomColorStyle = (hex: string, active: boolean) => ({
     color: hex,
@@ -118,6 +131,33 @@ export default function PreviewLine({
     const labelStr = sectionNum != null
       ? `${formatSectionLabel(baseLabel || line.label, t)} ${sectionNum}`
       : formatSectionLabel(line.label, t);
+
+    if (isReview) {
+      // Unlabelled, singer-less markers only end a section; they carry nothing to show.
+      if (!line.label?.trim() && singers.length === 0) return <div className="h-3" />;
+      return (
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 px-2 sm:px-3 pt-4 pb-1 text-[11px] sm:text-xs">
+          <span className="font-bold uppercase tracking-[0.1em] text-[color-mix(in_srgb,var(--color-success)_50%,var(--foreground))] dark:text-success">
+            {labelStr}
+          </span>
+          {singers.length > 0 && (
+            <span className="flex flex-wrap items-baseline gap-x-1.5 font-medium">
+              {singers.map((name, idx) => {
+                const globalIdx = singerColorIndex(name, roster);
+                const customHex = singerColors?.[globalIdx];
+                const colorClass = !customHex ? (WORD_SINGER_PREVIEW_COLORS[globalIdx] || 'text-primary') : '';
+                const style = customHex ? getCustomColorStyle(customHex, false) : undefined;
+                return (
+                  <span key={idx} className={colorClass} style={style}>
+                    {name}{idx < singers.length - 1 ? ',' : ''}
+                  </span>
+                );
+              })}
+            </span>
+          )}
+        </div>
+      );
+    }
 
     return (
       <div className={`flex items-center gap-4 px-2 sm:px-4 ${isRoot ? 'py-4 my-5' : 'py-2 my-2'}`}>
@@ -185,7 +225,7 @@ export default function PreviewLine({
     ? `${Math.min(distanceFromActive * 40, 200)}ms`
     : '0ms';
 
-  const hasWordTimestamps = line.words?.some((w) => w.time != null);
+  const hasWordTimestamps = wordHighlight && line.words?.some((w) => w.time != null);
 
   const translationLayout = settings.editor?.display?.translationLayout || 'side-by-side';
 
@@ -223,48 +263,18 @@ export default function PreviewLine({
     ? Math.min(1, Math.max(0, (playbackPosition! - line.timestamp!) / (segmentEnd! - line.timestamp!)))
     : null;
 
-  const inner = (
-    <button
-      type="button"
-      ref={isActive && !isDualLine ? activeRef : null}
-      onClick={hasMedia ? () => handleLineClick(line, i) : undefined}
-      onMouseEnter={hasMedia ? () => handleLineHover(i) : undefined}
-      onMouseLeave={hasMedia ? handleLineHoverEnd : undefined}
-      style={{
-        opacity: isAdLib && !isActive ? parallaxOpacity * 0.5 : parallaxOpacity,
-        transform: isAdLib ? 'scale(0.95)' : undefined,
-        paddingLeft: isAdLib ? '1.5rem' : undefined,
-        animationDelay: staggerDelay,
-      }}
-      className={`w-full group px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition-opacity duration-300 ease-out flex select-none relative overflow-hidden animate-preview-line-in ${hasMedia ? 'cursor-pointer' : 'cursor-default'
-        } ${translationLayout === 'side-by-side' && activeTranslationText && showTranslationsInPreview && !isEmptyLine
-          ? 'flex-row items-baseline gap-3 sm:gap-6'
-          : 'flex-col'
-        } ${settings.interface?.previewAlignment === 'right' ? 'items-end text-right' :
-          settings.interface?.previewAlignment === 'center' ? 'items-center text-center' :
-            'items-start text-left'
-        } ${isActive
-          ? `${settings.editor?.display?.activeHighlight === 'zoom' ? 'scale-y-105' : ''} origin-center bg-zinc-800/10 ${activeMargin[spacingOption] || 'my-1 sm:my-2'}`
-          : hasMedia ? 'hover:bg-zinc-800/30' : ''
-        }`}
-    >
-      {line.timestamp != null && (
-        <div className={`absolute top-1/2 -translate-y-1/2 ${isLocked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity flex items-center justify-center pointer-events-none ${isLocked ? 'text-amber-400' : 'text-primary'
-          } ${settings.interface?.previewAlignment === 'right' ? 'right-0 translate-x-full pl-2' : 'left-0 -translate-x-full pr-2'
-          } ${isActive ? 'animate-timestamp-pulse' : ''}`}>
-          {isLocked ? (
-            <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C9.24 2 7 4.24 7 7v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V7c0-2.76-2.24-5-5-5zm3 10H9v-2c0-1.66 1.34-3 3-3s3 1.34 3 3v2z" />
-            </svg>
-          ) : (
-            <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          )}
-        </div>
-      )}
+  const layoutClass = translationLayout === 'side-by-side' && activeTranslationText && showTranslationsInPreview && !isEmptyLine
+    ? 'flex-row items-baseline gap-3 sm:gap-6'
+    : 'flex-col';
+  const alignClass = settings.interface?.previewAlignment === 'right' ? 'items-end text-right' :
+    settings.interface?.previewAlignment === 'center' ? 'items-center text-center' :
+      'items-start text-left';
+  const activeClass = `${settings.editor?.display?.activeHighlight === 'zoom' ? 'scale-y-105' : ''} origin-center ${activeMargin[spacingOption] || 'my-1 sm:my-2'}`;
+  const isUntimed = effectiveTimestamp == null;
+  // Review rows dim what has already been sung and what still has no time.
+  const muted = isReview && (isPast || isUntimed);
 
-      {isEmptyLine ? (
+  const body = isEmptyLine ? (
         <div className="w-full flex items-center justify-center min-h-[2rem] sm:min-h-[2.5rem] py-1 sm:py-2">
           {segmentProgress != null ? (
             <InstrumentalDots
@@ -292,10 +302,11 @@ export default function PreviewLine({
               singerColors={singerColors}
               getCustomColorStyle={getCustomColorStyle}
               editorMode={editorMode}
+              review={isReview} muted={muted}
             />
             {line.secondary && renderSecondaryTrack({
               line, isActive, playbackPosition: playbackPosition ?? 0, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings,
-              isPlaying, playbackSpeed
+              isPlaying, playbackSpeed, wordHighlight
             })}
           </div>
 
@@ -325,11 +336,13 @@ export default function PreviewLine({
             singerColors={singerColors}
             getCustomColorStyle={getCustomColorStyle}
             editorMode={editorMode}
+            review={isReview}
+            muted={muted}
           />
 
           {line.secondary && renderSecondaryTrack({
             line, isActive, playbackPosition: playbackPosition ?? 0, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings,
-            isPlaying, playbackSpeed
+            isPlaying, playbackSpeed, wordHighlight
           })}
 
           {(activeTranslationText && showTranslationsInPreview) && (
@@ -343,6 +356,64 @@ export default function PreviewLine({
               {activeTranslationText}
             </p>
           )}
+        </>
+      );
+
+  const inner = (
+    <button
+      type="button"
+      ref={isActive && !isDualLine ? activeRef : null}
+      onClick={hasMedia ? () => handleLineClick(line, i) : undefined}
+      onMouseEnter={hasMedia ? () => handleLineHover(i) : undefined}
+      onMouseLeave={hasMedia ? handleLineHoverEnd : undefined}
+      style={{
+        opacity: isAdLib && !isActive ? parallaxOpacity * 0.5 : parallaxOpacity,
+        transform: isAdLib ? 'scale(0.95)' : undefined,
+        paddingLeft: isAdLib ? '1.5rem' : undefined,
+        animationDelay: staggerDelay,
+      }}
+      className={`w-full group flex select-none relative overflow-hidden animate-preview-line-in ${hasMedia ? 'cursor-pointer' : 'cursor-default'
+        } ${isReview
+          ? `gap-2 sm:gap-3.5 px-2 sm:px-3 py-[7px] sm:py-2 coarse:min-h-11 rounded-[10px] text-left transition-[opacity,background-color] duration-300 ease-out ${isActive
+            ? `${activeClass} bg-zinc-800 shadow-[inset_3px_0_0_var(--color-primary)]`
+            : hasMedia ? 'hover:bg-zinc-800/50' : ''}`
+          : `px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition-opacity duration-300 ease-out ${layoutClass} ${alignClass} ${isActive
+            ? `${activeClass} bg-zinc-800/10`
+            : hasMedia ? 'hover:bg-zinc-800/30' : ''}`
+        }`}
+    >
+      {isReview ? (
+        <>
+          {showTimestamps && (
+            <span className={`flex-none w-[58px] sm:w-16 pt-1 sm:pt-1.5 font-mono text-[10px] sm:text-[11px] tabular-nums ${isActive ? 'font-semibold text-primary' : 'text-foreground/45'}`}>
+              {isUntimed ? UNTIMED_TIMESTAMP : formatTimestamp(effectiveTimestamp)}
+            </span>
+          )}
+          <div className={`flex-1 min-w-0 flex ${layoutClass} ${alignClass}`}>{body}</div>
+          {isUntimed && !isEmptyLine && (
+            <span className="flex-none self-center rounded-md bg-warning/15 px-2 py-0.5 font-sans text-[11px] font-semibold text-foreground/80 dark:text-warning">
+              {t('preview.noTime')}
+            </span>
+          )}
+        </>
+      ) : (
+        <>
+          {line.timestamp != null && (
+            <div className={`absolute top-1/2 -translate-y-1/2 ${isLocked ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity flex items-center justify-center pointer-events-none ${isLocked ? 'text-amber-400' : 'text-primary'
+              } ${settings.interface?.previewAlignment === 'right' ? 'right-0 translate-x-full pl-2' : 'left-0 -translate-x-full pr-2'
+              } ${isActive ? 'animate-timestamp-pulse' : ''}`}>
+              {isLocked ? (
+                <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C9.24 2 7 4.24 7 7v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V7c0-2.76-2.24-5-5-5zm3 10H9v-2c0-1.66 1.34-3 3-3s3 1.34 3 3v2z" />
+                </svg>
+              ) : (
+                <svg className="size-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              )}
+            </div>
+          )}
+          {body}
         </>
       )}
     </button>
@@ -402,6 +473,8 @@ interface MainTrackProps {
   singerColors?: string[];
   getCustomColorStyle: (hex: string, active: boolean) => React.CSSProperties;
   editorMode?: string;
+  review?: boolean;
+  muted?: boolean;
 }
 
 // ——— Render main text track with karaoke fill ———
@@ -410,7 +483,7 @@ interface MainTrackProps {
 // timestamp, even before a single word was stamped: the words were split from
 // line.text with no `.time` on any of them, so the fill interpolated blindly
 // across the whole line as if evenly spaced, which is not what was recorded.
-function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying: _isPlaying, playbackSpeed: _playbackSpeed, hasReadings, roster, singerColors, getCustomColorStyle, editorMode: _editorMode }: MainTrackProps) {
+function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition, activeFontSizes, inactiveFontSizes, sizeOption, spacingOption, settings, showFuriganaInPreview = true, isPlaying: _isPlaying, playbackSpeed: _playbackSpeed, hasReadings, roster, singerColors, getCustomColorStyle, editorMode: _editorMode, review = false, muted = false }: MainTrackProps) {
   const fillTrack = settings.editor?.display?.karaokeFillTrack ?? 'main';
   const skipMainFill = isActive && fillTrack === 'secondary';
 
@@ -418,9 +491,11 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
   const effectiveHasWordTimestamps = hasWordTimestamps && !skipMainFill;
   const highlightMode = settings.editor?.display?.activeHighlight;
   // Active = white (fill effect provides green); past/completed = green; future = dim
-  const activeClass = `${activeFontSizes[sizeOption]} font-bold font-lyrics text-zinc-100 ${highlightMode === 'glow' ? 'glow-line' : ''} ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`;
+  const activeClass = `${activeFontSizes[sizeOption]} font-bold ${review ? 'font-heading' : 'font-lyrics'} text-zinc-100 ${highlightMode === 'glow' ? 'glow-line' : ''} ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`;
   const pastClass = `${inactiveFontSizes[sizeOption]} font-lyrics ${highlightMode === 'dim' ? 'text-zinc-700' : 'text-primary'}`;
   const futureClass = `${inactiveFontSizes[sizeOption]} font-lyrics ${highlightMode === 'dim' ? 'text-zinc-800' : 'text-zinc-600'}`;
+  // Review rows: past and untimed lines recede instead of taking the accent colour.
+  const mutedClass = `${inactiveFontSizes[sizeOption]} font-lyrics font-medium ${highlightMode === 'dim' ? 'text-zinc-700' : 'text-foreground/65'}`;
 
   // Furigana readings come from word.reading; gated by showFuriganaInPreview
   const mainText = line.text || '';
@@ -452,7 +527,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
 
   return (
     <p
-      className={`transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : isPast ? pastClass : futureClass} ${isDuet ? 'bg-clip-text !text-transparent' : ''}`}
+      className={`transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : muted ? mutedClass : isPast ? pastClass : `${futureClass}${review ? ' font-medium' : ''}`} ${isDuet ? 'bg-clip-text !text-transparent' : ''}`}
       style={{ lineHeight: hasReadings ? '2' : undefined, ...duetGradientStyle }}
     >
       {effectiveHasWordTimestamps
@@ -586,12 +661,13 @@ interface SecondaryTrackParams {
   settings: AppSettings;
   isPlaying?: boolean;
   playbackSpeed: number;
+  wordHighlight: boolean;
 }
 
-function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings, isPlaying: _isPlaying, playbackSpeed: _playbackSpeed }: SecondaryTrackParams) {
+function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondarySizes, inactiveSecondarySizes, sizeOption, settings, isPlaying: _isPlaying, playbackSpeed: _playbackSpeed, wordHighlight }: SecondaryTrackParams) {
   const fillTrack = settings?.editor?.display?.karaokeFillTrack ?? 'main';
   const hasSecondaryStamps = line.secondaryWords?.some((w) => w.time != null);
-  const doFill = isActive && hasSecondaryStamps && (fillTrack === 'secondary' || fillTrack === 'both');
+  const doFill = wordHighlight && isActive && hasSecondaryStamps && (fillTrack === 'secondary' || fillTrack === 'both');
   // secondary stays dim (inactive style) when fillTrack is 'main' — no active styling applied
   const treatAsActive = isActive && fillTrack !== 'main';
   const baseClass = `transition-all duration-500 ease-out w-full font-lyrics break-words overflow-wrap-anywhere hyphens-auto ${treatAsActive

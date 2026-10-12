@@ -14,6 +14,7 @@ import {
   applyMark,
   detectDuplicateTimestamps,
   normalizeLineMode,
+  clampWordTime,
 } from '../services/editor.service';
 import {
   parseRawTextLine, alignRawTextItems, rawTextKeyOfLine, rawTextKeyOfItem,
@@ -551,7 +552,8 @@ export function useEditor({
         focusedTimestamp.wordIndex != null &&
         currentLines[index][ftWordField]?.[focusedTimestamp.wordIndex]?.time != null
       ) {
-        const newWordTime = Math.max(0, (currentLines[index][ftWordField]![focusedTimestamp.wordIndex].time ?? 0) + numericDelta);
+        // A word cannot be nudged out of its own line.
+        const newWordTime = clampWordTime(currentLines, index, (currentLines[index][ftWordField]![focusedTimestamp.wordIndex].time ?? 0) + numericDelta);
         if (!isNaN(newWordTime)) targetTime = newWordTime;
       } 
       // Nudge end time only in 'srt' or 'words' mode
@@ -584,7 +586,7 @@ export function useEditor({
           updated[index][wField]?.[focusedTimestamp.wordIndex]?.time != null
         ) {
           const wi = focusedTimestamp.wordIndex;
-          const newWordTime = Math.max(0, (updated[index][wField]![wi].time ?? 0) + numericDelta);
+          const newWordTime = clampWordTime(updated, index, (updated[index][wField]![wi].time ?? 0) + numericDelta);
           if (!isNaN(newWordTime)) {
             const newWords = [...(updated[index][wField] || [])];
             newWords[wi] = { ...newWords[wi], time: newWordTime };

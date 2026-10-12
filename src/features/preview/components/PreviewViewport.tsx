@@ -47,6 +47,17 @@ interface PreviewViewportProps {
   // Custom per-singer hex overrides (Settings → Interface, or per-project). Index-aligned
   // with the song-wide roster built below.
   singerColors?: string[];
+  // Editor-preview options. All optional so the public viewer (LyricsStage) keeps
+  // its stage look and its "hide groups nobody has synced yet" behaviour.
+  /** 'review' lists every line, timed or not, as rows with a timestamp gutter. */
+  variant?: 'stage' | 'review';
+  showTimestamps?: boolean;
+  showSections?: boolean;
+  wordHighlight?: boolean;
+  /** False pauses auto-scroll to the active line. */
+  followPlayback?: boolean;
+  /** Scroll to this index of `lines`; a new object re-triggers the scroll. */
+  jumpRequest?: { index: number } | null;
   // Parent (Preview) still passes extra display-tuning props; allow passthrough until it migrates.
   [key: string]: unknown;
 }
@@ -80,6 +91,12 @@ export default function PreviewViewport({
   activeTranslationIndex = 0,
   songArtists,
   singerColors,
+  variant = 'stage',
+  showTimestamps = false,
+  showSections = true,
+  wordHighlight = true,
+  followPlayback = true,
+  jumpRequest = null,
 }: PreviewViewportProps) {
   // Own the refs here — the virtualizer needs getScrollElement to return
   // a non-null element on mount for its ResizeObserver to attach properly.
@@ -89,6 +106,7 @@ export default function PreviewViewport({
   const showNextLine = settings.editor?.display?.showNextLine !== false;
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
+  const isReview = variant === 'review';
 
   // Map<line.id, number> — assigns sequential numbers to section types that appear >1 times
   const sectionNumbers = useMemo(() => {
@@ -152,6 +170,7 @@ export default function PreviewViewport({
   // selection to end the new section) means "back to no section", so its lines rejoin
   // the shared unsectioned group instead of forming a new, hidden-until-synced group —
   // otherwise tagging a few lines made every unsynced line after them vanish.
+  // The review variant exists to show what is still missing, so it keeps every group.
   const visibleLines = useMemo(() => {
     type Group = { hasTs: boolean };
     const unsectioned: Group = { hasTs: false };
@@ -166,9 +185,12 @@ export default function PreviewViewport({
       if (line.timestamp != null) g.hasTs = true;
     });
     const result: { line: PreviewLineData; originalIndex: number }[] = [];
-    lines.forEach((line, idx) => { if (owners[idx].hasTs) result.push({ line, originalIndex: idx }); });
+    lines.forEach((line, idx) => {
+      if (!showSections && line.type === 'section') return;
+      if (isReview || owners[idx].hasTs) result.push({ line, originalIndex: idx });
+    });
     return result;
-  }, [lines]);
+  }, [lines, isReview, showSections]);
 
   // Active line's position within the filtered list (-1 when it's in a hidden group).
   const mappedActiveIndex = useMemo(
@@ -207,11 +229,17 @@ export default function PreviewViewport({
     estimateSize: () => 52,
     overscan: 5,
     measureElement: (el) => el?.getBoundingClientRect().height ?? 52,
+    // Measured heights are cached per key. Keyed by row index (the default), a
+    // row that takes over an index after the list is filtered (sections hidden,
+    // a group becoming visible) inherits the previous occupant's height, and
+    // rows overlap until something forces a re-measure. Keying by the line
+    // itself keeps each height with its own row.
+    getItemKey: (index) => visibleLines[index]?.line.id ?? `row-${visibleLines[index]?.originalIndex ?? index}`,
   });
 
   // Auto-scroll to active line (virtual)
   useEffect(() => {
-    if (isDualLine || scrollAlignment === 'none' || mappedActiveIndex < 0) return;
+    if (isDualLine || !followPlayback || scrollAlignment === 'none' || mappedActiveIndex < 0) return;
 
     // Use requestAnimationFrame to ensure the virtualizer has painted items before scrolling
     const raf = requestAnimationFrame(() => {
@@ -222,7 +250,20 @@ export default function PreviewViewport({
     });
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mappedActiveIndex, isDualLine, scrollAlignment, scrollMode]);
+  }, [mappedActiveIndex, isDualLine, followPlayback, scrollAlignment, scrollMode]);
+
+  // Explicit jump (e.g. "go to the first untimed line")
+  useEffect(() => {
+    if (!jumpRequest || isDualLine) return;
+    const target = visibleLines.findIndex((v) => v.originalIndex === jumpRequest.index);
+    if (target < 0) return;
+    const raf = requestAnimationFrame(() => {
+      virtualizer.scrollToIndex(target, { align: 'center', behavior: scrollMode });
+    });
+    return () => cancelAnimationFrame(raf);
+    // Only a new request should scroll; visibleLines/scrollMode are read at that moment.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jumpRequest]);
 
   let content;
 
@@ -290,6 +331,7 @@ export default function PreviewViewport({
               hasMedia={hasMedia}
               roster={songSingers}
               singerColors={singerColors}
+              wordHighlight={wordHighlight}
             />
           ))}
         </div>
@@ -300,11 +342,13 @@ export default function PreviewViewport({
     content = (
       <div
         ref={containerRef}
-        className="h-full overflow-y-auto overflow-x-hidden mask-edges rounded-lg"
+        tabIndex={isReview ? 0 : undefined}
+        aria-label={isReview ? t('preview.lyricsListLabel') : undefined}
+        className={`h-full overflow-y-auto overflow-x-hidden mask-edges rounded-lg ${isReview ? 'lrc-scroll outline-none focus-visible:ring-2 focus-visible:ring-primary/50' : ''}`}
       >
         <div
           style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
-          className={`overflow-x-hidden px-1 sm:px-0`}
+          className={`overflow-x-hidden px-1 sm:px-0 ${isReview ? 'mx-auto w-full max-w-[820px]' : ''}`}
         >
           {virtualizer.getVirtualItems().map((vRow) => {
             const entry = visibleLines[vRow.index];
@@ -357,6 +401,9 @@ export default function PreviewViewport({
                   hasMedia={hasMedia}
                   roster={songSingers}
                   singerColors={singerColors}
+                  variant={variant}
+                  showTimestamps={showTimestamps}
+                  wordHighlight={wordHighlight}
                 />
               </div>
             );

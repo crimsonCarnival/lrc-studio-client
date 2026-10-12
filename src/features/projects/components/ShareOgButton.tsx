@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { Tip } from '@ui/tip';
+import { projectsService } from '../services/projects.service';
 
 function getServerOrigin() {
   if (import.meta.env.PROD) return import.meta.env.VITE_SERVER_ORIGIN || '';
@@ -18,6 +20,7 @@ export function ShareOgButton({ publicId, title = '', className = '' }: ShareOgB
   const [copied, setCopied] = useState(false);
 
   const ogUrl = `${getServerOrigin()}/og/project/${publicId}`;
+  const label = copied ? t('share.linkCopied') : t('share.shareLink');
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -31,6 +34,8 @@ export function ShareOgButton({ publicId, title = '', className = '' }: ShareOgB
     try {
       await navigator.clipboard.writeText(ogUrl);
       setCopied(true);
+      // Same accounting as the overflow menu's "share link" entry.
+      projectsService.incrementShare(publicId).catch(() => {});
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard not available — do nothing
@@ -38,18 +43,21 @@ export function ShareOgButton({ publicId, title = '', className = '' }: ShareOgB
   };
 
   return (
-    <button
-      onClick={handleShare}
-      className={[
-        'h-7 px-2.5 text-[11px] font-medium gap-1 rounded-lg flex items-center',
-        'bg-zinc-800/60 border border-zinc-700/50 text-zinc-300 hover:border-zinc-600 hover:text-zinc-100 transition-colors',
-        className,
-      ].join(' ')}
-    >
-      {copied
-        ? <Icon name="check" size={12} className="text-primary" />
-        : <Icon name="share" size={12} />}
-      {copied ? t('share.linkCopied') : t('share.shareLink')}
-    </button>
+    <Tip content={label}>
+      <button
+        type="button"
+        onClick={handleShare}
+        aria-label={label}
+        className={[
+          'inline-grid place-items-center size-11 rounded-full border border-border text-foreground shrink-0',
+          'hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
+          className,
+        ].join(' ')}
+      >
+        {copied
+          ? <Icon name="check" size={16} className="text-primary" />
+          : <Icon name="share" size={16} />}
+      </button>
+    </Tip>
   );
 }

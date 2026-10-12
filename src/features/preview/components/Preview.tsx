@@ -6,17 +6,20 @@ import type { UsePreviewResult } from '../hooks/usePreview';
 import ExportPanel from './ExportPanel';
 import PreviewPasteArea from './PreviewPasteArea';
 import PreviewViewport from './PreviewViewport';
-import PlayerControls from '@/features/player/components/PlayerControls';
-import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
+import PublicPlaybackBar from '@/features/projects/components/PublicPlaybackBar';
+import { useHeaderSlot } from '@/shared/hooks/useHeaderSlot';
+import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import { Button } from '@ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverItem,
+  PopoverSeparator,
   PopoverTrigger,
 } from '@ui/popover';
 import { Tip } from '@ui/tip';
+import { Checkbox } from '@ui/checkbox';
 import { SharePanel } from '@features/sharing/components/ShareModal';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Icon } from '@/shared/ui/Icon';
@@ -49,11 +52,14 @@ interface PreviewProps {
   playerRef?: { current?: { getLoop?: () => { a: number | null; b: number | null } } | null };
   isPlaying?: boolean;
   playbackSpeed?: number;
-  // Panel toggles relocated from the header (#12/#13): hide the preview, or
-  // restore the editor when it's hidden.
-  onHidePreview?: () => void;
-  editorHidden?: boolean;
+  /** This is the workspace's visible view (it stays mounted while hidden). */
+  active?: boolean;
+  /** Switches the workspace back to the editor. */
   onShowEditor?: () => void;
+  /** Opens the public project page; absent until the project has been saved. */
+  onViewPublic?: () => void;
+  /** Moves the editor cursor, used to send the user to the first untimed line. */
+  setActiveLineIndex?: (index: number) => void;
   /** When 'preview', this panel owns the player dock (editor is hidden). */
   playerSlot?: PlayerSlot;
   [key: string]: unknown;
@@ -144,15 +150,33 @@ export default function Preview(props: PreviewProps) {
     hasSyncedLines,
     hasTranslations,
     hasSecondary,
-    hasWords,
+    hasWordTimes,
     hasFurigana,
+    exportFormat,
+    setExportFormat,
+    exportOffset,
+    setExportOffset,
+    exportFileName,
+    exportText,
+    exportPreviewLoading,
+    exportPreviewFailed,
+    showTimestamps,
+    setShowTimestamps,
+    showSections,
+    setShowSections,
+    wordHighlight,
+    setWordHighlight,
+    followPlayback,
+    setFollowPlayback,
+    lineStats,
+    songInfo,
     handleSavePaste,
     handleLineClick,
     handleExport,
     handleCopy,
   }: UsePreviewResult = usePreview(props);
 
-  const { lines, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, isPlaying, playbackSpeed, playerRef, onHidePreview, editorHidden, onShowEditor } = props;
+  const { lines, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, isPlaying, playbackSpeed, playerRef, onShowEditor, onViewPublic, setActiveLineIndex, active = true } = props;
 
   const shareTriggerRef = useRef<HTMLButtonElement>(null);
   const sharePanelRef = useRef<HTMLDivElement>(null);
@@ -187,292 +211,355 @@ export default function Preview(props: PreviewProps) {
 
   const { user } = useAuthContext();
 
+  // "Finish marking": back to the editor with the cursor on the first untimed line.
+  const goToFirstUntimed = useCallback(() => {
+    if (lineStats.firstUntimedIndex < 0) return;
+    setShowExportPanel(false);
+    setActiveLineIndex?.(lineStats.firstUntimedIndex);
+    onShowEditor?.();
+  }, [lineStats.firstUntimedIndex, setShowExportPanel, setActiveLineIndex, onShowEditor]);
+
+  // The editor's Export button opens this dialog without switching views.
+  useEffect(() => {
+    const open = () => setShowExportPanel(true);
+    window.addEventListener('preview:open-export', open);
+    return () => window.removeEventListener('preview:open-export', open);
+  }, [setShowExportPanel]);
+
+  const statusSlot = useHeaderSlot('status', active);
+  const centerSlot = useHeaderSlot('center', active);
+  const actionsSlot = useHeaderSlot('actions', active);
+
+  const subtitle = [songInfo.title, songInfo.artist].filter(Boolean).join(' · ');
+  const alignment = settings.interface?.previewAlignment || 'left';
+  const canPublish = !!activepublicId && !viewerMode && !isSharedProject;
+  const untimedCount = lineStats.total - lineStats.timed;
+
+  const viewToggles = [
+    { key: 'timestamps', label: t('preview.showTimestamps'), checked: showTimestamps, set: setShowTimestamps },
+    { key: 'sections', label: t('preview.showSections'), checked: showSections, set: setShowSections },
+    { key: 'words', label: t('preview.wordHighlight'), checked: wordHighlight, set: setWordHighlight },
+    { key: 'follow', label: t('preview.followPlayback'), checked: followPlayback, set: setFollowPlayback },
+  ];
+
+  const cardClass = 'rounded-2xl border border-zinc-800 bg-zinc-900 p-[18px] flex flex-col gap-3';
+  const captionClass = 'text-xs font-bold uppercase tracking-[0.08em] text-foreground/65';
+  const checkboxClass = 'size-[18px] border-zinc-600 bg-zinc-900 data-[state=checked]:bg-primary data-[state=checked]:border-primary';
+
+  const translationChips = hasTranslations && (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {translationLanguages.map((lang, idx) => {
+        const on = showTranslationsInPreview && activeTranslationIndex === idx;
+        return (
+          <button
+            key={idx}
+            type="button"
+            aria-pressed={on}
+            onClick={() => {
+              if (on) {
+                setShowTranslationsInPreview(false);
+              } else {
+                setActiveTranslationIndex(idx);
+                setShowTranslationsInPreview(true);
+              }
+            }}
+            className={`min-h-7 coarse:min-h-11 px-2.5 rounded-full border text-[11px] font-semibold tracking-wide transition-colors ${on ? 'bg-primary/20 text-primary border-primary/40' : 'bg-zinc-800 text-foreground/65 border-zinc-700 hover:text-foreground'}`}
+          >
+            {lang || `T${idx + 1}`}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const viewToggleList = (
+    <>
+      {viewToggles.map((toggle) => (
+        <label key={toggle.key} className="flex items-center gap-2.5 min-h-7 coarse:min-h-11 text-sm text-foreground cursor-pointer">
+          <Checkbox checked={toggle.checked} onCheckedChange={(c) => toggle.set(c === true)} className={checkboxClass} />
+          {toggle.label}
+        </label>
+      ))}
+      {hasFurigana && (
+        <label className="flex items-center gap-2.5 min-h-7 coarse:min-h-11 text-sm text-foreground cursor-pointer">
+          <Checkbox checked={showFuriganaInPreview} onCheckedChange={(c) => setShowFuriganaInPreview(c === true)} className={checkboxClass} />
+          {t('preview.furigana')}
+        </label>
+      )}
+    </>
+  );
+
   return (
     <>
-      <div data-tour="preview-panel" className="lg:glass relative lg:rounded-2xl lg:overflow-hidden rounded-none p-3 sm:p-5 flex flex-col flex-1 animate-fade-in min-h-0">
-
-        {/* Header */}
-        <div className={`flex items-center ${viewerMode ? 'justify-end' : 'justify-between'} mb-2 sm:mb-4 gap-2 sm:gap-4 relative z-raised`}>
-          {!viewerMode && (
-            <h2 className="text-xs sm:text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2 overflow-hidden flex-1 pb-1">
-              <span className="uppercase shrink-0 text-xs sm:text-sm flex items-center gap-1.5">
-                <Icon name="visibility" size={14} />
-                {t('preview.title')}
-              </span>
-            </h2>
+      {/* The workspace header (see AppHeader) hosts this screen's back button, title and actions */}
+      {statusSlot && onShowEditor && createPortal(
+        <Button
+          variant="outline"
+          onClick={onShowEditor}
+          aria-label={t('preview.backToEditor')}
+          className="h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-[10px] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground"
+        >
+          <Icon name="chevron_left" size={18} />
+          <span className="max-sm:hidden">{t('preview.backToEditor')}</span>
+        </Button>,
+        statusSlot,
+      )}
+      {centerSlot && createPortal(
+        <div className="flex flex-col items-center gap-0.5 text-center">
+          <span className="text-sm font-bold text-foreground">{t('preview.title')}</span>
+          {subtitle && <span className="max-w-[36vw] truncate text-xs text-foreground/65">{subtitle}</span>}
+        </div>,
+        centerSlot,
+      )}
+      {actionsSlot && createPortal(
+        <>
+          {onViewPublic && (
+            <Button
+              variant="outline"
+              onClick={onViewPublic}
+              className="max-md:hidden h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 rounded-[10px] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground"
+            >
+              {t('preview.viewAsPublic')}
+            </Button>
           )}
-          {/* #13: restore the editor when it's hidden — always available on desktop */}
-          {editorHidden && onShowEditor && (
-            <Tip content={t('app.showEditor')}>
+          {!viewerMode && !isSharedProject && (
+            <Tip content={canPublish ? (isPublic ? t('preview.unpublishTip') : t('preview.publishTip')) : t('preview.publishNeedsSave')}>
               <Button
-                variant="ghost"
-                size="icon"
-                onClick={onShowEditor}
-                aria-label={t('app.showEditor')}
-                className="hidden lg:flex flex-shrink-0 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                // aria-disabled keeps the tooltip reachable when the project is not saved yet.
+                aria-disabled={!canPublish}
+                aria-pressed={canPublish ? isPublic : undefined}
+                onClick={() => { if (canPublish) handlePrivacyChange(isPublic ? 'private' : 'public'); }}
+                className={`h-10 lg:h-10 coarse:h-11 px-4 lg:px-4 gap-2 rounded-[10px] text-[13px] lg:text-[13px] font-bold ${!canPublish
+                  ? 'bg-zinc-800 text-foreground/45 cursor-not-allowed hover:bg-zinc-800'
+                  : isPublic
+                    ? 'border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'
+                    : 'bg-primary hover:bg-primary-dim text-zinc-950'}`}
               >
-                <Icon name="left_panel_open" size={20} />
+                {canPublish && isPublic && <Icon name="check" size={16} />}
+                {canPublish && isPublic ? t('preview.published') : t('preview.publish')}
               </Button>
             </Tip>
           )}
-          {hasSyncedLines && (
-            <div className="relative flex items-center gap-1 text-zinc-300">
-              {hasFurigana && (
-                <Tip content={t('preview.furigana')}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowFuriganaInPreview((v: boolean) => !v)}
-                    className={`flex-shrink-0 transition-colors ${showFuriganaInPreview ? 'text-primary bg-primary/10 hover:bg-primary/20' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'}`}
-                  >
-                    <Icon name="menu_book" size={20} />
-                  </Button>
-                </Tip>
+          <Popover>
+            <Tip content={t('preview.moreActions')} side="bottom">
+              <PopoverTrigger asChild>
+                <Button
+                  ref={shareTriggerRef}
+                  data-tour="preview-share"
+                  variant="outline"
+                  size="icon"
+                  aria-label={t('preview.moreActions')}
+                  className="size-10 lg:size-10 coarse:size-11 rounded-[10px] border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground"
+                >
+                  <Icon name="more_horiz" size={18} />
+                </Button>
+              </PopoverTrigger>
+            </Tip>
+            <PopoverContent className="w-64 p-1" align="end">
+              <PopoverItem data-export-toggle onClick={() => setShowExportPanel(true)}>
+                <Icon name="download" size={16} />
+                {t('export.title')}
+              </PopoverItem>
+              {user && !viewerMode && (
+                <PopoverItem onClick={handleShareToggle}>
+                  <Icon name="share" size={16} />
+                  {isSharedProject ? t('share.viewingShared') : t('app.shareProject')}
+                </PopoverItem>
               )}
-              {/* #12: hide the preview — sits to the left of Share */}
-              {onHidePreview && !viewerMode && (
-                <Tip content={t('app.hidePreview')}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={onHidePreview}
-                    aria-label={t('app.hidePreview')}
-                    className="hidden lg:flex flex-shrink-0 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
-                  >
-                    <Icon name="right_panel_close" size={20} />
-                  </Button>
-                </Tip>
+              {onViewPublic && (
+                <PopoverItem onClick={onViewPublic} className="md:hidden">
+                  <Icon name="public" size={16} />
+                  {t('preview.viewAsPublic')}
+                </PopoverItem>
               )}
-              {/* Share button - restricted to logged in users */}
-              {user && (
-                <Tip content={shareModal ? t('share.close') : (isSharedProject ? t('share.viewingShared') : t('app.shareProject'))}>
-                  {viewerMode ? (
-                    <div className="flex items-center justify-center size-8 rounded-lg text-primary bg-primary/10">
-                      <Icon name="share" size={20} />
-                    </div>
-                  ) : (
-                    <Button
-                      ref={shareTriggerRef}
-                      data-tour="preview-share"
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleShareToggle}
-                      className={`flex-shrink-0 transition-colors ${isSharedProject
-                        ? 'text-primary bg-primary/10 hover:bg-primary/20'
-                        : shareModal
-                          ? 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700'
-                          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-                        }`}
-                    >
-                      {shareModal
-                        ? <Icon name="close" size={20} />
-                        : <Icon name="share" size={20} />
-                      }
-                    </Button>
-                  )}
-                </Tip>
-              )}
-              {/* Lock/unlock toggle for shared projects */}
               {isSharedProject && !viewerMode && (
-                <Tip content={sharedReadOnly ? t('share.readOnlyTitle') : t('share.editingTitle')}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setSharedReadOnly?.(!sharedReadOnly)}
-                    className={`flex-shrink-0 ${sharedReadOnly ? 'text-amber-400 hover:text-amber-300 bg-amber-400/10 hover:bg-amber-400/20' : 'text-emerald-400 hover:text-emerald-300 bg-emerald-400/10 hover:bg-emerald-400/20'}`}
-                  >
-                    {sharedReadOnly
-                      ? <Icon name="lock" size={20} />
-                      : <Icon name="lock_open" size={20} />
-                    }
-                  </Button>
-                </Tip>
+                <PopoverItem onClick={() => setSharedReadOnly?.(!sharedReadOnly)}>
+                  <Icon name={sharedReadOnly ? 'lock' : 'lock_open'} size={16} />
+                  {sharedReadOnly ? t('share.readOnlyTitle') : t('share.editingTitle')}
+                </PopoverItem>
               )}
-              {hasTranslations && (
-                <div className="flex items-center gap-1">
-                  {translationLanguages.map((lang, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => {
-                        if (activeTranslationIndex === idx && showTranslationsInPreview) {
-                          setShowTranslationsInPreview(false);
-                        } else {
-                          setActiveTranslationIndex(idx);
-                          setShowTranslationsInPreview(true);
-                        }
-                      }}
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide transition-colors ${
-                        showTranslationsInPreview && activeTranslationIndex === idx
-                          ? 'bg-primary/20 text-primary border border-primary/40'
-                          : 'bg-zinc-800/60 text-zinc-500 border border-zinc-700/40 hover:text-zinc-300'
-                      }`}
-                    >
-                      {lang || `T${idx + 1}`}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Text orientation toggle */}
-              <div className="flex items-center bg-zinc-800/60 rounded-lg p-0.5 border border-zinc-700/40">
-                <Tip content={t('settings.interface.alignLeft')} side="bottom">
-                  <button
-                    type="button"
-                    onClick={() => updateSetting('interface.previewAlignment', 'left')}
-                    className={`p-1 rounded transition-colors ${(settings.interface?.previewAlignment || 'left') === 'left' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
-                    aria-label={t('settings.interface.alignLeft')}
-                  >
-                    <Icon name="format_align_left" size={14} />
-                  </button>
-                </Tip>
-                <Tip content={t('settings.interface.alignCenter')} side="bottom">
-                  <button
-                    type="button"
-                    onClick={() => updateSetting('interface.previewAlignment', 'center')}
-                    className={`p-1 rounded transition-colors ${settings.interface?.previewAlignment === 'center' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
-                    aria-label={t('settings.interface.alignCenter')}
-                  >
-                    <Icon name="format_align_center" size={14} />
-                  </button>
-                </Tip>
-                <Tip content={t('settings.interface.alignRight')} side="bottom">
-                  <button
-                    type="button"
-                    onClick={() => updateSetting('interface.previewAlignment', 'right')}
-                    className={`p-1 rounded transition-colors ${settings.interface?.previewAlignment === 'right' ? 'bg-primary/20 text-primary' : 'text-zinc-400 hover:text-zinc-200'}`}
-                    aria-label={t('settings.interface.alignRight')}
-                  >
-                    <Icon name="format_align_right" size={14} />
-                  </button>
-                </Tip>
-              </div>
-
-              <div className="relative">
-                <Tip content={t('export.title')}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    data-export-toggle
-                    onClick={() => setShowExportPanel(!showExportPanel)}
-                    className={`flex-shrink-0 ${showExportPanel ? 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'}`}
-                  >
-                    {showExportPanel ? (
-                      <Icon name="close" size={20} />
-                    ) : (
-                      <svg className="w-4 sm:w-5 h-4 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                    )}
-                  </Button>
-                </Tip>
-              </div>
-
-              {/* Menu */}
               {!viewerMode && !sharedReadOnly && (
-                <Popover>
-                  <Tip content={t('preview.addTrack')} side="bottom">
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 flex-shrink-0"
-                      >
-                        <Icon name="add" size={20} />
-                      </Button>
-                    </PopoverTrigger>
-                  </Tip>
-                  <PopoverContent className="w-36 sm:w-48" align="end">
-                    <PopoverItem
-                      onClick={() => { setPastingType('secondary'); setPasteText(lines.map(l => l.secondary || '').join('\n')); }}
-                      className="sm:text-sm"
-                    >
-                      {t('preview.secondaryLyrics')}
-                    </PopoverItem>
-                    <PopoverItem
-                      onClick={() => { setPastingType('translation'); setPasteText(lines.map(l => l.translations?.[activeTranslationIndex]?.text || '').join('\n')); }}
-                      className="sm:text-sm"
-                    >
-                      {t('preview.translation')}
-                    </PopoverItem>
-                  </PopoverContent>
-                </Popover>
+                <>
+                  <PopoverSeparator />
+                  <PopoverItem onClick={() => { setPastingType('secondary'); setPasteText(lines.map(l => l.secondary || '').join('\n')); }}>
+                    <Icon name="add" size={16} />
+                    {t('preview.secondaryLyrics')}
+                  </PopoverItem>
+                  <PopoverItem onClick={() => { setPastingType('translation'); setPasteText(lines.map(l => l.translations?.[activeTranslationIndex]?.text || '').join('\n')); }}>
+                    <Icon name="add" size={16} />
+                    {t('preview.translation')}
+                  </PopoverItem>
+                </>
+              )}
+              {/* Below lg the sidebar is not shown, so its options live here */}
+              <div className="lg:hidden">
+                <PopoverSeparator />
+                <fieldset className="flex flex-col gap-1 px-2 py-1.5">
+                  <legend className={`${captionClass} mb-1.5`}>{t('preview.show')}</legend>
+                  {viewToggleList}
+                </fieldset>
+                {translationChips && <div className="px-2 pb-2">{translationChips}</div>}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </>,
+        actionsSlot,
+      )}
+
+      <div data-tour="preview-panel" className="flex flex-col flex-1 min-h-0 animate-fade-in">
+        <div className="flex flex-1 min-h-0">
+          <div className="flex flex-col flex-1 min-w-0 min-h-0 px-3 sm:px-8 pt-3 lg:pt-7">
+            {/* Below lg the review card collapses into this banner */}
+            {untimedCount > 0 && !pastingType && (
+              <button
+                type="button"
+                onClick={goToFirstUntimed}
+                className="lg:hidden mb-3 flex items-center gap-2 min-h-11 px-3 py-2.5 rounded-[10px] border border-warning/35 bg-warning/10 text-left text-[13px] font-medium text-foreground active:bg-warning/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              >
+                <span className="flex-1">{t('preview.untimedJump', { count: untimedCount })}</span>
+                <Icon name="arrow_forward" size={16} />
+              </button>
+            )}
+            {pastingType ? (
+              <PreviewPasteArea
+                pastingType={pastingType}
+                setPastingType={setPastingType}
+                pasteText={pasteText}
+                setPasteText={setPasteText}
+                handleSavePaste={handleSavePaste}
+              />
+            ) : (
+              <PreviewViewport
+                lines={lines}
+                currentIndex={currentIndex}
+                hasSyncedLines={hasSyncedLines}
+                playbackPosition={playbackPosition}
+                handleLineClick={handleLineClick}
+                showTranslationsInPreview={showTranslationsInPreview}
+                showFuriganaInPreview={showFuriganaInPreview}
+                activeTranslationIndex={activeTranslationIndex}
+                sizeOption={sizeOption}
+                spacingOption={spacingOption}
+                activeSecondarySizes={activeSecondarySizes}
+                inactiveSecondarySizes={inactiveSecondarySizes}
+                activeFontSizes={activeFontSizes}
+                inactiveFontSizes={inactiveFontSizes}
+                activeMargin={activeMargin}
+                wrapperSpacing={wrapperSpacing}
+                settings={settings}
+                editorMode={editorMode}
+                t={t}
+                hasMedia={hasMedia}
+                isPlaying={isPlaying}
+                playbackSpeed={playbackSpeed}
+                songArtists={songArtists}
+                singerColors={singerColors}
+                variant="review"
+                showTimestamps={showTimestamps}
+                showSections={showSections}
+                wordHighlight={wordHighlight}
+                followPlayback={followPlayback}
+              />
+            )}
+          </div>
+
+          <aside
+            aria-label={t('preview.review')}
+            className="lrc-scroll max-lg:hidden w-[300px] xl:w-[340px] shrink-0 min-h-0 overflow-y-auto flex flex-col gap-4 p-6 border-l border-zinc-800 bg-zinc-950/40"
+          >
+            <div className={cardClass}>
+              <span className={captionClass}>{t('preview.review')}</span>
+              <div className="flex items-baseline gap-2">
+                <span className="font-heading text-[28px] font-bold leading-none tabular-nums">{lineStats.timed}/{lineStats.total}</span>
+                <span className="text-sm text-foreground/65">{t('preview.linesTimed')}</span>
+              </div>
+              <div
+                role="progressbar"
+                aria-label={t('preview.reviewProgress')}
+                aria-valuemin={0}
+                aria-valuemax={lineStats.total}
+                aria-valuenow={lineStats.timed}
+                className="h-1.5 rounded-full bg-zinc-800 overflow-hidden"
+              >
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
+                  style={{ width: `${lineStats.total ? (lineStats.timed / lineStats.total) * 100 : 0}%` }}
+                />
+              </div>
+              {untimedCount > 0 && (
+                <button
+                  type="button"
+                  onClick={goToFirstUntimed}
+                  className="self-start text-left text-[13px] font-semibold text-primary underline underline-offset-2 hover:text-primary-dim"
+                >
+                  {t('preview.goToFirstUntimed')} →
+                </button>
               )}
             </div>
-          )}
+
+            <fieldset className={cardClass}>
+              <legend className="sr-only">{t('preview.show')}</legend>
+              <span aria-hidden className={captionClass}>{t('preview.show')}</span>
+              {viewToggleList}
+              {translationChips}
+            </fieldset>
+
+            <div className={cardClass}>
+              <span className={captionClass}>{t('preview.alignment')}</span>
+              <div role="group" aria-label={t('preview.alignment')} className="flex gap-0.5 rounded-[10px] bg-zinc-800 p-[3px]">
+                {(['left', 'center', 'right'] as const).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    aria-pressed={alignment === value}
+                    onClick={() => updateSetting('interface.previewAlignment', value)}
+                    className={`flex-1 h-9 rounded-[7px] text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${alignment === value ? 'bg-zinc-700 text-foreground font-semibold' : 'text-foreground/65 hover:text-foreground'}`}
+                  >
+                    {t(`preview.align.${value}`)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </aside>
         </div>
 
-        {/* Viewport */}
-        {showExportPanel ? (
-          <ExportPanel
-            showExportPanel={showExportPanel}
-            setShowExportPanel={setShowExportPanel}
-            exportFilename={exportFilename}
-            setExportFilename={setExportFilename}
-            includeTranslations={includeTranslations}
-            setIncludeTranslations={setIncludeTranslations}
-            includeSecondary={includeSecondary}
-            setIncludeSecondary={setIncludeSecondary}
-            includeWordTimestamps={includeWordTimestamps}
-            setIncludeWordTimestamps={setIncludeWordTimestamps}
-            includeMetadata={includeMetadata}
-            setIncludeMetadata={setIncludeMetadata}
-            hasTranslations={hasTranslations}
-            hasSecondary={hasSecondary}
-            hasWords={hasWords}
-            hasFurigana={hasFurigana}
-            wasCopied={wasCopied}
-            handleExport={handleExport}
-            handleCopy={handleCopy}
-          />
-        ) : pastingType ? (
-          <PreviewPasteArea
-            pastingType={pastingType}
-            setPastingType={setPastingType}
-            pasteText={pasteText}
-            setPasteText={setPasteText}
-            handleSavePaste={handleSavePaste}
-          />
-        ) : (
-          <PreviewViewport
-            lines={lines}
-            currentIndex={currentIndex}
-            hasSyncedLines={hasSyncedLines}
-            playbackPosition={playbackPosition}
-            handleLineClick={handleLineClick}
-            showTranslationsInPreview={showTranslationsInPreview}
-            showFuriganaInPreview={showFuriganaInPreview}
-            activeTranslationIndex={activeTranslationIndex}
-            sizeOption={sizeOption}
-            spacingOption={spacingOption}
-            activeSecondarySizes={activeSecondarySizes}
-            inactiveSecondarySizes={inactiveSecondarySizes}
-            activeFontSizes={activeFontSizes}
-            inactiveFontSizes={inactiveFontSizes}
-            activeMargin={activeMargin}
-            wrapperSpacing={wrapperSpacing}
-            settings={settings}
-            editorMode={editorMode}
-            t={t}
-            hasMedia={hasMedia}
-            isPlaying={isPlaying}
-            playbackSpeed={playbackSpeed}
-            songArtists={songArtists}
-            singerColors={singerColors}
-          />
-        )}
-        {/* Editor is hidden: this panel owns the player dock, mirroring the Editor's
-            own self-contained playerDock (Editor.tsx) instead of the page-level
-            AppPlayer mobile-style floating bar. */}
+        {/* This view owns the desktop player dock while it is showing */}
         {playerSlot === 'preview' && (
-          <DragPointerIsolate
-            data-tour="player-controls"
-            className="relative flex-shrink-0 border-zinc-800/50 -mx-3 sm:-mx-5 px-3 sm:px-5 mt-3 border-t pt-3"
-          >
-            <PlayerControls variant="editor" />
-          </DragPointerIsolate>
+          <PublicPlaybackBar lines={lines as unknown as EditorLine[]} hasInitialMedia={!!hasMedia} docked minimal />
         )}
       </div>
+      <ExportPanel
+        showExportPanel={showExportPanel}
+        setShowExportPanel={setShowExportPanel}
+        exportFilename={exportFilename}
+        setExportFilename={setExportFilename}
+        includeTranslations={includeTranslations}
+        setIncludeTranslations={setIncludeTranslations}
+        includeSecondary={includeSecondary}
+        setIncludeSecondary={setIncludeSecondary}
+        includeWordTimestamps={includeWordTimestamps}
+        setIncludeWordTimestamps={setIncludeWordTimestamps}
+        includeMetadata={includeMetadata}
+        setIncludeMetadata={setIncludeMetadata}
+        exportFormat={exportFormat}
+        setExportFormat={setExportFormat}
+        exportOffset={exportOffset}
+        setExportOffset={setExportOffset}
+        exportFileName={exportFileName}
+        exportText={exportText}
+        exportPreviewLoading={exportPreviewLoading}
+        exportPreviewFailed={exportPreviewFailed}
+        lineStats={lineStats}
+        songInfo={songInfo}
+        hasTranslations={hasTranslations}
+        hasSecondary={hasSecondary}
+        hasWordTimes={hasWordTimes}
+        hasFurigana={hasFurigana}
+        wasCopied={wasCopied}
+        handleExport={handleExport}
+        handleCopy={handleCopy}
+        onGoToFirstUntimed={goToFirstUntimed}
+      />
       {shareModal && shareAnchor && createPortal(
         <div
           ref={sharePanelRef}

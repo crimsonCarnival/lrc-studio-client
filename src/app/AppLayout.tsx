@@ -81,14 +81,16 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   } = appState;
 
   const { settings, updateSetting } = settingsState;
-  const { focusMode, hideEditor, hidePreview, mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
+  const { mobileTab, setMobileTab, isReady, isPlayerMounted, setUnsavedModalTarget, showNamingModal, setShowNamingModal, playerHeight, setPlayerHeight } = layoutState;
 
   // Reactive so the dynamic padding formula stays correct on resize.
   const isLg = useBreakpoint('lg');
 
   const inputMethod = useInputMethod();
   const isTouch = inputMethod === 'touch';
-  const playerSlot = usePlayerSlot({ hideEditor, hidePreview, focusMode, isLg, isTouch });
+  // The workspace shows one view at a time (see EditorWorkspace in AppRouter);
+  // whichever is showing owns the desktop player dock.
+  const playerSlot = usePlayerSlot({ hideEditor: mobileTab === 'preview', hidePreview: false, focusMode: 'default', isLg, isTouch });
 
   // Compute dynamic bottom padding only for the mobile dock (fixed above the tab bar).
   // Desktop slots (editor/header) are in-flow — no space reservation needed.
@@ -127,7 +129,10 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
 
   const isPublicProjectView = /^\/project\/[^/]+$/.test(location.pathname) &&
     !['new', 'local'].includes(location.pathname.split('/')[2] ?? '');
-  const isFullWidthPage = isSetupPage || isPublicProjectView;
+  // The editor workspace is a full-bleed app screen: its panels run edge to edge
+  // under the header, with no page gutters or bottom padding of their own.
+  const isWorkspacePage = /^\/project\/(local|[^/]+\/edit)$/.test(location.pathname) && location.pathname !== '/project/new/edit';
+  const isFullWidthPage = isSetupPage || isPublicProjectView || isWorkspacePage;
 
   // The editor's PlayerEngine lives here, above the routes, so it survives
   // navigation (intentional: the header/mobile dock keep playing while
@@ -194,7 +199,6 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         activeLineIndex={activeLineIndex}
         playbackPosition={playbackPosition}
         syncMode={syncMode}
-
       >
         <div className={`${isEditorPage ? 'h-dvh' : 'min-h-screen'} lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col`}>
           <AppBackground />
@@ -233,6 +237,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             playerSlot={playerSlot}
             projectCoverImage={projectCoverImage}
             onStartTour={startTour}
+            workspaceView={mobileTab}
           />
 
           <GuidedTour steps={EDITOR_TOUR_STEPS} isOpen={isTourOpen} onClose={closeTour} />

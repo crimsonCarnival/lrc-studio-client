@@ -103,6 +103,49 @@ const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
   );
 });
 
+interface AudioLoadErrorProps {
+  fileInputId: string;
+  onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onRetry: () => void;
+  canReplace: boolean;
+}
+
+/** Shown in place of the transport when the audio element could not load its source. */
+function AudioLoadError({ fileInputId, onFileChange, onRetry, canReplace }: AudioLoadErrorProps) {
+  const { t } = useTranslation();
+  return (
+    <div role="alert" className="flex flex-wrap items-center gap-x-4 gap-y-3 w-full rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3.5 text-left animate-fade-in">
+      <span className="grid place-items-center size-11 shrink-0 rounded-full bg-destructive/15 text-destructive">
+        <Icon name="error" size={22} />
+      </span>
+      <div className="flex-[1_1_240px] min-w-0">
+        <h3 className="text-base font-bold leading-snug text-foreground">{t('player.audioLoadFailedTitle')}</h3>
+        <p className="mt-0.5 text-[13px] leading-snug text-foreground/65">
+          {t(canReplace ? 'player.audioLoadFailedDesc' : 'player.audioLoadFailedDescViewer')}
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {canReplace && (
+          <label
+            htmlFor={fileInputId}
+            className="inline-flex items-center h-11 px-[18px] rounded-[10px] bg-primary hover:bg-primary-dim text-zinc-950 text-sm font-bold cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-primary/50"
+          >
+            {t('player.reupload')}
+            <input id={fileInputId} type="file" accept="audio/*" onChange={onFileChange} className="sr-only" />
+          </label>
+        )}
+        <Button
+          variant="outline"
+          onClick={onRetry}
+          className="h-11 lg:h-11 px-[18px] lg:px-[18px] rounded-[10px] bg-transparent border-zinc-700 text-sm lg:text-sm font-semibold text-foreground"
+        >
+          {t('player.retry')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 'editor' | 'header' | 'mobile', youtubeAudioUrl?: string | null }) {
   const {
     source, isPlaying, currentTime, duration, playbackSpeed,
@@ -114,7 +157,9 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
     detectedUrlType, mediaPopoverProps, fetchUploads,
     togglePlay, seek, applySpeed, setLoop, handleLoopChange, clearLoop,
     handleUrlLoad, handleSelectUpload,
+    failedAudioUrl, retryAudio,
   } = usePlayer();
+  const audioLoadFailed = source === 'local' && failedAudioUrl != null && failedAudioUrl === local.localUrl;
 
   const { t } = useTranslation();
   const { dt } = useDynamicTranslation();
@@ -396,25 +441,87 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
       </div>
 
       <div className={`max-lg:hidden animate-fade-in flex flex-col items-center w-full min-w-0 ${variant === 'editor' ? 'overflow-hidden' : 'overflow-visible'}`}>
-        {hasMedia && (
+        {hasMedia && audioLoadFailed && (
+          <div className="w-full max-w-[1200px] mx-auto pb-2">
+            <AudioLoadError fileInputId="audio-reupload-desktop" onFileChange={local.handleFileChange} onRetry={retryAudio} canReplace={!viewerMode} />
+          </div>
+        )}
+        {hasMedia && !audioLoadFailed && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
-            {/* Wide layout (≥480px container): absolute-centered cluster, full controls */}
-            <div className={`${variant === 'editor' ? 'xl:flex hidden' : 'flex'} items-center gap-2 w-full min-h-[48px] pb-1.5 lg:pb-2`}>
+            {/* Wide layout: time on the left, transport centred, speed / loop / volume on the right */}
+            <div className={`${variant === 'editor' ? 'xl:grid hidden' : 'grid'} grid-cols-[1fr_auto_1fr] items-center gap-4 w-full min-h-[52px] pb-1.5 lg:pb-2`}>
 
-              {/* Left spacer — balances the right actions so the transport stays centered.
-                  (Album art now lives next to the project title in the header.) */}
-              <div className="flex-1 min-w-0" />
+              <div className="min-w-0 font-mono tabular-nums text-[15px] whitespace-nowrap">
+                <span className="text-foreground">{formatTime(currentTime)}</span>
+                <span className="text-foreground/45"> / {formatTime(duration)}</span>
+              </div>
 
-              {/* ── CENTERED: Transport Cluster (Times + Speed + Nudges + Play + Volume) ── */}
-              <div className="flex items-center gap-1 sm:gap-4 shrink-0">
-                {/* Current Time on the left */}
-                <span className="text-xs text-zinc-400 font-mono tabular-nums shrink-0 min-w-[44px] text-right">
-                  {formatTime(currentTime)}
-                </span>
+              {/* ── Transport ── */}
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                <Tip content="-0.1s">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => seek(currentTime - 0.1)}
+                    aria-label={t('player.seekBack', { seconds: 0.1 })}
+                    className={`rounded-full text-foreground/45 hover:text-foreground ${FOCUS_RING}`}
+                  >
+                    <Icon name="chevron_left" size={16} />
+                  </Button>
+                </Tip>
 
-                <div className="w-px h-4 bg-zinc-800/60 shrink-0 mx-1" />
+                <Tip content={`-${settings.playback?.seekTime ?? 5}s`}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => seek(Math.max(0, currentTime - (settings.playback?.seekTime ?? 5)))}
+                    aria-label={t('player.seekBack', { seconds: settings.playback?.seekTime ?? 5 })}
+                    className={`size-10 lg:size-10 rounded-full text-foreground hover:bg-zinc-800/60 ${FOCUS_RING}`}
+                  >
+                    <Icon name="skip_previous" size={20} />
+                  </Button>
+                </Tip>
 
-                {/* Speed */}
+                <Tip content={t('shortcuts.playPause')}>
+                  <Button
+                    id="play-pause-btn"
+                    size="icon"
+                    onClick={togglePlay}
+                    aria-label={t('shortcuts.playPause')}
+                    aria-pressed={isPlaying}
+                    className="size-[52px] lg:size-[52px] rounded-full bg-primary hover:bg-primary-dim text-zinc-950 hover:scale-105 active:scale-95 flex-shrink-0 transition-all duration-100"
+                  >
+                    <Icon name={isPlaying ? 'pause' : 'play_arrow'} size={24} filled />
+                  </Button>
+                </Tip>
+
+                <Tip content={`+${settings.playback?.seekTime ?? 5}s`}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => seek(Math.min(duration, currentTime + (settings.playback?.seekTime ?? 5)))}
+                    aria-label={t('player.seekForward', { seconds: settings.playback?.seekTime ?? 5 })}
+                    className={`size-10 lg:size-10 rounded-full text-foreground hover:bg-zinc-800/60 ${FOCUS_RING}`}
+                  >
+                    <Icon name="skip_next" size={20} />
+                  </Button>
+                </Tip>
+
+                <Tip content="+0.1s">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => seek(currentTime + 0.1)}
+                    aria-label={t('player.seekForward', { seconds: 0.1 })}
+                    className={`rounded-full text-foreground/45 hover:text-foreground ${FOCUS_RING}`}
+                  >
+                    <Icon name="chevron_right" size={16} />
+                  </Button>
+                </Tip>
+              </div>
+
+              {/* ── Speed, loop, volume, media ── */}
+              <div className="min-w-0 flex items-center justify-end gap-2 sm:gap-3">
                 <SpeedControl
                   playbackSpeed={playbackSpeed}
                   applySpeed={applySpeed}
@@ -423,88 +530,12 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                   SPEED_PRESETS={SPEED_PRESETS}
                 />
 
-                <div className="flex items-center gap-0.5 sm:gap-1.5">
-                  <Tip content="-0.1s">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => seek(currentTime - 0.1)}
-                      className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}
-                    >
-                      <Icon name="chevron_left" size={16} />
-                    </Button>
-                  </Tip>
-
-                  <Tip content={`-${settings.playback?.seekTime ?? 5}s`}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => seek(Math.max(0, currentTime - (settings.playback?.seekTime ?? 5)))}
-                      className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}
-                    >
-                      <Icon name="skip_previous" size={16} />
-                    </Button>
-                  </Tip>
-
-                  <Tip content={isPlaying ? t('shortcuts.playPause') : t('shortcuts.playPause')}>
-                    <Button
-                      id="play-pause-btn"
-                      size="icon"
-                      onClick={togglePlay}
-                      aria-label={isPlaying ? t('shortcuts.playPause') : t('shortcuts.playPause')}
-                      className="rounded-full bg-primary hover:bg-primary-dim text-zinc-950 hover:scale-105 active:scale-95 glow-primary flex-shrink-0 transition-all duration-100"
-                    >
-                      {isPlaying ? (
-                        <Icon name="pause" size={16} />
-                      ) : (
-                        <Icon name="play_arrow" size={16} />
-                      )}
-                    </Button>
-                  </Tip>
-
-                  <Tip content={`+${settings.playback?.seekTime ?? 5}s`}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => seek(Math.min(duration, currentTime + (settings.playback?.seekTime ?? 5)))}
-                      className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}
-                    >
-                      <Icon name="skip_next" size={16} />
-                    </Button>
-                  </Tip>
-
-                  <Tip content="+0.1s">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => seek(currentTime + 0.1)}
-                      className={`text-zinc-500 hover:text-zinc-200 ${FOCUS_RING}`}
-                    >
-                      <Icon name="chevron_right" size={16} />
-                    </Button>
-                  </Tip>
-                </div>
-
-                {/* Volume */}
-                <VolumeControl />
-
-                <div className="w-px h-4 bg-zinc-800/60 shrink-0 mx-1" />
-
-                {/* Total Duration on the right */}
-                <span className="text-xs text-zinc-500 font-mono tabular-nums shrink-0 min-w-[44px]">
-                  {formatTime(duration)}
-                </span>
-              </div>
-
-              {/* ── Right Section: Actions, Loop ── */}
-              <div className="flex-1 min-w-0 flex items-center justify-end gap-2 sm:gap-3">
-
                 {/* A-B Loop: repeat the active line, or clear an active loop */}
                 {!viewerMode && (
                   <Tip content={loopA != null && loopB != null ? t('player.clearLoop') : t('player.setLoop')}>
                     <Button
-                      variant="ghost"
-                      size="sm"
+                      variant="outline"
+                      size="icon"
                       onClick={() => {
                         if (loopA != null && loopB != null) {
                           clearLoop();
@@ -527,12 +558,15 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                         if (a != null && b != null) setLoop({ a, b });
                       }}
                       aria-pressed={loopA != null && loopB != null}
-                      className={`shrink-0 ${FOCUS_RING} flex items-center gap-1.5 ${loopA != null && loopB != null ? 'text-accent-purple bg-accent-purple/10 hover:bg-accent-purple/20' : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60'}`}
+                      aria-label={loopA != null && loopB != null ? t('player.clearLoop') : t('player.setLoop')}
+                      className={`size-10 lg:size-10 rounded-[10px] shrink-0 ${FOCUS_RING} ${loopA != null && loopB != null ? 'border-accent-purple/50 text-accent-purple bg-accent-purple/10 hover:bg-accent-purple/20' : 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground hover:bg-zinc-800/60'}`}
                     >
                       <Icon name="repeat" size={16} />
                     </Button>
                   </Tip>
                 )}
+
+                <VolumeControl />
 
                 {/* Change Media */}
                 {hasMedia && !viewerMode && (
@@ -793,8 +827,14 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
           </div>
         )}
 
+        {hasMedia && audioLoadFailed && (
+          <div className="p-3">
+            <AudioLoadError fileInputId="audio-reupload-mobile" onFileChange={local.handleFileChange} onRetry={retryAudio} canReplace={!viewerMode} />
+          </div>
+        )}
+
         {/* Has media: seekbar row + action row */}
-        {hasMedia && (
+        {hasMedia && !audioLoadFailed && (
           <>
             <div className="flex flex-col gap-3 p-4 w-full">
               {/* Top Row: Play/Pause, Seeker, Speed */}

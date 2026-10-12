@@ -153,10 +153,10 @@ export function SkeletonEditor({ className }: { className?: string }) {
       </div>
       {/* Line items */}
       <div className="flex-1 space-y-1.5">
-        {[85, 100, 70, 90, 60, 95, 75, 80].map((w) => (
-          <div key={w} className="flex items-center gap-3 p-2 rounded-lg bg-zinc-800/30">
-            <Skeleton className="h-4 w-12 flex-shrink-0" />
-            <Skeleton className="h-4 flex-1" style={{ maxWidth: `${w}%` }} />
+        {[72, 54, 66, 40, 60, 48, 70, 58].map((w, i) => (
+          <div key={i} className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl bg-zinc-800/30">
+            <Skeleton className="h-[26px] w-16 rounded-lg flex-shrink-0" />
+            <Skeleton className="h-3.5 rounded-full" style={{ width: `${w}%` }} />
           </div>
         ))}
       </div>

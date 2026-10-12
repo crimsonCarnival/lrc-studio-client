@@ -1,4 +1,5 @@
 import { useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ComponentProps, RefObject } from 'react';
 import { useVirtualizer, defaultRangeExtractor } from '@tanstack/react-virtual';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
@@ -11,8 +12,12 @@ import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
 
-const ESTIMATED_LINE_HEIGHT = 52;
+const ESTIMATED_LINE_HEIGHT = 56;
 const LINE_GAP = 4;
+// Breathing room inside the scroll area. Given to the virtualizer rather than set as
+// CSS padding so row offsets and scrollToIndex keep accounting for it.
+const LIST_PADDING_START = 12;
+const LIST_PADDING_END = 48;
 
 type LineItemProps = ComponentProps<typeof EditorLineItem>;
 
@@ -82,6 +87,10 @@ interface VirtualizedLineListProps {
   collapsedSections: ReadonlySet<string>;
   collapsedView: CollapsedView;
   onToggleSectionCollapse: (key: string) => void;
+  /** Words mode showing a single line: the row drops its list chrome. */
+  wordsFocus?: boolean;
+  /** Word being sung on the cursor line while it plays; null when paused. */
+  playingWordIndex?: number | null;
 }
 
 export default function VirtualizedLineList({
@@ -148,7 +157,10 @@ export default function VirtualizedLineList({
   collapsedSections,
   collapsedView,
   onToggleSectionCollapse,
+  wordsFocus = false,
+  playingWordIndex = null,
 }: VirtualizedLineListProps) {
+  const { t } = useTranslation();
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
 
@@ -178,6 +190,8 @@ export default function VirtualizedLineList({
     // first-render overlap while ResizeObserver corrects the true height.
     estimateSize: () => editorMode === 'words' ? 96 : ESTIMATED_LINE_HEIGHT,
     gap: LINE_GAP,
+    paddingStart: LIST_PADDING_START,
+    paddingEnd: LIST_PADDING_END,
     overscan: 8,
     rangeExtractor: useCallback((range: import('@tanstack/react-virtual').Range) => {
       // 1. Get the default range based on current scroll position and overscan
@@ -249,6 +263,16 @@ export default function VirtualizedLineList({
     toMeasure.forEach(measureLine);
   }, [displayedActiveIndex, measureLine]);
 
+  // The cursor line (the one marking acts on) is taller than its neighbours regardless of
+  // hover, so it needs the same synchronous re-measure when it moves.
+  const prevCursorIndexRef = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const prev = prevCursorIndexRef.current;
+    prevCursorIndexRef.current = activeLineIndex;
+    const toMeasure = new Set([activeLineIndex, prev].filter((x): x is number => x != null && x >= 0));
+    toMeasure.forEach(measureLine);
+  }, [activeLineIndex, measureLine]);
+
   // Force-measure drag target so if we add a drop gap (e.g. mt-12), it expands
   const prevDragOverIndexRef = useRef<number | null>(null);
   useLayoutEffect(() => {
@@ -317,7 +341,7 @@ export default function VirtualizedLineList({
   }, [activeLineIndex]);
 
   // Pre-compute nextTimestamp and active section contexts for each line
-  const { nextTimestamps, activeSingers } = useMemo(() => {
+  const { nextTimestamps, activeSingers, sectionLabels } = useMemo(() => {
     const nextTsResult: (number | null)[] = new Array(lines.length).fill(null);
     let lastTs: number | null = null;
     for (let i = lines.length - 1; i >= 0; i--) {
@@ -329,16 +353,50 @@ export default function VirtualizedLineList({
     }
 
     const singersResult: (string[] | undefined)[] = new Array(lines.length).fill(undefined);
+    const labelsResult: (string | undefined)[] = new Array(lines.length).fill(undefined);
     let currentSingers: string[] | undefined = undefined;
+    let currentLabel: string | undefined = undefined;
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].type === 'section') {
         currentSingers = lines[i].singers;
+        currentLabel = lines[i].label || undefined;
       }
       singersResult[i] = currentSingers;
+      labelsResult[i] = currentLabel;
     }
 
-    return { nextTimestamps: nextTsResult, activeSingers: singersResult };
+    return { nextTimestamps: nextTsResult, activeSingers: singersResult, sectionLabels: labelsResult };
   }, [lines]);
+
+  // Marks for the scrollbar rail: where sections start, which stretches still
+  // have no time, and where the cursor is. Positions are row fractions, which
+  // is close enough to scroll position while rows are of similar height.
+  const railMarks = useMemo(() => {
+    const count = rows.length;
+    if (count < 2) return null;
+    const sections: number[] = [];
+    const untimed: { top: number; height: number }[] = [];
+    let cursor: number | null = null;
+    let runStart = -1;
+    const closeRun = (end: number) => {
+      if (runStart >= 0) untimed.push({ top: runStart / count, height: (end - runStart) / count });
+      runStart = -1;
+    };
+    rows.forEach((lineIndex, row) => {
+      const line = lines[lineIndex];
+      if (lineIndex === activeLineIndex) cursor = row / count;
+      if (line.type === 'section') {
+        sections.push(row / count);
+        closeRun(row);
+      } else if (line.timestamp == null) {
+        if (runStart < 0) runStart = row;
+      } else {
+        closeRun(row);
+      }
+    });
+    closeRun(count);
+    return { sections, untimed, cursor: cursor as number | null };
+  }, [rows, lines, activeLineIndex]);
 
   return (
     <div className="flex flex-col flex-1 gap-3 animate-fade-in min-h-0">
@@ -346,11 +404,12 @@ export default function VirtualizedLineList({
         <div
           ref={listRef}
           onMouseLeave={handleLineHoverEnd}
-          className="h-full overflow-y-auto pr-1 mask-edges pb-32"
+          className="lrc-scroll h-full overflow-y-auto"
         >
           <div
+            role="list"
+            aria-label={t('editor.lineList')}
             style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}
-            className="px-1 sm:px-0"
           >
             {virtualizer.getVirtualItems().map((virtualRow) => {
               const i = rows[virtualRow.index]; // original line index — used for every action
@@ -368,6 +427,7 @@ export default function VirtualizedLineList({
               return (
                 <div
                   key={line.id || i}
+                  role="listitem"
                   // Sections deliberately stretch (top:start + bottom:0) so their header can
                   // stick over their block, which makes this wrapper as tall as the whole
                   // list. It must therefore never be measurable: `data-index` is what both
@@ -386,7 +446,7 @@ export default function VirtualizedLineList({
                     left: 0,
                     width: '100%',
                     transform: isSection ? undefined : `translateY(${virtualRow.start}px)`,
-                    paddingTop: dragOverIndex === i ? 52 : 0,
+                    paddingTop: dragOverIndex === i ? ESTIMATED_LINE_HEIGHT : 0,
                     transition: 'padding-top 0.2s ease-out',
                     pointerEvents: isSection ? 'none' : 'auto',
                     zIndex: isSection ? 20 + i : undefined,
@@ -472,6 +532,10 @@ export default function VirtualizedLineList({
                       i={i}
                       displayedActiveIndex={displayedActiveIndex}
                       isActive={isActive}
+                      isCursor={i === activeLineIndex}
+                      wordsFocus={wordsFocus}
+                      playingWordIndex={i === activeLineIndex ? playingWordIndex : null}
+                      sectionLabel={sectionLabels[i]}
                       isLocked={isActiveLineLocked && i === activeLineIndex}
                       isSynced={isSynced}
                       editorMode={editorMode}
@@ -540,6 +604,24 @@ export default function VirtualizedLineList({
             })}
           </div>
         </div>
+        {/* Scrollbar rail marks: beside the 12px scrollbar's thumb, never over it */}
+        {railMarks && (
+          <div aria-hidden className="absolute top-1 bottom-1 right-0 w-3 pointer-events-none">
+            {railMarks.untimed.map((m, k) => (
+              <span
+                key={`u${k}`}
+                className="absolute right-0 w-[3px] min-h-[3px] rounded-full bg-warning/80"
+                style={{ top: `${m.top * 100}%`, height: `${m.height * 100}%` }}
+              />
+            ))}
+            {railMarks.sections.map((top, k) => (
+              <span key={`s${k}`} className="absolute right-0 w-[5px] h-[3px] rounded-full bg-success" style={{ top: `${top * 100}%` }} />
+            ))}
+            {railMarks.cursor != null && (
+              <span className="absolute inset-x-0 h-[3px] rounded-full bg-primary" style={{ top: `${railMarks.cursor * 100}%` }} />
+            )}
+          </div>
+        )}
         <ScrollProgress containerRef={listRef} className="absolute bottom-0 inset-x-0 h-[2px]" />
       </div>
 

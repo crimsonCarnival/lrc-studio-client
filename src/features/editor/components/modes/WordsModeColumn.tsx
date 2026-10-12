@@ -23,6 +23,24 @@ const WORD_SINGER_CHIP = [
   { stamped: 'bg-fuchsia-500/15 border-fuchsia-500/40 text-fuchsia-400/80 hover:border-fuchsia-400 hover:bg-fuchsia-500/25 hover:text-fuchsia-400', unstamped: 'bg-fuchsia-500/8 border-fuchsia-500/25 text-fuchsia-400/60 hover:bg-fuchsia-500/15 hover:text-fuchsia-400/80' },
 ];
 
+// Word chips are small cards. On the line being worked on they grow and show
+// each word's time under it; elsewhere they stay compact so a long song still
+// fits on screen.
+const CHIP_BASE = 'flex flex-col items-start gap-1 border font-medium transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40';
+const CHIP_COMPACT = 'px-2.5 py-1.5 coarse:py-2.5 rounded-lg text-[13px] leading-none';
+const CHIP_LARGE = 'px-4 py-2.5 rounded-xl min-h-11';
+const CHIP_NOW = 'border-2 border-primary bg-zinc-800 text-foreground';
+const CHIP_PLAYING = 'border-primary bg-primary text-zinc-950';
+const CHIP_DONE = 'border-primary/40 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20';
+const CHIP_TODO = 'border-dashed border-zinc-600 bg-transparent text-foreground/55 hover:border-zinc-500 hover:text-foreground/80';
+
+// Same formatter as the chip's tooltip and the timestamp badges, so a word never
+// shows two different times; the "00:" minutes are dropped while they are zero.
+function shortTime(time: number): string {
+  const label = formatTime(time);
+  return label.startsWith('00:') ? label.slice(3) : label;
+}
+
 /** Resolves a per-word singer chip's class + optional custom-hex inline style, mirroring LineTextContent's logic. */
 function resolveWordSingerChip(
   w: Word,
@@ -91,6 +109,11 @@ export interface WordsModeColumnProps {
   songSingers?: string[];
   singerColors?: string[];
   activeSingers?: string[];
+  /**
+   * While the line is playing: index of the word being sung (-1 before the first
+   * one). The highlight follows it instead of the stamping cursor. Null when paused.
+   */
+  playingWordIndex?: number | null;
 }
 
 export function WordsModeTimestamp({
@@ -168,6 +191,7 @@ export function WordsModeTimestamp({
 export function WordsModeChips({
   line,
   lineIndex,
+  isActive,
   isMobile,
   focusedTimestamp,
   stampTarget,
@@ -179,16 +203,29 @@ export function WordsModeChips({
   songSingers,
   singerColors,
   activeSingers,
+  playingWordIndex = null,
 }: WordsModeColumnProps) {
   const { t } = useTranslation();
+  const playing = playingWordIndex != null;
   const roster = songSingers ?? [];
   const appliedSingers = activeSingers || line.singers;
   const settingsSingerColors = settings?.editor?.display?.singerColors;
+  const chipSize = isActive ? CHIP_LARGE : CHIP_COMPACT;
+  const chipBody = (label: string, time: number | null | undefined) => (
+    <>
+      <span className={isActive ? 'font-heading text-2xl font-bold leading-none' : undefined}>{label}</span>
+      {isActive && (
+        <span className="font-mono text-[11px] leading-none tabular-nums opacity-80">
+          {time != null ? shortTime(time) : '—'}
+        </span>
+      )}
+    </>
+  );
   return (
     <div className="flex flex-col gap-1 w-full">
       {/* Word chips */}
       {stampTarget !== 'secondary' && (
-        <div className="flex flex-wrap gap-x-1.5 gap-y-1.5 w-full pr-2 min-h-[26px] items-center content-start">
+        <div className={`flex flex-wrap w-full pr-2 min-h-[26px] items-center content-start ${isActive ? 'gap-2.5' : 'gap-1.5'}`}>
           {(() => {
             let wcs = 0;
             return line.words?.map((w, wi) => {
@@ -196,8 +233,11 @@ export function WordsModeChips({
             wcs += w.word.length;
             const displayWord = w.word.replace(/^[()'"]+|[,;.!?()'"]+$/g, '');
             // In Words mode, only show the automatic "next word" cursor if no word is manually focused anywhere
-            const isFocusedWord = focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'word' && focusedTimestamp?.wordIndex === wi;
-            const isActiveWord = wi === activeWordIndex && !focusedTimestamp;
+            // Playing: only the sung word is highlighted, with the solid look the
+            // focused word has when paused. Paused: the focused word, else the cursor.
+            const isFocusedWord = !playing && focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'word' && focusedTimestamp?.wordIndex === wi;
+            const isActiveWord = playing ? wi === playingWordIndex : wi === activeWordIndex && !focusedTimestamp;
+            const nowClass = playing ? CHIP_PLAYING : CHIP_NOW;
             const singerChip = resolveWordSingerChip(w, appliedSingers, roster, singerColors, settingsSingerColors, w.time != null);
             return (
               <div key={wKey} className="flex flex-col items-center gap-1">
@@ -207,17 +247,17 @@ export function WordsModeChips({
                     <Tip content={t('editor.wordChipTitle', { word: w.word, time: formatTime(w.time) })}>
                       <StampedWordChip
                         time={w.time}
-                        focusedTimestamp={focusedTimestamp}
+                        focusedTimestamp={playing ? null : focusedTimestamp}
                         lineIndex={lineIndex}
                         wi={wi}
                         onClick={(e) => handleWordClick(e, w, wi)}
-                        className={`text-[13px] px-3 py-1 rounded-full border leading-none font-medium transition-all duration-200 cursor-pointer ${isActiveWord || isFocusedWord
-                          ? 'bg-primary text-zinc-950 border-primary ring-2 ring-primary/40 shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)] animate-pulse-glow'
-                          : (w.singerIndex != null ? (singerChip.className || 'bg-zinc-800 border-primary/30') : 'bg-zinc-800 border-primary/30 text-primary/70 hover:border-primary hover:bg-primary/20 hover:text-primary')
+                        className={`${CHIP_BASE} ${chipSize} ${isActiveWord || isFocusedWord
+                          ? nowClass
+                          : (w.singerIndex != null ? (singerChip.className || CHIP_DONE) : CHIP_DONE)
                           }`}
                         style={!(isActiveWord || isFocusedWord) ? singerChip.style : undefined}
                       >
-                        {displayWord}
+                        {chipBody(displayWord, w.time)}
                       </StampedWordChip>
                     </Tip>
                     {!isMobile && (
@@ -244,13 +284,13 @@ export function WordsModeChips({
                     <button
                       type="button"
                       onClick={(e) => handleWordClick(e, w, wi)}
-                      className={`text-[13px] px-3 py-1 rounded-full border leading-none font-medium transition-all cursor-pointer outline-none focus:ring-2 focus:ring-primary/40 ${isActiveWord || isFocusedWord
-                        ? 'bg-primary text-zinc-950 border-primary shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)] animate-pulse-glow'
-                        : (w.singerIndex != null ? (singerChip.className || 'bg-zinc-800/50 border-zinc-700/30') : 'bg-zinc-800/50 border-zinc-700/30 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400')
+                      className={`${CHIP_BASE} ${chipSize} ${isActiveWord || isFocusedWord
+                        ? nowClass
+                        : (w.singerIndex != null ? (singerChip.className || CHIP_TODO) : CHIP_TODO)
                         }`}
                       style={!(isActiveWord || isFocusedWord) ? singerChip.style : undefined}
                     >
-                      {displayWord}
+                      {chipBody(displayWord, w.time)}
                     </button>
                     {isMobile && isFocusedWord && (
                       <button

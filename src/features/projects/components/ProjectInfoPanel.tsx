@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -7,8 +7,11 @@ import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { ProjectActionsMenu } from './ProjectActionsMenu';
 import { BoostButton } from './BoostButton';
+import { ShareOgButton } from './ShareOgButton';
+import { downloadProjectExport } from './project-export';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
+import type { EditorLine } from '@/features/editor/services/editor.service';
 
 interface ProjectMeta {
   description?: string;
@@ -16,6 +19,7 @@ interface ProjectMeta {
   songArtist?: string;
   songAlbum?: string;
   songYear?: string | number;
+  songLanguage?: string;
   tags?: string[];
 }
 
@@ -24,6 +28,7 @@ interface ProjectData {
   title?: string;
   metadata?: ProjectMeta;
   user?: { accountName?: string; displayName?: string };
+  upload?: { duration?: number | null };
   createdAt?: string | number;
   forksEnabled?: boolean;
   isForkedByMe?: boolean;
@@ -34,25 +39,27 @@ interface ProjectData {
   [key: string]: unknown;
 }
 
-function PanelButton({ onClick, disabled, active, children, variant = 'outline' }: {
-  onClick?: () => void;
-  disabled?: boolean;
-  active?: boolean;
-  children: ReactNode;
-  variant?: string;
-}) {
+const PILL =
+  'inline-flex items-center gap-1.5 h-11 px-3.5 rounded-full border text-sm font-semibold shrink-0 transition-colors ' +
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-50';
+const PILL_IDLE = 'border-border text-foreground hover:bg-muted';
+const PILL_ACTIVE = 'border-primary/30 bg-primary/10 text-primary';
+const SECTION_LABEL = 'text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground';
+const CARD = 'rounded-[14px] border border-border bg-card/60 p-3.5';
+const CHIP = 'rounded-md px-2 py-1 text-xs font-semibold';
+
+function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <Button
-      size="sm"
-      // @ts-expect-error variant is a valid union value
-      variant={variant}
-      onClick={onClick}
-      disabled={disabled}
-      className={`h-8 px-3 text-xs font-medium gap-1.5 rounded-full shrink-0 transition-all ${active ? 'bg-primary/10 text-foreground' : 'bg-transparent text-muted-foreground'}`}
-    >
-      {children}
-    </Button>
+    <div className="min-w-0">
+      <div className="font-heading text-[22px] font-bold leading-tight tabular-nums">{value}</div>
+      <div className="text-xs text-muted-foreground truncate">{label}</div>
+    </div>
   );
+}
+
+function clock(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
 interface ProjectInfoPanelProps {
@@ -70,8 +77,7 @@ interface ProjectInfoPanelProps {
   reactionsSlot?: ReactNode;
   viewersSlot?: ReactNode;
   ctaSlot?: ReactNode;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  lines?: any[];
+  lines?: EditorLine[];
   songSingers?: string[];
   singerColors?: string[];
   /** Owned by the page: on desktop it also hides the whole column. */
@@ -115,49 +121,68 @@ export default function ProjectInfoPanel({
     }, i18n.resolvedLanguage || i18n.language)
     : null;
 
+  const { lineCount, wordCount, hasWordTimes } = useMemo(() => {
+    let lineCount = 0;
+    let wordCount = 0;
+    let hasWordTimes = false;
+    for (const l of lines ?? []) {
+      if (l.type === 'section') continue;
+      lineCount++;
+      wordCount += l.words?.length || (l.text?.trim() ? l.text.trim().split(/\s+/).length : 0);
+      if (!hasWordTimes && l.words?.some((w) => w.time != null)) hasWordTimes = true;
+    }
+    return { lineCount, wordCount, hasWordTimes };
+  }, [lines]);
+
+  const locale = i18n.resolvedLanguage || i18n.language;
+  const languageName = useMemo(() => {
+    if (!meta.songLanguage) return null;
+    try {
+      return new Intl.DisplayNames([locale], { type: 'language' }).of(meta.songLanguage) ?? meta.songLanguage;
+    } catch {
+      return meta.songLanguage; // not a BCP 47 tag; show it as stored
+    }
+  }, [meta.songLanguage, locale]);
+
+  const duration = project?.upload?.duration;
+  const facts: { label: string; value: ReactNode; mono?: boolean }[] = [];
+  if (duration) facts.push({ label: t('projectView.duration'), value: clock(duration), mono: true });
+  if (languageName) facts.push({ label: t('projectView.language'), value: <span className="capitalize">{languageName}</span> });
+  if (lineCount > 0) facts.push({ label: t('projectView.sync'), value: hasWordTimes ? t('projectView.syncLineAndWord') : t('projectView.syncLine') });
+  if (formattedDate) facts.push({ label: t('projectView.publishedOn'), value: formattedDate });
+
+  const title = project?.title || meta.songName || t('projectView.notFound');
+  const showSongName = !!meta.songName && meta.songName !== title;
+
   return (
-    <div className="flex flex-col gap-4 rounded-2xl overflow-hidden bg-card/60 border border-border backdrop-blur-lg">
-      {/* Cover art */}
-      {cover && !collapsed && (
-        <div className="relative w-full aspect-square overflow-hidden rounded-t-2xl bg-card">
-          {/* object-contain, not -cover: a non-square cover (most are square,
-              but nothing guarantees it) must never lose its edges to cropping.
-              Letterboxed on the card's own background instead. */}
+    <div className="flex flex-col gap-4 flex-1">
+      {/* Cover + title; the overflow menu and collapse toggle sit top-right */}
+      <div className="flex items-end gap-4">
+        {cover && !collapsed && (
+          // object-contain, not -cover: a non-square cover must never lose its
+          // edges to cropping. Letterboxed on the card's own background instead.
           <img
             src={cover}
-            alt={project?.title ?? ''}
-            className="w-full h-full object-contain"
+            alt={t('projectView.coverAlt', { title })}
+            className="size-24 sm:size-[120px] flex-none rounded-[14px] border border-border bg-card object-contain"
             loading="eager"
             decoding="async"
           />
-          {/* Gradient overlay at bottom of cover */}
-          <div
-            aria-hidden
-            className="absolute inset-x-0 bottom-0 h-1/3"
-            style={{ background: 'linear-gradient(to top, var(--card), transparent)' }}
-          />
+        )}
+        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+          <h1 className="font-heading font-bold leading-none text-3xl lg:text-[38px] tracking-tight text-foreground break-words">
+            {title}
+          </h1>
+          {showSongName && <p className="text-[13px] text-foreground/85">{meta.songName}</p>}
+          {(meta.songArtist || meta.songAlbum || meta.songYear) && (
+            <p className="text-[13px] leading-snug text-muted-foreground">
+              {meta.songArtist && <span className="font-semibold text-foreground">{meta.songArtist}</span>}
+              {meta.songAlbum && <span className={`italic ${meta.songArtist ? "before:content-['·'] before:mx-1 before:not-italic" : ''}`}>{meta.songAlbum}</span>}
+              {meta.songYear && <span className={meta.songArtist || meta.songAlbum ? "before:content-['·'] before:mx-1" : ''}>{meta.songYear}</span>}
+            </p>
+          )}
         </div>
-      )}
-
-      <div className={`px-4 pb-4 flex flex-col gap-3 ${cover && !collapsed ? '' : 'pt-4'}`}>
-
-        {/* Title + actions row */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <h1 className="font-semibold leading-tight text-base sm:text-lg tracking-tight text-foreground">
-              {project?.title || t('projectView.notFound')}
-            </h1>
-            {(meta.songName || meta.songArtist) && (
-              <p className="text-xs mt-0.5 leading-snug text-muted-foreground">
-                {meta.songName && <span className="font-medium">{meta.songName}</span>}
-                {meta.songArtist && <span className="before:content-['·'] before:mx-1">{meta.songArtist}</span>}
-                {meta.songAlbum && <span className="before:content-['·'] before:mx-1 italic">{meta.songAlbum}</span>}
-                {meta.songYear && <span className="before:content-['·'] before:mx-1">{meta.songYear}</span>}
-              </p>
-            )}
-          </div>
-
-          {/* Overflow menu */}
+        <div className="flex items-center self-start shrink-0">
           <ProjectActionsMenu
             project={project}
             lines={lines ?? []}
@@ -165,6 +190,7 @@ export default function ProjectInfoPanel({
             user={user}
             onEdit={onEdit}
             onFork={onFork}
+            triggerClassName="size-9 coarse:size-11 rounded-full shrink-0"
           />
           <Tip content={collapseLabel}>
             <Button
@@ -173,48 +199,69 @@ export default function ProjectInfoPanel({
               onClick={onToggleCollapsed}
               aria-expanded={!collapsed}
               aria-label={collapseLabel}
-              className="size-8 rounded-full shrink-0"
+              className="size-9 lg:size-9 coarse:size-11 rounded-full shrink-0"
             >
               <Icon name={collapsed ? 'expand_more' : 'expand_less'} size={16} />
             </Button>
           </Tip>
         </div>
+      </div>
 
-        {!collapsed && (<>
-        {/* Primary action buttons */}
+      {!collapsed && (<>
+        {/* Chips: sync type first, then counts and the owner's tags */}
+        {(lineCount > 0 || (meta.tags?.length ?? 0) > 0) && (
+          <div className="flex flex-wrap gap-1.5">
+            {lineCount > 0 && (
+              <>
+                <span className={`${CHIP} font-bold bg-primary text-primary-foreground`}>
+                  {hasWordTimes ? t('projectView.syncByWord') : t('projectView.syncByLine')}
+                </span>
+                <span className={`${CHIP} bg-muted text-foreground`}>{t('projectView.lineCount', { count: lineCount })}</span>
+                <span className={`${CHIP} bg-muted text-foreground`}>{t('projectView.wordCount', { count: wordCount })}</span>
+              </>
+            )}
+            {meta.tags?.map((tag, i) => (
+              <span key={`${tag}-${i}`} className={`${CHIP} bg-muted text-foreground`}>{tag}</span>
+            ))}
+          </div>
+        )}
+
+        {/* Primary actions */}
         <div className="flex items-center gap-2 flex-wrap">
           {isOwner ? (
             <>
-              <PanelButton onClick={onEdit} variant="outline">
-                <Icon name="edit" size={14} />
+              <button type="button" onClick={onEdit} className={`${PILL} ${PILL_IDLE}`}>
+                <Icon name="edit" size={16} />
                 {t('projectView.editButton')}
-              </PanelButton>
+              </button>
               {ctaSlot}
             </>
           ) : (
             <>
               {user && (
-                <PanelButton
+                <button
+                  type="button"
                   onClick={onStar}
                   disabled={starring}
-                  active={isStarred}
+                  aria-pressed={!!isStarred}
+                  className={`${PILL} ${isStarred ? PILL_ACTIVE : PILL_IDLE}`}
                 >
-                  <Icon name="star" size={14} filled={isStarred} />
+                  <Icon name="star" size={16} filled={isStarred} />
                   {isStarred ? t('projectView.unstarButton') : t('projectView.starButton')}
-                </PanelButton>
+                </button>
               )}
 
               {project?.forksEnabled !== false && (
                 project?.isForkedByMe ? (
-                  <span className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20">
-                    <Icon name="check" size={14} />
+                  <span className={`${PILL} ${PILL_ACTIVE}`}>
+                    <Icon name="check" size={16} />
                     {t('projectView.forkedBadge')}
                   </span>
                 ) : (
-                  <PanelButton onClick={onFork}>
-                    <Icon name="call_split" size={14} />
+                  <button type="button" onClick={onFork} className={`${PILL} ${PILL_IDLE}`}>
+                    <Icon name="call_split" size={16} />
                     {t('projectView.forkButton')}
-                  </PanelButton>
+                  </button>
                 )
               )}
 
@@ -223,29 +270,30 @@ export default function ProjectInfoPanel({
               )}
             </>
           )}
+          {project?.publicId && <ShareOgButton publicId={project.publicId} title={title} />}
         </div>
 
-        {/* Stats row */}
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
-            <Icon name="star" size={14} />
-            <span className="text-foreground">{starCount ?? 0}</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Icon name="call_split" size={14} />
-            <span className="text-foreground">{project?.forkCount ?? 0}</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Icon name="visibility" size={14} />
-            <span className="text-foreground">{project?.viewCount ?? 0}</span>
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Icon name="share" size={14} />
-            <span className="text-foreground">{project?.shareCount ?? 0}</span>
-          </span>
-          {reactionsSlot && <div>{reactionsSlot}</div>}
+        {/* Stats */}
+        <div className={`${CARD} grid grid-cols-4 gap-2`}>
+          <Stat value={project?.viewCount ?? 0} label={t('projectView.statViews')} />
+          <Stat value={starCount ?? 0} label={t('projectView.statStars')} />
+          <Stat value={project?.forkCount ?? 0} label={t('projectView.statForks')} />
+          <Stat value={project?.shareCount ?? 0} label={t('projectView.statShares')} />
         </div>
-        {viewersSlot && <div className="mt-2">{viewersSlot}</div>}
+        {reactionsSlot && <div>{reactionsSlot}</div>}
+        {viewersSlot && <div>{viewersSlot}</div>}
+
+        {/* Facts */}
+        {facts.length > 0 && (
+          <dl className={`${CARD} grid grid-cols-2 gap-y-2 text-[13px]`}>
+            {facts.map((fact) => (
+              <div key={fact.label} className="contents">
+                <dt className="text-muted-foreground">{fact.label}</dt>
+                <dd className={`text-foreground ${fact.mono ? 'font-mono tabular-nums' : ''}`}>{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
 
         {/* Forked-from */}
         {project?.forkedFrom?.publicId && (
@@ -271,12 +319,13 @@ export default function ProjectInfoPanel({
 
         {/* Description */}
         {description && (
-          <div className="rounded-xl p-3 bg-card/40 border border-border">
-            <p className={`text-xs leading-relaxed whitespace-pre-wrap text-muted-foreground ${!descExpanded && isLongDescription ? 'line-clamp-4' : ''}`}>
+          <div className={CARD}>
+            <p className={`text-[13px] leading-relaxed whitespace-pre-wrap text-muted-foreground ${!descExpanded && isLongDescription ? 'line-clamp-4' : ''}`}>
               {description}
             </p>
             {isLongDescription && (
               <button
+                type="button"
                 onClick={() => setDescExpanded((v) => !v)}
                 className="text-xs mt-1 hover:underline text-primary"
               >
@@ -288,10 +337,8 @@ export default function ProjectInfoPanel({
 
         {/* Singers */}
         {songSingers && songSingers.length > 0 && (
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('projectView.singers')}
-            </span>
+          <div className="flex flex-col gap-2">
+            <span className={SECTION_LABEL}>{t('projectView.singers')}</span>
             <div className="flex flex-wrap gap-1.5">
               {songSingers.map((singer, idx) => {
                 const color = singerColors?.[idx] || 'var(--color-primary)';
@@ -313,45 +360,38 @@ export default function ProjectInfoPanel({
           </div>
         )}
 
-        {/* Tags */}
-        {meta.tags && meta.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {meta.tags.map((tag, i) => (
-              <span
-                key={`${tag}-${i}`}
-                className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-muted text-muted-foreground border border-border"
-              >
-                {tag}
-              </span>
-            ))}
+        {/* Download: same files as the overflow menu's export entries */}
+        {lineCount > 0 && (
+          <div className="flex flex-col gap-2">
+            <span className={SECTION_LABEL}>{t('projectView.download')}</span>
+            <div className="flex flex-wrap gap-2">
+              {(['lrc', 'srt'] as const).map((format) => (
+                <button
+                  key={format}
+                  type="button"
+                  onClick={() => downloadProjectExport(format, project, lines ?? [])}
+                  className="h-10 coarse:h-11 px-3.5 rounded-[10px] border border-border bg-muted/60 font-semibold text-sm text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                >
+                  .{format}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Author + date */}
-        <div className="flex items-center gap-3 flex-wrap text-[11px] text-muted-foreground">
-          {accountName && (
-            <div className="flex items-center gap-1.5">
-              <Icon name="music_note" size={12} />
-              <Link
-                to={`/profile/${accountName}`}
-                className="hover:underline text-foreground"
-              >
-                {project.user?.displayName || accountName}
-              </Link>
-            </div>
-          )}
-          {formattedDate && (
-            <div className="flex items-center gap-1.5">
-              <Icon name="calendar_month" size={12} />
-              <span>
-                {t('projectView.publishedOn')} {formattedDate}
-              </span>
-            </div>
-          )}
-        </div>
-        </>)}
-
-      </div>
+        {/* Author */}
+        {accountName && (
+          <p className="mt-auto pt-2 flex items-center gap-2 text-[13px] text-muted-foreground">
+            <span aria-hidden className="inline-grid place-items-center size-6 rounded-full bg-muted text-[11px] font-semibold uppercase text-foreground">
+              {(project.user?.displayName || accountName).charAt(0)}
+            </span>
+            {t('projectView.syncedBy')}
+            <Link to={`/profile/${accountName}`} className="font-semibold text-foreground hover:underline">
+              {project.user?.displayName || accountName}
+            </Link>
+          </p>
+        )}
+      </>)}
     </div>
   );
 }

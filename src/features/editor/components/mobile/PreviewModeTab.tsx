@@ -1,10 +1,15 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { formatTime } from '@/shared/utils/format-time';
+import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 
 interface PreviewLine {
+  id?: string;
   text?: string;
   type?: string;
+  label?: string;
+  timestamp?: number | null;
   [key: string]: unknown;
 }
 
@@ -12,37 +17,39 @@ interface PreviewModeTabProps {
   lines?: PreviewLine[];
   activeLineIndex: number;
   isPlaying?: boolean;
+  /** Moves the editor cursor; used by the "first untimed line" banner. */
+  onSelectLine?: (index: number) => void;
 }
+
+/** Shown in the time gutter of a line that has not been marked yet. */
+const UNTIMED = '--:--.--';
 
 export default function PreviewModeTab({
   lines,
   activeLineIndex,
   isPlaying,
+  onSelectLine,
 }: PreviewModeTabProps) {
   const { t } = useTranslation();
-  const currentLine = useMemo(() => {
-    if (!lines || lines.length === 0) return null;
-    return lines[activeLineIndex];
-  }, [lines, activeLineIndex]);
+  const activeRef = useRef<HTMLLIElement>(null);
 
-  const nextLine = useMemo(() => {
-    if (!lines || activeLineIndex >= lines.length - 1) return null;
-    return lines[activeLineIndex + 1];
-  }, [lines, activeLineIndex]);
+  const { total, timed, firstUntimed } = useMemo(() => {
+    let total = 0;
+    let timed = 0;
+    let firstUntimed = -1;
+    (lines ?? []).forEach((l, i) => {
+      if (l.type === 'section') return;
+      total++;
+      if (l.timestamp != null) timed++;
+      else if (firstUntimed === -1) firstUntimed = i;
+    });
+    return { total, timed, firstUntimed };
+  }, [lines]);
 
-  const totalLyricLines = useMemo(
-    () => lines?.filter(l => l.type !== 'section').length || 0,
-    [lines]
-  );
-  const currentLyricPosition = useMemo(
-    () => lines?.slice(0, activeLineIndex + 1).filter(l => l.type !== 'section').length || 0,
-    [lines, activeLineIndex]
-  );
-
-  const progressPercent = useMemo(() => {
-    if (!totalLyricLines) return 0;
-    return (currentLyricPosition / totalLyricLines) * 100;
-  }, [totalLyricLines, currentLyricPosition]);
+  // Keep the current line in view as the cursor moves.
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [activeLineIndex]);
 
   if (!lines || lines.length === 0) {
     return (
@@ -58,64 +65,68 @@ export default function PreviewModeTab({
     );
   }
 
+  const untimed = total - timed;
+
   return (
-    <div
-      data-testid="preview-container"
-      className="flex flex-col items-center justify-center min-h-96 gap-8 p-4"
-    >
-      {/* Current line - Large display */}
-      <div className="w-full text-center space-y-4">
-        <h2
-          className="text-3xl sm:text-4xl lg:text-5xl font-semibold text-primary leading-tight break-words"
-        >
-          {currentLine?.text || ''}
-        </h2>
+    <div data-testid="preview-container" className="flex flex-col gap-3 p-3">
+      {/* Review summary */}
+      <div className="flex flex-col gap-1.5 px-1">
+        <div className="flex items-center justify-between gap-3 text-xs text-foreground/65">
+          <span>{t('editor.linesTimedCount', { timed, total })}</span>
+          <span data-testid="playback-info" className="inline-flex items-center gap-1">
+            <Icon name={isPlaying ? 'play_arrow' : 'pause'} size={14} className={isPlaying ? 'text-primary' : undefined} />
+            {isPlaying ? t('editor.playing') : t('editor.paused')}
+          </span>
+        </div>
+        <div data-testid="progress-indicator" className="h-1 rounded-full bg-zinc-800 overflow-hidden">
+          <div className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out" style={{ width: `${total ? (timed / total) * 100 : 0}%` }} />
+        </div>
       </div>
 
-      {/* Next line preview */}
-      {nextLine && (
-        <div className="w-full text-center space-y-2 border-t border-zinc-800/50 pt-6">
-          <div className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
-            {t('editor.nextLine')}
-          </div>
-          <p className="text-lg text-zinc-400">{nextLine.text}</p>
-        </div>
+      {untimed > 0 && (
+        <button
+          type="button"
+          onClick={() => onSelectLine?.(firstUntimed)}
+          className="flex items-center gap-2 min-h-11 px-3 py-2.5 rounded-[10px] border border-warning/35 bg-warning/10 text-left text-[13px] font-medium text-foreground active:bg-warning/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        >
+          <span className="flex-1">{t('preview.untimedJump', { count: untimed })}</span>
+          <Icon name="arrow_forward" size={16} />
+        </button>
       )}
 
-      {/* Progress indicator */}
-      <div className="w-full space-y-2">
-        <div
-          data-testid="progress-indicator"
-          className="w-full h-1 bg-zinc-800/50 rounded-full overflow-hidden"
-        >
-          <div
-            className="h-full bg-gradient-to-r from-primary/50 to-primary transition-all duration-300"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-        <div className="flex items-center justify-between text-xs text-zinc-500">
-          <span>{currentLyricPosition}</span>
-          <span>{totalLyricLines}</span>
-        </div>
-      </div>
-
-      {/* Playback info */}
-      <div
-        data-testid="playback-info"
-        className="flex items-center gap-2 text-sm text-zinc-400 bg-zinc-900/50 px-4 py-2 rounded-lg border border-zinc-800/50"
-      >
-        {isPlaying ? (
-          <>
-            <Icon name="play_arrow" size={16} className="text-primary animate-pulse" />
-            <span>{t('editor.playing')}</span>
-          </>
-        ) : (
-          <>
-            <Icon name="pause" size={16} className="text-zinc-500" />
-            <span>{t('editor.paused')}</span>
-          </>
-        )}
-      </div>
+      <ol className="flex flex-col gap-0.5 list-none m-0 p-0">
+        {lines.map((line, i) => {
+          if (line.type === 'section') {
+            return (
+              <li
+                key={line.id ?? i}
+                className="px-2 pt-2.5 pb-1 text-[11px] font-bold uppercase tracking-[0.1em] text-[color-mix(in_srgb,var(--color-success)_50%,var(--foreground))] dark:text-success"
+              >
+                {formatSectionLabel(line.label, t)}
+              </li>
+            );
+          }
+          const isActive = i === activeLineIndex;
+          const pending = line.timestamp == null;
+          return (
+            <li
+              key={line.id ?? i}
+              ref={isActive ? activeRef : undefined}
+              aria-current={isActive ? 'true' : undefined}
+              className={`flex gap-2 px-2 py-[7px] rounded-[10px] leading-snug ${
+                isActive
+                  ? 'bg-zinc-800 shadow-[inset_3px_0_0_var(--color-primary)] text-lg font-bold text-foreground'
+                  : `text-[15px] ${i > activeLineIndex && !pending ? 'text-foreground/85' : 'text-foreground/55'}`
+              }`}
+            >
+              <span className={`flex-none w-[58px] pt-1 font-mono text-[10px] tabular-nums ${isActive ? 'text-primary' : 'text-foreground/45'}`}>
+                {pending ? UNTIMED : formatTime(line.timestamp as number)}
+              </span>
+              <span className="min-w-0 break-words">{line.text}</span>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }
