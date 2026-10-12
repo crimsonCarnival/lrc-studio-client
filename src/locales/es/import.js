@@ -9,6 +9,8 @@ export default {
   noLines: "No se encontraron letras en el archivo",
   tooLarge: "Archivo demasiado grande (máx 5 MB)",
   unsupportedFormat: "Tipo de archivo no soportado. Usa archivos .lrc, .srt o .txt.",
+  pasteLabel: "Pega la letra, una línea por verso",
+  fromFile: "Importar .lrc / .srt / .txt",
   fromUrl: "Importar desde URL",
   urlPlaceholder: "https://ejemplo.com/letras.lrc",
   fetchError: "Error al obtener el archivo. El servidor puede no permitir solicitudes externas.",

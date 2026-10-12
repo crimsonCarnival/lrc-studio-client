@@ -42,6 +42,14 @@ interface EditorLineItemProps {
   i: number;
   displayedActiveIndex?: number | null;
   isActive: boolean;
+  /** The line marking acts on (activeLineIndex), as opposed to the hovered/playing one. */
+  isCursor?: boolean;
+  /** Label of the section this line belongs to, shown in the row's meta line. */
+  sectionLabel?: string;
+  /** Words mode showing only this line: no row surface, handle, number or progress. */
+  wordsFocus?: boolean;
+  /** Word being sung on this line while it plays; null when paused or not this line. */
+  playingWordIndex?: number | null;
   isLocked: boolean;
   isSynced: boolean;
   editorMode: string;
@@ -117,6 +125,10 @@ const EditorLineItem = React.memo(({
   i,
   displayedActiveIndex,
   isActive,
+  isCursor = false,
+  sectionLabel,
+  wordsFocus = false,
+  playingWordIndex = null,
   isLocked,
   isSynced,
   editorMode,
@@ -345,6 +357,16 @@ const EditorLineItem = React.memo(({
       : 'warning'
     : null;
 
+  // Meta line under the text: which section the line is in and how far its
+  // per-word timing has got. Words mode already shows every word, so it is skipped there.
+  const timedWords = line.words?.filter((w) => w.time != null).length ?? 0;
+  const wordStatus = !line.words?.length || timedWords === 0
+    ? null
+    : timedWords === line.words.length
+      ? t('editor.wordsTimedAll')
+      : t('editor.wordsTimedPartial', { timed: timedWords, total: line.words.length });
+  const showMeta = editorMode !== 'words' && (!!sectionLabel || !!wordStatus);
+
   const lyricNumber = sectionLines
     ? sectionLines.slice(0, i).filter((l) => l.type !== 'section').length + 1
     : i + 1;
@@ -549,33 +571,39 @@ const EditorLineItem = React.memo(({
         onDragEnd={handleDragEnd}
         onDrop={(e) => handleDrop(e, i)}
         style={{ animationDelay: staggerDelay }}
-        className={`outline-none flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-3 sm:gap-4 px-4 py-3 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl transition-all duration-300 ease-out cursor-pointer group relative overflow-visible animate-preview-line-in ${selectedLines.has(i)
-          ? `bg-primary/15 border border-${isModified ? 'warning' : 'primary'}/40 ring-1 ring-${isModified ? 'warning' : 'primary'}/20`
-          : isActive
-            ? isLocked
-              ? `bg-primary/15 border border-${isModified ? 'warning' : 'primary'}/30 shadow-glow`
-              : `bg-primary/5 border border-${isModified ? 'warning' : 'primary'}/20 border-dashed`
-            : dragOverIndex === i
-              ? 'bg-accent-blue/10 border border-accent-blue/30'
-              : (upcomingDepth ?? 0) > 0
-                ? `bg-primary/${upcomingDepth === 1 ? '5' : upcomingDepth === 2 ? '3' : '2'} border border-primary/${upcomingDepth === 1 ? '15' : '10'} border-dashed`
-                : `bg-zinc-900/50 hover:bg-zinc-800/60 border border-zinc-800/50 hover:border-${isModified ? 'warning/30' : 'zinc-700/50'} shadow-sm`
-          } ${dragIndex === i ? 'opacity-40' : ''} ${justSynced ? 'ring-2 ring-primary/60 animate-just-synced' : ''}`}
+        className={`outline-none flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-3 sm:gap-3.5 px-3.5 ${isCursor ? 'py-3.5' : 'py-2.5'} rounded-xl border transition-[background-color,border-color,box-shadow] duration-200 ease-out cursor-pointer group relative overflow-visible animate-preview-line-in ${selectedLines.has(i)
+          ? `bg-primary/15 ${isModified ? 'border-warning/40 ring-1 ring-warning/20' : 'border-primary/40 ring-1 ring-primary/20'}`
+          : isCursor
+            // The line marking acts on: a raised surface with an accent ring. Locked
+            // (playback will not move it) reads stronger than merely selected.
+            ? `bg-zinc-800 ${isModified ? 'border-warning/50' : isLocked ? 'border-primary/60 shadow-glow' : 'border-primary/40'}`
+            : isActive
+              ? `bg-zinc-800/50 border-dashed ${isModified ? 'border-warning/30' : 'border-primary/25'}`
+              : dragOverIndex === i
+                ? 'bg-accent-blue/10 border-accent-blue/30'
+                : (upcomingDepth ?? 0) > 0
+                  ? `border-dashed ${upcomingDepth === 1 ? 'bg-primary/5 border-primary/15' : 'bg-primary/[0.03] border-primary/10'}`
+                  : `bg-transparent hover:bg-zinc-800/40 ${isModified ? 'border-transparent hover:border-warning/30' : 'border-transparent'}`
+          } ${dragIndex === i ? 'opacity-40' : ''} ${justSynced ? 'ring-2 ring-primary/60 animate-just-synced' : ''} ${wordsFocus ? '!bg-transparent !border-transparent !shadow-none !px-0' : ''}`}
       >
 
         {/* Lock/unlock indicator */}
-        {isActive && (
-          <div className={`absolute left-1 top-2 bottom-2 w-1 z-0 rounded-full animate-bar-grow ${isLocked
-            ? `${isModified ? 'bg-warning shadow-[0_0_12px_rgba(245,158,11,0.6)]' : 'bg-primary shadow-[0_0_12px_rgba(29,185,84,0.6)]'} opacity-90`
-            : `${isModified ? 'bg-warning/60' : 'bg-primary/40'} opacity-60`
-            }`} />
+        {isActive && !wordsFocus && (
+          // Clipped by the row's own radius so the bar can run into the corner
+          // and join the progress bar along the bottom edge.
+          <div className="absolute inset-0 z-0 rounded-[11px] overflow-hidden pointer-events-none">
+            <div className={`absolute left-0 top-2 w-1 animate-bar-grow ${segmentProgress != null ? 'bottom-0 rounded-t-full' : 'bottom-2 rounded-full'} ${isLocked
+              ? `${isModified ? 'bg-warning' : 'bg-primary'} opacity-90`
+              : `${isModified ? 'bg-warning/60' : 'bg-primary/40'} opacity-60`
+              }`} />
+          </div>
         )}
         {/* Auto Stamp confidence indicator (only when the line isn't already showing the active/lock bar) */}
         {!isActive && confidenceTint && (
           <div className={`absolute left-1 top-2 bottom-2 w-1 z-0 rounded-full opacity-70 ${confidenceTint === 'success' ? 'bg-success' : 'bg-warning'}`} />
         )}
         {/* Drag Handle & Line number */}
-        <div className="flex items-center gap-1 shrink-0 z-10">
+        <div className={`flex items-center gap-1 shrink-0 z-10 ${wordsFocus ? 'hidden' : ''}`}>
           <Tip content={t('editor.dragToReorder')}>
             <div
               className="cursor-grab active:cursor-grabbing text-zinc-600 hover:text-zinc-400 transition-colors p-0.5 -ml-1 select-none"
@@ -595,7 +623,7 @@ const EditorLineItem = React.memo(({
                   className="size-3.5 border-zinc-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
               ) : (
-                <span className="text-[10px] font-mono tabular-nums text-zinc-500 select-none text-right">
+                <span className="text-xs font-mono tabular-nums text-foreground/45 select-none text-right">
                   {lyricNumber}
                 </span>
               )}
@@ -610,7 +638,7 @@ const EditorLineItem = React.memo(({
               ? 'text-zinc-400 animate-pulse-glow'
               : 'text-zinc-600'
             }`}
-          style={{ width: editorMode === 'words' ? '240px' : '92px', flexShrink: 0 }}
+          style={{ width: editorMode === 'words' ? undefined : '92px', minWidth: '92px', flexShrink: 0 }}
         >
           {editorMode === 'words' ? (
             <WordsModeTimestamp
@@ -668,14 +696,14 @@ const EditorLineItem = React.memo(({
           )}
           {isModified && (
             <div
-              className={`absolute -right-2 size-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.5)] animate-in fade-in zoom-in duration-300 z-10 top-1/2 -translate-y-1/2`}
+              className="absolute -right-2 size-1.5 rounded-full bg-warning animate-in fade-in zoom-in duration-300 z-10 top-1/2 -translate-y-1/2"
             />
           )}
         </span>
 
         {/* Lyrics text container */}
         <div
-          className={`flex-1 min-w-0 flex ${editorMode === 'words' ? 'flex-col' : 'items-start'} gap-2 overflow-x-hidden pb-0.5 mt-0.5 select-text`}
+          className={`flex-1 min-w-0 flex flex-col ${editorMode === 'words' ? 'gap-2' : 'gap-1'} overflow-x-hidden pb-0.5 mt-0.5 select-text`}
           data-no-drag
           onDoubleClick={() => {
             setEditingLineIndex(i);
@@ -686,6 +714,7 @@ const EditorLineItem = React.memo(({
             setEditingSingers([...singers, '', '', '', ''].slice(0, 4));
           }}>
           {editorMode !== 'words' && (
+            <div className="flex items-start gap-2 min-w-0">
             <LineTextContent
               line={line as ComponentProps<typeof LineTextContent>['line']}
               lineIndex={i}
@@ -708,6 +737,38 @@ const EditorLineItem = React.memo(({
               singerColors={singerColors}
               activeSingers={activeSingers}
             />
+            </div>
+          )}
+          {showMeta && (
+            <span className="flex items-center gap-1.5 text-xs text-foreground/65 select-none min-w-0">
+              {sectionLabel && (
+                <span className="truncate text-[color-mix(in_srgb,var(--color-success)_50%,var(--foreground))] dark:text-success">
+                  {formatSectionLabel(sectionLabel, t)}
+                </span>
+              )}
+              {sectionLabel && wordStatus && <span aria-hidden>·</span>}
+              {wordStatus && <span className="shrink-0">{wordStatus}</span>}
+            </span>
+          )}
+
+          {/* Words mode: how many of this line's words are timed */}
+          {editorMode === 'words' && !wordsFocus && !!line.words?.length && (
+            <span className="flex items-center gap-2 max-w-[280px] select-none">
+              <span
+                role="progressbar"
+                aria-label={t('editor.wordProgressLabel')}
+                aria-valuemin={0}
+                aria-valuemax={line.words.length}
+                aria-valuenow={timedWords}
+                className="flex-1 h-1 rounded-full bg-zinc-800 overflow-hidden"
+              >
+                <span
+                  className={`block h-full rounded-full transition-[width] duration-300 ease-out ${timedWords === line.words.length ? 'bg-success' : 'bg-primary'}`}
+                  style={{ width: `${(timedWords / line.words.length) * 100}%` }}
+                />
+              </span>
+              <span className="font-mono text-[11px] tabular-nums text-foreground/65">{timedWords}/{line.words.length}</span>
+            </span>
           )}
 
           {editorMode === 'words' && (
@@ -734,6 +795,7 @@ const EditorLineItem = React.memo(({
               songSingers={projectSingers}
               singerColors={singerColors}
               activeSingers={activeSingers}
+              playingWordIndex={playingWordIndex}
             />
           )}
 
@@ -827,9 +889,9 @@ const EditorLineItem = React.memo(({
         />
 
         {segmentProgress != null && (
-          <div className="absolute inset-x-0 bottom-0 h-1 rounded-b-xl sm:rounded-b-2xl overflow-hidden bg-zinc-800/60 z-10 pointer-events-none animate-in fade-in duration-300">
+          <div className="absolute inset-x-0 bottom-0 h-1 rounded-b-[11px] overflow-hidden bg-zinc-800/60 z-10 pointer-events-none animate-in fade-in duration-300">
             <div
-              className="h-full bg-primary rounded-r-full shadow-[0_0_8px_var(--color-primary)]"
+              className="h-full bg-primary rounded-r-full"
               style={{ width: `${segmentProgress * 100}%` }}
             />
           </div>

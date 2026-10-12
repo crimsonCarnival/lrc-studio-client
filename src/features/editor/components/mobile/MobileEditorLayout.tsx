@@ -36,6 +36,8 @@ interface MobileEditorLayoutProps {
   isPlaying?: boolean;
   syncMode?: boolean;
   editorMode?: string;
+  undo?: () => void;
+  canUndo?: boolean;
 }
 
 export default function MobileEditorLayout({
@@ -49,6 +51,8 @@ export default function MobileEditorLayout({
   isPlaying,
   syncMode,
   editorMode,
+  undo,
+  canUndo,
 }: MobileEditorLayoutProps) {
   const { t } = useTranslation();
   const [activeMode, setActiveMode] = useState('sync');
@@ -182,6 +186,8 @@ export default function MobileEditorLayout({
                 // mark button and the player use. It was never wired, so the
                 // "tap to timestamp" area had never marked anything.
                 onMark={() => window.dispatchEvent(new Event('editor:mark'))}
+                onUndo={undo}
+                canUndo={canUndo}
                 handleDeleteLine={handleDeleteLine}
                 handleClearLine={handleClearLine}
                 handleAddLine={handleAddLine}
@@ -211,6 +217,7 @@ export default function MobileEditorLayout({
                 lines={lines ?? []}
                 activeLineIndex={activeLineIndex ?? 0}
                 isPlaying={isPlaying}
+                onSelectLine={(index) => { setActiveLineIndex?.(index); setActiveMode('sync'); }}
               />
             </div>
           )}

@@ -1,9 +1,17 @@
-import { useMemo, useEffect, useState, useCallback } from 'react';
+import { useMemo, useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import type { ComponentProps } from 'react';
 import { useEditor } from '@features/editor/hooks/useEditor';
 import { useEditorActionDrawer } from '@features/editor/hooks/useEditorActionDrawer';
 import { useAutoStamp, type AutoStampPhase } from '@features/editor/hooks/useAutoStamp';
 import EditorToolbar from './EditorToolbar';
+import EditorSidePanel from './EditorSidePanel';
+import { WordsLineNav, WordTimeline } from '../modes/WordsFocus';
+import { usePlayer } from '@/features/player/PlayerContext';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
+import { formatTimestamp } from '@/shared/utils/lrc';
+import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { useHeaderSlot } from '@/shared/hooks/useHeaderSlot';
 import EditorPasteArea from '../setup/EditorPasteArea';
 import VirtualizedLineList from './VirtualizedLineList';
 import EditorActionDrawer from './EditorActionDrawer';
@@ -34,6 +42,18 @@ import { useNavigate } from 'react-router-dom';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EMPTY_ARTISTS: string[] = [];
+const WORDS_LOOP_KEY = 'lrc_words_loop_line';
+
+// Teal is `success`; in the light theme that token is too pale to read as text,
+// so it is mixed toward the foreground there.
+const TEAL_TEXT = 'text-[color-mix(in_srgb,var(--color-success)_50%,var(--foreground))] dark:text-success';
+const HEADER_ICON_BTN = 'size-10 lg:size-10 coarse:size-11 rounded-[10px] border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground disabled:opacity-30';
+const MODE_TAB = 'h-9 coarse:h-11 px-3.5 rounded-lg text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50';
+const MODE_TAB_ON = 'bg-zinc-700 text-foreground font-semibold shadow-sm';
+const MODE_TAB_OFF = 'text-foreground/65 font-medium hover:text-foreground';
+const FILTER_BTN = 'h-9 coarse:h-11 px-3 rounded-lg border text-[13px] whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50';
+const FILTER_ON = 'border-zinc-700 bg-zinc-800 text-foreground font-semibold';
+const FILTER_OFF = 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground';
 
 const ActionsDropdown = ({ children, icon = 'more_horiz', label }: { children: React.ReactNode; icon?: string; label?: string }) => {
   const { t } = useTranslation();
@@ -41,7 +61,7 @@ const ActionsDropdown = ({ children, icon = 'more_horiz', label }: { children: R
     <Popover>
       <Tip content={label || t('editor.lineOptions')}>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-9 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 rounded-full transition-colors">
+          <Button variant="outline" size="icon" aria-label={label || t('editor.lineOptions')} className="size-10 lg:size-10 coarse:size-11 rounded-[10px] border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground">
             <Icon name={icon} size={18} />
           </Button>
         </PopoverTrigger>
@@ -94,8 +114,8 @@ interface EditorProps {
   /** Song-level singer roster from project metadata (project setup), offered as picker choices. */
   declaredSingers?: string[];
   playerSlot?: PlayerSlot;
-  onHideEditor?: () => void;
-  previewHidden?: boolean;
+  duration?: number;
+  /** Switches the workspace to the preview ("Revisar"). */
   onShowPreview?: () => void;
   // Auto Stamp (#9): the persisted Cloudinary upload (if any) and a media-availability
   // flag used as the render-time button-enable signal. The raw local File itself is
@@ -128,18 +148,17 @@ export default function Editor({
   handleManualSave,
   buildProjectPayload,
   handleRemoveAllLyrics,
-  isAutosaving,
   isSaving,
   compact,
   onNewProject,
   onShowKeyboardHelp,
+  onOpenProjectSettings,
   registerAfterSave,
   songArtists = EMPTY_ARTISTS,
   singerColors,
   declaredSingers = EMPTY_ARTISTS,
   playerSlot,
-  onHideEditor,
-  previewHidden,
+  duration,
   onShowPreview,
   uploadedAudio,
   hasMedia,
@@ -401,7 +420,7 @@ export default function Editor({
   const playerDock = playerSlot === 'editor' ? (
     <DragPointerIsolate
       data-tour="player-controls"
-      className={`relative flex-shrink-0 border-zinc-800/50 -mx-3 sm:-mx-5 px-3 sm:px-5 ${playerPosition === 'top' ? 'mb-3 border-b pb-3' : 'mt-3 border-t pt-3'
+      className={`relative flex-shrink-0 border-zinc-800 px-4 sm:px-6 ${playerPosition === 'top' ? 'border-b pt-1 pb-3' : 'border-t pt-3.5 pb-3'
         }`}
     >
       <PlayerControls variant="editor" youtubeAudioUrl={autoStamp.youtubeAudioUrl} />
@@ -417,7 +436,7 @@ export default function Editor({
         });
 
         return (
-          <p className="text-xs text-zinc-600 text-center mt-2 animate-fade-in pb-1">
+          <p className="text-xs text-foreground/45 text-center mt-2 animate-fade-in pb-1">
             {selectedLines.size > 0
               ? selectionHintText
               : editorMode === 'srt'
@@ -447,184 +466,321 @@ export default function Editor({
     return { synced, total: lyricLines.length, wordCount, charCount, charCountNoSpaces, totalWordsInLine, currentWordNum };
   }, [lines, activeLineIndex, activeWordIndex, stampTarget]);
 
+  const statusSlot = useHeaderSlot('status');
+  const centerSlot = useHeaderSlot('center');
+  const actionsSlot = useHeaderSlot('actions');
+
+  const saveState = isSaving ? 'saving' : modifiedLines.size > 0 ? 'unsaved' : 'saved';
+
+  const handleSaveClick = async () => {
+    if (!user) {
+      const payload = buildProjectPayload ? buildProjectPayload() : {};
+      const idbPayload = {
+        title: payload.title,
+        lyrics: { editorMode: payload.editorMode, sections: payload.sections || flatToSections(payload.lines || []) },
+        state: {
+          syncMode: payload.syncMode,
+          activeLineIndex: payload.activeLineIndex,
+          playbackPosition: payload.playbackPosition,
+          playbackSpeed: payload.playbackSpeed,
+          saveTime: payload.saveTime,
+          timezone: payload.timezone,
+          utcOffset: payload.utcOffset,
+        },
+        metadata: payload.metadata,
+        ...(payload.ytUrl ? { ytUrl: payload.ytUrl } : {}),
+        ...(payload.uploadedAudio ? {
+          uploadUrl: payload.uploadedAudio.uploadUrl,
+          uploadPublicId: payload.uploadedAudio.publicId || null,
+          fileName: payload.uploadedAudio.fileName || '',
+          duration: payload.uploadedAudio.duration || null,
+        } : {}),
+      };
+      try {
+        await savePendingProject(idbPayload);
+        navigate(`/auth?action=signin&redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
+      } catch {
+        import('react-hot-toast').then(({ default: toast }) => {
+          toast.error(t('editor.draftSaveFailed'));
+        });
+      }
+    } else {
+      handleManualSave?.();
+    }
+  };
+
+  // ── Mode tabs: Lines / Words / Review ──
+  const isWordsMode = editorMode === 'words';
+  // Words mode needs at least one line timestamp to anchor against.
+  const wordsLocked = useMemo(() => !lines.some((l) => l.timestamp != null), [lines]);
+  const selectMode = (mode: string) => {
+    setEditorMode(mode);
+    const exportFormat = mode === 'words' ? 'lrc' : mode;
+    updateSetting('export.copyFormat', exportFormat);
+    updateSetting('export.downloadFormat', exportFormat);
+  };
+  // "Lines" covers both line modes; coming back from Words returns to whichever was in use.
+  const lineModeRef = useRef(editorMode === 'srt' ? 'srt' : 'lrc');
+  useLayoutEffect(() => {
+    if (editorMode !== 'words') lineModeRef.current = editorMode;
+  }, [editorMode]);
+
+  const modeTabs = (
+    <div role="tablist" aria-label={t('editor.modeGroup')} className="flex gap-1 rounded-xl border border-zinc-800 bg-zinc-900 p-1">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={!isWordsMode}
+        onClick={() => { if (isWordsMode) selectMode(lineModeRef.current); }}
+        className={`${MODE_TAB} ${!isWordsMode ? MODE_TAB_ON : MODE_TAB_OFF}`}
+      >
+        {t('editor.tabLines')}
+      </button>
+      <Tip content={wordsLocked ? t('editor.modeWordsLocked') : t('editor.modeTooltipWords')}>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={isWordsMode}
+          // aria-disabled, not disabled: a disabled button emits no pointer events,
+          // so the tooltip explaining why it is locked would never open.
+          aria-disabled={wordsLocked}
+          onClick={() => { if (!wordsLocked && !isWordsMode) selectMode('words'); }}
+          className={`${MODE_TAB} ${isWordsMode ? MODE_TAB_ON : MODE_TAB_OFF} ${wordsLocked ? 'opacity-40 cursor-not-allowed' : ''}`}
+        >
+          {t('editor.modeWords')}
+        </button>
+      </Tip>
+      {onShowPreview && (
+        <button type="button" role="tab" aria-selected={false} onClick={onShowPreview} className={`${MODE_TAB} ${MODE_TAB_OFF}`}>
+          {t('editor.tabReview')}
+        </button>
+      )}
+    </div>
+  );
+
+  // ── "Unmarked" filter ──
+  // View-only, like section collapsing: `lines` and every index-based action are
+  // untouched; only which rows the list renders changes. The cursor line always
+  // stays visible so marking it does not make the list jump.
+  const [lineFilter, setLineFilter] = useState<'all' | 'unmarked'>('all');
+  const unmarkedCount = syncProgress ? syncProgress.total - syncProgress.synced : 0;
+  // Words mode on a wide screen works on one line at a time: the list shows just
+  // the cursor line and the sidebar is how you move between lines. Below lg the
+  // sidebar is not shown, so the full list stays.
+  const isLg = useBreakpoint('lg');
+  const wordsFocus = isWordsMode && isLg;
+  const listView = useMemo(() => {
+    if (lineFilter === 'all' && !wordsFocus) return collapsedView;
+    const rows = wordsFocus
+      ? (activeLineIndex >= 0 && activeLineIndex < lines.length ? [activeLineIndex] : [])
+      : collapsedView.rows.filter((i) => lines[i].type === 'section' || lines[i].timestamp == null || i === activeLineIndex);
+    const rowOfLine = new Int32Array(lines.length).fill(-1);
+    rows.forEach((lineIndex, row) => { rowOfLine[lineIndex] = row; });
+    return { ...collapsedView, rows, rowOfLine };
+  }, [lineFilter, wordsFocus, collapsedView, lines, activeLineIndex]);
+
+  // ── Inspector ──
+  const handleInspectorSection = useCallback((lineIndex: number, sectionIndex: number) => {
+    handleMoveToSection([lineIndex], sectionIndex);
+    // The line lands right after the section marker; keep the cursor on it.
+    setActiveLineIndex(sectionIndex < lineIndex ? sectionIndex + 1 : sectionIndex);
+  }, [handleMoveToSection, setActiveLineIndex]);
+  const handleInspectorSinger = useCallback((name: string, lineIndex: number) => {
+    handleAssignSinger(name, [lineIndex]);
+  }, [handleAssignSinger]);
+
+  // ── Words focus ──
+  const { seek, togglePlay, isPlaying: playerIsPlaying, applySpeed, playbackSpeed, setLoopActiveLine } = usePlayer();
+  // Words focus keeps playback inside the line being worked on. On by default;
+  // the choice is a per-browser convenience, so it lives in localStorage.
+  const [loopFocusLine, setLoopFocusLine] = useState(() => {
+    try { return localStorage.getItem(WORDS_LOOP_KEY) !== '0'; } catch { return true; }
+  });
+  const toggleLoopFocusLine = () => {
+    setLoopFocusLine((on) => {
+      try { localStorage.setItem(WORDS_LOOP_KEY, on ? '0' : '1'); } catch { /* still applies for this session */ }
+      return !on;
+    });
+  };
+  useEffect(() => {
+    setLoopActiveLine(wordsFocus && loopFocusLine);
+    return () => setLoopActiveLine(false);
+  }, [wordsFocus, loopFocusLine, setLoopActiveLine]);
+  const focusLine: EditorLine | undefined = lines[activeLineIndex];
+  const focusInfo = useMemo(() => {
+    let lyricNumber = 0;
+    let sectionLabel = '';
+    let end: number | null = null;
+    lines.forEach((l, i) => {
+      if (l.type === 'section') {
+        if (i < activeLineIndex) sectionLabel = l.label ?? '';
+      } else if (i <= activeLineIndex) {
+        lyricNumber++;
+      } else if (end == null && l.timestamp != null) {
+        end = l.timestamp;
+      }
+    });
+    const line = lines[activeLineIndex];
+    return { lyricNumber, sectionLabel, end: line?.endTime ?? end ?? duration ?? null };
+  }, [lines, activeLineIndex, duration]);
+  const focusStart = focusLine?.timestamp ?? null;
+  const focusLength = focusStart != null && focusInfo.end != null && focusInfo.end > focusStart ? focusInfo.end - focusStart : null;
+
+  // While the focused line plays, the highlight follows the word being sung
+  // (chips and timeline alike) instead of sitting on the stamping cursor.
+  const playingWordIndex = useMemo(() => {
+    if (!wordsFocus || !playerIsPlaying || !focusLine?.words) return null;
+    let index = -1;
+    focusLine.words.forEach((w, i) => { if (w.time != null && w.time <= playbackPosition) index = i; });
+    return index;
+  }, [wordsFocus, playerIsPlaying, focusLine, playbackPosition]);
+
+  const handleSetWordTime = useCallback((wordIndex: number, time: number) => {
+    setLines((prev) => {
+      const line = prev[activeLineIndex];
+      if (!line?.words?.[wordIndex]) return prev;
+      const next = [...prev];
+      next[activeLineIndex] = { ...line, words: line.words.map((w, i) => (i === wordIndex ? { ...w, time } : w)) };
+      return next;
+    });
+  }, [setLines, activeLineIndex]);
+
+  // Spreads the line's words evenly between its start and where it ends.
+  const distributeWords = () => {
+    if (focusStart == null || focusLength == null) return;
+    setLines((prev) => {
+      const line = prev[activeLineIndex];
+      if (!line?.words?.length) return prev;
+      const step = focusLength / line.words.length;
+      const next = [...prev];
+      next[activeLineIndex] = { ...line, words: line.words.map((w, i) => ({ ...w, time: Number((focusStart + i * step).toFixed(3)) })) };
+      return next;
+    });
+  };
+  const handleDistributeWords = () => {
+    // Replacing times someone stamped by hand is confirmed first.
+    if (focusLine?.words?.some((w) => w.time != null)) {
+      requestConfirm(t('editor.words.distributeConfirm'), distributeWords, { title: t('editor.words.distribute') });
+    } else {
+      distributeWords();
+    }
+  };
+  // Words focus has no transport footer, so this one button both starts the line
+  // and pauses playback.
+  const handlePlayLine = () => {
+    if (playerIsPlaying) {
+      togglePlay();
+      return;
+    }
+    if (focusStart == null) return;
+    seek(focusStart);
+    togglePlay();
+  };
+
   return (
     <div
       onMouseLeave={handleLineHoverEnd}
-      className={`p-4 sm:p-6 flex ${compact ? 'flex-row gap-2' : 'flex-col'} flex-1 animate-fade-in min-h-0 relative`}
+      className={`flex ${compact ? 'flex-row gap-2' : 'flex-col'} flex-1 animate-fade-in min-h-0 relative`}
     >
-      <div className="flex items-center justify-between gap-3 w-full mb-4 z-raised">
-        <div className="flex items-center gap-2 overflow-hidden flex-1">
-          <h2 className="text-sm font-semibold tracking-widest text-zinc-400 flex items-center gap-2 mr-2">
-            <span className="uppercase shrink-0 text-sm flex items-center gap-1.5">
-              <Icon name="description" size={16} />
-              {t('editor.title')}
-            </span>
-          </h2>
+      {/* The workspace header (see AppHeader) hosts this screen's status, tabs and actions */}
+      {statusSlot && createPortal(
+        <span
+          role="status"
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs whitespace-nowrap ${saveState === 'saved' ? `bg-success/10 ${TEAL_TEXT}` : 'bg-zinc-800 text-foreground/65'}`}
+        >
+          {saveState === 'saving'
+            ? <LogoLoader size={12} />
+            : <span aria-hidden className={`size-1.5 rounded-full ${saveState === 'saved' ? 'bg-success' : 'bg-warning'}`} />}
+          {saveState === 'saving' ? t('project.saving') : saveState === 'saved' ? t('project.saved') : t('editor.statusUnsaved')}
+        </span>,
+        statusSlot,
+      )}
+      {centerSlot && createPortal(modeTabs, centerSlot)}
+      {actionsSlot && createPortal(
+        <>
           {syncMode && lines.length > 0 && (
-            <div data-tour="editor-undo-redo" className="flex items-center gap-1 shrink-0">
-              <Tip content={t('editor.backToEdit')}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setRawText(linesToRawText(lines, rawLineText, combinedSingers));
-                    setSyncMode(false);
-                  }}
-                  className="text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 flex-shrink-0 size-8 rounded-full"
-                >
-                  <Icon name="edit" size={16} />
-                </Button>
-              </Tip>
-              {handleManualSave && (
-                <Tip content={isSaving ? (t('project.saving')) : isAutosaving ? (t('project.saved')) : (t('project.save'))}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={async () => {
-                      if (!user) {
-                        const payload = buildProjectPayload ? buildProjectPayload() : {};
-                        const idbPayload = {
-                          title: payload.title,
-                          lyrics: { editorMode: payload.editorMode, sections: payload.sections || flatToSections(payload.lines || []) },
-                          state: {
-                            syncMode: payload.syncMode,
-                            activeLineIndex: payload.activeLineIndex,
-                            playbackPosition: payload.playbackPosition,
-                            playbackSpeed: payload.playbackSpeed,
-                            saveTime: payload.saveTime,
-                            timezone: payload.timezone,
-                            utcOffset: payload.utcOffset,
-                          },
-                          metadata: payload.metadata,
-                          ...(payload.ytUrl ? { ytUrl: payload.ytUrl } : {}),
-                          ...(payload.uploadedAudio ? {
-                            uploadUrl: payload.uploadedAudio.uploadUrl,
-                            uploadPublicId: payload.uploadedAudio.publicId || null,
-                            fileName: payload.uploadedAudio.fileName || '',
-                            duration: payload.uploadedAudio.duration || null,
-                          } : {}),
-                        };
-                        try {
-                          await savePendingProject(idbPayload);
-                          navigate(`/auth?action=signin&redirect=${encodeURIComponent('/project/local?fromGuest=1')}`);
-                        } catch {
-                          import('react-hot-toast').then(({ default: toast }) => {
-                            toast.error(t('editor.draftSaveFailed'));
-                          });
-                        }
-                      } else {
-                        handleManualSave();
-                      }
-                    }}
-                    disabled={isSaving}
-                    className={`size-8 rounded-full transition-colors ${isSaving ? 'text-zinc-400' : isAutosaving ? 'text-primary' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'}`}
-                  >
-                    {isSaving ? <LogoLoader size={16} /> : isAutosaving ? <Icon name="check" size={16} /> : <Icon name="save" size={16} />}
-                  </Button>
-                </Tip>
-              )}
-              <div className="w-px h-4 bg-zinc-700/50 mx-1 shrink-0" />
+            <div data-tour="editor-undo-redo" className="flex items-center gap-2">
               <Tip content={t('editor.undoTitle')}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={undo}
-                  disabled={!canUndo}
-                  className="size-8 rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 disabled:opacity-30 transition-colors"
-                >
-                  <Icon name="undo" size={16} />
+                <Button variant="outline" size="icon" onClick={undo} disabled={!canUndo} aria-label={t('editor.undo')} className={HEADER_ICON_BTN}>
+                  <Icon name="undo" size={18} />
                 </Button>
               </Tip>
               <Tip content={t('editor.redoTitle')}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={redo}
-                  disabled={!canRedo}
-                  className="size-8 rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 disabled:opacity-30 transition-colors"
-                >
-                  <Icon name="redo" size={16} />
+                <Button variant="outline" size="icon" onClick={redo} disabled={!canRedo} aria-label={t('editor.redo')} className={HEADER_ICON_BTN}>
+                  <Icon name="redo" size={18} />
                 </Button>
               </Tip>
             </div>
           )}
-        </div>
-
-        <div className="hidden xl:block">
-          <SelectionActionBar
-            selectedLines={selectedLines}
-            lines={lines}
-            settings={settings}
-            handleBulkClearTimestamps={handleBulkClearTimestamps as ComponentProps<typeof SelectionActionBar>['handleBulkClearTimestamps']}
-            handleBulkShift={handleBulkShift as ComponentProps<typeof SelectionActionBar>['handleBulkShift']}
-            handleBulkDelete={handleBulkDelete as ComponentProps<typeof SelectionActionBar>['handleBulkDelete']}
-            handleBulkSingTogether={handleBulkSingTogether}
-            handleBulkSplitSingers={handleBulkSplitSingers}
-            clearSelection={clearSelection as ComponentProps<typeof SelectionActionBar>['clearSelection']}
-            handleApplyOffset={handleApplyOffset as ComponentProps<typeof SelectionActionBar>['handleApplyOffset']}
-            handleMoveToSection={handleMoveToSection as ComponentProps<typeof SelectionActionBar>['handleMoveToSection']}
-            songArtists={combinedSingers}
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          {!selectedLines.size && syncProgress && (
-            <Tip content={t('editor.wordCharCount', { words: syncProgress.wordCount, chars: syncProgress.charCount, charsNoSp: syncProgress.charCountNoSpaces })}>
-              <div className={`text-[10px] font-mono tabular-nums px-3 py-1 rounded-full border bg-zinc-900/50 flex items-center gap-1.5 cursor-default ${syncProgress.synced === syncProgress.total ? 'text-primary border-primary/20' : 'text-zinc-500 border-zinc-800/60'
-                }`}>
-                <div className={`size-1.5 rounded-full flex-shrink-0 ${syncProgress.synced === syncProgress.total ? 'bg-primary shadow-glow' : 'bg-zinc-700'
-                  }`} />
-                {editorMode === 'words' && syncProgress.totalWordsInLine > 0 ? (
-                  <span>{syncProgress.currentWordNum}/{syncProgress.totalWordsInLine}</span>
-                ) : (
-                  <span>{syncProgress.synced}/{syncProgress.total}</span>
-                )}
-                <span className="text-zinc-600 hidden sm:inline">·</span>
-                <span className="text-zinc-600 hidden sm:inline">{t('editor.wordCount', { count: syncProgress.wordCount })}</span>
-              </div>
-            </Tip>
-          )}
-
-          <div className="flex items-center gap-1 shrink-0 ml-2">
-            {onHideEditor && onShowPreview && (
-              <Tip content={previewHidden ? (t('editor.showPreview')) : (t('editor.hideEditor'))}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={previewHidden ? onShowPreview : onHideEditor}
-                  className="size-9 rounded-full text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors"
-                >
-                  <Icon name={previewHidden ? 'visibility' : 'visibility_off'} size={18} />
-                </Button>
-              </Tip>
-            )}
-
-            {activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && (
-              <Tip content={t('editor.viewAsPublic')}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onTogglePublicView}
-                  className="size-9 rounded-full text-zinc-400 hover:text-primary hover:bg-primary/10 transition-colors"
-                >
-                  <Icon name="public" size={18} />
-                </Button>
-              </Tip>
-            )}
-
-            <Tip content={t('lyricsSearch.findLyrics')}>
+          {/* Save stays in the bar: it is the one action nobody should have to look for. */}
+          {handleManualSave && (
+            <Tip content={isSaving ? t('project.saving') : t('project.save')}>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                onClick={() => setLyricsSearchOpen(true)}
-                className="size-9 rounded-full text-zinc-400 hover:text-primary hover:bg-primary/10 transition-colors"
+                onClick={handleSaveClick}
+                disabled={isSaving}
+                aria-label={t('project.save')}
+                className={HEADER_ICON_BTN}
               >
-                <Icon name="search" size={18} />
+                {isSaving ? <LogoLoader size={16} /> : <Icon name="save" size={18} />}
               </Button>
             </Tip>
+          )}
+          {onShowPreview && (
+            <Button
+              variant="outline"
+              onClick={onShowPreview}
+              aria-label={t('editor.previewAction')}
+              className="h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-[10px] border-zinc-800 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground"
+            >
+              <Icon name="visibility" size={16} />
+              <span className="max-xl:hidden">{t('editor.previewAction')}</span>
+            </Button>
+          )}
+          <Button
+            onClick={() => window.dispatchEvent(new CustomEvent('preview:open-export'))}
+            disabled={lines.length === 0}
+            className="h-10 lg:h-10 coarse:h-11 px-4 lg:px-4 gap-2 rounded-[10px] bg-primary hover:bg-primary-dim text-zinc-950 text-[13px] lg:text-[13px] font-bold"
+          >
+            <Icon name="download" size={16} />
+            <span className="max-sm:hidden">{t('editor.exportAs', { format: editorMode === 'srt' ? 'SRT' : 'LRC' })}</span>
+          </Button>
+          <ActionsDropdown icon="more_horiz">
+            <div className="p-1 space-y-0.5">
+              {syncMode && lines.length > 0 && (
+                <PopoverItem
+                  onClick={() => {
+                    setRawText(linesToRawText(lines, rawLineText, combinedSingers));
+                    setSyncMode(false);
+                  }}
+                >
+                  <Icon name="edit" size={16} />
+                  {t('editor.backToEdit')}
+                </PopoverItem>
+              )}
+              {onOpenProjectSettings && (
+                <PopoverItem onClick={onOpenProjectSettings}>
+                  <Icon name="tune" size={16} />
+                  {t('editor.projectSettings')}
+                </PopoverItem>
+              )}
+              {onTogglePublicView && activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && (
+                <PopoverItem onClick={onTogglePublicView}>
+                  <Icon name="public" size={16} />
+                  {t('editor.viewAsPublic')}
+                </PopoverItem>
+              )}
+              {/* SRT has no tab of its own: it is line mode with end times. */}
+              {!isWordsMode && (
+                <PopoverItem onClick={() => selectMode(editorMode === 'srt' ? 'lrc' : 'srt')}>
+                  <Icon name={editorMode === 'srt' ? 'check_box' : 'check_box_outline_blank'} size={16} />
+                  {t('editor.srtEndTimes')}
+                </PopoverItem>
+              )}
 
-            <ActionsDropdown icon="more_horiz">
-              <div className="p-1 space-y-0.5">
+              <PopoverSeparator className="bg-zinc-800/50" />
+
 
                 <PopoverItem onClick={() => setSelectedLines(new Set(lines.map((_, i) => i)))}>
                   <Icon name="checklist" size={16} />
@@ -684,24 +840,124 @@ export default function Editor({
                   <Icon name="delete" size={16} />
                   {t('editor.removeAll')}
                 </PopoverItem>
+            </div>
+          </ActionsDropdown>
+        </>,
+        actionsSlot,
+      )}
+
+      {playerPosition === 'top' && (!wordsFocus || !hasMedia) && playerDock}
+
+      <div className="flex flex-1 min-h-0">
+      {wordsFocus && <WordsLineNav lines={lines} activeLineIndex={activeLineIndex} onSelect={setActiveLineIndex} />}
+      <section aria-label={t('editor.lineList')} className="flex flex-col flex-1 min-w-0 min-h-0">
+      {/* List header: sync progress on the left, mode switch + Auto Stamp on the right */}
+      <div className={`flex flex-wrap items-center gap-3 ${wordsFocus ? 'px-5 sm:px-8 pt-7 pb-2' : 'px-4 sm:px-6 py-4 border-b border-zinc-800'}`}>
+        <div className="lg:hidden w-full flex">{modeTabs}</div>
+        {wordsFocus ? (
+          <>
+            <div className="flex flex-col gap-1 flex-[1_1_220px] min-w-0">
+              <span className={`text-xs font-bold uppercase tracking-[0.1em] ${TEAL_TEXT}`}>
+                {t('editor.inspector.title', { number: focusInfo.lyricNumber })}
+                {focusInfo.sectionLabel && ` · ${formatSectionLabel(focusInfo.sectionLabel, t)}`}
+              </span>
+              <span className="font-mono text-[13px] tabular-nums text-foreground/65">
+                {focusStart != null ? formatTimestamp(focusStart) : '--:--.--'}
+                {focusInfo.end != null && ` → ${formatTimestamp(focusInfo.end)}`}
+                {focusLength != null && ` · ${focusLength.toFixed(2)} s`}
+              </span>
+            </div>
+            <Tip content={focusLength == null ? t('editor.words.distributeUnavailable') : t('editor.words.distributeTip')}>
+              <Button
+                variant="outline"
+                // aria-disabled keeps the tooltip that explains why reachable.
+                aria-disabled={focusLength == null || !focusLine?.words?.length}
+                onClick={() => { if (focusLength != null && focusLine?.words?.length) handleDistributeWords(); }}
+                className={`h-10 lg:h-10 coarse:h-11 px-3.5 lg:px-3.5 rounded-[10px] border-zinc-700 bg-transparent text-[13px] lg:text-[13px] font-semibold text-foreground ${focusLength == null ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {t('editor.words.distribute')}
+              </Button>
+            </Tip>
+          </>
+        ) : (
+          <>
+        {syncProgress ? (
+          <Tip content={t('editor.wordCharCount', { words: syncProgress.wordCount, chars: syncProgress.charCount, charsNoSp: syncProgress.charCountNoSpaces })}>
+            <div className="flex flex-col gap-1.5 flex-[1_1_220px] min-w-0 cursor-default">
+              <div className="flex items-baseline gap-2 min-w-0">
+                <span className="font-heading text-xl font-bold leading-tight whitespace-nowrap">
+                  {t('editor.syncedCount', { synced: syncProgress.synced, count: syncProgress.total })}
+                </span>
+                <span className="text-[13px] text-foreground/65 truncate">
+                  {t('editor.syncedLabel', { count: syncProgress.total })} · {t('editor.wordCount', { count: syncProgress.wordCount })}
+                </span>
+                {editorMode === 'words' && syncProgress.totalWordsInLine > 0 && (
+                  <span className="text-xs font-mono tabular-nums text-foreground/65 shrink-0">
+                    {syncProgress.currentWordNum}/{syncProgress.totalWordsInLine}
+                  </span>
+                )}
               </div>
-            </ActionsDropdown>
+              <div
+                role="progressbar"
+                aria-label={t('editor.syncProgressLabel')}
+                aria-valuemin={0}
+                aria-valuemax={syncProgress.total}
+                aria-valuenow={syncProgress.synced}
+                className="h-1.5 rounded-full bg-zinc-800 overflow-hidden"
+              >
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
+                  style={{ width: `${(syncProgress.synced / syncProgress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          </Tip>
+        ) : (
+          <div className="flex-1" />
+        )}
+        {lines.length > 0 && (
+          <div role="group" aria-label={t('editor.filterGroup')} className="flex gap-1">
+            <button
+              type="button"
+              aria-pressed={lineFilter === 'all'}
+              onClick={() => setLineFilter('all')}
+              className={`${FILTER_BTN} ${lineFilter === 'all' ? FILTER_ON : FILTER_OFF}`}
+            >
+              {t('editor.filterAll')}
+            </button>
+            <button
+              type="button"
+              aria-pressed={lineFilter === 'unmarked'}
+              onClick={() => setLineFilter('unmarked')}
+              className={`${FILTER_BTN} ${lineFilter === 'unmarked' ? FILTER_ON : FILTER_OFF}`}
+            >
+              {t('editor.filterUnmarked', { count: unmarkedCount })}
+            </button>
           </div>
-        </div>
+        )}
+        <Tip content={t('lyricsSearch.findLyrics')}>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setLyricsSearchOpen(true)}
+            aria-label={t('lyricsSearch.findLyrics')}
+            className="size-9 lg:size-9 coarse:size-11 rounded-lg border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground"
+          >
+            <Icon name="search" size={16} />
+          </Button>
+        </Tip>
+          </>
+        )}
+        <EditorToolbar
+          editorMode={editorMode}
+          lines={lines}
+          autoStampHasAudio={autoStampHasAudio}
+          autoStampRunning={autoStampRunning}
+          onAutoStamp={handleAutoStampStart}
+        />
       </div>
 
-      <EditorToolbar
-        editorMode={editorMode}
-        setEditorMode={setEditorMode}
-        updateSetting={updateSetting}
-        lines={lines}
-        autoStampHasAudio={autoStampHasAudio}
-        autoStampRunning={autoStampRunning}
-        onAutoStamp={handleAutoStampStart}
-        playerPosition={playerPosition}
-      />
-
-      <div className="flex flex-col flex-1 min-h-0 min-w-0">
+      <div className={`flex flex-col min-h-0 min-w-0 ${wordsFocus ? 'flex-none px-5 sm:px-8 pt-4' : 'flex-1 px-3 sm:px-4 pt-3'}`}>
         <ResponsiveModal
           open={!syncMode}
           onOpenChange={(open) => {
@@ -730,7 +986,24 @@ export default function Editor({
         </ResponsiveModal>
 
         {/* Sync Mode View */}
-        <div data-tour="editor-lines" className="relative flex flex-col flex-1 min-h-0">
+        <div data-tour="editor-lines" className={`relative flex flex-col min-h-0 ${wordsFocus ? 'flex-none h-[clamp(150px,26vh,260px)]' : 'flex-1'}`}>
+          <div className="hidden xl:block empty:hidden">
+          <SelectionActionBar
+            selectedLines={selectedLines}
+            lines={lines}
+            settings={settings}
+            handleBulkClearTimestamps={handleBulkClearTimestamps as ComponentProps<typeof SelectionActionBar>['handleBulkClearTimestamps']}
+            handleBulkShift={handleBulkShift as ComponentProps<typeof SelectionActionBar>['handleBulkShift']}
+            handleBulkDelete={handleBulkDelete as ComponentProps<typeof SelectionActionBar>['handleBulkDelete']}
+            handleBulkSingTogether={handleBulkSingTogether}
+            handleBulkSplitSingers={handleBulkSplitSingers}
+            clearSelection={clearSelection as ComponentProps<typeof SelectionActionBar>['clearSelection']}
+            handleApplyOffset={handleApplyOffset as ComponentProps<typeof SelectionActionBar>['handleApplyOffset']}
+            handleMoveToSection={handleMoveToSection as ComponentProps<typeof SelectionActionBar>['handleMoveToSection']}
+            songArtists={combinedSingers}
+          />
+          </div>
+          {!wordsFocus && (
           <TaggingToolbar
             lines={lines}
             setLines={setLines}
@@ -739,6 +1012,7 @@ export default function Editor({
             songArtists={combinedSingers}
             clearSelection={clearSelection as () => void}
           />
+          )}
           <VirtualizedLineList
             lines={lines}
             displayedActiveIndex={displayedActiveIndex}
@@ -802,13 +1076,95 @@ export default function Editor({
             onToggleLineMode={handleToggleLineMode}
             confidenceById={autoStamp.confidenceById}
             collapsedSections={collapsedSections}
-            collapsedView={collapsedView}
+            collapsedView={listView}
+            wordsFocus={wordsFocus}
+            playingWordIndex={playingWordIndex}
             onToggleSectionCollapse={toggleSectionCollapse}
           />
         </div>
       </div>
 
-      {playerPosition === 'bottom' && playerDock}
+      {wordsFocus && focusLine && focusLine.type !== 'section' && (
+        <div className="lrc-scroll flex flex-col flex-1 min-h-0 overflow-y-auto gap-6 px-5 sm:px-8 pt-2 pb-6">
+          <WordTimeline
+            line={focusLine}
+            lineEnd={focusInfo.end}
+            playbackPosition={playbackPosition}
+            activeWordIndex={playingWordIndex ?? (focusedTimestamp?.lineIndex === activeLineIndex && focusedTimestamp?.type === 'word' && focusedTimestamp.wordIndex != null ? focusedTimestamp.wordIndex : activeWordIndex)}
+            onSetWordTime={handleSetWordTime}
+          />
+          <div className="mt-auto flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap gap-x-3.5 gap-y-2 text-xs text-foreground/65">
+              {[
+                { key: settings.shortcuts?.mark?.[0] || 'Enter', label: t('editor.words.hintMark') },
+                { key: settings.shortcuts?.playPause?.[0] || 'Space', label: t('editor.shortcutHints.play') },
+              ].map((hint) => (
+                <span key={hint.label} className="inline-flex items-center gap-1.5">
+                  <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 font-mono text-[11px] text-foreground">
+                    {((KEY_SYMBOLS as Record<string, string>)[hint.key] ?? hint.key).trim() || hint.key}
+                  </kbd>
+                  {hint.label}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div role="group" aria-label={t('player.speed')} className="flex gap-0.5 rounded-[10px] border border-zinc-800 bg-zinc-900 p-[3px]">
+                {[0.25, 0.5, 1].map((speed) => (
+                  <button
+                    key={speed}
+                    type="button"
+                    aria-pressed={playbackSpeed === speed}
+                    onClick={() => applySpeed(speed)}
+                    className={`h-8 coarse:h-11 px-2.5 rounded-[7px] font-mono text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${playbackSpeed === speed ? 'bg-zinc-700 text-foreground' : 'text-foreground/65 hover:text-foreground'}`}
+                  >
+                    {speed}×
+                  </button>
+                ))}
+              </div>
+              <Tip content={loopFocusLine ? t('editor.words.loopOn') : t('editor.words.loopOff')}>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-pressed={loopFocusLine}
+                  aria-label={t('editor.words.loop')}
+                  onClick={toggleLoopFocusLine}
+                  className={`size-10 lg:size-10 coarse:size-11 rounded-[10px] ${loopFocusLine ? 'border-primary/50 bg-primary/10 text-primary hover:bg-primary/20' : 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground'}`}
+                >
+                  <Icon name="repeat" size={18} />
+                </Button>
+              </Tip>
+              <Tip content={playerIsPlaying ? t('editor.words.pause') : focusStart == null ? t('editor.words.timelineUnavailable') : t('editor.words.playLine')}>
+                <Button
+                  size="icon"
+                  aria-disabled={!hasMedia || (!playerIsPlaying && focusStart == null)}
+                  aria-label={playerIsPlaying ? t('editor.words.pause') : t('editor.words.playLine')}
+                  onClick={() => { if (hasMedia) handlePlayLine(); }}
+                  className={`size-[52px] lg:size-[52px] rounded-full bg-primary hover:bg-primary-dim text-zinc-950 ${!hasMedia || (!playerIsPlaying && focusStart == null) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <Icon name={playerIsPlaying ? 'pause' : 'play_arrow'} size={24} filled />
+                </Button>
+              </Tip>
+            </div>
+          </div>
+        </div>
+      )}
+      </section>
+      {!wordsFocus && (
+      <EditorSidePanel
+        lines={lines}
+        playbackPosition={playbackPosition}
+        duration={duration}
+        editorMode={editorMode}
+        activeLineIndex={activeLineIndex}
+        singers={combinedSingers}
+        settings={settings}
+        onMoveToSection={handleInspectorSection}
+        onAssignSinger={handleInspectorSinger}
+      />
+      )}
+      </div>
+
+      {playerPosition === 'bottom' && (!wordsFocus || !hasMedia) && playerDock}
 
       {/* Action Drawer for Mobile Actions */}
       <EditorActionDrawer

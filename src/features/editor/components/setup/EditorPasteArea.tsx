@@ -90,8 +90,14 @@ export default function EditorPasteArea({
   };
 
   return (
-    <div className="flex flex-col flex-1 gap-1.5 animate-fade-in min-h-0 px-1">
-      <div className="relative flex flex-1 min-h-0">
+    // The column scrolls as a whole: opening the formatting help can need more
+    // room than the modal has, and the textarea must keep a usable height
+    // instead of collapsing under it.
+    <div className="lrc-scroll flex flex-col flex-1 gap-2 animate-fade-in min-h-0 px-1 overflow-y-auto">
+      <label htmlFor="lyrics-textarea" className="text-[13px] text-zinc-400/80 shrink-0">
+        {t('import.pasteLabel')}
+      </label>
+      <div className="relative flex flex-1 min-h-[160px]">
         <Textarea
           ref={textareaRef}
           id="lyrics-textarea"
@@ -100,7 +106,7 @@ export default function EditorPasteArea({
           onSelect={handleSelect}
           onScroll={handleScroll}
           placeholder={t('editor.pastePlaceholder')}
-          className="flex-1 bg-zinc-800/40 border-zinc-700/50 text-zinc-200 placeholder:text-zinc-600 resize-none focus:border-primary/50 focus:ring-primary/25 font-mono leading-relaxed min-h-0"
+          className="lrc-scroll flex-1 rounded-xl p-3.5 bg-zinc-950/60 border-zinc-700 text-zinc-200 placeholder:text-zinc-600 resize-none focus:border-primary/50 focus:ring-primary/25 font-mono leading-relaxed min-h-0"
         />
         {selection && pill && (
           <div
@@ -128,17 +134,16 @@ export default function EditorPasteArea({
             ref={fileInputRef}
             onChange={handleFileUpload}
           />
-          <Tip content={t('editor.importFile')}>
-            <Button
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex-1 py-1.5 bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:border-zinc-600 text-zinc-300 font-semibold rounded-lg h-auto text-sm"
-            >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex-1 h-10 lg:h-10 coarse:h-11 lg:text-sm gap-2 bg-transparent border-zinc-700 hover:bg-zinc-800 hover:border-zinc-600 text-zinc-200 font-semibold rounded-[10px] text-sm"
+          >
+            <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            </Button>
-          </Tip>
+            {t('import.fromFile')}
+          </Button>
         </div>
         {/* URL import */}
         <div className="flex flex-col gap-1">
@@ -149,7 +154,8 @@ export default function EditorPasteArea({
               onChange={(e) => { setUrlInput(e.target.value); setUrlError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
               placeholder={t('import.urlPlaceholder')}
-              className="flex-1 bg-zinc-800/40 border border-zinc-700/50 text-zinc-200 text-xs rounded-lg px-2.5 py-2 placeholder:text-zinc-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 min-w-0"
+              aria-label={t('import.fromUrl')}
+              className="flex-1 h-10 coarse:h-11 bg-zinc-950/60 border border-zinc-700 text-zinc-200 text-xs rounded-[10px] px-3 placeholder:text-zinc-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25 min-w-0"
               disabled={urlFetching}
             />
             <Tip content={t('import.fromUrl')}>
@@ -157,7 +163,8 @@ export default function EditorPasteArea({
                 variant="outline"
                 onClick={handleUrlSubmit}
                 disabled={!urlInput.trim() || urlFetching}
-                className="py-2 bg-zinc-800 border-zinc-700 hover:bg-zinc-700 hover:border-zinc-600 text-zinc-300 rounded-lg h-auto text-xs px-2.5 flex-shrink-0"
+                aria-label={t('import.fromUrl')}
+                className="size-10 lg:size-10 coarse:size-11 p-0 bg-transparent border-zinc-700 hover:bg-zinc-800 hover:border-zinc-600 text-zinc-200 rounded-[10px] flex-shrink-0"
               >
               {urlFetching ? (
                 <LogoLoader size={16} />
