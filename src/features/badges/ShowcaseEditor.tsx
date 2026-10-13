@@ -5,7 +5,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
 import { BADGE_REGISTRY, RARITY_CONFIG, BADGE_COLORS } from './badge-registry';
 import { useBadgeDefs } from './BadgeDefsContext';
-import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 import { Toggle } from '@/features/settings/components/shared';
 
 const UPDATE_SHOWCASE = /* GraphQL */ `
@@ -235,15 +235,9 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
             <Toggle checked={showcasePublic} onChange={setShowcasePublic} label={t('badges.showcase.publicToggle')} />
             <span className="text-sm text-zinc-400">{t('badges.showcase.publicToggle')}</span>
           </div>
-          <button
-            type="button"
-            onClick={save}
-            disabled={saving}
-            className="flex items-center gap-2 h-11 px-5 rounded-xl bg-primary text-zinc-950 text-sm font-bold hover:bg-primary/90 disabled:opacity-50 transition-colors"
-          >
-            {saving && <LogoLoader size={14} />}
+          <Button type="button" onClick={save} loading={saving} className="h-11 gap-2 px-5 text-sm lg:h-11 lg:px-5 lg:text-sm">
             {t('badges.showcase.save')}
-          </button>
+          </Button>
         </div>
       </section>
 
