@@ -168,6 +168,7 @@ export default {
   wordReadingEdit: "Lectura: {{reading}} — clic para editar",
   wordReadingAdd: "Clic para añadir lectura",
   wordChipTitle: "{{word}} @ {{time}} — clic para enfocar",
+  wordSameTime: "mismo tiempo que la palabra anterior",
   wordChipTitleReading: "{{word}} @ {{time}} — doble clic para editar lectura",
   clearWordTimestamp: "Borrar marca de \"{{word}}\"",
   switchToSecondaryStamping: "Clic para marcar letras secundarias",

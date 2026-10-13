@@ -165,6 +165,7 @@ export default {
   wordReadingEdit: "{{reading}} (Click to edit)",
   wordReadingAdd: "Click to add reading",
   wordChipTitle: "{{word}} @ {{time}} — click to focus",
+  wordSameTime: "same time as the previous word",
   wordChipTitleReading: "{{word}} @ {{time}} — double-click to edit",
   clearWordTimestamp: "Clear timestamp for \"{{word}}\"",
   switchToSecondaryStamping: "Click to stamp secondary lyrics",
