@@ -70,12 +70,12 @@ function generateHandle(displayName: string): string {
 
 function StepIndicator({ step, t }: { step: number; t: TFunction }) {
   return (
-    <p className="flex items-center gap-2.5 font-mono text-xs font-medium text-foreground/65">
-      <span className="inline-flex gap-1" aria-hidden="true">
+    <p className="flex items-center gap-3 font-mono text-[13px] text-subtle">
+      <span className="inline-flex gap-1.5" aria-hidden="true">
         {[1, 2].map(n => (
           <span
             key={n}
-            className={`w-6 h-[3px] rounded-sm transition-colors duration-300 ${n <= step ? 'bg-primary' : 'bg-zinc-700'}`}
+            className={`w-10 h-1 rounded-sm transition-colors duration-[var(--duration-state)] ${n <= step ? 'bg-iris' : 'bg-hl'}`}
           />
         ))}
       </span>
