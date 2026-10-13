@@ -12,6 +12,74 @@ export function Spinner({ className, size = 16 }: { className?: string; size?: n
   return <LogoLoader size={size} className={className} />;
 }
 
+/* ─── Home: resume card ─────────────────────────────────────────────── */
+/* Mirrors: 96px cover | title + status tag, artist, progress row | resume button */
+export function SkeletonResumeCard({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex flex-col sm:flex-row sm:items-center gap-5 rounded-[var(--radius-card)] bg-background p-[18px] inset-ring inset-ring-hl", className)}>
+      <Skeleton className="size-24 shrink-0 rounded-xl" />
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-6 w-24 rounded-full" />
+        </div>
+        <Skeleton className="h-4 w-52 max-w-full" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-1 flex-1 rounded-full" />
+          <Skeleton className="h-3 w-36" />
+        </div>
+      </div>
+      <Skeleton className="h-11 w-32 shrink-0 rounded-[var(--radius-control)]" />
+    </div>
+  );
+}
+
+/* ─── Project grid card ─────────────────────────────────────────────── */
+/* Mirrors: 150px cover | title + artist | status tag + line count | bar | stats */
+export function SkeletonProjectCard({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex flex-col overflow-hidden rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl", className)}>
+      <Skeleton className="h-[150px] w-full rounded-none" />
+      <div className="flex flex-col gap-3 py-4 pr-4 pl-[18px] pb-[18px]">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-5 w-3/5" />
+          <Skeleton className="h-4 w-2/5" />
+        </div>
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-6 w-24 rounded-full" />
+          <Skeleton className="h-3 w-20" />
+        </div>
+        <Skeleton className="h-1 w-full rounded-full" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-3 w-8" />
+          <Skeleton className="h-3 w-8" />
+          <Skeleton className="h-3 w-8" />
+          <Skeleton className="ml-auto h-3 w-16" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Home: almost-done rows ────────────────────────────────────────── */
+/* Mirrors: 44px ring | title + line count | percentage */
+export function SkeletonAlmostDone({ rows = 2, className }: { rows?: number; className?: string }) {
+  return (
+    <div className={cn("flex flex-col gap-2 rounded-[var(--radius-card)] bg-background p-2 inset-ring inset-ring-hl", className)}>
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="flex items-center gap-3.5 px-2.5 py-2">
+          <Skeleton className="size-11 shrink-0 rounded-full" />
+          <div className="flex flex-1 flex-col gap-2">
+            <Skeleton className="h-4 w-2/5" />
+            <Skeleton className="h-3 w-1/4" />
+          </div>
+          <Skeleton className="h-4 w-9" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ─── Library / UploadsLibrary item skeleton ────────────────────────── */
 /* Mirrors: 9×9 source icon | title + badge | meta row | date */
 function SkeletonCard({ className }: { className?: string }) {

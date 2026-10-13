@@ -107,7 +107,7 @@ function Button({
       data-loading={loading || undefined}
       aria-busy={loading || undefined}
       aria-disabled={loading || undefined}
-      className={cn(buttonVariants({ variant, size, className }), loading && "cursor-progress data-[loading]:[&_svg]:hidden")}
+      className={cn(buttonVariants({ variant, size, className }), loading && "cursor-progress [&_svg]:hidden [&_.material-symbols-outlined]:hidden")}
       onClick={triggerWithHaptic}
       {...props}
     >

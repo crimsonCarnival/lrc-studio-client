@@ -700,24 +700,6 @@ audio::-webkit-media-controls-panel {
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* ── Logo loader: the logo fills up from the bottom over a dimmed copy ── */
-@keyframes logo-fill {
-  0%   { clip-path: inset(100% 0 0 0); }
-  70%  { clip-path: inset(0 0 0 0); opacity: 1; }
-  100% { clip-path: inset(0 0 0 0); opacity: 0; }
-}
-
-.logo-loader-track {
-  filter: grayscale(1);
-  opacity: 0.2;
-}
-
-/* Base state is fully filled so reduced motion (animation collapsed) shows the whole logo. */
-.logo-loader-fill {
-  clip-path: inset(0 0 0 0);
-  animation: logo-fill 1.4s cubic-bezier(0.45, 0, 0.3, 1) infinite;
-}
-
 /* ── Skeleton loading shimmer ── */
 @keyframes skeleton-shimmer {
   0% {
@@ -876,8 +858,14 @@ audio::-webkit-media-controls-panel {
   --color-focus: var(--focus);
   --color-gold-ink: var(--gold-ink);
   --color-gold-soft: var(--gold-soft);
+  --color-foam-ink: var(--foam-ink);
+  --color-foam-soft: var(--foam-soft);
+  --color-mark: var(--mark);
   --color-primary-strong: var(--primary-strong);
   --color-knob: var(--knob);
+  --color-tip: var(--tip);
+  --color-tip-foreground: var(--tip-foreground);
+  --shadow-toast: var(--toast-shadow);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -897,30 +885,112 @@ audio::-webkit-media-controls-panel {
   .karaoke-fill { animation: none !important; width: 60%; }
 }
 
-/* Equalizer bars: indeterminate loader (button loading state, redesign sheet 02/08) */
+/* Equalizer bars: the app's indeterminate loader (redesign sheets 02 and 08).
+   Three bars by default (button loading state); the Loader component sets --eq-h / --eq-w /
+   --eq-gap and renders five bars at larger sizes. */
 .eq-bars {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  height: 14px;
+  gap: var(--eq-gap, 2px);
+  height: var(--eq-h, 14px);
 }
 .eq-bars > i {
   display: block;
-  width: 3px;
-  height: 14px;
-  border-radius: 2px;
+  width: var(--eq-w, 3px);
+  height: 100%;
+  border-radius: calc(var(--eq-w, 3px) * 0.6);
   background: currentColor;
   transform-origin: center;
   animation: eq-bars 900ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
-.eq-bars > i:nth-child(2) { animation-delay: -300ms; }
-.eq-bars > i:nth-child(3) { animation-delay: -600ms; }
+/* Negative delays stagger the bars without a silent first cycle. */
+.eq-bars > i:nth-child(1) { animation-delay: -720ms; }
+.eq-bars > i:nth-child(2) { animation-delay: -540ms; }
+.eq-bars > i:nth-child(3) { animation-delay: -360ms; }
+.eq-bars > i:nth-child(4) { animation-delay: -180ms; }
 @keyframes eq-bars {
   0%, 100% { transform: scaleY(0.3); }
   50%      { transform: scaleY(1); }
 }
 @media (prefers-reduced-motion: reduce) {
   .eq-bars > i { animation: none; transform: scaleY(0.7); }
+}
+
+/* Sync sweep: a playhead crosses a row of beat ticks, lighting each one it passes
+   (redesign sheet 08). The lit copy is revealed with clip-path, so no fixed width is needed. */
+@keyframes sync-sweep-fill {
+  0%        { clip-path: inset(0 100% 0 0); }
+  85%, 100% { clip-path: inset(0 0 0 0); }
+}
+@keyframes sync-sweep-head {
+  0%        { left: 0; }
+  85%, 100% { left: calc(100% - 2px); }
+}
+.sync-sweep-lit  { animation: sync-sweep-fill 2.6s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+.sync-sweep-head { animation: sync-sweep-head 2.6s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .sync-sweep-lit  { animation: none; clip-path: inset(0 38% 0 0); }
+  .sync-sweep-head { animation: none; left: 62%; }
+}
+
+/* Star lands with a small overshoot when a project is starred (redesign sheet 17). */
+@keyframes star-pop {
+  0%   { transform: scale(0.6) rotate(-20deg); }
+  60%  { transform: scale(1.25) rotate(6deg); }
+  100% { transform: none; }
+}
+.star-pop { animation: star-pop 360ms var(--ease-bounce); }
+@media (prefers-reduced-motion: reduce) {
+  .star-pop { animation: none; }
+}
+
+/* Reaction burst: the emoji pops and six dots fly out when you react (redesign sheet 18).
+   Each ray sets its own --a angle inline. Reduced motion gets the count change only. */
+@keyframes reaction-bump {
+  0%   { transform: scale(0.8); }
+  40%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+@keyframes reaction-ray {
+  0%   { transform: rotate(var(--a)) translateY(0); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: rotate(var(--a)) translateY(-22px); opacity: 0; }
+}
+.reaction-bump { animation: reaction-bump 220ms var(--ease-bounce); }
+.reaction-ray {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin: -2px;
+  border-radius: 999px;
+  background: var(--iris);
+  opacity: 0;
+  pointer-events: none;
+  animation: reaction-ray 600ms var(--ease-state) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reaction-bump { animation: none; }
+  .reaction-ray { display: none; }
+}
+
+/* Placeholder texture for a missing cover (redesign sheet 07). */
+.cover-hatch {
+  background: repeating-linear-gradient(135deg, var(--hatch) 0 10px, transparent 10px 20px), var(--raised);
+}
+
+/* Toast countdown: the bar drains over the toast's own duration (set inline). */
+@keyframes toast-timer {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+/* "Saving…" dot */
+@keyframes status-pulse {
+  50% { opacity: 0.3; transform: scale(0.7); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast-timer, .status-pulse { animation: none !important; }
 }
 
 @keyframes shine {
@@ -980,8 +1050,15 @@ audio::-webkit-media-controls-panel {
   --focus: #286983;
   --gold-ink: #9a6214;
   --gold-soft: rgba(234, 157, 52, 0.14);
+  --foam-ink: #286983;
+  --foam-soft: rgba(86, 148, 159, 0.14);
+  --mark: rgba(234, 157, 52, 0.24);
   --primary-strong: rgba(144, 122, 169, 0.34);
   --knob: #fffaf3;
+  --tip: #575279;
+  --hatch: rgba(87, 82, 121, 0.06);
+  --tip-foreground: #e0def4;
+  --toast-shadow: 0 12px 32px rgba(87, 82, 121, 0.16);
   --sidebar: #f2e9e1;
   --sidebar-foreground: #1a1826;
   --sidebar-primary: #1a1826;
@@ -1046,8 +1123,15 @@ audio::-webkit-media-controls-panel {
   --focus: #9ccfd8;
   --gold-ink: #f6c177;
   --gold-soft: rgba(246, 193, 119, 0.12);
+  --foam-ink: #9ccfd8;
+  --foam-soft: rgba(156, 207, 216, 0.14);
+  --mark: rgba(246, 193, 119, 0.22);
   --primary-strong: rgba(196, 167, 231, 0.32);
   --knob: #e0def4;
+  --tip: #393552;
+  --hatch: rgba(224, 222, 244, 0.05);
+  --tip-foreground: #e0def4;
+  --toast-shadow: 0 12px 32px rgba(8, 6, 20, 0.5);
   --success: #9ccfd8;
   --success-foreground: #1a1826;
   --info: #9ccfd8;

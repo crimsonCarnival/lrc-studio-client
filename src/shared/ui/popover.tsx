@@ -51,7 +51,7 @@ const PopoverItem = React.forwardRef<
     ref={ref}
     data-slot="popover-item"
     className={cn(
-      "relative flex w-full cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-xs outline-hidden select-none text-zinc-300 hover:bg-primary/10 hover:text-primary data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 whitespace-nowrap",
+      "relative flex w-full cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2 min-h-10 coarse:min-h-11 text-[15px] font-medium outline-hidden select-none text-foreground hover:bg-raised hover:text-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 whitespace-nowrap",
       className
     )}
     {...props}
@@ -67,7 +67,7 @@ const PopoverSeparator = React.forwardRef<
   <div
     ref={ref}
     data-slot="popover-separator"
-    className={cn("-mx-1 my-1 h-px bg-zinc-700/50", className)}
+    className={cn("mx-2 my-1.5 h-px bg-hl", className)}
     {...props}
   />
 ))
