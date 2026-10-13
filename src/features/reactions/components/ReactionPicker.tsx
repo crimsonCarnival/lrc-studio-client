@@ -1,76 +1,70 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Popover as PopoverPrimitive } from 'radix-ui';
+import { PopoverContent } from '@ui/popover';
+import { Button } from '@ui/button';
+import { Tip } from '@ui/tip';
+import { Icon } from '@/shared/ui/Icon';
+import { cn } from '@/shared/utils/utils';
 import { EMOJI_MAP } from './reaction-constants';
+
+const FullEmojiPicker = lazy(() => import('./FullEmojiPicker'));
 
 interface ReactionPickerProps {
   myReaction?: string | null;
   onReact: (code: string) => void;
-  onClose: () => void;
 }
 
-export function ReactionPicker({ myReaction, onReact, onClose }: ReactionPickerProps) {
+/**
+ * Content of the reaction popover (redesign sheet 18). Rendered inside the Popover that
+ * ReactionBar owns, so it opens above the trigger and flips below when there is no room.
+ */
+export function ReactionPicker({ myReaction, onReact }: ReactionPickerProps) {
   const { t } = useTranslation();
-  const ref = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [custom, setCustom] = useState('');
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [onClose]);
-
-  const submitCustom = () => {
-    const trimmed = custom.trim();
-    if (!trimmed) return;
-    onReact(trimmed);
-    setCustom('');
-  };
+  // Dynamic keys (one per emoji code) are not in the typed resources.
+  const tk = t as (key: string) => string;
+  const [showAll, setShowAll] = useState(false);
 
   return (
-    <div
-      ref={ref}
-      className="absolute bottom-full mb-1.5 left-0 z-50 flex flex-col gap-1 p-1.5 bg-zinc-900 border border-zinc-700/80 rounded-2xl shadow-xl shadow-black/50 backdrop-blur-sm"
+    <PopoverContent
+      side="top"
+      align="start"
+      sideOffset={10}
+      aria-label={t('reactions.addReaction')}
+      // overflow-visible: the pointer sits outside the box, and the default scroll clip would cut it off.
+      className="flex w-[348px] max-w-[calc(100vw-1.5rem)] flex-col gap-3 overflow-visible rounded-[18px] border-0 bg-background p-3 shadow-elevated inset-ring inset-ring-hl lg:min-w-0"
     >
-      {/* Fixed emoji row */}
-      <div className="flex items-center gap-0.5">
+      <div role="group" aria-label={t('reactions.reactTitle')} className="flex justify-between gap-1">
         {Object.entries(EMOJI_MAP).map(([code, emoji]) => (
-          <button
-            key={code}
-            onClick={() => onReact(code)}
-            className={[
-              'size-9 rounded-xl flex items-center justify-center text-lg hover:bg-zinc-800 transition-colors duration-100 relative',
-              myReaction === code ? 'bg-primary/8 ring-1 ring-primary/40' : '',
-            ].join(' ')}
-          >
-            <span className="transition-transform duration-100 hover:scale-125 leading-none select-none">
-              {emoji as string}
-            </span>
-          </button>
+          <Tip key={code} content={tk(`reactions.names.${code}`)}>
+            <button
+              type="button"
+              aria-pressed={myReaction === code}
+              aria-label={tk(`reactions.names.${code}`)}
+              onClick={() => onReact(code)}
+              className={cn(
+                'grid size-[52px] place-items-center rounded-[14px] text-[28px] leading-none transition-[transform,background-color] duration-[180ms] ease-bounce select-none hover:-translate-y-1 hover:scale-[1.18] hover:bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus motion-reduce:transform-none motion-reduce:transition-none max-sm:size-11 max-sm:text-2xl',
+                myReaction === code && 'bg-primary-soft inset-ring-2 inset-ring-iris',
+              )}
+            >
+              {emoji}
+            </button>
+          </Tip>
         ))}
       </div>
 
-      {/* Free-input row */}
-      <div className="flex items-center gap-1 px-0.5">
-        <input
-          ref={inputRef}
-          value={custom}
-          onChange={e => setCustom(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitCustom(); } }}
-          placeholder="✨"
-          maxLength={8}
-          className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1 text-sm text-zinc-200 placeholder-zinc-600 outline-none focus:border-primary/60 min-w-0"
-        />
-        <button
-          onClick={submitCustom}
-          disabled={!custom.trim()}
-          className="shrink-0 px-2 py-1 text-xs rounded-lg bg-primary/15 text-primary hover:bg-primary/25 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-        >
-          {t('common.send')}
-        </button>
-      </div>
-    </div>
+      {showAll ? (
+        <Suspense fallback={<div className="grid h-[280px] place-items-center text-sm text-subtle">{t('reactions.loadingEmoji')}</div>}>
+          <FullEmojiPicker onSelect={onReact} />
+        </Suspense>
+      ) : (
+        <Button variant="outline" onClick={() => setShowAll(true)} className="h-11 w-full justify-start gap-2 px-3 text-[15px] text-subtle lg:h-11 lg:px-3 lg:text-[15px]">
+          <Icon name="add_reaction" size={18} />
+          {t('reactions.moreEmoji')}
+        </Button>
+      )}
+
+      <PopoverPrimitive.Arrow width={16} height={8} className="fill-background drop-shadow-[0_1px_0_var(--hl)]" />
+    </PopoverContent>
   );
 }

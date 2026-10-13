@@ -1,5 +1,12 @@
 export default {
   reactTitle: 'Reaccionar',
+  addReaction: 'Añadir reacción',
+  moreEmoji: 'Más emojis…',
+  searchEmoji: 'Buscar emoji',
+  loadingEmoji: 'Cargando emojis…',
+  noEmoji: 'No se encontró ningún emoji.',
+  moreReactions_one: '{{count}} reacción más',
+  moreReactions_other: '{{count}} reacciones más',
   emojis: {
     heart: '❤️',
     fire: '🔥',
@@ -8,4 +15,19 @@ export default {
     clap: '👏',
     music: '🎵',
   },
+  names: {
+    heart: 'Me encanta',
+    fire: 'Fuego',
+    wow: 'Guau',
+    laugh: 'Jaja',
+    clap: 'Aplausos',
+    music: 'Música',
+  },
+  chipLabel: '{{name}}, {{count}}',
+  chipLabelMine: '{{name}}, {{count}}, reaccionaste',
+  whoOnlyYou: 'Tú',
+  whoYouAndOthers_one: 'Tú y {{count}} más',
+  whoYouAndOthers_other: 'Tú y {{count}} más',
+  whoPeople_one: '{{count}} persona',
+  whoPeople_other: '{{count}} personas',
 };

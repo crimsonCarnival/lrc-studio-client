@@ -1,5 +1,12 @@
 export default {
   reactTitle: 'React',
+  addReaction: 'Add reaction',
+  moreEmoji: 'More emoji…',
+  searchEmoji: 'Search emoji',
+  loadingEmoji: 'Loading emoji…',
+  noEmoji: 'No emoji found.',
+  moreReactions_one: '{{count}} more reaction',
+  moreReactions_other: '{{count}} more reactions',
   emojis: {
     heart: '❤️',
     fire: '🔥',
@@ -8,4 +15,19 @@ export default {
     clap: '👏',
     music: '🎵',
   },
+  names: {
+    heart: 'Love',
+    fire: 'Fire',
+    wow: 'Wow',
+    laugh: 'Haha',
+    clap: 'Applause',
+    music: 'Music',
+  },
+  chipLabel: '{{name}}, {{count}}',
+  chipLabelMine: '{{name}}, {{count}}, you reacted',
+  whoOnlyYou: 'You',
+  whoYouAndOthers_one: 'You and {{count}} other',
+  whoYouAndOthers_other: 'You and {{count}} others',
+  whoPeople_one: '{{count}} person',
+  whoPeople_other: '{{count}} people',
 };
