@@ -6,24 +6,25 @@ import { cn } from "@/shared/utils/utils"
 import useHapticFeedback from "@/shared/hooks/useHapticFeedback"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-xs font-normal whitespace-nowrap transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:border-primary/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover-capable:hover:bg-zinc-700 active:scale-95",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-transparent bg-clip-padding text-xs font-semibold whitespace-nowrap transition-[background-color,box-shadow,color,transform] duration-[var(--duration-state)] ease-state select-none focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-solid focus-visible:outline-focus active:not-aria-[haspopup]:scale-[.97] disabled:pointer-events-none aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        default:
+          "bg-primary text-primary-foreground shadow-button-top hover:bg-primary-hover active:bg-primary-press active:shadow-button-press disabled:bg-primary-off disabled:text-subtle disabled:shadow-none",
         outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "bg-raised text-foreground inset-ring inset-ring-hl hover:bg-overlay hover:inset-ring-faint active:bg-background aria-expanded:bg-overlay aria-expanded:inset-ring-faint disabled:bg-transparent disabled:text-faint",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "bg-raised text-foreground inset-ring inset-ring-hl hover:bg-overlay hover:inset-ring-faint active:bg-background aria-expanded:bg-overlay aria-expanded:inset-ring-faint disabled:bg-transparent disabled:text-faint",
         ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "bg-transparent text-foreground hover:bg-primary-soft hover:text-primary-ink aria-expanded:bg-primary-soft aria-expanded:text-primary-ink disabled:text-faint",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-transparent text-love-ink inset-ring inset-ring-love-soft hover:bg-love-soft hover:inset-ring-love-ink active:bg-love-soft disabled:text-faint disabled:inset-ring-hl",
+        link: "text-primary underline-offset-4 hover:underline disabled:opacity-50",
         sync:
-          "bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 hover:border-primary/50 focus-visible:ring-primary/30",
+          "bg-primary/15 text-primary border-primary/30 hover:bg-primary/25 hover:border-primary/50 disabled:opacity-50",
         warning:
-          "bg-warning/10 text-warning border-warning/30 hover:bg-warning/20 focus-visible:border-warning/40 focus-visible:ring-warning/20",
+          "bg-warning/10 text-warning border-warning/30 hover:bg-warning/20 disabled:opacity-50",
       },
       size: {
         default:
@@ -39,6 +40,14 @@ const buttonVariants = cva(
         "icon-lg": "size-12 lg:size-9",
       },
     },
+    compoundVariants: [
+      {
+        variant: "ghost",
+        size: ["icon", "icon-xs", "icon-sm", "icon-lg"],
+        className:
+          "text-subtle hover:bg-raised hover:text-foreground aria-pressed:bg-primary-soft aria-pressed:text-primary-ink",
+      },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",
@@ -51,29 +60,59 @@ function Button({
   variant = "default",
   size = "default",
   asChild = false,
+  loading = false,
   onClick,
+  children,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    /** Indeterminate busy state: equalizer bars replace the icon. Stays focusable, ignores clicks. */
+    loading?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"
   const { trigger: haptic } = useHapticFeedback()
 
   const triggerWithHaptic = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (loading) {
+      e.preventDefault()
+      return
+    }
     haptic("light")
     onClick?.(e)
   }
+
+  // Slot.Root needs exactly one child element, so under asChild the children pass through
+  // untouched (even a `false` sibling breaks it) and the bars only render for real <button>s.
+  const content = asChild ? (
+    children
+  ) : (
+    <>
+      {loading && (
+        <span className="eq-bars" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </span>
+      )}
+      {children}
+    </>
+  )
 
   return (
     <Comp
       data-slot="button"
       data-variant={variant}
       data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
+      data-loading={loading || undefined}
+      aria-busy={loading || undefined}
+      aria-disabled={loading || undefined}
+      className={cn(buttonVariants({ variant, size, className }), loading && "cursor-progress data-[loading]:[&_svg]:hidden")}
       onClick={triggerWithHaptic}
       {...props}
-    />
+    >
+      {content}
+    </Comp>
   )
 }
 
