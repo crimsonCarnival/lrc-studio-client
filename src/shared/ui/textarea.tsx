@@ -12,13 +12,14 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, React.ComponentProps<"tex
         // Mobile-first sizing (44px+ touch target)
         "min-h-[120px] px-4 py-3 text-base",
         // Desktop sizing
-        "lg:min-h-[100px] lg:px-2.5 lg:py-2 lg:text-sm",
-        // Base classes
-        "flex field-sizing-content w-full rounded-lg border border-input bg-transparent transition-colors outline-none placeholder:text-muted-foreground",
+        "lg:min-h-[100px] lg:px-4 lg:py-3 lg:text-base md:text-base",
+        // Field look (redesign sheet 05): ring is an inset shadow so it can thicken on focus
+        // without shifting layout.
+        "flex field-sizing-content w-full rounded-[var(--radius-control)] border-0 bg-card font-medium leading-snug text-foreground inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] ease-state outline-none placeholder:text-faint hover:inset-ring-faint",
         // Focus & disabled
-        "focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50",
-        // Validation & dark mode
-        "aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        "focus-visible:ring-0 focus-visible:inset-ring-2 focus-visible:inset-ring-primary disabled:cursor-not-allowed disabled:opacity-50",
+        // Validation
+        "aria-invalid:ring-0 aria-invalid:inset-ring-2 aria-invalid:inset-ring-love",
         className
       )}
       {...props}

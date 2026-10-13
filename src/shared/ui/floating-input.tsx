@@ -17,6 +17,8 @@ function FloatingInput({ className, label, value, error, hasIcon, onFocus, onBlu
     }
   }, [value, combinedRef])
 
+  const raised = isFocused || hasValue
+
   return (
     <div className="relative group/floating w-full">
       <Input
@@ -39,8 +41,13 @@ function FloatingInput({ className, label, value, error, hasIcon, onFocus, onBlu
         placeholder=" "
         aria-invalid={error || undefined}
         className={cn(
-          "h-12 w-full bg-transparent border-zinc-700/50 text-zinc-100 focus:border-primary/60 focus:ring-0 rounded-xl transition-all px-4 pt-2",
-          error && "border-destructive/50 focus:border-destructive/80",
+          // The ring is an inset shadow, not a border, so the label can sit on top of it
+          // and mask it with the field's own fill (bg-card) wherever it floats.
+          "h-[52px] lg:h-[52px] rounded-[var(--radius-control)] border-0 bg-card px-4 lg:px-4 text-[17px] md:text-[17px] lg:text-[17px] font-medium text-foreground inset-ring inset-ring-hl",
+          "transition-shadow duration-[var(--duration-state)] ease-state hover:inset-ring-faint",
+          "focus-visible:border-transparent focus-visible:ring-0 focus-visible:inset-ring-2 focus-visible:inset-ring-primary",
+          "aria-invalid:ring-0 aria-invalid:inset-ring-2 aria-invalid:inset-ring-love focus-visible:aria-invalid:inset-ring-love",
+          hasIcon && "pl-12 lg:pl-12",
           className
         )}
       />
@@ -49,16 +56,16 @@ function FloatingInput({ className, label, value, error, hasIcon, onFocus, onBlu
         // only positioned next to it visually, which a screen reader cannot see.
         htmlFor={props.id}
         className={cn(
-          // top-6 is half of the input's h-12, NOT top-1/2: the wrapper stretches
-          // to the tallest cell in a grid row, and centring on it drops the
-          // label below the field's own border.
-          "absolute top-6 -translate-y-1/2 text-sm text-zinc-500 pointer-events-none transition-all duration-200 ease-out",
+          // top-[26px] is half of the input's fixed 52px, NOT top-1/2: the wrapper stretches
+          // to the tallest cell in a grid row, and centring on it drops the label below
+          // the field's own border.
+          "absolute -translate-y-1/2 pointer-events-none rounded-sm bg-card px-1 -ml-1 transition-all duration-[var(--duration-state)] ease-state",
           hasIcon ? "left-12" : "left-4",
-          // The background here must match the modal background EXACTLY to 'break' the border seamlessly
-          // We use the theme variable for zinc-900 to ensure consistency across the project
-          (isFocused || hasValue) && "-top-[2px] px-1.5 text-[10px] uppercase tracking-wider text-primary font-bold bg-zinc-900 rounded-sm leading-none py-0.5",
-          (isFocused || hasValue) && (hasIcon ? "left-10" : "left-3"),
-          (isFocused || hasValue) && error && "text-destructive"
+          raised
+            ? "top-0 text-[11px] font-semibold uppercase leading-none tracking-[0.08em] text-subtle"
+            : "top-[26px] text-[17px] font-medium text-subtle",
+          raised && isFocused && "text-primary-ink",
+          raised && error && "text-love-ink"
         )}
       >
         {label}
