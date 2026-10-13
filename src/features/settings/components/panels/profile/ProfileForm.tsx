@@ -69,9 +69,9 @@ export default function ProfileForm({ identifier }: { identifier?: React.ReactNo
       </div>
 
       <div className="mt-[18px]">
-        <div className="flex justify-between items-baseline mb-2">
-          <label htmlFor="settings-bio" className="text-[13px] font-bold text-zinc-100">{t('profile.bio')}</label>
-          <span className="text-[13px] text-zinc-400 font-mono">{formData.bio.length}/160</span>
+        <div className="flex justify-between items-baseline mb-2 px-1">
+          <label htmlFor="settings-bio" className="text-[15px] font-semibold text-foreground">{t('profile.bio')}</label>
+          <span className="font-mono text-xs text-subtle">{formData.bio.length}/160</span>
         </div>
         <Textarea
           id="settings-bio"
@@ -79,7 +79,7 @@ export default function ProfileForm({ identifier }: { identifier?: React.ReactNo
           onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value.slice(0, 160) }))}
           placeholder={t('profile.bioPlaceholder')}
           rows={3}
-          className="bg-zinc-950 border border-zinc-700 rounded-[10px] min-h-[96px] text-[15px] resize-y"
+          className="min-h-[96px] resize-y"
         />
       </div>
 

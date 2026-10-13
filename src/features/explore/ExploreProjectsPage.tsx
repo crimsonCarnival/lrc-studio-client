@@ -4,6 +4,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { usePaginatedProjects } from './hooks/useExplore';
 import { useProjectSearch } from '@/features/search/hooks/useProjectSearch';
 import { LogoLoader } from '@ui/LogoLoader';
+import { SearchField } from '@ui/search-field';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 
 interface ExploreProject {
@@ -89,28 +90,15 @@ export default function ExploreProjectsPage() {
     <div className="max-w-4xl mx-auto w-full py-6 px-4 flex flex-col gap-6">
       <h1 className="text-xl font-semibold text-white">{t('explore.trending.title')}</h1>
 
-      <div className="relative">
-        <Icon name="search" size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
-        <input
-          type="search"
-          value={search.query}
-          onChange={e => search.handleQueryChange(e.target.value)}
-          placeholder={t('explore.page.searchPlaceholder')}
-          aria-label={t('explore.page.searchLabel')}
-          maxLength={100}
-          className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder:text-zinc-500 focus:outline-none focus:border-primary text-sm transition-colors [&::-webkit-search-cancel-button]:hidden"
-        />
-        {isSearching && (
-          <button
-            type="button"
-            onClick={() => search.handleQueryChange('')}
-            aria-label={t('explore.page.clearSearch')}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-zinc-400 hover:text-white transition-colors"
-          >
-            <Icon name="close" size={16} />
-          </button>
-        )}
-      </div>
+      <SearchField
+        value={search.query}
+        onValueChange={search.handleQueryChange}
+        placeholder={t('explore.page.searchPlaceholder')}
+        label={t('explore.page.searchLabel')}
+        clearLabel={t('explore.page.clearSearch')}
+        maxLength={100}
+        focusShortcut
+      />
 
       {isSearching ? (
         search.loading ? (

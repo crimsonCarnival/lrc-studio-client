@@ -1,25 +1,12 @@
 import React, { useState } from 'react';
 import type { ReactNode } from 'react';
 import { cn } from '@/shared/utils/utils';
+import { Switch } from '@ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
 
 export function Toggle({ checked, onChange, id, disabled, label }: { checked?: boolean; onChange?: (checked: boolean) => void; id?: string; disabled?: boolean; label?: string }) {
   return (
-    <button
-      id={id}
-      type="button"
-      role="switch"
-      aria-checked={!!checked}
-      aria-label={label}
-      disabled={disabled}
-      onClick={() => onChange?.(!checked)}
-      className={cn(
-        "relative shrink-0 flex items-center w-[52px] h-[30px] p-[3px] rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-50 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-2",
-        checked ? 'bg-primary' : 'bg-zinc-700',
-      )}
-    >
-      <span className={cn('block size-6 rounded-full transition-transform', checked ? 'translate-x-[22px] bg-zinc-900' : 'translate-x-0 bg-zinc-400')} />
-    </button>
+    <Switch id={id} checked={!!checked} onCheckedChange={onChange} disabled={disabled} aria-label={label} />
   );
 }
 

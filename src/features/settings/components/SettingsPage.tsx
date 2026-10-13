@@ -18,6 +18,7 @@ import StatsSettings from './panels/StatsSettings';
 import PrivacySettings from './panels/PrivacySettings';
 import BadgesSettings from './panels/BadgesSettings';
 import { Button } from '@ui/button';
+import { SearchField } from '@ui/search-field';
 import { LazyImage } from '@ui/LazyImage';
 import { cn } from '@/shared/utils/utils';
 import type { AppSettings } from '@/features/settings/settings.types';
@@ -266,17 +267,13 @@ export default function SettingsPage() {
   };
 
   const searchField = (
-    <div className="relative">
-      <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none z-10" />
-      <input
-        type="search"
-        aria-label={t('settings.search')}
-        placeholder={t('settings.search')}
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="w-full h-10 bg-zinc-900 border border-zinc-800 contrast-more:border-zinc-600 rounded-[10px] pl-9 pr-3 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:border-primary/50 transition-colors"
-      />
-    </div>
+    <SearchField
+      label={t('settings.search')}
+      placeholder={t('settings.search')}
+      value={searchTerm}
+      onValueChange={setSearchTerm}
+      clearLabel={t('settings.clearSearch')}
+    />
   );
 
   return (
