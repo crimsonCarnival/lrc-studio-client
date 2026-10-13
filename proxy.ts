@@ -84,11 +84,13 @@ export const config = {
 export { MATCHER };
 
 const API_ORIGIN = (process.env.OG_API_ORIGIN || 'https://api.lrcstudio.app').replace(/\/+$/, '');
-// www is the canonical host throughout this repo: index.html's <link rel="canonical">,
-// robots.txt's Sitemap line and every public/sitemap.xml entry all use it. og:url and
-// canonical disagreeing is a duplicate-content bug, so this default follows them.
-const SITE_ORIGIN = (process.env.OG_SITE_ORIGIN || 'https://www.lrcstudio.app').replace(/\/+$/, '');
+// The bare domain (no www) is the canonical host throughout this repo:
+// index.html's <link rel="canonical">, robots.txt's Sitemap line, and
+// every public/sitemap.xml entry all use it. og:url and canonical
+// disagreeing is a duplicate-content bug, so this default follows them.
+const SITE_ORIGIN = (process.env.OG_SITE_ORIGIN || 'https://lrcstudio.app').replace(/\/+$/, '');
 const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-default.png`;
+const SITE_LOGO = `${SITE_ORIGIN}/favicon.svg`;
 
 /** A crawler that waits on us is a crawler that gives up. Budget the API call hard. */
 const META_TIMEOUT_MS = 2500;
@@ -157,11 +159,11 @@ function fallbackMeta(url: URL, lang: 'en' | 'es'): OgMeta {
   const canonical = `${SITE_ORIGIN}${url.pathname}`;
   const copy = lang === 'es'
     ? {
-        title: 'LRC Studio — Sincronización profesional de letras',
+        title: 'LRC Studio — Sincroniza Letras con Música',
         description: 'Sincroniza letras con cualquier canción y exporta archivos .lrc, .srt o karaoke.',
       }
     : {
-        title: 'LRC Studio — Professional Lyric Synchronization & Editing',
+        title: 'LRC Studio — Sync Lyrics to Music, Perfectly',
         description: 'Sync lyrics to any song and export .lrc, .srt or word-level karaoke files.',
       };
   return {
@@ -237,6 +239,7 @@ function buildTags(meta: OgMeta): string {
     `<meta name="twitter:description" content="${escapeAttr(meta.description)}">`,
     `<meta name="twitter:image" content="${escapeAttr(meta.image.url)}">`,
     `<meta name="twitter:image:alt" content="${escapeAttr(meta.image.alt)}">`,
+    `<meta property="og:logo" content="${escapeAttr(SITE_LOGO)}">`,
   ];
 
   for (const alt of meta.localeAlternate ?? []) {

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    @media (prefers-color-scheme: light) {
+      :root { --bg: #f5f3ff; --fg: #6f5a8f; }
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #232136; --fg: #c4a7e7; }
+    }
+    rect.bg { fill: var(--bg, #232136); }
+    rect.bar { fill: var(--fg, #c4a7e7); }
+  </style>
+  <rect class="bg" width="32" height="32" rx="6"/>
+  <!-- Music waveform / equaliser bars — brand icon -->
+  <rect class="bar" x="4"  y="14" width="3" height="8"  rx="1.5"/>
+  <rect class="bar" x="9"  y="10" width="3" height="16" rx="1.5"/>
+  <rect class="bar" x="14" y="6"  width="3" height="20" rx="1.5"/>
+  <rect class="bar" x="19" y="9"  width="3" height="18" rx="1.5"/>
+  <rect class="bar" x="24" y="12" width="3" height="10" rx="1.5"/>
+</svg>

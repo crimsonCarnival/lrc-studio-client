@@ -2,40 +2,67 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/x-icon" href="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106907/favicon_bvatcm.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106908/favicon-32x32_c0xrwo.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="https://res.cloudinary.com/dzjid2tos/image/upload/v1778106908/android-chrome-192x192_ifsskm.png" />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="canonical" href="https://www.lrcstudio.app/" />
+    <link rel="canonical" href="https://lrcstudio.app/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LRC Studio — Professional Lyric Synchronization &amp; Editing</title>
-    <meta name="description" content="LRC Studio is a professional tool to sync lyrics to any song (MP3 or YouTube) and export as high-quality .lrc files. Features tap-to-timestamp and live karaoke preview." />
+    <title>LRC Studio — Sync Lyrics to Music, Perfectly</title>
+    <meta name="description" content="Sync lyrics to any song with tap-to-timestamp editing. Export .lrc, .srt, or word-level karaoke files. Free, browser-based, no install needed." />
     <meta name="theme-color" content="#232136" />
 
     <!-- Default Open Graph / Twitter card. proxy.ts replaces these per-route for
          crawlers; these are the fallback for any crawler reaching a path outside
          its matcher, and for a plain static build.
-         NOTE: og:url intentionally matches the <link rel="canonical"> above. That
-         canonical currently says www.lrcstudio.app while the API and proxy build
-         lrcstudio.app — one of the two is wrong and they must agree. -->
+         NOTE: og:url intentionally matches the <link rel="canonical"> above.
+         Both use lrcstudio.app (no www). -->
     <meta property="og:site_name" content="LRC Studio" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="LRC Studio &#8212; Professional Lyric Synchronization &amp; Editing" />
+    <meta property="og:title" content="LRC Studio — Sync Lyrics to Music, Perfectly" />
     <meta property="og:description" content="Sync lyrics to any song and export .lrc, .srt or word-level karaoke files." />
-    <meta property="og:url" content="https://www.lrcstudio.app/" />
+    <meta property="og:url" content="https://lrcstudio.app/" />
+    <meta property="og:logo" content="https://lrcstudio.app/favicon.svg" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:locale:alternate" content="es_CO" />
-    <meta property="og:image" content="https://www.lrcstudio.app/og-default.png" />
-    <meta property="og:image:secure_url" content="https://www.lrcstudio.app/og-default.png" />
+    <meta property="og:image" content="https://lrcstudio.app/og-default.png" />
+    <meta property="og:image:secure_url" content="https://lrcstudio.app/og-default.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="LRC Studio &#8212; sync lyrics to music, perfectly." />
+    <meta property="og:image:alt" content="LRC Studio — sync lyrics to music, perfectly." />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="LRC Studio &#8212; Professional Lyric Synchronization &amp; Editing" />
+    <meta name="twitter:title" content="LRC Studio — Sync Lyrics to Music, Perfectly" />
     <meta name="twitter:description" content="Sync lyrics to any song and export .lrc, .srt or word-level karaoke files." />
-    <meta name="twitter:image" content="https://www.lrcstudio.app/og-default.png" />
-    <meta name="twitter:image:alt" content="LRC Studio &#8212; sync lyrics to music, perfectly." />
+    <meta name="twitter:image" content="https://lrcstudio.app/og-default.png" />
+    <meta name="twitter:image:alt" content="LRC Studio — sync lyrics to music, perfectly." />
+    <!-- JSON-LD structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "LRC Studio",
+      "url": "https://lrcstudio.app",
+      "description": "Sync lyrics to any song with tap-to-timestamp editing. Export .lrc, .srt, or word-level karaoke files. Free, browser-based, no install needed.",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires a modern web browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Tap-to-timestamp lyric sync",
+        "Word-level karaoke timing",
+        "LRC file export",
+        "SRT subtitle export",
+        "YouTube audio support",
+        "Live karaoke preview"
+      ]
+    }
+    </script>
     <!-- One stylesheet request for all web fonts (was four chained CSS @imports),
          with the connections opened early. Only the weights actually used are
          requested; Noto Serif JP is a CJK fallback and arrives in unicode-range
