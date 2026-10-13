@@ -21,7 +21,7 @@ export default function ProfileSettings({ searchTerm }: { searchTerm?: string })
     tk('profile.emailSection'), tk('profile.email'),
     tk('profile.accountNameSection'), tk('profile.accountName'),
     tk('profile.avatar'),
-    'avatar', 'photo', 'display name', 'bio', 'email', 'username', 'handle', 'profile', 'public',
+    'avatar', 'photo', 'display name', 'bio', 'email', 'account name', 'username', 'handle', 'profile', 'public',
   ]);
 
   if (!matches) return null;

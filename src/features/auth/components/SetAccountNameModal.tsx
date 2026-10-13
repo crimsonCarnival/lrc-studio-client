@@ -174,7 +174,7 @@ export default function SetAccountNameModal() {
                     <LogoLoader size={16} />
                   ) : (
                     <>
-                      {t('auth.setAccountName.saveUsername')}
+                      {t('auth.setAccountName.saveAccountName')}
                       <Icon name="arrow_forward" size={16} className="ml-1.5" />
                     </>
                   )}

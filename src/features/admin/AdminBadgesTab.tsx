@@ -591,10 +591,10 @@ function GrantModal({ badge, onClose }: { badge: BadgeDef; onClose: () => void }
         </div>
         <form onSubmit={grant} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.badges.usernameLabel')}</span>
+            <span className="text-[11px] text-zinc-300 uppercase tracking-widest">{t('admin.badges.accountNameLabel')}</span>
             <input
               className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
-              placeholder={t('admin.badges.usernamePlaceholder')}
+              placeholder={t('admin.badges.accountNamePlaceholder')}
               value={identifier}
               onChange={e => setIdentifier(e.target.value)}
               required

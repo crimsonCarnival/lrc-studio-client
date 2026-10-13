@@ -37,7 +37,7 @@ export default function SecuritySettings({ focusCard, searchTerm }: { focusCard?
     'password', 'credentials', 'change password', 'google', 'connect', 'oauth',
   ]);
   const sessionsMatch = blockMatches(searchTerm, [t('profile.sessions.title'), 'sessions', 'devices', 'sign out']);
-  const historyMatch = blockMatches(searchTerm, [t('profile.tabs.history'), 'history', 'username', 'handle', 'email', 'changes']);
+  const historyMatch = blockMatches(searchTerm, [t('profile.tabs.history'), 'history', 'account name', 'username', 'handle', 'email', 'changes']);
 
   return (
     <>

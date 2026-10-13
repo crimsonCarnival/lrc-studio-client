@@ -204,7 +204,7 @@ function ProjectCard({
                 {project.editorMode}
               </span>
               {project.forkedFrom?.publicId && (
-                <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { username: project.forkedFrom.accountName }) : t('share.forkedProject')}>
+                <Tip content={project.forkedFrom.accountName ? t('share.forkedFrom', { accountName: project.forkedFrom.accountName }) : t('share.forkedProject')}>
                   <span className="text-[10px] font-bold uppercase text-accent-blue bg-accent-blue/10 border border-accent-blue/20 px-1.5 py-0.5 rounded flex-shrink-0 flex items-center gap-1">
                     <Icon name="open_in_new" size={10} />
                     {t('share.forkedBadge')}

@@ -111,21 +111,21 @@ export function ErrorBanner({ message }: { message?: ReactNode }) {
 }
 
 interface AvatarBadgeProps {
-  username?: string;
+  accountName?: string;
   avatarUrl?: string;
   size?: 'md' | 'lg';
 }
 
-function AvatarBadgeInner({ username, avatarUrl, size = 'md' }: AvatarBadgeProps) {
+function AvatarBadgeInner({ accountName, avatarUrl, size = 'md' }: AvatarBadgeProps) {
   const sizeClass = size === 'lg' ? 'size-16 text-xl' : 'size-10 text-sm';
-  const initial = (username || '?')[0].toUpperCase();
+  const initial = (accountName || '?')[0].toUpperCase();
   const [imgError, setImgError] = useState(false);
 
   if (avatarUrl && !imgError) {
     return (
       <LazyImage
         src={avatarUrl}
-        alt={username}
+        alt={accountName}
         className={`${sizeClass} rounded-full object-cover ring-2 ring-primary/30`}
         onError={() => setImgError(true)}
       />

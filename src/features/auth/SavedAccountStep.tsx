@@ -147,7 +147,7 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
                   className="group flex-1 min-w-0 flex items-center gap-3.5 px-2.5 py-2 rounded-lg text-left hover:bg-zinc-800 transition-colors"
                 >
                   <AvatarBadge
-                    username={account.accountName || account.identifier}
+                    accountName={account.accountName || account.identifier}
                     avatarUrl={account.avatarUrl}
                     size="md"
                   />

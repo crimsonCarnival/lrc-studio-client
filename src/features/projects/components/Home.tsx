@@ -148,7 +148,7 @@ export default function Home() {
   });
 
   const lastProject = items.length > 0 ? items[0] : null;
-  const username = user?.displayName || user?.accountName || 'Creator';
+  const greetingName = user?.displayName || user?.accountName || 'Creator';
   const timezone = (user as unknown as { settings?: { advanced?: { timezone?: string } } })?.settings?.advanced?.timezone || 'auto';
 
   return (
@@ -157,7 +157,7 @@ export default function Home() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 animate-fade-in px-4 lg:px-0">
         <div>
           <h1 className="text-3xl font-bold text-zinc-100 mb-2 tracking-tight">
-            {dt('home.welcome', { name: username, context: user?.id })}
+            {dt('home.welcome', { name: greetingName, context: user?.id })}
           </h1>
           <p className="text-[15px] text-zinc-400">
             {dt('home.welcomeSub')}

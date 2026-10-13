@@ -130,7 +130,7 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
               type="text"
               value={xpBulkIds}
               onChange={e => setXpBulkIds(e.target.value)}
-              placeholder={t('admin.xp.usernamePlaceholder')}
+              placeholder={t('admin.xp.accountNamePlaceholder')}
               className="h-9 px-3 text-sm rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-200 placeholder:text-zinc-700 focus:outline-none focus:border-amber-500/50"
             />
           </label>

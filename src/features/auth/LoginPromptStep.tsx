@@ -56,7 +56,7 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
     <div className="animate-fade-in flex flex-col items-center gap-7">
       <div className="flex flex-col items-center gap-3 text-center">
         <AvatarBadge
-          username={identifierData.accountName || identifierData.identifier}
+          accountName={identifierData.accountName || identifierData.identifier}
           avatarUrl={identifierData.avatarUrl}
           size="lg"
         />

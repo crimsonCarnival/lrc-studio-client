@@ -95,7 +95,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
       </button>
 
       <div className="flex flex-col items-start gap-5">
-        <AvatarBadge username={identifierData.accountName || identifierData.identifier} avatarUrl={identifierData.avatarUrl} size="lg" />
+        <AvatarBadge accountName={identifierData.accountName || identifierData.identifier} avatarUrl={identifierData.avatarUrl} size="lg" />
         <AuthHeading
           title={identifierData.accountName || identifierData.identifier}
           subtitle={identifierData.hasPassword === false ? t('auth.signInWithGoogle') : t('auth.enterPassword')}
