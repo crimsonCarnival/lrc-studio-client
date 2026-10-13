@@ -874,6 +874,10 @@ audio::-webkit-media-controls-panel {
   --color-primary-soft: var(--primary-soft);
   --color-label: var(--label);
   --color-focus: var(--focus);
+  --color-gold-ink: var(--gold-ink);
+  --color-gold-soft: var(--gold-soft);
+  --color-primary-strong: var(--primary-strong);
+  --color-knob: var(--knob);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -881,6 +885,16 @@ audio::-webkit-media-controls-panel {
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Karaoke fill: a copy of the word in the accent colour is unmasked left to right across
+   the span the word is sung (redesign sheet 04). Duration and delay are set inline. */
+@keyframes karaoke-fill {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .karaoke-fill { animation: none !important; width: 60%; }
 }
 
 /* Equalizer bars: indeterminate loader (button loading state, redesign sheet 02/08) */
@@ -964,6 +978,10 @@ audio::-webkit-media-controls-panel {
   --primary-soft: rgba(144, 122, 169, 0.16);
   --label: #286983;
   --focus: #286983;
+  --gold-ink: #9a6214;
+  --gold-soft: rgba(234, 157, 52, 0.14);
+  --primary-strong: rgba(144, 122, 169, 0.34);
+  --knob: #fffaf3;
   --sidebar: #f2e9e1;
   --sidebar-foreground: #1a1826;
   --sidebar-primary: #1a1826;
@@ -1026,6 +1044,10 @@ audio::-webkit-media-controls-panel {
   --primary-soft: rgba(196, 167, 231, 0.14);
   --label: #9ccfd8;
   --focus: #9ccfd8;
+  --gold-ink: #f6c177;
+  --gold-soft: rgba(246, 193, 119, 0.12);
+  --primary-strong: rgba(196, 167, 231, 0.32);
+  --knob: #e0def4;
   --success: #9ccfd8;
   --success-foreground: #1a1826;
   --info: #9ccfd8;
