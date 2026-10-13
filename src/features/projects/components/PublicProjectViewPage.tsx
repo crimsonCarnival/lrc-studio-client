@@ -373,12 +373,9 @@ function PublicProjectViewPageInner() {
             <p className="text-xs flex-1 min-w-0 truncate text-muted-foreground">
               {t('projectView.ctaGuest')}
             </p>
-            <button
-              onClick={handleSignUp}
-              className="shrink-0 h-7 px-3 text-[11px] font-medium rounded-full border border-border text-foreground transition-colors"
-            >
+            <Button variant="outline" size="sm" onClick={handleSignUp} className="h-8 shrink-0 rounded-full px-3 text-xs coarse:h-11">
               {t('projectView.signUpButton')}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -390,9 +387,11 @@ function PublicProjectViewPageInner() {
           {/* Left: lyrics — natural DOM order puts it first both stacked
               (mobile) and in the row (desktop), so no order-* juggling needed. */}
           <div className="relative flex-1 min-h-0 flex flex-col" style={{ minHeight: '50vh' }}>
-            {/* Desktop only: the column that holds the card's own toggle is hidden. */}
+            {/* Desktop only: the column that holds the card's own toggle is hidden.
+                top-23 / right-7 = the 64px header + the card's 28px padding, i.e. exactly
+                where that toggle sat, so the button does not jump when the card collapses. */}
             {infoCollapsed && (
-              <div className="hidden lg:block absolute top-14 right-4 z-20">
+              <div className="hidden lg:block absolute top-23 right-7 z-20">
                 <Tip content={t('projectView.expandInfo')}>
                   <Button
                     size="icon"
@@ -400,7 +399,7 @@ function PublicProjectViewPageInner() {
                     onClick={toggleInfoCollapsed}
                     aria-expanded={false}
                     aria-label={t('projectView.expandInfo')}
-                    className="size-8 rounded-lg bg-card/70 backdrop-blur-md border border-border"
+                    className="size-9 lg:size-9 rounded-full bg-card/70 backdrop-blur-md border border-border"
                   >
                     <Icon name="chevron_left" size={16} />
                   </Button>
@@ -419,12 +418,16 @@ function PublicProjectViewPageInner() {
 
           {/* Right: info panel — fixed width on desktop, stacked below on mobile.
               Its own min-h-0/overflow-y-auto scrolls internally within the row's
-              bounded height; it never pushes the page itself into scrolling. */}
+              bounded height; it never pushes the page itself into scrolling.
+              lg:mt-16: on desktop this route drops the layout's top padding so the
+              lyrics run full-bleed behind the fixed header (AppLayout, `lg:pt-0`).
+              The card must not, or its title, cover and collapse toggle sit under
+              the header. 64px is what every other route pads on desktop (`lg:pt-16`). */}
           <div
             ref={rightPanelRef}
             tabIndex={0}
             aria-label={t('projectView.aboutProject')}
-            className={`lrc-scroll relative min-h-0 lg:w-[400px] xl:w-[460px] lg:flex-shrink-0 overflow-y-auto border-border lg:border-l max-lg:border-t bg-card/40 max-lg:pb-64 ${infoCollapsed ? 'lg:hidden' : ''}`}
+            className={`lrc-scroll relative min-h-0 lg:mt-16 lg:w-[400px] xl:w-[460px] lg:flex-shrink-0 overflow-y-auto border-border lg:border-l max-lg:border-t bg-card/40 max-lg:pb-64 ${infoCollapsed ? 'lg:hidden' : ''}`}
           >
             <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20" />
             <div className="px-5 pt-6 pb-6 lg:px-7 lg:pt-7 flex flex-col gap-4 min-h-full">
@@ -478,14 +481,16 @@ function PublicProjectViewPageInner() {
           onToggleFullLyrics={toggleFullLyrics}
           startSlot={canFork ? (
             <Tip content={t('projectView.forkButton')}>
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 onClick={handleFork}
                 aria-label={t('projectView.forkButton')}
-                className="inline-grid place-items-center size-11 rounded-full border border-border text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                className="size-11 rounded-full bg-transparent text-subtle hover:text-foreground lg:size-11"
               >
-                <Icon name="call_split" size={16} />
-              </button>
+                <Icon name="call_split" size={18} />
+              </Button>
             </Tip>
           ) : undefined}
           endSlot={project.publicId ? <ShareOgButton publicId={project.publicId} title={projectTitle} /> : undefined}
@@ -493,22 +498,26 @@ function PublicProjectViewPageInner() {
           {/* Prev / next in playlist context */}
           {listId && (prevTrack || nextTrack) && (
             <div className="flex items-center justify-between">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 disabled={!prevTrack}
                 onClick={() => goToTrack(prevTrack)}
-                className="h-9 coarse:h-11 px-2.5 text-xs text-foreground disabled:opacity-30 transition-opacity"
+                className="h-9 lg:h-9 coarse:h-11"
               >
                 {t('projectView.prevTrack')}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
                 disabled={!nextTrack}
                 onClick={() => goToTrack(nextTrack)}
-                className="h-9 coarse:h-11 px-2.5 text-xs text-foreground disabled:opacity-30 transition-opacity"
+                className="h-9 lg:h-9 coarse:h-11"
               >
                 {t('projectView.nextTrack')}
-              </button>
+              </Button>
             </div>
           )}
         </PublicPlaybackBar>

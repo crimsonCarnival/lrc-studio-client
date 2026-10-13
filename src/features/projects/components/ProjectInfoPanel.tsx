@@ -27,11 +27,13 @@ interface ProjectData {
   publicId?: string;
   title?: string;
   metadata?: ProjectMeta;
-  user?: { accountName?: string; displayName?: string };
+  user?: { accountName?: string; displayName?: string; avatarUrl?: string | null; progression?: { level?: number | null } | null };
   upload?: { duration?: number | null };
   createdAt?: string | number;
   forksEnabled?: boolean;
   isForkedByMe?: boolean;
+  isBoostedByMe?: boolean;
+  boostCount?: number;
   forkCount?: number;
   viewCount?: number;
   shareCount?: number;
@@ -39,23 +41,17 @@ interface ProjectData {
   [key: string]: unknown;
 }
 
-const PILL =
-  'inline-flex items-center gap-1.5 h-11 px-3.5 rounded-full border text-sm font-semibold shrink-0 transition-colors ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-50';
-const PILL_IDLE = 'border-border text-foreground hover:bg-muted';
-const PILL_ACTIVE = 'border-primary/30 bg-primary/10 text-primary';
+// One segment of the joined Star / Fork / Boost group (redesign sheet 17). Counts ride on the
+// action they belong to, which is what let the separate four-number stats box go.
+const SEG =
+  'flex items-center gap-2 h-[42px] coarse:h-11 px-3.5 text-[15px] font-semibold text-foreground whitespace-nowrap ' +
+  'transition-colors duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:-outline-offset-2 ' +
+  'focus-visible:outline-solid focus-visible:outline-focus';
+const SEG_BUTTON = 'hover:bg-raised disabled:pointer-events-none';
+const SEG_COUNT = 'border-l border-hl pl-2 font-mono text-xs font-medium tabular-nums text-subtle';
 const SECTION_LABEL = 'text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground';
 const CARD = 'rounded-[14px] border border-border bg-card/60 p-3.5';
-const CHIP = 'rounded-md px-2 py-1 text-xs font-semibold';
-
-function Stat({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="min-w-0">
-      <div className="font-heading text-[22px] font-bold leading-tight tabular-nums">{value}</div>
-      <div className="text-xs text-muted-foreground truncate">{label}</div>
-    </div>
-  );
-}
+const CHIP = 'inline-flex h-[26px] items-center gap-1.5 rounded-full bg-raised px-2.5 text-[13px] font-semibold text-subtle';
 
 function clock(seconds: number): string {
   const s = Math.max(0, Math.round(seconds));
@@ -145,44 +141,74 @@ export default function ProjectInfoPanel({
   }, [meta.songLanguage, locale]);
 
   const duration = project?.upload?.duration;
-  const facts: { label: string; value: ReactNode; mono?: boolean }[] = [];
-  if (duration) facts.push({ label: t('projectView.duration'), value: clock(duration), mono: true });
+  const authorName = project.user?.displayName || accountName;
+  const authorLevel = project.user?.progression?.level ?? 0;
+  const facts: { label: string; value: ReactNode }[] = [];
   if (languageName) facts.push({ label: t('projectView.language'), value: <span className="capitalize">{languageName}</span> });
-  if (lineCount > 0) facts.push({ label: t('projectView.sync'), value: hasWordTimes ? t('projectView.syncLineAndWord') : t('projectView.syncLine') });
   if (formattedDate) facts.push({ label: t('projectView.publishedOn'), value: formattedDate });
+  if (accountName) {
+    facts.push({
+      label: t('projectView.syncedBy'),
+      value: (
+        <span className="flex min-w-0 items-center gap-2">
+          {project.user?.avatarUrl ? (
+            <img src={project.user.avatarUrl} alt="" className="size-[22px] shrink-0 rounded-full object-cover" loading="lazy" decoding="async" />
+          ) : (
+            <span aria-hidden className="grid size-[22px] shrink-0 place-items-center rounded-full bg-foam-soft font-heading text-[10px] font-bold uppercase text-foam-ink">
+              {(authorName ?? '').charAt(0)}
+            </span>
+          )}
+          <Link to={`/profile/${accountName}`} className="truncate font-bold text-foreground hover:underline">
+            {authorName}
+          </Link>
+          {authorLevel > 0 && (
+            <span className="inline-flex h-5 shrink-0 items-center rounded-full bg-primary-soft px-[7px] font-mono text-[11px] font-semibold text-primary-ink">
+              {t('settings.levelShort', { level: authorLevel })}
+            </span>
+          )}
+        </span>
+      ),
+    });
+  }
 
   const title = project?.title || meta.songName || t('projectView.notFound');
   const showSongName = !!meta.songName && meta.songName !== title;
+  const albumLine = [meta.songAlbum, meta.songYear].filter(Boolean).join(' · ');
+  const canFork = project?.forksEnabled !== false;
 
   return (
-    <div className="flex flex-col gap-4 flex-1">
+    <div className="flex flex-col gap-[18px] flex-1">
       {/* Cover + title; the overflow menu and collapse toggle sit top-right */}
-      <div className="flex items-end gap-4">
+      <div className="flex items-start gap-4">
         {cover && !collapsed && (
           // object-contain, not -cover: a non-square cover must never lose its
           // edges to cropping. Letterboxed on the card's own background instead.
           <img
             src={cover}
             alt={t('projectView.coverAlt', { title })}
-            className="size-24 sm:size-[120px] flex-none rounded-[14px] border border-border bg-card object-contain"
+            className="size-24 sm:size-[116px] flex-none rounded-[14px] bg-raised object-contain shadow-elevated"
             loading="eager"
             decoding="async"
           />
         )}
-        <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-          <h1 className="font-heading font-bold leading-none text-3xl lg:text-[38px] tracking-tight text-foreground break-words">
+        <div className="flex-1 min-w-0 flex flex-col gap-1 pt-0.5">
+          {/* Wraps instead of clipping: a long title grows the header, it never hides under the scroll edge. */}
+          <h1 className="font-heading font-extrabold leading-none text-3xl lg:text-[34px] tracking-[-0.03em] text-foreground break-words">
             {title}
           </h1>
-          {showSongName && <p className="text-[13px] text-foreground/85">{meta.songName}</p>}
-          {(meta.songArtist || meta.songAlbum || meta.songYear) && (
-            <p className="text-[13px] leading-snug text-muted-foreground">
-              {meta.songArtist && <span className="font-semibold text-foreground">{meta.songArtist}</span>}
-              {meta.songAlbum && <span className={`italic ${meta.songArtist ? "before:content-['·'] before:mx-1 before:not-italic" : ''}`}>{meta.songAlbum}</span>}
-              {meta.songYear && <span className={meta.songArtist || meta.songAlbum ? "before:content-['·'] before:mx-1" : ''}>{meta.songYear}</span>}
-            </p>
+          {showSongName && <p className="text-[15px] text-subtle">{meta.songName}</p>}
+          {meta.songArtist && <p className="text-[15px] leading-tight font-bold text-foreground">{meta.songArtist}</p>}
+          {albumLine && (
+            <Tip content={albumLine}>
+              <p className="line-clamp-2 text-sm text-subtle">
+                {meta.songAlbum && <i>{meta.songAlbum}</i>}
+                {meta.songAlbum && meta.songYear && ' · '}
+                {meta.songYear}
+              </p>
+            </Tip>
           )}
         </div>
-        <div className="flex items-center self-start shrink-0">
+        <div className="flex items-center self-start shrink-0 -mt-1.5 -mr-2">
           <ProjectActionsMenu
             project={project}
             lines={lines ?? []}
@@ -213,86 +239,119 @@ export default function ProjectInfoPanel({
           <div className="flex flex-wrap gap-1.5">
             {lineCount > 0 && (
               <>
-                <span className={`${CHIP} font-bold bg-primary text-primary-foreground`}>
+                {/* Word sync is the premium state, so only it gets the iris fill. */}
+                <span className={hasWordTimes ? `${CHIP} bg-primary-soft text-primary-ink` : `${CHIP} text-foreground`}>
+                  <Icon name={hasWordTimes ? 'view_week' : 'subject'} size={14} className={hasWordTimes ? undefined : 'text-foam-ink'} />
                   {hasWordTimes ? t('projectView.syncByWord') : t('projectView.syncByLine')}
                 </span>
-                <span className={`${CHIP} bg-muted text-foreground`}>{t('projectView.lineCount', { count: lineCount })}</span>
-                <span className={`${CHIP} bg-muted text-foreground`}>{t('projectView.wordCount', { count: wordCount })}</span>
+                <span className={CHIP}>{t('projectView.lineCount', { count: lineCount })}</span>
+                <span className={CHIP}>{t('projectView.wordCount', { count: wordCount })}</span>
               </>
             )}
+            {duration ? <span className={`${CHIP} tabular-nums`}>{clock(duration)}</span> : null}
             {meta.tags?.map((tag, i) => (
-              <span key={`${tag}-${i}`} className={`${CHIP} bg-muted text-foreground`}>{tag}</span>
+              <span key={`${tag}-${i}`} className={CHIP}>{tag}</span>
             ))}
           </div>
         )}
 
-        {/* Primary actions */}
+        {/* Primary actions. A segment without a handler (your own project, or signed out)
+            still shows its count, as plain text rather than a dead button. */}
         <div className="flex items-center gap-2 flex-wrap">
-          {isOwner ? (
-            <>
-              <button type="button" onClick={onEdit} className={`${PILL} ${PILL_IDLE}`}>
-                <Icon name="edit" size={16} />
-                {t('projectView.editButton')}
-              </button>
-              {ctaSlot}
-            </>
-          ) : (
-            <>
-              {user && (
-                <button
-                  type="button"
-                  onClick={onStar}
-                  disabled={starring}
-                  aria-pressed={!!isStarred}
-                  className={`${PILL} ${isStarred ? PILL_ACTIVE : PILL_IDLE}`}
-                >
-                  <Icon name="star" size={16} filled={isStarred} />
-                  {isStarred ? t('projectView.unstarButton') : t('projectView.starButton')}
-                </button>
-              )}
-
-              {project?.forksEnabled !== false && (
-                project?.isForkedByMe ? (
-                  <span className={`${PILL} ${PILL_ACTIVE}`}>
-                    <Icon name="check" size={16} />
-                    {t('projectView.forkedBadge')}
-                  </span>
-                ) : (
-                  <button type="button" onClick={onFork} className={`${PILL} ${PILL_IDLE}`}>
-                    <Icon name="call_split" size={16} />
-                    {t('projectView.forkButton')}
-                  </button>
-                )
-              )}
-
-              {user && !user.isGuest && (
-                <BoostButton publicId={project?.publicId ?? ''} />
-              )}
-            </>
+          {isOwner && (
+            <Button variant="outline" onClick={onEdit} className="h-[42px] gap-2 px-3.5 text-[15px] lg:h-[42px] lg:px-3.5 lg:text-[15px] coarse:h-11">
+              <Icon name="edit" size={17} />
+              {t('projectView.editButton')}
+            </Button>
           )}
-          {project?.publicId && <ShareOgButton publicId={project.publicId} title={title} />}
+          <div role="group" aria-label={t('projectView.projectActions')} className="flex min-w-0 items-stretch divide-x divide-hl overflow-hidden rounded-[var(--radius-control)] inset-ring inset-ring-hl">
+            {user && !isOwner ? (
+              <button
+                type="button"
+                onClick={onStar}
+                disabled={starring}
+                aria-pressed={!!isStarred}
+                className={`${SEG} ${SEG_BUTTON} ${isStarred ? 'bg-gold-soft text-gold-ink hover:bg-gold-soft' : ''}`}
+              >
+                {/* Keyed on the state so the pop replays on every star, not only the first. */}
+                <Icon key={String(!!isStarred)} name="star" size={17} filled={isStarred} className={isStarred ? 'star-pop' : undefined} />
+                {isStarred ? t('projectView.unstarButton') : t('projectView.starButton')}
+                <span className={`${SEG_COUNT} ${isStarred ? 'text-gold-ink' : ''}`}>{starCount ?? 0}</span>
+              </button>
+            ) : (
+              <span className={SEG}>
+                <Icon name="star" size={17} className="text-subtle" />
+                {t('projectView.statStars')}
+                <span className={SEG_COUNT}>{starCount ?? 0}</span>
+              </span>
+            )}
+
+            {canFork && !isOwner && !project?.isForkedByMe ? (
+              <button type="button" onClick={onFork} className={`${SEG} ${SEG_BUTTON}`}>
+                <Icon name="call_split" size={17} />
+                {t('projectView.forkButton')}
+                <span className={SEG_COUNT}>{project?.forkCount ?? 0}</span>
+              </button>
+            ) : (
+              <span className={`${SEG} ${project?.isForkedByMe ? 'bg-primary-soft text-primary-ink' : ''}`}>
+                <Icon name={project?.isForkedByMe ? 'check' : 'call_split'} size={17} className={project?.isForkedByMe ? undefined : 'text-subtle'} />
+                {project?.isForkedByMe ? t('projectView.forkedBadge') : t('projectView.statForks')}
+                <span className={`${SEG_COUNT} ${project?.isForkedByMe ? 'text-primary-ink' : ''}`}>{project?.forkCount ?? 0}</span>
+              </span>
+            )}
+
+            {user && !user.isGuest && !isOwner ? (
+              <BoostButton
+                // Keyed so the local state resets when navigating between projects in a playlist.
+                key={project?.publicId}
+                publicId={project?.publicId ?? ''}
+                initialBoosted={!!project?.isBoostedByMe}
+                initialCount={project?.boostCount ?? 0}
+                className={`${SEG} ${SEG_BUTTON}`}
+                countClassName={SEG_COUNT}
+              />
+            ) : (
+              <span className={SEG}>
+                <Icon name="repeat" size={17} className="text-subtle" />
+                {t('projectView.statBoosts')}
+                <span className={SEG_COUNT}>{project?.boostCount ?? 0}</span>
+              </span>
+            )}
+          </div>
+          {project?.publicId && (
+            <ShareOgButton
+              publicId={project.publicId}
+              title={title}
+              className="size-[42px] rounded-[var(--radius-control)] lg:size-[42px] coarse:size-11"
+            />
+          )}
+          {isOwner && ctaSlot}
         </div>
 
-        {/* Stats */}
-        <div className={`${CARD} grid grid-cols-4 gap-2`}>
-          <Stat value={project?.viewCount ?? 0} label={t('projectView.statViews')} />
-          <Stat value={starCount ?? 0} label={t('projectView.statStars')} />
-          <Stat value={project?.forkCount ?? 0} label={t('projectView.statForks')} />
-          <Stat value={project?.shareCount ?? 0} label={t('projectView.statShares')} />
-        </div>
-        {reactionsSlot && <div>{reactionsSlot}</div>}
+        {(reactionsSlot || (project?.viewCount ?? 0) > 0) && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {reactionsSlot}
+            <span className="ml-auto flex shrink-0 items-center gap-1.5 font-mono text-xs font-medium text-subtle">
+              <Icon name="visibility" size={14} />
+              {t('projectView.viewCount', { count: project?.viewCount ?? 0 })}
+            </span>
+          </div>
+        )}
         {viewersSlot && <div>{viewersSlot}</div>}
 
         {/* Facts */}
         {facts.length > 0 && (
-          <dl className={`${CARD} grid grid-cols-2 gap-y-2 text-[13px]`}>
-            {facts.map((fact) => (
-              <div key={fact.label} className="contents">
-                <dt className="text-muted-foreground">{fact.label}</dt>
-                <dd className={`text-foreground ${fact.mono ? 'font-mono tabular-nums' : ''}`}>{fact.value}</dd>
-              </div>
-            ))}
-          </dl>
+          <>
+            <div aria-hidden className="h-px bg-hl" />
+            <dl className="grid grid-cols-[110px_1fr] gap-y-2.5 text-[15px]">
+              {facts.map((fact) => (
+                <div key={fact.label} className="contents">
+                  <dt className="text-subtle">{fact.label}</dt>
+                  <dd className="min-w-0 text-foreground">{fact.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </>
         )}
 
         {/* Forked-from */}
@@ -324,13 +383,15 @@ export default function ProjectInfoPanel({
               {description}
             </p>
             {isLongDescription && (
-              <button
+              <Button
                 type="button"
+                variant="link"
+                size={null}
                 onClick={() => setDescExpanded((v) => !v)}
-                className="text-xs mt-1 hover:underline text-primary"
+                className="mt-1 text-xs"
               >
                 {descExpanded ? t('projectView.showLess') : t('projectView.showMore')}
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -364,32 +425,23 @@ export default function ProjectInfoPanel({
         {lineCount > 0 && (
           <div className="flex flex-col gap-2">
             <span className={SECTION_LABEL}>{t('projectView.download')}</span>
-            <div className="flex flex-wrap gap-2">
-              {(['lrc', 'srt'] as const).map((format) => (
+            <div className="grid grid-cols-2 gap-2">
+              {([['lrc', 'projectView.downloadLrcHint'], ['srt', 'projectView.downloadSrtHint']] as const).map(([format, hintKey]) => (
                 <button
                   key={format}
                   type="button"
                   onClick={() => downloadProjectExport(format, project, lines ?? [])}
-                  className="h-10 coarse:h-11 px-3.5 rounded-[10px] border border-border bg-muted/60 font-semibold text-sm text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                  className="flex h-[50px] items-center gap-2.5 rounded-[var(--radius-control)] bg-card px-3.5 text-left text-foreground inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-iris focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
                 >
-                  .{format}
+                  <Icon name="download" size={18} className="shrink-0 text-primary-ink" />
+                  <span className="flex min-w-0 flex-col gap-px">
+                    <span className="font-mono text-[15px] leading-tight font-semibold">.{format}</span>
+                    <span className="truncate text-xs text-subtle">{t(hintKey)}</span>
+                  </span>
                 </button>
               ))}
             </div>
           </div>
-        )}
-
-        {/* Author */}
-        {accountName && (
-          <p className="mt-auto pt-2 flex items-center gap-2 text-[13px] text-muted-foreground">
-            <span aria-hidden className="inline-grid place-items-center size-6 rounded-full bg-muted text-[11px] font-semibold uppercase text-foreground">
-              {(project.user?.displayName || accountName).charAt(0)}
-            </span>
-            {t('projectView.syncedBy')}
-            <Link to={`/profile/${accountName}`} className="font-semibold text-foreground hover:underline">
-              {project.user?.displayName || accountName}
-            </Link>
-          </p>
         )}
       </>)}
     </div>

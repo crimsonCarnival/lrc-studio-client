@@ -8,7 +8,7 @@ const GET_PUBLIC_PROJECT = /* GraphQL */ `
       id publicId title coverImage
       metadata { description genre tags songName songArtist songAlbum songYear songLanguage trackNumber trackCount singerColors }
       upload { id source uploadUrl duration coverImage }
-      user { id accountName displayName avatarUrl }
+      user { id accountName displayName avatarUrl progression { level } }
       lyrics {
         editorMode
         sections {
@@ -23,7 +23,7 @@ const GET_PUBLIC_PROJECT = /* GraphQL */ `
           }
         }
       }
-      starCount forkCount viewCount shareCount isStarredByMe isForkedByMe forksEnabled createdAt
+      starCount forkCount viewCount shareCount boostCount isStarredByMe isForkedByMe isBoostedByMe forksEnabled createdAt
       forkedFrom { publicId accountName sourceDeleted }
     }
   }

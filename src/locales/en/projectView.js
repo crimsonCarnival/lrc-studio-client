@@ -53,7 +53,13 @@ export default {
   statStars: "Stars",
   statForks: "Forks",
   statShares: "Shares",
+  statBoosts: "Boosts",
   download: "Download",
+  downloadLrcHint: "Lyrics file",
+  downloadSrtHint: "Subtitles",
+  viewCount_one: "{{count}} view",
+  viewCount_other: "{{count}} views",
+  projectActions: "Project actions",
   syncedBy: "Synced by",
   actions: {
     menu: 'More options',

@@ -263,9 +263,16 @@ export type FollowListType =
 export type FollowUser = {
   accountName: Scalars['String']['output'];
   avatarUrl?: Maybe<Scalars['String']['output']>;
+  /** Subject to the user's country visibility preference. */
+  country?: Maybe<Scalars['String']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
+  /** The profile summary fields are only loaded by searchUsers; null elsewhere. */
+  followerCount?: Maybe<Scalars['Int']['output']>;
   id: Scalars['ID']['output'];
   isFollowedByMe: Scalars['Boolean']['output'];
+  level?: Maybe<Scalars['Int']['output']>;
+  projectCount?: Maybe<Scalars['Int']['output']>;
+  totalStarsReceived?: Maybe<Scalars['Int']['output']>;
 };
 
 export type ForkedFrom = {
@@ -683,13 +690,17 @@ export type PlaylistSortMode =
   | 'STARS';
 
 export type Project = {
+  boostCount?: Maybe<Scalars['Int']['output']>;
   coverImage?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['String']['output']>;
   expiresAt?: Maybe<Scalars['String']['output']>;
   forkCount?: Maybe<Scalars['Int']['output']>;
   forkedFrom?: Maybe<ForkedFrom>;
   forksEnabled?: Maybe<Scalars['Boolean']['output']>;
+  /** True when at least one word carries a timestamp. */
+  hasWordSync?: Maybe<Scalars['Boolean']['output']>;
   id: Scalars['ID']['output'];
+  isBoostedByMe?: Maybe<Scalars['Boolean']['output']>;
   isForkedByMe?: Maybe<Scalars['Boolean']['output']>;
   isStarredByMe?: Maybe<Scalars['Boolean']['output']>;
   lineCount?: Maybe<Scalars['Int']['output']>;

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
+import { cn } from '@/shared/utils/utils';
 import { projectsService } from '../services/projects.service';
 
 function getServerOrigin() {
@@ -44,20 +46,18 @@ export function ShareOgButton({ publicId, title = '', className = '' }: ShareOgB
 
   return (
     <Tip content={label}>
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="icon"
         onClick={handleShare}
         aria-label={label}
-        className={[
-          'inline-grid place-items-center size-11 rounded-full border border-border text-foreground shrink-0',
-          'hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
-          className,
-        ].join(' ')}
+        className={cn('size-11 rounded-full bg-transparent text-subtle hover:text-foreground lg:size-11', className)}
       >
         {copied
-          ? <Icon name="check" size={16} className="text-primary" />
-          : <Icon name="share" size={16} />}
-      </button>
+          ? <Icon name="check" size={18} className="text-primary-ink" />
+          : <Icon name="share" size={18} />}
+      </Button>
     </Tip>
   );
 }

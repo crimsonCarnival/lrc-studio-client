@@ -53,7 +53,13 @@ export default {
   statStars: "Destacados",
   statForks: "Copias",
   statShares: "Compartido",
+  statBoosts: "Impulsos",
   download: "Descargar",
+  downloadLrcHint: "Archivo de letra",
+  downloadSrtHint: "Subtítulos",
+  viewCount_one: "{{count}} vista",
+  viewCount_other: "{{count}} vistas",
+  projectActions: "Acciones del proyecto",
   syncedBy: "Sincronizada por",
   actions: {
     menu: 'Más opciones',
