@@ -20,6 +20,7 @@ const HEADER_SEARCH_QUERY = /* GraphQL */ `
         forkCount
         forkedFrom { publicId accountName sourceDeleted }
         metadata { songName songArtist }
+        hasWordSync
       }
       total
     }
@@ -28,6 +29,7 @@ const HEADER_SEARCH_QUERY = /* GraphQL */ `
       accountName
       displayName
       avatarUrl
+      level
     }
   }
 `;

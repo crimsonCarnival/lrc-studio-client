@@ -1,49 +1,92 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LazyImage } from '@ui/LazyImage';
-import { UserHoverCard } from '@ui/UserHoverCard';
+import { Button } from '@ui/button';
+import { CountryFlag } from '@ui/CountryFlag';
+import { Icon } from '@/shared/ui/Icon';
+import { followUser, unfollowUser } from '@/features/profile/profile.service';
 import type { FollowUser } from '@/types';
+import { Highlight } from './Highlight';
 
-export function SearchUserCard({ user, compact = false }: { user: FollowUser; compact?: boolean }) {
-  const { accountName, displayName, avatarUrl, id } = user;
-  const initials = (displayName || accountName || '?').charAt(0).toUpperCase();
+type SearchUserCardProps = {
+  user: FollowUser;
+  query: string;
+  /** Signed-in viewer who is not this user. Guests and your own row get no follow button. */
+  canFollow: boolean;
+};
 
-  if (compact) {
-    return (
-      <UserHoverCard accountName={accountName} userId={id}>
-        <Link
-          to={`/profile/${accountName}`}
-          className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-accent rounded-lg transition-colors"
-        >
-          <div className="size-7 rounded-full overflow-hidden bg-zinc-800 shrink-0">
-            {avatarUrl
-              ? <LazyImage src={avatarUrl} alt={displayName || accountName} className="size-full object-cover" />
-              : <div className="size-full flex items-center justify-center text-xs font-bold text-zinc-400">{initials}</div>}
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">{displayName || accountName}</p>
-            {displayName && <p className="text-xs text-muted-foreground truncate">{accountName}</p>}
-          </div>
-        </Link>
-      </UserHoverCard>
-    );
-  }
+/** One row per user with its actions inline (redesign sheet 19), instead of a hover card under the row. */
+export function SearchUserCard({ user, query, canFollow }: SearchUserCardProps) {
+  const { t } = useTranslation();
+  const { accountName, displayName, avatarUrl, country } = user;
+  const name = displayName || accountName;
+  const level = user.level ?? 0;
+  // Local override of the server flag; null until the viewer acts on this row.
+  const [followOverride, setFollowOverride] = useState<boolean | null>(null);
+  const [pending, setPending] = useState(false);
+  const following = followOverride ?? user.isFollowedByMe;
+  // Keeps the follower count in step with the button without refetching the search.
+  const followerDelta = followOverride === null ? 0 : Number(followOverride) - Number(user.isFollowedByMe);
+
+  const toggleFollow = async () => {
+    setPending(true);
+    try {
+      await (following ? unfollowUser(accountName) : followUser(accountName));
+      setFollowOverride(!following);
+    } catch {
+      // The button keeps its previous state; the request layer already reports the error.
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
-    <UserHoverCard accountName={accountName} userId={id}>
-      <Link
-        to={`/profile/${accountName}`}
-        className="w-full flex items-center gap-3 p-4 rounded-xl bg-card border border-border hover:border-border/80 hover:bg-accent/50 transition-all"
-      >
-        <div className="size-10 rounded-full overflow-hidden bg-zinc-800 shrink-0">
-          {avatarUrl
-            ? <LazyImage src={avatarUrl} alt={displayName || accountName} className="size-full object-cover" />
-            : <div className="size-full flex items-center justify-center text-sm font-bold text-zinc-400">{initials}</div>}
-        </div>
-        <div className="min-w-0">
-          <p className="font-semibold text-foreground text-sm truncate">{displayName || accountName}</p>
-          <p className="text-xs text-muted-foreground truncate">{accountName}</p>
-        </div>
-      </Link>
-    </UserHoverCard>
+    <article className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[18px] bg-background px-[18px] py-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint">
+      <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft font-heading text-[22px] font-bold text-primary-ink uppercase">
+        {avatarUrl ? <LazyImage src={avatarUrl} alt="" className="size-full object-cover" /> : name.charAt(0)}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <span className="flex min-w-0 items-center gap-2">
+          <Link to={`/profile/${accountName}`} className="truncate font-heading text-xl leading-tight font-bold tracking-[-0.02em] text-foreground hover:underline">
+            <Highlight text={name} query={query} />
+          </Link>
+          {level > 0 && (
+            <span className="inline-flex h-[22px] shrink-0 items-center rounded-full bg-primary-soft px-2 font-mono text-[11px] font-semibold text-primary-ink">
+              {t('settings.levelShort', { level })}
+            </span>
+          )}
+        </span>
+        <span className="flex min-w-0 items-center gap-2 text-sm text-subtle">
+          <span className="truncate font-mono text-xs">@<Highlight text={accountName} query={query} /></span>
+          {/* Only present when the user chose to show their country. */}
+          {country && <><span aria-hidden>·</span><CountryFlag countryCode={country} /></>}
+        </span>
+        <span className="truncate font-mono text-xs font-medium text-subtle">
+          {t('search.statProjects', { count: user.projectCount ?? 0 })}
+          {' · '}
+          {t('search.statStars', { count: user.totalStarsReceived ?? 0 })}
+          {' · '}
+          {t('search.statFollowers', { count: Math.max(0, (user.followerCount ?? 0) + followerDelta) })}
+        </span>
+      </div>
+      <div className="flex shrink-0 items-center gap-2 max-sm:w-full">
+        <Button asChild variant="outline" className="h-10 px-3.5 text-[15px] max-sm:flex-1 lg:h-10 lg:px-3.5 lg:text-[15px] coarse:h-11">
+          <Link to={`/profile/${accountName}`}>{t('search.viewProfile')}</Link>
+        </Button>
+        {canFollow && (
+          <Button
+            variant={following ? 'outline' : 'default'}
+            aria-pressed={following}
+            loading={pending}
+            onClick={toggleFollow}
+            className="h-10 gap-2 px-3.5 text-[15px] max-sm:flex-1 lg:h-10 lg:px-3.5 lg:text-[15px] coarse:h-11"
+          >
+            <Icon name={following ? 'check' : 'add'} size={16} />
+            {following ? t('profile.following') : t('profile.follow')}
+          </Button>
+        )}
+      </div>
+    </article>
   );
 }

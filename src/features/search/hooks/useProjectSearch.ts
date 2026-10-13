@@ -18,6 +18,7 @@ const SEARCH_QUERY = /* GraphQL */ `
         starCount
         forkCount
         createdAt
+        hasWordSync
         user { accountName }
         forkedFrom {
           publicId

@@ -13,6 +13,12 @@ const SEARCH_USERS_QUERY = /* GraphQL */ `
       accountName
       displayName
       avatarUrl
+      isFollowedByMe
+      level
+      projectCount
+      totalStarsReceived
+      followerCount
+      country
     }
   }
 `;

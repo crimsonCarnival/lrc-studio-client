@@ -4,43 +4,41 @@ import { Icon } from '@/shared/ui/Icon';
 import { ProjectListCover } from '@/features/projects/components/ProjectListCover';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 import type { Project } from '@/types';
+import { Highlight } from './Highlight';
 
-export function SearchProjectCard({ project }: { project: Project }) {
+export function SearchProjectCard({ project, query }: { project: Project; query: string }) {
   const { t } = useTranslation();
   const { publicId, title, coverImage, starCount, forkCount, metadata, forkedFrom } = project;
-  const displayTitle = metadata?.songName || title || 'Untitled';
+  const displayTitle = metadata?.songName || title || t('library.untitled');
   const artist = metadata?.songArtist;
 
   return (
     <ProjectMenu project={project} isOwner={false}>
       <Link
         to={`/project/${publicId}`}
-        className="flex gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 hover:bg-zinc-800/50 transition-all"
+        className="flex items-center gap-4 rounded-[18px] bg-background px-[18px] py-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
       >
-        <ProjectListCover coverImage={coverImage} genre={metadata?.genre} className="size-12" />
+        <ProjectListCover coverImage={coverImage} genre={metadata?.genre} className="size-14" />
 
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-white text-sm truncate">{displayTitle}</p>
-          {artist && (
-            <p className="text-xs text-zinc-400 truncate mt-0.5">{artist}</p>
-          )}
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <p className="truncate font-heading text-xl leading-tight font-bold tracking-[-0.02em] text-foreground">
+            <Highlight text={displayTitle} query={query} />
+          </p>
+          <p className="truncate text-sm text-subtle">
+            {artist && <><Highlight text={artist} query={query} />{' · '}</>}
+            {t(project.hasWordSync ? 'search.wordSync' : 'search.lineSync')}
+          </p>
           {forkedFrom?.accountName && (
-            <p className="text-[10px] text-zinc-600 mt-0.5">
+            <p className="truncate text-xs text-faint">
               {t('search.forkedFrom', { accountName: forkedFrom.accountName })}
             </p>
           )}
         </div>
 
-        <div className="flex flex-col items-end gap-1.5 shrink-0">
-          <ProjectMenuButton project={project} isOwner={false} className="p-1 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-colors" />
-          <div className="flex items-center gap-1 text-xs text-zinc-500">
-            <Icon name="star" size={12} />
-            <span>{starCount ?? 0}</span>
-          </div>
-          <div className="flex items-center gap-1 text-xs text-zinc-500">
-            <Icon name="call_split" size={12} />
-            <span>{forkCount ?? 0}</span>
-          </div>
+        <div className="flex shrink-0 items-center gap-3 font-mono text-xs font-medium text-subtle tabular-nums">
+          <span className="flex items-center gap-1"><Icon name="star" size={14} />{starCount ?? 0}</span>
+          <span className="flex items-center gap-1"><Icon name="call_split" size={14} />{forkCount ?? 0}</span>
+          <ProjectMenuButton project={project} isOwner={false} className="grid size-8 place-items-center rounded-[10px] text-subtle transition-colors hover:bg-raised hover:text-foreground coarse:size-11" />
         </div>
       </Link>
     </ProjectMenu>
