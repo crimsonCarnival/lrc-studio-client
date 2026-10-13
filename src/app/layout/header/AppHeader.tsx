@@ -8,7 +8,9 @@ import { useNavigate, useLocation, NavLink, Link } from 'react-router-dom';
 import { guardedLinkClick } from './guarded-link-click';
 import { Icon } from '@/shared/ui/Icon';
 import { HeaderSearchBar } from '@/features/search/components/HeaderSearchBar';
+import { findOpenDialog, isSearchShortcut, pickShortcutTarget } from '@/shared/utils/search-shortcut';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
 import { UserMenu } from './UserMenu';
 import { ThemeLangSwitcher } from './ThemeLangSwitcher';
 import { HeaderBreadcrumb } from './HeaderBreadcrumb';
@@ -50,6 +52,15 @@ interface AppHeaderProps {
   /** Which workspace view is showing; the preview replaces the breadcrumb with its back button. */
   workspaceView?: string;
 }
+
+// Desktop primary navigation, in display order.
+const NAV_LINKS = [
+  ['/home', 'nav.home'],
+  ['/explore', 'nav.explore'],
+  ['/feed', 'nav.feed'],
+  ['/leaderboard', 'nav.leaderboard'],
+  ['/library', 'nav.library'],
+] as const;
 
 export function AppHeader({
   user,
@@ -97,6 +108,19 @@ export function AppHeader({
     };
   }, [searchOpen]);
 
+  // "/" opens the header search on pages with no search box of their own. A page-level
+  // field (or one inside an open dialog) takes the key first, so this only fills the gap.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (!isSearchShortcut(e) || !searchOverlayRef.current) return;
+      if (findOpenDialog(document) || pickShortcutTarget(document)) return;
+      e.preventDefault();
+      setSearchOpen(true);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
 
 
   // On the admin host `/` is the dashboard, not the landing page, so keep the header.
@@ -133,7 +157,8 @@ export function AppHeader({
     }
   };
 
-  const iconBtn = 'size-8 coarse:size-11 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors rounded-lg flex-shrink-0 cursor-pointer';
+  // Header icon buttons are 40px (44px on touch) at every breakpoint, unlike Button's own icon size.
+  const iconBtn = 'size-10 lg:size-10 coarse:size-11';
 
   // Guest landing page has its own embedded nav — don't render the app header there
   if (isGuestLanding) return null;
@@ -163,12 +188,22 @@ export function AppHeader({
 
             {/* ── Desktop Navigation ── */}
             {user && !isGuestLanding && !isWorkspace && (
-              <nav className="hidden lg:flex items-center gap-6">
-                <Link to='/home' onClick={(e) => guardedLinkClick(e, () => navTo('/home'))} className={`text-sm font-medium transition-colors ${location.pathname === '/home' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.home')}</Link>
-                <Link to='/explore' onClick={(e) => guardedLinkClick(e, () => navTo('/explore'))} className={`text-sm font-medium transition-colors ${location.pathname === '/explore' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.explore')}</Link>
-                <Link to='/feed' onClick={(e) => guardedLinkClick(e, () => navTo('/feed'))} className={`text-sm font-medium transition-colors ${location.pathname === '/feed' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.feed')}</Link>
-                <Link to='/leaderboard' onClick={(e) => guardedLinkClick(e, () => navTo('/leaderboard'))} className={`text-sm font-medium transition-colors ${location.pathname === '/leaderboard' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.leaderboard')}</Link>
-                <Link to='/library' onClick={(e) => guardedLinkClick(e, () => navTo('/library'))} className={`text-sm font-medium transition-colors ${location.pathname === '/library' ? 'text-zinc-100' : 'text-zinc-400 hover:text-zinc-200'}`}>{t('nav.library')}</Link>
+              <nav aria-label={t('nav.main')} className="hidden lg:flex items-center gap-1">
+                {NAV_LINKS.map(([path, labelKey]) => {
+                  const current = location.pathname === path;
+                  return (
+                    <Link
+                      key={path}
+                      to={path}
+                      onClick={(e) => guardedLinkClick(e, () => navTo(path))}
+                      aria-current={current ? 'page' : undefined}
+                      // Active link: brighter text plus a 16px iris tick under it (sheet 06).
+                      className={`relative flex h-10 items-center rounded-[10px] px-3 text-[15px] font-semibold transition-colors duration-[var(--duration-state)] hover:bg-raised hover:text-foreground focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${current ? "text-foreground after:absolute after:bottom-0.5 after:left-1/2 after:h-[3px] after:w-4 after:-translate-x-1/2 after:rounded-sm after:bg-iris after:content-['']" : 'text-subtle'}`}
+                    >
+                      {t(labelKey)}
+                    </Link>
+                  );
+                })}
               </nav>
             )}
           </div>
@@ -179,12 +214,13 @@ export function AppHeader({
           <div id="workspace-header-center" className="empty:hidden max-lg:hidden flex items-center shrink-0" />
 
           {!syncMode && isReady && !isWorkspace && playerSlot !== 'header' && playerSlot !== 'preview' && (
-            <button
+            <Button
+              size="sm"
               onClick={() => window.dispatchEvent(new CustomEvent('editor:start-syncing'))}
-              className="py-1 px-3 h-7 text-xs font-semibold text-zinc-950 bg-primary hover:bg-primary-dim rounded-lg transition-colors shrink-0"
+              className="shrink-0"
             >
               {t('editor.startSyncing')}
-            </button>
+            </Button>
           )}
 
           {/* ── Center: Compact player (header slot only) — absolutely centered in the bar ── */}
@@ -211,13 +247,16 @@ export function AppHeader({
                   </div>
                 )}
                 <Tip content={t('search.title')} side="bottom">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setSearchOpen(o => !o)}
                     aria-label={t('search.title')}
-                    className={`${iconBtn} ${searchOpen ? 'text-primary bg-primary/10' : ''}`}
+                    aria-pressed={searchOpen}
+                    className={iconBtn}
                   >
-                    <Icon name="search" size={14} />
-                  </button>
+                    <Icon name="search" size={20} />
+                  </Button>
                 </Tip>
               </div>
             )}
@@ -226,13 +265,15 @@ export function AppHeader({
 
             {isEditorPage && isReady && onStartTour && !isWorkspace && (
               <Tip content={t('editor.tour.replay')} side="bottom">
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={onStartTour}
                   aria-label={t('editor.tour.replay')}
                   className={`${iconBtn} max-sm:hidden`}
                 >
-                  <Icon name="school" size={14} />
-                </button>
+                  <Icon name="school" size={20} />
+                </Button>
               </Tip>
             )}
 
@@ -262,7 +303,7 @@ export function AppHeader({
           </div>
         </div>
 
-        {!isProjectPage && <ScrollProgress className="absolute top-auto bottom-0 h-[2px]" />}
+        {!isProjectPage && <ScrollProgress className="absolute top-auto bottom-0 h-[2px] bg-none bg-iris" />}
 
 
       </header>

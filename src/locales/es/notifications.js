@@ -1,5 +1,6 @@
 export default {
   bell: 'Notificaciones',
+  bellUnread: 'Notificaciones, {{count}} nuevas',
   markAllRead: 'Marcar todo como leído',
   empty: 'Sin notificaciones',
   dismiss: 'Descartar',

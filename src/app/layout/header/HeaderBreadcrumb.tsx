@@ -1,11 +1,13 @@
-import { useState, useRef, startTransition } from 'react';
+import { useState, useRef, useEffect, useMemo, startTransition } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useNavigationType } from 'react-router-dom';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { Icon } from '@/shared/ui/Icon';
 import { LOGO_URL } from '@/shared/constants/brand';
+import { findPrevious, readTrail, recordVisit } from '@/shared/utils/nav-trail';
 
 interface ForkedFrom {
   publicId?: string;
@@ -38,11 +40,13 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
   const isSetupPage = location.pathname === '/project/new';
   const isSettingsPage = location.pathname.startsWith('/settings');
 
-  // Page title shown in the header breadcrumb (single source of truth — pages no
-  // longer render their own title row).
-  const breadcrumbTitle = (() => {
-    const seg = location.pathname.split('/')[1];
+  // Title for a path's first segment. Used for the current page (settings) and for the
+  // page the back arrow leads to (everywhere else).
+  const titleFor = (pathname: string): string => {
+    const seg = pathname.split('/')[1] ?? '';
     const map: Record<string, string> = {
+      '': t('nav.home'),
+      home: t('nav.home'),
       profile: t('profile.title'),
       settings: t('settings.title'),
       library: t('library.title'),
@@ -57,7 +61,25 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
       notifications: t('notifications.bell'),
     };
     return map[seg] || seg.replace(/-/g, ' ');
-  })();
+  };
+  const breadcrumbTitle = titleFor(location.pathname);
+
+  // Where "back" goes. React Router numbers history entries (history.state.idx); the trail
+  // remembers which path sat at each one, so the label can name the real destination
+  // instead of the page the user is already on.
+  const navigationType = useNavigationType();
+  const historyIdx: number | undefined = window.history.state?.idx;
+  useEffect(() => {
+    if (historyIdx !== undefined) recordVisit(historyIdx, location.pathname, navigationType === 'PUSH');
+  }, [historyIdx, location.pathname, navigationType]);
+  const previous = useMemo(
+    () => (historyIdx === undefined ? null : findPrevious(readTrail(), historyIdx, location.pathname)),
+    [historyIdx, location.pathname],
+  );
+  // Opened directly on this page (deep link, new tab): there is no in-app "back", and
+  // history.back() could leave the site, so the arrow offers Home instead.
+  const backTitle = previous ? titleFor(previous.path) : t('nav.home');
+  const goBack = () => (previous ? navigate(previous.delta) : navigate('/home'));
 
   return (
     <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink">
@@ -94,13 +116,16 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
             )}
             {onProjectSettings && (
               <Tip content={t('editor.projectSettings')} side="bottom">
-                <button
+                {/* Pinned to 24px on touch too: the breadcrumb shares one row with 44px action icons. */}
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   onClick={onProjectSettings}
                   aria-label={t('editor.projectSettings')}
-                  className="size-6 flex items-center justify-center rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors shrink-0 cursor-pointer"
+                  className="size-6 coarse:size-6"
                 >
                   <Icon name="tune" size={14} />
-                </button>
+                </Button>
               </Tip>
             )}
             {editingProjectName ? (
@@ -149,22 +174,22 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
             <span className="text-zinc-700 shrink-0 hidden sm:inline">/</span>
             {isSettingsPage ? (
               // Settings keeps its own guarded back button in-page, so the header shows the title only.
-              <span className="text-xs font-semibold text-zinc-200 truncate uppercase tracking-wide max-w-[20vw] sm:max-w-none">
+              <span className="font-mono text-xs font-medium text-subtle truncate uppercase tracking-[0.1em] max-w-[20vw] sm:max-w-none">
                 {breadcrumbTitle}
               </span>
             ) : (
               <button
                 type="button"
-                onClick={() => navigate(-1)}
+                onClick={goBack}
                 className="flex items-center gap-1.5 min-w-0 group py-1 coarse:py-3.5 -my-1"
-                aria-label={t('common.back')}
+                aria-label={`${t('common.back')}: ${backTitle}`}
               >
                 <Icon name="arrow_back" size={14} className="text-zinc-500 group-hover:text-zinc-200 transition-colors shrink-0" />
                 {/* Capped on narrow screens: the header's action icons are
                     44px each on touch, and without a ceiling here the last two
                     (notifications, user menu) get pushed off-screen. */}
-                <span className="text-xs font-semibold text-zinc-200 group-hover:text-zinc-100 truncate uppercase tracking-wide transition-colors max-w-[20vw] sm:max-w-none">
-                  {breadcrumbTitle}
+                <span className="font-mono text-xs font-medium text-subtle group-hover:text-foreground truncate uppercase tracking-[0.1em] transition-colors max-w-[20vw] sm:max-w-none">
+                  {backTitle}
                 </span>
               </button>
             )}

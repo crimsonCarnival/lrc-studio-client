@@ -3,6 +3,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
+import { SegmentedControl } from '@ui/segmented-control';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
@@ -292,25 +293,17 @@ export default function LeaderboardPage() {
           </div>
 
           {/* Tabs */}
-          <div className="flex p-1 gap-1">
-            <button
-              onClick={() => setView({ period: 'week' })}
-              className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'week' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
-            >
-              {t('badges.leaderboard.thisWeek')}
-            </button>
-            <button
-              onClick={() => setView({ period: 'month' })}
-              className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'month' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
-            >
-              {t('badges.leaderboard.thisMonth')}
-            </button>
-            <button
-              onClick={() => setView({ period: 'all' })}
-              className={`px-4 py-1.5 coarse:py-3 text-sm font-medium rounded-md transition-colors ${timeFilter === 'all' ? 'bg-zinc-700/60 text-zinc-100 border border-zinc-600/50 shadow-sm' : 'text-zinc-400 hover:text-zinc-200 border border-transparent'}`}
-            >
-              {t('badges.leaderboard.allTime')}
-            </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <SegmentedControl<'week' | 'month' | 'all'>
+              label={t('badges.leaderboard.title')}
+              value={timeFilter}
+              onChange={(period) => setView({ period })}
+              options={[
+                { value: 'week', label: t('badges.leaderboard.thisWeek') },
+                { value: 'month', label: t('badges.leaderboard.thisMonth') },
+                { value: 'all', label: t('badges.leaderboard.allTime') },
+              ]}
+            />
 
             {/* The only one-click way back to the canonical board. Without it the
                 sort could be undone only by reloading, since the view is written

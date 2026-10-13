@@ -254,13 +254,13 @@ export default function SettingsPage() {
         onClick={() => setTab(entry.id)}
         aria-current={isActive ? 'page' : undefined}
         className={cn(
-          'flex items-center gap-3 min-h-10 px-3 rounded-[10px] text-sm text-left w-full transition-colors',
+          'flex items-center gap-3 min-h-11 px-3 rounded-[var(--radius-control)] text-[15px] text-left w-full transition-colors duration-[var(--duration-state)] focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus',
           isActive
-            ? 'bg-zinc-800/70 text-zinc-100 font-semibold shadow-[inset_3px_0_0_var(--color-primary)]'
-            : 'text-zinc-400 font-medium hover:bg-zinc-900 hover:text-zinc-100',
+            ? 'bg-primary-soft text-foreground font-semibold'
+            : 'text-subtle font-medium hover:bg-raised hover:text-foreground',
         )}
       >
-        <Icon name={entry.iconName} size={16} className="shrink-0" />
+        <Icon name={entry.iconName} size={18} className={cn('shrink-0', isActive && 'text-primary-ink')} />
         {tk(entry.labelKey)}
       </button>
     );
@@ -304,17 +304,19 @@ export default function SettingsPage() {
               const showDivider = idx > 0 && visibleTabs[idx - 1].group !== entry.group;
               return (
                 <div key={entry.id} className="flex items-center">
-                  {showDivider && <div className="w-px h-4 mx-2 bg-zinc-800/60 shrink-0" />}
+                  {showDivider && <div className="w-px h-4 mx-2 bg-hl shrink-0" />}
+                  {/* Same underline tab as CountTabs (sheet 06), kept raw: these are page links
+                      (aria-current) that need group dividers and data-active for scroll-into-view. */}
                   <button
                     onClick={() => setTab(entry.id)}
                     data-active={isActive}
                     aria-current={isActive ? 'page' : undefined}
-                    className={`flex items-center gap-1.5 px-3 py-2.5 coarse:py-3.5 text-xs font-semibold whitespace-nowrap border-b-2 transition-all -mb-px ${isActive
-                        ? 'text-primary border-primary'
-                        : 'text-zinc-500 border-transparent hover:text-zinc-300 hover:border-zinc-600'
-                      }`}
+                    className={cn(
+                      'flex items-center gap-2 h-12 px-2 text-[15px] font-semibold whitespace-nowrap border-b-2 -mb-px transition-colors duration-[var(--duration-state)] focus-visible:ring-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus',
+                      isActive ? 'text-foreground border-iris' : 'text-subtle border-transparent hover:text-foreground',
+                    )}
                   >
-                    <Icon name={entry.iconName} size={14} className="shrink-0" />
+                    <Icon name={entry.iconName} size={18} className={cn('shrink-0', isActive && 'text-primary-ink')} />
                     {label}
                   </button>
                 </div>

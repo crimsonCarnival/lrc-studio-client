@@ -6,6 +6,8 @@ import type { i18n as I18nInstance } from 'i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
+import { CountDot } from '@ui/count-dot';
 import { LazyImage } from '@ui/LazyImage';
 import { projects, uploads } from '@/app/api';
 import { requestsApi } from '@/features/admin/services/requests.service';
@@ -32,6 +34,7 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
   const currentLang = (i18n?.language || 'en').split('-')[0];
   // Library/upload/request counts are only shown in this menu — own the state here.
   const [counts, setCounts] = useState({ library: 0, uploads: 0, requests: 0 });
+  const [menuOpen, setMenuOpen] = useState(false);
   const staff = isStaff(user?.permissions);
 
   const fetchCounts = async () => {
@@ -57,32 +60,30 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
     <>
       {staff && (
         <Tip content={t('admin.dashboard.title')}>
-          {(() => {
-            const cls = "relative size-8 coarse:size-11 flex items-center justify-center rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 shrink-0";
-            const inner = (
-              <>
-                <Icon name="security" size={18} />
-                {counts.requests > 0 && (
-                   <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground border-2 border-background">
-                     {counts.requests > 99 ? '99+' : counts.requests}
-                   </span>
-                )}
-              </>
-            );
-            // The dashboard lives on the admin host; fall back to /admin on previews/localhost.
-            return canUseAdminHost()
-              ? <a href={adminHostUrl('/')} className={cls} aria-label={t('admin.dashboard.title')}>{inner}</a>
-              : <Link to="/admin" className={cls} aria-label={t('admin.dashboard.title')}>{inner}</Link>;
-          })()}
+          <Button asChild variant="ghost" size="icon" className="relative size-10 lg:size-10 coarse:size-11">
+            {(() => {
+              const inner = (
+                <>
+                  <Icon name="security" size={20} />
+                  <CountDot count={counts.requests} />
+                </>
+              );
+              // The dashboard lives on the admin host; fall back to /admin on previews/localhost.
+              return canUseAdminHost()
+                ? <a href={adminHostUrl('/')} aria-label={t('admin.dashboard.title')}>{inner}</a>
+                : <Link to="/admin" aria-label={t('admin.dashboard.title')}>{inner}</Link>;
+            })()}
+          </Button>
         </Tip>
       )}
       <NotificationBell />
-      <Popover onOpenChange={(open) => { if (open) fetchCounts(); }}>
+      <Popover open={menuOpen} onOpenChange={(open) => { setMenuOpen(open); if (open) fetchCounts(); }}>
         <div className="relative flex-shrink-0">
-          <PopoverTrigger className="relative z-[110] size-8 coarse:size-11 rounded-full overflow-hidden bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700/50 transition-all focus:ring-2 focus:ring-primary/50 cursor-pointer outline-none block">
+          {/* Double ring: 2px of page colour, then a hairline, so the avatar reads as lifted off the bar (sheet 06). */}
+          <PopoverTrigger className="relative z-[110] ml-1 block size-10 coarse:size-11 cursor-pointer overflow-hidden rounded-full bg-primary-soft shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--hl)] transition-shadow duration-[var(--duration-state)] outline-none hover:shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--subtle)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-solid focus-visible:outline-focus">
             {user?.avatarUrl
               ? <LazyImage src={user.avatarUrl} alt={user?.displayName || user?.accountName || user?.email || ''} className="size-full object-cover" />
-              : <div className="size-full flex items-center justify-center bg-gradient-to-br from-primary/50 to-accent-purple/50 text-white font-bold text-sm">
+              : <div className="size-full grid place-items-center font-heading text-[17px] font-bold text-primary-ink">
                 {(user?.displayName || user?.accountName || user?.email || '?').charAt(0).toUpperCase()}
               </div>}
           </PopoverTrigger>
@@ -92,7 +93,18 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
             </Tip>
           )}
         </div>
-        <PopoverContent className="w-[calc(100vw-32px)] sm:w-64 p-0" align="end" sideOffset={8}>
+        <PopoverContent
+          className="w-[calc(100vw-32px)] sm:w-64 p-0"
+          align="end"
+          sideOffset={8}
+          // Choosing an item closes the menu. One handler here instead of one per item, so a
+          // new item cannot forget it. Items that flip a preference in place (language)
+          // opt out with data-keep-open; the theme buttons are not menu items at all.
+          onClick={(e) => {
+            const item = (e.target as HTMLElement).closest('[data-slot="popover-item"]');
+            if (item && !item.hasAttribute('data-keep-open')) setMenuOpen(false);
+          }}
+        >
           <div className="p-3 border-b border-zinc-800/60 flex flex-col">
             <span className="text-sm font-bold text-zinc-100 truncate">{user?.displayName || user?.accountName || t('auth.user')}</span>
             <span className="text-xs text-zinc-400 truncate">{user?.email || ''}</span>
@@ -146,20 +158,22 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
               <div className="flex items-center gap-1.5">
                 {THEMES.map(({ id, labelKey, iconName }) => (
                   <Tip key={id} content={t(labelKey)}>
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
                       onClick={() => updateSetting?.('interface.theme', id)}
                       aria-label={t(labelKey)}
                       aria-pressed={currentTheme === id}
-                      className={`size-7 flex items-center justify-center rounded-lg transition-all ${currentTheme === id ? 'text-primary bg-primary/10' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'}`}
                     >
                       <Icon name={iconName} size={14} />
-                    </button>
+                    </Button>
                   </Tip>
                 ))}
               </div>
             </div>
             {/* Language toggle — two languages, so a single flip (#14) */}
             <PopoverItem
+              data-keep-open
               onClick={() => i18n?.changeLanguage(currentLang === 'es' ? 'en' : 'es')}
               className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2"
             >

@@ -1,15 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Input } from '@ui/input';
-import { Icon } from '@/shared/ui/Icon';
 import toast from 'react-hot-toast';
 import { lyricsSearch } from '@features/editor/services/lyrics-search.service';
 import type { LyricsSearchHit, LyricsExtractResult } from '@features/editor/services/lyrics-search.service';
 import LyricsResultCard from './LyricsResultCard';
 import LyricsModal from './LyricsModal';
 import { useSettings } from '@/features/settings/useSettings';
-import { LogoLoader } from '@ui/LogoLoader';
+import { SearchField } from '@ui/search-field';
 
 type SongResult = LyricsSearchHit;
 
@@ -62,8 +59,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
     doSearch(autoSearch.q);
   }, [autoSearch, doSearch]); // new object reference on each button click
 
-  const handleQueryChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleQueryChange = useCallback((value: string) => {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -133,18 +129,14 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
   return (
     <div className="flex flex-col gap-2 w-full">
       {!selectedSong && (
-        <div className="relative">
-          <Icon name="search" size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
-          <Input
-            value={query}
-            onChange={handleQueryChange}
-            placeholder={t('lyricsSearch.searchPlaceholder')}
-            className="pl-8 lg:pl-8 pr-8 lg:pr-8 bg-zinc-900 border-zinc-700"
-          />
-          {isSearching && (
-            <LogoLoader size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
-          )}
-        </div>
+        <SearchField
+          compact
+          value={query}
+          onValueChange={handleQueryChange}
+          label={t('lyricsSearch.searchPlaceholder')}
+          placeholder={t('lyricsSearch.searchPlaceholder')}
+          busy={isSearching}
+        />
       )}
 
       {results !== null && !selectedSong && (

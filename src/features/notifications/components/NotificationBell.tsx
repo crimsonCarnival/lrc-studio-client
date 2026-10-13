@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useNotificationsContext } from '../NotificationsContext';
 import { NotificationPanel } from './NotificationPanel';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
+import { CountDot } from '@ui/count-dot';
 
 export function NotificationBell() {
   const { t } = useTranslation();
@@ -22,23 +24,20 @@ export function NotificationBell() {
     return () => document.removeEventListener('mousedown', onMouseDown);
   }, [open]);
 
-  const displayCount = unreadCount > 99 ? '99+' : unreadCount;
-
   return (
     <div ref={containerRef} className="relative">
       <Tip content={t('notifications.bell')} side="bottom">
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => setOpen(o => !o)}
-          aria-label={t('notifications.bell')}
-          className="relative p-2 coarse:p-3 coarse:px-3.5 rounded-lg hover:bg-zinc-800/60 transition-colors text-zinc-400 hover:text-zinc-200"
+          aria-expanded={open}
+          aria-label={unreadCount > 0 ? t('notifications.bellUnread', { count: unreadCount }) : t('notifications.bell')}
+          className="relative size-10 lg:size-10 coarse:size-11"
         >
-          <Icon name="notifications" size={18} />
-          {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-zinc-950 leading-none">
-              {displayCount}
-            </span>
-          )}
-        </button>
+          <Icon name="notifications" size={20} />
+          <CountDot count={unreadCount} />
+        </Button>
       </Tip>
       {open && <NotificationPanel />}
     </div>

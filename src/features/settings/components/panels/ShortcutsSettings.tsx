@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon } from '@/shared/ui/Icon';
+import { SearchField } from '@ui/search-field';
 import { cn } from '@/shared/utils/utils';
 import { Kbd } from '@ui/kbd';
 import { useShortcutsSettings } from '../../hooks/useShortcutsSettings';
@@ -172,17 +172,16 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
             ))}
           </div>
         )}
-        <label className="flex items-center gap-2 h-10 px-3 flex-[0_1_260px] ml-auto rounded-[10px] bg-zinc-900 border border-zinc-800 text-zinc-400 focus-within:border-primary/50">
-          <Icon name="search" size={16} />
-          <span className="sr-only">{tk('settings.shortcuts.searchLabel')}</span>
-          <input
-            type="search"
-            value={localQuery}
-            onChange={(e) => setLocalQuery(e.target.value)}
-            placeholder={tk('settings.shortcuts.searchPlaceholder')}
-            className="flex-1 min-w-0 bg-transparent border-none outline-none text-sm text-zinc-100 placeholder:text-zinc-500"
-          />
-        </label>
+        {/* The settings sidebar search owns "/" on this page. */}
+        <SearchField
+          compact
+          focusShortcut={false}
+          label={tk('settings.shortcuts.searchLabel')}
+          placeholder={tk('settings.shortcuts.searchPlaceholder')}
+          value={localQuery}
+          onValueChange={setLocalQuery}
+          className="flex-[0_1_260px] ml-auto"
+        />
       </div>
 
       {groups.length === 0 && (

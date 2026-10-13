@@ -1,5 +1,6 @@
 export default {
   bell: 'Notifications',
+  bellUnread: 'Notifications, {{count}} new',
   markAllRead: 'Mark all read',
   empty: 'No notifications',
   dismiss: 'Dismiss',

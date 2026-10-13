@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { THEMES } from './theme-options';
 
@@ -22,8 +23,6 @@ function getLangLabel(code: string, currentLang: string): string {
   return `${native} (${translated})`;
 }
 
-const iconBtn = 'size-8 coarse:size-11 flex items-center justify-center text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/80 transition-colors rounded-lg flex-shrink-0 cursor-pointer';
-
 interface ThemeLangSwitcherProps {
   currentTheme: string;
   updateSetting?: (path: string, value: unknown) => void;
@@ -41,9 +40,9 @@ export function ThemeLangSwitcher({ currentTheme, updateSetting, i18n }: ThemeLa
       <Popover>
         <Tip content={t('settings.interface.theme')} side="bottom">
           <PopoverTrigger asChild>
-            <button className={`${iconBtn} hidden sm:flex`} aria-label={t('settings.interface.theme')}>
+            <Button variant="ghost" size="icon" className="hidden size-8 sm:inline-flex lg:size-8 coarse:size-11" aria-label={t('settings.interface.theme')}>
               <Icon name={THEMES.find(t => t.id === currentTheme)?.iconName || 'dark_mode'} size={14} />
-            </button>
+            </Button>
           </PopoverTrigger>
         </Tip>
         <PopoverContent className="w-44 p-1" align="end" sideOffset={8}>
@@ -67,10 +66,10 @@ export function ThemeLangSwitcher({ currentTheme, updateSetting, i18n }: ThemeLa
       <Popover>
         <Tip content={t('settings.interface.language')} side="bottom">
           <PopoverTrigger asChild>
-            <button className={`${iconBtn} gap-0.5 w-auto px-2`} aria-label={t('settings.interface.language')}>
+            <Button variant="ghost" size="sm" className="h-8 gap-0.5 px-2 text-subtle lg:h-8 lg:px-2 coarse:h-11" aria-label={t('settings.interface.language')}>
               <Icon name="language" size={14} className="shrink-0" />
               <span className="text-[10px] font-bold tracking-wide">{currentLang}</span>
-            </button>
+            </Button>
           </PopoverTrigger>
         </Tip>
         <PopoverContent className="w-48 p-1" align="end" sideOffset={8}>
