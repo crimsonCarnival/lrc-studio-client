@@ -9,9 +9,8 @@ import { translateAuthError } from '@/shared/utils/auth-errors';
 import { auth } from '@/app/api';
 import {
   AuthField, AuthHeading, OrDivider, RedirectMessage, ContextBanner, GoogleButton,
-  authInputCls, authPrimaryBtnCls,
 } from './auth-shared';
-import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 
 const identifierSchema = z.string().refine(
   (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || /^[a-z0-9_-]{3,30}$/.test(v.toLowerCase()),
@@ -76,14 +75,16 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
   return (
     <div className="animate-fade-in flex flex-col gap-6">
       {onBackToSavedAccounts && (
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size={null}
           onClick={onBackToSavedAccounts}
-          className="self-start -ml-2.5 -mb-2 h-10 px-2.5 rounded-lg inline-flex items-center gap-2 text-sm font-semibold text-primary hover:bg-zinc-900 transition-colors"
+          className="-mb-2 -ml-2.5 h-10 gap-2 self-start px-2.5 text-sm text-primary-ink"
         >
           <Icon name="arrow_back" size={16} />
           {backLabel}
-        </button>
+        </Button>
       )}
 
       {(from || redirect) && (
@@ -107,17 +108,17 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
             autoCapitalize="none"
             spellCheck={false}
             error={!!error}
-            className={authInputCls}
           />
         </AuthField>
 
-        <button
+        <Button
           type="submit"
-          disabled={loading || !normaliseIdentifier(identifier)}
-          className={authPrimaryBtnCls}
+          loading={loading}
+          disabled={!normaliseIdentifier(identifier)}
+          className="h-[52px] w-full text-[17px] lg:h-[52px] lg:text-[17px]"
         >
-          {loading ? <LogoLoader size={16} /> : t('auth.continue')}
-        </button>
+          {t('auth.continue')}
+        </Button>
       </form>
 
       <OrDivider t={t} />
@@ -134,9 +135,9 @@ export default function LoginIdentifierStep({ t, onNext, onSwitchToRegister, onG
 
       <p className="text-sm text-foreground/65">
         {t('auth.noAccount')}{' '}
-        <button type="button" onClick={onSwitchToRegister} className="font-semibold text-primary hover:underline">
+        <Button type="button" variant="link" size={null} onClick={onSwitchToRegister} className="text-sm">
           {t('auth.register')}
-        </button>
+        </Button>
       </p>
     </div>
   );

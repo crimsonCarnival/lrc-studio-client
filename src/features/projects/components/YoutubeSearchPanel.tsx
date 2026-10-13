@@ -1,11 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import type { ChangeEvent, KeyboardEvent } from 'react';
+import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { youtube } from '@/features/player/services/youtube.service';
 import { Skeleton } from '@ui/skeleton';
 import { LazyImage } from '@ui/LazyImage';
-import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
+import { SearchField } from '@ui/search-field';
 
 function YtIcon({ className }: { className?: string }) {
   return (
@@ -100,8 +101,7 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
     }
   }, [onSelect, t]);
 
-  const handleQueryChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleQueryChange = (value: string) => {
     userEditedRef.current = true;
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -156,12 +156,14 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
             <Icon name="search" size={14} />
             {t('player.findAnotherVersion')}
           </a>
-          <button
+          <Button
+            variant="outline"
+            size="lg"
             onClick={() => setUnembeddableWarning(null)}
-            className="w-full py-2 px-4 rounded-xl border border-zinc-700/50 text-sm text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 transition-colors"
+            className="w-full"
           >
             {t('common.goBack')}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -171,35 +173,32 @@ export default function YoutubeSearchPanel({ onSelect, onClose, initialQuery = '
     <div className="flex flex-col h-full animate-fade-in">
       {/* Search Input */}
       <div className="flex items-center gap-2 p-4 border-b border-zinc-800/60 shrink-0">
-        <div className="flex items-center gap-2 flex-1 bg-zinc-900 border border-zinc-700/60 rounded-xl px-3 py-2 focus-within:border-red-500/50 focus-within:ring-1 focus-within:ring-red-500/30 transition-all">
-          <YtIcon className="size-4 text-red-500 shrink-0" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={handleQueryChange}
-            onKeyDown={handleKeyDown}
-            placeholder={t('home.searchYoutubePlaceholder')}
-            className="flex-1 bg-transparent text-sm text-zinc-200 placeholder:text-zinc-500 outline-none focus:ring-0 focus-visible:ring-0"
-          />
-          {query && (
-            <button aria-label={t('common.clear')} onClick={() => { if (debounceRef.current) clearTimeout(debounceRef.current); userEditedRef.current = true; setQuery(''); setResults([]); setSearched(false); }} className="text-zinc-500 hover:text-zinc-300 transition-colors">
-              <Icon name="close" size={16} />
-            </button>
-          )}
-        </div>
-        <button
+        <SearchField
+          compact
+          ref={inputRef}
+          value={query}
+          onValueChange={handleQueryChange}
+          onKeyDown={handleKeyDown}
+          label={t('home.searchYoutube')}
+          placeholder={t('home.searchYoutubePlaceholder')}
+          clearLabel={t('common.clear')}
+          leading={<YtIcon className="size-4 text-red-500 shrink-0" />}
+          className="flex-1"
+        />
+        <Button
           aria-label={t('home.searchYoutube')}
           onClick={() => runSearch(query)}
-          disabled={!query.trim() || loading}
-          className="h-9 coarse:h-11 px-4 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold flex items-center gap-2 transition-colors shrink-0"
+          disabled={!query.trim()}
+          loading={loading}
+          className="h-9 lg:h-9 coarse:h-11 bg-red-600 hover:bg-red-500 text-white"
         >
-          {loading ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
-        </button>
+          {/* Icon is a font glyph, not an svg, so Button's loading state can't hide it itself. */}
+          {!loading && <Icon name="search" size={16} />}
+        </Button>
         {onClose && (
-          <button aria-label={t('common.close')} onClick={onClose} className="size-9 rounded-xl flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors shrink-0">
+          <Button variant="ghost" size="icon-lg" aria-label={t('common.close')} onClick={onClose}>
             <Icon name="close" size={16} />
-          </button>
+          </Button>
         )}
       </div>
 

@@ -8,6 +8,7 @@ import { useNavigate, useParams, useSearchParams, useLocation } from 'react-rout
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
+import { Button } from '@ui/button';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
@@ -104,12 +105,12 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
 
         {isOwner && (
           <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 z-20 bg-black/40 backdrop-blur-sm rounded-lg p-1">
-            <button onClick={handleEdit} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" aria-label={t('profile.editProject')}>
+            <Button variant="ghost" size="icon-sm" onClick={handleEdit} className="size-7" aria-label={t('profile.editProject')}>
               <Icon name="edit" size={14} />
-            </button>
-            <button onClick={handleDelete} className="p-1.5 hover:bg-red-500/20 rounded-md text-zinc-400 hover:text-red-400 transition-colors" aria-label={t('profile.deleteProject')}>
+            </Button>
+            <Button variant="ghost" size="icon-sm" onClick={handleDelete} className="size-7 text-love-ink hover:bg-love-soft hover:text-love-ink" aria-label={t('profile.deleteProject')}>
               <Icon name="delete" size={14} />
-            </button>
+            </Button>
           </div>
         )}
 
@@ -448,13 +449,15 @@ export default function ProfilePage() {
               <Icon name="visibility" size={16} className="text-primary" />
               {t('profile.viewingAsOthers')}
             </span>
-            <button
+            <Button
               type="button"
+              variant="link"
+              size={null}
               onClick={() => setViewAsOthers(false)}
-              className="text-xs font-semibold text-primary hover:underline"
+              className="text-xs"
             >
               {t('profile.exitViewAsOthers')}
-            </button>
+            </Button>
           </div>
         )}
         <ProfileHeader

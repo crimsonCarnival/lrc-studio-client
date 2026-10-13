@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { BadgeChip } from '@/features/badges/BadgeChip';
 import { LazyImage } from '@ui/LazyImage';
+import { Button } from '@ui/button';
 import { cn } from '@/shared/utils/utils';
 import toast from 'react-hot-toast';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@ui/dropdown-menu';
@@ -208,8 +209,11 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
           role="dialog"
           aria-busy={!profile}
           aria-label={profile ? t('profile.mini.cardLabel', { name: displayName }) : t('profile.mini.loading')}
-          style={{ position: 'absolute', top: pos.top, left: pos.left, zIndex: 9999, width: 340, visibility: pos.top === -9999 ? 'hidden' : 'visible' }}
-          className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-[0_18px_40px_rgba(0,0,0,.5)] flex flex-col overflow-hidden animate-fade-in"
+          style={{ position: 'absolute', top: pos.top, left: pos.left, width: 340, visibility: pos.top === -9999 ? 'hidden' : 'visible' }}
+          // z-popover, the same level as menus: the card's own "more" menu is portaled to
+          // <body> after the card, so at equal z-index it paints above. A higher value here
+          // (it was 9999) buries that menu behind the card.
+          className="z-popover bg-zinc-900 border border-zinc-800 rounded-2xl shadow-[0_18px_40px_rgba(0,0,0,.5)] flex flex-col overflow-hidden animate-fade-in"
         >
           {!profile ? (
             <MiniProfileSkeleton />
@@ -291,22 +295,21 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
 
               <div className="flex gap-2 px-[18px] pt-3 pb-4 border-t border-zinc-800">
                 {me && !isSelf && (
-                  <button
+                  <Button
                     type="button"
+                    variant={isFollowedByMe ? 'outline' : 'default'}
                     aria-pressed={isFollowedByMe}
                     onClick={handleFollowToggle}
                     onMouseEnter={() => setFollowHover(true)}
                     onMouseLeave={() => setFollowHover(false)}
                     disabled={followPending}
                     className={cn(
-                      'flex-[1.2] h-10 rounded-[10px] text-sm font-bold transition-colors disabled:opacity-50 whitespace-nowrap',
-                      !isFollowedByMe && 'bg-primary text-zinc-950 hover:bg-primary/90',
-                      isFollowedByMe && !followHover && 'border border-zinc-700 bg-zinc-800 text-zinc-100',
-                      isFollowedByMe && followHover && 'border border-red-900/60 bg-red-950/50 text-red-300',
+                      'flex-[1.2] h-10 text-sm lg:h-10 lg:text-sm',
+                      isFollowedByMe && followHover && 'bg-red-950/50 text-red-300 inset-ring-red-900/60 hover:bg-red-950/50 hover:inset-ring-red-900/60',
                     )}
                   >
                     {isFollowedByMe ? (followHover ? t('profile.mini.unfollow') : t('profile.following')) : followLabel}
-                  </button>
+                  </Button>
                 )}
                 <Link
                   to={`/profile/${accountName}`}
@@ -317,9 +320,9 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                 </Link>
                 <DropdownMenu onOpenChange={(o) => { menuOpenRef.current = o; if (!o) startClose(); }}>
                   <DropdownMenuTrigger asChild>
-                    <button type="button" aria-label={t('profile.mini.moreOptions')} className="size-10 shrink-0 grid place-items-center rounded-[10px] border border-zinc-700 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60">
+                    <Button type="button" variant="outline" size="icon" aria-label={t('profile.mini.moreOptions')} className="size-10 lg:size-10">
                       <Icon name="more_horiz" size={18} />
-                    </button>
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" onMouseEnter={cancelClose}>
                     <DropdownMenuItem onClick={copyProfileLink}>

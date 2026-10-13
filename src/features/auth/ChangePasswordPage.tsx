@@ -6,6 +6,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { auth } from '@/app/api';
 import PasswordStrength from './components/PasswordStrength';
 import toast from 'react-hot-toast';
+import { Button } from '@ui/button';
 
 export default function ChangePasswordPage() {
   const { t } = useTranslation();
@@ -176,18 +177,20 @@ export default function ChangePasswordPage() {
 
           {error && <p className="text-destructive text-xs font-medium">{error}</p>}
 
-          <button
+          <Button
             type="submit"
             disabled={submitting || (!isSetMode && !currentPassword) || newPassword.length < 8}
-            className="w-full h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-bold text-sm rounded-xl disabled:opacity-40 transition-all duration-200 mt-1"
+            className="mt-1 h-[52px] w-full text-[17px] lg:h-[52px] lg:text-[17px]"
           >
             {submitting
               ? (isSetMode ? t('auth.passwordManagement.setting') : t('auth.changePassword.changing'))
               : (isSetMode ? t('auth.passwordManagement.setPassword') : t('auth.changePassword.button'))}
-          </button>
+          </Button>
         </form>
 
-        <button
+        <Button
+          variant="link"
+          size={null}
           onClick={() => {
             if (fromPasswordReset) {
               navigate('/');
@@ -195,10 +198,10 @@ export default function ChangePasswordPage() {
               navigate(-1);
             }
           }}
-          className="w-full text-center text-zinc-400 hover:text-zinc-300 text-sm"
+          className="w-full text-sm text-zinc-400 hover:text-zinc-300"
         >
           {fromPasswordReset ? t('common.backToHome') : t('common.goBack')}
-        </button>
+        </Button>
       </div>
     </div>
   );

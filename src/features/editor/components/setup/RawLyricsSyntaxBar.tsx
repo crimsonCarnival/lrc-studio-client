@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { toggleSingerAtCaret } from '../../utils/paste-toolbar';
 
@@ -53,16 +54,18 @@ export default function RawLyricsSyntaxBar({ value, onChange, textareaRef, singe
   return (
     <div className="flex flex-col gap-1.5 shrink-0">
       <div className="flex flex-wrap items-center gap-1.5">
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="xs"
           onClick={() => setHelpOpen((o) => !o)}
           aria-expanded={helpOpen}
-          className="inline-flex items-center gap-1 h-6 px-2 rounded-full text-[11px] font-medium text-zinc-400 hover:text-primary hover:bg-zinc-800/60 transition-colors"
+          className="rounded-full"
         >
           <Icon name="help" size={13} />
           {t('editor.paste.help.toggle')}
           <Icon name={helpOpen ? 'expand_less' : 'expand_more'} size={13} />
-        </button>
+        </Button>
         {singers.length > 0 && (
           <>
             <span className="w-px h-4 bg-zinc-700/60 mx-0.5" />

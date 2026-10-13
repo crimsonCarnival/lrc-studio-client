@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
 import { flatToSections } from '@/features/editor/utils/sections';
 import type { EditorLine } from '@/features/editor/services/editor.service';
@@ -65,20 +66,21 @@ export function GuestAuthButtons({ isReady, lines, mediaTitle, buildProjectPaylo
   return (
     <div className="flex items-center gap-1 flex-shrink-0">
       <div className="relative hidden sm:flex items-center flex-shrink-0">
-        <button
+        <Button
+          variant="outline"
           onClick={() => goToAuth('signin')}
-          className="h-8 coarse:h-11 px-3 coarse:px-4 text-xs font-normal text-zinc-300 hover:text-zinc-100 bg-zinc-800/70 hover:bg-zinc-700/80 border border-zinc-800/50 rounded-xl transition-colors"
+          className="h-8 text-xs coarse:h-11 lg:coarse:h-11"
         >
           {t('auth.signIn')}
-        </button>
+        </Button>
       </div>
       <div className="relative flex items-center flex-shrink-0">
-        <button
+        <Button
           onClick={() => goToAuth('signup')}
-          className="h-8 coarse:h-11 px-3 coarse:px-4 text-xs font-normal text-zinc-950 bg-primary hover:bg-primary/90 rounded-xl transition-colors"
+          className="h-8 text-xs coarse:h-11 lg:coarse:h-11"
         >
           {t('auth.signUp')}
-        </button>
+        </Button>
         {hasDraft && (
           <Tip content={t('auth.signUpToSave')}>
             <span

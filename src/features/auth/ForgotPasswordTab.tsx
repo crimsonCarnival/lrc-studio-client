@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { Button } from '@ui/button';
 
 export default function ForgotPasswordTab({ onBackToLogin }: { onBackToLogin?: () => void }) {
   const { t } = useTranslation();
@@ -56,15 +57,17 @@ export default function ForgotPasswordTab({ onBackToLogin }: { onBackToLogin?: (
         <div className="text-green-500 text-5xl">✓</div>
         <p className="text-zinc-300">{t('auth.forgotPasswordForm.success')}</p>
         <p className="text-sm text-zinc-500">{t('auth.forgotPasswordForm.validFor')}</p>
-        <button
+        <Button
+          variant="link"
+          size={null}
           onClick={() => {
             setSuccess(false);
             setEmail('');
           }}
-          className="text-blue-400 hover:underline mt-4"
+          className="mt-4 text-base"
         >
           {t('auth.forgotPasswordForm.sendAnother')}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -73,14 +76,16 @@ export default function ForgotPasswordTab({ onBackToLogin }: { onBackToLogin?: (
     <div className="animate-fade-in">
       {/* Back button */}
       {onBackToLogin && (
-        <button
+        <Button
           type="button"
+          variant="link"
+          size={null}
           onClick={onBackToLogin}
-          className="flex items-center gap-2 mb-6 text-sm font-semibold text-zinc-500 hover:text-primary transition-colors"
+          className="mb-6 flex w-fit gap-2 text-sm text-zinc-500 hover:text-primary"
         >
           <Icon name="arrow_back" size={16} />
           {t('auth.backToLogin')}
-        </button>
+        </Button>
       )}
 
       <div className="mb-6">
@@ -106,13 +111,13 @@ export default function ForgotPasswordTab({ onBackToLogin }: { onBackToLogin?: (
           {error && <p className="text-destructive text-xs font-medium mt-1">{error}</p>}
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={loading || !email}
-          className="h-11 bg-primary hover:bg-primary-dim text-zinc-950 font-bold text-sm rounded-xl disabled:opacity-40 transition-all duration-200"
+          className="h-[52px] text-[17px] lg:h-[52px] lg:text-[17px]"
         >
           {loading ? t('auth.forgotPasswordForm.sending') : t('auth.forgotPasswordForm.button')}
-        </button>
+        </Button>
       </form>
     </div>
   );

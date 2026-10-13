@@ -10,7 +10,6 @@ import { createPlaylist, updatePlaylist, addProjectToPlaylist, removeProjectFrom
 import { gqlRequest } from '@/app/graphql.client';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
-import { LogoLoader } from '@ui/LogoLoader';
 
 const GET_MY_PROJECTS = /* GraphQL */ `
   query GetMyProjects {
@@ -198,9 +197,9 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
           <h2 className="text-base font-semibold">
             {isEdit ? t('playlists.modal.titleEdit') : t('playlists.modal.titleCreate')}
           </h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+          <Button variant="ghost" size="icon-xs" onClick={onClose} aria-label={t('common.close')}>
             <Icon name="close" size={20} />
-          </button>
+          </Button>
         </div>
 
         {/* Step indicator (create only) */}
@@ -247,18 +246,16 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
                     value={form.coverImage}
                     onChange={e => handleField('coverImage', e.target.value)}
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="icon-lg"
                     onClick={() => imageInputRef.current?.click()}
-                    disabled={imageUploading}
-                    className="shrink-0 size-9 flex items-center justify-center rounded-lg border border-border bg-zinc-800/50 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors disabled:opacity-50"
+                    loading={imageUploading}
                   >
-                    {imageUploading ? (
-                      <LogoLoader size={16} />
-                    ) : (
-                      <Icon name="upload" size={16} />
-                    )}
-                  </button>
+                    {/* Icon is a font glyph, not an svg, so Button's loading state can't hide it. */}
+                    {!imageUploading && <Icon name="upload" size={16} />}
+                  </Button>
                   <input
                     type="file"
                     ref={imageInputRef}

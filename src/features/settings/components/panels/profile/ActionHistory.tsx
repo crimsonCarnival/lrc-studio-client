@@ -4,6 +4,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { ActivityCard } from '@/features/feed/components/ActivityCard';
 import { gqlRequest } from '@/app/graphql.client';
 import { Skeleton } from '@ui/skeleton';
+import { Button } from '@ui/button';
 
 interface ActivityItem {
   id: string;
@@ -110,12 +111,9 @@ export default function ActionHistory() {
         <ActivityCard key={activity.id} activity={activity} />
       ))}
       {hasMore && (
-        <button
-          onClick={loadMore}
-          className="w-full text-xs text-zinc-400 hover:text-zinc-300 py-3 transition-colors"
-        >
+        <Button variant="ghost" onClick={loadMore} className="w-full h-10 lg:h-10">
           {t('common.loadMore')}
-        </button>
+        </Button>
       )}
     </div>
   );

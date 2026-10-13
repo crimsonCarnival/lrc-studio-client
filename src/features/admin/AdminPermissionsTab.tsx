@@ -5,6 +5,7 @@ import { admin } from '@/app/api';
 import { isSudoCancelled } from './services/sudo';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import { Icon } from '@/shared/ui/Icon';
+import { Button } from '@ui/button';
 import { PERMISSIONS, ROLE_RANK, type Permission, type Role } from '@/features/auth/permissions';
 
 /*
@@ -185,14 +186,15 @@ export default function AdminPermissionsTab({ isSuperadmin }: { isSuperadmin: bo
             <div key={role} className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold uppercase tracking-wider text-zinc-300">{tk(`admin.table.${role}`)}</span>
-                <button
+                <Button
                   type="button"
+                  variant="sync"
+                  size="xs"
                   disabled={!presetDirty(role)}
                   onClick={() => setConfirm({ type: 'role', role, label: tk(`admin.table.${role}`) })}
-                  className="text-[11px] font-semibold rounded px-2 py-1 bg-primary/15 text-primary hover:bg-primary/25 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   {t('admin.permissions.save')}
-                </button>
+                </Button>
               </div>
               <div className="flex flex-col gap-1.5">
                 {PERMISSIONS.map(perm => (
@@ -227,14 +229,15 @@ export default function AdminPermissionsTab({ isSuperadmin }: { isSuperadmin: bo
                   <span className="text-sm font-medium text-zinc-200">{user.displayName || user.accountName}</span>
                   <span className="ml-2 text-[10px] uppercase tracking-wider text-zinc-500">{tk(`admin.table.${user.role}`)}</span>
                 </div>
-                <button
+                <Button
                   type="button"
+                  variant="sync"
+                  size="xs"
                   disabled={!userDirty(user)}
                   onClick={() => setConfirm({ type: 'user', userId: user.id, label: user.displayName || user.accountName || '' })}
-                  className="text-[11px] font-semibold rounded px-2 py-1 bg-primary/15 text-primary hover:bg-primary/25 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   {t('admin.permissions.save')}
-                </button>
+                </Button>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                 {PERMISSIONS.map(perm => (

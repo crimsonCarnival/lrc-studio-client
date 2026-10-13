@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { Button } from '@ui/button';
 import { useNotificationsContext } from '../NotificationsContext';
 import { NotificationStickySection } from './NotificationStickySection';
 import { NotificationItem } from './NotificationItem';
@@ -58,12 +59,9 @@ export function NotificationPanel() {
     <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-zinc-800/60 bg-zinc-900 shadow-2xl z-50">
       <div className="flex items-center justify-between border-b border-zinc-800/60 px-4 py-3">
         <span className="text-sm font-semibold text-zinc-100">{t('notifications.bell')}</span>
-        <button
-          onClick={markAllRead}
-          className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-        >
+        <Button variant="link" size={null} onClick={markAllRead} className="text-xs">
           {t('notifications.markAllRead')}
-        </button>
+        </Button>
       </div>
 
       <div className="max-h-[560px] overflow-y-auto">

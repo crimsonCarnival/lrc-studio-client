@@ -8,6 +8,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
 import { requestsApi } from './services/requests.service';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 
 // Typed i18next rejects arbitrary string keys; alias for dynamic req/stat labels.
@@ -203,9 +204,9 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
                 : t('admin.levels.modal.newTitle')}
             </h3>
           </div>
-          <button type="button" onClick={onClose} className="text-zinc-500 hover:text-zinc-200 transition-colors">
+          <Button type="button" variant="ghost" size="icon-xs" onClick={onClose} aria-label={t('common.close')} className="-m-1">
             <Icon name="close" size={16} />
-          </button>
+          </Button>
         </div>
 
         <form onSubmit={submit} className="p-5 flex flex-col gap-5 max-h-[85vh] overflow-y-auto custom-scrollbar">
@@ -327,17 +328,17 @@ function LevelFormModal({ editing, onClose, onSaved, proposeMode }: LevelFormMod
           </div>
 
           <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border border-zinc-700 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
+            <Button type="button" variant="outline" size="lg" onClick={onClose} className="flex-1">
               {t('admin.levels.modal.cancel')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={saving}
-              className="flex-1 px-4 py-2 rounded-lg bg-primary text-zinc-950 text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              size="lg"
+              loading={saving}
+              className="flex-1"
             >
-              {saving && <LogoLoader size={14} />}
               {editing ? t('admin.levels.modal.update') : t('admin.levels.modal.create')}
-            </button>
+            </Button>
           </div>
         </form>
       </M.div>
@@ -377,25 +378,29 @@ function LevelCard({ level, rank, total, onEdit, onDelete, onMove, proposeMode }
     >
       <div className="flex flex-col items-center gap-0.5 mt-0.5 shrink-0">
         {!proposeMode && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             disabled={rank === 0}
             onClick={() => onMove(level, 'up')}
-            className="size-5 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-20 transition-colors"
+            className="lg:size-5"
           >
             <Icon name="expand_less" size={14} />
-          </button>
+          </Button>
         )}
         <span className="text-[10px] font-bold text-zinc-400 tabular-nums w-5 text-center">#{rank + 1}</span>
         {!proposeMode && (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             disabled={rank === total - 1}
             onClick={() => onMove(level, 'down')}
-            className="size-5 flex items-center justify-center rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 disabled:opacity-20 transition-colors"
+            className="lg:size-5"
           >
             <Icon name="expand_more" size={14} />
-          </button>
+          </Button>
         )}
       </div>
 
@@ -412,20 +417,25 @@ function LevelCard({ level, rank, total, onEdit, onDelete, onMove, proposeMode }
             )}
           </div>
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={() => onEdit(level)}
-              className="size-6 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-200 transition-colors"
+              aria-label={t('editor.edit')}
             >
               <Icon name="edit" size={12} />
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={() => onDelete(level)}
-              className="size-6 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors"
+              aria-label={t('common.delete')}
+              className="text-love-ink hover:bg-love-soft hover:text-love-ink"
             >
               <Icon name="delete" size={12} />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -546,21 +556,21 @@ export default function AdminLevelsTab({ proposeMode = false }: { proposeMode?: 
         <div className="flex-1 min-w-0">
           <p className="text-xs text-zinc-400">{t('admin.levels.description')}</p>
         </div>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           onClick={fetchLevels}
-          className="size-8 rounded-xl border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-all"
         >
           {loading ? <LogoLoader size={14} /> : <Icon name="refresh" size={14} />}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={() => setFormModal('new')}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-zinc-950 text-xs font-semibold hover:bg-primary/90 transition-colors"
         >
           <Icon name="add" size={14} />
           {t('admin.levels.newLevel')}
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

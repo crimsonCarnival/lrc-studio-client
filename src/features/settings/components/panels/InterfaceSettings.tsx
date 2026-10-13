@@ -3,6 +3,7 @@ import { Section, SettingRow, Toggle, SegmentedControl, SettingSelect, SettingOp
 import { useInterfaceSettings } from '../../hooks/useInterfaceSettings';
 import { cn } from '@/shared/utils/utils';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
 type SelectEvent = { target: { value: string } };
 
 interface InterfaceSettingsProps {
@@ -159,13 +160,14 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
                 {i + 1}
               </label>
             ))}
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => updateSetting('editor.display.singerColors', [])}
-              className="h-8 ml-1.5 px-3 rounded-[10px] border border-zinc-700 text-[13px] font-semibold text-zinc-400 hover:text-zinc-100"
+              className="ml-1.5"
             >
               {t('settings.interface.resetColors')}
-            </button>
+            </Button>
           </div>
         </SettingRow>
       </Section>

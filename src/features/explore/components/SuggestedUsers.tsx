@@ -7,6 +7,7 @@ import { followUser, unfollowUser } from '@/features/profile/profile.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { UserHoverCard } from '@ui/UserHoverCard';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 
 interface SuggestedUser {
   id: string;
@@ -112,23 +113,26 @@ export function SuggestedUsers({ limit = 8 }: { limit?: number }) {
 
                 {me && !isSelf && (
                   isFollowing ? (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={(e) => { e.stopPropagation(); handleUnfollow(u.accountName); }}
                       disabled={isPending}
-                      className="relative z-10 ml-auto shrink-0 text-xs px-3 py-1.5 rounded-lg border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors disabled:opacity-50"
+                      className="relative z-10 ml-auto"
                     >
                       {t('explore.suggested.following')}
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
                       type="button"
+                      size="sm"
                       onClick={(e) => { e.stopPropagation(); handleFollow(u.accountName); }}
                       disabled={isPending}
-                      className="relative z-10 ml-auto shrink-0 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors disabled:opacity-50"
+                      className="relative z-10 ml-auto"
                     >
                       {t('explore.suggested.follow')}
-                    </button>
+                    </Button>
                   )
                 )}
               </div>

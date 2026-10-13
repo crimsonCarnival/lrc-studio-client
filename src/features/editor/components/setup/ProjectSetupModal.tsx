@@ -294,13 +294,15 @@ export default function ProjectSetupModal({
         >
           {/* Close */}
           <Tip content={t('common.close')}>
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={onClose}
-              className="absolute top-3 right-3 p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors z-10"
+              className="absolute top-3 right-3 z-10"
               aria-label={t('common.close')}
             >
               <Icon name="close" size={16} />
-            </button>
+            </Button>
           </Tip>
 
           {/* Header */}
@@ -417,8 +419,10 @@ export default function ProjectSetupModal({
                           </Tip>
                           {form.singerColors?.[i] && (
                             <Tip content={t('project.resetColor')}>
-                              <button
+                              <Button
                                 type="button"
+                                variant="link"
+                                size={null}
                                 onClick={() => {
                                   setForm((f) => {
                                     const newColors = [...(f.singerColors || Array(Math.max(8, songSingers.length)).fill(''))];
@@ -426,11 +430,11 @@ export default function ProjectSetupModal({
                                     return { ...f, singerColors: newColors };
                                   });
                                 }}
-                                className="text-[10px] text-zinc-400 hover:text-red-400"
+                                className="text-[10px]"
                                 aria-label={t('project.resetColor')}
                               >
                                 ×
-                              </button>
+                              </Button>
                             </Tip>
                           )}
                         </div>
@@ -561,18 +565,16 @@ export default function ProjectSetupModal({
                     placeholder={t('setup.coverImagePlaceholder')}
                     className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9 placeholder:text-zinc-600"
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="icon-lg"
                     onClick={() => coverImageInputRef.current?.click()}
-                    disabled={imageUploading}
-                    className="shrink-0 size-9 flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200 hover:border-primary/50 transition-colors disabled:opacity-50"
+                    loading={imageUploading}
                   >
-                    {imageUploading ? (
-                      <LogoLoader size={16} />
-                    ) : (
-                      <Icon name="upload" size={16} />
-                    )}
-                  </button>
+                    {/* Icon is a font glyph, not an svg, so Button's loading state can't hide it itself. */}
+                    {!imageUploading && <Icon name="upload" size={16} />}
+                  </Button>
                   <input
                     type="file"
                     ref={coverImageInputRef}

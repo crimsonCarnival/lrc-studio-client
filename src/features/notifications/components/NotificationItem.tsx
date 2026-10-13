@@ -3,10 +3,14 @@ import { useTranslation, Trans } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { useNavigate } from 'react-router-dom';
 import { LazyImage } from '@ui/LazyImage';
+import { Button } from '@ui/button';
 import { useNotificationsContext } from '../NotificationsContext';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatTimeAgo } from '../timeAgo';
 import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
+import { EMOJI_MAP } from '@/features/reactions/components/reaction-constants';
+
+const REACTION_GLYPHS: Record<string, string> = EMOJI_MAP;
 
 interface NotificationActor {
   accountName?: string;
@@ -96,7 +100,8 @@ export function NotificationText({ notification, t }: { notification: Notificati
       : <span><Trans i18nKey="notifications.forked" values={{ actors: actorStr }} components={[<strong key="0" />]} /></span>;
   }
   if (type === 'reaction') {
-    const emojiChar = body || '❤️';
+    // The body is a quick-reaction code ('heart') or, for a custom reaction, the emoji itself.
+    const emojiChar = (body && (REACTION_GLYPHS[body] ?? body)) || '❤️';
     return projectTitle
       ? <span><Trans i18nKey="notifications.reactedProject" values={{ actors: actorStr, emoji: emojiChar, title: projectTitle }} components={[<strong key="0" />, <strong key="1" />]} /></span>
       : <span><Trans i18nKey="notifications.reacted" values={{ actors: actorStr, emoji: emojiChar }} components={[<strong key="0" />]} /></span>;
@@ -211,13 +216,14 @@ export function NotificationItem({ notification }: { notification: NotificationD
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {!read && <span className="w-2 h-2 rounded-full bg-primary" aria-hidden="true" />}
-        <button
+        <Button
+          variant="ghost"
+          size="icon-xs"
           onClick={(e) => { e.stopPropagation(); dismiss(_id); }}
-          className="p-1 coarse:p-3.5 rounded hover:bg-zinc-700 text-zinc-500 hover:text-zinc-200 transition-colors"
           aria-label={t('notifications.dismiss')}
         >
           <Icon name="close" size={14} />
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -10,6 +10,8 @@ import { useSettings } from '@/features/settings/useSettings';
 import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { Icon } from '@/shared/ui/Icon';
+import { SearchField } from '@ui/search-field';
+import { SegmentedControl } from '@ui/segmented-control';
 import { WaveformBars } from '@/shared/ui/WaveformBars';
 import { cn } from '@/shared/utils/utils';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent } from '@ui/context-menu';
@@ -18,7 +20,7 @@ import { contextMenuComponents, dropdownMenuComponents, type MenuComponents } fr
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 import useConfirm from '@/shared/hooks/useConfirm';
-import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 import { LibrarySwitch } from './LibrarySwitch';
 
 interface UploadProject {
@@ -239,14 +241,15 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
         disabled={savingTitle}
         aria-label={t('uploads.rename')}
       />
-      <button type="button" aria-label={t('common.save')} onClick={(e) => handleSaveTitle(e, upload.id)} disabled={savingTitle}
-        className="size-8 shrink-0 grid place-items-center rounded-lg text-primary hover:bg-primary/10">
-        {savingTitle ? <LogoLoader size={14} /> : <Icon name="check" size={16} />}
-      </button>
-      <button type="button" aria-label={t('common.cancel')} onClick={handleCancelEdit} disabled={savingTitle}
-        className="size-8 shrink-0 grid place-items-center rounded-lg text-zinc-400 hover:bg-zinc-800">
+      <Button type="button" variant="ghost" size="icon" aria-label={t('common.save')} onClick={(e) => handleSaveTitle(e, upload.id)} loading={savingTitle}
+        className="size-8 text-primary hover:bg-primary/10 hover:text-primary">
+        {/* Icon is a font glyph, not an svg, so Button's loading state can't hide it. */}
+        {!savingTitle && <Icon name="check" size={16} />}
+      </Button>
+      <Button type="button" variant="ghost" size="icon" aria-label={t('common.cancel')} onClick={handleCancelEdit} disabled={savingTitle}
+        className="size-8">
         <Icon name="close" size={16} />
-      </button>
+      </Button>
     </div>
   ) : (
     <span className={className}>{displayTitle(upload, untitled)}</span>
@@ -255,14 +258,16 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
   const menuButton = (upload: Upload) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           aria-label={t('uploads.moreOptions')}
           onClick={(e) => e.stopPropagation()}
-          className="size-8 grid place-items-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 shrink-0 coarse:size-11"
+          className="size-8 coarse:size-11"
         >
           <Icon name="more_vert" size={18} />
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">{renderMenu(upload)(dropdownMenuComponents)}</DropdownMenuContent>
     </DropdownMenu>
@@ -338,13 +343,14 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
               {upload.projects?.length ? projectLink(upload, 'card') : (
                 <>
                   <span className="text-[13px] text-zinc-400">{t('uploads.noProject')}</span>
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={(e) => handleCreateProject(e, upload)}
-                    className="h-8 px-2.5 rounded-lg border border-zinc-700 text-primary text-[13px] font-semibold hover:bg-zinc-800 shrink-0"
+                    className="h-8 px-2.5 text-[13px] text-primary"
                   >
                     + {t('uploads.createProject')}
-                  </button>
+                  </Button>
                 </>
               )}
             </div>
@@ -396,18 +402,6 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
     </button>
   ));
 
-  const viewButton = (id: ViewId, icon: string, label: string) => (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={view === id}
-      onClick={() => setView(id)}
-      className={cn('size-8 grid place-items-center rounded-md coarse:size-10', view === id ? 'bg-zinc-700 text-zinc-100' : 'text-zinc-400 hover:text-zinc-200')}
-    >
-      <Icon name={icon} size={16} />
-    </button>
-  );
-
   return (
     <div className="flex flex-col h-full overflow-y-auto pt-8 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full settings-scroll">
       <LibrarySwitch active="uploads" />
@@ -420,22 +414,23 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
           </p>
         </div>
         <div className="flex gap-2.5 flex-wrap">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={() => navigate('/project/new')}
-            className="h-11 px-4 rounded-xl border border-zinc-700 bg-zinc-900 text-zinc-100 font-semibold text-[15px] flex items-center gap-2 hover:bg-zinc-800"
+            className="h-11 px-4 text-[15px] lg:h-11 lg:px-4 lg:text-[15px]"
           >
             <Icon name="link" size={18} />
             {t('uploads.fromLink')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => navigate('/project/new')}
-            className="h-11 px-5 rounded-xl bg-primary text-primary-foreground font-bold text-[15px] flex items-center gap-2 hover:bg-primary/90"
+            className="h-11 px-5 text-[15px] lg:h-11 lg:px-5 lg:text-[15px]"
           >
             <Icon name="upload" size={18} />
             {t('uploads.uploadAudio')}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -443,17 +438,15 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
         <div className="flex items-center justify-between gap-4 flex-wrap mt-8 pb-3.5 border-b border-zinc-800">
           <div role="tablist" aria-label={t('uploads.filterLabel')} className="flex gap-1.5 flex-wrap">{filterTabs}</div>
           <div className="flex gap-2.5 items-center flex-wrap">
-            <label className="flex items-center gap-2 h-10 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 focus-within:border-primary/50">
-              <Icon name="search" size={16} />
-              <span className="sr-only">{t('uploads.searchLabel')}</span>
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t('uploads.searchPlaceholder')}
-                className="bg-transparent border-none outline-none text-sm text-zinc-100 placeholder:text-zinc-500 w-44"
-              />
-            </label>
+            <SearchField
+              compact
+              label={t('uploads.searchLabel')}
+              placeholder={t('uploads.searchPlaceholder')}
+              value={query}
+              onValueChange={setQuery}
+              clearLabel={t('common.clear')}
+              className="w-60 max-w-full"
+            />
             <div className="relative flex items-center h-10 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-100">
               <Icon name="sort" size={16} className="absolute left-3 pointer-events-none text-zinc-400" />
               <select
@@ -467,10 +460,15 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
                 ))}
               </select>
             </div>
-            <div className="flex p-0.5 rounded-xl bg-zinc-900 border border-zinc-800">
-              {viewButton('grid', 'grid_view', t('uploads.gridView'))}
-              {viewButton('list', 'view_list', t('uploads.listView'))}
-            </div>
+            <SegmentedControl<ViewId>
+              label={t('uploads.gridView')}
+              value={view}
+              onChange={setView}
+              options={[
+                { value: 'grid', label: <Icon name="grid_view" size={18} />, ariaLabel: t('uploads.gridView') },
+                { value: 'list', label: <Icon name="view_list" size={18} />, ariaLabel: t('uploads.listView') },
+              ]}
+            />
           </div>
         </div>
       )}
@@ -485,9 +483,9 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
             <Icon name="error" size={28} className="text-zinc-500" />
           </div>
           <p className="text-sm text-zinc-400 font-medium">{t('common.loadError')}</p>
-          <button onClick={fetchUploads} className="text-xs text-primary hover:text-primary/70 transition-colors font-medium">
+          <Button variant="link" size={null} onClick={fetchUploads} className="text-xs">
             {t('common.retry')}
-          </button>
+          </Button>
         </div>
       ) : items.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">

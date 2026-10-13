@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { Button } from '@ui/button';
 import { ScreenshotPlaceholder } from './ScreenshotPlaceholder';
 
 const SECTION_ORDER = ['sync', 'player', 'saveUndo', 'sections', 'preview', 'furigana', 'share', 'import'] as const;
@@ -29,13 +30,15 @@ export default function GuidePage() {
             <h1 className="text-3xl font-heading font-semibold text-foreground">{t('guide.title')}</h1>
             <p className="text-sm text-muted-foreground mt-2">{t('guide.subtitle')}</p>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors shrink-0"
+            className="self-start sm:self-auto"
           >
             <Icon name="arrow_back" size={14} />
             {t('guide.backToEditor')}
-          </button>
+          </Button>
         </div>
 
         {/* Section nav */}

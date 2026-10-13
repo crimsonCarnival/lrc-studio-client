@@ -6,6 +6,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { LazyImage } from '@ui/LazyImage';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
 
 import { LANGUAGES, getLangLabel } from './auth-constants';
 
@@ -15,12 +16,10 @@ export function LangSwitcher({ i18n }: { i18n?: I18nInstance }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button
-          className="flex items-center gap-1 h-8 px-2.5 text-zinc-400 hover:text-zinc-200 bg-zinc-900/60 hover:bg-zinc-800/80 border border-zinc-800/50 rounded-xl transition-colors text-[11px] font-bold"
-        >
+        <Button variant="outline" size="sm" className="h-8 lg:h-8">
           <Icon name="language" size={14} />
           {currentShort}
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent className="w-48 p-1" align="end" sideOffset={6}>
         {LANGUAGES.map(({ code, short }) => {
@@ -47,21 +46,8 @@ export function LangSwitcher({ i18n }: { i18n?: I18nInstance }) {
 
 export function FieldError({ message }: { message?: ReactNode }) {
   if (!message) return null;
-  return <p className="text-[13px] text-destructive font-medium flex items-center gap-1">{message}</p>;
+  return <p className="pl-1 text-sm text-love-ink font-medium flex items-center gap-1.5">{message}</p>;
 }
-
-/** Passed to every auth FloatingInput so the forms stay visually identical.
-    The fill matches the floated label's own chip background. */
-export const authInputCls =
-  // The lg:/md: overrides cancel the shared Input's desktop shrink (lg:h-8), which
-  // would otherwise leave the field shorter than the h-12 its floating label assumes.
-  'bg-zinc-900 border-zinc-700 rounded-[10px] text-base md:text-base font-medium lg:h-12 lg:px-4 lg:text-base';
-
-export const authPrimaryBtnCls =
-  'h-12 w-full rounded-[10px] bg-primary hover:bg-primary-dim text-primary-foreground text-[15px] font-bold flex items-center justify-center gap-2 transition-colors disabled:bg-zinc-700 disabled:text-foreground/65 disabled:cursor-not-allowed';
-
-export const authSecondaryBtnCls =
-  'h-12 rounded-[10px] border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-100 text-[15px] font-semibold inline-flex items-center justify-center gap-2.5 transition-colors disabled:opacity-40 disabled:pointer-events-none';
 
 interface AuthFieldProps {
   error?: ReactNode;
@@ -77,7 +63,7 @@ export function AuthField({ error, hint, children }: AuthFieldProps) {
       {children}
       {error
         ? <FieldError message={error} />
-        : hint && <p className="text-[13px] text-foreground/65">{hint}</p>}
+        : hint && <p className="pl-1 text-sm text-subtle">{hint}</p>}
     </div>
   );
 }
@@ -93,10 +79,10 @@ export function AuthHeading({ title, subtitle }: { title: ReactNode; subtitle?: 
 
 export function OrDivider({ t }: { t: TFunction }) {
   return (
-    <div className="flex items-center gap-3 font-mono text-xs font-medium lowercase text-foreground/45">
-      <span className="flex-1 h-px bg-zinc-800" />
+    <div className="flex items-center gap-3.5 text-sm lowercase text-subtle">
+      <span className="flex-1 h-px bg-hl" />
       {t('common.or')}
-      <span className="flex-1 h-px bg-zinc-800" />
+      <span className="flex-1 h-px bg-hl" />
     </div>
   );
 }
@@ -117,7 +103,9 @@ interface AvatarBadgeProps {
 }
 
 function AvatarBadgeInner({ accountName, avatarUrl, size = 'md' }: AvatarBadgeProps) {
-  const sizeClass = size === 'lg' ? 'size-16 text-xl' : 'size-10 text-sm';
+  const sizeClass = size === 'lg' ? 'size-16 text-2xl' : 'size-12 text-xl';
+  // Iris ring separated from the avatar by a gap in the page colour (redesign sheet 05).
+  const ring = 'ring-[1.5px] ring-iris ring-offset-2 ring-offset-ground';
   const initial = (accountName || '?')[0].toUpperCase();
   const [imgError, setImgError] = useState(false);
 
@@ -126,13 +114,13 @@ function AvatarBadgeInner({ accountName, avatarUrl, size = 'md' }: AvatarBadgePr
       <LazyImage
         src={avatarUrl}
         alt={accountName}
-        className={`${sizeClass} rounded-full object-cover ring-2 ring-primary/30`}
+        className={`${sizeClass} ${ring} shrink-0 rounded-full object-cover`}
         onError={() => setImgError(true)}
       />
     );
   }
   return (
-    <div className={`${sizeClass} rounded-full bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center font-bold text-zinc-950 ring-2 ring-primary/20`}>
+    <div className={`${sizeClass} ${ring} shrink-0 rounded-full bg-primary-soft text-primary-ink font-heading font-bold flex items-center justify-center`}>
       {initial}
     </div>
   );
@@ -195,23 +183,26 @@ export function RedirectMessage({ from, t }: { from?: string; t: TFunction }) {
     }`}>
       {variant === 'warning' ? <Icon name="lightbulb" size={16} className="shrink-0" /> : <Icon name="music_note" size={16} className="shrink-0" />}
       <div className="flex-1">{message}</div>
-      <button
+      <Button
+        variant="ghost"
+        size="icon-xs"
         onClick={() => setVisible(false)}
         aria-label={t('common.dismiss')}
-        className="p-1 hover:bg-white/5 rounded-md transition-colors opacity-60 hover:opacity-100"
+        className="size-6 lg:size-6"
       >
         <Icon name="close" size={14} />
-      </button>
+      </Button>
     </div>
   );
 }
 
 export function GoogleButton({ onClick, t, short }: { onClick?: () => void; t: TFunction; short?: boolean }) {
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
       onClick={onClick}
-      className={`w-full ${authSecondaryBtnCls}`}
+      className="h-[52px] w-full gap-2.5 text-[17px] lg:h-[52px] lg:text-[17px]"
     >
       <svg className="size-[18px]" viewBox="0 0 48 48" aria-hidden="true">
         <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
@@ -220,7 +211,7 @@ export function GoogleButton({ onClick, t, short }: { onClick?: () => void; t: T
         <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
       </svg>
       {short ? t('auth.googleShort') : t('auth.googleContinue')}
-    </button>
+    </Button>
   );
 }
 
@@ -268,14 +259,16 @@ export function ContextBanner({ redirect, t, onDismiss }: { redirect?: string; t
       </div>
       {onDismiss && (
         <Tip content={t('auth.context.dismiss')}>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             onClick={onDismiss}
             aria-label={t('auth.context.dismiss')}
-            className="shrink-0 size-6 rounded-lg flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/40 transition-colors"
+            className="size-6 lg:size-6"
           >
             <Icon name="close" size={14} />
-          </button>
+          </Button>
         </Tip>
       )}
     </div>

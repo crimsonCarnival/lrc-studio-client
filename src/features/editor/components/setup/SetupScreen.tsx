@@ -843,13 +843,16 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                         {/* URL + file input */}
                         <div className="flex items-center gap-2 bg-zinc-900/50 p-2 rounded-2xl border border-zinc-800/60 focus-within:border-primary/40 transition-all shrink-0">
                           <Tip content={t('setup.uploadAudio')}>
-                            <button
+                            <Button
+                              variant="outline"
+                              size="icon"
                               onClick={() => audioInputRef.current?.click()}
-                              className="size-11 flex items-center justify-center rounded-xl bg-zinc-800 text-zinc-400 hover:text-primary hover:bg-zinc-700/50 transition-all shrink-0 border border-zinc-700/40 cursor-pointer"
+                              aria-label={t('setup.uploadAudio')}
+                              className="size-11 lg:size-11"
                             >
                               <Icon name="folder_open" size={20} />
                               <input ref={audioInputRef} id="setup-audio-input" type="file" accept="audio/*" onChange={handleAudioFile} className="hidden" />
-                            </button>
+                            </Button>
                           </Tip>
                           <div className="relative flex-1 flex items-center">
                             <FloatingInput

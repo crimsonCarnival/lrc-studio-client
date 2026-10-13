@@ -119,14 +119,15 @@ export function GuidedTour({ steps, isOpen, onClose }: { steps: TourStep[]; isOp
       >
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-sm font-semibold text-zinc-100">{t(step.titleKey)}</h3>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             onClick={onClose}
             aria-label={t('editor.tour.skip')}
-            className="text-zinc-500 hover:text-zinc-300 transition-colors flex-shrink-0"
           >
             <Icon name="close" size={16} />
-          </button>
+          </Button>
         </div>
         <p className="text-xs text-zinc-400 leading-relaxed">{t(step.bodyKey)}</p>
 

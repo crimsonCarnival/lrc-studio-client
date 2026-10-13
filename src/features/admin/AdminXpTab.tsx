@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 
 interface AdminXpTabProps {
   onAdjustXP: (action: string, amount: number, target: string, userId?: string, userIds?: string[]) => Promise<void>;
@@ -138,21 +139,24 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
 
         {/* Action buttons */}
         <div className="flex gap-3 pt-1">
-          <button
+          <Button
+            variant="outline"
+            size="lg"
             onClick={() => handleBulkXP('grant')}
             disabled={xpBulkSaving}
-            className="flex items-center gap-2 h-9 px-5 text-sm font-semibold rounded-xl bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors disabled:opacity-50"
+            className="bg-amber-500/15 text-amber-400 border-amber-500/30 hover:bg-amber-500/25"
           >
             <Icon name="auto_awesome" size={14} />
             {t('admin.xp.grantXp')}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="destructive"
+            size="lg"
             onClick={() => handleBulkXP('revoke')}
             disabled={xpBulkSaving}
-            className="flex items-center gap-2 h-9 px-5 text-sm font-semibold rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors disabled:opacity-50"
           >
             {t('admin.xp.revokeXp')}
-          </button>
+          </Button>
           {xpBulkSaving && (
             <LogoLoader size={16} className="self-center" />
           )}
@@ -176,14 +180,14 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
         ) : curveFailed ? (
           <div className="flex flex-col items-center gap-3 py-12 text-center">
             <p className="text-xs text-zinc-400">{t('admin.xp.curve.fetchError')}</p>
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => fetchCurve(curveMaxLevel)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-800 text-xs font-semibold text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors"
             >
               <Icon name="refresh" size={14} />
               {t('admin.xp.curve.retry')}
-            </button>
+            </Button>
           </div>
         ) : curve.length === 0 ? (
           <p className="py-12 text-center text-xs text-zinc-500">{t('admin.xp.curve.empty')}</p>
@@ -225,23 +229,23 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
 
             <div className="flex items-center gap-3">
               {curveMaxLevel < CURVE_EXPANDED_SIZE ? (
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => fetchCurve(CURVE_EXPANDED_SIZE)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-800 text-xs font-semibold text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors"
                 >
                   <Icon name="expand_more" size={14} />
                   {t('admin.xp.curve.showMore', { level: CURVE_EXPANDED_SIZE })}
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => fetchCurve(CURVE_PAGE_SIZE)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-800 text-xs font-semibold text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors"
                 >
                   <Icon name="expand_less" size={14} />
                   {t('admin.xp.curve.showLess', { level: CURVE_PAGE_SIZE })}
-                </button>
+                </Button>
               )}
               <p className="text-[10px] uppercase tracking-widest text-zinc-600">
                 {t('admin.xp.curve.shownCount', { total: curve.length })}

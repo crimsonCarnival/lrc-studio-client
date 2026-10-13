@@ -1,5 +1,6 @@
 import { Icon } from '@/shared/ui/Icon';
 import { SkeletonMediaItem } from '@ui/skeleton';
+import { Button } from '@ui/button';
 import { useTranslation } from 'react-i18next';
 
 interface MediaUpload {
@@ -36,12 +37,14 @@ export default function MediaLibrary({
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{t('setup.yourMedia')}</span>
         {!loading && uploads.length > 4 && onShowAll && (
-          <button
+          <Button
+            variant="link"
+            size={null}
             onClick={onShowAll}
-            className="text-[10px] font-medium text-primary hover:text-primary/80 uppercase tracking-wider"
+            className="text-[10px] uppercase tracking-wider"
           >
             {t('setup.viewAll')}
-          </button>
+          </Button>
         )}
       </div>
       <div className="flex flex-col gap-1.5">
@@ -74,15 +77,18 @@ export default function MediaLibrary({
                 }`}>
                 {upload.title || upload.fileName || 'Untitled'}
               </p>
-              <button
+              <Button
+                variant="ghost"
+                size="icon-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete(upload.id);
                 }}
-                className="p-1 rounded opacity-0 group-hover:opacity-100 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-all shrink-0"
+                aria-label={t('common.delete')}
+                className="size-6 coarse:size-6 opacity-0 group-hover:opacity-100 text-love-ink hover:bg-love-soft hover:text-love-ink"
               >
                 <Icon name="delete" size={14} />
-              </button>
+              </Button>
             </div>
           ))
         )}

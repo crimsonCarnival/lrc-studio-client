@@ -63,12 +63,9 @@ export default function PasteSelectionToolbar({ value, selection, singers, onApp
       {/* Insert a section before the selected line(s) */}
       <Popover>
         <PopoverTrigger asChild>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-600 text-zinc-200 rounded-full transition-colors outline-none"
-          >
+          <Button type="button" variant="outline" size="sm" className="rounded-full">
             <Icon name="add" size={14} /> {t('editor.insertSectionAbove')}
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="lg:min-w-56">
           {SECTION_TYPES.map((s) => (
@@ -122,12 +119,9 @@ export default function PasteSelectionToolbar({ value, selection, singers, onApp
           {!rosterEmpty && (
             <Popover onOpenChange={(open) => setSingerDraft(open ? (targetHeader.singers ?? []) : null)}>
               <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-600 text-zinc-200 rounded-full transition-colors outline-none"
-                >
+                <Button type="button" variant="outline" size="sm" className="rounded-full">
                   <Icon name="group" size={14} /> {t('editor.assignSinger')}
-                </button>
+                </Button>
               </PopoverTrigger>
               <PopoverContent align="start">
                 {singers.map((name) => (

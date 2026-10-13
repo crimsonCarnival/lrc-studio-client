@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Button } from '@ui/button';
 import { useNotificationsContext } from './NotificationsContext';
 import { NotificationStickySection } from './components/NotificationStickySection';
 import { NotificationItem } from './components/NotificationItem';
@@ -46,12 +47,9 @@ export default function NotificationsPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-zinc-100">{t('notifications.bell')}</h1>
         {hasAny && (
-          <button
-            onClick={markAllRead}
-            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-          >
+          <Button variant="link" size={null} onClick={markAllRead} className="text-xs">
             {t('notifications.markAllRead')}
-          </button>
+          </Button>
         )}
       </div>
 

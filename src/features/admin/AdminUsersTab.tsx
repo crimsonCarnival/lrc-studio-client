@@ -1,11 +1,10 @@
 import { useTranslation } from 'react-i18next';
-import type { ChangeEvent } from 'react';
 import { AdminUserContextMenu } from './AdminUserContextMenu';
 import { Button } from '@ui/button';
-import { Input } from '@ui/input';
 import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
 import { Icon } from '@/shared/ui/Icon';
+import { SearchField } from '@ui/search-field';
 import { CountryFlag } from '@/shared/ui/CountryFlag';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { useState as useLocalState } from 'react';
@@ -149,15 +148,16 @@ export default function AdminUsersTab({
   return (
     <>
       <div className="p-3 sm:p-4 border-b border-zinc-800/50 flex flex-col gap-3 bg-zinc-900/50">
-        <div className="relative">
-          <Input
-            placeholder={t('admin.dashboard.searchPlaceholder')}
-            value={search}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-            className="bg-zinc-950 border-zinc-800 focus:border-primary !pl-10 h-10 coarse:h-11 text-sm"
-          />
-          <Icon name="filter_list" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
-        </div>
+        <SearchField
+          compact
+          label={t('admin.dashboard.searchPlaceholder')}
+          placeholder={t('admin.dashboard.searchPlaceholder')}
+          value={search}
+          onValueChange={setSearch}
+          clearLabel={t('common.clear')}
+          leading={<Icon name="filter_list" size={16} className="shrink-0" />}
+          className="coarse:h-11"
+        />
         <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-row gap-2 sm:gap-4'}`}>
           {!hideRoleFilter && (
             <select
@@ -550,15 +550,19 @@ export default function AdminUsersTab({
                             onChange={e => setXpAmount(e.target.value)}
                             className="w-16 h-7 px-2 text-xs rounded bg-zinc-800 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-primary"
                           />
-                          <button
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => { handleAdjustXP('grant', Number(xpAmount), 'user', user.id); setXpPopover(null); }}
-                            className="h-7 px-2 text-[10px] font-bold rounded bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 transition-colors"
-                          >+XP</button>
-                          <button
+                            className="h-7 px-2 bg-amber-500/15 text-amber-400 border-amber-500/30 hover:bg-amber-500/25"
+                          >+XP</Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
                             onClick={() => { handleAdjustXP('revoke', Number(xpAmount), 'user', user.id); setXpPopover(null); }}
-                            className="h-7 px-2 text-[10px] font-bold rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-colors"
-                          >−XP</button>
-                          <button onClick={() => setXpPopover(null)} className="h-7 px-1.5 text-zinc-600 hover:text-zinc-400 text-xs">✕</button>
+                            className="h-7 px-2"
+                          >−XP</Button>
+                          <Button variant="ghost" size="icon-sm" onClick={() => setXpPopover(null)} aria-label={t('common.close')} className="size-7">✕</Button>
                         </div>
                       )}
                       {canActOn(user) && (

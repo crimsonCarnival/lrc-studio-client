@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
+import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { OnlineDot } from '@ui/OnlineDot';
@@ -112,21 +113,22 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
 
         {me && !isSelf && (
           isFollowing ? (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => toggleFollow(u.accountName, false)}
               disabled={isPending}
-              className="shrink-0 text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-50 whitespace-nowrap"
             >
               {followBtnLabel}
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
+              size="sm"
               onClick={() => toggleFollow(u.accountName, true)}
               disabled={isPending}
-              className="shrink-0 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
             >
               {followBtnLabel}
-            </button>
+            </Button>
           )
         )}
       </div>
@@ -155,9 +157,9 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
             <p className="text-sm font-semibold text-foreground">
               {accountName}
             </p>
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors p-1 -mr-1">
+            <Button variant="ghost" size="icon-xs" onClick={onClose} className="-mr-1" aria-label={t('common.close')}>
               <Icon name="close" size={16} />
-            </button>
+            </Button>
           </div>
 
           {/* Tabs */}
@@ -203,13 +205,15 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
 
                 {current.hasNextPage && (
                   <div className="flex justify-center py-3">
-                    <button
+                    <Button
+                      variant="link"
+                      size={null}
                       onClick={() => current.fetchNextPage()}
-                      disabled={current.isFetchingNextPage}
-                      className="text-sm text-primary hover:underline disabled:opacity-50"
+                      loading={current.isFetchingNextPage}
+                      className="gap-1.5 text-sm"
                     >
-                      {current.isFetchingNextPage ? <LoadingSpinner size="sm" /> : t('profile.loadMore')}
-                    </button>
+                      {t('profile.loadMore')}
+                    </Button>
                   </div>
                 )}
               </div>

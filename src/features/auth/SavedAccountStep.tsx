@@ -9,6 +9,7 @@ import { AvatarBadge, AuthHeading } from './auth-shared';
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
 
 interface SavedAccount {
   userId: string;
@@ -164,27 +165,31 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
 
                 {account.hasPasskey && (
                   <Tip content={t('auth.savedAccount.usePasskey')}>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={(e) => handlePasskey(e, account)}
                       disabled={isLoading}
                       aria-label={t('auth.savedAccount.usePasskey')}
-                      className="shrink-0 size-11 flex items-center justify-center rounded-lg text-foreground/65 hover:text-primary hover:bg-zinc-800 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                      className="size-11 lg:size-11"
                     >
                       <Icon name="fingerprint" size={20} />
-                    </button>
+                    </Button>
                   </Tip>
                 )}
 
                 <Tip content={t('auth.savedAccount.removeAccount')}>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="icon"
                     onClick={() => onRemoveAccount(account.userId)}
                     aria-label={t('auth.savedAccount.removeNamed', { name: displayName })}
-                    className="shrink-0 size-11 flex items-center justify-center rounded-lg text-foreground/45 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
+                    className="size-11 lg:size-11"
                   >
                     <Icon name="close" size={16} />
-                  </button>
+                  </Button>
                 </Tip>
               </div>
               {errors[key] && (
@@ -207,21 +212,23 @@ export default function SavedAccountStep({ t, savedAccounts, accountsChecked, on
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm text-foreground/65">
         <p>
           {t('auth.noAccount')}{' '}
-          <button type="button" onClick={onSwitchToRegister} className="font-semibold text-primary hover:underline">
+          <Button type="button" variant="link" size={null} onClick={onSwitchToRegister} className="text-sm">
             {t('auth.register')}
-          </button>
+          </Button>
         </p>
         {savedAccounts.length > 1 && (
-          <button
+          <Button
             type="button"
+            variant="link"
+            size={null}
             onClick={() => {
               rememberedAccounts.clear();
               savedAccounts.forEach((a) => onRemoveAccount(a.userId));
             }}
-            className="hover:text-destructive transition-colors"
+            className="text-sm text-foreground/65 hover:text-destructive"
           >
             {t('auth.savedAccount.forgetAll')}
-          </button>
+          </Button>
         )}
       </div>
     </div>

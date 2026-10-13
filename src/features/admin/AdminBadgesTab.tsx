@@ -5,11 +5,13 @@ import { motion as M, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { SearchField } from '@ui/search-field';
 import { gqlRequest } from '@/app/graphql.client';
 import { BadgeChip } from '@/features/badges/BadgeChip';
 import { BADGE_COLORS } from '@/features/badges/badge-registry';
 import { requestsApi } from './services/requests.service';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 
 // Typed i18next rejects arbitrary string keys / object interpolation values.
 type TkFn = (k: string, o?: Record<string, unknown>) => string;
@@ -239,9 +241,9 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
               {editing ? t('admin.badges.editTitle', { name: editing.label?.en || editing.id }) : t('admin.badges.newTitle')}
             </h3>
           </div>
-          <button type="button" onClick={onClose} className="text-zinc-600 hover:text-zinc-400 transition-colors">
+          <Button type="button" variant="ghost" size="icon-xs" onClick={onClose} aria-label={t('common.close')} className="-m-1">
             <Icon name="close" size={16} />
-          </button>
+          </Button>
         </div>
 
         <form onSubmit={submit} className="p-5 flex flex-col gap-5 max-h-[85vh] overflow-y-auto custom-scrollbar">
@@ -427,17 +429,17 @@ function BadgeFormModal({ editing, onClose, onSaved, proposeMode }: BadgeFormMod
           </div>
 
           <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border border-zinc-700 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
+            <Button type="button" variant="outline" size="lg" onClick={onClose} className="flex-1">
               {t('admin.badges.cancel')}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={saving}
-              className="flex-1 px-4 py-2 rounded-lg bg-primary text-zinc-950 text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              size="lg"
+              loading={saving}
+              className="flex-1"
             >
-              {saving && <LogoLoader size={14} />}
               {editing ? t('admin.badges.update') : t('admin.badges.create')}
-            </button>
+            </Button>
           </div>
         </form>
       </M.div>
@@ -491,13 +493,13 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
           </div>
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button type="button" onClick={() => onEdit(def)} className="size-6 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-300 transition-colors">
+          <Button type="button" variant="ghost" size="icon-xs" onClick={() => onEdit(def)} aria-label={t('editor.edit')}>
             <Icon name="edit" size={12} />
-          </button>
+          </Button>
           {!def.isBuiltin && (
-            <button type="button" onClick={() => onDelete(def)} className="size-6 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-zinc-600 hover:text-red-400 transition-colors">
+            <Button type="button" variant="ghost" size="icon-xs" onClick={() => onDelete(def)} aria-label={t('common.delete')} className="text-love-ink hover:bg-love-soft hover:text-love-ink">
               <Icon name="delete" size={12} />
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -527,27 +529,25 @@ function BadgeCard({ def, onEdit, onDelete, onRetroactive, onGrant, retroLoading
       {/* Actions — grant/retro require badges.manage, hidden when proposing */}
       {!proposeMode && (
         <div className="flex gap-1.5 flex-wrap">
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="xs"
             onClick={() => onGrant(def)}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 transition-all border border-zinc-700/50"
           >
             <Icon name="person_add" size={12} />
             {t('admin.badges.grantToUser')}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
+            size="xs"
             onClick={() => onRetroactive(def.id)}
-            disabled={retroLoading === def.id}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-zinc-800 hover:bg-primary/20 text-zinc-400 hover:text-primary transition-all border border-zinc-700/50 disabled:opacity-50"
+            loading={retroLoading === def.id}
           >
-            {retroLoading === def.id ? (
-              <LogoLoader size={12} />
-            ) : (
-              <Icon name="qr_code_scanner" size={12} />
-            )}
+            {retroLoading !== def.id && <Icon name="qr_code_scanner" size={12} />}
             {t('admin.badges.retroactiveScan')}
-          </button>
+          </Button>
         </div>
       )}
     </M.div>
@@ -601,12 +601,12 @@ function GrantModal({ badge, onClose }: { badge: BadgeDef; onClose: () => void }
             />
           </label>
           <div className="flex gap-2">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border border-zinc-700 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
+            <Button type="button" variant="outline" size="lg" onClick={onClose} className="flex-1">
               {t('admin.badges.cancel')}
-            </button>
-            <button type="submit" disabled={loading} className="flex-1 px-4 py-2 rounded-lg bg-primary text-zinc-950 text-sm font-semibold disabled:opacity-50">
+            </Button>
+            <Button type="submit" size="lg" disabled={loading} className="flex-1">
               {loading ? t('admin.badges.granting') : t('admin.badges.grant')}
-            </button>
+            </Button>
           </div>
         </form>
       </M.div>
@@ -705,30 +705,30 @@ export default function AdminBadgesTab({ proposeMode = false }: { proposeMode?: 
     <div className="flex flex-col gap-5">
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-40">
-          <Icon name="search" size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
-          <input
-            className="w-full pl-8 pr-3 py-2 text-xs bg-zinc-900 border border-zinc-800 rounded-xl placeholder:text-zinc-500 focus:border-primary/40 focus:outline-none text-zinc-300"
-            placeholder={t('admin.badges.searchPlaceholder')}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-        <button
+        <SearchField
+          compact
+          label={t('admin.badges.searchPlaceholder')}
+          placeholder={t('admin.badges.searchPlaceholder')}
+          value={search}
+          onValueChange={setSearch}
+          clearLabel={t('common.clear')}
+          className="flex-1 min-w-40"
+        />
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           onClick={fetchDefs}
-          className="size-8 rounded-xl border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-all"
         >
           {loading ? <LogoLoader size={14} /> : <Icon name="refresh" size={14} />}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
           onClick={() => setFormModal('new')}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-zinc-950 text-xs font-semibold hover:bg-primary/90 transition-colors"
         >
           <Icon name="add" size={14} />
           {t('admin.badges.newBadge')}
-        </button>
+        </Button>
       </div>
 
       {/* Stats bar */}

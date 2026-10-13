@@ -9,6 +9,7 @@ import { requestsApi, type StaffRequest } from './services/requests.service';
 import { isSudoCancelled, withSudo } from './services/sudo';
 import { getSocket } from '@/app/socket.client';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 
 // Request types the inline composer can build (simple payloads). Other types
 // (badges/levels) are submitted from their own tabs.
@@ -90,12 +91,12 @@ function RequestComposer({ types, onClose, onSubmitted }: { types: ComposerType[
           )}
 
           <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 rounded-lg border border-zinc-700 text-sm text-zinc-400 hover:text-zinc-200 transition-colors">
+            <Button type="button" variant="outline" size="lg" onClick={onClose} className="flex-1">
               {t('admin.requests.composer.cancel')}
-            </button>
-            <button type="submit" disabled={saving} className="flex-1 px-4 py-2 rounded-lg bg-primary text-zinc-950 text-sm font-semibold disabled:opacity-50">
+            </Button>
+            <Button type="submit" size="lg" disabled={saving} className="flex-1">
               {saving ? t('admin.requests.composer.submitting') : t('admin.requests.composer.submit')}
-            </button>
+            </Button>
           </div>
         </form>
       </M.div>
@@ -229,22 +230,22 @@ export default function AdminRequestsTab() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-end gap-2">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="icon"
           onClick={fetchAll}
-          className="size-8 rounded-xl border border-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-200 hover:border-zinc-700 transition-all"
         >
           <Icon name="refresh" size={14} />
-        </button>
+        </Button>
         {composerTypes.length > 0 && (
-          <button
+          <Button
             type="button"
             onClick={() => setComposerOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-zinc-950 text-xs font-semibold hover:bg-primary/90 transition-colors"
           >
             <Icon name="add" size={14} />
             {t('admin.requests.newRequest')}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -275,40 +276,45 @@ export default function AdminRequestsTab() {
                         placeholder={t('admin.requests.rejectNote')}
                         className="w-48 bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-[11px] text-zinc-200 placeholder:text-zinc-500 focus:border-primary/50 focus:outline-none"
                       />
-                      <button
+                      <Button
                         type="button"
+                        variant="destructive"
+                        size="sm"
                         disabled={busy === req.id}
                         onClick={() => decide(req, 'reject', rejectNote)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
                       >
                         <Icon name="close" size={12} /> {t('admin.requests.confirmReject')}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="sm"
                         onClick={() => { setRejectingId(null); setRejectNote(''); }}
-                        className="px-2.5 py-1.5 rounded-lg text-[11px] text-zinc-400 border border-zinc-700 hover:text-zinc-200 transition-colors"
                       >
                         {t('admin.requests.cancelReject')}
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       disabled={busy === req.id}
                       onClick={() => decide(req, 'approve')}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 disabled:opacity-50 transition-colors"
+                      className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25"
                     >
                       <Icon name="check" size={12} /> {t('admin.requests.approve')}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="destructive"
+                      size="sm"
                       disabled={busy === req.id}
                       onClick={() => { setRejectingId(req.id); setRejectNote(''); }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
                     >
                       <Icon name="close" size={12} /> {t('admin.requests.reject')}
-                    </button>
+                    </Button>
                   </div>
                   )}
                 </RequestRow>

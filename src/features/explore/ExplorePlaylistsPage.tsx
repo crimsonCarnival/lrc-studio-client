@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import { usePaginatedPlaylists } from './hooks/useExplore';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 
 interface ExplorePlaylist {
   id: string;
@@ -88,15 +89,14 @@ export default function ExplorePlaylistsPage() {
           </div>
 
           {hasMore ? (
-            <button
+            <Button
+              variant="outline"
               onClick={loadMore}
-              disabled={loadingMore}
-              className="mt-2 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              loading={loadingMore}
+              className="mt-2 h-10 text-sm lg:h-10 lg:text-sm"
             >
-              {loadingMore
-                ? <LogoLoader size={16} />
-                : t('explore.page.loadMore')}
-            </button>
+              {t('explore.page.loadMore')}
+            </Button>
           ) : (
             <p className="text-center text-sm text-zinc-500">{t('explore.page.noMore')}</p>
           )}

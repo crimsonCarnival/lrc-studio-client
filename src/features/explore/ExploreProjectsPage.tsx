@@ -4,6 +4,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { usePaginatedProjects } from './hooks/useExplore';
 import { useProjectSearch } from '@/features/search/hooks/useProjectSearch';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 import { SearchField } from '@ui/search-field';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 
@@ -143,15 +144,14 @@ export default function ExploreProjectsPage() {
           </div>
 
           {hasMore ? (
-            <button
+            <Button
+              variant="outline"
               onClick={loadMore}
-              disabled={loadingMore}
-              className="mt-2 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              loading={loadingMore}
+              className="mt-2 h-10 text-sm lg:h-10 lg:text-sm"
             >
-              {loadingMore
-                ? <LogoLoader size={16} />
-                : t('explore.page.loadMore')}
-            </button>
+              {t('explore.page.loadMore')}
+            </Button>
           ) : (
             <p className="text-center text-sm text-zinc-500">{t('explore.page.noMore')}</p>
           )}

@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
 } from '@ui/alert-dialog';
 import { onSudoPrompt, submitSudoPassword, submitSudoPasskey, cancelSudo, getSudoFactors } from './services/sudo';
-import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 
 interface SudoFactors {
   hasPassword: boolean;
@@ -130,14 +130,14 @@ export default function SudoPasswordModal() {
                   className="h-10 px-3 text-sm rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50"
                 />
               </label>
-              <button
+              <Button
                 type="submit"
-                disabled={!password || submitting}
-                className="w-full py-2.5 font-semibold text-sm rounded-xl transition-all bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50 flex items-center justify-center gap-2"
+                disabled={!password}
+                loading={submitting}
+                className="w-full h-10 text-sm lg:h-10 lg:text-sm bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white"
               >
-                {submitting && <LogoLoader size={16} />}
                 {t('admin.sudo.confirm')}
-              </button>
+              </Button>
             </form>
           )}
 
@@ -150,15 +150,16 @@ export default function SudoPasswordModal() {
           )}
 
           {factors.hasPasskey && (
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handlePasskey}
               disabled={submitting}
-              className="w-full py-2.5 font-semibold text-sm rounded-xl transition-all bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full h-10 text-sm lg:h-10 lg:text-sm"
             >
               <Icon name="fingerprint" size={16} />
               {t('admin.sudo.usePasskey')}
-            </button>
+            </Button>
           )}
 
           {!factors.hasPassword && !factors.hasPasskey && (
@@ -167,13 +168,14 @@ export default function SudoPasswordModal() {
 
           {error && <p className="text-xs text-red-400">{error}</p>}
 
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={handleCancel}
-            className="w-full py-2.5 bg-transparent hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 font-semibold text-sm rounded-xl transition-all"
+            className="w-full h-10 text-sm lg:h-10 lg:text-sm"
           >
             {t('admin.sudo.cancel')}
-          </button>
+          </Button>
         </div>
       </AlertDialogContent>
     </AlertDialog>

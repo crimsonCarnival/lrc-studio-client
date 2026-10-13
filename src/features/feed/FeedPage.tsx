@@ -6,7 +6,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { useFeed } from './hooks/useFeed';
 import { ActivityCard } from './components/ActivityCard';
-import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 
 // Stable pick per page load — empty state variants shouldn't flip on re-render
 function pickRandom(arr: unknown): string {
@@ -62,15 +62,14 @@ export default function FeedPage() {
           ))}
 
           {hasMore && (
-            <button
+            <Button
+              variant="outline"
               onClick={loadMore}
-              disabled={loadingMore}
-              className="mt-2 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              loading={loadingMore}
+              className="mt-2 h-10 text-sm lg:h-10 lg:text-sm"
             >
-              {loadingMore
-                ? <LogoLoader size={16} />
-                : t('feed.loadMore')}
-            </button>
+              {t('feed.loadMore')}
+            </Button>
           )}
         </div>
       )}

@@ -8,15 +8,13 @@ import { AnimatePresence, m as M } from 'framer-motion';
 import { z } from 'zod';
 import { FloatingInput } from '@ui/floating-input';
 import { translateAuthError } from '@/shared/utils/auth-errors';
-import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { auth } from '@/app/api';
 import PasswordStrength from './components/PasswordStrength.jsx';
 import RegistrationBlockedModal from './RegistrationBlockedModal';
 import {
   AuthField, AuthHeading, OrDivider, ContextBanner, GoogleButton,
-  authInputCls, authPrimaryBtnCls, authSecondaryBtnCls,
 } from './auth-shared';
-import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 
 const step1Schema = z.object({
   displayName: z.string().min(1, 'auth.validation.fieldRequired'),
@@ -108,8 +106,6 @@ interface SignUpFormProps {
 }
 
 export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLogin, onSuccess, redirect, onDismissRedirect, onIdentityChange }: SignUpFormProps) {
-  const { trigger: haptic } = useHapticFeedback();
-
   const [step, setStep] = useState(1);
 
   // Step 1 fields
@@ -227,14 +223,12 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
     }
   };
 
-  const toggleBtnCls = 'absolute right-1.5 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center text-foreground/65 hover:text-zinc-100 transition-colors rounded-lg';
-
   const loginLink = (
     <p className="text-sm text-foreground/65">
       {t('auth.hasAccount')}{' '}
-      <button type="button" onClick={onSwitchToLogin} className="font-semibold text-primary hover:underline">
+      <Button type="button" variant="link" size={null} onClick={onSwitchToLogin} className="text-sm">
         {t('auth.login')}
-      </button>
+      </Button>
     </p>
   );
 
@@ -287,7 +281,6 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                   autoComplete="nickname"
                   maxLength={50}
                   error={!!fieldErrors.displayName}
-                  className={authInputCls}
                 />
               </AuthField>
 
@@ -303,27 +296,30 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                   spellCheck={false}
                   maxLength={30}
                   error={!!fieldErrors.accountName}
-                  className={`${authInputCls} font-mono`}
+                  className="font-mono"
                 />
               </AuthField>
 
-              <button
+              <Button
                 type="submit"
-                disabled={loading || !displayName.trim()}
-                className={authPrimaryBtnCls}
+                loading={loading}
+                disabled={!displayName.trim()}
+                className="h-[52px] w-full text-[17px] lg:h-[52px] lg:text-[17px]"
               >
-                {loading ? <LogoLoader size={16} /> : t('auth.continue')}
-              </button>
+                {t('auth.continue')}
+              </Button>
             </form>
 
             <OrDivider t={t} />
 
             <div className="grid grid-cols-2 gap-2.5">
               <GoogleButton onClick={onGoogleLogin} t={t} short />
-              <Link to="/project/new" className={`${authSecondaryBtnCls} bg-transparent`}>
-                <Icon name="bolt" size={16} />
-                {t('auth.guestShort')}
-              </Link>
+              <Button asChild variant="outline" className="h-[52px] gap-2.5 bg-transparent text-[17px] lg:h-[52px] lg:text-[17px]">
+                <Link to="/project/new">
+                  <Icon name="bolt" size={16} />
+                  {t('auth.guestShort')}
+                </Link>
+              </Button>
             </div>
 
             {loginLink}
@@ -349,7 +345,6 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                 onChange={(e) => { setEmail(e.target.value); setFieldErrors(p => ({ ...p, email: undefined })); }}
                 autoComplete="email"
                 error={!!fieldErrors.email}
-                className={authInputCls}
               />
             </AuthField>
 
@@ -363,17 +358,19 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                   onChange={(e) => { setPassword(e.target.value); setFieldErrors(p => ({ ...p, password: undefined })); }}
                   autoComplete="new-password"
                   error={!!fieldErrors.password}
-                  className={`${authInputCls} pr-12`}
+                  className="pr-12"
                 />
                 {password && (
-                  <button
+                  <Button
                     type="button"
-                    onClick={() => { haptic('light'); setShowPassword(!showPassword); }}
-                    className={toggleBtnCls}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
                     aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                   >
                     <Icon name={showPassword ? 'visibility_off' : 'visibility'} size={16} />
-                  </button>
+                  </Button>
                 )}
               </div>
               <PasswordStrength password={password} />
@@ -389,35 +386,37 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                   onChange={(e) => { setConfirmPassword(e.target.value); setFieldErrors(p => ({ ...p, confirmPassword: undefined })); }}
                   autoComplete="new-password"
                   error={!!fieldErrors.confirmPassword}
-                  className={`${authInputCls} pr-12`}
+                  className="pr-12"
                 />
                 {confirmPassword && (
-                  <button
+                  <Button
                     type="button"
-                    onClick={() => { haptic('light'); setShowConfirm(!showConfirm); }}
-                    className={toggleBtnCls}
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
                     aria-label={showConfirm ? t('auth.hidePassword') : t('auth.showPassword')}
                   >
                     <Icon name={showConfirm ? 'visibility_off' : 'visibility'} size={16} />
-                  </button>
+                  </Button>
                 )}
               </div>
             </AuthField>
 
             <div className="flex gap-2.5">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 onClick={handleBack}
                 aria-label={t('common.back')}
-                className={`${authSecondaryBtnCls} w-12 shrink-0 bg-transparent`}
+                className="size-11 bg-transparent lg:size-11"
               >
                 <Icon name="arrow_back" size={16} />
-              </button>
-              <button type="submit" disabled={loading} className={authPrimaryBtnCls}>
-                {loading
-                  ? <><LogoLoader size={16} /><span>{t('auth.registerActionLoading')}</span></>
-                  : t('auth.registerAction')}
-              </button>
+              </Button>
+              <Button type="submit" loading={loading} className="h-[52px] flex-1 text-[17px] lg:h-[52px] lg:text-[17px]">
+                {loading ? t('auth.registerActionLoading') : t('auth.registerAction')}
+              </Button>
             </div>
 
             {loginLink}

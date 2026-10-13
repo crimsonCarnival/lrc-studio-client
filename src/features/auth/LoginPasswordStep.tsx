@@ -5,13 +5,11 @@ import { Icon } from '@/shared/ui/Icon';
 import { AnimatePresence, m } from 'framer-motion';
 import { FloatingInput } from '@ui/floating-input';
 import { translateAuthError } from '@/shared/utils/auth-errors';
-import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import {
-  AuthField, AuthHeading, OrDivider, AvatarBadge, GoogleButton,
-  authInputCls, authPrimaryBtnCls, authSecondaryBtnCls,
+  AuthField, OrDivider, AvatarBadge, GoogleButton,
 } from './auth-shared';
-import { LogoLoader } from '@ui/LogoLoader';
+import { Button } from '@ui/button';
 
 interface IdentifierData {
   identifier?: string;
@@ -43,7 +41,6 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
   const [loading, setLoading] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { trigger: haptic } = useHapticFeedback();
   const { loginWithPasskey } = useAuthContext();
 
   const handlePasskey = async () => {
@@ -85,21 +82,20 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
 
   return (
     <div className="animate-fade-in flex flex-col gap-6">
-      <button
-        type="button"
-        onClick={onBack}
-        className="self-start -ml-2.5 -mb-2 h-10 px-2.5 rounded-lg inline-flex items-center gap-2 text-sm font-semibold text-primary hover:bg-zinc-900 transition-colors"
-      >
-        <Icon name="arrow_back" size={16} />
-        {t('auth.notYou')}
-      </button>
-
-      <div className="flex flex-col items-start gap-5">
-        <AvatarBadge accountName={identifierData.accountName || identifierData.identifier} avatarUrl={identifierData.avatarUrl} size="lg" />
-        <AuthHeading
-          title={identifierData.accountName || identifierData.identifier}
-          subtitle={identifierData.hasPassword === false ? t('auth.signInWithGoogle') : t('auth.enterPassword')}
-        />
+      {/* Account card: who is signing in, with the way back to pick another account. */}
+      <div className="flex items-center gap-3.5 rounded-[14px] bg-background px-3.5 py-3 inset-ring inset-ring-hl">
+        <AvatarBadge accountName={identifierData.accountName || identifierData.identifier} avatarUrl={identifierData.avatarUrl} />
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <h1 className="truncate font-heading text-xl font-bold tracking-tight text-foreground">
+            {identifierData.accountName || identifierData.identifier}
+          </h1>
+          <p className="text-sm text-subtle">
+            {identifierData.hasPassword === false ? t('auth.signInWithGoogle') : t('auth.enterPassword')}
+          </p>
+        </div>
+        <Button type="button" variant="ghost" size={null} onClick={onBack} className="h-10 shrink-0 px-2.5 text-[15px] text-primary-ink">
+          {t('auth.notYou')}
+        </Button>
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
@@ -128,20 +124,19 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                 onChange={(e) => { setPassword(e.target.value); setError(''); }}
                 autoComplete="current-password"
                 error={!!error}
-                className={`${authInputCls} pr-12`}
+                className="pr-12"
               />
               {password && (
-                <button
+                <Button
                   type="button"
-                  onClick={() => {
-                    haptic('light');
-                    setShowPassword(!showPassword);
-                  }}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 size-9 flex items-center justify-center text-foreground/65 hover:text-zinc-100 transition-colors rounded-lg"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
                   aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                 >
                   {showPassword ? <Icon name="visibility_off" size={16} /> : <Icon name="visibility" size={16} />}
-                </button>
+                </Button>
               )}
             </div>
             <AnimatePresence>
@@ -158,48 +153,44 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                 </m.div>
               )}
             </AnimatePresence>
-            <button
+            <Button
               type="button"
+              variant="link"
+              size={null}
               onClick={onSwitchToForgotPassword}
-              className="self-end text-sm font-semibold text-primary hover:underline"
+              className="self-end text-sm"
             >
               {t('auth.forgotPassword')}
-            </button>
+            </Button>
           </AuthField>
         )}
 
         {identifierData.hasPassword !== false ? (
-          <button
+          <Button
             type="submit"
-            disabled={loading || passkeyLoading || !password}
-            className={authPrimaryBtnCls}
+            loading={loading}
+            disabled={passkeyLoading || !password}
+            className="h-[52px] w-full text-[17px] lg:h-[52px] lg:text-[17px]"
           >
-            {loading
-              ? <LogoLoader size={16} />
-              : t('auth.loginAction')
-            }
-          </button>
+            {t('auth.loginAction')}
+          </Button>
         ) : (
           // OAuth-only account: the passkey error has no password field to sit under.
           error && <p role="alert" className="text-sm text-destructive">{error}</p>
         )}
 
         {identifierData.hasPasskey && (
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={handlePasskey}
-            disabled={loading || passkeyLoading}
-            className={authSecondaryBtnCls}
+            loading={passkeyLoading}
+            disabled={loading}
+            className="h-[52px] w-full gap-2.5 text-[17px] lg:h-[52px] lg:text-[17px]"
           >
-            {passkeyLoading ? (
-              <LogoLoader size={16} />
-            ) : (
-              <>
-                <Icon name="fingerprint" size={18} className="text-primary" />
-                {t('auth.passkeyManagement.tryPasskey')}
-              </>
-            )}
-          </button>
+            {!passkeyLoading && <Icon name="fingerprint" size={18} className="text-primary" />}
+            {t('auth.passkeyManagement.tryPasskey')}
+          </Button>
         )}
 
         {(identifierData.hasGoogle || identifierData.hasPassword === false) && (

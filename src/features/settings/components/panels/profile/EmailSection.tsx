@@ -91,16 +91,16 @@ export default function EmailSection() {
       {user?.pendingEmail ? (
         <div className="flex items-center gap-2 text-[13px] text-amber-500/90 mt-3">
           <span>{t('auth.verification.pendingNotice', { email: user.pendingEmail })}</span>
-          <button onClick={handleResend} disabled={resending} className="relative underline hover:no-underline font-semibold shrink-0 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-4">
+          <Button variant="link" size={null} onClick={handleResend} disabled={resending} className="relative text-[13px] text-inherit underline hover:no-underline coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-4">
             {resending ? t('auth.verification.resendLoading') : t('auth.verification.resendButton')}
-          </button>
+          </Button>
         </div>
       ) : user?.email && !user?.isVerified ? (
         <div className="flex items-center gap-2 text-[13px] text-amber-500/90 mt-3">
           <span>{t('auth.verification.unverifiedNotice')}</span>
-          <button onClick={handleResend} disabled={resending} className="relative underline hover:no-underline font-semibold shrink-0 coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-4">
+          <Button variant="link" size={null} onClick={handleResend} disabled={resending} className="relative text-[13px] text-inherit underline hover:no-underline coarse:after:content-[''] coarse:after:absolute coarse:after:-inset-x-2 coarse:after:-inset-y-4">
             {resending ? t('auth.verification.resendLoading') : t('auth.verification.resendButton')}
-          </button>
+          </Button>
         </div>
       ) : null}
 

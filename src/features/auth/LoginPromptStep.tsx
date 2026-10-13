@@ -6,7 +6,6 @@ import { Button } from '@ui/button';
 import { AvatarBadge } from './auth-shared';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { toast } from 'react-hot-toast';
-import { LogoLoader } from '@ui/LogoLoader';
 
 interface IdentifierData {
   displayName?: string;
@@ -68,38 +67,31 @@ export default function LoginPromptStep({ t, identifierData, onSave, onSkip, onP
         </div>
       </div>
 
-      <div className="flex flex-col items-center gap-1.5 text-center">
-        <p className="text-base font-semibold text-zinc-100">{t('auth.savedAccount.prompt')}</p>
-        <p className="text-xs text-zinc-500 leading-relaxed max-w-[240px]">{t('auth.savedAccount.promptSub')}</p>
-      </div>
+      {/* Passkey card: icon tile + what it is, then the actions. */}
+      <div className="flex w-full flex-col gap-3.5 rounded-2xl bg-background p-[18px] inset-ring inset-ring-hl">
+        <div className="flex items-center gap-3.5">
+          <span className="grid size-11 shrink-0 place-items-center rounded-[var(--radius-control)] bg-primary-soft text-primary-ink">
+            <Icon name="fingerprint" size={24} />
+          </span>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <p className="text-[17px] font-semibold text-foreground">{t('auth.savedAccount.prompt')}</p>
+            <p className="text-sm text-subtle">{t('auth.savedAccount.promptSub')}</p>
+          </div>
+        </div>
 
-      <div className="w-full flex flex-col gap-2">
-        <Button
-          onClick={handleCreatePasskey}
-          disabled={loading}
-          className="h-11 w-full bg-primary hover:bg-primary-dim text-zinc-950 font-normal text-sm rounded-xl gap-2"
-        >
-          {loading ? <LogoLoader size={16} /> : <Icon name="fingerprint" size={16} />}
-          {t('auth.savedAccount.createPasskey')}
-        </Button>
-        <Button
-          onClick={onSave}
-          disabled={loading}
-          variant="outline"
-          className="h-11 w-full border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800/50 font-normal text-sm rounded-xl gap-2"
-        >
-          <Icon name="check" size={16} />
-          {t('auth.savedAccount.save')}
-        </Button>
-        <Button
-          variant="ghost"
-          onClick={onSkip}
-          disabled={loading}
-          className="h-11 w-full text-zinc-500 hover:text-zinc-300 font-normal text-sm rounded-xl gap-2 mt-1"
-        >
-          <Icon name="close" size={16} />
-          {t('auth.savedAccount.skip')}
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button onClick={handleCreatePasskey} loading={loading} className="h-[52px] w-full text-[17px] lg:h-[52px] lg:text-[17px]">
+            {t('auth.savedAccount.createPasskey')}
+          </Button>
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={onSave} disabled={loading} variant="outline" className="h-[52px] text-[17px] lg:h-[52px] lg:text-[17px]">
+              {t('auth.savedAccount.save')}
+            </Button>
+            <Button onClick={onSkip} disabled={loading} variant="ghost" className="h-11 text-[15px] lg:h-11 lg:text-[15px]">
+              {t('auth.savedAccount.skip')}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

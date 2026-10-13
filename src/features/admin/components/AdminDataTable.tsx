@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import useInputMethod from '@/shared/hooks/useInputMethod';
+import { Button } from '@ui/button';
 
 interface Column {
   key: string;
@@ -56,12 +57,13 @@ export function AdminDataTable({
                   </div>
                 ))}
                 {onRowAction && (
-                  <button
+                  <Button
+                    variant="sync"
                     onClick={() => onRowAction(row)}
-                    className="mt-2 h-11 px-3 text-sm font-medium bg-primary/20 hover:bg-primary/30 rounded-lg text-primary transition-colors active:bg-primary/40"
+                    className="mt-2 h-11 text-sm lg:h-11 lg:text-sm"
                   >
                     {rowActionLabel}
-                  </button>
+                  </Button>
                 )}
               </div>
             )

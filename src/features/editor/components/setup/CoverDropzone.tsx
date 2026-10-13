@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Tip } from '@ui/tip';
+import { Button } from '@ui/button';
 
 /**
  * Cap for the cover image. This mirrors the limit the previous inline handler
@@ -115,20 +116,18 @@ export function CoverDropzone({ value, onChange, onUpload, onToggleUrl, urlOpen,
 
       {onToggleUrl && (
         <Tip content={t('setup.coverUrlLabel')}>
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="xs"
             onClick={onToggleUrl}
             aria-expanded={!!urlOpen}
             aria-label={t('setup.coverUrlLabel')}
-            className={`mt-1 w-[72px] h-6 coarse:h-11 rounded-lg border flex items-center justify-center gap-1 transition-colors ${
-              urlOpen
-                ? 'border-primary/50 text-primary bg-primary/10'
-                : 'border-zinc-800 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700'
-            }`}
+            className="mt-1 w-[72px] coarse:h-11"
           >
             <Icon name="link" size={12} />
             <span className="text-[9px] font-bold uppercase tracking-wider">URL</span>
-          </button>
+          </Button>
         </Tip>
       )}
 

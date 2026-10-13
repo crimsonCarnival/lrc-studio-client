@@ -3,6 +3,8 @@ import type { ReactNode } from 'react';
 import { m, LazyMotion, domAnimation, AnimatePresence } from 'framer-motion';
 import { Icon } from '@/shared/ui/Icon';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@ui/button';
 
 interface ActionDrawerProps {
   isOpen?: boolean;
@@ -22,6 +24,7 @@ export default function ActionDrawer({
   children,
   showClose = true
 }: ActionDrawerProps) {
+  const { t } = useTranslation();
   // Prevent scrolling when drawer is open
   useEffect(() => {
     if (isOpen) {
@@ -62,12 +65,15 @@ export default function ActionDrawer({
               <div className="flex items-center justify-between mb-6">
                 {title && <h3 className="text-lg font-semibold text-zinc-100">{title}</h3>}
                 {showClose && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-lg"
                     onClick={onClose}
-                    className="p-2 -mr-2 text-zinc-400 hover:text-zinc-200 bg-zinc-900 rounded-full transition-colors"
+                    aria-label={t('common.close')}
+                    className="-mr-2 rounded-full"
                   >
                     <Icon name="close" size={20} />
-                  </button>
+                  </Button>
                 )}
               </div>
 

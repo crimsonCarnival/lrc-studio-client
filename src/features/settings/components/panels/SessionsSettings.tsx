@@ -145,9 +145,9 @@ export default function SessionsSettings() {
                     {session.ip && (
                       <>
                         IP <span className="font-mono">{shownIps.has(session.id) ? session.ip : maskIp(session.ip)}</span>{' '}
-                        <button type="button" onClick={() => toggleIp(session.id)} className="text-primary text-[13px] px-1">
+                        <Button type="button" variant="link" size={null} onClick={() => toggleIp(session.id)} className="text-[13px] px-1">
                           {shownIps.has(session.id) ? t('profile.sessions.hideIp') : t('profile.sessions.showIp')}
-                        </button>{' · '}
+                        </Button>{' · '}
                       </>
                     )}
                     {session.isCurrent ? t('profile.sessions.activeNow') : session.lastUsedAt && (
