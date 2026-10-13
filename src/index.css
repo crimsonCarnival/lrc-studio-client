@@ -282,6 +282,22 @@ input:-webkit-autofill:active {
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* Design-system motion (redesign sheet 01). "Beat" reuses --ease-bounce. */
+  --ease-state: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-press: 90ms;
+  --duration-state: 160ms;
+  --duration-beat: 280ms;
+  --duration-enter: 220ms;
+  --duration-exit: 160ms;
+
+  /* ── Radii by role ── pills (rounded-full) are for tags and status only */
+  --radius-chip: 8px;
+  --radius-control: 12px;
+  --radius-card: 20px;
+
+  /* ── Button bevels ── */
+  --shadow-button-top: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  --shadow-button-press: inset 0 2px 4px rgba(0, 0, 0, 0.18);
 
   /* ── Typography scale ── */
   --text-caption: 0.6875rem;
@@ -307,14 +323,14 @@ input:-webkit-autofill:active {
   --color-zinc-200: #1a1826;
   --color-zinc-100: #1a1826;
   --color-zinc-50: #1a1826;
-  --color-primary: #b4637a;
-  --color-primary-dim: #9a4f66;
+  --color-primary: #6f5a8f;
+  --color-primary-dim: #5f4c7d;
   --color-surface: rgba(87, 82, 121, 0.05);
   --color-surface-hover: rgba(87, 82, 121, 0.09);
   --color-glass: rgba(250, 244, 237, 0.85);
   --color-glass-border: rgba(87, 82, 121, 0.1);
-  --shadow-glow: 0 0 20px rgba(180, 99, 122, 0.2), 0 0 60px rgba(180, 99, 122, 0.08);
-  --shadow-glow-strong: 0 0 30px rgba(180, 99, 122, 0.3), 0 0 80px rgba(180, 99, 122, 0.12);
+  --shadow-glow: 0 0 20px rgba(111, 90, 143, 0.2), 0 0 60px rgba(111, 90, 143, 0.08);
+  --shadow-glow-strong: 0 0 30px rgba(111, 90, 143, 0.3), 0 0 80px rgba(111, 90, 143, 0.12);
   --shadow-sm: 0 1px 2px rgba(87, 82, 121, 0.06);
   --shadow-card: 0 8px 30px rgba(87, 82, 121, 0.08), 0 4px 12px rgba(87, 82, 121, 0.04);
   --shadow-elevated: 0 15px 45px rgba(87, 82, 121, 0.1), 0 5px 15px rgba(87, 82, 121, 0.05);
@@ -836,6 +852,28 @@ audio::-webkit-media-controls-panel {
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+  /* Rosé Pine palette + roles (redesign sheet 01). Values live in :root / .dark. */
+  --color-ground: var(--ground);
+  --color-raised: var(--raised);
+  --color-overlay: var(--overlay);
+  --color-hl: var(--hl);
+  --color-subtle: var(--subtle);
+  --color-faint: var(--faint);
+  --color-iris: var(--iris);
+  --color-foam: var(--foam);
+  --color-gold: var(--gold);
+  --color-pine: var(--pine);
+  --color-rose: var(--rose);
+  --color-love: var(--love);
+  --color-love-ink: var(--love-ink);
+  --color-love-soft: var(--love-soft);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-press: var(--primary-press);
+  --color-primary-off: var(--primary-off);
+  --color-primary-ink: var(--primary-ink);
+  --color-primary-soft: var(--primary-soft);
+  --color-label: var(--label);
+  --color-focus: var(--focus);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -843,6 +881,32 @@ audio::-webkit-media-controls-panel {
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Equalizer bars: indeterminate loader (button loading state, redesign sheet 02/08) */
+.eq-bars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 14px;
+}
+.eq-bars > i {
+  display: block;
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: currentColor;
+  transform-origin: center;
+  animation: eq-bars 900ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.eq-bars > i:nth-child(2) { animation-delay: -300ms; }
+.eq-bars > i:nth-child(3) { animation-delay: -600ms; }
+@keyframes eq-bars {
+  0%, 100% { transform: scaleY(0.3); }
+  50%      { transform: scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eq-bars > i { animation: none; transform: scaleY(0.7); }
 }
 
 @keyframes shine {
@@ -866,7 +930,7 @@ audio::-webkit-media-controls-panel {
   --card-foreground: #1a1826;
   --popover: #fffaf3;
   --popover-foreground: #1a1826;
-  --primary: #b4637a;
+  --primary: #6f5a8f;
   --primary-foreground: #fffaf3;
   --secondary: #f2e9e1;
   --secondary-foreground: #1a1826;
@@ -877,8 +941,29 @@ audio::-webkit-media-controls-panel {
   --destructive: #b4637a;
   --border: #dfdad9;
   --input: #dfdad9;
-  --ring: #b4637a;
+  --ring: #6f5a8f;
   --radius: 0.625rem;
+  --ground: #f2e9e1;
+  --raised: #fffaf3;
+  --overlay: #f2e9e1;
+  --hl: #dfdad9;
+  --subtle: #6c6886;
+  --faint: #9893a5;
+  --iris: #907aa9;
+  --foam: #56949f;
+  --gold: #ea9d34;
+  --pine: #286983;
+  --rose: #d7827e;
+  --love: #b4637a;
+  --love-ink: #9b4a62;
+  --love-soft: rgba(180, 99, 122, 0.12);
+  --primary-hover: #5f4c7d;
+  --primary-press: #53436e;
+  --primary-off: #cfc5da;
+  --primary-ink: #6f5a8f;
+  --primary-soft: rgba(144, 122, 169, 0.16);
+  --label: #286983;
+  --focus: #286983;
   --sidebar: #f2e9e1;
   --sidebar-foreground: #1a1826;
   --sidebar-primary: #1a1826;
@@ -920,6 +1005,27 @@ audio::-webkit-media-controls-panel {
   --border: rgba(224, 222, 244, 0.12);
   --input: rgba(224, 222, 244, 0.08);
   --ring: #c4a7e7;
+  --ground: #1c1b29;
+  --raised: #2a273f;
+  --overlay: #393552;
+  --hl: #44415a;
+  --subtle: #908caa;
+  --faint: #6e6a86;
+  --iris: #c4a7e7;
+  --foam: #9ccfd8;
+  --gold: #f6c177;
+  --pine: #3e8fb0;
+  --rose: #ea9a97;
+  --love: #eb6f92;
+  --love-ink: #eb6f92;
+  --love-soft: rgba(235, 111, 146, 0.14);
+  --primary-hover: #d3bdf0;
+  --primary-press: #b393dc;
+  --primary-off: #4a4064;
+  --primary-ink: #c4a7e7;
+  --primary-soft: rgba(196, 167, 231, 0.14);
+  --label: #9ccfd8;
+  --focus: #9ccfd8;
   --success: #9ccfd8;
   --success-foreground: #1a1826;
   --info: #9ccfd8;
