@@ -9,7 +9,12 @@ import useConfirm from '@/shared/hooks/useConfirm';
 import { useSettings } from '@/features/settings/useSettings';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { Icon } from '@/shared/ui/Icon';
+import { SearchField } from '@ui/search-field';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
+import { Button } from '@ui/button';
+import { CountTabs } from '@ui/count-tabs';
+import { Link } from 'react-router-dom';
+import { projectStatus as statusOf, type ProjectStatus } from '@/features/projects/project-status';
 import ProjectCard from './ProjectCard.jsx';
 import ProjectListRaw from './ProjectList';
 import { LibrarySwitch } from './LibrarySwitch';
@@ -21,6 +26,9 @@ const ProjectList = ProjectListRaw;
 
 // Stable fallback: ProjectSetupModal re-syncs its form whenever an initial* prop changes identity.
 const EMPTY_LIST: string[] = [];
+
+type LibraryFilterTab = 'all' | ProjectStatus;
+const FILTER_TABS: LibraryFilterTab[] = ['all', 'inProgress', 'completed', 'notStarted'];
 
 interface ProjectMeta {
   description?: string;
@@ -41,6 +49,8 @@ interface ProjectItem {
   coverImage?: string;
   public?: boolean;
   metadata?: ProjectMeta;
+  lineCount?: number;
+  syncedLineCount?: number;
   [key: string]: unknown;
 }
 
@@ -74,9 +84,8 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
   const [, confirmModal] = useConfirm() as [unknown, ReactNode];
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterTab, setFilterTab] = useState<'all' | 'inProgress' | 'completed' | 'notStarted'>('all');
+  const [filterTab, setFilterTab] = useState<LibraryFilterTab>('all');
   const [sortBy, setSortBy] = useState<'edited' | 'created' | 'title'>('edited');
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const handleDelete = useCallback((publicId: string) => {
     setDeletingId(publicId);
@@ -104,26 +113,17 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
   const completedProjects = items.filter(p => (p.lineCount as number) && (p.syncedLineCount as number) === (p.lineCount as number) && (p.lineCount as number) > 0).length;
   const totalSyncedLines = items.reduce((acc, p) => acc + ((p.syncedLineCount as number) || 0), 0);
 
-  const filteredProjects = items.filter(p => {
+  const searchMatched = items.filter(p => {
     const titleMatch = (p.title || '').toLowerCase().includes(searchQuery.toLowerCase());
     const tagsMatch = p.metadata?.tags?.some(tag => (tag || '').toLowerCase().includes(searchQuery.toLowerCase())) || false;
-    const matchesSearch = titleMatch || tagsMatch;
+    return titleMatch || tagsMatch;
+  });
 
-    if (!matchesSearch) return false;
+  // Counted from the search-filtered list, so a badge always equals the cards its tab shows.
+  const tabCounts: Record<LibraryFilterTab, number> = { all: searchMatched.length, inProgress: 0, completed: 0, notStarted: 0 };
+  for (const p of searchMatched) tabCounts[statusOf(p)]++;
 
-    const progress = p.lineCount ? Math.min(100, Math.round((((p.syncedLineCount as number) || 0) / (p.lineCount as number)) * 100)) : 0;
-
-    if (filterTab === 'inProgress') {
-      return progress > 0 && progress < 100;
-    }
-    if (filterTab === 'completed') {
-      return progress === 100;
-    }
-    if (filterTab === 'notStarted') {
-      return progress === 0;
-    }
-    return true;
-  }).sort((a, b) => {
+  const filteredProjects = searchMatched.filter(p => filterTab === 'all' || statusOf(p) === filterTab).sort((a, b) => {
     if (sortBy === 'edited') {
       const aTime = new Date((a.updatedAt as string) || (a.createdAt as string) || 0).getTime();
       const bTime = new Date((b.updatedAt as string) || (b.createdAt as string) || 0).getTime();
@@ -154,50 +154,42 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
             {!loading && t('library.stats', { total: totalProjects, completed: completedProjects, lines: totalSyncedLines })}
           </p>
         </div>
-        <button
-          className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 px-5 py-2.5 rounded-xl font-medium transition-colors shadow-glow w-fit"
-        >
-          <Icon name="add" size={18} />
-          {t('home.createNew')}
-        </button>
+        <Button asChild className="h-11 w-fit px-5 text-[15px] lg:h-11 lg:px-5 lg:text-[15px]">
+          <Link to="/project/new">
+            <Icon name="add" size={18} />
+            {t('home.createNew')}
+          </Link>
+        </Button>
       </div>
 
       {/* Filter Row */}
       {!loading && !error && items.length > 0 && (
         <div className="px-4 lg:px-0 mb-6 flex flex-col gap-4 relative z-10">
           <div className="flex items-end justify-between">
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-colors ${
-              isSearchFocused ? 'border-primary/50 bg-zinc-900' : 'border-zinc-800 bg-zinc-900/50'
-            }`}>
-              <Icon name="search" size={14} className={isSearchFocused ? 'text-primary' : 'text-zinc-500'} />
-              <input 
-                type="text" 
-                placeholder={t('home.search')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                className="bg-transparent border-none outline-none text-xs text-zinc-200 placeholder:text-zinc-600 w-32 focus:w-48 transition-all"
-              />
-            </div>
+            <SearchField
+              compact
+              label={t('home.search')}
+              placeholder={t('home.search')}
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+              clearLabel={t('common.clear')}
+              className="w-56 max-w-full"
+            />
           </div>
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 w-full mb-6 relative">
-            <div className="flex gap-1 overflow-x-auto hide-scrollbar">
-              {['all', 'inProgress', 'completed', 'notStarted'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setFilterTab(tab as 'all' | 'inProgress' | 'completed' | 'notStarted')}
-                  className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${filterTab === tab
-                    ? 'border-primary text-zinc-100'
-                    : 'border-transparent text-zinc-400 hover:text-zinc-200'
-                    }`}
-                >
-                  {(t as (k: string) => string)(`home.${tab}`)}
-                </button>
-              ))}
-            </div>
-            
+            <CountTabs<LibraryFilterTab>
+              label={t('library.title')}
+              value={filterTab}
+              onChange={setFilterTab}
+              tabs={FILTER_TABS.map((tab) => ({
+                value: tab,
+                label: (t as (k: string) => string)(`home.${tab}`),
+                count: tabCounts[tab],
+              }))}
+            />
+
+
             <div className="relative flex items-center shrink-0 ml-auto sm:ml-0 mb-1 sm:mb-0">
               <Icon name="sort" size={14} className="absolute left-3 text-zinc-400 pointer-events-none" />
               <select 
@@ -226,9 +218,9 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
             <Icon name="error" size={28} className="text-zinc-500" />
           </div>
           <p className="text-sm text-zinc-400 font-medium">{t('common.loadError')}</p>
-          <button onClick={fetchProjects} className="text-xs text-primary hover:text-primary/70 transition-colors font-medium">
+          <Button variant="link" size={null} onClick={fetchProjects} className="text-xs">
             {t('common.retry')}
-          </button>
+          </Button>
         </div>
       ) : items.length === 0 ? (
         <motion.div

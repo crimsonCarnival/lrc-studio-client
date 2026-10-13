@@ -2,11 +2,18 @@ import { useState, useEffect, useCallback } from 'react';
 import type { TFunction } from 'i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { formatInTimezone } from '@/shared/utils/date';
+import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projects } from '@/app/api';
 import { Icon } from '@/shared/ui/Icon';
+import { SearchField } from '@ui/search-field';
+import { Button } from '@ui/button';
+import { Tip } from '@ui/tip';
+import { CountTabs } from '@ui/count-tabs';
+import { Skeleton, SkeletonAlmostDone, SkeletonProjectCard, SkeletonResumeCard } from '@ui/skeleton';
+import { projectStatus as statusOf } from '../project-status';
+import { ProjectStatusTag } from './ProjectStatusTag';
 import ProjectSetupModalRaw from '@features/editor/components/setup/ProjectSetupModal';
 import ProjectCard from '@/features/library/components/ProjectCard';
 import { AlmostDoneBand } from './home/AlmostDoneBand';
@@ -59,24 +66,16 @@ interface DynamicTranslation {
 type HomeFilterTab = 'all' | 'inProgress' | 'completed' | 'notStarted';
 const FILTER_TABS: HomeFilterTab[] = ['all', 'inProgress', 'completed', 'notStarted'];
 
-function statusOf(p: HomeProject): Exclude<HomeFilterTab, 'all'> {
-  const progress = p.lineCount ? Math.min(100, Math.round(((p.syncedLineCount || 0) / p.lineCount) * 100)) : 0;
-  if (progress === 100) return 'completed';
-  if (progress === 0) return 'notStarted';
-  return 'inProgress';
-}
-
 export default function Home() {
   const { t, dt, i18n } = useDynamicTranslation() as DynamicTranslation;
   const navigate = useNavigate();
   const { user } = useAuthContext();
 
   const [items, setItems] = useState<HomeProject[]>([]);
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTab, setFilterTab] = useState<HomeFilterTab>('all');
   const [sortBy, setSortBy] = useState<'edited' | 'created' | 'title'>('edited');
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [editingProject, setEditingProject] = useState<HomeProject | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -150,6 +149,7 @@ export default function Home() {
   const lastProject = items.length > 0 ? items[0] : null;
   const greetingName = user?.displayName || user?.accountName || 'Creator';
   const timezone = (user as unknown as { settings?: { advanced?: { timezone?: string } } })?.settings?.advanced?.timezone || 'auto';
+  const locale = (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2);
 
   return (
     <div className="h-full overflow-y-auto overflow-x-hidden pt-8 pb-12 lg:px-12 max-w-7xl mx-auto w-full">
@@ -164,77 +164,83 @@ export default function Home() {
             {items.length > 0 && ` ${t('home.projectProgress', { total: items.length, remaining: lastProject?.lineCount ? lastProject.lineCount - (lastProject.syncedLineCount || 0) : '?' })}`}
           </p>
         </div>
-        <Link to="/project/new"
-          className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 px-5 py-2.5 rounded-xl font-medium transition-colors shadow-glow"
-        >
-          <Icon name="add" size={18} />
-          {t('home.createNew')}
-        </Link>
+        <Button asChild className="h-11 gap-2 px-[18px] text-base lg:h-11 lg:px-[18px] lg:text-base">
+          <Link to="/project/new">
+            <Icon name="add" size={18} />
+            {t('home.createNew')}
+          </Link>
+        </Button>
       </div>
 
-      {/* ── Donde lo dejaste ── */}
-      {lastProject && (
-        <div className="mb-12 animate-fade-in px-4 lg:px-0">
-          <h2 className="text-sm font-bold text-zinc-300 mb-4">{t('home.resumeLast')}</h2>
-          <div 
-            className="glass rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-6 cursor-pointer hover:border-primary/30 transition-all group"
-            onClick={() => navigate(`/project/${lastProject.publicId}/edit`)}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center gap-5 flex-1 min-w-0">
-              <div className="size-24 rounded-2xl bg-zinc-800/50 border border-zinc-700/50 flex items-center justify-center shrink-0 shadow-inner-highlight overflow-hidden relative">
+      {/* ── Donde lo dejaste ──
+             While the project list loads this slot holds a skeleton of the same shape.
+             Without it the section is simply absent, the bands below render at the top,
+             and the card then pops in above them and shoves the page down. ── */}
+      {(loading || lastProject) && (
+        <section className="mb-12 animate-fade-in px-4 lg:px-0" aria-busy={loading}>
+          <h2 className="text-sm font-bold text-subtle mb-4">{t('home.resumeLast')}</h2>
+          {loading || !lastProject ? (
+            <SkeletonResumeCard />
+          ) : (
+            <article
+              className="group flex cursor-pointer flex-col gap-5 rounded-[var(--radius-card)] bg-background p-[18px] inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] ease-state hover:inset-ring-faint sm:flex-row sm:items-center"
+              onClick={() => navigate(`/project/${lastProject.publicId}/edit`)}
+            >
+              <div className="cover-hatch relative grid size-24 shrink-0 place-items-center overflow-hidden rounded-xl">
                 {lastProject.coverImage ? (
-                  <img src={lastProject.coverImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <img src={lastProject.coverImage} alt="" className="absolute inset-0 size-full object-cover" />
                 ) : (
-                  <Icon name="equalizer" className="text-primary/70" size={36} />
+                  <Icon name="equalizer" className="text-faint" size={36} />
                 )}
               </div>
-              <div className="flex flex-col flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="text-xl font-bold text-zinc-100 truncate group-hover:text-primary transition-colors">{lastProject.title || t('library.untitled')}</h3>
-                  {lastProject.syncedLineCount === lastProject.lineCount && lastProject.lineCount && lastProject.lineCount > 0 ? (
-                    <span className="text-[10px] px-2 py-1 rounded-md bg-zinc-700/50 text-zinc-300 font-bold tracking-wider uppercase border border-zinc-600/30">{t('home.statusComplete')}</span>
-                  ) : null}
+              <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <h3 className="truncate font-heading text-2xl font-bold tracking-tight text-foreground">{lastProject.title || t('library.untitled')}</h3>
+                  <ProjectStatusTag status={statusOf(lastProject)} withCheck />
                 </div>
-                <p className="text-[15px] text-zinc-400 mb-4 truncate">
+                <p className="truncate text-base text-subtle">
                   {lastProject.metadata?.songArtist || t('home.noArtist')}
                   {lastProject.metadata?.songAlbum ? ` · ${lastProject.metadata.songAlbum}` : ''}
                 </p>
-                <div className="flex items-center gap-4 w-full max-w-xl">
-                  <div className="h-1 flex-1 bg-zinc-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-success rounded-full" 
+                <div className="flex items-center gap-3">
+                  <div className="h-1 flex-1 overflow-hidden rounded-sm bg-hl">
+                    <div
+                      className={`h-full rounded-sm ${statusOf(lastProject) === 'completed' ? 'bg-foam' : 'bg-iris'}`}
                       style={{ width: `${lastProject.lineCount ? Math.min(100, Math.round(((lastProject.syncedLineCount || 0) / lastProject.lineCount) * 100)) : 0}%` }}
                     />
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-xs font-medium text-zinc-300">
-                      {(lastProject.syncedLineCount || 0)} / {(lastProject.lineCount || 0)} {t('home.lines')}
+                  <Tip content={`${t('home.created')} ${formatInTimezone(lastProject.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, locale)}`}>
+                    <span className="shrink-0 font-mono text-xs font-medium text-subtle">
+                      {(lastProject.syncedLineCount || 0)}/{(lastProject.lineCount || 0)} · {t('home.edited')} {getRelativeTime(lastProject.updatedAt || lastProject.createdAt, t, timezone, locale)}
                     </span>
-                    <span className="text-xs text-zinc-500 flex flex-col items-end gap-1">
-                      <span>{t('home.created')} {formatInTimezone(lastProject.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2))}</span>
-                      {(lastProject.updatedAt && lastProject.updatedAt !== lastProject.createdAt) && (
-                        <span>{t('home.edited')} {formatInTimezone(lastProject.updatedAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2))}</span>
-                      )}
-                    </span>
-                  </div>
+                  </Tip>
                 </div>
               </div>
-            </div>
-            <button className="flex items-center justify-center gap-2 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 px-5 py-3 rounded-xl font-medium transition-colors shrink-0">
-              <Icon name="play_arrow" size={20} /> {t('home.resume')}
-            </button>
-          </div>
-        </div>
+              {/* The whole card is clickable for the mouse; this button is the keyboard and
+                  screen-reader way in (its click bubbles to the card's handler). */}
+              <Button aria-label={`${t('home.resume')}: ${lastProject.title || t('library.untitled')}`} className="h-11 shrink-0 gap-2 px-[18px] text-base lg:h-11 lg:px-[18px] lg:text-base">
+                <Icon name="play_arrow" size={18} filled /> {t('home.resume')}
+              </Button>
+            </article>
+          )}
+        </section>
       )}
 
       {/* ── Almost done + your activity, side by side on wide screens.
              AlmostDoneBand renders nothing when no project qualifies, in which
              case ActivityBand's flex-1 takes the full row on its own. ── */}
       <div className="px-4 lg:px-0 mb-8 flex flex-col lg:flex-row lg:items-stretch gap-6">
-        <AlmostDoneBand
-          projects={items}
-          onOpen={(publicId) => navigate(`/project/${publicId}/edit`)}
-        />
+        {loading ? (
+          <div className="lg:w-[38%] lg:shrink-0" aria-hidden="true">
+            <Skeleton className="mb-3 h-5 w-40" />
+            <SkeletonAlmostDone />
+          </div>
+        ) : (
+          <AlmostDoneBand
+            projects={items}
+            onOpen={(publicId) => navigate(`/project/${publicId}/edit`)}
+          />
+        )}
         <ActivityBand />
       </div>
 
@@ -244,43 +250,28 @@ export default function Home() {
           <div className="flex items-end justify-between">
             <h2 className="text-2xl font-semibold text-zinc-100 tracking-tight">{t('home.yourProjects')}</h2>
             
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-colors ${
-              isSearchFocused ? 'border-primary/50 bg-zinc-900' : 'border-zinc-800 bg-zinc-900/50'
-            }`}>
-              <Icon name="search" size={14} className={isSearchFocused ? 'text-primary' : 'text-zinc-500'} />
-              <input 
-                type="text" 
-                placeholder={t('home.search')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                className="bg-transparent border-none outline-none text-xs text-zinc-200 placeholder:text-zinc-600 w-32 focus:w-48 transition-all"
-              />
-            </div>
+            <SearchField
+              compact
+              label={t('home.search')}
+              placeholder={t('home.search')}
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+              clearLabel={t('common.clear')}
+              className="w-56 max-w-full"
+            />
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 w-full relative">
-            <div className="flex gap-1 overflow-x-auto hide-scrollbar">
-              {FILTER_TABS.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setFilterTab(tab)}
-                  aria-pressed={filterTab === tab}
-                  className={`flex items-center gap-2 px-4 py-2 coarse:py-3 text-sm font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap ${filterTab === tab
-                    ? 'border-primary text-zinc-100'
-                    : 'border-transparent text-zinc-400 hover:text-zinc-200'
-                    }`}
-                >
-                  {(t as (k: string) => string)(`home.${tab}`)}
-                  <span className={`min-w-5 px-1.5 py-0.5 rounded-full text-[10px] font-bold tabular-nums leading-none ${filterTab === tab
-                    ? 'bg-primary/20 text-primary'
-                    : 'bg-zinc-800 text-zinc-500'
-                    }`}>
-                    {tabCounts[tab]}
-                  </span>
-                </button>
-              ))}
-            </div>
+            <CountTabs<HomeFilterTab>
+              label={t('home.yourProjects')}
+              value={filterTab}
+              onChange={setFilterTab}
+              tabs={FILTER_TABS.map((tab) => ({
+                value: tab,
+                label: (t as (k: string) => string)(`home.${tab}`),
+                // No counts while loading: a row of zeros reads as "you have no projects".
+                count: loading ? undefined : tabCounts[tab],
+              }))}
+            />
 
             <div className="flex items-center gap-2 relative shrink-0 ml-auto sm:ml-0 mb-1 sm:mb-0">
               <div className="relative flex items-center">
@@ -306,8 +297,9 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12">
-          {filteredProjects.map((project) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12" aria-busy={loading}>
+          {loading && Array.from({ length: 3 }, (_, i) => <SkeletonProjectCard key={i} />)}
+          {!loading && filteredProjects.map((project) => (
             <ProjectCard
               key={project.publicId}
               project={project}
@@ -326,13 +318,13 @@ export default function Home() {
 
           {/* Start another CTA Card */}
           <Link to="/project/new"
-            className="group relative rounded-2xl border border-dashed border-zinc-700 hover:border-primary/50 bg-transparent hover:bg-zinc-800/20 transition-all flex flex-col items-center justify-center p-6 h-80 text-center"
+            className="group flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-[var(--radius-card)] border-[1.5px] border-dashed border-hl p-6 text-center text-subtle transition-colors duration-[var(--duration-state)] ease-state hover:border-iris hover:bg-primary-soft hover:text-primary-ink focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
           >
-             <div className="size-12 rounded-full bg-zinc-800/80 group-hover:bg-primary/20 flex items-center justify-center mb-4 transition-colors">
-               <Icon name="add" size={24} className="text-zinc-400 group-hover:text-primary transition-colors" />
-             </div>
-             <h3 className="text-zinc-100 font-medium text-sm leading-tight mb-1">{t('home.startAnother')}</h3>
-             <p className="text-zinc-400 text-xs">{t('home.startAnotherDesc')}</p>
+            <span className="grid size-[52px] place-items-center rounded-full bg-raised">
+              <Icon name="add" size={24} />
+            </span>
+            <h3 className="text-base font-semibold">{t('home.startAnother')}</h3>
+            <p className="text-sm text-subtle">{t('home.startAnotherDesc')}</p>
           </Link>
         </div>
       </div>

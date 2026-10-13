@@ -10,6 +10,8 @@ import useConfirm from '@/shared/hooks/useConfirm';
 import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
 import { LogoLoader } from '@ui/LogoLoader';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
+import { ProjectStatusTag } from '@/features/projects/components/ProjectStatusTag';
+import { projectStatus } from '@/features/projects/project-status';
 
 const SWIPE_THRESHOLD = 60;
 
@@ -326,30 +328,26 @@ function ProjectCard({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="group glass rounded-2xl overflow-hidden text-left hover:border-primary/40 transition-all cursor-pointer focus:ring-2 focus:ring-primary/30 outline-none flex flex-col h-80 relative"
+        className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[var(--radius-card)] bg-background text-left inset-ring inset-ring-hl transition-[translate,box-shadow] duration-200 ease-state hover:-translate-y-[3px] hover:inset-ring-faint hover:shadow-toast focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
       >
-        {/* Image/Waveform Header */}
-        <div className="relative h-36 bg-zinc-800/30 border-b border-zinc-800/50 flex items-center justify-center overflow-hidden shrink-0">
-          {project.coverImage ? (
-            <>
-              <img src={project.coverImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 to-transparent" />
-            </>
-          ) : (
-            <div className="flex items-end gap-[3px] h-12 opacity-30 group-hover:opacity-50 transition-opacity">
-              {Array.from({ length: 9 }, (_, i) => (
-                <div key={i} className="w-1.5 rounded-full bg-zinc-300" style={{ height: `${20 + 80 * Math.abs(Math.sin(i * 1.5))}%` }} />
-              ))}
-            </div>
-          )}
-          {/* Badge */}
-          <div className="absolute top-3 left-3 px-2 py-1 bg-zinc-950/60 backdrop-blur-md rounded border border-zinc-700/50 flex items-center gap-1.5 z-10">
-            {project.upload?.source === 'youtube' ? (
-              <><Icon name="play_circle" size={10} className="text-destructive" /><span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceYoutube')}</span></>
-            ) : project.upload?.source === 'cloudinary' ? (
-              <><Icon name="cloud" size={10} className="text-info" /><span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceCloud')}</span></>
+        {/* Cover: art (or a hatch placeholder), source pill, open-in-tab on hover */}
+        <div className="cover-hatch relative h-[150px] shrink-0 overflow-hidden">
+          <div className="absolute inset-0 grid place-items-center transition-transform duration-[400ms] ease-state group-hover:scale-[1.04]">
+            {project.coverImage ? (
+              <img src={project.coverImage} alt="" className="absolute inset-0 size-full object-cover" />
             ) : (
-              <span className="text-[9px] font-bold text-zinc-300 uppercase">{t('home.sourceFile')}</span>
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true" className="text-faint">
+                <path d="M3 12h1 M7 9v6 M11 5v14 M15 8v8 M19 11v2" />
+              </svg>
+            )}
+          </div>
+          <div className="absolute top-3 left-3 z-10 flex h-[26px] items-center gap-1.5 rounded-full bg-glass px-2.5 font-mono text-[11px] font-semibold leading-none tracking-[0.08em] text-foreground uppercase backdrop-blur-md">
+            {project.upload?.source === 'youtube' ? (
+              <><Icon name="play_circle" size={12} className="text-love" />{t('home.sourceYoutube')}</>
+            ) : project.upload?.source === 'cloudinary' ? (
+              <><Icon name="cloud" size={12} className="text-foam" />{t('home.sourceCloud')}</>
+            ) : (
+              t('home.sourceFile')
             )}
           </div>
           {project.public ? (
@@ -358,27 +356,31 @@ function ProjectCard({
                 href={`/project/${project.publicId}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={t('home.viewPublic')}
                 onClick={(e) => e.stopPropagation()}
-                className="absolute top-3 right-3 z-10 p-1.5 bg-zinc-950/60 backdrop-blur-md rounded border border-zinc-700/50 text-zinc-300 hover:text-primary hover:border-primary/40 transition-colors"
+                className="absolute top-2 right-2 z-10 grid size-9 place-items-center rounded-[10px] bg-glass text-foreground opacity-0 backdrop-blur-md transition-opacity duration-[var(--duration-state)] group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-100"
               >
-                <Icon name="open_in_new" size={12} />
+                <Icon name="open_in_new" size={16} />
               </a>
             </Tip>
           ) : null}
         </div>
-        {/* Content */}
-        <div className="p-4 flex flex-col flex-1 relative z-10">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-bold text-zinc-100 truncate group-hover:text-primary transition-colors flex-1">{project.title || project.upload?.fileName || t('library.untitled')}</h3>
-            {/* Action Buttons (visible on hover) */}
-            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+
+        <div className="flex flex-1 flex-col gap-3 py-4 pr-4 pb-[18px] pl-[18px]">
+          <div className="flex items-start gap-2">
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <h3 className="truncate font-heading text-[19px] font-bold tracking-tight text-foreground">{project.title || project.upload?.fileName || t('library.untitled')}</h3>
+              <span className="truncate text-[15px] text-subtle">{project.metadata?.songArtist || t('home.noArtist')}</span>
+            </div>
+            {/* Quick actions on hover; the menu button holds the same actions for touch and keyboard. */}
+            <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 coarse:hidden">
               <Tip content={t('project.editMetadata')}>
-                <Button variant="ghost" size="icon" onClick={handleEdit} className="text-zinc-500 hover:text-primary hover:bg-primary/10 size-6 bg-zinc-900/80 backdrop-blur">
-                  <Icon name="edit" size={12} />
+                <Button variant="ghost" size="icon" onClick={handleEdit} aria-label={t('project.editMetadata')} className="size-9 lg:size-9">
+                  <Icon name="edit" size={16} />
                 </Button>
               </Tip>
-              <Button variant="ghost" size="icon" onClick={handleDelete} disabled={isDeleting} className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10 size-6 bg-zinc-900/80 backdrop-blur">
-                {isDeleting ? <LogoLoader size={12} /> : <Icon name="delete" size={12} />}
+              <Button variant="ghost" size="icon" onClick={handleDelete} disabled={isDeleting} className="size-9 text-love-ink hover:bg-love-soft hover:text-love-ink lg:size-9">
+                {isDeleting ? <LogoLoader size={14} /> : <Icon name="delete" size={16} />}
               </Button>
             </div>
             <ProjectMenuButton
@@ -386,62 +388,52 @@ function ProjectCard({
               isOwner={isOwner}
               onEdit={onEdit ? () => onEdit(project) : undefined}
               onDelete={onDelete ? handleSwipeDelete : undefined}
-              className="p-1 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-700/50 transition-colors shrink-0 bg-zinc-900/80 backdrop-blur"
+              className="grid size-9 shrink-0 place-items-center rounded-[10px] text-subtle transition-colors hover:bg-raised hover:text-foreground"
             />
           </div>
-          <p className="text-xs text-zinc-400 mt-1 truncate">{project.metadata?.songArtist || t('home.noArtist')}</p>
 
-          {/* Stats. The synced/total pair lives here rather than beside the
-              progress bar, where it used to be repeated. */}
-          <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-2">
-            <Tip content={t('home.statLinesTip')}>
-              <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
-                <Icon name="description" size={11} />
-                {(project.syncedLineCount || 0)} / {(project.lineCount || 0)} {t('home.lines')}
-              </span>
-            </Tip>
-            <Tip content={t('home.statStarsTip')}>
-              <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
-                <Icon name="star" size={11} />
-                {project.starCount ?? 0}
-              </span>
-            </Tip>
-            <Tip content={t('home.statForksTip')}>
-              <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
-                <Icon name="call_split" size={11} />
-                {project.forkCount ?? 0}
-              </span>
-            </Tip>
-            <Tip content={t('home.statViewsTip')}>
-              <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
-                <Icon name="visibility" size={11} />
-                {project.viewCount ?? 0}
-              </span>
-            </Tip>
-            <Tip content={t('home.statSharesTip')}>
-              <span className="text-[10px] text-zinc-500 flex items-center gap-1 cursor-default">
-                <Icon name="share" size={11} />
-                {project.shareCount ?? 0}
-              </span>
-            </Tip>
+          <div className="flex flex-col gap-[7px]">
+            <div className="flex items-center justify-between gap-2">
+              <ProjectStatusTag status={projectStatus(project)} />
+              <Tip content={t('home.statLinesTip')}>
+                <span className="cursor-default font-mono text-xs font-medium text-subtle">
+                  {(project.syncedLineCount || 0)}/{(project.lineCount || 0)} {t('home.lines')}
+                </span>
+              </Tip>
+            </div>
+            <div className="h-1 overflow-hidden rounded-sm bg-hl">
+              <div className={`h-full rounded-sm transition-[width] duration-500 ${progress === 100 ? 'bg-foam' : 'bg-iris'}`} style={{ width: `${progress}%` }} />
+            </div>
           </div>
 
-          <div className="mt-auto pt-4 flex flex-col gap-2">
-            <div className="h-[3px] w-full bg-zinc-800 rounded-full overflow-hidden">
-              <div className={`h-full rounded-full transition-all duration-500 ${progress === 100 ? 'bg-success' : 'bg-primary'}`} style={{ width: `${progress}%` }} />
-            </div>
-            <div className="flex items-center justify-end mt-auto">
-              <div className="flex flex-col items-end gap-0.5">
-                <span className="text-[10px] text-zinc-500">
-                  {t('home.created')} {formatInTimezone(project.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}
+          <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs font-medium text-subtle">
+            <Tip content={t('home.statStarsTip')}>
+              <span className="flex cursor-default items-center gap-1"><Icon name="star" size={13} />{project.starCount ?? 0}</span>
+            </Tip>
+            <Tip content={t('home.statForksTip')}>
+              <span className="flex cursor-default items-center gap-1"><Icon name="call_split" size={13} />{project.forkCount ?? 0}</span>
+            </Tip>
+            <Tip content={t('home.statViewsTip')}>
+              <span className="flex cursor-default items-center gap-1"><Icon name="visibility" size={13} />{project.viewCount ?? 0}</span>
+            </Tip>
+            <Tip content={t('home.statSharesTip')}>
+              <span className="flex cursor-default items-center gap-1"><Icon name="share" size={13} />{project.shareCount ?? 0}</span>
+            </Tip>
+            {/* Relative time on the card; the exact created/edited stamps move to the tooltip. */}
+            <Tip
+              content={
+                <span className="flex flex-col gap-0.5">
+                  <span>{t('home.created')} {formatInTimezone(project.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}</span>
+                  {(project.updatedAt && project.updatedAt !== project.createdAt) && (
+                    <span>{t('home.edited')} {formatInTimezone(project.updatedAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}</span>
+                  )}
                 </span>
-                {(project.updatedAt && project.updatedAt !== project.createdAt) && (
-                  <span className="text-[10px] text-zinc-500">
-                    {t('home.edited')} {formatInTimezone(project.updatedAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}
-                  </span>
-                )}
-              </div>
-            </div>
+              }
+            >
+              <span className="ml-auto cursor-default">
+                {getRelativeTime(project.updatedAt || project.createdAt, t, timezone, i18n?.resolvedLanguage || i18n?.language)}
+              </span>
+            </Tip>
           </div>
         </div>
       </div>

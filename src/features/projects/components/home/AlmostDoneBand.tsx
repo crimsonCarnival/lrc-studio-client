@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { ProgressRing } from '@ui/progress-ring';
 import { ProjectListCover } from '@/features/projects/components/ProjectListCover';
+import { Button } from '@ui/button';
 
 export interface AlmostDoneProject {
   publicId: string;
@@ -50,37 +52,38 @@ export function AlmostDoneBand({
   return (
     <section className="lg:w-[38%] lg:shrink-0 flex flex-col">
       <div className="flex items-center gap-2 mb-3">
-        <Icon name="pending_actions" size={16} className="text-primary" />
-        <h2 className="text-sm font-bold text-zinc-300">{t('home.almostDone')}</h2>
-        <span className="text-[11px] text-zinc-500">{t('home.almostDoneSub')}</span>
+        <Icon name="pending_actions" size={16} className="text-primary-ink" />
+        <h2 className="text-sm font-bold text-subtle">{t('home.almostDone')}</h2>
+        <span className="text-xs text-faint">{t('home.almostDoneSub')}</span>
       </div>
 
-      <div className="glass rounded-2xl p-3 flex-1 flex flex-col gap-2">
+      {/* The ring replaces the old progress bar and wraps the cover thumbnail (sheet 07). */}
+      <div className="flex flex-1 flex-col gap-2 rounded-[var(--radius-card)] bg-background p-2 inset-ring inset-ring-hl">
         {items.map(p => (
-          <button
+          <Button
             key={p.publicId}
             type="button"
+            variant="ghost"
+            size={null}
             onClick={() => onOpen(p.publicId)}
-            className="text-left rounded-xl p-3 flex items-center gap-3 bg-zinc-900/40 hover:bg-zinc-800/50 border border-zinc-800 hover:border-primary/40 transition-colors focus:ring-2 focus:ring-primary/30 outline-none"
+            className="h-auto justify-start gap-3.5 rounded-[14px] px-2.5 py-2 text-left font-normal hover:bg-raised hover:text-foreground"
           >
-            <ProjectListCover
-              coverImage={p.coverImage}
-              genre={p.metadata?.genre}
-              className="size-10 shrink-0"
-            />
-            <span className="flex-1 min-w-0">
-              <span className="block text-xs font-semibold text-zinc-100 truncate">
+            {/* 44px ring, 4px stroke, 2px gap: leaves 32px for the cover. */}
+            <ProgressRing value={p.pct} size={44} label={p.title || t('library.untitled')}>
+              <span className="block size-8 overflow-hidden rounded-full">
+                <ProjectListCover coverImage={p.coverImage} genre={p.metadata?.genre} className="size-8" />
+              </span>
+            </ProgressRing>
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="truncate text-base font-semibold text-foreground">
                 {p.title || t('library.untitled')}
               </span>
-              <span className="block text-[10px] text-zinc-500 truncate">
+              <span className="truncate font-mono text-xs font-medium text-subtle">
                 {p.syncedLineCount} / {p.lineCount} {t('home.lines')}
               </span>
-              <span className="mt-1.5 block h-[3px] w-full bg-zinc-800 rounded-full overflow-hidden">
-                <span className="block h-full bg-primary rounded-full" style={{ width: `${p.pct}%` }} />
-              </span>
             </span>
-            <span className="text-[11px] font-bold text-primary tabular-nums shrink-0">{p.pct}%</span>
-          </button>
+            <span className="shrink-0 font-mono text-sm font-semibold text-primary-ink tabular-nums">{p.pct}%</span>
+          </Button>
         ))}
       </div>
     </section>
