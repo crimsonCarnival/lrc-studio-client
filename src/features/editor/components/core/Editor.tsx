@@ -879,32 +879,32 @@ export default function Editor({
           </>
         ) : (
           <>
+        {/* One row (redesign sheet 13): count, what it counts, then the bar taking the rest. */}
         {syncProgress ? (
           <Tip content={t('editor.wordCharCount', { words: syncProgress.wordCount, chars: syncProgress.charCount, charsNoSp: syncProgress.charCountNoSpaces })}>
-            <div className="flex flex-col gap-1.5 flex-[1_1_220px] min-w-0 cursor-default">
-              <div className="flex items-baseline gap-2 min-w-0">
-                <span className="font-heading text-xl font-bold leading-tight whitespace-nowrap">
-                  {t('editor.syncedCount', { synced: syncProgress.synced, count: syncProgress.total })}
+            <div className="flex items-center gap-3.5 flex-[1_1_320px] min-w-0 cursor-default">
+              <span className="font-heading text-[22px] font-bold leading-tight tracking-[-0.02em] whitespace-nowrap">
+                {t('editor.syncedCount', { synced: syncProgress.synced, count: syncProgress.total })}
+              </span>
+              <span className="text-[15px] text-subtle truncate">
+                {t('editor.syncedLabel', { count: syncProgress.total })} · {t('editor.wordCount', { count: syncProgress.wordCount })}
+              </span>
+              {editorMode === 'words' && syncProgress.totalWordsInLine > 0 && (
+                <span className="text-xs font-mono tabular-nums text-subtle shrink-0">
+                  {syncProgress.currentWordNum}/{syncProgress.totalWordsInLine}
                 </span>
-                <span className="text-[13px] text-foreground/65 truncate">
-                  {t('editor.syncedLabel', { count: syncProgress.total })} · {t('editor.wordCount', { count: syncProgress.wordCount })}
-                </span>
-                {editorMode === 'words' && syncProgress.totalWordsInLine > 0 && (
-                  <span className="text-xs font-mono tabular-nums text-foreground/65 shrink-0">
-                    {syncProgress.currentWordNum}/{syncProgress.totalWordsInLine}
-                  </span>
-                )}
-              </div>
+              )}
               <div
                 role="progressbar"
                 aria-label={t('editor.syncProgressLabel')}
                 aria-valuemin={0}
                 aria-valuemax={syncProgress.total}
                 aria-valuenow={syncProgress.synced}
-                className="h-1.5 rounded-full bg-zinc-800 overflow-hidden"
+                className="h-1 min-w-12 flex-1 rounded-sm bg-hl overflow-hidden"
               >
                 <div
-                  className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
+                  // Foam once every line is marked, the same "done" colour as a full word meter.
+                  className={`h-full rounded-sm transition-[width] duration-300 ease-out ${syncProgress.synced === syncProgress.total ? 'bg-foam' : 'bg-iris'}`}
                   style={{ width: `${(syncProgress.synced / syncProgress.total) * 100}%` }}
                 />
               </div>
@@ -1141,8 +1141,10 @@ export default function Editor({
         activeLineIndex={activeLineIndex}
         singers={combinedSingers}
         settings={settings}
+        singerColors={singerColors}
         onMoveToSection={handleInspectorSection}
         onAssignSinger={handleInspectorSinger}
+        onNudge={shiftTimeWithConfidence}
       />
       )}
       </div>

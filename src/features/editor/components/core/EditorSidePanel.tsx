@@ -4,13 +4,22 @@ import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import { formatTimestamp } from '@/shared/utils/lrc';
 import { KEY_SYMBOLS } from '@features/settings/key-symbols';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/singer-colors';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
+import { Button } from '@ui/button';
+import { Tip } from '@ui/tip';
+import { Icon } from '@/shared/ui/Icon';
+import { cn } from '@/shared/utils/utils';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
 
-const CARD = 'rounded-2xl border border-zinc-800 bg-zinc-900';
-const CAPTION = 'text-xs font-bold uppercase tracking-[0.08em] text-foreground/65';
-const FIELD = 'h-10 w-full rounded-[10px] border border-zinc-700 bg-zinc-800 px-2.5 text-sm text-foreground disabled:opacity-60';
-const UNTIMED = '--:--.--';
+const CARD = 'rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl';
+const CAPTION = 'font-mono text-xs font-semibold uppercase tracking-[0.14em] text-subtle';
+const LABEL = 'text-sm font-semibold text-subtle';
+const FIELD = 'flex h-11 items-center rounded-[var(--radius-control)] bg-card inset-ring inset-ring-hl';
+const UNTIMED = '—:—';
+// The inspector's nudge step. Finer steps stay on the wheel and the keyboard shortcuts.
+const NUDGE_STEP = 0.1;
 
 interface EditorSidePanelProps {
   lines: EditorLine[];
@@ -21,9 +30,13 @@ interface EditorSidePanelProps {
   activeLineIndex: number;
   /** Singer names offered in the inspector. */
   singers: string[];
+  /** Per-project colour overrides, index-aligned with the singer palette. */
+  singerColors?: string[];
   settings: AppSettings;
   onMoveToSection: (lineIndex: number, sectionIndex: number) => void;
   onAssignSinger: (name: string, lineIndex: number) => void;
+  /** Shifts the line's start time by `delta` seconds. */
+  onNudge: (lineIndex: number, delta: number) => void;
 }
 
 /** Splits a line into the part already sung and the rest, at word granularity. */
@@ -69,28 +82,35 @@ function LiveCard({ lines, playbackPosition, duration, editorMode }: Pick<Editor
   const [sung, rest] = current ? splitSung(current, playbackPosition, currentEnd) : ['', ''];
 
   return (
-    <section aria-label={t('editor.live.title')} className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <span className={CAPTION}>{t('editor.live.title')}</span>
-        <span className="font-mono text-xs tabular-nums text-foreground/65">{formatTimestamp(playbackPosition)}</span>
-      </div>
-      <div className={`${CARD} p-6 flex flex-col gap-3.5 min-h-[168px] justify-center`}>
-        {previous && <p className="text-[15px] text-foreground/45 break-words">{previous.text}</p>}
-        {current ? (
-          <p className="font-heading font-bold text-[28px] leading-[1.15] break-words">
-            <span className="text-primary">{sung}{sung && rest ? ' ' : ''}</span>
-            <span className="text-foreground">{rest}</span>
-          </p>
-        ) : (
-          <p className="text-sm italic text-foreground/65">{t('editor.live.waiting')}</p>
-        )}
-        {next && <p className="text-[15px] text-foreground/65 break-words">{next.text}</p>}
+    <section aria-label={t('editor.live.title')}>
+      <div className={`${CARD} px-5 py-[18px] flex flex-col gap-3 min-h-[168px]`}>
+        <div className="flex items-center justify-between">
+          <span className={`${CAPTION} flex items-center gap-2`}>
+            <span aria-hidden className="size-[7px] rounded-full bg-love" />
+            {t('editor.live.title')}
+          </span>
+          <span className="font-mono text-[13px] font-medium tabular-nums text-subtle">{formatTimestamp(playbackPosition)}</span>
+        </div>
+        <div className="flex flex-1 flex-col justify-center gap-3">
+          {previous && <p className="text-[15px] text-faint break-words">{previous.text}</p>}
+          {current ? (
+            <p className="font-heading font-extrabold text-[28px] leading-[1.08] tracking-[-0.03em] break-words">
+              <span className="text-primary-ink [text-shadow:0_0_20px_var(--primary-strong)]">{sung}{sung && rest ? ' ' : ''}</span>
+              <span className="text-foreground">{rest}</span>
+            </p>
+          ) : (
+            <p className="text-sm italic text-subtle">{t('editor.live.waiting')}</p>
+          )}
+          {next && <p className="text-base font-medium text-subtle break-words">{next.text}</p>}
+        </div>
       </div>
     </section>
   );
 }
 
-function LineInspector({ lines, activeLineIndex, duration, singers, onMoveToSection, onAssignSinger }: Pick<EditorSidePanelProps, 'lines' | 'activeLineIndex' | 'duration' | 'singers' | 'onMoveToSection' | 'onAssignSinger'>) {
+const SINGER_BUTTON = 'grid h-10 place-items-center rounded-[10px] font-mono text-sm font-bold transition-shadow duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus coarse:h-11';
+
+function LineInspector({ lines, activeLineIndex, duration, singers, singerColors, settings, onMoveToSection, onAssignSinger, onNudge }: Pick<EditorSidePanelProps, 'lines' | 'activeLineIndex' | 'duration' | 'singers' | 'singerColors' | 'settings' | 'onMoveToSection' | 'onAssignSinger' | 'onNudge'>) {
   const { t } = useTranslation();
   const id = useId();
   const line: EditorLine | undefined = lines[activeLineIndex];
@@ -119,51 +139,118 @@ function LineInspector({ lines, activeLineIndex, duration, singers, onMoveToSect
   // The inspector edits the first singer slot; a custom name not in the roster still shows.
   const singer = line.singers?.[0] ?? '';
   const singerOptions = singer && !singers.includes(singer) ? [singer, ...singers] : singers;
+  const timed = line.timestamp != null;
+  const step = NUDGE_STEP.toFixed(1);
 
   return (
-    <section aria-label={t('editor.inspector.title', { number: lyricNumber })} className={`${CARD} p-[18px] flex flex-col gap-3.5`}>
-      <h3 className="font-sans text-sm font-bold text-foreground">{t('editor.inspector.title', { number: lyricNumber })}</h3>
+    <section aria-label={t('editor.inspector.title', { number: lyricNumber })} className={`${CARD} px-5 py-[18px] flex flex-col gap-3.5`}>
+      <h3 className="font-heading text-xl font-bold tracking-[-0.02em] text-foreground">{t('editor.inspector.title', { number: lyricNumber })}</h3>
 
-      <label htmlFor={`${id}-section`} className="flex flex-col gap-1.5 text-xs text-foreground/65">
-        {t('editor.inspector.section')}
-        <select
-          id={`${id}-section`}
-          value={currentSection}
+      <div className="flex flex-col gap-1.5">
+        <span id={`${id}-section`} className={LABEL}>{t('editor.inspector.section')}</span>
+        <Select
+          value={String(currentSection)}
           disabled={sections.length === 0}
-          onChange={(e) => onMoveToSection(activeLineIndex, Number(e.target.value))}
-          className={FIELD}
+          onValueChange={(value) => onMoveToSection(activeLineIndex, Number(value))}
         >
-          {currentSection === -1 && <option value={-1}>{t('editor.inspector.noSection')}</option>}
-          {sections.map((s) => (
-            <option key={s.index} value={s.index}>{formatSectionLabel(s.label, t)}</option>
-          ))}
-        </select>
-      </label>
+          <SelectTrigger aria-labelledby={`${id}-section`} className="h-11 w-full px-3.5 text-base data-[size=default]:h-11">
+            <span className="flex min-w-0 items-center gap-2">
+              <Icon name="layers" size={16} className="shrink-0 text-label" />
+              <SelectValue />
+            </span>
+          </SelectTrigger>
+          <SelectContent>
+            {currentSection === -1 && <SelectItem value="-1">{t('editor.inspector.noSection')}</SelectItem>}
+            {sections.map((s) => (
+              <SelectItem key={s.index} value={String(s.index)}>{formatSectionLabel(s.label, t)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      <label htmlFor={`${id}-singer`} className="flex flex-col gap-1.5 text-xs text-foreground/65">
-        {t('editor.inspector.singer')}
-        <select
-          id={`${id}-singer`}
-          value={singer}
-          disabled={singerOptions.length === 0}
-          onChange={(e) => onAssignSinger(e.target.value, activeLineIndex)}
-          className={FIELD}
-        >
-          <option value="">{t('editor.tagging.noSinger')}</option>
-          {singerOptions.map((name) => <option key={name} value={name}>{name}</option>)}
-        </select>
-      </label>
+      <div className="flex flex-col gap-1.5">
+        <span id={`${id}-singer`} className={LABEL}>{t('editor.inspector.singer')}</span>
+        {/* One button per singer, numbered and coloured like the badge on the line. */}
+        <div role="group" aria-labelledby={`${id}-singer`} className="grid grid-cols-5 gap-1.5">
+          <Tip content={t('editor.tagging.noSinger')}>
+            <button
+              type="button"
+              aria-pressed={!singer}
+              aria-label={t('editor.tagging.noSinger')}
+              onClick={() => onAssignSinger('', activeLineIndex)}
+              className={cn(SINGER_BUTTON, !singer ? 'bg-raised text-foreground inset-ring-[1.5px] inset-ring-iris' : 'bg-card text-subtle inset-ring inset-ring-hl hover:inset-ring-faint')}
+            >
+              ∅
+            </button>
+          </Tip>
+          {singerOptions.map((name) => {
+            const idx = singerColorIndex(name, singers);
+            const color = singerColors?.[idx] || settings.editor?.display?.singerColors?.[idx] || SINGER_GRADIENT_STOPS[idx];
+            const on = name === singer;
+            return (
+              <Tip key={name} content={name}>
+                <button
+                  type="button"
+                  aria-pressed={on}
+                  aria-label={name}
+                  onClick={() => onAssignSinger(name, activeLineIndex)}
+                  className={cn(SINGER_BUTTON, on ? 'text-primary-foreground' : 'bg-card inset-ring inset-ring-hl hover:inset-ring-faint')}
+                  // The singer's own colour: as the fill when chosen, as the numeral otherwise.
+                  style={on ? { background: color, boxShadow: `0 0 0 2px var(--background), 0 0 0 3.5px ${color}` } : { color }}
+                >
+                  {(singers.indexOf(name) + 1) || 1}
+                </button>
+              </Tip>
+            );
+          })}
+        </div>
+      </div>
 
-      <dl className="grid grid-cols-2 gap-2">
-        <div className="rounded-[10px] bg-zinc-800 px-3 py-2.5">
-          <dt className="text-xs text-foreground/65">{t('editor.inspector.start')}</dt>
-          <dd className="font-mono text-sm tabular-nums text-foreground">{line.timestamp != null ? formatTimestamp(line.timestamp) : UNTIMED}</dd>
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <span className={LABEL}>{t('editor.inspector.start')}</span>
+          <div className={`${FIELD} justify-between pr-1 pl-3.5`}>
+            <span className="truncate font-mono text-[15px] font-medium tabular-nums text-foreground">
+              {timed ? formatTimestamp(line.timestamp as number) : UNTIMED}
+            </span>
+            <span className="flex shrink-0">
+              <Tip content={t('editor.inspector.earlier', { amount: step })}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={!timed}
+                  aria-label={t('editor.inspector.earlier', { amount: step })}
+                  onClick={() => onNudge(activeLineIndex, -NUDGE_STEP)}
+                  className="size-8 rounded-lg font-mono text-base lg:size-8"
+                >
+                  −
+                </Button>
+              </Tip>
+              <Tip content={t('editor.inspector.later', { amount: step })}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={!timed}
+                  aria-label={t('editor.inspector.later', { amount: step })}
+                  onClick={() => onNudge(activeLineIndex, NUDGE_STEP)}
+                  className="size-8 rounded-lg font-mono text-base lg:size-8"
+                >
+                  +
+                </Button>
+              </Tip>
+            </span>
+          </div>
         </div>
-        <div className="rounded-[10px] bg-zinc-800 px-3 py-2.5">
-          <dt className="text-xs text-foreground/65">{t('editor.inspector.duration')}</dt>
-          <dd className="font-mono text-sm tabular-nums text-foreground">{length != null ? `${length.toFixed(2)} s` : '—'}</dd>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <span className={LABEL}>{t('editor.inspector.duration')}</span>
+          <div className={`${FIELD} justify-between gap-2 px-3.5`}>
+            <span className="font-mono text-[15px] font-medium tabular-nums text-foreground">{length != null ? `${length.toFixed(2)} s` : '—'}</span>
+            {length != null && lineEnd != null && (
+              <span className="truncate text-[13px] text-subtle">{t('editor.inspector.until', { time: lineEnd.toFixed(2) })}</span>
+            )}
+          </div>
         </div>
-      </dl>
+      </div>
     </section>
   );
 }
@@ -202,7 +289,7 @@ function EditorSidePanel(props: EditorSidePanelProps) {
   return (
     <aside
       aria-label={t('editor.sidePanel')}
-      className="lrc-scroll max-lg:hidden w-[360px] xl:w-[400px] shrink-0 min-h-0 overflow-y-auto flex flex-col gap-4 p-5 border-l border-zinc-800 bg-zinc-950/40"
+      className="lrc-scroll max-lg:hidden w-[360px] xl:w-[400px] shrink-0 min-h-0 overflow-y-auto flex flex-col gap-4 p-5 border-l border-hl bg-zinc-950/40"
     >
       <LiveCard lines={props.lines} playbackPosition={props.playbackPosition} duration={props.duration} editorMode={props.editorMode} />
       <LineInspector
@@ -210,8 +297,11 @@ function EditorSidePanel(props: EditorSidePanelProps) {
         activeLineIndex={props.activeLineIndex}
         duration={props.duration}
         singers={props.singers}
+        singerColors={props.singerColors}
+        settings={props.settings}
         onMoveToSection={props.onMoveToSection}
         onAssignSinger={props.onAssignSinger}
+        onNudge={props.onNudge}
       />
       <ShortcutsLegend settings={props.settings} />
     </aside>

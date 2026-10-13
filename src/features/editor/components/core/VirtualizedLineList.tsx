@@ -7,6 +7,7 @@ import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import EditorLineItem from '../line/EditorLineItem';
 import { sectionCollapseKey } from '@/features/editor/utils/sections';
+import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import type { CollapsedView } from '@/features/editor/utils/sections';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
@@ -161,6 +162,12 @@ export default function VirtualizedLineList({
   playingWordIndex = null,
 }: VirtualizedLineListProps) {
   const { t } = useTranslation();
+  // The line playback is on, as opposed to the cursor (activeLineIndex) or the hovered one.
+  // -1 before the first timed line.
+  const playingIndex = useMemo(
+    () => (playbackPosition == null ? -1 : computeCurrentIndex(lines, playbackPosition, editorMode)),
+    [lines, playbackPosition, editorMode],
+  );
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
 
@@ -533,6 +540,8 @@ export default function VirtualizedLineList({
                       displayedActiveIndex={displayedActiveIndex}
                       isActive={isActive}
                       isCursor={i === activeLineIndex}
+                      isPlaying={i === playingIndex}
+                      isPast={isSynced && i < playingIndex}
                       wordsFocus={wordsFocus}
                       playingWordIndex={i === activeLineIndex ? playingWordIndex : null}
                       sectionLabel={sectionLabels[i]}
