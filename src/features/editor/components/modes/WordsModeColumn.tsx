@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { MouseEvent, WheelEvent } from 'react';
 import { hasCJK } from '@/shared/utils/furigana';
 import { formatTime } from '@/shared/utils/format-time';
+import { usePlayer } from '@/features/player/PlayerContext';
+import { wordSpan } from '../../utils/word-span';
 import { Tip } from '@ui/tip';
 import { InlineTimestampEdit } from '../line/InlineTimestampEdit';
 import { TimestampBadge } from '../line/TimestampBadge';
@@ -29,16 +32,40 @@ const WORD_SINGER_CHIP = [
 const CHIP_BASE = 'flex flex-col items-start gap-1 border font-medium transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40';
 const CHIP_COMPACT = 'px-2.5 py-1.5 coarse:py-2.5 rounded-lg text-[13px] leading-none';
 const CHIP_LARGE = 'px-4 py-2.5 rounded-xl min-h-11';
-const CHIP_NOW = 'border-2 border-primary bg-zinc-800 text-foreground';
-const CHIP_PLAYING = 'border-primary bg-primary text-zinc-950';
-const CHIP_DONE = 'border-primary/40 bg-primary/10 text-primary hover:border-primary hover:bg-primary/20';
-const CHIP_TODO = 'border-dashed border-zinc-600 bg-transparent text-foreground/55 hover:border-zinc-500 hover:text-foreground/80';
+const CHIP_NOW = 'border-2 border-primary bg-primary-soft text-foreground';
+// The sung word keeps a neutral body: the karaoke fill (KaraokeFill) is what shows progress.
+const CHIP_PLAYING = 'border-2 border-primary bg-raised text-foreground';
+const CHIP_COLLISION = 'border-gold bg-gold-soft text-foreground hover:border-gold';
+const CHIP_DONE = 'border-hl bg-raised text-foreground hover:border-faint';
+const CHIP_TODO = 'border-dashed border-hl bg-transparent text-faint hover:border-faint hover:text-subtle';
 
 // Same formatter as the chip's tooltip and the timestamp badges, so a word never
 // shows two different times; the "00:" minutes are dropped while they are zero.
 function shortTime(time: number): string {
   const label = formatTime(time);
   return label.startsWith('00:') ? label.slice(3) : label;
+}
+
+/**
+ * Accent-coloured copy of the sung word, unmasked left to right over the span the word
+ * lasts. It is a CSS animation, so playback does not re-render the chip per frame.
+ * Keyed per word by the caller, so each word mounts a fresh fill; the offset into the
+ * word is read once on mount (a seek lands on a different word, which remounts).
+ */
+function KaraokeFill({ label, start, end }: { label: string; start: number; end: number }) {
+  const { currentTime, playbackSpeed } = usePlayer();
+  const [offset] = useState(() => Math.max(0, currentTime - start));
+  // Media seconds -> wall-clock seconds at the current playback speed.
+  const speed = playbackSpeed || 1;
+  return (
+    <span
+      aria-hidden="true"
+      className="karaoke-fill absolute left-0 top-0 overflow-hidden whitespace-nowrap text-primary-ink"
+      style={{ animation: `karaoke-fill ${Math.max(end - start, 0.05) / speed}s linear forwards`, animationDelay: `${-offset / speed}s` }}
+    >
+      {label}
+    </span>
+  );
 }
 
 /** Resolves a per-word singer chip's class + optional custom-hex inline style, mirroring LineTextContent's logic. */
@@ -211,11 +238,23 @@ export function WordsModeChips({
   const appliedSingers = activeSingers || line.singers;
   const settingsSingerColors = settings?.editor?.display?.singerColors;
   const chipSize = isActive ? CHIP_LARGE : CHIP_COMPACT;
-  const chipBody = (label: string, time: number | null | undefined) => (
+  const chipBody = (
+    label: string,
+    time: number | null | undefined,
+    extras: { collision?: boolean; fill?: { start: number; end: number } | null } = {},
+  ) => (
     <>
-      <span className={isActive ? 'font-heading text-2xl font-bold leading-none' : undefined}>{label}</span>
+      <span className={`${isActive ? 'font-heading text-2xl font-bold leading-none' : ''} ${extras.fill ? 'relative whitespace-nowrap' : ''}`}>
+        {label}
+        {extras.fill && <KaraokeFill key={extras.fill.start} label={label} start={extras.fill.start} end={extras.fill.end} />}
+      </span>
       {isActive && (
-        <span className="font-mono text-[11px] leading-none tabular-nums opacity-80">
+        <span className={`flex items-center gap-1 font-mono text-[11px] leading-none tabular-nums ${extras.collision ? 'text-gold-ink' : 'opacity-80'}`}>
+          {extras.collision && (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 4L2.8 19.5h18.4z M12 10v4 M12 17h.01" />
+            </svg>
+          )}
           {time != null ? shortTime(time) : '—'}
         </span>
       )}
@@ -239,12 +278,17 @@ export function WordsModeChips({
             const isActiveWord = playing ? wi === playingWordIndex : wi === activeWordIndex && !focusedTimestamp;
             const nowClass = playing ? CHIP_PLAYING : CHIP_NOW;
             const singerChip = resolveWordSingerChip(w, appliedSingers, roster, singerColors, settingsSingerColors, w.time != null);
+            // Two words showing the same time are almost always a double mark. Compared by
+            // what the chip displays, so it flags exactly what the user would see twice.
+            const prevTime = line.words?.[wi - 1]?.time;
+            const sameAsPrev = w.time != null && prevTime != null && shortTime(w.time) === shortTime(prevTime);
+            const fill = playing && isActiveWord ? wordSpan(line.words ?? [], wi) : null;
             return (
               <div key={wKey} className="flex flex-col items-center gap-1">
                 {/* Word chip */}
                 {w.time != null ? (
                   <div className="group/word flex items-center gap-0.5">
-                    <Tip content={t('editor.wordChipTitle', { word: w.word, time: formatTime(w.time) })}>
+                    <Tip content={`${t('editor.wordChipTitle', { word: w.word, time: formatTime(w.time) })}${sameAsPrev ? ` · ${t('editor.wordSameTime')}` : ''}`}>
                       <StampedWordChip
                         time={w.time}
                         focusedTimestamp={playing ? null : focusedTimestamp}
@@ -253,11 +297,13 @@ export function WordsModeChips({
                         onClick={(e) => handleWordClick(e, w, wi)}
                         className={`${CHIP_BASE} ${chipSize} ${isActiveWord || isFocusedWord
                           ? nowClass
-                          : (w.singerIndex != null ? (singerChip.className || CHIP_DONE) : CHIP_DONE)
+                          : sameAsPrev
+                            ? CHIP_COLLISION
+                            : (w.singerIndex != null ? (singerChip.className || CHIP_DONE) : CHIP_DONE)
                           }`}
-                        style={!(isActiveWord || isFocusedWord) ? singerChip.style : undefined}
+                        style={!(isActiveWord || isFocusedWord || sameAsPrev) ? singerChip.style : undefined}
                       >
-                        {chipBody(displayWord, w.time)}
+                        {chipBody(displayWord, w.time, { collision: sameAsPrev, fill })}
                       </StampedWordChip>
                     </Tip>
                     {!isMobile && (

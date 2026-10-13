@@ -24,6 +24,7 @@ import PlayerControls from '@/features/player/components/PlayerControls';
 import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
+import { SegmentedControl } from '@ui/segmented-control';
 import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import { useTranslation } from 'react-i18next';
 import { KEY_SYMBOLS } from '@features/settings/key-symbols';
@@ -48,12 +49,7 @@ const WORDS_LOOP_KEY = 'lrc_words_loop_line';
 // so it is mixed toward the foreground there.
 const TEAL_TEXT = 'text-[color-mix(in_srgb,var(--color-success)_50%,var(--foreground))] dark:text-success';
 const HEADER_ICON_BTN = 'size-10 lg:size-10 coarse:size-11 rounded-[10px] border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground disabled:opacity-30';
-const MODE_TAB = 'h-9 coarse:h-11 px-3.5 rounded-lg text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50';
-const MODE_TAB_ON = 'bg-zinc-700 text-foreground font-semibold shadow-sm';
-const MODE_TAB_OFF = 'text-foreground/65 font-medium hover:text-foreground';
-const FILTER_BTN = 'h-9 coarse:h-11 px-3 rounded-lg border text-[13px] whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50';
-const FILTER_ON = 'border-zinc-700 bg-zinc-800 text-foreground font-semibold';
-const FILTER_OFF = 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground';
+const EDITOR_SPEEDS = [0.25, 0.5, 1].map((speed) => ({ value: speed, label: `${speed}×` }));
 
 const ActionsDropdown = ({ children, icon = 'more_horiz', label }: { children: React.ReactNode; icon?: string; label?: string }) => {
   const { t } = useTranslation();
@@ -525,37 +521,28 @@ export default function Editor({
     if (editorMode !== 'words') lineModeRef.current = editorMode;
   }, [editorMode]);
 
+  // "review" is never the current value: it leaves the editor instead of switching mode.
   const modeTabs = (
-    <div role="tablist" aria-label={t('editor.modeGroup')} className="flex gap-1 rounded-xl border border-zinc-800 bg-zinc-900 p-1">
-      <button
-        type="button"
-        role="tab"
-        aria-selected={!isWordsMode}
-        onClick={() => { if (isWordsMode) selectMode(lineModeRef.current); }}
-        className={`${MODE_TAB} ${!isWordsMode ? MODE_TAB_ON : MODE_TAB_OFF}`}
-      >
-        {t('editor.tabLines')}
-      </button>
-      <Tip content={wordsLocked ? t('editor.modeWordsLocked') : t('editor.modeTooltipWords')}>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={isWordsMode}
-          // aria-disabled, not disabled: a disabled button emits no pointer events,
-          // so the tooltip explaining why it is locked would never open.
-          aria-disabled={wordsLocked}
-          onClick={() => { if (!wordsLocked && !isWordsMode) selectMode('words'); }}
-          className={`${MODE_TAB} ${isWordsMode ? MODE_TAB_ON : MODE_TAB_OFF} ${wordsLocked ? 'opacity-40 cursor-not-allowed' : ''}`}
-        >
-          {t('editor.modeWords')}
-        </button>
-      </Tip>
-      {onShowPreview && (
-        <button type="button" role="tab" aria-selected={false} onClick={onShowPreview} className={`${MODE_TAB} ${MODE_TAB_OFF}`}>
-          {t('editor.tabReview')}
-        </button>
-      )}
-    </div>
+    <SegmentedControl<'lines' | 'words' | 'review'>
+      semantics="tabs"
+      label={t('editor.modeGroup')}
+      value={isWordsMode ? 'words' : 'lines'}
+      onChange={(tab) => {
+        if (tab === 'review') onShowPreview?.();
+        else if (tab === 'words') selectMode('words');
+        else selectMode(lineModeRef.current);
+      }}
+      options={[
+        { value: 'lines', label: t('editor.tabLines') },
+        {
+          value: 'words',
+          label: t('editor.modeWords'),
+          disabled: wordsLocked,
+          tip: wordsLocked ? t('editor.modeWordsLocked') : t('editor.modeTooltipWords'),
+        },
+        ...(onShowPreview ? [{ value: 'review' as const, label: t('editor.tabReview') }] : []),
+      ]}
+    />
   );
 
   // ── "Unmarked" filter ──
@@ -916,24 +903,15 @@ export default function Editor({
           <div className="flex-1" />
         )}
         {lines.length > 0 && (
-          <div role="group" aria-label={t('editor.filterGroup')} className="flex gap-1">
-            <button
-              type="button"
-              aria-pressed={lineFilter === 'all'}
-              onClick={() => setLineFilter('all')}
-              className={`${FILTER_BTN} ${lineFilter === 'all' ? FILTER_ON : FILTER_OFF}`}
-            >
-              {t('editor.filterAll')}
-            </button>
-            <button
-              type="button"
-              aria-pressed={lineFilter === 'unmarked'}
-              onClick={() => setLineFilter('unmarked')}
-              className={`${FILTER_BTN} ${lineFilter === 'unmarked' ? FILTER_ON : FILTER_OFF}`}
-            >
-              {t('editor.filterUnmarked', { count: unmarkedCount })}
-            </button>
-          </div>
+          <SegmentedControl<'all' | 'unmarked'>
+            label={t('editor.filterGroup')}
+            value={lineFilter}
+            onChange={setLineFilter}
+            options={[
+              { value: 'all', label: t('editor.filterAll') },
+              { value: 'unmarked', label: t('editor.filterUnmarked', { count: unmarkedCount }) },
+            ]}
+          />
         )}
         <Tip content={t('lyricsSearch.findLyrics')}>
           <Button
@@ -1108,19 +1086,13 @@ export default function Editor({
               ))}
             </div>
             <div className="flex items-center gap-2.5">
-              <div role="group" aria-label={t('player.speed')} className="flex gap-0.5 rounded-[10px] border border-zinc-800 bg-zinc-900 p-[3px]">
-                {[0.25, 0.5, 1].map((speed) => (
-                  <button
-                    key={speed}
-                    type="button"
-                    aria-pressed={playbackSpeed === speed}
-                    onClick={() => applySpeed(speed)}
-                    className={`h-8 coarse:h-11 px-2.5 rounded-[7px] font-mono text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${playbackSpeed === speed ? 'bg-zinc-700 text-foreground' : 'text-foreground/65 hover:text-foreground'}`}
-                  >
-                    {speed}×
-                  </button>
-                ))}
-              </div>
+              <SegmentedControl
+                mono
+                label={t('player.speed')}
+                value={playbackSpeed}
+                onChange={applySpeed}
+                options={EDITOR_SPEEDS}
+              />
               <Tip content={loopFocusLine ? t('editor.words.loopOn') : t('editor.words.loopOff')}>
                 <Button
                   variant="outline"
