@@ -106,7 +106,7 @@ export default function EditorPasteArea({
           onSelect={handleSelect}
           onScroll={handleScroll}
           placeholder={t('editor.pastePlaceholder')}
-          className="lrc-scroll flex-1 rounded-xl p-3.5 bg-zinc-950/60 border-zinc-700 text-zinc-200 placeholder:text-zinc-600 resize-none focus:border-primary/50 focus:ring-primary/25 font-mono leading-relaxed min-h-0"
+          className="lrc-scroll flex-1 p-3.5 resize-none font-mono leading-relaxed min-h-0"
         />
         {selection && pill && (
           <div

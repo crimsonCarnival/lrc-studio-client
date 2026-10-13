@@ -42,7 +42,7 @@ export default function PreviewPasteArea({
       <Textarea
         value={pasteText}
         onChange={(e) => setPasteText(e.target.value)}
-        className="flex-1 bg-zinc-900/50 border-zinc-700/50 text-zinc-200 placeholder:text-zinc-600 resize-none font-mono leading-relaxed focus:border-primary/50 min-h-0"
+        className="flex-1 resize-none font-mono leading-relaxed min-h-0"
         placeholder={t('preview.pastePlaceholder')}
       />
       <Button

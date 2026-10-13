@@ -952,7 +952,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                           value={lyricsText}
                           onChange={(e) => setLyricsState({ text: e.target.value })}
                           placeholder={t('setup.pasteLyricsDesc')}
-                          className="flex-1 min-h-0 bg-zinc-900/50 border-zinc-700/50 text-zinc-200 placeholder:text-zinc-500 resize-none text-sm p-3 leading-relaxed focus:border-primary/50 overflow-y-auto scrollbar-thin rounded-xl"
+                          className="flex-1 min-h-0 resize-none text-sm p-3 leading-relaxed overflow-y-auto scrollbar-thin"
                         />
                         <RawLyricsSyntaxBar
                           value={lyricsText}

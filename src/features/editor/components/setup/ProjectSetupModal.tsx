@@ -508,7 +508,7 @@ export default function ProjectSetupModal({
                   value={form.description}
                   onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
                   placeholder={t('project.descriptionPlaceholder')}
-                  className="bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-primary/20 min-h-[80px] resize-none"
+                  className="min-h-[80px] resize-none"
                 />
               </div>
 
