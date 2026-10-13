@@ -33,7 +33,7 @@ export default {
   ],
   userNotFoundDesc: [
     "The profile you're looking for doesn't exist in our records.",
-    "We couldn't find an account matching that username.",
+    "We couldn't find an account matching that account name.",
     "This creator's profile might have been deleted or renamed.",
     "Looks like this user isn't in the studio right now."
   ],

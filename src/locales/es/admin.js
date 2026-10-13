@@ -18,7 +18,7 @@ export default {
   dashboard: {
     title: 'Panel de Administración',
     subtitle: 'Administra usuarios.',
-    searchPlaceholder: 'Buscar usuarios por nombre o correo...',
+    searchPlaceholder: 'Buscar usuarios por nombre de cuenta o correo...',
     loading: 'Cargando usuarios...',
     noUsers: 'No se encontraron usuarios.',
     stats: {
@@ -257,8 +257,8 @@ export default {
     update: 'Actualizar',
     create: 'Crear Insignia',
     grantTitle: 'Otorgar "{{name}}"',
-    usernameLabel: 'Nombre de usuario',
-    usernamePlaceholder: 'nombreDeUsuario',
+    accountNameLabel: 'Nombre de cuenta',
+    accountNamePlaceholder: 'nombredecuenta',
     grant: 'Otorgar',
     granting: 'Otorgando…',
     cancel: 'Cancelar',
@@ -365,7 +365,7 @@ export default {
     failedAdjust: 'Error al ajustar XP',
     enterValidAmount: 'Introduce una cantidad de XP válida',
     enterUserIds: 'Introduce al menos un nombre de usuario',
-    usernamePlaceholder: 'usuario1, usuario2, usuario3…',
+    accountNamePlaceholder: 'usuario1, usuario2, usuario3…',
     curve: {
       title: 'Requisitos de nivel',
       description: 'XP acumulada necesaria para alcanzar cada nivel y las ranuras de vitrina de insignias que desbloquea.',

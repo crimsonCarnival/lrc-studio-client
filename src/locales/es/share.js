@@ -55,6 +55,6 @@ export default {
   secondsPlaceholder: "Segundos...",
   forkedProject: "Proyecto bifurcado",
   forkedBadge: "Derivado",
-  forkedFrom: "Derivado de {{username}}",
+  forkedFrom: "Derivado de {{accountName}}",
   verifying: "Verificando tu sesión...",
 };

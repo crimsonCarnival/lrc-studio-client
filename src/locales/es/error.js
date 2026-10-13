@@ -31,7 +31,7 @@ export default {
   ],
   userNotFoundDesc: [
     "El perfil que buscas no existe en nuestros registros.",
-    "No pudimos encontrar una cuenta con ese nombre de usuario.",
+    "No pudimos encontrar una cuenta con ese nombre de cuenta.",
     "Este perfil pudo haber sido eliminado o renombrado.",
     "Parece que este usuario no está en el estudio ahora mismo."
   ],
