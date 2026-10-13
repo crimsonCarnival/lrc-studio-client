@@ -153,6 +153,8 @@ export function useAppState(user?: AuthUserType | null) {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [isAutosaving, setIsAutosaving] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  // Last manual save was rejected by the server. Cleared when the next one starts.
+  const [saveFailed, setSaveFailed] = useState(false);
 
   const [projectYtUrl, setProjectYtUrl] = useState('');
   const [restoredMedia, setRestoredMedia] = useState<RestoredMedia | null>(null);
@@ -607,6 +609,7 @@ export function useAppState(user?: AuthUserType | null) {
     playerRef,
     setIsAutosaving,
     setIsSaving,
+    setSaveFailed,
     setActivepublicId,
     setForkedFrom,
     onSaveSuccess: callAfterSave,
@@ -964,6 +967,7 @@ export function useAppState(user?: AuthUserType | null) {
     isAutosaving,
     pendingSyncs,
     isSaving,
+    saveFailed,
     isSharedProject,
     sharedReadOnly,
     setSharedReadOnly,

@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { createElement, useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import type { TFunction } from 'i18next';
 import toast from 'react-hot-toast';
+import { ToastBody } from '@ui/app-toast';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
 import { downloadLRC } from '@/shared/utils/lrc';
@@ -411,6 +412,9 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
   const exportPreviewLoading = showExportPanel && !currentExport;
   const exportPreviewFailed = !!currentExport && currentExport.text === null;
 
+  // Lets the failure toast offer "Retry" without handleExport depending on itself.
+  const retryExportRef = useRef<() => void>(() => {});
+
   const handleExport = useCallback(async () => {
     try {
       // Prefer the text already on screen so the file is exactly what was previewed.
@@ -418,12 +422,18 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
       downloadLRC(content, exportFileName);
 
       setShowExportPanel(false);
-      toast.success(t('export.success'));
+      toast.success(createElement(ToastBody, { title: t('export.success'), description: exportFileName }));
     } catch (err) {
       console.error('Export failed', err);
-      toast.error(t('export.failed'));
+      toast.error((item) => createElement(ToastBody, {
+        title: t('export.failed'),
+        action: { label: t('common.retry'), onClick: () => retryExportRef.current() },
+        toastId: item.id,
+      }));
     }
   }, [exportText, buildExportText, exportFileName, t]);
+
+  useEffect(() => { retryExportRef.current = handleExport; }, [handleExport]);
 
   const handleCopy = useCallback(async () => {
     try {

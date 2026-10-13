@@ -100,6 +100,8 @@ interface EditorProps {
   isAutosaving?: boolean;
   pendingSyncs?: number;
   isSaving?: boolean;
+  /** The last manual save was rejected by the server. */
+  saveFailed?: boolean;
   compact?: boolean;
   onNewProject: () => void;
   onShowKeyboardHelp?: () => void;
@@ -145,6 +147,7 @@ export default function Editor({
   buildProjectPayload,
   handleRemoveAllLyrics,
   isSaving,
+  saveFailed,
   compact,
   onNewProject,
   onShowKeyboardHelp,
@@ -466,7 +469,9 @@ export default function Editor({
   const centerSlot = useHeaderSlot('center');
   const actionsSlot = useHeaderSlot('actions');
 
-  const saveState = isSaving ? 'saving' : modifiedLines.size > 0 ? 'unsaved' : 'saved';
+  // 'failed' only while there is still something unsaved: a later autosave that gets the
+  // changes through clears the markers, and with them the error.
+  const saveState = isSaving ? 'saving' : modifiedLines.size > 0 ? (saveFailed ? 'failed' : 'unsaved') : 'saved';
 
   const handleSaveClick = async () => {
     if (!user) {
@@ -673,12 +678,18 @@ export default function Editor({
       {statusSlot && createPortal(
         <span
           role="status"
-          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs whitespace-nowrap ${saveState === 'saved' ? `bg-success/10 ${TEAL_TEXT}` : 'bg-zinc-800 text-foreground/65'}`}
+          // Each state differs by mark and wording, not colour alone: gold dot, pulsing iris
+          // dot, check, cross (redesign sheet 08).
+          className={`inline-flex h-8 items-center gap-2 rounded-full bg-raised px-3.5 text-[15px] font-medium whitespace-nowrap ${saveState === 'saved' ? 'text-foam pl-[11px] gap-1.5' : saveState === 'failed' ? 'text-love-ink pl-[11px] gap-1.5' : 'text-subtle'}`}
         >
-          {saveState === 'saving'
-            ? <LogoLoader size={12} />
-            : <span aria-hidden className={`size-1.5 rounded-full ${saveState === 'saved' ? 'bg-success' : 'bg-warning'}`} />}
-          {saveState === 'saving' ? t('project.saving') : saveState === 'saved' ? t('project.saved') : t('editor.statusUnsaved')}
+          {saveState === 'saved' || saveState === 'failed' ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d={saveState === 'saved' ? 'M5 12.5l4.5 4.5L19 7' : 'M7 7l10 10 M17 7L7 17'} />
+            </svg>
+          ) : (
+            <span aria-hidden className={`size-[7px] rounded-full ${saveState === 'saving' ? 'status-pulse bg-iris [animation:status-pulse_1.2s_ease-in-out_infinite]' : 'bg-gold'}`} />
+          )}
+          {saveState === 'saving' ? t('project.saving') : saveState === 'saved' ? t('project.saved') : saveState === 'failed' ? t('project.saveFailed') : t('editor.statusUnsaved')}
         </span>,
         statusSlot,
       )}

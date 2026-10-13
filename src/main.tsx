@@ -13,6 +13,7 @@ import { isStaff } from '@/features/auth/permissions';
 // window.location.reload();
 // });
 import { Toaster } from 'react-hot-toast'
+import { AppToast } from '@ui/app-toast'
 
 import './index.css';
 import '@/app/i18n';
@@ -212,25 +213,12 @@ function AppToaster() {
     <Toaster
       position={position}
       toastOptions={{
-        style: {
-          background: '#18181b',
-          color: '#f4f4f5',
-          border: '1px solid rgba(255,255,255,0.1)',
-          borderRadius: '0.75rem',
-          fontSize: '0.8125rem',
-          fontFamily: 'Inter, system-ui, sans-serif',
-          padding: '0.625rem 1rem',
-        },
-        success: {
-          iconTheme: { primary: '#1DB954', secondary: '#09090b' },
-          duration: 2000,
-        },
-        error: {
-          iconTheme: { primary: '#ef4444', secondary: '#09090b' },
-          duration: 4000,
-        },
+        success: { duration: 2000 },
+        error: { duration: 4000 },
       }}
-    />
+    >
+      {(item) => <AppToast item={item} />}
+    </Toaster>
   );
 }
 

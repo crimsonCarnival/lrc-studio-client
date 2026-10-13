@@ -196,6 +196,7 @@ export function useManualSave({
   playerRef,
   setIsAutosaving,
   setIsSaving,
+  setSaveFailed,
   setActivepublicId,
   setForkedFrom,
   onSaveSuccess,
@@ -268,6 +269,7 @@ export function useManualSave({
 
     if (getAccessToken() && activepublicIdRef.current && !isSharedProjectRef.current) {
       setIsSaving?.(true);
+      setSaveFailed?.(false);
       try {
         let uploadIdToSave = sessionUploadIdRef.current || null;
         // Skip a cached sessionUploadId that was set with a local: temp id
@@ -340,6 +342,10 @@ export function useManualSave({
             }
             console.error('[Manual Save] Server error:', err);
             toast.error(t('project.saveFailed'));
+            setSaveFailed?.(true);
+            // Nothing was persisted: skip onSaveSuccess, which would clear the editor's
+            // unsaved markers and leave it claiming "Saved".
+            return;
           }
         }
         onSaveSuccess?.();
@@ -394,7 +400,7 @@ export function useManualSave({
       };
       performCreate();
     }
-  }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, uploadedAudio, duration, t, isSharedProjectRef, activepublicIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setActivepublicId, setUploadedAudio, executeRecaptcha, onSaveSuccess, setForkedFrom, settings?.advanced?.autoSaveIndicator]);
+  }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, uploadedAudio, duration, t, isSharedProjectRef, activepublicIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setSaveFailed, setActivepublicId, setUploadedAudio, executeRecaptcha, onSaveSuccess, setForkedFrom, settings?.advanced?.autoSaveIndicator]);
 
   const manualSaveRef = useRef<typeof handleManualSave | null>(null);
   useLayoutEffect(() => { manualSaveRef.current = handleManualSave; });

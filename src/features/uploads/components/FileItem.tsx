@@ -3,6 +3,7 @@ import type { MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent } fro
 import { AnimatePresence, motion } from 'framer-motion';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { Button } from '@ui/button';
+import { ProgressRing } from '@ui/progress-ring';
 import { useTranslation } from 'react-i18next';
 import { useConfirmDestructive } from '@/shared/hooks/useConfirm';
 
@@ -90,14 +91,10 @@ export const FileItem = ({ file, progress, onDelete }: FileItemProps) => {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="mt-2 w-full bg-zinc-700 rounded-full h-1 overflow-hidden"
+              className="mt-2 flex items-center gap-2 overflow-hidden"
             >
-              <motion.div
-                className="bg-primary h-1 rounded-full"
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                aria-label={t('uploads.uploadProgress', { progress })}
-              />
+              <ProgressRing value={progress} size={20} label={t('uploads.uploadProgress', { progress })} />
+              <span className="font-mono text-xs text-primary-ink tabular-nums">{Math.round(progress)}%</span>
             </motion.div>
           )}
         </AnimatePresence>
