@@ -122,7 +122,8 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/70 to-transparent" />
             </>
           )}
-          <WaveformBars seed={title || publicId} count={26} minHeight={20} className="relative" />
+          {/* The waveform is the placeholder art; a real cover replaces it. */}
+          {!hasCover && <WaveformBars seed={title || publicId} count={26} minHeight={20} className="relative" />}
           <span className={`absolute left-3 top-3 px-2.5 py-1 rounded-full bg-zinc-950/80 text-[11px] font-bold uppercase tracking-wide ${isYoutube ? 'text-red-300' : 'text-blue-300'}`}>
             {isYoutube ? t('uploads.youtube') : t('uploads.cloudAudio')}
           </span>

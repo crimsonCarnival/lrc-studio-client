@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
 import { flatToSections } from '@/features/editor/utils/sections';
@@ -81,13 +80,6 @@ export function GuestAuthButtons({ isReady, lines, mediaTitle, buildProjectPaylo
         >
           {t('auth.signUp')}
         </Button>
-        {hasDraft && (
-          <Tip content={t('auth.signUpToSave')}>
-            <span
-              className="absolute -top-1 -right-1 size-2 rounded-full bg-primary animate-pulse pointer-events-none"
-            />
-          </Tip>
-        )}
       </div>
     </div>
   );

@@ -34,6 +34,8 @@ export function ProgressRing({ value, size = 56, label, children, className }: P
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={Math.round(pct)}
+      // Inline, so a parent's "size every svg" rule (Button has one) cannot shrink the ring.
+      style={{ width: size, height: size }}
       className={cn('shrink-0 -rotate-90 text-iris', !children && className)}
     >
       <circle cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={stroke} className="stroke-hl" />

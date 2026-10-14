@@ -122,6 +122,7 @@ export function FloatingCombobox({
     )
   }, [displayText, options])
 
+  const hasOptions = options.length > 0
   const showDropdown = open && filtered.length > 0
   const hasValue = !!displayText
 
@@ -248,32 +249,37 @@ export function FloatingCombobox({
         aria-invalid={error || undefined}
         className={cn(
           'w-full focus:ring-0 transition-all',
-          size === 'default' && 'h-12 bg-transparent border-zinc-700/50 text-zinc-100 focus:border-primary/60 rounded-xl px-4 pt-2 pr-9',
+          // Same field as FloatingInput (redesign sheet 05), so the two sit side by side evenly.
+          size === 'default' && 'h-[52px] lg:h-[52px] rounded-[var(--radius-control)] border-0 bg-card px-4 lg:px-4 text-[17px] md:text-[17px] lg:text-[17px] font-medium text-foreground inset-ring inset-ring-hl hover:inset-ring-faint focus-visible:ring-0 focus-visible:inset-ring-2 focus-visible:inset-ring-primary',
+          size === 'default' && hasOptions && 'pr-9 lg:pr-9',
           size === 'sm' && 'h-6 bg-zinc-800 border-zinc-600/50 text-zinc-500 text-[10px] focus:border-primary/60 rounded px-1.5 pr-6',
-          error && 'border-destructive/50 focus:border-destructive/80'
+          error && (size === 'default' ? 'inset-ring-2 inset-ring-love' : 'border-destructive/50 focus:border-destructive/80')
         )}
       />
       {size === 'default' && label && (
         <label
           htmlFor={id}
           className={cn(
-            // top-6 = half of h-12, not top-1/2: see floating-input.tsx. The
-            // wrapper stretches with its grid row; the field does not.
-            'absolute top-6 -translate-y-1/2 left-4 text-sm text-zinc-500 pointer-events-none transition-all duration-200 ease-out',
-            (focused || hasValue || value) &&
-              '-top-[2px] px-1.5 text-[10px] uppercase tracking-wider text-primary font-bold bg-zinc-900 rounded-sm leading-none py-0.5 left-3',
-            (focused || hasValue || value) && error && 'text-destructive'
+            // top-[26px] = half of the 52px field, not top-1/2: see floating-input.tsx.
+            'absolute left-4 -ml-1 -translate-y-1/2 pointer-events-none rounded-sm bg-card px-1 text-subtle transition-all duration-[var(--duration-state)] ease-state',
+            (focused || hasValue || value)
+              ? 'top-0 text-[11px] font-semibold uppercase leading-none tracking-[0.08em]'
+              : 'top-[26px] text-[17px] font-medium',
+            focused && 'text-primary-ink',
+            (focused || hasValue || value) && error && 'text-love-ink'
           )}
         >
           {label}
         </label>
       )}
-      {/* Pinned to the control's own height for the same reason as the label:
-          top-1/2 followed the stretched wrapper and drifted below the field. */}
-      <Icon name="expand_more" className={cn(
-        "absolute -translate-y-1/2 pointer-events-none",
-        size === 'default' ? "top-6 right-3 text-zinc-600" : "top-3 right-1.5 text-zinc-500"
-      )} size={size === 'default' ? 14 : 12} />
+      {/* Only when there is something to pick: with no options it is a plain text field.
+          Pinned to the field's own centre (26px / 12px), not top-1/2, for the label's reason. */}
+      {hasOptions && (
+        <Icon name="expand_more" className={cn(
+          "absolute -translate-y-1/2 pointer-events-none",
+          size === 'default' ? "top-[26px] right-3.5 text-subtle" : "top-3 right-1.5 text-zinc-500"
+        )} size={size === 'default' ? 16 : 12} />
+      )}
 
       {showDropdown && typeof document !== 'undefined'
         ? createPortal(dropdown, document.body)
