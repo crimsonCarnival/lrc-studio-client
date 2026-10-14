@@ -166,6 +166,7 @@ export const authService = {
           miniProfileBadgeIds
           defaultProjectPrivacy
           showActivityHeatmap
+          showXpProgress
           notifications { follow reaction star fork badge_awarded xp_changed streak_warning }
         }
       }

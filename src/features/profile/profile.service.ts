@@ -13,6 +13,7 @@ const GET_PUBLIC_PROFILE = /* GraphQL */ `
       stats { minutesSynced }
       streak { current longest }
       activityHeatmap { date count }
+      showXpProgress
       lastOnlineAt
       country
       showcasePublic

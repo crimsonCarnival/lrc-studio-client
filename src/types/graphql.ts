@@ -825,6 +825,7 @@ export type PublicUser = {
   showFollowers: Scalars['Boolean']['output'];
   showcasePublic: Scalars['Boolean']['output'];
   showcasedBadges: Array<ShowcasedBadge>;
+  showXpProgress?: Maybe<Scalars['Boolean']['output']>;
   stats?: Maybe<UserStats>;
   streak?: Maybe<UserStreak>;
   totalForksReceived: Scalars['Int']['output'];
@@ -1220,6 +1221,7 @@ export type UserPreferences = {
   miniProfileBadgesEnabled: Scalars['Boolean']['output'];
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
   showActivityHeatmap: Scalars['Boolean']['output'];
+  showXpProgress?: Maybe<Scalars['Boolean']['output']>;
   notifications: UserPreferencesNotifications;
   defaultProjectPrivacy: Scalars['String']['output'];
 };
@@ -1243,6 +1245,7 @@ export type UpdatePreferencesInput = {
   miniProfileBadgesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
   showActivityHeatmap?: InputMaybe<Scalars['Boolean']['input']>;
+  showXpProgress?: InputMaybe<Scalars['Boolean']['input']>;
   notifications?: InputMaybe<UpdatePreferencesNotificationsInput>;
   defaultProjectPrivacy?: InputMaybe<Scalars['String']['input']>;
 };

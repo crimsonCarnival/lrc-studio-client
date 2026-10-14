@@ -303,6 +303,8 @@ export default {
     lastLoginHour: "Last Login Hour",
     showActivityHeatmap: "Show activity heatmap on my profile",
     showActivityHeatmapSub: "Off by default: it reveals which days you are active",
+    showXpProgress: "Show my XP progress on my profile",
+    showXpProgressSub: "Off by default: visitors see your level, not how close you are to the next one",
     miniProfileBadges: "Show badges in mini profile",
     miniProfileBadgesSub: "Display up to 3 selected badges when hovering your name",
     miniProfileBadgesPick: "Select badges",

@@ -11,6 +11,7 @@ const PREFERENCES_FIELDS = /* GraphQL */ `
   miniProfileBadgeIds
   defaultProjectPrivacy
   showActivityHeatmap
+  showXpProgress
   notifications {
     follow
     reaction

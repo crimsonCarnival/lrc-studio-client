@@ -302,6 +302,8 @@ export default {
     lastLoginHour: "Hora del último inicio de sesión",
     showActivityHeatmap: "Mostrar mapa de actividad",
     showActivityHeatmapSub: "Revela qué días estás activo. Desactivado por defecto",
+    showXpProgress: "Mostrar mi progreso de XP en mi perfil",
+    showXpProgressSub: "Desactivado por defecto: los visitantes ven tu nivel, no cuánto te falta para el siguiente",
     miniProfileBadges: "Mostrar insignias en el perfil rápido",
     miniProfileBadgesSub: "Muestra hasta 3 insignias al pasar el cursor sobre tu nombre",
     miniProfileBadgesPick: "Seleccionar insignias",

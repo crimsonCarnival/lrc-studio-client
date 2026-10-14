@@ -137,6 +137,7 @@ export function ProfileHeader({
   const progress = xp - xpForLevel;
   const needed = xpForNext - xp;
   const xpPct = Math.max(0, Math.min(100, Math.round((progress / (xpForNext - xpForLevel)) * 100)));
+  const showXp = isOwner || profile.showXpProgress === true;
   const xpTip = `${xp.toLocaleString()} XP · ${needed.toLocaleString()} to Lv.${level + 1} (${xpPct}%)`;
   const streakCurrent = profile.streak?.current ?? 0;
   const streakLongest = profile.streak?.longest ?? 0;
@@ -167,7 +168,7 @@ export function ProfileHeader({
             <h1 className="text-2xl sm:text-3xl font-bold text-zinc-100 truncate">{displayName}</h1>
             <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
               {badgeIds.length > 0 && <BadgeList ids={badgeIds} max={3} />}
-              <Tip content={xpTip} side="bottom">
+              <Tip content={showXp ? xpTip : undefined} side="bottom">
                 <span className="inline-flex h-6 items-center rounded-full bg-primary-soft px-2.5 font-mono text-[11px] font-semibold tracking-[0.08em] text-primary-ink cursor-default">
                   {t('common.levelShort', { level })}
                 </span>
@@ -271,7 +272,9 @@ export function ProfileHeader({
           )}
         </p>
 
-        {/* Level and XP (redesign sheet 10): where you are, and how far the next level is. */}
+        {/* Level and XP (redesign sheet 10): where you are, and how far the next level is.
+            Visitors only see it when the owner opted in (preferences.showXpProgress). */}
+        {showXp && (
         <div className="mt-4 flex w-full max-w-sm flex-col gap-2 self-center sm:self-start">
           <span className="inline-flex items-center gap-1.5 self-center font-mono text-[13px] font-medium text-gold-ink sm:self-start">
             <Icon name="bolt" size={14} />
@@ -289,6 +292,7 @@ export function ProfileHeader({
           </div>
           <span className="text-left text-sm text-subtle">{t('profile.xpToNext', { xp: needed.toLocaleString(), level: level + 1 })}</span>
         </div>
+        )}
 
         {profile.totalForksReceived > 0 && (
           <p className="text-xs text-primary/70 mt-3 font-medium">
