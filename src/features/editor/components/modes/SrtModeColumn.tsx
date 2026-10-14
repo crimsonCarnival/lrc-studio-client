@@ -2,6 +2,7 @@ import type { WheelEvent } from 'react';
 import { formatTimestamp } from '@/shared/utils/lrc';
 import { InlineTimestampEdit } from '../line/InlineTimestampEdit';
 import { TimestampBadge } from '../line/TimestampBadge';
+import { timeChipClass } from '../line/time-chip-class';
 import type { EditorLine } from '../../services/editor.service';
 
 interface FocusedTimestamp {
@@ -14,6 +15,7 @@ interface SrtModeColumnProps {
   lineIndex: number;
   isSynced?: boolean;
   isActive?: boolean;
+  isPlaying?: boolean;
   settings: { editor?: { timestampPrecision?: string } };
   awaitingEndMark?: number | null;
   editingTimestamp: string | null;
@@ -30,6 +32,7 @@ export default function SrtModeColumn({
   lineIndex,
   isSynced,
   isActive,
+  isPlaying,
   settings,
   awaitingEndMark,
   editingTimestamp,
@@ -57,6 +60,7 @@ export default function SrtModeColumn({
           isSynced={isSynced}
           isFocused={focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start'}
           isActive={isActive}
+          isPlaying={isPlaying}
           precision={precision}
           onClick={() => setFocusedTimestamp(focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start' ? null : { lineIndex: lineIndex, type: 'start' })}
           onDoubleClick={(e) => { e.stopPropagation(); if (isSynced) setEditingTimestamp('start'); }}
@@ -77,19 +81,16 @@ export default function SrtModeColumn({
           type="button"
           onClick={() => setFocusedTimestamp(focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'end' ? null : { lineIndex: lineIndex, type: 'end' })}
           onDoubleClick={(e) => { e.stopPropagation(); if (line.endTime != null) setEditingTimestamp('end'); }}
-          className={`flex items-center rounded px-1.5 py-0.5 text-[10px] font-mono tabular-nums transition-all w-fit ${focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'end'
-            ? 'bg-primary/25 ring-1 ring-primary/50 font-semibold'
-            : line.endTime != null
-              ? 'bg-zinc-800 border border-zinc-700/50 hover:border-accent-blue/40 hover:bg-zinc-700/60'
-              : 'text-zinc-600 hover:bg-zinc-800/50 border border-transparent'
-            }`}
+          // Same chip as the start time; the end reads in foam so the pair is told apart by colour too.
+          className={timeChipClass({
+            isSynced: line.endTime != null,
+            isFocused: focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'end',
+            isActive: awaitingEndMark === lineIndex,
+          })}
         >
           {line.endTime != null
-            ? (() => {
-              const colorClass = 'text-accent-blue';
-              return <span className={awaitingEndMark === lineIndex ? 'animate-pulse-glow text-primary' : colorClass}>{formatTimestamp(line.endTime, precision)}</span>;
-            })()
-            : <span className={awaitingEndMark === lineIndex ? 'animate-pulse-glow text-zinc-400' : ''}>--:--.--</span>
+            ? <span className={awaitingEndMark === lineIndex ? 'animate-pulse-glow text-primary-ink' : 'text-foam-ink'}>{formatTimestamp(line.endTime, precision)}</span>
+            : '—:—'
           }
         </button>
       )}

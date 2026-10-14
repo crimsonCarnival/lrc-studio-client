@@ -44,6 +44,10 @@ interface EditorLineItemProps {
   isActive: boolean;
   /** The line marking acts on (activeLineIndex), as opposed to the hovered/playing one. */
   isCursor?: boolean;
+  /** Playback is on this line right now. */
+  isPlaying?: boolean;
+  /** Playback has already passed this line. */
+  isPast?: boolean;
   /** Label of the section this line belongs to, shown in the row's meta line. */
   sectionLabel?: string;
   /** Words mode showing only this line: no row surface, handle, number or progress. */
@@ -126,6 +130,8 @@ const EditorLineItem = React.memo(({
   displayedActiveIndex,
   isActive,
   isCursor = false,
+  isPlaying = false,
+  isPast = false,
   sectionLabel,
   wordsFocus = false,
   playingWordIndex = null,
@@ -357,15 +363,16 @@ const EditorLineItem = React.memo(({
       : 'warning'
     : null;
 
-  // Meta line under the text: which section the line is in and how far its
-  // per-word timing has got. Words mode already shows every word, so it is skipped there.
+  // Meta line under the text: which section the line is in. How far the per-word timing
+  // has got is the meter at the end of the row; words mode shows every word instead.
   const timedWords = line.words?.filter((w) => w.time != null).length ?? 0;
-  const wordStatus = !line.words?.length || timedWords === 0
-    ? null
-    : timedWords === line.words.length
-      ? t('editor.wordsTimedAll')
-      : t('editor.wordsTimedPartial', { timed: timedWords, total: line.words.length });
-  const showMeta = editorMode !== 'words' && (!!sectionLabel || !!wordStatus);
+  const showMeta = editorMode !== 'words' && !!sectionLabel;
+
+  const singerBadges = editorMode === 'words' ? [] : getSingers(line).filter(Boolean).map((name) => {
+    const idx = singerColorIndex(name, projectSingers ?? []);
+    const custom = singerColors?.[idx] || settings.editor?.display?.singerColors?.[idx];
+    return { name, number: (projectSingers?.indexOf(name) ?? -1) + 1 || 1, color: custom || SINGER_GRADIENT_STOPS[idx] };
+  });
 
   const lyricNumber = sectionLines
     ? sectionLines.slice(0, i).filter((l) => l.type !== 'section').length + 1
@@ -410,7 +417,7 @@ const EditorLineItem = React.memo(({
           {(() => {
             const lineSingers = getSingers(line);
             const firstSingerColorIdx = lineSingers.length > 0 && projectSingers ? singerColorIndex(lineSingers[0], projectSingers) : -1;
-            const colorVar = firstSingerColorIdx >= 0 ? SINGER_GRADIENT_STOPS[firstSingerColorIdx] : 'var(--color-zinc-500)';
+            const colorVar = firstSingerColorIdx >= 0 ? SINGER_GRADIENT_STOPS[firstSingerColorIdx] : 'var(--color-faint)';
 
             const label = formatSectionLabel(line.label, t);
             const singersStr = lineSingers.length > 0 ? lineSingers.join(' + ') : t('editor.tagging.noSinger');
@@ -472,8 +479,7 @@ const EditorLineItem = React.memo(({
             ) : (
               <Tip content={t('editor.doubleClickToEdit')}>
                 <span
-                  className={`pl-2 py-1 flex items-center gap-2 relative z-10 hover:opacity-80 transition-opacity`}
-                  style={{ color: colorVar, borderLeft: `3px solid ${colorVar}` }}
+                  className="pl-2 py-1 flex items-center gap-2 relative z-10 hover:opacity-80 transition-opacity"
                   onDoubleClick={(e) => {
                     e.stopPropagation();
                     setEditingLineIndex(i);
@@ -481,7 +487,9 @@ const EditorLineItem = React.memo(({
                     setEditingSingers(getSingers(line));
                   }}
                 >
-                  <span className={`text-[10px] font-semibold tracking-widest uppercase opacity-80 select-none`}>
+                  {/* The section's singer colour, as a dot rather than the old left stripe. */}
+                  {lineSingers.length > 0 && <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: colorVar }} />}
+                  <span className="font-mono text-xs font-semibold tracking-[0.14em] text-label uppercase select-none">
                     {t('editor.tagging.sectionSingerFormat', { section: label, singer: singersStr })}
                   </span>
                   {isCollapsed && (
@@ -493,7 +501,7 @@ const EditorLineItem = React.memo(({
               </Tip>
             );
           })()}
-          <div className={`flex-1 h-px ml-2 ${isRoot ? 'bg-primary/20' : 'bg-zinc-800'}`} />
+          <div className="flex-1 h-px ml-2.5 mb-2.5 bg-hl" />
 
           {selectedLines.size === 0 && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-0 bottom-0 mb-1 flex items-center gap-1 pl-6 pr-2 bg-gradient-to-l from-zinc-900 via-zinc-900 to-transparent">
@@ -571,27 +579,31 @@ const EditorLineItem = React.memo(({
         onDragEnd={handleDragEnd}
         onDrop={(e) => handleDrop(e, i)}
         style={{ animationDelay: staggerDelay }}
-        className={`outline-none flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-3 sm:gap-3.5 px-3.5 ${isCursor ? 'py-3.5' : 'py-2.5'} rounded-xl border transition-[background-color,border-color,box-shadow] duration-200 ease-out cursor-pointer group relative overflow-visible animate-preview-line-in ${selectedLines.has(i)
-          ? `bg-primary/15 ${isModified ? 'border-warning/40 ring-1 ring-warning/20' : 'border-primary/40 ring-1 ring-primary/20'}`
+        // One height and padding for every state (redesign sheet 13): the row never jumps when
+        // the cursor lands on it, and the surface alone says what it is. Outline = the line
+        // marking acts on (gold while it has an unsaved edit), soft fill = multi-selected.
+        className={`outline-none flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-3 min-h-14 px-3.5 py-2 rounded-[14px] transition-[background-color,box-shadow] duration-[var(--duration-state)] ease-out cursor-pointer group relative overflow-visible animate-preview-line-in focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${selectedLines.has(i)
+          ? `bg-primary-soft inset-ring ${isModified ? 'inset-ring-gold' : 'inset-ring-iris/50'}`
           : isCursor
-            // The line marking acts on: a raised surface with an accent ring. Locked
-            // (playback will not move it) reads stronger than merely selected.
-            ? `bg-zinc-800 ${isModified ? 'border-warning/50' : isLocked ? 'border-primary/60 shadow-glow' : 'border-primary/40'}`
+            // Locked (playback will not move it) reads stronger than merely selected.
+            ? `bg-primary-soft inset-ring-[1.5px] ${isModified ? 'inset-ring-gold' : 'inset-ring-iris'} ${isLocked ? 'shadow-glow' : ''}`
             : isActive
-              ? `bg-zinc-800/50 border-dashed ${isModified ? 'border-warning/30' : 'border-primary/25'}`
+              ? 'bg-raised'
               : dragOverIndex === i
-                ? 'bg-accent-blue/10 border-accent-blue/30'
+                ? 'bg-foam-soft inset-ring inset-ring-foam'
                 : (upcomingDepth ?? 0) > 0
-                  ? `border-dashed ${upcomingDepth === 1 ? 'bg-primary/5 border-primary/15' : 'bg-primary/[0.03] border-primary/10'}`
-                  : `bg-transparent hover:bg-zinc-800/40 ${isModified ? 'border-transparent hover:border-warning/30' : 'border-transparent'}`
-          } ${dragIndex === i ? 'opacity-40' : ''} ${justSynced ? 'ring-2 ring-primary/60 animate-just-synced' : ''} ${wordsFocus ? '!bg-transparent !border-transparent !shadow-none !px-0' : ''}`}
+                  ? (upcomingDepth === 1 ? 'bg-primary/5' : 'bg-primary/[0.03]')
+                  // An unsaved edit is the gold dot beside the time chip; a ring per edited
+                  // row turned a freshly stamped verse into a stack of gold boxes.
+                  : 'bg-transparent hover:bg-raised'
+          } ${dragIndex === i ? 'opacity-40' : ''} ${justSynced ? 'ring-2 ring-primary/60 animate-just-synced' : ''} ${wordsFocus ? '!bg-transparent !shadow-none !px-0' : ''}`}
       >
 
         {/* Lock/unlock indicator */}
         {isActive && !wordsFocus && (
           // Clipped by the row's own radius so the bar can run into the corner
           // and join the progress bar along the bottom edge.
-          <div className="absolute inset-0 z-0 rounded-[11px] overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 z-0 rounded-[14px] overflow-hidden pointer-events-none">
             <div className={`absolute left-0 top-2 w-1 animate-bar-grow ${segmentProgress != null ? 'bottom-0 rounded-t-full' : 'bottom-2 rounded-full'} ${isLocked
               ? `${isModified ? 'bg-warning' : 'bg-primary'} opacity-90`
               : `${isModified ? 'bg-warning/60' : 'bg-primary/40'} opacity-60`
@@ -606,9 +618,9 @@ const EditorLineItem = React.memo(({
         <div className={`flex items-center gap-1 shrink-0 z-10 ${wordsFocus ? 'hidden' : ''}`}>
           <Tip content={t('editor.dragToReorder')}>
             <div
-              className="cursor-grab active:cursor-grabbing text-zinc-600 hover:text-zinc-400 transition-colors p-0.5 -ml-1 select-none"
+              className="cursor-grab active:cursor-grabbing text-faint opacity-60 group-hover:opacity-100 hover:text-subtle transition-[color,opacity] p-0.5 -ml-1 select-none"
             >
-              <Icon name="drag_indicator" size={12} />
+              <Icon name="drag_indicator" size={14} />
             </div>
           </Tip>
           {(settings.editor?.showLineNumbers ?? true) && (
@@ -623,7 +635,7 @@ const EditorLineItem = React.memo(({
                   className="size-3.5 border-zinc-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                 />
               ) : (
-                <span className="text-xs font-mono tabular-nums text-foreground/45 select-none text-right">
+                <span className="text-[13px] font-mono font-medium tabular-nums text-subtle select-none text-right">
                   {lyricNumber}
                 </span>
               )}
@@ -632,12 +644,7 @@ const EditorLineItem = React.memo(({
         </div>
 
         <span
-          className={`text-xs font-mono tabular-nums shrink-0 transition-colors relative z-10 ${editorMode === 'words' ? 'self-start pt-0.5' : ''} ${isSynced
-            ? 'text-primary'
-            : isActive
-              ? 'text-zinc-400 animate-pulse-glow'
-              : 'text-zinc-600'
-            }`}
+          className={`text-xs font-mono tabular-nums shrink-0 transition-colors relative z-10 ${editorMode === 'words' ? `self-start pt-0.5 ${isSynced ? 'text-primary' : isActive ? 'text-zinc-400 animate-pulse-glow' : 'text-zinc-600'}` : ''}`}
           style={{ width: editorMode === 'words' ? undefined : '92px', minWidth: '92px', flexShrink: 0 }}
         >
           {editorMode === 'words' ? (
@@ -668,6 +675,7 @@ const EditorLineItem = React.memo(({
               lineIndex={i}
               isSynced={isSynced}
               isActive={isActive}
+              isPlaying={isPlaying}
               settings={settings}
               awaitingEndMark={awaitingEndMark}
               editingTimestamp={editingTimestamp}
@@ -684,6 +692,7 @@ const EditorLineItem = React.memo(({
               lineIndex={i}
               isSynced={isSynced}
               isActive={isActive}
+              isPlaying={isPlaying}
               settings={settings}
               editingTimestamp={editingTimestamp}
               setEditingTimestamp={setEditingTimestamp}
@@ -715,11 +724,25 @@ const EditorLineItem = React.memo(({
           }}>
           {editorMode !== 'words' && (
             <div className="flex items-start gap-2 min-w-0">
+            {/* Singer badge: the number is the singer's place in the song's roster, and the
+                colour is the same one the preview uses for them. */}
+            {singerBadges.map((badge) => (
+              <Tip key={badge.name} content={badge.name}>
+                <span
+                  className="mt-[5px] grid size-[18px] shrink-0 place-items-center rounded-[5px] font-mono text-[11px] font-bold text-primary-foreground select-none"
+                  style={{ background: badge.color }}
+                >
+                  {badge.number}
+                </span>
+              </Tip>
+            ))}
             <LineTextContent
               line={line as ComponentProps<typeof LineTextContent>['line']}
               lineIndex={i}
               isActive={isActive}
               isSynced={isSynced}
+              isPlaying={isPlaying}
+              isPast={isPast}
               editorMode={editorMode}
               settings={settings}
               activeWordIndex={activeWordIndex}
@@ -740,14 +763,8 @@ const EditorLineItem = React.memo(({
             </div>
           )}
           {showMeta && (
-            <span className="flex items-center gap-1.5 text-xs text-foreground/65 select-none min-w-0">
-              {sectionLabel && (
-                <span className="truncate text-[color-mix(in_srgb,var(--color-success)_50%,var(--foreground))] dark:text-success">
-                  {formatSectionLabel(sectionLabel, t)}
-                </span>
-              )}
-              {sectionLabel && wordStatus && <span aria-hidden>·</span>}
-              {wordStatus && <span className="shrink-0">{wordStatus}</span>}
+            <span className="truncate font-mono text-[11px] tracking-[0.08em] text-label uppercase select-none">
+              {formatSectionLabel(sectionLabel, t)}
             </span>
           )}
 
@@ -855,6 +872,27 @@ const EditorLineItem = React.memo(({
             </button>
           </Tip>
         )}
+        {/* Word meter: how many of this line's words carry their own time. Foam when all do. */}
+        {editorMode !== 'words' && !!line.words?.length && (
+          <Tip content={t('editor.wordProgressLabel')}>
+            <span className="flex shrink-0 items-center gap-2 font-mono text-xs font-medium text-subtle tabular-nums select-none max-sm:hidden">
+              <span
+                role="progressbar"
+                aria-label={t('editor.wordProgressLabel')}
+                aria-valuemin={0}
+                aria-valuemax={line.words.length}
+                aria-valuenow={timedWords}
+                className="block h-1 w-11 overflow-hidden rounded-sm bg-hl"
+              >
+                <span
+                  className={`block h-full rounded-sm transition-[width] duration-300 ease-out ${timedWords === line.words.length ? 'bg-foam' : 'bg-iris'}`}
+                  style={{ width: `${(timedWords / line.words.length) * 100}%` }}
+                />
+              </span>
+              {timedWords}/{line.words.length}
+            </span>
+          </Tip>
+        )}
         <LineActionToolbar
           line={line as ComponentProps<typeof LineActionToolbar>['line']}
           lineIndex={i}
@@ -889,7 +927,7 @@ const EditorLineItem = React.memo(({
         />
 
         {segmentProgress != null && (
-          <div className="absolute inset-x-0 bottom-0 h-1 rounded-b-[11px] overflow-hidden bg-zinc-800/60 z-10 pointer-events-none animate-in fade-in duration-300">
+          <div className="absolute inset-x-0 bottom-0 h-1 rounded-b-[14px] overflow-hidden bg-hl/60 z-10 pointer-events-none animate-in fade-in duration-300">
             <div
               className="h-full bg-primary rounded-r-full"
               style={{ width: `${segmentProgress * 100}%` }}

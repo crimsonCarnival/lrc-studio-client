@@ -130,6 +130,9 @@ export default {
     singer: "Cantante",
     start: "Inicio",
     duration: "Duración",
+    until: "hasta {{time}}",
+    earlier: "{{amount}} s antes",
+    later: "{{amount}} s después",
   },
   shortcutHints: {
     title: "Atajos",

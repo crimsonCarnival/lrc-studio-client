@@ -127,6 +127,9 @@ export default {
     singer: "Singer",
     start: "Start",
     duration: "Duration",
+    until: "until {{time}}",
+    earlier: "{{amount}} s earlier",
+    later: "{{amount}} s later",
   },
   shortcutHints: {
     title: "Shortcuts",

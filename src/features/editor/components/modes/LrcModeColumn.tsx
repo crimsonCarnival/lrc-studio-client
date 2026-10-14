@@ -13,6 +13,7 @@ interface LrcModeColumnProps {
   lineIndex: number;
   isSynced?: boolean;
   isActive?: boolean;
+  isPlaying?: boolean;
   settings: { editor?: { timestampPrecision?: string } };
   editingTimestamp: string | null;
   setEditingTimestamp: (v: string | null) => void;
@@ -28,6 +29,7 @@ export default function LrcModeColumn({
   lineIndex,
   isSynced,
   isActive,
+  isPlaying,
   settings,
   editingTimestamp,
   setEditingTimestamp,
@@ -54,6 +56,7 @@ export default function LrcModeColumn({
             isSynced={isSynced}
             isFocused={focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start'}
             isActive={isActive}
+            isPlaying={isPlaying}
             precision={precision}
             onClick={() => setFocusedTimestamp(focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start' ? null : { lineIndex: lineIndex, type: 'start' })}
             onDoubleClick={(e) => { e.stopPropagation(); if (isSynced) setEditingTimestamp('start'); }}

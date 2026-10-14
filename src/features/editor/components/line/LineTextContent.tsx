@@ -42,6 +42,7 @@ interface TextLine {
   singers?: string[];
   words?: Word[];
   text?: string;
+  adLibOf?: number | null;
   secondary?: string;
   translations?: Translation[];
   mode?: string;
@@ -59,6 +60,10 @@ interface LineTextContentProps {
   lineIndex: number;
   isActive: boolean;
   isSynced: boolean;
+  /** Playback is on this line. */
+  isPlaying?: boolean;
+  /** Playback has already passed this line. */
+  isPast?: boolean;
   editorMode: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   settings?: Record<string, any>;
@@ -84,6 +89,8 @@ const LineTextContent = memo(({
   lineIndex,
   isActive,
   isSynced,
+  isPlaying,
+  isPast,
   editorMode,
   settings,
   activeWordIndex,
@@ -111,27 +118,17 @@ const LineTextContent = memo(({
     textShadow: active ? `0 0 8px ${hex}80` : undefined,
   });
 
-  // Single-singer lines: always inherit singer color regardless of whether a words array exists
-  const lineColorClass = (() => {
-    if (appliedSingers?.length === 1) {
-      const idx = singerColorIndex(appliedSingers[0], roster);
-      const customHex = singerColors?.[idx] || settings?.editor?.display?.singerColors?.[idx];
-      if (customHex) return isActive ? 'font-medium' : '';
-      return isActive ? `${WORD_SINGER_COLORS[idx]} font-medium` : WORD_SINGER_COLORS[idx];
-    }
-    if (isActive) return 'text-zinc-100 font-medium';
-    if (isSynced) return line.words?.some(w => w.time != null) ? 'text-zinc-300' : 'text-zinc-100';
-    return 'text-zinc-500';
-  })();
-
-  const lineColorStyle = (() => {
-    if (appliedSingers?.length === 1) {
-      const idx = singerColorIndex(appliedSingers[0], roster);
-      const customHex = singerColors?.[idx] || settings?.editor?.display?.singerColors?.[idx];
-      if (customHex) return getCustomColorStyle(customHex, isActive);
-    }
-    return undefined;
-  })();
+  // The text colour carries the line's state, not its singer (redesign sheet 13): playing
+  // now glows iris, lines already sung recede, unmarked lines are faint. The singer is the
+  // numbered badge in front of the text; duet and per-word splits keep their own colours.
+  const isAdLib = line.adLibOf != null;
+  const lineColorClass = isPlaying
+    ? 'text-primary-ink [text-shadow:0_0_18px_var(--primary-strong)]'
+    : !isSynced
+      ? 'text-faint'
+      : isPast || isAdLib
+        ? 'text-subtle'
+        : 'text-foreground';
 
   const fmtR = (r?: string | null) => {
     const rubyFmt = settings?.editor?.display?.readingFormat || 'hiragana';
@@ -152,8 +149,8 @@ const LineTextContent = memo(({
             : lineStyle;
           return (
         <p
-          className={`text-[13px] lg:text-xs transition-all duration-300 ease-out ${layoutClass} ${isDuet ? 'bg-clip-text text-transparent' : lineColorClass}`}
-          style={isDuet ? duetStyle : lineColorStyle}
+          className={`font-semibold transition-colors duration-300 ease-out ${isAdLib ? 'text-[15px] italic' : 'text-[17px]'} ${layoutClass} ${isDuet ? 'bg-clip-text text-transparent' : lineColorClass}`}
+          style={duetStyle}
         >
           {(line.words?.length ?? 0) > 0
             ? (() => {
@@ -166,7 +163,8 @@ const LineTextContent = memo(({
               const rubyFmt = settings?.editor?.display?.readingFormat || 'hiragana';
               const trailingSpace = /[a-zA-Z0-9]/.test(w.word) ? ' ' : null;
 
-              const wordSingerIdx = w.singerIndex ?? (appliedSingers?.length === 1 ? 0 : null);
+              // Only a line split between singers colours its words; a single singer is the badge.
+              const wordSingerIdx = hasSingerSplit ? (w.singerIndex ?? null) : null;
               const singerName = wordSingerIdx !== null ? appliedSingers?.[wordSingerIdx] : undefined;
               const globalIdx = singerName ? singerColorIndex(singerName, roster) : null;
               const customHex = globalIdx !== null ? (singerColors?.[globalIdx] || settings?.editor?.display?.singerColors?.[globalIdx]) : null;
@@ -297,7 +295,7 @@ const LineTextContent = memo(({
                   }, []);
 
                 return displayWords.map((w, wi) => {
-                  const wordSingerIdx = w.singerIndex ?? (appliedSingers?.length === 1 ? 0 : null);
+                  const wordSingerIdx = hasSingerSplit ? (w.singerIndex ?? null) : null;
                   const singerName2 = wordSingerIdx !== null ? appliedSingers?.[wordSingerIdx] : undefined;
                   const globalIdx2 = singerName2 ? singerColorIndex(singerName2, roster) : null;
                   const customHex2 = globalIdx2 !== null ? (singerColors?.[globalIdx2] || settings?.editor?.display?.singerColors?.[globalIdx2]) : null;
@@ -368,7 +366,8 @@ const LineTextContent = memo(({
                   };
 
                   if (isNonCJK) return (
-                    <span key={ci} className="text-zinc-300/90">{ch}</span>
+                    // No colour of its own: the line's state colour has to reach every character.
+                    <span key={ci}>{ch}</span>
                   );
 
                   if (selection.range) {
@@ -433,7 +432,7 @@ const LineTextContent = memo(({
                     return (
                       <span
                         key={ci}
-                        className={`transition-colors px-0.5 ${inSelection ? 'bg-primary/20 text-primary rounded-sm' : 'text-zinc-400/80'}`}
+                        className={`transition-colors px-0.5 ${inSelection ? 'bg-primary/20 text-primary rounded-sm' : ''}`}
                       >
                         {ch}
                       </span>
