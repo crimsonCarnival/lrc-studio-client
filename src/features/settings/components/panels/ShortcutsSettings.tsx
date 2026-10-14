@@ -25,6 +25,7 @@ const SHORTCUTS: ShortcutDef[] = [
   { id: 'addLine', group: 'editor', fallback: 'Ctrl+Enter' },
   { id: 'deleteLine', group: 'editor', fallback: 'Delete' },
   { id: 'clearTimestamp', group: 'editor', fallback: 'Backspace' },
+  { id: 'captureAdLib', group: 'editor', fallback: 'a' },
   { id: 'switchMode', group: 'editor', fallback: 'Ctrl+M' },
   { id: 'deselect', group: 'editor', fallback: 'Escape' },
   { id: 'showHelp', group: 'editor', fallback: '?' },

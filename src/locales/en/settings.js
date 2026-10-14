@@ -267,6 +267,8 @@ export default {
     deleteLineDesc: "Delete active line (or selection)",
     clearTimestampLabel: "Clear Timestamp",
     clearTimestampDesc: "Clear timestamp on active line",
+    captureAdLibLabel: "Capture ad-lib",
+    captureAdLibDesc: "Drop an ad-lib at the current time; name it afterwards",
     switchModeLabel: "Switch Mode",
     switchModeDesc: "Toggle LRC/SRT editor mode",
     deselectLabel: "Deselect / Close",

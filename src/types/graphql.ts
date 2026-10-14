@@ -1072,6 +1072,7 @@ export type ShortcutsSettings = {
   addLine?: Maybe<Array<Scalars['String']['output']>>;
   addSecondary?: Maybe<Array<Scalars['String']['output']>>;
   addTranslation?: Maybe<Array<Scalars['String']['output']>>;
+  captureAdLib?: Maybe<Array<Scalars['String']['output']>>;
   clearTimestamp?: Maybe<Array<Scalars['String']['output']>>;
   deleteLine?: Maybe<Array<Scalars['String']['output']>>;
   deselect?: Maybe<Array<Scalars['String']['output']>>;
@@ -1100,6 +1101,7 @@ export type ShortcutsSettingsInput = {
   addLine?: InputMaybe<Array<Scalars['String']['input']>>;
   addSecondary?: InputMaybe<Array<Scalars['String']['input']>>;
   addTranslation?: InputMaybe<Array<Scalars['String']['input']>>;
+  captureAdLib?: InputMaybe<Array<Scalars['String']['input']>>;
   clearTimestamp?: InputMaybe<Array<Scalars['String']['input']>>;
   deleteLine?: InputMaybe<Array<Scalars['String']['input']>>;
   deselect?: InputMaybe<Array<Scalars['String']['input']>>;

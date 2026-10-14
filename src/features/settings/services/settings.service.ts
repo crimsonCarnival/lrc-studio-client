@@ -68,7 +68,7 @@ const GET_SETTINGS = /* GraphQL */ `
         addLine deleteLine clearTimestamp switchMode deselect showHelp
         rangeSelect toggleSelect playPause seekForward seekBackward mute
         speedUp speedDown addSecondary addTranslation toggleTranslation
-        focusSync focusPreview focusPlayback
+        focusSync focusPreview focusPlayback captureAdLib
       }
       advanced {
         autoSave { enabled timeInterval }

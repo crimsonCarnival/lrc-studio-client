@@ -100,7 +100,7 @@ const SHORTCUT_KEYS = [
   'mark', 'nudgeLeft', 'nudgeRight', 'addLine', 'deleteLine', 'clearTimestamp',
   'switchMode', 'nudgeLeftFine', 'nudgeRightFine', 'deselect', 'showHelp',
   'playPause', 'seekForward', 'seekBackward', 'mute', 'speedUp', 'speedDown',
-  'addSecondary', 'addTranslation', 'toggleTranslation',
+  'addSecondary', 'addTranslation', 'toggleTranslation', 'captureAdLib',
 ];
 
 export default function SettingsPage() {

@@ -126,9 +126,13 @@ const LineTextContent = memo(({
     ? 'text-primary-ink [text-shadow:0_0_18px_var(--primary-strong)]'
     : !isSynced
       ? 'text-faint'
-      : isPast || isAdLib
-        ? 'text-subtle'
-        : 'text-foreground';
+      // Rose is the second voice (redesign sheet 20): an ad-lib never takes the main line's iris.
+      : isAdLib
+        ? 'text-adlib-ink'
+        : isPast
+          ? 'text-subtle'
+          : 'text-foreground';
+  const isPendingAdLib = isAdLib && !line.text?.trim();
 
   const fmtR = (r?: string | null) => {
     const rubyFmt = settings?.editor?.display?.readingFormat || 'hiragana';
@@ -139,6 +143,13 @@ const LineTextContent = memo(({
     <div className={`flex flex-col gap-1 group/text min-w-0 w-full ${editorMode === 'words' ? 'pt-0.5' : ''}`}>
 
       <div className="flex items-center gap-2">
+        {isAdLib && (
+          <span className={`inline-flex h-[22px] shrink-0 items-center gap-1 rounded-full px-2 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] ${isPendingAdLib ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold' : 'bg-adlib-soft text-adlib-ink'}`}>
+            <Icon name="mic" size={11} />
+            {t('editor.adLib.chip')}
+          </span>
+        )}
+        {isPendingAdLib && <span className="text-[15px] italic text-gold-ink">{t('editor.adLib.pendingRow')}</span>}
         {(() => {
           const isDuet = line.mode === 'duet' && (appliedSingers?.length ?? 0) >= 2;
           const hasRubyOrSelection = line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null));

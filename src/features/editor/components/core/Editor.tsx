@@ -6,6 +6,10 @@ import { useEditorActionDrawer } from '@features/editor/hooks/useEditorActionDra
 import { useAutoStamp, type AutoStampPhase } from '@features/editor/hooks/useAutoStamp';
 import EditorToolbar from './EditorToolbar';
 import EditorSidePanel from './EditorSidePanel';
+import { AdLibStrip } from '../adlibs/AdLibStrip';
+import { matchKey } from '@/shared/utils/keyboard';
+import { CountDot } from '@ui/count-dot';
+import { isPendingAdLib } from '@features/editor/services/ad-libs';
 import { WordsLineNav, WordTimeline } from '../modes/WordsFocus';
 import { usePlayer } from '@/features/player/PlayerContext';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
@@ -227,6 +231,10 @@ export default function Editor({
     handleToggleLineMode,
     handleDeleteLine,
     handleToggleAdLib,
+    handleCaptureAdLib,
+    handleMoveAdLib,
+    handleNameAdLib,
+    handleRemoveAdLib,
     handleAddLine,
     handleDragStart,
     handleDragOver,
@@ -562,6 +570,34 @@ export default function Editor({
   // sidebar is not shown, so the full list stays.
   const isLg = useBreakpoint('lg');
   const wordsFocus = isWordsMode && isLg;
+
+  // Ad-lib capture (redesign sheet 20). The strip opens itself the first time one is
+  // captured, so the shortcut works without finding the button first.
+  const [adLibOpen, setAdLibOpen] = useState(false);
+  const [adLibSelected, setAdLibSelected] = useState<string | null>(null);
+  const [adLibNaming, setAdLibNaming] = useState<string | null>(null);
+  const captureKeyRaw = settings.shortcuts?.captureAdLib?.[0] || 'a';
+  const pendingAdLibs = useMemo(() => lines.filter((l) => isPendingAdLib(l)).length, [lines]);
+  const captureAdLibHere = useCallback(() => {
+    const id = handleCaptureAdLib();
+    if (!id) return;
+    setAdLibOpen(true);
+    setAdLibSelected(id);
+    setAdLibNaming(id);
+  }, [handleCaptureAdLib]);
+  useEffect(() => {
+    if (wordsFocus) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.isComposing || e.repeat) return;
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
+      if (!matchKey(e, captureKeyRaw)) return;
+      e.preventDefault();
+      captureAdLibHere();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [wordsFocus, captureKeyRaw, captureAdLibHere]);
   const listView = useMemo(() => {
     if (lineFilter === 'all' && !wordsFocus) return collapsedView;
     const rows = wordsFocus
@@ -925,6 +961,18 @@ export default function Editor({
             ]}
           />
         )}
+        <Tip content={t('editor.adLib.toggleTip')}>
+          <Button
+            variant="outline"
+            aria-pressed={adLibOpen}
+            onClick={() => setAdLibOpen((open) => !open)}
+            className={`relative h-9 lg:h-9 coarse:h-11 gap-1.5 rounded-lg px-3 lg:px-3 text-[13px] lg:text-[13px] font-semibold ${adLibOpen ? 'bg-adlib-soft text-adlib-ink inset-ring-adlib hover:bg-adlib-soft' : 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground'}`}
+          >
+            <Icon name="mic" size={16} />
+            {t('editor.adLib.toggle')}
+            <CountDot count={pendingAdLibs} className="-top-1.5 -right-1.5 bg-gold" />
+          </Button>
+        </Tip>
         <Tip content={t('lyricsSearch.findLyrics')}>
           <Button
             variant="outline"
@@ -1073,6 +1121,25 @@ export default function Editor({
           />
         </div>
       </div>
+
+      {adLibOpen && !wordsFocus && (
+        <AdLibStrip
+          lines={lines}
+          playbackPosition={playbackPosition}
+          // A single letter is printed as it is on the key, in capitals.
+          captureKey={captureKeyRaw.length === 1 ? captureKeyRaw.toUpperCase() : keyCap(captureKeyRaw)}
+          selectedId={adLibSelected}
+          onSelect={setAdLibSelected}
+          namingId={adLibNaming}
+          onNaming={setAdLibNaming}
+          onCapture={captureAdLibHere}
+          onMove={handleMoveAdLib}
+          onName={handleNameAdLib}
+          onDelete={handleRemoveAdLib}
+          onSeek={seek}
+          onClose={() => setAdLibOpen(false)}
+        />
+      )}
 
       {wordsFocus && focusLine && focusLine.type !== 'section' && (
         <div className="lrc-scroll flex flex-col flex-1 min-h-0 overflow-y-auto gap-6 px-5 sm:px-8 pt-2 pb-6">

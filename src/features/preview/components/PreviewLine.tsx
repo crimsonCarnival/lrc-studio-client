@@ -419,10 +419,13 @@ export default function PreviewLine({
     </button>
   );
 
+  // A captured ad-lib that has no text yet is a to-do for the editor, not a lyric.
+  if (isAdLib && !line.text?.trim()) return null;
+
   // Ad-lib lines are shown at half-opacity and indented to visually overlap with parent
   if (isAdLib && !isActive) {
     return (
-      <div className="pl-6 border-l-2 border-violet-500/30">
+      <div className="pl-6 border-l-2 border-adlib/40">
         {inner}
       </div>
     );
@@ -528,7 +531,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
 
   return (
     <p
-      className={`transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : muted ? mutedClass : isPast ? pastClass : `${futureClass}${review ? ' font-medium' : ''}`} ${isDuet ? 'bg-clip-text !text-transparent' : ''}`}
+      className={`transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : muted ? mutedClass : isPast ? pastClass : `${futureClass}${review ? ' font-medium' : ''}`} ${isDuet ? 'bg-clip-text !text-transparent' : line.adLibOf != null ? 'italic !text-adlib-ink' : ''}`}
       style={{ lineHeight: hasReadings ? '2' : undefined, ...duetGradientStyle }}
     >
       {effectiveHasWordTimestamps

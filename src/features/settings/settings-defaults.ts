@@ -82,6 +82,7 @@ export const DEFAULT_SETTINGS = {
     addLine: ['Ctrl+Enter'],
     deleteLine: ['Delete'],
     clearTimestamp: ['Backspace'],
+    captureAdLib: ['a'],
     switchMode: ['Ctrl+m'],
     deselect: ['Escape'],
     showHelp: ['?'],

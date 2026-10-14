@@ -86,6 +86,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
         { keys: resolveShortcut(settings.shortcuts?.mark?.[0] || 'Enter'),       desc: t('shortcuts.mark') },
         { keys: resolveShortcut(settings.shortcuts?.nudgeLeft?.[0] || 'Alt+ArrowLeft'),  desc: t('shortcuts.nudgeLeft', { val: nudge }) },
         { keys: resolveShortcut(settings.shortcuts?.nudgeRight?.[0] || 'Alt+ArrowRight'), desc: t('shortcuts.nudgeRight', { val: nudge }) },
+        { keys: resolveShortcut(settings.shortcuts?.captureAdLib?.[0] || 'a'), desc: t('shortcuts.captureAdLib') },
       ]},
       { section: t('shortcuts.selection.title'), items: [
         { keys: [...resolveModifier(settings.shortcuts?.rangeSelect?.[0] || 'Shift'), t('shortcuts.selection.click')],  desc: t('shortcuts.selection.rangeSelect') },

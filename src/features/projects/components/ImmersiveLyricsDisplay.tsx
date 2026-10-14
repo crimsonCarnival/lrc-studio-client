@@ -211,6 +211,8 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   if (lineSingerHex && !isActive) {
     color = `${lineSingerHex}99`;
   }
+  // Rose is the second voice (redesign sheet 20): it never takes the iris of the main line.
+  if (isAdLib && !lineSingerHex) color = 'var(--color-adlib-ink)';
 
   const isWithinWindow = isActive
     && isEmptyLine
@@ -265,6 +267,9 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
 
   const staggerDelay = dist != null ? `${Math.min(dist * 40, 200)}ms` : '0ms';
 
+  // A captured ad-lib that has no text yet is a to-do for the editor, not a lyric.
+  if (isAdLib && isEmptyLine) return null;
+
   return (
     <div
       ref={ref}
@@ -277,6 +282,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
         animationDelay: staggerDelay,
         cursor: clickable ? 'pointer' : 'default',
         textAlign: alignment,
+        fontStyle: isAdLib ? 'italic' : undefined,
         color,
         textShadow: isActive && activeHighlight === 'glow'
           ? '0 0 20px color-mix(in srgb, var(--color-primary) 50%, transparent)'
