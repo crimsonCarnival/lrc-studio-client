@@ -55,7 +55,7 @@ export function usePageTitle(projectName: string | null = null) {
     }
 
     if (pageTitle) {
-      document.title = `${appName} - ${pageTitle}`;
+      document.title = `${pageTitle} | ${appName}`;
     } else {
       document.title = appName;
     }
