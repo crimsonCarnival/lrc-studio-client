@@ -41,7 +41,7 @@ async function fetchMiniProfile(accountName: string): Promise<MiniProfile | null
   const data = await gqlRequest<{ publicProfile: MiniProfile | null }>(/* GraphQL */ `
     query MiniProfile($accountName: String!) {
       publicProfile(accountName: $accountName) {
-        id accountName displayName avatarUrl bio isVerified
+        id accountName displayName avatarUrl staffRole bio isVerified
         followerCount followingCount projectCount totalStarsReceived
         isFollowedByMe isFollowingMe miniProfileBadgeIds
         country
