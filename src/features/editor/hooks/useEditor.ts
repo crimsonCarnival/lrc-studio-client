@@ -16,6 +16,7 @@ import {
   normalizeLineMode,
   clampWordTime,
 } from '../services/editor.service';
+import { captureAdLib, moveAdLib, isAdLib } from '../services/ad-libs';
 import {
   parseRawTextLine, alignRawTextItems, rawTextKeyOfLine, rawTextKeyOfItem,
   computeCollapsedView, collapsedAncestorKeys, indexMapByIdentity, remapIndexSet,
@@ -962,6 +963,45 @@ export function useEditor({
     });
   }, [setLines]);
 
+  /**
+   * Live capture (redesign sheet 20): drops an unnamed ad-lib at the playhead and returns
+   * its id, so the caller can ask for its text. Works outside sync mode too: hearing an
+   * ad-lib and tapping is the whole gesture.
+   */
+  const handleCaptureAdLib = useCallback((): string | null => {
+    const time = isPlayingRef.current
+      ? (playerRef?.current?.getCurrentTime?.() ?? playbackPositionRef.current)
+      : playbackPositionRef.current;
+    const id = crypto.randomUUID();
+    const result = captureAdLib(linesRef.current, time ?? 0, id);
+    if (!result) {
+      toast.error(t('editor.adLib.needsSyncedLine'), { id: 'adlib-needs-line' });
+      return null;
+    }
+    linesRef.current = result.lines;
+    setLines(result.lines);
+    return id;
+  }, [playerRef, setLines, t]);
+
+  const handleMoveAdLib = useCallback((index: number, time: number) => {
+    setLines((prev) => moveAdLib(prev, index, time));
+  }, [setLines]);
+
+  /** Removes an ad-lib without asking: it is one tap to make and undo brings it back. */
+  const handleRemoveAdLib = useCallback((index: number) => {
+    setLines((prev) => (isAdLib(prev[index]) ? prev.filter((_, i) => i !== index) : prev));
+    setActiveLineIndex((prevIdx) => (prevIdx > index ? prevIdx - 1 : prevIdx));
+  }, [setLines, setActiveLineIndex]);
+
+  const handleNameAdLib = useCallback((index: number, text: string) => {
+    setLines((prev) => {
+      if (!isAdLib(prev[index]) || prev[index].text === text) return prev;
+      const next = [...prev];
+      next[index] = { ...prev[index], text };
+      return next;
+    });
+  }, [setLines]);
+
   const handleAddLine = useCallback(
     (index, lineData = null, { before = false } = {}) => {
       setLines((prev) => {
@@ -1563,6 +1603,10 @@ export function useEditor({
     handleToggleLineMode,
     handleDeleteLine,
     handleToggleAdLib,
+    handleCaptureAdLib,
+    handleMoveAdLib,
+    handleNameAdLib,
+    handleRemoveAdLib,
     handleAddLine,
     handleDragStart,
     handleDragOver,
