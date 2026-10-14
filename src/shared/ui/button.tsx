@@ -1,4 +1,4 @@
-﻿import React from "react"
+import React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 
@@ -107,7 +107,7 @@ function Button({
       data-loading={loading || undefined}
       aria-busy={loading || undefined}
       aria-disabled={loading || undefined}
-      className={cn(buttonVariants({ variant, size, className }), loading && "cursor-progress [&_svg]:hidden [&_.material-symbols-outlined]:hidden")}
+      className={cn(buttonVariants({ variant, size, className }), loading && "cursor-progress [&_svg]:hidden [&_.app-icon]:hidden")}
       onClick={triggerWithHaptic}
       {...props}
     >

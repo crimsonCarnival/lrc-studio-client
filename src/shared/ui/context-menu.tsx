@@ -58,7 +58,7 @@ function ContextMenuItem({
         // Severity you can read (redesign sheet 15): gold = a loss you can undo, red = removal.
         "data-[variant=warning]:text-gold-ink data-[variant=warning]:focus:bg-gold-soft data-[variant=warning]:focus:text-gold-ink",
         "data-[variant=destructive]:text-love-ink data-[variant=destructive]:focus:bg-love-soft data-[variant=destructive]:focus:text-love-ink",
-        "data-[variant=default]:[&>.material-symbols-outlined]:text-subtle",
+        "data-[variant=default]:[&>.app-icon]:text-subtle",
         "data-disabled:pointer-events-none data-disabled:opacity-40",
         "data-[inset]:pl-8",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[18px]",
@@ -117,7 +117,7 @@ function ContextMenuSubTrigger({
       className={cn(
         "flex cursor-pointer select-none items-center gap-3 rounded-[10px] px-3 py-2 min-h-10 coarse:min-h-11 text-base font-medium outline-none",
         "focus:bg-raised focus:text-foreground data-[state=open]:bg-primary-soft data-[state=open]:text-foreground",
-        "[&>.material-symbols-outlined]:text-subtle data-[state=open]:[&>.material-symbols-outlined]:text-primary-ink",
+        "[&>.app-icon]:text-subtle data-[state=open]:[&>.app-icon]:text-primary-ink",
         "data-[inset]:pl-8",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[18px]",
         className

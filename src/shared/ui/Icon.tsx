@@ -1,3 +1,5 @@
+import { ICON_SHAPES, strokeForSize } from './icon-paths';
+
 interface IconProps {
   name: string;
   size?: number;
@@ -5,10 +7,42 @@ interface IconProps {
   className?: string;
 }
 
+/**
+ * An icon by name. Names in LRC Studio's own set (see icon-paths.ts) are drawn as SVG;
+ * the rest fall back to the Material Symbols font. Both carry the `app-icon` class, which
+ * is what other components style and hide icons by.
+ */
 export function Icon({ name, size = 20, filled = false, className }: IconProps) {
+  const shape = ICON_SHAPES[name];
+
+  if (shape) {
+    const solid = shape.solid || (filled && shape.fillable);
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill={solid ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth={strokeForSize(size) * (shape.weight ?? 1)}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        className={`app-icon shrink-0 select-none${className ? ` ${className}` : ''}`}
+        // Inline, so a parent's "size every svg" rule cannot override the size asked for here.
+        style={{
+          width: size,
+          height: size,
+          verticalAlign: 'middle',
+          transform: shape.rotate ? `rotate(${shape.rotate}deg)` : undefined,
+        }}
+      >
+        <path d={shape.d} />
+      </svg>
+    );
+  }
+
   return (
     <span
-      className={`material-symbols-outlined leading-none select-none${className ? ` ${className}` : ''}`}
+      className={`app-icon material-symbols-outlined leading-none select-none${className ? ` ${className}` : ''}`}
       style={{
         fontSize: size,
         fontVariationSettings: `'FILL' ${filled ? 1 : 0}, 'wght' 400, 'GRAD' 0, 'opsz' 24`,
