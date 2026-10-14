@@ -367,8 +367,11 @@ function PublicProjectViewPageInner() {
     >
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-background">
       {/* ── Guest CTA strip ─────────────────────────────────── */}
+      {/* Phones and tablets only. On desktop the lyrics run under the fixed header, so the
+          strip sat hidden behind it while still pushing the page 49px down; the header
+          already has Sign up there. */}
       {!user && (
-        <div className="w-full flex-shrink-0 border-b border-border bg-card/60">
+        <div className="w-full flex-shrink-0 border-b border-border bg-card/60 lg:hidden">
           <div className="flex items-center gap-3 px-4 py-2.5 max-w-screen-xl mx-auto">
             <p className="text-xs flex-1 min-w-0 truncate text-muted-foreground">
               {t('projectView.ctaGuest')}
@@ -410,6 +413,7 @@ function PublicProjectViewPageInner() {
               lines={lines as unknown as DisplayLine[]}
               editorMode={editorMode}
               fullLyrics={fullLyrics}
+              reserveCorner={infoCollapsed}
               showTranslations
               songSingers={songSingers}
               singerColors={singerColors}
@@ -419,18 +423,18 @@ function PublicProjectViewPageInner() {
           {/* Right: info panel — fixed width on desktop, stacked below on mobile.
               Its own min-h-0/overflow-y-auto scrolls internally within the row's
               bounded height; it never pushes the page itself into scrolling.
-              lg:mt-16: on desktop this route drops the layout's top padding so the
-              lyrics run full-bleed behind the fixed header (AppLayout, `lg:pt-0`).
-              The card must not, or its title, cover and collapse toggle sit under
-              the header. 64px is what every other route pads on desktop (`lg:pt-16`). */}
+              On desktop this route drops the layout's top padding so the lyrics run
+              full-bleed behind the fixed header (AppLayout, `lg:pt-0`). The panel does too,
+              so there is no empty band between the header and it; its content starts
+              below the header instead (lg:pt-23 = the 64px header + the card's 28px). */}
           <div
             ref={rightPanelRef}
             tabIndex={0}
             aria-label={t('projectView.aboutProject')}
-            className={`lrc-scroll relative min-h-0 lg:mt-16 lg:w-[400px] xl:w-[460px] lg:flex-shrink-0 overflow-y-auto border-border lg:border-l max-lg:border-t bg-card/40 max-lg:pb-64 ${infoCollapsed ? 'lg:hidden' : ''}`}
+            className={`lrc-scroll relative min-h-0 lg:w-[400px] xl:w-[460px] lg:flex-shrink-0 overflow-y-auto border-border lg:border-l max-lg:border-t bg-card/40 max-lg:pb-64 ${infoCollapsed ? 'lg:hidden' : ''}`}
           >
-            <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20" />
-            <div className="px-5 pt-6 pb-6 lg:px-7 lg:pt-7 flex flex-col gap-4 min-h-full">
+            <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20 lg:top-16" />
+            <div className="px-5 pt-6 pb-6 lg:px-7 lg:pt-23 flex flex-col gap-4 min-h-full">
               <ProjectInfoPanel
                 project={displayProject!}
                 cover={cover}

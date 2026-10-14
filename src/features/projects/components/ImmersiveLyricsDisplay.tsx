@@ -543,6 +543,8 @@ interface ImmersiveLyricsDisplayProps {
   editorMode: string;
   /** Scrollable list of every line instead of the focus stage. */
   fullLyrics?: boolean;
+  /** Desktop: the top-right corner holds another control (the collapsed info panel's toggle). */
+  reserveCorner?: boolean;
   showTranslations?: boolean;
   songSingers?: string[];
   singerColors?: string[];
@@ -554,6 +556,7 @@ export default function ImmersiveLyricsDisplay({
   lines,
   editorMode,
   fullLyrics = false,
+  reserveCorner = false,
   showTranslations = true,
   songSingers = [],
   singerColors = [],
@@ -676,8 +679,9 @@ export default function ImmersiveLyricsDisplay({
       role="group"
       aria-label={t('projectView.alignment')}
       // Phones: a row of its own above the lyrics, so it never covers them. Desktop: floating,
-      // clear of the 64px header the lyrics run underneath (lg:pt-0 on this route).
-      className="z-20 flex w-fit items-center rounded-lg border border-zinc-700/50 bg-zinc-950/70 p-0.5 shadow-lg backdrop-blur-md max-lg:mx-4 max-lg:mt-2 max-lg:self-end lg:absolute lg:top-19 lg:right-4"
+      // in the same row as the info panel's toggle (top-23 = 64px header + 28px), and to its left
+      // while that toggle is showing.
+      className={`z-20 flex w-fit items-center rounded-lg border border-zinc-700/50 bg-zinc-950/70 p-0.5 shadow-lg backdrop-blur-md max-lg:mx-4 max-lg:mt-2 max-lg:self-end lg:absolute lg:top-23 ${reserveCorner ? 'lg:right-18' : 'lg:right-7'}`}
     >
       {(['left', 'center', 'right'] as const).map((align) => {
         const label = t(ALIGN_LABEL_KEYS[align]);
