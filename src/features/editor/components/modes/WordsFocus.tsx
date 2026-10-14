@@ -82,6 +82,8 @@ interface WordTimelineProps {
   /** Index of the word the next mark will stamp, or -1. */
   activeWordIndex: number;
   onSetWordTime: (wordIndex: number, time: number) => void;
+  /** The mark shortcut as the user configured it, already turned into a key-cap label. */
+  markKey: string;
 }
 
 /**
@@ -90,7 +92,7 @@ interface WordTimelineProps {
  * line and its neighbours. Words with no time yet share what is left of the line evenly and
  * cannot be dragged.
  */
-export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex, onSetWordTime }: WordTimelineProps) {
+export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex, onSetWordTime, markKey }: WordTimelineProps) {
   const { t } = useTranslation();
   const trackRef = useRef<HTMLDivElement>(null);
   // Which edge is being dragged. The time itself is written to the line on every
@@ -139,7 +141,7 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
         art="words"
         words={words.map((w) => w.word ?? '').filter(Boolean)}
         title={t('editor.words.emptyTitle')}
-        description={<Trans i18nKey="editor.words.emptyDesc" components={[<Kbd key="0" />]} />}
+        description={<Trans i18nKey="editor.words.emptyDesc" values={{ key: markKey }} components={[<Kbd key="0" />]} />}
       />
     );
   }

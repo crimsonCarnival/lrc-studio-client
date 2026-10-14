@@ -14,3 +14,9 @@ export const KEY_SYMBOLS = {
   Alt: 'Alt',
   Meta: '⌘',
 };
+
+/** A shortcut key as printed on a key cap, e.g. "Enter" -> "↵ Enter". Combos pass through as they are. */
+export function keyCap(key: string): string {
+  const symbol = (KEY_SYMBOLS as Record<string, string>)[key];
+  return (symbol ?? key).trim() || key;
+}

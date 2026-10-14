@@ -28,7 +28,7 @@ import { Button } from '@ui/button';
 import { SegmentedControl } from '@ui/segmented-control';
 import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import { useTranslation } from 'react-i18next';
-import { KEY_SYMBOLS } from '@features/settings/key-symbols';
+import { KEY_SYMBOLS, keyCap } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
@@ -1082,6 +1082,7 @@ export default function Editor({
             playbackPosition={playbackPosition}
             activeWordIndex={playingWordIndex ?? (focusedTimestamp?.lineIndex === activeLineIndex && focusedTimestamp?.type === 'word' && focusedTimestamp.wordIndex != null ? focusedTimestamp.wordIndex : activeWordIndex)}
             onSetWordTime={handleSetWordTime}
+            markKey={keyCap(settings.shortcuts?.mark?.[0] || 'Enter')}
           />
           <div className="mt-auto flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap gap-x-3.5 gap-y-2 text-xs text-foreground/65">
@@ -1091,7 +1092,7 @@ export default function Editor({
               ].map((hint) => (
                 <span key={hint.label} className="inline-flex items-center gap-1.5">
                   <Kbd>
-                    {((KEY_SYMBOLS as Record<string, string>)[hint.key] ?? hint.key).trim() || hint.key}
+                    {keyCap(hint.key)}
                   </Kbd>
                   {hint.label}
                 </span>
