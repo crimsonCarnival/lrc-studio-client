@@ -714,25 +714,29 @@ export default function ImmersiveLyricsDisplay({
       <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
         <ContourLines />
         {alignmentControl}
-        <div className="lrc-scroll relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 py-8 lg:px-14 lg:py-10">
+        {/* Outside the lyrics' centered column on purpose: that column re-centers
+            whenever the visible lines' combined height changes (singer tag added/
+            removed, line count shifts at a section boundary), which dragged this
+            label up and down with it. Pinning it here keeps it fixed regardless. */}
+        {(section?.label || singers.length > 0) && (
+          <p
+            className="relative z-10 shrink-0 px-6 pt-8 lg:px-14 lg:pt-10 text-[11px] lg:text-xs font-bold uppercase tracking-[0.1em] text-success"
+            style={{ textAlign: alignment }}
+          >
+            {section?.label}
+            {section?.label && singers.length > 0 && ' · '}
+            {singers.map((name, idx) => {
+              const hex = singerColors[singerColorIndex(name, songSingers)];
+              return (
+                <span key={`${name}-${idx}`} style={hex ? { color: hex } : undefined}>
+                  {name}{idx < singers.length - 1 ? ', ' : ''}
+                </span>
+              );
+            })}
+          </p>
+        )}
+        <div className={`lrc-scroll relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 pb-8 lg:px-14 lg:pb-10 ${section?.label || singers.length > 0 ? 'pt-3 lg:pt-4' : 'pt-8 lg:pt-10'}`}>
           <div className="my-auto flex flex-col gap-[18px] lg:gap-[22px]">
-            {(section?.label || singers.length > 0) && (
-              <p
-                className="text-[11px] lg:text-xs font-bold uppercase tracking-[0.1em] text-success"
-                style={{ textAlign: alignment }}
-              >
-                {section?.label}
-                {section?.label && singers.length > 0 && ' · '}
-                {singers.map((name, idx) => {
-                  const hex = singerColors[singerColorIndex(name, songSingers)];
-                  return (
-                    <span key={`${name}-${idx}`} style={hex ? { color: hex } : undefined}>
-                      {name}{idx < singers.length - 1 ? ', ' : ''}
-                    </span>
-                  );
-                })}
-              </p>
-            )}
             {focusWindow.map(({ index, step }) => {
               const line = lines[index];
               return (
