@@ -1,3 +1,4 @@
+import { ContourLines } from '@ui/ContourLines';
 import { useRef, useEffect, useCallback, useMemo, forwardRef, useState, Fragment } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
@@ -13,6 +14,7 @@ import { hasCJK, hasKanji, toHiragana, toKatakana } from '@/shared/utils/furigan
 // Theme-token colors: the stage sits on the app background, so text derives
 // from --foreground and stays legible in both the dark and light themes.
 const FG = 'var(--foreground)';
+const PAST = 'var(--color-past)';
 const fgAlpha = (pct: number) => `color-mix(in srgb, var(--foreground) ${pct}%, transparent)`;
 
 export interface DisplayLine {
@@ -61,7 +63,8 @@ function getDistStyle(dist: number | null) {
 // stepping down in size and contrast. Keyed by offset from the active line;
 // the dimming is opacity on the foreground token, so it holds in both themes.
 const FOCUS_STYLE: Record<number, { size: string; opacity: number }> = {
-  [-1]: { size: 'clamp(1.125rem, 1.8vw, 1.625rem)', opacity: 0.3 },
+  // The line just sung stays readable: its colour, not its opacity, says it is past.
+  [-1]: { size: 'clamp(1.125rem, 1.8vw, 1.625rem)', opacity: 0.75 },
   0: { size: 'clamp(2.5rem, 4.7vw, 4.25rem)', opacity: 1 },
   1: { size: 'clamp(1.375rem, 2.4vw, 2.125rem)', opacity: 0.72 },
   2: { size: 'clamp(1.25rem, 2.1vw, 1.875rem)', opacity: 0.42 },
@@ -133,6 +136,8 @@ interface ImmersiveLineProps {
   baseFontRem?: number;
   /** Offset from the active line on the focus stage; unset in the full-lyrics list. */
   focusStep?: number;
+  /** Already sung. Past lines keep a quieter iris instead of fading to grey (redesign sheet 12). */
+  isPast?: boolean;
 }
 
 // ── Single lyric line ────────────────────────────────────────
@@ -155,6 +160,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
     readingFormat,
     baseFontRem = BASE_FONT_REM.normal,
     focusStep,
+    isPast = false,
   },
   ref,
 ) {
@@ -201,7 +207,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   // inactive lines, where they're the point: telling lines apart at a glance.
   // On the active line they fought the karaoke fill, which is already the
   // color doing the work there.
-  let color = isActive || focus ? FG : dist === 1 ? nearer : faded;
+  let color = isActive ? FG : isPast ? PAST : focus ? FG : dist === 1 ? nearer : faded;
   if (lineSingerHex && !isActive) {
     color = `${lineSingerHex}99`;
   }
@@ -349,7 +355,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
             const wGlobalIdx = wSingerName ? singerColorIndex(wSingerName, songSingers) : null;
             const wColor = wGlobalIdx !== null && singerColors[wGlobalIdx] ? singerColors[wGlobalIdx] : null;
 
-            const fillHighlightColor = wColor || 'var(--color-primary)';
+            const fillHighlightColor = wColor || 'var(--color-primary-ink)';
             const isWordFilled = isActive && startTime != null && endTime != null;
             let progress = 0;
             if (isWordFilled && playbackPosition != null) {
@@ -375,7 +381,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
                     className="absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none karaoke-fill-glow"
                     style={{
                       color: fillHighlightColor,
-                      textShadow: `0 0 12px color-mix(in srgb, ${fillHighlightColor} 50%, transparent)`,
+                      textShadow: `0 0 22px color-mix(in srgb, ${fillHighlightColor} 45%, transparent)`,
                       clipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
                       WebkitClipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
                       direction: 'ltr',
@@ -693,9 +699,10 @@ export default function ImmersiveLyricsDisplay({
     const singers = lines[anchor]?.singers ?? section?.singers ?? [];
 
     return (
-      <div className="relative flex-1 min-h-0 flex flex-col">
+      <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
+        <ContourLines />
         {alignmentControl}
-        <div className="lrc-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 py-8 lg:px-14 lg:py-10">
+        <div className="lrc-scroll relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 py-8 lg:px-14 lg:py-10">
           <div className="my-auto flex flex-col gap-[18px] lg:gap-[22px]">
             {(section?.label || singers.length > 0) && (
               <p
@@ -722,6 +729,7 @@ export default function ImmersiveLyricsDisplay({
                   line={line}
                   dist={Math.abs(step)}
                   focusStep={step}
+                  isPast={step < 0}
                   onClick={() => handleLineClick(line)}
                   hasSyncedLines={hasSyncedLines}
                   showTranslations={showTranslations}
@@ -747,6 +755,7 @@ export default function ImmersiveLyricsDisplay({
 
   return (
     <div className="relative flex-1 min-h-0 overflow-hidden">
+      <ContourLines />
       {alignmentControl}
 
       {/* Top fade */}
@@ -765,7 +774,7 @@ export default function ImmersiveLyricsDisplay({
       {/* Scroll container — hides scrollbar visually */}
       <div
         ref={containerRef}
-        className="h-full overflow-y-auto overflow-x-hidden"
+        className="relative h-full overflow-y-auto overflow-x-hidden"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         <style>{`.immersive-scroll::-webkit-scrollbar { display: none; }`}</style>
@@ -798,6 +807,7 @@ export default function ImmersiveLyricsDisplay({
                 ref={isActive ? activeRef : null}
                 line={line}
                 dist={dist}
+                isPast={currentIndex >= 0 && i < currentIndex}
                 onClick={() => handleLineClick(line)}
                 hasSyncedLines={hasSyncedLines}
                 showTranslations={showTranslations}

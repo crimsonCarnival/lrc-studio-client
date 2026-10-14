@@ -420,7 +420,8 @@ body,
 
 /* Seamless karaoke fill overlay */
 .karaoke-fill-glow {
-  text-shadow: 0 0 10px color-mix(in srgb, var(--color-primary) 60%, transparent), 0 0 20px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  /* Glow only on sung text, in the colour it is sung in (redesign sheet 12). */
+  text-shadow: 0 0 22px color-mix(in srgb, currentColor 45%, transparent);
 }
 
 .karaoke-fill-mask {
@@ -862,6 +863,7 @@ audio::-webkit-media-controls-panel {
   --color-foam-soft: var(--foam-soft);
   --color-mark: var(--mark);
   --color-silver: var(--silver);
+  --color-past: var(--past);
   --color-primary-strong: var(--primary-strong);
   --color-knob: var(--knob);
   --color-tip: var(--tip);
@@ -962,6 +964,13 @@ audio::-webkit-media-controls-panel {
 .star-pop { animation: star-pop 360ms var(--ease-bounce); }
 @media (prefers-reduced-motion: reduce) {
   .star-pop { animation: none; }
+}
+
+/* Contour lines behind the lyric stage drift 40px and back (redesign sheet 12). */
+@keyframes contour-drift { to { transform: translateX(-40px); } }
+.contour-drift { animation: contour-drift 18s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) {
+  .contour-drift { animation: none; }
 }
 
 /* Empty states (redesign sheet 11): the waiting playhead breathes, the card you could add floats. */
@@ -1091,6 +1100,7 @@ audio::-webkit-media-controls-panel {
   --foam-soft: rgba(86, 148, 159, 0.14);
   --mark: rgba(234, 157, 52, 0.24);
   --silver: #797593;
+  --past: #8a77a3;
   --primary-strong: rgba(144, 122, 169, 0.34);
   --knob: #fffaf3;
   --tip: #575279;
@@ -1165,6 +1175,7 @@ audio::-webkit-media-controls-panel {
   --foam-soft: rgba(156, 207, 216, 0.14);
   --mark: rgba(246, 193, 119, 0.22);
   --silver: #cfcbe6;
+  --past: #a48cc3;
   --primary-strong: rgba(196, 167, 231, 0.32);
   --knob: #e0def4;
   --tip: #393552;

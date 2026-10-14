@@ -1,3 +1,4 @@
+import { ContourLines } from '@ui/ContourLines';
 import { useRef, useEffect, useMemo } from 'react';
 import type { TFunction } from 'i18next';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -414,7 +415,9 @@ export default function PreviewViewport({
   }
 
   return (
-    <div className="relative flex-1 min-h-0">
+    <div className="relative flex-1 min-h-0 overflow-hidden">
+      {/* Behind the stage only: the review list is a working surface, not a display. */}
+      {!isReview && <ContourLines />}
       {content}
       <ScrollProgress containerRef={containerRef} className="absolute bottom-0 inset-x-0 h-[2px]" />
     </div>

@@ -490,10 +490,11 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
   const words = line.words || [];
   const effectiveHasWordTimestamps = hasWordTimestamps && !skipMainFill;
   const highlightMode = settings.editor?.display?.activeHighlight;
-  // Active = white (fill effect provides green); past/completed = green; future = dim
-  const activeClass = `${activeFontSizes[sizeOption]} font-bold ${review ? 'font-heading' : 'font-lyrics'} text-zinc-100 ${highlightMode === 'glow' ? 'glow-line' : ''} ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`;
-  const pastClass = `${inactiveFontSizes[sizeOption]} font-lyrics ${highlightMode === 'dim' ? 'text-zinc-700' : 'text-primary'}`;
-  const futureClass = `${inactiveFontSizes[sizeOption]} font-lyrics ${highlightMode === 'dim' ? 'text-zinc-800' : 'text-zinc-600'}`;
+  // Redesign sheet 12: sung lines keep a quieter iris, the current line is plain text that the
+  // fill turns iris, and lines still to come are muted.
+  const activeClass = `${activeFontSizes[sizeOption]} font-bold ${review ? 'font-heading' : 'font-lyrics'} text-foreground ${highlightMode === 'glow' ? 'glow-line' : ''} ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`;
+  const pastClass = `${inactiveFontSizes[sizeOption]} font-lyrics ${highlightMode === 'dim' ? 'text-zinc-700' : 'text-past'}`;
+  const futureClass = `${inactiveFontSizes[sizeOption]} font-lyrics ${highlightMode === 'dim' ? 'text-zinc-800' : 'text-faint'}`;
   // Review rows: past and untimed lines recede instead of taking the accent colour.
   const mutedClass = `${inactiveFontSizes[sizeOption]} font-lyrics font-medium ${highlightMode === 'dim' ? 'text-zinc-700' : 'text-foreground/65'}`;
 
@@ -595,7 +596,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
                 <span className={isActive ? (wordSingerColorClass || customHex ? 'opacity-50 transition-colors duration-300' : 'text-zinc-500 transition-colors duration-300') : ''}>{wordContent}</span>
                 {isActive && progress > 0 && (
                   <span
-                    className={`absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none karaoke-fill-glow ${wordSingerColorClass || (!customHex ? 'text-primary' : '')}`}
+                    className={`absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none karaoke-fill-glow ${wordSingerColorClass || (!customHex ? 'text-primary-ink' : '')}`}
                     style={{
                       ...(customHex ? getCustomColorStyle(customHex, true) : {}),
                       clipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,
