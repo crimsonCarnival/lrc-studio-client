@@ -10,6 +10,8 @@ import { Button } from '@ui/button';
 import { getLeaderboard } from './leaderboard.service';
 import type { LeaderboardSort, LeaderboardSortDirection, LeaderboardTimeframe } from './leaderboard.service';
 import { LogoLoader } from '@ui/LogoLoader';
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 
 interface LeaderEntry {
   id?: string;
@@ -25,14 +27,6 @@ interface LeaderEntry {
   projectCount?: number;
   rankScore?: number | null;
   periodXp?: number | null;
-}
-
-interface PodiumStyle {
-  accent: string;
-  medal: string;
-  glow: string;
-  ring: string;
-  label: string;
 }
 
 type TimeFilter = 'week' | 'month' | 'all';
@@ -102,26 +96,28 @@ function formatCount(n?: number) {
   return String(n);
 }
 
-const PODIUM: Record<number, PodiumStyle> = {
-  1: { accent: 'text-warning', medal: 'emoji_events', glow: 'bg-warning/10', ring: 'ring-2 ring-warning', label: 'text-warning' },
-  2: { accent: 'text-zinc-300', medal: 'emoji_events', glow: 'bg-zinc-300/10', ring: 'ring-2 ring-zinc-300', label: 'text-zinc-200' },
-  3: { accent: 'text-orange-500', medal: 'emoji_events', glow: 'bg-orange-500/10', ring: 'ring-2 ring-orange-500', label: 'text-orange-400' },
+/** Medal colour of the first three places (redesign sheet 10). */
+const PODIUM: Record<number, string> = {
+  1: 'var(--color-gold)',
+  2: 'var(--color-silver)',
+  3: 'var(--color-rose)',
 };
 
 function RankBadge({ pos, podium }: { pos: number; podium?: boolean }) {
   const { t } = useTranslation();
-  const p = podium ? PODIUM[pos] : undefined;
-  if (p) {
+  const medal = podium ? PODIUM[pos] : undefined;
+  if (medal) {
     return (
-      <div className="flex items-center justify-center">
-        <Icon name={p.medal} size={18} className={p.accent} />
-        <span className={`ml-1 text-sm font-bold ${p.accent}`}>{pos}</span>
-      </div>
+      <svg width="36" height="40" viewBox="0 0 36 40" role="img" aria-label={t('common.rankN', { pos })} className="mx-auto block" style={{ color: medal }}>
+        <path d="M10 26l-4 12 6-3 4 5 3-10 M26 26l4 12-6-3-4 5-3-10" fill="currentColor" fillOpacity=".35" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <circle cx="18" cy="17" r="14" fill="currentColor" fillOpacity=".18" stroke="currentColor" strokeWidth="2" />
+        <text x="18" y="22.5" textAnchor="middle" fill="currentColor" className="font-heading text-[15px] font-extrabold">{pos}</text>
+      </svg>
     );
   }
   return (
     <span
-      className="text-sm tabular-nums w-full text-center text-zinc-500 font-mono font-semibold"
+      className="block w-full text-center font-mono text-[15px] font-semibold tabular-nums text-subtle"
       aria-label={t('common.rankN', { pos })}
     >
       {pos}
@@ -129,26 +125,24 @@ function RankBadge({ pos, podium }: { pos: number; podium?: boolean }) {
   );
 }
 
-function UserAvatar({ avatarUrl, name, ring }: { avatarUrl?: string; name?: string; ring?: string }) {
-  if (avatarUrl) {
-    return (
-      <LazyImage
-        src={avatarUrl}
-        alt={name}
-        className={`size-10 rounded-full object-cover flex-shrink-0 ${ring ?? ''}`}
-      />
-    );
-  }
+function UserAvatar({ avatarUrl, name, handle, medal }: { avatarUrl?: string; name?: string; handle: string; medal?: string }) {
+  // A podium place rings the avatar in its medal colour, 2px clear of it.
+  const ring = medal ? { boxShadow: `0 0 0 2px var(--background), 0 0 0 3.5px ${medal}` } : undefined;
   return (
-    <div className={`size-10 rounded-full bg-gradient-to-br from-primary/80 to-accent-blue flex items-center justify-center flex-shrink-0 font-bold text-zinc-950 text-sm select-none ${ring ?? ''}`}>
-      {(name || '?')[0].toUpperCase()}
+    <div className="size-10 shrink-0 overflow-hidden rounded-full" style={ring}>
+      {avatarUrl
+        ? <LazyImage src={avatarUrl} alt={name} className="size-full object-cover" />
+        : <InitialsAvatar name={name} handle={handle} className="size-full text-base" />}
     </div>
   );
 }
-
 export default function LeaderboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user: me } = useAuthContext();
+  // Your own row gets a soft iris band, wherever it lands.
+  const mine = (entry: LeaderEntry) => !!me?.accountName && entry.accountName === me.accountName;
+  const MINE_ROW = 'bg-primary-soft inset-ring inset-ring-primary-strong';
   const [searchParams, setSearchParams] = useSearchParams();
 
   const readParam = <T extends string>(key: string, allowed: readonly T[], fallback: T): T => {
@@ -268,7 +262,7 @@ export default function LeaderboardPage() {
           type="button"
           onClick={() => toggleSort(column)}
           aria-label={t('badges.leaderboard.sortByColumn', { column: label })}
-          className={`group/sort inline-flex items-center justify-end gap-0.5 min-h-11 w-full rounded-md px-1 text-xs font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${column === sortBy ? 'text-zinc-200' : 'text-zinc-500 hover:text-zinc-300'}`}
+          className={`group/sort inline-flex items-center justify-end gap-0.5 min-h-11 w-full rounded-md px-1 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${column === sortBy ? 'text-foreground' : 'text-subtle hover:text-foreground'}`}
         >
           <span>{label}</span>
           {sortIcon(column)}
@@ -349,7 +343,7 @@ export default function LeaderboardPage() {
             <p className="text-sm text-muted-foreground">{t(isPeriod ? 'badges.leaderboard.emptyPeriod' : 'badges.leaderboard.empty')}</p>
           </div>
         ) : (
-          <div className="glass rounded-2xl overflow-hidden border border-zinc-800/60">
+          <div className="overflow-hidden rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl">
             {/* The stacked card list cannot host table headers, so below lg the
                 same sort state is driven by this column select + direction
                 toggle. */}
@@ -394,18 +388,18 @@ export default function LeaderboardPage() {
                 return (
                   <li key={entry.id ?? entry.accountName}>
                     <Link to={`/profile/${entry.accountName}`}
-                      className="block w-full text-left px-4 py-3.5 hover:bg-zinc-800/30 transition-colors"
+                      className={`block w-full text-left px-4 py-3.5 transition-colors ${mine(entry) ? MINE_ROW : 'hover:bg-raised'}`}
                     >
                       <div className="flex items-center gap-3">
                         <div className="shrink-0"><RankBadge pos={i + 1} podium={isRanking} /></div>
-                        <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} ring={podiumOf(i + 1)?.ring} />
+                        <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} handle={entry.accountName} medal={podiumOf(i + 1)} />
                         <div className="flex flex-col min-w-0 flex-1">
-                          <span className={`font-semibold text-sm truncate ${podiumOf(i + 1)?.label ?? 'text-zinc-100'}`}>
+                          <span className="truncate text-[15px] font-semibold text-foreground">
                             {entry.displayName || entry.accountName}
                           </span>
-                          <span className="text-xs text-zinc-500 truncate">
+                          <span className="truncate font-mono text-xs font-medium text-subtle">
                             {entry.accountName}
-                            {(entry.progression?.level ?? 0) > 0 && ` · Nv. ${entry.progression!.level}`}
+                            {(entry.progression?.level ?? 0) > 0 && ` · ${t('common.levelShort', { level: entry.progression!.level })}`}
                           </span>
                         </div>
                       </div>
@@ -426,7 +420,7 @@ export default function LeaderboardPage() {
             <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[780px]">
                 <thead>
-                  <tr className="border-b border-zinc-800 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                  <tr className="border-b border-hl font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-subtle">
                     <th className="py-4 px-4 w-16 text-center">
                       <span aria-hidden="true">#</span>
                       <span className="sr-only">{t('badges.leaderboard.rankCol')}</span>
@@ -437,12 +431,12 @@ export default function LeaderboardPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-800/50">
+                <tbody>
                   {users.map((entry, i) => {
                     return (
                       <tr
                         key={entry.id ?? entry.accountName}
-                        className="hover:bg-zinc-800/30 transition-colors group cursor-pointer"
+                        className={`group cursor-pointer transition-colors ${mine(entry) ? MINE_ROW : 'hover:bg-raised'}`}
                         onClick={() => navigate(`/profile/${entry.accountName}`)}
                       >
                         <td className="py-3 px-4 text-center">
@@ -450,34 +444,34 @@ export default function LeaderboardPage() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-4">
-                            <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} ring={podiumOf(i + 1)?.ring} />
+                            <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} handle={entry.accountName} medal={podiumOf(i + 1)} />
                             <div className="flex flex-col">
-                              <span className={`font-semibold text-[15px] ${podiumOf(i + 1)?.label ?? 'text-zinc-100'}`}>
+                              <span className="text-[17px] font-semibold leading-tight text-foreground">
                                 {entry.displayName || entry.accountName}
                               </span>
-                              <span className="text-xs text-zinc-500 mt-0.5">
+                              <span className="mt-0.5 font-mono text-xs font-medium text-subtle">
                                 {entry.accountName}
-                                {(entry.progression?.level ?? 0) > 0 && ` · Nv. ${entry.progression!.level}`}
+                                {(entry.progression?.level ?? 0) > 0 && ` · ${t('common.levelShort', { level: entry.progression!.level })}`}
                               </span>
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-right tabular-nums text-zinc-400 text-[15px]">
+                        <td className="py-3 px-4 text-right font-mono text-sm font-semibold tabular-nums text-subtle">
                           {formatCount(entry.projectCount ?? 0)}
                         </td>
-                        <td className="py-3 px-4 text-right tabular-nums text-zinc-200 font-semibold text-[15px]">
+                        <td className="py-3 px-4 text-right font-mono text-sm font-semibold tabular-nums text-foreground">
                           {formatCount(entry.stats?.syncedLines ?? 0)}
                         </td>
-                        <td className="py-3 px-4 text-right tabular-nums text-zinc-400 text-[15px]">
-                          {podiumOf(i + 1) ? <span className="text-warning font-semibold">{formatCount(entry.totalStarsReceived ?? 0)}</span> : formatCount(entry.totalStarsReceived ?? 0)}
+                        <td className="py-3 px-4 text-right font-mono text-sm font-semibold tabular-nums text-subtle">
+                          {formatCount(entry.totalStarsReceived ?? 0)}
                         </td>
-                        <td className="py-3 px-4 text-right tabular-nums text-zinc-200 font-bold text-[15px]">
+                        <td className="py-3 px-4 text-right font-mono text-sm font-semibold tabular-nums text-subtle">
                           {formatTime(entry.stats?.minutesSynced, entry.stats?.secondsSynced)}
                         </td>
-                        <td className="py-3 px-4 text-right tabular-nums text-primary/80 font-bold text-[15px]">
+                        <td className="py-3 px-4 text-right font-mono text-sm font-semibold tabular-nums text-gold-ink">
                           {xpOf(entry).toLocaleString()}
                         </td>
-                        <td className="py-3 px-4 text-right tabular-nums text-zinc-400 text-[15px]">
+                        <td className="py-3 px-4 text-right font-mono text-sm font-semibold tabular-nums text-subtle">
                           {scoreOf(entry)}
                         </td>
                       </tr>

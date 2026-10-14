@@ -1,3 +1,4 @@
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -57,9 +58,7 @@ export default function BlockedUsersSettings({ searchTerm }: { searchTerm?: stri
                   {u.avatarUrl ? (
                     <LazyImage src={u.avatarUrl} alt={name} className="size-9 rounded-lg object-cover" />
                   ) : (
-                    <div className="size-9 rounded-lg bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center font-bold text-zinc-950 select-none">
-                      {(name || '?')[0].toUpperCase()}
-                    </div>
+                    <InitialsAvatar name={(name || '?')} handle={u.accountName} className="size-9 rounded-lg" />
                   )}
                 </Link>
                 <div className="min-w-0 flex-1">

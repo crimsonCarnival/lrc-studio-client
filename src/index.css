@@ -861,6 +861,7 @@ audio::-webkit-media-controls-panel {
   --color-foam-ink: var(--foam-ink);
   --color-foam-soft: var(--foam-soft);
   --color-mark: var(--mark);
+  --color-silver: var(--silver);
   --color-primary-strong: var(--primary-strong);
   --color-knob: var(--knob);
   --color-tip: var(--tip);
@@ -1080,6 +1081,7 @@ audio::-webkit-media-controls-panel {
   --foam-ink: #286983;
   --foam-soft: rgba(86, 148, 159, 0.14);
   --mark: rgba(234, 157, 52, 0.24);
+  --silver: #797593;
   --primary-strong: rgba(144, 122, 169, 0.34);
   --knob: #fffaf3;
   --tip: #575279;
@@ -1153,6 +1155,7 @@ audio::-webkit-media-controls-panel {
   --foam-ink: #9ccfd8;
   --foam-soft: rgba(156, 207, 216, 0.14);
   --mark: rgba(246, 193, 119, 0.22);
+  --silver: #cfcbe6;
   --primary-strong: rgba(196, 167, 231, 0.32);
   --knob: #e0def4;
   --tip: #393552;

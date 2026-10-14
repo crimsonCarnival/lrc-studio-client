@@ -1,3 +1,4 @@
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -97,9 +98,7 @@ export function SuggestedUsers({ limit = 8 }: { limit?: number }) {
                           className="size-9 rounded-full object-cover shrink-0"
                         />
                       ) : (
-                        <div className="size-9 rounded-full bg-gradient-to-br from-primary/50 to-violet-500/50 flex items-center justify-center text-sm font-bold text-white shrink-0 select-none">
-                          {(u.displayName || u.accountName || '?').charAt(0).toUpperCase()}
-                        </div>
+                        <InitialsAvatar name={(u.displayName || u.accountName || '?')} handle={u.accountName} className="size-9 rounded-full text-sm shrink-0" />
                       )}
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-white truncate">

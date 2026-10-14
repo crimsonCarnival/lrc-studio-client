@@ -1,3 +1,4 @@
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useRef } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -96,9 +97,7 @@ export default function AvatarUpload() {
         ) : hasAvatar ? (
           <LazyImage src={user!.avatarUrl!} alt={t('profile.avatarAlt')} className="size-full object-cover" />
         ) : (
-          <div className="size-full flex items-center justify-center bg-gradient-to-br from-primary/80 to-accent-purple font-bold text-zinc-950 text-[40px] select-none">
-            {(user?.displayName || user?.accountName || '?')[0].toUpperCase()}
-          </div>
+          <InitialsAvatar name={(user?.displayName || user?.accountName || '?')} handle={user?.accountName} className="size-full text-[40px]" />
         )}
       </button>
 

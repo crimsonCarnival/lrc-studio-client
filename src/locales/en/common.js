@@ -40,6 +40,7 @@ export default {
   localNetwork: "Local Network",
   rankN: "Rank {{pos}}",
   levelN: "Level {{level}}",
+  levelShort: "Lv. {{level}}",
   removeItem: "Remove {{name}}",
   deleteItem: "Delete {{name}}",
   loadError: "Failed to load. Please try again.",

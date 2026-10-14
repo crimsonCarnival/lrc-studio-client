@@ -1,3 +1,4 @@
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -93,9 +94,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
               {u.avatarUrl ? (
                 <LazyImage src={u.avatarUrl} alt={u.accountName} className="size-9 rounded-xl object-cover" />
               ) : (
-                <div className="size-9 rounded-xl bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center font-bold text-zinc-950 text-sm select-none">
-                  {(u.displayName || u.accountName)[0].toUpperCase()}
-                </div>
+                <InitialsAvatar name={(u.displayName || u.accountName)} handle={u.accountName} className="size-9 rounded-xl text-sm" />
               )}
               {presence.isOnline(u.id) && <OnlineDot />}
             </div>

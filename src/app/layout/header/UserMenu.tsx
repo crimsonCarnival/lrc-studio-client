@@ -1,3 +1,4 @@
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { guardedLinkClick } from './guarded-link-click';
@@ -83,9 +84,7 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
           <PopoverTrigger className="relative z-[110] ml-1 block size-10 coarse:size-11 cursor-pointer overflow-hidden rounded-full bg-primary-soft shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--hl)] transition-shadow duration-[var(--duration-state)] outline-none hover:shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--subtle)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-solid focus-visible:outline-focus">
             {user?.avatarUrl
               ? <LazyImage src={user.avatarUrl} alt={user?.displayName || user?.accountName || user?.email || ''} className="size-full object-cover" />
-              : <div className="size-full grid place-items-center font-heading text-[17px] font-bold text-primary-ink">
-                {(user?.displayName || user?.accountName || user?.email || '?').charAt(0).toUpperCase()}
-              </div>}
+              : <InitialsAvatar name={user?.displayName || user?.accountName || user?.email} handle={user?.accountName} className="size-full text-[17px]" />}
           </PopoverTrigger>
           {user?.email && !user?.isVerified && (
             <Tip content={t('auth.verification.avatarBadge')}>

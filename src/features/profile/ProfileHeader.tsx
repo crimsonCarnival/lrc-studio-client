@@ -6,6 +6,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Icon } from '@/shared/ui/Icon';
 import { LevelBadge } from '@ui/LevelBadge';
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { BadgeList } from '@/features/badges/BadgeList';
 import { Tip } from '@/shared/ui/tip';
 import { CountryFlag } from '@/shared/ui/CountryFlag';
@@ -17,7 +18,7 @@ import { useStreakResetHint } from '@/shared/hooks/useStreakResetHint';
 import { formatDistanceToNow } from 'date-fns';
 import { es as esLocale, enUS as enLocale } from 'date-fns/locale';
 
-function AvatarBadge({ avatarUrl, name, isOnline, size = 'lg' }: { avatarUrl?: string | null; name: string; isOnline?: boolean; size?: 'lg' | 'sm' }) {
+function AvatarBadge({ avatarUrl, name, handle, isOnline, size = 'lg' }: { avatarUrl?: string | null; name: string; handle?: string | null; isOnline?: boolean; size?: 'lg' | 'sm' }) {
   const sizeClass = size === 'lg' ? 'size-28 sm:size-32 text-5xl rounded-[1.5rem]' : 'size-16 text-2xl rounded-xl';
   if (avatarUrl) {
     return (
@@ -35,8 +36,9 @@ function AvatarBadge({ avatarUrl, name, isOnline, size = 'lg' }: { avatarUrl?: s
   }
   return (
     <div className="relative inline-block shrink-0">
-      <div className={`${sizeClass} bg-gradient-to-br from-primary/80 to-accent-purple flex items-center justify-center border border-border shadow-inner-highlight ring-4 ring-zinc-900 font-bold text-zinc-950 select-none`}>
-        {(name || '?')[0].toUpperCase()}
+      {/* bg-background under the tint, so the waveform cover does not show through it. */}
+      <div className={`${sizeClass} overflow-hidden bg-background border border-border shadow-inner-highlight ring-4 ring-zinc-900`}>
+        <InitialsAvatar name={name} handle={handle} className="size-full" />
       </div>
       {isOnline && (
         <span className="absolute -bottom-1 -right-1 size-5 rounded-full bg-green-500 border-[3px] border-zinc-900" />
@@ -127,7 +129,8 @@ export function ProfileHeader({
   const xpForNext = (level + 1) * (level + 1) * 100;
   const progress = xp - xpForLevel;
   const needed = xpForNext - xp;
-  const xpTip = `${xp.toLocaleString()} XP · ${needed.toLocaleString()} to Lv.${level + 1} (${Math.round((progress / (xpForNext - xpForLevel)) * 100)}%)`;
+  const xpPct = Math.max(0, Math.min(100, Math.round((progress / (xpForNext - xpForLevel)) * 100)));
+  const xpTip = `${xp.toLocaleString()} XP · ${needed.toLocaleString()} to Lv.${level + 1} (${xpPct}%)`;
   const streakCurrent = profile.streak?.current ?? 0;
   const streakLongest = profile.streak?.longest ?? 0;
   const streakResetHint = useStreakResetHint();
@@ -146,7 +149,7 @@ export function ProfileHeader({
 
       <div className="px-6 sm:px-8 pb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
       <div className="-mt-14 sm:-mt-16">
-        <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} isOnline={isOnline} />
+        <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} handle={profile.accountName} isOnline={isOnline} />
       </div>
 
       <div className="flex-1 min-w-0 w-full text-center sm:text-left flex flex-col pt-1 sm:pt-4">
@@ -158,8 +161,8 @@ export function ProfileHeader({
             <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
               {badgeIds.length > 0 && <BadgeList ids={badgeIds} max={3} />}
               <Tip content={xpTip} side="bottom">
-                <span className="bg-primary/20 text-primary-light border border-primary/30 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider cursor-default shadow-glow">
-                  {t('profile.levelLabel')} {level}
+                <span className="inline-flex h-6 items-center rounded-full bg-primary-soft px-2.5 font-mono text-[11px] font-semibold tracking-[0.08em] text-primary-ink cursor-default">
+                  {t('common.levelShort', { level })}
                 </span>
               </Tip>
               {(streakCurrent > 0 || streakLongest > 0) && (
@@ -167,9 +170,9 @@ export function ProfileHeader({
                   content={<span className="flex flex-col gap-0.5"><span>{t('profile.streakLongest', { count: streakLongest })}</span><span className="text-muted-foreground">{streakResetHint}</span></span>}
                   side="bottom"
                 >
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border cursor-default ${streakCurrent > 0
-                    ? 'bg-orange-500/15 text-orange-400 border-orange-500/30'
-                    : 'bg-zinc-800/50 text-zinc-500 border-zinc-700'}`}>
+                  <span className={`inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs font-semibold cursor-default ${streakCurrent > 0
+                    ? 'bg-gold-soft text-gold-ink'
+                    : 'bg-raised text-subtle'}`}>
                     <Icon name="local_fire_department" size={14} />
                     {streakCurrent > 0 ? t('profile.streakDays', { count: streakCurrent }) : t('profile.streakNone')}
                   </span>
@@ -260,6 +263,25 @@ export function ProfileHeader({
             <span className="italic text-zinc-500">{t('profile.noBio')}</span>
           )}
         </p>
+
+        {/* Level and XP (redesign sheet 10): where you are, and how far the next level is. */}
+        <div className="mt-4 flex w-full max-w-sm flex-col gap-2 self-center sm:self-start">
+          <span className="inline-flex items-center gap-1.5 self-center font-mono text-[13px] font-medium text-gold-ink sm:self-start">
+            <Icon name="bolt" size={14} />
+            {t('profile.xpProgress', { xp: xp.toLocaleString(), next: xpForNext.toLocaleString() })}
+          </span>
+          <div
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={xpPct}
+            aria-label={t('profile.xpToNext', { xp: needed.toLocaleString(), level: level + 1 })}
+            className="h-2 overflow-hidden rounded-[4px] bg-hl"
+          >
+            <div className="h-full rounded-[4px] bg-linear-to-r from-iris to-gold" style={{ width: `${xpPct}%` }} />
+          </div>
+          <span className="text-left text-sm text-subtle">{t('profile.xpToNext', { xp: needed.toLocaleString(), level: level + 1 })}</span>
+        </div>
 
         {profile.totalForksReceived > 0 && (
           <p className="text-xs text-primary/70 mt-3 font-medium">

@@ -1,3 +1,4 @@
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { TFunction } from 'i18next';
@@ -100,9 +101,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
           {actor.avatarUrl ? (
             <img src={actor.avatarUrl} alt={actor.displayName || actor.accountName} referrerPolicy="no-referrer" className="w-9 h-9 rounded-full object-cover" />
           ) : (
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary/50 to-violet-500/50 flex items-center justify-center text-sm font-bold text-white">
-              {(actor.displayName || actor.accountName || '?').charAt(0).toUpperCase()}
-            </div>
+            <InitialsAvatar name={(actor.displayName || actor.accountName || '?')} handle={actor.accountName} className="w-9 h-9 rounded-full text-sm" />
           )}
         </Link>
       </UserHoverCard>

@@ -1,3 +1,4 @@
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { UserHoverCard } from '@ui/UserHoverCard';
@@ -193,9 +194,7 @@ function PeopleYouMightKnow({ excludeAccountName }: { excludeAccountName?: strin
               {u.avatarUrl ? (
                 <img src={u.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-7 rounded-full object-cover shrink-0" />
               ) : (
-                <div className="size-7 rounded-full bg-gradient-to-br from-primary/50 to-violet-500/50 flex items-center justify-center text-xs font-bold text-white shrink-0 select-none">
-                  {(u.displayName || u.accountName || '?').charAt(0).toUpperCase()}
-                </div>
+                <InitialsAvatar name={(u.displayName || u.accountName || '?')} handle={u.accountName} className="size-7 rounded-full text-xs shrink-0" />
               )}
               <div className="min-w-0">
                 <p className="text-xs font-medium text-foreground truncate">{u.displayName || u.accountName}</p>

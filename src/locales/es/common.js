@@ -40,6 +40,7 @@ export default {
   localNetwork: "Red local",
   rankN: "Puesto {{pos}}",
   levelN: "Nivel {{level}}",
+  levelShort: "Nv. {{level}}",
   removeItem: "Quitar {{name}}",
   deleteItem: "Eliminar {{name}}",
   loadError: "Error al cargar. Por favor, inténtalo de nuevo.",

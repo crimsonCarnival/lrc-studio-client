@@ -1,3 +1,4 @@
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -333,10 +334,10 @@ export default function SettingsPage() {
                 <aside className="hidden lg:flex flex-col gap-0.5 w-[230px] shrink-0 sticky top-0">
                   {user && !isGuest && (
                     <Link to={`/profile/${user.accountName}`} className="flex items-center gap-3 px-3 pb-4 pt-1 text-zinc-100 no-underline">
-                      <div className="size-10 rounded-xl flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/80 to-accent-blue flex items-center justify-center font-bold text-zinc-950 text-sm select-none">
+                      <div className="size-10 rounded-xl flex-shrink-0 overflow-hidden">
                         {user.avatarUrl
                           ? <LazyImage src={user.avatarUrl} alt="" className="size-full object-cover" />
-                          : (user.displayName || user.accountName || '?')[0].toUpperCase()
+                          : <InitialsAvatar name={user.displayName || user.accountName} handle={user.accountName} className="size-full text-sm" />
                         }
                       </div>
                       <div className="min-w-0">

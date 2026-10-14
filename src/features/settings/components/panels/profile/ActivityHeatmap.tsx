@@ -53,11 +53,11 @@ function buildDays(countsByDate: Map<string, number>): GridDay[] {
 }
 
 function intensityClass(count: number) {
-  if (count === 0) return 'bg-zinc-800/40';
-  if (count <= 2) return 'bg-primary/40';
-  if (count <= 5) return 'bg-primary/60';
-  if (count <= 9) return 'bg-primary/80';
-  return 'bg-primary';
+  if (count === 0) return 'bg-iris/[.07]';
+  if (count <= 2) return 'bg-iris/25';
+  if (count <= 5) return 'bg-iris/45';
+  if (count <= 9) return 'bg-iris/70';
+  return 'bg-primary-ink';
 }
 
 function HeatmapSkeleton() {
@@ -186,11 +186,11 @@ export default function ActivityHeatmap({
   }
 
   const legend = [
-    { range: t('profile.heatmap.tip0'), cls: 'bg-zinc-800/40' },
-    { range: t('profile.heatmap.tip1'), cls: 'bg-primary/40' },
-    { range: t('profile.heatmap.tip2'), cls: 'bg-primary/60' },
-    { range: t('profile.heatmap.tip3'), cls: 'bg-primary/80' },
-    { range: t('profile.heatmap.tip4'), cls: 'bg-primary' },
+    { range: t('profile.heatmap.tip0'), cls: 'bg-iris/[.07]' },
+    { range: t('profile.heatmap.tip1'), cls: 'bg-iris/25' },
+    { range: t('profile.heatmap.tip2'), cls: 'bg-iris/45' },
+    { range: t('profile.heatmap.tip3'), cls: 'bg-iris/70' },
+    { range: t('profile.heatmap.tip4'), cls: 'bg-primary-ink' },
   ];
 
   return (
@@ -232,7 +232,7 @@ export default function ActivityHeatmap({
                     onMouseEnter={() => !day.isFuture && setHovered(day)}
                     onMouseLeave={() => setHovered(null)}
                     style={{ width: cellSize, height: cellSize }}
-                    className={`rounded-sm ${day.isFuture ? 'bg-transparent' : intensityClass(day.count)} transition-colors`}
+                    className={`rounded-[4px] ${day.isFuture ? 'bg-transparent' : intensityClass(day.count)} transition-colors`}
                   />
                 </Tip>
               ))}
@@ -251,7 +251,7 @@ export default function ActivityHeatmap({
           <span>{t('profile.heatmap.less')}</span>
           {legend.map((l) => (
             <Tip key={l.cls} content={l.range}>
-              <div className={`size-3.5 rounded-sm ${l.cls}`} />
+              <div className={`size-3.5 rounded-[4px] ${l.cls}`} />
             </Tip>
           ))}
           <span>{t('profile.heatmap.more')}</span>
