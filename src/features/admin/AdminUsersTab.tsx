@@ -1,3 +1,4 @@
+import { StatusChip } from '@ui/StatusChip';
 import { useTranslation } from 'react-i18next';
 import { AdminUserContextMenu } from './AdminUserContextMenu';
 import { Button } from '@ui/button';
@@ -123,7 +124,6 @@ export default function AdminUsersTab({
 
   function RoleControl({ user }: { user: AdminUser }) {
     const targetRank = ROLE_RANK[(user.role as Role) ?? 'user'] ?? 0;
-    const isPrivileged = user.role === 'admin' || user.role === 'superadmin';
     if (canAssignRoles && targetRank < myRank) {
       // Current role first, then any other roles below the actor's rank.
       const options = Array.from(new Set([user.role ?? 'user', ...assignableRoles]));
@@ -139,9 +139,7 @@ export default function AdminUsersTab({
       );
     }
     return (
-      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${isPrivileged ? 'bg-primary/20 text-primary' : 'bg-zinc-800 text-zinc-400'}`}>
-        {user.role ? tk(`admin.table.${user.role}`) : ''}
-      </span>
+      <StatusChip role={user.role}>{user.role ? tk(`admin.table.${user.role}`) : ''}</StatusChip>
     );
   }
 
@@ -244,17 +242,9 @@ export default function AdminUsersTab({
                         </div>
                         <div className="flex-1">
                           <p className="text-xs font-semibold text-zinc-400 mb-1">{t('admin.table.status')}</p>
-                          <div className="w-full p-2 rounded text-xs font-medium text-center">
-                            {user.ban?.active ? (
-                              <span className="flex items-center justify-center gap-1 text-red-400">
-                                <Icon name="block" size={12} /> {t('admin.table.banned')}
-                              </span>
-                            ) : (
-                              <span className="flex items-center justify-center gap-1 text-emerald-400">
-                                <Icon name="check_circle" size={12} /> {t('admin.table.active')}
-                              </span>
-                            )}
-                          </div>
+                          {user.ban?.active
+                            ? <StatusChip tone="love">{t('admin.table.banned')}</StatusChip>
+                            : <StatusChip tone="foam"><Icon name="check" size={11} />{t('admin.table.active')}</StatusChip>}
                         </div>
                       </div>
 
@@ -457,13 +447,13 @@ export default function AdminUsersTab({
                   <td className="p-4">
                     {user.ban?.active ? (
                       <div className="flex flex-col">
-                        <span className="flex items-center gap-1.5 text-xs text-red-400 font-medium"><Icon name="block" size={12} /> {t('admin.table.banned')}</span>
+                        <StatusChip tone="love" className="self-start">{t('admin.table.banned')}</StatusChip>
                         <Tip content={user.ban?.reason}>
                           <span className="text-[10px] text-zinc-600 line-clamp-1 italic">{user.ban?.reason}</span>
                         </Tip>
                       </div>
                     ) : (
-                      <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium"><Icon name="check_circle" size={12} /> {t('admin.table.active')}</span>
+                      <StatusChip tone="foam"><Icon name="check" size={11} />{t('admin.table.active')}</StatusChip>
                     )}
                   </td>
                   <td className="p-4">

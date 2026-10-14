@@ -33,7 +33,7 @@ export default function StatsSettings({ searchTerm }: { searchTerm?: string }) {
 
       <section className="settings-section rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
         <h2 className="text-[17px] font-bold text-zinc-100 mb-4">{t('profile.heatmap.title')}</h2>
-        <ActivityHeatmap />
+        <ActivityHeatmap streak={user?.streak ?? { current: 0, longest: 0 }} />
         <p className="text-sm text-zinc-400 mt-3.5">
           {heatmapPublic ? t('profile.heatmap.visibleOnProfile') : t('profile.heatmap.hiddenOnProfile')}{' — '}
           <Link to="/settings/privacy" className="text-primary underline">{t('profile.heatmap.changeInPrivacy')}</Link>.

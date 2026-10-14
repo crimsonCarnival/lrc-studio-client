@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { gqlRequest } from '@/app/graphql.client';
 import { Tip } from '@/shared/ui/tip';
 import { Skeleton } from '@ui/skeleton';
+import { Icon } from '@/shared/ui/Icon';
 
 const GET_ACTIVITY_HEATMAP = /* GraphQL */ `
   query UserActivityHeatmap {
@@ -108,7 +109,8 @@ export default function ActivityHeatmap({
   days: providedDays,
   cellSize = 14,
   cellGap = 4,
-}: { days?: HeatDay[]; cellSize?: number; cellGap?: number } = {}) {
+  streak,
+}: { days?: HeatDay[]; cellSize?: number; cellGap?: number; streak?: { current?: number | null; longest?: number | null } | null } = {}) {
   // One week's horizontal advance. The month labels are absolutely positioned,
   // so they have to step by exactly this or they drift off their column.
   const step = cellSize + cellGap;
@@ -193,8 +195,31 @@ export default function ActivityHeatmap({
     { range: t('profile.heatmap.tip4'), cls: 'bg-primary-ink' },
   ];
 
+  const STAT_CARD = 'flex flex-col gap-1 rounded-[14px] bg-background p-3.5 inset-ring inset-ring-hl';
+  const STAT_VALUE = 'font-heading text-[28px] font-bold leading-[1.15] text-foreground';
+
   return (
     <div className="flex flex-col gap-6 w-full">
+      {/* Streak stats (redesign sheet 10). Only where the caller knows the streak. */}
+      {streak && (
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className={STAT_CARD}>
+            <span className="flex items-center gap-1.5 text-gold-ink">
+              <Icon name="local_fire_department" size={18} />
+              <span className={STAT_VALUE}>{streak.current ?? 0}</span>
+            </span>
+            <span className="text-[13px] text-subtle">{t('profile.heatmap.streakDays')}</span>
+          </div>
+          <div className={STAT_CARD}>
+            <span className={STAT_VALUE}>{streak.longest ?? 0}</span>
+            <span className="text-[13px] text-subtle">{t('profile.heatmap.streakLongest')}</span>
+          </div>
+          <div className={STAT_CARD}>
+            <span className={STAT_VALUE}>{total}</span>
+            <span className="text-[13px] text-subtle">{t('profile.heatmap.perYear')}</span>
+          </div>
+        </div>
+      )}
       <div className="overflow-x-auto pb-4 custom-scrollbar" ref={scrollRef}>
         <div className="min-w-max flex gap-2">
           <div

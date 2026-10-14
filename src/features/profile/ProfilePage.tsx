@@ -565,7 +565,7 @@ export default function ProfilePage() {
 
             {activeTab === 'activity' && profile.activityHeatmap && (
               <div className="glass rounded-2xl p-5">
-                <ActivityHeatmap days={profile.activityHeatmap} />
+                <ActivityHeatmap days={profile.activityHeatmap} streak={profile.streak} />
               </div>
             )}
 
