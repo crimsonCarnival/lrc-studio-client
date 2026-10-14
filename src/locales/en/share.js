@@ -8,7 +8,6 @@ export default {
     qrHint: "Scan it to open the song on another device",
     startAt: "Start at",
     startAtTime: "Start time",
-    loop: "Include the A-B loop",
     via: "Share to",
     email: "Email",
     more: "More",

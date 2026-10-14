@@ -9,7 +9,6 @@ import { cn } from '@/shared/utils/utils';
 import { ProjectListCover } from '@/features/projects/components/ProjectListCover';
 import { PlayerContext } from '@/features/player/PlayerContext';
 import { Checkbox } from '@ui/checkbox';
-import { formatLoopParam } from '@/shared/utils/url-params';
 import { SHARE_TARGETS, shareTargetUrl, type ShareTargetId } from '../share-targets';
 
 interface ShareSheetProps {
@@ -122,23 +121,21 @@ function ShareSheetBody({ url: baseUrl, title, subtitle, coverImage, genre, onSh
   const canSystemShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   const text = subtitle ? `${title} · ${subtitle}` : title;
 
-  // Deep-link options, as in the editor's share panel. Snapshot of the player when the sheet
-  // opened: the time to start at, and the A-B loop if one is set. Null outside a player.
+  // Start time, as in the editor's share panel: where the player was when the sheet opened,
+  // editable. Null outside a player, and then the option is not offered.
   const player = useContext(PlayerContext);
-  const [startAt, setStartAt] = useState(() => Math.floor(player?.currentTime ?? 0));
   const [startText, setStartText] = useState(() => mmss(Math.floor(player?.currentTime ?? 0)));
   const [includeStart, setIncludeStart] = useState(false);
-  const [loop] = useState(() => {
-    const l = player?.loop;
-    return l && l.a != null && l.b != null && l.b > l.a ? { a: l.a, b: l.b } : null;
-  });
-  const [includeLoop, setIncludeLoop] = useState(false);
-  const canStart = (player?.duration ?? 0) > 0;
+  const duration = Math.floor(player?.duration ?? 0);
+  const canStart = duration > 0;
+  // Read from the field itself, so Copy uses what is typed even before the field loses focus.
+  // Past the end of the song it is clamped to the end; text that is not a time means no start.
+  const typed = parseMmss(startText);
+  const startAt = typed == null ? null : Math.min(Math.max(0, typed), duration);
 
   const url = (() => {
     const extra = new URLSearchParams();
-    if (canStart && includeStart && startAt > 0) extra.set('s', String(startAt));
-    if (loop && includeLoop) extra.set('loop', formatLoopParam(loop.a, loop.b));
+    if (canStart && includeStart && startAt != null && startAt > 0) extra.set('s', String(startAt));
     const query = extra.toString();
     return query ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${query}` : baseUrl;
   })();
@@ -204,36 +201,21 @@ function ShareSheetBody({ url: baseUrl, title, subtitle, coverImage, genre, onSh
           </Button>
         </div>
 
-        {(canStart || loop) && (
-          <div className="flex flex-col gap-2 rounded-[14px] bg-card p-3 inset-ring inset-ring-hl">
-            {canStart && (
-              <div className="flex min-h-9 items-center gap-3">
-                <Checkbox id="share-start" checked={includeStart} onCheckedChange={(v) => setIncludeStart(v === true)} />
-                <label htmlFor="share-start" className="flex-1 cursor-pointer text-[15px] text-foreground">{t('share.sheet.startAt')}</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  aria-label={t('share.sheet.startAtTime')}
-                  value={startText}
-                  onFocus={() => setIncludeStart(true)}
-                  onChange={(e) => setStartText(e.target.value)}
-                  onBlur={() => {
-                    const s = parseMmss(startText);
-                    const clamped = s == null ? startAt : Math.min(Math.max(0, s), Math.floor(player?.duration ?? s));
-                    setStartAt(clamped);
-                    setStartText(mmss(clamped));
-                  }}
-                  className="h-9 w-20 rounded-[10px] border-0 bg-background px-2 text-center font-mono text-sm text-foreground outline-none inset-ring inset-ring-hl focus-visible:inset-ring-2 focus-visible:inset-ring-primary"
-                />
-              </div>
-            )}
-            {loop && (
-              <div className="flex min-h-9 items-center gap-3">
-                <Checkbox id="share-loop" checked={includeLoop} onCheckedChange={(v) => setIncludeLoop(v === true)} />
-                <label htmlFor="share-loop" className="flex-1 cursor-pointer text-[15px] text-foreground">{t('share.sheet.loop')}</label>
-                <span className="font-mono text-sm text-subtle">{mmss(loop.a)} – {mmss(loop.b)}</span>
-              </div>
-            )}
+        {canStart && (
+          <div className="flex min-h-9 items-center gap-3 rounded-[14px] bg-card p-3 inset-ring inset-ring-hl">
+            <Checkbox id="share-start" checked={includeStart} onCheckedChange={(v) => setIncludeStart(v === true)} />
+            <label htmlFor="share-start" className="flex-1 cursor-pointer text-[15px] text-foreground">{t('share.sheet.startAt')}</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              aria-label={t('share.sheet.startAtTime')}
+              value={startText}
+              onFocus={() => setIncludeStart(true)}
+              onChange={(e) => setStartText(e.target.value)}
+              // Tidy what was typed ("65" becomes "1:05") once the field is left.
+              onBlur={() => { if (startAt != null) setStartText(mmss(startAt)); }}
+              className="h-9 w-20 rounded-[10px] border-0 bg-background px-2 text-center font-mono text-sm text-foreground outline-none inset-ring inset-ring-hl focus-visible:inset-ring-2 focus-visible:inset-ring-primary"
+            />
           </div>
         )}
 

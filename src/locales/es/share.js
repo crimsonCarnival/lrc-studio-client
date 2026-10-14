@@ -8,7 +8,6 @@ export default {
     qrHint: "Escanéalo para abrir la canción en otro dispositivo",
     startAt: "Empezar en",
     startAtTime: "Tiempo de inicio",
-    loop: "Incluir el bucle A-B",
     via: "Compartir en",
     email: "Correo",
     more: "Más",
