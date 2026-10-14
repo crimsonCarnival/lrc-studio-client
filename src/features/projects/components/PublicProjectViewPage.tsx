@@ -493,7 +493,7 @@ function PublicProjectViewPageInner() {
               </Button>
             </Tip>
           ) : undefined}
-          endSlot={project.publicId ? <ShareOgButton publicId={project.publicId} title={projectTitle} /> : undefined}
+          endSlot={project.publicId ? <ShareOgButton publicId={project.publicId} title={projectTitle} subtitle={project.metadata?.songArtist as string | undefined} coverImage={cover} genre={project.metadata?.genre as string | undefined} /> : undefined}
         >
           {/* Prev / next in playlist context */}
           {listId && (prevTrack || nextTrack) && (

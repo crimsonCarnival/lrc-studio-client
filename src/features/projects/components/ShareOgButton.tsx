@@ -4,60 +4,51 @@ import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import { cn } from '@/shared/utils/utils';
+import { ShareSheet } from '@/features/sharing/components/ShareSheet';
 import { projectsService } from '../services/projects.service';
-
-function getServerOrigin() {
-  if (import.meta.env.PROD) return import.meta.env.VITE_SERVER_ORIGIN || '';
-  return window.location.origin;
-}
+import { ogShareUrl } from '../og-url';
 
 interface ShareOgButtonProps {
   publicId: string;
   title?: string;
+  /** Artist, shown under the title in the sheet and sent with the link. */
+  subtitle?: string;
+  coverImage?: string | null;
+  genre?: string | null;
   className?: string;
 }
 
-export function ShareOgButton({ publicId, title = '', className = '' }: ShareOgButtonProps) {
+/** Opens the share sheet for a published project's link-preview URL. */
+export function ShareOgButton({ publicId, title = '', subtitle, coverImage, genre, className = '' }: ShareOgButtonProps) {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
-
-  const ogUrl = `${getServerOrigin()}/og/project/${publicId}`;
-  const label = copied ? t('share.linkCopied') : t('share.shareLink');
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({ url: ogUrl, title: title || 'LRC Studio' });
-        return;
-      } catch {
-        // User cancelled or share failed — fall through to clipboard
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(ogUrl);
-      setCopied(true);
-      // Same accounting as the overflow menu's "share link" entry.
-      projectsService.incrementShare(publicId).catch(() => {});
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard not available — do nothing
-    }
-  };
+  const [open, setOpen] = useState(false);
+  const label = t('share.shareLink');
 
   return (
-    <Tip content={label}>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        onClick={handleShare}
-        aria-label={label}
-        className={cn('size-11 rounded-full bg-transparent text-subtle hover:text-foreground lg:size-11', className)}
-      >
-        {copied
-          ? <Icon name="check" size={18} className="text-primary-ink" />
-          : <Icon name="share" size={18} />}
-      </Button>
-    </Tip>
+    <>
+      <Tip content={label}>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => setOpen(true)}
+          aria-label={label}
+          aria-haspopup="dialog"
+          className={cn('size-11 rounded-full bg-transparent text-subtle hover:text-foreground lg:size-11', className)}
+        >
+          <Icon name="share" size={18} />
+        </Button>
+      </Tip>
+      <ShareSheet
+        open={open}
+        onOpenChange={setOpen}
+        url={ogShareUrl(publicId)}
+        title={title || 'LRC Studio'}
+        subtitle={subtitle}
+        coverImage={coverImage}
+        genre={genre}
+        onShared={() => { projectsService.incrementShare(publicId).catch(() => {}); }}
+      />
+    </>
   );
 }

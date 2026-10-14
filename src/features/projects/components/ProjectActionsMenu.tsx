@@ -1,3 +1,5 @@
+import { ShareSheet } from '@/features/sharing/components/ShareSheet';
+import { ogShareUrl } from '../og-url';
 import { useState } from 'react';
 import type { ReactNode, CSSProperties } from 'react';
 import type { TFunction } from 'i18next';
@@ -20,7 +22,8 @@ interface Project {
   title?: string;
   forksEnabled?: boolean;
   isForkedByMe?: boolean;
-  metadata?: { songName?: string };
+  coverImage?: string | null;
+  metadata?: { songName?: string; songArtist?: string; genre?: string };
 }
 
 interface User {
@@ -185,7 +188,6 @@ export function ProjectActionsMenu({
 }: ProjectActionsMenuProps) {
   const { t } = useTranslation();
   const [linkCopied, setLinkCopied] = useState(false);
-  const [ogCopied, setOgCopied] = useState(false);
 
   const handleCopyLink = async () => {
     try { await navigator.clipboard.writeText(window.location.href); } catch { /* no-op */ }
@@ -196,25 +198,15 @@ export function ProjectActionsMenu({
     setTimeout(() => setLinkCopied(false), 2000);
   };
 
-  const handleShareOg = async () => {
-    const origin = import.meta.env.PROD ? (import.meta.env.VITE_SERVER_ORIGIN || '') : window.location.origin;
-    const ogUrl = `${origin}/og/project/${project?.publicId}`;
-    if (navigator.share) {
-      try { await navigator.share({ url: ogUrl, title: project?.title || 'LRC Studio' }); return; }
-      catch { /* cancelled */ }
-    }
-    try { await navigator.clipboard.writeText(ogUrl); } catch { /* no-op */ }
-    setOgCopied(true);
-    if (project?.publicId) {
-      projectsService.incrementShare(project.publicId).catch(() => {});
-    }
-    setTimeout(() => setOgCopied(false), 2000);
-  };
+  // The share link opens the share sheet; the popover closes first so the dialog owns focus.
+  const [shareOpen, setShareOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const canFork = project?.forksEnabled !== false && !project?.isForkedByMe;
 
   return (
-    <Popover>
+    <>
+    <Popover open={menuOpen} onOpenChange={setMenuOpen}>
       <PopoverTrigger asChild>
         <Button
           size="icon"
@@ -260,9 +252,9 @@ export function ProjectActionsMenu({
         {/* Share — all users */}
         <MenuItem iconName="share" label={t('projectView.actions.share')}>
           <MenuItem
-            iconName={ogCopied ? 'check' : 'share'}
-            label={ogCopied ? t('projectView.actions.copied') : t('projectView.actions.shareOg')}
-            onClick={handleShareOg}
+            iconName="share"
+            label={t('projectView.actions.shareOg')}
+            onClick={() => { setMenuOpen(false); setShareOpen(true); }}
           />
           <MenuItem
             iconName={linkCopied ? 'check' : 'link'}
@@ -273,5 +265,18 @@ export function ProjectActionsMenu({
 
       </PopoverContent>
     </Popover>
+    {project?.publicId && (
+      <ShareSheet
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        url={ogShareUrl(project.publicId)}
+        title={project.metadata?.songName || project.title || 'LRC Studio'}
+        subtitle={project.metadata?.songArtist}
+        coverImage={project.coverImage}
+        genre={project.metadata?.genre}
+        onShared={() => { projectsService.incrementShare(project.publicId!).catch(() => {}); }}
+      />
+    )}
+    </>
   );
 }

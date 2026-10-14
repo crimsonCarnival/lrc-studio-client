@@ -21,6 +21,7 @@ interface ProjectMeta {
   songAlbum?: string;
   songYear?: string | number;
   songLanguage?: string;
+  genre?: string;
   tags?: string[];
 }
 
@@ -322,6 +323,9 @@ export default function ProjectInfoPanel({
             <ShareOgButton
               publicId={project.publicId}
               title={title}
+              subtitle={meta.songArtist}
+              coverImage={cover}
+              genre={meta.genre}
               className="size-[42px] rounded-[var(--radius-control)] lg:size-[42px] coarse:size-11"
             />
           )}
