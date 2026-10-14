@@ -13,13 +13,15 @@ interface ShareOgButtonProps {
   title?: string;
   /** Artist, shown under the title in the sheet and sent with the link. */
   subtitle?: string;
+  /** The project's own name, when it is not the song's (used in the WhatsApp message). */
+  projectName?: string;
   coverImage?: string | null;
   genre?: string | null;
   className?: string;
 }
 
 /** Opens the share sheet for a published project's link-preview URL. */
-export function ShareOgButton({ publicId, title = '', subtitle, coverImage, genre, className = '' }: ShareOgButtonProps) {
+export function ShareOgButton({ publicId, title = '', subtitle, projectName, coverImage, genre, className = '' }: ShareOgButtonProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const label = t('share.shareLink');
@@ -45,6 +47,7 @@ export function ShareOgButton({ publicId, title = '', subtitle, coverImage, genr
         url={ogShareUrl(publicId)}
         title={title || 'LRC Studio'}
         subtitle={subtitle}
+        projectName={projectName}
         coverImage={coverImage}
         genre={genre}
         onShared={() => { projectsService.incrementShare(publicId).catch(() => {}); }}

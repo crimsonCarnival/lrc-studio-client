@@ -19,6 +19,8 @@ interface ShareSheetProps {
   /** Short text that goes with it: the song, the artist. */
   title: string;
   subtitle?: string;
+  /** The project's own name, when it differs from the song's. Used in the WhatsApp intro. */
+  projectName?: string;
   coverImage?: string | null;
   genre?: string | null;
   /** Called once per share action (copy, a service, the system sheet), for share counts. */
@@ -114,12 +116,18 @@ function parseMmss(raw: string): number | null {
   return Number.isFinite(seconds) ? seconds : null;
 }
 
-function ShareSheetBody({ url: baseUrl, title, subtitle, coverImage, genre, onShared }: Omit<ShareSheetProps, 'open' | 'onOpenChange'>) {
+function ShareSheetBody({ url: baseUrl, title, subtitle, projectName, coverImage, genre, onShared }: Omit<ShareSheetProps, 'open' | 'onOpenChange'>) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const canSystemShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   const text = subtitle ? `${title} · ${subtitle}` : title;
+  // WhatsApp gets a sentence, not just a link: a friendly line that names the project and
+  // the song (`Song – Artist`), as people would write it themselves.
+  const song = subtitle ? `${title} – ${subtitle}` : title;
+  const whatsappText = projectName && projectName.trim() && projectName.trim() !== title
+    ? t('share.sheet.whatsappIntroProject', { project: projectName.trim(), song })
+    : t('share.sheet.whatsappIntro', { song });
 
   // Start time, as in the editor's share panel: where the player was when the sheet opened,
   // editable. Null outside a player, and then the option is not offered.
@@ -155,7 +163,7 @@ function ShareSheetBody({ url: baseUrl, title, subtitle, coverImage, genre, onSh
 
   const openTarget = (target: ShareTargetId) => {
     onShared?.();
-    const href = shareTargetUrl(target, url, text);
+    const href = shareTargetUrl(target, url, target === 'whatsapp' ? whatsappText : text);
     // mailto: hands over to the mail app in place; the rest open the service in a new tab.
     window.open(href, target === 'email' ? '_self' : '_blank', 'noopener,noreferrer');
   };

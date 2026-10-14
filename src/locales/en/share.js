@@ -12,6 +12,8 @@ export default {
     email: "Email",
     more: "More",
     discordCopied: "Link copied. Paste it in Discord.",
+    whatsappIntro: "Check out the synced lyrics for {{song}} on LRC Studio 🎶",
+    whatsappIntroProject: "Check out “{{project}}” on LRC Studio, synced lyrics for {{song}} 🎶",
   },  title: "Share Project",
   close: "Close",
   viewingShared: "Viewing shared project",

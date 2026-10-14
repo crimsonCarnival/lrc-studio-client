@@ -322,8 +322,9 @@ export default function ProjectInfoPanel({
           {project?.publicId && (
             <ShareOgButton
               publicId={project.publicId}
-              title={title}
+              title={meta.songName || title}
               subtitle={meta.songArtist}
+              projectName={project.title}
               coverImage={cover}
               genre={meta.genre}
               className="size-[42px] rounded-[var(--radius-control)] lg:size-[42px] coarse:size-11"

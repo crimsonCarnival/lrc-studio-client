@@ -12,6 +12,8 @@ export default {
     email: "Correo",
     more: "Más",
     discordCopied: "Enlace copiado. Pégalo en Discord.",
+    whatsappIntro: "Mira la letra sincronizada de {{song}} en LRC Studio 🎶",
+    whatsappIntroProject: "Mira “{{project}}” en LRC Studio, la letra sincronizada de {{song}} 🎶",
   },  title: "Compartir proyecto",
   close: "Cerrar",
   viewingShared: "Viendo sesión compartida",

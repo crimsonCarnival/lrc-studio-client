@@ -272,6 +272,7 @@ export function ProjectActionsMenu({
         url={ogShareUrl(project.publicId)}
         title={project.metadata?.songName || project.title || 'LRC Studio'}
         subtitle={project.metadata?.songArtist}
+        projectName={project.title}
         coverImage={project.coverImage}
         genre={project.metadata?.genre}
         onShared={() => { projectsService.incrementShare(project.publicId!).catch(() => {}); }}

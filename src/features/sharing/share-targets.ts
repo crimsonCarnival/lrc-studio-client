@@ -11,7 +11,8 @@ export function shareTargetUrl(target: ShareTargetId, url: string, text: string)
   const t = encodeURIComponent(text);
   const both = encodeURIComponent(text ? `${text} ${url}` : url);
   switch (target) {
-    case 'whatsapp': return `https://wa.me/?text=${both}`;
+    // The link on its own line, under the message, so WhatsApp shows its preview cleanly.
+    case 'whatsapp': return `https://wa.me/?text=${encodeURIComponent(text ? `${text}\n${url}` : url)}`;
     case 'x': return `https://twitter.com/intent/tweet?url=${u}${text ? `&text=${t}` : ''}`;
     case 'facebook': return `https://www.facebook.com/sharer/sharer.php?u=${u}`;
     case 'telegram': return `https://t.me/share/url?url=${u}${text ? `&text=${t}` : ''}`;

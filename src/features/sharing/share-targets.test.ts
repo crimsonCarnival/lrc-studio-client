@@ -14,7 +14,7 @@ describe('shareTargetUrl', () => {
   });
 
   it('builds each service\'s compose URL', () => {
-    expect(shareTargetUrl('whatsapp', 'https://a.b/c', 'Hi')).toBe('https://wa.me/?text=Hi%20https%3A%2F%2Fa.b%2Fc');
+    expect(shareTargetUrl('whatsapp', 'https://a.b/c', 'Hi')).toBe('https://wa.me/?text=Hi%0Ahttps%3A%2F%2Fa.b%2Fc');
     expect(shareTargetUrl('x', 'https://a.b/c', 'Hi')).toBe('https://twitter.com/intent/tweet?url=https%3A%2F%2Fa.b%2Fc&text=Hi');
     expect(shareTargetUrl('facebook', 'https://a.b/c', 'Hi')).toBe('https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fa.b%2Fc');
     expect(shareTargetUrl('email', 'https://a.b/c', 'Hi')).toBe('mailto:?subject=Hi&body=Hi%20https%3A%2F%2Fa.b%2Fc');
