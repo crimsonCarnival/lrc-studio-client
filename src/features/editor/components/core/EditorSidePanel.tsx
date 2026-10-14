@@ -86,10 +86,7 @@ function LiveCard({ lines, playbackPosition, duration, editorMode }: Pick<Editor
     <section aria-label={t('editor.lineReview.title')}>
       <div className={`${CARD} px-5 py-[18px] flex flex-col gap-3 min-h-[168px]`}>
         <div className="flex items-center justify-between">
-          <span className={`${CAPTION} flex items-center gap-2`}>
-            <span aria-hidden className="size-[7px] rounded-full bg-love" />
-            {t('editor.lineReview.title')}
-          </span>
+          <span className={CAPTION}>{t('editor.lineReview.title')}</span>
           <span className="font-mono text-[13px] font-medium tabular-nums text-subtle">{formatTimestamp(playbackPosition)}</span>
         </div>
         <div className="flex flex-1 flex-col justify-center gap-3">
