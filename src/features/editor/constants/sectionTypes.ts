@@ -22,7 +22,7 @@ export const SECTION_TYPES = [
  * Strips a trailing ordinal ("Verse 2", "Part III") so the label can be matched
  * against a preset id.
  */
-function presetIdForLabel(label) {
+export function presetIdForLabel(label) {
   return label.trim().toLowerCase().replace(/\s+(i{1,3}|iv|v|vi{0,3}|ix|x{1,2}|\d+)$/, '');
 }
 

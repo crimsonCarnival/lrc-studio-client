@@ -1072,6 +1072,15 @@ export function useEditor({
       return;
     }
 
+    // Plain click while a selection is already active: the row is a bigger target
+    // than the checkbox, so clicking anywhere on it toggles that line in/out of
+    // the selection instead of locking (which would be surprising mid-selection).
+    if (selectedLines.size > 0) {
+      handleToggleLine(i);
+      lastClickedRef.current = i;
+      return;
+    }
+
     // Plain click: toggle lock
     if (isActiveLineLocked && activeLineIndex === i) {
       // Clicking the locked active line unlocks

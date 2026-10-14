@@ -6,7 +6,7 @@
  * Nested format: [{label, depth, singers, lines:[{text,...},...]}]
  */
 import type { EditorLine } from '@/features/editor/services/editor.service';
-import { formatSectionLabelForSerialization, isStructuralSection, getPresetDepthForLabel } from '@/features/editor/constants/sectionTypes';
+import { formatSectionLabelForSerialization, isStructuralSection, getPresetDepthForLabel, presetIdForLabel } from '@/features/editor/constants/sectionTypes';
 import { serializeToRubyMarkup } from '@/shared/utils/furigana';
 
 interface Section {
@@ -538,6 +538,39 @@ export function parseSectionHeader(rawLine: string): { label: string; singers: s
  * Markers are inserted/dropped, so indices shift: `indexMap[oldIndex]` is the line's new
  * index (-1 for a dropped marker). Callers must remap index-based state (selection, active line).
  */
+/**
+ * Renumbers preset-type section markers (Verse, Chorus, ...) so duplicates stay distinct:
+ * a single marker of a given preset keeps the bare label ("verse"), two or more get
+ * sequential ordinals in order of appearance ("verse 1", "verse 2", ...). Custom labels
+ * (no matching preset id) are left untouched. Without this, tagging two selections as the
+ * same preset produces two markers with the identical label, which collide on serialization
+ * (both emit `[Verse]`) and are indistinguishable in the section picker.
+ */
+function renumberSectionLabels(lines: EditorLine[]): EditorLine[] {
+  const groups = new Map<string, number[]>();
+  lines.forEach((l, i) => {
+    if (l?.type !== 'section') return;
+    const preset = presetIdForLabel(((l.label as string | undefined) ?? '').trim());
+    if (!preset) return;
+    const arr = groups.get(preset) ?? [];
+    arr.push(i);
+    groups.set(preset, arr);
+  });
+
+  let changed = false;
+  const result = [...lines];
+  for (const [preset, indices] of groups) {
+    indices.forEach((lineIndex, order) => {
+      const newLabel = indices.length > 1 ? `${preset} ${order + 1}` : preset;
+      if (result[lineIndex].label !== newLabel) {
+        result[lineIndex] = { ...result[lineIndex], label: newLabel };
+        changed = true;
+      }
+    });
+  }
+  return changed ? result : lines;
+}
+
 export function applyTagToSelection(
   lines: EditorLine[],
   selectedIndices: Set<number>,
@@ -628,5 +661,5 @@ export function applyTagToSelection(
     }
   }
 
-  return { lines: updated, indexMap };
+  return { lines: tag.label !== undefined ? renumberSectionLabels(updated) : updated, indexMap };
 }

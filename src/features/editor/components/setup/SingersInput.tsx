@@ -91,7 +91,7 @@ export default function SingersInput({ value, onChange, suggestions = [] }: Sing
           maxLength={MAX_SINGER_NAME_LENGTH * 4 /* allows a few comma-separated names */}
           list={pendingSuggestions.length > 0 ? listId : undefined}
           placeholder={atLimit ? t('setup.singersLimit', { count: MAX_SINGERS }) : t('setup.singersPlaceholder')}
-          className="flex-1 min-w-[120px] h-7 px-1.5 bg-transparent border-none text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none disabled:cursor-not-allowed"
+          className="flex-1 min-w-[120px] h-7 px-1.5 bg-transparent border-none text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none disabled:cursor-not-allowed [&::-webkit-list-button]:hidden [&::-webkit-calendar-picker-indicator]:hidden"
         />
         {pendingSuggestions.length > 0 && (
           <datalist id={listId}>

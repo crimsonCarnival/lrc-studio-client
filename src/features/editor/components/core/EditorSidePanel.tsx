@@ -106,7 +106,7 @@ function LiveCard({ lines, playbackPosition, duration, editorMode }: Pick<Editor
   );
 }
 
-const SINGER_BUTTON = 'grid h-10 place-items-center rounded-[10px] font-mono text-sm font-bold transition-shadow duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus coarse:h-11';
+const SINGER_BUTTON = 'flex h-10 items-center justify-center px-3 rounded-[10px] text-sm font-semibold transition-shadow duration-[var(--duration-state)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus coarse:h-11';
 
 function LineInspector({ lines, activeLineIndex, duration, singers, singerColors, settings, onMoveToSection, onAssignSinger, onNudge }: Pick<EditorSidePanelProps, 'lines' | 'activeLineIndex' | 'duration' | 'singers' | 'singerColors' | 'settings' | 'onMoveToSection' | 'onAssignSinger' | 'onNudge'>) {
   const { t } = useTranslation();
@@ -114,15 +114,18 @@ function LineInspector({ lines, activeLineIndex, duration, singers, singerColors
   const line: EditorLine | undefined = lines[activeLineIndex];
 
   const { sections, currentSection, lyricNumber, end } = useMemo(() => {
-    const sections: { index: number; label: string }[] = [];
+    const sections: { index: number; label: string; singers: string[]; lineCount: number }[] = [];
     let currentSection = -1;
     let lyricNumber = 0;
     let end: number | null = null;
+    let openSection: typeof sections[number] | null = null;
     lines.forEach((l, i) => {
       if (l.type === 'section') {
-        sections.push({ index: i, label: l.label ?? '' });
+        openSection = { index: i, label: l.label ?? '', singers: Array.isArray(l.singers) ? (l.singers as string[]) : [], lineCount: 0 };
+        sections.push(openSection);
         if (i < activeLineIndex) currentSection = i;
       } else {
+        if (openSection) openSection.lineCount++;
         if (i <= activeLineIndex) lyricNumber++;
         else if (end == null && l.timestamp != null) end = l.timestamp;
       }
@@ -159,17 +162,24 @@ function LineInspector({ lines, activeLineIndex, duration, singers, singerColors
           </SelectTrigger>
           <SelectContent>
             {currentSection === -1 && <SelectItem value="-1">{t('editor.inspector.noSection')}</SelectItem>}
-            {sections.map((s) => (
-              <SelectItem key={s.index} value={String(s.index)}>{formatSectionLabel(s.label, t)}</SelectItem>
-            ))}
+            {sections.map((s) => {
+              const meta = s.singers[0]
+                ? t('editor.inspector.sectionMetaWithSinger', { count: s.lineCount, singer: s.singers[0] })
+                : t('editor.inspector.sectionMeta', { count: s.lineCount });
+              return (
+                <SelectItem key={s.index} value={String(s.index)}>
+                  {formatSectionLabel(s.label, t)} <span className="text-subtle">· {meta}</span>
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>
 
       <div className="flex flex-col gap-1.5">
         <span id={`${id}-singer`} className={LABEL}>{t('editor.inspector.singer')}</span>
-        {/* One button per singer, numbered and coloured like the badge on the line. */}
-        <div role="group" aria-labelledby={`${id}-singer`} className="grid grid-cols-5 gap-1.5">
+        {/* One button per singer, named and coloured like the badge on the line. */}
+        <div role="group" aria-labelledby={`${id}-singer`} className="flex flex-wrap gap-1.5">
           <Tip content={t('editor.tagging.noSinger')}>
             <button
               type="button"
@@ -193,10 +203,10 @@ function LineInspector({ lines, activeLineIndex, duration, singers, singerColors
                   aria-label={name}
                   onClick={() => onAssignSinger(name, activeLineIndex)}
                   className={cn(SINGER_BUTTON, on ? 'text-primary-foreground' : 'bg-card inset-ring inset-ring-hl hover:inset-ring-faint')}
-                  // The singer's own colour: as the fill when chosen, as the numeral otherwise.
+                  // The singer's own colour: as the fill when chosen, as the text otherwise.
                   style={on ? { background: color, boxShadow: `0 0 0 2px var(--background), 0 0 0 3.5px ${color}` } : { color }}
                 >
-                  {(singers.indexOf(name) + 1) || 1}
+                  <span className="max-w-[96px] truncate">{name}</span>
                 </button>
               </Tip>
             );
@@ -287,7 +297,7 @@ function EditorSidePanel(props: EditorSidePanelProps) {
   return (
     <aside
       aria-label={t('editor.sidePanel')}
-      className="lrc-scroll max-lg:hidden w-[360px] xl:w-[400px] shrink-0 min-h-0 overflow-y-auto flex flex-col gap-4 p-5 border-l border-hl bg-zinc-950/40"
+      className="lrc-scroll max-lg:hidden w-[400px] xl:w-[460px] shrink-0 min-h-0 overflow-y-auto flex flex-col gap-4 p-5 border-l border-hl bg-zinc-950/40"
     >
       <LiveCard lines={props.lines} playbackPosition={props.playbackPosition} duration={props.duration} editorMode={props.editorMode} />
       <LineInspector
