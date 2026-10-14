@@ -99,8 +99,11 @@ export default function PlaybackProgress({
 
   const rulerTicks = useMemo(() => {
     if (!duration || duration <= 0) return [];
-    // ~56px per label keeps "00:00.00" from touching its neighbour.
-    const maxLabels = Math.max(2, Math.floor((rulerWidth || 600) / 56));
+    // ~56px per label keeps "00:00.00" from touching its neighbour. The first and
+    // last ticks aren't centred like the rest (they're pulled inside the track to
+    // avoid clipping), so they occupy a full label-width instead of half — the -1
+    // reserves that extra slot so they don't collide with their nearest neighbour.
+    const maxLabels = Math.max(2, Math.floor((rulerWidth || 600) / 56) - 1);
     const intervals = [5, 10, 15, 30, 60, 120, 300];
     const interval = intervals.find(iv => duration / iv <= maxLabels - 1) ?? 300;
     const ticks: { t: number; pct: number }[] = [];
