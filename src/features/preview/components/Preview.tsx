@@ -20,6 +20,10 @@ import {
 } from '@ui/popover';
 import { Tip } from '@ui/tip';
 import { Checkbox } from '@ui/checkbox';
+import { SegmentedControl } from '@ui/segmented-control';
+
+// Spelled out as literals: the icon font is subset by scanning the source for icon names.
+const ALIGN_ICON = { left: 'format_align_left', center: 'format_align_center', right: 'format_align_right' } as const;
 import { SharePanel } from '@features/sharing/components/ShareModal';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Icon } from '@/shared/ui/Icon';
@@ -89,14 +93,20 @@ export default function Preview(props: PreviewProps) {
     }
   }, [project]);
 
+  // True while the visibility change is on its way to the server: the publish button
+  // shows it as in flight instead of claiming the new state early.
+  const [privacyPending, setPrivacyPending] = useState(false);
   const handlePrivacyChange = async (newPrivacy: string) => {
     const newIsPublic = newPrivacy === 'public';
     setIsPublic(newIsPublic);
     if (activepublicId) {
+      setPrivacyPending(true);
       try {
         await projects.patch(activepublicId, { public: newIsPublic } as Parameters<typeof projects.patch>[1]);
       } catch {
         setIsPublic(!newIsPublic);
+      } finally {
+        setPrivacyPending(false);
       }
     }
   };
@@ -242,9 +252,10 @@ export default function Preview(props: PreviewProps) {
     { key: 'follow', label: t('preview.followPlayback'), checked: followPlayback, set: setFollowPlayback },
   ];
 
-  const cardClass = 'rounded-2xl border border-zinc-800 bg-zinc-900 p-[18px] flex flex-col gap-3';
-  const captionClass = 'text-xs font-bold uppercase tracking-[0.08em] text-foreground/65';
-  const checkboxClass = 'size-[18px] border-zinc-600 bg-zinc-900 data-[state=checked]:bg-primary data-[state=checked]:border-primary';
+  const cardClass = 'rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl px-5 py-[18px] flex flex-col gap-2';
+  const captionClass = 'text-sm font-semibold text-subtle';
+  const checkboxClass = 'size-[22px] rounded-md';
+  const toggleRowClass = 'flex items-center gap-3 min-h-9 coarse:min-h-11 text-base font-medium text-foreground cursor-pointer';
 
   const translationChips = hasTranslations && (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -275,13 +286,13 @@ export default function Preview(props: PreviewProps) {
   const viewToggleList = (
     <>
       {viewToggles.map((toggle) => (
-        <label key={toggle.key} className="flex items-center gap-2.5 min-h-7 coarse:min-h-11 text-sm text-foreground cursor-pointer">
+        <label key={toggle.key} className={toggleRowClass}>
           <Checkbox checked={toggle.checked} onCheckedChange={(c) => toggle.set(c === true)} className={checkboxClass} />
           {toggle.label}
         </label>
       ))}
       {hasFurigana && (
-        <label className="flex items-center gap-2.5 min-h-7 coarse:min-h-11 text-sm text-foreground cursor-pointer">
+        <label className={toggleRowClass}>
           <Checkbox checked={showFuriganaInPreview} onCheckedChange={(c) => setShowFuriganaInPreview(c === true)} className={checkboxClass} />
           {t('preview.furigana')}
         </label>
@@ -328,15 +339,27 @@ export default function Preview(props: PreviewProps) {
                 // aria-disabled keeps the tooltip reachable when the project is not saved yet.
                 aria-disabled={!canPublish}
                 aria-pressed={canPublish ? isPublic : undefined}
+                loading={privacyPending}
                 onClick={() => { if (canPublish) handlePrivacyChange(isPublic ? 'private' : 'public'); }}
-                className={`h-10 lg:h-10 coarse:h-11 px-4 lg:px-4 gap-2 rounded-[10px] text-[13px] lg:text-[13px] font-bold ${!canPublish
-                  ? 'bg-zinc-800 text-foreground/45 cursor-not-allowed hover:bg-zinc-800'
-                  : isPublic
-                    ? 'border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'
-                    : 'bg-primary hover:bg-primary-dim text-zinc-950'}`}
+                // Live is foam, not the accent: it is a state, and the accent is kept for the
+                // action that gets you there. Hovering it offers the undo (redesign sheet 16).
+                className={`group/publish h-10 lg:h-10 coarse:h-11 min-w-[124px] px-4 lg:px-4 gap-2 text-[15px] lg:text-[15px] ${!canPublish
+                  ? 'bg-raised text-faint shadow-none cursor-not-allowed hover:bg-raised active:bg-raised'
+                  : privacyPending
+                    ? 'bg-primary-off text-subtle shadow-none hover:bg-primary-off'
+                    : isPublic
+                      ? 'bg-foam-soft text-foam-ink shadow-none inset-ring inset-ring-foam hover:bg-foam-soft active:bg-foam-soft'
+                      : ''}`}
               >
-                {canPublish && isPublic && <Icon name="check" size={16} />}
-                {canPublish && isPublic ? t('preview.published') : t('preview.publish')}
+                {privacyPending ? (
+                  isPublic ? t('preview.publishing') : t('preview.unpublishing')
+                ) : canPublish && isPublic ? (
+                  <>
+                    <Icon name="check" size={16} className="group-hover/publish:hidden group-focus-visible/publish:hidden" />
+                    <span className="group-hover/publish:hidden group-focus-visible/publish:hidden">{t('preview.published')}</span>
+                    <span className="hidden group-hover/publish:inline group-focus-visible/publish:inline">{t('preview.unpublish')}</span>
+                  </>
+                ) : t('preview.publish')}
               </Button>
             </Tip>
           )}
@@ -506,19 +529,19 @@ export default function Preview(props: PreviewProps) {
 
             <div className={cardClass}>
               <span className={captionClass}>{t('preview.alignment')}</span>
-              <div role="group" aria-label={t('preview.alignment')} className="flex gap-0.5 rounded-[10px] bg-zinc-800 p-[3px]">
-                {(['left', 'center', 'right'] as const).map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    aria-pressed={alignment === value}
-                    onClick={() => updateSetting('interface.previewAlignment', value)}
-                    className={`flex-1 h-9 rounded-[7px] text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${alignment === value ? 'bg-zinc-700 text-foreground font-semibold' : 'text-foreground/65 hover:text-foreground'}`}
-                  >
-                    {t(`preview.align.${value}`)}
-                  </button>
-                ))}
-              </div>
+              {/* Icons instead of words: alignment is one of the few settings a glyph says better. */}
+              <SegmentedControl<'left' | 'center' | 'right'>
+                label={t('preview.alignment')}
+                value={alignment as 'left' | 'center' | 'right'}
+                onChange={(value) => updateSetting('interface.previewAlignment', value)}
+                options={(['left', 'center', 'right'] as const).map((value) => ({
+                  value,
+                  ariaLabel: t(`preview.align.${value}`),
+                  tip: t(`preview.align.${value}`),
+                  label: <Icon name={ALIGN_ICON[value]} size={20} />,
+                }))}
+                className="flex w-full [&>button]:flex-1 [&>button]:px-0"
+              />
             </div>
           </aside>
         </div>

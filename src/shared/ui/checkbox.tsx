@@ -12,7 +12,9 @@ function Checkbox({
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer relative flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-input transition-colors outline-none group-has-disabled/field:opacity-50 after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 aria-invalid:aria-checked:border-primary dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary",
+        // Unchecked is an empty outlined box, checked a filled accent one with the check cut
+        // out of it (redesign sheet 16). The ::after widens the hit area without growing the box.
+        "peer relative flex size-4 shrink-0 items-center justify-center rounded-[5px] border-0 bg-transparent inset-ring-[1.5px] inset-ring-faint transition-[background-color,box-shadow] duration-[var(--duration-state)] outline-none group-has-disabled/field:opacity-50 after:absolute after:-inset-x-3 after:-inset-y-2 hover:inset-ring-subtle focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:inset-ring-love data-checked:bg-primary data-checked:text-primary-foreground data-checked:inset-ring-primary",
         className
       )}
       {...props}

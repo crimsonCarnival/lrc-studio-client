@@ -6,6 +6,7 @@ import { gqlRequest } from '@/app/graphql.client';
 import { Tip } from '@/shared/ui/tip';
 import { Skeleton } from '@ui/skeleton';
 import { useStreakResetHint } from '@/shared/hooks/useStreakResetHint';
+import { LevelLadder } from './LevelLadder';
 
 const GET_CONTENT_STATS = /* GraphQL */ `
   query UserContentStats {
@@ -215,6 +216,8 @@ export default function StatsTab() {
           </div>
         </Tip>
       </div>
+
+      <LevelLadder currentId={stats.addictionId} />
     </div>
   );
 }
