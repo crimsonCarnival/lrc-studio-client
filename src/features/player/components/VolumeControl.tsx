@@ -5,9 +5,18 @@ import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 
+/** Icon tier by volume: muted/0 → off, <33% → mute (speaker, no waves), <66% → down (one wave), else → up. */
+function volumeIconName(muted: boolean, volume: number): string {
+  if (muted || volume <= 0) return 'volume_off';
+  if (volume < 0.33) return 'volume_mute';
+  if (volume < 0.66) return 'volume_down';
+  return 'volume_up';
+}
+
 const VolumeControl = memo(function VolumeControl() {
   const { t } = useTranslation();
   const { settings, updateSetting } = useSettings();
+  const iconName = volumeIconName(settings.playback.muted, settings.playback.volume ?? 0);
 
   return (
     <div className="group/volume flex items-center gap-1.5 lg:gap-2" role="group" aria-label={t('player.volume')}>
@@ -19,17 +28,15 @@ const VolumeControl = memo(function VolumeControl() {
           className="flex-shrink-0 size-11 lg:size-11"
           aria-label={settings.playback.muted ? t('player.unmute') : t('player.mute')}
         >
-        {settings.playback.muted || settings.playback.volume === 0 ? (
-          <Icon name="volume_off" size={20} />
-        ) : (
-          <Icon name="volume_up" size={20} />
-        )}
+          <Icon name={iconName} size={20} />
         </Button>
       </Tip>
 
-      {/* Desktop Slider: collapsed to 0 width until the group is hovered or the
-          slider itself has focus (keyboard users tabbing to it must still see it). */}
-      <div className="hidden lg:flex items-center w-0 overflow-hidden transition-[width] duration-200 group-hover/volume:w-24 group-focus-within/volume:w-24">
+      {/* Desktop Slider: the track keeps its w-24 always, so hovering never reflows
+          neighbouring layout (a width transition here previously pushed/shifted the
+          band row above it in the public player view). Only opacity/interactivity
+          toggle, revealed on hover or when the slider itself has focus (keyboard). */}
+      <div className="hidden lg:flex items-center w-24 opacity-0 pointer-events-none transition-opacity duration-150 group-hover/volume:opacity-100 group-hover/volume:pointer-events-auto group-focus-within/volume:opacity-100 group-focus-within/volume:pointer-events-auto">
         <input
           type="range"
           min={0}
