@@ -11,6 +11,7 @@ import { getLeaderboard } from './leaderboard.service';
 import type { LeaderboardSort, LeaderboardSortDirection, LeaderboardTimeframe } from './leaderboard.service';
 import { LogoLoader } from '@ui/LogoLoader';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
+import { StaffRing } from '@/shared/ui/StaffRing';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 
 interface LeaderEntry {
@@ -18,6 +19,7 @@ interface LeaderEntry {
   accountName: string;
   displayName?: string;
   avatarUrl?: string;
+  staffRole?: string | null;
   badges?: { id: string }[];
   progression?: { level?: number; xp?: number };
   streak?: { current?: number };
@@ -125,15 +127,18 @@ function RankBadge({ pos, podium }: { pos: number; podium?: boolean }) {
   );
 }
 
-function UserAvatar({ avatarUrl, name, handle, medal }: { avatarUrl?: string; name?: string; handle: string; medal?: string }) {
+function UserAvatar({ avatarUrl, name, handle, medal, staffRole }: { avatarUrl?: string; name?: string; handle: string; medal?: string; staffRole?: string | null }) {
   // A podium place rings the avatar in its medal colour, 2px clear of it.
   const ring = medal ? { boxShadow: `0 0 0 2px var(--background), 0 0 0 3.5px ${medal}` } : undefined;
   return (
-    <div className="size-10 shrink-0 overflow-hidden rounded-full" style={ring}>
-      {avatarUrl
-        ? <LazyImage src={avatarUrl} alt={name} className="size-full object-cover" />
-        : <InitialsAvatar name={name} handle={handle} className="size-full text-base" />}
-    </div>
+    // Staff get their ring outside the medal ring, so both stay readable on the podium.
+    <StaffRing role={staffRole} outset={medal ? 6.5 : 3.5}>
+      <div className="size-10 shrink-0 overflow-hidden rounded-full" style={ring}>
+        {avatarUrl
+          ? <LazyImage src={avatarUrl} alt={name} className="size-full object-cover" />
+          : <InitialsAvatar name={name} handle={handle} className="size-full text-base" />}
+      </div>
+    </StaffRing>
   );
 }
 export default function LeaderboardPage() {
@@ -392,7 +397,7 @@ export default function LeaderboardPage() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="shrink-0"><RankBadge pos={i + 1} podium={isRanking} /></div>
-                        <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} handle={entry.accountName} medal={podiumOf(i + 1)} />
+                        <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} handle={entry.accountName} medal={podiumOf(i + 1)} staffRole={entry.staffRole} />
                         <div className="flex flex-col min-w-0 flex-1">
                           <span className="truncate text-[15px] font-semibold text-foreground">
                             {entry.displayName || entry.accountName}
@@ -444,7 +449,7 @@ export default function LeaderboardPage() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-4">
-                            <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} handle={entry.accountName} medal={podiumOf(i + 1)} />
+                            <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} handle={entry.accountName} medal={podiumOf(i + 1)} staffRole={entry.staffRole} />
                             <div className="flex flex-col">
                               <span className="text-[17px] font-semibold leading-tight text-foreground">
                                 {entry.displayName || entry.accountName}

@@ -41,6 +41,7 @@ export default {
   rankN: "Puesto {{pos}}",
   levelN: "Nivel {{level}}",
   levelShort: "Nv. {{level}}",
+  staffRole: { superadmin: "Dev", admin: "Admin", mod: "Mod" },
   removeItem: "Quitar {{name}}",
   deleteItem: "Eliminar {{name}}",
   loadError: "Error al cargar. Por favor, inténtalo de nuevo.",

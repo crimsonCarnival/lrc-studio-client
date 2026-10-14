@@ -273,6 +273,7 @@ export type FollowUser = {
   level?: Maybe<Scalars['Int']['output']>;
   projectCount?: Maybe<Scalars['Int']['output']>;
   totalStarsReceived?: Maybe<Scalars['Int']['output']>;
+  staffRole?: Maybe<Scalars['String']['output']>;
 };
 
 export type ForkedFrom = {
@@ -358,6 +359,7 @@ export type LeaderboardUser = {
   streak?: Maybe<UserStreak>;
   totalForksReceived: Scalars['Int']['output'];
   totalStarsReceived: Scalars['Int']['output'];
+  staffRole?: Maybe<Scalars['String']['output']>;
 };
 
 export type Line = {
@@ -827,6 +829,7 @@ export type PublicUser = {
   streak?: Maybe<UserStreak>;
   totalForksReceived: Scalars['Int']['output'];
   totalStarsReceived: Scalars['Int']['output'];
+  staffRole?: Maybe<Scalars['String']['output']>;
 };
 
 export type Query = {
@@ -1332,6 +1335,7 @@ export type User = {
   lastIp?: Maybe<Scalars['String']['output']>;
   lastDevice?: Maybe<Scalars['String']['output']>;
   lastLoginAt?: Maybe<Scalars['String']['output']>;
+  staffRole?: Maybe<Scalars['String']['output']>;
 };
 
 export type UserAppeal = {

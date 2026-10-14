@@ -969,6 +969,28 @@ audio::-webkit-media-controls-panel {
   .star-pop { animation: none; }
 }
 
+/* Staff ring: a gradient ring around a staff member's avatar (see StaffRing). It is drawn
+   outside the avatar's box with a mask, so it never moves anything around it. */
+.staff-ring { position: relative; display: inline-flex; flex: none; }
+.staff-ring::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * var(--staff-outset, 3.5px));
+  border-radius: inherit;
+  padding: 2.5px;
+  background: linear-gradient(135deg, var(--ring-a), var(--ring-b));
+  /* Two masks, the inner one clipped to the content box, subtracted: what is left is the ring. */
+  mask-image: linear-gradient(#000 0 0), linear-gradient(#000 0 0);
+  mask-clip: content-box, border-box;
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+  z-index: 1;
+}
+.staff-ring[data-staff="superadmin"] { --ring-a: var(--iris); --ring-b: var(--gold); }
+.staff-ring[data-staff="admin"] { --ring-a: var(--rose); --ring-b: var(--love); }
+.staff-ring[data-staff="mod"] { --ring-a: var(--foam); --ring-b: var(--pine); }
+
 /* Ad-lib capture (redesign sheet 20): a pill drops into its lane; an unnamed one pulses
    softly until it gets its text. */
 @keyframes adlib-drop { from { transform: translateY(-14px) scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }

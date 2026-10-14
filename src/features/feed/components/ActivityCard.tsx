@@ -1,3 +1,4 @@
+import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
@@ -33,7 +34,7 @@ const REACTABLE_TYPES = new Set(['PROJECT_PUBLISHED', 'PROJECT_STARRED', 'PROJEC
 
 interface Activity {
   id: string;
-  actor: { accountName: string; avatarUrl?: string | null; displayName?: string | null };
+  actor: { accountName: string; avatarUrl?: string | null; staffRole?: string | null; displayName?: string | null };
   type: string;
   publicId?: string | null;
   projectTitle?: string | null;
@@ -98,11 +99,13 @@ export function ActivityCard({ activity }: { activity: Activity }) {
     <div ref={cardRef} className="flex gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors">
       <UserHoverCard accountName={actor.accountName}>
         <Link to={`/profile/${actor.accountName}`} className="shrink-0 block">
-          {actor.avatarUrl ? (
-            <img src={actor.avatarUrl} alt={actor.displayName || actor.accountName} referrerPolicy="no-referrer" className="w-9 h-9 rounded-full object-cover" />
-          ) : (
-            <InitialsAvatar name={(actor.displayName || actor.accountName || '?')} handle={actor.accountName} className="w-9 h-9 rounded-full text-sm" />
-          )}
+          <StaffRing role={actor.staffRole}>
+            {actor.avatarUrl ? (
+              <img src={actor.avatarUrl} alt={actor.displayName || actor.accountName} referrerPolicy="no-referrer" className="w-9 h-9 rounded-full object-cover" />
+            ) : (
+              <InitialsAvatar name={(actor.displayName || actor.accountName || '?')} handle={actor.accountName} className="w-9 h-9 rounded-full text-sm" />
+            )}
+          </StaffRing>
         </Link>
       </UserHoverCard>
 

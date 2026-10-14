@@ -1,3 +1,4 @@
+import { StaffRing } from '@/shared/ui/StaffRing';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -43,9 +44,11 @@ export function SearchUserCard({ user, query, canFollow }: SearchUserCardProps) 
 
   return (
     <article className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[18px] bg-background px-[18px] py-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint">
-      <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft font-heading text-[22px] font-bold text-primary-ink uppercase">
-        {avatarUrl ? <LazyImage src={avatarUrl} alt="" className="size-full object-cover" /> : name.charAt(0)}
-      </span>
+      <StaffRing role={user.staffRole}>
+        <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft font-heading text-[22px] font-bold text-primary-ink uppercase">
+          {avatarUrl ? <LazyImage src={avatarUrl} alt="" className="size-full object-cover" /> : name.charAt(0)}
+        </span>
+      </StaffRing>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="flex min-w-0 items-center gap-2">
           <Link to={`/profile/${accountName}`} className="truncate font-heading text-xl leading-tight font-bold tracking-[-0.02em] text-foreground hover:underline">

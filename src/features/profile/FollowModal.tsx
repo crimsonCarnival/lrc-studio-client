@@ -1,3 +1,4 @@
+import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -19,7 +20,7 @@ interface FollowListUser {
   id: string;
   accountName: string;
   displayName?: string | null;
-  avatarUrl?: string | null;
+  avatarUrl?: string | null; staffRole?: string | null;
   isFollowedByMe?: boolean;
 }
 
@@ -91,11 +92,13 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
             className="flex items-center gap-3 flex-1 min-w-0"
           >
             <div className="relative size-9 shrink-0">
-              {u.avatarUrl ? (
-                <LazyImage src={u.avatarUrl} alt={u.accountName} className="size-9 rounded-xl object-cover" />
-              ) : (
-                <InitialsAvatar name={(u.displayName || u.accountName)} handle={u.accountName} className="size-9 rounded-xl text-sm" />
-              )}
+              <StaffRing role={u.staffRole} className="rounded-xl">
+                {u.avatarUrl ? (
+                  <LazyImage src={u.avatarUrl} alt={u.accountName} className="size-9 rounded-xl object-cover" />
+                ) : (
+                  <InitialsAvatar name={(u.displayName || u.accountName)} handle={u.accountName} className="size-9 rounded-xl text-sm" />
+                )}
+              </StaffRing>
               {presence.isOnline(u.id) && <OnlineDot />}
             </div>
             <div className="min-w-0">

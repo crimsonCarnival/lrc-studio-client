@@ -1,3 +1,4 @@
+import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
@@ -14,7 +15,7 @@ interface SuggestedUser {
   id: string;
   accountName: string;
   displayName?: string;
-  avatarUrl?: string;
+  avatarUrl?: string; staffRole?: string | null;
   isFollowedByMe?: boolean;
 }
 
@@ -90,16 +91,18 @@ export function SuggestedUsers({ limit = 8 }: { limit?: number }) {
                       aria-hidden="true"
                       className="flex items-center gap-3 min-w-0 pointer-events-auto"
                     >
-                      {u.avatarUrl ? (
-                        <img
-                          src={u.avatarUrl}
-                          alt={u.displayName || u.accountName}
-                          referrerPolicy="no-referrer"
-                          className="size-9 rounded-full object-cover shrink-0"
-                        />
-                      ) : (
-                        <InitialsAvatar name={(u.displayName || u.accountName || '?')} handle={u.accountName} className="size-9 rounded-full text-sm shrink-0" />
-                      )}
+                      <StaffRing role={u.staffRole}>
+                        {u.avatarUrl ? (
+                          <img
+                            src={u.avatarUrl}
+                            alt={u.displayName || u.accountName}
+                            referrerPolicy="no-referrer"
+                            className="size-9 rounded-full object-cover shrink-0"
+                          />
+                        ) : (
+                          <InitialsAvatar name={(u.displayName || u.accountName || '?')} handle={u.accountName} className="size-9 rounded-full text-sm shrink-0" />
+                        )}
+                      </StaffRing>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-white truncate">
                           {u.displayName || u.accountName}

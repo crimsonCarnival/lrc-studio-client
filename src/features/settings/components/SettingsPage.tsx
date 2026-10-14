@@ -1,3 +1,4 @@
+import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
@@ -334,12 +335,14 @@ export default function SettingsPage() {
                 <aside className="hidden lg:flex flex-col gap-0.5 w-[230px] shrink-0 sticky top-0">
                   {user && !isGuest && (
                     <Link to={`/profile/${user.accountName}`} className="flex items-center gap-3 px-3 pb-4 pt-1 text-zinc-100 no-underline">
-                      <div className="size-10 rounded-xl flex-shrink-0 overflow-hidden">
-                        {user.avatarUrl
-                          ? <LazyImage src={user.avatarUrl} alt="" className="size-full object-cover" />
-                          : <InitialsAvatar name={user.displayName || user.accountName} handle={user.accountName} className="size-full text-sm" />
-                        }
-                      </div>
+                      <StaffRing role={user.staffRole} className="rounded-xl">
+                        <div className="size-10 rounded-xl flex-shrink-0 overflow-hidden">
+                          {user.avatarUrl
+                            ? <LazyImage src={user.avatarUrl} alt="" className="size-full object-cover" />
+                            : <InitialsAvatar name={user.displayName || user.accountName} handle={user.accountName} className="size-full text-sm" />
+                          }
+                        </div>
+                      </StaffRing>
                       <div className="min-w-0">
                         <p className="font-heading text-[15px] font-bold truncate leading-tight">{user.displayName || user.accountName}</p>
                         <p className="text-[13px] text-zinc-400 font-mono truncate mt-0.5">{user.accountName}</p>

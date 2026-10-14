@@ -1,3 +1,4 @@
+import { StaffRing } from '@/shared/ui/StaffRing';
 import { useRef, useEffect, useId, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -20,6 +21,8 @@ type Row = {
   /** Trailing detail on the second line: level for users, sync type for projects. */
   meta?: string;
   image?: string | null;
+  /** Users only: public staff role, for the avatar ring. */
+  staffRole?: string | null;
   kind: 'user' | 'project';
 };
 
@@ -50,6 +53,7 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
     sub: `@${u.accountName}`,
     meta: u.level ? t('settings.levelShort', { level: u.level }) : undefined,
     image: u.avatarUrl,
+    staffRole: u.staffRole,
     kind: 'user',
   }));
   const projectRows: Row[] = projects.map((p) => ({
@@ -138,9 +142,11 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
         className={cn('mx-1.5 flex min-h-[52px] items-center gap-3 rounded-[10px] px-2.5 py-1.5 text-foreground', isActive && 'bg-primary-soft')}
       >
         {row.kind === 'user' ? (
-          <span className="grid size-[34px] shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft font-heading text-sm font-bold text-primary-ink uppercase">
-            {row.image ? <LazyImage src={row.image} alt="" className="size-full object-cover" /> : row.title.charAt(0)}
-          </span>
+          <StaffRing role={row.staffRole}>
+            <span className="grid size-[34px] shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft font-heading text-sm font-bold text-primary-ink uppercase">
+              {row.image ? <LazyImage src={row.image} alt="" className="size-full object-cover" /> : row.title.charAt(0)}
+            </span>
+          </StaffRing>
         ) : (
           <span className="cover-hatch grid size-[38px] shrink-0 place-items-center overflow-hidden rounded-lg text-faint">
             {row.image ? <LazyImage src={row.image} alt="" className="size-full object-cover" /> : <Icon name="music_note" size={16} />}

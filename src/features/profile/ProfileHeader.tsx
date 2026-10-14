@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import { Icon } from '@/shared/ui/Icon';
 import { LevelBadge } from '@ui/LevelBadge';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
+import { StaffRing } from '@/shared/ui/StaffRing';
 import { BadgeList } from '@/features/badges/BadgeList';
 import { Tip } from '@/shared/ui/tip';
 import { CountryFlag } from '@/shared/ui/CountryFlag';
@@ -18,16 +19,20 @@ import { useStreakResetHint } from '@/shared/hooks/useStreakResetHint';
 import { formatDistanceToNow } from 'date-fns';
 import { es as esLocale, enUS as enLocale } from 'date-fns/locale';
 
-function AvatarBadge({ avatarUrl, name, handle, isOnline, size = 'lg' }: { avatarUrl?: string | null; name: string; handle?: string | null; isOnline?: boolean; size?: 'lg' | 'sm' }) {
-  const sizeClass = size === 'lg' ? 'size-28 sm:size-32 text-5xl rounded-[1.5rem]' : 'size-16 text-2xl rounded-xl';
+function AvatarBadge({ avatarUrl, name, handle, staffRole, isOnline, size = 'lg' }: { avatarUrl?: string | null; name: string; handle?: string | null; staffRole?: string | null; isOnline?: boolean; size?: 'lg' | 'sm' }) {
+  const radius = size === 'lg' ? 'rounded-[1.5rem]' : 'rounded-xl';
+  const sizeClass = size === 'lg' ? `size-28 sm:size-32 text-5xl ${radius}` : `size-16 text-2xl ${radius}`;
   if (avatarUrl) {
     return (
       <div className="relative inline-block shrink-0">
-        <LazyImage
-          src={avatarUrl}
-          alt={name}
-          className={`${sizeClass} object-cover border border-border shadow-inner-highlight ring-4 ring-zinc-900`}
-        />
+        {/* Outside the 4px card-coloured ring the avatar already has. */}
+        <StaffRing role={staffRole} className={radius} outset={7}>
+          <LazyImage
+            src={avatarUrl}
+            alt={name}
+            className={`${sizeClass} object-cover border border-border shadow-inner-highlight ring-4 ring-zinc-900`}
+          />
+        </StaffRing>
         {isOnline && (
           <span className="absolute -bottom-1 -right-1 size-5 rounded-full bg-green-500 border-[3px] border-zinc-900" />
         )}
@@ -37,9 +42,11 @@ function AvatarBadge({ avatarUrl, name, handle, isOnline, size = 'lg' }: { avata
   return (
     <div className="relative inline-block shrink-0">
       {/* bg-background under the tint, so the waveform cover does not show through it. */}
-      <div className={`${sizeClass} overflow-hidden bg-background border border-border shadow-inner-highlight ring-4 ring-zinc-900`}>
-        <InitialsAvatar name={name} handle={handle} className="size-full" />
-      </div>
+      <StaffRing role={staffRole} className={radius} outset={7}>
+        <div className={`${sizeClass} overflow-hidden bg-background border border-border shadow-inner-highlight ring-4 ring-zinc-900`}>
+          <InitialsAvatar name={name} handle={handle} className="size-full" />
+        </div>
+      </StaffRing>
       {isOnline && (
         <span className="absolute -bottom-1 -right-1 size-5 rounded-full bg-green-500 border-[3px] border-zinc-900" />
       )}
@@ -149,7 +156,7 @@ export function ProfileHeader({
 
       <div className="px-6 sm:px-8 pb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
       <div className="-mt-14 sm:-mt-16">
-        <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} handle={profile.accountName} isOnline={isOnline} />
+        <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} handle={profile.accountName} staffRole={profile.staffRole} isOnline={isOnline} />
       </div>
 
       <div className="flex-1 min-w-0 w-full text-center sm:text-left flex flex-col pt-1 sm:pt-4">

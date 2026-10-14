@@ -1,3 +1,5 @@
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
+import { StaffRing } from '@/shared/ui/StaffRing';
 import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
@@ -23,6 +25,7 @@ interface MiniProfile {
   accountName: string;
   displayName: string | null;
   avatarUrl: string | null;
+  staffRole?: string | null;
   bio: string | null;
   isVerified: boolean;
   followerCount: number;
@@ -221,13 +224,13 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
             <>
               <div className="flex items-start gap-3.5 px-[18px] pt-[18px] pb-3.5">
                 <Link to={`/profile/${accountName}`} onClick={() => setOpen(false)} className="relative shrink-0">
-                  {profile.avatarUrl ? (
-                    <LazyImage src={profile.avatarUrl} alt={accountName} className="size-14 rounded-2xl object-cover" />
-                  ) : (
-                    <div className="size-14 rounded-2xl bg-gradient-to-br from-primary/80 to-violet-500/50 flex items-center justify-center font-semibold text-[26px] text-zinc-950 select-none">
-                      {displayName[0]?.toUpperCase()}
-                    </div>
-                  )}
+                  <StaffRing role={profile.staffRole} className="rounded-2xl">
+                    {profile.avatarUrl ? (
+                      <LazyImage src={profile.avatarUrl} alt={accountName} className="size-14 rounded-2xl object-cover" />
+                    ) : (
+                      <InitialsAvatar name={displayName} handle={accountName} className="size-14 rounded-2xl text-[26px]" />
+                    )}
+                  </StaffRing>
                   {isOnline && <span title={t('common.online')} className="absolute -right-[3px] -bottom-[3px] size-3.5 rounded-full bg-emerald-400 border-[3px] border-zinc-900" />}
                 </Link>
 

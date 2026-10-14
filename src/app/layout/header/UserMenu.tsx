@@ -1,3 +1,4 @@
+import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -79,13 +80,16 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
       )}
       <NotificationBell />
       <Popover open={menuOpen} onOpenChange={(open) => { setMenuOpen(open); if (open) fetchCounts(); }}>
-        <div className="relative flex-shrink-0">
+        <div className="relative ml-1 flex-shrink-0">
           {/* Double ring: 2px of page colour, then a hairline, so the avatar reads as lifted off the bar (sheet 06). */}
-          <PopoverTrigger className="relative z-[110] ml-1 block size-10 coarse:size-11 cursor-pointer overflow-hidden rounded-full bg-primary-soft shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--hl)] transition-shadow duration-[var(--duration-state)] outline-none hover:shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--subtle)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-solid focus-visible:outline-focus">
+          {/* Staff ring outside the double ring (2px gap + hairline) the avatar already has. */}
+          <StaffRing role={user?.staffRole} outset={6}>
+          <PopoverTrigger className="relative z-[110] block size-10 coarse:size-11 cursor-pointer overflow-hidden rounded-full bg-primary-soft shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--hl)] transition-shadow duration-[var(--duration-state)] outline-none hover:shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--subtle)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-solid focus-visible:outline-focus">
             {user?.avatarUrl
               ? <LazyImage src={user.avatarUrl} alt={user?.displayName || user?.accountName || user?.email || ''} className="size-full object-cover" />
               : <InitialsAvatar name={user?.displayName || user?.accountName || user?.email} handle={user?.accountName} className="size-full text-[17px]" />}
           </PopoverTrigger>
+          </StaffRing>
           {user?.email && !user?.isVerified && (
             <Tip content={t('auth.verification.avatarBadge')}>
               <span className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-amber-400 border-2 border-zinc-950 pointer-events-none z-[111]" />

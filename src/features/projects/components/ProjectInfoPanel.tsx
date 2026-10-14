@@ -1,3 +1,4 @@
+import { StaffRing } from '@/shared/ui/StaffRing';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
@@ -27,7 +28,7 @@ interface ProjectData {
   publicId?: string;
   title?: string;
   metadata?: ProjectMeta;
-  user?: { accountName?: string; displayName?: string; avatarUrl?: string | null; progression?: { level?: number | null } | null };
+  user?: { accountName?: string; displayName?: string; avatarUrl?: string | null; staffRole?: string | null; progression?: { level?: number | null } | null };
   upload?: { duration?: number | null };
   createdAt?: string | number;
   forksEnabled?: boolean;
@@ -151,13 +152,15 @@ export default function ProjectInfoPanel({
       label: t('projectView.syncedBy'),
       value: (
         <span className="flex min-w-0 items-center gap-2">
-          {project.user?.avatarUrl ? (
-            <img src={project.user.avatarUrl} alt="" className="size-[22px] shrink-0 rounded-full object-cover" loading="lazy" decoding="async" />
-          ) : (
-            <span aria-hidden className="grid size-[22px] shrink-0 place-items-center rounded-full bg-foam-soft font-heading text-[10px] font-bold uppercase text-foam-ink">
-              {(authorName ?? '').charAt(0)}
-            </span>
-          )}
+          <StaffRing role={project.user?.staffRole} outset={2.5}>
+            {project.user?.avatarUrl ? (
+              <img src={project.user.avatarUrl} alt="" className="size-[22px] shrink-0 rounded-full object-cover" loading="lazy" decoding="async" />
+            ) : (
+              <span aria-hidden className="grid size-[22px] shrink-0 place-items-center rounded-full bg-foam-soft font-heading text-[10px] font-bold uppercase text-foam-ink">
+                {(authorName ?? '').charAt(0)}
+              </span>
+            )}
+          </StaffRing>
           <Link to={`/profile/${accountName}`} className="truncate font-bold text-foreground hover:underline">
             {authorName}
           </Link>
