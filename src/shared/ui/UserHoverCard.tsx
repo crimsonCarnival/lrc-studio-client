@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
-import { BadgeChip } from '@/features/badges/BadgeChip';
+import { BadgeList } from '@/features/badges/BadgeList';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
 import { cn } from '@/shared/utils/utils';
@@ -267,9 +267,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
               )}
 
               {profile.miniProfileBadgeIds.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 px-[18px] pb-3.5">
-                  {profile.miniProfileBadgeIds.map((id) => <BadgeChip key={id} id={id} />)}
-                </div>
+                <BadgeList ids={profile.miniProfileBadgeIds} max={profile.miniProfileBadgeIds.length} className="px-[18px] pb-3.5" />
               )}
 
               <nav aria-label={t('profile.mini.stats')} className="grid grid-cols-4 border-t border-zinc-800">

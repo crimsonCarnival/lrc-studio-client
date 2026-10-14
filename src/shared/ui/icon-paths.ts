@@ -90,6 +90,8 @@ export const ICON_SHAPES: Record<string, IconShape> = {
   military_tech: { d: 'M8 3h8l-2 6h-4z M17 15a5 5 0 1 1-10 0a5 5 0 1 1 10 0 M12 13v4' },
   local_fire_department: { d: 'M12 21a6 6 0 0 0 6-6c0-4-3-6-4-10c-2 2-3 4-3 6c-1-1-1.5-2-1.5-3C7.5 10 6 12.5 6 15a6 6 0 0 0 6 6z', fillable: true },
   bolt: { d: 'M13 3L5 13.5h6L10 21l8-10.5h-6z', fillable: true },
+  // Drawn on sheet 09 (the locked showcase slot), in the same geometry.
+  lock: { d: 'M7 11V8a5 5 0 0 1 10 0v3 M5.5 11h13v9h-13z' },
   block: { d: 'M20 12a8 8 0 1 1-16 0a8 8 0 1 1 16 0 M6.4 6.4l11.2 11.2' },
   warning: { d: 'M12 4L2.8 19.5h18.4z M12 10v4 M12 17h.01' },
 };

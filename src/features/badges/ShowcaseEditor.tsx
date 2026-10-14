@@ -1,9 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
-import { BADGE_REGISTRY, RARITY_CONFIG, BADGE_COLORS } from './badge-registry';
+import { BADGE_REGISTRY, RARITY_CONFIG } from './badge-registry';
+import { BadgeEmblem } from './BadgeEmblem';
+import { emblemFor } from './badge-emblems';
 import { useBadgeDefs } from './BadgeDefsContext';
 import { Button } from '@ui/button';
 import { Toggle } from '@/features/settings/components/shared';
@@ -38,7 +40,6 @@ function EarnedBadgeItem({ badge, isInShowcase, onToggle }: { badge: Badge; isIn
   const tk = t as (key: string, defaultValue?: string) => string;
   const dbDefs = useBadgeDefs();
   const def = BADGE_REGISTRY[badge.id] ?? { label: badge.id, icon: '?', color: 'primary' };
-  const colorConf = BADGE_COLORS[def.color] ?? BADGE_COLORS.primary;
   const rarity = dbDefs[badge.id]?.rarity ?? badge.rarity ?? 'common';
   const rarityConf = RARITY_CONFIG[rarity] ?? RARITY_CONFIG.common;
   const rawLabel = def.label as unknown;
@@ -48,57 +49,64 @@ function EarnedBadgeItem({ badge, isInShowcase, onToggle }: { badge: Badge; isIn
   const label = tk(`badges.${badge.id}.label`, fallbackLabel);
 
   return (
-    <li className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-zinc-950 border border-zinc-800">
-      <span className={`shrink-0 min-w-[84px] text-center px-2 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 ${colorConf.text}`}>
-        {label}
-      </span>
+    <li className="flex items-center gap-3 rounded-[var(--radius-control)] bg-background px-3.5 py-3 inset-ring inset-ring-hl">
+      <BadgeEmblem id={badge.id} color={dbDefs[badge.id]?.color} rarity={rarity} size={44} />
       <span className="flex-1 min-w-0">
-        <span className="block text-[13px] text-zinc-400">{tk(`badges.${badge.id}.tip`, def.condition ?? '')}</span>
-        <span className="block text-xs text-zinc-500 mt-0.5">{tk(rarityConf.labelKey)}</span>
+        <span className="block text-[15px] font-semibold leading-tight text-foreground">{label}</span>
+        <span className="block text-[13px] text-subtle">{tk(`badges.${badge.id}.tip`, def.condition ?? '')}</span>
+        <span className="mt-0.5 block font-mono text-[11px] text-faint">{tk(rarityConf.labelKey)}</span>
       </span>
-      <button
+      <Button
         type="button"
+        variant={isInShowcase ? 'default' : 'outline'}
+        size="icon"
         aria-pressed={isInShowcase}
         aria-label={t(isInShowcase ? 'badges.showcase.removeFrom' : 'badges.showcase.addTo', { name: label })}
         onClick={() => onToggle(badge.id)}
-        className={`shrink-0 size-9 rounded-lg border font-bold text-[15px] transition-colors ${isInShowcase
-          ? 'bg-primary border-primary text-zinc-900'
-          : 'border-zinc-700 text-zinc-100 hover:bg-zinc-800'}`}
+        className="size-11 lg:size-9"
       >
-        {isInShowcase ? '✓' : '+'}
-      </button>
+        <Icon name={isInShowcase ? 'check' : 'add'} size={18} />
+      </Button>
     </li>
   );
 }
 
-function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop }: {
+const SLOT_CLASS = 'relative flex h-[168px] flex-col items-center justify-center gap-2.5 rounded-2xl px-2 text-center text-[15px] font-semibold leading-tight';
+
+function ShowcaseSlot({ badge, index, onRemove, onChoose, onDragStart, onDragOver, onDrop }: {
   badge: Badge | null;
   index: number;
   onRemove: (id: string) => void;
+  onChoose: () => void;
   onDragStart: (index: number) => void;
   onDragOver: (index: number) => void;
   onDrop: (index: number) => void;
 }) {
   const { t } = useTranslation();
   const tk = t as (key: string, defaultValue?: string) => string;
+  const dbDefs = useBadgeDefs();
   const number = (
-    <span className="absolute left-2 top-1.5 text-[11px] font-mono text-zinc-500">{index + 1}</span>
+    <span className="absolute left-2.5 top-2 font-mono text-[11px] text-faint">{index + 1}</span>
   );
   if (!badge) {
     return (
-      <div
-        className="relative aspect-square rounded-[14px] border border-dashed border-zinc-700"
+      <button
+        type="button"
+        onClick={onChoose}
+        className={`${SLOT_CLASS} border-[1.5px] border-dashed border-hl text-subtle transition-colors duration-[var(--duration-state)] hover:border-iris hover:bg-primary-soft hover:text-primary-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus`}
         onDragOver={(e) => { e.preventDefault(); onDragOver(index); }}
         onDrop={() => onDrop(index)}
       >
         {number}
-      </div>
+        <Icon name="add" size={22} />
+        {t('badges.showcase.choose')}
+      </button>
     );
   }
 
   const def = BADGE_REGISTRY[badge.id] ?? { label: badge.id, icon: '?', color: 'primary' };
-  const colorConf = BADGE_COLORS[def.color] ?? BADGE_COLORS.primary;
   const label = tk(`badges.${badge.id}.label`, typeof def.label === 'string' ? def.label : badge.id);
+  const color = dbDefs[badge.id]?.color ?? def.color;
 
   return (
     <div
@@ -106,22 +114,39 @@ function ShowcaseSlot({ badge, index, onRemove, onDragStart, onDragOver, onDrop 
       onDragStart={() => onDragStart(index)}
       onDragOver={(e) => { e.preventDefault(); onDragOver(index); }}
       onDrop={() => onDrop(index)}
-      className={`group relative aspect-square rounded-[14px] flex items-center justify-center border bg-zinc-800/60 cursor-grab active:cursor-grabbing ${colorConf.border}`}
+      className={`group ${SLOT_CLASS} bg-background text-foreground cursor-grab active:cursor-grabbing`}
+      style={{ boxShadow: `inset 0 0 0 1.5px ${emblemFor(badge.id, color).color}` }}
     >
       {number}
-      <span className={`text-xs font-bold text-center px-1 ${colorConf.text}`}>{label}</span>
-      <button
+      <BadgeEmblem id={badge.id} color={color} rarity={dbDefs[badge.id]?.rarity ?? badge.rarity} size={64} />
+      <span>{label}</span>
+      <Button
         type="button"
+        variant="ghost"
+        size="icon-xs"
         aria-label={t('badges.showcase.removeFrom', { name: label })}
         onClick={() => onRemove(badge.id)}
-        className="absolute right-1 top-1 size-6 rounded-full flex items-center justify-center text-zinc-400 hover:text-red-400 hover:bg-red-500/20 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-100 transition-opacity"
+        className="absolute right-1 top-1 rounded-full opacity-0 hover:bg-love-soft hover:text-love-ink group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-100"
       >
         <Icon name="close" size={14} />
-      </button>
+      </Button>
     </div>
   );
 }
 
+/** The slot the next level unlocks, shown so the reward is visible before it is earned. */
+function LockedSlot({ level }: { level: number }) {
+  const { t } = useTranslation();
+  return (
+    <div
+      className={`${SLOT_CLASS} text-subtle`}
+      style={{ background: 'repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-faint) 10%, transparent) 0 8px, transparent 8px 16px)' }}
+    >
+      <Icon name="lock" size={22} />
+      <span className="font-mono text-xs font-medium">{t('badges.showcase.lockedLevel', { level })}</span>
+    </div>
+  );
+}
 interface ShowcaseEditorProps {
   userBadges?: Badge[];
   initialShowcase?: string[];
@@ -140,6 +165,12 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [, setDragOver] = useState<number | null>(null);
   const [rarityFilter, setRarityFilter] = useState('all');
+  const earnedRef = useRef<HTMLElement>(null);
+  // An empty slot is filled from the list below, so choosing takes you there.
+  const goToEarned = useCallback(() => {
+    earnedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    earnedRef.current?.querySelector<HTMLElement>('button[aria-pressed="false"]')?.focus({ preventScroll: true });
+  }, []);
 
   const showcaseSet = new Set(showcase);
 
@@ -216,18 +247,20 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
             {nextUnlock && <> · {t('badges.showcase.nextSlot', { level: nextUnlock.level })}</>}
           </span>
         </div>
-        <div className="grid gap-2.5 mt-[18px]" style={{ gridTemplateColumns: `repeat(${Math.min(showcaseSlots, 8)}, minmax(0, 1fr))` }}>
+        <div className="grid gap-2.5 mt-[18px]" style={{ gridTemplateColumns: `repeat(${Math.min(showcaseSlots + (nextUnlock ? 1 : 0), 8)}, minmax(0, 1fr))` }}>
           {slots.map((badge, i) => (
             <ShowcaseSlot
               key={i}
               badge={badge}
               index={i}
               onRemove={removeFromShowcase}
+              onChoose={goToEarned}
               onDragStart={setDragFrom}
               onDragOver={setDragOver}
               onDrop={handleDrop}
             />
           ))}
+          {nextUnlock && <LockedSlot level={nextUnlock.level} />}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-zinc-800">
@@ -241,7 +274,7 @@ export function ShowcaseEditor({ userBadges = EMPTY_BADGES, initialShowcase = EM
         </div>
       </section>
 
-      <section className="settings-section rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+      <section ref={earnedRef} className="settings-section rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-[17px] font-bold text-zinc-100">
             {t('badges.showcase.earned')}{' '}

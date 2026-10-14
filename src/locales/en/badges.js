@@ -43,6 +43,9 @@ export default {
     slotsFull_other: 'You have used all {{slots}} slots',
     nextSlot:    'Unlock slot 4 at level {{level}}',
     lockedSlot:  'Reach level {{level}} to unlock {{slots}} slots',
+    choose:      'Choose',
+    lockedLevel: 'Lv. {{level}}',
+    earnedAgo:   'Earned {{when}}',
     // Holder count
     holders_one:   '{{count}} holder',
     holders_other: '{{count}} holders',

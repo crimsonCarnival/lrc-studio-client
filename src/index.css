@@ -963,6 +963,14 @@ audio::-webkit-media-controls-panel {
   .star-pop { animation: none; }
 }
 
+/* Legendary badge frame: a gold arc orbiting the emblem (redesign sheet 09).
+   The emblem is drawn on a 72px grid, so its centre is 36 36. */
+@keyframes emblem-sheen { to { transform: rotate(360deg); } }
+.emblem-sheen { transform-origin: 36px 36px; animation: emblem-sheen 3.2s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .emblem-sheen { animation: none; }
+}
+
 /* Reaction burst: the emoji pops and six dots fly out when you react (redesign sheet 18).
    Each ray sets its own --a angle inline. Reduced motion gets the count change only. */
 @keyframes reaction-bump {

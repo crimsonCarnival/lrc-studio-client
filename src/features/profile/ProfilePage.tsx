@@ -17,7 +17,7 @@ import { useProfile } from './profile.queries';
 import { useSuggestedUsers } from '@/features/explore/hooks/useExplore';
 import { FollowModal } from './FollowModal';
 import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
-import { BadgeChip } from '@/features/badges/BadgeChip';
+import { BadgeEmblem } from '@/features/badges/BadgeEmblem';
 import { ShowcasedBadges } from '@/features/badges/ShowcasedBadges';
 import ActivityHeatmap from '@/features/settings/components/panels/profile/ActivityHeatmap';
 import { projects } from '@/app/api';
@@ -636,7 +636,7 @@ export default function ProfilePage() {
                   <div className="flex flex-col gap-2">
                     {allBadgeIds.map(id => (
                       <div key={id} className="glass rounded-xl p-3 flex items-center gap-3">
-                        <BadgeChip id={id} />
+                        <BadgeEmblem id={id} size={40} />
                         <div className="flex flex-col min-w-0 flex-1">
                           <span className="text-sm font-bold text-zinc-200 truncate">{(t as (k: string) => string)(`badges.${id}.label`)}</span>
                           <span className="text-xs text-zinc-500 truncate">{(t as (k: string) => string)(`badges.${id}.tip`)}</span>
