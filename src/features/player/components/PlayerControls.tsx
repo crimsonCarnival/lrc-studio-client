@@ -1,3 +1,4 @@
+import { EmptyState } from '@ui/EmptyState';
 import { lazy, Suspense, memo, useMemo } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -304,6 +305,11 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
         {/* Unified media loader — shown when no media is loaded */}
         {!hasMedia && !yt.ytLoading && (
           <div className="animate-fade-in w-full max-w-[1000px] mx-auto flex flex-col items-center justify-center gap-3 relative">
+            {/* Says what is missing before offering the ways to fix it (redesign sheet 11).
+                Wide layouts only: the phone transport has no room for it. */}
+            {!viewerMode && (
+              <EmptyState art="song" card={false} title={t('player.emptyTitle')} description={t('player.emptyDesc')} className="hidden lg:flex pb-1" />
+            )}
             {!viewerMode && (
               <div className="flex flex-wrap items-center justify-center gap-3 w-full">
                 {/* Local Audio */}

@@ -14,6 +14,7 @@ export default {
   resultCount_one: '{{count}} result',
   resultCount_other: '{{count}} results',
   noResults: 'No public projects found for "{{query}}".',
+  emptyHint: 'Check the spelling or try a shorter search.',
   noUsers: 'No users found for "{{query}}".',
   forkedFrom: 'forked from {{accountName}}',
   error: 'Search failed. Try again later.',

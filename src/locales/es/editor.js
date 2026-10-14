@@ -149,6 +149,8 @@ export default {
     distributeConfirm: "Esta línea ya tiene palabras con tiempo. Repartir uniforme los reemplazará.",
     timelineLabel: "Palabras de la línea en el tiempo",
     timelineUnavailable: "Marca el inicio de esta línea para ver sus palabras en el tiempo.",
+    emptyTitle: "Marca el inicio de la línea",
+    emptyDesc: "Pulsa <0>Enter</0> cuando empiece la primera palabra. Las demás aparecerán aquí, en el tiempo.",
     dragHint: "Arrastra los bordes de cada bloque para ajustar dónde empieza una palabra.",
     boundaryLabel: "Inicio de «{{word}}»",
     tooShort: "«{{word}}» dura {{seconds}} s: demasiado corta o se solapa con la siguiente",

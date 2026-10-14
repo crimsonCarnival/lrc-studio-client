@@ -146,6 +146,8 @@ export default {
     distributeConfirm: "This line already has timed words. Spreading evenly will replace them.",
     timelineLabel: "This line's words over time",
     timelineUnavailable: "Mark this line's start to see its words over time.",
+    emptyTitle: "Mark the start of the line",
+    emptyDesc: "Press <0>Enter</0> when the first word begins. The rest will show up here, in time.",
     dragHint: "Drag the edge of a block to adjust where a word starts.",
     boundaryLabel: "Start of “{{word}}”",
     tooShort: "“{{word}}” lasts {{seconds}} s: too short, or overlapping the next word",

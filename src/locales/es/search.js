@@ -14,6 +14,7 @@ export default {
   resultCount_one: '{{count}} resultado',
   resultCount_other: '{{count}} resultados',
   noResults: 'No se encontraron proyectos públicos para "{{query}}".',
+  emptyHint: 'Revisa la ortografía o prueba con una búsqueda más corta.',
   noUsers: 'No se encontraron usuarios para "{{query}}".',
   forkedFrom: 'copiado de {{accountName}}',
   error: 'La búsqueda falló. Intenta más tarde.',

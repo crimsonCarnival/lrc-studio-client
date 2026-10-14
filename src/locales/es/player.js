@@ -6,6 +6,8 @@ export default {
   changeSong: "Cambiar canción",
   clearUrl: "Volver a cargar archivo",
   dropAudio: "Suelta o haz clic para cargar un archivo de audio",
+  emptyTitle: "Carga una canción para empezar",
+  emptyDesc: "Suelta un archivo de audio o pega un enlace de YouTube.",
   dropHint: "MP3, WAV, FLAC, OGG y más",
   or: "o",
   pasteUrl: "Pega la URL de YouTube...",

@@ -964,6 +964,15 @@ audio::-webkit-media-controls-panel {
   .star-pop { animation: none; }
 }
 
+/* Empty states (redesign sheet 11): the waiting playhead breathes, the card you could add floats. */
+@keyframes empty-pulse { 50% { opacity: 0.35; } }
+@keyframes empty-float { 50% { transform: translateY(-4px); } }
+.empty-pulse { animation: empty-pulse 1.6s ease-in-out infinite; }
+.empty-float { animation: empty-float 3.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .empty-pulse, .empty-float { animation: none; }
+}
+
 /* Legendary badge frame: a gold arc orbiting the emblem (redesign sheet 09).
    The emblem is drawn on a 72px grid, so its centre is 36 36. */
 @keyframes emblem-sheen { to { transform: rotate(360deg); } }

@@ -1,3 +1,4 @@
+import { EmptyState } from '@ui/EmptyState';
 import { useRef, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -142,23 +143,20 @@ export default function SearchPage() {
 
       {/* An empty tab points at the one that has results instead of dead-ending. */}
       {hasQuery && !active.loading && !active.error && active.results.length === 0 && (
-        <div className="flex flex-col items-center gap-3 rounded-[18px] bg-background px-5 py-[30px] text-center inset-ring inset-ring-hl">
-          <Icon name={urlTab === 'projects' ? 'music_note' : 'person_search'} size={40} className="text-faint" />
-          <span className="font-heading text-xl font-bold tracking-[-0.02em] text-foreground">
-            {t(urlTab === 'projects' ? 'search.emptyProjects' : 'search.emptyUsers', { query })}
-          </span>
+        <EmptyState
+          art="search"
+          title={t(urlTab === 'projects' ? 'search.emptyProjects' : 'search.emptyUsers', { query })}
+          description={counts[otherTab] > 0
+            ? t(otherTab === 'users' ? 'search.butUsers' : 'search.butProjects', { count: counts[otherTab] })
+            : t('search.emptyHint')}
+        >
           {counts[otherTab] > 0 && (
-            <>
-              <span className="text-[15px] text-subtle">
-                {t(otherTab === 'users' ? 'search.butUsers' : 'search.butProjects', { count: counts[otherTab] })}
-              </span>
-              <Button variant="outline" onClick={() => handleTab(otherTab)} className="h-10 gap-2 px-3.5 text-[15px] lg:h-10 lg:px-3.5 lg:text-[15px] coarse:h-11">
-                {t(otherTab === 'users' ? 'search.showUsers' : 'search.showProjects')}
-                <Icon name="arrow_forward" size={16} />
-              </Button>
-            </>
+            <Button variant="outline" onClick={() => handleTab(otherTab)} className="h-10 gap-2 px-3.5 text-[15px] lg:h-10 lg:px-3.5 lg:text-[15px] coarse:h-11">
+              {t(otherTab === 'users' ? 'search.showUsers' : 'search.showProjects')}
+              <Icon name="arrow_forward" size={16} />
+            </Button>
           )}
-        </div>
+        </EmptyState>
       )}
 
       {urlTab === 'projects' && !projects.error && projects.results.length > 0 && (

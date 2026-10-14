@@ -9,6 +9,7 @@ export default {
     title: 'Popular Playlists',
     seeAll: 'See all playlists',
     empty: 'No popular playlists yet.',
+    emptyHint: 'Group your synced songs and share them. The first list could be yours.',
   },
   suggested: {
     title: 'People You Might Follow',

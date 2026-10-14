@@ -1,3 +1,4 @@
+import { EmptyState } from '@ui/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
@@ -111,9 +112,7 @@ export default function ExploreProjectsPage() {
             {t('search.error')}
           </div>
         ) : searchResults.length === 0 ? (
-          <div className="flex items-center justify-center text-zinc-500 text-sm py-20">
-            {t('search.noResults', { query: search.query.trim() })}
-          </div>
+          <EmptyState art="search" title={t('search.noResults', { query: search.query.trim() })} description={t('search.emptyHint')} className="py-14" />
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

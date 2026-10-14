@@ -1,6 +1,8 @@
+import { EmptyState } from '@ui/EmptyState';
+import { Kbd } from '@ui/kbd';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 
@@ -133,9 +135,12 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
 
   if (start == null || span == null || words.length === 0) {
     return (
-      <p className="rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl p-5 text-[13px] text-subtle">
-        {t('editor.words.timelineUnavailable')}
-      </p>
+      <EmptyState
+        art="words"
+        words={words.map((w) => w.word ?? '').filter(Boolean)}
+        title={t('editor.words.emptyTitle')}
+        description={<Trans i18nKey="editor.words.emptyDesc" components={[<Kbd key="0" />]} />}
+      />
     );
   }
 

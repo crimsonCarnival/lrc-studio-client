@@ -6,6 +6,8 @@ export default {
   changeSong: "Change media",
   clearUrl: "Back to file upload",
   dropAudio: "Drop audio here, or click to browse",
+  emptyTitle: "Load a song to start",
+  emptyDesc: "Drop an audio file or paste a YouTube link.",
   dropHint: "Supports MP3, WAV, FLAC, OGG",
   or: "or",
   pasteUrl: "Paste YouTube URL...",

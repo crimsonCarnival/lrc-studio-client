@@ -9,6 +9,7 @@ export default {
     title: 'Listas populares',
     seeAll: 'Ver todas las listas',
     empty: 'Aún no hay listas populares.',
+    emptyHint: 'Agrupa tus canciones sincronizadas y compártelas. La primera lista podría ser la tuya.',
   },
   suggested: {
     title: 'Personas que podrías seguir',

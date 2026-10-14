@@ -1,3 +1,4 @@
+import { EmptyState } from '@ui/EmptyState';
 import { useState } from 'react';
 import { useCachedList } from '@/shared/hooks/useCachedList';
 import type { ReactNode } from 'react';
@@ -94,9 +95,7 @@ export function PlaylistGrid({ accountName, isOwner }: { accountName: string; is
       )}
 
       {visiblePlaylists.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-          <p className="text-sm">{t('playlists.empty')}</p>
-        </div>
+        <EmptyState art="lists" title={t('playlists.empty')} className="py-12" />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {visiblePlaylists.map(playlist => (

@@ -1,3 +1,4 @@
+import { EmptyState } from '@ui/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
@@ -48,9 +49,7 @@ export default function ExplorePlaylistsPage() {
       <h1 className="text-xl font-semibold text-white">{t('explore.playlists.title')}</h1>
 
       {playlists.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-zinc-500 text-sm py-20">
-          {t('explore.playlists.empty')}
-        </div>
+        <EmptyState art="lists" title={t('explore.playlists.empty')} description={t('explore.playlists.emptyHint')} className="py-14" />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
