@@ -223,7 +223,7 @@ export default function ShortcutsSettings({ settings, updateSetting, searchTerm,
                   ) : (
                     <>
                       {parts.map((p, i) => (
-                        <Kbd key={i} className="h-7 min-w-7 px-1.5 bg-zinc-800 border border-zinc-700 text-zinc-100 text-xs font-mono">{keyLabel(p)}</Kbd>
+                        <Kbd key={i} className="h-7 min-w-7">{keyLabel(p)}</Kbd>
                       ))}
                       {def.modifier && <span className="text-[13px] text-zinc-400">{tk('settings.shortcuts.clickSuffix')}</span>}
                     </>

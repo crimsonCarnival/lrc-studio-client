@@ -1,12 +1,13 @@
-﻿import React from "react"
+import React from "react"
 import { cn } from "@/shared/utils/utils"
 
+/** A key cap: raised surface with a heavier bottom edge, so it reads as a key and not a tag. */
 function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
   return (
     <kbd
       data-slot="kbd"
       className={cn(
-        "pointer-events-none inline-flex h-5 w-fit min-w-5 items-center justify-center gap-1 rounded-sm bg-muted px-1 font-sans text-xs font-medium text-muted-foreground select-none in-data-[slot=tooltip-content]:h-auto in-data-[slot=tooltip-content]:rounded-md in-data-[slot=tooltip-content]:bg-white/12 in-data-[slot=tooltip-content]:px-1.5 in-data-[slot=tooltip-content]:py-[3px] in-data-[slot=tooltip-content]:font-mono in-data-[slot=tooltip-content]:text-tip-foreground [&_svg:not([class*='size-'])]:size-3",
+        "pointer-events-none inline-flex h-6 w-fit min-w-6 items-center justify-center gap-1 rounded-md bg-raised px-1.5 font-mono text-xs leading-none font-semibold text-foreground shadow-[inset_0_-2px_0_var(--hl),inset_0_0_0_1px_var(--hl)] select-none in-data-[slot=tooltip-content]:h-auto in-data-[slot=tooltip-content]:bg-white/12 in-data-[slot=tooltip-content]:px-1.5 in-data-[slot=tooltip-content]:py-[3px] in-data-[slot=tooltip-content]:text-tip-foreground in-data-[slot=tooltip-content]:shadow-none [&_svg:not([class*='size-'])]:size-3",
         className
       )}
       {...props}
@@ -14,6 +15,7 @@ function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
   )
 }
 
+/** Keys pressed together, e.g. Ctrl + D. In a menu row, pass `className="ml-auto"`. */
 function KbdGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <kbd

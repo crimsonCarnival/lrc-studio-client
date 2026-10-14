@@ -18,6 +18,7 @@ import StatsSettings from './panels/StatsSettings';
 import PrivacySettings from './panels/PrivacySettings';
 import BadgesSettings from './panels/BadgesSettings';
 import { Button } from '@ui/button';
+import { Kbd } from '@ui/kbd';
 import { SearchField } from '@ui/search-field';
 import { LazyImage } from '@ui/LazyImage';
 import { cn } from '@/shared/utils/utils';
@@ -369,7 +370,7 @@ export default function SettingsPage() {
                       {activeTab === 'shortcuts' ? (
                         <p className="text-[15px] text-zinc-400 mt-1.5">
                           {t('settings.pages.shortcuts.lead')}{' '}
-                          <kbd className="inline-grid place-items-center h-[22px] min-w-[22px] rounded-md border border-zinc-700 bg-zinc-800 font-mono text-[11px] text-zinc-100">?</kbd>{' '}
+                          <Kbd>?</Kbd>{' '}
                           {t('settings.pages.shortcuts.leadEnd')}
                         </p>
                       ) : pageLead && <p className="text-[15px] text-zinc-400 mt-1.5">{pageLead}</p>}

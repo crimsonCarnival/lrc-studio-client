@@ -164,9 +164,9 @@ export function NotificationAvatar({ notification }: { notification: Notificatio
 
   if (hasActor) {
     return first.avatarUrl
-      ? <LazyImage src={first.avatarUrl} alt="" className="w-8 h-8 rounded-full shrink-0" />
+      ? <LazyImage src={first.avatarUrl} alt="" className="size-[34px] rounded-full shrink-0 object-cover" />
       : (
-        <div className="w-8 h-8 rounded-full bg-zinc-700 shrink-0 flex items-center justify-center text-xs text-zinc-400">
+        <div className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft font-heading text-sm font-bold text-primary-ink">
           {first.accountName?.[0]?.toUpperCase() ?? '?'}
         </div>
       );
@@ -175,9 +175,10 @@ export function NotificationAvatar({ notification }: { notification: Notificatio
   const iconName = TYPE_ICON_NAME[type];
   if (!iconName) return null;
   const isBadge = type === 'badge_awarded';
+  // No person behind it: a square tile, so system and badge notices are told apart from people.
   return (
-    <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center ${isBadge ? 'bg-amber-400/10' : 'bg-primary/10'}`}>
-      <Icon name={iconName} size={14} className={isBadge ? 'text-amber-400' : 'text-primary'} aria-hidden="true" />
+    <div className={`grid size-[34px] shrink-0 place-items-center rounded-[10px] ${isBadge ? 'bg-gold-soft text-gold-ink' : 'bg-primary-soft text-primary-ink'}`}>
+      <Icon name={iconName} size={18} aria-hidden="true" />
     </div>
   );
 }
@@ -203,19 +204,21 @@ export function NotificationItem({ notification }: { notification: NotificationD
       tabIndex={0}
       onClick={handleClick}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); } }}
-      className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-zinc-800/50 transition-colors ${!read ? 'bg-zinc-800/30' : ''}`}
+      // Read and unread differ by the dot and by how bright the text is, not by a tinted row
+      // (redesign sheet 15).
+      className="group/notification flex items-start gap-3 rounded-[10px] p-2.5 cursor-pointer transition-colors duration-[var(--duration-state)] hover:bg-raised focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
     >
       <NotificationAvatar notification={notification} />
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-zinc-200 leading-snug">
+        <p className={`text-base leading-snug ${read ? 'text-subtle' : 'text-foreground'}`}>
           <NotificationText notification={notification} t={t} />
         </p>
         {displayTime && (
-          <p className="text-xs text-zinc-500 mt-1">{formatTimeAgo(displayTime, t, settings.advanced?.timezone, i18n.resolvedLanguage || i18n.language)}</p>
+          <p className="mt-0.5 font-mono text-xs text-subtle">{formatTimeAgo(displayTime, t, settings.advanced?.timezone, i18n.resolvedLanguage || i18n.language)}</p>
         )}
       </div>
-      <div className="flex items-center gap-2 shrink-0">
-        {!read && <span className="w-2 h-2 rounded-full bg-primary" aria-hidden="true" />}
+      <div className="flex items-center gap-1.5 shrink-0 self-center">
+        {!read && <span className="size-2 rounded-full bg-iris" aria-hidden="true" />}
         <Button
           variant="ghost"
           size="icon-xs"

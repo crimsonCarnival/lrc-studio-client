@@ -167,7 +167,7 @@ export function AdminUserContextMenu({
                       {t('admin.table.unshadowBan')}
                     </ContextMenuItem>
                   ) : (
-                    <ContextMenuItem variant="destructive" onClick={handleShadowBan}>
+                    <ContextMenuItem variant="warning" onClick={handleShadowBan}>
                       <Icon name="visibility_off" />
                       {t('admin.table.shadowBan')}
                     </ContextMenuItem>
@@ -175,14 +175,14 @@ export function AdminUserContextMenu({
                 )}
 
                 {user.lastIp && (
-                  <ContextMenuItem variant="destructive" onClick={() => handleBlockIpDirect(user)}>
+                  <ContextMenuItem variant="warning" onClick={() => handleBlockIpDirect(user)}>
                     <Icon name="language" />
                     {t('admin.table.blockIp')}
                   </ContextMenuItem>
                 )}
 
                 {user.lastDeviceId && (
-                  <ContextMenuItem variant="destructive" onClick={() => handleBlockDeviceDirect(user)}>
+                  <ContextMenuItem variant="warning" onClick={() => handleBlockDeviceDirect(user)}>
                     <Icon name="gpp_bad" />
                     {t('admin.table.blockDevice')}
                   </ContextMenuItem>

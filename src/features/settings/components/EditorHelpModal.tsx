@@ -114,7 +114,7 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className="bg-zinc-900 border border-zinc-700 shadow-elevated p-0 max-w-sm w-full [&>button]:hidden"
+        className="bg-background border-0 inset-ring inset-ring-hl rounded-[var(--radius-card)] shadow-elevated p-0 max-w-[720px] w-[calc(100vw-2rem)] [&>button]:hidden"
         style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
         aria-describedby={undefined}
       >
@@ -122,10 +122,10 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
         <div className="flex flex-col w-full min-w-0">
           {/* Header */}
           <div
-            className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-zinc-800/60 cursor-grab active:cursor-grabbing select-none"
+            className="flex items-center justify-between px-6 pt-5 pb-3 cursor-grab active:cursor-grabbing select-none"
             onPointerDown={handleMouseDown}
           >
-            <h3 className="text-sm font-semibold text-zinc-200 uppercase tracking-widest">
+            <h3 className="font-heading text-[22px] font-bold tracking-[-0.02em] text-foreground">
               {t('shortcuts.title')}
             </h3>
             <Button
@@ -133,28 +133,31 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
               size="icon"
               onClick={onClose}
               onPointerDown={(e) => e.stopPropagation()}
-              className="text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800"
+              aria-label={t('common.close')}
+              className="size-10 lg:size-10 -mr-2"
             >
-              <Icon name="close" size={16} />
+              <Icon name="close" size={20} />
             </Button>
           </div>
 
-          {/* Tabs */}
-          <div className="flex px-3 pt-2 gap-0.5 bg-zinc-950/40 overflow-x-auto no-scrollbar min-w-0">
+          {/* Tabs: text only, the open one ringed in iris (redesign sheet 15). */}
+          <div role="tablist" aria-label={t('shortcuts.title')} className="flex gap-1 overflow-x-auto no-scrollbar min-w-0 border-b border-hl px-5 pb-3.5">
             {HELP_TABS.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <Button
                   key={tab.id}
                   variant="ghost"
+                  size={null}
+                  role="tab"
+                  aria-selected={isActive}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex flex-col items-center gap-0.5 shrink-0 px-4 py-2 h-auto text-[10px] font-medium rounded-lg transition-colors ${
+                  className={`h-10 shrink-0 rounded-[10px] px-3.5 text-[15px] coarse:h-11 ${
                     isActive
-                      ? 'bg-zinc-800 text-zinc-100'
-                      : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50'
+                      ? 'bg-raised text-foreground inset-ring-[1.5px] inset-ring-iris hover:bg-raised hover:text-foreground'
+                      : 'text-subtle hover:bg-transparent hover:text-foreground'
                   }`}
                 >
-                  <Icon name={tab.iconName} size={14} />
                   {tk(tab.labelKey)}
                 </Button>
               );
@@ -162,48 +165,51 @@ export default function EditorHelpModal({ isOpen, onClose }: { isOpen: boolean; 
           </div>
 
           {/* Content */}
-          <div className="px-5 pt-4 pb-5 space-y-5 overflow-y-auto max-h-[60vh] min-w-0">
+          <div className="px-6 pt-5 pb-6 overflow-y-auto max-h-[60vh] min-w-0">
             {activeTab === 'sections' ? (
-              <div className="text-zinc-300 text-sm space-y-4 leading-relaxed">
+              <div className="text-foreground text-base space-y-4 leading-relaxed">
                 <p>{t('editor.help.sectionsIntro')}</p>
-                <ul className="list-disc pl-4 space-y-2 text-zinc-400">
+                <ul className="list-disc pl-4 space-y-2 text-subtle">
                   <li>{t('editor.help.sectionsAuto')}</li>
                   <li>{t('editor.help.sectionsManual')}</li>
                   <li>{t('editor.help.sectionsDropdown')}</li>
                 </ul>
               </div>
             ) : activeTab === 'singers' ? (
-              <div className="text-zinc-300 text-sm space-y-4 leading-relaxed">
+              <div className="text-foreground text-base space-y-4 leading-relaxed">
                 <p>{t('editor.help.singersIntro')}</p>
-                <ul className="list-disc pl-4 space-y-2 text-zinc-400">
+                <ul className="list-disc pl-4 space-y-2 text-subtle">
 
                   <li>{t('editor.help.singersShortcuts')}</li>
                   <li>{t('editor.help.singersSplit')}</li>
                 </ul>
               </div>
             ) : (
-              groups.map((group) => (
-                <div key={group.section}>
-                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-2">
-                    {group.section}
-                  </p>
-                  <div className="space-y-2">
-                    {group.items.map((s) => (
-                      <div key={s.desc} className="flex items-center justify-between gap-3">
-                        <span className="text-sm text-zinc-300">{s.desc}</span>
-                        <KbdGroup>
-                          {s.keys.map((k, i) => (
-                            <span key={k} className="inline-flex items-center gap-1">
-                              {i > 0 && <span className="text-zinc-600 text-[10px]">+</span>}
-                              <Kbd>{k}</Kbd>
-                            </span>
-                          ))}
-                        </KbdGroup>
-                      </div>
-                    ))}
+              // Groups sit side by side when there is room, so a tab rarely needs to scroll.
+              <div className="grid gap-x-12 gap-y-5 sm:grid-cols-2">
+                {groups.map((group) => (
+                  <div key={group.section}>
+                    <p className="mb-1.5 font-mono text-[11px] font-semibold tracking-[0.14em] text-subtle uppercase">
+                      {group.section}
+                    </p>
+                    <div>
+                      {group.items.map((s) => (
+                        <div key={s.desc} className="flex min-h-[38px] items-center justify-between gap-3">
+                          <span className="text-base text-foreground">{s.desc}</span>
+                          <KbdGroup className="shrink-0">
+                            {s.keys.map((k, i) => (
+                              <span key={k} className="inline-flex items-center gap-1">
+                                {i > 0 && <span className="font-mono text-[11px] text-subtle">+</span>}
+                                <Kbd>{k}</Kbd>
+                              </span>
+                            ))}
+                          </KbdGroup>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </div>

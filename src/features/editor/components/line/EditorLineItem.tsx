@@ -872,27 +872,6 @@ const EditorLineItem = React.memo(({
             </button>
           </Tip>
         )}
-        {/* Word meter: how many of this line's words carry their own time. Foam when all do. */}
-        {editorMode !== 'words' && !!line.words?.length && (
-          <Tip content={t('editor.wordProgressLabel')}>
-            <span className="flex shrink-0 items-center gap-2 font-mono text-xs font-medium text-subtle tabular-nums select-none max-sm:hidden">
-              <span
-                role="progressbar"
-                aria-label={t('editor.wordProgressLabel')}
-                aria-valuemin={0}
-                aria-valuemax={line.words.length}
-                aria-valuenow={timedWords}
-                className="block h-1 w-11 overflow-hidden rounded-sm bg-hl"
-              >
-                <span
-                  className={`block h-full rounded-sm transition-[width] duration-300 ease-out ${timedWords === line.words.length ? 'bg-foam' : 'bg-iris'}`}
-                  style={{ width: `${(timedWords / line.words.length) * 100}%` }}
-                />
-              </span>
-              {timedWords}/{line.words.length}
-            </span>
-          </Tip>
-        )}
         <LineActionToolbar
           line={line as ComponentProps<typeof LineActionToolbar>['line']}
           lineIndex={i}
@@ -925,6 +904,29 @@ const EditorLineItem = React.memo(({
           activeWordIndex={activeWordIndex}
           focusedTimestamp={focusedTimestamp}
         />
+        {/* Word meter, at the very end of the row so it lines up down the list whatever the
+            hover toolbar beside it is showing. Foam when every word carries its own time. */}
+        {editorMode !== 'words' && !!line.words?.length && (
+          <Tip content={t('editor.wordProgressLabel')}>
+            <span className="flex shrink-0 items-center gap-2 font-mono text-xs font-medium text-subtle tabular-nums select-none max-sm:hidden">
+              <span
+                role="progressbar"
+                aria-label={t('editor.wordProgressLabel')}
+                aria-valuemin={0}
+                aria-valuemax={line.words.length}
+                aria-valuenow={timedWords}
+                className="block h-1 w-11 overflow-hidden rounded-sm bg-hl"
+              >
+                <span
+                  className={`block h-full rounded-sm transition-[width] duration-300 ease-out ${timedWords === line.words.length ? 'bg-foam' : 'bg-iris'}`}
+                  style={{ width: `${(timedWords / line.words.length) * 100}%` }}
+                />
+              </span>
+              {/* Fixed width, or the bars drift left and right with "9/9" versus "12/12". */}
+              <span className="min-w-[5ch] text-right">{timedWords}/{line.words.length}</span>
+            </span>
+          </Tip>
+        )}
 
         {segmentProgress != null && (
           <div className="absolute inset-x-0 bottom-0 h-1 rounded-b-[14px] overflow-hidden bg-hl/60 z-10 pointer-events-none animate-in fade-in duration-300">

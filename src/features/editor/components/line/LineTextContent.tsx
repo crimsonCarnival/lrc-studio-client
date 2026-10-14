@@ -178,7 +178,8 @@ const LineTextContent = memo(({
                     ? wordSingerIdx !== null ? '' : 'text-primary/70 hover:bg-zinc-800'
                     : isActive || isSynced ? wordSingerIdx !== null ? '' : 'text-zinc-100 hover:bg-zinc-800' : 'hover:bg-zinc-800'
                 }`
-                : `transition-colors px-0.5 rounded ${singerColorClass} ${canHaveReading ? 'hover:bg-white/5' : ''}`;
+                // No side padding: at 17px it read as double spaces between words.
+                : `transition-colors rounded ${singerColorClass} ${canHaveReading ? 'hover:bg-white/5' : ''}`;
 
               const content = (
                 <span className={spanClass} style={singerColorStyle}>
@@ -304,7 +305,7 @@ const LineTextContent = memo(({
                   return (
                     <Tip key={wi} content={t('editor.rightClickToAssignSinger')}>
                       <span
-                        className={`transition-colors px-0.5 rounded cursor-context-menu select-text ${singerColorClass} hover:bg-white/5`}
+                        className={`transition-colors rounded cursor-context-menu select-text ${singerColorClass} hover:bg-white/5`}
                         style={singerColorStyle}
                         onContextMenu={(e) => {
                           e.preventDefault();

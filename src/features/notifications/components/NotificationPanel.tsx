@@ -22,11 +22,11 @@ const STICKY_TYPES  = new Set(['verify_email', 'set_password']);
 
 function SectionLabel({ label, variant = 'default' }: { label: string; variant?: 'default' | 'action' | 'badge' }) {
   const color =
-    variant === 'action' ? 'text-primary' :
-    variant === 'badge'  ? 'text-amber-400' :
-    'text-zinc-500';
+    variant === 'action' ? 'text-primary-ink' :
+    variant === 'badge'  ? 'text-gold-ink' :
+    'text-subtle';
   return (
-    <p className={`px-4 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-widest ${color}`}>
+    <p className={`px-2.5 pt-3 pb-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] ${color}`}>
       {label}
     </p>
   );
@@ -56,17 +56,17 @@ export function NotificationPanel() {
   const systemSlice  = system.slice(0, remaining);
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-zinc-800/60 bg-zinc-900 shadow-2xl z-50">
-      <div className="flex items-center justify-between border-b border-zinc-800/60 px-4 py-3">
-        <span className="text-sm font-semibold text-zinc-100">{t('notifications.bell')}</span>
-        <Button variant="link" size={null} onClick={markAllRead} className="text-xs">
+    <div className="absolute right-0 top-full z-50 mt-2 w-[380px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[18px] bg-background shadow-elevated inset-ring inset-ring-hl">
+      <div className="flex items-center justify-between px-[18px] pt-4 pb-2">
+        <span className="font-heading text-xl font-bold tracking-[-0.02em] text-foreground">{t('notifications.bell')}</span>
+        <Button variant="link" size={null} onClick={markAllRead} className="text-sm">
           {t('notifications.markAllRead')}
         </Button>
       </div>
 
-      <div className="max-h-[560px] overflow-y-auto">
+      <div className="settings-scroll max-h-[560px] overflow-y-auto px-2 pb-2">
         {!hasAny && (
-          <p className="px-4 py-8 text-center text-sm text-zinc-500">{t('notifications.empty')}</p>
+          <p className="px-4 py-8 text-center text-[15px] text-subtle">{t('notifications.empty')}</p>
         )}
 
         {stickySlice.length > 0 && (
@@ -106,7 +106,7 @@ export function NotificationPanel() {
       </div>
 
       <Link to="/notifications"
-        className="block w-full px-4 py-2.5 border-t border-zinc-800/60 text-xs font-medium text-primary hover:text-primary/80 hover:bg-zinc-800/40 transition-colors text-center rounded-b-xl"
+        className="block w-full border-t border-hl px-4 py-3 text-center text-[15px] font-semibold text-primary-ink transition-colors duration-[var(--duration-state)] hover:bg-raised focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
       >
         {t('notifications.viewAll')}
       </Link>

@@ -8,6 +8,7 @@ import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
+import { Kbd } from '@ui/kbd';
 import { Icon } from '@/shared/ui/Icon';
 import { cn } from '@/shared/utils/utils';
 import type { EditorLine } from '@/features/editor/services/editor.service';
@@ -274,7 +275,7 @@ function ShortcutsLegend({ settings }: Pick<EditorSidePanelProps, 'settings'>) {
       <div className="flex flex-wrap gap-x-3 gap-y-2">
         {items.map((item) => (
           <span key={item.label} className="inline-flex items-center gap-1.5">
-            <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 font-mono text-[11px] text-foreground whitespace-nowrap">{item.key}</kbd>
+            <Kbd className="whitespace-nowrap">{item.key}</Kbd>
             {item.label}
           </span>
         ))}

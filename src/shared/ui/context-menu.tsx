@@ -45,7 +45,7 @@ function ContextMenuItem({
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.Item> & {
   inset?: boolean
-  variant?: "default" | "destructive"
+  variant?: "default" | "warning" | "destructive"
 }) {
   return (
     <ContextMenuPrimitive.Item
@@ -53,9 +53,12 @@ function ContextMenuItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-3 rounded-[10px] px-3 py-2 min-h-10 coarse:min-h-11 text-[15px] font-medium outline-none transition-colors",
+        "relative flex cursor-pointer select-none items-center gap-3 rounded-[10px] px-3 py-2 min-h-10 coarse:min-h-11 text-base font-medium outline-none transition-colors",
         "focus:bg-raised focus:text-foreground",
+        // Severity you can read (redesign sheet 15): gold = a loss you can undo, red = removal.
+        "data-[variant=warning]:text-gold-ink data-[variant=warning]:focus:bg-gold-soft data-[variant=warning]:focus:text-gold-ink",
         "data-[variant=destructive]:text-love-ink data-[variant=destructive]:focus:bg-love-soft data-[variant=destructive]:focus:text-love-ink",
+        "data-[variant=default]:[&>.material-symbols-outlined]:text-subtle",
         "data-disabled:pointer-events-none data-disabled:opacity-40",
         "data-[inset]:pl-8",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[18px]",
@@ -112,8 +115,9 @@ function ContextMenuSubTrigger({
       data-slot="context-menu-sub-trigger"
       data-inset={inset}
       className={cn(
-        "flex cursor-pointer select-none items-center gap-3 rounded-[10px] px-3 py-2 min-h-10 coarse:min-h-11 text-[15px] font-medium outline-none",
-        "focus:bg-raised focus:text-foreground data-[state=open]:bg-primary/10 data-[state=open]:text-primary",
+        "flex cursor-pointer select-none items-center gap-3 rounded-[10px] px-3 py-2 min-h-10 coarse:min-h-11 text-base font-medium outline-none",
+        "focus:bg-raised focus:text-foreground data-[state=open]:bg-primary-soft data-[state=open]:text-foreground",
+        "[&>.material-symbols-outlined]:text-subtle data-[state=open]:[&>.material-symbols-outlined]:text-primary-ink",
         "data-[inset]:pl-8",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[18px]",
         className
@@ -128,12 +132,19 @@ function ContextMenuSubTrigger({
 
 function ContextMenuSubContent({
   className,
+  // The trigger sits 6px inside its menu (the menu's padding), so 12 leaves the submenu
+  // 6px clear of the parent's edge, and -6 puts its first item level with the trigger.
+  // Radix mirrors it to the other side when it would not fit (redesign sheet 15).
+  sideOffset = 12,
+  alignOffset = -6,
   ...props
 }: React.ComponentProps<typeof ContextMenuPrimitive.SubContent>) {
   return (
     <ContextMenuPrimitive.Portal>
       <ContextMenuPrimitive.SubContent
         data-slot="context-menu-sub-content"
+        sideOffset={sideOffset}
+        alignOffset={alignOffset}
         className={cn(
           "z-popover min-w-[180px] max-w-[260px] overflow-hidden rounded-[14px] border-0 bg-background p-1.5 text-foreground shadow-toast inset-ring inset-ring-hl",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
@@ -156,7 +167,7 @@ function ContextMenuCheckboxItem({
     <ContextMenuPrimitive.CheckboxItem
       data-slot="context-menu-checkbox-item"
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-3 rounded-[10px] py-2 pl-8 pr-3 min-h-10 coarse:min-h-11 text-[15px] font-medium outline-none transition-colors focus:bg-raised focus:text-foreground data-disabled:pointer-events-none data-disabled:opacity-40",
+        "relative flex cursor-pointer select-none items-center gap-3 rounded-[10px] py-2 pl-8 pr-3 min-h-10 coarse:min-h-11 text-base font-medium outline-none transition-colors focus:bg-raised focus:text-foreground data-disabled:pointer-events-none data-disabled:opacity-40",
         className
       )}
       checked={checked}
@@ -185,7 +196,7 @@ function ContextMenuRadioItem({
     <ContextMenuPrimitive.RadioItem
       data-slot="context-menu-radio-item"
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-3 rounded-[10px] py-2 pl-8 pr-3 min-h-10 coarse:min-h-11 text-[15px] font-medium outline-none transition-colors focus:bg-raised focus:text-foreground data-disabled:pointer-events-none data-disabled:opacity-40",
+        "relative flex cursor-pointer select-none items-center gap-3 rounded-[10px] py-2 pl-8 pr-3 min-h-10 coarse:min-h-11 text-base font-medium outline-none transition-colors focus:bg-raised focus:text-foreground data-disabled:pointer-events-none data-disabled:opacity-40",
         className
       )}
       {...props}

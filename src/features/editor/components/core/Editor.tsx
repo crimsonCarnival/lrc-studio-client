@@ -23,6 +23,7 @@ import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
 import PlayerControls from '@/features/player/components/PlayerControls';
 import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
 import { Tip } from '@ui/tip';
+import { Kbd } from '@ui/kbd';
 import { Button } from '@ui/button';
 import { SegmentedControl } from '@ui/segmented-control';
 import ResponsiveModal from '@/shared/ui/ResponsiveModal';
@@ -1089,9 +1090,9 @@ export default function Editor({
                 { key: settings.shortcuts?.playPause?.[0] || 'Space', label: t('editor.shortcutHints.play') },
               ].map((hint) => (
                 <span key={hint.label} className="inline-flex items-center gap-1.5">
-                  <kbd className="rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 font-mono text-[11px] text-foreground">
+                  <Kbd>
                     {((KEY_SYMBOLS as Record<string, string>)[hint.key] ?? hint.key).trim() || hint.key}
-                  </kbd>
+                  </Kbd>
                   {hint.label}
                 </span>
               ))}

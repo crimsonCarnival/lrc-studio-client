@@ -11,7 +11,13 @@ import {
   ContextMenuLabel,
 } from '@ui/context-menu';
 import { Icon } from '@/shared/ui/Icon';
+import { Kbd, KbdGroup } from '@ui/kbd';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+
+// Shortcut keys at the end of a menu row: smaller and quieter than a key cap in body text,
+// and hidden where there is no keyboard.
+const KEYS = 'ml-auto pl-3 coarse:hidden';
+const KEY = 'h-[22px] min-w-[22px] text-[11px] text-subtle';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 
 interface Props {
@@ -95,7 +101,7 @@ export function EditorLineContextMenu({
         <ContextMenuContent>
           <ContextMenuLabel>{t('editor.selection.count', { count: selectedCount})}</ContextMenuLabel>
           {handleClearLine && (
-            <ContextMenuItem onClick={() => selectedLines.forEach(i => handleClearLine!(i))}>
+            <ContextMenuItem variant="warning" onClick={() => selectedLines.forEach(i => handleClearLine!(i))}>
               <Icon name="ink_eraser" />
               {t('editor.selection.clearTimestamps')}
             </ContextMenuItem>
@@ -141,7 +147,7 @@ export function EditorLineContextMenu({
           <ContextMenuItem variant="destructive" onClick={() => [...selectedLines].forEach(i => handleDeleteLine(i))}>
             <Icon name="delete" />
             {t('editor.selection.removeN', { count: selectedCount})}
-            <span className="ml-auto text-xs tracking-widest opacity-60 coarse:hidden">Del</span>
+            <KbdGroup className={KEYS}><Kbd className={`${KEY} text-love-ink`}>Del</Kbd></KbdGroup>
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -161,12 +167,12 @@ export function EditorLineContextMenu({
             <ContextMenuItem onClick={() => handleAddLine(lineIndex)}>
               <Icon name="vertical_align_bottom" />
               {t('editor.insertLineBelow')}
-              <span className="ml-auto text-xs tracking-widest opacity-60 coarse:hidden">Alt+N</span>
+              <KbdGroup className={KEYS}><Kbd className={KEY}>Alt</Kbd><Kbd className={KEY}>N</Kbd></KbdGroup>
             </ContextMenuItem>
             <ContextMenuItem onClick={() => handleAddLine(lineIndex, { ...line, id: crypto.randomUUID() })}>
-              <Icon name="post_add" />
+              <Icon name="content_copy" />
               {t('editor.duplicateLine')}
-              <span className="ml-auto text-xs tracking-widest opacity-60 coarse:hidden">Ctrl+D</span>
+              <KbdGroup className={KEYS}><Kbd className={KEY}>Ctrl</Kbd><Kbd className={KEY}>D</Kbd></KbdGroup>
             </ContextMenuItem>
           </>
         )}
@@ -176,12 +182,7 @@ export function EditorLineContextMenu({
             {t('editor.insertSectionAbove')}
           </ContextMenuItem>
         )}
-        {line.timestamp != null && handleClearLine && (
-          <ContextMenuItem onClick={() => handleClearLine(lineIndex)}>
-            <Icon name="ink_eraser" />
-            {t('editor.clearTimestamp')}
-          </ContextMenuItem>
-        )}
+        <ContextMenuSeparator />
         {handleMoveToSection && sections.length > 0 && (
           <ContextMenuSub>
             <ContextMenuSubTrigger>
@@ -225,11 +226,18 @@ export function EditorLineContextMenu({
             {line.adLibOf != null ? t('editor.unmarkAdLib') : t('editor.markAdLib')}
           </ContextMenuItem>
         )}
+        {/* Gold: the timestamp is lost, but undo brings it back. */}
+        {line.timestamp != null && handleClearLine && (
+          <ContextMenuItem variant="warning" onClick={() => handleClearLine(lineIndex)}>
+            <Icon name="ink_eraser" />
+            {t('editor.clearTimestamp')}
+          </ContextMenuItem>
+        )}
         <ContextMenuSeparator />
         <ContextMenuItem variant="destructive" onClick={() => handleDeleteLine(lineIndex)}>
           <Icon name="delete" />
           {t('editor.removeLine')}
-          <span className="ml-auto text-xs tracking-widest opacity-60 coarse:hidden">Del</span>
+          <KbdGroup className={KEYS}><Kbd className={`${KEY} text-love-ink`}>Del</Kbd></KbdGroup>
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
