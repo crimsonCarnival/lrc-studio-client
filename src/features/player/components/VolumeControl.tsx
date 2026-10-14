@@ -10,7 +10,7 @@ const VolumeControl = memo(function VolumeControl() {
   const { settings, updateSetting } = useSettings();
 
   return (
-    <div className="flex items-center gap-1.5 lg:gap-2" role="group" aria-label={t('player.volume')}>
+    <div className="group/volume flex items-center gap-1.5 lg:gap-2" role="group" aria-label={t('player.volume')}>
       <Tip content={settings.playback.muted ? t('player.unmute') : t('player.mute')}>
         <Button
           variant="ghost"
@@ -27,8 +27,9 @@ const VolumeControl = memo(function VolumeControl() {
         </Button>
       </Tip>
 
-      {/* Desktop Slider */}
-      <div className="hidden lg:flex items-center w-24">
+      {/* Desktop Slider: collapsed to 0 width until the group is hovered or the
+          slider itself has focus (keyboard users tabbing to it must still see it). */}
+      <div className="hidden lg:flex items-center w-0 overflow-hidden transition-[width] duration-200 group-hover/volume:w-24 group-focus-within/volume:w-24">
         <input
           type="range"
           min={0}
