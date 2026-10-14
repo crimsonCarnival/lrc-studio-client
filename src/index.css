@@ -975,7 +975,7 @@ audio::-webkit-media-controls-panel {
 .staff-ring::before {
   content: '';
   position: absolute;
-  inset: calc(-1 * var(--staff-outset, 3.5px));
+  inset: calc(-1 * var(--staff-outset, 3px));
   border-radius: inherit;
   padding: 2.5px;
   background: linear-gradient(135deg, var(--ring-a), var(--ring-b));

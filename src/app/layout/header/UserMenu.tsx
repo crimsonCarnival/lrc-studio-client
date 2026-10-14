@@ -82,8 +82,8 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
       <Popover open={menuOpen} onOpenChange={(open) => { setMenuOpen(open); if (open) fetchCounts(); }}>
         <div className="relative ml-1 flex-shrink-0">
           {/* Double ring: 2px of page colour, then a hairline, so the avatar reads as lifted off the bar (sheet 06). */}
-          {/* Staff ring outside the double ring (2px gap + hairline) the avatar already has. */}
-          <StaffRing role={user?.staffRole} outset={6}>
+          {/* Staff ring drawn over the double ring (2px gap + hairline) the avatar already has. */}
+          <StaffRing role={user?.staffRole} outset={3.5}>
           <PopoverTrigger className="relative z-[110] block size-10 coarse:size-11 cursor-pointer overflow-hidden rounded-full bg-primary-soft shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--hl)] transition-shadow duration-[var(--duration-state)] outline-none hover:shadow-[0_0_0_2px_var(--background),0_0_0_3.5px_var(--subtle)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-solid focus-visible:outline-focus">
             {user?.avatarUrl
               ? <LazyImage src={user.avatarUrl} alt={user?.displayName || user?.accountName || user?.email || ''} className="size-full object-cover" />
