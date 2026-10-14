@@ -119,8 +119,8 @@ export default {
   srtEndTimes: "Tiempos de fin (SRT)",
   statusUnsaved: "Sin guardar",
   sidePanel: "Panel lateral",
-  live: {
-    title: "En vivo",
+  lineReview: {
+    title: "Revisión de línea",
     waiting: "La línea que suena aparecerá aquí.",
   },
   inspector: {

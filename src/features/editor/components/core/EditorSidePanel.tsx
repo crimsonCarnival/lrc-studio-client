@@ -83,12 +83,12 @@ function LiveCard({ lines, playbackPosition, duration, editorMode }: Pick<Editor
   const [sung, rest] = current ? splitSung(current, playbackPosition, currentEnd) : ['', ''];
 
   return (
-    <section aria-label={t('editor.live.title')}>
+    <section aria-label={t('editor.lineReview.title')}>
       <div className={`${CARD} px-5 py-[18px] flex flex-col gap-3 min-h-[168px]`}>
         <div className="flex items-center justify-between">
           <span className={`${CAPTION} flex items-center gap-2`}>
             <span aria-hidden className="size-[7px] rounded-full bg-love" />
-            {t('editor.live.title')}
+            {t('editor.lineReview.title')}
           </span>
           <span className="font-mono text-[13px] font-medium tabular-nums text-subtle">{formatTimestamp(playbackPosition)}</span>
         </div>
@@ -100,7 +100,7 @@ function LiveCard({ lines, playbackPosition, duration, editorMode }: Pick<Editor
               <span className="text-foreground">{rest}</span>
             </p>
           ) : (
-            <p className="text-sm italic text-subtle">{t('editor.live.waiting')}</p>
+            <p className="text-sm italic text-subtle">{t('editor.lineReview.waiting')}</p>
           )}
           {next && <p className="text-base font-medium text-subtle break-words">{next.text}</p>}
         </div>
