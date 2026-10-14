@@ -1,3 +1,4 @@
+import { localizeSongLanguage } from '@features/editor/utils/song-language';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -9,7 +10,6 @@ import { Tip } from '@ui/tip';
 import { ProjectActionsMenu } from './ProjectActionsMenu';
 import { BoostButton } from './BoostButton';
 import { ShareOgButton } from './ShareOgButton';
-import { downloadProjectExport } from './project-export';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
 import type { EditorLine } from '@/features/editor/services/editor.service';
@@ -134,11 +134,8 @@ export default function ProjectInfoPanel({
   const locale = i18n.resolvedLanguage || i18n.language;
   const languageName = useMemo(() => {
     if (!meta.songLanguage) return null;
-    try {
-      return new Intl.DisplayNames([locale], { type: 'language' }).of(meta.songLanguage) ?? meta.songLanguage;
-    } catch {
-      return meta.songLanguage; // not a BCP 47 tag; show it as stored
-    }
+    // Stored as a name in the uploader's UI language, so it is translated for the viewer.
+    return localizeSongLanguage(meta.songLanguage, locale);
   }, [meta.songLanguage, locale]);
 
   const duration = project?.upload?.duration;
@@ -424,28 +421,6 @@ export default function ProjectInfoPanel({
           </div>
         )}
 
-        {/* Download: same files as the overflow menu's export entries */}
-        {lineCount > 0 && (
-          <div className="flex flex-col gap-2">
-            <span className={SECTION_LABEL}>{t('projectView.download')}</span>
-            <div className="grid grid-cols-2 gap-2">
-              {([['lrc', 'projectView.downloadLrcHint'], ['srt', 'projectView.downloadSrtHint']] as const).map(([format, hintKey]) => (
-                <button
-                  key={format}
-                  type="button"
-                  onClick={() => downloadProjectExport(format, project, lines ?? [])}
-                  className="flex h-[50px] items-center gap-2.5 rounded-[var(--radius-control)] bg-card px-3.5 text-left text-foreground inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-iris focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
-                >
-                  <Icon name="download" size={18} className="shrink-0 text-primary-ink" />
-                  <span className="flex min-w-0 flex-col gap-px">
-                    <span className="font-mono text-[15px] leading-tight font-semibold">.{format}</span>
-                    <span className="truncate text-xs text-subtle">{t(hintKey)}</span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </>)}
     </div>
   );

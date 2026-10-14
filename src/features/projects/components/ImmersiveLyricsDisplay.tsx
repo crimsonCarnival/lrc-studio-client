@@ -274,7 +274,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
     <div
       ref={ref}
       onClick={clickable ? onClick : undefined}
-      className={`${focusStep === 0 ? 'font-heading' : 'font-lyrics'} animate-preview-line-in`}
+      className="font-heading animate-preview-line-in"
       style={{
         opacity: isAdLib && !isActive ? effectiveOpacity * 0.5 : effectiveOpacity,
         transform: `scale(${(isAdLib ? 0.9 : 1) * (isActive && activeHighlight === 'zoom' ? 1.05 : 1)})`,
@@ -488,7 +488,7 @@ function SectionDivider({
   // Divider lines flanking a large uppercase title, singer names as plain colored inline text.
   return (
     <div
-      className="font-lyrics"
+      className="font-heading"
       style={{
         opacity: Math.max(0.3, opacity * 0.7),
         transition: 'opacity 0.35s ease',
@@ -675,7 +675,9 @@ export default function ImmersiveLyricsDisplay({
     <div
       role="group"
       aria-label={t('projectView.alignment')}
-      className="absolute top-3 right-4 z-20 flex items-center bg-zinc-950/70 backdrop-blur-md rounded-lg p-0.5 border border-zinc-700/50 shadow-lg"
+      // Phones: a row of its own above the lyrics, so it never covers them. Desktop: floating,
+      // clear of the 64px header the lyrics run underneath (lg:pt-0 on this route).
+      className="z-20 flex w-fit items-center rounded-lg border border-zinc-700/50 bg-zinc-950/70 p-0.5 shadow-lg backdrop-blur-md max-lg:mx-4 max-lg:mt-2 max-lg:self-end lg:absolute lg:top-19 lg:right-4"
     >
       {(['left', 'center', 'right'] as const).map((align) => {
         const label = t(ALIGN_LABEL_KEYS[align]);
@@ -760,7 +762,10 @@ export default function ImmersiveLyricsDisplay({
   }
 
   return (
-    <div className="relative flex-1 min-h-0 overflow-hidden">
+    // container-type: size lets the half-height spacers below be measured against this box (cqh)
+    // instead of the viewport: on a phone the stage is a fraction of the screen, and 50dvh of
+    // padding pushed every line out of it before playback had moved the scroll.
+    <div className="relative flex flex-1 min-h-0 flex-col overflow-hidden [container-type:size]">
       <ContourLines />
       {alignmentControl}
 
@@ -780,7 +785,7 @@ export default function ImmersiveLyricsDisplay({
       {/* Scroll container — hides scrollbar visually */}
       <div
         ref={containerRef}
-        className="relative h-full overflow-y-auto overflow-x-hidden"
+        className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         <style>{`.immersive-scroll::-webkit-scrollbar { display: none; }`}</style>
@@ -788,7 +793,7 @@ export default function ImmersiveLyricsDisplay({
         {/* Half a screen at each end so the first and last lines can both reach
             the centre. The old 20vh/35vh pair was sized for the 20% anchor and
             left the closing lines short of it — the scroll simply ran out. */}
-        <div className="px-6 sm:px-10 lg:px-14" style={{ paddingTop: '50dvh', paddingBottom: '50dvh' }}>
+        <div className="px-6 sm:px-10 lg:px-14" style={{ paddingTop: '50cqh', paddingBottom: '50cqh' }}>
           {lines.map((line, i) => {
             const isActive = i === currentIndex;
             const dist = currentIndex >= 0 ? Math.abs(i - currentIndex) : null;
