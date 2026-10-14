@@ -151,6 +151,7 @@ export default {
     timelineUnavailable: "Marca el inicio de esta línea para ver sus palabras en el tiempo.",
     dragHint: "Arrastra los bordes de cada bloque para ajustar dónde empieza una palabra.",
     boundaryLabel: "Inicio de «{{word}}»",
+    tooShort: "«{{word}}» dura {{seconds}} s: demasiado corta o se solapa con la siguiente",
     playLine: "Reproducir línea",
     pause: "Pausar",
     loop: "Repetir la línea",

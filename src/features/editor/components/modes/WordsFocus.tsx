@@ -7,6 +7,8 @@ import type { EditorLine } from '@/features/editor/services/editor.service';
 const CAPTION = 'text-xs font-bold uppercase tracking-[0.08em] text-foreground/65';
 /** Smallest gap kept between two neighbouring word starts while dragging. */
 const MIN_WORD_GAP = 0.02;
+/** A timed word shorter than this (seconds) is flagged: nobody sings a word in under 80 ms. */
+const TOO_SHORT = 0.08;
 
 interface WordsLineNavProps {
   lines: EditorLine[];
@@ -131,7 +133,7 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
 
   if (start == null || span == null || words.length === 0) {
     return (
-      <p className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 text-[13px] text-foreground/65">
+      <p className="rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl p-5 text-[13px] text-subtle">
         {t('editor.words.timelineUnavailable')}
       </p>
     );
@@ -171,26 +173,37 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
   const playhead = (playbackPosition - start) / span;
 
   return (
-    <section aria-label={t('editor.words.timelineLabel')} className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4 flex flex-col gap-2.5">
-      <div ref={trackRef} className="relative h-[34px] touch-none select-none">
+    <section aria-label={t('editor.words.timelineLabel')} className="rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl px-5 pt-5 pb-4 flex flex-col gap-3.5">
+      <div ref={trackRef} className="relative h-10 touch-none select-none">
         {/* Blocks are clipped to the track: a word squeezed against either end
             narrows instead of spilling out. Edges and the playhead sit outside
             this layer because they are meant to overhang. */}
-        <div className="absolute inset-0 overflow-hidden rounded-md">
+        <div className="absolute inset-0 overflow-hidden rounded-lg">
         {segments.map((seg, i) => {
           const isNow = i === activeWordIndex;
+          // A timed word this short is almost certainly a mis-stamp or an overlap with its
+          // neighbour, so it is called out in gold (redesign sheet 14).
+          const tooShort = seg.timed && seg.to - seg.from < TOO_SHORT;
           return (
             <span
               key={i}
-              className={`absolute inset-y-0 flex items-center px-2 rounded-md text-xs font-semibold overflow-hidden whitespace-nowrap ${isNow
-                ? 'bg-primary text-zinc-950'
-                : seg.timed ? 'bg-primary/20 text-foreground' : 'bg-zinc-800 text-foreground/55'}`}
+              title={tooShort ? t('editor.words.tooShort', { word: seg.word, seconds: (seg.to - seg.from).toFixed(2) }) : undefined}
+              // @container: the label hides itself once the block is narrower than 36px.
+              className={`@container absolute inset-y-0 flex items-center rounded-lg text-sm font-semibold overflow-hidden whitespace-nowrap ${isNow
+                ? 'bg-primary text-primary-foreground'
+                : tooShort
+                  ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold'
+                  : seg.timed ? 'bg-raised text-foreground inset-ring inset-ring-hl' : 'bg-card text-faint inset-ring inset-ring-hl'}`}
               style={{
                 left: `calc(${((seg.from - start) / span) * 100}% + 2px)`,
                 width: `max(0px, calc(${((seg.to - seg.from) / span) * 100}% - 4px))`,
               }}
             >
-              {seg.word}
+              {/* Left grip: the edge you drag to move where the word starts. */}
+              {seg.timed && !tooShort && (
+                <span aria-hidden className={`absolute left-0 inset-y-1.5 w-[3px] rounded-sm ${isNow ? 'bg-primary-foreground/50' : 'bg-faint'}`} />
+              )}
+              <span className="hidden pl-2.5 @[36px]:inline">{seg.word}</span>
             </span>
           );
         })}
@@ -220,17 +233,17 @@ export function WordTimeline({ line, lineEnd, playbackPosition, activeWordIndex,
           >
             <span className={`w-0.5 h-full rounded-full transition-colors group-hover:bg-foreground group-focus-visible:bg-foreground ${dragIndex === i ? 'bg-foreground' : 'bg-transparent'}`} />
             {dragIndex === i && (
-              <span className="absolute bottom-full mb-1.5 rounded-md border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 font-mono text-[11px] tabular-nums text-foreground whitespace-nowrap pointer-events-none">
+              <span className="absolute bottom-full mb-1.5 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums text-background whitespace-nowrap pointer-events-none">
                 {formatTime(seg.from)}
               </span>
             )}
           </span>
         ) : null))}
         {playhead >= 0 && playhead <= 1 && (
-          <span aria-hidden className="absolute inset-y-[-4px] w-0.5 rounded-full bg-foreground pointer-events-none" style={{ left: `${playhead * 100}%` }} />
+          <span aria-hidden className="absolute inset-y-[-4px] w-0.5 rounded-full bg-foam pointer-events-none" style={{ left: `${playhead * 100}%` }} />
         )}
       </div>
-      <span className="text-xs text-foreground/65">{t('editor.words.dragHint')}</span>
+      <span className="text-[13px] text-subtle">{t('editor.words.dragHint')}</span>
     </section>
   );
 }

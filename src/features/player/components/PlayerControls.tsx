@@ -1,4 +1,4 @@
-import { lazy, Suspense, memo } from 'react';
+import { lazy, Suspense, memo, useMemo } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
@@ -9,6 +9,7 @@ import { usePlayer } from '../PlayerContext';
 import type { UploadItem } from '../PlayerContext';
 const WaveformDisplay = lazy(() => import('./WaveformDisplay'));
 import PlaybackProgress from './PlaybackProgress';
+import { SectionBands } from './TimelineOverview';
 import VolumeControl from './VolumeControl';
 import SpeedControl from './SpeedControl';
 import { Button } from '@ui/button';
@@ -21,6 +22,19 @@ import { YoutubeIcon } from '@/shared/ui/YoutubeIcon';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const FOCUS_RING = 'focus:ring-2 focus:ring-primary/50 focus:ring-offset-1 focus:ring-offset-zinc-950 focus:outline-none';
+
+/**
+ * Where "previous line" lands: the start of the current line, or of the one before it
+ * when playback is within half a second of that start (so a second press keeps going back).
+ */
+function previousLineTime(times: number[], now: number): number {
+  let target = 0;
+  for (const time of times) {
+    if (time < now - 0.5) target = time;
+    else break;
+  }
+  return target;
+}
 
 interface ChangeMediaPopoverContentProps {
   fileInputId: string;
@@ -164,6 +178,15 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
   const { t } = useTranslation();
   const { dt } = useDynamicTranslation();
   const { settings } = useSettings();
+  const seekStep = settings.playback?.seekTime ?? 5;
+  // Start times of the timed lyric lines, in order: what the previous/next buttons step through.
+  const timedLineTimes = useMemo(
+    () => (lines ?? [])
+      .filter((l) => l.type !== 'section' && l.timestamp != null)
+      .map((l) => l.timestamp as number)
+      .sort((a, b) => a - b),
+    [lines],
+  );
 
   // ── Header compact variant ──────────────────────────────────────────────────
   if (variant === 'header') {
@@ -405,6 +428,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
             <>
               {canShowWaveform && (
                 <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
+                  {isShowingWaveform && <div className="mt-2"><SectionBands lines={lines ?? []} duration={duration} /></div>}
                   <Suspense fallback={null}>
                     <WaveformDisplay
                       showWaveform={settings.playback?.showWaveform}
@@ -426,6 +450,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
               {!isShowingWaveform && hasMedia && (
                 <div className="animate-fade-in w-full max-w-[1200px] mx-auto px-4">
                   <PlaybackProgress
+                    lines={lines}
                     playbackPosition={playbackPosition ?? 0}
                     duration={duration}
                     onSeek={seek}
@@ -448,35 +473,44 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
         )}
         {hasMedia && !audioLoadFailed && (
           <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
-            {/* Wide layout: time on the left, transport centred, speed / loop / volume on the right */}
-            <div className={`${variant === 'editor' ? 'xl:grid hidden' : 'grid'} grid-cols-[1fr_auto_1fr] items-center gap-4 w-full min-h-[52px] pb-1.5 lg:pb-2`}>
+            {/* Wide layout: time and jump on the left, transport centred, speed / loop / volume
+                on the right. The jump group sits on the left (the mock has it on the right)
+                because with the media button the right side no longer fits beside a centred
+                play button. */}
+            <div className={`${variant === 'editor' ? 'xl:grid hidden' : 'grid'} grid-cols-[1fr_auto_1fr] items-center gap-4 w-full min-h-[60px] pb-1.5 lg:pb-2`}>
 
-              <div className="min-w-0 font-mono tabular-nums text-[15px] whitespace-nowrap">
-                <span className="text-foreground">{formatTime(currentTime)}</span>
-                <span className="text-foreground/45"> / {formatTime(duration)}</span>
+              <div className="min-w-0 flex items-center gap-4">
+                <div className="font-mono font-medium tabular-nums text-base whitespace-nowrap">
+                  <span className="text-foreground">{formatTime(currentTime)}</span>
+                  <span className="text-subtle"> / {formatTime(duration)}</span>
+                </div>
+                <div role="group" aria-label={t('player.jump')} className="flex gap-0.5 rounded-[var(--radius-control)] bg-card p-[3px] inset-ring inset-ring-hl">
+                  {[-seekStep, -0.1, 0.1, seekStep].map((delta) => (
+                    <Button
+                      key={delta}
+                      variant="ghost"
+                      size={null}
+                      onClick={() => seek(Math.min(duration, Math.max(0, currentTime + delta)))}
+                      aria-label={t(delta < 0 ? 'player.seekBack' : 'player.seekForward', { seconds: Math.abs(delta) })}
+                      className="h-[38px] rounded-[9px] px-2.5 font-mono text-[13px] font-medium text-subtle hover:bg-raised hover:text-foreground"
+                    >
+                      {delta < 0 ? '−' : '+'}{Math.abs(delta)}{Math.abs(delta) >= 1 ? 's' : ''}
+                    </Button>
+                  ))}
+                </div>
               </div>
 
-              {/* ── Transport ── */}
-              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                <Tip content="-0.1s">
+              {/* ── Transport: the buttons either side of play step by lyric line; jumping by
+                  time is the group beside the clock (redesign sheet 14). ── */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Tip content={t('projectView.previousLine')}>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => seek(currentTime - 0.1)}
-                    aria-label={t('player.seekBack', { seconds: 0.1 })}
-                    className={`rounded-full text-foreground/45 hover:text-foreground ${FOCUS_RING}`}
-                  >
-                    <Icon name="chevron_left" size={16} />
-                  </Button>
-                </Tip>
-
-                <Tip content={`-${settings.playback?.seekTime ?? 5}s`}>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => seek(Math.max(0, currentTime - (settings.playback?.seekTime ?? 5)))}
-                    aria-label={t('player.seekBack', { seconds: settings.playback?.seekTime ?? 5 })}
-                    className={`size-10 lg:size-10 rounded-full text-foreground hover:bg-zinc-800/60 ${FOCUS_RING}`}
+                    disabled={!timedLineTimes.length}
+                    onClick={() => seek(previousLineTime(timedLineTimes, currentTime))}
+                    aria-label={t('projectView.previousLine')}
+                    className="size-11 lg:size-11"
                   >
                     <Icon name="skip_previous" size={20} />
                   </Button>
@@ -489,39 +523,30 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                     onClick={togglePlay}
                     aria-label={t('shortcuts.playPause')}
                     aria-pressed={isPlaying}
-                    className="size-[52px] lg:size-[52px] rounded-full bg-primary hover:bg-primary-dim text-zinc-950 hover:scale-105 active:scale-95 flex-shrink-0 transition-all duration-100"
+                    className="relative size-[60px] lg:size-[60px] rounded-full shadow-none active:scale-[.94] flex-shrink-0"
                   >
-                    <Icon name={isPlaying ? 'pause' : 'play_arrow'} size={24} filled />
+                    {/* Beat ring: a pulse off the button while audio is playing (sheet 02). */}
+                    {isPlaying && <span aria-hidden className="beat-ring" />}
+                    <Icon name={isPlaying ? 'pause' : 'play_arrow'} size={26} filled />
                   </Button>
                 </Tip>
 
-                <Tip content={`+${settings.playback?.seekTime ?? 5}s`}>
+                <Tip content={t('projectView.nextLine')}>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => seek(Math.min(duration, currentTime + (settings.playback?.seekTime ?? 5)))}
-                    aria-label={t('player.seekForward', { seconds: settings.playback?.seekTime ?? 5 })}
-                    className={`size-10 lg:size-10 rounded-full text-foreground hover:bg-zinc-800/60 ${FOCUS_RING}`}
+                    disabled={!timedLineTimes.some((time) => time > currentTime)}
+                    onClick={() => { const next = timedLineTimes.find((time) => time > currentTime); if (next != null) seek(next); }}
+                    aria-label={t('projectView.nextLine')}
+                    className="size-11 lg:size-11"
                   >
                     <Icon name="skip_next" size={20} />
-                  </Button>
-                </Tip>
-
-                <Tip content="+0.1s">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => seek(currentTime + 0.1)}
-                    aria-label={t('player.seekForward', { seconds: 0.1 })}
-                    className={`rounded-full text-foreground/45 hover:text-foreground ${FOCUS_RING}`}
-                  >
-                    <Icon name="chevron_right" size={16} />
                   </Button>
                 </Tip>
               </div>
 
               {/* ── Speed, loop, volume, media ── */}
-              <div className="min-w-0 flex items-center justify-end gap-2 sm:gap-3">
+              <div className="min-w-0 flex items-center justify-end gap-2.5">
                 <SpeedControl
                   playbackSpeed={playbackSpeed}
                   applySpeed={applySpeed}
@@ -534,7 +559,8 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                 {!viewerMode && (
                   <Tip content={loopA != null && loopB != null ? t('player.clearLoop') : t('player.setLoop')}>
                     <Button
-                      variant="outline"
+                      // Ghost icon button: aria-pressed gives it the soft iris "on" state.
+                      variant="ghost"
                       size="icon"
                       onClick={() => {
                         if (loopA != null && loopB != null) {
@@ -559,9 +585,9 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       }}
                       aria-pressed={loopA != null && loopB != null}
                       aria-label={loopA != null && loopB != null ? t('player.clearLoop') : t('player.setLoop')}
-                      className={`size-10 lg:size-10 rounded-[10px] shrink-0 ${FOCUS_RING} ${loopA != null && loopB != null ? 'border-accent-purple/50 text-accent-purple bg-accent-purple/10 hover:bg-accent-purple/20' : 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground hover:bg-zinc-800/60'}`}
+                      className="size-11 lg:size-11 shrink-0"
                     >
-                      <Icon name="repeat" size={16} />
+                      <Icon name="repeat" size={20} />
                     </Button>
                   </Tip>
                 )}
@@ -575,10 +601,11 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       <PopoverTrigger asChild>
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className={`shrink-0 text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 ${FOCUS_RING} flex items-center gap-2`}
+                          size="icon"
+                          aria-label={t('player.changeSong')}
+                          className="size-11 lg:size-11 shrink-0"
                         >
-                          <Icon name="library_music" size={16} />
+                          <Icon name="library_music" size={20} />
                         </Button>
                       </PopoverTrigger>
                     </Tip>

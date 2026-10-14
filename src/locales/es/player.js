@@ -53,6 +53,7 @@ export default {
   audioLoadFailedDescViewer: "El archivo pudo haberse movido o el enlace expiró. Vuelve a intentarlo en un momento.",
   reupload: "Volver a subir",
   retry: "Reintentar",
+  jump: "Saltar",
   seekBack: "Retroceder {{seconds}} s",
   seekForward: "Avanzar {{seconds}} s",
   embeddingBlockedDesc: "El propietario de este video bloquea la reproducción externa. Usa un archivo de audio directo.",

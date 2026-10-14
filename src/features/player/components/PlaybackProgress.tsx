@@ -2,6 +2,8 @@ import { useMemo, useCallback, useRef, useState, useLayoutEffect } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
+import { formatTimestamp } from '@/shared/utils/lrc';
+import { SectionBands, LineMarkers } from './TimelineOverview';
 
 interface PlaybackProgressProps {
   playbackPosition: number;
@@ -10,7 +12,11 @@ interface PlaybackProgressProps {
   loopA?: number | null;
   loopB?: number | null;
   onLoopChange?: (a: number, b: number) => void;
+  /** Sections and timed lines, drawn as bands above the bar and ticks below it. */
+  lines?: readonly { type?: string; label?: string; timestamp?: number | null }[];
 }
+
+const NO_LINES: NonNullable<PlaybackProgressProps['lines']> = [];
 
 /**
  * Fallback playback position indicator for sources that don't have a waveform (YouTube).
@@ -21,7 +27,8 @@ export default function PlaybackProgress({
   onSeek,
   loopA,
   loopB,
-  onLoopChange
+  onLoopChange,
+  lines = NO_LINES,
 }: PlaybackProgressProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
@@ -109,6 +116,10 @@ export default function PlaybackProgress({
 
   return (
     <div className="w-full flex flex-col gap-0 mt-2 animate-fade-in">
+      <SectionBands lines={lines} duration={duration} reserveSpace />
+      {/* The bar and the time bubble share this box so the bubble can sit above the
+          track without being clipped by its rounded corners. */}
+      <div className="relative mt-2">
       {/* Main progress bar container */}
       <div
         ref={containerRef}
@@ -118,19 +129,17 @@ export default function PlaybackProgress({
         aria-valuemin={0}
         aria-valuemax={duration || 0}
         aria-valuenow={playbackPosition}
+        aria-valuetext={formatTime(playbackPosition)}
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === 'ArrowRight') onSeek?.(Math.min(duration, playbackPosition + 5));
           else if (e.key === 'ArrowLeft') onSeek?.(Math.max(0, playbackPosition - 5));
         }}
-        className="w-full h-8 relative rounded-xl overflow-hidden bg-black/20 border border-white/10 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1 focus-visible:ring-offset-zinc-950"
+        className="w-full h-8 relative rounded-[10px] overflow-hidden bg-card inset-ring inset-ring-hl cursor-pointer group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
       >
-        {/* Subtle background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
-
         {/* Progress fill overlay */}
         <div
-          className="absolute h-full bg-primary/10 border-r border-primary/30"
+          className="absolute h-full bg-primary-soft"
           style={{ width: `${playbackPct}%` }}
         />
 
@@ -166,23 +175,32 @@ export default function PlaybackProgress({
           </div>
         )}
 
-        {/* Playback indicator line */}
-        <div
-          className="absolute top-0 bottom-0 w-0.5 -translate-x-1/2 pointer-events-none z-30"
-          style={{ left: `${playbackPct}%`, background: 'var(--color-primary)', boxShadow: '0 0 12px var(--color-primary)' }}
-        />
+      </div>
 
-        {/* Playhead glow effect */}
+        {/* Playhead: foam, the one colour on the timeline that is not the accent, with the
+            exact time riding on it. The bubble is clamped so it stays inside the track. */}
         <div
-          className="absolute top-0 bottom-0 w-24 -translate-x-1/2 pointer-events-none z-0 opacity-10 bg-gradient-to-r from-transparent via-primary to-transparent"
+          aria-hidden
+          className="absolute -top-1.5 -bottom-1.5 w-0.5 -translate-x-1/2 rounded-sm bg-foam pointer-events-none z-30"
           style={{ left: `${playbackPct}%` }}
         />
+        <span
+          aria-hidden
+          className="absolute -top-[30px] z-30 rounded-md bg-foam px-[7px] py-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums text-background pointer-events-none whitespace-nowrap"
+          style={{ left: `clamp(0px, calc(${playbackPct}% - 28px), calc(100% - 56px))` }}
+        >
+          {formatTimestamp(playbackPosition)}
+        </span>
+      </div>
+
+      <div className="mt-2">
+        <LineMarkers lines={lines} duration={duration} />
       </div>
 
       {/* Ruler with time labels */}
       {/* overflow-hidden so the end labels cannot widen the row: each is centred
           on its tick, so the first and last hang half outside the track. */}
-      <div ref={rulerRef} className="w-full h-5 relative select-none mt-1.5 px-0.5 overflow-hidden">
+      <div ref={rulerRef} className="w-full h-5 relative select-none mt-1 px-0.5 overflow-hidden">
         {rulerTicks.map(({ t: tickTime, pct }, idx) => (
           <div
             key={tickTime}
@@ -194,8 +212,8 @@ export default function PlaybackProgress({
               transform: `translateX(${idx === 0 ? '0' : idx === rulerTicks.length - 1 ? '-100%' : '-50%'})`,
             }}
           >
-            <div className="w-px h-1.5 bg-zinc-700/60" />
-            <span className="text-[9px] text-zinc-500 font-mono tabular-nums mt-0.5 leading-none whitespace-nowrap">
+            <div className="w-px h-1.5 bg-hl" />
+            <span className="text-[11px] font-medium text-subtle font-mono tabular-nums mt-0.5 leading-none whitespace-nowrap">
               {formatTime(tickTime)}
             </span>
           </div>

@@ -148,6 +148,7 @@ export default {
     timelineUnavailable: "Mark this line's start to see its words over time.",
     dragHint: "Drag the edge of a block to adjust where a word starts.",
     boundaryLabel: "Start of “{{word}}”",
+    tooShort: "“{{word}}” lasts {{seconds}} s: too short, or overlapping the next word",
     playLine: "Play line",
     pause: "Pause",
     loop: "Loop the line",

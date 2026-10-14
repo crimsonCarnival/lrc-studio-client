@@ -933,6 +933,25 @@ audio::-webkit-media-controls-panel {
   .sync-sweep-head { animation: none; left: 62%; }
 }
 
+/* Beat ring: a pulse leaving the play button while audio is playing (redesign sheets 02, 14).
+   The button must be position: relative. */
+@keyframes beat-ring {
+  0%   { transform: scale(0.9); opacity: 0.55; }
+  100% { transform: scale(1.18); opacity: 0; }
+}
+.beat-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  border: 2px solid var(--primary);
+  opacity: 0;
+  pointer-events: none;
+  animation: beat-ring 1.2s var(--ease-state) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .beat-ring { animation: none; opacity: 0.35; }
+}
+
 /* Star lands with a small overshoot when a project is starred (redesign sheet 17). */
 @keyframes star-pop {
   0%   { transform: scale(0.6) rotate(-20deg); }
