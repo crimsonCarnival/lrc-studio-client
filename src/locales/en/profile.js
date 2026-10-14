@@ -227,6 +227,8 @@ export default {
   confirmUnfollow: "Confirm unfollow",
   xpProgress: "{{xp}} / {{next}} XP",
   xpToNext: "{{xp}} XP to Lv. {{level}}",
+  levelAndXp: "Level and XP",
+  xpTip: "{{xp}} XP · {{needed}} to Lv. {{level}} ({{pct}}%)",
   followError: "Could not follow. Try again.",
   unfollowError: "Could not unfollow. Try again.",
   newFollower: "You have a new follower!",

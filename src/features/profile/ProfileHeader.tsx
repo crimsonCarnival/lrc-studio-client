@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import { Icon } from '@/shared/ui/Icon';
 import { LevelBadge } from '@ui/LevelBadge';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
+import { xpProgress } from './xp-progress';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { BadgeList } from '@/features/badges/BadgeList';
 import { Tip } from '@/shared/ui/tip';
@@ -25,8 +26,8 @@ function AvatarBadge({ avatarUrl, name, handle, staffRole, isOnline, size = 'lg'
   if (avatarUrl) {
     return (
       <div className="relative inline-block shrink-0">
-        {/* Outside the 4px card-coloured ring the avatar already has. */}
-        <StaffRing role={staffRole} className={radius} outset={7}>
+        {/* On the 4px card-coloured ring the avatar already has, not outside it. */}
+        <StaffRing role={staffRole} className={radius} outset={3.5}>
           <LazyImage
             src={avatarUrl}
             alt={name}
@@ -42,7 +43,7 @@ function AvatarBadge({ avatarUrl, name, handle, staffRole, isOnline, size = 'lg'
   return (
     <div className="relative inline-block shrink-0">
       {/* bg-background under the tint, so the waveform cover does not show through it. */}
-      <StaffRing role={staffRole} className={radius} outset={7}>
+      <StaffRing role={staffRole} className={radius} outset={3.5}>
         <div className={`${sizeClass} overflow-hidden bg-background border border-border shadow-inner-highlight ring-4 ring-zinc-900`}>
           <InitialsAvatar name={name} handle={handle} className="size-full" />
         </div>
@@ -132,13 +133,9 @@ export function ProfileHeader({
   const presence = usePresence();
   const isOnline = presence.isOnline(profile.id);
 
-  const xpForLevel = level * level * 100;
-  const xpForNext = (level + 1) * (level + 1) * 100;
-  const progress = xp - xpForLevel;
-  const needed = xpForNext - xp;
-  const xpPct = Math.max(0, Math.min(100, Math.round((progress / (xpForNext - xpForLevel)) * 100)));
+  const { needed, pct: xpPct } = xpProgress(level, xp);
   const showXp = isOwner || profile.showXpProgress === true;
-  const xpTip = `${xp.toLocaleString()} XP · ${needed.toLocaleString()} to Lv.${level + 1} (${xpPct}%)`;
+  const xpTip = t('profile.xpTip', { xp: xp.toLocaleString(), needed: needed.toLocaleString(), level: level + 1, pct: xpPct });
   const streakCurrent = profile.streak?.current ?? 0;
   const streakLongest = profile.streak?.longest ?? 0;
   const streakResetHint = useStreakResetHint();
@@ -271,28 +268,6 @@ export function ProfileHeader({
             <span className="italic text-zinc-500">{t('profile.noBio')}</span>
           )}
         </p>
-
-        {/* Level and XP (redesign sheet 10): where you are, and how far the next level is.
-            Visitors only see it when the owner opted in (preferences.showXpProgress). */}
-        {showXp && (
-        <div className="mt-4 flex w-full max-w-sm flex-col gap-2 self-center sm:self-start">
-          <span className="inline-flex items-center gap-1.5 self-center font-mono text-[13px] font-medium text-gold-ink sm:self-start">
-            <Icon name="bolt" size={14} />
-            {t('profile.xpProgress', { xp: xp.toLocaleString(), next: xpForNext.toLocaleString() })}
-          </span>
-          <div
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={xpPct}
-            aria-label={t('profile.xpToNext', { xp: needed.toLocaleString(), level: level + 1 })}
-            className="h-2 overflow-hidden rounded-[4px] bg-hl"
-          >
-            <div className="h-full rounded-[4px] bg-linear-to-r from-iris to-gold" style={{ width: `${xpPct}%` }} />
-          </div>
-          <span className="text-left text-sm text-subtle">{t('profile.xpToNext', { xp: needed.toLocaleString(), level: level + 1 })}</span>
-        </div>
-        )}
 
         {profile.totalForksReceived > 0 && (
           <p className="text-xs text-primary/70 mt-3 font-medium">

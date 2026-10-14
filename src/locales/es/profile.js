@@ -226,6 +226,8 @@ export default {
   confirmUnfollow: "Confirmar dejar de seguir",
   xpProgress: "{{xp}} / {{next}} XP",
   xpToNext: "{{xp}} XP para Nv. {{level}}",
+  levelAndXp: "Nivel y XP",
+  xpTip: "{{xp}} XP · faltan {{needed}} para Nv. {{level}} ({{pct}} %)",
   followError: "No se pudo seguir. Inténtalo de nuevo.",
   unfollowError: "No se pudo dejar de seguir. Inténtalo de nuevo.",
   newFollower: "¡Tienes un nuevo seguidor!",

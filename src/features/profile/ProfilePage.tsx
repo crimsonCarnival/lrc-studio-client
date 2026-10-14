@@ -1,3 +1,4 @@
+import { LevelXpCard } from './LevelXpCard';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
@@ -432,6 +433,8 @@ export default function ProfilePage() {
     : null;
   const level = profile.progression?.level ?? 0;
   const xp = profile.progression?.xp ?? 0;
+  // The XP card is private by default; the owner always sees their own.
+  const showXpCard = isOwner || profile.showXpProgress === true;
 
   const showcaseVisibleToViewer = profile.showcasePublic !== false;
   const hasVisibleShowcase = showcaseVisibleToViewer && showcasedBadges.length > 0;
@@ -511,7 +514,7 @@ export default function ProfilePage() {
         </ProfileHeader>
 
         {/* Two-column layout: main content + showcase sidebar */}
-        <div className={`flex gap-6 items-start ${hasVisibleShowcase || isOwner || (!isOwner && !!user) ? 'flex-col lg:flex-row' : ''}`}>
+        <div className={`flex gap-6 items-start ${showXpCard || hasVisibleShowcase || isOwner || (!isOwner && !!user) ? 'flex-col lg:flex-row' : ''}`}>
           {/* Main content */}
           <div className="flex-1 min-w-0">
             {/* Tabs */}
@@ -589,8 +592,9 @@ export default function ProfilePage() {
           </div>
 
           {/* Showcase sidebar */}
-          {(hasVisibleShowcase || isOwner || (!isOwner && !!user)) && (
+          {(showXpCard || hasVisibleShowcase || isOwner || (!isOwner && !!user)) && (
             <aside className="w-full lg:w-72 shrink-0 flex flex-col gap-6">
+              {showXpCard && <LevelXpCard level={level} xp={xp} />}
               
               {/* Vitrina block */}
               <div className="flex flex-col gap-3">
