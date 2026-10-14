@@ -28,7 +28,7 @@ const LEADERBOARD_QUERY = /* GraphQL */ `
   ) {
     leaderboard(limit: $limit, offset: $offset, timeframe: $timeframe, sortBy: $sortBy, sortDir: $sortDir) {
       users {
-        id accountName displayName avatarUrl
+        id accountName displayName avatarUrl staffRole
         badges { id grantedAt }
         stats { minutesSynced secondsSynced wordsSynced karaokeLines syncedLines aiSyncedLines aiWordsSynced }
         progression { xp level }

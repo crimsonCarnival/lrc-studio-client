@@ -28,7 +28,7 @@ const HEADER_SEARCH_QUERY = /* GraphQL */ `
       id
       accountName
       displayName
-      avatarUrl
+      avatarUrl staffRole
       level
     }
   }

@@ -141,7 +141,7 @@ const GET_PROJECT = /* GraphQL */ `
       user {
         id
         accountName
-        avatarUrl
+        avatarUrl staffRole
       }
     }
   }
@@ -215,7 +215,7 @@ const GET_SHARE = /* GraphQL */ `
         id
         accountName
         displayName
-        avatarUrl
+        avatarUrl staffRole
       }
       upload {
         id

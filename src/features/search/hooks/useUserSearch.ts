@@ -12,7 +12,7 @@ const SEARCH_USERS_QUERY = /* GraphQL */ `
       id
       accountName
       displayName
-      avatarUrl
+      avatarUrl staffRole
       isFollowedByMe
       level
       projectCount

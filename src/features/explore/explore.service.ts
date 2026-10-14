@@ -46,7 +46,7 @@ const SUGGESTED_USERS = /* GraphQL */ `
       id
       accountName
       displayName
-      avatarUrl
+      avatarUrl staffRole
     }
   }
 `;

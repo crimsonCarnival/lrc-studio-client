@@ -8,7 +8,7 @@ const GET_PUBLIC_PROJECT = /* GraphQL */ `
       id publicId title coverImage
       metadata { description genre tags songName songArtist songAlbum songYear songLanguage trackNumber trackCount singerColors }
       upload { id source uploadUrl duration coverImage }
-      user { id accountName displayName avatarUrl progression { level } }
+      user { id accountName displayName avatarUrl staffRole progression { level } }
       lyrics {
         editorMode
         sections {

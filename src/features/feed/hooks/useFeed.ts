@@ -20,7 +20,7 @@ const FEED_QUERY = /* GraphQL */ `
           id
           accountName
           displayName
-          avatarUrl
+          avatarUrl staffRole
         }
       }
       hasMore

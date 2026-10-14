@@ -5,7 +5,7 @@ import type { PublicUser, FollowListResult, FollowListType } from '@/types';
 const GET_PUBLIC_PROFILE = /* GraphQL */ `
   query GetPublicProfile($accountName: String!, $asVisitor: Boolean) {
     publicProfile(accountName: $accountName, asVisitor: $asVisitor) {
-      id accountName displayName avatarUrl bio isVerified isAdmin createdAt
+      id accountName displayName avatarUrl staffRole bio isVerified isAdmin createdAt
       projectCount playlistCount totalStarsReceived totalForksReceived
       followerCount followingCount isFollowedByMe isFollowingMe isBlockedByMe showFollowers
       badges { id grantedAt }
@@ -62,7 +62,7 @@ const GET_BLOCKED_USERS = /* GraphQL */ `
 const GET_FOLLOW_LIST = /* GraphQL */ `
   query GetFollowList($accountName: String!, $type: FollowListType!, $offset: Int) {
     followList(accountName: $accountName, type: $type, offset: $offset) {
-      users { id accountName displayName avatarUrl isFollowedByMe }
+      users { id accountName displayName avatarUrl staffRole isFollowedByMe }
       total
     }
   }
