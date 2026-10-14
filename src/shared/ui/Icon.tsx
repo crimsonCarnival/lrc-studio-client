@@ -26,6 +26,7 @@ export function Icon({ name, size = 20, filled = false, className }: IconProps) 
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
+        data-icon={name}
         className={`app-icon shrink-0 select-none${className ? ` ${className}` : ''}`}
         // Inline, so a parent's "size every svg" rule cannot override the size asked for here.
         style={{
@@ -35,7 +36,7 @@ export function Icon({ name, size = 20, filled = false, className }: IconProps) 
           transform: shape.rotate ? `rotate(${shape.rotate}deg)` : undefined,
         }}
       >
-        <path d={shape.d} />
+        {typeof shape.d === 'string' ? <path d={shape.d} /> : shape.d.map((d) => <path key={d} d={d} />)}
       </svg>
     );
   }

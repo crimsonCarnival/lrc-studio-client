@@ -205,7 +205,7 @@ export default function ActivityHeatmap({
         <div className="grid grid-cols-3 gap-2.5">
           <div className={STAT_CARD}>
             <span className="flex items-center gap-1.5 text-gold-ink">
-              <Icon name="local_fire_department" size={18} />
+              <Icon name="local_fire_department" size={18} className={(streak.current ?? 0) > 0 ? 'icon-flicker' : undefined} />
               <span className={STAT_VALUE}>{streak.current ?? 0}</span>
             </span>
             <span className="text-[13px] text-subtle">{t('profile.heatmap.streakDays')}</span>

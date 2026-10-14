@@ -35,7 +35,7 @@ export function NotificationBell() {
           aria-label={unreadCount > 0 ? t('notifications.bellUnread', { count: unreadCount }) : t('notifications.bell')}
           className="relative size-10 lg:size-10 coarse:size-11"
         >
-          <Icon name="notifications" size={20} />
+          <Icon name="notifications" size={20} className={unreadCount > 0 ? 'icon-ring' : undefined} />
           <CountDot count={unreadCount} />
         </Button>
       </Tip>

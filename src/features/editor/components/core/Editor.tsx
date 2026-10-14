@@ -684,7 +684,7 @@ export default function Editor({
           className={`inline-flex h-8 items-center gap-2 rounded-full bg-raised px-3.5 text-[15px] font-medium whitespace-nowrap ${saveState === 'saved' ? 'text-foam pl-[11px] gap-1.5' : saveState === 'failed' ? 'text-love-ink pl-[11px] gap-1.5' : 'text-subtle'}`}
         >
           {saveState === 'saved' || saveState === 'failed' ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg key={saveState} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={saveState === 'saved' ? 'icon-draw' : undefined}>
               <path d={saveState === 'saved' ? 'M5 12.5l4.5 4.5L19 7' : 'M7 7l10 10 M17 7L7 17'} />
             </svg>
           ) : (

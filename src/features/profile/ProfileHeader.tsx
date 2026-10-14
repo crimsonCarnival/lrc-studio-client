@@ -173,7 +173,7 @@ export function ProfileHeader({
                   <span className={`inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs font-semibold cursor-default ${streakCurrent > 0
                     ? 'bg-gold-soft text-gold-ink'
                     : 'bg-raised text-subtle'}`}>
-                    <Icon name="local_fire_department" size={14} />
+                    <Icon name="local_fire_department" size={14} className={streakCurrent > 0 ? 'icon-flicker' : undefined} />
                     {streakCurrent > 0 ? t('profile.streakDays', { count: streakCurrent }) : t('profile.streakNone')}
                   </span>
                 </Tip>

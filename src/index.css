@@ -966,6 +966,53 @@ audio::-webkit-media-controls-panel {
   .star-pop { animation: none; }
 }
 
+/* Icon motion (redesign sheet 03). Hover motions belong to buttons only, so an icon inside
+   a card or a link does not twitch when the card is hovered. */
+.app-icon[data-icon="close"],
+.app-icon[data-icon="star"] { transition: transform 240ms var(--ease-bounce), fill 160ms; }
+button:hover .app-icon[data-icon="close"] { transform: rotate(90deg) scale(0.92); }
+button:hover .app-icon[data-icon="star"] { transform: scale(1.12) rotate(-8deg); }
+.app-icon[data-icon="delete"] > path:first-child {
+  transform-origin: 20px 7px;
+  transition: transform 200ms var(--ease-bounce);
+}
+button:hover .app-icon[data-icon="delete"] > path:first-child { transform: translateY(-1.5px) rotate(12deg); }
+
+/* Opt-in motions: a check that draws itself once, a bell that rings while something is
+   unread, a flame that is alive while the streak is. */
+@keyframes icon-draw { from { stroke-dashoffset: 22; } to { stroke-dashoffset: 0; } }
+.icon-draw path { stroke-dasharray: 22; animation: icon-draw 420ms cubic-bezier(0.65, 0, 0.35, 1) both; }
+@keyframes icon-ring {
+  0%, 60%, 100% { transform: rotate(0); }
+  66% { transform: rotate(14deg); }
+  72% { transform: rotate(-12deg); }
+  78% { transform: rotate(8deg); }
+  84% { transform: rotate(-4deg); }
+}
+.icon-ring { transform-origin: 50% 17%; animation: icon-ring 2.4s ease-in-out infinite; }
+@keyframes icon-flicker { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(0.94, 1.06); } }
+.icon-flicker { transform-origin: 50% 88%; animation: icon-flicker 1.4s ease-in-out infinite; }
+
+/* Badge unlock (redesign sheet 09): the emblem pops in and a ring bursts out of it, once. */
+@keyframes emblem-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes emblem-burst {
+  0% { transform: scale(0.6); opacity: 0; }
+  25% { opacity: 0.9; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+.emblem-unlock { overflow: visible; animation: emblem-pop 560ms var(--ease-bounce) both; }
+.emblem-burst { transform-origin: 36px 36px; opacity: 0; animation: emblem-burst 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 160ms both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .app-icon[data-icon], .app-icon[data-icon="delete"] > path:first-child { transition: none; }
+  .icon-draw path, .icon-ring, .icon-flicker, .emblem-unlock { animation: none; }
+  .emblem-burst { animation: none; opacity: 0; }
+}
+
 /* Contour lines behind the lyric stage drift 40px and back (redesign sheet 12). */
 @keyframes contour-drift { to { transform: translateX(-40px); } }
 .contour-drift { animation: contour-drift 18s ease-in-out infinite alternate; }

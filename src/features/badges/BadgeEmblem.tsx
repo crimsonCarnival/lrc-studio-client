@@ -11,6 +11,8 @@ interface BadgeEmblemProps {
   locked?: boolean;
   /** Shape and colour only, for rows of small emblems. */
   mini?: boolean;
+  /** Just earned: pops in with a ring burst, once. */
+  unlock?: boolean;
   /** Accessible name. Omit when the name is written next to the emblem. */
   label?: string;
   className?: string;
@@ -19,7 +21,7 @@ interface BadgeEmblemProps {
 const FILL_OPACITY: Record<string, number> = { epic: 0.24, legendary: 0.28 };
 
 /** A badge drawn as its emblem (redesign sheet 09). */
-export function BadgeEmblem({ id, size = 68, color, rarity, locked = false, mini = false, label, className }: BadgeEmblemProps) {
+export function BadgeEmblem({ id, size = 68, color, rarity, locked = false, mini = false, unlock = false, label, className }: BadgeEmblemProps) {
   const emblem = emblemFor(id, color);
   const shape = EMBLEM_SHAPES[emblem.shape];
   const framed = !mini && (rarity === 'rare' || rarity === 'epic' || rarity === 'legendary');
@@ -32,7 +34,7 @@ export function BadgeEmblem({ id, size = 68, color, rarity, locked = false, mini
       role={label ? 'img' : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
-      className={`shrink-0${locked ? ' opacity-[.42] grayscale' : ''}${className ? ` ${className}` : ''}`}
+      className={`shrink-0${unlock ? ' emblem-unlock' : ''}${locked ? ' opacity-[.42] grayscale' : ''}${className ? ` ${className}` : ''}`}
       style={{
         color: emblem.color,
         filter: framed && rarity === 'epic' && !locked
@@ -44,6 +46,7 @@ export function BadgeEmblem({ id, size = 68, color, rarity, locked = false, mini
         <path d={shape.outer} fill="currentColor" fillOpacity=".3" stroke="currentColor" strokeWidth="5" strokeLinejoin="round" />
       ) : (
         <>
+          {unlock && <circle className="emblem-burst" cx="36" cy="36" r="30" fill="none" stroke="currentColor" strokeWidth="2" />}
           {rarity === 'rare' && (
             <circle cx="36" cy="36" r="34" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 4" strokeLinecap="round" />
           )}

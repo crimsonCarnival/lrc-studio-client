@@ -6,6 +6,7 @@ import { request } from '@/app/api.client';
 import { getSocket } from '@/app/socket.client';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
+import { BadgeEmblem } from '@/features/badges/BadgeEmblem';
 import { NotificationText, NotificationAvatar, notificationDestination, type NotificationData } from './components/NotificationItem';
 import { appNavigate } from '@/app/navigation';
 import { Icon } from '@/shared/ui/Icon';
@@ -77,9 +78,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
                 className="flex items-center gap-3 cursor-pointer select-none"
                 onClick={() => toast.dismiss(item.id)}
               >
-                <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-lg shrink-0">
-                  <Icon name="military_tech" size={20} className="text-amber-400" />
-                </div>
+                <BadgeEmblem id={badgeId} size={44} unlock />
                 <div>
                   <p className="text-xs font-bold text-foreground leading-tight">{t('notifications.badgeUnlocked')}</p>
                   <p className="text-xs text-muted-foreground leading-tight">{label}</p>
@@ -186,6 +185,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
             className="flex items-center gap-3 cursor-pointer select-none"
             onClick={() => toast.dismiss(item.id)}
           >
+            <BadgeEmblem id={badgeId} size={44} unlock />
             <div>
               <p className="text-xs font-bold text-foreground leading-tight">{t('notifications.badgeUnlocked')}</p>
               <p className="text-xs text-muted-foreground leading-tight">{label}</p>
