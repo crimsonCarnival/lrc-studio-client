@@ -18,6 +18,7 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/types';
+import OwnProfileRedirect from '@/features/profile/OwnProfileRedirect';
 import { editorPath, parseSlugId, projectDisplayName, projectPath } from '@/features/projects/project-path';
 import { listPath, profilePath } from '@/features/profile/profile-path';
 import { LogoLoader } from '@ui/LogoLoader';
@@ -511,9 +512,10 @@ export function AppRouter({
           <ListPage />
         </Suspense>
       } />
-      <Route path="profile/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => listPath(p.accountName, p.listId)} />} />
-      <Route path="u/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => listPath(p.accountName, p.listId)} />} />
-      <Route path=":accountName" element={
+      <Route path=":accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
+      <Route path="u/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
+      <Route path="profile" element={<OwnProfileRedirect />} />
+      <Route path="profile/:accountName" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <ProfilePage />
         </Suspense>
