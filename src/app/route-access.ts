@@ -44,8 +44,9 @@ const RULES: Rule[] = [
 
   // ── Public profile shapes (vanity URLs at root) ── evaluated LAST.
   { test: p => /^\/[a-z0-9_.:-]+$/.test(p), access: 'public' },           // /:accountName
-  { test: p => /^\/profile\/[a-z0-9_.:-]+$/.test(p), access: 'public' },  // legacy profile
-  { test: p => /^\/[a-z0-9_.:-]+\/lists\/[^/]+$/.test(p), access: 'public' }, // public list
+  { test: p => /^\/(profile|u)\/[a-z0-9_.:-]+$/.test(p), access: 'public' },  // legacy profile
+  { test: p => /^\/(u\/)?[a-z0-9_.:-]+\/lists\/[^/]+$/.test(p), access: 'public' }, // public list
+  { test: p => /^\/profile\/[a-z0-9_.:-]+\/(lists|playlists)\/[^/]+$/.test(p), access: 'public' }, // legacy list
 ];
 
 /**
@@ -53,8 +54,13 @@ const RULES: Rule[] = [
  * default to 'auth' (default-deny).
  */
 export function accessFor(pathname: string): Access {
+  // React Router matches paths case-insensitively, so `/Settings` renders the
+  // settings page and `/Alice` opens alice's profile (account names are stored
+  // lowercase and the API lowercases lookups). Classify the same way the router
+  // matches, or a capitalised private path would slip past every rule above.
+  const path = pathname.toLowerCase();
   for (const rule of RULES) {
-    if (rule.test(pathname)) return rule.access;
+    if (rule.test(path)) return rule.access;
   }
   return 'auth';
 }
