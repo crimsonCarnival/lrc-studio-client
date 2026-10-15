@@ -1,4 +1,6 @@
 import { profilePath } from '@/features/profile/profile-path';
+import { ArtistText } from '@/features/artists/ArtistText';
+import { artistDisplay, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
@@ -13,6 +15,7 @@ interface ProjectMeta {
   description?: string;
   songName?: string;
   songArtist?: string;
+  artists?: ArtistCredit[];
   songAlbum?: string;
   songYear?: string | number;
   tags?: string[];
@@ -70,10 +73,10 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
           <h1 className="text-xl font-semibold text-foreground tracking-tight leading-tight">
             {project.title || t('projectView.notFound')}
           </h1>
-          {(meta.songName || meta.songArtist) && (
+          {(meta.songName || artistDisplay(meta)) && (
             <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
               {meta.songName && <span className="font-medium text-foreground/90">{meta.songName}</span>}
-              {meta.songArtist && <span className="before:content-['·'] before:mr-1.5">{meta.songArtist}</span>}
+              {artistDisplay(meta) && <ArtistText metadata={meta} className="before:content-['·'] before:mr-1.5" />}
               {meta.songAlbum && <span className="before:content-['·'] before:mr-1.5 italic">{meta.songAlbum}</span>}
               {meta.songYear && <span className="before:content-['·'] before:mr-1.5">{meta.songYear}</span>}
             </div>

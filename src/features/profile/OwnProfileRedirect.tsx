@@ -1,4 +1,5 @@
 import { Navigate } from 'react-router-dom';
+import { profilePath } from './profile-path';
 import { LogoLoader } from '@ui/LogoLoader';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 
@@ -12,6 +13,6 @@ export default function OwnProfileRedirect() {
   if (loading) {
     return <div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>;
   }
-  if (user?.accountName) return <Navigate to={`/profile/${user.accountName}`} replace />;
+  if (user?.accountName) return <Navigate to={profilePath(user.accountName)} replace />;
   return <Navigate to={`/auth/signin?redirect=${encodeURIComponent('/profile')}`} replace />;
 }

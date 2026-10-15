@@ -1,4 +1,6 @@
 import { profilePath } from '@/features/profile/profile-path';
+import { ArtistText } from '@/features/artists/ArtistText';
+import { artistDisplay, type ArtistCredit } from '@/features/artists/artist-credits';
 import { localizeSongLanguage } from '@features/editor/utils/song-language';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { useMemo, useState } from 'react';
@@ -20,6 +22,7 @@ interface ProjectMeta {
   description?: string;
   songName?: string;
   songArtist?: string;
+  artists?: ArtistCredit[];
   songAlbum?: string;
   songYear?: string | number;
   songLanguage?: string;
@@ -202,7 +205,7 @@ export default function ProjectInfoPanel({
             {title}
           </h1>
           {showSongName && <p className="text-[15px] text-subtle">{meta.songName}</p>}
-          {meta.songArtist && <p className="text-[15px] leading-tight font-bold text-foreground">{meta.songArtist}</p>}
+          {artistDisplay(meta) && <p className="text-[15px] leading-tight font-bold text-foreground"><ArtistText metadata={meta} /></p>}
           {albumLine && (
             <Tip content={albumLine}>
               <p className="line-clamp-2 text-sm text-subtle">
@@ -327,7 +330,7 @@ export default function ProjectInfoPanel({
             <ShareOgButton
               publicId={project.publicId}
               title={meta.songName || title}
-              subtitle={meta.songArtist}
+              subtitle={artistDisplay(meta) || undefined}
               projectName={project.title}
               coverImage={cover}
               genre={meta.genre}

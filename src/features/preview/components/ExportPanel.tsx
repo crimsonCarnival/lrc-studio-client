@@ -22,6 +22,10 @@ interface ExportPanelProps {
   setIncludeWordTimestamps: (v: boolean) => void;
   includeMetadata: boolean;
   setIncludeMetadata: (v: boolean) => void;
+  includeFeaturedInTitle: boolean;
+  setIncludeFeaturedInTitle: (v: boolean) => void;
+  /** Only a project with featured artists is changed by the option, so it is only offered then. */
+  hasFeaturedArtists: boolean;
   exportFormat: ExportFormat;
   setExportFormat: (format: ExportFormat) => void;
   /** Milliseconds, as typed. */
@@ -69,6 +73,9 @@ export default function ExportPanel({
   setIncludeWordTimestamps,
   includeMetadata,
   setIncludeMetadata,
+  includeFeaturedInTitle,
+  setIncludeFeaturedInTitle,
+  hasFeaturedArtists,
   exportFormat,
   setExportFormat,
   exportOffset,
@@ -189,6 +196,22 @@ export default function ExportPanel({
                 <div className="flex items-center gap-2.5 min-h-6 coarse:min-h-11">
                   <Checkbox id={`${id}-meta`} checked={includeMetadata} onCheckedChange={(c) => setIncludeMetadata(c === true)} className={CHECKBOX} />
                   <Label htmlFor={`${id}-meta`} className="text-sm font-normal text-foreground cursor-pointer">{t('export.includeMetadata')}</Label>
+                </div>
+              )}
+              {exportFormat === 'lrc' && hasFeaturedArtists && (
+                <div className="flex items-center gap-2.5 min-h-6 coarse:min-h-11">
+                  <Checkbox
+                    id={`${id}-feat-title`}
+                    checked={includeFeaturedInTitle}
+                    disabled={!includeMetadata}
+                    onCheckedChange={(c) => setIncludeFeaturedInTitle(c === true)}
+                    aria-describedby={`${id}-feat-title-hint`}
+                    className={CHECKBOX}
+                  />
+                  <div className="flex flex-col">
+                    <Label htmlFor={`${id}-feat-title`} className="text-sm font-normal text-foreground cursor-pointer">{(t as (k: string) => string)('artists.export.includeFeaturedInTitle')}</Label>
+                    <span id={`${id}-feat-title-hint`} className="text-xs text-foreground/65">{(t as (k: string) => string)('artists.export.includeFeaturedInTitleHint')}</span>
+                  </div>
                 </div>
               )}
               {(hasSecondary || hasFurigana) && (

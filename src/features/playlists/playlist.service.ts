@@ -18,7 +18,7 @@ const PLAYLIST_FIELDS = /* GraphQL */ `
     owner { id accountName displayName avatarUrl }
     projects {
       id publicId title starCount forkCount coverImage
-      metadata { songName songArtist genre }
+      metadata { songName songArtist artists { name role order } genre }
       upload { source uploadUrl coverImage }
     }
   }

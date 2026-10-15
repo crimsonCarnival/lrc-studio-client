@@ -5,6 +5,7 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { getSocket } from '@/app/socket.client';
+import { artistDisplay } from '@/features/artists/artist-credits';
 import {
   enqueueSyncJob,
   flushSyncQueue,
@@ -250,8 +251,8 @@ export function useAutosave({
 
       const derivedTitle = (() => {
         if (mediaTitle) return mediaTitle;
-        const { songName, songArtists, songArtist } = projectMetadata || {};
-        const artistStr = Array.isArray(songArtists) && songArtists.length > 0 ? songArtists.join(', ') : (songArtist || '');
+        const { songName } = projectMetadata || {};
+        const artistStr = artistDisplay(projectMetadata);
         if (songName) return artistStr ? `${songName} - ${artistStr}` : songName;
         return mediaTitle || '';
       })();

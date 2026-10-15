@@ -8,7 +8,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
 import { matchKey } from '@/shared/utils/keyboard';
-import { splitArtists } from '@/shared/utils/lrc';
+import { artistFieldsFromForm, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useUrlParamsSync } from '@/shared/hooks/useUrlParamsSync';
 import BannedScreen from '@features/auth/components/BannedScreen';
 import GuestProjectSaveGate from '@features/editor/components/core/GuestProjectSaveGate';
@@ -38,7 +38,7 @@ interface SetupCompleteData {
   tags?: string[];
   isPublic?: boolean;
   songName?: string;
-  songArtist?: string;
+  artists?: ArtistCredit[];
   songAlbum?: string;
   songYear?: string | number;
   genre?: string;
@@ -152,7 +152,7 @@ function AppInner() {
     tags,
     isPublic,
     songName,
-    songArtist,
+    artists,
     songAlbum,
     songYear,
     genre,
@@ -202,8 +202,7 @@ function AppInner() {
 
     setMediaTitle(finalTitle);
 
-    const songArtists = splitArtists(songArtist);
-    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songArtists, songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), singers: singers || [] };
+    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', ...artistFieldsFromForm({ artists, artistsChanged: (artists?.length ?? 0) > 0 }), songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), singers: singers || [] };
     appState.setProjectMetadata(newMetadata);
 
     if (!user) {

@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { artistErrorMessageFor } from '@/features/artists/artist-errors';
+import { ArtistText } from '@/features/artists/ArtistText';
 import type { TFunction } from 'i18next';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { artistFieldsFromForm, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
 import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
 import useDynamicTranslation from '@/shared/hooks/useDynamicTranslation';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -199,7 +202,7 @@ export default function Home() {
                   <ProjectStatusTag status={statusOf(lastProject)} withCheck />
                 </div>
                 <p className="truncate text-base text-subtle">
-                  {lastProject.metadata?.songArtist || t('home.noArtist')}
+                  <ArtistText metadata={lastProject.metadata} fallback={t('home.noArtist')} />
                   {lastProject.metadata?.songAlbum ? ` · ${lastProject.metadata.songAlbum}` : ''}
                 </p>
                 <div className="flex items-center gap-3">
@@ -340,18 +343,18 @@ export default function Home() {
         onClose={() => setEditingProject(null)}
         onConfirm={async (data: {
           name?: string; description?: string; tags?: string[];
-          songName?: string; songArtist?: string; songAlbum?: string; songYear?: string | number;
+          songName?: string; artists?: ArtistCredit[]; artistsChanged?: boolean; songAlbum?: string; songYear?: string | number;
           coverImage?: string; isPublic?: boolean; singerColors?: string[]; singers?: string[];
         }) => {
           if (!editingProject) return;
           try {
-            const { name: title, description, tags, songName, songArtist, songAlbum, songYear, coverImage, isPublic, singerColors, singers } = data;
+            const { name: title, description, tags, songName, songAlbum, songYear, coverImage, isPublic, singerColors, singers } = data;
             const updatedMetadata = {
               ...editingProject.metadata,
               description,
               tags,
               songName,
-              songArtist,
+              ...artistFieldsFromForm({ artists: data.artists ?? [], artistsChanged: data.artistsChanged }),
               songAlbum,
               songYear,
               singerColors: (singerColors || []).map((c) => c || ''),
@@ -370,15 +373,15 @@ export default function Home() {
                 : p
             ));
             setEditingProject(null);
-          } catch {
-            toast.error(t('project.updateError'));
+          } catch (err) {
+            toast.error(artistErrorMessageFor(t, err) ?? t('project.updateError'));
           }
         }}
         initialName={editingProject?.title || ''}
         initialDescription={editingProject?.metadata?.description || ''}
         initialTags={editingProject?.metadata?.tags || []}
         initialSongName={editingProject?.metadata?.songName || ''}
-        initialSongArtist={editingProject?.metadata?.songArtist || ''}
+        initialArtists={creditsOf(editingProject?.metadata)}
         initialSongAlbum={editingProject?.metadata?.songAlbum || ''}
         initialSongYear={editingProject?.metadata?.songYear || ''}
         initialCoverImage={editingProject?.coverImage || ''}

@@ -15,7 +15,7 @@ const GET_MY_PROJECTS = /* GraphQL */ `
   query GetMyProjects {
     projects {
       id publicId title
-      metadata { songName songArtist }
+      metadata { songName songArtist artists { name role order } }
     }
   }
 `;

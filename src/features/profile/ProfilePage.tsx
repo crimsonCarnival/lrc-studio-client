@@ -1,4 +1,5 @@
 import { profilePath } from '@/features/profile/profile-path';
+import { artistErrorMessageFor } from '@/features/artists/artist-errors';
 import { LevelXpCard } from './LevelXpCard';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
@@ -14,6 +15,8 @@ import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 import { projectPath } from '@/features/projects/project-path';
+import { ArtistText } from '@/features/artists/ArtistText';
+import { artistFieldsFromForm, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { followUser, unfollowUser, blockUser, unblockUser } from './profile.service';
@@ -59,7 +62,7 @@ interface ProjectMetaLoose {
   tags?: string[];
   songName?: string;
   songArtist?: string;
-  songArtists?: string[];
+  artists?: ArtistCredit[];
   songAlbum?: string;
   songYear?: string;
   genre?: string;
@@ -81,7 +84,6 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
   const isPrivate = isOwner && isPublic === false;
   const hasCover = !!coverImage;
   const meta = (project.metadata || {}) as ProjectMetaLoose;
-  const artist = (meta.songArtists || []).join(', ') || meta.songArtist || '';
   const synced = project.syncedLineCount || 0;
   const total = project.lineCount || 0;
   const percent = total > 0 ? Math.min(100, Math.round((synced / total) * 100)) : 0;
@@ -147,7 +149,7 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
             <h3 className="text-[15px] font-bold uppercase text-zinc-100 truncate group-hover:text-primary transition-colors leading-snug">
               {title || t('library.untitled')}
             </h3>
-            {artist && <p className="text-[13px] text-zinc-400 truncate mt-0.5">{artist}</p>}
+            <ArtistText metadata={meta} className="block text-[13px] text-zinc-400 truncate mt-0.5" />
             <div className="h-1 rounded-full bg-zinc-800 mt-3 overflow-hidden" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
               <div className={`h-full rounded-full ${complete ? 'bg-teal-400' : 'bg-primary'}`} style={{ width: `${percent}%` }} />
             </div>
@@ -677,13 +679,13 @@ export default function ProfilePage() {
               onClose={() => setEditingProject(null)}
               onConfirm={async (data: ProjectSetupConfirm) => {
                 try {
-                  const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic, singerColors, singers } = data;
+                  const { name: title, description, tags, songName, songAlbum, songYear, genre, coverImage, isPublic, singerColors, singers } = data;
                   const updatedMetadata = {
                     ...(editingProject.metadata as Record<string, unknown>),
                     description,
                     tags,
                     songName,
-                    songArtist,
+                    ...artistFieldsFromForm(data),
                     songAlbum,
                     songYear,
                     genre,
@@ -706,15 +708,15 @@ export default function ProfilePage() {
                   } : prev);
                   setEditingProject(null);
                   toast.success(t('project.updateSuccess'));
-                } catch {
-                  toast.error(t('project.updateError'));
+                } catch (err) {
+                  toast.error(artistErrorMessageFor(t, err) ?? t('project.updateError'));
                 }
               }}
               initialName={editingProject.title || ''}
               initialDescription={meta.description || ''}
               initialTags={meta.tags ?? EMPTY_LIST}
               initialSongName={meta.songName || ''}
-              initialSongArtist={(meta.songArtists || []).join(', ') || meta.songArtist || ''}
+              initialArtists={creditsOf(meta)}
               initialSongAlbum={meta.songAlbum || ''}
               initialSongYear={meta.songYear || ''}
               initialGenre={meta.genre || ''}
