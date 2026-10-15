@@ -41,14 +41,18 @@ const RULES: Rule[] = [
   //    single-segment routes don't get treated as /:accountName.
   { test: p => AUTH_SEGMENTS.has(seg1(p)), access: 'auth' },
   { test: p => /^\/project\/[^/]+\/edit$/.test(p), access: 'auth' },      // edit own project
-  { test: p => /^\/[a-z0-9_.:-]+\/projects\/[^/]+\/edit$/.test(p), access: 'auth' }, // edit own project (canonical URL)
+  { test: p => /^\/[^/]+\/projects\/[^/]+\/edit\/?$/.test(p), access: 'auth' }, // edit own project (canonical URL)
 
   // ── Public profile shapes (vanity URLs at root) ── evaluated LAST.
-  { test: p => /^\/[a-z0-9_.:-]+$/.test(p), access: 'public' },           // /:accountName
+  // The account segment is any non-slash text, not just today's `[a-z0-9_.:-]`: accounts created before
+  // that rule can have capitals or other characters, and a stricter pattern here sent their profile
+  // and project links to the sign-in page. Every private route is matched above, so this stays safe.
+  // An optional trailing slash is accepted for the same reason.
+  { test: p => /^\/[^/]+\/?$/.test(p), access: 'public' },                // /:accountName
   // Legacy /profile/… and /u/… forms: redirected to the bare URLs, but must not bounce to login first.
-  { test: p => /^\/(profile|u)\/[a-z0-9_.:-]+(\/(lists|playlists)\/[^/]+)?$/.test(p), access: 'public' },
-  { test: p => /^\/[a-z0-9_.:-]+\/lists\/[^/]+$/.test(p), access: 'public' }, // public list
-  { test: p => /^\/[a-z0-9_.:-]+\/projects\/[^/]+$/.test(p), access: 'public' }, // public project view
+  { test: p => /^\/(profile|u)\/[^/]+(\/(lists|playlists)\/[^/]+)?\/?$/.test(p), access: 'public' },
+  { test: p => /^\/[^/]+\/lists\/[^/]+\/?$/.test(p), access: 'public' },    // public list
+  { test: p => /^\/[^/]+\/projects\/[^/]+\/?$/.test(p), access: 'public' }, // public project view
 ];
 
 /**

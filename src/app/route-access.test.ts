@@ -19,4 +19,26 @@ describe('accessFor', () => {
     expect(accessFor('/library')).toBe('auth');
     expect(accessFor('/settings/profile')).toBe('auth');
   });
+
+  it('keeps profiles and project pages public for accounts with capitals, dots or non-Latin letters', () => {
+    for (const name of ['Gburpy', 'Some.User', 'user_Name', 'ユーザー', 'a%20b']) {
+      expect(accessFor(`/${name}`)).toBe('public');
+      expect(accessFor(`/${name}/lists/abc`)).toBe('public');
+      expect(accessFor(`/${name}/projects/radiohead-creep-E46boTClMr`)).toBe('public');
+      expect(accessFor(`/${name}/projects/radiohead-creep-E46boTClMr/edit`)).toBe('auth');
+    }
+  });
+
+  it('accepts a trailing slash and the id-only project form', () => {
+    expect(accessFor('/gburpy/projects/E46boTClMr')).toBe('public');
+    expect(accessFor('/gburpy/projects/radiohead-creep-E46boTClMr/')).toBe('public');
+    expect(accessFor('/gburpy/')).toBe('public');
+    expect(accessFor('/gburpy/projects/radiohead-creep-E46boTClMr/edit/')).toBe('auth');
+  });
+
+  it('does not make private areas public by being more permissive', () => {
+    for (const path of ['/library', '/home', '/settings', '/settings/profile', '/uploads', '/uploads/abc', '/feed', '/notifications', '/library/lists/x', '/admin', '/admin/users']) {
+      expect(accessFor(path)).not.toBe('public');
+    }
+  });
 });
