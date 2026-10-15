@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { editorPath, hasProjectIdentity, isProjectEditorPath, isProjectViewPath, parseSlugId, projectPath, slugify } from './project-path';
+import { editorPath, hasProjectIdentity, projectDisplayName, isProjectEditorPath, isProjectViewPath, parseSlugId, projectPath, slugify } from './project-path';
 
 describe('slugify', () => {
   it('lowercases, strips accents and punctuation', () => {
@@ -17,6 +17,19 @@ describe('slugify', () => {
     const slug = slugify('word '.repeat(40));
     expect(slug.length).toBeLessThanOrEqual(60);
     expect(slug.endsWith('-')).toBe(false);
+  });
+});
+
+describe('projectDisplayName', () => {
+  it('uses the song and artist the user typed', () => {
+    expect(projectDisplayName({ title: 'my-file.mp3', metadata: { songName: 'Creep', songArtist: 'Radiohead' } })).toBe('Creep – Radiohead');
+    expect(projectDisplayName({ metadata: { songName: 'Creep', songArtists: ['A', 'B'] } })).toBe('Creep – A, B');
+  });
+  it('falls back to what exists, then the project name', () => {
+    expect(projectDisplayName({ title: 'x', metadata: { songName: 'Creep' } })).toBe('Creep');
+    expect(projectDisplayName({ title: 'x', metadata: { songArtist: 'Radiohead' } })).toBe('Radiohead');
+    expect(projectDisplayName({ title: ' My Song ' })).toBe('My Song');
+    expect(projectDisplayName({})).toBe('');
   });
 });
 

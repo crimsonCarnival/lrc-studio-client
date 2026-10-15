@@ -10,6 +10,8 @@ import { ProjectListCover } from '@/features/projects/components/ProjectListCove
 import { PlayerContext } from '@/features/player/PlayerContext';
 import { Checkbox } from '@ui/checkbox';
 import { SHARE_TARGETS, shareTargetUrl, type ShareTargetId } from '../share-targets';
+import { LOGO_DATA_URL, QR_QUIET, canShareQrFile, logoBox, qrModules, renderQrPng, type QrModules } from '../qr';
+import { slugify } from '@/features/projects/project-path';
 
 interface ShareSheetProps {
   open: boolean;
@@ -51,31 +53,31 @@ function BrandMark({ path }: { path: string }) {
 }
 
 /**
- * The link as a QR code, drawn as SVG squares in the text colour on a light tile: scanners
- * need dark-on-light, whatever the theme. The encoder is loaded only when the code is asked for.
+ * The link as a QR code, drawn as SVG squares on a light tile with the app logo in the
+ * centre: scanners need dark-on-light, whatever the theme. The encoder is loaded only when
+ * the code is asked for.
  */
 function QrCode({ value }: { value: string }) {
-  const [modules, setModules] = useState<{ size: number; dark: boolean[] } | null>(null);
+  const [modules, setModules] = useState<QrModules | null>(null);
 
   useEffect(() => {
     let alive = true;
-    import('qrcode').then(({ create }) => {
-      const qr = create(value, { errorCorrectionLevel: 'M' });
-      const size = qr.modules.size;
-      const dark = Array.from({ length: size * size }, (_, i) => qr.modules.get(i % size, Math.floor(i / size)) === 1);
-      if (alive) setModules({ size, dark });
-    }).catch(() => { /* leave the placeholder */ });
+    qrModules(value).then((m) => { if (alive) setModules(m); }).catch(() => { /* leave the placeholder */ });
     return () => { alive = false; };
   }, [value]);
 
-  const quiet = 2; // modules of margin around the code
+  const logo = modules ? logoBox(modules.size) : null;
   return (
     <div className="mx-auto grid size-52 place-items-center rounded-[var(--radius-card)] bg-white p-3 text-black">
-      {modules ? (
-        <svg viewBox={`${-quiet} ${-quiet} ${modules.size + quiet * 2} ${modules.size + quiet * 2}`} className="size-full" shapeRendering="crispEdges" aria-hidden="true">
-          {modules.dark.map((on, i) => on && (
-            <rect key={i} x={i % modules.size} y={Math.floor(i / modules.size)} width="1" height="1" fill="currentColor" />
-          ))}
+      {modules && logo ? (
+        <svg viewBox={`${-QR_QUIET} ${-QR_QUIET} ${modules.size + QR_QUIET * 2} ${modules.size + QR_QUIET * 2}`} className="size-full" aria-hidden="true">
+          <g shapeRendering="crispEdges">
+            {modules.dark.map((on, i) => on && (
+              <rect key={i} x={i % modules.size} y={Math.floor(i / modules.size)} width="1" height="1" fill="currentColor" />
+            ))}
+          </g>
+          <rect x={logo.x - logo.pad} y={logo.y - logo.pad} width={logo.side + logo.pad * 2} height={logo.side + logo.pad * 2} rx={(logo.side + logo.pad * 2) * 0.18} fill="#fff" />
+          <image href={LOGO_DATA_URL} x={logo.x} y={logo.y} width={logo.side} height={logo.side} />
         </svg>
       ) : null}
     </div>
@@ -172,6 +174,36 @@ function ShareSheetBody({ url: baseUrl, title, subtitle, projectName, coverImage
     if (await copy()) toast.success(t('share.sheet.discordCopied'));
   };
 
+  // The QR as an image, for sharing it instead of the link.
+  const qrFileName = `${slugify(text) || 'lrc-studio'}-qr.png`;
+  const canShareQr = canSystemShare && canShareQrFile();
+
+  const downloadQr = async () => {
+    try {
+      const blob = await renderQrPng(url);
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = qrFileName;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(href), 1000);
+      onShared?.();
+    } catch {
+      toast.error(t('share.sheet.qrFailed'));
+    }
+  };
+
+  const shareQr = async () => {
+    try {
+      const blob = await renderQrPng(url);
+      const file = new File([blob], qrFileName, { type: 'image/png' });
+      await navigator.share({ files: [file], title: text, text: url });
+      onShared?.();
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === 'AbortError')) toast.error(t('share.sheet.qrFailed'));
+    }
+  };
+
   const systemShare = async () => {
     try {
       await navigator.share({ url, title: text });
@@ -231,6 +263,18 @@ function ShareSheetBody({ url: baseUrl, title, subtitle, projectName, coverImage
           <div className="flex flex-col items-center gap-2">
             <QrCode value={url} />
             <span className="text-[13px] text-subtle">{t('share.sheet.qrHint')}</span>
+            <div className="flex w-full gap-2">
+              <Button variant="outline" onClick={downloadQr} className="h-11 flex-1 gap-2 text-[15px] lg:h-11 lg:text-[15px]">
+                <Icon name="download" size={18} />
+                {t('share.sheet.downloadQr')}
+              </Button>
+              {canShareQr && (
+                <Button variant="outline" onClick={shareQr} className="h-11 flex-1 gap-2 text-[15px] lg:h-11 lg:text-[15px]">
+                  <Icon name="share" size={18} />
+                  {t('share.sheet.shareQr')}
+                </Button>
+              )}
+            </div>
           </div>
         )}
 

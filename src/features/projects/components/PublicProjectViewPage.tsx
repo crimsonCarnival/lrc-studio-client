@@ -15,7 +15,7 @@ import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { ProjectUpNextPanel } from './ProjectUpNextPanel';
 import { usePublicProject } from '../hooks/usePublicProject';
-import { parseSlugId, projectPath } from '../project-path';
+import { parseSlugId, projectDisplayName, projectPath } from '../project-path';
 import { useStarredPlaylist } from '../hooks/useStarredPlaylist';
 import ImmersiveLyricsDisplay, { type DisplayLine } from './ImmersiveLyricsDisplay';
 import ProjectInfoPanel from './ProjectInfoPanel';
@@ -267,8 +267,10 @@ function PublicProjectViewPageInner() {
 
   const [mediaTitleOverride, setMediaTitle] = useState<string | null>(null);
   const mediaTitle = mediaTitleOverride ?? projectTitle;
+  // The tab title is the song and artist the owner entered, not whatever the player reports
+  // for the media (a YouTube video's title, a file name).
   // usePageTitle's JS param type is mis-inferred; it accepts a title string at runtime.
-  (usePageTitle as (title?: string | null) => void)(mediaTitle);
+  (usePageTitle as (title?: string | null) => void)(projectDisplayName({ title: project?.title, metadata: project?.metadata as Parameters<typeof projectDisplayName>[0]['metadata'] }) || mediaTitle);
 
   const cover = resolveCoverImage(project);
 
