@@ -5,6 +5,7 @@ import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
 import { useNavigate, useLocation, NavLink, Link } from 'react-router-dom';
+import { isProjectViewPath, isProjectEditorPath } from '@/features/projects/project-path';
 import { guardedLinkClick } from './guarded-link-click';
 import { Icon } from '@/shared/ui/Icon';
 import { HeaderSearchBar } from '@/features/search/components/HeaderSearchBar';
@@ -128,8 +129,8 @@ export function AppHeader({
   // Project pages (setup, edit, public view) are fixed-height app layouts that don't
   // window-scroll — the editor and preview panes own their own scroll-progress bars,
   // so the header's window-scroll bar is meaningless noise there.
-  const isProjectPage = location.pathname.startsWith('/project/');
-  const isEditorPage = Boolean(location.pathname.match(/^\/project\/(local|new|[^/]+\/edit)$/));
+  const isProjectPage = location.pathname.startsWith('/project/') || isProjectViewPath(location.pathname) || isProjectEditorPath(location.pathname);
+  const isEditorPage = Boolean(location.pathname.match(/^\/project\/(local|new|[^/]+\/edit)$/)) || isProjectEditorPath(location.pathname);
   // The editor/preview workspace takes over the middle and right of the bar:
   // it portals its own status badge, tabs and actions into the slots below
   // (see useHeaderSlot), so the site nav, search and tour button step aside.

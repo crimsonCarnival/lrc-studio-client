@@ -41,11 +41,14 @@ const RULES: Rule[] = [
   //    single-segment routes don't get treated as /:accountName.
   { test: p => AUTH_SEGMENTS.has(seg1(p)), access: 'auth' },
   { test: p => /^\/project\/[^/]+\/edit$/.test(p), access: 'auth' },      // edit own project
+  { test: p => /^\/[a-z0-9_.:-]+\/projects\/[^/]+\/edit$/.test(p), access: 'auth' }, // edit own project (canonical URL)
 
   // ── Public profile shapes (vanity URLs at root) ── evaluated LAST.
   { test: p => /^\/[a-z0-9_.:-]+$/.test(p), access: 'public' },           // /:accountName
-  { test: p => /^\/profile\/[a-z0-9_.:-]+$/.test(p), access: 'public' },  // legacy profile
+  // Legacy /profile/… and /u/… forms: redirected to the bare URLs, but must not bounce to login first.
+  { test: p => /^\/(profile|u)\/[a-z0-9_.:-]+(\/(lists|playlists)\/[^/]+)?$/.test(p), access: 'public' },
   { test: p => /^\/[a-z0-9_.:-]+\/lists\/[^/]+$/.test(p), access: 'public' }, // public list
+  { test: p => /^\/[a-z0-9_.:-]+\/projects\/[^/]+$/.test(p), access: 'public' }, // public project view
 ];
 
 /**

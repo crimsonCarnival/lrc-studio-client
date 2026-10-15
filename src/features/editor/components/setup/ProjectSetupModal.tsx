@@ -12,6 +12,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
+import { hasProjectIdentity } from '@/features/projects/project-path';
 import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { Switch } from '@/shared/ui/switch';
 import toast from 'react-hot-toast';
@@ -258,8 +259,11 @@ export default function ProjectSetupModal({
     }
   }, [form.songName, form.songArtist, metaSearching, t]);
 
+  const hasIdentity = hasProjectIdentity({ title: form.name, metadata: { songName: form.songName, songArtist: form.songArtist } });
+
   const handleSubmit = (e: FormEvent | ReactMouseEvent) => {
     e.preventDefault();
+    if (!hasIdentity) return;
     const finalTags = form.tagInput.trim() ? [...form.tags, form.tagInput.trim()] : form.tags;
     onConfirm({
       name: form.name.trim(),
@@ -332,8 +336,12 @@ export default function ProjectSetupModal({
                   onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder={t('project.titlePlaceholder')}
                   className="bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-primary/20"
-                  required
+                  aria-invalid={!hasIdentity}
+                  aria-describedby="project-identity-hint"
                 />
+                <p id="project-identity-hint" className={`text-xs ${hasIdentity ? 'text-zinc-500' : 'text-love'}`} role={hasIdentity ? undefined : 'alert'}>
+                  {t('setup.identityRequired')}
+                </p>
               </div>
 
               {/* Song Metadata Fields */}
@@ -622,7 +630,7 @@ export default function ProjectSetupModal({
             <Button
               type="button"
               onClick={handleSubmit}
-              disabled={!form.name.trim()}
+              disabled={!hasIdentity}
               className="bg-primary hover:bg-primary-dim text-zinc-950 font-bold px-8 rounded-xl shadow-lg shadow-primary/10 transition-all h-10"
             >
               {isEditing ? t('common.save') : t('common.create')}

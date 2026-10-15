@@ -1,3 +1,4 @@
+import { listPath } from '@/features/profile/profile-path';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -28,7 +29,7 @@ export function ProjectUpNextPanel({ playlist, currentpublicId, listId, accountN
           {t('projectView.upNext')}
         </span>
         <Link
-          to={`/profile/${accountName}/lists/${listId}`}
+          to={listPath(accountName, listId)}
           className="block text-sm font-semibold text-foreground hover:text-primary transition-colors line-clamp-1 mt-0.5"
         >
           {playlist.name}

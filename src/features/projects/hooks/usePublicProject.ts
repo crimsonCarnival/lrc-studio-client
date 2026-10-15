@@ -5,7 +5,7 @@ import type { Project } from '@/types';
 const GET_PUBLIC_PROJECT = /* GraphQL */ `
   query GetPublicProject($publicId: String!) {
     publicProject(publicId: $publicId) {
-      id publicId title coverImage
+      id publicId slug title coverImage
       metadata { description genre tags songName songArtist songAlbum songYear songLanguage trackNumber trackCount singerColors }
       upload { id source uploadUrl duration coverImage }
       user { id accountName displayName avatarUrl staffRole progression { level } }

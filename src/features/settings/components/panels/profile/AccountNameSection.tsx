@@ -94,7 +94,7 @@ export default function AccountNameSection() {
         <p className="text-[13px] text-red-400 mt-1.5">{error}</p>
       ) : (
         <p className="text-[13px] text-zinc-400 mt-1.5">
-          {window.location.host}/profile/{value || '…'} · {accountNameCooldownDaysLeft > 0
+          {window.location.host}/{value || '…'} · {accountNameCooldownDaysLeft > 0
             ? t('profile.accountNameCooldown', { days: accountNameCooldownDaysLeft })
             : t('profile.accountNameChangeEvery', { days: COOLDOWN_DAYS })}
         </p>

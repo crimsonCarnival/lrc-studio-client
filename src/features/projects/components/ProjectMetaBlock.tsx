@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
@@ -154,7 +155,7 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
               <div className="flex items-center gap-1.5">
                 <Icon name="music_note" size={14} />
                 <UserHoverCard accountName={accountName}>
-                  <Link to={`/profile/${accountName}`} className="text-foreground hover:text-primary transition-colors">
+                  <Link to={profilePath(accountName)} className="text-foreground hover:text-primary transition-colors">
                     {project.user?.displayName || accountName}
                   </Link>
                 </UserHoverCard>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { isProjectViewPath, isProjectEditorPath } from '@/features/projects/project-path';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 
@@ -8,7 +9,7 @@ export function FloatingTipsPill() {
   const location = useLocation();
   const [tipIndex, setTipIndex] = useState(0);
 
-  const isProjectPage = location.pathname.startsWith('/project/');
+  const isProjectPage = location.pathname.startsWith('/project/') || isProjectViewPath(location.pathname) || isProjectEditorPath(location.pathname);
   const tips = t('home.tips', { returnObjects: true }) as unknown as string[];
   const hasTips = Array.isArray(tips) && tips.length > 0;
 
