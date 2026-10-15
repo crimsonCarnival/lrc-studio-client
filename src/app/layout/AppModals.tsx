@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { useTranslation } from 'react-i18next';
+import { creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
 
 const EditorHelpModal = lazy(() => import('@features/settings/components/EditorHelpModal'));
 import ProjectSetupModalRaw from '@features/editor/components/setup/ProjectSetupModal';
@@ -14,7 +15,7 @@ interface ProjectMetadata {
   description?: string;
   tags?: string[];
   songName?: string;
-  songArtists?: string[];
+  artists?: ArtistCredit[];
   songArtist?: string;
   songAlbum?: string;
   songYear?: string | number;
@@ -87,7 +88,7 @@ export function AppModals({
         initialDescription={projectMetadata?.description}
         initialTags={projectMetadata?.tags}
         initialSongName={projectMetadata?.songName}
-        initialSongArtist={(projectMetadata?.songArtists || []).join(', ') || projectMetadata?.songArtist || ''}
+        initialArtists={creditsOf(projectMetadata)}
         initialSongAlbum={projectMetadata?.songAlbum}
         initialSongYear={projectMetadata?.songYear}
         initialGenre={projectMetadata?.genre || ''}

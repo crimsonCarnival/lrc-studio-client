@@ -21,6 +21,7 @@ import { isApiError } from '@/types';
 import OwnProfileRedirect from '@/features/profile/OwnProfileRedirect';
 import { editorPath, parseSlugId, projectDisplayName, projectPath } from '@/features/projects/project-path';
 import { listPath, profilePath } from '@/features/profile/profile-path';
+import { artistDisplay, artistRoster, type ArtistCredit } from '@/features/artists/artist-credits';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
@@ -149,12 +150,12 @@ function EditorContainer({ loadProject, activepublicId, isProjectLoading, projec
     if (isProjectLoading || !id || activepublicId !== id || !user || user.id !== projectUserId) return;
     if (canonicalizedFor.current === id) return;
     canonicalizedFor.current = id;
-    const m = projectMetadata as { name?: string; songName?: string; songArtist?: string; songArtists?: string[] } | undefined;
+    const m = projectMetadata as { name?: string; songName?: string; artists?: ArtistCredit[]; songArtist?: string } | undefined;
     const canonical = editorPath({
       publicId: id,
       accountName: user.accountName,
       title: m?.name,
-      metadata: m,
+      metadata: { songName: m?.songName, songArtist: artistDisplay(m) },
     });
     if (canonical !== location.pathname) {
       navigate(`${canonical}${location.search}${location.hash}`, { replace: true });
@@ -297,8 +298,10 @@ export function AppRouter({
   } = appState;
 
   // Song and artist as the user typed them; the media title (file or video name) is only a fallback.
-  const meta = projectMetadata as { name?: string; songName?: string; songArtist?: string; songArtists?: string[] } | undefined;
-  usePageTitle(projectDisplayName({ title: meta?.name, metadata: meta }) || mediaTitle);
+  const meta = projectMetadata as { name?: string; songName?: string; artists?: ArtistCredit[]; songArtist?: string } | undefined;
+  usePageTitle(projectDisplayName({ title: meta?.name, metadata: { songName: meta?.songName, songArtist: artistDisplay(meta) } }) || mediaTitle);
+  // Every credit, primaries then featured: the singer choices when assigning lines. Memoised, so the editor's props keep a stable identity.
+  const rosterNames = useMemo(() => artistRoster(projectMetadata as Parameters<typeof artistRoster>[0]), [projectMetadata]);
 
   // Broadcast editor activity to mutual friends via socket presence system.
   // Emits when user is actively working in a project; clears on close/unmount.
@@ -338,7 +341,7 @@ export function AppRouter({
       publicId: activepublicId,
       accountName: user?.accountName,
       title: (projectMetadata as { name?: string } | undefined)?.name,
-      metadata: projectMetadata as { songName?: string; songArtist?: string; songArtists?: string[] } | undefined,
+      metadata: { songName: (projectMetadata as { songName?: string } | undefined)?.songName, songArtist: artistDisplay(projectMetadata as Parameters<typeof artistDisplay>[0]) },
     })) : undefined),
     [activepublicId, navigate, user?.accountName, projectMetadata],
   );
@@ -358,7 +361,7 @@ export function AppRouter({
     onShowKeyboardHelp: handleToggleKeyboardHelp,
     onOpenProjectSettings: setShowNamingModal ? () => setShowNamingModal(true) : undefined,
     registerAfterSave,
-    songArtists: projectMetadata?.songArtists || [],
+    songArtists: rosterNames,
     singerColors: projectMetadata?.singerColors || [],
     declaredSingers: projectMetadata?.singers || [],
     playerSlot,
@@ -383,7 +386,7 @@ export function AppRouter({
     handleToggleKeyboardHelp,
     setShowNamingModal,
     registerAfterSave,
-    projectMetadata,
+    projectMetadata, rosterNames,
     playerSlot,
     showPreviewView,
     uploadedAudio, hasMedia, activepublicId, handleViewPublic, isPlaying,
@@ -400,7 +403,7 @@ export function AppRouter({
     onShowEditor: showEditorView,
     onViewPublic: handleViewPublic,
     setActiveLineIndex,
-    songArtists: projectMetadata?.songArtists || [],
+    songArtists: rosterNames,
     singerColors: projectMetadata?.singerColors || [],
     playerSlot,
   } as unknown as PreviewComponentProps), [
@@ -410,7 +413,7 @@ export function AppRouter({
     sharedReadOnly, setSharedReadOnly,
     shareModal, setShareModal, hasMedia,
     isPlaying, playbackSpeed, activepublicId,
-    pendingProject, projectMetadata,
+    pendingProject, projectMetadata, rosterNames,
     showEditorView, handleViewPublic, setActiveLineIndex,
     playerSlot,
   ]);

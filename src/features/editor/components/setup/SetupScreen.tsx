@@ -23,6 +23,10 @@ import { lyrics as lyricsApi, uploads as uploadsApi, songMetadata as songMetadat
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { hasProjectIdentity } from '@/features/projects/project-path';
+import { ArtistsSection, type ArtistsSectionHandle } from '@/features/artists/ArtistsSection';
+import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
+import { mergeCredits, primaryArtistText } from '@/features/artists/artist-credits';
+import { formatArtistDisplay, primaryNames, type ArtistCredit } from '@/shared/utils/artists';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import YoutubeSearchPanel from '@features/projects/components/YoutubeSearchPanel';
 import { useYouTubeAvailability, YT_UNAVAILABLE_KEYS } from '@/features/player/hooks/useYouTubeAvailability';
@@ -51,7 +55,7 @@ interface Prefill {
   description?: string;
   tags?: string[];
   songName?: string;
-  songArtist?: string;
+  artists?: ArtistCredit[];
   songAlbum?: string;
   songYear?: string;
   genre?: string;
@@ -92,7 +96,7 @@ interface MetadataState {
   tags: string[];
   isPublic: boolean;
   songName: string;
-  songArtist: string;
+  artists: ArtistCredit[];
   songAlbum: string;
   songYear: string;
   genre: string;
@@ -195,7 +199,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     // Guests can't toggle it, so their drafts stay private until they sign up.
     isPublic: user ? (user.preferences?.defaultProjectPrivacy !== 'private') : false,
     songName: prefill?.songName || '',
-    songArtist: prefill?.songArtist || '',
+    artists: prefill?.artists || [],
     songAlbum: prefill?.songAlbum || '',
     songYear: prefill?.songYear || '',
     genre: prefill?.genre || '',
@@ -208,10 +212,14 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   const [musicLibrary, setMusicLibrary] = useState<MusicEntry[]>([]);
   const [metaSearching, setMetaSearching] = useState(false);
+  // Drives the artist editor from the handlers below (lookup, lyrics search, imported file).
+  const artistsRef = useRef<ArtistsSectionHandle>(null);
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
-  const { name: projectName, description: projectDescription, tags: projectTags, isPublic, songName, songArtist, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, singers } = metadata;
+  const { name: projectName, description: projectDescription, tags: projectTags, isPublic, songName, artists, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, singers } = metadata;
+  // The server owns `songArtist` (derived from the credits); here only the primary names are needed, for lookups.
+  const primaryText = primaryArtistText(artists);
 
   // State setters
   const setAudioState = useCallback((val: Partial<AudioState> | ((p: AudioState) => Partial<AudioState>)) => setAudio(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
@@ -226,7 +234,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   const hasLyrics = parsedLines ? parsedLines.length > 0 : lyricsText.trim().length > 0;
   // A project must be nameable: a title, song name or artist (also what its URL slug is built from).
-  const hasIdentity = hasProjectIdentity({ title: projectName, metadata: { songName, songArtist } });
+  const hasIdentity = hasProjectIdentity({ title: projectName, metadata: { songName, songArtist: formatArtistDisplay(artists) } });
   const canContinue = audioReady && hasLyrics && hasIdentity;
 
   // Fetch user's media library on mount
@@ -394,9 +402,11 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     if (file.size > MAX_IMPORT_FILE_SIZE) { toast.error(t('import.tooLarge')); return; }
     try {
       const text = await file.text();
-      const { lines } = await lyricsApi.parse(text, file.name) as { lines: EditorLine[] };
+      const { lines, metadata: header } = await lyricsApi.parse(text, file.name) as { lines: EditorLine[]; metadata?: { ti?: string; ar?: string } };
       if (lines.length === 0) { toast.error(t('import.noLines')); return; }
       setLyricsState({ parsedLines: lines, fileName: file.name, editorMode: ext === 'srt' ? 'srt' : 'lrc', text: '' });
+      // The file's [ar:] / [ti:] header: offered as artists, confirmed first (the parser flags doubtful splits).
+      if (header?.ar?.trim()) artistsRef.current?.offer({ title: header.ti ?? '', artist: header.ar }, 'import');
     } catch { toast.error(t('import.failed')); }
   };
 
@@ -406,7 +416,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
    * syncing entirely. Otherwise drop plain text into the textarea so they can
    * still edit before syncing.
    */
-  const handleLyricsSearchImport = useCallback(async (text: string, keepTimestamps: boolean) => {
+  const handleLyricsSearchImport = useCallback(async (text: string, keepTimestamps: boolean, song?: { title: string; artist: string }) => {
+    // The search found the song's artists too: offer them (primary only by default).
+    if (song?.artist) artistsRef.current?.offer({ title: song.title, artist: song.artist }, 'apply');
     if (keepTimestamps) {
       try {
         const { lines } = await lyricsApi.parse(text, 'lyrics.lrc') as { lines: EditorLine[] };
@@ -427,9 +439,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   // the tab shows results instead of an empty field. Memoised: LyricsSearchBar
   // re-runs its search whenever this object's identity changes.
   const lyricsAutoSearch = useMemo(() => {
-    const q = [songName, songArtist].filter(Boolean).join(' ').trim();
+    const q = [songName, primaryText].filter(Boolean).join(' ').trim();
     return q ? { q } : null;
-  }, [songName, songArtist]);
+  }, [songName, primaryText]);
 
   // ── Metadata handlers ──
 
@@ -437,22 +449,17 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const genreOptions    = useMemo(() => PRIMARY_GENRES.map((k) => ({ value: k, label: (t as TkFn)(`setup.genre.${k}`) })), [t]);
   const languageOptions = useLanguageOptions();
 
-  const artistOptions = useMemo(() => {
-    const seen = new Set<string>();
-    return musicLibrary
-      .filter((e) => !!e.artist && !seen.has(e.artist.toLowerCase()) && !!seen.add(e.artist.toLowerCase()))
-      .map((e) => ({ value: e.artist as string }));
-  }, [musicLibrary]);
-
   const albumOptions = useMemo(() => {
     const seen = new Set<string>();
-    const base = songArtist
-      ? musicLibrary.filter((e) => e.artist?.toLowerCase() === songArtist.toLowerCase())
+    // The library stores primary artists, so match on the first one.
+    const firstPrimary = primaryNames(artists)[0];
+    const base = firstPrimary
+      ? musicLibrary.filter((e) => e.artist?.toLowerCase() === firstPrimary.toLowerCase())
       : musicLibrary;
     return base
       .filter((e) => !!e.album && !seen.has(e.album.toLowerCase()) && !!seen.add(e.album.toLowerCase()))
       .map((e) => ({ value: e.album as string }));
-  }, [musicLibrary, songArtist]);
+  }, [musicLibrary, artists]);
 
   const handleAlbumSelect = useCallback((albumName: string) => {
     const match = musicLibrary.find((e) => e.album?.toLowerCase() === albumName.toLowerCase());
@@ -465,17 +472,16 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   }, [musicLibrary, setMetadataState]);
 
   const handleFetchSongInfo = useCallback(async () => {
-    if (!songName.trim() || !songArtist.trim() || metaSearching) return;
+    if (!songName.trim() || !primaryText.trim() || metaSearching) return;
     setMetaSearching(true);
     try {
-      const meta = await songMetadataApi.lookupTrack(songName.trim(), songArtist.trim()) as {
+      const meta = await songMetadataApi.lookupTrack(songName.trim(), primaryText.trim()) as {
         error?: string; genres?: string[]; name?: string; artist?: string; album?: string; releaseYear?: string; totalTracks?: number; albumArt?: string;
       };
       if (meta && !meta.error) {
         const mappedGenre = matchGenreFromTags(meta.genres || []);
         setMetadataState({
           songName:   meta.name   || songName,
-          songArtist: meta.artist || songArtist,
           songAlbum:  meta.album  || songAlbum,
           songYear:   meta.releaseYear || songYear,
           ...(mappedGenre           ? { genre:      mappedGenre              } : {}),
@@ -486,12 +492,15 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
       } else {
         toast.error(t('setup.metaSearchFailed'));
       }
+      // The provider answers with one string ("A, B"); the parser turns it into credits and
+      // anything doubtful waits for a confirmation. The lookup's artists lead, yours stay.
+      if (meta && !meta.error && meta.artist) artistsRef.current?.proposeFromLookup(meta.artist);
     } catch {
       toast.error(t('setup.metaSearchFailed'));
     } finally {
       setMetaSearching(false);
     }
-  }, [songName, songArtist, songAlbum, songYear, coverImage, metaSearching, setMetadataState, t]);
+  }, [songName, primaryText, songAlbum, songYear, coverImage, metaSearching, setMetadataState, t]);
 
   const handleProceed = () => {
     let finalLines = parsedLines;
@@ -500,7 +509,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     }
     const parsedTrackNumber = parseInt(String(trackNumber), 10);
     const parsedTrackCount = parseInt(String(trackCount), 10);
-    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), songArtist: songArtist.trim(), songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers });
+    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), artists, songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers });
   };
 
   // Resolves with the uploaded URL and lets failures propagate — CoverDropzone
@@ -598,19 +607,13 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   placeholder={t('setup.projectNamePlaceholder')}
                   maxLength={200}
                 />
-                <div className="grid grid-cols-2 gap-3 items-start">
-                  <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
-                    onChange={(e) => setMetadataState({ songName: e.target.value })}
-                    maxLength={500} />
-                  <FloatingCombobox
-                    id="song-artist"
-                    label={t('setup.songArtist')}
-                    value={songArtist}
-                    onChange={(v: string) => setMetadataState({ songArtist: v })}
-                    options={artistOptions}
-                    maxLength={300}
-                  />
-                </div>
+                <TitleFeatSuggestion
+                  title={projectName}
+                  onApply={(cleaned, featured) => setMetadataState((prev) => ({ name: cleaned, artists: mergeCredits(prev.artists, featured) }))}
+                />
+                <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
+                  onChange={(e) => setMetadataState({ songName: e.target.value })}
+                  maxLength={500} />
                 <p
                   id="project-identity-hint"
                   className={`text-xs ${audioReady && hasLyrics && !hasIdentity ? 'text-love' : 'text-zinc-500'}`}
@@ -634,16 +637,21 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               </div>
             </div>
 
+            {/* Artists: primary and featured credits, with parsing, review and autocomplete. */}
+            <div className="shrink-0 flex flex-col gap-3">
+              <ArtistsSection ref={artistsRef} idPrefix="setup-artists" value={artists} onChange={(next) => setMetadataState({ artists: next })} />
+            </div>
+
             {/* Autofill. It sits below song name + artist because it needs both;
                 promoting it above them would only show a disabled control. */}
-            <Tip content={songName.trim() && songArtist.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')}>
+            <Tip content={songName.trim() && primaryText.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')}>
               {/* span keeps the tooltip working while the button is disabled */}
               <span className="block shrink-0">
                 <Button
                   type="button"
                   variant="sync"
                   onClick={handleFetchSongInfo}
-                  disabled={metaSearching || !songName.trim() || !songArtist.trim()}
+                  disabled={metaSearching || !songName.trim() || !primaryText.trim()}
                   className="w-full h-10 coarse:h-12 gap-2 justify-center font-semibold rounded-xl"
                 >
                   {metaSearching ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
@@ -841,7 +849,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     {audioTab === 'youtube' && (
                       <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-zinc-800/50">
                         <YoutubeSearchPanel
-                          initialQuery={[songName, songArtist].filter(Boolean).join(' ').trim()}
+                          initialQuery={[songName, primaryText].filter(Boolean).join(' ').trim()}
                           onSelect={({ videoId, url, title }: { videoId: string; url: string; title?: string }) => {
                             loadYouTubeVerified(videoId, url, { ytUrl: url, name: title || t('setup.youtubeVideo') });
                           }}

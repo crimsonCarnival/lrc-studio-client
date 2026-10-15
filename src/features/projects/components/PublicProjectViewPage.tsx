@@ -33,7 +33,7 @@ import { sectionsToFlat } from '@/features/editor/utils/sections';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import { projects as projectsApi } from '@/app/api';
 import { projectsService } from '@features/projects/services/projects.service';
-import { splitArtists } from '@/shared/utils/lrc';
+import { artistRoster } from '@/features/artists/artist-credits';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 
 interface PublicProject {
@@ -244,7 +244,7 @@ function PublicProjectViewPageInner() {
   const projectTitle = project?.metadata?.songName || project?.title || '';
 
   const songArtists = useMemo(
-    () => splitArtists(project?.metadata?.songArtist as string | undefined),
+    () => artistRoster(project?.metadata as Parameters<typeof artistRoster>[0]),
     [project?.metadata],
   );
   const songSingers = useMemo(

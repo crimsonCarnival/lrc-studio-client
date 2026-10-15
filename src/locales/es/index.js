@@ -31,6 +31,7 @@ import reactions from './reactions.js';
 import badges from './badges.js';
 import nav from './nav.js';
 import guide from './guide.js';
+import artists from './artists.js';
 
 export default {
   translation: {
@@ -67,5 +68,6 @@ export default {
     badges,
     nav,
     guide,
+    artists,
   }
 };

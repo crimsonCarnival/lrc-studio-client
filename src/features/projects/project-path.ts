@@ -30,12 +30,17 @@ export function slugify(input: string): string {
 
 interface SlugSource {
   title?: string | null;
-  metadata?: { songName?: string | null; songArtist?: string | null; songArtists?: string[] | null } | null;
+  /** `songArtist` is the server's display string (`A feat. B`), which already carries the featured artists. */
+  metadata?: { songName?: string | null; songArtist?: string | null } | null;
 }
 
-/** "artist song", falling back to the project title. Empty when there is nothing usable. */
+/**
+ * "artist song" from the display string, falling back to the project title. Empty when there is
+ * nothing usable. Only the identity check and the stand-in for a missing server `slug` use this;
+ * links prefer the stored `slug` the server derives the same way.
+ */
 export function projectSlug({ title, metadata }: SlugSource): string {
-  const artist = metadata?.songArtist || metadata?.songArtists?.[0] || '';
+  const artist = metadata?.songArtist || '';
   const song = metadata?.songName || '';
   return slugify(`${artist} ${song}`) || slugify(title || '');
 }
@@ -47,7 +52,7 @@ export function projectSlug({ title, metadata }: SlugSource): string {
  */
 export function projectDisplayName({ title, metadata }: SlugSource): string {
   const song = metadata?.songName?.trim() || '';
-  const artist = metadata?.songArtist?.trim() || metadata?.songArtists?.filter(Boolean).join(', ') || '';
+  const artist = metadata?.songArtist?.trim() || '';
   if (song && artist) return `${song} – ${artist}`;
   return song || artist || title?.trim() || '';
 }

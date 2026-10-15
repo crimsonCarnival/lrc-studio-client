@@ -23,7 +23,7 @@ describe('slugify', () => {
 describe('projectDisplayName', () => {
   it('uses the song and artist the user typed', () => {
     expect(projectDisplayName({ title: 'my-file.mp3', metadata: { songName: 'Creep', songArtist: 'Radiohead' } })).toBe('Creep – Radiohead');
-    expect(projectDisplayName({ metadata: { songName: 'Creep', songArtists: ['A', 'B'] } })).toBe('Creep – A, B');
+    expect(projectDisplayName({ metadata: { songName: 'Creep', songArtist: 'A feat. B' } })).toBe('Creep – A feat. B');
   });
   it('falls back to what exists, then the project name', () => {
     expect(projectDisplayName({ title: 'x', metadata: { songName: 'Creep' } })).toBe('Creep');
