@@ -173,7 +173,8 @@ export function ProfileHeader({
   return (
     <div className="glass rounded-3xl relative overflow-hidden mb-6">
       {/* Cover banner — the user's own image when set, else the waveform decoration. */}
-      <div className="h-24 sm:h-28 bg-primary/10 border-b border-border overflow-hidden">
+      {/* 3:1 like the crop box in settings, so the framing the user picks is what shows here. */}
+      <div className="aspect-[3/1] bg-primary/10 border-b border-border overflow-hidden">
         {profile.coverImageUrl ? (
           <button
             type="button"
