@@ -26,6 +26,13 @@ export function projectsChanged(): void {
   invalidate('explore', 'trending');
 }
 
+/** The viewer edited their own profile (avatar, cover, bio, names): cached public profiles are stale. */
+export function profileChanged(): void {
+  invalidate('profile');
+  invalidate('followList');
+  invalidate('feed');
+}
+
 /** A project was deleted: drop it from every cached list before refetching. */
 export function projectRemoved(publicId: string): void {
   queryClient.setQueriesData<Array<{ publicId?: string }>>(
