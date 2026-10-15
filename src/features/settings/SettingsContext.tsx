@@ -93,36 +93,45 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, []);
   useLayoutEffect(() => { computeChangesRef.current = computeChanges; }, [computeChanges]);
 
-  // Debounced localStorage + server persistence — skips the initial render
-  // and skips when changes came from a server fetch (isSyncingRef).
+  // localStorage write is synchronous and cheap, so it happens immediately on every
+  // change — unlike the server push below, it must not be debounced. A debounced write
+  // here meant a reload within the debounce window (e.g. toggling the theme then
+  // immediately refreshing to "confirm" it) read back the OLD value, since the pending
+  // write never got a chance to fire before the page tore down.
+  useEffect(() => {
+    if (isFirstRender.current) return;
+    if (isSyncingRef.current) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    } catch (e) {
+      console.error('Failed to save settings', e);
+    }
+  }, [settings]);
+
+  // Debounced server persistence — skips the initial render and skips when changes
+  // came from a server fetch (isSyncingRef). Debouncing here is still correct: it's a
+  // network call, and rapid successive changes (e.g. dragging a slider) shouldn't each
+  // fire their own PATCH.
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
     if (isSyncingRef.current) return;
+    if (!getAccessToken()) return;
 
     const timer = setTimeout(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      } catch (e) {
-        console.error('Failed to save settings', e);
-      }
+      const changes = computeChangesRef.current?.(lastSavedToServerRef.current, settings) ?? {};
 
-      // Push to server if authenticated (only changed fields)
-      if (getAccessToken()) {
-        const changes = computeChangesRef.current?.(lastSavedToServerRef.current, settings) ?? {};
-
-        // Only send if there are actual changes
-        if (Object.keys(changes).length > 0) {
-          // Use PATCH for partial updates (changed fields only)
-          settingsApi.patch(changes).then(() => {
-            // Update the last saved snapshot on success
-            lastSavedToServerRef.current = structuredClone(settings);
-          }).catch(() => {
-            // Silently fail — localStorage is the source of truth
-          });
-        }
+      // Only send if there are actual changes
+      if (Object.keys(changes).length > 0) {
+        // Use PATCH for partial updates (changed fields only)
+        settingsApi.patch(changes).then(() => {
+          // Update the last saved snapshot on success
+          lastSavedToServerRef.current = structuredClone(settings);
+        }).catch(() => {
+          // Silently fail — localStorage is the source of truth
+        });
       }
     }, 300);
     return () => clearTimeout(timer);
