@@ -62,7 +62,15 @@ const CRAWLER_TOKENS = [
   'developers.google.com/+/web/snippet',
 ];
 
-/** Routes whose metadata the API can resolve. Everything else gets the brand card. */
+/**
+ * Routes whose metadata the API can resolve. Everything else gets the brand card.
+ *
+ * Profiles, playlists and projects live at the site root (`/:accountName`,
+ * `/:accountName/lists/:id`, `/:accountName/projects/:slug-:id`), so those need
+ * entries too. The single-segment account pattern excludes static-file names so
+ * `/favicon.svg` and friends don't invoke the proxy; `/api/...` has two segments
+ * and never matches it.
+ */
 const MATCHER = [
   '/',
   '/project/:path*',
@@ -70,6 +78,9 @@ const MATCHER = [
   '/u/:path*',
   '/explore/:path*',
   '/leaderboard',
+  '/:accountName((?!.*\\.(?:svg|png|jpe?g|webp|gif|ico|txt|xml|json|js|css|map|webmanifest|woff2?)$)[^/]+)',
+  '/:accountName/projects/:slugId',
+  '/:accountName/lists/:listId',
 ];
 
 /**

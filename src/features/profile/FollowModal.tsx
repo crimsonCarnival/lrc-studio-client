@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState } from 'react';
@@ -87,7 +88,7 @@ export function FollowModal({ accountName, initialTab = 'FOLLOWERS', onClose }: 
       <div className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.03] transition-colors">
         <UserHoverCard accountName={u.accountName} userId={u.id}>
           <Link
-            to={`/profile/${u.accountName}`}
+            to={profilePath(u.accountName)}
             onClick={onClose}
             className="flex items-center gap-3 flex-1 min-w-0"
           >

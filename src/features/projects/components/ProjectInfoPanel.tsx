@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { localizeSongLanguage } from '@features/editor/utils/song-language';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { useMemo, useState } from 'react';
@@ -161,7 +162,7 @@ export default function ProjectInfoPanel({
                 </span>
               )}
             </StaffRing>
-            <Link to={`/profile/${accountName}`} className="truncate font-bold text-foreground hover:underline">
+            <Link to={profilePath(accountName)} className="truncate font-bold text-foreground hover:underline">
               {authorName}
             </Link>
             {authorLevel > 0 && (

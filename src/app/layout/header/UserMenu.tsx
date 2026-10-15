@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useEffect } from 'react';
@@ -126,7 +127,7 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
           </div>
 
           <div className="p-1 border-b border-zinc-800/60">
-            <PopoverItem asChild><Link to={user?.accountName ? `/profile/${user.accountName}` : '/'} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+            <PopoverItem asChild><Link to={user?.accountName ? profilePath(user.accountName) : '/'} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <Icon name="person" size={16} className="text-zinc-400" />{t('profile.title')}
             </Link></PopoverItem>
             <PopoverItem asChild><Link to="/library" onClick={(e) => guardedLinkClick(e, () => navTo('/library'))} className="flex items-center justify-between cursor-pointer font-medium text-sm py-3 sm:py-2">

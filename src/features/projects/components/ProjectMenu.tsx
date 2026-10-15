@@ -6,6 +6,8 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@ui/drop
 import { contextMenuComponents, dropdownMenuComponents, type MenuComponents } from '@ui/menu-components';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { projectPath } from '@/features/projects/project-path';
 
 /**
  * Only `publicId` is read here, so the shape is widened rather than tied to the
@@ -29,10 +31,17 @@ export type ProjectMenuActions = {
  */
 function useProjectMenuItems({ project, isOwner, onEdit, onDelete }: ProjectMenuActions) {
   const { t } = useTranslation();
+  const { user } = useAuthContext();
   const [copied, setCopied] = useState(false);
+  // Cards in the library don't carry their owner; for your own projects it's you.
+  const path = projectPath({
+    accountName: isOwner ? user?.accountName : undefined,
+    ...(project as Omit<Parameters<typeof projectPath>[0], 'publicId'>),
+    publicId: project.publicId,
+  });
 
   const handleCopyLink = () => {
-    const projectUrl = `${window.location.origin}/project/${project.publicId}`;
+    const projectUrl = `${window.location.origin}${path}`;
     navigator.clipboard.writeText(projectUrl).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
@@ -42,7 +51,7 @@ function useProjectMenuItems({ project, isOwner, onEdit, onDelete }: ProjectMenu
   return (C: MenuComponents): ReactNode => (
     <>
       <C.Item asChild>
-        <a href={`/project/${project.publicId}`} target="_blank" rel="noopener noreferrer">
+        <a href={path} target="_blank" rel="noopener noreferrer">
           <Icon name="open_in_new" />
           {t('profile.openInNewTab')}
         </a>

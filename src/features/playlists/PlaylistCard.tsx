@@ -1,3 +1,4 @@
+import { listPath } from '@/features/profile/profile-path';
 import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -41,7 +42,7 @@ export function PlaylistCard({ playlist, accountName, isOwner, onEdit, onDelete 
 
   return (
     <Link
-      to={`/profile/${accountName}/lists/${playlist.id}`}
+      to={listPath(accountName, playlist.id)}
       className="glass rounded-2xl overflow-hidden flex flex-col hover:bg-white/5 transition-colors group relative"
     >
       {isOwner && (

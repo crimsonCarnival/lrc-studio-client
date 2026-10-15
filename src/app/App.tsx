@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { isProjectViewPath, isProjectEditorPath } from '@/features/projects/project-path';
 import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useAppState } from '@/shared/hooks/useAppState';
@@ -101,9 +102,9 @@ function AppInner() {
   // Public project view (/project/:id without /edit) has its own embedded player
   const isPublicProjectView = /^\/project\/[^/]+$/.test(routerLocation.pathname) &&
     !['new', 'local'].includes(routerLocation.pathname.split('/')[2] ?? '');
-  const isProjectPage = routerLocation.pathname.startsWith('/project/') &&
+  const isProjectPage = (routerLocation.pathname.startsWith('/project/') &&
     routerLocation.pathname !== '/project/new' &&
-    !isPublicProjectView;
+    !isPublicProjectView) || isProjectEditorPath(routerLocation.pathname);
   const isSetupPage = routerLocation.pathname === '/project/new';
   const isReady = isProjectPage;
   const isPlayerMounted = isProjectPage || isSetupPage;
@@ -271,7 +272,7 @@ function AppInner() {
 
   // Pause player when navigating away
   useEffect(() => {
-    if (!routerLocation.pathname.startsWith('/project/')) {
+    if (!routerLocation.pathname.startsWith('/project/') && !isProjectViewPath(routerLocation.pathname) && !isProjectEditorPath(routerLocation.pathname)) {
       playerRef.current?.pause?.();
     }
   }, [routerLocation.pathname, playerRef]);

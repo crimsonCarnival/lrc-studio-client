@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { LevelXpCard } from './LevelXpCard';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
@@ -12,6 +13,7 @@ import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
+import { projectPath } from '@/features/projects/project-path';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { followUser, unfollowUser, blockUser, unblockUser } from './profile.service';
@@ -73,6 +75,7 @@ interface ProjectCardProps {
 function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { accountName: ownerAccountName } = useParams();
   const { title, publicId, upload, public: isPublic, coverImage } = project;
   const isYoutube = upload?.source === 'youtube';
   const isPrivate = isOwner && isPublic === false;
@@ -100,7 +103,7 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
     <ProjectMenu project={project} isOwner={isOwner} onEdit={onEdit} onDelete={onDelete}>
       <button
         type="button"
-        onClick={() => navigate(`/project/${publicId}${isOwner ? '/edit' : ''}`)}
+        onClick={() => navigate(isOwner ? `/project/${publicId}/edit` : projectPath({ ...project, accountName: ownerAccountName }))}
         className="group relative glass rounded-2xl overflow-hidden text-left hover:border-primary/30 transition-all cursor-pointer focus:ring-1 focus:ring-primary/30 outline-none animate-fade-in contrast-more:border-zinc-600 w-full"
       >
         <ThemedShineBorder />
@@ -190,7 +193,7 @@ function PeopleYouMightKnow({ excludeAccountName }: { excludeAccountName?: strin
         {suggestions.map(u => (
           <UserHoverCard key={u.id} accountName={u.accountName} userId={u.id}>
             <Link
-              to={`/profile/${u.accountName}`}
+              to={profilePath(u.accountName)}
               className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors w-full"
             >
               {u.avatarUrl ? (
@@ -257,17 +260,18 @@ export default function ProfilePage() {
     }, { replace: true });
   }, [setSearchParams]);
 
-  // Silently rewrite legacy /profile/:accountName → /:accountName
+  // The server resolves a previous account name (or another casing) to the current profile;
+  // swap in the canonical name so an old link ends up on the user's current URL.
   useEffect(() => {
-    if (location.pathname.startsWith('/profile/') && accountName) {
-      navigate(`/profile/${accountName}`, { replace: true });
+    if (profile?.accountName && accountName && profile.accountName !== accountName) {
+      navigate(`${profilePath(profile.accountName)}${location.search}`, { replace: true });
     }
-  }, [location.pathname, accountName, navigate]);
+  }, [profile?.accountName, accountName, location.search, navigate]);
 
   useEffect(() => {
     if (accountName) return;
     if (user?.accountName) {
-      navigate(`/profile/${user.accountName}`, { replace: true });
+      navigate(profilePath(user.accountName), { replace: true });
     } else {
       navigate('/', { replace: true });
     }
@@ -302,7 +306,7 @@ export default function ProfilePage() {
 
   const handleFollow = useCallback(async () => {
     if (!user) {
-      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/profile/${accountName}`)}&intent=follow`);
+      navigate(`/auth?action=signin&redirect=${encodeURIComponent(profilePath(accountName))}&intent=follow`);
       return;
     }
     setFollowLoading(true);
@@ -330,7 +334,7 @@ export default function ProfilePage() {
 
   const handleBlock = useCallback(async () => {
     if (!user) {
-      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/profile/${accountName}`)}`);
+      navigate(`/auth?action=signin&redirect=${encodeURIComponent(profilePath(accountName))}`);
       return;
     }
     setBlockLoading(true);

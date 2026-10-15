@@ -22,6 +22,7 @@ import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { lyrics as lyricsApi, uploads as uploadsApi, songMetadata as songMetadataApi, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
+import { hasProjectIdentity } from '@/features/projects/project-path';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import YoutubeSearchPanel from '@features/projects/components/YoutubeSearchPanel';
 import { useYouTubeAvailability, YT_UNAVAILABLE_KEYS } from '@/features/player/hooks/useYouTubeAvailability';
@@ -224,7 +225,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const [mediaLoading, setMediaLoading] = useState(!!getAccessToken());
 
   const hasLyrics = parsedLines ? parsedLines.length > 0 : lyricsText.trim().length > 0;
-  const canContinue = audioReady && hasLyrics;
+  // A project must be nameable: a title, song name or artist (also what its URL slug is built from).
+  const hasIdentity = hasProjectIdentity({ title: projectName, metadata: { songName, songArtist } });
+  const canContinue = audioReady && hasLyrics && hasIdentity;
 
   // Fetch user's media library on mount
   useEffect(() => {
@@ -587,8 +590,9 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   ref={projectNameInputRef}
                   id="project-name"
                   type="text"
-                  label={`${t('setup.projectName')} *`}
-                  aria-required
+                  label={t('setup.projectName')}
+                  aria-invalid={audioReady && hasLyrics && !hasIdentity}
+                  aria-describedby="project-identity-hint"
                   value={projectName}
                   onChange={(e) => setMetadataState({ name: e.target.value })}
                   placeholder={t('setup.projectNamePlaceholder')}
@@ -607,6 +611,13 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                     maxLength={300}
                   />
                 </div>
+                <p
+                  id="project-identity-hint"
+                  className={`text-xs ${audioReady && hasLyrics && !hasIdentity ? 'text-love' : 'text-zinc-500'}`}
+                  role={audioReady && hasLyrics && !hasIdentity ? 'alert' : undefined}
+                >
+                  {t('setup.identityRequired')}
+                </p>
 
                 {/* Sits inside the cover's own row so the URL path is next to
                     the thing it sets, and costs no height until asked for. */}

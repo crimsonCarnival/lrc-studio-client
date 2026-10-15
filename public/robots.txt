@@ -3,7 +3,6 @@ Allow: /auth/
 Disallow: /home
 Disallow: /library
 Disallow: /uploads/
-Disallow: /profile
 Disallow: /settings
 Disallow: /dashboard
 Disallow: /admin
