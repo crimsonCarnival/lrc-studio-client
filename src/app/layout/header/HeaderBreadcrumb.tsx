@@ -6,7 +6,7 @@ import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { Icon } from '@/shared/ui/Icon';
-import { LOGO_URL } from '@/shared/constants/brand';
+import { LogoMark } from '@/shared/ui/LogoMark';
 import { findPrevious, readTrail, recordVisit } from '@/shared/utils/nav-trail';
 
 interface ForkedFrom {
@@ -87,11 +87,7 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
         onClick={onLogoClick}
         className="size-7 sm:size-8 coarse:size-11 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
       >
-        <LazyImage
-          src={LOGO_URL}
-          alt="LRC Studio"
-          className="size-full object-contain"
-        />
+        <LogoMark className="size-full" />
       </button>
 
       <div className="flex items-center gap-1.5 min-w-0">

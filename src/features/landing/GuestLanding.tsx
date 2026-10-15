@@ -4,8 +4,7 @@ import { useTranslation, Trans } from 'react-i18next';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { Icon } from '@/shared/ui/Icon';
 import { LangSwitcher } from '@/features/auth/auth-shared';
-import { LazyImage } from '@ui/LazyImage';
-import { LOGO_URL } from '@/shared/constants/brand';
+import { LogoMark } from '@/shared/ui/LogoMark';
 import SmoothWavyCanvas from './SmoothWavyCanvas';
 import LandingDemo from './LandingDemo';
 import LandingSteps, { Kbd } from './LandingSteps';
@@ -64,7 +63,7 @@ export default function GuestLanding() {
             onClick={() => scrollTo()}
             className="flex items-center gap-2.5 text-[17px] font-bold tracking-tight hover:opacity-80 transition-opacity"
           >
-            <LazyImage src={LOGO_URL} alt="" className="size-7 object-contain" />
+            <LogoMark className="size-7" decorative />
             {t('app.name')}
           </button>
           <div className="hidden sm:flex gap-5 flex-1 text-[15px]">

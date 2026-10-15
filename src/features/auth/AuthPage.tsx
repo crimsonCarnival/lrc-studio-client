@@ -9,7 +9,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { toast } from 'react-hot-toast';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { useThemeSync } from '@/shared/hooks/useThemeSync';
-import { LazyImage } from '@ui/LazyImage';
+import { LogoMark } from '@/shared/ui/LogoMark';
 import LoginIdentifierStep from './LoginIdentifierStep';
 import LoginPasswordStep from './LoginPasswordStep';
 import SavedAccountStep from './SavedAccountStep';
@@ -34,7 +34,6 @@ import type { ComponentProps } from 'react';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import type { RememberedAccount } from '@/features/auth/services/remembered-accounts.service';
 import type { SignUpIdentity } from './SignUpForm';
-import { LOGO_URL } from '@/shared/constants/brand';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -534,7 +533,7 @@ export default function AuthPage() {
           to="/"
           className="absolute top-9 left-6 sm:left-10 lg:left-16 z-raised flex items-center gap-2.5 text-[17px] font-bold tracking-tight text-zinc-100 hover:opacity-80 transition-opacity"
         >
-          <LazyImage src={LOGO_URL} alt="" className="size-7 object-contain" />
+          <LogoMark className="size-7" decorative />
           {t('app.name')}
         </Link>
         <div className="absolute top-8 right-6 sm:right-10 lg:right-16 z-raised">
