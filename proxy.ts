@@ -67,9 +67,9 @@ const CRAWLER_TOKENS = [
  *
  * Profiles, playlists and projects live at the site root (`/:accountName`,
  * `/:accountName/lists/:id`, `/:accountName/projects/:slug-:id`), so those need
- * entries too. The single-segment account pattern excludes static-file names so
- * `/favicon.svg` and friends don't invoke the proxy; `/api/...` has two segments
- * and never matches it.
+ * entries too. They are plain `:param` patterns on purpose (no regex inside the matcher, which
+ * the platform may not accept). `/:accountName` also matches `/favicon.svg` and the like, so the
+ * handler returns early for anything that looks like a file (see `isStaticPath`).
  */
 const MATCHER = [
   '/',
@@ -78,7 +78,7 @@ const MATCHER = [
   '/u/:path*',
   '/explore/:path*',
   '/leaderboard',
-  '/:accountName((?!.*\\.(?:svg|png|jpe?g|webp|gif|ico|txt|xml|json|js|css|map|webmanifest|woff2?)$)[^/]+)',
+  '/:accountName',
   '/:accountName/projects/:slugId',
   '/:accountName/lists/:listId',
 ];
@@ -290,10 +290,19 @@ export function injectTags(html: string, tags: string): string {
 
 export { buildTags, escapeAttr, isCrawler, resolveLang, fallbackMeta };
 
+/**
+ * `/favicon.svg`, `/robots.txt`: files, not pages. `/:accountName` would otherwise hand a crawler the
+ * HTML shell in their place. Only known file extensions count, because account names may contain dots.
+ */
+export function isStaticPath(pathname: string): boolean {
+  return /\.(?:svg|png|jpe?g|webp|avif|gif|ico|txt|xml|json|js|mjs|css|map|webmanifest|woff2?|ttf|mp3|mp4|wasm)$/i.test(pathname);
+}
+
 export default async function proxy(request: Request): Promise<Response> {
   if (!isCrawler(request.headers.get('user-agent'))) return next();
 
   const url = new URL(request.url);
+  if (isStaticPath(url.pathname)) return next();
   const lang = resolveLang(url, request.headers.get('accept-language'));
 
   let html: string;

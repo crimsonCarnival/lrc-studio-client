@@ -15,7 +15,7 @@ import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { ProjectUpNextPanel } from './ProjectUpNextPanel';
 import { usePublicProject } from '../hooks/usePublicProject';
-import { parseSlugId, projectDisplayName, projectPath } from '../project-path';
+import { parseSlugId, projectDisplayName, projectPageTitle, projectPath } from '../project-path';
 import { useStarredPlaylist } from '../hooks/useStarredPlaylist';
 import ImmersiveLyricsDisplay, { type DisplayLine } from './ImmersiveLyricsDisplay';
 import ProjectInfoPanel from './ProjectInfoPanel';
@@ -270,7 +270,13 @@ function PublicProjectViewPageInner() {
   // The tab title is the song and artist the owner entered, not whatever the player reports
   // for the media (a YouTube video's title, a file name).
   // usePageTitle's JS param type is mis-inferred; it accepts a title string at runtime.
-  (usePageTitle as (title?: string | null) => void)(projectDisplayName({ title: project?.title, metadata: project?.metadata as Parameters<typeof projectDisplayName>[0]['metadata'] }) || mediaTitle);
+  (usePageTitle as (title?: string | null) => void)(
+    projectPageTitle(
+      projectDisplayName({ title: project?.title, metadata: project?.metadata as Parameters<typeof projectDisplayName>[0]['metadata'] }),
+      project?.user?.accountName,
+      (name) => (t as (k: string, o?: object) => string)('app.titles.syncedBy', { name }),
+    ) || mediaTitle,
+  );
 
   const cover = resolveCoverImage(project);
 

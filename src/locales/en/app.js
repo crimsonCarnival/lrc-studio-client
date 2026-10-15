@@ -1,6 +1,7 @@
 export default {
   name: "LRC Studio",
   titles: {
+    syncedBy: "Synced by {{name}}",
     home: "Home",
     newProject: "New Project",
     library: "Library",
