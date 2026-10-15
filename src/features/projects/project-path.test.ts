@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { editorPath, hasProjectIdentity, projectDisplayName, isProjectEditorPath, isProjectViewPath, parseSlugId, projectPath, slugify } from './project-path';
+import { editorPath, hasProjectIdentity, projectDisplayName, projectPageTitle, isProjectEditorPath, isProjectViewPath, parseSlugId, projectPath, slugify } from './project-path';
 
 describe('slugify', () => {
   it('lowercases, strips accents and punctuation', () => {
@@ -74,5 +74,16 @@ describe('projectPath / parseSlugId', () => {
     expect(isProjectViewPath(`/32blunts/projects/radiohead-creep-${id}`)).toBe(true);
     expect(isProjectViewPath('/project/abc')).toBe(false);
     expect(isProjectViewPath('/profile/32blunts')).toBe(false);
+  });
+});
+
+describe('projectPageTitle', () => {
+  const syncedBy = (name: string) => `Synced by ${name}`;
+  it('reads "Song – Artist, Synced by accountname"', () => {
+    expect(projectPageTitle('Creep – Radiohead', '32blunts', syncedBy)).toBe('Creep – Radiohead, Synced by 32blunts');
+  });
+  it('drops the owner part when it is not known, and is empty without a name', () => {
+    expect(projectPageTitle('Creep – Radiohead', null, syncedBy)).toBe('Creep – Radiohead');
+    expect(projectPageTitle('', '32blunts', syncedBy)).toBe('');
   });
 });

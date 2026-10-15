@@ -19,7 +19,7 @@ import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/types';
 import OwnProfileRedirect from '@/features/profile/OwnProfileRedirect';
-import { editorPath, parseSlugId, projectDisplayName, projectPath } from '@/features/projects/project-path';
+import { editorPath, parseSlugId, projectDisplayName, projectPageTitle, projectPath } from '@/features/projects/project-path';
 import { listPath, profilePath } from '@/features/profile/profile-path';
 import { artistDisplay, artistRoster, type ArtistCredit } from '@/features/artists/artist-credits';
 import { LogoLoader } from '@ui/LogoLoader';
@@ -295,11 +295,19 @@ export function AppRouter({
     buildProjectPayload,
     restoredMedia,
     uploadedAudio,
+    t,
   } = appState;
 
   // Song and artist as the user typed them; the media title (file or video name) is only a fallback.
   const meta = projectMetadata as { name?: string; songName?: string; artists?: ArtistCredit[]; songArtist?: string } | undefined;
-  usePageTitle(projectDisplayName({ title: meta?.name, metadata: { songName: meta?.songName, songArtist: artistDisplay(meta) } }) || mediaTitle);
+  const { user } = useAuthContext();
+  usePageTitle(
+    projectPageTitle(
+      projectDisplayName({ title: meta?.name, metadata: { songName: meta?.songName, songArtist: artistDisplay(meta) } }),
+      user?.accountName,
+      (name) => (t as (k: string, o?: object) => string)('app.titles.syncedBy', { name }),
+    ) || mediaTitle,
+  );
   // Every credit, primaries then featured: the singer choices when assigning lines. Memoised, so the editor's props keep a stable identity.
   const rosterNames = useMemo(() => artistRoster(projectMetadata as Parameters<typeof artistRoster>[0]), [projectMetadata]);
 
@@ -313,7 +321,6 @@ export function AppRouter({
       : null
   );
 
-  const { user } = useAuthContext();
   const { mobileTab, setMobileTab, setShowNamingModal } = layoutState;
 
   // Editor or preview ("Revisar"). Stored in interface.mobileTab, the setting the

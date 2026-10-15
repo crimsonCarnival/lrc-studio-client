@@ -8,7 +8,7 @@
       "/u/:path*",
       "/explore/:path*",
       "/leaderboard",
-      "/:accountName((?!.*\\.(?:svg|png|jpe?g|webp|gif|ico|txt|xml|json|js|css|map|webmanifest|woff2?)$)[^/]+)",
+      "/:accountName",
       "/:accountName/projects/:slugId",
       "/:accountName/lists/:listId"
     ]

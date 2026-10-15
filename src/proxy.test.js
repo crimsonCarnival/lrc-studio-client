@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildTags, escapeAttr, injectTags, isCrawler, resolveLang, fallbackMeta } from '../proxy';
+import { buildTags, escapeAttr, injectTags, isCrawler, isStaticPath, resolveLang, fallbackMeta } from '../proxy';
 
 describe('isCrawler', () => {
   const bots = [
@@ -174,15 +174,20 @@ describe('MATCHER', () => {
       '/:accountName/projects/:slugId',
       '/:accountName/lists/:listId',
     ]));
-    expect(MATCHER.some((m) => m.startsWith('/:accountName('))).toBe(true);
+    expect(MATCHER).toContain('/:accountName');
   });
 
-  it('keeps static files out of the single-segment account pattern', async () => {
+  it('uses plain :param patterns only, nothing a matcher parser could reject', async () => {
     const { MATCHER } = await import('../proxy');
-    const entry = MATCHER.find((m) => m.startsWith('/:accountName(')) ?? '';
-    const inner = entry.slice('/:accountName('.length, -1);
-    const re = new RegExp(`^${inner.replace(/^\(\?!/, '(?!')}$`);
-    for (const ok of ['32blunts', 'some.user', 'a_b-c']) expect(re.test(ok)).toBe(true);
-    for (const file of ['favicon.svg', 'og-default.png', 'robots.txt', 'sitemap.xml', 'app.js']) expect(re.test(file)).toBe(false);
+    for (const entry of MATCHER) expect(entry).not.toMatch(/[()?!]|\\/);
+  });
+});
+
+describe('isStaticPath', () => {
+  it('recognises files, so a crawler gets the file and not the HTML shell', () => {
+    for (const p of ['/favicon.svg', '/og-default.png', '/robots.txt', '/sitemap.xml', '/assets/app.js']) expect(isStaticPath(p)).toBe(true);
+  });
+  it('does not mistake pages for files, including account names with a dot', () => {
+    for (const p of ['/some.user', '/a.b/projects/x-k3x9a2c7qm', '/32blunts', '/32blunts/projects/radiohead-creep-k3x9a2c7qm', '/32blunts/lists/65f0c1a2b3c4d5e6f7a8b9c0', '/explore/projects']) expect(isStaticPath(p)).toBe(false);
   });
 });

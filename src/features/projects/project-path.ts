@@ -109,3 +109,12 @@ export function isProjectViewPath(pathname: string): boolean {
 export function isProjectEditorPath(pathname: string): boolean {
   return /^\/[^/]+\/projects\/[^/]+\/edit\/?$/.test(pathname);
 }
+
+/**
+ * The tab / link title of a project: `Song – Artist, Synced by accountname`. The page appends
+ * ` | LRC Studio`. The server writes the same text for link previews, so the two read alike.
+ */
+export function projectPageTitle(display: string, ownerAccountName: string | null | undefined, syncedBy: (name: string) => string): string {
+  const owner = ownerAccountName?.trim();
+  return display && owner ? `${display}, ${syncedBy(owner)}` : display;
+}
