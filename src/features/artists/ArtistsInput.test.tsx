@@ -165,11 +165,25 @@ describe('ArtistsInput: flags are confirmed, never guessed', () => {
     expect(screen.queryByRole('group', { name: 'Check the artists' })).toBeNull();
   });
 
+  it('shows plainly whether "A & B" is one artist or two, and updates as the person decides', async () => {
+    const u = user();
+    render(<Harness />);
+    await paste(u, 'Simon & Garfunkel');
+    const review = screen.getByRole('group', { name: 'Check the artists' });
+    expect(within(review).getByText('(2 artists)')).toBeInTheDocument();
+    expect(within(review).getAllByText(/^(Simon|Garfunkel)$/)).toHaveLength(2);
+    await u.click(screen.getByRole('checkbox', { name: 'Join Simon and Garfunkel into one artist' }));
+    expect(within(review).getByText('(1 artist)')).toBeInTheDocument();
+    expect(within(review).getAllByText('Simon & Garfunkel').length).toBeGreaterThan(0);
+    await u.click(screen.getByRole('checkbox', { name: 'Join Simon and Garfunkel into one artist' }));
+    expect(within(review).getByText('(2 artists)')).toBeInTheDocument();
+  });
+
   it('lets the person keep "Simon & Garfunkel" as one artist', async () => {
     const u = user();
     render(<Harness />);
     await paste(u, 'Simon & Garfunkel');
-    await u.click(screen.getByRole('button', { name: 'Join Simon and Garfunkel into one artist' }));
+    await u.click(screen.getByRole('checkbox', { name: 'Join Simon and Garfunkel into one artist' }));
     await u.click(screen.getByRole('button', { name: 'Apply' }));
     expect(chips('Primary artists')).toEqual(['Simon & Garfunkel']);
   });
@@ -178,7 +192,7 @@ describe('ArtistsInput: flags are confirmed, never guessed', () => {
     const u = user();
     render(<Harness />);
     await paste(u, 'Earth, Wind & Fire');
-    await u.click(screen.getByRole('button', { name: 'Join Wind and Fire into one artist' }));
+    await u.click(screen.getByRole('checkbox', { name: 'Join Wind and Fire into one artist' }));
     await u.click(screen.getByRole('button', { name: 'Apply' }));
     expect(chips('Primary artists')).toEqual(['Earth', 'Wind & Fire']);
   });

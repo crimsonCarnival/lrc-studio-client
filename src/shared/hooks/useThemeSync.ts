@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useReplaceSearch } from './useReplaceSearch';
 
@@ -19,7 +19,10 @@ export function useThemeSync(theme?: string) {
   }, [theme]);
 
   // 2. Sync Language -> URL
-  // When language changes, update the URL silently
+  // When language changes, update the URL silently.
+  // The URL is read from the browser, not from the router state of this render: a child's
+  // <Navigate> (every legacy /profile/… or /u/… link) runs its replace before this effect does, and
+  // writing back the render's older path would undo that redirect and bounce between the two.
   useEffect(() => {
     // Read the live URL, not the render-time params: a redirect issued in this same
     // commit has already moved it (see useReplaceSearch).

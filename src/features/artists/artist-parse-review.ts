@@ -50,6 +50,16 @@ export function splitWithSeparators(text: string): { parts: string[]; separators
   return { parts, separators: separators.slice(0, Math.max(0, parts.length - 1)) };
 }
 
+/** The names a group becomes: `merge[i]` joins `parts[i]` and `parts[i + 1]` back into one artist, with the original separator. */
+export function mergedNames(group: Pick<AmbiguousGroup, 'parts' | 'separators'>, merge: readonly boolean[]): string[] {
+  const names: string[] = [];
+  group.parts.forEach((part, i) => {
+    if (i > 0 && merge[i - 1]) names[names.length - 1] += `${group.separators[i - 1]}${part}`;
+    else names.push(part);
+  });
+  return names;
+}
+
 export function buildPlan(raw: { artist: string; title?: string }, role?: ArtistRole): ParsePlan {
   const parsed = parseArtists(raw.artist, raw.title);
   const flags = parsed.flags;
@@ -102,15 +112,11 @@ export function applyPlan(plan: ParsePlan, decisions: PlanDecisions): { credits:
   plan.groups.forEach((group, gi) => {
     const merge = decisions.merges[gi] ?? [];
     if (!merge.some(Boolean)) return;
-    const mergedNames: string[] = [];
-    group.parts.forEach((part, i) => {
-      if (i > 0 && merge[i - 1]) mergedNames[mergedNames.length - 1] += `${group.separators[i - 1]}${part}`;
-      else mergedNames.push(part);
-    });
+    const names = mergedNames(group, merge);
     const at = credits.findIndex((_, i) => group.parts.every((p, k) => credits[i + k]?.name === p));
     if (at === -1) return;
     const role = credits[at].role;
-    credits.splice(at, group.parts.length, ...mergedNames.map((name) => ({ name, role, order: 0 })));
+    credits.splice(at, group.parts.length, ...names.map((name) => ({ name, role, order: 0 })));
   });
 
   if (plan.role) credits = credits.map((c) => ({ ...c, role: plan.role as ArtistRole }));

@@ -40,7 +40,7 @@ describe('ArtistApplyStep', () => {
     render(<ArtistApplyStep song={{ title: 'Song', artist: 'Simon & Garfunkel' }} onApply={onApply} onSkip={vi.fn()} />);
     await userEvent.click(screen.getByRole('button', { name: 'Use artists' }));
     expect(onApply).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole('button', { name: 'Join Simon and Garfunkel into one artist' }));
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Join Simon and Garfunkel into one artist' }));
     await userEvent.click(screen.getByRole('button', { name: 'Apply' }));
     expect(onApply).toHaveBeenCalledWith([{ name: 'Simon & Garfunkel', role: 'primary', order: 0 }]);
   });
