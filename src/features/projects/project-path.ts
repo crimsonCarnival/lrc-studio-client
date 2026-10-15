@@ -41,6 +41,18 @@ export function projectSlug({ title, metadata }: SlugSource): string {
 }
 
 /**
+ * What a project is called in page titles: the song name and artist the user typed
+ * ("Creep – Radiohead"), never the audio file or video name. Falls back to whichever of the
+ * two exists, then to the project name.
+ */
+export function projectDisplayName({ title, metadata }: SlugSource): string {
+  const song = metadata?.songName?.trim() || '';
+  const artist = metadata?.songArtist?.trim() || metadata?.songArtists?.filter(Boolean).join(', ') || '';
+  if (song && artist) return `${song} – ${artist}`;
+  return song || artist || title?.trim() || '';
+}
+
+/**
  * A project needs something to be called by: a title, song name or artist that survives
  * slugging ("!!!" doesn't). The server enforces the same rule on create and update.
  */

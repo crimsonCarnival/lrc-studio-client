@@ -18,7 +18,7 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/types';
-import { editorPath, parseSlugId, projectPath } from '@/features/projects/project-path';
+import { editorPath, parseSlugId, projectDisplayName, projectPath } from '@/features/projects/project-path';
 import { listPath, profilePath } from '@/features/profile/profile-path';
 import { LogoLoader } from '@ui/LogoLoader';
 
@@ -295,7 +295,9 @@ export function AppRouter({
     uploadedAudio,
   } = appState;
 
-  usePageTitle(mediaTitle);
+  // Song and artist as the user typed them; the media title (file or video name) is only a fallback.
+  const meta = projectMetadata as { name?: string; songName?: string; songArtist?: string; songArtists?: string[] } | undefined;
+  usePageTitle(projectDisplayName({ title: meta?.name, metadata: meta }) || mediaTitle);
 
   // Broadcast editor activity to mutual friends via socket presence system.
   // Emits when user is actively working in a project; clears on close/unmount.
