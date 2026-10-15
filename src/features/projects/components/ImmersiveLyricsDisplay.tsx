@@ -460,11 +460,14 @@ interface SectionDividerProps {
 function SectionDivider({
   label,
   dist,
-  singers = [],
+  // `??` rather than a default param: line.singers comes from the DB as `null`
+  // (not `undefined`) when unset, and a default param only covers `undefined`.
+  singers: singersProp,
   songSingers = [],
   singerColors = [],
   alignment = 'left',
 }: SectionDividerProps) {
+  const singers = singersProp ?? [];
   const { opacity } = getDistStyle(dist);
   const ruleStrong = fgAlpha(25);
   const ruleSoft = fgAlpha(10);
@@ -702,40 +705,38 @@ export default function ImmersiveLyricsDisplay({
     </div>
   );
 
-  if (!showFull) {
-    const anchor = currentIndex >= 0 ? currentIndex : focusWindow[0]?.index ?? -1;
-    let section: DisplayLine | undefined;
-    for (let i = anchor; i >= 0 && !section; i--) {
-      if (lines[i].type === 'section') section = lines[i];
-    }
-    const singers = lines[anchor]?.singers ?? section?.singers ?? [];
+  // The section (and its singers) the current/upcoming line belongs to. Shared by both
+  // views: the compact view's pinned caption and the full-lyrics view's sticky header.
+  const anchor = currentIndex >= 0 ? currentIndex : focusWindow[0]?.index ?? -1;
+  let activeSection: DisplayLine | undefined;
+  for (let i = anchor; i >= 0 && !activeSection; i--) {
+    if (lines[i].type === 'section') activeSection = lines[i];
+  }
+  const activeSingers = lines[anchor]?.singers ?? activeSection?.singers ?? [];
 
+  // Pinned current-section header, shared by both views (compact and full lyrics) so they
+  // read the same and don't drift out of sync with each other. Lives outside each view's
+  // scrolling/centering area so its own height never affects line layout.
+  const sectionHeader = (activeSection?.label || activeSingers.length > 0) && (
+    <div className="relative z-10 shrink-0 px-6 pt-10 pb-2 sm:px-10 lg:px-14">
+      <SectionDivider
+        label={activeSection?.label}
+        dist={0}
+        singers={activeSingers}
+        songSingers={songSingers}
+        singerColors={singerColors}
+        alignment={alignment}
+      />
+    </div>
+  );
+
+  if (!showFull) {
     return (
       <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
         <ContourLines />
         {alignmentControl}
-        {/* Outside the lyrics' centered column on purpose: that column re-centers
-            whenever the visible lines' combined height changes (singer tag added/
-            removed, line count shifts at a section boundary), which dragged this
-            label up and down with it. Pinning it here keeps it fixed regardless. */}
-        {(section?.label || singers.length > 0) && (
-          <p
-            className="relative z-10 shrink-0 px-6 pt-8 lg:px-14 lg:pt-10 text-[11px] lg:text-xs font-bold uppercase tracking-[0.1em] text-success"
-            style={{ textAlign: alignment }}
-          >
-            {section?.label}
-            {section?.label && singers.length > 0 && ' · '}
-            {singers.map((name, idx) => {
-              const hex = singerColors[singerColorIndex(name, songSingers)];
-              return (
-                <span key={`${name}-${idx}`} style={hex ? { color: hex } : undefined}>
-                  {name}{idx < singers.length - 1 ? ', ' : ''}
-                </span>
-              );
-            })}
-          </p>
-        )}
-        <div className={`lrc-scroll relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 pb-8 lg:px-14 lg:pb-10 ${section?.label || singers.length > 0 ? 'pt-3 lg:pt-4' : 'pt-8 lg:pt-10'}`}>
+        {sectionHeader}
+        <div className="lrc-scroll relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 py-8 lg:px-14 lg:py-10">
           <div className="my-auto flex flex-col gap-[18px] lg:gap-[22px]">
             {focusWindow.map(({ index, step }) => {
               const line = lines[index];
@@ -776,6 +777,7 @@ export default function ImmersiveLyricsDisplay({
     <div className="relative flex flex-1 min-h-0 flex-col overflow-hidden [container-type:size]">
       <ContourLines />
       {alignmentControl}
+      {sectionHeader}
 
       {/* Top fade */}
       <div
@@ -806,19 +808,10 @@ export default function ImmersiveLyricsDisplay({
             const isActive = i === currentIndex;
             const dist = currentIndex >= 0 ? Math.abs(i - currentIndex) : null;
 
-            if (line.type === 'section') {
-              return (
-                <SectionDivider
-                  key={line.id ?? `s-${i}`}
-                  label={line.label}
-                  dist={dist}
-                  singers={line.singers}
-                  songSingers={songSingers}
-                  singerColors={singerColors}
-                  alignment={alignment}
-                />
-              );
-            }
+            // Section markers no longer render inline here — the pinned header above
+            // the scroll area (driven by activeSection) replaces them, so they don't
+            // need a line entry of their own.
+            if (line.type === 'section') return null;
 
             return (
               <ImmersiveLine
