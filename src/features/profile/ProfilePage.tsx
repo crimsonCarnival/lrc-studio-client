@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { LevelXpCard } from './LevelXpCard';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
@@ -192,7 +193,7 @@ function PeopleYouMightKnow({ excludeAccountName }: { excludeAccountName?: strin
         {suggestions.map(u => (
           <UserHoverCard key={u.id} accountName={u.accountName} userId={u.id}>
             <Link
-              to={`/profile/${u.accountName}`}
+              to={profilePath(u.accountName)}
               className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors w-full"
             >
               {u.avatarUrl ? (
@@ -259,25 +260,18 @@ export default function ProfilePage() {
     }, { replace: true });
   }, [setSearchParams]);
 
-  // Silently rewrite legacy /profile/:accountName → /:accountName
-  useEffect(() => {
-    if (location.pathname.startsWith('/profile/') && accountName) {
-      navigate(`/profile/${accountName}`, { replace: true });
-    }
-  }, [location.pathname, accountName, navigate]);
-
   // The server resolves a previous account name (or another casing) to the current profile;
   // swap in the canonical name so an old link ends up on the user's current URL.
   useEffect(() => {
     if (profile?.accountName && accountName && profile.accountName !== accountName) {
-      navigate(`/profile/${profile.accountName}${location.search}`, { replace: true });
+      navigate(`${profilePath(profile.accountName)}${location.search}`, { replace: true });
     }
   }, [profile?.accountName, accountName, location.search, navigate]);
 
   useEffect(() => {
     if (accountName) return;
     if (user?.accountName) {
-      navigate(`/profile/${user.accountName}`, { replace: true });
+      navigate(profilePath(user.accountName), { replace: true });
     } else {
       navigate('/', { replace: true });
     }
@@ -312,7 +306,7 @@ export default function ProfilePage() {
 
   const handleFollow = useCallback(async () => {
     if (!user) {
-      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/profile/${accountName}`)}&intent=follow`);
+      navigate(`/auth?action=signin&redirect=${encodeURIComponent(profilePath(accountName))}&intent=follow`);
       return;
     }
     setFollowLoading(true);
@@ -340,7 +334,7 @@ export default function ProfilePage() {
 
   const handleBlock = useCallback(async () => {
     if (!user) {
-      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/profile/${accountName}`)}`);
+      navigate(`/auth?action=signin&redirect=${encodeURIComponent(profilePath(accountName))}`);
       return;
     }
     setBlockLoading(true);

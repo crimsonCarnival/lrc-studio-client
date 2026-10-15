@@ -19,7 +19,8 @@ working.
 | Public project | `/:accountName/projects/:slug-:publicId` e.g. `/32blunts/projects/radiohead-creep-k3x9a2c7qm` |
 | Editor (owner only) | `/:accountName/projects/:slug-:publicId/edit` |
 | Legacy (kept, redirects) | `/project/:publicId`, `/project/:publicId/edit` |
-| Profile (unchanged) | `/profile/:accountName` |
+| Profile | `/:accountName` (legacy `/profile/:accountName` and `/u/:accountName` redirect to it) |
+| Playlist | `/:accountName/lists/:listId` (legacy `/profile/:accountName/lists/:listId` redirects) |
 
 `publicId` is the existing `nanoid(10)`. Its alphabet includes `-` and `_`, so the client always
 takes the **last 10 characters** of the final path segment as the id. The slug and account name in
@@ -128,7 +129,7 @@ Account names can be changed (`lastAccountNameChangedAt` already exists). Today 
   that collides with someone's *history* row, otherwise an old link would silently land on the
   wrong person. (If you prefer to allow reuse after N days, make that explicit and tested; the
   default is: never reuse.) Release the user's own old names if they switch back to one.
-- `publicProfile(accountName: String!)`: resolve case-insensitively against current names, then
+- `publicProfile(accountName: String!)` (now reached at `/:accountName`): resolve case-insensitively against current names, then
   against history. Return the user's **current** `accountName` in the payload. The client
   compares it with the URL param and redirects to `/profile/<current>` when they differ, so no
   server-side redirect is needed.

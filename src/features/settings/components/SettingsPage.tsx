@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
@@ -334,7 +335,7 @@ export default function SettingsPage() {
                 {/* Desktop sidebar */}
                 <aside className="hidden lg:flex flex-col gap-0.5 w-[230px] shrink-0 sticky top-0">
                   {user && !isGuest && (
-                    <Link to={`/profile/${user.accountName}`} className="flex items-center gap-3 px-3 pb-4 pt-1 text-zinc-100 no-underline">
+                    <Link to={profilePath(user.accountName)} className="flex items-center gap-3 px-3 pb-4 pt-1 text-zinc-100 no-underline">
                       <StaffRing role={user.staffRole} className="rounded-xl">
                         <div className="size-10 rounded-xl flex-shrink-0 overflow-hidden">
                           {user.avatarUrl
@@ -386,7 +387,7 @@ export default function SettingsPage() {
                     )}
                     {activeTab === 'profile' && user?.accountName && (
                       <Button asChild variant="outline" className="h-11 rounded-xl border-zinc-700 bg-zinc-900 text-zinc-100 font-semibold">
-                        <Link to={`/profile/${user.accountName}`}>
+                        <Link to={profilePath(user.accountName)}>
                           <Icon name="visibility" size={16} />
                           {t('settings.viewProfile')}
                         </Link>

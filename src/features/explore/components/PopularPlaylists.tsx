@@ -1,3 +1,4 @@
+import { listPath } from '@/features/profile/profile-path';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -50,7 +51,7 @@ export function PopularPlaylists({ limit = 6 }: { limit?: number }) {
             return (
               <Link
                 key={playlist.id}
-                to={`/profile/${ownerAccountName}/lists/${playlist.id}`}
+                to={listPath(ownerAccountName, playlist.id)}
                 className="flex flex-col rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors overflow-hidden group"
               >
                 <div className="aspect-video w-full bg-gradient-to-br from-primary/30 to-accent-purple/30 flex items-center justify-center relative shrink-0">

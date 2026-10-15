@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import type { TFunction } from 'i18next';
 import { useTranslation, Trans } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -55,7 +56,7 @@ const TYPE_ICON_NAME: Record<string, string> = {
 export function notificationDestination(notification: NotificationData): string | null {
   const { type, actors, publicId } = notification;
   if ((type === 'star' || type === 'fork' || type === 'reaction') && publicId) return `/project/${publicId}`;
-  if (type === 'follow' && actors?.[0]?.accountName) return `/profile/${actors[0].accountName}`;
+  if (type === 'follow' && actors?.[0]?.accountName) return profilePath(actors[0].accountName);
   if (type === 'admin_granted' || type === 'role_changed') return '/admin';
   if (type === 'xp_changed') return '/settings/profile';
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';

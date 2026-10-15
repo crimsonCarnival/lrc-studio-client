@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -57,7 +58,7 @@ export default function BlockedUsersSettings({ searchTerm }: { searchTerm?: stri
               >
                 <UserHoverCard accountName={u.accountName} userId={u.id}>
                   <span className="flex items-center gap-3 min-w-0 flex-1">
-                    <Link to={`/profile/${u.accountName}`} className="shrink-0">
+                    <Link to={profilePath(u.accountName)} className="shrink-0">
                       {u.avatarUrl ? (
                         <LazyImage src={u.avatarUrl} alt={name} className="size-9 rounded-lg object-cover" />
                       ) : (
@@ -65,7 +66,7 @@ export default function BlockedUsersSettings({ searchTerm }: { searchTerm?: stri
                       )}
                     </Link>
                     <div className="min-w-0 flex-1">
-                      <Link to={`/profile/${u.accountName}`} className="text-sm text-foreground hover:underline block truncate">
+                      <Link to={profilePath(u.accountName)} className="text-sm text-foreground hover:underline block truncate">
                         {name}
                       </Link>
                       <p className="text-[11px] text-muted-foreground font-mono truncate">{u.accountName}</p>

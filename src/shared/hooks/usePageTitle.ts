@@ -52,6 +52,12 @@ export function usePageTitle(projectName: string | null = null) {
       pageTitle = t('app.titles.leaderboard');
     } else if (cleanPath === 'notifications') {
       pageTitle = t('app.titles.notifications');
+    } else if (/^[^/]+\/projects\/[^/]+(\/edit)?$/.test(cleanPath)) {
+      // /:accountName/projects/:slug-:id[/edit]
+      pageTitle = projectName || t('app.titles.library');
+    } else if (accountName && /^[^/]+(\/lists\/[^/]+)?$/.test(cleanPath)) {
+      // /:accountName and /:accountName/lists/:listId (reached only through those routes, so a param is set)
+      pageTitle = accountName;
     }
 
     if (pageTitle) {

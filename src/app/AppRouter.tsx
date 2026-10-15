@@ -19,6 +19,7 @@ import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/types';
 import { editorPath, parseSlugId, projectPath } from '@/features/projects/project-path';
+import { listPath, profilePath } from '@/features/profile/profile-path';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
@@ -83,12 +84,13 @@ function ExternalRedirect({ to }: { to: string }) {
 
 function LegacyListRedirect() {
   const { accountName, listId } = useParams();
-  return <Navigate to={`/profile/${accountName}/lists/${listId}`} replace />;
+  return <Navigate to={listPath(accountName, listId ?? '')} replace />;
 }
 
 function RedirectWithParams({ to }: { to: (params: Record<string, string>) => string }) {
   const params = useParams() as Record<string, string>;
-  return <Navigate to={to(params)} replace />;
+  const { search, hash } = useLocation();
+  return <Navigate to={`${to(params)}${search}${hash}`} replace />;
 }
 
 type WorkspaceView = 'editor' | 'preview';
@@ -501,20 +503,21 @@ export function AppRouter({
           <PublicProjectViewPage />
         </Suspense>
       } />
-      <Route path="profile/:accountName/lists/:listId" element={
+      {/* Profiles and playlists live at the site root. The /profile and /u forms are legacy and redirect. */}
+      <Route path=":accountName/lists/:listId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <ListPage />
         </Suspense>
       } />
-      <Route path=":accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
-      <Route path="u/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
-      <Route path="profile/:accountName" element={
+      <Route path="profile/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => listPath(p.accountName, p.listId)} />} />
+      <Route path="u/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => listPath(p.accountName, p.listId)} />} />
+      <Route path=":accountName" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <ProfilePage />
         </Suspense>
       } />
-      <Route path=":accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
-      <Route path="u/:accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
+      <Route path="profile/:accountName" element={<RedirectWithParams to={(p) => profilePath(p.accountName)} />} />
+      <Route path="u/:accountName" element={<RedirectWithParams to={(p) => profilePath(p.accountName)} />} />
       <Route path="profile/:accountName/playlists/:listId" element={<LegacyListRedirect />} />
       <Route path="settings/:tab?" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>

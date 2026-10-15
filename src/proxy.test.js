@@ -159,3 +159,30 @@ describe('injectTags', () => {
     expect(out.indexOf('og:title')).toBeLessThan(out.indexOf('</head>'));
   });
 });
+
+describe('MATCHER', () => {
+  it('stays in sync with the matcher in vercel.json', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { MATCHER } = await import('../proxy');
+    const vercel = JSON.parse(readFileSync('vercel.json', 'utf8'));
+    expect(vercel.proxy.matcher).toEqual(MATCHER);
+  });
+
+  it('covers root-level profiles, playlists and projects', async () => {
+    const { MATCHER } = await import('../proxy');
+    expect(MATCHER).toEqual(expect.arrayContaining([
+      '/:accountName/projects/:slugId',
+      '/:accountName/lists/:listId',
+    ]));
+    expect(MATCHER.some((m) => m.startsWith('/:accountName('))).toBe(true);
+  });
+
+  it('keeps static files out of the single-segment account pattern', async () => {
+    const { MATCHER } = await import('../proxy');
+    const entry = MATCHER.find((m) => m.startsWith('/:accountName(')) ?? '';
+    const inner = entry.slice('/:accountName('.length, -1);
+    const re = new RegExp(`^${inner.replace(/^\(\?!/, '(?!')}$`);
+    for (const ok of ['32blunts', 'some.user', 'a_b-c']) expect(re.test(ok)).toBe(true);
+    for (const file of ['favicon.svg', 'og-default.png', 'robots.txt', 'sitemap.xml', 'app.js']) expect(re.test(file)).toBe(false);
+  });
+});
