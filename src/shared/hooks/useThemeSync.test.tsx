@@ -1,46 +1,55 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import i18n from 'i18next'
-import '@/app/i18n'
+import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { render } from '@testing-library/react'
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
+
+const lang = vi.hoisted(() => ({ value: 'en' }))
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ i18n: { language: lang.value, changeLanguage: vi.fn() } }),
+}))
+
 import { useThemeSync } from './useThemeSync'
 
-function Where() {
-  const loc = useLocation()
-  return <div data-testid="where">{loc.pathname + loc.search}</div>
+function Shell() {
+  useThemeSync()
+  return <Outlet />
 }
 
-function App() {
-  useThemeSync('dark')
-  return (
-    <Routes>
-      <Route path="profile/:name" element={<Navigate to="/alice" replace />} />
-      <Route path="*" element={<Where />} />
-    </Routes>
+function renderAt(url: string) {
+  window.history.replaceState({}, '', url)
+  return render(
+    <BrowserRouter>
+      <Routes>
+        <Route element={<Shell />}>
+          <Route path=":accountName" element={<Navigate to="/profile/alice" replace />} />
+          <Route path="profile/:accountName" element={<div>profile page</div>} />
+        </Route>
+      </Routes>
+    </BrowserRouter>,
   )
 }
 
-describe('useThemeSync', () => {
-  beforeEach(async () => { await i18n.changeLanguage('en') })
+describe('useThemeSync language -> URL sync', () => {
+  beforeEach(() => { lang.value = 'en' })
 
-  it('adds ?hl= to the URL it finds', async () => {
-    window.history.replaceState(null, '', '/somewhere')
-    render(<BrowserRouter><App /></BrowserRouter>)
-    expect(await screen.findByTestId('where')).toHaveTextContent('/somewhere?hl=en')
+  it('adds ?hl= without undoing a redirect issued in the same render', () => {
+    const { getByText } = renderAt('/alice')
+    // Regression: the hl update used the pre-redirect path and bounced /:username back to itself.
+    expect(window.location.pathname).toBe('/profile/alice')
+    expect(window.location.search).toBe('?hl=en')
+    expect(getByText('profile page')).toBeTruthy()
   })
 
-  it('does not undo a redirect made by a child on the first render (/profile/alice -> /alice)', async () => {
-    window.history.replaceState(null, '', '/profile/alice')
-    render(<BrowserRouter><App /></BrowserRouter>)
-    expect(await screen.findByTestId('where')).toHaveTextContent('/alice?hl=en')
-    expect(window.location.pathname).toBe('/alice')
+  it('keeps existing query params and the hash', () => {
+    lang.value = 'es-MX'
+    renderAt('/profile/alice?intent=follow#top')
+    expect(window.location.pathname).toBe('/profile/alice')
+    expect(window.location.search).toBe('?intent=follow&hl=es')
+    expect(window.location.hash).toBe('#top')
   })
 
-  it('keeps the other query parameters', async () => {
-    window.history.replaceState(null, '', '/profile/alice?view=public')
-    render(<BrowserRouter><App /></BrowserRouter>)
-    expect(await screen.findByTestId('where')).toHaveTextContent(/^\/alice\?/)
-    expect(window.location.search).toContain('hl=en')
+  it('leaves the URL alone when hl already matches', () => {
+    renderAt('/profile/alice?hl=en')
+    expect(window.location.search).toBe('?hl=en')
   })
 })

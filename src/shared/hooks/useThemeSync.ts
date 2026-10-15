@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useReplaceSearch } from './useReplaceSearch';
 
 export function useThemeSync(theme?: string) {
   const { i18n } = useTranslation();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const replaceSearch = useReplaceSearch();
 
   // 1. Apply theme — dark (default) or light
   useEffect(() => {
@@ -23,13 +24,15 @@ export function useThemeSync(theme?: string) {
   // <Navigate> (every legacy /profile/… or /u/… link) runs its replace before this effect does, and
   // writing back the render's older path would undo that redirect and bounce between the two.
   useEffect(() => {
+    // Read the live URL, not the render-time params: a redirect issued in this same
+    // commit has already moved it (see useReplaceSearch).
     const currentHl = i18n.language?.split('-')[0];
-    if (!currentHl) return;
-    const url = new URL(window.location.href);
-    if (url.searchParams.get('hl') === currentHl) return;
-    url.searchParams.set('hl', currentHl);
-    navigate(`${url.pathname}${url.search}${url.hash}`, { replace: true });
-  }, [i18n.language, navigate]);
+    const params = new URLSearchParams(window.location.search);
+    if (currentHl && params.get('hl') !== currentHl) {
+      params.set('hl', currentHl);
+      replaceSearch(params);
+    }
+  }, [i18n.language, replaceSearch]);
 
   // 3. Sync URL -> App State (Mount Only)
   // Support deep-linking by checking the URL only once when the app loads
