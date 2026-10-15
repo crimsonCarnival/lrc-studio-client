@@ -116,7 +116,7 @@ export const authService = {
           accountName
           displayName
           email
-          avatarUrl staffRole
+          avatarUrl coverImageUrl staffRole
           isVerified
           ban { active reason until }
           appeal { text status submittedAt resolvedAt }
@@ -184,7 +184,7 @@ export const authService = {
           displayName
           email
           pendingEmail
-          avatarUrl staffRole
+          avatarUrl coverImageUrl staffRole
           bio
           isVerified
           lastAccountNameChangedAt
@@ -228,7 +228,7 @@ export const authService = {
           displayName
           email
           pendingEmail
-          avatarUrl staffRole
+          avatarUrl coverImageUrl staffRole
           bio
           showFollowers
           onlineVisibility

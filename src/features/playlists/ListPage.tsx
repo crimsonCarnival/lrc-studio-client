@@ -7,6 +7,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { UserHoverCard } from '@ui/UserHoverCard';
 import {
   savePlaylist,
   unsavePlaylist,
@@ -153,19 +154,21 @@ export default function ListPage() {
               <p className="text-sm text-muted-foreground max-w-2xl mb-3">{playlist.description}</p>
             )}
 
-            <Link
-              to={`/profile/${accountName}`}
-              className="flex items-center gap-2 w-fit hover:opacity-80 transition-opacity mb-3"
-            >
-              {playlist.owner?.avatarUrl ? (
-                <img src={playlist.owner.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-5 rounded-full object-cover" />
-              ) : (
-                <div className="size-5 rounded-full bg-muted" />
-              )}
-              <span className="text-sm font-medium text-foreground">
-                {playlist.owner?.displayName || playlist.owner?.accountName}
-              </span>
-            </Link>
+            <UserHoverCard accountName={playlist.owner?.accountName ?? accountName ?? ''}>
+              <Link
+                to={`/profile/${accountName}`}
+                className="flex items-center gap-2 w-fit hover:opacity-80 transition-opacity mb-3"
+              >
+                {playlist.owner?.avatarUrl ? (
+                  <img src={playlist.owner.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-5 rounded-full object-cover" />
+                ) : (
+                  <div className="size-5 rounded-full bg-muted" />
+                )}
+                <span className="text-sm font-medium text-foreground">
+                  {playlist.owner?.displayName || playlist.owner?.accountName}
+                </span>
+              </Link>
+            </UserHoverCard>
 
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-3">
               <span>{t('playlists.detail.projects', { count: playlist.projectCount ?? playlist.projects?.length ?? 0 })}</span>

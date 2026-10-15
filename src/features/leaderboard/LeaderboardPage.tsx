@@ -12,6 +12,7 @@ import type { LeaderboardSort, LeaderboardSortDirection, LeaderboardTimeframe } 
 import { LogoLoader } from '@ui/LogoLoader';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { StaffRing } from '@/shared/ui/StaffRing';
+import { UserHoverCard } from '@ui/UserHoverCard';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 
 interface LeaderEntry {
@@ -397,16 +398,20 @@ export default function LeaderboardPage() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="shrink-0"><RankBadge pos={i + 1} podium={isRanking} /></div>
-                        <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} handle={entry.accountName} medal={podiumOf(i + 1)} staffRole={entry.staffRole} />
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <span className="truncate text-[15px] font-semibold text-foreground">
-                            {entry.displayName || entry.accountName}
+                        <UserHoverCard accountName={entry.accountName} userId={entry.id}>
+                          <span className="flex items-center gap-3 min-w-0 flex-1">
+                            <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} handle={entry.accountName} medal={podiumOf(i + 1)} staffRole={entry.staffRole} />
+                            <span className="flex flex-col min-w-0 flex-1">
+                              <span className="truncate text-[15px] font-semibold text-foreground">
+                                {entry.displayName || entry.accountName}
+                              </span>
+                              <span className="truncate font-mono text-xs font-medium text-subtle">
+                                {entry.accountName}
+                                {(entry.progression?.level ?? 0) > 0 && ` · ${t('common.levelShort', { level: entry.progression!.level })}`}
+                              </span>
+                            </span>
                           </span>
-                          <span className="truncate font-mono text-xs font-medium text-subtle">
-                            {entry.accountName}
-                            {(entry.progression?.level ?? 0) > 0 && ` · ${t('common.levelShort', { level: entry.progression!.level })}`}
-                          </span>
-                        </div>
+                        </UserHoverCard>
                       </div>
                       <dl className="mt-2.5 grid grid-cols-3 gap-y-2 gap-x-2 pl-1">
                         {stats.map(([label, value]) => (
@@ -449,16 +454,20 @@ export default function LeaderboardPage() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-4">
-                            <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} handle={entry.accountName} medal={podiumOf(i + 1)} staffRole={entry.staffRole} />
-                            <div className="flex flex-col">
-                              <span className="text-[17px] font-semibold leading-tight text-foreground">
-                                {entry.displayName || entry.accountName}
+                            <UserHoverCard accountName={entry.accountName} userId={entry.id}>
+                              <span className="flex items-center gap-4">
+                                <UserAvatar avatarUrl={entry.avatarUrl} name={entry.displayName || entry.accountName} handle={entry.accountName} medal={podiumOf(i + 1)} staffRole={entry.staffRole} />
+                                <span className="flex flex-col">
+                                  <span className="text-[17px] font-semibold leading-tight text-foreground">
+                                    {entry.displayName || entry.accountName}
+                                  </span>
+                                  <span className="mt-0.5 font-mono text-xs font-medium text-subtle">
+                                    {entry.accountName}
+                                    {(entry.progression?.level ?? 0) > 0 && ` · ${t('common.levelShort', { level: entry.progression!.level })}`}
+                                  </span>
+                                </span>
                               </span>
-                              <span className="mt-0.5 font-mono text-xs font-medium text-subtle">
-                                {entry.accountName}
-                                {(entry.progression?.level ?? 0) > 0 && ` · ${t('common.levelShort', { level: entry.progression!.level })}`}
-                              </span>
-                            </div>
+                            </UserHoverCard>
                           </div>
                         </td>
                         <td className="py-3 px-4 text-right font-mono text-sm font-semibold tabular-nums text-subtle">

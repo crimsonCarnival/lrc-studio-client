@@ -12,6 +12,7 @@ import { useState as useLocalState } from 'react';
 import { userHasPermission, ROLES, ROLE_RANK, type Role } from '@/features/auth/permissions';
 import { usePresence } from '@/shared/hooks/usePresence';
 import { OnlineDot } from '@/shared/ui/OnlineDot';
+import { UserHoverCard } from '@/shared/ui/UserHoverCard';
 
 interface AdminUser {
   id?: string;
@@ -218,21 +219,32 @@ export default function AdminUsersTab({
                       className={`bg-zinc-800/30 rounded-lg p-4 flex flex-col gap-3 border border-zinc-700/50 ${user.isDeleted ? 'opacity-50' : ''}`}
                     >
                       {/* User Info */}
-                      <div className="flex items-center gap-3">
-                        <div className="relative size-10 shrink-0">
-                          <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
-                            {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
-                          </div>
-                          {(user.isOnline || presence.isOnline(user.id || '')) && <OnlineDot />}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium text-zinc-200 truncate">{user.displayName || user.accountName}</span>
-                            {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider flex-shrink-0">{t('admin.table.you')}</span>}
-                          </div>
-                          <div className="text-xs text-zinc-500 truncate">{user.email}</div>
-                        </div>
-                      </div>
+                      {(() => {
+                        const info = (
+                          <>
+                            <div className="relative size-10 shrink-0">
+                              <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
+                                {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
+                              </div>
+                              {(user.isOnline || presence.isOnline(user.id || '')) && <OnlineDot />}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium text-zinc-200 truncate">{user.displayName || user.accountName}</span>
+                                {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider flex-shrink-0">{t('admin.table.you')}</span>}
+                              </div>
+                              <div className="text-xs text-zinc-500 truncate">{user.email}</div>
+                            </div>
+                          </>
+                        );
+                        return user.accountName ? (
+                          <UserHoverCard accountName={user.accountName} userId={user.id}>
+                            <div className="flex items-center gap-3">{info}</div>
+                          </UserHoverCard>
+                        ) : (
+                          <div className="flex items-center gap-3">{info}</div>
+                        );
+                      })()}
 
                       {/* Role and Status */}
                       <div className="flex gap-2">
@@ -425,21 +437,32 @@ export default function AdminUsersTab({
               >
                 <tr className={`group hover:bg-zinc-800/30 transition-colors ${user.isDeleted ? 'opacity-50 grayscale-[0.5]' : ''}`}>
                   <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="relative size-10 shrink-0">
-                        <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
-                          {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
-                        </div>
-                        {(user.isOnline || presence.isOnline(user.id || '')) && <OnlineDot />}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-zinc-200">{user.displayName || user.accountName}</span>
-                          {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider">{t('admin.table.you')}</span>}
-                        </div>
-                        <div className="text-xs text-zinc-500">{user.email}</div>
-                      </div>
-                    </div>
+                    {(() => {
+                      const info = (
+                        <>
+                          <div className="relative size-10 shrink-0">
+                            <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-semibold overflow-hidden border border-zinc-700">
+                              {user.avatarUrl ? <LazyImage src={user.avatarUrl} alt={user.displayName || user.accountName} className="size-full object-cover" /> : (user.displayName || user.accountName || '?')[0].toUpperCase()}
+                            </div>
+                            {(user.isOnline || presence.isOnline(user.id || '')) && <OnlineDot />}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-zinc-200">{user.displayName || user.accountName}</span>
+                              {isSelf && <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider">{t('admin.table.you')}</span>}
+                            </div>
+                            <div className="text-xs text-zinc-500">{user.email}</div>
+                          </div>
+                        </>
+                      );
+                      return user.accountName ? (
+                        <UserHoverCard accountName={user.accountName} userId={user.id}>
+                          <div className="flex items-center gap-3">{info}</div>
+                        </UserHoverCard>
+                      ) : (
+                        <div className="flex items-center gap-3">{info}</div>
+                      );
+                    })()}
                   </td>
                   <td className="p-4">
                     <RoleControl user={user} />

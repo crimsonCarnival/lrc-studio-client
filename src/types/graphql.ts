@@ -806,6 +806,7 @@ export type PublicUser = {
   badges: Array<UserBadge>;
   bio?: Maybe<Scalars['String']['output']>;
   country?: Maybe<Scalars['String']['output']>;
+  coverImageUrl?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['String']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
   followerCount: Scalars['Int']['output'];
@@ -1191,14 +1192,10 @@ export type UpdatePlaylistInput = {
 export type UpdateProfileInput = {
   accountName?: InputMaybe<Scalars['String']['input']>;
   avatarUrl?: InputMaybe<Scalars['String']['input']>;
+  coverImageUrl?: InputMaybe<Scalars['String']['input']>;
   bio?: InputMaybe<Scalars['String']['input']>;
   displayName?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
-  showFollowers?: InputMaybe<Scalars['Boolean']['input']>;
-  onlineVisibility?: InputMaybe<Scalars['String']['input']>;
-  lastOnlineVisibility?: InputMaybe<Scalars['String']['input']>;
-  miniProfileBadgesEnabled?: InputMaybe<Scalars['Boolean']['input']>;
-  miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type UserPreferencesNotifications = {
@@ -1305,6 +1302,7 @@ export type User = {
   bio?: Maybe<Scalars['String']['output']>;
   country?: Maybe<Scalars['String']['output']>;
   countryVisibility?: Maybe<Scalars['String']['output']>;
+  coverImageUrl?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['String']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
   email?: Maybe<Scalars['String']['output']>;

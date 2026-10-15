@@ -10,6 +10,7 @@ import { LazyImage } from '@ui/LazyImage';
 import { cn } from '@/shared/utils/utils';
 import { useHeaderSearch } from '../hooks/useHeaderSearch';
 import { Highlight } from './Highlight';
+import { UserHoverCard } from '@ui/UserHoverCard';
 
 const KEY = 'inline-grid h-[22px] min-w-[22px] place-items-center rounded-md bg-raised px-1.5 font-mono text-[11px] leading-none font-semibold text-subtle shadow-[inset_0_-2px_0_var(--hl),inset_0_0_0_1px_var(--hl)]';
 
@@ -23,6 +24,9 @@ type Row = {
   image?: string | null;
   /** Users only: public staff role, for the avatar ring. */
   staffRole?: string | null;
+  /** Users only: used to wire up the UserHoverCard. */
+  accountName?: string;
+  userId?: string;
   kind: 'user' | 'project';
 };
 
@@ -54,6 +58,8 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
     meta: u.level ? t('settings.levelShort', { level: u.level }) : undefined,
     image: u.avatarUrl,
     staffRole: u.staffRole,
+    accountName: u.accountName,
+    userId: u.id,
     kind: 'user',
   }));
   const projectRows: Row[] = projects.map((p) => ({
@@ -142,26 +148,42 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
         className={cn('mx-1.5 flex min-h-[52px] items-center gap-3 rounded-[10px] px-2.5 py-1.5 text-foreground', isActive && 'bg-primary-soft')}
       >
         {row.kind === 'user' ? (
-          <StaffRing role={row.staffRole}>
-            <span className="grid size-[34px] shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft font-heading text-sm font-bold text-primary-ink uppercase">
-              {row.image ? <LazyImage src={row.image} alt="" className="size-full object-cover" /> : row.title.charAt(0)}
+          <UserHoverCard accountName={row.accountName ?? ''} userId={row.userId}>
+            <span className="flex min-w-0 flex-1 items-center gap-3">
+              <StaffRing role={row.staffRole}>
+                <span className="grid size-[34px] shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft font-heading text-sm font-bold text-primary-ink uppercase">
+                  {row.image ? <LazyImage src={row.image} alt="" className="size-full object-cover" /> : row.title.charAt(0)}
+                </span>
+              </StaffRing>
+              <span className="flex min-w-0 flex-col gap-px">
+                <span className="truncate text-base leading-tight font-semibold"><Highlight text={row.title} query={trimmed} /></span>
+                {(row.sub || row.meta) && (
+                  <span className="truncate text-subtle font-mono text-xs font-medium">
+                    {row.sub && <Highlight text={row.sub} query={trimmed} />}
+                    {row.sub && row.meta && ' · '}
+                    {row.meta}
+                  </span>
+                )}
+              </span>
             </span>
-          </StaffRing>
+          </UserHoverCard>
         ) : (
-          <span className="cover-hatch grid size-[38px] shrink-0 place-items-center overflow-hidden rounded-lg text-faint">
-            {row.image ? <LazyImage src={row.image} alt="" className="size-full object-cover" /> : <Icon name="music_note" size={16} />}
-          </span>
-        )}
-        <span className="flex min-w-0 flex-col gap-px">
-          <span className="truncate text-base leading-tight font-semibold"><Highlight text={row.title} query={trimmed} /></span>
-          {(row.sub || row.meta) && (
-            <span className={cn('truncate text-subtle', row.kind === 'user' ? 'font-mono text-xs font-medium' : 'text-[13px]')}>
-              {row.sub && (row.kind === 'user' ? <Highlight text={row.sub} query={trimmed} /> : row.sub)}
-              {row.sub && row.meta && ' · '}
-              {row.meta}
+          <>
+            <span className="cover-hatch grid size-[38px] shrink-0 place-items-center overflow-hidden rounded-lg text-faint">
+              {row.image ? <LazyImage src={row.image} alt="" className="size-full object-cover" /> : <Icon name="music_note" size={16} />}
             </span>
-          )}
-        </span>
+            <span className="flex min-w-0 flex-col gap-px">
+              <span className="truncate text-base leading-tight font-semibold"><Highlight text={row.title} query={trimmed} /></span>
+              {(row.sub || row.meta) && (
+                <span className="truncate text-subtle text-[13px]">
+                  {row.sub}
+                  {row.sub && row.meta && ' · '}
+                  {row.meta}
+                </span>
+              )}
+            </span>
+          </>
+        )}
         <kbd aria-hidden className={cn(KEY, 'ml-auto shrink-0 coarse:hidden', !isActive && 'opacity-0')}>↵</kbd>
       </Link>
     );

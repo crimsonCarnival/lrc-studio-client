@@ -1,4 +1,8 @@
 export default {
+  picker: {
+    title: "Elige un proyecto para compartir",
+    noPublicProjects: "Aún no tienes proyectos publicados. Publica uno primero para compartirlo.",
+  },
   sheet: {
     title: "Compartir",
     copy: "Copiar enlace",

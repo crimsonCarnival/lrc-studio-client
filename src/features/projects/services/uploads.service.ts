@@ -64,14 +64,14 @@ export const uploadsService = {
     };
   },
 
-  async getAvatarSignature(file: File, recaptchaToken?: string): Promise<CloudinarySignature> {
+  async getAvatarSignature(file: Blob, recaptchaToken?: string): Promise<CloudinarySignature> {
     return (await request<CloudinarySignature>('/uploads/avatar-signature', {
       method: 'POST',
       body: JSON.stringify({ fileSize: file.size, recaptchaToken }),
     }))!;
   },
 
-  async uploadAvatar(file: File, recaptchaToken?: string): Promise<{ url: string; publicId: string }> {
+  async uploadAvatar(file: Blob, recaptchaToken?: string): Promise<{ url: string; publicId: string }> {
     const result = await this.uploadImage(file, () => this.getAvatarSignature(file, recaptchaToken));
     return {
       url: result.secure_url,
@@ -89,12 +89,30 @@ export const uploadsService = {
     return result.secure_url;
   },
 
-  async uploadImage(file: File, signatureGetter: () => Promise<CloudinarySignature>): Promise<CloudinaryUploadResult> {
+  async getProfileCoverSignature(file: Blob, recaptchaToken?: string): Promise<CloudinarySignature> {
+    return (await request<CloudinarySignature>('/uploads/profile-cover-signature', {
+      method: 'POST',
+      body: JSON.stringify({ fileSize: file.size, recaptchaToken }),
+    }))!;
+  },
+
+  /** The profile banner — a cropped-to-3:1 image, distinct from uploadCoverImage (project/playlist art). */
+  async uploadProfileCover(file: Blob, recaptchaToken?: string): Promise<{ url: string; publicId: string }> {
+    const result = await this.uploadImage(file, () => this.getProfileCoverSignature(file, recaptchaToken));
+    return {
+      url: result.secure_url,
+      publicId: result.public_id,
+    };
+  },
+
+  async uploadImage(file: Blob, signatureGetter: () => Promise<CloudinarySignature>): Promise<CloudinaryUploadResult> {
     const { signature, timestamp, cloudName, apiKey, folder, resourceType, transformation } =
       await signatureGetter();
 
     const formData = new FormData();
-    formData.append('file', file);
+    // Cropped output from the image-crop step is a plain Blob (no .name) — Cloudinary's
+    // multipart parser still needs a filename to detect the part as a file.
+    formData.append('file', file, file instanceof File ? file.name : 'upload.png');
     formData.append('api_key', apiKey);
     formData.append('timestamp', String(timestamp));
     formData.append('signature', signature);

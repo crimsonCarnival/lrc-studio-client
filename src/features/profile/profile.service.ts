@@ -5,7 +5,7 @@ import type { PublicUser, FollowListResult, FollowListType } from '@/types';
 const GET_PUBLIC_PROFILE = /* GraphQL */ `
   query GetPublicProfile($accountName: String!, $asVisitor: Boolean) {
     publicProfile(accountName: $accountName, asVisitor: $asVisitor) {
-      id accountName displayName avatarUrl staffRole bio isVerified isAdmin createdAt
+      id accountName displayName avatarUrl coverImageUrl staffRole bio isVerified isAdmin createdAt
       projectCount playlistCount totalStarsReceived totalForksReceived
       followerCount followingCount isFollowedByMe isFollowingMe isBlockedByMe showFollowers
       badges { id grantedAt }

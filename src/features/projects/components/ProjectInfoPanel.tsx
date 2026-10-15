@@ -10,6 +10,7 @@ import { Tip } from '@ui/tip';
 import { ProjectActionsMenu } from './ProjectActionsMenu';
 import { BoostButton } from './BoostButton';
 import { ShareOgButton } from './ShareOgButton';
+import { UserHoverCard } from '@ui/UserHoverCard';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
 import type { EditorLine } from '@/features/editor/services/editor.service';
@@ -149,25 +150,27 @@ export default function ProjectInfoPanel({
     facts.push({
       label: t('projectView.syncedBy'),
       value: (
-        <span className="flex min-w-0 items-center gap-2">
-          <StaffRing role={project.user?.staffRole} outset={2.5}>
-            {project.user?.avatarUrl ? (
-              <img src={project.user.avatarUrl} alt="" className="size-[22px] shrink-0 rounded-full object-cover" loading="lazy" decoding="async" />
-            ) : (
-              <span aria-hidden className="grid size-[22px] shrink-0 place-items-center rounded-full bg-foam-soft font-heading text-[10px] font-bold uppercase text-foam-ink">
-                {(authorName ?? '').charAt(0)}
+        <UserHoverCard accountName={accountName}>
+          <span className="flex min-w-0 items-center gap-2">
+            <StaffRing role={project.user?.staffRole} outset={2.5}>
+              {project.user?.avatarUrl ? (
+                <img src={project.user.avatarUrl} alt="" className="size-[22px] shrink-0 rounded-full object-cover" loading="lazy" decoding="async" />
+              ) : (
+                <span aria-hidden className="grid size-[22px] shrink-0 place-items-center rounded-full bg-foam-soft font-heading text-[10px] font-bold uppercase text-foam-ink">
+                  {(authorName ?? '').charAt(0)}
+                </span>
+              )}
+            </StaffRing>
+            <Link to={`/profile/${accountName}`} className="truncate font-bold text-foreground hover:underline">
+              {authorName}
+            </Link>
+            {authorLevel > 0 && (
+              <span className="inline-flex h-5 shrink-0 items-center rounded-full bg-primary-soft px-[7px] font-mono text-[11px] font-semibold text-primary-ink">
+                {t('settings.levelShort', { level: authorLevel })}
               </span>
             )}
-          </StaffRing>
-          <Link to={`/profile/${accountName}`} className="truncate font-bold text-foreground hover:underline">
-            {authorName}
-          </Link>
-          {authorLevel > 0 && (
-            <span className="inline-flex h-5 shrink-0 items-center rounded-full bg-primary-soft px-[7px] font-mono text-[11px] font-semibold text-primary-ink">
-              {t('settings.levelShort', { level: authorLevel })}
-            </span>
-          )}
-        </span>
+          </span>
+        </UserHoverCard>
       ),
     });
   }

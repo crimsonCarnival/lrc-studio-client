@@ -9,6 +9,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { formatTimeAgo } from '../timeAgo';
 import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
 import { EMOJI_MAP } from '@/features/reactions/components/reaction-constants';
+import { UserHoverCard } from '@ui/UserHoverCard';
 
 const REACTION_GLYPHS: Record<string, string> = EMOJI_MAP;
 
@@ -163,13 +164,16 @@ export function NotificationAvatar({ notification }: { notification: Notificatio
   const hasActor = !!first;
 
   if (hasActor) {
-    return first.avatarUrl
+    const avatar = first.avatarUrl
       ? <LazyImage src={first.avatarUrl} alt="" className="size-[34px] rounded-full shrink-0 object-cover" />
       : (
         <div className="grid size-[34px] shrink-0 place-items-center rounded-full bg-primary-soft font-heading text-sm font-bold text-primary-ink">
           {first.accountName?.[0]?.toUpperCase() ?? '?'}
         </div>
       );
+    return first.accountName
+      ? <UserHoverCard accountName={first.accountName}>{avatar}</UserHoverCard>
+      : avatar;
   }
 
   const iconName = TYPE_ICON_NAME[type];

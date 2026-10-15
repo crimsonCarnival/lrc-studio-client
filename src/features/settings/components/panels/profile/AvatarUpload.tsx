@@ -5,12 +5,18 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
+import { ImageCropModal } from '@ui/ImageCropModal';
 import toast from 'react-hot-toast';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { authService } from '@/features/auth/services/auth.service';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LogoLoader } from '@ui/LogoLoader';
+
+// Matches the server's avatar-signature transformation (c_fill,w_256,h_256) — the crop
+// step resizes to this before upload so the Cloudinary transform is a no-op safety net,
+// not the thing doing the actual framing.
+const AVATAR_OUTPUT_SIZE = 256;
 
 export default function AvatarUpload() {
   const { t } = useTranslation();
@@ -19,12 +25,14 @@ export default function AvatarUpload() {
   const [uploading, setUploading] = useState(false);
   const [urlMode, setUrlMode] = useState(false);
   const [urlValue, setUrlValue] = useState('');
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarClick = () => fileInputRef.current?.click();
 
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
@@ -37,10 +45,20 @@ export default function AvatarUpload() {
       return;
     }
 
+    setCropSrc(URL.createObjectURL(file));
+  };
+
+  const closeCrop = () => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+  };
+
+  const handleCropConfirm = async (blob: Blob) => {
+    closeCrop();
     setUploading(true);
     try {
       const recaptchaToken = executeRecaptcha ? await executeRecaptcha('upload_avatar') : undefined;
-      const { url } = await uploadsService.uploadAvatar(file, recaptchaToken) as { url: string };
+      const { url } = await uploadsService.uploadAvatar(blob, recaptchaToken);
       const updatedUser = await authService.updateProfile({ avatarUrl: url });
       setUser(prev => ({ ...prev, ...updatedUser }));
       toast.success(t('profile.avatarUpdated'));
@@ -48,7 +66,6 @@ export default function AvatarUpload() {
       toast.error(t('profile.avatarUploadFailed'));
     } finally {
       setUploading(false);
-      e.target.value = '';
     }
   };
 
@@ -141,6 +158,16 @@ export default function AvatarUpload() {
         <p className="text-[13px] text-zinc-400 mt-2">{t('profile.avatarHint')}</p>
         <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
       </div>
+      <ImageCropModal
+        imageSrc={cropSrc}
+        aspect={1}
+        outputWidth={AVATAR_OUTPUT_SIZE}
+        outputHeight={AVATAR_OUTPUT_SIZE}
+        cropShape="round"
+        title={t('profile.crop.avatarTitle')}
+        onCancel={closeCrop}
+        onConfirm={handleCropConfirm}
+      />
     </div>
   );
 }

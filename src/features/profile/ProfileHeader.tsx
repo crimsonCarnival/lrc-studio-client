@@ -4,6 +4,9 @@ import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import toast from 'react-hot-toast';
+import { ShareProjectPickerModal } from '@/features/sharing/components/ShareProjectPickerModal';
+import { ImageLightbox } from '@/shared/ui/ImageLightbox';
 import { Icon } from '@/shared/ui/Icon';
 import { LevelBadge } from '@ui/LevelBadge';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
@@ -20,7 +23,8 @@ import { useStreakResetHint } from '@/shared/hooks/useStreakResetHint';
 import { formatDistanceToNow } from 'date-fns';
 import { es as esLocale, enUS as enLocale } from 'date-fns/locale';
 
-function AvatarBadge({ avatarUrl, name, handle, staffRole, isOnline, size = 'lg' }: { avatarUrl?: string | null; name: string; handle?: string | null; staffRole?: string | null; isOnline?: boolean; size?: 'lg' | 'sm' }) {
+function AvatarBadge({ avatarUrl, name, handle, staffRole, isOnline, size = 'lg', onExpand }: { avatarUrl?: string | null; name: string; handle?: string | null; staffRole?: string | null; isOnline?: boolean; size?: 'lg' | 'sm'; onExpand?: () => void }) {
+  const { t } = useTranslation();
   const radius = size === 'lg' ? 'rounded-[1.5rem]' : 'rounded-xl';
   const sizeClass = size === 'lg' ? `size-28 sm:size-32 text-5xl ${radius}` : `size-16 text-2xl ${radius}`;
   if (avatarUrl) {
@@ -28,11 +32,21 @@ function AvatarBadge({ avatarUrl, name, handle, staffRole, isOnline, size = 'lg'
       <div className="relative inline-block shrink-0">
         {/* On the 4px card-coloured ring the avatar already has, not outside it. */}
         <StaffRing role={staffRole} className={radius} outset={3.5}>
-          <LazyImage
-            src={avatarUrl}
-            alt={name}
-            className={`${sizeClass} object-cover border border-border shadow-inner-highlight ring-4 ring-zinc-900`}
-          />
+          {onExpand ? (
+            <button type="button" onClick={onExpand} aria-label={t('profile.expandAvatar')} className="block cursor-zoom-in">
+              <LazyImage
+                src={avatarUrl}
+                alt={name}
+                className={`${sizeClass} object-cover border border-border shadow-inner-highlight ring-4 ring-zinc-900`}
+              />
+            </button>
+          ) : (
+            <LazyImage
+              src={avatarUrl}
+              alt={name}
+              className={`${sizeClass} object-cover border border-border shadow-inner-highlight ring-4 ring-zinc-900`}
+            />
+          )}
         </StaffRing>
         {isOnline && (
           <span className="absolute -bottom-1 -right-1 size-5 rounded-full bg-green-500 border-[3px] border-zinc-900" />
@@ -140,21 +154,52 @@ export function ProfileHeader({
   const streakLongest = profile.streak?.longest ?? 0;
   const streakResetHint = useStreakResetHint();
 
+  const [shareProjectPickerOpen, setShareProjectPickerOpen] = useState(false);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
+
   const copyProfileLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    // Ideally a toast would go here, but this is a lightweight solution
+    toast.success(t('share.sheet.copied'));
+  };
+
+  // On your own profile, "share" means sharing one of your own projects (the picker
+  // below); visiting someone else's, there's no project of yours to pick, so it falls
+  // back to just copying their profile link.
+  const handleShareClick = () => {
+    if (isOwner) setShareProjectPickerOpen(true);
+    else copyProfileLink();
   };
 
   return (
     <div className="glass rounded-3xl relative overflow-hidden mb-6">
-      {/* Decorative waveform cover */}
-      <div className="h-24 sm:h-28 bg-primary/10 border-b border-border px-6 sm:px-8 overflow-hidden">
-        <WaveformBars seed={profile.accountName || displayName} count={64} minHeight={10} className="justify-end" barClassName="bg-primary/25" />
+      {/* Cover banner — the user's own image when set, else the waveform decoration. */}
+      <div className="h-24 sm:h-28 bg-primary/10 border-b border-border overflow-hidden">
+        {profile.coverImageUrl ? (
+          <button
+            type="button"
+            onClick={() => setExpandedImage(profile.coverImageUrl ?? null)}
+            aria-label={t('profile.expandCover')}
+            className="block size-full cursor-zoom-in"
+          >
+            <LazyImage src={profile.coverImageUrl} alt="" className="size-full object-cover" />
+          </button>
+        ) : (
+          <div className="size-full px-6 sm:px-8">
+            <WaveformBars seed={profile.accountName || displayName} count={64} minHeight={10} className="justify-end" barClassName="bg-primary/25" />
+          </div>
+        )}
       </div>
 
       <div className="px-6 sm:px-8 pb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
       <div className="-mt-14 sm:-mt-16">
-        <AvatarBadge avatarUrl={profile.avatarUrl} name={displayName} handle={profile.accountName} staffRole={profile.staffRole} isOnline={isOnline} />
+        <AvatarBadge
+          avatarUrl={profile.avatarUrl}
+          name={displayName}
+          handle={profile.accountName}
+          staffRole={profile.staffRole}
+          isOnline={isOnline}
+          onExpand={profile.avatarUrl ? () => setExpandedImage(profile.avatarUrl ?? null) : undefined}
+        />
       </div>
 
       <div className="flex-1 min-w-0 w-full text-center sm:text-left flex flex-col pt-1 sm:pt-4">
@@ -229,8 +274,8 @@ export function ProfileHeader({
                 />
               </div>
             )}
-            <Tip content={t('share.title')}>
-              <Button variant="outline" size="icon-sm" onClick={copyProfileLink} className="bg-zinc-800/50 hover:bg-zinc-700 border-zinc-700">
+            <Tip content={isOwner ? t('share.picker.title') : t('share.title')}>
+              <Button variant="outline" size="icon-sm" onClick={handleShareClick} className="bg-zinc-800/50 hover:bg-zinc-700 border-zinc-700">
                 <Icon name="share" size={16} className="opacity-70" />
               </Button>
             </Tip>
@@ -278,6 +323,10 @@ export function ProfileHeader({
       </div>
 
       {children && <div className="border-t border-border">{children}</div>}
+      {isOwner && (
+        <ShareProjectPickerModal open={shareProjectPickerOpen} onOpenChange={setShareProjectPickerOpen} />
+      )}
+      <ImageLightbox src={expandedImage} alt={displayName} onClose={() => setExpandedImage(null)} />
     </div>
   );
 }

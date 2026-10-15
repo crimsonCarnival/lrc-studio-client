@@ -9,6 +9,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { followUser, unfollowUser } from '@/features/profile/profile.service';
 import type { FollowUser } from '@/types';
 import { Highlight } from './Highlight';
+import { UserHoverCard } from '@ui/UserHoverCard';
 
 type SearchUserCardProps = {
   user: FollowUser;
@@ -44,35 +45,39 @@ export function SearchUserCard({ user, query, canFollow }: SearchUserCardProps) 
 
   return (
     <article className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[18px] bg-background px-[18px] py-4 inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] hover:inset-ring-faint">
-      <StaffRing role={user.staffRole}>
-        <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft font-heading text-[22px] font-bold text-primary-ink uppercase">
-          {avatarUrl ? <LazyImage src={avatarUrl} alt="" className="size-full object-cover" /> : name.charAt(0)}
-        </span>
-      </StaffRing>
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="flex min-w-0 items-center gap-2">
-          <Link to={`/profile/${accountName}`} className="truncate font-heading text-xl leading-tight font-bold tracking-[-0.02em] text-foreground hover:underline">
-            <Highlight text={name} query={query} />
-          </Link>
-          {level > 0 && (
-            <span className="inline-flex h-[22px] shrink-0 items-center rounded-full bg-primary-soft px-2 font-mono text-[11px] font-semibold text-primary-ink">
-              {t('settings.levelShort', { level })}
+      <UserHoverCard accountName={accountName} userId={user.id}>
+        <span className="flex min-w-0 flex-1 items-center gap-x-4 gap-y-3">
+          <StaffRing role={user.staffRole}>
+            <span className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full bg-primary-soft font-heading text-[22px] font-bold text-primary-ink uppercase">
+              {avatarUrl ? <LazyImage src={avatarUrl} alt="" className="size-full object-cover" /> : name.charAt(0)}
             </span>
-          )}
+          </StaffRing>
+          <span className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="flex min-w-0 items-center gap-2">
+              <Link to={`/profile/${accountName}`} className="truncate font-heading text-xl leading-tight font-bold tracking-[-0.02em] text-foreground hover:underline">
+                <Highlight text={name} query={query} />
+              </Link>
+              {level > 0 && (
+                <span className="inline-flex h-[22px] shrink-0 items-center rounded-full bg-primary-soft px-2 font-mono text-[11px] font-semibold text-primary-ink">
+                  {t('settings.levelShort', { level })}
+                </span>
+              )}
+            </span>
+            <span className="flex min-w-0 items-center gap-2 text-sm text-subtle">
+              <span className="truncate font-mono text-xs">@<Highlight text={accountName} query={query} /></span>
+              {/* Only present when the user chose to show their country. */}
+              {country && <><span aria-hidden>·</span><CountryFlag countryCode={country} /></>}
+            </span>
+            <span className="truncate font-mono text-xs font-medium text-subtle">
+              {t('search.statProjects', { count: user.projectCount ?? 0 })}
+              {' · '}
+              {t('search.statStars', { count: user.totalStarsReceived ?? 0 })}
+              {' · '}
+              {t('search.statFollowers', { count: Math.max(0, (user.followerCount ?? 0) + followerDelta) })}
+            </span>
+          </span>
         </span>
-        <span className="flex min-w-0 items-center gap-2 text-sm text-subtle">
-          <span className="truncate font-mono text-xs">@<Highlight text={accountName} query={query} /></span>
-          {/* Only present when the user chose to show their country. */}
-          {country && <><span aria-hidden>·</span><CountryFlag countryCode={country} /></>}
-        </span>
-        <span className="truncate font-mono text-xs font-medium text-subtle">
-          {t('search.statProjects', { count: user.projectCount ?? 0 })}
-          {' · '}
-          {t('search.statStars', { count: user.totalStarsReceived ?? 0 })}
-          {' · '}
-          {t('search.statFollowers', { count: Math.max(0, (user.followerCount ?? 0) + followerDelta) })}
-        </span>
-      </div>
+      </UserHoverCard>
       <div className="flex shrink-0 items-center gap-2 max-sm:w-full">
         <Button asChild variant="outline" className="h-10 px-3.5 text-[15px] max-sm:flex-1 lg:h-10 lg:px-3.5 lg:text-[15px] coarse:h-11">
           <Link to={`/profile/${accountName}`}>{t('search.viewProfile')}</Link>

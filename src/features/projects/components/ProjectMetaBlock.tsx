@@ -6,6 +6,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
+import { UserHoverCard } from '@ui/UserHoverCard';
 
 interface ProjectMeta {
   description?: string;
@@ -152,9 +153,11 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
             {accountName && (
               <div className="flex items-center gap-1.5">
                 <Icon name="music_note" size={14} />
-                <Link to={`/profile/${accountName}`} className="text-foreground hover:text-primary transition-colors">
-                  {project.user?.displayName || accountName}
-                </Link>
+                <UserHoverCard accountName={accountName}>
+                  <Link to={`/profile/${accountName}`} className="text-foreground hover:text-primary transition-colors">
+                    {project.user?.displayName || accountName}
+                  </Link>
+                </UserHoverCard>
               </div>
             )}
             {formattedDate && (

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { getBlockedUsers, unblockUser, type BlockedUser } from '@/features/profile/profile.service';
+import { UserHoverCard } from '@ui/UserHoverCard';
 
 export default function BlockedUsersSettings({ searchTerm }: { searchTerm?: string }) {
   const { t } = useTranslation();
@@ -54,19 +55,23 @@ export default function BlockedUsersSettings({ searchTerm }: { searchTerm?: stri
                 key={u.id}
                 className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/10 p-3"
               >
-                <Link to={`/profile/${u.accountName}`} className="shrink-0">
-                  {u.avatarUrl ? (
-                    <LazyImage src={u.avatarUrl} alt={name} className="size-9 rounded-lg object-cover" />
-                  ) : (
-                    <InitialsAvatar name={(name || '?')} handle={u.accountName} className="size-9 rounded-lg" />
-                  )}
-                </Link>
-                <div className="min-w-0 flex-1">
-                  <Link to={`/profile/${u.accountName}`} className="text-sm text-foreground hover:underline block truncate">
-                    {name}
-                  </Link>
-                  <p className="text-[11px] text-muted-foreground font-mono truncate">{u.accountName}</p>
-                </div>
+                <UserHoverCard accountName={u.accountName} userId={u.id}>
+                  <span className="flex items-center gap-3 min-w-0 flex-1">
+                    <Link to={`/profile/${u.accountName}`} className="shrink-0">
+                      {u.avatarUrl ? (
+                        <LazyImage src={u.avatarUrl} alt={name} className="size-9 rounded-lg object-cover" />
+                      ) : (
+                        <InitialsAvatar name={(name || '?')} handle={u.accountName} className="size-9 rounded-lg" />
+                      )}
+                    </Link>
+                    <div className="min-w-0 flex-1">
+                      <Link to={`/profile/${u.accountName}`} className="text-sm text-foreground hover:underline block truncate">
+                        {name}
+                      </Link>
+                      <p className="text-[11px] text-muted-foreground font-mono truncate">{u.accountName}</p>
+                    </div>
+                  </span>
+                </UserHoverCard>
                 <Button
                   variant="outline"
                   size="sm"

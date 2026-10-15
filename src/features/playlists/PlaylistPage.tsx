@@ -22,6 +22,7 @@ import { SharePanel } from '@/features/sharing/components/ShareModal';
 import { incrementPlaylistView, incrementPlaylistShare } from './playlist.service';
 import { usePlaylistDetail } from './playlist.queries';
 import { useConfirmDestructive } from '@/shared/hooks/useConfirm';
+import { UserHoverCard } from '@ui/UserHoverCard';
 
 interface PlaylistProject {
   id: string;
@@ -231,13 +232,15 @@ export default function PlaylistPage() {
   return (
     <div className="flex-1 flex flex-col px-4 pt-6 pb-12 sm:pb-16 animate-fade-in max-w-4xl mx-auto w-full">
       {/* Back */}
-      <Link
-        to={`/profile/${accountName}`}
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 w-fit"
-      >
-        <Icon name="arrow_back" size={16} />
-        {accountName}
-      </Link>
+      <UserHoverCard accountName={accountName ?? ''}>
+        <Link
+          to={`/profile/${accountName}`}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 w-fit"
+        >
+          <Icon name="arrow_back" size={16} />
+          {accountName}
+        </Link>
+      </UserHoverCard>
 
       {/* Header */}
       <div className="glass rounded-[2rem] overflow-hidden mb-6">

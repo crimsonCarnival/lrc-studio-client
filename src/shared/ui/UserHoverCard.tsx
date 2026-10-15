@@ -25,6 +25,7 @@ interface MiniProfile {
   accountName: string;
   displayName: string | null;
   avatarUrl: string | null;
+  coverImageUrl: string | null;
   staffRole?: string | null;
   bio: string | null;
   isVerified: boolean;
@@ -44,7 +45,7 @@ async function fetchMiniProfile(accountName: string): Promise<MiniProfile | null
   const data = await gqlRequest<{ publicProfile: MiniProfile | null }>(/* GraphQL */ `
     query MiniProfile($accountName: String!) {
       publicProfile(accountName: $accountName) {
-        id accountName displayName avatarUrl staffRole bio isVerified
+        id accountName displayName avatarUrl coverImageUrl staffRole bio isVerified
         followerCount followingCount projectCount totalStarsReceived
         isFollowedByMe isFollowingMe miniProfileBadgeIds
         country
@@ -222,7 +223,12 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
             <MiniProfileSkeleton />
           ) : (
             <>
-              <div className="flex items-start gap-3.5 px-[18px] pt-[18px] pb-3.5">
+              {profile.coverImageUrl && (
+                <div className="h-16 w-full overflow-hidden bg-zinc-800">
+                  <LazyImage src={profile.coverImageUrl} alt="" className="size-full object-cover" />
+                </div>
+              )}
+              <div className={cn('flex items-start gap-3.5 px-[18px] pb-3.5', profile.coverImageUrl ? '-mt-7 pt-0' : 'pt-[18px]')}>
                 <Link to={`/profile/${accountName}`} onClick={() => setOpen(false)} className="relative shrink-0">
                   <StaffRing role={profile.staffRole} className="rounded-2xl">
                     {profile.avatarUrl ? (
