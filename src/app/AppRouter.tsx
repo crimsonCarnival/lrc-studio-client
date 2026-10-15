@@ -509,23 +509,25 @@ export function AppRouter({
           <PublicProjectViewPage />
         </Suspense>
       } />
-      {/* Profiles and playlists live at the site root. The /profile and /u forms are legacy and redirect. */}
+      {/* Profiles and playlists live at the site root: /:accountName and /:accountName/lists/:listId.
+          Static routes above outrank :accountName, so every top-level route must be a reserved account name. */}
       <Route path=":accountName/lists/:listId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <ListPage />
         </Suspense>
       } />
-      <Route path=":accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
-      <Route path="u/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
-      <Route path="profile" element={<OwnProfileRedirect />} />
-      <Route path="profile/:accountName" element={
+      <Route path=":accountName" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <ProfilePage />
         </Suspense>
       } />
+      {/* Old links that carried a prefix keep working by redirecting to the bare URL. Nothing links to these any more. */}
+      <Route path="profile" element={<OwnProfileRedirect />} />
       <Route path="profile/:accountName" element={<RedirectWithParams to={(p) => profilePath(p.accountName)} />} />
-      <Route path="u/:accountName" element={<RedirectWithParams to={(p) => profilePath(p.accountName)} />} />
+      <Route path="profile/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => listPath(p.accountName, p.listId)} />} />
       <Route path="profile/:accountName/playlists/:listId" element={<LegacyListRedirect />} />
+      <Route path="u/:accountName" element={<RedirectWithParams to={(p) => profilePath(p.accountName)} />} />
+      <Route path="u/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => listPath(p.accountName, p.listId)} />} />
       <Route path="settings/:tab?" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <SettingsPage />

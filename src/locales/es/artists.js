@@ -45,6 +45,8 @@ export default {
     emptyFeat: "Un «feat.» sin nombres se dejó como estaba escrito: {{text}}",
     unbalanced: "Hay un paréntesis sin cerrar, así que se dejó como estaba escrito: {{text}}",
     duplicate: "«{{text}}» estaba repetido y se conserva una sola vez.",
+    count_one: "{{count}} artista",
+    count_other: "{{count}} artistas",
     result: "Resultado:",
     newTitle: "título: {{title}}",
     apply: "Aplicar",

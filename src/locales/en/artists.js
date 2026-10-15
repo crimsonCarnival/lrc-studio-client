@@ -45,6 +45,8 @@ export default {
     emptyFeat: "A “feat.” with no names was left as typed: {{text}}",
     unbalanced: "A bracket is not closed, so this was left as typed: {{text}}",
     duplicate: "“{{text}}” was listed twice and is kept once.",
+    count_one: "{{count}} artist",
+    count_other: "{{count}} artists",
     result: "Result:",
     newTitle: "title: {{title}}",
     apply: "Apply",

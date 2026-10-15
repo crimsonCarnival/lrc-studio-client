@@ -4,7 +4,7 @@ import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { cn } from '@/shared/utils/utils';
 import { formatArtistDisplay, type ArtistCredit } from '@/shared/utils/artists';
-import { applyPlan, defaultDecisions, type ParsePlan, type PlanDecisions } from './artist-parse-review';
+import { applyPlan, defaultDecisions, mergedNames, type ParsePlan, type PlanDecisions } from './artist-parse-review';
 
 interface Props {
   plan: ParsePlan;
@@ -42,33 +42,29 @@ export function ArtistParseReview({ plan, onApply, onCancel }: Props) {
     <div className={CARD} role="group" aria-label={tr('artists.review.title')}>
       <p className="font-heading text-[15px] font-bold text-foreground">{tr('artists.review.title')}</p>
 
-      {plan.groups.map((group, gi) => (
-        <div key={`${group.text}-${gi}`} className="flex flex-col gap-1.5">
-          <p className="text-[13px] text-subtle">{tr('artists.review.ambiguous', { text: group.text })}</p>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {group.parts.map((part, pi) => (
-              <span key={`${part}-${pi}`} className="inline-flex items-center gap-1.5">
-                <span className={CHIP}>{part}</span>
-                {pi < group.parts.length - 1 && (
-                  <button
-                    type="button"
-                    aria-pressed={decisions.merges[gi]?.[pi] ?? false}
-                    aria-label={tr('artists.review.merge', { a: part, b: group.parts[pi + 1] })}
-                    onClick={() => toggleMerge(gi, pi)}
-                    className={cn(
-                      'grid size-6 place-items-center rounded-full text-xs text-subtle inset-ring inset-ring-hl transition-colors',
-                      decisions.merges[gi]?.[pi] && 'bg-primary-soft text-primary-ink inset-ring-iris',
-                    )}
-                  >
-                    <Icon name="link" size={13} />
-                  </button>
-                )}
-              </span>
+      {plan.groups.map((group, gi) => {
+        const merge = decisions.merges[gi] ?? [];
+        const names = mergedNames(group, merge);
+        return (
+          <fieldset key={`${group.text}-${gi}`} className="flex flex-col gap-2">
+            <legend className="text-[13px] text-subtle">{tr('artists.review.ambiguous', { text: group.text })}</legend>
+            {/* What it becomes right now: one chip per artist, so joining visibly changes the count. */}
+            <div className="flex flex-wrap items-center gap-1.5" aria-live="polite">
+              {names.map((name, i) => (
+                <span key={`${name}-${i}`} className={cn(CHIP, name.length > 0 && merge.some(Boolean) && names.length < group.parts.length && 'bg-primary-soft text-primary-ink inset-ring-iris')}>{name}</span>
+              ))}
+              <span className="text-xs text-faint">{tr('artists.review.count', { count: names.length })}</span>
+            </div>
+            {group.parts.slice(1).map((_, bi) => (
+              <label key={bi} className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
+                <input type="checkbox" checked={merge[bi] ?? false} onChange={() => toggleMerge(gi, bi)} />
+                {tr('artists.review.merge', { a: group.parts[bi], b: group.parts[bi + 1] })}
+              </label>
             ))}
-          </div>
-          <p className="text-xs text-faint">{tr('artists.review.mergeHint')}</p>
-        </div>
-      ))}
+            <p className="text-xs text-faint">{tr('artists.review.mergeHint')}</p>
+          </fieldset>
+        );
+      })}
 
       {plan.weak.length > 0 && (
         <fieldset className="flex flex-col gap-1.5">
@@ -98,7 +94,8 @@ export function ArtistParseReview({ plan, onApply, onCancel }: Props) {
 
       <p className="text-[13px] text-subtle" aria-live="polite">
         {tr('artists.review.result')}{' '}
-        <span className="font-semibold text-foreground">{formatArtistDisplay(result.credits) || '—'}</span>
+        <span className="font-semibold text-foreground">{formatArtistDisplay(result.credits) || '—'}</span>{' '}
+        <span className="text-faint">({tr('artists.review.count', { count: result.credits.length })})</span>
         {result.title ? <span className="text-faint"> · {tr('artists.review.newTitle', { title: result.title })}</span> : null}
       </p>
 
