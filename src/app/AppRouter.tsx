@@ -18,6 +18,7 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/types';
+import OwnProfileRedirect from '@/features/profile/OwnProfileRedirect';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
@@ -470,6 +471,7 @@ export function AppRouter({
       } />
       <Route path=":accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
       <Route path="u/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
+      <Route path="profile" element={<OwnProfileRedirect />} />
       <Route path="profile/:accountName" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <ProfilePage />
