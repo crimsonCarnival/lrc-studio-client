@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { useMemo } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -393,7 +394,7 @@ export default function LeaderboardPage() {
                 ];
                 return (
                   <li key={entry.id ?? entry.accountName}>
-                    <Link to={`/profile/${entry.accountName}`}
+                    <Link to={profilePath(entry.accountName)}
                       className={`block w-full text-left px-4 py-3.5 transition-colors ${mine(entry) ? MINE_ROW : 'hover:bg-raised'}`}
                     >
                       <div className="flex items-center gap-3">
@@ -447,7 +448,7 @@ export default function LeaderboardPage() {
                       <tr
                         key={entry.id ?? entry.accountName}
                         className={`group cursor-pointer transition-colors ${mine(entry) ? MINE_ROW : 'hover:bg-raised'}`}
-                        onClick={() => navigate(`/profile/${entry.accountName}`)}
+                        onClick={() => navigate(profilePath(entry.accountName))}
                       >
                         <td className="py-3 px-4 text-center">
                           <RankBadge pos={i + 1} podium={isRanking} />

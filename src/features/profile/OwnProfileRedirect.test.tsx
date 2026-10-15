@@ -31,7 +31,7 @@ describe('OwnProfileRedirect (/profile with no name)', () => {
   it('sends a signed-in user to their own profile', () => {
     auth.value = { user: { accountName: 'alice' }, loading: false }
     renderAt('/profile')
-    expect(screen.getByTestId('where').textContent).toBe('/profile/alice')
+    expect(screen.getByTestId('where').textContent).toBe('/alice')
   })
 
   it('sends a visitor to sign in, returning to /profile afterwards', () => {

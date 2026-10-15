@@ -7,7 +7,10 @@
       "/profile/:path*",
       "/u/:path*",
       "/explore/:path*",
-      "/leaderboard"
+      "/leaderboard",
+      "/:accountName((?!.*\\.(?:svg|png|jpe?g|webp|gif|ico|txt|xml|json|js|css|map|webmanifest|woff2?)$)[^/]+)",
+      "/:accountName/projects/:slugId",
+      "/:accountName/lists/:listId"
     ]
   },
   "headers": [

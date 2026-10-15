@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react';
@@ -182,7 +183,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
     return (t as (k: string, opts: object) => string)('profile.lastSeen', { time: formatDistanceToNow(date, { addSuffix: true, locale: dateLocale }) });
   })();
   const copyProfileLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/profile/${accountName}`)
+    navigator.clipboard.writeText(`${window.location.origin}${profilePath(accountName)}`)
       .then(() => toast.success(t('profile.mini.linkCopied')))
       .catch(() => { /* clipboard unavailable */ });
   };
@@ -229,7 +230,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                 </div>
               )}
               <div className={cn('flex items-start gap-3.5 px-[18px] pb-3.5', profile.coverImageUrl ? '-mt-7 pt-0' : 'pt-[18px]')}>
-                <Link to={`/profile/${accountName}`} onClick={() => setOpen(false)} className="relative shrink-0">
+                <Link to={profilePath(accountName)} onClick={() => setOpen(false)} className="relative shrink-0">
                   <StaffRing role={profile.staffRole} className="rounded-2xl">
                     {profile.avatarUrl ? (
                       <LazyImage src={profile.avatarUrl} alt={accountName} className="size-14 rounded-2xl object-cover" />
@@ -242,7 +243,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <Link to={`/profile/${accountName}`} onClick={() => setOpen(false)} className="text-[17px] font-bold leading-tight text-zinc-100 truncate hover:underline">
+                    <Link to={profilePath(accountName)} onClick={() => setOpen(false)} className="text-[17px] font-bold leading-tight text-zinc-100 truncate hover:underline">
                       {displayName}
                     </Link>
                     {profile.isVerified && <Icon name="verified" size={16} className="text-primary shrink-0" aria-label={t('profile.verified')} />}
@@ -281,9 +282,9 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
 
               <nav aria-label={t('profile.mini.stats')} className="grid grid-cols-4 border-t border-zinc-800">
                 {[
-                  { value: profile.followerCount, label: t('profile.mini.followers', { count: profile.followerCount }), to: `/profile/${accountName}` },
-                  { value: profile.followingCount, label: t('profile.mini.following', { count: profile.followingCount }), to: `/profile/${accountName}` },
-                  { value: profile.projectCount, label: t('profile.mini.projects', { count: profile.projectCount }), to: `/profile/${accountName}` },
+                  { value: profile.followerCount, label: t('profile.mini.followers', { count: profile.followerCount }), to: profilePath(accountName) },
+                  { value: profile.followingCount, label: t('profile.mini.following', { count: profile.followingCount }), to: profilePath(accountName) },
+                  { value: profile.projectCount, label: t('profile.mini.projects', { count: profile.projectCount }), to: profilePath(accountName) },
                   { value: profile.totalStarsReceived, label: t('profile.mini.stars', { count: profile.totalStarsReceived }) },
                 ].map(({ value, label, to }) => {
                   const body = (
@@ -319,7 +320,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                   </Button>
                 )}
                 <Link
-                  to={`/profile/${accountName}`}
+                  to={profilePath(accountName)}
                   onClick={() => setOpen(false)}
                   className="flex-1 h-10 grid place-items-center rounded-[10px] border border-zinc-700 text-sm font-semibold text-zinc-100 hover:bg-zinc-800/60 transition-colors"
                 >

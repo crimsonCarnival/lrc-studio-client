@@ -4,6 +4,7 @@
 
 import { serializeToRubyMarkup, parseRubyMarkup } from './furigana';
 import type { EditorLine, EditorWord, EditorTranslation } from '@/features/editor/services/editor.service';
+import { formatArtistDisplay, formatTitleWithFeatured, type ArtistCredit } from '@/shared/utils/artists';
 
 const KNOWN_LRC_META_KEYS = new Set(['ti','ar','al','au','by','lg','re','ve','length','offset','tool','id','hash','album']);
 
@@ -20,23 +21,6 @@ interface SrtConfig {
 
 /** No-op kept for call-site compatibility; DB is clean, no migration needed. */
 export function migrateLines(lines: EditorLine[]) { return lines; }
-
-/**
- * Splits an artist string on commas, feat./ft./featuring, ×, &, "and", "vs", "/".
- * Preserves original casing. Returns deduplicated, non-empty names.
- */
-export function splitArtists(raw?: string | null): string[] {
-  if (!raw?.trim()) return [];
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const part of raw.split(/\s*(?:,|feat\.?|ft\.?|featuring|×|\bx\b|&|\band\b|\/|vs\.?)\s*/i)) {
-    const value = part.trim();
-    if (!value || seen.has(value)) continue;
-    seen.add(value);
-    result.push(value);
-  }
-  return result;
-}
 
 function parseSectionText(raw: string): { label: string; singer?: string } {
   const colonIdx = raw.indexOf(':');
@@ -118,11 +102,23 @@ function sanitizeLrcTag(s: string): string {
 /**
  * Compiles an array of { text, timestamp } into a valid .lrc string
  */
-export function compileLRC(lines: EditorLine[], includeTranslations = false, precision: string = 'hundredths', metadata: LrcMeta = {}, lineEndings = 'lf', includeSecondary = false, wordPrecision?: string, exportTranslationIndex = 0, includeSections = true): string {
+export interface LrcArtistExport {
+  /** Credits for `[ar:]`. When present they win over `metadata.ar`. */
+  artists?: readonly ArtistCredit[] | null;
+  /** `[ti:]` becomes `Title (feat. A & B)`. Off by default: `[ti:]` stays the plain title. */
+  includeFeaturedInTitle?: boolean;
+}
+
+export function compileLRC(lines: EditorLine[], includeTranslations = false, precision: string = 'hundredths', metadata: LrcMeta = {}, lineEndings = 'lf', includeSecondary = false, wordPrecision?: string, exportTranslationIndex = 0, includeSections = true, artistExport: LrcArtistExport = {}): string {
   const wp = wordPrecision || precision;
+  // `[ar:]` is built from the credits with the shared formatter (same text the server writes);
+  // without credits the plain `ar` string passes through unchanged.
+  const credits = artistExport.artists ?? [];
+  const ti = metadata.ti && credits.length > 0 && artistExport.includeFeaturedInTitle ? formatTitleWithFeatured(metadata.ti, credits) : metadata.ti;
+  const ar = credits.length > 0 ? formatArtistDisplay(credits) : metadata.ar;
   let header = '';
-  if (metadata.ti) header += `[ti:${sanitizeLrcTag(metadata.ti)}]\n`;
-  if (metadata.ar) header += `[ar:${sanitizeLrcTag(metadata.ar)}]\n`;
+  if (ti) header += `[ti:${sanitizeLrcTag(ti)}]\n`;
+  if (ar) header += `[ar:${sanitizeLrcTag(ar)}]\n`;
   if (metadata.al) header += `[al:${sanitizeLrcTag(metadata.al)}]\n`;
   if (metadata.au) header += `[au:${sanitizeLrcTag(metadata.au)}]\n`;
   if (metadata.by) header += `[by:${sanitizeLrcTag(metadata.by)}]\n`;

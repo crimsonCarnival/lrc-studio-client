@@ -1,4 +1,6 @@
 import { useRef, useCallback, memo } from 'react';
+import { ArtistText } from '@/features/artists/ArtistText';
+import type { ArtistCredit } from '@/features/artists/artist-credits';
 import type { TouchEvent, MouseEvent, KeyboardEvent } from 'react';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { Icon } from '@/shared/ui/Icon';
@@ -12,6 +14,8 @@ import { LogoLoader } from '@ui/LogoLoader';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 import { ProjectStatusTag } from '@/features/projects/components/ProjectStatusTag';
 import { projectStatus } from '@/features/projects/project-status';
+import { projectPath } from '@/features/projects/project-path';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 
 const SWIPE_THRESHOLD = 60;
 
@@ -29,7 +33,7 @@ export interface CardProject {
   public?: boolean;
   createdAt?: string | number;
   updatedAt?: string | number;
-  metadata?: { genre?: string; songArtist?: string };
+  metadata?: { genre?: string; songArtist?: string; artists?: ArtistCredit[] };
   forkedFrom?: { publicId?: string; accountName?: string };
   upload?: { fileName?: string; duration?: number; source?: string };
   [key: string]: unknown;
@@ -71,6 +75,7 @@ function ProjectCard({
   isOwner = false
 }: ProjectCardProps) {
   const { t } = useTranslation();
+  const { user } = useAuthContext();
   const { trigger: haptic } = useHapticFeedback();
   const [requestConfirm, confirmModal] = useConfirm();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -353,7 +358,7 @@ function ProjectCard({
           {project.public ? (
             <Tip content={t('home.viewPublic')}>
               <a
-                href={`/project/${project.publicId}`}
+                href={projectPath({ accountName: user?.accountName, ...project })}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t('home.viewPublic')}
@@ -370,7 +375,7 @@ function ProjectCard({
           <div className="flex items-start gap-2">
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <h3 className="truncate font-heading text-[19px] font-bold tracking-tight text-foreground">{project.title || project.upload?.fileName || t('library.untitled')}</h3>
-              <span className="truncate text-[15px] text-subtle">{project.metadata?.songArtist || t('home.noArtist')}</span>
+              <ArtistText metadata={project.metadata} className="truncate text-[15px] text-subtle" fallback={t('home.noArtist')} />
             </div>
             {/* Quick actions on hover; the menu button holds the same actions for touch and keyboard. */}
             <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 coarse:hidden">

@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { useRef, useEffect, useId, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
@@ -52,7 +53,7 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
 
   const userRows: Row[] = users.map((u) => ({
     key: `u-${u.id}`,
-    to: `/profile/${u.accountName}`,
+    to: profilePath(u.accountName),
     title: u.displayName || u.accountName,
     sub: `@${u.accountName}`,
     meta: u.level ? t('settings.levelShort', { level: u.level }) : undefined,

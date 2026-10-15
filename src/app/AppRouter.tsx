@@ -19,6 +19,9 @@ import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/types';
 import OwnProfileRedirect from '@/features/profile/OwnProfileRedirect';
+import { editorPath, parseSlugId, projectDisplayName, projectPath } from '@/features/projects/project-path';
+import { listPath, profilePath } from '@/features/profile/profile-path';
+import { artistDisplay, artistRoster, type ArtistCredit } from '@/features/artists/artist-credits';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
@@ -83,12 +86,13 @@ function ExternalRedirect({ to }: { to: string }) {
 
 function LegacyListRedirect() {
   const { accountName, listId } = useParams();
-  return <Navigate to={`/profile/${accountName}/lists/${listId}`} replace />;
+  return <Navigate to={listPath(accountName, listId ?? '')} replace />;
 }
 
 function RedirectWithParams({ to }: { to: (params: Record<string, string>) => string }) {
   const params = useParams() as Record<string, string>;
-  return <Navigate to={to(params)} replace />;
+  const { search, hash } = useLocation();
+  return <Navigate to={`${to(params)}${search}${hash}`} replace />;
 }
 
 type WorkspaceView = 'editor' | 'preview';
@@ -126,13 +130,37 @@ interface EditorContainerProps {
   activepublicId?: string | null;
   isProjectLoading?: boolean;
   projectUserId?: string | null;
+  projectMetadata?: unknown;
   user?: AuthUser | null;
   navigate: NavigateFunction;
   children: ReactNode;
 }
 
-function EditorContainer({ loadProject, activepublicId, isProjectLoading, projectUserId, user, navigate, children }: EditorContainerProps) {
-  const { id } = useParams();
+function EditorContainer({ loadProject, activepublicId, isProjectLoading, projectUserId, projectMetadata, user, navigate, children }: EditorContainerProps) {
+  // Reached as /:accountName/projects/:slugId/edit, or via the legacy /project/:id/edit.
+  const params = useParams();
+  const id = params.id ?? parseSlugId(params.slugId);
+  const location = useLocation();
+
+  // Once the project has loaded, swap a legacy / stale URL (renamed song, renamed account,
+  // no slug yet) for the canonical one. Only once per project: while you edit the song name
+  // the address stays put, and the next visit to the old URL redirects.
+  const canonicalizedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (isProjectLoading || !id || activepublicId !== id || !user || user.id !== projectUserId) return;
+    if (canonicalizedFor.current === id) return;
+    canonicalizedFor.current = id;
+    const m = projectMetadata as { name?: string; songName?: string; artists?: ArtistCredit[]; songArtist?: string } | undefined;
+    const canonical = editorPath({
+      publicId: id,
+      accountName: user.accountName,
+      title: m?.name,
+      metadata: { songName: m?.songName, songArtist: artistDisplay(m) },
+    });
+    if (canonical !== location.pathname) {
+      navigate(`${canonical}${location.search}${location.hash}`, { replace: true });
+    }
+  }, [isProjectLoading, id, activepublicId, user, projectUserId, projectMetadata, location.pathname, location.search, location.hash, navigate]);
 
   useEffect(() => {
     if (id && id !== 'new' && id !== 'local' && id !== 'fork' && id !== activepublicId) {
@@ -269,7 +297,11 @@ export function AppRouter({
     uploadedAudio,
   } = appState;
 
-  usePageTitle(mediaTitle);
+  // Song and artist as the user typed them; the media title (file or video name) is only a fallback.
+  const meta = projectMetadata as { name?: string; songName?: string; artists?: ArtistCredit[]; songArtist?: string } | undefined;
+  usePageTitle(projectDisplayName({ title: meta?.name, metadata: { songName: meta?.songName, songArtist: artistDisplay(meta) } }) || mediaTitle);
+  // Every credit, primaries then featured: the singer choices when assigning lines. Memoised, so the editor's props keep a stable identity.
+  const rosterNames = useMemo(() => artistRoster(projectMetadata as Parameters<typeof artistRoster>[0]), [projectMetadata]);
 
   // Broadcast editor activity to mutual friends via socket presence system.
   // Emits when user is actively working in a project; clears on close/unmount.
@@ -305,8 +337,13 @@ export function AppRouter({
     setShowKeyboardHelp?.((p: boolean) => !p);
   }, [setShowKeyboardHelp]);
   const handleViewPublic = useMemo(
-    () => (activepublicId ? () => navigate(`/project/${activepublicId}`) : undefined),
-    [activepublicId, navigate],
+    () => (activepublicId ? () => navigate(projectPath({
+      publicId: activepublicId,
+      accountName: user?.accountName,
+      title: (projectMetadata as { name?: string } | undefined)?.name,
+      metadata: { songName: (projectMetadata as { songName?: string } | undefined)?.songName, songArtist: artistDisplay(projectMetadata as Parameters<typeof artistDisplay>[0]) },
+    })) : undefined),
+    [activepublicId, navigate, user?.accountName, projectMetadata],
   );
 
   const editorProps = useMemo(() => ({
@@ -324,7 +361,7 @@ export function AppRouter({
     onShowKeyboardHelp: handleToggleKeyboardHelp,
     onOpenProjectSettings: setShowNamingModal ? () => setShowNamingModal(true) : undefined,
     registerAfterSave,
-    songArtists: projectMetadata?.songArtists || [],
+    songArtists: rosterNames,
     singerColors: projectMetadata?.singerColors || [],
     declaredSingers: projectMetadata?.singers || [],
     playerSlot,
@@ -349,7 +386,7 @@ export function AppRouter({
     handleToggleKeyboardHelp,
     setShowNamingModal,
     registerAfterSave,
-    projectMetadata,
+    projectMetadata, rosterNames,
     playerSlot,
     showPreviewView,
     uploadedAudio, hasMedia, activepublicId, handleViewPublic, isPlaying,
@@ -366,7 +403,7 @@ export function AppRouter({
     onShowEditor: showEditorView,
     onViewPublic: handleViewPublic,
     setActiveLineIndex,
-    songArtists: projectMetadata?.songArtists || [],
+    songArtists: rosterNames,
     singerColors: projectMetadata?.singerColors || [],
     playerSlot,
   } as unknown as PreviewComponentProps), [
@@ -376,7 +413,7 @@ export function AppRouter({
     sharedReadOnly, setSharedReadOnly,
     shareModal, setShareModal, hasMedia,
     isPlaying, playbackSpeed, activepublicId,
-    pendingProject, projectMetadata,
+    pendingProject, projectMetadata, rosterNames,
     showEditorView, handleViewPublic, setActiveLineIndex,
     playerSlot,
   ]);
@@ -433,21 +470,23 @@ export function AppRouter({
         <Route path="admin" element={adminPage} />
       )}
       <Route path="project/fork/:id" element={<ForkHandler appState={appState} navigate={navigate} />} />
-      <Route path="project/:id/edit" element={
-        <EditorContainer loadProject={loadProject} activepublicId={activepublicId} isProjectLoading={isProjectLoading} projectUserId={projectUserId} user={user} navigate={navigate}>
-          {loadError === 'project' ? (
-            <NotFoundPage type="project" />
-          ) : loadError === 'forbidden' ? (
-            <NotFoundPage type="forbidden" />
-          ) : loadError === 'gone' ? (
-            <NotFoundPage type="gone" />
-          ) : isProjectLoading ? (
-            <SkeletonEditor />
-          ) : (
-            <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
-          )}
-        </EditorContainer>
-      } />
+      {[':accountName/projects/:slugId/edit', 'project/:id/edit'].map((path) => (
+        <Route key={path} path={path} element={
+          <EditorContainer loadProject={loadProject} activepublicId={activepublicId} isProjectLoading={isProjectLoading} projectUserId={projectUserId} projectMetadata={projectMetadata} user={user} navigate={navigate}>
+            {loadError === 'project' ? (
+              <NotFoundPage type="project" />
+            ) : loadError === 'forbidden' ? (
+              <NotFoundPage type="forbidden" />
+            ) : loadError === 'gone' ? (
+              <NotFoundPage type="gone" />
+            ) : isProjectLoading ? (
+              <SkeletonEditor />
+            ) : (
+              <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
+            )}
+          </EditorContainer>
+        } />
+      ))}
       <Route path="home" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} /></div>}>
           <Home />
@@ -459,12 +498,19 @@ export function AppRouter({
           ? <Navigate to="/project/new" replace />
           : <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
       } />
+      {/* Canonical public project URL; the legacy /project/:publicId redirects to it once the project loads. */}
+      <Route path=":accountName/projects/:slugId" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+          <PublicProjectViewPage />
+        </Suspense>
+      } />
       <Route path="project/:publicId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <PublicProjectViewPage />
         </Suspense>
       } />
-      <Route path="profile/:accountName/lists/:listId" element={
+      {/* Profiles and playlists live at the site root. The /profile and /u forms are legacy and redirect. */}
+      <Route path=":accountName/lists/:listId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <ListPage />
         </Suspense>
@@ -477,8 +523,8 @@ export function AppRouter({
           <ProfilePage />
         </Suspense>
       } />
-      <Route path=":accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
-      <Route path="u/:accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
+      <Route path="profile/:accountName" element={<RedirectWithParams to={(p) => profilePath(p.accountName)} />} />
+      <Route path="u/:accountName" element={<RedirectWithParams to={(p) => profilePath(p.accountName)} />} />
       <Route path="profile/:accountName/playlists/:listId" element={<LegacyListRedirect />} />
       <Route path="settings/:tab?" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>

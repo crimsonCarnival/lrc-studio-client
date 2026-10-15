@@ -1,8 +1,10 @@
 import { useState, useCallback } from 'react';
+import { artistErrorMessageFor } from '@/features/artists/artist-errors';
 import { useCachedList } from '@/shared/hooks/useCachedList';
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 import { projects } from '@/app/api';
 import ProjectSetupModalRaw from '@features/editor/components/setup/ProjectSetupModal';
 import useConfirm from '@/shared/hooks/useConfirm';
@@ -27,6 +29,8 @@ const ProjectList = ProjectListRaw;
 // Stable fallback: ProjectSetupModal re-syncs its form whenever an initial* prop changes identity.
 const EMPTY_LIST: string[] = [];
 
+import { artistFieldsFromForm, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
+
 type LibraryFilterTab = 'all' | ProjectStatus;
 const FILTER_TABS: LibraryFilterTab[] = ['all', 'inProgress', 'completed', 'notStarted'];
 
@@ -35,6 +39,7 @@ interface ProjectMeta {
   tags?: string[];
   songName?: string;
   songArtist?: string;
+  artists?: ArtistCredit[];
   songAlbum?: string;
   songYear?: string | number;
   genre?: string;
@@ -59,7 +64,8 @@ interface SetupConfirmData {
   description?: string;
   tags?: string[];
   songName?: string;
-  songArtist?: string;
+  artists?: ArtistCredit[];
+  artistsChanged?: boolean;
   songAlbum?: string;
   songYear?: string | number;
   genre?: string;
@@ -278,13 +284,13 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
           onClose={() => setEditingProject(null)}
           onConfirm={async (data: SetupConfirmData) => {
             try {
-              const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic, singerColors, singers } = data;
+              const { name: title, description, tags, songName, songAlbum, songYear, genre, coverImage, isPublic, singerColors, singers } = data;
               const updatedMetadata = {
                 ...editingProject.metadata,
                 description,
                 tags,
                 songName,
-                songArtist,
+                ...artistFieldsFromForm(data),
                 songAlbum,
                 songYear,
                 genre,
@@ -306,13 +312,15 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
               setEditingProject(null);
             } catch (err) {
               console.error('Failed to update project metadata:', err);
+              const invalid = artistErrorMessageFor(t, err);
+              if (invalid) toast.error(invalid);
             }
           }}
           initialName={editingProject?.title || ''}
           initialDescription={editingProject?.metadata?.description || ''}
           initialTags={editingProject?.metadata?.tags || []}
           initialSongName={editingProject?.metadata?.songName || ''}
-          initialSongArtist={editingProject?.metadata?.songArtist || ''}
+          initialArtists={creditsOf(editingProject?.metadata)}
           initialSongAlbum={editingProject?.metadata?.songAlbum || ''}
           initialSongYear={editingProject?.metadata?.songYear || ''}
           initialGenre={editingProject?.metadata?.genre || ''}

@@ -226,7 +226,7 @@ export function ContextBanner({ redirect, t, onDismiss }: { redirect?: string; t
     const url = new URL(decoded, window.location.origin);
     displayPath = url.pathname;
 
-    if (displayPath.startsWith('/project/')) {
+    if (displayPath.startsWith('/project/') || /^\/[^/]+\/projects\/[^/]+$/.test(displayPath)) {
       const id = displayPath.split('/').pop();
       displayPath = id === 'new' ? t('auth.context.newProject') : t('auth.context.project');
     } else if (displayPath === '/library') {

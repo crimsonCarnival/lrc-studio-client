@@ -10,7 +10,7 @@ import DecryptedText from '@/shared/ui/DecryptedText';
 const KNOWN_PREFIXES = new Set([
   '/home', '/library', '/search', '/explore', '/feed',
   '/settings', '/admin', '/notifications', '/leaderboard',
-  '/uploads', '/project', '/profile', '/auth', '/verify-email',
+  '/uploads', '/project', '/projects', '/profile', '/auth', '/verify-email',
   '/share', '/login', '/register', '/reset-password', '/change-password',
 ]);
 
@@ -25,6 +25,10 @@ function detectRouteType(pathname: string): RouteInfo {
     const parts = pathname.split('/');
     return { type: 'playlist', identifier: parts[3] };
   }
+  // /:accountName/projects/:slug-:id[/edit]
+  if (/^\/[^/]+\/projects\/[^/]+(\/edit)?\/?$/.test(pathname)) {
+    return { type: 'project', identifier: pathname.split('/')[3] };
+  }
   // /project/:id/edit or /project/:id
   if (/^\/project\/[^/]/.test(pathname)) {
     const parts = pathname.split('/');
@@ -35,8 +39,8 @@ function detectRouteType(pathname: string): RouteInfo {
     const parts = pathname.split('/');
     return { type: 'upload', identifier: parts[2] };
   }
-  // /profile/:accountName
-  if (/^\/profile\/[^/]+/.test(pathname)) {
+  // /profile/:accountName (legacy) and /u/:accountName
+  if (/^\/(profile|u)\/[^/]+/.test(pathname)) {
     const parts = pathname.split('/');
     return { type: 'user', identifier: parts[2] };
   }

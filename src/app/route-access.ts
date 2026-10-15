@@ -41,6 +41,7 @@ const RULES: Rule[] = [
   //    single-segment routes don't get treated as /:accountName.
   { test: p => AUTH_SEGMENTS.has(seg1(p)), access: 'auth' },
   { test: p => /^\/project\/[^/]+\/edit$/.test(p), access: 'auth' },      // edit own project
+  { test: p => /^\/[a-z0-9_.:-]+\/projects\/[^/]+\/edit$/.test(p), access: 'auth' }, // edit own project (canonical URL)
 
   // ── Public profile shapes (vanity URLs at root) ── evaluated LAST.
   { test: p => /^\/[a-z0-9_.:-]+$/.test(p), access: 'public' },           // /:accountName

@@ -28,6 +28,7 @@ import { SharePanel } from '@features/sharing/components/ShareModal';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { Icon } from '@/shared/ui/Icon';
 import { useSettings } from '@/features/settings/useSettings';
+import { artistRoster } from '@/features/artists/artist-credits';
 
 interface PreviewLineLite {
   secondary?: string;
@@ -74,7 +75,7 @@ export default function Preview(props: PreviewProps) {
   const { activepublicId, project, playerSlot } = props;
   // Pre-split song artists (when driven by a project) — threaded into PreviewViewport
   // so its singer roster matches the editor pane. See buildSingerRoster.
-  const songArtists = (props.projectMetadata as { songArtists?: string[] } | undefined)?.songArtists;
+  const songArtists = props.projectMetadata ? artistRoster(props.projectMetadata as Parameters<typeof artistRoster>[0]) : undefined;
   // Custom per-singer hex overrides — same source AppRouter threads into editorProps,
   // so Preview resolves the same colors as the Editor for a given singer.
   const singerColors = (props.projectMetadata as { singerColors?: string[] } | undefined)?.singerColors;
@@ -140,6 +141,9 @@ export default function Preview(props: PreviewProps) {
     setIncludeWordTimestamps,
     includeMetadata,
     setIncludeMetadata,
+    includeFeaturedInTitle,
+    setIncludeFeaturedInTitle,
+    hasFeaturedArtists,
     showTranslationsInPreview,
     setShowTranslationsInPreview,
     showFuriganaInPreview,
@@ -564,6 +568,9 @@ export default function Preview(props: PreviewProps) {
         setIncludeWordTimestamps={setIncludeWordTimestamps}
         includeMetadata={includeMetadata}
         setIncludeMetadata={setIncludeMetadata}
+        includeFeaturedInTitle={includeFeaturedInTitle}
+        setIncludeFeaturedInTitle={setIncludeFeaturedInTitle}
+        hasFeaturedArtists={hasFeaturedArtists}
         exportFormat={exportFormat}
         setExportFormat={setExportFormat}
         exportOffset={exportOffset}

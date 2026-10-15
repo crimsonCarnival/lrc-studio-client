@@ -6,6 +6,8 @@ import { ToastBody } from '@ui/app-toast';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
 import { downloadLRC } from '@/shared/utils/lrc';
+import { artistDisplay, creditsOf } from '@/features/artists/artist-credits';
+import { useIncludeFeaturedInTitle } from '@/features/artists/include-featured-setting';
 import { lyrics } from '@/app/api';
 import { applyGlobalOffset } from '@/features/editor/services/editor.service';
 import { matchKey } from '@/shared/utils/keyboard';
@@ -78,6 +80,11 @@ export interface UsePreviewResult {
   setIncludeWordTimestamps: Dispatch<SetStateAction<boolean>>;
   includeMetadata: boolean;
   setIncludeMetadata: Dispatch<SetStateAction<boolean>>;
+  /** `[ti:]` as `Title (feat. A & B)`. Off by default; remembered in this browser. */
+  includeFeaturedInTitle: boolean;
+  setIncludeFeaturedInTitle: (value: boolean) => void;
+  /** The project has featured artists, i.e. the option changes the file. */
+  hasFeaturedArtists: boolean;
   showTranslationsInPreview: boolean;
   setShowTranslationsInPreview: Dispatch<SetStateAction<boolean>>;
   showFuriganaInPreview: boolean;
@@ -158,15 +165,16 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
   const [wordHighlight, setWordHighlight] = useState(true);
   const [followPlayback, setFollowPlayback] = useState(true);
 
+  const credits = useMemo(() => creditsOf(projectMetadata as Parameters<typeof creditsOf>[0]), [projectMetadata]);
+  const [includeFeaturedInTitle, setIncludeFeaturedInTitle] = useIncludeFeaturedInTitle();
+
   // Build LRC metadata automatically from projectMetadata
   const metadata = useMemo(() => {
     if (!projectMetadata) return {};
-    const artists = Array.isArray(projectMetadata.songArtists) && projectMetadata.songArtists.length > 0
-      ? projectMetadata.songArtists.join(', ')
-      : (projectMetadata.songArtist || '');
     return {
       ti: projectMetadata.songName || '',
-      ar: artists,
+      // The display text, for projects without credits (legacy rows); with credits `[ar:]` is built from them.
+      ar: artistDisplay(projectMetadata),
       al: projectMetadata.songAlbum || '',
       lg: projectMetadata.songLanguage || '',
     };
@@ -376,6 +384,8 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
         includeTranslations,
         precision,
         metadata: includeMetadata ? metadata : {},
+        artists: includeMetadata ? credits : undefined,
+        includeFeaturedInTitle,
         lineEndings,
         exportTranslationIndex: activeTranslationIndex,
         includeSecondary,
@@ -384,7 +394,7 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
     return result.output;
   }, [
     lines, exportFormat, exportOffset, duration, includeTranslations,
-    includeSecondary, includeMetadata, metadata, lineEndings, wordPrecision,
+    includeSecondary, includeMetadata, metadata, credits, includeFeaturedInTitle, lineEndings, wordPrecision,
     precision, srtConfig, applyIncludeFlags, prepareExportLines, activeTranslationIndex,
   ]);
 
@@ -473,6 +483,9 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
     setIncludeWordTimestamps,
     includeMetadata,
     setIncludeMetadata,
+    includeFeaturedInTitle,
+    setIncludeFeaturedInTitle,
+    hasFeaturedArtists: credits.some((c) => c.role === 'featured'),
     showTranslationsInPreview,
     setShowTranslationsInPreview,
     showFuriganaInPreview,

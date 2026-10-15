@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { isProjectViewPath, isProjectEditorPath } from '@/features/projects/project-path';
 import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useAppState } from '@/shared/hooks/useAppState';
@@ -7,7 +8,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
 import { matchKey } from '@/shared/utils/keyboard';
-import { splitArtists } from '@/shared/utils/lrc';
+import { artistFieldsFromForm, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useUrlParamsSync } from '@/shared/hooks/useUrlParamsSync';
 import BannedScreen from '@features/auth/components/BannedScreen';
 import GuestProjectSaveGate from '@features/editor/components/core/GuestProjectSaveGate';
@@ -37,7 +38,7 @@ interface SetupCompleteData {
   tags?: string[];
   isPublic?: boolean;
   songName?: string;
-  songArtist?: string;
+  artists?: ArtistCredit[];
   songAlbum?: string;
   songYear?: string | number;
   genre?: string;
@@ -101,9 +102,9 @@ function AppInner() {
   // Public project view (/project/:id without /edit) has its own embedded player
   const isPublicProjectView = /^\/project\/[^/]+$/.test(routerLocation.pathname) &&
     !['new', 'local'].includes(routerLocation.pathname.split('/')[2] ?? '');
-  const isProjectPage = routerLocation.pathname.startsWith('/project/') &&
+  const isProjectPage = (routerLocation.pathname.startsWith('/project/') &&
     routerLocation.pathname !== '/project/new' &&
-    !isPublicProjectView;
+    !isPublicProjectView) || isProjectEditorPath(routerLocation.pathname);
   const isSetupPage = routerLocation.pathname === '/project/new';
   const isReady = isProjectPage;
   const isPlayerMounted = isProjectPage || isSetupPage;
@@ -151,7 +152,7 @@ function AppInner() {
     tags,
     isPublic,
     songName,
-    songArtist,
+    artists,
     songAlbum,
     songYear,
     genre,
@@ -201,8 +202,7 @@ function AppInner() {
 
     setMediaTitle(finalTitle);
 
-    const songArtists = splitArtists(songArtist);
-    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', songArtist: songArtist || '', songArtists, songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), singers: singers || [] };
+    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', ...artistFieldsFromForm({ artists, artistsChanged: (artists?.length ?? 0) > 0 }), songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), singers: singers || [] };
     appState.setProjectMetadata(newMetadata);
 
     if (!user) {
@@ -271,7 +271,7 @@ function AppInner() {
 
   // Pause player when navigating away
   useEffect(() => {
-    if (!routerLocation.pathname.startsWith('/project/')) {
+    if (!routerLocation.pathname.startsWith('/project/') && !isProjectViewPath(routerLocation.pathname) && !isProjectEditorPath(routerLocation.pathname)) {
       playerRef.current?.pause?.();
     }
   }, [routerLocation.pathname, playerRef]);

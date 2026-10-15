@@ -406,6 +406,32 @@ export type Lyrics = {
   version?: Maybe<Scalars['Int']['output']>;
 };
 
+export type ArtistCredit = {
+  artistId?: Maybe<Scalars['ID']['output']>;
+  name: Scalars['String']['output'];
+  order: Scalars['Int']['output'];
+  role: ArtistRole;
+};
+
+export type ArtistCreditInput = {
+  name: Scalars['String']['input'];
+  role: ArtistRole;
+};
+
+export type ArtistRole =
+  | 'featured'
+  | 'primary';
+
+export type ArtistSuggestion = {
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type ArtistSuggestionPage = {
+  items: Array<ArtistSuggestion>;
+  total: Scalars['Int']['output'];
+};
+
 export type MusicLibraryEntry = {
   album?: Maybe<Scalars['String']['output']>;
   artist?: Maybe<Scalars['String']['output']>;
@@ -737,10 +763,13 @@ export type ProjectLyricsInput = {
 };
 
 export type ProjectMetadata = {
+  /** Ordered credits, primaries first. `[]` on legacy rows. */
+  artists: Array<ArtistCredit>;
   description?: Maybe<Scalars['String']['output']>;
   genre?: Maybe<Scalars['String']['output']>;
   singerColors?: Maybe<Array<Scalars['String']['output']>>;
   songAlbum?: Maybe<Scalars['String']['output']>;
+  /** Read-only display string derived from `artists` (`A feat. B`). */
   songArtist?: Maybe<Scalars['String']['output']>;
   songGenre?: Maybe<Scalars['String']['output']>;
   songLanguage?: Maybe<Scalars['String']['output']>;
@@ -752,11 +781,12 @@ export type ProjectMetadata = {
 };
 
 export type ProjectMetadataInput = {
+  /** Omitted keeps the stored credits; `[]` clears them. `songArtist` is no longer accepted. */
+  artists?: InputMaybe<Array<ArtistCreditInput>>;
   description?: InputMaybe<Scalars['String']['input']>;
   genre?: InputMaybe<Scalars['String']['input']>;
   singerColors?: InputMaybe<Array<Scalars['String']['input']>>;
   songAlbum?: InputMaybe<Scalars['String']['input']>;
-  songArtist?: InputMaybe<Scalars['String']['input']>;
   songGenre?: InputMaybe<Scalars['String']['input']>;
   songLanguage?: InputMaybe<Scalars['String']['input']>;
   songName?: InputMaybe<Scalars['String']['input']>;

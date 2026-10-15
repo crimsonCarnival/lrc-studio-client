@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { useTranslation } from 'react-i18next';
 import {
   ContextMenu,
@@ -100,7 +101,7 @@ export function AdminUserContextMenu({
         <ContextMenuLabel>{user.accountName ?? '—'}</ContextMenuLabel>
 
         <ContextMenuItem asChild>
-          <a href={`/profile/${user.accountName}`} target="_blank" rel="noopener noreferrer">
+          <a href={profilePath(user.accountName)} target="_blank" rel="noopener noreferrer">
             <Icon name="open_in_new" />
             {t('admin.table.viewProfile')}
           </a>

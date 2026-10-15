@@ -1,3 +1,6 @@
+import { listPath } from '@/features/profile/profile-path';
+import { ArtistText } from '@/features/artists/ArtistText';
+import type { ArtistCredit } from '@/features/artists/artist-credits';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -6,7 +9,7 @@ import { resolveCoverImage } from '@/shared/utils/cover-image';
 interface UpNextProject {
   publicId: string;
   title?: string | null;
-  metadata?: { songArtist?: string | null } | null;
+  metadata?: { songArtist?: string | null; artists?: ArtistCredit[] | null } | null;
   [key: string]: unknown;
 }
 
@@ -28,7 +31,7 @@ export function ProjectUpNextPanel({ playlist, currentpublicId, listId, accountN
           {t('projectView.upNext')}
         </span>
         <Link
-          to={`/profile/${accountName}/lists/${listId}`}
+          to={listPath(accountName, listId)}
           className="block text-sm font-semibold text-foreground hover:text-primary transition-colors line-clamp-1 mt-0.5"
         >
           {playlist.name}
@@ -56,9 +59,7 @@ export function ProjectUpNextPanel({ playlist, currentpublicId, listId, accountN
                 <p className={`text-sm line-clamp-2 leading-snug ${isCurrent ? 'text-primary font-medium' : 'text-foreground'}`}>
                   {project.title || t('playlists.detail.untitled')}
                 </p>
-                {project.metadata?.songArtist && (
-                  <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{project.metadata.songArtist}</p>
-                )}
+                <ArtistText metadata={project.metadata} className="block text-xs text-muted-foreground line-clamp-1 mt-0.5" />
               </div>
             </Link>
           );

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { artistDisplay } from '@/features/artists/artist-credits';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { ProjectListCover } from '@/features/projects/components/ProjectListCover';
@@ -10,7 +11,7 @@ export function SearchProjectCard({ project, query }: { project: Project; query:
   const { t } = useTranslation();
   const { publicId, title, coverImage, starCount, forkCount, metadata, forkedFrom } = project;
   const displayTitle = metadata?.songName || title || t('library.untitled');
-  const artist = metadata?.songArtist;
+  const artist = artistDisplay(metadata);
 
   return (
     <ProjectMenu project={project} isOwner={false}>
