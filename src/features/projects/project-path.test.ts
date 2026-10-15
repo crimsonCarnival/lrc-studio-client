@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { editorPath, isProjectEditorPath, isProjectViewPath, parseSlugId, projectPath, slugify } from './project-path';
+import { editorPath, hasProjectIdentity, isProjectEditorPath, isProjectViewPath, parseSlugId, projectPath, slugify } from './project-path';
 
 describe('slugify', () => {
   it('lowercases, strips accents and punctuation', () => {
@@ -30,6 +30,17 @@ describe('projectPath / parseSlugId', () => {
   it('falls back to the title, then to the bare id', () => {
     expect(projectPath({ publicId: id, accountName: 'a', title: 'My Song' })).toBe(`/a/projects/my-song-${id}`);
     expect(projectPath({ publicId: id, accountName: 'a' })).toBe(`/a/projects/${id}`);
+  });
+  it('prefers the server-stored slug', () => {
+    expect(projectPath({ ...project, slug: 'stored-slug' })).toBe(`/32blunts/projects/stored-slug-${id}`);
+  });
+  it('requires a title, song name or artist that survives slugging', () => {
+    expect(hasProjectIdentity({})).toBe(false);
+    expect(hasProjectIdentity({ title: '  ', metadata: { songName: '', songArtist: '' } })).toBe(false);
+    expect(hasProjectIdentity({ title: '!!!' })).toBe(false);
+    expect(hasProjectIdentity({ title: 'x' })).toBe(true);
+    expect(hasProjectIdentity({ metadata: { songArtist: 'Radiohead' } })).toBe(true);
+    expect(hasProjectIdentity({ metadata: { songName: 'Creep' } })).toBe(true);
   });
   it('uses the legacy path when the owner is unknown', () => {
     expect(projectPath({ publicId: id })).toBe(`/project/${id}`);

@@ -33,6 +33,7 @@ export default {
   back: "Volver",
   projectName: "Nombre del proyecto",
   projectNamePlaceholder: "ej. Mi Canción — Artista",
+  identityRequired: "Añade un nombre de proyecto, canción o artista para poder nombrar y enlazar el proyecto.",
   projectDescription: "Descripción",
   projectDescriptionPlaceholder: "Notas opcionales sobre este proyecto...",
   projectDescriptionDesc: "Añade notas sobre este proyecto",

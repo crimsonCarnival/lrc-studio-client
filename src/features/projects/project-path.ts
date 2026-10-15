@@ -40,8 +40,18 @@ export function projectSlug({ title, metadata }: SlugSource): string {
   return slugify(`${artist} ${song}`) || slugify(title || '');
 }
 
+/**
+ * A project needs something to be called by: a title, song name or artist that survives
+ * slugging ("!!!" doesn't). The server enforces the same rule on create and update.
+ */
+export function hasProjectIdentity(source: SlugSource): boolean {
+  return projectSlug(source) !== '';
+}
+
 interface ProjectPathSource extends SlugSource {
   publicId: string;
+  /** The server-stored slug. Preferred when present; computed locally otherwise (same algorithm). */
+  slug?: string | null;
   accountName?: string | null;
   user?: { accountName?: string | null } | null;
   owner?: { accountName?: string | null } | null;
@@ -54,7 +64,7 @@ interface ProjectPathSource extends SlugSource {
 export function projectPath(project: ProjectPathSource): string {
   const accountName = project.accountName || project.user?.accountName || project.owner?.accountName;
   if (!accountName) return `/project/${project.publicId}`;
-  const slug = projectSlug(project);
+  const slug = project.slug || projectSlug(project);
   const last = slug ? `${slug}-${project.publicId}` : project.publicId;
   return `/${encodeURIComponent(accountName)}/projects/${encodeURIComponent(last)}`;
 }

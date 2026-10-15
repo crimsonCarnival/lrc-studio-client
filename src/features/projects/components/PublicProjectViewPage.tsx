@@ -38,6 +38,7 @@ import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 
 interface PublicProject {
   publicId?: string;
+  slug?: string | null;
   isStarredByMe?: boolean;
   starCount?: number;
   forkCount?: number;
