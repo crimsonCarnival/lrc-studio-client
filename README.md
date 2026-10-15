@@ -15,6 +15,7 @@ A professional web application for synchronizing song lyrics with audio, with su
   - [AI Auto Stamp](#-ai-auto-stamp)
   - [Lyrics Search & Import](#-lyrics-search--import)
   - [Sections & Singers](#sections--singers)
+  - [Artists & Featured Artists](#artists--featured-artists)
   - [Lyric Content](#lyric-content)
   - [Import](#import)
   - [Export](#export)
@@ -23,6 +24,7 @@ A professional web application for synchronizing song lyrics with audio, with su
   - [Social Platform](#-social-platform)
   - [Gamification](#-gamification)
   - [Sharing](#sharing)
+  - [URLs & Link Previews](#urls--link-previews)
   - [Keyboard Shortcuts](#️-keyboard-shortcuts)
   - [Interface & Themes](#interface--themes)
   - [Settings Panels](#settings-panels)
@@ -108,6 +110,21 @@ Search for a song and import its lyrics without leaving the app — available fr
 - **Raw-text syntax** — Edit structure as plain text: `[Chorus | Mira, Theo]` declares a section with singers, and `Mira: line` assigns a singer to one line. Singer prefixes only apply when the name is in the project's singer list, so an ordinary lyric like `Baby: come on` stays lyric text.
 - **Collapsible sections** — Collapse and expand sections while editing long songs.
 
+### Artists & Featured Artists
+
+A song's artists are an ordered list of **credits**, each `primary` or `featured`, instead of one free-text string. The server keeps a derived display string (`metadata.songArtist`, e.g. `Drake feat. Rihanna & Kanye`) that cards, search, slugs, link previews and LRC files all use; it is **read-only** and never sent back.
+
+- **Two fields** — *Primary artists* and *Featured artists*, each a list of chips. Add with Enter, remove with the ✕ or Delete, reorder by dragging or with **Alt + ←/→** on the focused chip. Roles, labels and live announcements are exposed to screen readers.
+- **Parsing, never guessing** — Typing or pasting `A, B & C` or `Drake feat. Rihanna` runs the shared parser (`src/shared/utils/artists.ts`, a copy of the server's). Anything doubtful opens a review card first: an `&` / `and` / `x` split that might be one act (*Simon & Garfunkel*) with a "join into one artist" checkbox and a live chip preview and count, a bare `ft` / `feat` that asks whether it is a marker, and warnings for an empty `feat.`, an unclosed bracket or a dropped duplicate. Nothing is applied until you press **Apply**.
+- **Title suggestion** — A title such as `Song (feat. A & B)` offers to move the names to *Featured artists* and keep `Song` as the title. It is never applied on its own and a dismissal sticks for that exact text.
+- **Autocomplete** — Names you have credited before are suggested while typing (`myArtistSuggestions`): debounced, the request in flight is cancelled on every keystroke, and a late answer never overwrites a newer one.
+- **Validation** — The same rules and limits as the server (`ARTIST_LIMITS`: at most 10 credits, names up to 300 characters, no case-insensitive duplicates, at least one primary). Server errors (`artist_duplicate`, `artists_too_many`, `artist_primary_required`, `project_identity_required`, …) are shown as translated messages.
+- **Where it comes from** — A track lookup (one `A, B` string) and an imported `.lrc` header (`[ar:]` / `[ti:]`) go through the parser and the same review. After a lyrics search you get an **apply artists** step with *primary artists only* selected by default.
+- **Display** — Primary names stay prominent and the featured ones follow a muted `feat.`; long lists truncate with the full text in a tooltip. Projects not yet migrated (credits `[]`) fall back to the stored text.
+- **Singer roster** — Every credit, primaries then featured, is offered when assigning sections and lines to singers.
+- **Saving** — Only `artists` is sent (`{ name, role }`, in display order), never `songArtist`. *Omitted* keeps what is stored and `[]` clears it, so a save that did not touch the artists sends nothing for them.
+- **A project must be nameable** — A title, song name or artist that still has letters or digits after slugging is required. The setup screen keeps *Start syncing* disabled and the project settings dialog keeps *Save* disabled until it is met.
+
 ### Lyric Content
 
 - **Secondary lyrics** — Add a secondary text track per line (e.g., romaji, alternate language pronunciation).
@@ -124,6 +141,7 @@ Search for a song and import its lyrics without leaving the app — available fr
 - **URL import** — Import lyrics from a remote URL.
 - **Paste detection** — Pasting an LRC or SRT block is automatically detected and parsed.
 - **Lyrics search** — See [Lyrics Search & Import](#-lyrics-search--import).
+- **Artists from the file header** — `[ar:]` / `[ti:]` in an imported `.lrc` are offered as artists in the setup wizard and go through the same confirmation as typed text.
 
 ### Export
 
@@ -138,6 +156,8 @@ Search for a song and import its lyrics without leaving the app — available fr
 - **Filename pattern** — Fixed `lyrics.lrc` or derived from the project title.
 - **Translation & secondary toggles** — Choose whether to include each track in the output.
 - **Server compilation with local fallback** — Compiles server-side for advanced formatting, falling back to the local compiler automatically if the server is unavailable.
+- **Artists in LRC tags** — `[ar:]` is built from the credits with the shared formatter (`Drake feat. Rihanna`), on the server and in the local fallback alike.
+- **Featured artists in `[ti:]`** — An option (off by default) writes `Song (feat. Rihanna)` as the title. It appears in the export panel when the project has featured artists and in *Settings → Export*; for now it is remembered in this browser (see `docs/server-export-artist-setting.md` for moving it to the user's settings).
 
 ### Live Preview
 
@@ -162,6 +182,9 @@ Search for a song and import its lyrics without leaving the app — available fr
 - **Multi-tab sync** — Saves broadcast over WebSocket, so another open tab on the same project updates live.
 - **Uploads library** — View all audio files and YouTube tracks previously associated with projects.
 - **Project metadata** — Name, description, tags, song title/artist/album/year/genre/language, track numbers, cover art, and singer roster.
+- **Readable URLs** — Public projects live at `/:accountName/projects/:slug-:id` and the editor at `…/edit`; see [URLs & Link Previews](#urls--link-previews).
+- **Server-stored slug** — The `slug` is derived by the server from the song, artist and title and returned with every project; the client uses it for links.
+- **Project settings** — The settings dialog edits name, song, artists (primary and featured), cover, visibility and singer colours.
 
 ### 🌐 Social Platform
 
@@ -177,6 +200,8 @@ Search for a song and import its lyrics without leaving the app — available fr
 - **Notifications** — Real-time delivery for stars, forks, follows, reactions, badges, and moderation events.
 - **User blocking** — Block another user.
 - **Privacy controls** — Online visibility, notification preferences, mini-profile badge display, and whether your activity heatmap is public.
+- **Profiles at the site root** — `/:accountName`, with playlists at `/:accountName/lists/:id`. Account names are lowercase `[a-z0-9_.:-]`, and every top-level route is a reserved name.
+- **Renames and old links** — Opening a profile through a previous account name redirects to the current one.
 
 ### 🏆 Gamification
 
@@ -193,6 +218,27 @@ Search for a song and import its lyrics without leaving the app — available fr
 - **Deep link with timestamp** — Include `?s=N` to start playback at a specific second.
 - **Current position shortcut** — One-click sync of the share timestamp to the current playback position.
 - **Read-only viewer** — Shared links open a read-only view with embedded media and synced lyrics.
+- **QR code with the app logo** — The share sheet draws the link as a QR code with the LRC Studio mark in the centre (error correction level H, so it stays scannable).
+- **Download as PNG** — Save the QR as a crisp black-on-white `.png` named after the song.
+- **Share the QR instead of the link** — Where the browser can share files, send the QR image through the system share sheet.
+- **Titles** — The tab title of a project page reads `Song – Artist, Synced by accountname | LRC Studio` (English and Spanish), using the song and artist you entered.
+
+### URLs & Link Previews
+
+| Page | URL |
+|---|---|
+| Profile | `/:accountName` |
+| Playlist | `/:accountName/lists/:listId` |
+| Public project | `/:accountName/projects/:slug-:publicId` |
+| Editor (owner) | `/:accountName/projects/:slug-:publicId/edit` |
+
+- **The id is the key** — A project is found by the last 10 characters of the segment (`publicId` is a `nanoid(10)` and may contain `-`). The account name and the slug are cosmetic.
+- **Renames never break links** — The page loads by id and, if the account name or slug in the URL is stale (or it is a legacy `/project/:id` link), swaps in the canonical URL. The editor does this once per load, so the address does not change while you type a song name.
+- **Legacy forms redirect** — `/project/:id`, `/project/:id/edit`, `/profile`, `/profile/:name`, `/profile/:name/lists/:id` and `/u/:name` keep working but nothing links to them any more.
+- **Slugs** — Built by the server from the display string (`radiohead-creep`, `drake-feat-rihanna-creep`): lowercase, Latin accents stripped, letters and digits of any script kept, at most 60 characters. `src/features/projects/project-path.ts` holds the helpers (`projectPath`, `editorPath`, `parseSlugId`, `projectDisplayName`, `projectPageTitle`); profile links go through `src/features/profile/profile-path.ts` (`profilePath`, `listPath`).
+- **Access rules** — `src/app/route-access.ts` stays default-deny; public profiles, lists and project pages are listed explicitly and editors require a session.
+- **Link previews** — Crawlers do not run JavaScript, so `proxy.ts` (Vercel Routing Middleware) injects Open Graph tags resolved by the API (`/og/meta?path=…`) for crawler user agents only. Its matcher (plain `:param` patterns) lives in `vercel.json` and `MATCHER` in `proxy.ts`, and a test asserts they match; file paths such as `/favicon.svg` are passed through untouched. The preview title follows `Song – Artist, Synced by accountname | LRC Studio`.
+- **Crawlers** — `public/robots.txt` no longer blocks profiles; private areas stay disallowed.
 
 ### ⌨️ Keyboard Shortcuts
 
@@ -243,7 +289,7 @@ All shortcuts are fully user-configurable via **Settings → Shortcuts**, with c
 
 **Interface** — Theme, language, active line highlight, scroll behavior and alignment, preview alignment, typography, translation layout, karaoke fill target and easing, reading format, lock layout.
 
-**Export** — Default copy/download formats, timestamp precision, filename pattern, line endings, strip empty lines, normalize timestamps, metadata tags.
+**Export** — Default copy/download formats, timestamp precision, filename pattern, line endings, strip empty lines, normalize timestamps, metadata tags, featured artists in the `[ti:]` title.
 
 **Auto Stamp** — Confidence threshold, fuzzy tolerance, and apply mode (empty-only or all).
 
@@ -290,7 +336,11 @@ Staff-only, gated by granular permissions rather than a role name.
 | Real-time | [Socket.IO](https://socket.io/) |
 | Testing | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) |
 
-State is deliberately kept without a global store — no Redux, no Zustand. It lives in React Context, the root `useAppState` hook, an undo/redo history stack, and `localStorage`.
+State is deliberately kept without a global store — no Redux, no Zustand. It lives in React Context, the root `useAppState` hook, an undo/redo history stack, and `localStorage`. Server data for profiles, feeds and explore is cached with [TanStack Query](https://tanstack.com/query) (`src/app/query.client.ts`); writes keep it in step through `src/app/cache-sync.ts` (for example `profileChanged()` after a profile edit, so a new cover shows on the profile at once).
+
+**Shared with the server.** `src/shared/utils/artists.ts` and its test are copies of the server's parser, formatter and validator and must stay identical: change them in the server first. The QR code (`qrcode`) is drawn client-side, and the image crop uses `react-easy-crop`.
+
+**Server briefs** (prompts for the backend, kept in `docs/`): [`server-slug-urls.md`](docs/server-slug-urls.md) (slug column and migration, account-name history, reserved names), [`server-og-title.md`](docs/server-og-title.md) (link-preview title) and [`server-export-artist-setting.md`](docs/server-export-artist-setting.md) (persisting the `[ti:]` option).
 
 ## Getting Started
 
@@ -457,6 +507,7 @@ Rate limits key on **IP only**, never on the client-supplied device header.
 ```
 
 Bounds: `sectionIdx ≤ 2000`, `lineIdx ≤ 10000`, `wordIndex ≤ 2000`. Always send nested `sections`, never the client's flat `lines` — convert with `flatToSections`.
+**Artists.** `metadata.artists` is `[{ name, role: 'primary' | 'featured' }]` on write and `[{ artistId, name, role, order }]` on read; `metadata.songArtist` is the derived display string and is **no longer accepted as input**. Leaving `artists` out keeps the stored credits, `[]` clears them. Validation failures are `422` with a `code` (`artists_invalid`, `artist_role_invalid`, `artist_name_empty`, `artist_name_too_long`, `artists_too_many`, `artist_duplicate`, `artist_primary_required`), and a project with no title, song name or artist is rejected with `project_identity_required`. Projects also carry a server-derived `slug`.
 
 ### `/lyrics` and `/editor` — parsing & editor operations
 
@@ -551,6 +602,7 @@ All `requireAuth`. Also delivered live over Socket.IO.
 | GET | `/google/login/url` | — | — | — | `{ url }` — for sign-in |
 | GET | `/google/auth/callback` | — | — | `?code&state` | HTML that `postMessage`s a one-time token to the opener, which you exchange via `POST /auth/exchange-ott` |
 | POST | `/google/disconnect` | `requireAuth` | — | — | `{ disconnected }` · 409 `last_auth_method` if it's the only sign-in method |
+| GET | `/og/meta` | — | — | `?path` (`/:account/projects/:slug-:id`, `/:account`, `/:account/lists/:id`, legacy forms), `?hl` | JSON metadata the crawler proxy turns into tags |
 | GET | `/og/project/:publicId` | — | — | — | **HTML** (not JSON) with Open Graph/Twitter tags and a redirect, under a per-response CSP nonce · 404 for private/missing |
 
 ### `/admin`
@@ -587,7 +639,7 @@ An `onRequest` hook applies `requireStaff` to **every** route below. Destructive
 
 ### GraphQL — `POST /graphql`
 
-Depth limit 12; introspection disabled in production. `gqlRequest` returns `json.data` directly and throws `ApiError` on HTTP or GraphQL errors; a 401 emits `authEvents('token:expired')` to trigger a refresh. There is **no client-side GraphQL cache**, so every query refetches.
+Depth limit 12; introspection disabled in production. `gqlRequest` returns `json.data` directly and throws `ApiError` on HTTP or GraphQL errors; a 401 emits `authEvents('token:expired')` to trigger a refresh. Profile, feed and explore queries are cached by TanStack Query (see [Tech Stack](#tech-stack)); everything else refetches.
 
 **Queries**
 
@@ -620,7 +672,9 @@ Depth limit 12; introspection disabled in production. `gqlRequest` returns `json
 | `badgeDefinitions` | — | `[BadgeDef!]!` |
 | `publicBadgeDefinitions` | — | `[PublicBadgeDef!]!` |
 | `userShowcase` | `accountName: String!` | `[ShowcasedBadge!]!` |
-| `myMusicLibrary` | — | `[MusicLibraryEntry!]!` |
+| `myMusicLibrary` | — | `[MusicLibraryEntry!]!` — primary artists only |
+| `myArtistSuggestions` | `prefix: String!, limit (≤ 20), offset` | `ArtistSuggestionPage!` — your own previously credited names, A–Z by prefix |
+| `parseArtists` | `artist: String!, title: String` | The shared parser's result (credits, cleaned title, flags); pure, no auth |
 | `userContentStats` | — | `ContentStats!` |
 | `adminAddictionLevels` | — | `[AddictionLevel!]!` |
 | `myPreferences` | — | `UserPreferences!` |
