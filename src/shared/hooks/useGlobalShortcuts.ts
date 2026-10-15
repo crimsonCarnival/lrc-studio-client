@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import { useLocation } from 'react-router-dom';
+import { isProjectEditorPath } from '@/features/projects/project-path';
 import { matchKey } from '@/shared/utils/keyboard';
 import type { AppSettings } from '@/features/settings/settings.types';
 
@@ -66,13 +67,13 @@ export function useGlobalShortcuts({
         updateSetting('playback.muted', !settings.playback?.muted);
       } else if (matchKey(e, settings.shortcuts?.speedUp?.[0] || '+')) {
         if (!playerRef.current) return;
-        const isEditorPage = /^\/project\/[^/]+\/edit$/.test(location.pathname) || location.pathname === '/project/local';
+        const isEditorPage = /^\/project\/[^/]+\/edit$/.test(location.pathname) || isProjectEditorPath(location.pathname) || location.pathname === '/project/local';
         if (!isEditorPage) return;
         e.preventDefault();
         playerRef.current.adjustSpeed?.(0.05);
       } else if (matchKey(e, settings.shortcuts?.speedDown?.[0] || '-')) {
         if (!playerRef.current) return;
-        const isEditorPage = /^\/project\/[^/]+\/edit$/.test(location.pathname) || location.pathname === '/project/local';
+        const isEditorPage = /^\/project\/[^/]+\/edit$/.test(location.pathname) || isProjectEditorPath(location.pathname) || location.pathname === '/project/local';
         if (!isEditorPage) return;
         e.preventDefault();
         playerRef.current.adjustSpeed?.(-0.05);

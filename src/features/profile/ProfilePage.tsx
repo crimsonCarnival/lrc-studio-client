@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
+import { projectPath } from '@/features/projects/project-path';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { followUser, unfollowUser, blockUser, unblockUser } from './profile.service';
@@ -73,6 +74,7 @@ interface ProjectCardProps {
 function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { accountName: ownerAccountName } = useParams();
   const { title, publicId, upload, public: isPublic, coverImage } = project;
   const isYoutube = upload?.source === 'youtube';
   const isPrivate = isOwner && isPublic === false;
@@ -100,7 +102,7 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
     <ProjectMenu project={project} isOwner={isOwner} onEdit={onEdit} onDelete={onDelete}>
       <button
         type="button"
-        onClick={() => navigate(`/project/${publicId}${isOwner ? '/edit' : ''}`)}
+        onClick={() => navigate(isOwner ? `/project/${publicId}/edit` : projectPath({ ...project, accountName: ownerAccountName }))}
         className="group relative glass rounded-2xl overflow-hidden text-left hover:border-primary/30 transition-all cursor-pointer focus:ring-1 focus:ring-primary/30 outline-none animate-fade-in contrast-more:border-zinc-600 w-full"
       >
         <ThemedShineBorder />
@@ -263,6 +265,14 @@ export default function ProfilePage() {
       navigate(`/profile/${accountName}`, { replace: true });
     }
   }, [location.pathname, accountName, navigate]);
+
+  // The server resolves a previous account name (or another casing) to the current profile;
+  // swap in the canonical name so an old link ends up on the user's current URL.
+  useEffect(() => {
+    if (profile?.accountName && accountName && profile.accountName !== accountName) {
+      navigate(`/profile/${profile.accountName}${location.search}`, { replace: true });
+    }
+  }, [profile?.accountName, accountName, location.search, navigate]);
 
   useEffect(() => {
     if (accountName) return;

@@ -12,6 +12,8 @@ import { LogoLoader } from '@ui/LogoLoader';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 import { ProjectStatusTag } from '@/features/projects/components/ProjectStatusTag';
 import { projectStatus } from '@/features/projects/project-status';
+import { projectPath } from '@/features/projects/project-path';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 
 const SWIPE_THRESHOLD = 60;
 
@@ -71,6 +73,7 @@ function ProjectCard({
   isOwner = false
 }: ProjectCardProps) {
   const { t } = useTranslation();
+  const { user } = useAuthContext();
   const { trigger: haptic } = useHapticFeedback();
   const [requestConfirm, confirmModal] = useConfirm();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -353,7 +356,7 @@ function ProjectCard({
           {project.public ? (
             <Tip content={t('home.viewPublic')}>
               <a
-                href={`/project/${project.publicId}`}
+                href={projectPath({ accountName: user?.accountName, ...project })}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t('home.viewPublic')}

@@ -25,6 +25,10 @@ function detectRouteType(pathname: string): RouteInfo {
     const parts = pathname.split('/');
     return { type: 'playlist', identifier: parts[3] };
   }
+  // /:accountName/projects/:slug-:id[/edit]
+  if (/^\/[^/]+\/projects\/[^/]+(\/edit)?\/?$/.test(pathname)) {
+    return { type: 'project', identifier: pathname.split('/')[3] };
+  }
   // /project/:id/edit or /project/:id
   if (/^\/project\/[^/]/.test(pathname)) {
     const parts = pathname.split('/');

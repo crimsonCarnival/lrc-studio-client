@@ -18,6 +18,7 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/types';
+import { editorPath, parseSlugId, projectPath } from '@/features/projects/project-path';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
@@ -125,13 +126,37 @@ interface EditorContainerProps {
   activepublicId?: string | null;
   isProjectLoading?: boolean;
   projectUserId?: string | null;
+  projectMetadata?: unknown;
   user?: AuthUser | null;
   navigate: NavigateFunction;
   children: ReactNode;
 }
 
-function EditorContainer({ loadProject, activepublicId, isProjectLoading, projectUserId, user, navigate, children }: EditorContainerProps) {
-  const { id } = useParams();
+function EditorContainer({ loadProject, activepublicId, isProjectLoading, projectUserId, projectMetadata, user, navigate, children }: EditorContainerProps) {
+  // Reached as /:accountName/projects/:slugId/edit, or via the legacy /project/:id/edit.
+  const params = useParams();
+  const id = params.id ?? parseSlugId(params.slugId);
+  const location = useLocation();
+
+  // Once the project has loaded, swap a legacy / stale URL (renamed song, renamed account,
+  // no slug yet) for the canonical one. Only once per project: while you edit the song name
+  // the address stays put, and the next visit to the old URL redirects.
+  const canonicalizedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (isProjectLoading || !id || activepublicId !== id || !user || user.id !== projectUserId) return;
+    if (canonicalizedFor.current === id) return;
+    canonicalizedFor.current = id;
+    const m = projectMetadata as { name?: string; songName?: string; songArtist?: string; songArtists?: string[] } | undefined;
+    const canonical = editorPath({
+      publicId: id,
+      accountName: user.accountName,
+      title: m?.name,
+      metadata: m,
+    });
+    if (canonical !== location.pathname) {
+      navigate(`${canonical}${location.search}${location.hash}`, { replace: true });
+    }
+  }, [isProjectLoading, id, activepublicId, user, projectUserId, projectMetadata, location.pathname, location.search, location.hash, navigate]);
 
   useEffect(() => {
     if (id && id !== 'new' && id !== 'local' && id !== 'fork' && id !== activepublicId) {
@@ -304,8 +329,13 @@ export function AppRouter({
     setShowKeyboardHelp?.((p: boolean) => !p);
   }, [setShowKeyboardHelp]);
   const handleViewPublic = useMemo(
-    () => (activepublicId ? () => navigate(`/project/${activepublicId}`) : undefined),
-    [activepublicId, navigate],
+    () => (activepublicId ? () => navigate(projectPath({
+      publicId: activepublicId,
+      accountName: user?.accountName,
+      title: (projectMetadata as { name?: string } | undefined)?.name,
+      metadata: projectMetadata as { songName?: string; songArtist?: string; songArtists?: string[] } | undefined,
+    })) : undefined),
+    [activepublicId, navigate, user?.accountName, projectMetadata],
   );
 
   const editorProps = useMemo(() => ({
@@ -432,21 +462,23 @@ export function AppRouter({
         <Route path="admin" element={adminPage} />
       )}
       <Route path="project/fork/:id" element={<ForkHandler appState={appState} navigate={navigate} />} />
-      <Route path="project/:id/edit" element={
-        <EditorContainer loadProject={loadProject} activepublicId={activepublicId} isProjectLoading={isProjectLoading} projectUserId={projectUserId} user={user} navigate={navigate}>
-          {loadError === 'project' ? (
-            <NotFoundPage type="project" />
-          ) : loadError === 'forbidden' ? (
-            <NotFoundPage type="forbidden" />
-          ) : loadError === 'gone' ? (
-            <NotFoundPage type="gone" />
-          ) : isProjectLoading ? (
-            <SkeletonEditor />
-          ) : (
-            <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
-          )}
-        </EditorContainer>
-      } />
+      {[':accountName/projects/:slugId/edit', 'project/:id/edit'].map((path) => (
+        <Route key={path} path={path} element={
+          <EditorContainer loadProject={loadProject} activepublicId={activepublicId} isProjectLoading={isProjectLoading} projectUserId={projectUserId} projectMetadata={projectMetadata} user={user} navigate={navigate}>
+            {loadError === 'project' ? (
+              <NotFoundPage type="project" />
+            ) : loadError === 'forbidden' ? (
+              <NotFoundPage type="forbidden" />
+            ) : loadError === 'gone' ? (
+              <NotFoundPage type="gone" />
+            ) : isProjectLoading ? (
+              <SkeletonEditor />
+            ) : (
+              <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
+            )}
+          </EditorContainer>
+        } />
+      ))}
       <Route path="home" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} /></div>}>
           <Home />
@@ -457,6 +489,12 @@ export function AppRouter({
           && new URLSearchParams(routerLocation.search).get('fromGuest') !== '1'
           ? <Navigate to="/project/new" replace />
           : <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
+      } />
+      {/* Canonical public project URL; the legacy /project/:publicId redirects to it once the project loads. */}
+      <Route path=":accountName/projects/:slugId" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+          <PublicProjectViewPage />
+        </Suspense>
       } />
       <Route path="project/:publicId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>

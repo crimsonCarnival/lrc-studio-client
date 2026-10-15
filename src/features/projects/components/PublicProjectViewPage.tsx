@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useLayoutEffect, useMemo, useCallback, lazy, Suspense } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import { SettingsProvider } from '@/features/settings/SettingsContext';
@@ -15,6 +15,7 @@ import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { ProjectUpNextPanel } from './ProjectUpNextPanel';
 import { usePublicProject } from '../hooks/usePublicProject';
+import { parseSlugId, projectPath } from '../project-path';
 import { useStarredPlaylist } from '../hooks/useStarredPlaylist';
 import ImmersiveLyricsDisplay, { type DisplayLine } from './ImmersiveLyricsDisplay';
 import ProjectInfoPanel from './ProjectInfoPanel';
@@ -69,7 +70,10 @@ interface UpNextPlaylist {
 function PublicProjectViewPageInner() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { publicId } = useParams();
+  // Reached as /:accountName/projects/:slugId, or via the legacy /project/:publicId.
+  const params = useParams();
+  const publicId = params.publicId ?? parseSlugId(params.slugId);
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const listId = searchParams.get('list');
   // Shares the parser with the editor route so `?s=` and `?loop=` mean exactly
@@ -85,6 +89,19 @@ function PublicProjectViewPageInner() {
 
   const { user } = useAuthContext();
   const { project, loading, notFound } = usePublicProject(publicId) as { project: PublicProject | null; loading: boolean; notFound: boolean };
+
+  // The publicId is the real key; account name and slug in the URL are cosmetic. Whenever
+  // they are stale (renamed song/account), absent (legacy /project/:id) or differently
+  // cased, swap in the canonical URL. This is the "slug history": old links keep working.
+  const canonicalPath = project?.publicId && project.publicId === publicId
+    ? projectPath({ ...project, publicId: project.publicId })
+    : null;
+  useEffect(() => {
+    if (canonicalPath && canonicalPath !== location.pathname) {
+      navigate(`${canonicalPath}${location.search}${location.hash}`, { replace: true });
+    }
+  }, [canonicalPath, location.pathname, location.search, location.hash, navigate]);
+
   const { reactions: projectReactions, myReaction: myProjectReaction, react: reactToProject } = useProjectReactions(project?.publicId ?? null) as {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     reactions: any; myReaction: any; react: (...args: any[]) => void;
@@ -294,7 +311,7 @@ function PublicProjectViewPageInner() {
 
   const goToTrack = useCallback((track: { publicId: string } | null) => {
     if (!track) return;
-    navigate(`/project/${track.publicId}?list=${listId}`);
+    navigate(`${projectPath(track)}?list=${listId}`);
   }, [navigate, listId]);
 
   // ── Handlers ─────────────────────────────────────────────────
@@ -325,12 +342,13 @@ function PublicProjectViewPageInner() {
   }, [publicId]);
 
   const handleEdit = useCallback(() => {
-    navigate(`/project/${publicId}/edit`);
-  }, [navigate, publicId]);
+    // Only the owner gets the edit button, so the canonical editor URL is theirs.
+    navigate(canonicalPath ? `${canonicalPath}/edit` : `/project/${publicId}/edit`);
+  }, [navigate, publicId, canonicalPath]);
 
   const handleSignUp = useCallback(() => {
-    navigate(`/auth/signup?redirect=${encodeURIComponent(`/project/${publicId}`)}`);
-  }, [navigate, publicId]);
+    navigate(`/auth/signup?redirect=${encodeURIComponent(canonicalPath ?? `/project/${publicId}`)}`);
+  }, [navigate, publicId, canonicalPath]);
 
   // ── Loading ──────────────────────────────────────────────────
   if (loading) {

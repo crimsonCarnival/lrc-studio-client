@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { splitArtists } from '@/shared/utils/lrc';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { isProjectViewPath, isProjectEditorPath } from '@/features/projects/project-path';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
@@ -127,11 +128,12 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     }
   }, [setMediaTitle, t]);
 
-  const isPublicProjectView = /^\/project\/[^/]+$/.test(location.pathname) &&
-    !['new', 'local'].includes(location.pathname.split('/')[2] ?? '');
+  const isPublicProjectView = (/^\/project\/[^/]+$/.test(location.pathname) &&
+    !['new', 'local'].includes(location.pathname.split('/')[2] ?? '')) || isProjectViewPath(location.pathname);
   // The editor workspace is a full-bleed app screen: its panels run edge to edge
   // under the header, with no page gutters or bottom padding of their own.
-  const isWorkspacePage = /^\/project\/(local|[^/]+\/edit)$/.test(location.pathname) && location.pathname !== '/project/new/edit';
+  const isWorkspacePage = (/^\/project\/(local|[^/]+\/edit)$/.test(location.pathname) && location.pathname !== '/project/new/edit')
+    || isProjectEditorPath(location.pathname);
   const isFullWidthPage = isSetupPage || isPublicProjectView || isWorkspacePage;
 
   // The editor's PlayerEngine lives here, above the routes, so it survives
