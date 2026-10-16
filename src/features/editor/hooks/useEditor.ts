@@ -1198,10 +1198,9 @@ export function useEditor({
     activeWordIndexRef.current = wordIndex;
   }, []);
 
-  const handleStampTargetToggle = useCallback(() => {
+  const applyStampTarget = useCallback((newTarget) => {
     const line = linesRef.current[activeLineIndexRef.current];
     if (!line) return;
-    const newTarget = stampTargetRef.current === 'main' ? 'secondary' : 'main';
     if (newTarget === 'secondary' && line.secondary) {
       if (!line.secondaryWords?.length) {
         const tokens = line.secondary.trim().split(/\s+/).filter(Boolean);
@@ -1223,6 +1222,16 @@ export function useEditor({
     setStampTarget(newTarget);
     stampTargetRef.current = newTarget;
   }, [setLines]);
+
+  const handleSetStampTarget = useCallback((target) => {
+    if (stampTargetRef.current !== target) applyStampTarget(target);
+  }, [applyStampTarget]);
+
+  // Kept for the keyboard shortcut: 'both' reads as the main layer here, so the
+  // shortcut keeps flipping between the two layers a mark can actually land on.
+  const handleStampTargetToggle = useCallback(() => {
+    applyStampTarget(stampTargetRef.current === 'secondary' ? 'main' : 'secondary');
+  }, [applyStampTarget]);
 
   // ——— Global keybinds ———
   useEffect(() => {
@@ -1636,6 +1645,7 @@ export function useEditor({
     handleSetWordReading,
     stampTarget,
     handleStampTargetToggle,
+    handleSetStampTarget,
     activeWordIndex,
     overlappingLines,
     modifiedLines,

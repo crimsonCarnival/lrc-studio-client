@@ -260,6 +260,7 @@ export default function Editor({
     handleSetWordReading,
     stampTarget,
     handleStampTargetToggle,
+    handleSetStampTarget,
     modifiedLines,
     clearModifiedLines,
   } = useEditor({
@@ -1107,6 +1108,7 @@ export default function Editor({
             handleCycleWordSinger={handleCycleWordSinger}
             stampTarget={stampTarget}
             handleStampTargetToggle={handleStampTargetToggle}
+            handleSetStampTarget={handleSetStampTarget}
             playbackPosition={playbackPosition}
             onWordMenu={openWord}
             onLineMenu={openLine}
