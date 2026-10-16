@@ -60,8 +60,13 @@ const RULES: Rule[] = [
  * default to 'auth' (default-deny).
  */
 export function accessFor(pathname: string): Access {
+  // React Router matches paths case-insensitively, so `/Settings` renders the
+  // settings page and `/Alice` opens alice's profile (account names are stored
+  // lowercase and the API lowercases lookups). Classify the same way the router
+  // matches, or a capitalised private path would slip past every rule above.
+  const path = pathname.toLowerCase();
   for (const rule of RULES) {
-    if (rule.test(pathname)) return rule.access;
+    if (rule.test(path)) return rule.access;
   }
   return 'auth';
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
+import { useReplaceSearch } from './useReplaceSearch';
 
 interface UrlAppState {
   editorMode: string;
@@ -44,7 +45,8 @@ const MOBILE_TABS = ['editor', 'preview'];
  */
 export function useUrlParamsSync(appState: UrlAppState, layoutState: UrlLayoutState) {
   const { i18n } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  const replaceSearch = useReplaceSearch();
   const isFirstLoad = useRef(true);
   const lastParamsRef = useRef('');
 
@@ -101,7 +103,8 @@ export function useUrlParamsSync(appState: UrlAppState, layoutState: UrlLayoutSt
 
   // 2. Sync state changes TO the URL
   useEffect(() => {
-    const params = new URLSearchParams(searchParams);
+    // The live URL, not the render-time params: a redirect in the same commit has already moved it.
+    const params = new URLSearchParams(window.location.search);
     let changed = false;
 
     const updateParam = (key: string, val: string | number | null, defaultVal: string | number | null) => {
@@ -136,9 +139,9 @@ export function useUrlParamsSync(appState: UrlAppState, layoutState: UrlLayoutSt
     const paramsString = params.toString();
     if (changed && paramsString !== lastParamsRef.current) {
       lastParamsRef.current = paramsString;
-      setSearchParams(params, { replace: true });
+      replaceSearch(params);
     }
-    // setSearchParams is stable (useSearchParams)
+    // replaceSearch is stable
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i18n.language, editorMode, focusMode, mobileTab, layoutSwap, searchParams, isReady]);
 }

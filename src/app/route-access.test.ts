@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { accessFor } from './route-access';
+import { describe, expect, it } from 'vitest'
+import { accessFor } from './route-access'
 
 describe('accessFor', () => {
   it('keeps profiles, lists and project pages at the root public', () => {
