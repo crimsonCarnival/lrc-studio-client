@@ -2,7 +2,8 @@ import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } fr
 import toast from 'react-hot-toast';
 import { lyrics } from '@/app/api';
 import { matchKey } from '@/shared/utils/keyboard';
-import { parseRubyMarkup, hasCJK, isKanji } from '@/shared/utils/furigana';
+import { parseRubyMarkup, hasCJK } from '@/shared/utils/furigana';
+import { groupMorphemes } from '@/features/editor/utils/morpheme-group';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
 import useConfirm from '@/shared/hooks/useConfirm';
@@ -277,41 +278,17 @@ export function useEditor({
             newWords.push({ word: seg.text, time: anchor?.time ?? null, reading: seg.reading });
             charPos += segChars.length;
           } else if (isCJKText) {
-            // Mixed CJK+Latin: group contiguous Kanji, split other CJK chars, keep Latin runs
-            let ci = 0;
-            while (ci < segChars.length) {
-              const ch = segChars[ci];
-              if (!ch.trim()) { charPos++; ci++; continue; }
-              
-              if (isKanji(ch)) {
-                let j = ci;
-                while (j < segChars.length && isKanji(segChars[j])) j++;
-                const kanjiGroup = segChars.slice(ci, j).join('');
-                
-                const old = oldWordAtPos.get(charPos);
-                const w: EditorWord = { word: kanjiGroup, time: old?.time ?? null };
-                if (old?.reading && old.word === kanjiGroup) w.reading = old.reading;
-                if (!w.reading && oldReadingByText.has(kanjiGroup)) w.reading = oldReadingByText.get(kanjiGroup);
-                newWords.push(w);
-                
-                charPos += [...kanjiGroup].length;
-                ci = j;
-              } else if (/[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch)) {
-                const old = oldWordAtPos.get(charPos);
-                const w: EditorWord = { word: ch, time: old?.time ?? null };
-                if (old?.reading) w.reading = old.reading;
-                if (!w.reading && oldReadingByText.has(ch)) w.reading = oldReadingByText.get(ch);
-                newWords.push(w);
-                charPos++; ci++;
-              } else {
-                let j = ci;
-                while (j < segChars.length && !/[\u3000-\u9FFF\uF900-\uFAFF]/.test(segChars[j]) && segChars[j].trim()) j++;
-                const latinToken = segChars.slice(ci, j).join('');
-                const old = oldWordAtPos.get(charPos);
-                newWords.push({ word: latinToken, time: old?.time ?? null });
-                charPos += [...latinToken].length;
-                ci = j;
-              }
+            // Grouped by morpheme so a chip is a unit someone sings; see
+            // morpheme-group.ts for why the per-character split was wrong.
+            for (const token of groupMorphemes(seg.text)) {
+              const old = oldWordAtPos.get(charPos);
+              const w: EditorWord = { word: token.text, time: old?.time ?? null };
+              const inherited = (old?.reading && old.word === token.text)
+                ? old.reading
+                : oldReadingByText.get(token.text) ?? oldReadingByText.get(token.kanji);
+              if (inherited) w.reading = inherited;
+              newWords.push(w);
+              charPos += [...token.text].length;
             }
           } else {
             // Pure Latin
@@ -424,28 +401,11 @@ export function useEditor({
       const isCJKText = hasCJK(plainText);
       const newWords: EditorWord[] = [];
       for (const seg of segments) {
-        const segChars = [...seg.text];
         if (seg.reading) {
           newWords.push({ word: seg.text, time: null, reading: seg.reading });
         } else if (isCJKText) {
-          let ci = 0;
-          while (ci < segChars.length) {
-            const ch = segChars[ci];
-            if (!ch.trim()) { ci++; continue; }
-            if (isKanji(ch)) {
-              let j = ci;
-              while (j < segChars.length && isKanji(segChars[j])) j++;
-              newWords.push({ word: segChars.slice(ci, j).join(''), time: null });
-              ci = j;
-            } else if (/[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch)) {
-              newWords.push({ word: ch, time: null });
-              ci++;
-            } else {
-              let j = ci;
-              while (j < segChars.length && !/[\u3000-\u9FFF\uF900-\uFAFF]/.test(segChars[j]) && segChars[j].trim()) j++;
-              newWords.push({ word: segChars.slice(ci, j).join(''), time: null });
-              ci = j;
-            }
+          for (const token of groupMorphemes(seg.text)) {
+            newWords.push({ word: token.text, time: null });
           }
         } else {
           for (const token of seg.text.split(/\s+/).filter(Boolean)) {
@@ -844,38 +804,21 @@ export function useEditor({
             newWords.push({ word: seg.text, time: anchor?.time ?? null, reading: seg.reading });
             charPos += segChars.length;
           } else if (isCJKText) {
-            // Mixed CJK+Latin: group Kanji, split other CJK, keep Latin runs
-            let ci = 0;
-            while (ci < segChars.length) {
-              const ch = segChars[ci];
-              if (!ch.trim()) { charPos++; ci++; continue; }
-              if (isKanji(ch)) {
-                let j = ci;
-                while (j < segChars.length && isKanji(segChars[j])) j++;
-                const kanjiGroup = segChars.slice(ci, j).join('');
-                const old = oldWordAtPos.get(charPos);
-                const w: EditorWord = { word: kanjiGroup, time: old?.time ?? null };
-                if (old?.reading && old.word === kanjiGroup) w.reading = old.reading;
-                if (!w.reading && oldReadingByText.has(kanjiGroup)) w.reading = oldReadingByText.get(kanjiGroup);
-                newWords.push(w);
-                charPos += [...kanjiGroup].length;
-                ci = j;
-              } else if (/[\u3000-\u9FFF\uF900-\uFAFF]/.test(ch)) {
-                const old = oldWordAtPos.get(charPos);
-                const w: EditorWord = { word: ch, time: old?.time ?? null };
-                if (old?.reading) w.reading = old.reading;
-                if (!w.reading && oldReadingByText.has(ch)) w.reading = oldReadingByText.get(ch);
-                newWords.push(w);
-                charPos++; ci++;
-              } else {
-                let j = ci;
-                while (j < segChars.length && !/[\u3000-\u9FFF\uF900-\uFAFF]/.test(segChars[j]) && segChars[j].trim()) j++;
-                const latinToken = segChars.slice(ci, j).join('');
-                const old = oldWordAtPos.get(charPos);
-                newWords.push({ word: latinToken, time: old?.time ?? null });
-                charPos += [...latinToken].length;
-                ci = j;
-              }
+            // Mixed CJK+Latin: group by morpheme, so a chip is a unit someone
+            // sings. Splitting every non-kanji character apart \u2014 the old
+            // behaviour \u2014 produced chips that match nothing in the audio, cannot
+            // hold a reading, and never line up with the romaji layer.
+            for (const token of groupMorphemes(seg.text)) {
+              const old = oldWordAtPos.get(charPos);
+              const w: EditorWord = { word: token.text, time: old?.time ?? null };
+              // A reading survives a regroup if the same text carried one before,
+              // whichever token it used to sit on.
+              const inherited = (old?.reading && old.word === token.text)
+                ? old.reading
+                : oldReadingByText.get(token.text) ?? oldReadingByText.get(token.kanji);
+              if (inherited) w.reading = inherited;
+              newWords.push(w);
+              charPos += [...token.text].length;
             }
           } else {
             const tokens = seg.text.trim().split(/\s+/).filter(Boolean);
@@ -915,6 +858,87 @@ export function useEditor({
         ? { ...words[wordIndex], reading: trimmed }
         : (() => { const { reading: _r, ...rest } = words[wordIndex]; return rest; })();
       line.words = words;
+      updated[lineIndex] = line;
+      return updated;
+    });
+  }, [setLines, setModifiedLines]);
+
+  /**
+   * Repairs for the cases automatic grouping cannot settle: a kana prefix that
+   * belongs to the kanji after it, a 熟字訓 whose reading does not decompose, or
+   * a chip the rules joined that the singer actually holds apart.
+   *
+   * The merged chip keeps the earlier timestamp, because that is when the sound
+   * it now covers begins.
+   */
+  const handleMergeWordWithNext = useCallback((lineIndex, wordIndex) => {
+    setModifiedLines(prev => new Set(prev).add(lineIndex));
+    setLines((prev) => {
+      const updated = [...prev];
+      const line = { ...updated[lineIndex] };
+      const words = [...(line.words || [])];
+      const a = words[wordIndex];
+      const b = words[wordIndex + 1];
+      if (!a || !b) return prev;
+      const merged = { ...a, word: (a.word || '') + (b.word || '') };
+      const time = a.time ?? b.time ?? null;
+      if (time == null) delete merged.time; else merged.time = time;
+      const reading = a.reading || b.reading;
+      if (reading) merged.reading = reading; else delete merged.reading;
+      words.splice(wordIndex, 2, merged);
+      line.words = words;
+      updated[lineIndex] = line;
+      return updated;
+    });
+  }, [setLines, setModifiedLines]);
+
+  /**
+   * Breaks a chip back into single characters so it can be regrouped by hand.
+   * Deliberately not a guess at the "right" split point: the first character
+   * keeps the timestamp and the rest start untimed.
+   */
+  const handleSplitWord = useCallback((lineIndex, wordIndex) => {
+    setModifiedLines(prev => new Set(prev).add(lineIndex));
+    setLines((prev) => {
+      const updated = [...prev];
+      const line = { ...updated[lineIndex] };
+      const words = [...(line.words || [])];
+      const target = words[wordIndex];
+      const chars = [...(target?.word || '')];
+      if (!target || chars.length < 2) return prev;
+      const pieces = chars.map((ch, i) => (i === 0
+        ? { ...target, word: ch }
+        : { word: ch, time: null }));
+      words.splice(wordIndex, 1, ...pieces);
+      line.words = words;
+      updated[lineIndex] = line;
+      return updated;
+    });
+  }, [setLines, setModifiedLines]);
+
+  /** Re-runs automatic grouping over a line, keeping times and readings where the text still matches. */
+  const handleRegroupLine = useCallback((lineIndex) => {
+    setModifiedLines(prev => new Set(prev).add(lineIndex));
+    setLines((prev) => {
+      const updated = [...prev];
+      const line = { ...updated[lineIndex] };
+      if (!hasCJK(line.text || '')) return prev;
+      const oldTimeAtPos = new Map();
+      const oldReadingByText = new Map();
+      let flat = 0;
+      for (const w of line.words || []) {
+        oldTimeAtPos.set(flat, w.time ?? null);
+        flat += [...(w.word || '')].length;
+        if (w.reading) oldReadingByText.set(w.word, w.reading);
+      }
+      let charPos = 0;
+      line.words = groupMorphemes(line.text || '').map((token) => {
+        const w: EditorWord = { word: token.text, time: oldTimeAtPos.get(charPos) ?? null };
+        const reading = oldReadingByText.get(token.text) ?? oldReadingByText.get(token.kanji);
+        if (reading) w.reading = reading;
+        charPos += [...token.text].length;
+        return w;
+      });
       updated[lineIndex] = line;
       return updated;
     });
@@ -1643,6 +1667,9 @@ export function useEditor({
     handleSetActiveWordIndex,
     handleSetTimestamp,
     handleSetWordReading,
+    handleMergeWordWithNext,
+    handleSplitWord,
+    handleRegroupLine,
     stampTarget,
     handleStampTargetToggle,
     handleSetStampTarget,

@@ -259,6 +259,9 @@ export default function Editor({
     handleSetActiveWordIndex,
     handleSetTimestamp,
     handleSetWordReading,
+    handleMergeWordWithNext,
+    handleSplitWord,
+    handleRegroupLine,
     stampTarget,
     handleStampTargetToggle,
     handleSetStampTarget,
@@ -1235,6 +1238,10 @@ export default function Editor({
         playerRef={playerRef}
         handleClearWordTimestamp={handleClearWordTimestamp}
         handleSetWordReading={handleSetWordReading}
+        handleMergeWordWithNext={handleMergeWordWithNext}
+        handleSplitWord={handleSplitWord}
+        handleRegroupLine={handleRegroupLine}
+        lineWordCount={wordData.lineIndex != null ? (lines[wordData.lineIndex]?.words?.length ?? 0) : 0}
         handleClearLine={handleClearLine}
         handleDeleteLine={handleDeleteLine}
         handleBulkClearTimestamps={handleBulkClearTimestamps}
