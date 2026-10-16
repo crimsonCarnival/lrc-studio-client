@@ -197,6 +197,11 @@ export default {
     nextUnread: "Siguiente sin lectura",
     open: "Editar furigana",
   },
+  grouping: {
+    mergeNext: "Unir con la siguiente palabra",
+    split: "Separar en caracteres",
+    regroup: "Reagrupar esta línea",
+  },
   stampLayerMain: "Marcar letra principal",
   stampLayerSecondary: "Marcar letra secundaria (romaji)",
   stampLayerMainShort: "Principal",

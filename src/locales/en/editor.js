@@ -194,6 +194,11 @@ export default {
     nextUnread: "Next without reading",
     open: "Edit furigana",
   },
+  grouping: {
+    mergeNext: "Merge with next word",
+    split: "Split into characters",
+    regroup: "Regroup this line",
+  },
   stampLayerMain: "Stamp main lyrics",
   stampLayerSecondary: "Stamp secondary lyrics (romaji)",
   stampLayerMainShort: "Main",
