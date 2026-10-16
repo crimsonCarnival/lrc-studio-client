@@ -358,7 +358,7 @@ export function WordsModeChips({
                         <Icon name="ink_eraser" size={10} />
                       </button>
                     )}
-                    {isMobile && isFocusedWord && (
+                    {isFocusedWord && (
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, false); }}
@@ -381,7 +381,7 @@ export function WordsModeChips({
                     >
                       {chipBody(displayWord, layerWord.time, { romaji })}
                     </button>
-                    {isMobile && isFocusedWord && (
+                    {isFocusedWord && (
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, false); }}
