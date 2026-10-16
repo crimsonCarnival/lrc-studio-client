@@ -1,6 +1,6 @@
 import { memo, Fragment } from 'react';
 import type { RefObject } from 'react';
-import { parseRubyMarkup, hasKanji, isKanji, hasCJK, toHiragana, toKatakana } from '@/shared/utils/furigana';
+import { parseRubyMarkup, hasKanji, isKanji, hasCJK, toHiragana, toKatakana, rubyRatioClass } from '@/shared/utils/furigana';
 import { Icon } from '@/shared/ui/Icon';
 import { ReadingInput } from './ReadingInput';
 import { Tip } from '@ui/tip';
@@ -152,15 +152,17 @@ const LineTextContent = memo(({
         {isPendingAdLib && <span className="text-[15px] italic text-gold-ink">{t('editor.adLib.pendingRow')}</span>}
         {(() => {
           const isDuet = line.mode === 'duet' && (appliedSingers?.length ?? 0) >= 2;
-          const hasRubyOrSelection = line.words?.some(w => w.reading) || (editorMode !== 'words' && (editingReadingWordIndex != null || selection.start != null || selection.range != null));
-          const layoutClass = hasRubyOrSelection ? 'overflow-hidden' : 'break-words whitespace-pre-wrap';
-          const lineStyle = hasRubyOrSelection ? { lineHeight: '2.4' } : { lineHeight: '1.6' };
+          // The furigana reserve lives in the line-height (`.ruby-host`), not in the
+          // content, so a line with readings and one without measure identically and
+          // adding a reading never reflows the virtualized list. That replaces the old
+          // 2.4/1.6 line-height swap, which resized the row the moment an rt appeared.
           const duetStyle = isDuet
-            ? { ...lineStyle, backgroundImage: singerGradient(appliedSingers!, roster) }
-            : lineStyle;
+            ? { backgroundImage: singerGradient(appliedSingers!, roster) }
+            : undefined;
           return (
         <p
-          className={`font-semibold transition-colors duration-300 ease-out ${isAdLib ? 'text-[15px] italic' : 'text-[17px]'} ${layoutClass} ${isDuet ? 'bg-clip-text text-transparent' : lineColorClass}`}
+          lang="ja"
+          className={`ruby-host font-semibold transition-colors duration-300 ease-out ${isAdLib ? 'text-[15px] italic' : 'text-[17px]'} break-words whitespace-pre-wrap ${isDuet ? 'bg-clip-text text-transparent' : lineColorClass}`}
           style={duetStyle}
         >
           {(line.words?.length ?? 0) > 0
@@ -221,7 +223,7 @@ const LineTextContent = memo(({
 
               const rubyElement = (
                   <ruby
-                    className={`group/ruby ${editorMode === 'words' || canHaveReading ? 'cursor-pointer' : 'cursor-default'} ${canHaveReading ? 'hover:text-primary' : ''}`}
+                    className={`group/ruby ${rubyRatioClass(w.word, w.reading)} ${editorMode === 'words' || canHaveReading ? 'cursor-pointer' : 'cursor-default'} ${canHaveReading ? 'hover:text-primary' : ''}`}
                     role={editorMode === 'words' || canHaveReading ? 'button' : undefined}
                     tabIndex={editorMode === 'words' || canHaveReading ? 0 : undefined}
                     onClick={(e) => {
@@ -260,7 +262,7 @@ const LineTextContent = memo(({
                       <rt
                         role="button"
                         aria-label={w.reading || t('editor.addReading')}
-                        className={`select-none transition-colors ${w.reading ? 'text-[10px] font-mono text-zinc-400 group-hover/ruby:text-primary' : 'border-b-2 border-zinc-700/30 border-dashed min-h-[4px] group-hover/ruby:border-primary/40'}`}
+                        className={`select-none transition-colors ${w.reading ? 'font-mono text-zinc-400 group-hover/ruby:text-primary' : 'border-b-2 border-zinc-700/30 border-dashed min-h-[4px] group-hover/ruby:border-primary/40'}`}
                         tabIndex={editorMode !== 'words' ? 0 : undefined}
                         onClick={editorMode !== 'words' ? (e) => {
                           e.stopPropagation();
@@ -345,7 +347,7 @@ const LineTextContent = memo(({
                   return (
                     <ruby
                       key={startCi}
-                      className="text-primary font-medium cursor-pointer group/ruby relative"
+                      className={`text-primary font-medium cursor-pointer group/ruby relative ${rubyRatioClass(seg.text, seg.reading)}`}
                       role="button"
                       aria-label={seg.reading || seg.text}
                       tabIndex={0}
@@ -361,7 +363,7 @@ const LineTextContent = memo(({
                       }}
                     >
                       {seg.text}
-                      <rt className="text-[10px] font-mono text-zinc-400 select-none group-hover/ruby:text-primary transition-colors">
+                      <rt className="font-mono text-zinc-400 select-none group-hover/ruby:text-primary transition-colors">
                         {rubyFmt === 'katakana' ? toKatakana(seg.reading) : toHiragana(seg.reading)}
                       </rt>
                     </ruby>
@@ -467,7 +469,7 @@ const LineTextContent = memo(({
                         }`}
                     >
                       {ch}
-                      <rt className={`min-h-[4px] text-[8px] ${inSelection
+                      <rt className={`min-h-[4px] ${inSelection
                           ? 'border-b-2 border-primary/40 border-dashed'
                           : 'border-b-2 border-zinc-700/30 border-dashed group-hover/ruby:border-primary/40'
                         }`}>

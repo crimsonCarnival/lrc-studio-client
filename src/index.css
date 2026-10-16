@@ -516,17 +516,101 @@ body,
   animation: just-synced 0.6s ease-out forwards;
 }
 
-/* Ruby/furigana positioning */
-ruby {
-  ruby-align: center;
+/* ——— Ruby / furigana ———
+   The reserve for the rt lives in the host's line-height, never in the content.
+   A line with furigana and one without therefore occupy exactly the same box,
+   so toggling furigana or adding a reading never reflows the list. Contexts set
+   --line-unit; everything below reads it. */
+:root {
+  /* 0.5em is the classical ratio, but at 17px it yields 8.5px — illegible.
+     Floor at 10px; above 34px the 0.5em takes over again. */
+  --size-ruby: clamp(10px, 0.5em, 17px);
 }
 
+/* The reserve is a per-project decision, not a per-line one: within one project
+   every row measures the same whether or not that particular line carries a
+   reading. These two classes go on a container; `.ruby-host` inside them picks
+   the unit up. Without them nothing changes, so projects with no readings at
+   all keep their natural spacing. */
+.cjk-reserve-list {
+  /* The annotation has to fit *inside* this box, not merely overflow into the gap
+     between rows: an ancestor of the lyric line sets overflow-x, which computes
+     overflow-y to `auto` and clips the top. At a 38px unit the rt sat 4px above
+     the paragraph and lost its upper half. The unit is therefore driven by the
+     reading: the base box is 1em, half-leading puts (unit - 1em) / 2 above it,
+     and that has to cover the rt plus its 2px offset. */
+  --line-unit: 52px;
+  /* 10px furigana is legible in the abstract and not while you are working. */
+  --size-ruby: 13px;
+}
+
+.cjk-reserve-preview {
+  /* Preview text scales with the size setting, so the unit is a ratio:
+     68px over a 34px base, holding the 21px reserve proportionally. */
+  --line-unit: 2;
+  /* Declared exception to the clamp: preview furigana caps at 16px, not the
+     17px a straight 0.5em of the 34px base would give. */
+  --size-ruby: clamp(10px, 0.5em, 16px);
+}
+
+.ruby-host {
+  line-height: var(--line-unit, inherit);
+}
+
+ruby {
+  ruby-align: center;
+  line-height: 1;
+  /* Constant inline padding gives a wide rt room to overhang symmetrically
+     without ever touching its neighbour or moving the grid. */
+  padding-inline: 4px;
+  position: relative;
+}
+
+/* The annotation is taken out of flow so it cannot grow the line box. Measured:
+   left in flow, a line carrying an rt is ~6px taller than one without — the very
+   reflow the reserve exists to prevent — and containing it in flow would need a
+   49px unit rather than 38px, losing the list's density. Out of flow it overflows
+   upward into the reserve the host's line-height already set aside.
+   The base deliberately does NOT widen to fit a long reading: token width has to
+   keep corresponding to the time block under it in words mode. A reading wider
+   than its base is handled by the r2/r3 escalation below, never by stretching
+   the token. */
 ruby rt {
-  font-size: 0.55em;
+  position: absolute;
+  bottom: 100%;
+  inset-inline: 0;
+  font-size: var(--size-ruby);
   line-height: 1;
   text-align: center;
   ruby-align: center;
   font-weight: normal;
+  white-space: nowrap;
+  pointer-events: none;
+  /* air between rt and the kanji below it */
+  margin-block-end: 2px;
+  transition: opacity 140ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ruby rt {
+    transition: none;
+  }
+}
+
+/* How far the reading outruns its base, resolved once when the line is
+   tokenized and carried as a class — never measured during playback.
+   r1 (<= 1.0) needs nothing. r2 flies symmetrically into the constant 4px
+   padding, so the overhang never shifts the grid. r3 tightens, then shrinks to
+   the 9px floor, before the reading would reach its neighbour. */
+ruby.r3 rt {
+  letter-spacing: -0.02em;
+  --size-ruby: 9px;
+}
+
+/* Furigana toggle: opacity only. The rt stays in the DOM so screen readers keep
+   reading it, and because the reserve is in line-height nothing reflows. */
+.ruby-off rt {
+  opacity: 0;
 }
 
 /* Preview line entrance */

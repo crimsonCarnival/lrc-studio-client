@@ -61,6 +61,29 @@ export function hasKanji(text?: string): boolean {
 }
 
 /**
+ * How far a reading outruns the kanji it sits over, as a class the CSS acts on.
+ *
+ * Both runs are CJK, so each glyph is about one em of its own font and the ratio
+ * reduces to a count ratio scaled by the two font sizes — the rt renders at
+ * roughly 0.59x the base (10px over 17px). That reproduces the three reference
+ * cases exactly: 目指/めざ -> r1, 高/たか -> r2, 承/うけたまわ -> r3.
+ *
+ * Deliberately arithmetic rather than measured: the ratio is resolved once when
+ * a line is tokenized and carried on the element, so playback never measures.
+ */
+const RT_TO_BASE_SIZE = 10 / 17;
+
+export function rubyRatioClass(word?: string, reading?: string | null): 'r1' | 'r2' | 'r3' {
+  if (!word || !reading) return 'r1';
+  const base = [...word].length;
+  const rt = [...reading].length;
+  if (!base) return 'r1';
+  const ratio = (rt * RT_TO_BASE_SIZE) / base;
+  if (ratio <= 1.0) return 'r1';
+  return ratio <= 1.6 ? 'r2' : 'r3';
+}
+
+/**
  * Parse {word|reading} ruby markup into plain text and annotated segments.
  * Supports single-char ({字|じ}) and multi-char ({二人|ふたり}) annotations.
  *
@@ -99,6 +122,55 @@ export function parseRubyMarkup(input?: string): { plainText: string; segments: 
     }
   }
   return { plainText, segments };
+}
+
+export interface RubyAtom {
+  text: string;
+  reading: string | null;
+  /** True for a run of kanji, which is what can carry a reading. */
+  annotatable: boolean;
+}
+
+/**
+ * Break a line's ruby markup into atoms: each existing {word|reading} block, and
+ * each maximal run of kanji inside the unannotated text between them.
+ *
+ * `parseRubyMarkup` keeps a whole unannotated stretch as one segment, which is too
+ * coarse to annotate against — "dreamers 高みを目指して" would be a single target.
+ * Splitting the plain runs by kanji gives one atom per word that could take a
+ * reading, whether or not it already has one, and `serializeRubyAtoms` puts the
+ * line back together so a reading can be written into text-only lyrics.
+ */
+export function explodeRubyAtoms(input?: string): RubyAtom[] {
+  const { segments } = parseRubyMarkup(input);
+  const atoms: RubyAtom[] = [];
+  for (const seg of segments) {
+    if (seg.reading) {
+      atoms.push({ text: seg.text, reading: seg.reading, annotatable: true });
+      continue;
+    }
+    // Split the run into alternating kanji / non-kanji pieces.
+    let buffer = '';
+    let bufferIsKanji: boolean | null = null;
+    const flush = () => {
+      if (!buffer) return;
+      atoms.push({ text: buffer, reading: null, annotatable: bufferIsKanji === true });
+      buffer = '';
+    };
+    for (const ch of seg.text) {
+      const kanji = isKanji(ch);
+      if (bufferIsKanji !== null && kanji !== bufferIsKanji) flush();
+      bufferIsKanji = kanji;
+      buffer += ch;
+    }
+    flush();
+  }
+  return atoms;
+}
+
+/** Inverse of explodeRubyAtoms: rebuilds the {word|reading} markup for a line. */
+export function serializeRubyAtoms(atoms: RubyAtom[]): string {
+  return atoms.map((a) => (a.reading ? `{${a.text}|${a.reading}}` : a.text)).join('');
 }
 
 /**

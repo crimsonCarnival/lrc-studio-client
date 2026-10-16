@@ -5,6 +5,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import PreviewLineRaw from './PreviewLine';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
+import { hasKanji } from '@/shared/utils/furigana';
 
 // PreviewLine is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -199,6 +200,20 @@ export default function PreviewViewport({
     [visibleLines, currentIndex],
   );
 
+  // Reserving furigana space is a per-project decision, not a per-line one: it keeps
+  // every line the same height whether or not it carries a reading, so toggling
+  // furigana never reflows the viewport or loses the scroll position. Gated on kanji
+  // being present rather than on a reading existing, so the first reading added to a
+  // Japanese project costs no reflow either.
+  const reservesRuby = useMemo(
+    () => lines.some((l) => {
+      if (hasKanji(typeof l.text === 'string' ? l.text : '')) return true;
+      const words = l.words as { word?: string }[] | undefined;
+      return !!words?.some((w) => hasKanji(w.word));
+    }),
+    [lines]
+  );
+
   // Compute display lines for dual-line mode
   const dualDisplayLines = useMemo(() => {
     if (!isDualLine) return null;
@@ -294,7 +309,7 @@ export default function PreviewViewport({
     content = (
       <div
         ref={containerRef}
-        className="h-full overflow-y-auto overflow-x-hidden scroll-smooth mask-edges rounded-lg"
+        className={`h-full overflow-y-auto overflow-x-hidden scroll-smooth mask-edges rounded-lg ${reservesRuby ? 'cjk-reserve-preview' : ''}`}
       >
         <div className="h-full flex flex-col justify-center items-center gap-4 sm:gap-8 overflow-x-hidden px-1 sm:px-0">
           {dualDisplayLines!.map(({ line, originalIndex: i }) => (
@@ -345,7 +360,7 @@ export default function PreviewViewport({
         ref={containerRef}
         tabIndex={isReview ? 0 : undefined}
         aria-label={isReview ? t('preview.lyricsListLabel') : undefined}
-        className={`h-full overflow-y-auto overflow-x-hidden mask-edges rounded-lg ${isReview ? 'lrc-scroll outline-none focus-visible:ring-2 focus-visible:ring-primary/50' : ''}`}
+        className={`h-full overflow-y-auto overflow-x-hidden mask-edges rounded-lg ${reservesRuby ? 'cjk-reserve-preview' : ''} ${isReview ? 'lrc-scroll outline-none focus-visible:ring-2 focus-visible:ring-primary/50' : ''}`}
       >
         <div
           style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
