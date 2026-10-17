@@ -124,6 +124,37 @@ export function parseRubyMarkup(input?: string): { plainText: string; segments: 
   return { plainText, segments };
 }
 
+export interface OkuriganaSplit {
+  /** Kana before the kanji, e.g. the お of お花. Rendered plain. */
+  lead: string;
+  /** The kanji run the reading belongs to. This is what the rt sits over. */
+  kanji: string;
+  /** Okurigana — the inflecting kana after the kanji. Rendered plain. */
+  tail: string;
+}
+
+/**
+ * Splits a word into the kanji a reading belongs to and the kana around it.
+ *
+ * A reading annotates the kanji only: 目指して is read めざ+して, so the rt sits
+ * over 目指 and して stays outside it. Since words are grouped by morpheme the
+ * token now carries its okurigana, and wrapping the whole token in <ruby> would
+ * stretch めざ across 目指して — which reads as though the kana were part of the
+ * reading.
+ */
+export function splitOkurigana(word?: string): OkuriganaSplit {
+  const chars = [...(word ?? '')];
+  const first = chars.findIndex((ch) => KANJI_RE.test(ch));
+  if (first === -1) return { lead: word ?? '', kanji: '', tail: '' };
+  let end = first;
+  while (end < chars.length && KANJI_RE.test(chars[end])) end++;
+  return {
+    lead: chars.slice(0, first).join(''),
+    kanji: chars.slice(first, end).join(''),
+    tail: chars.slice(end).join(''),
+  };
+}
+
 export interface RubyAtom {
   text: string;
   reading: string | null;

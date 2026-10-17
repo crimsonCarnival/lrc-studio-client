@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Ref } from 'react';
 import { useSettings } from '@/features/settings/useSettings';
-import { toHiragana, toKatakana, parseRubyMarkup, rubyRatioClass } from '@/shared/utils/furigana';
+import { toHiragana, toKatakana, parseRubyMarkup, rubyRatioClass, splitOkurigana } from '@/shared/utils/furigana';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import { useTranslation } from 'react-i18next';
 import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
@@ -586,7 +586,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
           const wordSingerColorStyle = customHex ? getCustomColorStyle(customHex, isActive) : undefined;
 
           const wordContent = w.reading && isKanjiWord(w.word)
-            ? <ruby className={rubyRatioClass(w.word, w.reading)}>{w.word}<rp>(</rp><rt>{fmtReading(w.reading)}</rt><rp>)</rp></ruby>
+            ? <RubyWord word={w.word} reading={fmtReading(w.reading)} />
             : w.word;
 
           let progress = 0;
@@ -788,6 +788,25 @@ function ParsedSecondary({ text }: { text?: string }) {
   });
 }
 
+/**
+ * A word with its reading over the kanji only. The okurigana stays outside the
+ * <ruby>, because the rt is positioned across its ruby's whole box — wrapping
+ * 目指して would stretch めざ across the kana too.
+ */
+function RubyWord({ word, reading }: { word?: string; reading?: string | null }) {
+  const { lead, kanji, tail } = splitOkurigana(word);
+  if (!kanji) return <>{word}</>;
+  return (
+    <>
+      {lead}
+      <ruby className={rubyRatioClass(kanji, reading)}>
+        {kanji}<rp>(</rp><rt>{reading}</rt><rp>)</rp>
+      </ruby>
+      {tail}
+    </>
+  );
+}
+
 // ——— Kanji detection: only kanji get ruby annotations, not hiragana/katakana ———
 const KANJI_RE = /[一-鿿㐀-䶿豈-﫿]/;
 function isKanjiWord(word?: string): boolean {
@@ -805,7 +824,7 @@ function renderLineWithReadings(line: EditorLine, fmtReading: ReadingFmt) {
       return (
 
         <React.Fragment key={`word-${i}`}>
-          <ruby className={rubyRatioClass(w.word, w.reading)}>{w.word}<rp>(</rp><rt>{fmtReading(w.reading)}</rt><rp>)</rp></ruby>
+          <RubyWord word={w.word} reading={fmtReading(w.reading)} />
           {addSpace ? ' ' : null}
         </React.Fragment>
       );

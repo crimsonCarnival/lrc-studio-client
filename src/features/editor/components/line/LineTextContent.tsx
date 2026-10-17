@@ -1,6 +1,6 @@
 import { memo, Fragment } from 'react';
-import type { RefObject } from 'react';
-import { parseRubyMarkup, hasKanji, isKanji, hasCJK, toHiragana, toKatakana, rubyRatioClass } from '@/shared/utils/furigana';
+import type { RefObject, ReactNode } from 'react';
+import { parseRubyMarkup, hasKanji, isKanji, hasCJK, toHiragana, toKatakana, rubyRatioClass, splitOkurigana } from '@/shared/utils/furigana';
 import { Icon } from '@/shared/ui/Icon';
 import { ReadingInput } from './ReadingInput';
 import { Tip } from '@ui/tip';
@@ -194,17 +194,32 @@ const LineTextContent = memo(({
                 // No side padding: at 17px it read as double spaces between words.
                 : `transition-colors rounded ${singerColorClass} ${canHaveReading ? 'hover:bg-white/5' : ''}`;
 
+              // The reading belongs to the kanji, not the kana around it. Since the
+              // rt is positioned across its ruby's whole box, the ruby has to wrap
+              // the kanji alone or めざ would stretch over 目指して.
+              const { lead, kanji, tail } = splitOkurigana(w.word);
+
               const content = (
                 <span className={spanClass} style={singerColorStyle}>
                   {w.word}
                 </span>
               );
 
+              const annotatedBase = (rt: ReactNode) => (
+                <span className={spanClass} style={singerColorStyle}>
+                  {lead}
+                  <ruby className={rubyRatioClass(kanji, w.reading)}>
+                    {kanji}
+                    {rt}
+                  </ruby>
+                  {tail}
+                </span>
+              );
+
               if (isEditing) {
                 return (
                   <Fragment key={wKey}>
-                    <ruby>
-                      {content}
+                    {annotatedBase(
                       <rt>
                         <ReadingInput
                           defaultValue={fmtR(w.reading) || ''}
@@ -215,15 +230,15 @@ const LineTextContent = memo(({
                           style={{ width: `${Math.max(30, (w.reading || w.word).length * 10)}px` }}
                         />
                       </rt>
-                    </ruby>
+                    )}
                     {trailingSpace}
                   </Fragment>
                 );
               }
 
               const rubyElement = (
-                  <ruby
-                    className={`group/ruby ${rubyRatioClass(w.word, w.reading)} ${editorMode === 'words' || canHaveReading ? 'cursor-pointer' : 'cursor-default'} ${canHaveReading ? 'hover:text-primary' : ''}`}
+                  <span
+                    className={`group/ruby ${editorMode === 'words' || canHaveReading ? 'cursor-pointer' : 'cursor-default'} ${canHaveReading ? 'hover:text-primary' : ''}`}
                     role={editorMode === 'words' || canHaveReading ? 'button' : undefined}
                     tabIndex={editorMode === 'words' || canHaveReading ? 0 : undefined}
                     onClick={(e) => {
@@ -257,8 +272,7 @@ const LineTextContent = memo(({
                       }
                     }}
                   >
-                    {content}
-                    {canHaveReading && (editorMode !== 'words' || w.reading) && (
+                    {canHaveReading && (editorMode !== 'words' || w.reading) ? annotatedBase(
                       <rt
                         role="button"
                         aria-label={w.reading || t('editor.addReading')}
@@ -277,8 +291,8 @@ const LineTextContent = memo(({
                       >
                         {w.reading ? fmtR(w.reading) : '　'}
                       </rt>
-                    )}
-                  </ruby>
+                    ) : content}
+                  </span>
               );
 
               return (
