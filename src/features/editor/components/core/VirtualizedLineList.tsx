@@ -8,6 +8,7 @@ import { Icon } from '@/shared/ui/Icon';
 import EditorLineItem from '../line/EditorLineItem';
 import { sectionCollapseKey } from '@/features/editor/utils/sections';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
+import { hasKanji } from '@/shared/utils/furigana';
 import type { CollapsedView } from '@/features/editor/utils/sections';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
@@ -77,6 +78,7 @@ interface VirtualizedLineListProps {
   handleCycleWordSinger?: LineItemProps['handleCycleWordSinger'];
   stampTarget?: string;
   handleStampTargetToggle?: LineItemProps['handleStampTargetToggle'];
+  handleSetStampTarget?: LineItemProps['handleSetStampTarget'];
   playbackPosition?: number | null;
   onWordMenu?: LineItemProps['onWordMenu'];
   onLineMenu?: LineItemProps['onLineMenu'];
@@ -148,6 +150,7 @@ export default function VirtualizedLineList({
   handleCycleWordSinger,
   stampTarget,
   handleStampTargetToggle,
+  handleSetStampTarget,
   playbackPosition,
   onWordMenu,
   onLineMenu,
@@ -405,6 +408,16 @@ export default function VirtualizedLineList({
     return { sections, untimed, cursor: cursor as number | null };
   }, [rows, lines, activeLineIndex]);
 
+  // Whether to reserve furigana space is decided once for the whole project, not
+  // per line, so every row measures the same and adding the first reading does
+  // not reflow the list. The trigger is that furigana is *possible* (kanji is
+  // present) rather than that a reading already exists — gating on the reading
+  // itself would still cost one reflow the moment the user typed one.
+  const reservesRuby = useMemo(
+    () => lines.some((l) => hasKanji(l.text) || l.words?.some((w) => hasKanji(w.word))),
+    [lines]
+  );
+
   return (
     <div className="flex flex-col flex-1 gap-3 animate-fade-in min-h-0">
       <div className="relative flex-1 min-h-0">
@@ -415,6 +428,7 @@ export default function VirtualizedLineList({
         >
           <div
             role="list"
+            className={reservesRuby ? 'cjk-reserve-list' : undefined}
             aria-label={t('editor.lineList')}
             style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}
           >
@@ -519,6 +533,7 @@ export default function VirtualizedLineList({
                         handleCycleWordSinger={handleCycleWordSinger}
                         stampTarget={stampTarget}
                         handleStampTargetToggle={handleStampTargetToggle}
+                        handleSetStampTarget={handleSetStampTarget}
                         playbackPosition={playbackPosition}
                         onWordMenu={onWordMenu}
                         onLineMenu={onLineMenu}
@@ -599,6 +614,7 @@ export default function VirtualizedLineList({
                       handleCycleWordSinger={handleCycleWordSinger}
                       stampTarget={i === activeLineIndex ? stampTarget : 'main'}
                       handleStampTargetToggle={handleStampTargetToggle}
+                        handleSetStampTarget={handleSetStampTarget}
                       playbackPosition={isActive ? playbackPosition : null}
                       upcomingDepth={upcomingDepth}
                       onWordMenu={onWordMenu}

@@ -22,6 +22,7 @@ import EditorActionDrawer from './EditorActionDrawer';
 import SelectionActionBar from './SelectionActionBar';
 import TaggingToolbar from './TaggingToolbar';
 import AutoStampModal from './AutoStampModal';
+import FuriganaModal from '../line/FuriganaModal';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
 import PlayerControls from '@/features/player/components/PlayerControls';
@@ -258,8 +259,12 @@ export default function Editor({
     handleSetActiveWordIndex,
     handleSetTimestamp,
     handleSetWordReading,
+    handleMergeWordWithNext,
+    handleSplitWord,
+    handleRegroupLine,
     stampTarget,
     handleStampTargetToggle,
+    handleSetStampTarget,
     modifiedLines,
     clearModifiedLines,
   } = useEditor({
@@ -386,6 +391,7 @@ export default function Editor({
   // user isn't stuck unable to apply or discard it. Derived directly at render
   // time (not via an effect + setState) to avoid an extra render pass.
   const autoStampOpen = (autoStamp.phase !== 'idle' && !autoStampDismissed) || autoStamp.pendingResult != null;
+  const [furiganaOpen, setFuriganaOpen] = useState(false);
   // Button-enable signal: `hasMedia` is the freshest render-time approximation for
   // "a local file might exist" (refs can't be read during render). It's true for
   // YouTube-only media too, but that's acceptable — start() re-checks the actual
@@ -992,6 +998,7 @@ export default function Editor({
           autoStampHasAudio={autoStampHasAudio}
           autoStampRunning={autoStampRunning}
           onAutoStamp={handleAutoStampStart}
+          onOpenFurigana={() => setFuriganaOpen(true)}
         />
       </div>
 
@@ -1107,6 +1114,7 @@ export default function Editor({
             handleCycleWordSinger={handleCycleWordSinger}
             stampTarget={stampTarget}
             handleStampTargetToggle={handleStampTargetToggle}
+            handleSetStampTarget={handleSetStampTarget}
             playbackPosition={playbackPosition}
             onWordMenu={openWord}
             onLineMenu={openLine}
@@ -1230,6 +1238,10 @@ export default function Editor({
         playerRef={playerRef}
         handleClearWordTimestamp={handleClearWordTimestamp}
         handleSetWordReading={handleSetWordReading}
+        handleMergeWordWithNext={handleMergeWordWithNext}
+        handleSplitWord={handleSplitWord}
+        handleRegroupLine={handleRegroupLine}
+        lineWordCount={wordData.lineIndex != null ? (lines[wordData.lineIndex]?.words?.length ?? 0) : 0}
         handleClearLine={handleClearLine}
         handleDeleteLine={handleDeleteLine}
         handleBulkClearTimestamps={handleBulkClearTimestamps}
@@ -1252,6 +1264,20 @@ export default function Editor({
       </ResponsiveModal>
 
       {confirmModal}
+
+      <FuriganaModal
+        open={furiganaOpen}
+        onOpenChange={setFuriganaOpen}
+        lines={lines}
+        startLineIndex={activeLineIndex}
+        readingFormat={settings.editor?.display?.readingFormat || 'hiragana'}
+        onSetReading={handleSetWordReading}
+        onSetLineText={(lineIndex, text) => {
+          const line = lines[lineIndex];
+          handleSaveLineText(lineIndex, text, line?.secondary, line?.translations, line?.singers);
+        }}
+        onFocusLine={setActiveLineIndex}
+      />
 
       <AutoStampModal
         open={autoStampOpen}

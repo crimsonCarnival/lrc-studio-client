@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { MouseEvent, WheelEvent } from 'react';
 import { hasCJK } from '@/shared/utils/furigana';
@@ -11,6 +11,7 @@ import { TimestampBadge } from '../line/TimestampBadge';
 import { StampedWordChip } from './StampedWordChip';
 import { Icon } from '@/shared/ui/Icon';
 import { singerColorIndex } from '@features/editor/utils/singer-colors';
+import { chipWidthStep } from '../../utils/chip-width';
 
 // Per-singer chip color sets [bg, border, text] for stamped and unstamped word chips.
 // Index-aligned with WORD_SINGER_COLORS in LineTextContent.tsx / SINGER_GRADIENT_STOPS
@@ -31,7 +32,15 @@ const WORD_SINGER_CHIP = [
 // fits on screen.
 const CHIP_BASE = 'flex flex-col items-start gap-1 border font-medium transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40';
 const CHIP_COMPACT = 'px-2.5 py-1.5 coarse:py-2.5 rounded-lg text-[13px] leading-none';
-const CHIP_LARGE = 'px-4 py-2.5 rounded-xl min-h-11';
+// On the line being worked on the chip is one component for both layers, sized
+// off the 32px step grid rather than its text, and centred: its width no longer
+// tracks the word, so left-aligning would scatter the faces across the row.
+const CHIP_LARGE = 'px-3 py-2 rounded-xl items-center justify-center text-center';
+// A line that carries a romaji layer reserves the row for it whether or not that
+// layer is the one being marked, so switching layer never changes the chip's
+// height nor shifts anything below it.
+const CHIP_H_WITH_ROMAJI = 86;
+const CHIP_H_PLAIN = 68;
 const CHIP_NOW = 'border-2 border-primary bg-primary-soft text-foreground';
 // The sung word keeps a neutral body: the karaoke fill (KaraokeFill) is what shows progress.
 const CHIP_PLAYING = 'border-2 border-primary bg-raised text-foreground';
@@ -126,6 +135,7 @@ export interface WordsModeColumnProps {
   setFocusedTimestamp: (value: FocusedTimestamp | null) => void;
   stampTarget: string;
   handleStampTargetToggle?: () => void;
+  handleSetStampTarget?: (target: 'main' | 'secondary' | 'both') => void;
   activeWordIndex: number;
   handleSetTimestamp: (lineIndex: number, type: string, val: number) => void;
   handleTimestampWheel: (e: WheelEvent, lineIndex: number, type: string) => void;
@@ -154,7 +164,7 @@ export function WordsModeTimestamp({
   focusedTimestamp,
   setFocusedTimestamp,
   stampTarget,
-  handleStampTargetToggle,
+  handleSetStampTarget,
   handleSetTimestamp,
   handleTimestampWheel,
   nudgeIndicator,
@@ -185,29 +195,31 @@ export function WordsModeTimestamp({
             nudgeIndicator={isSynced ? nudgeIndicator : null}
           />
         )}
-        {/* Layer toggle buttons — only for CJK lines with secondary text */}
-        {hasCJK(line.text || '') && line.secondary && (
+        {/* Layer control. Rendered only on lines that actually contain Japanese —
+            a permanently greyed-out control on every English line is just noise —
+            and each glyph carries its label, because 主 and ロ alone do not read. */}
+        {hasCJK(line.text || '') && (
           <div className="flex items-center gap-0.5 bg-zinc-900 rounded-md p-0.5 shrink-0">
-            <Tip content={t('editor.stampLayerMain')}>
+            {([
+              { key: 'main', glyph: '主', label: t('editor.stampLayerMainShort'), hint: t('editor.stampLayerMain') },
+              { key: 'secondary', glyph: 'ロ', label: t('editor.stampLayerSecondaryShort'), hint: t('editor.stampLayerSecondary') },
+              { key: 'both', glyph: null, label: t('editor.stampLayerBoth'), hint: t('editor.stampLayerBothHint') },
+            ] as const).map(({ key, glyph, label, hint }) => (
               <button
+                key={key}
                 type="button"
-                onClick={(e) => { e.stopPropagation(); if (stampTarget !== 'main') handleStampTargetToggle?.(); }}
-                className={`inline-flex items-center justify-center text-[9px] px-1.5 py-0.5 rounded leading-none font-bold transition-all ${stampTarget === 'main'
+                title={hint}
+                aria-pressed={stampTarget === key}
+                onClick={(e) => { e.stopPropagation(); handleSetStampTarget?.(key); }}
+                className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded leading-none font-semibold transition-all ${stampTarget === key
                   ? 'bg-primary text-zinc-900 shadow-sm'
-                  : 'text-zinc-600 hover:text-zinc-300'
+                  : 'text-zinc-500 hover:text-zinc-200'
                   }`}
-              >主</button>
-            </Tip>
-            <Tip content={t('editor.stampLayerSecondary')}>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); if (stampTarget !== 'secondary') handleStampTargetToggle?.(); }}
-                className={`inline-flex items-center justify-center text-[9px] px-1.5 py-0.5 rounded leading-none font-bold transition-all ${stampTarget === 'secondary'
-                  ? 'bg-accent-blue text-zinc-900 shadow-sm'
-                  : 'text-zinc-600 hover:text-zinc-300'
-                  }`}
-              >ロ</button>
-            </Tip>
+              >
+                {glyph && <span aria-hidden="true" className="font-bold">{glyph}</span>}
+                {label}
+              </button>
+            ))}
           </div>
         )}
       </div>
@@ -238,16 +250,46 @@ export function WordsModeChips({
   const appliedSingers = activeSingers || line.singers;
   const settingsSingerColors = settings?.editor?.display?.singerColors;
   const chipSize = isActive ? CHIP_LARGE : CHIP_COMPACT;
+
+  // The romaji layer can only be paired chip-for-chip when both layers tokenize to
+  // the same number of words. They usually do once the text is grouped by morpheme;
+  // when they don't, pairing by index would put the wrong reading under a word, so
+  // the layer is left off rather than guessed.
+  //
+  // secondaryWords only exists once the romaji layer has been stamped against, so
+  // the romaji is derived from the raw secondary text until then — otherwise the
+  // paired layer would stay invisible until the user happened to switch to it.
+  const romajiWords = useMemo(() => {
+    const wordCount = line.words?.length ?? 0;
+    if (!wordCount) return null;
+    if (line.secondaryWords?.length) {
+      return line.secondaryWords.length === wordCount ? line.secondaryWords : null;
+    }
+    const derived = (line.secondary || '').trim().split(/\s+/).filter(Boolean);
+    return derived.length === wordCount ? derived.map((word) => ({ word, time: null })) : null;
+  }, [line.words?.length, line.secondaryWords, line.secondary]);
+  const reservesRomaji = isActive && hasCJK(line.text || '') && !!romajiWords;
+
   const chipBody = (
     label: string,
     time: number | null | undefined,
-    extras: { collision?: boolean; fill?: { start: number; end: number } | null } = {},
+    extras: { collision?: boolean; fill?: { start: number; end: number } | null; romaji?: string | null } = {},
   ) => (
     <>
-      <span className={`${isActive ? 'font-heading text-2xl font-bold leading-none' : ''} ${extras.fill ? 'relative whitespace-nowrap' : ''}`}>
+      {/* nowrap: the chip is sized for the whole word, so letting a hyphenated one
+          like "low-key" break at its hyphen would spill it out of the box. */}
+      <span className={`${isActive ? 'font-heading text-[18px] font-bold leading-none whitespace-nowrap' : ''} ${extras.fill ? 'relative whitespace-nowrap' : ''}`}>
         {label}
         {extras.fill && <KaraokeFill key={extras.fill.start} label={label} start={extras.fill.start} end={extras.fill.end} />}
       </span>
+      {reservesRomaji && (
+        // Rendered even when its text is hidden: the reserved row is what keeps the
+        // chip the same height across layers, so picking a layer never moves the
+        // block bar underneath.
+        <span className="font-mono text-[11.5px] leading-none text-subtle truncate max-w-full">
+          {(stampTarget !== 'main' && extras.romaji) || ' '}
+        </span>
+      )}
       {isActive && (
         <span className={`flex items-center gap-1 font-mono text-[11px] leading-none tabular-nums ${extras.collision ? 'text-gold-ink' : 'opacity-80'}`}>
           {extras.collision && (
@@ -255,15 +297,21 @@ export function WordsModeChips({
               <path d="M12 4L2.8 19.5h18.4z M12 10v4 M12 17h.01" />
             </svg>
           )}
-          {time != null ? shortTime(time) : '—'}
+          {time != null ? shortTime(time) : '--:--'}
         </span>
       )}
     </>
   );
+
+  // Fixed geometry for the active line's chips: width off the 32px step grid, height
+  // constant per line. Inactive rows stay compact so a long song still fits on screen.
+  const chipGeometry = (word: string, romaji?: string | null) => isActive
+    ? { width: chipWidthStep(word, romaji), height: reservesRomaji ? CHIP_H_WITH_ROMAJI : CHIP_H_PLAIN }
+    : undefined;
   return (
     <div className="flex flex-col gap-1 w-full">
       {/* Word chips */}
-      {stampTarget !== 'secondary' && (
+      {(reservesRomaji || stampTarget !== 'secondary') && (
         <div className={`flex flex-wrap w-full pr-2 min-h-[26px] items-center content-start ${isActive ? 'gap-2.5' : 'gap-1.5'}`}>
           {(() => {
             let wcs = 0;
@@ -283,39 +331,46 @@ export function WordsModeChips({
             const prevTime = line.words?.[wi - 1]?.time;
             const sameAsPrev = w.time != null && prevTime != null && shortTime(w.time) === shortTime(prevTime);
             const fill = playing && isActiveWord ? wordSpan(line.words ?? [], wi) : null;
+            const romaji = romajiWords?.[wi]?.word ?? null;
+            const geometry = chipGeometry(displayWord, romaji);
+            // With both layers in one chip the layer control no longer swaps which
+            // component is on screen — it only picks which layer a mark lands on, so
+            // the chip's click and its time slot follow that choice.
+            const markingSecondary = reservesRomaji && stampTarget === 'secondary';
+            const layerWord = markingSecondary ? (romajiWords![wi] ?? w) : w;
             return (
               <div key={wKey} className="flex flex-col items-center gap-1">
                 {/* Word chip */}
-                {w.time != null ? (
+                {layerWord.time != null ? (
                   <div className="group/word flex items-center gap-0.5">
-                    <Tip content={`${t('editor.wordChipTitle', { word: w.word, time: formatTime(w.time) })}${sameAsPrev ? ` · ${t('editor.wordSameTime')}` : ''}`}>
+                    <Tip content={`${t('editor.wordChipTitle', { word: w.word, time: formatTime(layerWord.time) })}${sameAsPrev ? ` · ${t('editor.wordSameTime')}` : ''}`}>
                       <StampedWordChip
-                        time={w.time}
+                        time={layerWord.time}
                         focusedTimestamp={playing ? null : focusedTimestamp}
                         lineIndex={lineIndex}
                         wi={wi}
-                        onClick={(e) => handleWordClick(e, w, wi)}
+                        onClick={(e) => handleWordClick(e, layerWord, wi, markingSecondary)}
                         className={`${CHIP_BASE} ${chipSize} ${isActiveWord || isFocusedWord
                           ? nowClass
                           : sameAsPrev
                             ? CHIP_COLLISION
                             : (w.singerIndex != null ? (singerChip.className || CHIP_DONE) : CHIP_DONE)
                           }`}
-                        style={!(isActiveWord || isFocusedWord || sameAsPrev) ? singerChip.style : undefined}
+                        style={{ ...geometry, ...(!(isActiveWord || isFocusedWord || sameAsPrev) ? singerChip.style : undefined) }}
                       >
-                        {chipBody(displayWord, w.time, { collision: sameAsPrev, fill })}
+                        {chipBody(displayWord, layerWord.time, { collision: sameAsPrev, fill, romaji })}
                       </StampedWordChip>
                     </Tip>
                     {!isMobile && (
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); handleClearWordTimestamp(lineIndex, wi); }}
+                        onClick={(e) => { e.stopPropagation(); handleClearWordTimestamp(lineIndex, wi, markingSecondary ? 'secondaryWords' : undefined); }}
                         className="opacity-0 group-hover/word:opacity-100 text-zinc-600 hover:text-red-400 transition-all p-0.5 -ml-0.5"
                       >
                         <Icon name="ink_eraser" size={10} />
                       </button>
                     )}
-                    {isMobile && isFocusedWord && (
+                    {isFocusedWord && (
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, false); }}
@@ -329,16 +384,16 @@ export function WordsModeChips({
                   <div className="flex items-center gap-0.5">
                     <button
                       type="button"
-                      onClick={(e) => handleWordClick(e, w, wi)}
+                      onClick={(e) => handleWordClick(e, layerWord, wi, markingSecondary)}
                       className={`${CHIP_BASE} ${chipSize} ${isActiveWord || isFocusedWord
                         ? nowClass
                         : (w.singerIndex != null ? (singerChip.className || CHIP_TODO) : CHIP_TODO)
                         }`}
-                      style={!(isActiveWord || isFocusedWord) ? singerChip.style : undefined}
+                      style={{ ...geometry, ...(!(isActiveWord || isFocusedWord) ? singerChip.style : undefined) }}
                     >
-                      {chipBody(displayWord, w.time)}
+                      {chipBody(displayWord, layerWord.time, { romaji })}
                     </button>
-                    {isMobile && isFocusedWord && (
+                    {isFocusedWord && (
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onWordMenu?.(lineIndex, wi, w, false); }}
@@ -356,7 +411,7 @@ export function WordsModeChips({
         </div>
       )}
       {/* Secondary word chips — shown only when stampTarget is 'secondary' */}
-      {stampTarget === 'secondary' && hasCJK(line.text || '') && line.secondary && (
+      {!reservesRomaji && stampTarget === 'secondary' && hasCJK(line.text || '') && line.secondary && (
         <div className="flex flex-wrap gap-x-1.5 gap-y-1.5 w-full pr-2 min-h-[26px] items-center content-start">
           {(() => {
             const secondaryWords: Word[] = line.secondaryWords?.length

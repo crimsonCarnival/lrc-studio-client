@@ -23,6 +23,13 @@ interface ReadingInputProps {
   style?: CSSProperties;
   placeholder?: string;
   readingFormat?: string;
+  /**
+   * Select the existing reading on focus so typing replaces it. Wanted when
+   * stepping word by word through a song, where the field arrives pre-filled and
+   * the intent is to correct it; the inline editor leaves it off so a click lands
+   * the caret where it was clicked.
+   */
+  selectOnFocus?: boolean;
 }
 
 let wanakanaLoad: Promise<void> | undefined;
@@ -42,7 +49,7 @@ function loadWanakana(): Promise<void> {
 /**
  * Uncontrolled input that binds wanakana romaji→hiragana conversion while mounted.
  */
-export function ReadingInput({ defaultValue, onCommit, onCancel, className, style, placeholder, readingFormat }: ReadingInputProps) {
+export function ReadingInput({ defaultValue, onCommit, onCancel, className, style, placeholder, readingFormat, selectOnFocus }: ReadingInputProps) {
   const ref = useRef<HTMLInputElement>(null);
   const [error, setError] = useState(false);
   const committedRef = useRef(false);
@@ -51,13 +58,28 @@ export function ReadingInput({ defaultValue, onCommit, onCancel, className, styl
     const el = ref.current;
     if (!el) return;
     el.focus();
+    if (selectOnFocus) el.select();
     const toKana = readingFormat === 'katakana' ? 'toKatakana' : 'toHiragana';
     let cancelled = false;
+    let bound = false;
     loadWanakana().then(() => {
-      if (!cancelled) window.wanakana?.bind(el, { IMEMode: toKana });
+      if (cancelled) return;
+      window.wanakana?.bind(el, { IMEMode: toKana });
+      bound = true;
     });
-    return () => { cancelled = true; window.wanakana?.unbind(el); };
-  }, [readingFormat]);
+    return () => {
+      cancelled = true;
+      // Only unbind what was actually bound. bind() lands asynchronously, so a
+      // teardown before the loader resolves — every StrictMode double-invoke, and
+      // every word change in the furigana modal once wanakana is already cached —
+      // would otherwise hand unbind() an element it never touched, where it walks
+      // the node and throws on React's circular fiber reference.
+      if (!bound) return;
+      try {
+        window.wanakana?.unbind(el);
+      } catch { /* already detached */ }
+    };
+  }, [readingFormat, selectOnFocus]);
 
   const commit = (val: string, direction = 0) => {
     if (committedRef.current) return;

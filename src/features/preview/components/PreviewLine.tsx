@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Ref } from 'react';
 import { useSettings } from '@/features/settings/useSettings';
-import { toHiragana, toKatakana, parseRubyMarkup } from '@/shared/utils/furigana';
+import { toHiragana, toKatakana, parseRubyMarkup, rubyRatioClass } from '@/shared/utils/furigana';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import { useTranslation } from 'react-i18next';
 import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
@@ -229,7 +229,10 @@ export default function PreviewLine({
 
   const translationLayout = settings.editor?.display?.translationLayout || 'side-by-side';
 
-  const hasReadings = showFuriganaInPreview && line.words?.some((w) => w.reading);
+  // Whether readings exist, independent of whether they are currently shown: the
+  // furigana toggle hides the rt with opacity rather than unmounting it, so the
+  // reading stays available to screen readers and the line never changes height.
+  const hasReadings = line.words?.some((w) => w.reading);
 
   // Active translation text for this line
   const activeTranslationText = line.translations?.[activeTranslationIndex]?.text ?? null;
@@ -318,7 +321,6 @@ export default function PreviewLine({
                 ? `${activeFontSizes[sizeOption]} text-zinc-500 font-medium ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`
                 : `${inactiveFontSizes[sizeOption]} text-zinc-600`
                 }`}
-              style={{ lineHeight: hasReadings ? '2' : undefined }}
             >
               {activeTranslationText}
             </p>
@@ -351,7 +353,6 @@ export default function PreviewLine({
                 ? `${activeFontSizes[sizeOption]} text-zinc-500 font-medium ${spacingOption === 'compact' ? 'my-0' : 'my-0.5 sm:my-1'}`
                 : `${inactiveFontSizes[sizeOption]} text-zinc-600`
                 }`}
-              style={{ lineHeight: hasReadings ? '2' : undefined }}
             >
               {activeTranslationText}
             </p>
@@ -531,8 +532,9 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
 
   return (
     <p
-      className={`transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : muted ? mutedClass : isPast ? pastClass : `${futureClass}${review ? ' font-medium' : ''}`} ${isDuet ? 'bg-clip-text !text-transparent' : line.adLibOf != null ? 'italic !text-adlib-ink' : ''}`}
-      style={{ lineHeight: hasReadings ? '2' : undefined, ...duetGradientStyle }}
+      lang="ja"
+      className={`ruby-host ${showFuriganaInPreview ? '' : 'ruby-off'} transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : muted ? mutedClass : isPast ? pastClass : `${futureClass}${review ? ' font-medium' : ''}`} ${isDuet ? 'bg-clip-text !text-transparent' : line.adLibOf != null ? 'italic !text-adlib-ink' : ''}`}
+      style={duetGradientStyle}
     >
       {effectiveHasWordTimestamps
         ? words.map((w, wi) => {
@@ -583,8 +585,8 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
           const wordSingerColorClass = (globalIdx !== null && !customHex) ? (WORD_SINGER_PREVIEW_COLORS[globalIdx] || '') : '';
           const wordSingerColorStyle = customHex ? getCustomColorStyle(customHex, isActive) : undefined;
 
-          const wordContent = w.reading && isKanjiWord(w.word) && showFuriganaInPreview
-            ? <ruby>{w.word}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{fmtReading(w.reading)}</rt><rp>)</rp></ruby>
+          const wordContent = w.reading && isKanjiWord(w.word)
+            ? <ruby className={rubyRatioClass(w.word, w.reading)}>{w.word}<rp>(</rp><rt>{fmtReading(w.reading)}</rt><rp>)</rp></ruby>
             : w.word;
 
           let progress = 0;
@@ -645,7 +647,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
           const singerFallbackColorClass = (singerFallbackGlobalIdx !== null && !singerFallbackCustomHex) ? (WORD_SINGER_PREVIEW_COLORS[singerFallbackGlobalIdx] || '') : '';
           const singerFallbackStyle = singerFallbackCustomHex ? getCustomColorStyle(singerFallbackCustomHex, false) : undefined;
 
-          const plainContent = hasReadings ? renderLineWithReadings(line, fmtReading, showFuriganaInPreview) : mainText;
+          const plainContent = hasReadings ? renderLineWithReadings(line, fmtReading) : mainText;
           return (singerFallbackColorClass || singerFallbackStyle)
             ? <span className={singerFallbackColorClass} style={singerFallbackStyle}>{plainContent}</span>
             : plainContent;
@@ -779,7 +781,7 @@ function ParsedSecondary({ text }: { text?: string }) {
     const key = charOffset;
     charOffset += seg.text.length;
     return seg.reading ? (
-      <ruby key={key}>{seg.text}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{seg.reading}</rt><rp>)</rp></ruby>
+      <ruby key={key} className={rubyRatioClass(seg.text, seg.reading)}>{seg.text}<rp>(</rp><rt>{seg.reading}</rt><rp>)</rp></ruby>
     ) : (
       <React.Fragment key={key}>{seg.text}</React.Fragment>
     );
@@ -794,16 +796,16 @@ function isKanjiWord(word?: string): boolean {
 
 
 // ——— Render line text with ruby annotations from word.reading (only on kanji) ———
-function renderLineWithReadings(line: EditorLine, fmtReading: ReadingFmt, showFurigana = true) {
+function renderLineWithReadings(line: EditorLine, fmtReading: ReadingFmt) {
   const words = line.words || [];
   if (words.length === 0) return line.text || '';
   return words.map((w, i) => {
     const addSpace = needsSpaceAfter(w.word, words[i + 1]?.word);
-    if (w.reading && isKanjiWord(w.word) && showFurigana) {
+    if (w.reading && isKanjiWord(w.word)) {
       return (
 
         <React.Fragment key={`word-${i}`}>
-          <ruby>{w.word}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{fmtReading(w.reading)}</rt><rp>)</rp></ruby>
+          <ruby className={rubyRatioClass(w.word, w.reading)}>{w.word}<rp>(</rp><rt>{fmtReading(w.reading)}</rt><rp>)</rp></ruby>
           {addSpace ? ' ' : null}
         </React.Fragment>
       );

@@ -20,6 +20,11 @@ interface EditorActionDrawerProps {
   playerRef?: PlayerRefLike | null;
   handleClearWordTimestamp: (lineIndex: number, wordIndex: number, layer: string) => void;
   handleSetWordReading: (lineIndex: number, wordIndex: number, val: string) => void;
+  handleMergeWordWithNext?: (lineIndex: number, wordIndex: number) => void;
+  handleSplitWord?: (lineIndex: number, wordIndex: number) => void;
+  handleRegroupLine?: (lineIndex: number) => void;
+  /** Words of the owning line, so the drawer knows whether a merge target exists. */
+  lineWordCount?: number;
   handleClearLine: (lineIndex: number) => void;
   handleDeleteLine: (lineIndex: number) => void;
   handleBulkClearTimestamps: () => void;
@@ -35,6 +40,10 @@ interface EditorActionDrawerProps {
 export default function EditorActionDrawer({
   activeDrawer,
   wordData,
+  handleMergeWordWithNext,
+  handleSplitWord,
+  handleRegroupLine,
+  lineWordCount = 0,
   lineData,
   selectedCount,
   onClose,
@@ -112,6 +121,42 @@ export default function EditorActionDrawer({
                 if (newReading !== null) {
                   handleSetWordReading(wordData.lineIndex!, wordData.wordIndex!, newReading);
                 }
+              }}
+            />
+          )}
+
+          {/* Grouping repairs. Automatic grouping gets the ordinary line right but
+              cannot settle a kana prefix, a 熟字訓, or a word the singer holds
+              apart, so the chips stay editable by hand. */}
+          {handleMergeWordWithNext && wordData.wordIndex != null && wordData.wordIndex < lineWordCount - 1 && (
+            <DrawerItem
+              iconName="link"
+              label={t('editor.grouping.mergeNext')}
+              onClick={() => {
+                onClose();
+                handleMergeWordWithNext(wordData.lineIndex!, wordData.wordIndex!);
+              }}
+            />
+          )}
+
+          {handleSplitWord && [...(wordData.word?.word || '')].length > 1 && (
+            <DrawerItem
+              iconName="call_split"
+              label={t('editor.grouping.split')}
+              onClick={() => {
+                onClose();
+                handleSplitWord(wordData.lineIndex!, wordData.wordIndex!);
+              }}
+            />
+          )}
+
+          {handleRegroupLine && (
+            <DrawerItem
+              iconName="auto_fix_high"
+              label={t('editor.grouping.regroup')}
+              onClick={() => {
+                onClose();
+                handleRegroupLine(wordData.lineIndex!);
               }}
             />
           )}

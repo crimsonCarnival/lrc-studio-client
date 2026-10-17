@@ -4,6 +4,7 @@ import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { Icon } from '@/shared/ui/Icon';
 import type { EditorLine } from '@/features/editor/services/editor.service';
+import { hasKanji } from '@/shared/utils/furigana';
 import { LogoLoader } from '@ui/LogoLoader';
 
 interface EditorToolbarProps {
@@ -13,6 +14,7 @@ interface EditorToolbarProps {
   autoStampHasAudio?: boolean;
   autoStampRunning?: boolean;
   onAutoStamp?: () => void;
+  onOpenFurigana?: () => void;
 }
 
 // Teal is `success`; in the light theme that token is too pale to read as text on
@@ -27,8 +29,17 @@ export default function EditorToolbar({
   autoStampHasAudio,
   autoStampRunning,
   onAutoStamp,
+  onOpenFurigana,
 }: EditorToolbarProps) {
   const { t } = useTranslation();
+
+  // Offered only where it applies: a furigana button on an English-only project
+  // is a permanently useless control.
+  const hasKanjiAnywhere = useMemo(
+    () => lines.some((l) => l.type !== 'section'
+      && (hasKanji(l.text) || l.words?.some((w) => hasKanji(w.word)))),
+    [lines],
+  );
 
   // True once ASR has already stamped this project. Used for *labelling* only —
   // re-running is allowed (and is the only way to stamp lines ASR missed the
@@ -87,6 +98,19 @@ export default function EditorToolbar({
             <span className="hidden sm:inline whitespace-nowrap">
               {isWordsMode ? t('editor.autoStamp.buttonWords') : t('editor.autoStamp.button')}
             </span>
+          </Button>
+        </Tip>
+      )}
+      {onOpenFurigana && hasKanjiAnywhere && (
+        <Tip content={t('editor.furigana.description')}>
+          <Button
+            variant="outline"
+            aria-label={t('editor.furigana.open')}
+            onClick={onOpenFurigana}
+            className="ml-2 h-9 lg:h-9 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-lg shrink-0 text-[13px] lg:text-[13px] font-semibold"
+          >
+            <span lang="ja" aria-hidden="true" className="text-[13px] font-bold leading-none">あ</span>
+            <span className="hidden sm:inline whitespace-nowrap">{t('editor.furigana.open')}</span>
           </Button>
         </Tip>
       )}

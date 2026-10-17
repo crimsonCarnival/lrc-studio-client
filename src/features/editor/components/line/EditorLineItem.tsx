@@ -107,6 +107,7 @@ interface EditorLineItemProps {
   handleSetTimestamp: (lineIndex: number, which: string, val: number) => void;
   stampTarget?: string;
   handleStampTargetToggle?: () => void;
+  handleSetStampTarget?: (target: 'main' | 'secondary' | 'both') => void;
   playbackPosition?: number | null;
   upcomingDepth?: number;
   onWordMenu?: (...args: unknown[]) => void;
@@ -185,8 +186,9 @@ const EditorLineItem = React.memo(({
   handleClearWordTimestamp,
   handleSetActiveWordIndex,
   handleSetTimestamp,
-  stampTarget = 'main',
+  stampTarget = 'both',
   handleStampTargetToggle,
+  handleSetStampTarget,
   playbackPosition,
   upcomingDepth,
   onWordMenu,
@@ -661,6 +663,7 @@ const EditorLineItem = React.memo(({
               setFocusedTimestamp={setFocusedTimestamp}
               stampTarget={stampTarget}
               handleStampTargetToggle={handleStampTargetToggle}
+                        handleSetStampTarget={handleSetStampTarget}
               activeWordIndex={activeWordIndex}
               handleSetTimestamp={handleSetTimestamp}
               handleTimestampWheel={handleTimestampWheel}
@@ -802,6 +805,7 @@ const EditorLineItem = React.memo(({
               setFocusedTimestamp={setFocusedTimestamp}
               stampTarget={stampTarget}
               handleStampTargetToggle={handleStampTargetToggle}
+                        handleSetStampTarget={handleSetStampTarget}
               activeWordIndex={activeWordIndex}
               handleSetTimestamp={handleSetTimestamp}
               handleTimestampWheel={handleTimestampWheel}
