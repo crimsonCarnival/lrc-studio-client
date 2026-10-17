@@ -103,7 +103,7 @@ const LineActionToolbar = memo(({
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+    <div className="flex items-center gap-1.5 flex-shrink-0">
       {/* Mark button — always visible on the active unsaved line */}
       {isActive && editingLineIndex !== lineIndex && (
         <Tip content={(() => {

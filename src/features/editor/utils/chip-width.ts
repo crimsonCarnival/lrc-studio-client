@@ -20,9 +20,15 @@ const CJK_GLYPH = 18;
 
 const CJK_GLYPH_RE = /[\u3040-\u9FFF\uF900-\uFAFF\uFF01-\uFF60]/;
 
-function estimateTextWidth(text: string): number {
+// The romaji sits under the word in 11.5px mono, not in the 18px face, so it is
+// roughly 0.6em per glyph. Measuring it with the face's width made "mezashite"
+// claim a 128px chip when it needs 96, and those extra steps were enough to push
+// the row's last chip onto a second line.
+const ROMAJI_GLYPH = 7;
+
+function estimateTextWidth(text: string, latinGlyph = LATIN_GLYPH): number {
   let width = 0;
-  for (const ch of text) width += CJK_GLYPH_RE.test(ch) ? CJK_GLYPH : LATIN_GLYPH;
+  for (const ch of text) width += CJK_GLYPH_RE.test(ch) ? CJK_GLYPH : latinGlyph;
   return width;
 }
 
@@ -34,7 +40,7 @@ function estimateTextWidth(text: string): number {
 export function chipWidthStep(word?: string, romaji?: string | null): number {
   const content = Math.max(
     estimateTextWidth(word ?? ''),
-    estimateTextWidth(romaji ?? ''),
+    estimateTextWidth(romaji ?? '', ROMAJI_GLYPH),
   );
   if (!content) return MIN_WIDTH;
   const stepped = Math.ceil((content + SIDE_PADDING) / STEP) * STEP;

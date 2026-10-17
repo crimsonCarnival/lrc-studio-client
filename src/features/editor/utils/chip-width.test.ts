@@ -21,9 +21,12 @@ describe('chipWidthStep', () => {
   });
 
   it('fits whichever layer is wider so switching layer never resizes the chip', () => {
-    // mezashite is longer than 目指して renders, so it decides the step.
-    expect(chipWidthStep('目指して', 'mezashite')).toBe(128);
+    // The romaji renders in 11.5px mono, so it is measured narrower than the face:
+    // mezashite fits beside 目指して rather than forcing a wider step.
+    expect(chipWidthStep('目指して', 'mezashite')).toBe(96);
     expect(chipWidthStep('を', 'wo')).toBe(64);
+    // A romaji long enough to actually outrun its word still widens the chip.
+    expect(chipWidthStep('国', 'a'.repeat(30))).toBeGreaterThan(chipWidthStep('国'));
   });
 
   it('falls back to the floor for empty input', () => {

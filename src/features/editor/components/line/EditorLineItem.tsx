@@ -584,7 +584,7 @@ const EditorLineItem = React.memo(({
         // One height and padding for every state (redesign sheet 13): the row never jumps when
         // the cursor lands on it, and the surface alone says what it is. Outline = the line
         // marking acts on (gold while it has an unsaved edit), soft fill = multi-selected.
-        className={`outline-none flex ${editorMode === 'words' ? 'items-start' : 'items-center'} gap-3 min-h-14 px-3.5 py-2 rounded-[14px] transition-[background-color,box-shadow] duration-[var(--duration-state)] ease-out cursor-pointer group relative overflow-visible animate-preview-line-in focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${selectedLines.has(i)
+        className={`outline-none flex ${editorMode === 'words' ? 'items-start gap-2' : 'items-center gap-3'} min-h-14 px-3.5 py-2 rounded-[14px] transition-[background-color,box-shadow] duration-[var(--duration-state)] ease-out cursor-pointer group relative overflow-visible animate-preview-line-in focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${selectedLines.has(i)
           ? `bg-primary-soft inset-ring ${isModified ? 'inset-ring-gold' : 'inset-ring-iris/50'}`
           : isCursor
             // Locked (playback will not move it) reads stronger than merely selected.
@@ -598,7 +598,7 @@ const EditorLineItem = React.memo(({
                   // An unsaved edit is the gold dot beside the time chip; a ring per edited
                   // row turned a freshly stamped verse into a stack of gold boxes.
                   : 'bg-transparent hover:bg-raised'
-          } ${dragIndex === i ? 'opacity-40' : ''} ${justSynced ? 'ring-2 ring-primary/60 animate-just-synced' : ''} ${wordsFocus ? '!bg-transparent !shadow-none !px-0' : ''}`}
+          } ${dragIndex === i ? 'opacity-40' : ''} ${justSynced ? 'ring-2 ring-primary/60 animate-just-synced' : ''} ${wordsFocus ? '!bg-transparent !shadow-none !px-3' : ''}`}
       >
 
         {/* Lock/unlock indicator */}
