@@ -71,7 +71,39 @@ export function hasKanji(text?: string): boolean {
  * Deliberately arithmetic rather than measured: the ratio is resolved once when
  * a line is tokenized and carried on the element, so playback never measures.
  */
-const RT_TO_BASE_SIZE = 10 / 17;
+const RT_TO_BASE_SIZE = 13 / 17;
+
+/** Small kana and the sokuon take roughly half a square. */
+const NARROW_KANA = /[ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮ]/;
+
+/** Width of a reading in base-font squares. */
+function readingSquares(reading: string): number {
+  let n = 0;
+  for (const ch of reading) n += NARROW_KANA.test(ch) ? 0.5 : 1;
+  return n;
+}
+
+/**
+ * The rt font size, in em of the base, at which a reading stops outrunning the
+ * kanji it sits over.
+ *
+ * A reading like ごくさいしょく over 極彩色 is seven squares across three, so at a
+ * fixed size it spills well past its kanji and collides with the words beside
+ * it. Sizing it to fit keeps the annotation within its own base. Returned as em
+ * so it works at any of the sizes the ruby is rendered at — list, preview,
+ * modal — without measuring anything.
+ *
+ * The floor is the point where furigana stops being readable; a reading long
+ * enough to need less than that will still overhang a little, which is normal
+ * Japanese typesetting and far less than it overhangs unsized.
+ */
+export function rubyFitEm(word?: string, reading?: string | null): number | null {
+  if (!word || !reading) return null;
+  const kanji = [...splitOkurigana(word).kanji].length;
+  const squares = readingSquares(reading);
+  if (!kanji || !squares) return null;
+  return kanji / squares;
+}
 
 export function rubyRatioClass(word?: string, reading?: string | null): 'r1' | 'r2' | 'r3' {
   if (!word || !reading) return 'r1';
@@ -153,6 +185,12 @@ export function splitOkurigana(word?: string): OkuriganaSplit {
     kanji: chars.slice(first, end).join(''),
     tail: chars.slice(end).join(''),
   };
+}
+
+/** Inline style that keeps a long reading from outrunning its kanji. */
+export function rubyFitStyle(word?: string, reading?: string | null): Record<string, string> | undefined {
+  const em = rubyFitEm(word, reading);
+  return em == null ? undefined : ({ '--size-ruby-fit': `${em.toFixed(3)}em` } as Record<string, string>);
 }
 
 export interface RubyAtom {

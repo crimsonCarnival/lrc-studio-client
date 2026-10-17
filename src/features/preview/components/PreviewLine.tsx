@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Ref } from 'react';
 import { useSettings } from '@/features/settings/useSettings';
-import { toHiragana, toKatakana, parseRubyMarkup, rubyRatioClass, splitOkurigana } from '@/shared/utils/furigana';
+import { toHiragana, toKatakana, parseRubyMarkup, rubyRatioClass, splitOkurigana, rubyFitStyle } from '@/shared/utils/furigana';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import { useTranslation } from 'react-i18next';
 import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
@@ -781,7 +781,7 @@ function ParsedSecondary({ text }: { text?: string }) {
     const key = charOffset;
     charOffset += seg.text.length;
     return seg.reading ? (
-      <ruby key={key} className={rubyRatioClass(seg.text, seg.reading)}>{seg.text}<rp>(</rp><rt>{seg.reading}</rt><rp>)</rp></ruby>
+      <ruby key={key} className={rubyRatioClass(seg.text, seg.reading)} style={rubyFitStyle(seg.text, seg.reading)}>{seg.text}<rp>(</rp><rt>{seg.reading}</rt><rp>)</rp></ruby>
     ) : (
       <React.Fragment key={key}>{seg.text}</React.Fragment>
     );
@@ -799,7 +799,7 @@ function RubyWord({ word, reading }: { word?: string; reading?: string | null })
   return (
     <>
       {lead}
-      <ruby className={rubyRatioClass(kanji, reading)}>
+      <ruby className={rubyRatioClass(kanji, reading)} style={rubyFitStyle(kanji, reading)}>
         {kanji}<rp>(</rp><rt>{reading}</rt><rp>)</rp>
       </ruby>
       {tail}
