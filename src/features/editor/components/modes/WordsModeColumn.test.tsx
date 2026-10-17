@@ -117,6 +117,26 @@ describe('WordsModeChips — redesigned chip geometry', () => {
     expect(container.textContent).not.toContain('takami');
   });
 
+  it('omits the romaji line on words that are not Japanese', () => {
+    // Under "dreamers" the romaji just repeats the word, so it is left off; the
+    // Japanese words still carry theirs.
+    const { container } = renderChips('both');
+    expect(container.textContent).not.toContain('dreamersdreamers');
+    expect(container.textContent).toContain('takami');
+  });
+
+  it('puts the romaji in the face in romaji mode, so it differs from both mode', () => {
+    const romaji = sizedChips(renderChips('secondary').container);
+    const both = sizedChips(renderChips('both').container);
+    // Same geometry either way...
+    expect(romaji.map((c) => c.width)).toEqual(both.map((c) => c.width));
+    // ...but the layers swap round, rather than the two modes looking the same.
+    const textOf = (target: string) => [...renderChips(target).container.querySelectorAll('[style*="width"]')]
+      .map((e) => e.textContent?.replace('--:--', '') ?? '').join('|');
+    expect(textOf('secondary')).toContain('takami高み');
+    expect(textOf('both')).toContain('高みtakami');
+  });
+
   it('renders one chip per word rather than a separate row per layer', () => {
     // The old build swapped a box row for a pill row; both layers now live in the
     // same seven chips.

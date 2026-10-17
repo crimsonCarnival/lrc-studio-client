@@ -172,8 +172,10 @@ export function WordsModeTimestamp({
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col gap-1">
-      {/* Line-level timestamp + layer toggle */}
+    <div className="flex flex-col items-start gap-1">
+      {/* Line-level timestamp, with the layer control stacked under it rather
+          than beside it: side by side this column ran wide enough to push the
+          last chip onto a second row. */}
       <div className="flex items-center gap-1">
         {editingTimestamp === 'start' && isSynced ? (
           <InlineTimestampEdit
@@ -195,11 +197,12 @@ export function WordsModeTimestamp({
             nudgeIndicator={isSynced ? nudgeIndicator : null}
           />
         )}
-        {/* Layer control. Rendered only on lines that actually contain Japanese —
+      </div>
+      {/* Layer control. Rendered only on lines that actually contain Japanese —
             a permanently greyed-out control on every English line is just noise —
             and each glyph carries its label, because 主 and ロ alone do not read. */}
         {hasCJK(line.text || '') && (
-          <div className="flex items-center gap-0.5 bg-zinc-900 rounded-md p-0.5 shrink-0">
+          <div className="flex items-center gap-0.5 bg-zinc-900 rounded-md p-0.5 shrink-0 max-w-full">
             {([
               { key: 'main', glyph: '主', label: t('editor.stampLayerMainShort'), hint: t('editor.stampLayerMain') },
               { key: 'secondary', glyph: 'ロ', label: t('editor.stampLayerSecondaryShort'), hint: t('editor.stampLayerSecondary') },
@@ -211,7 +214,7 @@ export function WordsModeTimestamp({
                 title={hint}
                 aria-pressed={stampTarget === key}
                 onClick={(e) => { e.stopPropagation(); handleSetStampTarget?.(key); }}
-                className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded leading-none font-semibold transition-all ${stampTarget === key
+                className={`inline-flex items-center gap-1 text-[10px] px-1 py-0.5 rounded leading-none font-semibold transition-all ${stampTarget === key
                   ? 'bg-primary text-zinc-900 shadow-sm'
                   : 'text-zinc-500 hover:text-zinc-200'
                   }`}
@@ -222,7 +225,6 @@ export function WordsModeTimestamp({
             ))}
           </div>
         )}
-      </div>
     </div>
   );
 }
@@ -274,20 +276,34 @@ export function WordsModeChips({
     label: string,
     time: number | null | undefined,
     extras: { collision?: boolean; fill?: { start: number; end: number } | null; romaji?: string | null } = {},
-  ) => (
+  ) => {
+    // A romaji line only says something when the word is Japanese. Under
+    // "dreamers" it would just repeat the word back, so the row stays reserved
+    // -- the height has to stay constant -- but empty.
+    const romajiAddsSomething = hasCJK(label) && !!extras.romaji;
+    // Romaji mode puts the romaji in the face, since that is the layer being
+    // marked, and drops the Japanese underneath it. Ambas keeps the Japanese in
+    // the face with the romaji below. Without this the two read identically.
+    const romajiIsFace = stampTarget === 'secondary' && romajiAddsSomething;
+    const face = romajiIsFace ? extras.romaji! : label;
+    const under = romajiIsFace
+      ? label
+      : (stampTarget !== 'main' && romajiAddsSomething ? extras.romaji : null);
+
+    return (
     <>
       {/* nowrap: the chip is sized for the whole word, so letting a hyphenated one
           like "low-key" break at its hyphen would spill it out of the box. */}
       <span className={`${isActive ? 'font-heading text-[18px] font-bold leading-none whitespace-nowrap' : ''} ${extras.fill ? 'relative whitespace-nowrap' : ''}`}>
-        {label}
-        {extras.fill && <KaraokeFill key={extras.fill.start} label={label} start={extras.fill.start} end={extras.fill.end} />}
+        {face}
+        {extras.fill && <KaraokeFill key={extras.fill.start} label={face} start={extras.fill.start} end={extras.fill.end} />}
       </span>
       {reservesRomaji && (
-        // Rendered even when its text is hidden: the reserved row is what keeps the
-        // chip the same height across layers, so picking a layer never moves the
-        // block bar underneath.
+        // Rendered even when empty: the reserved row is what keeps the chip the
+        // same height across layers, so picking a layer never moves the block bar
+        // underneath.
         <span className="font-mono text-[11.5px] leading-none text-subtle truncate max-w-full">
-          {(stampTarget !== 'main' && extras.romaji) || ' '}
+          {under || ' '}
         </span>
       )}
       {isActive && (
@@ -301,7 +317,8 @@ export function WordsModeChips({
         </span>
       )}
     </>
-  );
+    );
+  };
 
   // Fixed geometry for the active line's chips: width off the 32px step grid, height
   // constant per line. Inactive rows stay compact so a long song still fits on screen.
@@ -312,7 +329,7 @@ export function WordsModeChips({
     <div className="flex flex-col gap-1 w-full">
       {/* Word chips */}
       {(reservesRomaji || stampTarget !== 'secondary') && (
-        <div className={`flex flex-wrap w-full pr-2 min-h-[26px] items-center content-start ${isActive ? 'gap-2.5' : 'gap-1.5'}`}>
+        <div className={`flex flex-wrap w-full min-h-[26px] items-center content-start ${isActive ? 'gap-2' : 'gap-1.5'}`}>
           {(() => {
             let wcs = 0;
             return line.words?.map((w, wi) => {
