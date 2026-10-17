@@ -4,7 +4,7 @@ import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { ReadingInput } from './ReadingInput';
-import { toHiragana, toKatakana, rubyRatioClass, splitOkurigana } from '@/shared/utils/furigana';
+import { toHiragana, toKatakana, rubyRatioClass, splitOkurigana, rubyFitStyle } from '@/shared/utils/furigana';
 import { collectFuriganaTargets, setTextAtomReading } from '@/features/editor/utils/furigana-targets';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 
@@ -20,6 +20,9 @@ interface FuriganaModalProps {
   onSetLineText?: (lineIndex: number, text: string) => void;
   /** Moves the editor's cursor so the list follows along with the modal. */
   onFocusLine?: (lineIndex: number) => void;
+  /** Regrouping, for when the automatic split put a boundary in the wrong place. */
+  onMergeWithNext?: (lineIndex: number, wordIndex: number) => void;
+  onSplitWord?: (lineIndex: number, wordIndex: number) => void;
 }
 
 export function FuriganaModal({
@@ -31,6 +34,8 @@ export function FuriganaModal({
   onSetReading,
   onSetLineText,
   onFocusLine,
+  onMergeWithNext,
+  onSplitWord,
 }: FuriganaModalProps) {
   const { t } = useTranslation();
   const targets = useMemo(() => collectFuriganaTargets(lines), [lines]);
@@ -54,8 +59,14 @@ export function FuriganaModal({
     }
   }
 
+  // Default is the kanji on its own: that is what is being annotated, and the
+  // surrounding kana only make it smaller. The line is one toggle away for when
+  // the reading depends on context.
+  const [showLine, setShowLine] = useState(false);
+
   const current = targets[cursor];
   const currentSplit = splitOkurigana(current?.word);
+  const lineRomaji = current ? (lines[current.lineIndex]?.secondary ?? null) : null;
 
   useEffect(() => {
     if (open && current) onFocusLine?.(current.lineIndex);
@@ -103,18 +114,59 @@ export function FuriganaModal({
             <span>{t('editor.furigana.remaining', { count: remaining })}</span>
           </div>
 
-          {/* The word itself, at a size where the kanji is actually readable */}
-          <div className="flex flex-col items-center gap-2 rounded-xl bg-raised py-7">
-            <p lang="ja" className="ruby-host cjk-reserve-preview text-[56px] font-semibold leading-none">
-              {/* Over the kanji only: the rt spans its ruby's whole box, so wrapping
-                  the okurigana too would stretch the reading across it. */}
-              {currentSplit.lead}
-              <ruby className={rubyRatioClass(currentSplit.kanji, current.reading)}>
-                {currentSplit.kanji || current.word}
-                <rt>{fmt(current.reading) || '　'}</rt>
-              </ruby>
-              {currentSplit.tail}
-            </p>
+          {/* The kanji being annotated, at a size where it is actually readable.
+              Only the kanji by default — the kana around it add nothing to the
+              decision and only force the glyph smaller. */}
+          <div className="flex flex-col items-center gap-2 rounded-xl bg-raised py-7 px-4">
+            {showLine ? (
+              <p lang="ja" className="ruby-host cjk-reserve-list text-[26px] font-semibold leading-relaxed text-center">
+                {current.lineWords.map((w, i) => {
+                  const part = splitOkurigana(w.word);
+                  const isCurrent = i === current.index;
+                  const body = part.kanji && w.reading ? (
+                    <>
+                      {part.lead}
+                      <ruby className={rubyRatioClass(part.kanji, w.reading)} style={rubyFitStyle(part.kanji, w.reading)}>
+                        {part.kanji}
+                        <rt>{fmt(w.reading)}</rt>
+                      </ruby>
+                      {part.tail}
+                    </>
+                  ) : w.word;
+                  return (
+                    <span key={i} className={isCurrent ? 'rounded bg-primary/25 text-primary-ink' : 'text-subtle'}>
+                      {body}
+                      {/\w$/.test(w.word) ? ' ' : ''}
+                    </span>
+                  );
+                })}
+              </p>
+            ) : (
+              <p lang="ja" className="ruby-host cjk-reserve-preview text-[56px] font-semibold leading-none">
+                <ruby
+                  className={rubyRatioClass(currentSplit.kanji, current.reading)}
+                  style={rubyFitStyle(currentSplit.kanji, current.reading)}
+                >
+                  {currentSplit.kanji || current.word}
+                  <rt>{fmt(current.reading) || '　'}</rt>
+                </ruby>
+              </p>
+            )}
+
+            {/* Romaji, when the two layers pair up */}
+            {(showLine ? lineRomaji : current.romaji) && (
+              <p className="font-mono text-[12px] text-subtle text-center">
+                {showLine ? lineRomaji : current.romaji}
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowLine((v) => !v)}
+              className="mt-1 text-[11px] font-medium text-subtle underline-offset-2 hover:text-foreground hover:underline"
+            >
+              {showLine ? t('editor.furigana.showKanjiOnly') : t('editor.furigana.showWholeLine')}
+            </button>
           </div>
 
           {/* Reading field. Keyed so moving to another word remounts it with that
@@ -135,6 +187,43 @@ export function FuriganaModal({
             />
             <p className="text-[11px] text-subtle">{t('editor.furigana.hint')}</p>
           </div>
+
+          {/* Regrouping. Automatic grouping puts the boundary in the wrong place
+              often enough — a kana prefix, a compound the singer holds apart —
+              that the fix has to be reachable from where the mistake is visible.
+              Only lines with a words array can be regrouped; a line still kept as
+              raw text has no boundaries to move. */}
+          {current.source === 'words' && (onMergeWithNext || onSplitWord) && (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-subtle">
+                {t('editor.furigana.regroupHint')}
+              </span>
+              <div className="flex items-center gap-2">
+                {onMergeWithNext && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={current.index >= current.lineWords.length - 1}
+                    onClick={() => onMergeWithNext(current.lineIndex, current.index)}
+                  >
+                    <Icon name="link" size={15} />
+                    {t('editor.grouping.mergeNext')}
+                  </Button>
+                )}
+                {onSplitWord && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={[...current.word].length < 2}
+                    onClick={() => onSplitWord(current.lineIndex, current.index)}
+                  >
+                    <Icon name="call_split" size={15} />
+                    {t('editor.grouping.split')}
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* The line it belongs to, with this word marked */}
           <div lang="ja" className="ruby-host cjk-reserve-list rounded-lg bg-raised/60 px-3 py-2 text-[15px] leading-relaxed">

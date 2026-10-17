@@ -1,6 +1,6 @@
 import { memo, Fragment } from 'react';
 import type { RefObject, ReactNode } from 'react';
-import { parseRubyMarkup, hasKanji, isKanji, hasCJK, toHiragana, toKatakana, rubyRatioClass, splitOkurigana } from '@/shared/utils/furigana';
+import { parseRubyMarkup, hasKanji, isKanji, hasCJK, toHiragana, toKatakana, rubyRatioClass, splitOkurigana, rubyFitStyle } from '@/shared/utils/furigana';
 import { Icon } from '@/shared/ui/Icon';
 import { ReadingInput } from './ReadingInput';
 import { Tip } from '@ui/tip';
@@ -208,7 +208,7 @@ const LineTextContent = memo(({
               const annotatedBase = (rt: ReactNode) => (
                 <span className={spanClass} style={singerColorStyle}>
                   {lead}
-                  <ruby className={rubyRatioClass(kanji, w.reading)}>
+                  <ruby className={rubyRatioClass(kanji, w.reading)} style={rubyFitStyle(kanji, w.reading)}>
                     {kanji}
                     {rt}
                   </ruby>
@@ -362,6 +362,7 @@ const LineTextContent = memo(({
                     <ruby
                       key={startCi}
                       className={`text-primary font-medium cursor-pointer group/ruby relative ${rubyRatioClass(seg.text, seg.reading)}`}
+                      style={rubyFitStyle(seg.text, seg.reading)}
                       role="button"
                       aria-label={seg.reading || seg.text}
                       tabIndex={0}

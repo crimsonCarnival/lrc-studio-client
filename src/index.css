@@ -524,7 +524,7 @@ body,
 :root {
   /* 0.5em is the classical ratio, but at 17px it yields 8.5px — illegible.
      Floor at 10px; above 34px the 0.5em takes over again. */
-  --size-ruby: clamp(10px, 0.5em, 17px);
+  --size-ruby-max: clamp(10px, 0.5em, 17px);
 }
 
 /* The reserve is a per-project decision, not a per-line one: within one project
@@ -541,7 +541,7 @@ body,
      and that has to cover the rt plus its 2px offset. */
   --line-unit: 52px;
   /* 10px furigana is legible in the abstract and not while you are working. */
-  --size-ruby: 13px;
+  --size-ruby-max: 13px;
 }
 
 .cjk-reserve-preview {
@@ -550,7 +550,7 @@ body,
   --line-unit: 2;
   /* Declared exception to the clamp: preview furigana caps at 16px, not the
      17px a straight 0.5em of the 34px base would give. */
-  --size-ruby: clamp(10px, 0.5em, 16px);
+  --size-ruby-max: clamp(10px, 0.5em, 16px);
 }
 
 .ruby-host {
@@ -579,7 +579,11 @@ ruby rt {
   position: absolute;
   bottom: 100%;
   inset-inline: 0;
-  font-size: var(--size-ruby);
+  /* The context sets the size it would like; a long reading sets --size-ruby-fit
+     to the size at which it stops outrunning its kanji, and the smaller wins. The
+     8px floor is where furigana stops being readable: past it a reading overhangs
+     a little rather than shrinking into nothing. */
+  font-size: max(8px, min(var(--size-ruby-max), var(--size-ruby-fit, 99px)));
   line-height: 1;
   text-align: center;
   ruby-align: center;
@@ -604,7 +608,6 @@ ruby rt {
    the 9px floor, before the reading would reach its neighbour. */
 ruby.r3 rt {
   letter-spacing: -0.02em;
-  --size-ruby: 9px;
 }
 
 /* Furigana toggle: opacity only. The rt stays in the DOM so screen readers keep

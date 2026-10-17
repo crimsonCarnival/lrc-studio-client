@@ -14,8 +14,29 @@ export interface FuriganaTarget {
   index: number;
   word: string;
   reading: string | null;
+  /** The romaji paired to this word, when both layers tokenize to the same count. */
+  romaji: string | null;
   /** The owning line broken into display pieces, for the context strip. */
   lineWords: { word: string; reading?: string | null }[];
+}
+
+type PairedWord = { word: string; time?: number | null };
+
+/**
+ * The romaji layer paired word-for-word with the Japanese, or null when the two
+ * layers do not tokenize to the same number of words — pairing by index would
+ * then put the wrong romaji under a word.
+ *
+ * secondaryWords only exists once that layer has been stamped against, so the
+ * romaji is derived from the raw secondary text until then.
+ */
+export function pairedRomaji(line: EditorLine): PairedWord[] | null {
+  const wordCount = line.words?.length ?? 0;
+  if (!wordCount) return null;
+  const stamped = line.secondaryWords as PairedWord[] | undefined;
+  if (stamped?.length) return stamped.length === wordCount ? stamped : null;
+  const derived = (line.secondary || '').trim().split(/\s+/).filter(Boolean);
+  return derived.length === wordCount ? derived.map((word) => ({ word, time: null })) : null;
 }
 
 /**
@@ -33,6 +54,7 @@ export function collectFuriganaTargets(lines: EditorLine[]): FuriganaTarget[] {
 
     const words = line.words ?? [];
     if (words.length) {
+      const romaji = pairedRomaji(line);
       words.forEach((w, index) => {
         if (!hasKanji(w.word)) return;
         targets.push({
@@ -41,6 +63,7 @@ export function collectFuriganaTargets(lines: EditorLine[]): FuriganaTarget[] {
           index,
           word: w.word ?? '',
           reading: w.reading ?? null,
+          romaji: romaji?.[index]?.word ?? null,
           lineWords: words as FuriganaTarget['lineWords'],
         });
       });
@@ -58,6 +81,8 @@ export function collectFuriganaTargets(lines: EditorLine[]): FuriganaTarget[] {
         index,
         word: atom.text,
         reading: atom.reading,
+        // A line kept as raw text has no tokenized romaji to pair against.
+        romaji: null,
         lineWords,
       });
     });

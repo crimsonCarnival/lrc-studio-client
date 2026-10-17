@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rubyRatioClass, splitOkurigana } from './furigana';
+import { rubyRatioClass, splitOkurigana, rubyFitEm } from './furigana';
 
 // The three reference cases from the ruby-rules design sheet. The ratio decides
 // whether a reading needs no adjustment, may overhang into the token's constant
@@ -49,5 +49,30 @@ describe('splitOkurigana', () => {
   it('reports no kanji for a word that has none', () => {
     expect(splitOkurigana('ライナー')).toEqual({ lead: 'ライナー', kanji: '', tail: '' });
     expect(splitOkurigana('')).toEqual({ lead: '', kanji: '', tail: '' });
+  });
+});
+
+// A long reading has to shrink to stay over its own kanji instead of running
+// across the words beside it.
+describe('rubyFitEm', () => {
+  it('shrinks a reading that outruns its kanji', () => {
+    // ごくさいしょく is 6.5 squares over 3 kanji (ょ is a small kana).
+    const em = rubyFitEm('極彩色', 'ごくさいしょく');
+    expect(em).toBeCloseTo(3 / 6.5, 2);
+    expect(em!).toBeLessThan(0.5);
+  });
+
+  it('leaves a reading that already fits at full size', () => {
+    // めざ over 目指 is square for square, so no shrink is asked for.
+    expect(rubyFitEm('目指して', 'めざ')).toBeCloseTo(1, 2);
+  });
+
+  it('measures against the kanji, not the okurigana around it', () => {
+    expect(rubyFitEm('高み', 'たか')).toBeCloseTo(0.5, 2);
+  });
+
+  it('asks for nothing when there is no reading or no kanji', () => {
+    expect(rubyFitEm('ライナー', 'x')).toBeNull();
+    expect(rubyFitEm('高', null)).toBeNull();
   });
 });
