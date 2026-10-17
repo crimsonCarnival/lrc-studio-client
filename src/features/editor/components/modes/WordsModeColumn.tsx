@@ -12,6 +12,7 @@ import { StampedWordChip } from './StampedWordChip';
 import { Icon } from '@/shared/ui/Icon';
 import { singerColorIndex } from '@features/editor/utils/singer-colors';
 import { chipWidthStep } from '../../utils/chip-width';
+import { pairedRomaji } from '../../utils/furigana-targets';
 
 // Per-singer chip color sets [bg, border, text] for stamped and unstamped word chips.
 // Index-aligned with WORD_SINGER_COLORS in LineTextContent.tsx / SINGER_GRADIENT_STOPS
@@ -261,15 +262,10 @@ export function WordsModeChips({
   // secondaryWords only exists once the romaji layer has been stamped against, so
   // the romaji is derived from the raw secondary text until then — otherwise the
   // paired layer would stay invisible until the user happened to switch to it.
-  const romajiWords = useMemo(() => {
-    const wordCount = line.words?.length ?? 0;
-    if (!wordCount) return null;
-    if (line.secondaryWords?.length) {
-      return line.secondaryWords.length === wordCount ? line.secondaryWords : null;
-    }
-    const derived = (line.secondary || '').trim().split(/\s+/).filter(Boolean);
-    return derived.length === wordCount ? derived.map((word) => ({ word, time: null })) : null;
-  }, [line.words?.length, line.secondaryWords, line.secondary]);
+  const romajiWords = useMemo(
+    () => pairedRomaji(line as Parameters<typeof pairedRomaji>[0]),
+    [line],
+  );
   const reservesRomaji = isActive && hasCJK(line.text || '') && !!romajiWords;
 
   const chipBody = (

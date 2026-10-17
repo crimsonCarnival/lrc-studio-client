@@ -1277,6 +1277,8 @@ export default function Editor({
           handleSaveLineText(lineIndex, text, line?.secondary, line?.translations, line?.singers);
         }}
         onFocusLine={setActiveLineIndex}
+        onMergeWithNext={handleMergeWordWithNext}
+        onSplitWord={handleSplitWord}
       />
 
       <AutoStampModal
