@@ -130,7 +130,7 @@ export default function EditorActionDrawer({
               apart, so the chips stay editable by hand. */}
           {handleMergeWordWithNext && wordData.wordIndex != null && wordData.wordIndex < lineWordCount - 1 && (
             <DrawerItem
-              iconName="merge"
+              iconName="link"
               label={t('editor.grouping.mergeNext')}
               onClick={() => {
                 onClose();
@@ -152,7 +152,7 @@ export default function EditorActionDrawer({
 
           {handleRegroupLine && (
             <DrawerItem
-              iconName="autorenew"
+              iconName="auto_fix_high"
               label={t('editor.grouping.regroup')}
               onClick={() => {
                 onClose();
