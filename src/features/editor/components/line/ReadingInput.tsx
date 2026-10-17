@@ -52,7 +52,12 @@ function loadWanakana(): Promise<void> {
 export function ReadingInput({ defaultValue, onCommit, onCancel, className, style, placeholder, readingFormat, selectOnFocus }: ReadingInputProps) {
   const ref = useRef<HTMLInputElement>(null);
   const [error, setError] = useState(false);
-  const committedRef = useRef(false);
+  // What was last sent, rather than "has committed at all". The guard exists to
+  // stop the blur that follows Enter from sending the same value twice; as a
+  // one-shot flag it also killed every later Enter, which only showed up once the
+  // furigana modal kept this input mounted across edits instead of unmounting it.
+  const committedValueRef = useRef<string | null>(null);
+  const cancelledRef = useRef(false);
 
   useEffect(() => {
     const el = ref.current;
@@ -82,10 +87,11 @@ export function ReadingInput({ defaultValue, onCommit, onCancel, className, styl
   }, [readingFormat, selectOnFocus]);
 
   const commit = (val: string, direction = 0) => {
-    if (committedRef.current) return;
+    if (cancelledRef.current) return;
 
     if (!val) {
-      committedRef.current = true;
+      if (committedValueRef.current === '' && direction === 0) return;
+      committedValueRef.current = '';
       onCommit('', direction);
       return;
     }
@@ -107,10 +113,13 @@ export function ReadingInput({ defaultValue, onCommit, onCancel, className, styl
     if (window.wanakana && final && !window.wanakana.isKana(final)) {
       setError(true);
       setTimeout(() => setError(false), 1000);
-      return; // committedRef stays false so user can correct and retry
+      return; // nothing recorded as committed, so the user can correct and retry
     }
 
-    committedRef.current = true;
+    // Re-sending an unchanged value is the blur-after-Enter case and is dropped,
+    // but navigating still goes through so the caller can move on.
+    if (committedValueRef.current === final && direction === 0) return;
+    committedValueRef.current = final;
     onCommit(final, direction);
   };
 
@@ -126,7 +135,7 @@ export function ReadingInput({ defaultValue, onCommit, onCancel, className, styl
           commit(e.currentTarget.value, e.key === 'Tab' ? (e.shiftKey ? -1 : 1) : 0);
         } else if (e.key === 'Escape') {
           e.preventDefault();
-          committedRef.current = true; // prevent blur-on-unmount from committing
+          cancelledRef.current = true; // prevent blur-on-unmount from committing
           onCancel();
         }
         e.stopPropagation();
