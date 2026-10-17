@@ -4,7 +4,7 @@ import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { ReadingInput } from './ReadingInput';
-import { toHiragana, toKatakana, rubyRatioClass } from '@/shared/utils/furigana';
+import { toHiragana, toKatakana, rubyRatioClass, splitOkurigana } from '@/shared/utils/furigana';
 import { collectFuriganaTargets, setTextAtomReading } from '@/features/editor/utils/furigana-targets';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 
@@ -55,6 +55,7 @@ export function FuriganaModal({
   }
 
   const current = targets[cursor];
+  const currentSplit = splitOkurigana(current?.word);
 
   useEffect(() => {
     if (open && current) onFocusLine?.(current.lineIndex);
@@ -105,10 +106,14 @@ export function FuriganaModal({
           {/* The word itself, at a size where the kanji is actually readable */}
           <div className="flex flex-col items-center gap-2 rounded-xl bg-raised py-7">
             <p lang="ja" className="ruby-host cjk-reserve-preview text-[56px] font-semibold leading-none">
-              <ruby className={rubyRatioClass(current.word, current.reading)}>
-                {current.word}
+              {/* Over the kanji only: the rt spans its ruby's whole box, so wrapping
+                  the okurigana too would stretch the reading across it. */}
+              {currentSplit.lead}
+              <ruby className={rubyRatioClass(currentSplit.kanji, current.reading)}>
+                {currentSplit.kanji || current.word}
                 <rt>{fmt(current.reading) || '　'}</rt>
               </ruby>
+              {currentSplit.tail}
             </p>
           </div>
 

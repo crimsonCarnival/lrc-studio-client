@@ -9,7 +9,7 @@ import { Tip } from '@ui/tip';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 import { useSettings } from '@/features/settings/useSettings';
 import { usePlayer } from '@features/player/PlayerContext';
-import { hasCJK, hasKanji, toHiragana, toKatakana } from '@/shared/utils/furigana';
+import { hasCJK, hasKanji, toHiragana, toKatakana, splitOkurigana } from '@/shared/utils/furigana';
 
 // Theme-token colors: the stage sits on the app background, so text derives
 // from --foreground and stays legible in both the dark and light themes.
@@ -240,7 +240,14 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   // Furigana lives on word.reading and only annotates kanji, as in PreviewLine.
   const hasReadings = words.some(w => w.reading && hasKanji(w.word));
   const renderWord = (w: DisplayWord) => w.reading && hasKanji(w.word)
-    ? <ruby>{w.word}<rp>(</rp><rt style={{ paddingBottom: '2px', marginInline: '0.25em' }}>{readingFormat === 'katakana' ? toKatakana(w.reading) : toHiragana(w.reading)}</rt><rp>)</rp></ruby>
+    ? (() => {
+      // The reading sits over the kanji only; okurigana stays outside the ruby.
+      const { lead, kanji, tail } = splitOkurigana(w.word);
+      const r = readingFormat === 'katakana' ? toKatakana(w.reading) : toHiragana(w.reading);
+      return kanji
+        ? <>{lead}<ruby>{kanji}<rp>(</rp><rt>{r}</rt><rp>)</rp></ruby>{tail}</>
+        : <>{w.word}</>;
+    })()
     : w.word;
   const hasWordTimestamps = words.some(w => w.time != null);
   const effectiveHasWordTimestamps = (hasWordTimestamps || (isWordsMode && line.timestamp != null && words.length > 0));
