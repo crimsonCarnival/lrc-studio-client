@@ -186,7 +186,7 @@ const EditorLineItem = React.memo(({
   handleClearWordTimestamp,
   handleSetActiveWordIndex,
   handleSetTimestamp,
-  stampTarget = 'main',
+  stampTarget = 'both',
   handleStampTargetToggle,
   handleSetStampTarget,
   playbackPosition,

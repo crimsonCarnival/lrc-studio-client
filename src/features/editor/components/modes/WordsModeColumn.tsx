@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { MouseEvent, WheelEvent } from 'react';
 import { hasCJK } from '@/shared/utils/furigana';
@@ -255,7 +255,19 @@ export function WordsModeChips({
   // the same number of words. They usually do once the text is grouped by morpheme;
   // when they don't, pairing by index would put the wrong reading under a word, so
   // the layer is left off rather than guessed.
-  const romajiWords = line.secondaryWords?.length === line.words?.length ? line.secondaryWords : null;
+  //
+  // secondaryWords only exists once the romaji layer has been stamped against, so
+  // the romaji is derived from the raw secondary text until then — otherwise the
+  // paired layer would stay invisible until the user happened to switch to it.
+  const romajiWords = useMemo(() => {
+    const wordCount = line.words?.length ?? 0;
+    if (!wordCount) return null;
+    if (line.secondaryWords?.length) {
+      return line.secondaryWords.length === wordCount ? line.secondaryWords : null;
+    }
+    const derived = (line.secondary || '').trim().split(/\s+/).filter(Boolean);
+    return derived.length === wordCount ? derived.map((word) => ({ word, time: null })) : null;
+  }, [line.words?.length, line.secondaryWords, line.secondary]);
   const reservesRomaji = isActive && hasCJK(line.text || '') && !!romajiWords;
 
   const chipBody = (

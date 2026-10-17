@@ -28,9 +28,9 @@ const line = {
   ],
 };
 
-function renderChips(stampTarget: string) {
+function renderChips(stampTarget: string, lineOverride: typeof line | Record<string, unknown> = line) {
   const props = {
-    line,
+    line: lineOverride,
     lineIndex: 0,
     isSynced: true,
     isActive: true,
@@ -99,6 +99,22 @@ describe('WordsModeChips — redesigned chip geometry', () => {
     // The last word has no timestamp but must still show the empty slot, so the
     // chip does not change height when it gets marked.
     expect(container.textContent).toContain('--:--');
+  });
+
+  it('pairs the romaji layer from the raw secondary text, before it has been stamped', () => {
+    // secondaryWords only exists once the romaji layer has been marked against.
+    // Until then the romaji comes from line.secondary, or the paired layer would
+    // stay invisible until the user happened to switch to it.
+    const { secondaryWords: _omitted, ...withoutStampedLayer } = line;
+    const { container } = renderChips('both', withoutStampedLayer);
+    expect(container.textContent).toContain('takami');
+    expect(container.textContent).toContain('mezashite');
+  });
+
+  it('leaves the romaji layer off when the two layers do not have the same count', () => {
+    const mismatched = { ...line, secondaryWords: undefined, secondary: 'we are fighting' };
+    const { container } = renderChips('both', mismatched);
+    expect(container.textContent).not.toContain('takami');
   });
 
   it('renders one chip per word rather than a separate row per layer', () => {

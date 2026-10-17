@@ -92,7 +92,10 @@ export function useEditor({
   const [hoveredLineIndex, setHoveredLineIndex] = useState<number | null>(null);
   const [isActiveLineLocked, setIsActiveLineLocked] = useState(false);
   const [activeWordIndex, setActiveWordIndex] = useState(0);
-  const [stampTarget, setStampTarget] = useState('main'); // 'main' | 'secondary'
+  // 'both' is the default: with the layers grouped by morpheme they have the same
+  // count and read together, so the control picks which one a mark lands on rather
+  // than which one is visible. On a line with no romaji layer it behaves as 'main'.
+  const [stampTarget, setStampTarget] = useState('both'); // 'main' | 'secondary' | 'both'
   const [modifiedLines, setModifiedLines] = useState<Set<number>>(new Set()); // indices modified since last save
 
   const [requestConfirm, confirmModal] = useConfirm();
@@ -207,7 +210,7 @@ export function useEditor({
   const focusedTimestampRef = useRef(focusedTimestamp);
   const selectedLinesRef = useRef(selectedLines);
   const activeWordIndexRef = useRef(0);
-  const stampTargetRef = useRef('main');
+  const stampTargetRef = useRef('both');
   const isPlayingRef = useRef(isPlaying);
   useEffect(() => {
     linesRef.current = lines;
