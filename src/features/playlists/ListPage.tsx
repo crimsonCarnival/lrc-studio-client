@@ -1,3 +1,4 @@
+import { profilePath, listPath } from '@/features/profile/profile-path';
 import { useState, useCallback, lazy, Suspense } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 
@@ -74,7 +75,7 @@ export default function ListPage() {
 
   const handleSave = useCallback(async () => {
     if (!user) {
-      navigate(`/auth/signin?redirect=${encodeURIComponent(`/profile/${accountName}/lists/${listId}`)}`);
+      navigate(`/auth/signin?redirect=${encodeURIComponent(listPath(accountName, listId))}`);
       return;
     }
     setSaveLoading(true);
@@ -170,7 +171,7 @@ export default function ListPage() {
 
             <UserHoverCard accountName={playlist.owner?.accountName ?? accountName ?? ''}>
               <Link
-                to={`/profile/${accountName}`}
+                to={profilePath(accountName)}
                 className="flex items-center gap-2 w-fit hover:opacity-80 transition-opacity mb-3"
               >
                 {playlist.owner?.avatarUrl ? (

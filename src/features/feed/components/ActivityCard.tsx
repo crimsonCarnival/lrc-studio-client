@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useRef } from 'react';
@@ -104,7 +105,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
   return (
     <div ref={cardRef} className="flex gap-3 p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors">
       <UserHoverCard accountName={actor.accountName}>
-        <Link to={`/profile/${actor.accountName}`} className="shrink-0 block">
+        <Link to={profilePath(actor.accountName)} className="shrink-0 block">
           <StaffRing role={actor.staffRole}>
             {actor.avatarUrl ? (
               <img src={actor.avatarUrl} alt={actor.displayName || actor.accountName} referrerPolicy="no-referrer" className="w-9 h-9 rounded-full object-cover" />
@@ -118,7 +119,7 @@ export function ActivityCard({ activity }: { activity: Activity }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm text-zinc-300 leading-snug">
           <UserHoverCard accountName={actor.accountName}>
-            <Link to={`/profile/${actor.accountName}`} className="font-semibold text-white hover:text-primary transition-colors">
+            <Link to={profilePath(actor.accountName)} className="font-semibold text-white hover:text-primary transition-colors">
               {actor.displayName || actor.accountName}
             </Link>
           </UserHoverCard>

@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useCallback } from 'react';
@@ -79,14 +80,14 @@ export function SuggestedUsers({ limit = 8 }: { limit?: number }) {
                 className="relative flex items-center gap-3 p-3 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors"
               >
                 <Link
-                  to={`/profile/${u.accountName}`}
+                  to={profilePath(u.accountName)}
                   aria-label={u.displayName || u.accountName}
                   className="absolute inset-0 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
                 />
                 <div className="relative flex-1 min-w-0 pointer-events-none">
                   <UserHoverCard accountName={u.accountName} userId={u.id}>
                     <Link
-                      to={`/profile/${u.accountName}`}
+                      to={profilePath(u.accountName)}
                       tabIndex={-1}
                       aria-hidden="true"
                       className="flex items-center gap-3 min-w-0 pointer-events-auto"

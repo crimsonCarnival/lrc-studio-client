@@ -5,6 +5,7 @@ import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
 import { useNavigate, useLocation, NavLink, Link } from 'react-router-dom';
+import { isProjectViewPath, isProjectEditorPath } from '@/features/projects/project-path';
 import { guardedLinkClick } from './guarded-link-click';
 import { Icon } from '@/shared/ui/Icon';
 import { HeaderSearchBar } from '@/features/search/components/HeaderSearchBar';

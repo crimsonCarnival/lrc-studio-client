@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import type { ArtistCredit } from '@/features/artists/artist-credits';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { ProgressRing } from '@ui/progress-ring';
@@ -11,7 +12,7 @@ export interface AlmostDoneProject {
   coverImage?: string;
   lineCount?: number;
   syncedLineCount?: number;
-  metadata?: { songArtist?: string; genre?: string };
+  metadata?: { songArtist?: string; artists?: ArtistCredit[]; genre?: string };
 }
 
 const MAX_SHOWN = 4;

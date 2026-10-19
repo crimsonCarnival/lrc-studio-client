@@ -1,5 +1,6 @@
 import { request } from '@/app/api.client';
 import type { EditorLine } from './editor.service';
+import { toArtistInput, type ArtistCredit } from '@/features/artists/artist-credits';
 import {
   parseLrcSrtFile as localParse,
   compileLRC as localCompileLRC,
@@ -22,6 +23,10 @@ interface CompileLrcParams {
   includeSecondary?: boolean;
   wordPrecision?: number | string;
   exportTranslationIndex?: number;
+  /** Credits for `[ar:]` (sent as `metadata.artists`); the server writes them with the shared formatter. */
+  artists?: ArtistCredit[];
+  /** `[ti:]` becomes `Title (feat. A & B)`. The server default is off. */
+  includeFeaturedInTitle?: boolean;
 }
 
 interface CompileSrtParams {
@@ -56,14 +61,23 @@ export const lyricsService = {
     }
   },
 
-  async compileLrc({ lines, includeTranslations, precision, metadata, lineEndings, includeSecondary, wordPrecision, exportTranslationIndex = 0 }: CompileLrcParams): Promise<unknown> {
+  async compileLrc({ lines, includeTranslations, precision, metadata, lineEndings, includeSecondary, wordPrecision, exportTranslationIndex = 0, artists, includeFeaturedInTitle = false }: CompileLrcParams): Promise<unknown> {
+    const hasCredits = !!artists && artists.length > 0;
     try {
       return await request('/lyrics/compile/lrc', {
         method: 'POST',
-        body: JSON.stringify({ lines, includeTranslations, precision, metadata, lineEndings, includeSecondary, wordPrecision, exportTranslationIndex }),
+        body: JSON.stringify({
+          lines, includeTranslations, precision, lineEndings, includeSecondary, wordPrecision, exportTranslationIndex,
+          // `metadata.artists` overrides `metadata.ar`: the server writes `[ar:]` with the shared formatter.
+          metadata: hasCredits ? { ...(metadata as object), artists: toArtistInput(artists) } : metadata,
+          includeFeaturedInTitle: hasCredits && includeFeaturedInTitle,
+        }),
       });
     } catch {
-      const output = localCompileLRC(lines as EditorLine[], includeTranslations, precision as 'hundredths' | 'thousandths' | undefined, metadata as Parameters<typeof localCompileLRC>[3], lineEndings as 'lf' | 'crlf' | undefined, includeSecondary, wordPrecision as string | undefined, exportTranslationIndex);
+      const output = localCompileLRC(lines as EditorLine[], includeTranslations, precision as 'hundredths' | 'thousandths' | undefined, metadata as Parameters<typeof localCompileLRC>[3], lineEndings as 'lf' | 'crlf' | undefined, includeSecondary, wordPrecision as string | undefined, exportTranslationIndex, true, {
+        artists,
+        includeFeaturedInTitle,
+      });
       return { output, format: 'lrc' };
     }
   },

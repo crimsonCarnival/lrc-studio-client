@@ -41,8 +41,12 @@ export interface ProjectMetadata {
   description?: string;
   tags?: string[];
   songName?: string;
+  /** Ordered credits, primaries first. The singer roster and every artist display are built from these. */
+  artists?: ArtistCredit[];
+  /** Read-only display string derived from the credits. Never sent to the server. */
   songArtist?: string;
-  songArtists?: string[];
+  /** The credits were edited this session; only then is an empty list sent (it would clear the stored artists). */
+  artistsDirty?: boolean;
   songAlbum?: string;
   songYear?: string | number;
   genre?: string;
@@ -297,10 +301,7 @@ export function useAppState(user?: AuthUserType | null) {
         if (parsed.title) setMediaTitle(parsed.title);
         if (parsed.metadata) {
           const m = parsed.metadata;
-          setProjectMetadata({
-            ...m,
-            songArtists: Array.isArray(m.songArtists) && m.songArtists.length > 0 ? m.songArtists : splitArtists(m.songArtist || ''),
-          });
+          setProjectMetadata(m);
         }
         if (parsed.uploadedAudio) {
           setUploadedAudio(parsed.uploadedAudio);
@@ -351,8 +352,8 @@ export function useAppState(user?: AuthUserType | null) {
               description: m.description || '',
               tags: m.tags || [],
               songName: m.songName || '',
+              artists: creditsOf(m),
               songArtist: m.songArtist || '',
-              songArtists: Array.isArray(m.songArtists) && m.songArtists.length > 0 ? m.songArtists : splitArtists(m.songArtist || ''),
               songAlbum: m.songAlbum || '',
               songYear: m.songYear || '',
               genre: m.genre || '',
@@ -380,7 +381,7 @@ export function useAppState(user?: AuthUserType | null) {
                   description: project.metadata?.description || '',
                   tags: project.metadata?.tags || [],
                   songName: project.metadata?.songName || '',
-                  songArtist: project.metadata?.songArtist || '',
+                  artists: creditsOf(project.metadata as ProjectMetadata),
                   songAlbum: project.metadata?.songAlbum || '',
                   songYear: project.metadata?.songYear || '',
                 }
@@ -487,10 +488,7 @@ export function useAppState(user?: AuthUserType | null) {
       if (parsed.title) setMediaTitle(parsed.title);
       if (parsed.metadata) {
         const m = parsed.metadata;
-        setProjectMetadata({
-          ...m,
-          songArtists: Array.isArray(m.songArtists) && m.songArtists.length > 0 ? m.songArtists : splitArtists(m.songArtist || ''),
-        });
+        setProjectMetadata(m);
       }
       if (parsed.uploadedAudio) {
         setUploadedAudio(parsed.uploadedAudio);

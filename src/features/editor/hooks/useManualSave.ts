@@ -1,5 +1,6 @@
 import { useRef, useCallback, useLayoutEffect } from 'react';
 const DateTimeFormat = Intl.DateTimeFormat;
+import { artistErrorMessageFor } from '@/features/artists/artist-errors';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { projects, uploads, getAccessToken, auth } from '@/app/api';
@@ -36,6 +37,7 @@ function toLocalISOString(date: Date, utcOffset: string): string {
 import deepEqual from 'fast-deep-equal';
 import { flatToSections, flatIndexToSectionPos } from '../utils/sections';
 import type { EditorLine } from '@/features/editor/services/editor.service';
+import { artistDisplay } from '@/features/artists/artist-credits';
 
 const cloneValue = <T,>(v: T): T => structuredClone(v);
 
@@ -248,8 +250,8 @@ export function useManualSave({
     let finalTitle = overrides.title !== undefined ? overrides.title : (mediaTitle || '');
     const GENERIC_TITLES = ['Sin título', 'Untitled', '無題'];
     if (GENERIC_TITLES.includes(finalTitle)) {
-      const { songName, songArtists, songArtist } = finalMetadata || {};
-      const artistStr = Array.isArray(songArtists) && songArtists.length > 0 ? songArtists.join(', ') : (songArtist || '');
+      const { songName } = finalMetadata || {};
+      const artistStr = artistDisplay(finalMetadata);
       if (songName) finalTitle = artistStr ? `${songName} - ${artistStr}` : songName;
     }
     if (overrides.isPublic !== undefined) payload.public = overrides.isPublic;
@@ -341,7 +343,7 @@ export function useManualSave({
               }
             }
             console.error('[Manual Save] Server error:', err);
-            toast.error(t('project.saveFailed'));
+            toast.error(artistErrorMessageFor(t, err) ?? t('project.saveFailed'));
             setSaveFailed?.(true);
             // Nothing was persisted: skip onSaveSuccess, which would clear the editor's
             // unsaved markers and leave it claiming "Saved".
@@ -393,7 +395,7 @@ export function useManualSave({
           toast.success(t('project.created'));
         } catch (err) {
           console.error(err);
-          toast.error(t('project.createFailed'));
+          toast.error(artistErrorMessageFor(t, err) ?? t('project.createFailed'));
         } finally {
           isCreatingProjectRef.current = false;
         }

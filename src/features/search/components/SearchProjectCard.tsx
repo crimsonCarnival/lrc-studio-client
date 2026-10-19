@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { artistDisplay } from '@/features/artists/artist-credits';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { ProjectListCover } from '@/features/projects/components/ProjectListCover';

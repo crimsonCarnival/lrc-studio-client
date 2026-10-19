@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { artistErrorMessageFor } from '@/features/artists/artist-errors';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
 import toast from 'react-hot-toast';
@@ -16,7 +17,7 @@ const STEADY_INTERVAL_MS = 30000;
 
 interface PendingRecord {
   savedAt?: number;
-  metadata?: { songArtists?: string[]; songArtist?: string; [key: string]: unknown };
+  metadata?: { artists?: Array<{ name: string; role: string; order: number }>; songArtist?: string; [key: string]: unknown };
   [key: string]: unknown;
 }
 
@@ -87,14 +88,6 @@ export default function GuestProjectSaveGate() {
             ytUrl?: string; uploadUrl?: string; uploadPublicId?: string; fileName?: string; duration?: number;
           };
 
-          if (payload.metadata) {
-            const { songArtists, ...restMeta } = payload.metadata as { songArtists?: string[]; songArtist?: string; [key: string]: unknown };
-            const songArtist = Array.isArray(songArtists) && songArtists.length > 0
-              ? songArtists.join(', ')
-              : (restMeta.songArtist ?? '');
-            payload.metadata = { ...restMeta, songArtist };
-          }
-
           // Resolve upload → get a real DB uploadId so the GraphQL mutation can link it.
           let uploadId: string | undefined;
           if (ytUrl) {
@@ -134,6 +127,9 @@ export default function GuestProjectSaveGate() {
           navigateRef.current(dest ?? '/library', { replace: true });
         } catch {
           if (cancelled) return;
+          // A validation failure will not fix itself: say what is wrong instead of retrying forever.
+          const invalid = artistErrorMessageFor(t, err);
+          if (invalid) { toast.error(invalid); return; }
           const delay = getBackoffDelay(attemptRef.current);
           attemptRef.current += 1;
           setDisplayAttempt(attemptRef.current);
