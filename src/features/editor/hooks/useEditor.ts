@@ -16,6 +16,7 @@ import {
   detectDuplicateTimestamps,
   normalizeLineMode,
   clampWordTime,
+  alignLineStart,
 } from '../services/editor.service';
 import { captureAdLib, moveAdLib, isAdLib } from '../services/ad-libs';
 import {
@@ -479,7 +480,12 @@ export function useEditor({
         } else if (type === 'word') {
           // Not used yet, but ready for future
         } else {
-          updated[index] = { ...updated[index], timestamp: numericValue };
+          // Words mode keeps the line's start and its first word together, so typing
+          // a start time moves the first chip with it rather than leaving the two
+          // showing different numbers.
+          updated[index] = editorMode === 'words'
+            ? alignLineStart(updated[index], numericValue)
+            : { ...updated[index], timestamp: numericValue };
           for (let j = index + 1; j < updated.length; j++) {
             if (updated[j].type === 'section') break;
             if (updated[j].adLibOf != null) {
@@ -495,7 +501,7 @@ export function useEditor({
         playerRef.current.seek(numericValue);
       }
     },
-    [setLines, playerRef],
+    [setLines, playerRef, editorMode],
   );
 
   const shiftTime = useCallback(
@@ -554,7 +560,10 @@ export function useEditor({
           if (!isNaN(newWordTime)) {
             const newWords = [...(updated[index][wField] || [])];
             newWords[wi] = { ...newWords[wi], time: newWordTime };
-            updated[index] = { ...updated[index], [wField]: newWords };
+            const nudged = { ...updated[index], [wField]: newWords };
+            // The first word is the line's start; nudging one nudges both. The
+            // romaji track is marked on its own, so only the main layer carries it.
+            updated[index] = wi === 0 && wField === 'words' ? alignLineStart(nudged, newWordTime) : nudged;
           }
         } else if (
           (editorMode === 'srt' || editorMode === 'words') &&
@@ -569,7 +578,9 @@ export function useEditor({
         } else if (updated[index].timestamp != null) {
           const newTimestamp = Math.max(0, Number(updated[index].timestamp) + numericDelta);
           if (!isNaN(newTimestamp)) {
-            updated[index] = { ...updated[index], timestamp: newTimestamp };
+            updated[index] = editorMode === 'words'
+              ? alignLineStart(updated[index], newTimestamp)
+              : { ...updated[index], timestamp: newTimestamp };
           }
         }
         return updated;
@@ -1207,6 +1218,10 @@ export function useEditor({
     });
   }, [selectedLines, setLines]);
 
+  // Clearing a word only clears that word. The first word and the line's start are
+  // kept together by alignLineStart on every *write* to either one, but not here:
+  // erasing a word is a request to re-mark it, not to unsync the line, and dropping
+  // line.timestamp would also pull the line out of the lrc/srt output it is in.
   const handleClearWordTimestamp = useCallback((lineIndex, wordIndex, field = 'words') => {
     setLines((prev) => {
       const updated = [...prev];

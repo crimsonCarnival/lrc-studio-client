@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useReplaceSearch } from './useReplaceSearch';
 
-export function useThemeSync(theme?: string) {
+export function useThemeSync(theme?: string, fontWeight?: string) {
   const { i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const replaceSearch = useReplaceSearch();
@@ -17,6 +17,16 @@ export function useThemeSync(theme?: string) {
       root.classList.add('dark');
     }
   }, [theme]);
+
+  // 1b. Apply the type weight ramp. Undefined means the caller has no settings to
+  // read (the auth page), so the attribute the first-paint script wrote is left
+  // alone rather than being reset to the default.
+  useEffect(() => {
+    if (fontWeight === undefined) return;
+    const root = document.documentElement;
+    if (fontWeight === 'normal') root.removeAttribute('data-font-weight');
+    else root.setAttribute('data-font-weight', fontWeight);
+  }, [fontWeight]);
 
   // 2. Sync Language -> URL
   // When language changes, update the URL silently.

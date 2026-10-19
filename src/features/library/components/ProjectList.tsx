@@ -7,16 +7,20 @@ interface ProjectListProps {
   projects?: CardProject[];
   // publicId, not the project: Library's handlers and ProjectCard's callbacks
   // both speak publicId. Declaring these as project-shaped is what let the list
-  // hand the whole object to loadProject and navigate to /project/[object Object].
+  // hand the whole object to loadProject and navigate to a path built from it.
   onDelete?: (publicId: string) => void;
   onFavorite?: (publicId: string) => void;
-  onSelect?: (publicId: string) => void;
+  // Opening also needs the canonical editor path: project URLs are owner-scoped,
+  // so publicId alone is not enough to build one.
+  onSelect?: (publicId: string, editPath: string | null) => void;
+  /** The owner's account name — this list only ever shows the signed-in user's projects. */
+  ownerAccountName?: string | null;
 }
 
 /**
  * Mobile list view for projects — renders projects as full-width list items.
  */
-export default function ProjectList({ projects, onDelete, onFavorite, onSelect }: ProjectListProps) {
+export default function ProjectList({ projects, onDelete, onFavorite, onSelect, ownerAccountName }: ProjectListProps) {
   const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-3 p-4">
@@ -29,6 +33,7 @@ export default function ProjectList({ projects, onDelete, onFavorite, onSelect }
             onDelete={onDelete}
             onFavorite={onFavorite}
             onSelect={onSelect}
+            ownerAccountName={ownerAccountName}
             isListView={true}
             // ProjectList is only ever fed Library's own project list (the
             // signed-in user's projects) — same ownership guarantee as Library.tsx.

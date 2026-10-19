@@ -10,6 +10,7 @@ import { getPendingProject, clearPendingProject } from '@/features/editor/servic
 import { projectsService } from '@/features/projects/services/projects.service';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { LogoLoader } from '@ui/LogoLoader';
+import { projectEditPath } from '@/features/projects/project-path';
 
 const BACKOFF_INTERVALS_MS = [2000, 4000, 8000, 16000, 32000];
 const STEADY_INTERVAL_MS = 30000;
@@ -45,8 +46,12 @@ export default function GuestProjectSaveGate() {
   // listing them as dependencies (which would re-fire the effect on every render).
   const navigateRef = useRef(navigate);
   const executeRecaptchaRef = useRef(executeRecaptcha);
+  // The draft is created under this user, so they own it and their account name
+  // is the owner segment of the project's URL.
+  const accountNameRef = useRef(user?.accountName);
   useLayoutEffect(() => { navigateRef.current = navigate; });
   useLayoutEffect(() => { executeRecaptchaRef.current = executeRecaptcha; });
+  useLayoutEffect(() => { accountNameRef.current = user?.accountName; });
 
   useEffect(() => {
     if (!isActive) return;
@@ -115,8 +120,12 @@ export default function GuestProjectSaveGate() {
             recaptchaToken,
           });
           await clearPendingProject();
-          navigateRef.current(`/project/${result.publicId}/edit`, { replace: true });
-        } catch (err) {
+          const dest = projectEditPath(
+            { publicId: result.publicId, slug: (result as { slug?: string | null }).slug },
+            accountNameRef.current,
+          );
+          navigateRef.current(dest ?? '/library', { replace: true });
+        } catch {
           if (cancelled) return;
           // A validation failure will not fix itself: say what is wrong instead of retrying forever.
           const invalid = artistErrorMessageFor(t, err);

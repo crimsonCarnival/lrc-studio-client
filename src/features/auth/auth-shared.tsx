@@ -9,6 +9,7 @@ import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 
 import { LANGUAGES, getLangLabel } from './auth-constants';
+import { isProjectPath } from '@features/projects/project-path';
 
 export function LangSwitcher({ i18n }: { i18n?: I18nInstance }) {
   const currentCode = (i18n?.language || 'en').split('-')[0];
@@ -226,9 +227,10 @@ export function ContextBanner({ redirect, t, onDismiss }: { redirect?: string; t
     const url = new URL(decoded, window.location.origin);
     displayPath = url.pathname;
 
-    if (displayPath.startsWith('/project/') || /^\/[^/]+\/projects\/[^/]+$/.test(displayPath)) {
-      const id = displayPath.split('/').pop();
-      displayPath = id === 'new' ? t('auth.context.newProject') : t('auth.context.project');
+    if (displayPath === '/project/new') {
+      displayPath = t('auth.context.newProject');
+    } else if (displayPath === '/project/local' || isProjectPath(displayPath)) {
+      displayPath = t('auth.context.project');
     } else if (displayPath === '/library') {
       displayPath = t('auth.context.library');
     } else if (displayPath === '/home') {

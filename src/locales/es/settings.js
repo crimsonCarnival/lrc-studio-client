@@ -204,6 +204,9 @@ export default {
     singerColors: "Colores de cantantes",
     singerColorsDesc: "Personaliza los colores predeterminados globales para los cantantes 1-8.",
     fontSize: "Tamaño de fuente del editor",
+    fontWeight: "Grosor del texto",
+    fontWeightDesc: "Qué tan grueso es el texto de la app. Los niveles ligeros aplanan la escala de grosores; nunca baja del corte normal de la fuente.",
+    fontWeightSample: "Letra",
     fontSizeDesc: "Escala del texto en el área de trabajo",
     spacing: "Espaciado entre líneas",
     spacingDesc: "Vertical distancia entre las líneas de letra",
@@ -365,6 +368,11 @@ export default {
       zoom: "Aumentar tamaño",
       color: "Cambiar color",
       dim: "Atenuar otras"
+    },
+    weights: {
+      normal: "Normal",
+      light: "Ligero",
+      lighter: "Más ligero"
     },
     sizes: {
       small: "Pequeño",

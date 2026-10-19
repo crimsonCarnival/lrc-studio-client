@@ -2,6 +2,7 @@ import { EmptyState } from '@ui/EmptyState';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
+import { projectPath } from '@/features/projects/project-path';
 import { usePaginatedProjects } from './hooks/useExplore';
 import { useProjectSearch } from '@/features/search/hooks/useProjectSearch';
 import { LogoLoader } from '@ui/LogoLoader';
@@ -12,24 +13,28 @@ import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/P
 interface ExploreProject {
   id: string;
   publicId?: string;
+  slug?: string | null;
   title?: string | null;
   coverImage?: string | null;
   upload?: { uploadUrl?: string | null } | null;
   accountName?: string;
   user?: { accountName?: string } | null;
   owner?: { accountName?: string } | null;
+  metadata?: { songName?: string | null; songArtist?: string | null } | null;
   starCount?: number | null;
   forkCount?: number | null;
 }
 
+const CARD_CLASS = 'flex flex-col rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors overflow-hidden group';
+
 function ExploreProjectCard({ project }: { project: ExploreProject }) {
   const menuProject = { ...project, publicId: project.publicId ?? project.id };
-  return (
-    <ProjectMenu project={menuProject} isOwner={false}>
-      <Link
-        to={`/project/${project.publicId ?? project.id}`}
-        className="flex flex-col rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors overflow-hidden group"
-      >
+  const ownerAccountName = project.user?.accountName ?? project.owner?.accountName ?? project.accountName;
+  // No owner account name means no canonical URL: the card stays non-navigable
+  // rather than pointing at a path that would 404.
+  const href = projectPath(menuProject, ownerAccountName);
+  const body = (
+    <>
         <div className="aspect-video w-full bg-gradient-to-br from-primary/30 to-violet-500/30 flex items-center justify-center relative shrink-0">
           {project.coverImage || project.upload?.uploadUrl ? (
             <img
@@ -46,7 +51,7 @@ function ExploreProjectCard({ project }: { project: ExploreProject }) {
             {project.title}
           </p>
           <p className="text-xs text-zinc-500 truncate">
-            {project.user?.accountName ?? project.owner?.accountName ?? project.accountName}
+            {ownerAccountName}
           </p>
           <div className="flex items-center justify-between mt-0.5">
             <div className="flex items-center gap-3">
@@ -66,7 +71,13 @@ function ExploreProjectCard({ project }: { project: ExploreProject }) {
             />
           </div>
         </div>
-      </Link>
+    </>
+  );
+  return (
+    <ProjectMenu project={menuProject} isOwner={false} ownerAccountName={ownerAccountName}>
+      {href
+        ? <Link to={href} className={CARD_CLASS}>{body}</Link>
+        : <div className={CARD_CLASS}>{body}</div>}
     </ProjectMenu>
   );
 }

@@ -150,6 +150,7 @@ export const uploadsService = {
           updatedAt
           projects {
             publicId
+            slug
             title
           }
         }
@@ -174,6 +175,7 @@ export const uploadsService = {
           projects {
             id
             publicId
+            slug
             title
             updatedAt
           }

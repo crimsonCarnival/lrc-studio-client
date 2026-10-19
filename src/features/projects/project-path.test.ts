@@ -1,89 +1,100 @@
-import { describe, expect, it } from 'vitest';
-import { editorPath, hasProjectIdentity, projectDisplayName, projectPageTitle, isProjectEditorPath, isProjectViewPath, parseSlugId, projectPath, slugify } from './project-path';
+import { describe, it, expect } from 'vitest';
+import {
+  slugify, projectPath, projectEditPath, publicIdFromSlugId,
+  isProjectViewPath, isEditorPath, isProjectPath,
+} from './project-path';
 
-describe('slugify', () => {
-  it('lowercases, strips accents and punctuation', () => {
-    expect(slugify("Beyoncé — Don't Hurt Yourself!")).toBe('beyonce-dont-hurt-yourself');
-    expect(slugify('Canción del Mariachi')).toBe('cancion-del-mariachi');
+// These cases are copied from the server's project-slug tests: the two
+// implementations have to agree byte for byte or a shared link resolves to a
+// different canonical URL than the one the server put in og:url.
+describe('slugify — must match the server byte for byte', () => {
+  it('strips latin diacritics but leaves kana dakuten alone', () => {
+    expect(slugify('Café')).toBe('cafe');
+    expect(slugify('がぎ')).toBe('がぎ');
   });
-  it('keeps non-Latin letters', () => {
-    expect(slugify('米津玄師 ありがとう')).toBe('米津玄師-ありがとう');
-    expect(slugify('が')).toBe('が');
+
+  it('drops apostrophes rather than turning them into separators', () => {
+    expect(slugify("Don't Stop")).toBe('dont-stop');
   });
-  it('is empty when nothing usable remains', () => {
-    expect(slugify('!!!')).toBe('');
+
+  it('collapses every other run of non-alphanumerics into one dash', () => {
+    expect(slugify('Hello  ---  World!!')).toBe('hello-world');
   });
-  it('caps length without a trailing dash', () => {
-    const slug = slugify('word '.repeat(40));
-    expect(slug.length).toBeLessThanOrEqual(60);
-    expect(slug.endsWith('-')).toBe(false);
+
+  it('caps the length and never ends on a dash or half a surrogate pair', () => {
+    const long = slugify('a'.repeat(80));
+    expect(long).toHaveLength(60);
+    expect(slugify('x'.repeat(59) + ' y')).not.toMatch(/-$/);
+    // A 60-char cut landing mid-pair would make encodeURIComponent throw.
+    expect(() => encodeURIComponent(slugify('😀'.repeat(40)))).not.toThrow();
   });
 });
 
-describe('projectDisplayName', () => {
-  it('uses the song and artist the user typed', () => {
-    expect(projectDisplayName({ title: 'my-file.mp3', metadata: { songName: 'Creep', songArtist: 'Radiohead' } })).toBe('Creep – Radiohead');
-    expect(projectDisplayName({ metadata: { songName: 'Creep', songArtist: 'A feat. B' } })).toBe('Creep – A feat. B');
+describe('projectPath', () => {
+  const project = { publicId: 'vEq0VaYgaM', slug: 'drake-feat-rihanna-song' };
+
+  it('builds the one canonical shape', () => {
+    expect(projectPath(project, 'alice')).toBe('/alice/projects/drake-feat-rihanna-song-vEq0VaYgaM');
+    expect(projectEditPath(project, 'alice')).toBe('/alice/projects/drake-feat-rihanna-song-vEq0VaYgaM/edit');
   });
-  it('falls back to what exists, then the project name', () => {
-    expect(projectDisplayName({ title: 'x', metadata: { songName: 'Creep' } })).toBe('Creep');
-    expect(projectDisplayName({ title: 'x', metadata: { songArtist: 'Radiohead' } })).toBe('Radiohead');
-    expect(projectDisplayName({ title: ' My Song ' })).toBe('My Song');
-    expect(projectDisplayName({})).toBe('');
+
+  it('reads the owner off the project when not passed one', () => {
+    expect(projectPath({ ...project, user: { accountName: 'bob' } })).toBe(
+      '/bob/projects/drake-feat-rihanna-song-vEq0VaYgaM',
+    );
+  });
+
+  it('returns null without an owner, rather than a half-built path', () => {
+    expect(projectPath(project)).toBeNull();
+    expect(projectEditPath(project)).toBeNull();
+  });
+
+  it('derives the slug when the server did not send one', () => {
+    expect(projectPath({ publicId: 'vEq0VaYgaM', metadata: { songArtist: 'Drake', songName: 'Song' } }, 'alice'))
+      .toBe('/alice/projects/drake-song-vEq0VaYgaM');
+  });
+
+  it('still addresses a project whose name slugifies to nothing', () => {
+    expect(projectPath({ publicId: 'vEq0VaYgaM', title: '!!!' }, 'alice')).toBe('/alice/projects/vEq0VaYgaM');
   });
 });
 
-describe('projectPath / parseSlugId', () => {
-  const id = 'k3x9a2c7qm';
-  const project = { publicId: id, user: { accountName: '32blunts' }, metadata: { songArtist: 'Radiohead', songName: 'Creep' } };
+describe('publicIdFromSlugId', () => {
+  it('takes the id off the tail, not by splitting on dashes', () => {
+    // The nanoid alphabet contains '-', so the id itself can hold one.
+    expect(publicIdFromSlugId('a-song-ab-de_1XyZ')).toBe('ab-de_1XyZ');
+    expect(publicIdFromSlugId('vEq0VaYgaM')).toBe('vEq0VaYgaM');
+  });
 
-  it('builds /:accountName/projects/:slug-:publicId', () => {
-    expect(projectPath(project)).toBe(`/32blunts/projects/radiohead-creep-${id}`);
+  it('rejects anything that cannot hold an id', () => {
+    expect(publicIdFromSlugId('short')).toBeNull();
+    expect(publicIdFromSlugId(undefined)).toBeNull();
+    expect(publicIdFromSlugId('a-song-$$$$$$$$$$')).toBeNull();
   });
-  it('falls back to the title, then to the bare id', () => {
-    expect(projectPath({ publicId: id, accountName: 'a', title: 'My Song' })).toBe(`/a/projects/my-song-${id}`);
-    expect(projectPath({ publicId: id, accountName: 'a' })).toBe(`/a/projects/${id}`);
+});
+
+// The router, the layout and the header all branch on these, so a false
+// positive on /project/new or /project/local would mount the wrong shell.
+describe('route-shape predicates', () => {
+  it('matches the canonical shapes and nothing else', () => {
+    expect(isProjectViewPath('/ada/projects/song-name-V1StGXR8_Z')).toBe(true);
+    expect(isProjectViewPath('/ada/projects/song-name-V1StGXR8_Z/edit')).toBe(false);
+    expect(isEditorPath('/ada/projects/song-name-V1StGXR8_Z/edit')).toBe(true);
+    expect(isEditorPath('/ada/projects/song-name-V1StGXR8_Z')).toBe(false);
+    expect(isProjectPath('/ada/projects/x-V1StGXR8_Z/fork')).toBe(true);
+    expect(isProjectPath('/ada/lists/abc')).toBe(false);
   });
-  it('prefers the server-stored slug', () => {
-    expect(projectPath({ ...project, slug: 'stored-slug' })).toBe(`/32blunts/projects/stored-slug-${id}`);
+
+  it('treats the local draft as the editor but never as a project identity', () => {
+    expect(isEditorPath('/project/local')).toBe(true);
+    expect(isProjectPath('/project/local')).toBe(false);
   });
-  it('requires a title, song name or artist that survives slugging', () => {
-    expect(hasProjectIdentity({})).toBe(false);
-    expect(hasProjectIdentity({ title: '  ', metadata: { songName: '', songArtist: '' } })).toBe(false);
-    expect(hasProjectIdentity({ title: '!!!' })).toBe(false);
-    expect(hasProjectIdentity({ title: 'x' })).toBe(true);
-    expect(hasProjectIdentity({ metadata: { songArtist: 'Radiohead' } })).toBe(true);
-    expect(hasProjectIdentity({ metadata: { songName: 'Creep' } })).toBe(true);
-  });
-  it('uses the legacy path when the owner is unknown', () => {
-    expect(projectPath({ publicId: id })).toBe(`/project/${id}`);
-  });
-  it('round-trips, including ids that contain - and _', () => {
-    for (const pid of [id, '-abc_def-g', '_-_-_-_-_a']) {
-      expect(parseSlugId(`radiohead-creep-${pid}`)).toBe(pid);
-      expect(parseSlugId(pid)).toBe(pid);
+
+  it('never matches the identity-free action routes', () => {
+    for (const p of ['/project/new', '/project/local', '/ada', '/profile/ada']) {
+      expect(isProjectViewPath(p)).toBe(false);
+      expect(isProjectPath(p)).toBe(false);
     }
-  });
-  it('builds editor paths, legacy when the owner is unknown', () => {
-    expect(editorPath(project)).toBe(`/32blunts/projects/radiohead-creep-${id}/edit`);
-    expect(editorPath({ publicId: id })).toBe(`/project/${id}/edit`);
-    expect(isProjectEditorPath(editorPath(project))).toBe(true);
-    expect(isProjectViewPath(editorPath(project))).toBe(false);
-  });
-  it('recognises the view path', () => {
-    expect(isProjectViewPath(`/32blunts/projects/radiohead-creep-${id}`)).toBe(true);
-    expect(isProjectViewPath('/project/abc')).toBe(false);
-    expect(isProjectViewPath('/profile/32blunts')).toBe(false);
-  });
-});
-
-describe('projectPageTitle', () => {
-  const syncedBy = (name: string) => `Synced by ${name}`;
-  it('reads "Song – Artist, Synced by accountname"', () => {
-    expect(projectPageTitle('Creep – Radiohead', '32blunts', syncedBy)).toBe('Creep – Radiohead, Synced by 32blunts');
-  });
-  it('drops the owner part when it is not known, and is empty without a name', () => {
-    expect(projectPageTitle('Creep – Radiohead', null, syncedBy)).toBe('Creep – Radiohead');
-    expect(projectPageTitle('', '32blunts', syncedBy)).toBe('');
+    expect(isEditorPath('/project/new')).toBe(false);
   });
 });

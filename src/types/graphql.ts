@@ -738,6 +738,11 @@ export type Project = {
   public?: Maybe<Scalars['Boolean']['output']>;
   publicId: Scalars['String']['output'];
   readOnly?: Maybe<Scalars['Boolean']['output']>;
+  /**
+   * Readable URL slug (artist + song name, else title). `String!` on the server,
+   * optional here because most selections omit it; `projectPath` derives it when absent.
+   */
+  slug?: Maybe<Scalars['String']['output']>;
   starCount?: Maybe<Scalars['Int']['output']>;
   state?: Maybe<ProjectState>;
   syncedLineCount?: Maybe<Scalars['Int']['output']>;

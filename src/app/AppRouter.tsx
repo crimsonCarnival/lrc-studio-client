@@ -18,10 +18,7 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/types';
-import OwnProfileRedirect from '@/features/profile/OwnProfileRedirect';
-import { editorPath, parseSlugId, projectDisplayName, projectPageTitle, projectPath } from '@/features/projects/project-path';
-import { listPath, profilePath } from '@/features/profile/profile-path';
-import { artistDisplay, artistRoster, type ArtistCredit } from '@/features/artists/artist-credits';
+import { projectEditPath, publicIdFromSlugId } from '@features/projects/project-path';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
@@ -84,11 +81,6 @@ function ExternalRedirect({ to }: { to: string }) {
   return null;
 }
 
-function LegacyListRedirect() {
-  const { accountName, listId } = useParams();
-  return <Navigate to={listPath(accountName, listId ?? '')} replace />;
-}
-
 function RedirectWithParams({ to }: { to: (params: Record<string, string>) => string }) {
   const params = useParams() as Record<string, string>;
   const { search, hash } = useLocation();
@@ -136,34 +128,14 @@ interface EditorContainerProps {
   children: ReactNode;
 }
 
-function EditorContainer({ loadProject, activepublicId, isProjectLoading, projectUserId, projectMetadata, user, navigate, children }: EditorContainerProps) {
-  // Reached as /:accountName/projects/:slugId/edit, or via the legacy /project/:id/edit.
-  const params = useParams();
-  const id = params.id ?? parseSlugId(params.slugId);
-  const location = useLocation();
-
-  // Once the project has loaded, swap a legacy / stale URL (renamed song, renamed account,
-  // no slug yet) for the canonical one. Only once per project: while you edit the song name
-  // the address stays put, and the next visit to the old URL redirects.
-  const canonicalizedFor = useRef<string | null>(null);
-  useEffect(() => {
-    if (isProjectLoading || !id || activepublicId !== id || !user || user.id !== projectUserId) return;
-    if (canonicalizedFor.current === id) return;
-    canonicalizedFor.current = id;
-    const m = projectMetadata as { name?: string; songName?: string; artists?: ArtistCredit[]; songArtist?: string } | undefined;
-    const canonical = editorPath({
-      publicId: id,
-      accountName: user.accountName,
-      title: m?.name,
-      metadata: { songName: m?.songName, songArtist: artistDisplay(m) },
-    });
-    if (canonical !== location.pathname) {
-      navigate(`${canonical}${location.search}${location.hash}`, { replace: true });
-    }
-  }, [isProjectLoading, id, activepublicId, user, projectUserId, projectMetadata, location.pathname, location.search, location.hash, navigate]);
+function EditorContainer({ loadProject, activepublicId, isProjectLoading, projectUserId, user, navigate, children }: EditorContainerProps) {
+  const { accountName, slugId } = useParams();
+  // The slug half of the segment is cosmetic; the project is always resolved by
+  // the publicId in its tail.
+  const id = publicIdFromSlugId(slugId);
 
   useEffect(() => {
-    if (id && id !== 'new' && id !== 'local' && id !== 'fork' && id !== activepublicId) {
+    if (id && id !== activepublicId) {
       loadProject(id);
     }
     // loadProject is stable (useCallback); route param id is the true trigger
@@ -172,18 +144,20 @@ function EditorContainer({ loadProject, activepublicId, isProjectLoading, projec
 
   useEffect(() => {
     if (!isProjectLoading && projectUserId && activepublicId === id && user && user.id !== projectUserId) {
-      navigate(`/project/${id}`);
+      // Already on the canonical path — the public view is this URL without /edit.
+      navigate(`/${accountName}/projects/${slugId}`);
     }
-  }, [isProjectLoading, projectUserId, activepublicId, id, user, navigate]);
+  }, [isProjectLoading, projectUserId, activepublicId, id, user, navigate, accountName, slugId]);
 
   return children;
 }
 
 function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigate: NavigateFunction }) {
-  const { id } = useParams();
+  const { accountName, slugId } = useParams();
   const { user, loading } = useAuthContext();
   const { loadProject, t } = appState;
   const ran = useRef(false);
+  const id = publicIdFromSlugId(slugId);
 
   useEffect(() => {
     if (loading) return;
@@ -192,7 +166,7 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
 
     if (!user || user.isGuest) {
       // Redirect to login; AuthPage's handleAuthSuccess navigates back to ?redirect= on success
-      navigate(`/auth/signin?redirect=${encodeURIComponent(`/project/fork/${id}`)}`);
+      navigate(`/auth/signin?redirect=${encodeURIComponent(`/${accountName}/projects/${slugId}/fork`)}`);
       return;
     }
 
@@ -200,9 +174,12 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
     import('@/app/api').then(({ projects }) => {
       projects.clone(id)
         .then((res) => {
-          const result = res as { publicId: string };
+          // The clone belongs to the signed-in user, so they are its owner.
+          // accountName is always set on a real account; '/library' is only a
+          // guard so a missing one cannot navigate to a half-built URL.
+          const result = res as { publicId: string; slug?: string | null };
           loadProject(result.publicId);
-          navigate(`/project/${result.publicId}/edit`);
+          navigate(projectEditPath(result, user.accountName) ?? '/library');
           import('react-hot-toast').then(({ default: toast }) => {
             toast.success(t('project.cloneSuccess'));
           });
@@ -224,6 +201,8 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
     // navigate, loadProject, t are stable; ran.current guards single-execution
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user, loading]);
+
+  if (!id) return <NotFoundPage type="project" />;
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">
@@ -343,15 +322,15 @@ export function AppRouter({
   const handleToggleKeyboardHelp = useCallback(() => {
     setShowKeyboardHelp?.((p: boolean) => !p);
   }, [setShowKeyboardHelp]);
-  const handleViewPublic = useMemo(
-    () => (activepublicId ? () => navigate(projectPath({
-      publicId: activepublicId,
-      accountName: user?.accountName,
-      title: (projectMetadata as { name?: string } | undefined)?.name,
-      metadata: { songName: (projectMetadata as { songName?: string } | undefined)?.songName, songArtist: artistDisplay(projectMetadata as Parameters<typeof artistDisplay>[0]) },
-    })) : undefined),
-    [activepublicId, navigate, user?.accountName, projectMetadata],
-  );
+  // The public view is the editor URL without `/edit`, so it is derived from the
+  // path we are already on rather than rebuilt from an id we have no owner for.
+  const handleViewPublic = useMemo(() => {
+    if (!activepublicId) return undefined;
+    const match = /^(\/[^/]+\/projects\/[^/]+)\/edit$/.exec(routerLocation.pathname);
+    if (!match) return undefined;
+    const viewPath = match[1];
+    return () => navigate(viewPath);
+  }, [activepublicId, routerLocation.pathname, navigate]);
 
   const editorProps = useMemo(() => ({
     lines, setLines, syncMode, setSyncMode,
@@ -457,9 +436,13 @@ export function AppRouter({
       <Route path="library" element={
         <Suspense fallback={<div className="glass rounded-xl p-5 flex-1"><SkeletonList count={3} /></div>}>
           <Library
-            onOpenProject={(publicId: string) => {
+            onOpenProject={(publicId: string, editPath: string | null) => {
+              // Library builds the canonical path from the row it rendered (it
+              // has the slug and the owner); null means the owner was unknown
+              // there, and there is no URL to send the user to.
+              if (!editPath) return;
               loadProject(publicId);
-              navigate(`/project/${publicId}/edit`);
+              navigate(editPath);
             }}
           />
         </Suspense>
@@ -476,24 +459,22 @@ export function AppRouter({
       ) : (
         <Route path="admin" element={adminPage} />
       )}
-      <Route path="project/fork/:id" element={<ForkHandler appState={appState} navigate={navigate} />} />
-      {[':accountName/projects/:slugId/edit', 'project/:id/edit'].map((path) => (
-        <Route key={path} path={path} element={
-          <EditorContainer loadProject={loadProject} activepublicId={activepublicId} isProjectLoading={isProjectLoading} projectUserId={projectUserId} projectMetadata={projectMetadata} user={user} navigate={navigate}>
-            {loadError === 'project' ? (
-              <NotFoundPage type="project" />
-            ) : loadError === 'forbidden' ? (
-              <NotFoundPage type="forbidden" />
-            ) : loadError === 'gone' ? (
-              <NotFoundPage type="gone" />
-            ) : isProjectLoading ? (
-              <SkeletonEditor />
-            ) : (
-              <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
-            )}
-          </EditorContainer>
-        } />
-      ))}
+      <Route path=":accountName/projects/:slugId/fork" element={<ForkHandler appState={appState} navigate={navigate} />} />
+      <Route path=":accountName/projects/:slugId/edit" element={
+        <EditorContainer loadProject={loadProject} activepublicId={activepublicId} isProjectLoading={isProjectLoading} projectUserId={projectUserId} user={user} navigate={navigate}>
+          {loadError === 'project' ? (
+            <NotFoundPage type="project" />
+          ) : loadError === 'forbidden' ? (
+            <NotFoundPage type="forbidden" />
+          ) : loadError === 'gone' ? (
+            <NotFoundPage type="gone" />
+          ) : isProjectLoading ? (
+            <SkeletonEditor />
+          ) : (
+            <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
+          )}
+        </EditorContainer>
+      } />
       <Route path="home" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} /></div>}>
           <Home />
@@ -505,13 +486,7 @@ export function AppRouter({
           ? <Navigate to="/project/new" replace />
           : <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
       } />
-      {/* Canonical public project URL; the legacy /project/:publicId redirects to it once the project loads. */}
       <Route path=":accountName/projects/:slugId" element={
-        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
-          <PublicProjectViewPage />
-        </Suspense>
-      } />
-      <Route path="project/:publicId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <PublicProjectViewPage />
         </Suspense>
@@ -528,13 +503,8 @@ export function AppRouter({
           <ProfilePage />
         </Suspense>
       } />
-      {/* Old links that carried a prefix keep working by redirecting to the bare URL. Nothing links to these any more. */}
-      <Route path="profile" element={<OwnProfileRedirect />} />
-      <Route path="profile/:accountName" element={<RedirectWithParams to={(p) => profilePath(p.accountName)} />} />
-      <Route path="profile/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => listPath(p.accountName, p.listId)} />} />
-      <Route path="profile/:accountName/playlists/:listId" element={<LegacyListRedirect />} />
-      <Route path="u/:accountName" element={<RedirectWithParams to={(p) => profilePath(p.accountName)} />} />
-      <Route path="u/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => listPath(p.accountName, p.listId)} />} />
+      <Route path=":accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
+      <Route path="u/:accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
       <Route path="settings/:tab?" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <SettingsPage />

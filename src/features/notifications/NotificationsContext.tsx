@@ -115,6 +115,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const socket = getSocket();
     if (!socket || !user) return;
+    // Read before the hoisted handlers below: TS does not carry the null check
+    // above into a function declaration. The recipient of a project
+    // notification is that project's owner, so this is the owner-scoped URL's
+    // account name.
+    const recipientAccountName = user.accountName;
 
     function onPush(notification: AppNotification) {
       setNotifications(prev => {
@@ -146,7 +151,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
               onClick={() => {
                 toast.dismiss(item.id);
                 if (!data.read) markReadRef.current([data._id]);
-                const dest = notificationDestination(data);
+                const dest = notificationDestination(data, recipientAccountName);
                 if (dest) appNavigate(dest);
               }}
             >

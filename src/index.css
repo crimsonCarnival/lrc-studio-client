@@ -984,6 +984,33 @@ audio::-webkit-media-controls-panel {
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── Typography weight ramp (settings.interface.fontWeight) ──
+   Tailwind v4 compiles every weight utility to font-weight: var(--font-weight-*),
+   so re-pointing those variables restyles the whole app — no className changes,
+   no per-component setting lookup. The attribute is written on <html> by
+   useThemeSync, and seeded by the first-paint script in index.html.
+
+   Nothing drops below 400: Fira Sans ships 400-900 and both display faces are
+   400..700 variable, so a lower number buys a synthesized faux-thin rather than
+   a real cut. "Lighter" instead flattens the ramp — body copy at 400 and headings
+   where semibold used to sit. */
+:root[data-font-weight='light'] {
+  --font-weight-medium: 400;
+  --font-weight-semibold: 500;
+  --font-weight-bold: 600;
+  --font-weight-extrabold: 700;
+  --font-weight-black: 800;
+}
+
+:root[data-font-weight='lighter'] {
+  --font-weight-medium: 400;
+  --font-weight-semibold: 400;
+  --font-weight-bold: 500;
+  --font-weight-extrabold: 600;
+  --font-weight-black: 700;
+}
+
+
 /* Karaoke fill: a copy of the word in the accent colour is unmasked left to right across
    the span the word is sung (redesign sheet 04). Duration and delay are set inline. */
 @keyframes karaoke-fill {

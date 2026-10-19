@@ -4,6 +4,7 @@ import { artistDisplay, type ArtistCredit } from '@/features/artists/artist-cred
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { projectPath } from '../project-path';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
@@ -116,14 +117,24 @@ export default function ProjectMetaBlock({ project, cover, ctaSlot, starCount, r
                 </span>
               </Tip>
             ) : (
-              <Link
-                to={`/project/${project.forkedFrom.publicId}`}
-                className="inline-flex items-center gap-1 text-xs text-accent-blue hover:underline w-fit"
-              >
-                <Icon name="open_in_new" size={12} />
-                {t('projectView.forkedFrom')}
-                {project.forkedFrom.accountName ? ` ${project.forkedFrom.accountName}` : ''}
-              </Link>
+              // `forkedFrom` carries the source's accountName but no slug; the
+              // helper omits the slug and publicId alone still resolves. Null
+              // accountName means no owner-scoped URL, so it stays plain text.
+              (() => {
+                const forkHref = projectPath({ publicId: project.forkedFrom!.publicId }, project.forkedFrom!.accountName);
+                const label = (
+                  <>
+                    <Icon name="open_in_new" size={12} />
+                    {t('projectView.forkedFrom')}
+                    {project.forkedFrom!.accountName ? ` ${project.forkedFrom!.accountName}` : ''}
+                  </>
+                );
+                return forkHref ? (
+                  <Link to={forkHref} className="inline-flex items-center gap-1 text-xs text-accent-blue hover:underline w-fit">{label}</Link>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground w-fit">{label}</span>
+                );
+              })()
             )
           )}
 

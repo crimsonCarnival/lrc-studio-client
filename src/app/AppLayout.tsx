@@ -20,6 +20,7 @@ import { useGuidedTour } from '@/features/editor/hooks/useGuidedTour';
 import { GuidedTour } from '@/features/editor/components/GuidedTour';
 import { EDITOR_TOUR_STEPS } from '@/features/editor/tour/tourSteps';
 import useInputMethod from '@/shared/hooks/useInputMethod';
+import { isEditorPath, isProjectViewPath } from '@features/projects/project-path';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
@@ -102,13 +103,13 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     : undefined;
 
   const isSetupPage = location.pathname === '/project/new';
-  // Same route set AppHeader treats as the editor (its own copy of this regex).
+  // Same route set AppHeader treats as the editor (it calls the same predicate).
   // The editor builds its own clamped-to-viewport layout below lg (tabs pinned,
   // content scrolls internally via h-full -> flex-1 -> overflow-y-auto), which
   // only works if something upstream actually clamps to the viewport. Every
   // other route relies on min-h-screen so the page scrolls normally under the
   // fixed header/nav; only the editor needs the dvh clamp this early.
-  const isEditorPage = /^\/project\/(local|new|[^/]+\/edit)$/.test(location.pathname);
+  const isEditorPage = isEditorPath(location.pathname) || isSetupPage;
 
   const { isOpen: isTourOpen, start: startTour, close: closeTour, startIfFirstVisit } = useGuidedTour();
 
@@ -129,12 +130,10 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     }
   }, [setMediaTitle, t]);
 
-  const isPublicProjectView = (/^\/project\/[^/]+$/.test(location.pathname) &&
-    !['new', 'local'].includes(location.pathname.split('/')[2] ?? '')) || isProjectViewPath(location.pathname);
+  const isPublicProjectView = isProjectViewPath(location.pathname);
   // The editor workspace is a full-bleed app screen: its panels run edge to edge
   // under the header, with no page gutters or bottom padding of their own.
-  const isWorkspacePage = (/^\/project\/(local|[^/]+\/edit)$/.test(location.pathname) && location.pathname !== '/project/new/edit')
-    || isProjectEditorPath(location.pathname);
+  const isWorkspacePage = isEditorPath(location.pathname);
   const isFullWidthPage = isSetupPage || isPublicProjectView || isWorkspacePage;
 
   // The editor's PlayerEngine lives here, above the routes, so it survives

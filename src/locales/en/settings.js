@@ -206,6 +206,9 @@ export default {
     focusContrast: "Focus contrast",
     focusContrastDesc: "Opacity fade intensity for inactive lines in the preview panel",
     fontSize: "Editor Font Size",
+    fontWeight: "Text weight",
+    fontWeightDesc: "How heavy the app's text is. Lighter steps flatten the weight ramp; nothing goes below the font's regular cut.",
+    fontWeightSample: "Lyrics",
     fontSizeDesc: "Scale of the text in the editor workspace",
     spacing: "Line Spacing",
     spacingDesc: "Vertical distance between lines of lyrics",
@@ -365,6 +368,11 @@ export default {
       zoom: "Scale Up",
       color: "Change Color",
       dim: "Dim Others"
+    },
+    weights: {
+      normal: "Normal",
+      light: "Light",
+      lighter: "Lighter"
     },
     sizes: {
       small: "Small",

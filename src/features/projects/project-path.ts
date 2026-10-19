@@ -1,120 +1,120 @@
 /**
- * Public project URLs: `/:accountName/projects/:slug-:publicId`, e.g.
- * `/32blunts/projects/radiohead-creep-k3x9a2c7qm`.
+ * Readable project URL paths. The algorithm mirrors the server
+ * (`src/utils/project-slug.ts`) and must stay byte-identical to it.
  *
- * The trailing publicId is the only part that identifies the project. The account name
- * and slug are cosmetic, so a renamed song or account never breaks a link: the page
- * resolves by id and redirects to the current canonical URL (see PublicProjectViewPage).
- * The server builds the same URLs for Open Graph / sitemap, so keep `slugify` in step with
- * the algorithm documented in docs/server-slug-urls.md.
+ * The slug in a URL is cosmetic: projects are always resolved by `publicId`
+ * (the last 10 characters of the final path segment), so a stale slug or
+ * account name never breaks a link. That is why the router can accept any
+ * `:slugId` and still find the right project.
+ *
+ * There is exactly one project URL shape. `/project/:publicId` is gone — not
+ * redirected — so nothing in the client may construct it.
  */
-
-/** Length of a server-issued publicId (nanoid(10)). Its alphabet includes `-` and `_`, so the id can't be split off by delimiter. */
-export const PUBLIC_ID_LENGTH = 10;
 
 const MAX_SLUG_LENGTH = 60;
+/** nanoid(10); the id is the tail of the segment, never found by splitting on '-'. */
+export const PROJECT_ID_LENGTH = 10;
 
-/** Lowercase, accent-stripped, `-`-separated; keeps non-Latin letters (CJK, Cyrillic…) so those titles still get a slug. */
 export function slugify(input: string): string {
-  const slug = input
-    .normalize('NFD')
-    // Latin diacritics only: kana dakuten/handakuten (U+3099/309A) are part of the letter.
-    .replace(/[̀-ͯ]/g, '')
-    .normalize('NFC')
-    .toLowerCase()
-    .replace(/['’]/g, '')
-    .replace(/[^\p{L}\p{N}]+/gu, '-')
-    .replace(/^-+|-+$/g, '');
-  return slug.slice(0, MAX_SLUG_LENGTH).replace(/-+$/g, '');
+  let s = input.normalize('NFD');
+  // Latin diacritics only (U+0300–U+036F). Kana dakuten U+3099/U+309A are left
+  // alone so が does not decay into か.
+  s = s.replace(/[̀-ͯ]/g, '');
+  s = s.normalize('NFC').toLowerCase();
+  s = s.replace(/['’]/g, '');
+  s = s.replace(/[^\p{L}\p{N}]+/gu, '-');
+  s = s.replace(/^-+|-+$/g, '');
+  s = s.slice(0, MAX_SLUG_LENGTH);
+  // A cut can land between the halves of a surrogate pair, which would make
+  // encodeURIComponent throw on the resulting path.
+  if (/[\ud800-\udbff]$/.test(s)) s = s.slice(0, -1);
+  return s.replace(/-+$/g, '');
 }
 
-interface SlugSource {
-  title?: string | null;
-  /** `songArtist` is the server's display string (`A feat. B`), which already carries the featured artists. */
-  metadata?: { songName?: string | null; songArtist?: string | null } | null;
-}
+type SlugMetadata = {
+  songName?: string | null;
+  songArtist?: string | null;
+  songArtists?: (string | null)[] | null;
+};
 
-/**
- * "artist song" from the display string, falling back to the project title. Empty when there is
- * nothing usable. Only the identity check and the stand-in for a missing server `slug` use this;
- * links prefer the stored `slug` the server derives the same way.
- */
-export function projectSlug({ title, metadata }: SlugSource): string {
-  const artist = metadata?.songArtist || '';
-  const song = metadata?.songName || '';
-  return slugify(`${artist} ${song}`) || slugify(title || '');
-}
-
-/**
- * What a project is called in page titles: the song name and artist the user typed
- * ("Creep – Radiohead"), never the audio file or video name. Falls back to whichever of the
- * two exists, then to the project name.
- */
-export function projectDisplayName({ title, metadata }: SlugSource): string {
-  const song = metadata?.songName?.trim() || '';
-  const artist = metadata?.songArtist?.trim() || '';
-  if (song && artist) return `${song} – ${artist}`;
-  return song || artist || title?.trim() || '';
-}
-
-/**
- * A project needs something to be called by: a title, song name or artist that survives
- * slugging ("!!!" doesn't). The server enforces the same rule on create and update.
- */
-export function hasProjectIdentity(source: SlugSource): boolean {
-  return projectSlug(source) !== '';
-}
-
-interface ProjectPathSource extends SlugSource {
+export type ProjectPathSource = {
   publicId: string;
-  /** The server-stored slug. Preferred when present; computed locally otherwise (same algorithm). */
+  /** The server's stored slug. Preferred over recomputing when present. */
   slug?: string | null;
-  accountName?: string | null;
+  title?: string | null;
+  metadata?: object | null;
+  /** The owner, however the query happened to shape it. */
   user?: { accountName?: string | null } | null;
-  owner?: { accountName?: string | null } | null;
+  accountName?: string | null;
+};
+
+export function projectSlug(p: ProjectPathSource): string {
+  const m = (p.metadata ?? {}) as SlugMetadata;
+  const artist = m.songArtist || m.songArtists?.[0] || '';
+  const songName = m.songName || '';
+  return slugify(`${artist} ${songName}`) || slugify(p.title || '') || '';
 }
 
 /**
- * Canonical public URL of a project. Falls back to the legacy `/project/:publicId`
- * (which redirects to the canonical URL) when the owner's account name isn't known.
+ * Canonical path for a project, or null when the owner is not known here.
+ *
+ * Null rather than a fallback URL: every project URL is owner-scoped, so a
+ * caller without the owner's name has nothing to link to and must either query
+ * it or not render the link. Silently emitting a half-built path would produce
+ * links that 404 only in production.
  */
-export function projectPath(project: ProjectPathSource): string {
-  const accountName = project.accountName || project.user?.accountName || project.owner?.accountName;
-  if (!accountName) return `/project/${project.publicId}`;
-  const slug = project.slug || projectSlug(project);
-  const last = slug ? `${slug}-${project.publicId}` : project.publicId;
-  return `/${encodeURIComponent(accountName)}/projects/${encodeURIComponent(last)}`;
+export function projectPath(p: ProjectPathSource, ownerAccountName?: string | null): string | null {
+  const owner = ownerAccountName ?? p.user?.accountName ?? p.accountName;
+  if (!owner) return null;
+  const slug = p.slug || projectSlug(p);
+  const segment = slug ? `${slug}-${p.publicId}` : p.publicId;
+  return `/${encodeURIComponent(owner)}/projects/${encodeURIComponent(segment)}`;
 }
 
-/** Editor URL of one of your own projects: the canonical path plus `/edit` (legacy `/project/:id/edit` without an account name). */
-export function editorPath(project: ProjectPathSource): string {
-  return `${projectPath(project)}/edit`;
+export function projectEditPath(p: ProjectPathSource, ownerAccountName?: string | null): string | null {
+  const base = projectPath(p, ownerAccountName);
+  return base && `${base}/edit`;
 }
 
-/** Extracts the publicId from the `:slug-:publicId` URL segment (also accepts a bare id). */
-export function parseSlugId(slugId: string | undefined): string | undefined {
-  if (!slugId) return undefined;
-  if (slugId.length > PUBLIC_ID_LENGTH && slugId[slugId.length - PUBLIC_ID_LENGTH - 1] === '-') {
-    return slugId.slice(-PUBLIC_ID_LENGTH);
-  }
-  return slugId;
+export function projectForkPath(p: ProjectPathSource, ownerAccountName?: string | null): string | null {
+  const base = projectPath(p, ownerAccountName);
+  return base && `${base}/fork`;
 }
 
-/** True for `/:accountName/projects/:slugId`, the public project view page. */
+/**
+ * Route-shape predicates. The router, the layout and the header all need to ask
+ * "is this a project page?" and there is now exactly one shape to ask about, so
+ * the patterns live next to the builders rather than being re-typed per file.
+ *
+ * `/project/new` and `/project/local` are deliberately *not* matched: they are
+ * action routes with no project identity, and callers that care about them test
+ * for them literally.
+ */
+const PROJECT_VIEW_PATH = /^\/[^/]+\/projects\/[^/]+$/;
+const PROJECT_EDIT_PATH = /^\/[^/]+\/projects\/[^/]+\/edit$/;
+const PROJECT_ANY_PATH = /^\/[^/]+\/projects\/[^/]+(\/(edit|fork))?$/;
+
+/** The public, read-only project page. */
 export function isProjectViewPath(pathname: string): boolean {
-  return /^\/[^/]+\/projects\/[^/]+\/?$/.test(pathname);
+  return PROJECT_VIEW_PATH.test(pathname);
 }
 
-/** True for `/:accountName/projects/:slugId/edit`, the editor for one of your own projects. */
-export function isProjectEditorPath(pathname: string): boolean {
-  return /^\/[^/]+\/projects\/[^/]+\/edit\/?$/.test(pathname);
+/** The editor workspace: a saved project's `/edit` page, or the local draft. */
+export function isEditorPath(pathname: string): boolean {
+  return PROJECT_EDIT_PATH.test(pathname) || pathname === '/project/local';
+}
+
+/** Any canonical project path — view, `/edit` or `/fork`. */
+export function isProjectPath(pathname: string): boolean {
+  return PROJECT_ANY_PATH.test(pathname);
 }
 
 /**
- * The tab / link title of a project: `Song – Artist, Synced by accountname`. The page appends
- * ` | LRC Studio`. The server writes the same text for link previews, so the two read alike.
+ * The publicId inside a `:slugId` route param — the last 10 characters, because
+ * the nanoid alphabet contains '-' and the slug may too.
  */
-export function projectPageTitle(display: string, ownerAccountName: string | null | undefined, syncedBy: (name: string) => string): string {
-  const owner = ownerAccountName?.trim();
-  return display && owner ? `${display}, ${syncedBy(owner)}` : display;
+export function publicIdFromSlugId(slugId: string | undefined): string | null {
+  if (!slugId || slugId.length < PROJECT_ID_LENGTH) return null;
+  const publicId = slugId.slice(-PROJECT_ID_LENGTH);
+  return /^[A-Za-z0-9_-]{10}$/.test(publicId) ? publicId : null;
 }

@@ -49,6 +49,7 @@ import { AppProviders } from './app/AppProviders';
 import { useSettings } from '@/features/settings/useSettings';
 import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 import { gqlRequest } from '@/app/graphql.client.js';
+import { projectPath } from '@/features/projects/project-path';
 
 declare global {
   interface Window {
@@ -56,9 +57,17 @@ declare global {
   }
 }
 
+type SharedProject = {
+  publicId?: string;
+  slug?: string | null;
+  user?: { accountName?: string | null } | null;
+};
+
+// Enough to build the canonical, owner-scoped project path: a share token knows
+// the project, but the URL it redirects to needs the owner's account name.
 const GET_SHARE_PROJECT_ID = /* GraphQL */ `
   query GetShareProjectId($id: ID!) {
-    getShare(id: $id) { publicId }
+    getShare(id: $id) { publicId slug user { accountName } }
   }
 `;
 
@@ -69,20 +78,25 @@ const ResetPasswordPage = lazy(() => import('@features/auth/ResetPasswordPage'))
 // eslint-disable-next-line react-refresh/only-export-components
 const ChangePasswordPage = lazy(() => import('@features/auth/ChangePasswordPage'));
 
-// Resolves a share token to a publicId and redirects to /project/:publicId
+// Resolves a share token to the project's canonical, owner-scoped path.
 // eslint-disable-next-line react-refresh/only-export-components
 function SharedProjectRoute() {
   const { id } = useParams();
   const location = useLocation();
   const { t } = useTranslation();
-  const [publicId, setpublicId] = useState<string | null>(null);
+  const [path, setPath] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     gqlRequest(GET_SHARE_PROJECT_ID, { id })
-      .then((data: { getShare?: { publicId?: string } } | null) => {
-        const pid = data?.getShare?.publicId;
-        if (pid) setpublicId(pid);
+      .then((data: { getShare?: SharedProject | null } | null) => {
+        const project = data?.getShare;
+        // No owner means no canonical URL exists for the project, so there is
+        // nowhere to send the viewer — the same dead end as a bad token.
+        const dest = project?.publicId
+          ? projectPath({ publicId: project.publicId, slug: project.slug, user: project.user })
+          : null;
+        if (dest) setPath(dest);
         else setFailed(true);
       })
       .catch(() => setFailed(true));
@@ -93,7 +107,7 @@ function SharedProjectRoute() {
       <p className="text-sm text-zinc-400">{t('common.shareLinkNotFound')}</p>
     </div>
   );
-  if (!publicId) return (
+  if (!path) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <LoadingSpinner size="sm" />
     </div>
@@ -101,7 +115,7 @@ function SharedProjectRoute() {
   // Carry the query string and hash across the redirect. Share links built by
   // the share modal append `?s=<seconds>`, and dropping the search here is what
   // made every custom-time share link land at 0:00.
-  return <Navigate to={`/project/${publicId}${location.search}${location.hash}`} replace />;
+  return <Navigate to={`${path}${location.search}${location.hash}`} replace />;
 }
 
 // Protected Route Wrapper

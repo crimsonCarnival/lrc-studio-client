@@ -7,6 +7,7 @@ const TRENDING_PROJECTS = /* GraphQL */ `
       projects {
         id
         publicId
+        slug
         title
         coverImage
         trendingScore

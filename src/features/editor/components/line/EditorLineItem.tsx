@@ -12,7 +12,7 @@ import LineTextEditingForm from './LineTextEditingForm';
 import { useLineGestures } from '../../hooks/useLineGestures';
 import LrcModeColumn from '../modes/LrcModeColumn';
 import SrtModeColumn from '../modes/SrtModeColumn';
-import { WordsModeTimestamp, WordsModeChips } from '../modes/WordsModeColumn';
+import { WordsModeTimestamp, WordsModeChips, WordsModeLayerControl } from '../modes/WordsModeColumn';
 import LineTextContent from './LineTextContent';
 import LineActionToolbar from './LineActionToolbar';
 import SectionPickerDropdown from './SectionPickerDropdown';
@@ -380,6 +380,36 @@ const EditorLineItem = React.memo(({
     ? sectionLines.slice(0, i).filter((l) => l.type !== 'section').length + 1
     : i + 1;
 
+  // Drag handle + line number. Shared by both layouts: in lrc/srt it opens the row,
+  // in words mode it opens the header strip above the chip tray.
+  const lineHandle = (
+    <div className={`flex items-center gap-1 shrink-0 z-10 ${wordsFocus ? 'hidden' : ''}`}>
+      <Tip content={t('editor.dragToReorder')}>
+        <div
+          className="cursor-grab active:cursor-grabbing text-faint opacity-60 group-hover:opacity-100 hover:text-subtle transition-[color,opacity] p-0.5 -ml-1 select-none"
+        >
+          <Icon name="drag_indicator" size={14} />
+        </div>
+      </Tip>
+      {(settings.editor?.showLineNumbers ?? true) && (
+        <div className="w-5 shrink-0 flex items-center justify-center select-none">
+          {selectedLines.size > 0 ? (
+            <Checkbox
+              checked={selectedLines.has(i)}
+              onCheckedChange={() => handleToggleLine(i)}
+              onKeyDown={(e) => e.stopPropagation()}
+              className="size-3.5 border-zinc-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            />
+          ) : (
+            <span className="text-[13px] font-mono font-medium tabular-nums text-subtle select-none text-right">
+              {lyricNumber}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   if (line.type === 'section') {
     const isEditing = editingLineIndex === i;
     const isRoot = line.depth === 0;
@@ -584,7 +614,7 @@ const EditorLineItem = React.memo(({
         // One height and padding for every state (redesign sheet 13): the row never jumps when
         // the cursor lands on it, and the surface alone says what it is. Outline = the line
         // marking acts on (gold while it has an unsaved edit), soft fill = multi-selected.
-        className={`outline-none flex ${editorMode === 'words' ? 'items-start gap-2' : 'items-center gap-3'} min-h-14 px-3.5 py-2 rounded-[14px] transition-[background-color,box-shadow] duration-[var(--duration-state)] ease-out cursor-pointer group relative overflow-visible animate-preview-line-in focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${selectedLines.has(i)
+        className={`outline-none flex ${editorMode === 'words' ? 'items-start gap-2 py-2.5' : 'items-center gap-3'} min-h-14 px-3.5 py-2 rounded-[14px] transition-[background-color,box-shadow] duration-[var(--duration-state)] ease-out cursor-pointer group relative overflow-visible animate-preview-line-in focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus ${selectedLines.has(i)
           ? `bg-primary-soft inset-ring ${isModified ? 'inset-ring-gold' : 'inset-ring-iris/50'}`
           : isCursor
             // Locked (playback will not move it) reads stronger than merely selected.
@@ -616,63 +646,14 @@ const EditorLineItem = React.memo(({
         {!isActive && confidenceTint && (
           <div className={`absolute left-1 top-2 bottom-2 w-1 z-0 rounded-full opacity-70 ${confidenceTint === 'success' ? 'bg-success' : 'bg-warning'}`} />
         )}
-        {/* Drag Handle & Line number */}
-        <div className={`flex items-center gap-1 shrink-0 z-10 ${wordsFocus ? 'hidden' : ''}`}>
-          <Tip content={t('editor.dragToReorder')}>
-            <div
-              className="cursor-grab active:cursor-grabbing text-faint opacity-60 group-hover:opacity-100 hover:text-subtle transition-[color,opacity] p-0.5 -ml-1 select-none"
-            >
-              <Icon name="drag_indicator" size={14} />
-            </div>
-          </Tip>
-          {(settings.editor?.showLineNumbers ?? true) && (
-            <div
-              className={`w-5 shrink-0 flex ${editorMode === 'words' ? 'items-start pt-1' : 'items-center'} justify-center select-none`}
-            >
-              {selectedLines.size > 0 ? (
-                <Checkbox
-                  checked={selectedLines.has(i)}
-                  onCheckedChange={() => handleToggleLine(i)}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  className="size-3.5 border-zinc-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                />
-              ) : (
-                <span className="text-[13px] font-mono font-medium tabular-nums text-subtle select-none text-right">
-                  {lyricNumber}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
+        {editorMode !== 'words' && lineHandle}
 
-        <span
-          className={`text-xs font-mono tabular-nums shrink-0 transition-colors relative z-10 ${editorMode === 'words' ? `self-start pt-0.5 ${isSynced ? 'text-primary' : isActive ? 'text-zinc-400 animate-pulse-glow' : 'text-zinc-600'}` : ''}`}
-          style={{ width: editorMode === 'words' ? undefined : '92px', minWidth: '92px', flexShrink: 0 }}
-        >
-          {editorMode === 'words' ? (
-            <WordsModeTimestamp
-              line={line as ComponentProps<typeof WordsModeTimestamp>['line']}
-              lineIndex={i}
-              isSynced={isSynced}
-              isActive={isActive}
-              isMobile={isMobile}
-              settings={settings}
-              editingTimestamp={editingTimestamp}
-              setEditingTimestamp={setEditingTimestamp}
-              focusedTimestamp={focusedTimestamp ?? null}
-              setFocusedTimestamp={setFocusedTimestamp}
-              stampTarget={stampTarget}
-              handleStampTargetToggle={handleStampTargetToggle}
-                        handleSetStampTarget={handleSetStampTarget}
-              activeWordIndex={activeWordIndex}
-              handleSetTimestamp={handleSetTimestamp}
-              handleTimestampWheel={handleTimestampWheel}
-              nudgeIndicator={nudgeIndicator}
-              handleWordClick={handleWordClick as ComponentProps<typeof WordsModeTimestamp>['handleWordClick']}
-              handleClearWordTimestamp={handleClearWordTimestamp as ComponentProps<typeof WordsModeTimestamp>['handleClearWordTimestamp']}
-              onWordMenu={onWordMenu}
-            />
-          ) : editorMode === 'srt' ? (
+        {editorMode !== 'words' && (
+          <span
+            className="text-xs font-mono tabular-nums shrink-0 transition-colors relative z-10"
+            style={{ width: '92px', minWidth: '92px', flexShrink: 0 }}
+          >
+            {editorMode === 'srt' ? (
             <SrtModeColumn
               line={line}
               lineIndex={i}
@@ -705,13 +686,14 @@ const EditorLineItem = React.memo(({
               handleTimestampWheel={handleTimestampWheel}
               nudgeIndicator={nudgeIndicator}
             />
-          )}
-          {isModified && (
-            <div
-              className="absolute -right-2 size-1.5 rounded-full bg-warning animate-in fade-in zoom-in duration-300 z-10 top-1/2 -translate-y-1/2"
-            />
-          )}
-        </span>
+            )}
+            {isModified && (
+              <div
+                className="absolute -right-2 size-1.5 rounded-full bg-warning animate-in fade-in zoom-in duration-300 z-10 top-1/2 -translate-y-1/2"
+              />
+            )}
+          </span>
+        )}
 
         {/* Lyrics text container */}
         <div
@@ -771,27 +753,81 @@ const EditorLineItem = React.memo(({
             </span>
           )}
 
-          {/* Words mode: how many of this line's words are timed */}
-          {editorMode === 'words' && !wordsFocus && !!line.words?.length && (
-            <span className="flex items-center gap-2 max-w-[280px] select-none">
-              <span
-                role="progressbar"
-                aria-label={t('editor.wordProgressLabel')}
-                aria-valuemin={0}
-                aria-valuemax={line.words.length}
-                aria-valuenow={timedWords}
-                className="flex-1 h-1 rounded-full bg-zinc-800 overflow-hidden"
-              >
-                <span
-                  className={`block h-full rounded-full transition-[width] duration-300 ease-out ${timedWords === line.words.length ? 'bg-success' : 'bg-primary'}`}
-                  style={{ width: `${(timedWords / line.words.length) * 100}%` }}
+          {/* Words mode header strip.
+              A words row is not a wide lrc row: its content is a tray of chips that
+              wants the whole width, while the things the lrc row keeps in a 92px
+              left column — number, start time, and here also the layer control and
+              the line's progress — are one short line of metadata. So they run
+              across the top instead of being stacked into a column narrow enough to
+              push the tray's last chip onto an extra row. */}
+          {editorMode === 'words' && !wordsFocus && (
+            <div className="flex items-center gap-2 min-w-0 relative z-10">
+              {lineHandle}
+              <WordsModeTimestamp
+                line={line as ComponentProps<typeof WordsModeTimestamp>['line']}
+                lineIndex={i}
+                isSynced={isSynced}
+                isActive={isActive}
+                isMobile={isMobile}
+                settings={settings}
+                editingTimestamp={editingTimestamp}
+                setEditingTimestamp={setEditingTimestamp}
+                focusedTimestamp={focusedTimestamp ?? null}
+                setFocusedTimestamp={setFocusedTimestamp}
+                stampTarget={stampTarget}
+                handleStampTargetToggle={handleStampTargetToggle}
+                handleSetStampTarget={handleSetStampTarget}
+                activeWordIndex={activeWordIndex}
+                handleSetTimestamp={handleSetTimestamp}
+                handleTimestampWheel={handleTimestampWheel}
+                nudgeIndicator={nudgeIndicator}
+                handleWordClick={handleWordClick as ComponentProps<typeof WordsModeTimestamp>['handleWordClick']}
+                handleClearWordTimestamp={handleClearWordTimestamp as ComponentProps<typeof WordsModeTimestamp>['handleClearWordTimestamp']}
+                onWordMenu={onWordMenu}
+              />
+              {isModified && (
+                <span className="size-1.5 shrink-0 rounded-full bg-warning animate-in fade-in zoom-in duration-300" />
+              )}
+              {sectionLabel && (
+                <span className="truncate font-mono text-[11px] tracking-[0.08em] text-label uppercase select-none">
+                  {formatSectionLabel(sectionLabel, t)}
+                </span>
+              )}
+              {/* Only the line being worked on: a mark lands on it, so the layer
+                  choice is only actionable there. */}
+              {isActive && (
+                <WordsModeLayerControl
+                  line={line as ComponentProps<typeof WordsModeLayerControl>['line']}
+                  stampTarget={stampTarget}
+                  handleSetStampTarget={handleSetStampTarget}
                 />
-              </span>
-              <span className="font-mono text-[11px] tabular-nums text-foreground/65">{timedWords}/{line.words.length}</span>
-            </span>
+              )}
+              {!!line.words?.length && (
+                <span className="ml-auto flex w-28 shrink-0 items-center gap-2 select-none">
+                  <span
+                    role="progressbar"
+                    aria-label={t('editor.wordProgressLabel')}
+                    aria-valuemin={0}
+                    aria-valuemax={line.words.length}
+                    aria-valuenow={timedWords}
+                    className="flex-1 h-1 rounded-full bg-hl overflow-hidden"
+                  >
+                    <span
+                      className={`block h-full rounded-full transition-[width] duration-300 ease-out ${timedWords === line.words.length ? 'bg-success' : 'bg-primary'}`}
+                      style={{ width: `${(timedWords / line.words.length) * 100}%` }}
+                    />
+                  </span>
+                  <span className="font-mono text-[11px] tabular-nums text-foreground/65">{timedWords}/{line.words.length}</span>
+                </span>
+              )}
+            </div>
           )}
 
+          {/* Chip tray. On the line being worked on it sits on its own recessed
+              surface, so the row reads as "header over tray" rather than as a
+              lyric line that happens to have grown boxes. */}
           {editorMode === 'words' && (
+            <div className={isActive && !wordsFocus ? 'rounded-xl bg-background/40 px-2 py-2 inset-ring inset-ring-hl/60' : ''}>
             <WordsModeChips
               line={line as ComponentProps<typeof WordsModeChips>['line']}
               lineIndex={i}
@@ -818,6 +854,7 @@ const EditorLineItem = React.memo(({
               activeSingers={activeSingers}
               playingWordIndex={playingWordIndex}
             />
+            </div>
           )}
 
           <ResponsiveModal

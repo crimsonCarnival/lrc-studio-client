@@ -4,5 +4,6 @@ export default {
   explore: "Explorar",
   feed: "Feed",
   leaderboard: "Clasificación",
+  project: "Proyecto",
   library: "Biblioteca",
 };

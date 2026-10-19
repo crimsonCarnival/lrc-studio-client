@@ -16,8 +16,8 @@ import { useProjectActions } from '@/features/projects/hooks/useProjectActions';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { lyrics, projects, getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
-import { migrateLines } from '@/shared/utils/lrc';
-import { creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
+import { isEditorPath } from '@/features/projects/project-path';
+import { migrateLines, splitArtists } from '@/shared/utils/lrc';
 import { sectionsToFlat } from '@/features/editor/utils/sections';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 import type { AuthUser as AuthUserType } from '@/features/auth/hooks/useAuth';
@@ -89,7 +89,10 @@ export function useAppState(user?: AuthUserType | null) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  useThemeSync(settings?.interface?.theme as string | undefined);
+  useThemeSync(
+    settings?.interface?.theme as string | undefined,
+    settings?.interface?.fontWeight as string | undefined,
+  );
 
   // ——— Lines state with undo/redo ———
   // editorMode must be declared before useHistory so getCompanion can close over it
@@ -835,9 +838,11 @@ export function useAppState(user?: AuthUserType | null) {
       // Never block exit while the project is still being restored from server
       if (isProjectLoadingRef.current) return;
 
-      // Ensure we only prompt on editor routes (local, new, or edit).
-      // We do NOT want to prompt on public view pages like /project/123
-      if (!window.location.pathname.match(/^\/project\/(local|new|[^/]+\/edit)$/)) return;
+      // Ensure we only prompt on editor routes (local, new, or a project's /edit).
+      // We do NOT want to prompt on the public view page, which is the same
+      // owner-scoped path without the /edit suffix.
+      const path = window.location.pathname;
+      if (!isEditorPath(path) && path !== '/project/new') return;
 
       // Block exit while a save / create is in-flight so we don't corrupt state.
       if (isSaving || (isCreatingProjectRef.current && !!activepublicIdRef.current)) {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { connectSocket } from '@/app/socket.client';
 import { startStamp, startStampWithFile, getStampJob, cancelStampJob, getJobAudio, type StampResultDto, type AsrJobDto } from '../services/asr.service';
 import type { EditorLine } from '../services/editor.service';
+import { alignLineStart } from '../services/editor.service';
 
 export type AutoStampPhase =
   | 'idle'
@@ -135,12 +136,19 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
         // just because its words were the part that was actually missing.
         const keepOwnTiming = isWordsMode && applyMode === 'empty-only' && line.timestamp != null;
 
-        return {
+        const stamped: EditorLine = {
           ...line,
           ...(keepOwnTiming ? {} : { timestamp: r.timestamp, ...(r.endTime !== null ? { endTime: r.endTime } : {}) }),
           source: 'asr' as const,
           ...(mergedWords !== undefined ? { words: mergedWords } : {}),
         };
+        if (!isWordsMode) return stamped;
+        // Words mode holds line.timestamp and words[0].time as one instant. Which
+        // of the two wins depends on what empty-only promised: when the user's own
+        // line timing is being kept, the first word moves onto it; otherwise the
+        // line moves onto the ASR's (more precise) first-word time.
+        const anchor = keepOwnTiming ? stamped.timestamp : (mergedWords?.[0]?.time ?? stamped.timestamp);
+        return anchor != null ? alignLineStart(stamped, anchor) : stamped;
       });
       setLines(next); // single call → single undo entry
       setConfidenceById(conf);

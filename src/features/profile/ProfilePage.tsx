@@ -14,7 +14,7 @@ import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
-import { projectPath } from '@/features/projects/project-path';
+import { projectPath, projectEditPath } from '@/features/projects/project-path';
 import { ArtistText } from '@/features/artists/ArtistText';
 import { artistFieldsFromForm, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useAuthContext } from '@/features/auth/useAuthContext';
@@ -70,12 +70,14 @@ interface ProjectMetaLoose {
 
 interface ProjectCardProps {
   project: Project;
+  /** The owner's account name, from the page's route param. */
+  ownerAccountName: string;
   isOwner: boolean;
   onEdit: (project: Project) => void;
   onDelete: (project: Project) => void;
 }
 
-function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
+function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: ProjectCardProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { accountName: ownerAccountName } = useParams();
@@ -102,10 +104,15 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
   };
 
   return (
-    <ProjectMenu project={project} isOwner={isOwner} onEdit={onEdit} onDelete={onDelete}>
+    <ProjectMenu project={project} isOwner={isOwner} ownerAccountName={ownerAccountName} onEdit={onEdit} onDelete={onDelete}>
       <button
         type="button"
-        onClick={() => navigate(isOwner ? `/project/${publicId}/edit` : projectPath({ ...project, accountName: ownerAccountName }))}
+        onClick={() => {
+          const dest = isOwner
+            ? projectEditPath(project, ownerAccountName)
+            : projectPath(project, ownerAccountName);
+          if (dest) navigate(dest);
+        }}
         className="group relative glass rounded-2xl overflow-hidden text-left hover:border-primary/30 transition-all cursor-pointer focus:ring-1 focus:ring-primary/30 outline-none animate-fade-in contrast-more:border-zinc-600 w-full"
       >
         <ThemedShineBorder />
@@ -165,6 +172,7 @@ function ProjectCard({ project, isOwner, onEdit, onDelete }: ProjectCardProps) {
           <ProjectMenuButton
             project={project}
             isOwner={isOwner}
+            ownerAccountName={ownerAccountName}
             onEdit={onEdit}
             onDelete={onDelete}
             className="p-1 rounded-md text-zinc-500 hover:text-zinc-100 hover:bg-zinc-700/50 transition-colors shrink-0"
@@ -560,6 +568,7 @@ export default function ProfilePage() {
                     <ProjectCard
                       key={project.publicId}
                       project={project}
+                      ownerAccountName={profile.accountName}
                       isOwner={isOwner}
                       onEdit={handleEditProject}
                       onDelete={handleDeleteProject}

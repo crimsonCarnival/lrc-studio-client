@@ -25,14 +25,17 @@ function detectRouteType(pathname: string): RouteInfo {
     const parts = pathname.split('/');
     return { type: 'playlist', identifier: parts[3] };
   }
-  // /:accountName/projects/:slug-:id[/edit]
-  if (/^\/[^/]+\/projects\/[^/]+(\/edit)?\/?$/.test(pathname)) {
-    return { type: 'project', identifier: pathname.split('/')[3] };
+  // /:accountName/projects/:slugId (optionally /edit or /fork). The identifier
+  // shown to the user is the readable segment, not the bare publicId.
+  const projectMatch = /^\/[^/]+\/projects\/([^/]+)(?:\/(?:edit|fork))?\/?$/.exec(pathname);
+  if (projectMatch) {
+    // Left percent-encoded on purpose: decodeURIComponent throws on a malformed
+    // escape, and a 404 page must never be the thing that crashes.
+    return { type: 'project', identifier: projectMatch[1] };
   }
-  // /project/:id/edit or /project/:id
-  if (/^\/project\/[^/]/.test(pathname)) {
-    const parts = pathname.split('/');
-    return { type: 'project', identifier: parts[2] };
+  // /project/new and /project/local are the only remaining /project/ routes.
+  if (/^\/project\//.test(pathname)) {
+    return { type: 'project', identifier: null };
   }
   // /uploads/:id
   if (/^\/uploads\/[^/]+/.test(pathname)) {

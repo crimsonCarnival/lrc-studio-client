@@ -20,6 +20,7 @@ import { projectStatus as statusOf, type ProjectStatus } from '@/features/projec
 import ProjectCard from './ProjectCard.jsx';
 import ProjectListRaw from './ProjectList';
 import { LibrarySwitch } from './LibrarySwitch';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 
 // ProjectSetupModal is still untyped JS; cast until it is migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,9 +76,14 @@ interface SetupConfirmData {
   singers?: string[];
 }
 
-// onOpenProject receives the project's publicId (ProjectCard.onSelect passes project.publicId).
-export default function Library({ onOpenProject }: { onOpenProject?: (publicId: string) => void }) {
+// onOpenProject receives the project's publicId AND its canonical editor path
+// (ProjectCard.onSelect passes both). Project URLs are owner-scoped, so the
+// caller must navigate to the path given and never rebuild one from publicId.
+export default function Library({ onOpenProject }: { onOpenProject?: (publicId: string, editPath: string | null) => void }) {
   const { t, i18n } = useTranslation();
+  // projects.list() returns only the signed-in user's own projects, so the
+  // signed-in account name IS the owner for every card in this list.
+  const { user } = useAuthContext();
   const { settings } = useSettings();
   const timezone = settings.advanced?.timezone;
   const inputMethod = useInputMethod();
@@ -249,6 +255,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
             onDelete={handleDelete}
             onFavorite={handleFavorite}
             onSelect={onOpenProject}
+            ownerAccountName={user?.accountName}
           />
         </div>
       ) : (
@@ -262,6 +269,7 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
               onDelete={handleDelete}
               onFavorite={handleFavorite}
               onSelect={onOpenProject}
+              ownerAccountName={user?.accountName}
               onEdit={handleEdit}
               isListView={false}
               isDeleting={deletingId === project.publicId}

@@ -150,6 +150,11 @@ export function FuriganaModal({
               </p>
             ) : (
               <p lang="ja" className="ruby-host cjk-reserve-preview text-[56px] font-semibold leading-none">
+                {/* The kana around the kanji are shown, smaller and dimmed, rather than
+                    dropped: the romaji under this glyph is the whole word's, so hiding
+                    them put "takami" under a bare 高 and read as a wrong reading. They
+                    stay secondary so the kanji — the thing being annotated — still leads. */}
+                {currentSplit.lead && <span className="text-[32px] text-subtle">{currentSplit.lead}</span>}
                 <ruby
                   className={rubyRatioClass(currentSplit.kanji, current.reading)}
                   style={rubyFitStyle(currentSplit.kanji, current.reading)}
@@ -157,6 +162,7 @@ export function FuriganaModal({
                   {currentSplit.kanji || current.word}
                   <rt>{fmt(current.reading) || '　'}</rt>
                 </ruby>
+                {currentSplit.tail && <span className="text-[32px] text-subtle">{currentSplit.tail}</span>}
               </p>
             )}
 

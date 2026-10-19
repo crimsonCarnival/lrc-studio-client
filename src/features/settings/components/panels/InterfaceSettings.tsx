@@ -45,6 +45,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
   const ui = settings.interface ?? {};
   const display = settings.editor?.display ?? {};
   const fontSize = ui.fontSize ?? 'normal';
+  const fontWeight = ui.fontWeight ?? 'normal';
   const spacing = ui.spacing ?? 'normal';
   const focusContrast = ui.focusContrast ?? 'medium';
   const previewAlignment = ui.previewAlignment ?? 'left';
@@ -66,6 +67,23 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
             <SettingOption value="en">{t('common.language.en')}</SettingOption>
             <SettingOption value="es">{t('common.language.es')}</SettingOption>
           </SettingSelect>
+        </SettingRow>
+        <SettingRow label={t('settings.interface.fontWeight')} description={t('settings.interface.fontWeightDesc')}>
+          <div className="flex flex-col items-end gap-1.5">
+            {seg(t('settings.interface.fontWeight'), fontWeight, [
+              ['normal', t('settings.options.weights.normal')],
+              ['light', t('settings.options.weights.light')],
+              ['lighter', t('settings.options.weights.lighter')],
+            ], (v) => updateSetting('interface.fontWeight', v))}
+            {/* Shows the ramp itself rather than one sample: the setting flattens the
+                distance between body copy and headings, which a single word cannot show.
+                It previews live because the attribute is already on <html>. */}
+            <span aria-hidden="true" className="flex items-baseline gap-2 text-zinc-300">
+              <span className="text-[15px] font-normal">{t('settings.interface.fontWeightSample')}</span>
+              <span className="text-[15px] font-semibold">{t('settings.interface.fontWeightSample')}</span>
+              <span className="text-[15px] font-bold">{t('settings.interface.fontWeightSample')}</span>
+            </span>
+          </div>
         </SettingRow>
         <SettingRow label={t('settings.interface.lockLayout')} description={t('settings.interface.lockLayoutDesc')}>
           <Toggle id="toggle-lock-layout" label={t('settings.interface.lockLayout')} checked={ui.lockLayout ?? false} onChange={(v: boolean) => updateSetting('interface.lockLayout', v)} />

@@ -35,6 +35,7 @@ import { projects as projectsApi } from '@/app/api';
 import { projectsService } from '@features/projects/services/projects.service';
 import { artistRoster } from '@/features/artists/artist-credits';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
+import { projectPath, publicIdFromSlugId } from '@features/projects/project-path';
 
 interface PublicProject {
   publicId?: string;
@@ -62,8 +63,18 @@ interface PublicProject {
 
 const INFO_COLLAPSED_KEY = 'lrc_project_info_collapsed';
 
+interface UpNextTrack {
+  publicId: string;
+  slug?: string | null;
+  title?: string | null;
+  metadata?: { songName?: string; songArtist?: string } | null;
+  // Each track carries its own owner: a playlist can collect other people's
+  // projects, and every project URL is owner-scoped.
+  user?: { accountName?: string | null } | null;
+}
+
 interface UpNextPlaylist {
-  projects?: { publicId: string }[];
+  projects?: UpNextTrack[];
   owner?: { accountName?: string };
   [key: string]: unknown;
 }
@@ -71,10 +82,10 @@ interface UpNextPlaylist {
 function PublicProjectViewPageInner() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  // Reached as /:accountName/projects/:slugId, or via the legacy /project/:publicId.
-  const params = useParams();
-  const publicId = params.publicId ?? parseSlugId(params.slugId);
-  const location = useLocation();
+  const { accountName, slugId } = useParams();
+  // The slug half of the segment is cosmetic — the project resolves by the
+  // publicId in its tail.
+  const publicId = publicIdFromSlugId(slugId) ?? undefined;
   const [searchParams] = useSearchParams();
   const listId = searchParams.get('list');
   // Shares the parser with the editor route so `?s=` and `?loop=` mean exactly
@@ -318,9 +329,11 @@ function PublicProjectViewPageInner() {
     };
   }, [playlist, publicId]);
 
-  const goToTrack = useCallback((track: { publicId: string } | null) => {
+  const goToTrack = useCallback((track: UpNextTrack | null) => {
     if (!track) return;
-    navigate(`${projectPath(track)}?list=${listId}`);
+    const dest = projectPath(track);
+    if (!dest) return;
+    navigate(`${dest}?list=${listId}`);
   }, [navigate, listId]);
 
   // ── Handlers ─────────────────────────────────────────────────
@@ -346,18 +359,31 @@ function PublicProjectViewPageInner() {
     }
   };
 
+  // This page already sits on the canonical path, so its own sub-routes are
+  // that path plus a suffix — no need to rebuild the owner/slug segment.
+  const canonicalPath = `/${accountName}/projects/${slugId}`;
+
   const handleFork = useCallback(() => {
-    window.location.href = `/project/fork/${publicId}`;
-  }, [publicId]);
+    window.location.href = `${canonicalPath}/fork`;
+  }, [canonicalPath]);
 
   const handleEdit = useCallback(() => {
-    // Only the owner gets the edit button, so the canonical editor URL is theirs.
-    navigate(canonicalPath ? `${canonicalPath}/edit` : `/project/${publicId}/edit`);
-  }, [navigate, publicId, canonicalPath]);
+    navigate(`${canonicalPath}/edit`);
+  }, [navigate, canonicalPath]);
 
   const handleSignUp = useCallback(() => {
-    navigate(`/auth/signup?redirect=${encodeURIComponent(canonicalPath ?? `/project/${publicId}`)}`);
-  }, [navigate, publicId, canonicalPath]);
+    navigate(`/auth/signup?redirect=${encodeURIComponent(canonicalPath)}`);
+  }, [navigate, canonicalPath]);
+
+  // A segment too short to hold a publicId can never name a project, so there
+  // is nothing to fetch — go straight to 404 instead of spinning forever.
+  if (!publicId) {
+    return (
+      <Suspense fallback={null}>
+        <NotFoundPage type="project" identifier={slugId} />
+      </Suspense>
+    );
+  }
 
   // ── Loading ──────────────────────────────────────────────────
   if (loading) {
@@ -371,7 +397,7 @@ function PublicProjectViewPageInner() {
   if (notFound || !project) {
     return (
       <Suspense fallback={null}>
-        <NotFoundPage type="project" identifier={publicId} />
+        <NotFoundPage type="project" identifier={slugId} />
       </Suspense>
     );
   }

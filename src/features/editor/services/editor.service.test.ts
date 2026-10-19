@@ -18,6 +18,7 @@ import {
   detectDuplicateTimestamps,
   wordTimeBounds,
   clampWordTime,
+  alignLineStart,
 } from './editor.service';
 import type { EditorLine } from './editor.service';
 
@@ -305,6 +306,76 @@ describe('applyMark — words mode', () => {
     } as Partial<EditorLine>)];
     const res = mark({ lines, time: 2, editorMode: 'words', activeWordIndex: 1 });
     expect(res.nextLines[0].words?.[1]).toMatchObject({ time: 2, singerIndex: 1 });
+  });
+});
+
+describe('alignLineStart — the line starts when its first word does', () => {
+  it('writes both sides from one value', () => {
+    const next = alignLineStart(
+      line('one two', { timestamp: 1, words: [{ word: 'one', time: 1 }, { word: 'two', time: 4 }] } as Partial<EditorLine>),
+      7,
+    );
+    expect(next.timestamp).toBe(7);
+    expect(next.words?.[0].time).toBe(7);
+    // Only the first word is the line's start; the rest keep their own times.
+    expect(next.words?.[1].time).toBe(4);
+  });
+
+  it('leaves the romaji track alone, since it is marked separately', () => {
+    const next = alignLineStart(
+      line('一', { timestamp: 1, words: [{ word: '一', time: 1 }], secondaryWords: [{ word: 'ichi', time: 2 }] } as Partial<EditorLine>),
+      7,
+    );
+    expect(next.secondaryWords?.[0].time).toBe(2);
+  });
+
+  it('still sets the line on a line with no word tokens', () => {
+    expect(alignLineStart(line('untokenized'), 7).timestamp).toBe(7);
+  });
+});
+
+describe('applyMark — words mode keeps the first word on the line start', () => {
+  it('re-marking the first word moves the line with it', () => {
+    const lines = [line('one two', {
+      timestamp: 3,
+      words: [{ word: 'one', time: 3 }, { word: 'two', time: 5 }],
+    } as Partial<EditorLine>)];
+    const res = mark({ lines, time: 9, editorMode: 'words', activeWordIndex: 0 });
+    expect(res.nextLines[0].words?.[0].time).toBe(9);
+    expect(res.nextLines[0].timestamp).toBe(9);
+  });
+
+  it('marking the focused first word moves the line with it', () => {
+    const lines = [line('one two', {
+      timestamp: 3,
+      words: [{ word: 'one', time: 3 }, { word: 'two', time: 5 }],
+    } as Partial<EditorLine>)];
+    const res = mark({
+      lines, time: 9, editorMode: 'words',
+      focusedTimestamp: { lineIndex: 0, type: 'word', wordIndex: 0 },
+    });
+    expect(res.nextLines[0].timestamp).toBe(9);
+  });
+
+  it('marking a later word leaves the line start where it is', () => {
+    const lines = [line('one two', {
+      timestamp: 3,
+      words: [{ word: 'one', time: 3 }, { word: 'two', time: null }],
+    } as Partial<EditorLine>)];
+    const res = mark({ lines, time: 9, editorMode: 'words', activeWordIndex: 1 });
+    expect(res.nextLines[0].timestamp).toBe(3);
+  });
+
+  it('setting the line start from the focused badge pulls the first word along', () => {
+    const lines = [line('one two', {
+      timestamp: 3,
+      words: [{ word: 'one', time: 3 }, { word: 'two', time: 5 }],
+    } as Partial<EditorLine>)];
+    const res = mark({
+      lines, time: 9, editorMode: 'words',
+      focusedTimestamp: { lineIndex: 0, type: 'start' },
+    });
+    expect(res.nextLines[0].words?.[0].time).toBe(9);
   });
 });
 

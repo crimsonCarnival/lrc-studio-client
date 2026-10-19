@@ -22,9 +22,12 @@ import toast from 'react-hot-toast';
 import useConfirm from '@/shared/hooks/useConfirm';
 import { Button } from '@ui/button';
 import { LibrarySwitch } from './LibrarySwitch';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { projectEditPath } from '@/features/projects/project-path';
 
 interface UploadProject {
   publicId: string;
+  slug?: string | null;
   title?: string | null;
 }
 
@@ -78,6 +81,7 @@ function SourceBadge({ source, label, className }: { source?: string; label: Rea
 export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Upload) => void }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuthContext();
   const { settings } = useSettings();
   const timezone = settings.advanced?.timezone;
   const locale = i18n.resolvedLanguage || i18n.language;
@@ -289,10 +293,14 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
   const projectLink = (upload: Upload, size: 'card' | 'row') => {
     const project = upload.projects?.[0];
     if (!project) return null;
+    // Uploads are the signed-in user's own, so their projects are too. Without
+    // an account name there is no owner-scoped URL, so nothing is rendered.
+    const href = projectEditPath(project, user?.accountName);
+    if (!href) return null;
     const extra = (upload.projects?.length ?? 1) - 1;
     return (
       <Link
-        to={`/project/${project.publicId}/edit`}
+        to={href}
         onClick={(e) => e.stopPropagation()}
         className={cn('flex items-center gap-1.5 font-semibold text-teal-300 hover:text-teal-200 min-w-0', size === 'card' ? 'text-[13px]' : 'text-[13px]')}
       >

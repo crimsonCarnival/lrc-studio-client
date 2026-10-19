@@ -52,7 +52,6 @@ export default {
     passwordMinLength: "Password must be at least 8 characters",
     accountNamePattern: "Account name must be 3–30 characters: lowercase letters, numbers, _ or -",
     identifierInvalid: "Enter a valid email or account name (e.g. yourname)",
-    emailOrHandleRequired: "Enter an email or account name",
     emailInvalid: "Please enter a valid email address",
     fieldRequired: "This field is required",
     passwordMismatch: "Passwords do not match"

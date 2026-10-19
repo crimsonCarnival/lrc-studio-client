@@ -6,6 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
 import { useNotificationsContext } from '../NotificationsContext';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { projectPath, projectEditPath } from '@/features/projects/project-path';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatTimeAgo } from '../timeAgo';
 import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
@@ -52,11 +54,27 @@ const TYPE_ICON_NAME: Record<string, string> = {
   streak_warning: 'local_fire_department',
 };
 
+/**
+ * Where a notification row navigates to.
+ *
+ * `recipientAccountName` is the signed-in user's account name. Every
+ * project-bearing notification type is addressed to the project's owner
+ * (star/fork/reaction are sent to the owner; streak_warning points at the
+ * recipient's own most recently edited project), so the recipient IS the owner
+ * and supplies the account name the owner-scoped URL needs. Without it there is
+ * no canonical URL, and the row is left non-navigable rather than pointing at a
+ * path that would 404. No slug is available here; `publicId` alone resolves.
+ */
 // eslint-disable-next-line react-refresh/only-export-components
-export function notificationDestination(notification: NotificationData): string | null {
+export function notificationDestination(
+  notification: NotificationData,
+  recipientAccountName?: string | null,
+): string | null {
   const { type, actors, publicId } = notification;
-  if ((type === 'star' || type === 'fork' || type === 'reaction') && publicId) return `/project/${publicId}`;
-  if (type === 'follow' && actors?.[0]?.accountName) return profilePath(actors[0].accountName);
+  if ((type === 'star' || type === 'fork' || type === 'reaction') && publicId) {
+    return projectPath({ publicId }, recipientAccountName);
+  }
+  if (type === 'follow' && actors?.[0]?.accountName) return `/profile/${actors[0].accountName}`;
   if (type === 'admin_granted' || type === 'role_changed') return '/admin';
   if (type === 'xp_changed') return '/settings/profile';
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';
@@ -64,7 +82,7 @@ export function notificationDestination(notification: NotificationData): string 
   if (type === 'badge_awarded') return '/settings/badges';
   if (type === 'request_submitted' || type === 'request_reviewed') return '/admin?tab=requests';
   // "Continue working": the user's most recently updated project, else home.
-  if (type === 'streak_warning') return publicId ? `/project/${publicId}/edit` : '/home';
+  if (type === 'streak_warning') return (publicId && projectEditPath({ publicId }, recipientAccountName)) || '/home';
   return null;
 }
 
@@ -193,10 +211,11 @@ export function NotificationItem({ notification }: { notification: NotificationD
   const navigate = useNavigate();
   const { markRead, dismiss } = useNotificationsContext();
   const { settings } = useSettings();
+  const { user } = useAuthContext();
   const { _id, read, createdAt, updatedAt } = notification;
   const displayTime = updatedAt ?? createdAt;
 
-  const dest = notificationDestination(notification);
+  const dest = notificationDestination(notification, user?.accountName);
 
   const handleClick = () => {
     if (!read) markRead([_id]);
