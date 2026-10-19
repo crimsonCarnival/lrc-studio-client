@@ -110,6 +110,25 @@ export function isProjectPath(pathname: string): boolean {
 }
 
 /**
+ * A canonical path rebuilt from route params.
+ *
+ * Route params arrive URL-decoded, so `/%2Fevil.com/projects/<real-slug-id>`
+ * hands back an account name of `/evil.com`, and interpolating that straight
+ * back into a path yields `//evil.com/projects/...` — protocol-relative, i.e.
+ * an off-site navigation from a link that looks like one of ours. Nothing
+ * validates the account segment for us either: it is cosmetic, the project
+ * resolves by the id at the tail of the slug segment, so such a link loads a
+ * real project and only diverges when a button rebuilds the path.
+ *
+ * Prefer `projectPath()` with loaded project data where it is available; this
+ * is for the places that only have the params. Re-encoding each segment keeps
+ * the result a same-origin relative path.
+ */
+export function canonicalPathFromParams(accountName?: string, slugId?: string): string {
+  return `/${encodeURIComponent(accountName ?? '')}/projects/${encodeURIComponent(slugId ?? '')}`;
+}
+
+/**
  * The publicId inside a `:slugId` route param — the last 10 characters, because
  * the nanoid alphabet contains '-' and the slug may too.
  */

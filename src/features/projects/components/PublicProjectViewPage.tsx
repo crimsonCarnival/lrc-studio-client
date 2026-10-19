@@ -35,7 +35,7 @@ import { projects as projectsApi } from '@/app/api';
 import { projectsService } from '@features/projects/services/projects.service';
 import { artistRoster } from '@/features/artists/artist-credits';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
-import { projectPath, publicIdFromSlugId } from '@features/projects/project-path';
+import { projectPath, publicIdFromSlugId, canonicalPathFromParams } from '@features/projects/project-path';
 
 interface PublicProject {
   publicId?: string;
@@ -359,9 +359,17 @@ function PublicProjectViewPageInner() {
     }
   };
 
-  // This page already sits on the canonical path, so its own sub-routes are
-  // that path plus a suffix — no need to rebuild the owner/slug segment.
-  const canonicalPath = `/${accountName}/projects/${slugId}`;
+  // Rebuilt from the loaded project, NOT from the path this page happens to sit
+  // on. The account segment is cosmetic — the project resolves by the id at the
+  // tail of the slug segment — so a link can carry any account name, and a
+  // percent-encoded slash in it decodes to one that would make these handlers
+  // navigate off-site. projectPath encodes what it builds; the params fallback
+  // encodes too, for a project that has not loaded yet.
+  const canonicalPath = useMemo(
+    () => (project?.publicId ? projectPath({ ...project, publicId: project.publicId }) : null)
+      || canonicalPathFromParams(accountName, slugId),
+    [project, accountName, slugId],
+  );
 
   const handleFork = useCallback(() => {
     window.location.href = `${canonicalPath}/fork`;
