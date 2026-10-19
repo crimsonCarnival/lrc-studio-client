@@ -14,7 +14,7 @@ export function SearchProjectCard({ project, query }: { project: Project; query:
   const { t } = useTranslation();
   const { title, coverImage, starCount, forkCount, metadata, forkedFrom } = project;
   const displayTitle = metadata?.songName || title || t('library.untitled');
-  const artist = metadata?.songArtist;
+  const artist = artistDisplay(metadata);
   // Null when the search result carries no owner account name: the row then
   // renders non-navigable rather than pointing at a path that would 404.
   const href = projectPath(project);

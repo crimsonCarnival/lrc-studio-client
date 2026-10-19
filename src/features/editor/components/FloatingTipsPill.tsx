@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { isProjectViewPath, isProjectEditorPath } from '@/features/projects/project-path';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { isEditorPath } from '@features/projects/project-path';

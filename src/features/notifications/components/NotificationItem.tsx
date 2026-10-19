@@ -74,7 +74,7 @@ export function notificationDestination(
   if ((type === 'star' || type === 'fork' || type === 'reaction') && publicId) {
     return projectPath({ publicId }, recipientAccountName);
   }
-  if (type === 'follow' && actors?.[0]?.accountName) return `/profile/${actors[0].accountName}`;
+  if (type === 'follow' && actors?.[0]?.accountName) return profilePath(actors[0].accountName);
   if (type === 'admin_granted' || type === 'role_changed') return '/admin';
   if (type === 'xp_changed') return '/settings/profile';
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';

@@ -18,7 +18,8 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/types';
-import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams } from '@features/projects/project-path';
+import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle } from '@features/projects/project-path';
+import { artistDisplay, artistRoster, type ArtistCredit } from '@features/artists/artist-credits';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
