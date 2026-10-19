@@ -4,6 +4,7 @@ import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import { counterpartEnd } from '@/features/editor/services/counterparts';
 import { isHeldAt, tailWordEnd } from '@/features/editor/utils/line-span';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
+import { showsInstrumentalBreak } from '@/features/editor/utils/instrumental-break';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
@@ -299,6 +300,9 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
 
   // A captured counterpart that has no text yet is a to-do for the editor, not a lyric.
   if (isCounterpart && isEmptyLine) return null;
+  // A gap too short to register reads as a flicker between lines, not as a
+  // break in the song, so the row is dropped rather than shown for an instant.
+  if (isEmptyLine && !showsInstrumentalBreak(gap)) return null;
 
   return (
     <div
