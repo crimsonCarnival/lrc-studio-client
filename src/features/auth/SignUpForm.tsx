@@ -16,25 +16,25 @@ import {
 } from './auth-shared';
 import { Button } from '@ui/button';
 
+// The account name is required, not one identifier of two: `/:accountName` is the
+// profile URL and every project URL is scoped under it, so an account without one
+// could not be addressed at all. The server enforces the same rule on /auth/register,
+// and this keeps a blank handle from becoming a raw 400 from the schema validator.
 const step1Schema = z.object({
   displayName: z.string().min(1, 'auth.validation.fieldRequired'),
   accountName: z.string()
-    .regex(/^[a-z0-9_-]{3,30}$/, 'auth.validation.accountNamePattern')
-    .optional()
-    .or(z.literal('')),
+    .min(1, 'auth.validation.fieldRequired')
+    .regex(/^[a-z0-9_-]{3,30}$/, 'auth.validation.accountNamePattern'),
 });
 
 const step2Schema = z.object({
   email: z.string().email('auth.validation.emailInvalid').optional().or(z.literal('')),
-  accountName: z.string().optional().or(z.literal('')),
+  accountName: z.string().min(1, 'auth.validation.fieldRequired'),
   password: z.string()
     .min(1, 'auth.validation.fieldRequired')
     .min(8, 'auth.validation.passwordMinLength'),
   confirmPassword: z.string().min(1, 'auth.validation.fieldRequired'),
 }).refine(
-  (d) => !d.email || d.accountName || d.email,
-  { message: 'auth.validation.emailOrHandleRequired', path: ['email'] }
-).refine(
   (d) => d.password === d.confirmPassword,
   { message: 'auth.validation.passwordMismatch', path: ['confirmPassword'] }
 );

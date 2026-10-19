@@ -52,7 +52,6 @@ export default {
     passwordMinLength: "La contraseña debe tener al menos 8 caracteres",
     accountNamePattern: "El nombre de cuenta debe tener 3–30 caracteres: minúsculas, números, _ o -",
     identifierInvalid: "Ingresa un correo válido o tu nombre de cuenta (ej. nombredecuenta)",
-    emailOrHandleRequired: "Ingresa un correo o nombre de cuenta",
     emailInvalid: "Ingresa un correo electrónico válido",
     fieldRequired: "Este campo es obligatorio",
     passwordMismatch: "Las contraseñas no coinciden"
