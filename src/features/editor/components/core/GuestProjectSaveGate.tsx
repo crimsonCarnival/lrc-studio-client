@@ -125,7 +125,7 @@ export default function GuestProjectSaveGate() {
             accountNameRef.current,
           );
           navigateRef.current(dest ?? '/library', { replace: true });
-        } catch {
+        } catch (err) {
           if (cancelled) return;
           // A validation failure will not fix itself: say what is wrong instead of retrying forever.
           const invalid = artistErrorMessageFor(t, err);

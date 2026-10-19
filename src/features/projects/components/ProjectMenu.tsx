@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAuthContext } from '@/features/auth/useAuthContext';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent } from '@ui/context-menu';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@ui/dropdown-menu';
 import { contextMenuComponents, dropdownMenuComponents, type MenuComponents } from '@ui/menu-components';
@@ -39,17 +40,13 @@ function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDel
   const { t } = useTranslation();
   const { user } = useAuthContext();
   const [copied, setCopied] = useState(false);
-  // Cards in the library don't carry their owner; for your own projects it's you.
-  const path = projectPath({
-    accountName: isOwner ? user?.accountName : undefined,
-    ...(project as Omit<Parameters<typeof projectPath>[0], 'publicId'>),
-    publicId: project.publicId,
-  });
-
-  // Null when the owner's account name is unknown here: there is no canonical
-  // URL to open or copy, so both link items are left out rather than pointing
-  // at a path that would 404.
-  const path = projectPath(project, ownerAccountName);
+  // The explicit owner wins; cards in the library don't carry one, and for your
+  // own projects that owner is you.
+  //
+  // Null when it is unknown either way: there is no canonical URL to open or
+  // copy, so both link items are left out rather than pointing at a path that
+  // would 404.
+  const path = projectPath(project, ownerAccountName ?? (isOwner ? user?.accountName : undefined));
 
   const handleCopyLink = () => {
     if (!path) return;

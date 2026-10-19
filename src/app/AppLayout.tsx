@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { artistFieldsFromForm, artistRoster, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { isProjectViewPath, isProjectEditorPath } from '@/features/projects/project-path';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';

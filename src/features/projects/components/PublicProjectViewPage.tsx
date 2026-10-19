@@ -15,7 +15,6 @@ import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { ProjectUpNextPanel } from './ProjectUpNextPanel';
 import { usePublicProject } from '../hooks/usePublicProject';
-import { parseSlugId, projectDisplayName, projectPageTitle, projectPath } from '../project-path';
 import { useStarredPlaylist } from '../hooks/useStarredPlaylist';
 import ImmersiveLyricsDisplay, { type DisplayLine } from './ImmersiveLyricsDisplay';
 import ProjectInfoPanel from './ProjectInfoPanel';
@@ -35,7 +34,7 @@ import { projects as projectsApi } from '@/app/api';
 import { projectsService } from '@features/projects/services/projects.service';
 import { artistRoster } from '@/features/artists/artist-credits';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
-import { projectPath, publicIdFromSlugId, canonicalPathFromParams } from '@features/projects/project-path';
+import { projectPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle } from '@features/projects/project-path';
 
 interface PublicProject {
   publicId?: string;
@@ -86,6 +85,9 @@ function PublicProjectViewPageInner() {
   // The slug half of the segment is cosmetic — the project resolves by the
   // publicId in its tail.
   const publicId = publicIdFromSlugId(slugId) ?? undefined;
+  // The router's location, not window.location: the canonical-URL correction
+  // below has to re-run when navigation changes the path in place.
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const listId = searchParams.get('list');
   // Shares the parser with the editor route so `?s=` and `?loop=` mean exactly
@@ -365,23 +367,24 @@ function PublicProjectViewPageInner() {
   // percent-encoded slash in it decodes to one that would make these handlers
   // navigate off-site. projectPath encodes what it builds; the params fallback
   // encodes too, for a project that has not loaded yet.
-  const canonicalPath = useMemo(
-    () => (project?.publicId ? projectPath({ ...project, publicId: project.publicId }) : null)
-      || canonicalPathFromParams(accountName, slugId),
-    [project, accountName, slugId],
-  );
+  // Action targets hang off the canonical path above, which is built from the
+  // loaded project. While it is still loading, the params stand in — re-encoded
+  // by canonicalPathFromParams, never interpolated raw: a percent-encoded slash
+  // in the (cosmetic) account segment would otherwise decode into a
+  // protocol-relative URL and send a fork click off-site.
+  const actionPath = canonicalPath ?? canonicalPathFromParams(accountName, slugId);
 
   const handleFork = useCallback(() => {
-    window.location.href = `${canonicalPath}/fork`;
-  }, [canonicalPath]);
+    window.location.href = `${actionPath}/fork`;
+  }, [actionPath]);
 
   const handleEdit = useCallback(() => {
-    navigate(`${canonicalPath}/edit`);
-  }, [navigate, canonicalPath]);
+    navigate(`${actionPath}/edit`);
+  }, [navigate, actionPath]);
 
   const handleSignUp = useCallback(() => {
-    navigate(`/auth/signup?redirect=${encodeURIComponent(canonicalPath)}`);
-  }, [navigate, canonicalPath]);
+    navigate(`/auth/signup?redirect=${encodeURIComponent(actionPath)}`);
+  }, [navigate, actionPath]);
 
   // A segment too short to hold a publicId can never name a project, so there
   // is nothing to fetch — go straight to 404 instead of spinning forever.

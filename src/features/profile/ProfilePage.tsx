@@ -80,7 +80,6 @@ interface ProjectCardProps {
 function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: ProjectCardProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { accountName: ownerAccountName } = useParams();
   const { title, publicId, upload, public: isPublic, coverImage } = project;
   const isYoutube = upload?.source === 'youtube';
   const isPrivate = isOwner && isPublic === false;

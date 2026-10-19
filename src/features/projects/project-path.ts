@@ -37,18 +37,26 @@ type SlugMetadata = {
   songArtists?: (string | null)[] | null;
 };
 
-export type ProjectPathSource = {
+/**
+ * Just the naming half: what a project is *called*. Separate from the path source
+ * because the title and identity helpers run on a project being set up, before it
+ * has a publicId to be addressed by.
+ */
+export type ProjectNameSource = {
+  title?: string | null;
+  metadata?: object | null;
+};
+
+export type ProjectPathSource = ProjectNameSource & {
   publicId: string;
   /** The server's stored slug. Preferred over recomputing when present. */
   slug?: string | null;
-  title?: string | null;
-  metadata?: object | null;
   /** The owner, however the query happened to shape it. */
   user?: { accountName?: string | null } | null;
   accountName?: string | null;
 };
 
-export function projectSlug(p: ProjectPathSource): string {
+export function projectSlug(p: ProjectNameSource): string {
   const m = (p.metadata ?? {}) as SlugMetadata;
   const artist = m.songArtist || m.songArtists?.[0] || '';
   const songName = m.songName || '';
@@ -107,6 +115,52 @@ export function isEditorPath(pathname: string): boolean {
 /** Any canonical project path — view, `/edit` or `/fork`. */
 export function isProjectPath(pathname: string): boolean {
   return PROJECT_ANY_PATH.test(pathname);
+}
+
+/**
+ * What a project is called in page titles: the song name and artist the user typed
+ * ("Creep – Radiohead"), never the audio file or video name. Falls back to whichever
+ * of the two exists, then to the project name.
+ */
+export function projectDisplayName({ title, metadata }: ProjectNameSource): string {
+  const m = (metadata ?? {}) as SlugMetadata;
+  const song = m.songName?.trim() || '';
+  const artist = m.songArtist?.trim() || '';
+  if (song && artist) return `${song} – ${artist}`;
+  return song || artist || title?.trim() || '';
+}
+
+/**
+ * A project needs something to be called by: a title, song name or artist that
+ * survives slugging ("!!!" does not). The server enforces the same rule on create
+ * and update.
+ */
+export function hasProjectIdentity(source: ProjectNameSource): boolean {
+  return projectSlug(source) !== '';
+}
+
+/**
+ * The tab / link title of a project: `Song – Artist, Synced by accountname`. The page
+ * appends ` | LRC Studio`. The server writes the same text for link previews, so a
+ * pasted link and the tab read alike.
+ */
+export function projectPageTitle(
+  display: string,
+  ownerAccountName: string | null | undefined,
+  syncedBy: (name: string) => string,
+): string {
+  const owner = ownerAccountName?.trim();
+  return display && owner ? `${display}, ${syncedBy(owner)}` : display;
+}
+
+/**
+ * Alias of `isEditorPath` for the parallel implementation that landed on the remote
+ * branch. The two differ: this one is the canonical `/edit` path only, while
+ * `isEditorPath` also counts the `/project/local` draft. Callers that mean "a saved
+ * project's editor" want this one.
+ */
+export function isProjectEditorPath(pathname: string): boolean {
+  return PROJECT_EDIT_PATH.test(pathname);
 }
 
 /**

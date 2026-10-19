@@ -83,7 +83,6 @@ function ProjectCard({
   ownerAccountName
 }: ProjectCardProps) {
   const { t } = useTranslation();
-  const { user } = useAuthContext();
   const { trigger: haptic } = useHapticFeedback();
   const [requestConfirm, confirmModal] = useConfirm();
   const cardRef = useRef<HTMLDivElement>(null);

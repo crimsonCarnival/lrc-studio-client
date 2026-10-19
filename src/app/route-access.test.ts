@@ -7,15 +7,20 @@ describe('accessFor', () => {
     expect(accessFor('/32blunts/lists/abc')).toBe('public');
     expect(accessFor('/32blunts/projects/radiohead-creep-k3x9a2c7qm')).toBe('public');
   });
-  it('keeps legacy profile and project URLs public so they can redirect', () => {
+  it('keeps the vanity profile and list URLs public so they can redirect', () => {
     expect(accessFor('/profile/32blunts')).toBe('public');
     expect(accessFor('/profile/32blunts/lists/abc')).toBe('public');
     expect(accessFor('/u/32blunts')).toBe('public');
-    expect(accessFor('/project/k3x9a2c7qm')).toBe('public');
+  });
+  it('no longer knows the removed /project/:id URL', () => {
+    // It was deleted outright rather than redirected, so route-access has no
+    // rule naming it and it falls through to the default like any other
+    // unknown path. Guests reaching an old link are sent to sign-in rather
+    // than shown a 404 — the cost of keeping no reference to the old shape.
+    expect(accessFor('/project/k3x9a2c7qm')).toBe('auth');
   });
   it('requires auth for editors and private areas', () => {
     expect(accessFor('/32blunts/projects/radiohead-creep-k3x9a2c7qm/edit')).toBe('auth');
-    expect(accessFor('/project/k3x9a2c7qm/edit')).toBe('auth');
     expect(accessFor('/library')).toBe('auth');
     expect(accessFor('/settings/profile')).toBe('auth');
   });
