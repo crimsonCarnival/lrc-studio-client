@@ -7,6 +7,7 @@ const GET_PROJECTS = /* GraphQL */ `
     projects(limit: $limit, offset: $offset) {
       id
       publicId
+      slug
       title
       type
       readOnly
@@ -67,6 +68,7 @@ const GET_PROJECT = /* GraphQL */ `
     project(id: $id) {
       id
       publicId
+      slug
       title
       type
       readOnly
@@ -152,6 +154,7 @@ const CREATE_PROJECT = /* GraphQL */ `
     createProject(input: $input) {
       id
       publicId
+      slug
       title
     }
   }
@@ -182,6 +185,7 @@ const GET_SHARE = /* GraphQL */ `
     getShare(id: $id) {
       id
       publicId
+      slug
       title
       public
       readOnly
@@ -262,6 +266,7 @@ const CLONE_PROJECT = /* GraphQL */ `
     cloneProject(id: $id) {
       id
       publicId
+      slug
     }
   }
 `;

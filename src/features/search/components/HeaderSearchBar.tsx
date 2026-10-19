@@ -4,6 +4,7 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { projectPath } from '@/features/projects/project-path';
 import { SearchField } from '@ui/search-field';
 import { Skeleton } from '@ui/skeleton';
 import { LazyImage } from '@ui/LazyImage';
@@ -62,15 +63,20 @@ export function HeaderSearchBar({ autoFocus = false, onClose }: { autoFocus?: bo
     userId: u.id,
     kind: 'user',
   }));
-  const projectRows: Row[] = projects.map((p) => ({
-    key: `p-${p.id}`,
-    to: `/project/${p.publicId}`,
-    title: p.metadata?.songName || p.title || t('library.untitled'),
-    sub: p.metadata?.songArtist ?? undefined,
-    meta: t(p.hasWordSync ? 'search.wordSync' : 'search.lineSync'),
-    image: p.coverImage,
-    kind: 'project',
-  }));
+  // A result whose owner account name is missing has no canonical URL, so it is
+  // dropped from the dropdown rather than rendered as a row that would 404.
+  const projectRows: Row[] = projects.flatMap((p) => {
+    const to = projectPath(p);
+    return to ? [{
+      key: `p-${p.id}`,
+      to,
+      title: p.metadata?.songName || p.title || t('library.untitled'),
+      sub: p.metadata?.songArtist ?? undefined,
+      meta: t(p.hasWordSync ? 'search.wordSync' : 'search.lineSync'),
+      image: p.coverImage,
+      kind: 'project' as const,
+    }] : [];
+  });
   const rows = [...userRows, ...projectRows];
 
   // The first row is active by default so Enter opens the best match; Shift+Enter (or the

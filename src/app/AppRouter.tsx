@@ -18,6 +18,7 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/types';
+import { projectEditPath, publicIdFromSlugId } from '@features/projects/project-path';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
@@ -80,11 +81,6 @@ function ExternalRedirect({ to }: { to: string }) {
   return null;
 }
 
-function LegacyListRedirect() {
-  const { accountName, listId } = useParams();
-  return <Navigate to={`/profile/${accountName}/lists/${listId}`} replace />;
-}
-
 function RedirectWithParams({ to }: { to: (params: Record<string, string>) => string }) {
   const params = useParams() as Record<string, string>;
   return <Navigate to={to(params)} replace />;
@@ -131,10 +127,13 @@ interface EditorContainerProps {
 }
 
 function EditorContainer({ loadProject, activepublicId, isProjectLoading, projectUserId, user, navigate, children }: EditorContainerProps) {
-  const { id } = useParams();
+  const { accountName, slugId } = useParams();
+  // The slug half of the segment is cosmetic; the project is always resolved by
+  // the publicId in its tail.
+  const id = publicIdFromSlugId(slugId);
 
   useEffect(() => {
-    if (id && id !== 'new' && id !== 'local' && id !== 'fork' && id !== activepublicId) {
+    if (id && id !== activepublicId) {
       loadProject(id);
     }
     // loadProject is stable (useCallback); route param id is the true trigger
@@ -143,18 +142,20 @@ function EditorContainer({ loadProject, activepublicId, isProjectLoading, projec
 
   useEffect(() => {
     if (!isProjectLoading && projectUserId && activepublicId === id && user && user.id !== projectUserId) {
-      navigate(`/project/${id}`);
+      // Already on the canonical path — the public view is this URL without /edit.
+      navigate(`/${accountName}/projects/${slugId}`);
     }
-  }, [isProjectLoading, projectUserId, activepublicId, id, user, navigate]);
+  }, [isProjectLoading, projectUserId, activepublicId, id, user, navigate, accountName, slugId]);
 
   return children;
 }
 
 function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigate: NavigateFunction }) {
-  const { id } = useParams();
+  const { accountName, slugId } = useParams();
   const { user, loading } = useAuthContext();
   const { loadProject, t } = appState;
   const ran = useRef(false);
+  const id = publicIdFromSlugId(slugId);
 
   useEffect(() => {
     if (loading) return;
@@ -163,7 +164,7 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
 
     if (!user || user.isGuest) {
       // Redirect to login; AuthPage's handleAuthSuccess navigates back to ?redirect= on success
-      navigate(`/auth/signin?redirect=${encodeURIComponent(`/project/fork/${id}`)}`);
+      navigate(`/auth/signin?redirect=${encodeURIComponent(`/${accountName}/projects/${slugId}/fork`)}`);
       return;
     }
 
@@ -171,9 +172,12 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
     import('@/app/api').then(({ projects }) => {
       projects.clone(id)
         .then((res) => {
-          const result = res as { publicId: string };
+          // The clone belongs to the signed-in user, so they are its owner.
+          // accountName is always set on a real account; '/library' is only a
+          // guard so a missing one cannot navigate to a half-built URL.
+          const result = res as { publicId: string; slug?: string | null };
           loadProject(result.publicId);
-          navigate(`/project/${result.publicId}/edit`);
+          navigate(projectEditPath(result, user.accountName) ?? '/library');
           import('react-hot-toast').then(({ default: toast }) => {
             toast.success(t('project.cloneSuccess'));
           });
@@ -195,6 +199,8 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
     // navigate, loadProject, t are stable; ran.current guards single-execution
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user, loading]);
+
+  if (!id) return <NotFoundPage type="project" />;
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-400">
@@ -303,10 +309,15 @@ export function AppRouter({
   const handleToggleKeyboardHelp = useCallback(() => {
     setShowKeyboardHelp?.((p: boolean) => !p);
   }, [setShowKeyboardHelp]);
-  const handleViewPublic = useMemo(
-    () => (activepublicId ? () => navigate(`/project/${activepublicId}`) : undefined),
-    [activepublicId, navigate],
-  );
+  // The public view is the editor URL without `/edit`, so it is derived from the
+  // path we are already on rather than rebuilt from an id we have no owner for.
+  const handleViewPublic = useMemo(() => {
+    if (!activepublicId) return undefined;
+    const match = /^(\/[^/]+\/projects\/[^/]+)\/edit$/.exec(routerLocation.pathname);
+    if (!match) return undefined;
+    const viewPath = match[1];
+    return () => navigate(viewPath);
+  }, [activepublicId, routerLocation.pathname, navigate]);
 
   const editorProps = useMemo(() => ({
     lines, setLines, syncMode, setSyncMode,
@@ -412,9 +423,13 @@ export function AppRouter({
       <Route path="library" element={
         <Suspense fallback={<div className="glass rounded-xl p-5 flex-1"><SkeletonList count={3} /></div>}>
           <Library
-            onOpenProject={(publicId: string) => {
+            onOpenProject={(publicId: string, editPath: string | null) => {
+              // Library builds the canonical path from the row it rendered (it
+              // has the slug and the owner); null means the owner was unknown
+              // there, and there is no URL to send the user to.
+              if (!editPath) return;
               loadProject(publicId);
-              navigate(`/project/${publicId}/edit`);
+              navigate(editPath);
             }}
           />
         </Suspense>
@@ -431,8 +446,8 @@ export function AppRouter({
       ) : (
         <Route path="admin" element={adminPage} />
       )}
-      <Route path="project/fork/:id" element={<ForkHandler appState={appState} navigate={navigate} />} />
-      <Route path="project/:id/edit" element={
+      <Route path=":accountName/projects/:slugId/fork" element={<ForkHandler appState={appState} navigate={navigate} />} />
+      <Route path=":accountName/projects/:slugId/edit" element={
         <EditorContainer loadProject={loadProject} activepublicId={activepublicId} isProjectLoading={isProjectLoading} projectUserId={projectUserId} user={user} navigate={navigate}>
           {loadError === 'project' ? (
             <NotFoundPage type="project" />
@@ -458,7 +473,7 @@ export function AppRouter({
           ? <Navigate to="/project/new" replace />
           : <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
       } />
-      <Route path="project/:publicId" element={
+      <Route path=":accountName/projects/:slugId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <PublicProjectViewPage />
         </Suspense>
@@ -477,7 +492,6 @@ export function AppRouter({
       } />
       <Route path=":accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
       <Route path="u/:accountName" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}`} />} />
-      <Route path="profile/:accountName/playlists/:listId" element={<LegacyListRedirect />} />
       <Route path="settings/:tab?" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <SettingsPage />

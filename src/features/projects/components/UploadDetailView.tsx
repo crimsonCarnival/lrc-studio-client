@@ -7,9 +7,12 @@ import { uploads } from '@/app/api';
 import { Button } from '@ui/button';
 import NotFoundPage from '@/app/NotFoundPage';
 import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { projectEditPath } from '../project-path';
 
 interface UploadProject {
   publicId: string;
+  slug?: string | null;
   title?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
@@ -27,6 +30,9 @@ interface MediaDetail {
 
 export default function UploadDetailView({ onBack }: { onBack: () => void }) {
   const { id } = useParams();
+  // This page shows the signed-in user's own upload, so its projects are theirs
+  // too; project URLs are owner-scoped and need that account name.
+  const { user } = useAuthContext();
   const { t, dt } = useDynamicTranslation();
 
   const [media, setMedia] = useState<MediaDetail | null>(null);
@@ -147,11 +153,10 @@ export default function UploadDetailView({ onBack }: { onBack: () => void }) {
 
             {media.projects && media.projects.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                {media.projects.map(project => (
-                  <Link to={`/project/${project.publicId}/edit`}
-                    key={project.publicId}
-                    className="group relative bg-zinc-900/60 border border-zinc-800 hover:border-primary/50 hover:bg-zinc-800/60 rounded-xl p-4 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer overflow-hidden flex flex-col text-left focus:ring-2 focus:ring-primary/50 outline-none"
-                  >
+                {media.projects.map(project => {
+                  const href = projectEditPath(project, user?.accountName);
+                  const body = (
+                    <>
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     <div className="flex items-start gap-3 relative z-10">
                       <div className="size-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -165,8 +170,15 @@ export default function UploadDetailView({ onBack }: { onBack: () => void }) {
                         </div>
                       </div>
                     </div>
-                  </Link>
-                ))}
+                    </>
+                  );
+                  const CARD_CLASS = 'group relative bg-zinc-900/60 border border-zinc-800 hover:border-primary/50 hover:bg-zinc-800/60 rounded-xl p-4 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer overflow-hidden flex flex-col text-left focus:ring-2 focus:ring-primary/50 outline-none';
+                  // No owner account name means no canonical URL: the card
+                  // renders non-navigable rather than linking to a 404.
+                  return href
+                    ? <Link to={href} key={project.publicId} className={CARD_CLASS}>{body}</Link>
+                    : <div key={project.publicId} className={CARD_CLASS}>{body}</div>;
+                })}
               </div>
             ) : (
               <div className="bg-zinc-900/30 border border-dashed border-zinc-700/50 rounded-2xl p-8 flex flex-col items-center justify-center text-center">

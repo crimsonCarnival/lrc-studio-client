@@ -8,6 +8,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { FloatingCombobox } from '@ui/floating-combobox';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { projectPath } from '@/features/projects/project-path';
 import {
   savePlaylist,
   unsavePlaylist,
@@ -27,10 +28,13 @@ import { UserHoverCard } from '@ui/UserHoverCard';
 interface PlaylistProject {
   id: string;
   publicId?: string;
+  slug?: string | null;
   title?: string;
   starCount?: number;
   forkCount?: number;
   metadata?: { songName?: string; songArtist?: string };
+  /** The project's own owner — not the playlist's owner. */
+  user?: { accountName?: string | null } | null;
 }
 
 interface Playlist {
@@ -59,6 +63,7 @@ function ProjectRow({ project, isOwner, playlistId, onRemoved, showDragHandle }:
 }) {
   const { t } = useTranslation();
   const [removing, setRemoving] = useState(false);
+  const href = project.publicId ? projectPath({ ...project, publicId: project.publicId }) : null;
   const mountedRef = useRef(true);
   useEffect(() => () => { mountedRef.current = false; }, []);
 
@@ -78,12 +83,20 @@ function ProjectRow({ project, isOwner, playlistId, onRemoved, showDragHandle }:
         <Icon name="drag_indicator" size={16} className="text-muted-foreground shrink-0 cursor-grab" />
       )}
       <div className="flex-1 min-w-0">
-        <Link
-          to={`/project/${project.publicId}`}
-          className="text-sm font-medium text-foreground hover:text-primary transition-colors line-clamp-1"
-        >
-          {project.title || t('playlists.detail.untitled')}
-        </Link>
+        {/* Null when no owner account name came back: the title stays plain text
+            rather than linking to a path that would 404. */}
+        {href ? (
+          <Link
+            to={href}
+            className="text-sm font-medium text-foreground hover:text-primary transition-colors line-clamp-1"
+          >
+            {project.title || t('playlists.detail.untitled')}
+          </Link>
+        ) : (
+          <p className="text-sm font-medium text-foreground line-clamp-1">
+            {project.title || t('playlists.detail.untitled')}
+          </p>
+        )}
         {(project.metadata?.songName || project.metadata?.songArtist) && (
           <p className="text-xs text-muted-foreground line-clamp-1">
             {[project.metadata.songName, project.metadata.songArtist].filter(Boolean).join(' · ')}

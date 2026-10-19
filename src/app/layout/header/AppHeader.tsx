@@ -20,6 +20,7 @@ import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import PlayerControls from '@/features/player/components/PlayerControls';
+import { isEditorPath, isProjectViewPath, projectEditPath } from '@features/projects/project-path';
 
 interface ForkedFrom {
   publicId?: string;
@@ -128,8 +129,9 @@ export function AppHeader({
   // Project pages (setup, edit, public view) are fixed-height app layouts that don't
   // window-scroll — the editor and preview panes own their own scroll-progress bars,
   // so the header's window-scroll bar is meaningless noise there.
-  const isProjectPage = location.pathname.startsWith('/project/');
-  const isEditorPage = Boolean(location.pathname.match(/^\/project\/(local|new|[^/]+\/edit)$/));
+  const isProjectPage = isEditorPath(location.pathname) || isProjectViewPath(location.pathname)
+    || location.pathname === '/project/new';
+  const isEditorPage = isEditorPath(location.pathname) || location.pathname === '/project/new';
   // The editor/preview workspace takes over the middle and right of the bar:
   // it portals its own status badge, tabs and actions into the slots below
   // (see useHeaderSlot), so the site nav, search and tour button step aside.
@@ -151,7 +153,9 @@ export function AppHeader({
     } else if (path !== '/home' && location.pathname.startsWith(path)) {
       // Re-clicking an open section toggles back to the editor. Home is excluded:
       // it is the landing page, so clicking it again must stay on it.
-      navigate(activepublicId ? `/project/${activepublicId}/edit` : '/project/new');
+      // The open project belongs to the signed-in user, so they are its owner.
+      const dest = activepublicId ? projectEditPath({ publicId: activepublicId }, user?.accountName) : null;
+      navigate(dest ?? '/project/new');
     } else {
       navigate(path);
     }

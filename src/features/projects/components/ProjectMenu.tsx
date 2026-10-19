@@ -6,17 +6,25 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@ui/drop
 import { contextMenuComponents, dropdownMenuComponents, type MenuComponents } from '@ui/menu-components';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
+import { projectPath, type ProjectPathSource } from '@/features/projects/project-path';
 
 /**
- * Only `publicId` is read here, so the shape is widened rather than tied to the
- * full `Project` type — Explore has its own `ExploreProject` and Library has
- * `CardProject`, and all three should satisfy this without a cast.
+ * Only the fields the canonical URL needs are read here, so the shape is
+ * widened rather than tied to the full `Project` type — Explore has its own
+ * `ExploreProject` and Library has `CardProject`, and all three should satisfy
+ * this without a cast.
  */
-export type ProjectMenuProject = { publicId: string } & Record<string, unknown>;
+export type ProjectMenuProject = ProjectPathSource & Record<string, unknown>;
 
 export type ProjectMenuActions = {
   project: ProjectMenuProject;
   isOwner: boolean;
+  /**
+   * The owner's account name, for callers that know it from context rather than
+   * from the project (the library and Home list the signed-in user's own
+   * projects; the profile page knows it from its route param).
+   */
+  ownerAccountName?: string | null;
   /** Optional: Search and Explore render other people's projects and pass neither. */
   onEdit?: (project: ProjectMenuProject) => void;
   onDelete?: (project: ProjectMenuProject) => void;
@@ -27,13 +35,18 @@ export type ProjectMenuActions = {
  * ContextMenu or the DropdownMenu component set. Adding an action means editing
  * this one function, so right-click and the ⋮ button cannot diverge.
  */
-function useProjectMenuItems({ project, isOwner, onEdit, onDelete }: ProjectMenuActions) {
+function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDelete }: ProjectMenuActions) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
+  // Null when the owner's account name is unknown here: there is no canonical
+  // URL to open or copy, so both link items are left out rather than pointing
+  // at a path that would 404.
+  const path = projectPath(project, ownerAccountName);
+
   const handleCopyLink = () => {
-    const projectUrl = `${window.location.origin}/project/${project.publicId}`;
-    navigator.clipboard.writeText(projectUrl).then(() => {
+    if (!path) return;
+    navigator.clipboard.writeText(`${window.location.origin}${path}`).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
@@ -41,17 +54,21 @@ function useProjectMenuItems({ project, isOwner, onEdit, onDelete }: ProjectMenu
 
   return (C: MenuComponents): ReactNode => (
     <>
-      <C.Item asChild>
-        <a href={`/project/${project.publicId}`} target="_blank" rel="noopener noreferrer">
-          <Icon name="open_in_new" />
-          {t('profile.openInNewTab')}
-        </a>
-      </C.Item>
+      {path && (
+        <>
+          <C.Item asChild>
+            <a href={path} target="_blank" rel="noopener noreferrer">
+              <Icon name="open_in_new" />
+              {t('profile.openInNewTab')}
+            </a>
+          </C.Item>
 
-      <C.Item onClick={handleCopyLink}>
-        {copied ? <Icon name="check" /> : <Icon name="link" />}
-        {copied ? t('projectView.actions.copied') : t('projectView.actions.copyLink')}
-      </C.Item>
+          <C.Item onClick={handleCopyLink}>
+            {copied ? <Icon name="check" /> : <Icon name="link" />}
+            {copied ? t('projectView.actions.copied') : t('projectView.actions.copyLink')}
+          </C.Item>
+        </>
+      )}
 
       {isOwner && onEdit && (
         <>

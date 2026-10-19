@@ -9,6 +9,7 @@ import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
 import { matchKey } from '@/shared/utils/keyboard';
 import { splitArtists } from '@/shared/utils/lrc';
 import { useUrlParamsSync } from '@/shared/hooks/useUrlParamsSync';
+import { projectEditPath, isEditorPath, isProjectPath } from '@features/projects/project-path';
 import BannedScreen from '@features/auth/components/BannedScreen';
 import GuestProjectSaveGate from '@features/editor/components/core/GuestProjectSaveGate';
 
@@ -88,22 +89,26 @@ function AppInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Promote /project/local → /project/:id once the server assigns a real ID
+  // Promote /project/local → the project's own canonical editor URL once the
+  // server has assigned it a publicId. The draft was just created under this
+  // user, so they are its owner.
   useEffect(() => {
     if (
       user && activepublicId && routerLocation.pathname === '/project/local' &&
       new URLSearchParams(routerLocation.search).get('fromGuest') !== '1'
     ) {
-      navigate(`/project/${activepublicId}/edit`, { replace: true });
+      const dest = projectEditPath(
+        { publicId: activepublicId, title: appState.mediaTitle, metadata: appState.projectMetadata },
+        user.accountName,
+      );
+      if (dest) navigate(dest, { replace: true });
     }
-  }, [user, activepublicId, routerLocation.pathname, routerLocation.search, navigate]);
+  }, [user, activepublicId, appState.mediaTitle, appState.projectMetadata, routerLocation.pathname, routerLocation.search, navigate]);
 
-  // Public project view (/project/:id without /edit) has its own embedded player
-  const isPublicProjectView = /^\/project\/[^/]+$/.test(routerLocation.pathname) &&
-    !['new', 'local'].includes(routerLocation.pathname.split('/')[2] ?? '');
-  const isProjectPage = routerLocation.pathname.startsWith('/project/') &&
-    routerLocation.pathname !== '/project/new' &&
-    !isPublicProjectView;
+  // The editor workspace: the shared player is mounted and "ready" only here.
+  // The public project view mounts its own player (see AppLayout), so it is
+  // deliberately excluded.
+  const isProjectPage = isEditorPath(routerLocation.pathname);
   const isSetupPage = routerLocation.pathname === '/project/new';
   const isReady = isProjectPage;
   const isPlayerMounted = isProjectPage || isSetupPage;
@@ -271,7 +276,11 @@ function AppInner() {
 
   // Pause player when navigating away
   useEffect(() => {
-    if (!routerLocation.pathname.startsWith('/project/')) {
+    const onProjectRoute =
+      isProjectPath(routerLocation.pathname) ||
+      isEditorPath(routerLocation.pathname) ||
+      routerLocation.pathname === '/project/new';
+    if (!onProjectRoute) {
       playerRef.current?.pause?.();
     }
   }, [routerLocation.pathname, playerRef]);

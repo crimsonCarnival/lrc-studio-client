@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useHapticFeedback from '../../shared/hooks/useHapticFeedback.js';
 import { Icon } from '@/shared/ui/Icon';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { isEditorPath, isProjectViewPath, projectEditPath } from '@features/projects/project-path';
 
 interface AppMobileNavProps {
   mobileTab: string;
@@ -18,6 +20,14 @@ export function AppMobileNav({ mobileTab, setMobileTab, activepublicId, isReady 
   const navigate = useNavigate();
   const location = useLocation();
   const { trigger: haptic } = useHapticFeedback();
+  const { user } = useAuthContext();
+
+  // Setup, the local draft, the editor and the public view all count as "a
+  // project page" for the tab bar's purposes.
+  const onProjectPage =
+    isEditorPath(location.pathname) ||
+    isProjectViewPath(location.pathname) ||
+    location.pathname === '/project/new';
 
   if (!isReady) return null;
 
@@ -31,7 +41,7 @@ export function AppMobileNav({ mobileTab, setMobileTab, activepublicId, isReady 
   const isActive = (id: string) => {
     if (id === 'library') return location.pathname.startsWith('/library');
     if (id === 'uploads') return location.pathname.startsWith('/uploads');
-    return location.pathname.startsWith('/project/') && mobileTab === id;
+    return onProjectPage && mobileTab === id;
   };
 
   const handleTabClick = (id: string) => {
@@ -41,8 +51,11 @@ export function AppMobileNav({ mobileTab, setMobileTab, activepublicId, isReady 
     } else if (id === 'uploads') {
       navigate('/uploads');
     } else {
-      if (!location.pathname.startsWith('/project/')) {
-        navigate(activepublicId ? `/project/${activepublicId}/edit` : '/project/new');
+      if (!onProjectPage) {
+        // The open project is the signed-in user's own, so they are its owner.
+        // No slug: it is cosmetic, and the publicId tail is what resolves.
+        const dest = activepublicId ? projectEditPath({ publicId: activepublicId }, user?.accountName) : null;
+        navigate(dest ?? '/project/new');
       }
       setMobileTab(id);
     }

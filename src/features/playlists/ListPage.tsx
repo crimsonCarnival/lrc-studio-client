@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
+import { projectPath } from '@/features/projects/project-path';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { UserHoverCard } from '@ui/UserHoverCard';
 import {
@@ -19,9 +20,12 @@ import { LoadingSpinner } from '@ui/LoadingSpinner';
 interface PlaylistProject {
   id: string;
   publicId: string;
+  slug?: string | null;
   title?: string;
   starCount?: number;
   metadata?: { songArtist?: string; songName?: string };
+  /** The project's own owner — not the playlist's owner. */
+  user?: { accountName?: string | null } | null;
   [key: string]: unknown;
 }
 
@@ -38,6 +42,8 @@ interface Playlist {
   projects?: PlaylistProject[];
   [key: string]: unknown;
 }
+
+const TRACK_ROW_CLASS = 'flex items-center gap-4 px-4 py-3 hover:bg-accent/40 transition-colors group';
 
 export default function ListPage() {
   const { accountName, listId } = useParams();
@@ -57,6 +63,14 @@ export default function ListPage() {
   const [hoveringUnsave, setHoveringUnsave] = useState(false);
 
   const isOwner = !!user && user.accountName === accountName;
+
+  // `?list=` keeps the up-next panel on the project page; the canonical path
+  // carries the project's OWN owner, which is not the playlist's owner.
+  const trackPath = (project: PlaylistProject): string | null => {
+    const base = projectPath(project);
+    return base && `${base}?list=${listId}`;
+  };
+  const playAllPath = playlist?.projects?.length ? trackPath(playlist.projects[0]) : null;
 
   const handleSave = useCallback(async () => {
     if (!user) {
@@ -184,11 +198,11 @@ export default function ListPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              {playlist.projects && playlist.projects.length > 0 && (
+              {playAllPath && (
                 <Button asChild
                   size="sm"
                   className="gap-1.5 rounded-full"
-                ><Link to={`/project/${playlist.projects![0].publicId}?list=${listId}`}>
+                ><Link to={playAllPath}>
                   <Icon name="play_arrow" size={16} filled />
                   {t('playlists.detail.playAll')}
                 </Link></Button>
@@ -229,12 +243,11 @@ export default function ListPage() {
           <div className="flex flex-col divide-y divide-border rounded-2xl overflow-hidden border border-border">
             {playlist.projects.map((project, index) => {
               const thumb = resolveCoverImage(project);
-              return (
-                <Link
-                  key={project.id}
-                  to={`/project/${project.publicId}?list=${listId}`}
-                  className="flex items-center gap-4 px-4 py-3 hover:bg-accent/40 transition-colors group"
-                >
+              // No owner account name means no canonical URL: the row renders
+              // non-navigable rather than pointing at a path that would 404.
+              const href = trackPath(project);
+              const body = (
+                <>
                   <span className="w-6 text-center text-sm text-muted-foreground group-hover:hidden">
                     {index + 1}
                   </span>
@@ -263,8 +276,11 @@ export default function ListPage() {
                     <Icon name="star" size={12} />
                     {project.starCount ?? 0}
                   </span>
-                </Link>
+                </>
               );
+              return href
+                ? <Link key={project.id} to={href} className={TRACK_ROW_CLASS}>{body}</Link>
+                : <div key={project.id} className={TRACK_ROW_CLASS}>{body}</div>;
             })}
           </div>
         )}

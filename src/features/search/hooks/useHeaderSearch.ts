@@ -14,10 +14,12 @@ const HEADER_SEARCH_QUERY = /* GraphQL */ `
       projects {
         id
         publicId
+        slug
         title
         coverImage
         starCount
         forkCount
+        user { accountName }
         forkedFrom { publicId accountName sourceDeleted }
         metadata { songName songArtist }
         hasWordSync

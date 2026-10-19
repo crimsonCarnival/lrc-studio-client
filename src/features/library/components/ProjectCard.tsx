@@ -12,11 +12,13 @@ import { LogoLoader } from '@ui/LogoLoader';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 import { ProjectStatusTag } from '@/features/projects/components/ProjectStatusTag';
 import { projectStatus } from '@/features/projects/project-status';
+import { projectPath, projectEditPath } from '@/features/projects/project-path';
 
 const SWIPE_THRESHOLD = 60;
 
 export interface CardProject {
   publicId: string;
+  slug?: string | null;
   title?: string;
   coverImage?: string;
   editorMode?: string;
@@ -31,6 +33,7 @@ export interface CardProject {
   updatedAt?: string | number;
   metadata?: { genre?: string; songArtist?: string };
   forkedFrom?: { publicId?: string; accountName?: string };
+  user?: { accountName?: string | null } | null;
   upload?: { fileName?: string; duration?: number; source?: string };
   [key: string]: unknown;
 }
@@ -44,7 +47,11 @@ interface ProjectCardProps {
   project: CardProject;
   onDelete?: (publicId: string) => void;
   onFavorite?: (publicId: string) => void;
-  onSelect?: (publicId: string) => void;
+  /**
+   * `editPath` is the canonical editor URL, or null when the owner's account
+   * name is unknown here — the caller must not rebuild a path from publicId.
+   */
+  onSelect?: (publicId: string, editPath: string | null) => void;
   onEdit?: (project: CardProject) => void;
   isListView?: boolean;
   isDeleting?: boolean;
@@ -56,6 +63,8 @@ interface ProjectCardProps {
    * owner surface (Library, the mobile ProjectList) passes it explicitly.
    */
   isOwner?: boolean;
+  /** The owner's account name; the canonical project URL is owner-scoped. */
+  ownerAccountName?: string | null;
 }
 
 function ProjectCard({
@@ -68,7 +77,8 @@ function ProjectCard({
   isDeleting = false,
   i18n,
   timezone,
-  isOwner = false
+  isOwner = false,
+  ownerAccountName
 }: ProjectCardProps) {
   const { t } = useTranslation();
   const { trigger: haptic } = useHapticFeedback();
@@ -154,18 +164,23 @@ function ProjectCard({
     onEdit?.(project);
   }, [project, onEdit]);
 
+  // Null when the owner's account name is unknown here: every project URL is
+  // owner-scoped, so there is nothing to navigate or link to without it.
+  const editPath = projectEditPath(project, ownerAccountName);
+  const viewPath = projectPath(project, ownerAccountName);
+
   const openProject = useCallback(() => {
     if (!touchState.current.isSwiping) {
-      onSelect?.(project.publicId);
+      onSelect?.(project.publicId, editPath);
     }
-  }, [project.publicId, onSelect]);
+  }, [project.publicId, editPath, onSelect]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      onSelect?.(project.publicId);
+      onSelect?.(project.publicId, editPath);
     }
-  }, [project.publicId, onSelect]);
+  }, [project.publicId, editPath, onSelect]);
 
   // List view: full-width row layout
   if (isListView) {
@@ -174,6 +189,7 @@ function ProjectCard({
         <ProjectMenu
           project={project}
           isOwner={isOwner}
+          ownerAccountName={ownerAccountName}
           onEdit={onEdit ? () => onEdit(project) : undefined}
           onDelete={onDelete ? handleSwipeDelete : undefined}
         >
@@ -296,6 +312,7 @@ function ProjectCard({
             <ProjectMenuButton
               project={project}
               isOwner={isOwner}
+              ownerAccountName={ownerAccountName}
               onEdit={onEdit ? () => onEdit(project) : undefined}
               onDelete={onDelete ? handleSwipeDelete : undefined}
             />
@@ -315,6 +332,7 @@ function ProjectCard({
       <ProjectMenu
         project={project}
         isOwner={isOwner}
+        ownerAccountName={ownerAccountName}
         onEdit={onEdit ? () => onEdit(project) : undefined}
         onDelete={onDelete ? handleSwipeDelete : undefined}
       >
@@ -350,10 +368,10 @@ function ProjectCard({
               t('home.sourceFile')
             )}
           </div>
-          {project.public ? (
+          {project.public && viewPath ? (
             <Tip content={t('home.viewPublic')}>
               <a
-                href={`/project/${project.publicId}`}
+                href={viewPath}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t('home.viewPublic')}
@@ -386,6 +404,7 @@ function ProjectCard({
             <ProjectMenuButton
               project={project}
               isOwner={isOwner}
+              ownerAccountName={ownerAccountName}
               onEdit={onEdit ? () => onEdit(project) : undefined}
               onDelete={onDelete ? handleSwipeDelete : undefined}
               className="grid size-9 shrink-0 place-items-center rounded-[10px] text-subtle transition-colors hover:bg-raised hover:text-foreground"

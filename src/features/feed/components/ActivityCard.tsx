@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { projectPath } from '@/features/projects/project-path';
 import { useIntersectionLoader } from '../hooks/useIntersectionLoader';
 import { ReactionBar } from '@features/reactions/components/ReactionBar';
 import { useCardReactions } from '@features/reactions/hooks/useCardReactions';
@@ -88,7 +89,12 @@ export function ActivityCard({ activity }: { activity: Activity }) {
   const i18nKey = TYPE_I18N_KEY[type] ?? 'project_starred';
   const actionText = pick(tk(`feed.action.${i18nKey}`, { returnObjects: true }), id);
 
-  const targetLink = targetPath || (publicId ? `/project/${publicId}` : null);
+  // The server builds `targetPath`; prefer it. The helper can only stand in for
+  // PROJECT_PUBLISHED, where the actor IS the project owner — for a star, fork
+  // or boost the actor is someone else, and an Activity carries no owner
+  // account name, so those stay unlinked rather than pointing at a 404.
+  const targetLink = targetPath
+    || (type === 'PROJECT_PUBLISHED' && publicId ? projectPath({ publicId }, actor.accountName) : null);
   const isUserFollow = type === 'USER_FOLLOWED';
   const canReact = REACTABLE_TYPES.has(type) && !!publicId;
 

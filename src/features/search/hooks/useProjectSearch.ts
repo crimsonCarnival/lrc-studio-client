@@ -13,6 +13,7 @@ const SEARCH_QUERY = /* GraphQL */ `
       projects {
         id
         publicId
+        slug
         title
         coverImage
         starCount

@@ -13,6 +13,7 @@ import { Tip } from '@ui/tip';
 import { CountTabs } from '@ui/count-tabs';
 import { Skeleton, SkeletonAlmostDone, SkeletonProjectCard, SkeletonResumeCard } from '@ui/skeleton';
 import { projectStatus as statusOf } from '../project-status';
+import { projectEditPath } from '../project-path';
 import { ProjectStatusTag } from './ProjectStatusTag';
 import ProjectSetupModalRaw from '@features/editor/components/setup/ProjectSetupModal';
 import ProjectCard from '@/features/library/components/ProjectCard';
@@ -40,6 +41,7 @@ interface ProjectMeta {
 
 interface HomeProject {
   publicId: string;
+  slug?: string | null;
   title?: string;
   coverImage?: string;
   metadata?: ProjectMeta;
@@ -147,6 +149,15 @@ export default function Home() {
   });
 
   const lastProject = items.length > 0 ? items[0] : null;
+
+  // projects.list() returns only the signed-in user's own projects, so the
+  // signed-in account name IS the owner for everything on this page. Null when
+  // it is not known yet; project URLs are owner-scoped, so there is nothing to
+  // navigate to until it is.
+  const openEditor = (project: HomeProject | null | undefined) => {
+    const dest = project && projectEditPath(project, user?.accountName);
+    if (dest) navigate(dest);
+  };
   const greetingName = user?.displayName || user?.accountName || 'Creator';
   const timezone = (user as unknown as { settings?: { advanced?: { timezone?: string } } })?.settings?.advanced?.timezone || 'auto';
   const locale = (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2);
@@ -184,7 +195,7 @@ export default function Home() {
           ) : (
             <article
               className="group flex cursor-pointer flex-col gap-5 rounded-[var(--radius-card)] bg-background p-[18px] inset-ring inset-ring-hl transition-shadow duration-[var(--duration-state)] ease-state hover:inset-ring-faint sm:flex-row sm:items-center"
-              onClick={() => navigate(`/project/${lastProject.publicId}/edit`)}
+              onClick={() => openEditor(lastProject)}
             >
               <div className="cover-hatch relative grid size-24 shrink-0 place-items-center overflow-hidden rounded-xl">
                 {lastProject.coverImage ? (
@@ -238,7 +249,7 @@ export default function Home() {
         ) : (
           <AlmostDoneBand
             projects={items}
-            onOpen={(publicId) => navigate(`/project/${publicId}/edit`)}
+            onOpen={(publicId) => openEditor(items.find(p => p.publicId === publicId))}
           />
         )}
         <ActivityBand />
@@ -303,7 +314,10 @@ export default function Home() {
             <ProjectCard
               key={project.publicId}
               project={project}
-              onSelect={(publicId) => navigate(`/project/${publicId}/edit`)}
+              // ProjectCard builds the canonical path from the owner account
+              // name it is given; never rebuild one from publicId here.
+              onSelect={(_publicId, editPath) => { if (editPath) navigate(editPath); }}
+              ownerAccountName={user?.accountName}
               onEdit={handleEdit}
               onDelete={handleDelete}
               isListView={false}

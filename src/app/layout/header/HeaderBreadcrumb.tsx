@@ -8,6 +8,7 @@ import { LazyImage } from '@ui/LazyImage';
 import { Icon } from '@/shared/ui/Icon';
 import { LogoMark } from '@/shared/ui/LogoMark';
 import { findPrevious, readTrail, recordVisit } from '@/shared/utils/nav-trail';
+import { isProjectPath } from '@features/projects/project-path';
 
 interface ForkedFrom {
   publicId?: string;
@@ -43,6 +44,9 @@ export function HeaderBreadcrumb({ isReady, mediaTitle, setMediaTitle, triggerIm
   // Title for a path's first segment. Used for the current page (settings) and for the
   // page the back arrow leads to (everywhere else).
   const titleFor = (pathname: string): string => {
+    // Project URLs are owner-scoped (/:accountName/projects/:slugId), so their
+    // first segment is an account name, not a page name.
+    if (isProjectPath(pathname) || pathname === '/project/local') return t('nav.project');
     const seg = pathname.split('/')[1] ?? '';
     const map: Record<string, string> = {
       '': t('nav.home'),

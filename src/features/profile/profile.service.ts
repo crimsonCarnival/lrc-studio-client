@@ -21,7 +21,7 @@ const GET_PUBLIC_PROFILE = /* GraphQL */ `
         id label { en es } icon color rarity rarityPct holderCount grantedAt
       }
       projects {
-        id publicId title starCount forkCount coverImage public lineCount syncedLineCount
+        id publicId slug title starCount forkCount coverImage public lineCount syncedLineCount
         metadata { songName songArtist songAlbum songYear genre description tags singers singerColors }
         upload { source uploadUrl }
         createdAt updatedAt

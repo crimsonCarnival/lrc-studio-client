@@ -1,17 +1,21 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { projectPath } from '@/features/projects/project-path';
 import { useTrendingProjects } from '../hooks/useExplore';
 import { LogoLoader } from '@ui/LogoLoader';
 
 interface ExploreProject {
   id: string;
   publicId?: string;
+  slug?: string | null;
   title?: string;
   coverImage?: string | null;
   upload?: { uploadUrl?: string } | null;
   accountName?: string;
+  user?: { accountName?: string } | null;
   owner?: { accountName?: string } | null;
+  metadata?: { songName?: string | null; songArtist?: string | null } | null;
   starCount?: number;
   forkCount?: number;
 }
@@ -46,12 +50,20 @@ export function TrendingProjects({ limit = 6 }: { limit?: number }) {
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {projects.map(project => (
-            <Link
-              key={project.id}
-              to={`/project/${project.publicId ?? project.id}`}
-              className="flex flex-col rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors overflow-hidden group"
-            >
+          {projects.map(project => {
+            // One owner name for both the link and the byline. They were resolved
+            // separately before, and the byline read `owner`/`accountName` while
+            // the query returns the owner under `user` — so it rendered empty.
+            const ownerName = project.user?.accountName ?? project.owner?.accountName ?? project.accountName;
+            // No owner account name means no canonical URL: the card renders
+            // without a link rather than pointing at a path that would 404.
+            const href = projectPath(
+              { ...project, publicId: project.publicId ?? project.id },
+              ownerName,
+            );
+            const CARD_CLASS = 'flex flex-col rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700/70 transition-colors overflow-hidden group';
+            const body = (
+              <>
               <div className="aspect-video w-full bg-gradient-to-br from-primary/30 to-violet-500/30 flex items-center justify-center relative shrink-0">
                 {project.coverImage || project.upload?.uploadUrl ? (
                   <img
@@ -68,7 +80,7 @@ export function TrendingProjects({ limit = 6 }: { limit?: number }) {
                   {project.title}
                 </p>
                 <p className="text-xs text-zinc-500 truncate">
-                  {project.owner?.accountName ?? project.accountName}
+                  {ownerName}
                 </p>
                 <div className="flex items-center gap-3 mt-0.5">
                   <span className="flex items-center gap-1 text-xs text-zinc-400">
@@ -81,8 +93,12 @@ export function TrendingProjects({ limit = 6 }: { limit?: number }) {
                   </span>
                 </div>
               </div>
-            </Link>
-          ))}
+              </>
+            );
+            return href
+              ? <Link key={project.id} to={href} className={CARD_CLASS}>{body}</Link>
+              : <div key={project.id} className={CARD_CLASS}>{body}</div>;
+          })}
         </div>
       )}
     </section>

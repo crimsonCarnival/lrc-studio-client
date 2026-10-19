@@ -31,7 +31,7 @@ const RULES: Rule[] = [
   // ── Explicit public routes ──
   { test: p => p === '/', access: 'public' },
   { test: p => p === '/project/new' || p === '/project/local', access: 'public' },
-  { test: p => /^\/project\/[^/]+$/.test(p), access: 'public' },          // public project view
+  { test: p => /^\/[^/]+\/projects\/[^/]+$/.test(p), access: 'public' },   // public project view
   { test: p => /^\/verify-email/.test(p), access: 'public' },
   { test: p => /^\/search/.test(p), access: 'public' },
   { test: p => /^\/explore(\/.*)?$/.test(p), access: 'public' },
@@ -40,7 +40,7 @@ const RULES: Rule[] = [
   // ── Auth-only app routes ── listed BEFORE the profile shapes so private
   //    single-segment routes don't get treated as /:accountName.
   { test: p => AUTH_SEGMENTS.has(seg1(p)), access: 'auth' },
-  { test: p => /^\/project\/[^/]+\/edit$/.test(p), access: 'auth' },      // edit own project
+  { test: p => /^\/[^/]+\/projects\/[^/]+\/(edit|fork)$/.test(p), access: 'auth' }, // edit / fork a project
 
   // ── Public profile shapes (vanity URLs at root) ── evaluated LAST.
   { test: p => /^\/[a-z0-9_.:-]+$/.test(p), access: 'public' },           // /:accountName

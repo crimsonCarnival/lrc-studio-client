@@ -4,5 +4,6 @@ export default {
   explore: "Explore",
   feed: "Feed",
   leaderboard: "Leaderboard",
+  project: "Project",
   library: "Library",
 };
