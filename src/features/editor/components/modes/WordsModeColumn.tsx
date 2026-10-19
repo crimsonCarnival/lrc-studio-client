@@ -164,68 +164,75 @@ export function WordsModeTimestamp({
   setEditingTimestamp,
   focusedTimestamp,
   setFocusedTimestamp,
-  stampTarget,
-  handleSetStampTarget,
   handleSetTimestamp,
   handleTimestampWheel,
   nudgeIndicator,
 }: WordsModeColumnProps) {
-  const { t } = useTranslation();
-
+  // The row's header strip gives this the whole width, so the badge is just the
+  // badge: the layer control it used to carry sits beside it there (and only on
+  // the line being worked on) rather than stacked underneath in a 92px column.
   return (
-    <div className="flex flex-col items-start gap-1">
-      {/* Line-level timestamp, with the layer control stacked under it rather
-          than beside it: side by side this column ran wide enough to push the
-          last chip onto a second row. */}
-      <div className="flex items-center gap-1">
-        {editingTimestamp === 'start' && isSynced ? (
-          <InlineTimestampEdit
-            value={line.timestamp}
-            precision={settings.editor?.timestampPrecision || 'hundredths'}
-            onChange={(val) => { handleSetTimestamp(lineIndex, 'start', val); setEditingTimestamp(null); }}
-            onCancel={() => setEditingTimestamp(null)}
-          />
-        ) : (
-          <TimestampBadge
-            value={line.timestamp}
-            isSynced={isSynced}
-            isFocused={focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start'}
-            isActive={isActive}
-            precision={settings.editor?.timestampPrecision || 'hundredths'}
-            onClick={() => setFocusedTimestamp(focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start' ? null : { lineIndex: lineIndex, type: 'start' })}
-            onDoubleClick={(e) => { e.stopPropagation(); if (isSynced) setEditingTimestamp('start'); }}
-            onWheel={(e) => { if (isSynced) handleTimestampWheel(e, lineIndex, 'start'); }}
-            nudgeIndicator={isSynced ? nudgeIndicator : null}
-          />
-        )}
-      </div>
-      {/* Layer control. Rendered only on lines that actually contain Japanese —
-            a permanently greyed-out control on every English line is just noise —
-            and each glyph carries its label, because 主 and ロ alone do not read. */}
-        {hasCJK(line.text || '') && (
-          <div className="flex items-center gap-0.5 bg-zinc-900 rounded-md p-0.5 shrink-0 max-w-full">
-            {([
-              { key: 'main', glyph: '主', label: t('editor.stampLayerMainShort'), hint: t('editor.stampLayerMain') },
-              { key: 'secondary', glyph: 'ロ', label: t('editor.stampLayerSecondaryShort'), hint: t('editor.stampLayerSecondary') },
-              { key: 'both', glyph: null, label: t('editor.stampLayerBoth'), hint: t('editor.stampLayerBothHint') },
-            ] as const).map(({ key, glyph, label, hint }) => (
-              <button
-                key={key}
-                type="button"
-                title={hint}
-                aria-pressed={stampTarget === key}
-                onClick={(e) => { e.stopPropagation(); handleSetStampTarget?.(key); }}
-                className={`inline-flex items-center gap-1 text-[10px] px-1 py-0.5 rounded leading-none font-semibold transition-all ${stampTarget === key
-                  ? 'bg-primary text-zinc-900 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-200'
-                  }`}
-              >
-                {glyph && <span aria-hidden="true" className="font-bold">{glyph}</span>}
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
+    <div className="flex items-center gap-1">
+      {editingTimestamp === 'start' && isSynced ? (
+        <InlineTimestampEdit
+          value={line.timestamp}
+          precision={settings.editor?.timestampPrecision || 'hundredths'}
+          onChange={(val) => { handleSetTimestamp(lineIndex, 'start', val); setEditingTimestamp(null); }}
+          onCancel={() => setEditingTimestamp(null)}
+        />
+      ) : (
+        <TimestampBadge
+          value={line.timestamp}
+          isSynced={isSynced}
+          isFocused={focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start'}
+          isActive={isActive}
+          precision={settings.editor?.timestampPrecision || 'hundredths'}
+          onClick={() => setFocusedTimestamp(focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start' ? null : { lineIndex: lineIndex, type: 'start' })}
+          onDoubleClick={(e) => { e.stopPropagation(); if (isSynced) setEditingTimestamp('start'); }}
+          onWheel={(e) => { if (isSynced) handleTimestampWheel(e, lineIndex, 'start'); }}
+          nudgeIndicator={isSynced ? nudgeIndicator : null}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Which layer a mark lands on: the Japanese, its romaji, or both at once.
+ *
+ * Rendered only on the line being worked on and only when that line actually
+ * contains Japanese — a greyed-out control repeated down every English line was
+ * noise. Each glyph carries its label, because 主 and ロ alone do not read.
+ */
+export function WordsModeLayerControl({
+  line,
+  stampTarget,
+  handleSetStampTarget,
+}: Pick<WordsModeColumnProps, 'line' | 'stampTarget' | 'handleSetStampTarget'>) {
+  const { t } = useTranslation();
+  if (!hasCJK(line.text || '')) return null;
+  return (
+    <div className="flex items-center gap-0.5 rounded-md bg-background/70 p-0.5 shrink-0 inset-ring inset-ring-hl">
+      {([
+        { key: 'main', glyph: '主', label: t('editor.stampLayerMainShort'), hint: t('editor.stampLayerMain') },
+        { key: 'secondary', glyph: 'ロ', label: t('editor.stampLayerSecondaryShort'), hint: t('editor.stampLayerSecondary') },
+        { key: 'both', glyph: null, label: t('editor.stampLayerBoth'), hint: t('editor.stampLayerBothHint') },
+      ] as const).map(({ key, glyph, label, hint }) => (
+        <button
+          key={key}
+          type="button"
+          title={hint}
+          aria-pressed={stampTarget === key}
+          onClick={(e) => { e.stopPropagation(); handleSetStampTarget?.(key); }}
+          className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold leading-none transition-all ${stampTarget === key
+            ? 'bg-primary text-primary-foreground shadow-sm'
+            : 'text-subtle hover:text-foreground'
+            }`}
+        >
+          {glyph && <span aria-hidden="true" className="font-bold">{glyph}</span>}
+          {label}
+        </button>
+      ))}
     </div>
   );
 }

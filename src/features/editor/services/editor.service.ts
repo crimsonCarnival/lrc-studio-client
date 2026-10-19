@@ -214,6 +214,24 @@ export function clearLineTimestamp(lines: EditorLine[], index: number, isSrt?: b
 }
 
 /**
+ * Words mode: a line starts when its first word is sung, so `line.timestamp` and
+ * `words[0].time` are two views of one instant. Every write to either side goes
+ * through here, because once they drift the line highlights at one time while its
+ * karaoke fill starts at another.
+ *
+ * Only the main layer is aligned. The romaji track is marked independently and a
+ * mark there must not silently retime the Japanese word underneath it.
+ */
+export function alignLineStart(line: EditorLine, time: number): EditorLine {
+  const next: EditorLine = { ...line, timestamp: time };
+  const words = next.words as EditorWord[] | undefined;
+  if (!words?.length || words[0].time === time) return next;
+  const aligned = [...words];
+  aligned[0] = { ...aligned[0], time };
+  return { ...next, words: aligned };
+}
+
+/**
  * Stamps blank lines between fromIndex+1 and the next non-blank line with the given time.
  * Returns a new array with blanks stamped.
  */
@@ -260,7 +278,10 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
         if (wi >= 0 && wi < words.length) {
           const newWords = [...words];
           newWords[wi] = { ...newWords[wi], time };
-          updated[focusedTimestamp.lineIndex] = { ...line, source: 'manual', [wordField]: newWords };
+          const stamped: EditorLine = { ...line, source: 'manual', [wordField]: newWords };
+          updated[focusedTimestamp.lineIndex] = wi === 0 && wordField === 'words'
+            ? alignLineStart(stamped, time)
+            : stamped;
 
           const nextWordIdx = wi + 1;
           if (nextWordIdx < words.length) {
@@ -270,13 +291,14 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
             return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
           }
         }
+      } else if (focusedTimestamp.type === 'start') {
+        const started: EditorLine = { ...line, source: 'manual', timestamp: time };
+        updated[focusedTimestamp.lineIndex] = editorMode === 'words' ? alignLineStart(started, time) : started;
       } else {
         updated[focusedTimestamp.lineIndex] = {
           ...line,
           source: 'manual',
-          ...(focusedTimestamp.type === 'start'
-            ? { timestamp: time }
-            : { endTime: Math.max(line.timestamp ?? 0, time) }),
+          endTime: Math.max(line.timestamp ?? 0, time),
         };
       }
     }
@@ -303,8 +325,8 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
       // Stamp line.timestamp + words[0] in one press
       const newWords = [...words];
       newWords[0] = { ...newWords[0], time };
-      updated[activeLineIndex] = { ...line, timestamp: time, source: 'manual', [wordField]: newWords };
-      if (newWords.length === 1) {
+      updated[activeLineIndex] = alignLineStart({ ...line, source: 'manual', [wordField]: newWords }, time);
+      if (words.length === 1) {
         const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
         return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
       }
@@ -316,7 +338,11 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
     if (clampedIdx >= 0) {
       const newWords = [...words];
       newWords[clampedIdx] = { ...newWords[clampedIdx], time };
-      updated[activeLineIndex] = { ...line, [wordField]: newWords };
+      const stamped: EditorLine = { ...line, [wordField]: newWords };
+      // Re-marking the first word moves the line's start with it.
+      updated[activeLineIndex] = clampedIdx === 0 && wordField === 'words'
+        ? alignLineStart(stamped, time)
+        : stamped;
       const nextWordIdx = clampedIdx + 1;
       if (nextWordIdx >= words.length) {
         // All words stamped — advance line

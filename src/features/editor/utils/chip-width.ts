@@ -20,15 +20,9 @@ const CJK_GLYPH = 18;
 
 const CJK_GLYPH_RE = /[\u3040-\u9FFF\uF900-\uFAFF\uFF01-\uFF60]/;
 
-// The romaji sits under the word in 11.5px mono, not in the 18px face, so it is
-// roughly 0.6em per glyph. Measuring it with the face's width made "mezashite"
-// claim a 128px chip when it needs 96, and those extra steps were enough to push
-// the row's last chip onto a second line.
-const ROMAJI_GLYPH = 7;
-
-function estimateTextWidth(text: string, latinGlyph = LATIN_GLYPH): number {
+function estimateTextWidth(text: string): number {
   let width = 0;
-  for (const ch of text) width += CJK_GLYPH_RE.test(ch) ? CJK_GLYPH : latinGlyph;
+  for (const ch of text) width += CJK_GLYPH_RE.test(ch) ? CJK_GLYPH : LATIN_GLYPH;
   return width;
 }
 
@@ -38,9 +32,14 @@ function estimateTextWidth(text: string, latinGlyph = LATIN_GLYPH): number {
  * visible layer never resizes it.
  */
 export function chipWidthStep(word?: string, romaji?: string | null): number {
+  // Both layers are measured at the 18px face, because either one can be the
+  // face: in Romaji mode the reading moves up into it and the Japanese drops
+  // underneath. Measuring the romaji at its 11.5px mono size — which is only
+  // what it costs while it is the *under* layer — sized "mezashite" to the 96px
+  // its kanji needed and let the reading run out of the box.
   const content = Math.max(
     estimateTextWidth(word ?? ''),
-    estimateTextWidth(romaji ?? '', ROMAJI_GLYPH),
+    estimateTextWidth(romaji ?? ''),
   );
   if (!content) return MIN_WIDTH;
   const stepped = Math.ceil((content + SIDE_PADDING) / STEP) * STEP;
