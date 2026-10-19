@@ -18,7 +18,7 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/shared/hooks/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/types';
-import { projectEditPath, publicIdFromSlugId } from '@features/projects/project-path';
+import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams } from '@features/projects/project-path';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EditorLazy = lazy(() => import('@features/editor/components/EditorPage'));
@@ -142,8 +142,10 @@ function EditorContainer({ loadProject, activepublicId, isProjectLoading, projec
 
   useEffect(() => {
     if (!isProjectLoading && projectUserId && activepublicId === id && user && user.id !== projectUserId) {
-      // Already on the canonical path — the public view is this URL without /edit.
-      navigate(`/${accountName}/projects/${slugId}`);
+      // Rebuilt rather than reused: route params arrive decoded, so an encoded
+      // slash in the (cosmetic) account segment would make this a protocol-relative
+      // off-site navigation. canonicalPathFromParams re-encodes both segments.
+      navigate(canonicalPathFromParams(accountName, slugId));
     }
   }, [isProjectLoading, projectUserId, activepublicId, id, user, navigate, accountName, slugId]);
 
@@ -164,7 +166,7 @@ function ForkHandler({ appState, navigate }: { appState: RouterAppState; navigat
 
     if (!user || user.isGuest) {
       // Redirect to login; AuthPage's handleAuthSuccess navigates back to ?redirect= on success
-      navigate(`/auth/signin?redirect=${encodeURIComponent(`/${accountName}/projects/${slugId}/fork`)}`);
+      navigate(`/auth/signin?redirect=${encodeURIComponent(`${canonicalPathFromParams(accountName, slugId)}/fork`)}`);
       return;
     }
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   slugify, projectPath, projectEditPath, publicIdFromSlugId,
-  isProjectViewPath, isEditorPath, isProjectPath,
+  isProjectViewPath, isEditorPath, isProjectPath, canonicalPathFromParams,
 } from './project-path';
 
 // These cases are copied from the server's project-slug tests: the two
@@ -70,6 +70,32 @@ describe('publicIdFromSlugId', () => {
     expect(publicIdFromSlugId('short')).toBeNull();
     expect(publicIdFromSlugId(undefined)).toBeNull();
     expect(publicIdFromSlugId('a-song-$$$$$$$$$$')).toBeNull();
+  });
+});
+
+describe('canonicalPathFromParams — open-redirect guard', () => {
+  it('keeps a decoded slash in the account segment from escaping the origin', () => {
+    // React Router hands params back URL-decoded, so /%2Fevil.com/projects/x
+    // arrives as accountName === '/evil.com'. Interpolated raw that becomes
+    // '//evil.com/projects/x' — protocol-relative, i.e. another origin.
+    const path = canonicalPathFromParams('/evil.com', 'song-V1StGXR8_Z');
+    expect(path.startsWith('//')).toBe(false);
+    expect(path).toBe('/%2Fevil.com/projects/song-V1StGXR8_Z');
+  });
+
+  it('stays a same-origin relative path for every hostile segment', () => {
+    for (const account of ['/evil.com', '//evil.com', '\\evil.com', '../../etc', 'https://evil.com']) {
+      const path = canonicalPathFromParams(account, 'x-V1StGXR8_Z');
+      expect(path.startsWith('/')).toBe(true);
+      expect(path.startsWith('//')).toBe(false);
+      expect(path.startsWith('/\\')).toBe(false);
+      // Resolved against any origin, it must not leave it.
+      expect(new URL(path, 'https://lrcstudio.app').origin).toBe('https://lrcstudio.app');
+    }
+  });
+
+  it('builds the ordinary path unchanged', () => {
+    expect(canonicalPathFromParams('ada', 'song-name-V1StGXR8_Z')).toBe('/ada/projects/song-name-V1StGXR8_Z');
   });
 });
 
