@@ -12,6 +12,13 @@ import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
+import { hasProjectIdentity } from '@/features/projects/project-path';
+import { ArtistsInput } from '@/features/artists/ArtistsInput';
+import { ArtistImportReview } from '@/features/artists/ArtistImportReview';
+import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
+import { useArtistImport } from '@/features/artists/useArtistImport';
+import { creditsEqual, mergeCredits, nameKey, primaryArtistText, renumber } from '@/features/artists/artist-credits';
+import { formatArtistDisplay, type ArtistCredit } from '@/shared/utils/artists';
 import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { Switch } from '@/shared/ui/switch';
 import toast from 'react-hot-toast';
@@ -20,6 +27,7 @@ import SingersInput from './SingersInput';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const EMPTY_TAGS: string[] = [];
+const EMPTY_ARTISTS: ArtistCredit[] = [];
 // Must be a stable reference: the form re-syncs whenever an initial* prop changes
 // identity, so an inline `[]` default re-ran that effect on every render (a loop
 // that also reset whatever the user typed) for callers that omit the prop.
@@ -78,7 +86,7 @@ interface ProjectSetupForm {
   tags: string[];
   tagInput: string;
   songName: string;
-  songArtist: string;
+  artists: ArtistCredit[];
   songAlbum: string;
   songYear: string;
   genre: string;
@@ -94,7 +102,9 @@ export interface ProjectSetupConfirm {
   description: string;
   tags: string[];
   songName: string;
-  songArtist: string;
+  artists: ArtistCredit[];
+  /** True when the artists differ from what the modal opened with, so the caller knows to send them. */
+  artistsChanged: boolean;
   songAlbum: string;
   songYear: string;
   genre: string;
@@ -113,7 +123,7 @@ interface ProjectSetupModalProps {
   initialDescription?: string;
   initialTags?: string[];
   initialSongName?: string;
-  initialSongArtist?: string;
+  initialArtists?: ArtistCredit[];
   initialSongAlbum?: string;
   initialSongYear?: string;
   initialGenre?: string;
@@ -135,7 +145,7 @@ export default function ProjectSetupModal({
   initialDescription = '',
   initialTags = EMPTY_TAGS,
   initialSongName = '',
-  initialSongArtist = '',
+  initialArtists = EMPTY_ARTISTS,
   initialSongAlbum = '',
   initialSongYear = '',
   initialGenre = '',
@@ -151,6 +161,9 @@ export default function ProjectSetupModal({
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [imageUploading, setImageUploading] = useState(false);
   const [metaSearching, setMetaSearching] = useState(false);
+  const artistImporter = useArtistImport();
+  // Callers build `initialArtists` on every render; compare by content so the form is not reset under the user.
+  const initialArtistsKey = JSON.stringify(initialArtists.map((c) => [c.name, c.role]));
   const coverImageInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState<ProjectSetupForm>(() => ({
     name: initialName || '',
@@ -158,7 +171,7 @@ export default function ProjectSetupModal({
     tags: initialTags || [],
     tagInput: '',
     songName: initialSongName || '',
-    songArtist: initialSongArtist || '',
+    artists: initialArtists,
     songAlbum: initialSongAlbum || '',
     songYear: initialSongYear || '',
     genre: initialGenre || '',
@@ -166,6 +179,7 @@ export default function ProjectSetupModal({
     isPublic: initialIsPublic || false,
     singers: initialSingers || [],
   }));
+  const primaryText = primaryArtistText(form.artists);
 
   // Sync form when the modal is opened or when the underlying data changes
   // (e.g. switching between projects without unmounting the component)
@@ -178,7 +192,7 @@ export default function ProjectSetupModal({
         tags: initialTags || [],
         tagInput: '',
         songName: initialSongName || '',
-        songArtist: initialSongArtist || '',
+        artists: initialArtists,
         songAlbum: initialSongAlbum || '',
         songYear: initialSongYear || '',
         genre: initialGenre || '',
@@ -188,7 +202,9 @@ export default function ProjectSetupModal({
         singers: initialSingers || [],
       });
     }
-  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialSongArtist, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialIsPublic, initialSingerColors, initialSingers]);
+  // `initialArtists` is compared by content through `initialArtistsKey`: callers build a new array every render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialName, initialDescription, initialTags, initialSongName, initialArtistsKey, initialSongAlbum, initialSongYear, initialGenre, initialCoverImage, initialIsPublic, initialSingerColors, initialSingers]);
 
 
   const addTag = (text: string) => {
@@ -231,10 +247,10 @@ export default function ProjectSetupModal({
   };
 
   const handleFetchSongInfo = useCallback(async () => {
-    if (!form.songName.trim() || !form.songArtist.trim() || metaSearching) return;
+    if (!form.songName.trim() || !primaryText.trim() || metaSearching) return;
     setMetaSearching(true);
     try {
-      const meta = await songMetadata.lookupTrack(form.songName.trim(), form.songArtist.trim()) as {
+      const meta = await songMetadata.lookupTrack(form.songName.trim(), primaryText.trim()) as {
         error?: string; genres?: string[]; name?: string; artist?: string; album?: string; releaseYear?: string; totalTracks?: number; albumArt?: string;
       };
       if (meta && !meta.error) {
@@ -242,7 +258,6 @@ export default function ProjectSetupModal({
         setForm(f => ({
           ...f,
           songName: meta.name || f.songName,
-          songArtist: meta.artist || f.songArtist,
           songAlbum: meta.album || f.songAlbum,
           songYear: meta.releaseYear || f.songYear,
           ...(mappedGenre ? { genre: mappedGenre } : {}),
@@ -251,15 +266,25 @@ export default function ProjectSetupModal({
       } else {
         toast.error(t('setup.metaSearchFailed'));
       }
+      // One provider string ("A, B") becomes credits; anything doubtful waits for a confirmation.
+      if (meta && !meta.error && meta.artist) {
+        artistImporter.propose({ artist: meta.artist }, (incoming) => {
+          const known = new Set(incoming.map((c) => nameKey(c.name)));
+          setForm((f) => ({ ...f, artists: renumber([...incoming, ...f.artists.filter((c) => !known.has(nameKey(c.name)))]) }));
+        });
+      }
     } catch {
       toast.error(t('setup.metaSearchFailed'));
     } finally {
       setMetaSearching(false);
     }
-  }, [form.songName, form.songArtist, metaSearching, t]);
+  }, [form.songName, primaryText, metaSearching, t, artistImporter]);
+
+  const hasIdentity = hasProjectIdentity({ title: form.name, metadata: { songName: form.songName, songArtist: formatArtistDisplay(form.artists) } });
 
   const handleSubmit = (e: FormEvent | ReactMouseEvent) => {
     e.preventDefault();
+    if (!hasIdentity) return;
     const finalTags = form.tagInput.trim() ? [...form.tags, form.tagInput.trim()] : form.tags;
     onConfirm({
       name: form.name.trim(),
@@ -267,7 +292,8 @@ export default function ProjectSetupModal({
       description: form.description.trim(),
       tags: finalTags,
       songName: form.songName.trim(),
-      songArtist: form.songArtist.trim(),
+      artists: form.artists,
+      artistsChanged: !creditsEqual(initialArtists, form.artists),
       songAlbum: form.songAlbum.trim(),
       songYear: form.songYear.trim(),
       genre: form.genre,
@@ -332,7 +358,15 @@ export default function ProjectSetupModal({
                   onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder={t('project.titlePlaceholder')}
                   className="bg-zinc-950 border-zinc-800 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-primary/20"
-                  required
+                  aria-invalid={!hasIdentity}
+                  aria-describedby="project-identity-hint"
+                />
+                <p id="project-identity-hint" className={`text-xs ${hasIdentity ? 'text-zinc-500' : 'text-love'}`} role={hasIdentity ? undefined : 'alert'}>
+                  {t('setup.identityRequired')}
+                </p>
+                <TitleFeatSuggestion
+                  title={form.name}
+                  onApply={(cleaned, featured) => setForm((f) => ({ ...f, name: cleaned, artists: mergeCredits(f.artists, featured) }))}
                 />
               </div>
 
@@ -342,7 +376,7 @@ export default function ProjectSetupModal({
                   {t('setup.songInformation')}
                 </span>
                 {/* Always rendered so it's discoverable; disabled until name + artist exist. */}
-                <Tip content={form.songName.trim() && form.songArtist.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')} side="left">
+                <Tip content={form.songName.trim() && primaryText.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')} side="left">
                   {/* span keeps the tooltip working while the button is disabled */}
                   <span className="inline-flex">
                     <Button
@@ -350,7 +384,7 @@ export default function ProjectSetupModal({
                       variant="sync"
                       size="sm"
                       onClick={handleFetchSongInfo}
-                      disabled={metaSearching || !form.songName.trim() || !form.songArtist.trim()}
+                      disabled={metaSearching || !form.songName.trim() || !primaryText.trim()}
                       className="gap-1.5 font-semibold"
                     >
                       {metaSearching ? <LogoLoader size={14} /> : <Icon name="search" size={14} />}
@@ -371,16 +405,9 @@ export default function ProjectSetupModal({
                     className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
                   />
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="song-artist" className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                    {t('setup.songArtist')}
-                  </Label>
-                  <Input
-                    id="song-artist"
-                    value={form.songArtist}
-                    onChange={(e) => setForm(f => ({ ...f, songArtist: e.target.value }))}
-                    className="bg-zinc-950 border-zinc-800 text-zinc-100 text-sm h-9"
-                  />
+                <div className="col-span-2 flex flex-col gap-3">
+                  <ArtistsInput idPrefix="modal-artists" value={form.artists} onChange={(next) => setForm((f) => ({ ...f, artists: next }))} />
+                  <ArtistImportReview importer={artistImporter} />
                 </div>
                 <div className="flex flex-col gap-1.5 mt-2">
                   <Label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
@@ -622,7 +649,7 @@ export default function ProjectSetupModal({
             <Button
               type="button"
               onClick={handleSubmit}
-              disabled={!form.name.trim()}
+              disabled={!hasIdentity}
               className="bg-primary hover:bg-primary-dim text-zinc-950 font-bold px-8 rounded-xl shadow-lg shadow-primary/10 transition-all h-10"
             >
               {isEditing ? t('common.save') : t('common.create')}

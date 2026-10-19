@@ -1,4 +1,6 @@
 import { useRef, useCallback, memo } from 'react';
+import { ArtistText } from '@/features/artists/ArtistText';
+import type { ArtistCredit } from '@/features/artists/artist-credits';
 import type { TouchEvent, MouseEvent, KeyboardEvent } from 'react';
 import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import { Icon } from '@/shared/ui/Icon';
@@ -31,7 +33,7 @@ export interface CardProject {
   public?: boolean;
   createdAt?: string | number;
   updatedAt?: string | number;
-  metadata?: { genre?: string; songArtist?: string };
+  metadata?: { genre?: string; songArtist?: string; artists?: ArtistCredit[] };
   forkedFrom?: { publicId?: string; accountName?: string };
   user?: { accountName?: string | null } | null;
   upload?: { fileName?: string; duration?: number; source?: string };
@@ -81,6 +83,7 @@ function ProjectCard({
   ownerAccountName
 }: ProjectCardProps) {
   const { t } = useTranslation();
+  const { user } = useAuthContext();
   const { trigger: haptic } = useHapticFeedback();
   const [requestConfirm, confirmModal] = useConfirm();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -388,7 +391,7 @@ function ProjectCard({
           <div className="flex items-start gap-2">
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <h3 className="truncate font-heading text-[19px] font-bold tracking-tight text-foreground">{project.title || project.upload?.fileName || t('library.untitled')}</h3>
-              <span className="truncate text-[15px] text-subtle">{project.metadata?.songArtist || t('home.noArtist')}</span>
+              <ArtistText metadata={project.metadata} className="truncate text-[15px] text-subtle" fallback={t('home.noArtist')} />
             </div>
             {/* Quick actions on hover; the menu button holds the same actions for touch and keyboard. */}
             <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 coarse:hidden">

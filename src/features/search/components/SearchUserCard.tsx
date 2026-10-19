@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -54,7 +55,7 @@ export function SearchUserCard({ user, query, canFollow }: SearchUserCardProps) 
           </StaffRing>
           <span className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="flex min-w-0 items-center gap-2">
-              <Link to={`/profile/${accountName}`} className="truncate font-heading text-xl leading-tight font-bold tracking-[-0.02em] text-foreground hover:underline">
+              <Link to={profilePath(accountName)} className="truncate font-heading text-xl leading-tight font-bold tracking-[-0.02em] text-foreground hover:underline">
                 <Highlight text={name} query={query} />
               </Link>
               {level > 0 && (
@@ -80,7 +81,7 @@ export function SearchUserCard({ user, query, canFollow }: SearchUserCardProps) 
       </UserHoverCard>
       <div className="flex shrink-0 items-center gap-2 max-sm:w-full">
         <Button asChild variant="outline" className="h-10 px-3.5 text-[15px] max-sm:flex-1 lg:h-10 lg:px-3.5 lg:text-[15px] coarse:h-11">
-          <Link to={`/profile/${accountName}`}>{t('search.viewProfile')}</Link>
+          <Link to={profilePath(accountName)}>{t('search.viewProfile')}</Link>
         </Button>
         {canFollow && (
           <Button

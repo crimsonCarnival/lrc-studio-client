@@ -37,7 +37,14 @@ export type ProjectMenuActions = {
  */
 function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDelete }: ProjectMenuActions) {
   const { t } = useTranslation();
+  const { user } = useAuthContext();
   const [copied, setCopied] = useState(false);
+  // Cards in the library don't carry their owner; for your own projects it's you.
+  const path = projectPath({
+    accountName: isOwner ? user?.accountName : undefined,
+    ...(project as Omit<Parameters<typeof projectPath>[0], 'publicId'>),
+    publicId: project.publicId,
+  });
 
   // Null when the owner's account name is unknown here: there is no canonical
   // URL to open or copy, so both link items are left out rather than pointing

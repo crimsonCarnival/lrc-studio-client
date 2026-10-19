@@ -10,7 +10,7 @@ import DecryptedText from '@/shared/ui/DecryptedText';
 const KNOWN_PREFIXES = new Set([
   '/home', '/library', '/search', '/explore', '/feed',
   '/settings', '/admin', '/notifications', '/leaderboard',
-  '/uploads', '/project', '/profile', '/auth', '/verify-email',
+  '/uploads', '/project', '/projects', '/profile', '/auth', '/verify-email',
   '/share', '/login', '/register', '/reset-password', '/change-password',
 ]);
 
@@ -42,8 +42,8 @@ function detectRouteType(pathname: string): RouteInfo {
     const parts = pathname.split('/');
     return { type: 'upload', identifier: parts[2] };
   }
-  // /profile/:accountName
-  if (/^\/profile\/[^/]+/.test(pathname)) {
+  // /profile/:accountName (legacy) and /u/:accountName
+  if (/^\/(profile|u)\/[^/]+/.test(pathname)) {
     const parts = pathname.split('/');
     return { type: 'user', identifier: parts[2] };
   }

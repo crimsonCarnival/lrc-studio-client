@@ -1,6 +1,7 @@
 import { gqlRequest } from '@/app/graphql.client';
 import { projectsChanged, projectRemoved } from '@/app/cache-sync';
 import type { Project, CreateProjectInput, UpdateProjectInput } from '@/types';
+import { toArtistInput, type ArtistCredit } from '@/features/artists/artist-credits';
 
 const GET_PROJECTS = /* GraphQL */ `
   query GetProjects($limit: Int, $offset: Int) {
@@ -35,6 +36,7 @@ const GET_PROJECTS = /* GraphQL */ `
         singers
         songName
         songArtist
+        artists { name role order }
         songAlbum
         songYear
         songLanguage
@@ -99,6 +101,7 @@ const GET_PROJECT = /* GraphQL */ `
         singers
         songName
         songArtist
+        artists { name role order }
         songAlbum
         songYear
         songLanguage
@@ -209,6 +212,7 @@ const GET_SHARE = /* GraphQL */ `
         singers
         songName
         songArtist
+        artists { name role order }
         songAlbum
         songYear
         songLanguage
@@ -322,15 +326,19 @@ const INCREMENT_PROJECT_SHARE = /* GraphQL */ `
   }
 `;
 
-function normalizeMetadata(
+export function normalizeMetadata(
   metadata: Record<string, unknown> | null | undefined
 ): Record<string, unknown> | null | undefined {
   if (!metadata) return metadata;
-  const { songArtists, ...rest } = metadata;
-  const songArtist = Array.isArray(songArtists) && songArtists.length > 0
-    ? songArtists.join(', ')
-    : ((rest.songArtist as string | undefined) ?? '');
-  return { ...rest, songArtist };
+  // `songArtist` is the server's read-only display string and `songArtists` an old client key:
+  // neither is accepted as input. Credits go as `{ name, role }`. Omitted keeps the stored
+  // credits and `[]` clears them, so the list is only sent when it has names or was edited
+  // (`artistsDirty`): an unrelated save of a legacy row (text only, credits `[]`) must not wipe it.
+  const { songArtists: _songArtists, songArtist: _songArtist, artists, artistsDirty, ...rest } = metadata;
+  if (Array.isArray(artists) && (artists.length > 0 || artistsDirty === true)) {
+    return { ...rest, artists: toArtistInput(artists as ArtistCredit[]) };
+  }
+  return rest;
 }
 
 function normalizeInput(input: CreateProjectInput | UpdateProjectInput): Record<string, unknown> {

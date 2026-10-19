@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildTags, escapeAttr, injectTags, isCrawler, resolveLang, fallbackMeta } from '../proxy';
+import { buildTags, escapeAttr, injectTags, isCrawler, isStaticPath, resolveLang, fallbackMeta } from '../proxy';
 
 describe('isCrawler', () => {
   const bots = [
@@ -157,5 +157,37 @@ describe('injectTags', () => {
 
   it('injects before </head>', () => {
     expect(out.indexOf('og:title')).toBeLessThan(out.indexOf('</head>'));
+  });
+});
+
+describe('MATCHER', () => {
+  it('stays in sync with the matcher in vercel.json', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { MATCHER } = await import('../proxy');
+    const vercel = JSON.parse(readFileSync('vercel.json', 'utf8'));
+    expect(vercel.proxy.matcher).toEqual(MATCHER);
+  });
+
+  it('covers root-level profiles, playlists and projects', async () => {
+    const { MATCHER } = await import('../proxy');
+    expect(MATCHER).toEqual(expect.arrayContaining([
+      '/:accountName/projects/:slugId',
+      '/:accountName/lists/:listId',
+    ]));
+    expect(MATCHER).toContain('/:accountName');
+  });
+
+  it('uses plain :param patterns only, nothing a matcher parser could reject', async () => {
+    const { MATCHER } = await import('../proxy');
+    for (const entry of MATCHER) expect(entry).not.toMatch(/[()?!]|\\/);
+  });
+});
+
+describe('isStaticPath', () => {
+  it('recognises files, so a crawler gets the file and not the HTML shell', () => {
+    for (const p of ['/favicon.svg', '/og-default.png', '/robots.txt', '/sitemap.xml', '/assets/app.js']) expect(isStaticPath(p)).toBe(true);
+  });
+  it('does not mistake pages for files, including account names with a dot', () => {
+    for (const p of ['/some.user', '/a.b/projects/x-k3x9a2c7qm', '/32blunts', '/32blunts/projects/radiohead-creep-k3x9a2c7qm', '/32blunts/lists/65f0c1a2b3c4d5e6f7a8b9c0', '/explore/projects']) expect(isStaticPath(p)).toBe(false);
   });
 });

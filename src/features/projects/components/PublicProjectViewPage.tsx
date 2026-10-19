@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useLayoutEffect, useMemo, useCallback, lazy, Suspense } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import { SettingsProvider } from '@/features/settings/SettingsContext';
@@ -15,6 +15,7 @@ import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { ProjectUpNextPanel } from './ProjectUpNextPanel';
 import { usePublicProject } from '../hooks/usePublicProject';
+import { parseSlugId, projectDisplayName, projectPageTitle, projectPath } from '../project-path';
 import { useStarredPlaylist } from '../hooks/useStarredPlaylist';
 import ImmersiveLyricsDisplay, { type DisplayLine } from './ImmersiveLyricsDisplay';
 import ProjectInfoPanel from './ProjectInfoPanel';
@@ -32,12 +33,13 @@ import { sectionsToFlat } from '@/features/editor/utils/sections';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import { projects as projectsApi } from '@/app/api';
 import { projectsService } from '@features/projects/services/projects.service';
-import { splitArtists } from '@/shared/utils/lrc';
+import { artistRoster } from '@/features/artists/artist-credits';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import { projectPath, publicIdFromSlugId } from '@features/projects/project-path';
 
 interface PublicProject {
   publicId?: string;
+  slug?: string | null;
   isStarredByMe?: boolean;
   starCount?: number;
   forkCount?: number;
@@ -99,6 +101,19 @@ function PublicProjectViewPageInner() {
 
   const { user } = useAuthContext();
   const { project, loading, notFound } = usePublicProject(publicId) as { project: PublicProject | null; loading: boolean; notFound: boolean };
+
+  // The publicId is the real key; account name and slug in the URL are cosmetic. Whenever
+  // they are stale (renamed song/account), absent (legacy /project/:id) or differently
+  // cased, swap in the canonical URL. This is the "slug history": old links keep working.
+  const canonicalPath = project?.publicId && project.publicId === publicId
+    ? projectPath({ ...project, publicId: project.publicId })
+    : null;
+  useEffect(() => {
+    if (canonicalPath && canonicalPath !== location.pathname) {
+      navigate(`${canonicalPath}${location.search}${location.hash}`, { replace: true });
+    }
+  }, [canonicalPath, location.pathname, location.search, location.hash, navigate]);
+
   const { reactions: projectReactions, myReaction: myProjectReaction, react: reactToProject } = useProjectReactions(project?.publicId ?? null) as {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     reactions: any; myReaction: any; react: (...args: any[]) => void;
@@ -240,7 +255,7 @@ function PublicProjectViewPageInner() {
   const projectTitle = project?.metadata?.songName || project?.title || '';
 
   const songArtists = useMemo(
-    () => splitArtists(project?.metadata?.songArtist as string | undefined),
+    () => artistRoster(project?.metadata as Parameters<typeof artistRoster>[0]),
     [project?.metadata],
   );
   const songSingers = useMemo(
@@ -263,8 +278,16 @@ function PublicProjectViewPageInner() {
 
   const [mediaTitleOverride, setMediaTitle] = useState<string | null>(null);
   const mediaTitle = mediaTitleOverride ?? projectTitle;
+  // The tab title is the song and artist the owner entered, not whatever the player reports
+  // for the media (a YouTube video's title, a file name).
   // usePageTitle's JS param type is mis-inferred; it accepts a title string at runtime.
-  (usePageTitle as (title?: string | null) => void)(mediaTitle);
+  (usePageTitle as (title?: string | null) => void)(
+    projectPageTitle(
+      projectDisplayName({ title: project?.title, metadata: project?.metadata as Parameters<typeof projectDisplayName>[0]['metadata'] }),
+      project?.user?.accountName,
+      (name) => (t as (k: string, o?: object) => string)('app.titles.syncedBy', { name }),
+    ) || mediaTitle,
+  );
 
   const cover = resolveCoverImage(project);
 

@@ -83,7 +83,8 @@ function ExternalRedirect({ to }: { to: string }) {
 
 function RedirectWithParams({ to }: { to: (params: Record<string, string>) => string }) {
   const params = useParams() as Record<string, string>;
-  return <Navigate to={to(params)} replace />;
+  const { search, hash } = useLocation();
+  return <Navigate to={`${to(params)}${search}${hash}`} replace />;
 }
 
 type WorkspaceView = 'editor' | 'preview';
@@ -121,6 +122,7 @@ interface EditorContainerProps {
   activepublicId?: string | null;
   isProjectLoading?: boolean;
   projectUserId?: string | null;
+  projectMetadata?: unknown;
   user?: AuthUser | null;
   navigate: NavigateFunction;
   children: ReactNode;
@@ -272,9 +274,21 @@ export function AppRouter({
     buildProjectPayload,
     restoredMedia,
     uploadedAudio,
+    t,
   } = appState;
 
-  usePageTitle(mediaTitle);
+  // Song and artist as the user typed them; the media title (file or video name) is only a fallback.
+  const meta = projectMetadata as { name?: string; songName?: string; artists?: ArtistCredit[]; songArtist?: string } | undefined;
+  const { user } = useAuthContext();
+  usePageTitle(
+    projectPageTitle(
+      projectDisplayName({ title: meta?.name, metadata: { songName: meta?.songName, songArtist: artistDisplay(meta) } }),
+      user?.accountName,
+      (name) => (t as (k: string, o?: object) => string)('app.titles.syncedBy', { name }),
+    ) || mediaTitle,
+  );
+  // Every credit, primaries then featured: the singer choices when assigning lines. Memoised, so the editor's props keep a stable identity.
+  const rosterNames = useMemo(() => artistRoster(projectMetadata as Parameters<typeof artistRoster>[0]), [projectMetadata]);
 
   // Broadcast editor activity to mutual friends via socket presence system.
   // Emits when user is actively working in a project; clears on close/unmount.
@@ -286,7 +300,6 @@ export function AppRouter({
       : null
   );
 
-  const { user } = useAuthContext();
   const { mobileTab, setMobileTab, setShowNamingModal } = layoutState;
 
   // Editor or preview ("Revisar"). Stored in interface.mobileTab, the setting the
@@ -334,7 +347,7 @@ export function AppRouter({
     onShowKeyboardHelp: handleToggleKeyboardHelp,
     onOpenProjectSettings: setShowNamingModal ? () => setShowNamingModal(true) : undefined,
     registerAfterSave,
-    songArtists: projectMetadata?.songArtists || [],
+    songArtists: rosterNames,
     singerColors: projectMetadata?.singerColors || [],
     declaredSingers: projectMetadata?.singers || [],
     playerSlot,
@@ -359,7 +372,7 @@ export function AppRouter({
     handleToggleKeyboardHelp,
     setShowNamingModal,
     registerAfterSave,
-    projectMetadata,
+    projectMetadata, rosterNames,
     playerSlot,
     showPreviewView,
     uploadedAudio, hasMedia, activepublicId, handleViewPublic, isPlaying,
@@ -376,7 +389,7 @@ export function AppRouter({
     onShowEditor: showEditorView,
     onViewPublic: handleViewPublic,
     setActiveLineIndex,
-    songArtists: projectMetadata?.songArtists || [],
+    songArtists: rosterNames,
     singerColors: projectMetadata?.singerColors || [],
     playerSlot,
   } as unknown as PreviewComponentProps), [
@@ -386,7 +399,7 @@ export function AppRouter({
     sharedReadOnly, setSharedReadOnly,
     shareModal, setShareModal, hasMedia,
     isPlaying, playbackSpeed, activepublicId,
-    pendingProject, projectMetadata,
+    pendingProject, projectMetadata, rosterNames,
     showEditorView, handleViewPublic, setActiveLineIndex,
     playerSlot,
   ]);
@@ -478,14 +491,14 @@ export function AppRouter({
           <PublicProjectViewPage />
         </Suspense>
       } />
-      <Route path="profile/:accountName/lists/:listId" element={
+      {/* Profiles and playlists live at the site root: /:accountName and /:accountName/lists/:listId.
+          Static routes above outrank :accountName, so every top-level route must be a reserved account name. */}
+      <Route path=":accountName/lists/:listId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <ListPage />
         </Suspense>
       } />
-      <Route path=":accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
-      <Route path="u/:accountName/lists/:listId" element={<RedirectWithParams to={(p) => `/profile/${p.accountName}/lists/${p.listId}`} />} />
-      <Route path="profile/:accountName" element={
+      <Route path=":accountName" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <ProfilePage />
         </Suspense>

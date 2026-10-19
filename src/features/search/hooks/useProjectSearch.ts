@@ -29,6 +29,7 @@ const SEARCH_QUERY = /* GraphQL */ `
         metadata {
           songName
           songArtist
+          artists { name role order }
           genre
           tags
         }

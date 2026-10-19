@@ -1,3 +1,4 @@
+import { profilePath, listPath } from '@/features/profile/profile-path';
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import type { ChangeEvent } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -161,7 +162,7 @@ export default function PlaylistPage() {
 
   const handleSave = useCallback(async () => {
     if (!user) {
-      navigate(`/auth/signin?redirect=${encodeURIComponent(`/profile/${accountName}/lists/${playlistId}`)}`);
+      navigate(`/auth/signin?redirect=${encodeURIComponent(listPath(accountName, playlistId))}`);
       return;
     }
     setSaveLoading(true);
@@ -194,7 +195,7 @@ export default function PlaylistPage() {
     setDeleting(true);
     try {
       await deletePlaylist(playlistId!);
-      navigate(`/profile/${accountName}`, { replace: true });
+      navigate(profilePath(accountName), { replace: true });
     } catch {
       setConfirmDelete(false);
     } finally {
@@ -247,7 +248,7 @@ export default function PlaylistPage() {
       {/* Back */}
       <UserHoverCard accountName={accountName ?? ''}>
         <Link
-          to={`/profile/${accountName}`}
+          to={profilePath(accountName)}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 w-fit"
         >
           <Icon name="arrow_back" size={16} />

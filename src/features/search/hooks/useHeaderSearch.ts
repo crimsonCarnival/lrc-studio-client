@@ -21,7 +21,7 @@ const HEADER_SEARCH_QUERY = /* GraphQL */ `
         forkCount
         user { accountName }
         forkedFrom { publicId accountName sourceDeleted }
-        metadata { songName songArtist }
+        metadata { songName songArtist artists { name role order } }
         hasWordSync
       }
       total

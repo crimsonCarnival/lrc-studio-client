@@ -15,6 +15,7 @@ Una aplicación web profesional para sincronizar letras de canciones con audio, 
   - [Estampado Automático con IA](#-estampado-automático-con-ia)
   - [Búsqueda e Importación de Letras](#-búsqueda-e-importación-de-letras)
   - [Secciones e Intérpretes](#secciones-e-intérpretes)
+  - [Artistas y Artistas Invitados](#artistas-y-artistas-invitados)
   - [Contenido de la Letra](#contenido-de-la-letra)
   - [Importación](#importación)
   - [Exportación](#exportación)
@@ -23,6 +24,7 @@ Una aplicación web profesional para sincronizar letras de canciones con audio, 
   - [Plataforma Social](#-plataforma-social)
   - [Gamificación](#-gamificación)
   - [Compartir](#compartir)
+  - [URLs y Vistas Previas de Enlaces](#urls-y-vistas-previas-de-enlaces)
   - [Atajos de Teclado](#️-atajos-de-teclado)
   - [Interfaz y Temas](#interfaz-y-temas)
   - [Paneles de Configuración](#paneles-de-configuración)
@@ -108,6 +110,21 @@ Busca una canción e importa su letra sin salir de la aplicación — disponible
 - **Sintaxis en texto plano** — Edita la estructura como texto: `[Chorus | Mira, Theo]` declara una sección con intérpretes, y `Mira: línea` asigna un intérprete a una línea. Los prefijos solo se aplican si el nombre está en la lista de intérpretes del proyecto, así que una letra normal como `Baby: come on` sigue siendo letra.
 - **Secciones plegables** — Pliega y despliega secciones al editar canciones largas.
 
+### Artistas y Artistas Invitados
+
+Los artistas de una canción son una lista ordenada de **créditos**, cada uno `primary` (principal) o `featured` (invitado), en lugar de una única cadena de texto libre. El servidor mantiene una cadena para mostrar derivada (`metadata.songArtist`, p. ej. `Drake feat. Rihanna & Kanye`) que usan las tarjetas, la búsqueda, los slugs, las vistas previas de enlaces y los archivos LRC; es de **solo lectura** y nunca se envía de vuelta.
+
+- **Dos campos** — *Artistas principales* y *Artistas invitados*, cada uno una lista de chips. Añade con Intro, quita con la ✕ o Supr, reordena arrastrando o con **Alt + ←/→** sobre el chip enfocado. Los roles, las etiquetas y los avisos en vivo se exponen a los lectores de pantalla.
+- **Análisis, sin adivinar** — Escribir o pegar `A, B & C` o `Drake feat. Rihanna` ejecuta el analizador compartido (`src/shared/utils/artists.ts`, copia del del servidor). Todo lo dudoso abre antes una tarjeta de revisión: una división por `&` / `and` / `x` que podría ser un solo grupo (*Simon & Garfunkel*), con una casilla «unir en un solo artista», una vista previa de chips y un contador; un `ft` / `feat` suelto que pregunta si es una marca; y avisos para un `feat.` vacío, un paréntesis sin cerrar o un duplicado descartado. No se aplica nada hasta que pulsas **Aplicar**.
+- **Sugerencia desde el título** — Un título como `Song (feat. A & B)` propone mover los nombres a *Artistas invitados* y dejar `Song` como título. Nunca se aplica solo y descartarla se recuerda para ese texto exacto.
+- **Autocompletado** — Mientras escribes se sugieren nombres que ya has acreditado (`myArtistSuggestions`): con retardo, cancelando la petición en curso en cada tecla, y una respuesta tardía nunca sobrescribe una más reciente.
+- **Validación** — Las mismas reglas y límites que el servidor (`ARTIST_LIMITS`: como máximo 10 créditos, nombres de hasta 300 caracteres, sin duplicados sin distinguir mayúsculas, al menos un principal). Los errores del servidor (`artist_duplicate`, `artists_too_many`, `artist_primary_required`, `project_identity_required`, …) se muestran como mensajes traducidos.
+- **De dónde vienen** — Una búsqueda de datos de la pista (una cadena `A, B`) y la cabecera de un `.lrc` importado (`[ar:]` / `[ti:]`) pasan por el analizador y la misma revisión. Tras una búsqueda de letras aparece un paso de **aplicar artistas** con *solo artistas principales* marcado por defecto.
+- **Visualización** — Los nombres principales destacan y los invitados siguen a un `feat.` atenuado; las listas largas se recortan con el texto completo en un tooltip. Los proyectos aún sin migrar (créditos `[]`) usan el texto guardado.
+- **Lista de intérpretes** — Todos los créditos, principales primero y luego invitados, se ofrecen al asignar secciones y líneas a intérpretes.
+- **Guardado** — Solo se envía `artists` (`{ name, role }`, en orden de visualización), nunca `songArtist`. *Omitido* conserva lo guardado y `[]` lo borra, así que un guardado que no tocó los artistas no envía nada sobre ellos.
+- **Un proyecto debe poder nombrarse** — Hace falta un título, nombre de canción o artista que conserve letras o dígitos tras convertirlo en slug. La pantalla de configuración mantiene deshabilitado *Empezar a sincronizar* y el diálogo de ajustes del proyecto mantiene deshabilitado *Guardar* hasta que se cumple.
+
 ### Contenido de la Letra
 
 - **Letra secundaria** — Añade una pista de texto secundaria por línea (por ejemplo, romaji o pronunciación en otro idioma).
@@ -124,6 +141,7 @@ Busca una canción e importa su letra sin salir de la aplicación — disponible
 - **Importar desde URL** — Importa una letra desde una URL remota.
 - **Detección al pegar** — Pegar un bloque LRC o SRT se detecta y analiza automáticamente.
 - **Búsqueda de letras** — Ver [Búsqueda e Importación de Letras](#-búsqueda-e-importación-de-letras).
+- **Artistas desde la cabecera del archivo** — `[ar:]` / `[ti:]` de un `.lrc` importado se ofrecen como artistas en el asistente de configuración y pasan por la misma confirmación que el texto escrito.
 
 ### Exportación
 
@@ -138,6 +156,8 @@ Busca una canción e importa su letra sin salir de la aplicación — disponible
 - **Patrón de nombre de archivo** — `lyrics.lrc` fijo o derivado del título del proyecto.
 - **Interruptores de traducción y secundaria** — Elige qué pistas incluir en la salida.
 - **Compilación en servidor con reserva local** — Compila en el servidor para formatos avanzados y recurre automáticamente al compilador local si el servidor no está disponible.
+- **Artistas en las etiquetas LRC** — `[ar:]` se construye a partir de los créditos con el formateador compartido (`Drake feat. Rihanna`), tanto en el servidor como en la reserva local.
+- **Invitados en `[ti:]`** — Una opción (desactivada por defecto) escribe `Song (feat. Rihanna)` como título. Aparece en el panel de exportación cuando el proyecto tiene artistas invitados y en *Configuración → Exportación*; por ahora se recuerda en este navegador (consulta `docs/server-export-artist-setting.md` para pasarla a los ajustes del usuario).
 
 ### Vista Previa en Vivo
 
@@ -162,6 +182,9 @@ Busca una canción e importa su letra sin salir de la aplicación — disponible
 - **Sincronización entre pestañas** — Los guardados se emiten por WebSocket, así otra pestaña abierta en el mismo proyecto se actualiza en vivo.
 - **Biblioteca de subidas** — Consulta todos los archivos de audio y pistas de YouTube asociados previamente a proyectos.
 - **Metadatos del proyecto** — Nombre, descripción, etiquetas, título/artista/álbum/año/género/idioma de la canción, números de pista, portada y lista de intérpretes.
+- **URLs legibles** — Los proyectos públicos viven en `/:accountName/projects/:slug-:id` y el editor en `…/edit`; consulta [URLs y Vistas Previas de Enlaces](#urls-y-vistas-previas-de-enlaces).
+- **Slug guardado en el servidor** — El `slug` lo deriva el servidor de la canción, el artista y el título y se devuelve con cada proyecto; el cliente lo usa para los enlaces.
+- **Ajustes del proyecto** — El diálogo de ajustes edita nombre, canción, artistas (principales e invitados), portada, visibilidad y colores de intérpretes.
 
 ### 🌐 Plataforma Social
 
@@ -177,6 +200,8 @@ Busca una canción e importa su letra sin salir de la aplicación — disponible
 - **Notificaciones** — Entrega en tiempo real para estrellas, bifurcaciones, seguidores, reacciones, insignias y eventos de moderación.
 - **Bloqueo de usuarios** — Bloquea a otro usuario.
 - **Controles de privacidad** — Visibilidad en línea, preferencias de notificación, insignias del mini-perfil y si tu mapa de calor es público.
+- **Perfiles en la raíz del sitio** — `/:accountName`, con las listas en `/:accountName/lists/:id`. Los nombres de cuenta son minúsculas `[a-z0-9_.:-]` y cada ruta de primer nivel es un nombre reservado.
+- **Cambios de nombre y enlaces antiguos** — Abrir un perfil con un nombre de cuenta anterior redirige al actual.
 
 ### 🏆 Gamificación
 
@@ -193,6 +218,27 @@ Busca una canción e importa su letra sin salir de la aplicación — disponible
 - **Enlace profundo con marca de tiempo** — Incluye `?s=N` para iniciar la reproducción en un segundo concreto.
 - **Atajo de posición actual** — Sincroniza con un clic la marca compartida con la posición de reproducción actual.
 - **Visor de solo lectura** — Los enlaces compartidos abren una vista de solo lectura con el medio incrustado y la letra sincronizada.
+- **Código QR con el logo de la app** — La hoja de compartir dibuja el enlace como código QR con la marca de LRC Studio en el centro (corrección de errores de nivel H, así que sigue siendo legible).
+- **Descargar como PNG** — Guarda el QR como un `.png` nítido en negro sobre blanco con el nombre de la canción.
+- **Compartir el QR en lugar del enlace** — Donde el navegador puede compartir archivos, envía la imagen del QR por la hoja de compartir del sistema.
+- **Títulos** — El título de la pestaña de un proyecto dice `Canción – Artista, Sincronizado por accountname | LRC Studio` (en inglés: `Synced by`), con la canción y el artista que escribiste.
+
+### URLs y Vistas Previas de Enlaces
+
+| Página | URL |
+|---|---|
+| Perfil | `/:accountName` |
+| Lista | `/:accountName/lists/:listId` |
+| Proyecto público | `/:accountName/projects/:slug-:publicId` |
+| Editor (propietario) | `/:accountName/projects/:slug-:publicId/edit` |
+
+- **El id es la clave** — Un proyecto se encuentra por los últimos 10 caracteres del segmento (`publicId` es un `nanoid(10)` y puede contener `-`). El nombre de cuenta y el slug son decorativos.
+- **Los cambios de nombre no rompen enlaces** — La página carga por id y, si el nombre de cuenta o el slug de la URL están desactualizados (o es un enlace antiguo `/project/:id`), sustituye la URL por la canónica. El editor lo hace una vez por carga, así que la dirección no cambia mientras escribes el nombre de la canción.
+- **Las formas antiguas redirigen** — `/project/:id`, `/project/:id/edit`, `/profile`, `/profile/:name`, `/profile/:name/lists/:id` y `/u/:name` siguen funcionando, pero ya nada enlaza a ellas.
+- **Slugs** — Los construye el servidor a partir de la cadena para mostrar (`radiohead-creep`, `drake-feat-rihanna-creep`): minúsculas, sin acentos latinos, conservando letras y dígitos de cualquier escritura, con un máximo de 60 caracteres. `src/features/projects/project-path.ts` contiene las utilidades (`projectPath`, `editorPath`, `parseSlugId`, `projectDisplayName`, `projectPageTitle`); los enlaces de perfil pasan por `src/features/profile/profile-path.ts` (`profilePath`, `listPath`).
+- **Reglas de acceso** — `src/app/route-access.ts` sigue denegando por defecto; los perfiles, listas y páginas de proyecto públicos se listan explícitamente y los editores exigen sesión.
+- **Vistas previas de enlaces** — Los rastreadores no ejecutan JavaScript, así que `proxy.ts` (Vercel Routing Middleware) inyecta las etiquetas Open Graph resueltas por la API (`/og/meta?path=…`) solo para agentes de usuario de rastreadores. Su matcher (patrones `:param` simples) está en `vercel.json` y `MATCHER` en `proxy.ts`, y una prueba comprueba que coinciden; las rutas de archivos como `/favicon.svg` pasan sin tocar. El título de la vista previa sigue `Canción – Artista, Sincronizado por accountname | LRC Studio`.
+- **Rastreadores** — `public/robots.txt` ya no bloquea los perfiles; las zonas privadas siguen prohibidas.
 
 ### ⌨️ Atajos de Teclado
 
@@ -243,7 +289,7 @@ Todos los atajos son configurables en **Configuración → Atajos**, con detecci
 
 **Interfaz** — Tema, idioma, resaltado de línea activa, comportamiento y alineación del desplazamiento, alineación de la vista previa, tipografía, disposición de traducción, objetivo y suavizado del relleno karaoke, formato de lectura, bloquear disposición.
 
-**Exportación** — Formatos por defecto, precisión de marcas, patrón de nombre, fin de línea, omitir líneas vacías, normalizar marcas, etiquetas de metadatos.
+**Exportación** — Formatos por defecto, precisión de marcas, patrón de nombre, fin de línea, omitir líneas vacías, normalizar marcas, etiquetas de metadatos, invitados en el título `[ti:]`.
 
 **Estampado Automático** — Umbral de confianza, tolerancia difusa y modo de aplicación (solo vacías o todas).
 
@@ -290,7 +336,11 @@ Solo para personal, con permisos granulares en lugar de un nombre de rol.
 | Tiempo real | [Socket.IO](https://socket.io/) |
 | Pruebas | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) |
 
-El estado se mantiene deliberadamente sin un almacén global — sin Redux ni Zustand. Vive en React Context, el hook raíz `useAppState`, una pila de deshacer/rehacer y `localStorage`.
+El estado se mantiene deliberadamente sin un almacén global — sin Redux ni Zustand. Vive en React Context, el hook raíz `useAppState`, una pila de deshacer/rehacer y `localStorage`. Los datos del servidor de perfiles, feed y explorar se cachean con [TanStack Query](https://tanstack.com/query) (`src/app/query.client.ts`); las escrituras la mantienen al día mediante `src/app/cache-sync.ts` (por ejemplo `profileChanged()` tras editar el perfil, para que una portada nueva se vea al instante en el perfil).
+
+**Compartido con el servidor.** `src/shared/utils/artists.ts` y su prueba son copias del analizador, formateador y validador del servidor y deben mantenerse idénticas: cámbialas primero en el servidor. El código QR (`qrcode`) se dibuja en el cliente y el recorte de imágenes usa `react-easy-crop`.
+
+**Guías para el servidor** (prompts para el backend, en `docs/`): [`server-slug-urls.md`](../server-slug-urls.md) (columna de slug y migración, historial de nombres de cuenta, nombres reservados), [`server-og-title.md`](../server-og-title.md) (título de la vista previa) y [`server-export-artist-setting.md`](../server-export-artist-setting.md) (persistir la opción de `[ti:]`).
 
 ## Empezando
 
@@ -457,6 +507,7 @@ Los límites de tasa se basan **solo en la IP**, nunca en la cabecera de disposi
 ```
 
 Límites: `sectionIdx ≤ 2000`, `lineIdx ≤ 10000`, `wordIndex ≤ 2000`. Envía siempre `sections` anidadas, nunca el array plano `lines` del cliente — conviértelo con `flatToSections`.
+**Artistas.** `metadata.artists` es `[{ name, role: 'primary' | 'featured' }]` al escribir y `[{ artistId, name, role, order }]` al leer; `metadata.songArtist` es la cadena derivada para mostrar y **ya no se acepta como entrada**. Omitir `artists` conserva los créditos guardados y `[]` los borra. Los fallos de validación son `422` con un `code` (`artists_invalid`, `artist_role_invalid`, `artist_name_empty`, `artist_name_too_long`, `artists_too_many`, `artist_duplicate`, `artist_primary_required`), y un proyecto sin título, nombre de canción ni artista se rechaza con `project_identity_required`. Los proyectos también llevan un `slug` derivado por el servidor.
 
 ### `/lyrics` y `/editor` — análisis y operaciones del editor
 
@@ -551,6 +602,7 @@ Todas con `requireAuth`. También se entregan en vivo por Socket.IO.
 | GET | `/google/login/url` | — | — | — | `{ url }` — para iniciar sesión |
 | GET | `/google/auth/callback` | — | — | `?code&state` | HTML que envía por `postMessage` un token de un solo uso a la ventana que lo abrió, que luego intercambias con `POST /auth/exchange-ott` |
 | POST | `/google/disconnect` | `requireAuth` | — | — | `{ disconnected }` · 409 `last_auth_method` si es el único método de acceso |
+| GET | `/og/meta` | — | — | `?path` (`/:account/projects/:slug-:id`, `/:account`, `/:account/lists/:id`, formas antiguas), `?hl` | Metadatos JSON que el proxy para rastreadores convierte en etiquetas |
 | GET | `/og/project/:publicId` | — | — | — | **HTML** (no JSON) con etiquetas Open Graph/Twitter y redirección, bajo un nonce CSP por respuesta · 404 si es privado o no existe |
 
 ### `/admin`
@@ -587,7 +639,7 @@ Un hook `onRequest` aplica `requireStaff` a **todas** las rutas siguientes. Las 
 
 ### GraphQL — `POST /graphql`
 
-Límite de profundidad 12; introspección desactivada en producción. `gqlRequest` devuelve `json.data` directamente y lanza `ApiError` ante errores HTTP o de GraphQL; un 401 emite `authEvents('token:expired')` para disparar un refresco. **No hay caché de GraphQL en el cliente**, así que cada consulta vuelve a pedir los datos.
+Límite de profundidad 12; introspección desactivada en producción. `gqlRequest` devuelve `json.data` directamente y lanza `ApiError` ante errores HTTP o de GraphQL; un 401 emite `authEvents('token:expired')` para disparar un refresco. Las consultas de perfil, feed y explorar se cachean con TanStack Query (ver [Pila Tecnológica](#pila-tecnológica)); el resto vuelve a pedir los datos.
 
 **Consultas**
 
@@ -620,7 +672,9 @@ Límite de profundidad 12; introspección desactivada en producción. `gqlReques
 | `badgeDefinitions` | — | `[BadgeDef!]!` |
 | `publicBadgeDefinitions` | — | `[PublicBadgeDef!]!` |
 | `userShowcase` | `accountName: String!` | `[ShowcasedBadge!]!` |
-| `myMusicLibrary` | — | `[MusicLibraryEntry!]!` |
+| `myMusicLibrary` | — | `[MusicLibraryEntry!]!` — solo artistas principales |
+| `myArtistSuggestions` | `prefix: String!, limit (≤ 20), offset` | `ArtistSuggestionPage!` — tus propios nombres ya acreditados, A–Z por prefijo |
+| `parseArtists` | `artist: String!, title: String` | El resultado del analizador compartido (créditos, título limpio, avisos); puro, sin autenticación |
 | `userContentStats` | — | `ContentStats!` |
 | `adminAddictionLevels` | — | `[AddictionLevel!]!` |
 | `myPreferences` | — | `UserPreferences!` |

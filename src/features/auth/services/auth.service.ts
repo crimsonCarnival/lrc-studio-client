@@ -1,5 +1,6 @@
 import { request } from '@/app/api.client';
 import { gqlRequest } from '@/app/graphql.client';
+import { profileChanged } from '@/app/cache-sync';
 import type { User, UpdateProfileInput, UserPreferences } from '@/types';
 
 interface RegisterParams {
@@ -240,6 +241,7 @@ export const authService = {
         }
       }
     `, { input });
+    profileChanged();
     return data.updateProfile;
   },
 

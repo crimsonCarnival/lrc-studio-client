@@ -43,9 +43,15 @@ const RULES: Rule[] = [
   { test: p => /^\/[^/]+\/projects\/[^/]+\/(edit|fork)$/.test(p), access: 'auth' }, // edit / fork a project
 
   // ── Public profile shapes (vanity URLs at root) ── evaluated LAST.
-  { test: p => /^\/[a-z0-9_.:-]+$/.test(p), access: 'public' },           // /:accountName
-  { test: p => /^\/profile\/[a-z0-9_.:-]+$/.test(p), access: 'public' },  // legacy profile
-  { test: p => /^\/[a-z0-9_.:-]+\/lists\/[^/]+$/.test(p), access: 'public' }, // public list
+  // The account segment is any non-slash text, not just today's `[a-z0-9_.:-]`: accounts created before
+  // that rule can have capitals or other characters, and a stricter pattern here sent their profile
+  // and project links to the sign-in page. Every private route is matched above, so this stays safe.
+  // An optional trailing slash is accepted for the same reason.
+  { test: p => /^\/[^/]+\/?$/.test(p), access: 'public' },                // /:accountName
+  // Legacy /profile/… and /u/… forms: redirected to the bare URLs, but must not bounce to login first.
+  { test: p => /^\/(profile|u)\/[^/]+(\/(lists|playlists)\/[^/]+)?\/?$/.test(p), access: 'public' },
+  { test: p => /^\/[^/]+\/lists\/[^/]+\/?$/.test(p), access: 'public' },    // public list
+  { test: p => /^\/[^/]+\/projects\/[^/]+\/?$/.test(p), access: 'public' }, // public project view
 ];
 
 /**
@@ -53,8 +59,13 @@ const RULES: Rule[] = [
  * default to 'auth' (default-deny).
  */
 export function accessFor(pathname: string): Access {
+  // React Router matches paths case-insensitively, so `/Settings` renders the
+  // settings page and `/Alice` opens alice's profile (account names are stored
+  // lowercase and the API lowercases lookups). Classify the same way the router
+  // matches, or a capitalised private path would slip past every rule above.
+  const path = pathname.toLowerCase();
   for (const rule of RULES) {
-    if (rule.test(pathname)) return rule.access;
+    if (rule.test(path)) return rule.access;
   }
   return 'auth';
 }

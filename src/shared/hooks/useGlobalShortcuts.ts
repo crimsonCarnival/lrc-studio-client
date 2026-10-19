@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import { useLocation } from 'react-router-dom';
+import { isProjectEditorPath } from '@/features/projects/project-path';
 import { matchKey } from '@/shared/utils/keyboard';
 import { isEditorPath } from '@features/projects/project-path';
 import type { AppSettings } from '@/features/settings/settings.types';

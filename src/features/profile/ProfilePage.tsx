@@ -1,3 +1,5 @@
+import { profilePath } from '@/features/profile/profile-path';
+import { artistErrorMessageFor } from '@/features/artists/artist-errors';
 import { LevelXpCard } from './LevelXpCard';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
@@ -13,6 +15,8 @@ import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
 import { projectPath, projectEditPath } from '@/features/projects/project-path';
+import { ArtistText } from '@/features/artists/ArtistText';
+import { artistFieldsFromForm, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { followUser, unfollowUser, blockUser, unblockUser } from './profile.service';
@@ -58,7 +62,7 @@ interface ProjectMetaLoose {
   tags?: string[];
   songName?: string;
   songArtist?: string;
-  songArtists?: string[];
+  artists?: ArtistCredit[];
   songAlbum?: string;
   songYear?: string;
   genre?: string;
@@ -76,12 +80,12 @@ interface ProjectCardProps {
 function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: ProjectCardProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { accountName: ownerAccountName } = useParams();
   const { title, publicId, upload, public: isPublic, coverImage } = project;
   const isYoutube = upload?.source === 'youtube';
   const isPrivate = isOwner && isPublic === false;
   const hasCover = !!coverImage;
   const meta = (project.metadata || {}) as ProjectMetaLoose;
-  const artist = (meta.songArtists || []).join(', ') || meta.songArtist || '';
   const synced = project.syncedLineCount || 0;
   const total = project.lineCount || 0;
   const percent = total > 0 ? Math.min(100, Math.round((synced / total) * 100)) : 0;
@@ -152,7 +156,7 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
             <h3 className="text-[15px] font-bold uppercase text-zinc-100 truncate group-hover:text-primary transition-colors leading-snug">
               {title || t('library.untitled')}
             </h3>
-            {artist && <p className="text-[13px] text-zinc-400 truncate mt-0.5">{artist}</p>}
+            <ArtistText metadata={meta} className="block text-[13px] text-zinc-400 truncate mt-0.5" />
             <div className="h-1 rounded-full bg-zinc-800 mt-3 overflow-hidden" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
               <div className={`h-full rounded-full ${complete ? 'bg-teal-400' : 'bg-primary'}`} style={{ width: `${percent}%` }} />
             </div>
@@ -199,7 +203,7 @@ function PeopleYouMightKnow({ excludeAccountName }: { excludeAccountName?: strin
         {suggestions.map(u => (
           <UserHoverCard key={u.id} accountName={u.accountName} userId={u.id}>
             <Link
-              to={`/profile/${u.accountName}`}
+              to={profilePath(u.accountName)}
               className="flex items-center gap-2 p-2 rounded-lg hover:bg-zinc-800/50 transition-colors w-full"
             >
               {u.avatarUrl ? (
@@ -266,17 +270,18 @@ export default function ProfilePage() {
     }, { replace: true });
   }, [setSearchParams]);
 
-  // Silently rewrite legacy /profile/:accountName → /:accountName
+  // The server resolves a previous account name (or another casing) to the current profile;
+  // swap in the canonical name so an old link ends up on the user's current URL.
   useEffect(() => {
-    if (location.pathname.startsWith('/profile/') && accountName) {
-      navigate(`/profile/${accountName}`, { replace: true });
+    if (profile?.accountName && accountName && profile.accountName !== accountName) {
+      navigate(`${profilePath(profile.accountName)}${location.search}`, { replace: true });
     }
-  }, [location.pathname, accountName, navigate]);
+  }, [profile?.accountName, accountName, location.search, navigate]);
 
   useEffect(() => {
     if (accountName) return;
     if (user?.accountName) {
-      navigate(`/profile/${user.accountName}`, { replace: true });
+      navigate(profilePath(user.accountName), { replace: true });
     } else {
       navigate('/', { replace: true });
     }
@@ -311,7 +316,7 @@ export default function ProfilePage() {
 
   const handleFollow = useCallback(async () => {
     if (!user) {
-      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/profile/${accountName}`)}&intent=follow`);
+      navigate(`/auth?action=signin&redirect=${encodeURIComponent(profilePath(accountName))}&intent=follow`);
       return;
     }
     setFollowLoading(true);
@@ -339,7 +344,7 @@ export default function ProfilePage() {
 
   const handleBlock = useCallback(async () => {
     if (!user) {
-      navigate(`/auth?action=signin&redirect=${encodeURIComponent(`/profile/${accountName}`)}`);
+      navigate(`/auth?action=signin&redirect=${encodeURIComponent(profilePath(accountName))}`);
       return;
     }
     setBlockLoading(true);
@@ -683,13 +688,13 @@ export default function ProfilePage() {
               onClose={() => setEditingProject(null)}
               onConfirm={async (data: ProjectSetupConfirm) => {
                 try {
-                  const { name: title, description, tags, songName, songArtist, songAlbum, songYear, genre, coverImage, isPublic, singerColors, singers } = data;
+                  const { name: title, description, tags, songName, songAlbum, songYear, genre, coverImage, isPublic, singerColors, singers } = data;
                   const updatedMetadata = {
                     ...(editingProject.metadata as Record<string, unknown>),
                     description,
                     tags,
                     songName,
-                    songArtist,
+                    ...artistFieldsFromForm(data),
                     songAlbum,
                     songYear,
                     genre,
@@ -712,15 +717,15 @@ export default function ProfilePage() {
                   } : prev);
                   setEditingProject(null);
                   toast.success(t('project.updateSuccess'));
-                } catch {
-                  toast.error(t('project.updateError'));
+                } catch (err) {
+                  toast.error(artistErrorMessageFor(t, err) ?? t('project.updateError'));
                 }
               }}
               initialName={editingProject.title || ''}
               initialDescription={meta.description || ''}
               initialTags={meta.tags ?? EMPTY_LIST}
               initialSongName={meta.songName || ''}
-              initialSongArtist={(meta.songArtists || []).join(', ') || meta.songArtist || ''}
+              initialArtists={creditsOf(meta)}
               initialSongAlbum={meta.songAlbum || ''}
               initialSongYear={meta.songYear || ''}
               initialGenre={meta.genre || ''}

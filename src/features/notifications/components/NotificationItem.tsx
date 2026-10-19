@@ -1,3 +1,4 @@
+import { profilePath } from '@/features/profile/profile-path';
 import type { TFunction } from 'i18next';
 import { useTranslation, Trans } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';

@@ -11,7 +11,8 @@ import { SearchField } from '@ui/search-field';
 type SongResult = LyricsSearchHit;
 
 interface LyricsSearchBarProps {
-  onImport: (lyricsText: string, keepTimestamps: boolean) => void;
+  /** `song` is the search hit the lyrics came from (its title and the provider's artist string). */
+  onImport: (lyricsText: string, keepTimestamps: boolean, song?: { title: string; artist: string }) => void;
   autoSearch?: { q?: string } | null;
   showKeepTimestamps?: boolean;
   /** Loaded media length in seconds. Sent to the server to disambiguate covers/remasters/live cuts. */
@@ -109,14 +110,14 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
   }, [t, mediaDuration]);
 
   const handleConfirm = useCallback((lyricsText: string) => {
-    onImport(lyricsText, keepTimestamps);
+    onImport(lyricsText, keepTimestamps, selectedSong ? { title: selectedSong.title, artist: selectedSong.artist } : undefined);
     setSelectedSong(null);
     setLyrics(null);
     setExtracted(null);
     setQuery('');
     setResults(null);
     setKeepTimestamps(false);
-  }, [onImport, keepTimestamps]);
+  }, [onImport, keepTimestamps, selectedSong]);
 
   const handleCloseModal = useCallback(() => {
     setSelectedSong(null);

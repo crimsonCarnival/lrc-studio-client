@@ -22,7 +22,7 @@ const GET_PUBLIC_PROFILE = /* GraphQL */ `
       }
       projects {
         id publicId slug title starCount forkCount coverImage public lineCount syncedLineCount
-        metadata { songName songArtist songAlbum songYear genre description tags singers singerColors }
+        metadata { songName songArtist artists { name role order } songAlbum songYear genre description tags singers singerColors }
         upload { source uploadUrl }
         createdAt updatedAt
       }

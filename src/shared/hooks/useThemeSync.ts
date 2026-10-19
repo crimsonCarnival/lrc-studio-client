@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useReplaceSearch } from './useReplaceSearch';
 
 export function useThemeSync(theme?: string, fontWeight?: string) {
   const { i18n } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  const replaceSearch = useReplaceSearch();
 
   // 1. Apply theme — dark (default) or light
   useEffect(() => {
@@ -27,21 +29,20 @@ export function useThemeSync(theme?: string, fontWeight?: string) {
   }, [fontWeight]);
 
   // 2. Sync Language -> URL
-  // When language changes, update the URL silently
+  // When language changes, update the URL silently.
+  // The URL is read from the browser, not from the router state of this render: a child's
+  // <Navigate> (every legacy /profile/… or /u/… link) runs its replace before this effect does, and
+  // writing back the render's older path would undo that redirect and bounce between the two.
   useEffect(() => {
-    setSearchParams(prev => {
-      const currentHl = i18n.language?.split('-')[0];
-      const newParams = new URLSearchParams(prev);
-      let changed = false;
-
-      if (currentHl && newParams.get('hl') !== currentHl) {
-        newParams.set('hl', currentHl);
-        changed = true;
-      }
-
-      return changed ? newParams : prev;
-    }, { replace: true });
-  }, [i18n.language, setSearchParams]);
+    // Read the live URL, not the render-time params: a redirect issued in this same
+    // commit has already moved it (see useReplaceSearch).
+    const currentHl = i18n.language?.split('-')[0];
+    const params = new URLSearchParams(window.location.search);
+    if (currentHl && params.get('hl') !== currentHl) {
+      params.set('hl', currentHl);
+      replaceSearch(params);
+    }
+  }, [i18n.language, replaceSearch]);
 
   // 3. Sync URL -> App State (Mount Only)
   // Support deep-linking by checking the URL only once when the app loads
