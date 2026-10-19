@@ -194,6 +194,7 @@ export default {
     hint: "Enter guarda. Tab va a la siguiente palabra, Shift+Tab a la anterior.",
     showWholeLine: "Ver la línea completa",
     showKanjiOnly: "Ver solo el kanji",
+    romajiLine: "Romaji de la línea completa",
     regroupHint: "¿Mal dividido? Reagrupa la palabra.",
     prev: "Anterior",
     next: "Siguiente",

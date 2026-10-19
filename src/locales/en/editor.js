@@ -191,6 +191,7 @@ export default {
     hint: "Enter saves. Tab moves to the next word, Shift+Tab to the previous.",
     showWholeLine: "Show the whole line",
     showKanjiOnly: "Show the kanji only",
+    romajiLine: "Romaji for the whole line",
     regroupHint: "Wrong split? Regroup the word.",
     prev: "Previous",
     next: "Next",

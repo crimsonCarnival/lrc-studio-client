@@ -67,6 +67,13 @@ export function FuriganaModal({
   const current = targets[cursor];
   const currentSplit = splitOkurigana(current?.word);
   const lineRomaji = current ? (lines[current.lineIndex]?.secondary ?? null) : null;
+  // Per-word romaji needs both layers to tokenize to the same count, which only
+  // happens on a line that has been through the tokenizer. A line still held as
+  // raw text has no per-word romaji but usually still has the line's, so show
+  // that rather than nothing.
+  const wordRomaji = current?.romaji ?? null;
+  const romajiShown = showLine ? lineRomaji : (wordRomaji ?? lineRomaji);
+  const romajiIsWholeLine = showLine || !wordRomaji;
 
   useEffect(() => {
     if (open && current) onFocusLine?.(current.lineIndex);
@@ -154,9 +161,12 @@ export function FuriganaModal({
             )}
 
             {/* Romaji, when the two layers pair up */}
-            {(showLine ? lineRomaji : current.romaji) && (
-              <p className="font-mono text-[12px] text-subtle text-center">
-                {showLine ? lineRomaji : current.romaji}
+            {romajiShown && (
+              <p
+                className={`font-mono text-[12px] text-center ${romajiIsWholeLine ? 'text-subtle/70' : 'text-subtle'}`}
+                title={romajiIsWholeLine ? t('editor.furigana.romajiLine') : undefined}
+              >
+                {romajiShown}
               </p>
             )}
 
