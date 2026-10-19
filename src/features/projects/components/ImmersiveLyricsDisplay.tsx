@@ -40,18 +40,21 @@ interface DisplayWord {
   singerIndex?: number;
 }
 
-// Opacity/size lookup by distance from active line
+// Opacity/size lookup by distance from active line. The weights go through the
+// theme's ramp variables rather than literal numbers, so settings.interface.fontWeight
+// reaches this viewer too — it is a reading surface, which is exactly where someone
+// who asked for lighter type expects it to apply.
 const DIST_STYLE = [
   // dist 0 — active
-  { opacity: 1, scale: 1, weight: 800, sizeFactor: 1.15 },
+  { opacity: 1, scale: 1, weight: 'var(--font-weight-extrabold)', sizeFactor: 1.15 },
   // dist 1
-  { opacity: 0.75, scale: 0.97, weight: 700, sizeFactor: 1.0 },
+  { opacity: 0.75, scale: 0.97, weight: 'var(--font-weight-bold)', sizeFactor: 1.0 },
   // dist 2
-  { opacity: 0.50, scale: 0.94, weight: 600, sizeFactor: 0.92 },
+  { opacity: 0.50, scale: 0.94, weight: 'var(--font-weight-semibold)', sizeFactor: 0.92 },
   // dist 3
-  { opacity: 0.30, scale: 0.91, weight: 500, sizeFactor: 0.86 },
+  { opacity: 0.30, scale: 0.91, weight: 'var(--font-weight-medium)', sizeFactor: 0.86 },
   // dist 4+
-  { opacity: 0.20, scale: 0.88, weight: 500, sizeFactor: 0.82 },
+  { opacity: 0.20, scale: 0.88, weight: 'var(--font-weight-medium)', sizeFactor: 0.82 },
 ];
 
 function getDistStyle(dist: number | null) {
@@ -294,7 +297,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
         textShadow: isActive && activeHighlight === 'glow'
           ? '0 0 20px color-mix(in srgb, var(--color-primary) 50%, transparent)'
           : undefined,
-        fontWeight: focus ? (focusStep === 0 ? 700 : 600) : weight,
+        fontWeight: focus ? (focusStep === 0 ? 'var(--font-weight-bold)' : 'var(--font-weight-semibold)') : weight,
         fontSize: focus
           ? `calc(${focus.size} * ${baseFontRem / BASE_FONT_REM.normal})`
           : `calc(${baseFontRem}rem * ${sizeFactor})`,
@@ -516,7 +519,7 @@ function SectionDivider({
         className="whitespace-nowrap uppercase"
         style={{
           fontSize: 'clamp(1.1rem, 2vw, 1.5rem)',
-          fontWeight: 900,
+          fontWeight: 'var(--font-weight-black)',
           letterSpacing: '0.14em',
           display: 'flex',
           alignItems: 'baseline',

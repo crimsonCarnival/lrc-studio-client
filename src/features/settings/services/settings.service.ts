@@ -53,6 +53,7 @@ const GET_SETTINGS = /* GraphQL */ `
       interface {
         defaultLanguage
         fontSize
+        fontWeight
         spacing
         previewAlignment
         focusMode

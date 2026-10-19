@@ -84,7 +84,10 @@ export function useAppState(user?: AuthUserType | null) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  useThemeSync(settings?.interface?.theme as string | undefined);
+  useThemeSync(
+    settings?.interface?.theme as string | undefined,
+    settings?.interface?.fontWeight as string | undefined,
+  );
 
   // ——— Lines state with undo/redo ———
   // editorMode must be declared before useHistory so getCompanion can close over it

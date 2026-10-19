@@ -84,6 +84,10 @@
           }
           if (!theme) theme = prefersDark ? 'dark' : 'light'; // brand-new user → follow OS
           var root = document.documentElement;
+          // Type weight ramp, seeded here too so the first paint is not a frame
+          // of the default weights before useThemeSync runs.
+          var weight = raw ? (JSON.parse(raw).interface || {}).fontWeight : null;
+          if (weight && weight !== 'normal') root.setAttribute('data-font-weight', weight);
           root.classList.remove('dark', 'theme-cobalt', 'theme-velvet', 'theme-sage');
           if (theme === 'light') { /* no classes */ }
           else if (theme === 'cobalt') root.classList.add('dark', 'theme-cobalt');
