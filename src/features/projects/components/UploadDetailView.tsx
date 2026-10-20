@@ -9,12 +9,14 @@ import NotFoundPage from '@/app/NotFoundPage';
 import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projectEditPath } from '../project-path';
+import { projectEditedAt } from '../project-edited-at';
 
 interface UploadProject {
   publicId: string;
   slug?: string | null;
   title?: string | null;
   updatedAt?: string | null;
+  contentUpdatedAt?: string | null;
   createdAt?: string | null;
 }
 
@@ -168,7 +170,7 @@ export default function UploadDetailView({ onBack }: { onBack: () => void }) {
                           <h4 className="text-sm font-semibold text-zinc-200 truncate group-hover:text-primary transition-colors">{project.title || t('project.untitled')}</h4>
                           <div className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1">
                             <Icon name="calendar_today" size={12} />
-                            <ClientOnlyDate date={project.updatedAt || project.createdAt} options={{ dateStyle: 'medium' }} />
+                            <ClientOnlyDate date={projectEditedAt(project)} options={{ dateStyle: 'medium' }} />
                           </div>
                         </div>
                       </div>

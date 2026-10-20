@@ -31,6 +31,7 @@ const ProjectList = ProjectListRaw;
 const EMPTY_LIST: string[] = [];
 
 import { artistFieldsFromForm, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
+import { projectEditedAt } from '@/features/projects/project-edited-at';
 
 type LibraryFilterTab = 'all' | ProjectStatus;
 const FILTER_TABS: LibraryFilterTab[] = ['all', 'inProgress', 'completed', 'notStarted'];
@@ -137,8 +138,8 @@ export default function Library({ onOpenProject }: { onOpenProject?: (publicId: 
 
   const filteredProjects = searchMatched.filter(p => filterTab === 'all' || statusOf(p) === filterTab).sort((a, b) => {
     if (sortBy === 'edited') {
-      const aTime = new Date((a.updatedAt as string) || (a.createdAt as string) || 0).getTime();
-      const bTime = new Date((b.updatedAt as string) || (b.createdAt as string) || 0).getTime();
+      const aTime = new Date(projectEditedAt(a as { contentUpdatedAt?: string; updatedAt?: string; createdAt?: string }) || 0).getTime();
+      const bTime = new Date(projectEditedAt(b as { contentUpdatedAt?: string; updatedAt?: string; createdAt?: string }) || 0).getTime();
       return bTime - aTime;
     }
     if (sortBy === 'created') {

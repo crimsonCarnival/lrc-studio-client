@@ -15,6 +15,7 @@ const GET_PROJECTS = /* GraphQL */ `
       public
       createdAt
       updatedAt
+      contentUpdatedAt
       forkedFrom {
         publicId
         userId
@@ -77,6 +78,7 @@ const GET_PROJECT = /* GraphQL */ `
       public
       createdAt
       updatedAt
+      contentUpdatedAt
       forkedFrom {
         publicId
         userId

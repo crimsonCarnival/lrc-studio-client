@@ -40,6 +40,7 @@ import type { Locale } from 'date-fns';
 import { ProfileHeader } from './ProfileHeader';
 import type { PublicUser, Project } from '@/types';
 import { connectSocket } from '@/app/socket.client';
+import { projectEditedAt } from '@/features/projects/project-edited-at';
 
 const DATE_FNS_LOCALES: Record<string, Locale> = { en: enUS, es };
 
@@ -162,7 +163,7 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
             </div>
             <div className="flex items-center justify-between gap-2 mt-2 text-xs text-zinc-400">
               <span className="font-mono">{t('profile.projectLines', { done: synced, total })}</span>
-              <span>{formatRelativeTime(project.updatedAt || project.createdAt, (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
+              <span>{formatRelativeTime(projectEditedAt(project), (i18n.resolvedLanguage || i18n.language).slice(0, 2))}</span>
             </div>
           </div>
           {/* Always-visible ⋮ — sibling of the hover-gated owner cluster above,

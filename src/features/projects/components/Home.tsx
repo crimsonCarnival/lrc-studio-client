@@ -23,6 +23,7 @@ import ProjectCard from '@/features/library/components/ProjectCard';
 import { AlmostDoneBand } from './home/AlmostDoneBand';
 import { ActivityBand } from './home/ActivityBand';
 import { FollowingBand } from './home/FollowingBand';
+import { projectEditedAt } from '../project-edited-at';
 
 // ProjectSetupModal is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,6 +51,7 @@ interface HomeProject {
   metadata?: ProjectMeta;
   createdAt?: string | number;
   updatedAt?: string | number;
+  contentUpdatedAt?: string | number | null;
   syncedLineCount?: number;
   lineCount?: number;
   public?: boolean;
@@ -136,8 +138,8 @@ export default function Home() {
 
   const filteredProjects = searchMatched.filter(p => filterTab === 'all' || statusOf(p) === filterTab).sort((a, b) => {
     if (sortBy === 'edited') {
-      const aTime = new Date(a.updatedAt || a.createdAt || 0).getTime();
-      const bTime = new Date(b.updatedAt || b.createdAt || 0).getTime();
+      const aTime = new Date(projectEditedAt(a) || 0).getTime();
+      const bTime = new Date(projectEditedAt(b) || 0).getTime();
       return bTime - aTime;
     }
     if (sortBy === 'created') {
@@ -227,7 +229,7 @@ export default function Home() {
                     </div>
                     <Tip content={`${t('home.created')} ${formatInTimezone(lastProject.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, locale)}`}>
                       <span className="shrink-0 font-mono text-xs font-medium text-subtle">
-                        {(lastProject.syncedLineCount || 0)}/{(lastProject.lineCount || 0)} · {t('home.edited')} {getRelativeTime(lastProject.updatedAt || lastProject.createdAt, t, timezone, locale)}
+                        {(lastProject.syncedLineCount || 0)}/{(lastProject.lineCount || 0)} · {t('home.edited')} {getRelativeTime(projectEditedAt(lastProject), t, timezone, locale)}
                       </span>
                     </Tip>
                   </div>

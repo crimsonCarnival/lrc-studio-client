@@ -15,6 +15,7 @@ import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/P
 import { ProjectStatusTag } from '@/features/projects/components/ProjectStatusTag';
 import { projectStatus } from '@/features/projects/project-status';
 import { projectPath, projectEditPath } from '@/features/projects/project-path';
+import { projectEditedAt } from '@/features/projects/project-edited-at';
 
 const SWIPE_THRESHOLD = 60;
 
@@ -33,6 +34,7 @@ export interface CardProject {
   public?: boolean;
   createdAt?: string | number;
   updatedAt?: string | number;
+  contentUpdatedAt?: string | number | null;
   metadata?: { genre?: string; songArtist?: string; artists?: ArtistCredit[] };
   forkedFrom?: { publicId?: string; accountName?: string };
   user?: { accountName?: string | null } | null;
@@ -276,12 +278,12 @@ function ProjectCard({
               )}
             </div>
 
-            <Tip content={formatInTimezone(project.updatedAt, timezone, {
+            <Tip content={formatInTimezone(projectEditedAt(project), timezone, {
               dateStyle: 'full',
               timeStyle: 'long'
             }, i18n?.resolvedLanguage || i18n?.language)}>
               <span className="text-[10px] text-zinc-600 mt-1 block">
-                {getRelativeTime(project.updatedAt, t, timezone, i18n?.resolvedLanguage || i18n?.language)}
+                {getRelativeTime(projectEditedAt(project), t, timezone, i18n?.resolvedLanguage || i18n?.language)}
               </span>
             </Tip>
           </div>
@@ -445,14 +447,14 @@ function ProjectCard({
               content={
                 <span className="flex flex-col gap-0.5">
                   <span>{t('home.created')} {formatInTimezone(project.createdAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}</span>
-                  {(project.updatedAt && project.updatedAt !== project.createdAt) && (
-                    <span>{t('home.edited')} {formatInTimezone(project.updatedAt, timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}</span>
+                  {(projectEditedAt(project) && projectEditedAt(project) !== project.createdAt) && (
+                    <span>{t('home.edited')} {formatInTimezone(projectEditedAt(project), timezone, { dateStyle: 'short', timeStyle: 'short' }, (i18n?.resolvedLanguage || i18n?.language || 'en').slice(0, 2))}</span>
                   )}
                 </span>
               }
             >
               <span className="ml-auto cursor-default">
-                {getRelativeTime(project.updatedAt || project.createdAt, t, timezone, i18n?.resolvedLanguage || i18n?.language)}
+                {getRelativeTime(projectEditedAt(project), t, timezone, i18n?.resolvedLanguage || i18n?.language)}
               </span>
             </Tip>
           </div>
