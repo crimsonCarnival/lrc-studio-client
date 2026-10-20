@@ -1,0 +1,9 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "LRC Studio",
+    "documentationUrl": "https://www.lrcstudio.app/guide",
+    "logoUrl": "https://www.lrcstudio.app/favicon.svg"
+  },
+  "entries": []
+}
