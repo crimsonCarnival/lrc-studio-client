@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { projects, uploads, getAccessToken, auth } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 
@@ -383,7 +384,7 @@ export function useManualSave({
 
       const performCreate = async () => {
         try {
-          const recaptchaToken = executeRecaptcha ? await executeRecaptcha('create_project').catch(err => { console.warn('reCAPTCHA failed:', err); return undefined; }) : undefined;
+          const recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'create_project');
           const res = await projects.create({ ...createData, recaptchaToken });
           const { publicId } = res;
           setForkedFrom?.(null); // Creation from guest is never a fork

@@ -38,3 +38,31 @@ export function needsRecaptchaOnArrival(pathname: string): boolean {
 export function isArmed(): boolean {
   return armed;
 }
+
+/**
+ * Runs executeRecaptcha, retrying once after a short delay.
+ *
+ * The hook reports a script as loaded (executeRecaptcha truthy) slightly before the
+ * badge's grecaptcha.render() callback assigns its real client id. Calling execute in
+ * that gap throws synchronously ("Invalid reCAPTCHA client id: ''"), which a plain
+ * `.catch()` on the call does not see since the throw happens before a promise exists.
+ * One retry covers that race; a second failure degrades to no token, same as before.
+ */
+export async function executeRecaptchaSafe(
+  executeRecaptcha: ((action: string) => Promise<string>) | undefined,
+  action: string
+): Promise<string | undefined> {
+  if (!executeRecaptcha) return undefined;
+  try {
+    return await executeRecaptcha(action);
+  } catch (err) {
+    console.warn('reCAPTCHA execute failed, retrying:', err);
+  }
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  try {
+    return await executeRecaptcha(action);
+  } catch (err) {
+    console.warn('reCAPTCHA execute failed:', err);
+    return undefined;
+  }
+}

@@ -2,6 +2,7 @@ import { useRef, useCallback, useEffect, useLayoutEffect, useState } from 'react
 import { uploads, projects, getAccessToken } from '@/app/api';
 import { flatToSections } from '@/features/editor/utils/sections';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { getSocket } from '@/app/socket.client';
@@ -274,7 +275,7 @@ export function useAutosave({
 
       const performCreate = async () => {
         try {
-          const recaptchaToken = executeRecaptcha ? await executeRecaptcha('autosave_create') : undefined;
+          const recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'autosave_create');
           const { publicId } = await projects.create({ ...createData, recaptchaToken });
           setForkedFrom?.(null); // Auto-creation from guest is never a fork
           setActivepublicId(publicId);
