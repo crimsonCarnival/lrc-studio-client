@@ -231,20 +231,30 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   // Media library state
   const [mediaUploads, setMediaUploads] = useState<UploadItem[]>([]);
   const [mediaLoading, setMediaLoading] = useState(!!getAccessToken());
+  const [uploadsFilter, setUploadsFilter] = useState('');
+  const filteredUploads = useMemo(() => {
+    const q = uploadsFilter.trim().toLowerCase();
+    if (!q) return mediaUploads;
+    return mediaUploads.filter((u) => `${u.title ?? ''} ${u.fileName ?? ''}`.toLowerCase().includes(q));
+  }, [mediaUploads, uploadsFilter]);
 
   const hasLyrics = parsedLines ? parsedLines.length > 0 : lyricsText.trim().length > 0;
   // A project must be nameable: a title, song name or artist (also what its URL slug is built from).
   const hasIdentity = hasProjectIdentity({ title: projectName, metadata: { songName, songArtist: formatArtistDisplay(artists) } });
   const canContinue = audioReady && hasLyrics && hasIdentity;
 
-  // Fetch user's media library on mount
+  // Fetch the user's media library — keyed on the user, so a session that is
+  // still being restored when this mounts loads it once sign-in lands.
+  const userId = user?.id;
   useEffect(() => {
-    if (!getAccessToken()) return;
+    if (!userId || !getAccessToken()) return;
+    let cancelled = false;
     uploadsApi.listMedia()
-      .then((uploads) => setMediaUploads((uploads as UploadItem[]) || []))
+      .then((uploads) => { if (!cancelled) setMediaUploads((uploads as UploadItem[]) || []); })
       .catch(() => { })
-      .finally(() => setMediaLoading(false));
-  }, []);
+      .finally(() => { if (!cancelled) setMediaLoading(false); });
+    return () => { cancelled = true; };
+  }, [userId]);
 
   // Fetch music library for artist/album autofill
   useEffect(() => {
@@ -371,16 +381,29 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const handleSelectUploadRef = useRef(handleSelectUpload);
   useLayoutEffect(() => { handleSelectUploadRef.current = handleSelectUpload; });
 
-  // Arriving from the uploads library ("Create project"): preselect that upload once the list is in.
+  // Arriving from the uploads library ("Create project"): preselect that upload.
+  // The list only holds the 50 most recent uploads, so one that is not in it
+  // once loaded is fetched on its own instead of being silently dropped.
   const requestedUploadId = (location.state as { uploadId?: string } | null)?.uploadId;
   const requestedUploadAppliedRef = useRef(false);
   useEffect(() => {
-    if (!requestedUploadId || requestedUploadAppliedRef.current) return;
-    const upload = mediaUploads.find((u) => u.id === requestedUploadId);
-    if (!upload) return;
+    if (!requestedUploadId || requestedUploadAppliedRef.current || mediaLoading || !userId) return;
     requestedUploadAppliedRef.current = true;
-    handleSelectUploadRef.current(upload);
-  }, [requestedUploadId, mediaUploads]);
+    const apply = (upload: UploadItem) => {
+      setRightTab('media');
+      setAudioState({ tab: 'library' });
+      handleSelectUploadRef.current(upload);
+    };
+    const listed = mediaUploads.find((u) => u.id === requestedUploadId);
+    if (listed) { apply(listed); return; }
+    uploadsApi.getMedia(requestedUploadId)
+      .then(({ upload }) => {
+        if (!upload) { toast.error(t('setup.uploadNotFound')); return; }
+        setMediaUploads((prev) => (prev.some((u) => u.id === upload.id) ? prev : [upload as UploadItem, ...prev]));
+        apply(upload as UploadItem);
+      })
+      .catch(() => toast.error(t('setup.uploadNotFound')));
+  }, [requestedUploadId, mediaUploads, mediaLoading, userId, setAudioState, t]);
 
   const handleDeleteUpload = async (uploadId: string) => {
     try {
@@ -611,9 +634,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   title={projectName}
                   onApply={(cleaned, featured) => setMetadataState((prev) => ({ name: cleaned, artists: mergeCredits(prev.artists, featured) }))}
                 />
-                <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
-                  onChange={(e) => setMetadataState({ songName: e.target.value })}
-                  maxLength={500} />
                 <p
                   id="project-identity-hint"
                   className={`text-xs ${audioReady && hasLyrics && !hasIdentity ? 'text-love' : 'text-zinc-500'}`}
@@ -637,28 +657,37 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
               </div>
             </div>
 
-            {/* Artists: primary and featured credits, with parsing, review and autocomplete. */}
+            {/* Song name + primary artist are what the lookup needs, so the
+                button sits directly under them instead of after the featured
+                field, where it read as unrelated to the inputs it uses. */}
             <div className="shrink-0 flex flex-col gap-3">
-              <ArtistsSection ref={artistsRef} idPrefix="setup-artists" value={artists} onChange={(next) => setMetadataState({ artists: next })} />
+              <FloatingInput id="song-name" type="text" label={t('setup.songName')} value={songName}
+                onChange={(e) => setMetadataState({ songName: e.target.value })}
+                maxLength={500} />
+              <ArtistsSection
+                ref={artistsRef}
+                idPrefix="setup-artists"
+                value={artists}
+                onChange={(next) => setMetadataState({ artists: next })}
+                afterPrimary={(
+                  <Tip content={songName.trim() && primaryText.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')}>
+                    {/* span keeps the tooltip working while the button is disabled */}
+                    <span className="block">
+                      <Button
+                        type="button"
+                        variant="sync"
+                        onClick={handleFetchSongInfo}
+                        disabled={metaSearching || !songName.trim() || !primaryText.trim()}
+                        className="w-full h-10 coarse:h-12 gap-2 justify-center font-semibold rounded-xl"
+                      >
+                        {metaSearching ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
+                        {t('setup.fetchInfo')}
+                      </Button>
+                    </span>
+                  </Tip>
+                )}
+              />
             </div>
-
-            {/* Autofill. It sits below song name + artist because it needs both;
-                promoting it above them would only show a disabled control. */}
-            <Tip content={songName.trim() && primaryText.trim() ? t('setup.fetchSongInfo') : t('setup.fetchInfoNeedsFields')}>
-              {/* span keeps the tooltip working while the button is disabled */}
-              <span className="block shrink-0">
-                <Button
-                  type="button"
-                  variant="sync"
-                  onClick={handleFetchSongInfo}
-                  disabled={metaSearching || !songName.trim() || !primaryText.trim()}
-                  className="w-full h-10 coarse:h-12 gap-2 justify-center font-semibold rounded-xl"
-                >
-                  {metaSearching ? <LogoLoader size={16} /> : <Icon name="search" size={16} />}
-                  {t('setup.fetchInfo')}
-                </Button>
-              </span>
-            </Tip>
 
             {/* Singers — the song-level roster offered when tagging sections/lines */}
             <div className="shrink-0">
@@ -783,6 +812,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                   {[
                     { id: 'youtube', label: t('setup.tabYoutube') },
                     { id: 'local',   label: t('setup.tabLocal') },
+                    // Signed-in only: guests have no stored uploads to pick from.
+                    ...(user ? [{ id: 'library', label: t('setup.tabUploads') }] : []),
                   ].map(tab => (
                     <button
                       key={tab.id}
@@ -908,15 +939,47 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                           </p>
                         )}
 
-                        {/* Media library */}
+                        {/* Recent media — the full list lives in the "Your uploads" tab */}
                         <MediaLibrary
                           loading={mediaLoading}
                           uploads={mediaUploads as ComponentProps<typeof MediaLibrary>['uploads']}
                           onSelect={handleSelectUpload as ComponentProps<typeof MediaLibrary>['onSelect']}
                           onDelete={handleDeleteUpload}
-                          onShowAll={onShowAllUploads}
+                          onShowAll={() => setAudioState({ tab: 'library' })}
                           selectedId={selectedUpload?.id}
                         />
+                      </div>
+                    )}
+
+                    {audioTab === 'library' && (
+                      <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
+                        {mediaUploads.length > 5 && (
+                          <FloatingInput
+                            id="setup-uploads-filter"
+                            type="search"
+                            label={t('setup.uploadsFilter')}
+                            value={uploadsFilter}
+                            onChange={(e) => setUploadsFilter(e.target.value)}
+                            className="shrink-0"
+                          />
+                        )}
+                        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin pr-0.5">
+                          {!mediaLoading && mediaUploads.length === 0 ? (
+                            <p className="text-xs text-zinc-500 text-center py-8">{t('setup.yourMediaEmpty')}</p>
+                          ) : !mediaLoading && filteredUploads.length === 0 ? (
+                            <p className="text-xs text-zinc-500 text-center py-8">{t('setup.uploadsNoMatch')}</p>
+                          ) : (
+                            <MediaLibrary
+                              loading={mediaLoading}
+                              uploads={filteredUploads as ComponentProps<typeof MediaLibrary>['uploads']}
+                              onSelect={handleSelectUpload as ComponentProps<typeof MediaLibrary>['onSelect']}
+                              onDelete={handleDeleteUpload}
+                              onShowAll={onShowAllUploads}
+                              selectedId={selectedUpload?.id}
+                              limit={null}
+                            />
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

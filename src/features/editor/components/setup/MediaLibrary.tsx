@@ -18,6 +18,8 @@ interface MediaLibraryProps {
   onDelete: (id: string) => void;
   onShowAll?: () => void;
   selectedId?: string | null;
+  /** How many uploads to show; null shows them all. */
+  limit?: number | null;
 }
 
 export default function MediaLibrary({
@@ -26,7 +28,8 @@ export default function MediaLibrary({
   onSelect,
   onDelete,
   onShowAll,
-  selectedId
+  selectedId,
+  limit = 4,
 }: MediaLibraryProps) {
   const { t } = useTranslation();
 
@@ -36,7 +39,7 @@ export default function MediaLibrary({
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{t('setup.yourMedia')}</span>
-        {!loading && uploads.length > 4 && onShowAll && (
+        {!loading && limit != null && uploads.length > limit && onShowAll && (
           <Button
             variant="link"
             size={null}
@@ -56,7 +59,7 @@ export default function MediaLibrary({
             <SkeletonMediaItem className="size-7" />
           </>
         ) : (
-          uploads.slice(0, 4).map((upload) => (
+          (limit == null ? uploads : uploads.slice(0, limit)).map((upload) => (
             <div
               key={upload.id}
               role="button"
