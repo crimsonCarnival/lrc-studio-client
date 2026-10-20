@@ -253,6 +253,10 @@ export default {
   blockSuccess: "Blocked {{name}}",
   blockError: "Could not block. Try again.",
   unblockError: "Could not unblock. Try again.",
+  blocked: {
+    title: "You blocked @{{name}}",
+    body: "You won't see their projects, lists, badges or activity anywhere, and they can't see yours.",
+  },
   mini: {
     cardLabel: "Quick profile of {{name}}",
     loading: "Loading profile",

@@ -39,6 +39,7 @@ export function useProfile(accountName: string | undefined, asVisitor: boolean) 
     // The server answers null for a missing, deleted, banned or blocking user.
     notFound: query.isError || query.data === null,
     setProfile,
+    refetch: query.refetch,
   };
 }
 

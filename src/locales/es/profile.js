@@ -252,6 +252,10 @@ export default {
   blockSuccess: "Bloqueaste a {{name}}",
   blockError: "No se pudo bloquear. Inténtalo de nuevo.",
   unblockError: "No se pudo desbloquear. Inténtalo de nuevo.",
+  blocked: {
+    title: "Bloqueaste a @{{name}}",
+    body: "No verás sus proyectos, listas, insignias ni actividad en ningún lugar, y esa persona no podrá ver los tuyos.",
+  },
   mini: {
     cardLabel: "Perfil rápido de {{name}}",
     loading: "Cargando perfil",
