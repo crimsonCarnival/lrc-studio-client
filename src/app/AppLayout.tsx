@@ -243,7 +243,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           <GuidedTour steps={EDITOR_TOUR_STEPS} isOpen={isTourOpen} onClose={closeTour} />
 
           <div
-            className={`relative z-base flex-1 min-h-0 ${isFullWidthPage ? 'px-0' : 'px-0 lg:px-6'} flex flex-col transition-[padding] duration-500 ease-in-out
+            className={`relative z-base flex-1 min-h-0 flex flex-col transition-[padding] duration-500 ease-in-out
             ${location.pathname === '/' ? 'pt-14'
                 : isPublicProjectView ? 'pt-14 lg:pt-0'
                   : 'pt-14 lg:pt-16'
@@ -272,7 +272,10 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
               ...(dynamicPb && !isPublicProjectView ? { paddingBottom: dynamicPb } : {}),
             }}
           >
-            <div className={`${isFullWidthPage ? 'w-full' : 'max-w-[1600px] mx-auto w-full'} flex-1 flex flex-col min-h-0`}>
+            {/* Full width on every route: pages scroll in their own container and
+                centre their content inside it, so a cap or side padding here would
+                leave gutters that are outside every scroller and ignore the wheel. */}
+            <div className="w-full flex-1 flex flex-col min-h-0">
               {children}
             </div>
           </div>
