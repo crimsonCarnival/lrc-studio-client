@@ -1,5 +1,5 @@
 import { useEffect, useImperativeHandle, useRef, useState } from 'react';
-import type { Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 import type { ArtistCredit } from '@/shared/utils/artists';
 import { ArtistApplyStep } from './ArtistApplyStep';
 import { ArtistImportReview } from './ArtistImportReview';
@@ -19,6 +19,8 @@ interface ArtistsSectionProps {
   onChange: (next: ArtistCredit[]) => void;
   idPrefix: string;
   ref?: Ref<ArtistsSectionHandle>;
+  /** Passed through to ArtistsInput: rendered between the Primary and Featured fields. */
+  afterPrimary?: ReactNode;
 }
 
 /**
@@ -26,7 +28,7 @@ interface ArtistsSectionProps {
  * search, imported file), each confirmed before it is applied. A form drops this in and drives
  * it through the ref; the form itself only has to keep the `value`.
  */
-export function ArtistsSection({ value, onChange, idPrefix, ref }: ArtistsSectionProps) {
+export function ArtistsSection({ value, onChange, idPrefix, ref, afterPrimary }: ArtistsSectionProps) {
   const importer = useArtistImport();
   const [offered, setOffered] = useState<{ title: string; artist: string; variant: 'apply' | 'import' } | null>(null);
   // Async results (a lookup) must merge into what is there when they arrive, not when they were asked for.
@@ -45,7 +47,7 @@ export function ArtistsSection({ value, onChange, idPrefix, ref }: ArtistsSectio
 
   return (
     <div className="flex flex-col gap-3">
-      <ArtistsInput idPrefix={idPrefix} value={value} onChange={onChange} />
+      <ArtistsInput idPrefix={idPrefix} value={value} onChange={onChange} afterPrimary={afterPrimary} />
       <ArtistImportReview importer={importer} />
       {offered && (
         <ArtistApplyStep

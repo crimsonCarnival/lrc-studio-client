@@ -1,5 +1,5 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import type { ClipboardEvent, DragEvent, KeyboardEvent } from 'react';
+import type { ClipboardEvent, DragEvent, KeyboardEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { cn } from '@/shared/utils/utils';
@@ -17,6 +17,8 @@ interface ArtistsInputProps {
   /** Prefix for element ids, so two inputs on one page do not collide. */
   idPrefix?: string;
   className?: string;
+  /** Rendered between the Primary and Featured fields (e.g. an action that needs the primary artist). */
+  afterPrimary?: ReactNode;
 }
 
 /** Text that is more than one name or carries a marker: parsed instead of added as a single chip. */
@@ -28,7 +30,7 @@ const NEEDS_PARSING = /[,&×]|\s(?:and|x)\s|(?:^|\s)(?:feat\.?|ft\.?|featuring)(
  * parser (so `A, B & C` and `A feat. B` become chips) and anything doubtful goes to a review
  * before it is applied. Names the user has credited before are suggested while typing.
  */
-export function ArtistsInput({ value, onChange, idPrefix, className }: ArtistsInputProps) {
+export function ArtistsInput({ value, onChange, idPrefix, className, afterPrimary }: ArtistsInputProps) {
   const { t } = useTranslation();
   const tr = t as (k: string, o?: object) => string;
   const autoId = useId();
@@ -97,6 +99,7 @@ export function ArtistsInput({ value, onChange, idPrefix, className }: ArtistsIn
   return (
     <div className={cn('flex flex-col gap-3', className)}>
       {field('primary')}
+      {afterPrimary}
       {field('featured')}
 
       {atLimit && <p className="text-xs text-subtle">{tr('artists.limit', { max: ARTIST_LIMITS.maxArtists })}</p>}
