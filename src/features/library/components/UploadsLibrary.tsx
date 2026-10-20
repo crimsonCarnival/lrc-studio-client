@@ -411,121 +411,124 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
   ));
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto pt-8 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full settings-scroll">
-      <LibrarySwitch active="uploads" />
+    <div className="h-full overflow-y-auto settings-scroll">
+      {/* The scroller spans the full width so the gutters beside the centred content scroll it too. */}
+      <div className="flex flex-col pt-8 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <LibrarySwitch active="uploads" />
 
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-7">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-100 tracking-tight">{t('uploads.title')}</h1>
-          <p className="text-[15px] text-zinc-400 mt-2">
-            {!loading && t('uploads.stats', { total: counts.all, used: counts.all - counts.unused, unused: counts.unused })}
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mt-7">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-100 tracking-tight">{t('uploads.title')}</h1>
+            <p className="text-[15px] text-zinc-400 mt-2">
+              {!loading && t('uploads.stats', { total: counts.all, used: counts.all - counts.unused, unused: counts.unused })}
+            </p>
+          </div>
+          <div className="flex gap-2.5 flex-wrap">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate('/project/new')}
+              className="h-11 px-4 text-[15px] lg:h-11 lg:px-4 lg:text-[15px]"
+            >
+              <Icon name="link" size={18} />
+              {t('uploads.fromLink')}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => navigate('/project/new')}
+              className="h-11 px-5 text-[15px] lg:h-11 lg:px-5 lg:text-[15px]"
+            >
+              <Icon name="upload" size={18} />
+              {t('uploads.uploadAudio')}
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2.5 flex-wrap">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate('/project/new')}
-            className="h-11 px-4 text-[15px] lg:h-11 lg:px-4 lg:text-[15px]"
-          >
-            <Icon name="link" size={18} />
-            {t('uploads.fromLink')}
-          </Button>
-          <Button
-            type="button"
-            onClick={() => navigate('/project/new')}
-            className="h-11 px-5 text-[15px] lg:h-11 lg:px-5 lg:text-[15px]"
-          >
-            <Icon name="upload" size={18} />
-            {t('uploads.uploadAudio')}
-          </Button>
-        </div>
-      </div>
 
-      {!loading && !error && items.length > 0 && (
-        <div className="flex items-center justify-between gap-4 flex-wrap mt-8 pb-3.5 border-b border-zinc-800">
-          <div role="tablist" aria-label={t('uploads.filterLabel')} className="flex gap-1.5 flex-wrap">{filterTabs}</div>
-          <div className="flex gap-2.5 items-center flex-wrap">
-            <SearchField
-              compact
-              label={t('uploads.searchLabel')}
-              placeholder={t('uploads.searchPlaceholder')}
-              value={query}
-              onValueChange={setQuery}
-              clearLabel={t('common.clear')}
-              className="w-60 max-w-full"
-            />
-            <div className="relative flex items-center h-10 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-100">
-              <Icon name="sort" size={16} className="absolute left-3 pointer-events-none text-zinc-400" />
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as SortId)}
-                aria-label={t('uploads.sort.recent')}
-                className="appearance-none bg-transparent h-full pl-9 pr-4 text-sm outline-none cursor-pointer"
-              >
-                {(['recent', 'oldest', 'title'] as SortId[]).map((id) => (
-                  <option key={id} value={id} className="bg-zinc-900">{t(`uploads.sort.${id}`)}</option>
+        {!loading && !error && items.length > 0 && (
+          <div className="flex items-center justify-between gap-4 flex-wrap mt-8 pb-3.5 border-b border-zinc-800">
+            <div role="tablist" aria-label={t('uploads.filterLabel')} className="flex gap-1.5 flex-wrap">{filterTabs}</div>
+            <div className="flex gap-2.5 items-center flex-wrap">
+              <SearchField
+                compact
+                label={t('uploads.searchLabel')}
+                placeholder={t('uploads.searchPlaceholder')}
+                value={query}
+                onValueChange={setQuery}
+                clearLabel={t('common.clear')}
+                className="w-60 max-w-full"
+              />
+              <div className="relative flex items-center h-10 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-100">
+                <Icon name="sort" size={16} className="absolute left-3 pointer-events-none text-zinc-400" />
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortId)}
+                  aria-label={t('uploads.sort.recent')}
+                  className="appearance-none bg-transparent h-full pl-9 pr-4 text-sm outline-none cursor-pointer"
+                >
+                  {(['recent', 'oldest', 'title'] as SortId[]).map((id) => (
+                    <option key={id} value={id} className="bg-zinc-900">{t(`uploads.sort.${id}`)}</option>
+                  ))}
+                </select>
+              </div>
+              <SegmentedControl<ViewId>
+                label={t('uploads.gridView')}
+                value={view}
+                onChange={setView}
+                options={[
+                  { value: 'grid', label: <Icon name="grid_view" size={18} />, ariaLabel: t('uploads.gridView') },
+                  { value: 'list', label: <Icon name="view_list" size={18} />, ariaLabel: t('uploads.listView') },
+                ]}
+              />
+            </div>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <LoadingSpinner size="md" />
+          </div>
+        ) : error ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
+            <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
+              <Icon name="error" size={28} className="text-zinc-500" />
+            </div>
+            <p className="text-sm text-zinc-400 font-medium">{t('common.loadError')}</p>
+            <Button variant="link" size={null} onClick={fetchUploads} className="text-xs">
+              {t('common.retry')}
+            </Button>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
+            <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
+              <Icon name="music_note" size={28} className="text-zinc-500" />
+            </div>
+            <p className="text-sm text-zinc-400 font-medium">{dt('uploads.empty')}</p>
+            <p className="text-xs text-zinc-500">{dt('uploads.emptyHint')}</p>
+          </div>
+        ) : shown.length === 0 ? (
+          <div className="mt-7 py-14 px-6 text-center border border-dashed border-zinc-700 rounded-2xl text-zinc-400">
+            {t('uploads.noResults')}
+          </div>
+        ) : view === 'grid' ? (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 mt-7">
+            {shown.map(renderCard)}
+          </div>
+        ) : (
+          <div className="mt-5 border border-zinc-800 rounded-2xl overflow-x-auto bg-zinc-900">
+            <div role="table" aria-label={t('uploads.title')} className="min-w-[760px]">
+              <div role="row" className={cn(ROW_GRID, 'py-3 border-b border-zinc-800 text-xs font-semibold uppercase tracking-wider text-zinc-400')}>
+                <span role="columnheader" />
+                {(['title', 'source', 'duration', 'project', 'uploaded'] as const).map((c) => (
+                  <span key={c} role="columnheader">{t(`uploads.columns.${c}`)}</span>
                 ))}
-              </select>
+                <span role="columnheader" />
+              </div>
+              {shown.map(renderRow)}
             </div>
-            <SegmentedControl<ViewId>
-              label={t('uploads.gridView')}
-              value={view}
-              onChange={setView}
-              options={[
-                { value: 'grid', label: <Icon name="grid_view" size={18} />, ariaLabel: t('uploads.gridView') },
-                { value: 'list', label: <Icon name="view_list" size={18} />, ariaLabel: t('uploads.listView') },
-              ]}
-            />
           </div>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <LoadingSpinner size="md" />
-        </div>
-      ) : error ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
-          <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
-            <Icon name="error" size={28} className="text-zinc-500" />
-          </div>
-          <p className="text-sm text-zinc-400 font-medium">{t('common.loadError')}</p>
-          <Button variant="link" size={null} onClick={fetchUploads} className="text-xs">
-            {t('common.retry')}
-          </Button>
-        </div>
-      ) : items.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
-          <div className="size-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center">
-            <Icon name="music_note" size={28} className="text-zinc-500" />
-          </div>
-          <p className="text-sm text-zinc-400 font-medium">{dt('uploads.empty')}</p>
-          <p className="text-xs text-zinc-500">{dt('uploads.emptyHint')}</p>
-        </div>
-      ) : shown.length === 0 ? (
-        <div className="mt-7 py-14 px-6 text-center border border-dashed border-zinc-700 rounded-2xl text-zinc-400">
-          {t('uploads.noResults')}
-        </div>
-      ) : view === 'grid' ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-5 mt-7">
-          {shown.map(renderCard)}
-        </div>
-      ) : (
-        <div className="mt-5 border border-zinc-800 rounded-2xl overflow-x-auto bg-zinc-900">
-          <div role="table" aria-label={t('uploads.title')} className="min-w-[760px]">
-            <div role="row" className={cn(ROW_GRID, 'py-3 border-b border-zinc-800 text-xs font-semibold uppercase tracking-wider text-zinc-400')}>
-              <span role="columnheader" />
-              {(['title', 'source', 'duration', 'project', 'uploaded'] as const).map((c) => (
-                <span key={c} role="columnheader">{t(`uploads.columns.${c}`)}</span>
-              ))}
-              <span role="columnheader" />
-            </div>
-            {shown.map(renderRow)}
-          </div>
-        </div>
-      )}
-      {confirmModal}
+        )}
+        {confirmModal}
+      </div>
     </div>
   );
 }
