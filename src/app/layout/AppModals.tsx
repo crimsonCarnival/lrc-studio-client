@@ -5,11 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
 
 const EditorHelpModal = lazy(() => import('@features/settings/components/EditorHelpModal'));
-import ProjectSetupModalRaw from '@features/editor/components/setup/ProjectSetupModal';
-
-// ProjectSetupModal is still untyped JS; cast until it is migrated.
+// Was a static import: AppModals is part of the always-mounted app shell (AppLayout),
+// so this pulled the 27 KB editor setup form into every single page's main bundle,
+// landing page included, even though it only ever renders for a logged-in editor
+// action. ProjectSetupModal is still untyped JS; cast until it is migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const ProjectSetupModal = ProjectSetupModalRaw as any;
+const ProjectSetupModal = lazy(() => import('@features/editor/components/setup/ProjectSetupModal')) as any;
 
 interface ProjectMetadata {
   description?: string;
@@ -79,27 +80,31 @@ export function AppModals({
         )}
       </Suspense>
 
-      <ProjectSetupModal
-        key={showNamingModal ? (mediaTitle || 'editing') : 'closed'}
-        isOpen={showNamingModal}
-        onClose={() => setShowNamingModal(false)}
-        onConfirm={handleProjectConfirm}
-        initialName={mediaTitle}
-        initialDescription={projectMetadata?.description}
-        initialTags={projectMetadata?.tags}
-        initialSongName={projectMetadata?.songName}
-        initialArtists={creditsOf(projectMetadata)}
-        initialSongAlbum={projectMetadata?.songAlbum}
-        initialSongYear={projectMetadata?.songYear}
-        initialGenre={projectMetadata?.genre || ''}
-        initialSingerColors={projectMetadata?.singerColors || []}
-        initialSingers={projectMetadata?.singers ?? EMPTY_SINGERS}
-        initialCoverImage={projectCoverImage || ''}
-        initialAlbumArt={''}
-        isEditing={true}
-        sourceInfo={sourceInfo}
-        songSingers={songSingers}
-      />
+      {showNamingModal && (
+        <Suspense fallback={null}>
+          <ProjectSetupModal
+            key={mediaTitle || 'editing'}
+            isOpen={showNamingModal}
+            onClose={() => setShowNamingModal(false)}
+            onConfirm={handleProjectConfirm}
+            initialName={mediaTitle}
+            initialDescription={projectMetadata?.description}
+            initialTags={projectMetadata?.tags}
+            initialSongName={projectMetadata?.songName}
+            initialArtists={creditsOf(projectMetadata)}
+            initialSongAlbum={projectMetadata?.songAlbum}
+            initialSongYear={projectMetadata?.songYear}
+            initialGenre={projectMetadata?.genre || ''}
+            initialSingerColors={projectMetadata?.singerColors || []}
+            initialSingers={projectMetadata?.singers ?? EMPTY_SINGERS}
+            initialCoverImage={projectCoverImage || ''}
+            initialAlbumArt={''}
+            isEditing={true}
+            sourceInfo={sourceInfo}
+            songSingers={songSingers}
+          />
+        </Suspense>
+      )}
 
       {pendingProject && (
         <div className="fixed inset-0 z-popover flex items-center justify-center">

@@ -106,7 +106,7 @@ export default function LandingDemo({ reducedMotion }: { reducedMotion: boolean 
                 <span className="shrink-0 w-[22px] font-mono text-xs font-semibold text-foreground/80">{i + 1}</span>
                 <span
                   className={`shrink-0 inline-flex items-center h-6 px-2.5 rounded-full border font-mono text-xs font-medium tabular-nums transition-colors ${
-                    isActive ? 'bg-primary/25 border-primary/50 text-primary' : 'bg-primary/10 border-primary/20 text-foreground/65'
+                    isActive ? 'bg-primary/25 border-primary/50 text-primary' : 'bg-primary/10 border-primary/20 text-foreground/80'
                   }`}
                 >
                   {formatStamp(line.t)}

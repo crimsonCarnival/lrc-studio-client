@@ -167,6 +167,7 @@ export const ICON_CODEPOINTS: Record<string, string> = {
   volume_mute: '\u{e04e}',
   volume_off: '\u{e04f}',
   volume_up: '\u{e050}',
+  window: '\u{f088}',
   zoom_in: '\u{e8ff}',
   zoom_out: '\u{e900}',
 };

@@ -1,7 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { isAdminHost } from '@/shared/utils/host';
 import type { Dispatch, SetStateAction } from 'react';
-import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
+// Lazy: this is the only static import that pulled framer-motion (vendor-framer, ~40 KiB,
+// most of it unused on any given page) into every page load via AppHeader, which is part
+// of the always-loaded app shell. Deferring it to a dynamic import keeps vendor-framer out
+// of the eager/modulepreload graph; it still fetches immediately once this header mounts,
+// but no longer competes with the critical path for priority.
+const ScrollProgress = lazy(() =>
+  import('@/shared/ui/magicui/scroll-progress').then((m) => ({ default: m.ScrollProgress }))
+);
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
 import { useNavigate, useLocation, NavLink, Link } from 'react-router-dom';
@@ -307,7 +314,11 @@ export function AppHeader({
           </div>
         </div>
 
-        {!isProjectPage && <ScrollProgress className="absolute top-auto bottom-0 h-[2px] bg-none bg-iris" />}
+        {!isProjectPage && (
+          <Suspense fallback={null}>
+            <ScrollProgress className="absolute top-auto bottom-0 h-[2px] bg-none bg-iris" />
+          </Suspense>
+        )}
 
 
       </header>

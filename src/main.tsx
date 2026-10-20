@@ -15,7 +15,7 @@ import { Toaster } from 'react-hot-toast'
 import { AppToast } from '@ui/app-toast'
 
 import './index.css';
-import '@/app/i18n';
+import { i18nReady } from '@/app/i18n';
 import { useTranslation } from 'react-i18next';
 import { useEffect } from 'react';
 import App from '@/app/App'
@@ -265,23 +265,30 @@ if (!window.__reactRoot) {
   window.__reactRoot = createRoot(rootElement!);
 }
 
-window.__reactRoot.render(
-  <StrictMode>
-    <ErrorBoundary>
-      <RecaptchaGate>
-        <AuthProvider>
-          <LanguageSync />
-          <SpeedInsights />
-          <AppProviders>
-            <BrowserRouter>
-              <RecaptchaRouteArmer />
-              <NavigationBridge />
-              <RootRoutes />
-            </BrowserRouter>
-            <AppToaster />
-          </AppProviders>
-        </AuthProvider>
-      </RecaptchaGate>
-    </ErrorBoundary>
-  </StrictMode>,
-);
+// i18n resources for the active language are now a dynamic import (see app/i18n.ts) instead
+// of a synchronous object, so the previous guarantee — that i18n is ready before the first
+// render — needs an explicit await here. The resolved promise is the same point at which
+// init() used to finish synchronously; this changes *when* that happens, not *what* the
+// first render sees.
+i18nReady.then(() => {
+  window.__reactRoot!.render(
+    <StrictMode>
+      <ErrorBoundary>
+        <RecaptchaGate>
+          <AuthProvider>
+            <LanguageSync />
+            <SpeedInsights />
+            <AppProviders>
+              <BrowserRouter>
+                <RecaptchaRouteArmer />
+                <NavigationBridge />
+                <RootRoutes />
+              </BrowserRouter>
+              <AppToaster />
+            </AppProviders>
+          </AuthProvider>
+        </RecaptchaGate>
+      </ErrorBoundary>
+    </StrictMode>,
+  );
+});

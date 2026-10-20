@@ -211,29 +211,63 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }: SmoothWav
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    resizeCanvas();
-    measureOrigin();
-    colorsRef.current ??= readThemeColors();
+    // Deferred one frame: resizeCanvas() mutates the canvas element, and reading
+    // geometry (getBoundingClientRect / getComputedStyle) right after that in the
+    // same task forces the browser to do a synchronous full-document style+layout
+    // recalc instead of folding it into its own paint-time pass — the same forced-
+    // reflow cost the render-phase readThemeColors() fix above was chasing, just
+    // moved one tick later by running inside an effect instead of render.
+    let pendingInitRaf: number | null = requestAnimationFrame(() => {
+      pendingInitRaf = null;
+      resizeCanvas();
+      measureOrigin();
+      colorsRef.current ??= readThemeColors();
+      animateRef.current?.(0);
+    });
 
+    // Same reasoning: a theme toggle flips the class synchronously, and reading
+    // computed style in the same task as that mutation is a forced reflow again.
+    let pendingThemeRaf: number | null = null;
     const observer = new MutationObserver(() => {
-      colorsRef.current = readThemeColors();
+      if (pendingThemeRaf != null) return;
+      pendingThemeRaf = requestAnimationFrame(() => {
+        pendingThemeRaf = null;
+        colorsRef.current = readThemeColors();
+      });
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
-    const handleResize = () => { resizeCanvas(); measureOrigin(); };
-    const onScroll = () => measureOrigin();
+    let pendingResizeRaf: number | null = null;
+    const handleResize = () => {
+      if (pendingResizeRaf != null) return;
+      pendingResizeRaf = requestAnimationFrame(() => {
+        pendingResizeRaf = null;
+        resizeCanvas();
+        measureOrigin();
+      });
+    };
+    let pendingScrollRaf: number | null = null;
+    const onScroll = () => {
+      if (pendingScrollRaf != null) return;
+      pendingScrollRaf = requestAnimationFrame(() => {
+        pendingScrollRaf = null;
+        measureOrigin();
+      });
+    };
     const onMouseMove = (e: MouseEvent) => handleMouseMoveRef.current(e);
     window.addEventListener('resize', handleResize);
     window.addEventListener('scroll', onScroll, { passive: true });
     canvas.addEventListener('mousemove', onMouseMove);
-
-    animateRef.current?.(0);
 
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('scroll', onScroll);
       canvas.removeEventListener('mousemove', onMouseMove);
+      if (pendingInitRaf != null) cancelAnimationFrame(pendingInitRaf);
+      if (pendingThemeRaf != null) cancelAnimationFrame(pendingThemeRaf);
+      if (pendingResizeRaf != null) cancelAnimationFrame(pendingResizeRaf);
+      if (pendingScrollRaf != null) cancelAnimationFrame(pendingScrollRaf);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       timeRef.current = 0;
     };
