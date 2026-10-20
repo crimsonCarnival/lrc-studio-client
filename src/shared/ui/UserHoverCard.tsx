@@ -230,7 +230,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                 </div>
               )}
               <div className={cn('flex items-start gap-3.5 px-[18px] pb-3.5', profile.coverImageUrl ? '-mt-7 pt-0' : 'pt-[18px]')}>
-                <Link to={profilePath(accountName)} onClick={() => setOpen(false)} className="relative shrink-0">
+                <Link to={profilePath(accountName)} onClick={() => setOpen(false)} className={cn('relative shrink-0', profile.coverImageUrl && 'rounded-2xl ring-[3px] ring-zinc-900')}>
                   <StaffRing role={profile.staffRole} className="rounded-2xl">
                     {profile.avatarUrl ? (
                       <LazyImage src={profile.avatarUrl} alt={accountName} className="size-14 rounded-2xl object-cover" />
@@ -241,7 +241,7 @@ export function UserHoverCard({ accountName, userId, children }: UserHoverCardPr
                   {isOnline && <span title={t('common.online')} className="absolute -right-[3px] -bottom-[3px] size-3.5 rounded-full bg-emerald-400 border-[3px] border-zinc-900" />}
                 </Link>
 
-                <div className="min-w-0 flex-1">
+                <div className={cn('min-w-0 flex-1', profile.coverImageUrl && 'pt-7')}>
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Link to={profilePath(accountName)} onClick={() => setOpen(false)} className="text-[17px] font-bold leading-tight text-zinc-100 truncate hover:underline">
                       {displayName}
