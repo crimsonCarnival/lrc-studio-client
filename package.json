@@ -17,8 +17,9 @@
   "dependencies": {
     "@crimson-carnival/ds-js": "^1.0.2",
     "@fingerprintjs/fingerprintjs": "^5.2.0",
-    "@fontsource-variable/geist": "^5.2.8",
     "@fontsource-variable/noto-serif-jp": "^5.2.9",
+    "@fontsource-variable/stack-sans-notch": "^5.3.0",
+    "@fontsource/fira-sans": "^5.3.0",
     "@react-three/fiber": "^9.6.1",
     "@react-three/postprocessing": "^3.0.4",
     "@simplewebauthn/browser": "^13.3.0",

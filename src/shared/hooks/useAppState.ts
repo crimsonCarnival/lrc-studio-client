@@ -18,6 +18,8 @@ import { lyrics, projects, getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { isEditorPath } from '@/features/projects/project-path';
 import { migrateLines } from '@/shared/utils/lrc';
+import { hasCJK } from '@/shared/utils/furigana';
+import { loadCjkFont } from '@/app/cjk-font';
 import { creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
 import { sectionsToFlat } from '@/features/editor/utils/sections';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
@@ -112,6 +114,35 @@ export function useAppState(user?: AuthUserType | null) {
     getCompanion: () => editorMode,
     onRestoreCompanion: setEditorModeRaw,
   });
+
+  // ── CJK fallback face ──
+  // Noto Serif JP is not in the render-blocking stylesheet: its 124 unicode-range
+  // @font-face rules are 31 KB gzipped, which every visitor would pay before first
+  // paint to support text most of them never render. It is fetched on demand here
+  // instead (src/app/cjk-font.ts), the first time a CJK character actually appears.
+  //
+  // `lines` is the right thing to watch because it is the one state every lyric
+  // reaches — typed, pasted, imported, auto-stamped or restored from a saved project
+  // — so a single effect covers all of them.
+  //
+  // The trade-off we accepted: a Japanese lyric paints in the platform CJK face for
+  // a moment before swapping. That is a fallback flash, not tofu — every OS ships a
+  // CJK face — and a latin-only reader pays nothing at all.
+  //
+  // Cost of the scan: .some() short-circuits on the first hit, and cjkFontLoadedRef
+  // stops it running again afterwards. The surviving case is a latin-only project,
+  // where this is one cheap regex per line per edit; negligible beside the render.
+  const cjkFontLoadedRef = useRef(false);
+  useEffect(() => {
+    if (cjkFontLoadedRef.current) return;
+    // Section markers carry their text in `label` rather than `text`.
+    const hasCjkContent = lines.some(
+      (l) => hasCJK(l.text as string | undefined) || hasCJK(l.label as string | undefined),
+    );
+    if (!hasCjkContent) return;
+    cjkFontLoadedRef.current = true;
+    void loadCjkFont();
+  }, [lines]);
 
   const [syncMode, setSyncMode] = useState(true);
   const [activeLineIndex, setActiveLineIndex] = useState(0);

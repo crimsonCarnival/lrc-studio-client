@@ -1,5 +1,36 @@
 @import "tailwindcss";
-@import "@fontsource-variable/geist";
+
+/* ── Web fonts ──
+   Self-hosted via @fontsource so they are same-origin and bundled by Vite with a
+   content hash. They used to come from fonts.googleapis.com, which cost a second
+   render-blocking stylesheet (~1.4s on mobile) before any font file could even be
+   discovered: HTML → Google CSS → 11 cross-origin woff2. Now the @font-face rules
+   are already inside this stylesheet, so the files start downloading one hop earlier.
+
+   Fira Sans is not available as a variable font, so each weight the ramp below can
+   emit (400-900, see --font-weight-*) is a separate cut. 800 was missing from the old
+   Google URL, which silently synthesized font-extrabold.
+
+   Every import carries the full set of unicode-range subsets (latin, latin-ext,
+   cyrillic, greek, vietnamese, …). They are @font-face rules only — a subset is not
+   downloaded unless a character in its range is actually rendered — which is what
+   keeps non-latin lyrics working without costing a latin-only reader anything.
+
+   Noto Serif JP is deliberately NOT imported here. It ships as 124 unicode-range
+   slices, and those @font-face rules alone are 105 KB raw / 31 KB gzipped — on a
+   stylesheet that blocks the first paint for every visitor, including the vast
+   majority who never render a CJK glyph. It is loaded on demand instead; see
+   src/app/cjk-font.ts. The font-family stacks below still name it, which is inert
+   until that stylesheet arrives and then starts being used with no code change. */
+@import "@fontsource-variable/stack-sans-notch";
+@import "@fontsource/fira-sans/400.css";
+@import "@fontsource/fira-sans/400-italic.css";
+@import "@fontsource/fira-sans/500.css";
+@import "@fontsource/fira-sans/600.css";
+@import "@fontsource/fira-sans/700.css";
+@import "@fontsource/fira-sans/800.css";
+@import "@fontsource/fira-sans/900.css";
+
 @import "tw-animate-css";
 
 @import "shadcn/tailwind.css";
@@ -187,9 +218,14 @@ input:-webkit-autofill:active {
 
 @theme {
   /* ── Fonts ── */
-  --font-heading: "Stack Sans Notch", "Noto Serif JP", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Fira Sans", "Noto Serif JP", ui-sans-serif, system-ui, sans-serif;
-  --font-lyrics: "Fira Sans", "Noto Serif JP", ui-sans-serif, sans-serif;
+  /* The "Variable" suffix is not decoration: @fontsource-variable packages declare
+     their @font-face as "<Name> Variable", while Google Fonts served the same face as
+     plain "<Name>". Dropping the suffix here does not error — the name simply matches
+     nothing and the stack silently falls through to ui-sans-serif. @fontsource/fira-sans
+     is a static package, so it keeps the bare name. */
+  --font-heading: "Stack Sans Notch Variable", "Noto Serif JP Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Fira Sans", "Noto Serif JP Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-lyrics: "Fira Sans", "Noto Serif JP Variable", ui-sans-serif, sans-serif;
 
   /* ── Colors ── */
   /* Rosé Pine Moon defaults (dark theme) */

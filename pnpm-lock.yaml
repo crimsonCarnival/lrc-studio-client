@@ -14,12 +14,15 @@ importers:
       '@fingerprintjs/fingerprintjs':
         specifier: ^5.2.0
         version: 5.2.0
-      '@fontsource-variable/geist':
-        specifier: ^5.2.8
-        version: 5.2.9
       '@fontsource-variable/noto-serif-jp':
         specifier: ^5.2.9
         version: 5.2.9
+      '@fontsource-variable/stack-sans-notch':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/fira-sans':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@react-three/fiber':
         specifier: ^9.6.1
         version: 9.6.1(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(three@0.184.0)
@@ -515,11 +518,14 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@fontsource-variable/geist@5.2.9':
-    resolution: {integrity: sha512-TP+QSBG3wxKGPE33CbMy/L0Nu3qvJ6Fy81Yc4LnQ95xH+i+cfEp8fyU8/kfV14YwszxIFPhnoMTbjL71waVpyQ==}
-
   '@fontsource-variable/noto-serif-jp@5.2.9':
     resolution: {integrity: sha512-FBQiejB8H0Jifs6BzC1yD32MKwdOLk63B/Dwaefauly0b36I6kL1L3a8zre7SWETP3zfe1eP0/H6DUR96jePpg==}
+
+  '@fontsource-variable/stack-sans-notch@5.3.0':
+    resolution: {integrity: sha512-RDnrc2zMy8WEWgTp9werbgQPbQg86PIdcW6iOV3xV+C9sItFr4oJ2Ta2ir1dpSBXOxjzEFrxRPRm8EncInrVsQ==}
+
+  '@fontsource/fira-sans@5.3.0':
+    resolution: {integrity: sha512-z1SKSG7eRhm3srlb7rQ3j77QP4TP7OFxCZ4wUWhCdt+3hOF9K0AyvybpAsz6+JWNcCVV7AqC7dbOT3e67P2r5A==}
 
   '@graphql-typed-document-node/core@3.2.0':
     resolution: {integrity: sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==}
@@ -4471,9 +4477,11 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@fontsource-variable/geist@5.2.9': {}
-
   '@fontsource-variable/noto-serif-jp@5.2.9': {}
+
+  '@fontsource-variable/stack-sans-notch@5.3.0': {}
+
+  '@fontsource/fira-sans@5.3.0': {}
 
   '@graphql-typed-document-node/core@3.2.0(graphql@16.14.0)':
     dependencies:

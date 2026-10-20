@@ -62,13 +62,10 @@
       ]
     }
     </script>
-    <!-- One stylesheet request for all web fonts (was four chained CSS @imports),
-         with the connections opened early. Only the weights actually used are
-         requested; Noto Serif JP is a CJK fallback and arrives in unicode-range
-         slices, so it only downloads when such text is on screen. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Stack+Sans+Notch:wght@400..700&family=Fira+Sans:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400&family=Noto+Serif+JP:wght@400..700&display=swap" />
+    <!-- Web fonts are self-hosted (see the @fontsource imports in src/index.css), so
+         there is no font stylesheet request here and nothing to preconnect to. They
+         used to be fetched from fonts.googleapis.com, which put a second
+         render-blocking stylesheet in front of every font file. -->
     <!-- First-paint theme seed: mirrors useThemeSync so there's no dark→light flash.
          New users (no stored theme) are seeded from the OS color scheme; the in-app
          theme switcher still wins once it loads. Falls back to the html `dark` class. -->
