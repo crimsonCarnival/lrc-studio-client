@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import type { ChangeEvent, ComponentProps, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useSearchParams, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { FloatingCombobox } from '@/shared/ui/floating-combobox';
@@ -19,7 +19,7 @@ import { parseRawLyricsText } from '@/features/editor/utils/parseRawLyrics';
 import { Icon } from '@/shared/ui/Icon';
 import { useSetupContext } from '@/features/editor/SetupContext';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
-import { lyrics as lyricsApi, uploads as uploadsApi, songMetadata as songMetadataApi, getAccessToken } from '@/app/api';
+import { lyrics as lyricsApi, songMetadata as songMetadataApi, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { hasProjectIdentity } from '@/features/projects/project-path';
@@ -29,7 +29,7 @@ import { mergeCredits, primaryArtistText } from '@/features/artists/artist-credi
 import { formatArtistDisplay, primaryNames, type ArtistCredit } from '@/shared/utils/artists';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import YoutubeSearchPanel from '@features/projects/components/YoutubeSearchPanel';
-import { useYouTubeAvailability, YT_UNAVAILABLE_KEYS } from '@/features/player/hooks/useYouTubeAvailability';
+import { YT_UNAVAILABLE_KEYS } from '@/features/player/hooks/useYouTubeAvailability';
 import toast from 'react-hot-toast';
 import MediaLibrary from './MediaLibrary';
 import SingersInput from './SingersInput';
@@ -37,13 +37,11 @@ import RawLyricsSyntaxBar from './RawLyricsSyntaxBar';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
 import type { EditorLine } from '@/features/editor/services/editor.service';
+import { useSetupMedia } from '@/features/editor/hooks/useSetupMedia';
 import { LogoLoader } from '@ui/LogoLoader';
 
 const MAX_IMPORT_FILE_SIZE = 2 * 1024 * 1024;
 
-const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\//;
-const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
-const YT_PATTERN = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|watch\?.+&v=)|youtu\.be\/)([^&?/\s]{11})/;
 
 // Typed i18next rejects arbitrary string keys.
 type TkFn = (k: string) => string;
@@ -133,7 +131,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const { t } = useTranslation();
   const { user } = useAuthContext();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
   const prefill = (location.state as { prefill?: Prefill } | null)?.prefill || null;
   const { step, setStep } = useSetupContext();
   const reducedMotion = useReducedMotion();
@@ -153,27 +150,37 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     return () => setStep(1);
   }, [setStep]);
 
-  const audioInputRef = useRef<HTMLInputElement | null>(null);
   const lyricsInputRef = useRef<HTMLInputElement | null>(null);
   const lyricsTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const projectNameInputRef = useRef<HTMLInputElement | null>(null);
-  const autoLoadPendingRef = useRef(false);
 
   useEffect(() => {
     // autoFocus removed as requested
   }, [step]);
 
-  const [initialPendingYtUrl] = useState(() => sessionStorage.getItem('pendingYtUrl'));
-
-  // Consolidated state for Step 1 & 2
-  const [audio, setAudio] = useState<AudioState>(() => ({
-    ready: false,
-    name: '',
-    tab: 'youtube',
-    source: null,
-    ytUrl: initialPendingYtUrl || '',
-    selectedUpload: null,
-  }));
+  // Audio state, the media library and every path that reaches the player live in
+  // useSetupMedia — the one state group here that is genuinely its own (see that file).
+  const revealMediaPanel = useCallback(() => setRightTab('media'), []);
+  const {
+    audio,
+    setAudioState,
+    audioInputRef,
+    mediaUploads,
+    mediaLoading,
+    filteredUploads,
+    uploadsFilter,
+    setUploadsFilter,
+    detectedUrlType,
+    ytCheck,
+    ytLoading,
+    clearYtCheck,
+    loadYouTubeVerified,
+    handleAudioFile,
+    handleLoadUrl,
+    handleSelectUpload,
+    handleDeleteUpload,
+    handleYtKeyDown,
+  } = useSetupMedia({ playerRef, userId: user?.id, onPreselectUpload: revealMediaPanel });
 
   const [lyrics, setLyrics] = useState<LyricsState>(() => {
     if (prefill?.lines?.length) {
@@ -229,7 +236,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const primaryText = primaryArtistText(artists);
 
   // State setters
-  const setAudioState = useCallback((val: Partial<AudioState> | ((p: AudioState) => Partial<AudioState>)) => setAudio(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
   const setLyricsState = useCallback((val: Partial<LyricsState> | ((p: LyricsState) => Partial<LyricsState>)) => setLyrics(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
   const setMetadataState = useCallback((val: Partial<MetadataState> | ((p: MetadataState) => Partial<MetadataState>)) => setMetadata(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
 
@@ -257,47 +263,16 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
 
 
-  // Media library state
-  const [mediaUploads, setMediaUploads] = useState<UploadItem[]>([]);
-  const [mediaLoading, setMediaLoading] = useState(!!getAccessToken());
-  const [uploadsFilter, setUploadsFilter] = useState('');
-  const filteredUploads = useMemo(() => {
-    const q = uploadsFilter.trim().toLowerCase();
-    if (!q) return mediaUploads;
-    return mediaUploads.filter((u) => `${u.title ?? ''} ${u.fileName ?? ''}`.toLowerCase().includes(q));
-  }, [mediaUploads, uploadsFilter]);
-
   const hasLyrics = parsedLines ? parsedLines.length > 0 : lyricsText.trim().length > 0;
   // A project must be nameable: a title, song name or artist (also what its URL slug is built from).
   const hasIdentity = hasProjectIdentity({ title: projectName, metadata: { songName, songArtist: formatArtistDisplay(artists) } });
   const canContinue = audioReady && hasLyrics && hasIdentity;
-
-  // Fetch the user's media library — keyed on the user, so a session that is
-  // still being restored when this mounts loads it once sign-in lands.
-  const userId = user?.id;
-  useEffect(() => {
-    if (!userId || !getAccessToken()) return;
-    let cancelled = false;
-    uploadsApi.listMedia()
-      .then((uploads) => { if (!cancelled) setMediaUploads((uploads as UploadItem[]) || []); })
-      .catch(() => { })
-      .finally(() => { if (!cancelled) setMediaLoading(false); });
-    return () => { cancelled = true; };
-  }, [userId]);
 
   // Fetch music library for artist/album autofill
   useEffect(() => {
     if (!getAccessToken()) return;
     getMyMusicLibrary().then((lib) => setMusicLibrary(lib as MusicEntry[])).catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (initialPendingYtUrl) {
-      autoLoadPendingRef.current = true;
-      sessionStorage.removeItem('pendingYtUrl');
-      sessionStorage.removeItem('pendingYtTitle');
-    }
-  }, [initialPendingYtUrl]);
 
   // Sync project name to audio name if empty when reaching step 2
   const prevStepRef = useRef(step);
@@ -311,142 +286,6 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     }
   }, [step, projectName, audioName, t, setMetadataState]);
 
-  const saveUploadRecord = useCallback(async (data: Record<string, unknown>) => {
-    if (!getAccessToken()) return;
-    try {
-      await uploadsApi.saveMedia(data as Parameters<typeof uploadsApi.saveMedia>[0]);
-      const uploads = await uploadsApi.listMedia();
-      setMediaUploads((uploads as UploadItem[]) || []);
-    } catch { /* ignore */ }
-  }, []);
-
-  // ── URL / pattern helpers ──
-
-  const detectedUrlType = (() => {
-    const v = ytUrl.trim().split(/\s+/)[0];
-    if (!v) return 'none';
-    if (CDN_PATTERN.test(v) || AUDIO_URL_PATTERN.test(v)) return 'cdn';
-    if (YT_PATTERN.test(v) || v.length === 11) return 'youtube';
-    return 'unknown';
-  })();
-
-  // ── YouTube availability ──
-  // The editor plays through the IFrame API, so private / removed / non-embeddable
-  // videos are unusable: verify before marking the audio ready (which gates Continue).
-  const { check: ytCheck, verify: verifyYouTube, reset: clearYtCheck } = useYouTubeAvailability();
-  const ytLoading = ytCheck.state === 'checking';
-
-  const loadYouTubeVerified = useCallback(async (videoId: string, url: string, onReady: Partial<AudioState>) => {
-    if (await verifyYouTube(videoId) !== 'playable') return; // blocked, or superseded by a newer selection
-    playerRef?.current?.loadYouTube?.(url);
-    setAudioState({ ready: true, source: 'youtube', selectedUpload: null, ...onReady });
-  }, [verifyYouTube, playerRef, setAudioState]);
-
-  // ── Audio handlers ──
-
-  const handleAudioFile = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('audio/')) {
-      toast.error(t('setup.invalidAudioType'));
-      if (audioInputRef.current) audioInputRef.current.value = '';
-      return;
-    }
-    if (playerRef?.current?.loadLocalAudio) playerRef.current.loadLocalAudio(file);
-    setAudioState({ ready: true, name: file.name, source: 'local', selectedUpload: null });
-  };
-
-  const handleLoadUrl = useCallback(async () => {
-    const trimmed = ytUrl.trim().split(/\s+/)[0];
-    if (!trimmed) return;
-
-    if (detectedUrlType === 'cdn') {
-      const pathOnly = trimmed.split('?')[0].split('#')[0];
-      const lastSegment = pathOnly.split('/').pop() || 'audio';
-      const dotIdx = lastSegment.lastIndexOf('.');
-      const rawName = dotIdx > 0 ? lastSegment.slice(0, dotIdx) : lastSegment;
-      const ext = dotIdx > 0 ? lastSegment.slice(dotIdx + 1).toLowerCase() : 'mp4';
-      const title = rawName.length > 30 ? 'Cloud Audio' : rawName;
-      if (playerRef?.current?.loadFromUrl) playerRef.current.loadFromUrl(trimmed, title);
-      setAudioState({ ready: true, name: title, source: 'cloud', selectedUpload: null });
-      saveUploadRecord({ source: 'cloudinary', uploadUrl: trimmed, fileName: `${rawName}.${ext}`, title });
-      return;
-    }
-
-    const videoId = trimmed.match(YT_PATTERN)?.[1] || (trimmed.length === 11 ? trimmed : null);
-    if (!videoId) { toast.error(t('player.invalidUrl')); return; }
-
-    loadYouTubeVerified(videoId, trimmed, { name: t('setup.youtubeVideo'), ytUrl: '' });
-  }, [ytUrl, detectedUrlType, playerRef, setAudioState, saveUploadRecord, loadYouTubeVerified, t]);
-
-  const handleLoadUrlRef = useRef(handleLoadUrl);
-  useLayoutEffect(() => { handleLoadUrlRef.current = handleLoadUrl; });
-
-  useEffect(() => {
-    if (autoLoadPendingRef.current && ytUrl) {
-      autoLoadPendingRef.current = false;
-      const timer = setTimeout(() => handleLoadUrlRef.current(), 0);
-      return () => clearTimeout(timer);
-    }
-  }, [ytUrl]);
-
-  const handleSelectUpload = (upload: UploadItem) => {
-    clearYtCheck();
-    setAudioState({
-      selectedUpload: upload,
-      name: upload.title || upload.fileName || 'Media',
-      ready: true,
-      source: upload.source === 'youtube' ? 'youtube' : 'cloud',
-    });
-
-    if (upload.source === 'youtube' && upload.uploadUrl) {
-      setAudioState({ ytUrl: upload.uploadUrl });
-      playerRef?.current?.loadYouTube?.(upload.uploadUrl);
-    } else if (upload.source === 'cloudinary' && upload.uploadUrl) {
-      playerRef?.current?.loadFromUrl?.(upload.uploadUrl, upload.title || upload.fileName);
-    }
-  };
-
-  const handleSelectUploadRef = useRef(handleSelectUpload);
-  useLayoutEffect(() => { handleSelectUploadRef.current = handleSelectUpload; });
-
-  // Arriving from the uploads library ("Create project"): preselect that upload.
-  // `?uploadId=` is the carrier — history state does not survive the app's
-  // state reset on entering this route, nor a reload of the setup page.
-  const requestedUploadId = searchParams.get('uploadId')
-    || (location.state as { uploadId?: string } | null)?.uploadId
-    || null;
-  const requestedUploadAppliedRef = useRef(false);
-  useEffect(() => {
-    // Waits for the media list to settle: the by-id fetch below is the fallback
-    // for an upload outside the 50 most recent, not a race against the list.
-    if (!requestedUploadId || requestedUploadAppliedRef.current || mediaLoading || !userId) return;
-    requestedUploadAppliedRef.current = true;
-    const apply = (upload: UploadItem) => {
-      setRightTab('media');
-      setAudioState({ tab: 'library' });
-      handleSelectUploadRef.current(upload);
-    };
-    const listed = mediaUploads.find((u) => u.id === requestedUploadId);
-    if (listed) { apply(listed); return; }
-    uploadsApi.getMedia(requestedUploadId)
-      .then(({ upload }) => {
-        if (!upload) { toast.error(t('setup.uploadNotFound')); return; }
-        setMediaUploads((prev) => (prev.some((u) => u.id === upload.id) ? prev : [upload as UploadItem, ...prev]));
-        apply(upload as UploadItem);
-      })
-      .catch(() => toast.error(t('setup.uploadNotFound')));
-  }, [requestedUploadId, mediaUploads, mediaLoading, userId, setAudioState, t]);
-
-  const handleDeleteUpload = async (uploadId: string) => {
-    try {
-      await uploadsApi.deleteMedia(uploadId);
-      setMediaUploads((prev) => prev.filter((u) => u.id !== uploadId));
-      if (selectedUpload?.id === uploadId) { setAudioState({ ready: false, name: '', selectedUpload: null, source: null }); }
-    } catch { toast.error(t('setup.deleteFailed')); }
-  };
-
-  const handleYtKeyDown = (e: ReactKeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') { e.preventDefault(); handleLoadUrl(); } };
 
   // ── Lyrics handlers ──
 
@@ -977,6 +816,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                           </Tip>
                           <div className="relative flex-1 flex items-center">
                             <FloatingInput
+                              id="setup-media-url"
                               type="text"
                               label={t('setup.urlPlaceholder')}
                               hasIcon={true}
