@@ -47,6 +47,8 @@ interface SetupCompleteData {
   trackCount?: number | null;
   coverImage?: string;
   singers?: string[];
+  previewUrl?: string;
+  explicit?: boolean;
 }
 
 interface UiState {
@@ -165,6 +167,8 @@ function AppInner() {
     trackCount,
     coverImage: _coverImage,
     singers,
+    previewUrl,
+    explicit,
   }: SetupCompleteData) => {
     setLines(lines);
     setEditorMode(editorMode);
@@ -206,7 +210,7 @@ function AppInner() {
 
     setMediaTitle(finalTitle);
 
-    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', ...artistFieldsFromForm({ artists, artistsChanged: (artists?.length ?? 0) > 0 }), songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), singers: singers || [] };
+    const newMetadata = { description: description || '', tags: tags || [], songName: songName || '', ...artistFieldsFromForm({ artists, artistsChanged: (artists?.length ?? 0) > 0 }), songAlbum: songAlbum || '', songYear: songYear || '', genre: genre || '', songLanguage: songLanguage || '', ...(trackNumber != null ? { trackNumber } : {}), ...(trackCount != null ? { trackCount } : {}), singers: singers || [], ...(previewUrl ? { previewUrl } : {}), ...(explicit != null ? { explicit } : {}) };
     appState.setProjectMetadata(newMetadata);
 
     if (!user) {

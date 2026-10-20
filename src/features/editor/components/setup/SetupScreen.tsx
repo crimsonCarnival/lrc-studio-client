@@ -64,6 +64,8 @@ interface Prefill {
   trackCount?: number | string;
   coverImage?: string;
   singers?: string[];
+  previewUrl?: string;
+  explicit?: boolean;
 }
 
 interface UploadItem {
@@ -105,6 +107,8 @@ interface MetadataState {
   trackCount: number | string;
   coverImage: string;
   singers: string[];
+  previewUrl: string;
+  explicit: boolean;
 }
 
 interface MusicEntry {
@@ -209,6 +213,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     trackCount: prefill?.trackCount ?? '',
     coverImage: prefill?.coverImage || '',
     singers: prefill?.singers || [],
+    previewUrl: prefill?.previewUrl || '',
+    explicit: prefill?.explicit ?? false,
   }));
 
   const [musicLibrary, setMusicLibrary] = useState<MusicEntry[]>([]);
@@ -218,7 +224,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
 
   const { ready: audioReady, name: audioName, tab: audioTab, source: audioSource, ytUrl, selectedUpload } = audio;
   const { text: lyricsText, parsedLines, fileName: lyricsFileName, editorMode } = lyrics;
-  const { name: projectName, description: projectDescription, tags: projectTags, isPublic, songName, artists, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, singers } = metadata;
+  const { name: projectName, description: projectDescription, tags: projectTags, isPublic, songName, artists, songAlbum, songYear, genre, songLanguage, trackNumber, trackCount, coverImage, singers, previewUrl, explicit } = metadata;
   // The server owns `songArtist` (derived from the credits); here only the primary names are needed, for lookups.
   const primaryText = primaryArtistText(artists);
 
@@ -226,6 +232,28 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const setAudioState = useCallback((val: Partial<AudioState> | ((p: AudioState) => Partial<AudioState>)) => setAudio(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
   const setLyricsState = useCallback((val: Partial<LyricsState> | ((p: LyricsState) => Partial<LyricsState>)) => setLyrics(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
   const setMetadataState = useCallback((val: Partial<MetadataState> | ((p: MetadataState) => Partial<MetadataState>)) => setMetadata(prev => ({ ...prev, ...(typeof val === 'function' ? val(prev) : val) })), []);
+
+  // 30s preview clip fetched alongside song metadata. Same pattern as
+  // UploadsLibrary's preview toggle: one lazily-created <audio>, paused on unmount.
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [previewPlaying, setPreviewPlaying] = useState(false);
+  useEffect(() => () => { previewAudioRef.current?.pause(); }, []);
+
+  const togglePreviewPlayback = useCallback(() => {
+    if (!previewUrl) return;
+    if (!previewAudioRef.current) {
+      previewAudioRef.current = new Audio();
+      previewAudioRef.current.addEventListener('ended', () => setPreviewPlaying(false));
+    }
+    const audioEl = previewAudioRef.current;
+    if (previewPlaying) {
+      audioEl.pause();
+      setPreviewPlaying(false);
+      return;
+    }
+    if (audioEl.src !== previewUrl) audioEl.src = previewUrl;
+    audioEl.play().then(() => setPreviewPlaying(true)).catch(() => setPreviewPlaying(false));
+  }, [previewUrl, previewPlaying]);
 
 
 
@@ -504,10 +532,14 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     setMetaSearching(true);
     try {
       const meta = await songMetadataApi.lookupTrack(songName.trim(), primaryText.trim()) as {
-        error?: string; genres?: string[]; name?: string; artist?: string; album?: string; releaseYear?: string; totalTracks?: number; albumArt?: string;
+        error?: string; genres?: string[]; name?: string; artist?: string; album?: string; releaseYear?: string; totalTracks?: number; albumArt?: string; previewUrl?: string; explicit?: boolean;
       };
       if (meta && !meta.error) {
         const mappedGenre = matchGenreFromTags(meta.genres || []);
+        // The old clip is about to be replaced — stop it so the play button
+        // doesn't end up pointing at audio that's no longer loaded.
+        previewAudioRef.current?.pause();
+        setPreviewPlaying(false);
         setMetadataState({
           songName:   meta.name   || songName,
           songAlbum:  meta.album  || songAlbum,
@@ -516,6 +548,8 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
           ...(meta.totalTracks      ? { trackCount: String(meta.totalTracks) } : {}),
           // Populate coverImage from API art if user hasn't set one
           ...(!coverImage && meta.albumArt ? { coverImage: meta.albumArt }   : {}),
+          previewUrl: meta.previewUrl || '',
+          explicit: !!meta.explicit,
         });
       } else {
         toast.error(t('setup.metaSearchFailed'));
@@ -537,7 +571,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
     }
     const parsedTrackNumber = parseInt(String(trackNumber), 10);
     const parsedTrackCount = parseInt(String(trackCount), 10);
-    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), artists, songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers });
+    onComplete({ lines: finalLines, editorMode, audioSource, ytUrl, audioName: (audioName && !audioName.includes('://')) ? audioName : null, selectedUpload, name: projectName.trim(), description: projectDescription.trim(), tags: projectTags, isPublic, songName: songName.trim(), artists, songAlbum: songAlbum.trim(), songYear: String(songYear).trim(), genre, songLanguage: songLanguage.trim(), trackNumber: isNaN(parsedTrackNumber) ? null : parsedTrackNumber, trackCount: isNaN(parsedTrackCount) ? null : parsedTrackCount, coverImage: coverImage.trim(), singers, previewUrl: previewUrl.trim(), explicit });
   };
 
   // Resolves with the uploaded URL and lets failures propagate — CoverDropzone
@@ -693,6 +727,38 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
                 )}
               />
             </div>
+
+            {/* Only shown once a lookup actually populated one of these — neither
+                field has a manual input, so an empty row would just be dead space. */}
+            {(previewUrl || explicit) && (
+              <div className="shrink-0 flex items-center gap-2 -mt-1">
+                {previewUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={togglePreviewPlayback}
+                    aria-label={previewPlaying ? t('setup.previewPause') : t('setup.previewPlay')}
+                    className="h-8 px-3 gap-1.5 rounded-full text-xs"
+                  >
+                    <Icon name={previewPlaying ? 'pause' : 'play_arrow'} size={14} filled />
+                    {t('setup.previewClip')}
+                  </Button>
+                )}
+                <Tip content={t('setup.explicitHint')}>
+                  <button
+                    type="button"
+                    onClick={() => setMetadataState({ explicit: !explicit })}
+                    aria-pressed={explicit}
+                    className={`h-8 px-3 rounded-full text-xs font-semibold uppercase tracking-wider transition-colors ${
+                      explicit ? 'bg-love/20 text-love' : 'bg-zinc-800 text-zinc-500'
+                    }`}
+                  >
+                    {t('setup.explicit')}
+                  </button>
+                </Tip>
+              </div>
+            )}
 
             {/* Singers — the song-level roster offered when tagging sections/lines */}
             <div className="shrink-0">

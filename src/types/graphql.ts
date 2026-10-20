@@ -783,6 +783,8 @@ export type ProjectMetadata = {
   tags?: Maybe<Array<Scalars['String']['output']>>;
   trackCount?: Maybe<Scalars['Int']['output']>;
   trackNumber?: Maybe<Scalars['Int']['output']>;
+  previewUrl?: Maybe<Scalars['String']['output']>;
+  explicit?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type ProjectMetadataInput = {
@@ -799,6 +801,8 @@ export type ProjectMetadataInput = {
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
   trackCount?: InputMaybe<Scalars['Int']['input']>;
   trackNumber?: InputMaybe<Scalars['Int']['input']>;
+  previewUrl?: InputMaybe<Scalars['String']['input']>;
+  explicit?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type ProjectPage = {
