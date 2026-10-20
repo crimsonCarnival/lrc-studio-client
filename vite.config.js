@@ -8,30 +8,43 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Puts <link rel="preload"> for the icon font into index.html at build time.
+// Puts <link rel="preload"> into index.html at build time for the handful of font
+// files that are actually needed to paint the first screen: the icon font, the
+// latin-400 cut of Fira Sans (body text) and the latin cut of the Stack Sans Notch
+// variable font (headings). Everything else in the @fontsource imports (other
+// weights, other unicode-range subsets) stays undiscovered until the stylesheet
+// is parsed, same as before — only the ones Lighthouse's critical-chain trace
+// flagged as blocking the LCP paint get pulled forward.
 //
 // It used to be appended from main.tsx, which meant the request could not start until
 // the entry chunk had downloaded and parsed — by which point the font was already being
 // requested by the stylesheet anyway, so the preload bought nothing. Emitting it into
 // the HTML starts the fetch with the document instead.
 //
-// The filename is content-hashed, so the URL is only knowable once the bundle exists:
+// The filenames are content-hashed, so the URL is only knowable once the bundle exists:
 // `order: 'post'` is what gives this hook the bundle to look it up in.
-function preloadIconFont() {
+const PRELOAD_FONT_PATTERNS = [
+  /material-symbols-subset.*\.woff2$/,
+  /fira-sans-latin-400-normal.*\.woff2$/,
+  /stack-sans-notch-latin-wght-normal.*\.woff2$/,
+];
+
+function preloadCriticalFonts() {
   return {
-    name: 'preload-icon-font',
+    name: 'preload-critical-fonts',
     transformIndexHtml: {
       order: 'post',
       handler(_html, ctx) {
-        const href = ctx.bundle
-          ? Object.values(ctx.bundle).find((f) => /material-symbols-subset.*\.woff2$/.test(f.fileName))?.fileName
-          : null;
-        if (!href) return [];
-        return [{
-          tag: 'link',
-          attrs: { rel: 'preload', as: 'font', type: 'font/woff2', crossorigin: '', href: `/${href}` },
-          injectTo: 'head',
-        }];
+        if (!ctx.bundle) return [];
+        const files = Object.values(ctx.bundle);
+        return PRELOAD_FONT_PATTERNS
+          .map((pattern) => files.find((f) => pattern.test(f.fileName))?.fileName)
+          .filter(Boolean)
+          .map((href) => ({
+            tag: 'link',
+            attrs: { rel: 'preload', as: 'font', type: 'font/woff2', crossorigin: '', href: `/${href}` },
+            injectTo: 'head',
+          }));
       },
     },
   };
@@ -47,7 +60,7 @@ export default defineConfig(({ mode }) => ({
       } : undefined,
     }),
     tailwindcss(),
-    preloadIconFont(),
+    preloadCriticalFonts(),
   ],
   resolve: {
     alias: {
@@ -94,6 +107,21 @@ export default defineConfig(({ mode }) => ({
   envPrefix: 'VITE_',
   build: {
     chunkSizeWarningLimit: 500,
+    // Hidden: maps are emitted for debugging large prod bundles, but with no
+    // //# sourceMappingURL comment in the JS, so DevTools/Lighthouse don't
+    // auto-load them for anyone just browsing the site.
+    sourcemap: 'hidden',
+    modulePreload: {
+      // vendor-framer is grouped as a named chunk (see manualChunks below) so the many
+      // route-level consumers share one cached copy, but that grouping makes the
+      // bundler treat it as a stable "vendor" bucket and modulepreload it from every
+      // page — even ones whose only path to it is a conditionally-rendered dynamic
+      // import (AppHeader's ScrollProgress, never mounted on project pages at all).
+      // That is the 85%-unused vendor-framer bytes Lighthouse flagged on initial load.
+      // Dropping it from the resolved preload list stops the forced eager fetch;
+      // dynamic import() still fetches it normally once something actually renders it.
+      resolveDependencies: (_filename, deps) => deps.filter((dep) => !dep.includes('vendor-framer')),
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
