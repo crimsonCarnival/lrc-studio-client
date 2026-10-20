@@ -508,6 +508,17 @@ export function useAuth() {
     }
   }, [setUser]);
 
+  // Streak and level change while the user works (editing extends the streak,
+  // syncing earns XP) and nothing pushes them, so Home refreshes them on mount.
+  const refreshUserActivity = useCallback(async () => {
+    try {
+      const activity = await auth.meActivity();
+      if (activity) setUser(prev => prev ? { ...prev, ...activity } : prev);
+    } catch {
+      // Non-critical — the values from sign-in stay on screen
+    }
+  }, [setUser]);
+
   const dismissUnbanMessage = useCallback(() => {
     setWasJustUnbanned(false);
   }, []);
@@ -647,6 +658,7 @@ export function useAuth() {
     registerPasskey,
     deactivateAccount,
     refreshUserProfile,
+    refreshUserActivity,
   };
 }
 

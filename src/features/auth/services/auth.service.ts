@@ -131,10 +131,25 @@ export const authService = {
           showcasedBadges
           showcasePublic
           progression { xp level }
+          streak { current longest lastActiveDate }
           showcaseSlots
           lastIp
           lastDevice
           lastLoginAt
+        }
+      }
+    `);
+    return data.me;
+  },
+
+  // Streak and level only: they move as the user works, so the surfaces that
+  // show them (Home) refresh just these instead of the whole user.
+  async meActivity(): Promise<Pick<User, 'streak' | 'progression'> | null> {
+    const data = await gqlRequest<{ me: Pick<User, 'streak' | 'progression'> | null }>(/* GraphQL */ `
+      query MeActivity {
+        me {
+          streak { current longest lastActiveDate }
+          progression { xp level }
         }
       }
     `);
