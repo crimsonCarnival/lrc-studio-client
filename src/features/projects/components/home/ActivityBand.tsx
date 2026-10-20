@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
@@ -9,14 +10,20 @@ import ActivityHeatmap from '@/features/settings/components/panels/profile/Activ
  * Streak, level and the contribution heatmap.
  *
  * All of this already existed but only on the profile page, which is why a
- * lapsed streak could go unnoticed. Streak and level come from the auth user —
- * both are in the auth selection set — and ActivityHeatmap fetches its own data,
- * so this band costs no new query.
+ * lapsed streak could go unnoticed. Streak and level come from the auth user,
+ * refreshed on mount: the values from sign-in go stale as soon as the user
+ * edits, and the profile page (which loads its own) would disagree.
+ * ActivityHeatmap fetches its own data.
  */
 export function ActivityBand() {
   const { t } = useTranslation();
-  const { user } = useAuthContext();
+  const { user, refreshUserActivity } = useAuthContext();
   const resetHint = useStreakResetHint();
+  const userId = user?.id;
+
+  useEffect(() => {
+    if (userId) refreshUserActivity();
+  }, [userId, refreshUserActivity]);
 
   // The server already applies the alive/dead rule (last active UTC day must be
   // today or yesterday), so a lapsed streak arrives here as 0 — no client-side

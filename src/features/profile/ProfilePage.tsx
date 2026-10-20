@@ -21,6 +21,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
 import { followUser, unfollowUser, blockUser, unblockUser } from './profile.service';
 import { useProfile } from './profile.queries';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSuggestedUsers } from '@/features/explore/hooks/useExplore';
 import { FollowModal } from './FollowModal';
 import { PlaylistGrid } from '@/features/playlists/PlaylistGrid';
@@ -247,7 +248,8 @@ export default function ProfilePage() {
   const isOwner = isSelf && !viewAsOthers;
 
   // Toggling the preview switches cache key, so each mode keeps its own copy.
-  const { profile, loading, notFound, setProfile } = useProfile(accountName, viewAsOthers);
+  const { profile, loading, notFound, setProfile, refetch } = useProfile(accountName, viewAsOthers);
+  const queryClient = useQueryClient();
   // Follow/block state lives on the cached profile, so it cannot drift from it.
   const isFollowing = profile?.isFollowedByMe ?? false;
   const isBlocked = profile?.isBlockedByMe ?? false;
@@ -354,23 +356,28 @@ export default function ProfilePage() {
       setIsFollowing(false);
       setProfile(prev => prev ? { ...prev, isBlockedByMe: true } : prev);
       toast.success(t('profile.blockSuccess', { name: accountName }));
+      // Everything already loaded (feed, explore, lists, this profile) may hold
+      // their content; refetch it all so it drops out without a reload.
+      queryClient.invalidateQueries();
     } catch {
       toast.error(t('profile.blockError'));
     }
     setBlockLoading(false);
-  }, [user, accountName, navigate, t, setIsBlocked, setIsFollowing, setProfile]);
+  }, [user, accountName, navigate, t, setIsBlocked, setIsFollowing, setProfile, queryClient]);
 
   const handleUnblock = useCallback(async () => {
     setBlockLoading(true);
     try {
       await unblockUser(accountName!);
-      setIsBlocked(false);
-      setProfile(prev => prev ? { ...prev, isBlockedByMe: false } : prev);
+      // The blocked profile was a stub with nothing in it: load the real one
+      // before leaving the blocked view, and let other surfaces show them again.
+      await refetch();
+      queryClient.invalidateQueries();
     } catch {
       toast.error(t('profile.unblockError'));
     }
     setBlockLoading(false);
-  }, [accountName, t, setIsBlocked, setProfile]);
+  }, [accountName, t, refetch, queryClient]);
 
   const handleDeleteProject = useCallback((project: Project) => {
     requestConfirm(
@@ -421,6 +428,35 @@ export default function ProfilePage() {
   }
 
   const displayName = profile.displayName || profile.accountName;
+
+  // Someone the viewer blocked: their name and the way back, nothing else.
+  if (isBlocked && !isSelf) {
+    return (
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="flex flex-col items-center text-center gap-4 px-4 pt-16 pb-12 max-w-md mx-auto w-full animate-fade-in">
+          <div className="size-24 rounded-3xl overflow-hidden bg-zinc-800 grayscale opacity-60">
+            {profile.avatarUrl
+              ? <img src={profile.avatarUrl} alt="" className="size-full object-cover" />
+              : <InitialsAvatar name={displayName} handle={profile.accountName} className="size-full" />}
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-zinc-100">{displayName}</h1>
+            <p className="text-sm text-zinc-500">@{profile.accountName}</p>
+          </div>
+          <div className="flex flex-col items-center gap-1.5">
+            <p className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
+              <Icon name="block" size={16} className="text-love" />
+              {t('profile.blocked.title', { name: profile.accountName })}
+            </p>
+            <p className="text-sm text-zinc-400">{t('profile.blocked.body')}</p>
+          </div>
+          <Button type="button" variant="outline" onClick={handleUnblock} disabled={blockLoading}>
+            {blockLoading ? <LoadingSpinner size="sm" /> : t('profile.unblock')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // All earned badge IDs (used in showcase tab only)
   const serverBadgeIds = (profile.badges ?? []).map(b => b.id);
