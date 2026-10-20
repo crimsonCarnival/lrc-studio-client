@@ -31,10 +31,10 @@ vi.mock('@/features/artists/TitleFeatSuggestion', () => ({ TitleFeatSuggestion: 
 import { TooltipProvider } from '@ui/tooltip';
 import SetupScreen from './SetupScreen';
 
-function renderSetup(state?: unknown) {
+function renderSetup(state?: unknown, search = '') {
   const playerRef = { current: { loadFromUrl: vi.fn(), loadYouTube: vi.fn() } };
   render(
-    <MemoryRouter initialEntries={[{ pathname: '/project/new', state }]}>
+    <MemoryRouter initialEntries={[{ pathname: '/project/new', search, state }]}>
       <TooltipProvider><SetupScreen onComplete={vi.fn()} playerRef={playerRef} /></TooltipProvider>
     </MemoryRouter>,
   );
@@ -46,6 +46,15 @@ describe('SetupScreen', () => {
 
   it('preselects the upload passed from the uploads library', async () => {
     const playerRef = renderSetup({ uploadId: 'u2' });
+    await waitFor(() => expect(screen.getByText('setup.audioReady')).toBeInTheDocument());
+    expect(screen.getByText('Second upload')).toBeInTheDocument();
+    expect(playerRef.current.loadFromUrl).toHaveBeenCalledWith(uploads[1].uploadUrl, 'Second upload');
+  });
+
+  // The uploads library hands the id over in the URL; history state does not
+  // survive the route's app-state reset or a reload of the setup page.
+  it('preselects the upload named by ?uploadId=', async () => {
+    const playerRef = renderSetup(undefined, '?uploadId=u2');
     await waitFor(() => expect(screen.getByText('setup.audioReady')).toBeInTheDocument());
     expect(screen.getByText('Second upload')).toBeInTheDocument();
     expect(playerRef.current.loadFromUrl).toHaveBeenCalledWith(uploads[1].uploadUrl, 'Second upload');

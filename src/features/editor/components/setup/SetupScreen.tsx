@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import type { ChangeEvent, ComponentProps, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, useSearchParams, Link } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { FloatingInput } from '@ui/floating-input';
 import { FloatingCombobox } from '@/shared/ui/floating-combobox';
@@ -129,6 +129,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   const { t } = useTranslation();
   const { user } = useAuthContext();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const prefill = (location.state as { prefill?: Prefill } | null)?.prefill || null;
   const { step, setStep } = useSetupContext();
   const reducedMotion = useReducedMotion();
@@ -382,11 +383,15 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   useLayoutEffect(() => { handleSelectUploadRef.current = handleSelectUpload; });
 
   // Arriving from the uploads library ("Create project"): preselect that upload.
-  // The list only holds the 50 most recent uploads, so one that is not in it
-  // once loaded is fetched on its own instead of being silently dropped.
-  const requestedUploadId = (location.state as { uploadId?: string } | null)?.uploadId;
+  // `?uploadId=` is the carrier — history state does not survive the app's
+  // state reset on entering this route, nor a reload of the setup page.
+  const requestedUploadId = searchParams.get('uploadId')
+    || (location.state as { uploadId?: string } | null)?.uploadId
+    || null;
   const requestedUploadAppliedRef = useRef(false);
   useEffect(() => {
+    // Waits for the media list to settle: the by-id fetch below is the fallback
+    // for an upload outside the 50 most recent, not a race against the list.
     if (!requestedUploadId || requestedUploadAppliedRef.current || mediaLoading || !userId) return;
     requestedUploadAppliedRef.current = true;
     const apply = (upload: UploadItem) => {

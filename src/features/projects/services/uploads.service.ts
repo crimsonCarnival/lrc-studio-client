@@ -178,6 +178,7 @@ export const uploadsService = {
             slug
             title
             updatedAt
+            contentUpdatedAt
           }
         }
       }

@@ -214,7 +214,10 @@ export default function UploadsLibrary({ onSelect }: { onSelect?: (upload: Uploa
 
   const handleCreateProject = (e: SyntheticEvent, upload: Upload) => {
     e.stopPropagation();
-    navigate('/project/new', { state: { uploadId: upload.id } });
+    // In the URL, not in history state: the setup route resets app state on
+    // entry and the draft can be reloaded or shared from there, both of which
+    // drop `location.state` and left the upload silently unattached.
+    navigate(`/project/new?uploadId=${encodeURIComponent(upload.id)}`);
   };
 
   const renderMenu = (upload: Upload) => (C: MenuComponents): ReactNode => (
