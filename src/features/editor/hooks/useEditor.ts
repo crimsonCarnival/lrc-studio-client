@@ -18,7 +18,6 @@ import {
   clampWordTime,
   alignLineStart,
 } from '../services/editor.service';
-import { captureAdLib, moveAdLib, isAdLib } from '../services/ad-libs';
 import {
   parseRawTextLine, alignRawTextItems, rawTextKeyOfLine, rawTextKeyOfItem,
   computeCollapsedView, collapsedAncestorKeys, indexMapByIdentity, remapIndexSet,
@@ -26,6 +25,8 @@ import {
 import { getDefaultDepthForLabel, formatSectionLabelForSerialization } from '../constants/sectionTypes';
 import { useFileImport } from './useFileImport';
 import { useDragReorder } from './useDragReorder';
+import { useAdLibs } from './useAdLibs';
+import { useWordsMode } from './useWordsMode';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import type { EditorLine, EditorWord, EditorTranslation } from '../services/editor.service';
 import type { PlayerHandle } from '@/shared/hooks/useAppState';
@@ -223,6 +224,20 @@ export function useEditor({
     activeWordIndexRef.current = activeWordIndex;
     stampTargetRef.current = stampTarget;
   });
+
+  // Two clusters that needed none of this hook's state live in their own files. They are
+  // called here (rather than by the editor components) so the handlers still reach callers
+  // through the same return object, keeping this an internal split with no call-site churn.
+  const {
+    handleToggleAdLib, handleCaptureAdLib, handleMoveAdLib, handleRemoveAdLib, handleNameAdLib,
+  } = useAdLibs({
+    setLines, setActiveLineIndex, playerRef, linesRef, playbackPositionRef, isPlayingRef,
+  });
+
+  const {
+    handleSetWordReading, handleMergeWordWithNext, handleSplitWord, handleRegroupLine,
+    handleClearWordTimestamp, handleCycleWordSinger, handleSetWordSinger,
+  } = useWordsMode({ setLines, setModifiedLines });
 
   const [prevActiveLineIndex, setPrevActiveLineIndex] = useState(activeLineIndex);
   const [prevEditorMode, setPrevEditorMode] = useState(editorMode);
@@ -861,103 +876,6 @@ export function useEditor({
     });
   }, [setLines, setModifiedLines]);
 
-  const handleSetWordReading = useCallback((lineIndex, wordIndex, reading) => {
-    setModifiedLines(prev => new Set(prev).add(lineIndex));
-    setLines((prev) => {
-      const updated = [...prev];
-      const line = { ...updated[lineIndex] };
-      const words = [...(line.words || [])];
-      const trimmed = reading?.trim() || null;
-      words[wordIndex] = trimmed
-        ? { ...words[wordIndex], reading: trimmed }
-        : (() => { const { reading: _r, ...rest } = words[wordIndex]; return rest; })();
-      line.words = words;
-      updated[lineIndex] = line;
-      return updated;
-    });
-  }, [setLines, setModifiedLines]);
-
-  /**
-   * Repairs for the cases automatic grouping cannot settle: a kana prefix that
-   * belongs to the kanji after it, a 熟字訓 whose reading does not decompose, or
-   * a chip the rules joined that the singer actually holds apart.
-   *
-   * The merged chip keeps the earlier timestamp, because that is when the sound
-   * it now covers begins.
-   */
-  const handleMergeWordWithNext = useCallback((lineIndex, wordIndex) => {
-    setModifiedLines(prev => new Set(prev).add(lineIndex));
-    setLines((prev) => {
-      const updated = [...prev];
-      const line = { ...updated[lineIndex] };
-      const words = [...(line.words || [])];
-      const a = words[wordIndex];
-      const b = words[wordIndex + 1];
-      if (!a || !b) return prev;
-      const merged = { ...a, word: (a.word || '') + (b.word || '') };
-      const time = a.time ?? b.time ?? null;
-      if (time == null) delete merged.time; else merged.time = time;
-      const reading = a.reading || b.reading;
-      if (reading) merged.reading = reading; else delete merged.reading;
-      words.splice(wordIndex, 2, merged);
-      line.words = words;
-      updated[lineIndex] = line;
-      return updated;
-    });
-  }, [setLines, setModifiedLines]);
-
-  /**
-   * Breaks a chip back into single characters so it can be regrouped by hand.
-   * Deliberately not a guess at the "right" split point: the first character
-   * keeps the timestamp and the rest start untimed.
-   */
-  const handleSplitWord = useCallback((lineIndex, wordIndex) => {
-    setModifiedLines(prev => new Set(prev).add(lineIndex));
-    setLines((prev) => {
-      const updated = [...prev];
-      const line = { ...updated[lineIndex] };
-      const words = [...(line.words || [])];
-      const target = words[wordIndex];
-      const chars = [...(target?.word || '')];
-      if (!target || chars.length < 2) return prev;
-      const pieces = chars.map((ch, i) => (i === 0
-        ? { ...target, word: ch }
-        : { word: ch, time: null }));
-      words.splice(wordIndex, 1, ...pieces);
-      line.words = words;
-      updated[lineIndex] = line;
-      return updated;
-    });
-  }, [setLines, setModifiedLines]);
-
-  /** Re-runs automatic grouping over a line, keeping times and readings where the text still matches. */
-  const handleRegroupLine = useCallback((lineIndex) => {
-    setModifiedLines(prev => new Set(prev).add(lineIndex));
-    setLines((prev) => {
-      const updated = [...prev];
-      const line = { ...updated[lineIndex] };
-      if (!hasCJK(line.text || '')) return prev;
-      const oldTimeAtPos = new Map();
-      const oldReadingByText = new Map();
-      let flat = 0;
-      for (const w of line.words || []) {
-        oldTimeAtPos.set(flat, w.time ?? null);
-        flat += [...(w.word || '')].length;
-        if (w.reading) oldReadingByText.set(w.word, w.reading);
-      }
-      let charPos = 0;
-      line.words = groupMorphemes(line.text || '').map((token) => {
-        const w: EditorWord = { word: token.text, time: oldTimeAtPos.get(charPos) ?? null };
-        const reading = oldReadingByText.get(token.text) ?? oldReadingByText.get(token.kanji);
-        if (reading) w.reading = reading;
-        charPos += [...token.text].length;
-        return w;
-      });
-      updated[lineIndex] = line;
-      return updated;
-    });
-  }, [setLines, setModifiedLines]);
-
   const handleDeleteLine = (index) => {
     const isSection = lines[index]?.type === 'section';
     requestConfirm(isSection ? t('confirm.deleteSection') : t('confirm.deleteLine'), () => {
@@ -979,67 +897,6 @@ export function useEditor({
    * If the nearest preceding timestamped non-adlib line has a timestamp,
    * that timestamp becomes the anchor. Toggling again clears it.
    */
-  const handleToggleAdLib = useCallback((index: number) => {
-    setLines((prev) => {
-      const line = prev[index];
-      if (!line || line.type === 'section') return prev;
-      if (line.adLibOf != null) {
-        const next = [...prev];
-        next[index] = { ...line, adLibOf: null };
-        return next;
-      }
-      let parentTs: number | null = null;
-      for (let j = index - 1; j >= 0; j--) {
-        const c = prev[j];
-        if (c.type === 'section' || c.adLibOf != null) continue;
-        parentTs = c.timestamp ?? 0;
-        break;
-      }
-      const next = [...prev];
-      next[index] = { ...line, adLibOf: parentTs ?? 0 };
-      return next;
-    });
-  }, [setLines]);
-
-  /**
-   * Live capture (redesign sheet 20): drops an unnamed ad-lib at the playhead and returns
-   * its id, so the caller can ask for its text. Works outside sync mode too: hearing an
-   * ad-lib and tapping is the whole gesture.
-   */
-  const handleCaptureAdLib = useCallback((): string | null => {
-    const time = isPlayingRef.current
-      ? (playerRef?.current?.getCurrentTime?.() ?? playbackPositionRef.current)
-      : playbackPositionRef.current;
-    const id = crypto.randomUUID();
-    const result = captureAdLib(linesRef.current, time ?? 0, id);
-    if (!result) {
-      toast.error(t('editor.adLib.needsSyncedLine'), { id: 'adlib-needs-line' });
-      return null;
-    }
-    linesRef.current = result.lines;
-    setLines(result.lines);
-    return id;
-  }, [playerRef, setLines, t]);
-
-  const handleMoveAdLib = useCallback((index: number, time: number) => {
-    setLines((prev) => moveAdLib(prev, index, time));
-  }, [setLines]);
-
-  /** Removes an ad-lib without asking: it is one tap to make and undo brings it back. */
-  const handleRemoveAdLib = useCallback((index: number) => {
-    setLines((prev) => (isAdLib(prev[index]) ? prev.filter((_, i) => i !== index) : prev));
-    setActiveLineIndex((prevIdx) => (prevIdx > index ? prevIdx - 1 : prevIdx));
-  }, [setLines, setActiveLineIndex]);
-
-  const handleNameAdLib = useCallback((index: number, text: string) => {
-    setLines((prev) => {
-      if (!isAdLib(prev[index]) || prev[index].text === text) return prev;
-      const next = [...prev];
-      next[index] = { ...prev[index], text };
-      return next;
-    });
-  }, [setLines]);
-
   const handleAddLine = useCallback(
     (index, lineData = null, { before = false } = {}) => {
       setLines((prev) => {
@@ -1222,19 +1079,6 @@ export function useEditor({
   // kept together by alignLineStart on every *write* to either one, but not here:
   // erasing a word is a request to re-mark it, not to unsync the line, and dropping
   // line.timestamp would also pull the line out of the lrc/srt output it is in.
-  const handleClearWordTimestamp = useCallback((lineIndex, wordIndex, field = 'words') => {
-    setLines((prev) => {
-      const updated = [...prev];
-      const line = updated[lineIndex];
-      if (!line?.[field]) return prev;
-      const newWords = [...(line[field] as EditorWord[])];
-      newWords[wordIndex] = { ...newWords[wordIndex], time: null };
-      updated[lineIndex] = { ...line, [field]: newWords };
-      return updated;
-    });
-    // activeWordIndex is synced by the lines effect above
-  }, [setLines]);
-
   const handleSetActiveWordIndex = useCallback((wordIndex) => {
     setActiveWordIndex(wordIndex);
     activeWordIndexRef.current = wordIndex;
@@ -1470,87 +1314,6 @@ export function useEditor({
    * Each right-click advances: null → 0 → 1 → … → (singerCount-1) → null.
    * If no words array exists yet (LRC/SRT mode), auto-creates one by splitting line.text.
    */
-  const handleCycleWordSinger = useCallback((lineIndex, wordIndex) => {
-    setModifiedLines(prev => new Set(prev).add(lineIndex));
-    setLines((prev) => {
-      const updated = [...prev];
-      const line = { ...updated[lineIndex] };
-      const singers = line.singers || [];
-      if (singers.length < 2) return prev;
-
-      // Auto-create words array from text when none exists yet (LRC/SRT mode)
-      let words = line.words ? [...line.words] : null;
-      if (!words || words.length === 0) {
-        if (!line.text) return prev;
-        // Split preserving spaces: tokenize into word+space chunks
-        const tokens = line.text.split(/(\s+)/);
-        const newWords: EditorWord[] = [];
-        for (const tok of tokens) {
-          if (!tok) continue;
-          if (/^\s+$/.test(tok)) {
-            // Append space to the last word rather than creating a space entry
-            if (newWords.length > 0) newWords[newWords.length - 1] = { ...newWords[newWords.length - 1], word: newWords[newWords.length - 1].word + tok };
-          } else {
-            newWords.push({ word: tok, time: null });
-          }
-        }
-        words = newWords;
-      }
-
-      const w = words[wordIndex];
-      if (!w) return prev;
-      const current = w.singerIndex ?? null;
-      const next = current === null ? 0 : current + 1 >= singers.length ? null : current + 1;
-      words[wordIndex] = next === null
-        ? (() => { const { singerIndex: _s, ...rest } = w; return rest; })()
-        : { ...w, singerIndex: next };
-      line.words = words;
-      line.mode = normalizeLineMode(line);
-      updated[lineIndex] = line;
-      return updated;
-    });
-  }, [setLines, setModifiedLines]);
-
-  /**
-   * Directly set a word's singerIndex (unlike cycle which rotates).
-   * Pass singerIndex=null to remove attribution.
-   */
-  const handleSetWordSinger = useCallback((lineIndex, wordIndex, singerIndex) => {
-    setModifiedLines(prev => new Set(prev).add(lineIndex));
-    setLines((prev) => {
-      const updated = [...prev];
-      const line = { ...updated[lineIndex] };
-      const singers = line.singers || [];
-      if (singers.length < 2) return prev;
-
-      let words = line.words ? [...line.words] : null;
-      if (!words || words.length === 0) {
-        if (!line.text) return prev;
-        const tokens = line.text.split(/(\s+)/);
-        const newWords: EditorWord[] = [];
-        for (const tok of tokens) {
-          if (!tok) continue;
-          if (/^\s+$/.test(tok)) {
-            if (newWords.length > 0) newWords[newWords.length - 1] = { ...newWords[newWords.length - 1], word: newWords[newWords.length - 1].word + tok };
-          } else {
-            newWords.push({ word: tok, time: null });
-          }
-        }
-        words = newWords;
-      }
-
-      const w = words[wordIndex];
-      if (!w) return prev;
-      words[wordIndex] = singerIndex === null
-        ? (() => { const { singerIndex: _s, ...rest } = w; return rest; })()
-        : { ...w, singerIndex };
-      line.words = words;
-      line.mode = normalizeLineMode(line);
-      updated[lineIndex] = line;
-      return updated;
-    });
-  }, [setLines, setModifiedLines]);
-
   // ── Number key shortcuts: 1-4 → assign singer, 0 → clear singers on active line ──
   useEffect(() => {
     const handleNumberKey = (e) => {
