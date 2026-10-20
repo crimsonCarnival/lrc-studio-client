@@ -8,6 +8,35 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Puts <link rel="preload"> for the icon font into index.html at build time.
+//
+// It used to be appended from main.tsx, which meant the request could not start until
+// the entry chunk had downloaded and parsed — by which point the font was already being
+// requested by the stylesheet anyway, so the preload bought nothing. Emitting it into
+// the HTML starts the fetch with the document instead.
+//
+// The filename is content-hashed, so the URL is only knowable once the bundle exists:
+// `order: 'post'` is what gives this hook the bundle to look it up in.
+function preloadIconFont() {
+  return {
+    name: 'preload-icon-font',
+    transformIndexHtml: {
+      order: 'post',
+      handler(_html, ctx) {
+        const href = ctx.bundle
+          ? Object.values(ctx.bundle).find((f) => /material-symbols-subset.*\.woff2$/.test(f.fileName))?.fileName
+          : null;
+        if (!href) return [];
+        return [{
+          tag: 'link',
+          attrs: { rel: 'preload', as: 'font', type: 'font/woff2', crossorigin: '', href: `/${href}` },
+          injectTo: 'head',
+        }];
+      },
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => ({
   plugins: [
     react({
@@ -18,6 +47,7 @@ export default defineConfig(({ mode }) => ({
       } : undefined,
     }),
     tailwindcss(),
+    preloadIconFont(),
   ],
   resolve: {
     alias: {

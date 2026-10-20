@@ -5,7 +5,6 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, useNavi
 import { setAppNavigate } from '@/app/navigation';
 import { accessFor } from '@/app/route-access';
 import { isAdminHost, wwwHostUrl, redirectOffMobileHostIfNeeded, redirectToMobileHostIfNeeded } from '@/shared/utils/host';
-import iconFontUrl from '@/assets/fonts/material-symbols-subset.woff2?url';
 import { isStaff } from '@/features/auth/permissions';
 
 // Auto-reload when a new deployment invalidates lazy-loaded chunks
@@ -243,22 +242,18 @@ const rootElement = document.getElementById('root');
 redirectOffMobileHostIfNeeded();
 redirectToMobileHostIfNeeded();
 
-// Hide icon ligature text until the Material Symbols font is usable. The font is
-// preloaded so it starts downloading before the first icon renders; the class
-// is dropped on load, or after a timeout so a failed fetch can't hide icons forever.
+// Keep icons blank until the Material Symbols font is usable, so nothing flashes in
+// their place. The preload now comes from index.html (injected at build time by the
+// preloadIconFont plugin in vite.config.js) rather than being appended here â€” appending
+// it from the entry chunk meant it could not start until that chunk had parsed, which is
+// later than the stylesheet would have requested the font anyway.
 {
   const root = document.documentElement;
   root.classList.add('icons-loading');
   const ready = () => root.classList.remove('icons-loading');
-  const preload = document.createElement('link');
-  preload.rel = 'preload';
-  preload.as = 'font';
-  preload.type = 'font/woff2';
-  preload.crossOrigin = 'anonymous';
-  preload.href = iconFontUrl;
-  document.head.appendChild(preload);
   if (document.fonts?.load) {
-    document.fonts.load('24px "Material Symbols Outlined"', 'a').then(ready, ready);
+    // Probe a real glyph: the font is subset by codepoint, so 'a' is no longer in it.
+    document.fonts.load('24px "Material Symbols Outlined"', '\u{e88a}').then(ready, ready);
     setTimeout(ready, 3000);
   } else {
     ready();

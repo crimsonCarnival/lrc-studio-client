@@ -1,4 +1,5 @@
 import { ICON_SHAPES, strokeForSize } from './icon-paths';
+import { ICON_CODEPOINTS } from './icon-codepoints';
 
 interface IconProps {
   name: string;
@@ -41,6 +42,18 @@ export function Icon({ name, size = 20, filled = false, className }: IconProps) 
     );
   }
 
+  // The font is subset by codepoint (see scripts/subset-icons.mjs), which drops the
+  // ligature table, so the glyph is addressed by its codepoint rather than by typing its
+  // name. A name missing from the map is a name that does not exist in the font — the
+  // build fails on those, so reaching this fallback means an icon added at runtime.
+  // Render nothing rather than the raw name: a stray "folder_search" in 64px type is a
+  // worse failure than a blank square, and that is exactly the bug this replaced.
+  const codepoint = ICON_CODEPOINTS[name];
+  if (!codepoint) {
+    if (import.meta.env.DEV) console.warn(`[Icon] unknown icon name: ${name}`);
+    return <span className={`app-icon inline-block${className ? ` ${className}` : ''}`} style={{ width: size, height: size }} aria-hidden="true" />;
+  }
+
   return (
     <span
       className={`app-icon material-symbols-outlined leading-none select-none${className ? ` ${className}` : ''}`}
@@ -49,8 +62,9 @@ export function Icon({ name, size = 20, filled = false, className }: IconProps) 
         fontVariationSettings: `'FILL' ${filled ? 1 : 0}, 'wght' 400, 'GRAD' 0, 'opsz' 24`,
         verticalAlign: 'middle',
       }}
+      data-icon={name}
     >
-      {name}
+      {codepoint}
     </span>
   );
 }
