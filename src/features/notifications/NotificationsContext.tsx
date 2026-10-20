@@ -39,6 +39,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  // Bumped when the server says the list changed under us (a block or unblock
+  // hides or restores notifications), to fetch it again.
+  const [refreshTick, setRefreshTick] = useState(0);
   const fetchedRef = useRef(false);
   // Lets the socket effect's toast call the latest markRead without re-subscribing
   // on every render (markRead is defined below, after this effect).
@@ -101,7 +104,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch(() => {});
-  }, [user, t]);
+  }, [user, t, refreshTick]);
 
   useEffect(() => {
     if (!user) {
@@ -212,13 +215,20 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       );
     }
 
+    function onRefresh() {
+      fetchedRef.current = false;
+      setRefreshTick(n => n + 1);
+    }
+
     socket.on('notification:push', onPush);
     socket.on('notification:dismissed', onDismissed);
     socket.on('badge:awarded', onBadgeAwarded);
+    socket.on('notifications:refresh', onRefresh);
     return () => {
       socket.off('notification:push', onPush);
       socket.off('notification:dismissed', onDismissed);
       socket.off('badge:awarded', onBadgeAwarded);
+      socket.off('notifications:refresh', onRefresh);
     };
   }, [user, t]);
 

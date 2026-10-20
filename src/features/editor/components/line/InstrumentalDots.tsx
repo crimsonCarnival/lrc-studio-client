@@ -36,11 +36,13 @@ export default function InstrumentalDots({
   const count = Math.max(1, Math.min(7, Math.round(dotCount)));
   const p = Math.max(0, Math.min(1, progress));
 
-  // How many dots are fully lit, and what fraction the next one is lit.
+  // How lit each dot is, 0-1: full ones 1, the one being filled its fraction, the rest 0.
   const filled = p * count;
-  const fullDots = Math.floor(filled);
-  const partial = filled - fullDots;
 
+  // Every dot is the same two layers, a dim base and a fill whose opacity is the
+  // only thing that changes. Swapping a dot between differently styled branches
+  // (dim background -> full-colour background at opacity ~0) flashed it at full
+  // colour for the length of the opacity transition each time a dot started.
   return (
     <span
       aria-hidden
@@ -48,54 +50,31 @@ export default function InstrumentalDots({
       className={className}
       style={{ display: 'inline-flex', alignItems: 'center', gap: `${gap}px`, ...style }}
     >
-      {Array.from({ length: count }, (_, i) => {
-        if (i < fullDots) {
-          return (
-            <span
-              key={i}
-              style={{
-                display: 'inline-block',
-                width: size,
-                height: size,
-                borderRadius: '50%',
-                background: color,
-                flexShrink: 0,
-                transition: 'opacity 0.15s linear',
-              }}
-            />
-          );
-        }
-        if (i === fullDots) {
-          return (
-            <span
-              key={i}
-              style={{
-                display: 'inline-block',
-                width: size,
-                height: size,
-                borderRadius: '50%',
-                background: color,
-                opacity: partial,
-                flexShrink: 0,
-                transition: 'opacity 0.15s linear',
-              }}
-            />
-          );
-        }
-        return (
+      {Array.from({ length: count }, (_, i) => (
+        <span
+          key={i}
+          style={{
+            position: 'relative',
+            display: 'inline-block',
+            width: size,
+            height: size,
+            borderRadius: '50%',
+            background: dimColor,
+            flexShrink: 0,
+          }}
+        >
           <span
-            key={i}
             style={{
-              display: 'inline-block',
-              width: size,
-              height: size,
+              position: 'absolute',
+              inset: 0,
               borderRadius: '50%',
-              background: dimColor,
-              flexShrink: 0,
+              background: color,
+              opacity: Math.max(0, Math.min(1, filled - i)),
+              transition: 'opacity 0.15s linear',
             }}
           />
-        );
-      })}
+        </span>
+      ))}
     </span>
   );
 }
