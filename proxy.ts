@@ -95,11 +95,12 @@ export const config = {
 export { MATCHER };
 
 const API_ORIGIN = (process.env.OG_API_ORIGIN || 'https://api.lrcstudio.app').replace(/\/+$/, '');
-// The bare domain (no www) is the canonical host throughout this repo:
-// index.html's <link rel="canonical">, robots.txt's Sitemap line, and
-// every public/sitemap.xml entry all use it. og:url and canonical
-// disagreeing is a duplicate-content bug, so this default follows them.
-const SITE_ORIGIN = (process.env.OG_SITE_ORIGIN || 'https://lrcstudio.app').replace(/\/+$/, '');
+// www is the canonical host throughout this repo: index.html's
+// <link rel="canonical">, robots.txt's Sitemap line and every
+// public/sitemap.xml entry use it, and the apex 308-redirects here. og:url and
+// canonical disagreeing is a duplicate-content bug, so this default follows them.
+// NOTE: OG_SITE_ORIGIN overrides this — check it is not pinned to the apex.
+const SITE_ORIGIN = (process.env.OG_SITE_ORIGIN || 'https://www.lrcstudio.app').replace(/\/+$/, '');
 const DEFAULT_IMAGE = `${SITE_ORIGIN}/og-default.png`;
 const SITE_LOGO = `${SITE_ORIGIN}/favicon.svg`;
 

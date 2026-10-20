@@ -339,7 +339,10 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       onChange={(e) => { yt.setYtUrl(e.target.value); yt.setYtError(''); }}
                       onKeyDown={(e) => { if (e.key === 'Enter') handleUrlLoad(); }}
                       placeholder={t('player.pasteUrl')}
-                      className="pl-8 bg-zinc-900/50 border-zinc-700/50 text-sm h-10 rounded-xl shadow-inner w-full"
+                      // lg:pl-8 as well as pl-8: the base Input sets lg:px-2.5, which at that
+                      // breakpoint overrides the plain pl-8 and let the link icon sit under the
+                      // placeholder text. padding-left beats padding-inline in Tailwind's order.
+                      className="pl-8 lg:pl-8 bg-zinc-900/50 border-zinc-700/50 text-sm h-10 rounded-xl shadow-inner w-full"
                     />
                   </div>
                   <Button

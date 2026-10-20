@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import type { InfiniteData } from '@tanstack/react-query';
 import { gqlRequest } from '@/app/graphql.client';
-import { getSocket } from '@/app/socket.client';
+import { connectSocket } from '@/app/socket.client';
 import type { FeedResult, Activity } from '@/types';
 
 const FEED_QUERY = /* GraphQL */ `
@@ -45,7 +45,11 @@ export function useFeed(limit = 20) {
 
   // Real-time: prepend new items pushed from the server
   useEffect(() => {
-    const socket = getSocket();
+    // connectSocket() rather than getSocket(): AppProviders only connects for a
+    // signed-in session, and React runs child effects before parent ones, so on the
+    // render where sign-in lands this would otherwise read null and never subscribe.
+    // It is idempotent, and the guard above keeps guests from opening one.
+    const socket = connectSocket();
     if (!socket) return;
 
     const onFeedNew = (activity: Activity) => {

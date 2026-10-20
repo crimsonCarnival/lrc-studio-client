@@ -46,7 +46,7 @@ import { LoadingSpinner } from '@ui/LoadingSpinner'
 import { AppLoadingScreen } from '@ui/AppLoadingScreen'
 import { AppProviders } from './app/AppProviders';
 import { useSettings } from '@/features/settings/useSettings';
-import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
+import { RecaptchaGate, RecaptchaRouteArmer } from '@/app/RecaptchaGate';
 import { gqlRequest } from '@/app/graphql.client.js';
 import { projectPath } from '@/features/projects/project-path';
 
@@ -244,7 +244,7 @@ redirectToMobileHostIfNeeded();
 
 // Keep icons blank until the Material Symbols font is usable, so nothing flashes in
 // their place. The preload now comes from index.html (injected at build time by the
-// preloadIconFont plugin in vite.config.js) rather than being appended here â€” appending
+// preloadIconFont plugin in vite.config.js) rather than being appended here — appending
 // it from the entry chunk meant it could not start until that chunk had parsed, which is
 // later than the stylesheet would have requested the font anyway.
 {
@@ -268,19 +268,20 @@ if (!window.__reactRoot) {
 window.__reactRoot.render(
   <StrictMode>
     <ErrorBoundary>
-      <GoogleReCaptchaProvider reCaptchaKey={import.meta.env.VITE_RECAPTCHA_KEY} scriptProps={{ defer: true, async: true, appendTo: "head" }}>
+      <RecaptchaGate>
         <AuthProvider>
           <LanguageSync />
           <SpeedInsights />
           <AppProviders>
             <BrowserRouter>
+              <RecaptchaRouteArmer />
               <NavigationBridge />
               <RootRoutes />
             </BrowserRouter>
             <AppToaster />
           </AppProviders>
         </AuthProvider>
-      </GoogleReCaptchaProvider>
+      </RecaptchaGate>
     </ErrorBoundary>
   </StrictMode>,
 );

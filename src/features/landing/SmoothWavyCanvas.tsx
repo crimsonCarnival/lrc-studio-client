@@ -43,8 +43,15 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }: SmoothWav
   const animateRef = useRef<((timestamp: number) => void) | null>(null);
   const timeRef = useRef(0);
   const mouseRef = useRef({ x: 0, y: 0 });
+  // Deliberately NOT read during render. readThemeColors() calls getComputedStyle, and
+  // doing that in the render phase forces a full style recalculation at the worst
+  // possible moment — React is mid-commit and the stylesheet has just invalidated
+  // everything, so the whole document is restyled synchronously. Lighthouse measured
+  // 160 ms of forced reflow here, attributed to React as the caller.
+  //
+  // The effect below fills this in before the first frame is drawn, which is early
+  // enough: animate() is only ever reached from that effect or a rAF after it.
   const colorsRef = useRef<ThemeColors | null>(null);
-  if (colorsRef.current === null) colorsRef.current = readThemeColors();
   const frameTimesRef = useRef<number[]>([]);      // rolling window of last 10 frame durations (ms)
   const qualityRef = useRef(1);          // 1 = full, 0.5 = half lines, 0 = static
   const lastFrameTimeRef = useRef(0);    // timestamp of previous frame
@@ -65,12 +72,22 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }: SmoothWav
     canvas.height = window.innerHeight;
   }, []);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
+  // The canvas origin is cached rather than measured per event: getBoundingClientRect()
+  // inside a mousemove handler forces a layout on every pointer sample, which is the same
+  // forced-reflow problem as the render-phase getComputedStyle above, just spread across
+  // the whole time the pointer is over the hero. It can only move on resize or scroll, so
+  // those are the only places it needs recomputing.
+  const originRef = useRef({ left: 0, top: 0 });
+  const measureOrigin = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    mouseRef.current.x = e.clientX - rect.left;
-    mouseRef.current.y = e.clientY - rect.top;
+    originRef.current = { left: rect.left, top: rect.top };
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    mouseRef.current.x = e.clientX - originRef.current.left;
+    mouseRef.current.y = e.clientY - originRef.current.top;
   }, []);
 
   const animate = useCallback((timestamp: number) => {
@@ -78,7 +95,8 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }: SmoothWav
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const colors = colorsRef.current!;
+    const colors = colorsRef.current;
+    if (!colors) return;
 
     // ── Reduced motion: draw solid background once and stop ──────────────
     const targetFps = reducedMotion ? 0 : 60;
@@ -194,15 +212,19 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }: SmoothWav
     if (!canvas) return;
 
     resizeCanvas();
+    measureOrigin();
+    colorsRef.current ??= readThemeColors();
 
     const observer = new MutationObserver(() => {
       colorsRef.current = readThemeColors();
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
-    const handleResize = () => resizeCanvas();
+    const handleResize = () => { resizeCanvas(); measureOrigin(); };
+    const onScroll = () => measureOrigin();
     const onMouseMove = (e: MouseEvent) => handleMouseMoveRef.current(e);
     window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', onScroll, { passive: true });
     canvas.addEventListener('mousemove', onMouseMove);
 
     animateRef.current?.(0);
@@ -210,11 +232,12 @@ const SmoothWavyCanvas = ({ animationSpeed = 0.004, lineOpacity = 1 }: SmoothWav
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', onScroll);
       canvas.removeEventListener('mousemove', onMouseMove);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       timeRef.current = 0;
     };
-  }, [animate, resizeCanvas]);
+  }, [animate, resizeCanvas, measureOrigin]);
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden">

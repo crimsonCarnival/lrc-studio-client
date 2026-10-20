@@ -14,7 +14,20 @@ import SetAccountNameModal from '@/features/auth/components/SetAccountNameModal'
 import { BadgeDefsProvider } from '@/features/badges/BadgeDefsContext';
 
 export function AppProviders({ children }: { children: ReactNode }) {
+  const { user: socketUser } = useAuthContext();
+  const socketUserId = socketUser?.id ?? null;
+
+  // Connect eagerly only for a signed-in session. A guest reading the landing page,
+  // explore or search has nothing to receive: every eager consumer (notifications,
+  // session invalidation, the feed) is authenticated by definition.
+  //
+  // This is NOT the same as "no socket for guests". The public project page genuinely
+  // needs one — anonymous viewer presence and live reactions both run over it — and
+  // those call sites call connectSocket() themselves when they mount, which is also why
+  // connectSocket() must keep returning a real socket rather than null for a guest
+  // (useReactions calls .emit() on the result without a null check).
   useEffect(() => {
+    if (!socketUserId) return;
     connectSocket();
 
     // A socket dropped while the tab was backgrounded (ping timeout) or while
@@ -33,7 +46,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       window.removeEventListener('online', resume);
       disconnectSocket();
     };
-  }, []);
+  }, [socketUserId]);
 
   // On touch devices a long press opens our own context menus, but the browser
   // fires its native `contextmenu` for the same gesture, so both appeared at

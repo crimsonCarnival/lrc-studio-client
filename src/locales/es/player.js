@@ -45,7 +45,9 @@ export default {
     html5: "Error del reproductor HTML5",
     notFound: "Video no encontrado o privado",
     notEmbeddable: "El video no se puede insertar",
-    generic: "Error de YouTube (código {{code}})"
+    generic: "Error de YouTube (código {{code}})",
+    apiLoadFailed: "No se pudo cargar el reproductor de YouTube. Revisa tu conexión o tu bloqueador de anuncios.",
+    apiTimeout: "El reproductor de YouTube tardó demasiado en cargar."
   },
   findAnotherVersion: "Buscar otra versión",
   embeddingDisabledDesc: "El propietario de este video ha desactivado la reproducción en sitios externos. No se reproducirá audio en el editor.",

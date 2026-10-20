@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="canonical" href="https://lrcstudio.app/" />
+    <link rel="canonical" href="https://www.lrcstudio.app/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LRC Studio — Sync Lyrics to Music, Perfectly</title>
     <meta name="description" content="Sync lyrics to any song with tap-to-timestamp editing. Export .lrc, .srt, or word-level karaoke files. Free, browser-based, no install needed." />
@@ -16,17 +16,19 @@
          crawlers; these are the fallback for any crawler reaching a path outside
          its matcher, and for a plain static build.
          NOTE: og:url intentionally matches the <link rel="canonical"> above.
-         Both use lrcstudio.app (no www). -->
+         Both use www.lrcstudio.app. www is the canonical host: the apex
+         308-redirects to it, so pointing canonical at the apex advertised a URL
+         that immediately redirects. -->
     <meta property="og:site_name" content="LRC Studio" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="LRC Studio — Sync Lyrics to Music, Perfectly" />
     <meta property="og:description" content="Sync lyrics to any song and export .lrc, .srt or word-level karaoke files." />
-    <meta property="og:url" content="https://lrcstudio.app/" />
-    <meta property="og:logo" content="https://lrcstudio.app/favicon.svg" />
+    <meta property="og:url" content="https://www.lrcstudio.app/" />
+    <meta property="og:logo" content="https://www.lrcstudio.app/favicon.svg" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:locale:alternate" content="es_CO" />
-    <meta property="og:image" content="https://lrcstudio.app/og-default.png" />
-    <meta property="og:image:secure_url" content="https://lrcstudio.app/og-default.png" />
+    <meta property="og:image" content="https://www.lrcstudio.app/og-default.png" />
+    <meta property="og:image:secure_url" content="https://www.lrcstudio.app/og-default.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -34,7 +36,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="LRC Studio — Sync Lyrics to Music, Perfectly" />
     <meta name="twitter:description" content="Sync lyrics to any song and export .lrc, .srt or word-level karaoke files." />
-    <meta name="twitter:image" content="https://lrcstudio.app/og-default.png" />
+    <meta name="twitter:image" content="https://www.lrcstudio.app/og-default.png" />
     <meta name="twitter:image:alt" content="LRC Studio — sync lyrics to music, perfectly." />
     <!-- JSON-LD structured data -->
     <script type="application/ld+json">
@@ -42,7 +44,7 @@
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "LRC Studio",
-      "url": "https://lrcstudio.app",
+      "url": "https://www.lrcstudio.app",
       "description": "Sync lyrics to any song with tap-to-timestamp editing. Export .lrc, .srt, or word-level karaoke files. Free, browser-based, no install needed.",
       "applicationCategory": "MultimediaApplication",
       "operatingSystem": "Any",

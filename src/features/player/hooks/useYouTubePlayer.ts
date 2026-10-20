@@ -101,8 +101,14 @@ export default function useYouTubePlayer({
   const [ytError, setYtError] = useState('');
   const [ytEmbedBlocked, setYtEmbedBlocked] = useState(false);
 
-  // Load YouTube IFrame API
-  useEffect(() => {
+  // Load the YouTube IFrame API — on first use, not on mount.
+  //
+  // This hook mounts wherever PlayerEngine does, which includes the guest landing page,
+  // so injecting on mount fetched the API (two requests to youtube.com) for every visitor
+  // whether or not a YouTube URL was ever involved. Nothing here is needed until
+  // loadYouTube actually has a video id.
+  const apiTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ensureYouTubeApi = useCallback(() => {
     if (apiLoadedRef.current) return;
     if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
       apiLoadedRef.current = true;
@@ -111,16 +117,19 @@ export default function useYouTubePlayer({
     const tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
     tag.onerror = () => {
-      setYtError('Failed to load YouTube player. Check your connection or ad-blocker.');
+      setYtError(t('player.ytErrors.apiLoadFailed'));
     };
     document.head.appendChild(tag);
     apiLoadedRef.current = true;
-    const timeout = setTimeout(() => {
+    apiTimeoutRef.current = setTimeout(() => {
       if (!window.YT) {
-        setYtError('YouTube API took too long to load.');
+        setYtError(t('player.ytErrors.apiTimeout'));
       }
     }, 10000);
-    return () => clearTimeout(timeout);
+  }, [t]);
+
+  useEffect(() => () => {
+    if (apiTimeoutRef.current) clearTimeout(apiTimeoutRef.current);
   }, []);
 
   // Create inner div for YT player on mount
@@ -140,6 +149,7 @@ export default function useYouTubePlayer({
       setYtError(t('player.invalidUrl'));
       return;
     }
+    ensureYouTubeApi();
     setYtError('');
     setYtEmbedBlocked(false);
     setSource('youtube');
@@ -224,7 +234,7 @@ export default function useYouTubePlayer({
     } else {
       window.onYouTubeIframeAPIReady = initPlayer;
     }
-  }, [containerRef, ytUrl, t, settings.playback?.volume, settings.playback?.muted, settings.playback?.autoRewindOnPause?.enabled, settings.playback?.autoRewindOnPause?.seconds, updateDuration, updateTime, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, setSource]);
+  }, [containerRef, ytUrl, t, settings.playback?.volume, settings.playback?.muted, settings.playback?.autoRewindOnPause?.enabled, settings.playback?.autoRewindOnPause?.seconds, updateDuration, updateTime, setIsPlaying, setCurrentTime, onTitleChange, onMediaChange, setSource, ensureYouTubeApi]);
 
 
   // Poll YouTube time with requestAnimationFrame

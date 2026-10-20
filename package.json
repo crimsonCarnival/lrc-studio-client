@@ -6,7 +6,7 @@
   "scripts": {
     "icons": "node scripts/subset-icons.mjs",
     "predev": "node scripts/subset-icons.mjs",
-    "prebuild": "node scripts/subset-icons.mjs",
+    "prebuild": "node scripts/subset-icons.mjs && node scripts/check-csp-hash.mjs",
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "lint": "eslint .",

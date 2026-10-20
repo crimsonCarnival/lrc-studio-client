@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { request } from '@/app/api.client';
-import { getSocket } from '@/app/socket.client';
+import { connectSocket } from '@/app/socket.client';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
 import { BadgeEmblem } from '@/features/badges/BadgeEmblem';
@@ -116,8 +116,13 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket || !user) return;
+    if (!user) return;
+    // connectSocket() rather than getSocket(): AppProviders only connects for a
+    // signed-in session, and React runs child effects before parent ones, so on the
+    // render where sign-in lands this would otherwise read null and never subscribe.
+    // It is idempotent, and the guard above keeps guests from opening one.
+    const socket = connectSocket();
+    if (!socket) return;
     // Read before the hoisted handlers below: TS does not carry the null check
     // above into a function declaration. The recipient of a project
     // notification is that project's owner, so this is the owner-scoped URL's

@@ -45,7 +45,9 @@ export default {
     html5: "HTML5 player error",
     notFound: "Video not found or private",
     notEmbeddable: "Video cannot be embedded",
-    generic: "YouTube error (code {{code}})"
+    generic: "YouTube error (code {{code}})",
+    apiLoadFailed: "Couldn't load the YouTube player. Check your connection or ad blocker.",
+    apiTimeout: "The YouTube player took too long to load."
   },
   findAnotherVersion: "Find another version",
   embeddingDisabledDesc: "This video's owner has disabled playback on external sites. No audio will play in the editor.",

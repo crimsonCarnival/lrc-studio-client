@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { getSocket } from '@/app/socket.client';
+import { connectSocket, getSocket } from '@/app/socket.client';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { presenceStore } from '@/features/auth/presence.store';
 import type { UserActivity } from '@/features/auth/presence.store';
@@ -13,8 +13,13 @@ export function useSessionSocket() {
   const isStaff = user?.role ? (ROLE_RANK[user.role as keyof typeof ROLE_RANK] ?? 0) >= STAFF_RANK : false;
 
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket || !userId) return;
+    if (!userId) return;
+    // connectSocket() rather than getSocket(): AppProviders only connects for a
+    // signed-in session, and React runs child effects before parent ones, so on the
+    // render where sign-in lands this would otherwise read null and never subscribe.
+    // It is idempotent, and the guard above keeps guests from opening one.
+    const socket = connectSocket();
+    if (!socket) return;
 
     function joinRooms() {
       socket!.emit('join:user');

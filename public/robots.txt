@@ -9,4 +9,4 @@ Disallow: /admin
 Disallow: /api/
 Disallow: /graphql
 
-Sitemap: https://lrcstudio.app/sitemap.xml
+Sitemap: https://www.lrcstudio.app/sitemap.xml
