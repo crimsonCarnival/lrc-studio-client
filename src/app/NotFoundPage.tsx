@@ -93,7 +93,7 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
     switch (type) {
       case 'project':
         return {
-          icon: <Icon name="folder_search" size={64} className="text-amber-400" />,
+          icon: <Icon name="folder_off" size={64} className="text-amber-400" />,
           title: identifier
             ? t('error.projectNotFoundWithName', { id: identifier })
             : pickVariant(t, 'error.projectNotFoundTitle'),
@@ -175,7 +175,7 @@ export default function NotFoundPage({ type: typeProp, identifier: identifierPro
         };
       default:
         return {
-          icon: <Icon name="ghost" size={64} className="text-zinc-500" />,
+          icon: <Icon name="explore_off" size={64} className="text-zinc-500" />,
           title: pickVariant(t, 'error.pageNotFoundTitle'),
           description: pickVariant(t, 'error.pageNotFoundDesc'),
           primaryAction: {
