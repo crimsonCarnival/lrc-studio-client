@@ -64,6 +64,8 @@ export interface PlayerContextValue {
   mediaPopoverProps: MediaPopoverProps;
   // upload fetcher
   fetchUploads: () => void;
+  /** True for a short window after seek() is called, until the time update confirms the jump landed. */
+  isSeeking: boolean;
   // commands
   togglePlay: () => void;
   seek: (t: number) => void;
