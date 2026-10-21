@@ -272,11 +272,14 @@ export function useAutosave({
         readOnly: false,
       };
       if (uploadIdToSave) createData.uploadId = uploadIdToSave;
+      const pendingProjectRef = sessionStorage.getItem('pendingProjectRef');
+      if (pendingProjectRef) createData.createdFrom = pendingProjectRef;
 
       const performCreate = async () => {
         try {
           const recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'autosave_create');
           const { publicId } = await projects.create({ ...createData, recaptchaToken });
+          if (pendingProjectRef) sessionStorage.removeItem('pendingProjectRef');
           setForkedFrom?.(null); // Auto-creation from guest is never a fork
           setActivepublicId(publicId);
           activepublicIdRef.current = publicId;

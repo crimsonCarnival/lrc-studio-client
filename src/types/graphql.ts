@@ -146,6 +146,8 @@ export type CreatePlaylistInput = {
 
 export type CreateProjectInput = {
   coverImage?: InputMaybe<Scalars['String']['input']>;
+  /** Attribution for what triggered creation (e.g. "uploads_library"), carried from the `ref` URL param. */
+  createdFrom?: InputMaybe<Scalars['String']['input']>;
   lyrics?: InputMaybe<ProjectLyricsInput>;
   metadata?: InputMaybe<ProjectMetadataInput>;
   public?: InputMaybe<Scalars['Boolean']['input']>;

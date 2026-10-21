@@ -61,6 +61,15 @@ export function useSetupMedia({ playerRef, userId, onPreselectUpload }: UseSetup
 
   const [initialPendingYtUrl] = useState(() => sessionStorage.getItem('pendingYtUrl'));
 
+  // Project-creation attribution: `?ref=` names what sent the user to setup
+  // (e.g. `uploads_library`). Stashed for the auto-create path in useAutosave,
+  // which runs after this screen's state resets — history state does not
+  // survive that, same reason `uploadId` above is a URL param and not state.
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) sessionStorage.setItem('pendingProjectRef', ref.slice(0, 64));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [audio, setAudio] = useState<AudioState>(() => ({
     ready: false,
     name: '',

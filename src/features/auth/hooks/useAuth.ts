@@ -9,6 +9,7 @@ import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.serv
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 import type { User } from '@/types/graphql';
+import { getSignupAttribution, clearSignupAttribution } from '@/shared/utils/attribution';
 
 // Migrate legacy single-account format to multi-account array on first load
 rememberedAccounts.migrate();
@@ -327,7 +328,8 @@ export function useAuth() {
       recaptchaToken = await executeRecaptcha('register');
     }
 
-    const result = await auth.register({ accountName, email, password, recaptchaToken }) as { user: AuthUser };
+    const result = await auth.register({ accountName, email, password, recaptchaToken, signupSource: getSignupAttribution() }) as { user: AuthUser };
+    clearSignupAttribution();
     // Cookies are automatically set by the server. Just update user state.
     storage.set(STORAGE_KEYS.HAS_SESSION, '1');
     setAuthFlag(true);
@@ -343,7 +345,8 @@ export function useAuth() {
       recaptchaToken = await executeRecaptcha('register');
     }
 
-    const result = await auth.register({ accountName, email, password, displayName, recaptchaToken }) as { user: AuthUser };
+    const result = await auth.register({ accountName, email, password, displayName, recaptchaToken, signupSource: getSignupAttribution() }) as { user: AuthUser };
+    clearSignupAttribution();
     storage.set(STORAGE_KEYS.HAS_SESSION, '1');
     setAuthFlag(true);
     scheduleRefresh();

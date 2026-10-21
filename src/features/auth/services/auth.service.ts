@@ -11,6 +11,7 @@ interface RegisterParams {
   recaptchaToken?: string;
   claimToken?: string;
   publicId?: string;
+  signupSource?: { ref?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string };
 }
 
 interface LoginParams {

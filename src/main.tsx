@@ -49,6 +49,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { RecaptchaGate, RecaptchaRouteArmer } from '@/app/RecaptchaGate';
 import { gqlRequest } from '@/app/graphql.client.js';
 import { projectPath } from '@/features/projects/project-path';
+import { captureSignupAttribution } from '@/shared/utils/attribution';
 
 declare global {
   interface Window {
@@ -241,6 +242,10 @@ const rootElement = document.getElementById('root');
 // phone layout before being sent to the canonical host.
 redirectOffMobileHostIfNeeded();
 redirectToMobileHostIfNeeded();
+
+// First-touch signup attribution: cheap, synchronous, must run before the URL
+// a social link carried is ever lost to in-app navigation.
+captureSignupAttribution();
 
 // Keep icons blank until the Material Symbols font is usable, so nothing flashes in
 // their place. The preload now comes from index.html (injected at build time by the
