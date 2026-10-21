@@ -12,6 +12,7 @@ import { authService } from '@/features/auth/services/auth.service';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LogoLoader } from '@ui/LogoLoader';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
 // Matches the server's avatar-signature transformation (c_fill,w_256,h_256) — the crop
 // step resizes to this before upload so the Cloudinary transform is a no-op safety net,
@@ -57,7 +58,7 @@ export default function AvatarUpload() {
     closeCrop();
     setUploading(true);
     try {
-      const recaptchaToken = executeRecaptcha ? await executeRecaptcha('upload_avatar') : undefined;
+      const recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'upload_avatar');
       const { url } = await uploadsService.uploadAvatar(blob, recaptchaToken);
       const updatedUser = await authService.updateProfile({ avatarUrl: url });
       setUser(prev => ({ ...prev, ...updatedUser }));

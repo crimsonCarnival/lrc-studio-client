@@ -6,6 +6,7 @@ import { sectionsToFlat, flatToSections } from '@/features/editor/utils/sections
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 import { sanitizeLines } from '@/shared/utils/sanitize-lines';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
 
 /**
@@ -229,7 +230,7 @@ export function useProjectActions({
             } catch { /* fall through to create */ }
           }
           
-          const recaptchaToken = executeRecaptcha ? await executeRecaptcha('restore_project') : undefined;
+          const recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'restore_project');
           const res = await projects.create({ ...serverPayload, recaptchaToken });
           setActivepublicId(res.publicId);
           activepublicIdRef.current = res.publicId;

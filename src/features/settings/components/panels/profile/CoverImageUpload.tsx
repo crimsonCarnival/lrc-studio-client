@@ -11,6 +11,7 @@ import { authService } from '@/features/auth/services/auth.service';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LogoLoader } from '@ui/LogoLoader';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
 // Matches the server's profile-cover-signature transformation (c_fill,w_1200,h_400) —
 // a 3:1 banner, same ratio ProfileHeader displays it at via object-cover.
@@ -55,7 +56,7 @@ export default function CoverImageUpload() {
     closeCrop();
     setUploading(true);
     try {
-      const recaptchaToken = executeRecaptcha ? await executeRecaptcha('upload_profile_cover') : undefined;
+      const recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'upload_profile_cover');
       const { url } = await uploadsService.uploadProfileCover(blob, recaptchaToken);
       const updatedUser = await authService.updateProfile({ coverImageUrl: url });
       setUser(prev => ({ ...prev, ...updatedUser }));

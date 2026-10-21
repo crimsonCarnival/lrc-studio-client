@@ -9,6 +9,7 @@ import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { useProjectSocket } from './useProjectSocket';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 import { sanitizeLines } from '@/shared/utils/sanitize-lines';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
 // Legacy URL-encoded share fallbacks
 async function decompressFromBase64(str) {
@@ -245,7 +246,7 @@ export function useSharedProject({
       }
       if (!sharedId) {
         if (!lastShareData) setShareModalState({ loading: 'recaptcha' });
-        const recaptchaToken = executeRecaptcha ? await executeRecaptcha('share_project') : undefined;
+        const recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'share_project');
         if (!lastShareData) setShareModalState({ loading: 'creating' });
         const result = await projects.create({ ...projectData, recaptchaToken });
         sharedId = result.publicId;

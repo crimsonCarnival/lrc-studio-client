@@ -39,6 +39,7 @@ import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import { useSetupMedia } from '@/features/editor/hooks/useSetupMedia';
 import { LogoLoader } from '@ui/LogoLoader';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
 const MAX_IMPORT_FILE_SIZE = 2 * 1024 * 1024;
 
@@ -417,7 +418,7 @@ export default function SetupScreen({ onComplete, playerRef, onShowAllUploads }:
   // owns the validation messages and the busy state. The previous version
   // swallowed every error, so a rejected file looked like a dead button.
   const uploadCover = useCallback(async (file: File): Promise<string> => {
-    const token = executeRecaptcha ? await executeRecaptcha('upload_cover') : undefined;
+    const token = await executeRecaptchaSafe(executeRecaptcha, 'upload_cover');
     return await uploadsService.uploadCoverImage(file, token) as string;
   }, [executeRecaptcha]);
 

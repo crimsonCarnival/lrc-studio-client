@@ -10,6 +10,7 @@ import { createPlaylist, updatePlaylist, addProjectToPlaylist, removeProjectFrom
 import { gqlRequest } from '@/app/graphql.client';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { uploadsService } from '@/features/projects/services/uploads.service';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
 const GET_MY_PROJECTS = /* GraphQL */ `
   query GetMyProjects {
@@ -100,7 +101,7 @@ export function PlaylistModal({ playlist, onClose, onSave }: PlaylistModalProps)
     if (file.size > 5 * 1024 * 1024) return;
     setImageUploading(true);
     try {
-      const token = executeRecaptcha ? await executeRecaptcha('upload_cover') : undefined;
+      const token = await executeRecaptchaSafe(executeRecaptcha, 'upload_cover');
       const url = await uploadsService.uploadCoverImage(file, token);
       handleField('coverImage', url);
     } catch { /* ignore */ }

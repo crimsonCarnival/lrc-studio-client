@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { Button } from '@ui/button';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
 export default function ForgotPasswordTab({ onBackToLogin }: { onBackToLogin?: () => void }) {
   const { t } = useTranslation();
@@ -22,7 +23,7 @@ export default function ForgotPasswordTab({ onBackToLogin }: { onBackToLogin?: (
     try {
       let recaptchaToken: string | undefined = undefined;
       if (executeRecaptcha) {
-        recaptchaToken = await executeRecaptcha('forgot_password');
+        recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'forgot_password');
       }
 
       const response = await fetch('/api/auth/forgot-password', {

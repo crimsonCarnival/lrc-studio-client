@@ -6,6 +6,7 @@ import { uploads, getAccessToken } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { PlaybackEntry } from '../playback-history';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
 type HostedFile = File & { isHosted?: boolean };
 
@@ -79,7 +80,7 @@ export default function useLocalAudio({
         try {
           const result = await uploads.uploadMedia(
             file,
-            executeRecaptcha ? await executeRecaptcha('upload_audio') : undefined
+            await executeRecaptchaSafe(executeRecaptcha, 'upload_audio')
           ) as { secure_url: string; public_id: string; duration?: number | null };
           try {
             // Immediately persist to database before considering it successful

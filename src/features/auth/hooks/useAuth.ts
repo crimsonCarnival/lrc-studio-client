@@ -10,6 +10,7 @@ import { rememberedAccounts } from '@/features/auth/services/remembered-accounts
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 import type { User } from '@/types/graphql';
 import { getSignupAttribution, clearSignupAttribution } from '@/shared/utils/attribution';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
 // Migrate legacy single-account format to multi-account array on first load
 rememberedAccounts.migrate();
@@ -277,7 +278,7 @@ export function useAuth() {
   const login = useCallback(async ({ identifier, password }) => {
     let recaptchaToken: string | undefined = undefined;
     if (executeRecaptcha) {
-      recaptchaToken = await executeRecaptcha('login');
+      recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'login');
     }
 
     const result = await auth.login({ identifier, password, recaptchaToken }) as { user: AuthUser };
@@ -302,7 +303,7 @@ export function useAuth() {
   const loginAndHold = useCallback(async ({ identifier, password }) => {
     let recaptchaToken: string | undefined = undefined;
     if (executeRecaptcha) {
-      recaptchaToken = await executeRecaptcha('login');
+      recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'login');
     }
 
     const result = await auth.login({ identifier, password, recaptchaToken }) as { user: AuthUser };
@@ -325,7 +326,7 @@ export function useAuth() {
   const register = useCallback(async ({ accountName, email, password }) => {
     let recaptchaToken: string | undefined = undefined;
     if (executeRecaptcha) {
-      recaptchaToken = await executeRecaptcha('register');
+      recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'register');
     }
 
     const result = await auth.register({ accountName, email, password, recaptchaToken, signupSource: getSignupAttribution() }) as { user: AuthUser };
@@ -342,7 +343,7 @@ export function useAuth() {
   const registerAndHold = useCallback(async ({ accountName, email, password, displayName }) => {
     let recaptchaToken: string | undefined = undefined;
     if (executeRecaptcha) {
-      recaptchaToken = await executeRecaptcha('register');
+      recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'register');
     }
 
     const result = await auth.register({ accountName, email, password, displayName, recaptchaToken, signupSource: getSignupAttribution() }) as { user: AuthUser };

@@ -25,6 +25,7 @@ import toast from 'react-hot-toast';
 import { songMetadata } from '@/app/api';
 import SingersInput from './SingersInput';
 import { LogoLoader } from '@ui/LogoLoader';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
 const EMPTY_TAGS: string[] = [];
 const EMPTY_ARTISTS: ArtistCredit[] = [];
@@ -236,7 +237,7 @@ export default function ProjectSetupModal({
     if (file.size > 5 * 1024 * 1024) return;
     setImageUploading(true);
     try {
-      const token = executeRecaptcha ? await executeRecaptcha('upload_cover') : undefined;
+      const token = await executeRecaptchaSafe(executeRecaptcha, 'upload_cover');
       const url = await uploadsService.uploadCoverImage(file, token) as string;
       setForm(f => ({ ...f, [field]: url }));
     } catch { /* ignore */ }

@@ -40,29 +40,41 @@ export function isArmed(): boolean {
 }
 
 /**
- * Runs executeRecaptcha, retrying once after a short delay.
+ * Runs executeRecaptcha, retrying for a few seconds and falling back to grecaptcha.execute.
  *
  * The hook reports a script as loaded (executeRecaptcha truthy) slightly before the
  * badge's grecaptcha.render() callback assigns its real client id. Calling execute in
  * that gap throws synchronously ("Invalid reCAPTCHA client id: ''"), which a plain
  * `.catch()` on the call does not see since the throw happens before a promise exists.
- * One retry covers that race; a second failure degrades to no token, same as before.
+ * Retries (and the client-id-free direct call) cover that race; exhausting them degrades to no token.
  */
 export async function executeRecaptchaSafe(
   executeRecaptcha: ((action: string) => Promise<string>) | undefined,
   action: string
 ): Promise<string | undefined> {
   if (!executeRecaptcha) return undefined;
-  try {
-    return await executeRecaptcha(action);
-  } catch (err) {
-    console.warn('reCAPTCHA execute failed, retrying:', err);
+  const siteKey = import.meta.env.VITE_RECAPTCHA_KEY as string | undefined;
+  // The hook's client id can stay unassigned for a few seconds after the script
+  // loads (badge render is slow on a cold page), so one 300 ms retry is not
+  // enough. grecaptcha.execute(siteKey, ...) works without a client id, so use
+  // it as a fallback and keep trying for a few seconds before giving up.
+  const attempts = 6;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await executeRecaptcha(action);
+    } catch (err) {
+      if (i === attempts - 1) console.warn('reCAPTCHA execute failed:', err);
+    }
+    const g = (window as unknown as { grecaptcha?: { ready?: (cb: () => void) => void; execute?: (key: string, o: { action: string }) => Promise<string> } }).grecaptcha;
+    if (g?.execute && siteKey) {
+      try {
+        return await new Promise<string>((resolve, reject) => {
+          const run = () => g.execute!(siteKey, { action }).then(resolve, reject);
+          if (g.ready) g.ready(run); else run();
+        });
+      } catch { /* fall through to the delay and retry */ }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 300 * (i + 1)));
   }
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  try {
-    return await executeRecaptcha(action);
-  } catch (err) {
-    console.warn('reCAPTCHA execute failed:', err);
-    return undefined;
-  }
+  return undefined;
 }

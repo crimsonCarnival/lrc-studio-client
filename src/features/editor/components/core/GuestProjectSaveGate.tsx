@@ -11,6 +11,7 @@ import { projectsService } from '@/features/projects/services/projects.service';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { LogoLoader } from '@ui/LogoLoader';
 import { projectEditPath } from '@/features/projects/project-path';
+import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
 const BACKOFF_INTERVALS_MS = [2000, 4000, 8000, 16000, 32000];
 const STEADY_INTERVAL_MS = 30000;
@@ -81,7 +82,7 @@ export default function GuestProjectSaveGate() {
 
         try {
           const recaptchaToken = executeRecaptchaRef.current
-            ? await executeRecaptchaRef.current('create_project').catch(() => undefined)
+            ? await executeRecaptchaSafe(executeRecaptchaRef.current, 'create_project')
             : undefined;
 
           const { savedAt: _savedAt, ytUrl, uploadUrl, uploadPublicId, fileName, duration: fileDuration, ...payload } = record as PendingRecord & {
