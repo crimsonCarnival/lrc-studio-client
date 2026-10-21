@@ -395,6 +395,13 @@ export type LineInput = {
   words?: InputMaybe<Array<WordInput>>;
 };
 
+/** One positional line write within ProjectLyricsInput.lines. */
+export type LinePatchInput = {
+  line: LineInput;
+  lineIdx: Scalars['Int']['input'];
+  sectionIdx: Scalars['Int']['input'];
+};
+
 export type Lyrics = {
   createdAt?: Maybe<Scalars['String']['output']>;
   editorMode: Scalars['String']['output'];
@@ -761,6 +768,8 @@ export type ProjectLyricsInput = {
   language?: InputMaybe<Scalars['String']['input']>;
   line?: InputMaybe<LineInput>;
   lineIdx?: InputMaybe<Scalars['Int']['input']>;
+  /** Several lines changed in one save, line count and section markers unchanged. */
+  lines?: InputMaybe<Array<LinePatchInput>>;
   sectionIdx?: InputMaybe<Scalars['Int']['input']>;
   sections?: InputMaybe<Array<SectionInput>>;
   word?: InputMaybe<WordInput>;
