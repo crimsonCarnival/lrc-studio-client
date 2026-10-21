@@ -50,6 +50,49 @@ function preloadCriticalFonts() {
   };
 }
 
+// i18n.ts's `i18nReady` only bundles the detected language into the initial
+// i18next.init() call, but the dynamic import() that fetches that bundle is
+// buried inside the module graph — so the browser has no way to discover its
+// URL until the entry chunk has downloaded AND parsed far enough to reach
+// that line. The chunk is knowable at build time (same situation as the
+// fonts above), so modulepreloading it removes that serial hop.
+//
+// There is no visitor-specific HTML on this static deploy, so this can only
+// preload one language unconditionally. 'en' is picked because it is
+// already this codebase's fallback everywhere else: index.html's
+// `lang="en"`, i18next's `fallbackLng: 'en'`, and proxy.ts's OG-metadata
+// default all agree. That is an assumption about traffic, not a measurement
+// — if most real visitors are actually Spanish-reading, this should
+// preload 'es' instead, or the whole thing should be revisited in favor of
+// injecting the right one per-request the way proxy.ts already does for
+// crawlers (bigger change: that path is deliberately skipped for humans
+// today to avoid a function invocation on every page load).
+//
+// A wrong guess costs the *other* language's visitors one wasted ~40KB
+// chunk fetch — strictly worse than today only for them, and only by that
+// one chunk; everyone's own-language load is unaffected.
+function preloadDetectedLocale() {
+  const PRELOAD_LOCALE = 'en';
+  return {
+    name: 'preload-detected-locale',
+    transformIndexHtml: {
+      order: 'post',
+      handler(_html, ctx) {
+        if (!ctx.bundle) return [];
+        const chunk = Object.values(ctx.bundle).find(
+          (f) => f.type === 'chunk' && f.facadeModuleId?.replace(/\\/g, '/').endsWith(`/locales/${PRELOAD_LOCALE}/index.js`)
+        );
+        if (!chunk) return [];
+        return [{
+          tag: 'link',
+          attrs: { rel: 'modulepreload', href: `/${chunk.fileName}` },
+          injectTo: 'head',
+        }];
+      },
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => ({
   plugins: [
     react({
@@ -61,6 +104,7 @@ export default defineConfig(({ mode }) => ({
     }),
     tailwindcss(),
     preloadCriticalFonts(),
+    preloadDetectedLocale(),
   ],
   resolve: {
     alias: {
