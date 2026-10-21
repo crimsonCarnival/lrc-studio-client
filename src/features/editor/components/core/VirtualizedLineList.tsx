@@ -534,7 +534,7 @@ export default function VirtualizedLineList({
                         stampTarget={stampTarget}
                         handleStampTargetToggle={handleStampTargetToggle}
                         handleSetStampTarget={handleSetStampTarget}
-                        playbackPosition={playbackPosition}
+                        playbackPosition={isActive ? playbackPosition : null}
                         onWordMenu={onWordMenu}
                         onLineMenu={onLineMenu}
                         isModified={modifiedLines?.has(i) || false}
