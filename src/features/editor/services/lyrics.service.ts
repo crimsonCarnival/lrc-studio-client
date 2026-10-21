@@ -73,7 +73,12 @@ export const lyricsService = {
           includeFeaturedInTitle: hasCredits && includeFeaturedInTitle,
         }),
       });
-    } catch {
+    } catch (err) {
+      // A bare catch here used to swallow a 422 from the server's
+      // artist-credit validator too, silently handing back a file that
+      // skipped it. Only fall back on a genuine network failure, same as
+      // `parse` above.
+      if (!isNetworkError(err)) throw err;
       const output = localCompileLRC(lines as EditorLine[], includeTranslations, precision as 'hundredths' | 'thousandths' | undefined, metadata as Parameters<typeof localCompileLRC>[3], lineEndings as 'lf' | 'crlf' | undefined, includeSecondary, wordPrecision as string | undefined, exportTranslationIndex, true, {
         artists,
         includeFeaturedInTitle,
@@ -88,7 +93,10 @@ export const lyricsService = {
         method: 'POST',
         body: JSON.stringify({ lines, duration, includeTranslations, lineEndings, srtConfig, includeSecondary, exportTranslationIndex }),
       });
-    } catch {
+    } catch (err) {
+      // Same reasoning as compileLrc: only fall back on a network failure,
+      // not on a validation error the server deliberately rejected.
+      if (!isNetworkError(err)) throw err;
       const output = localCompileSRT(lines as EditorLine[], duration ?? 0, includeTranslations, lineEndings as 'lf' | 'crlf' | undefined, srtConfig as Parameters<typeof localCompileSRT>[4], includeSecondary, exportTranslationIndex);
       return { output, format: 'srt' };
     }

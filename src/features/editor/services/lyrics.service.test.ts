@@ -5,7 +5,10 @@ const api = vi.hoisted(() => ({ offline: false, calls: [] as Array<[string, { bo
 vi.mock('@/app/api.client', () => ({
   request: (path: string, init: { body: string }) => {
     api.calls.push([path, init]);
-    return api.offline ? Promise.reject(new Error('offline')) : Promise.resolve({ output: '', format: 'lrc' });
+    // A real browser fetch() throws TypeError on a network failure — that's
+    // what isNetworkError() in lyrics.service.ts actually checks for, so the
+    // mock has to produce the same shape rather than an arbitrary Error.
+    return api.offline ? Promise.reject(new TypeError('Failed to fetch')) : Promise.resolve({ output: '', format: 'lrc' });
   },
 }));
 
