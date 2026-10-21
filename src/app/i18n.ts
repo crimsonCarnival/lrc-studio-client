@@ -65,8 +65,12 @@ function ensureLanguageLoaded(lng: string): Promise<void> {
 // visitor actually reads. Only the detected language's resources are bundled into the
 // initial i18n.init() call now; i18nReady (awaited by main.tsx before the first render) is
 // what used to be a synchronous resources object, so there is no change in what the first
-// paint sees for the active language. The other language loads lazily: proactively once the
-// page goes idle, and immediately as a fallback if changeLanguage() fires before that.
+// paint sees for the active language. The other language loads lazily, on demand, the moment
+// changeLanguage() is called -- ensureLanguageLoaded() below is wrapped into it precisely so
+// that's guaranteed to work. It used to also preload proactively once the page went idle, but
+// that cost every session ~47KB gzip for a switch most visitors never make; the on-demand path
+// alone already has no raw-key flash, so the idle preload bought only a head start on a rare,
+// user-initiated action and was removed.
 export const i18nReady: Promise<void> = RESOURCE_LOADERS[initialLanguage]().then((mod) => {
   languageLoadPromises.set(initialLanguage, Promise.resolve());
 
@@ -96,14 +100,5 @@ export const i18nReady: Promise<void> = RESOURCE_LOADERS[initialLanguage]().then
         if (!lng) return originalChangeLanguage(lng, callback);
         return ensureLanguageLoaded(lng).then(() => originalChangeLanguage(lng, callback));
       }) as typeof i18n.changeLanguage;
-
-      if (typeof window === 'undefined') return;
-      const win = window as typeof window & { requestIdleCallback?: (cb: () => void) => number };
-      const preloadOtherLanguage = () => {
-        const other = SUPPORTED_LANGUAGES.find((l) => l !== initialLanguage);
-        if (other) void ensureLanguageLoaded(other);
-      };
-      if (win.requestIdleCallback) win.requestIdleCallback(preloadOtherLanguage);
-      else setTimeout(preloadOtherLanguage, 2000);
     });
 });
