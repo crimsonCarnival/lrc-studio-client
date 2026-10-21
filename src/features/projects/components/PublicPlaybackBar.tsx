@@ -91,7 +91,7 @@ export default function PublicPlaybackBar({
   const { t } = useTranslation();
   const { settings } = useSettings();
   const {
-    source, isPlaying, currentTime, duration, playbackSpeed, hasMedia,
+    source, isPlaying, currentTime, duration, playbackSpeed, hasMedia, isSeeking,
     loopA, loopB, local, yt, audioRef,
     MIN_SPEED, MAX_SPEED, speedPresets,
     togglePlay, seek, applySpeed, handleLoopChange,
@@ -311,10 +311,20 @@ export default function PublicPlaybackBar({
             type="button"
             onClick={togglePlay}
             disabled={!ready}
-            aria-label={isPlaying ? t('projectView.pause') : t('projectView.play')}
+            aria-label={isSeeking ? t('player.loading') : isPlaying ? t('projectView.pause') : t('projectView.play')}
             className="inline-grid place-items-center size-16 lg:size-14 rounded-full bg-foreground text-background hover:opacity-90 active:scale-95 transition disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            <Icon name={isPlaying ? 'pause' : 'play_arrow'} size={26} filled />
+            {isSeeking ? (
+              <span
+                className="eq-bars text-current"
+                style={{ '--eq-h': '20px', '--eq-w': '3.5px', '--eq-gap': '3px' } as React.CSSProperties}
+                aria-hidden
+              >
+                <i /><i /><i />
+              </span>
+            ) : (
+              <Icon name={isPlaying ? 'pause' : 'play_arrow'} size={26} filled />
+            )}
           </button>
           <button
             type="button"

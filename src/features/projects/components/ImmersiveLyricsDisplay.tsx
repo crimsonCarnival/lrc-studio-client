@@ -67,11 +67,11 @@ function getDistStyle(dist: number | null) {
 // the dimming is opacity on the foreground token, so it holds in both themes.
 const FOCUS_STYLE: Record<number, { size: string; opacity: number }> = {
   // The line just sung stays readable: its colour, not its opacity, says it is past.
-  [-1]: { size: 'clamp(0.95rem, 1.4vw, 1.25rem)', opacity: 0.75 },
-  0: { size: 'clamp(1.6rem, 3vw, 2.75rem)', opacity: 1 },
-  1: { size: 'clamp(1.05rem, 1.7vw, 1.5rem)', opacity: 0.72 },
-  2: { size: 'clamp(0.95rem, 1.5vw, 1.375rem)', opacity: 0.42 },
-  3: { size: 'clamp(0.9rem, 1.4vw, 1.3rem)', opacity: 0.24 },
+  [-1]: { size: 'clamp(0.85rem, 1.1vw, 1.05rem)', opacity: 0.75 },
+  0: { size: 'clamp(1.2rem, 1.8vw, 1.65rem)', opacity: 1 },
+  1: { size: 'clamp(0.95rem, 1.3vw, 1.2rem)', opacity: 0.72 },
+  2: { size: 'clamp(0.85rem, 1.15vw, 1.05rem)', opacity: 0.42 },
+  3: { size: 'clamp(0.8rem, 1vw, 0.95rem)', opacity: 0.24 },
 };
 
 const isBlank = (line: DisplayLine) => !line.text || line.text.trim() === '';
@@ -106,15 +106,13 @@ const ALIGN_LABEL_KEYS = {
   right: 'settings.interface.alignRight',
 } as const;
 
-// Base (dist-0) rem size per settings.interface.fontSize — the same setting
-// PreviewLine's ACTIVE_FONT_SIZES reads, so the public view tracks the
-// viewer's own preference instead of a fixed value. Bumped up from the
-// previous flat 1.25rem across the board, per request.
+// Base (dist-0) rem size per settings.interface.fontSize — scaled down to keep
+// public view lyrics balanced and readable without dominating the viewport.
 const BASE_FONT_REM: Record<string, number> = {
-  small: 1.15,
-  normal: 1.4,
-  large: 1.65,
-  xlarge: 1.95,
+  small: 0.875,
+  normal: 1.0,
+  large: 1.15,
+  xlarge: 1.3,
 };
 
 interface ImmersiveLineProps {
@@ -746,8 +744,8 @@ export default function ImmersiveLyricsDisplay({
         <ContourLines />
         {alignmentControl}
         {sectionHeader}
-        <div className="lrc-scroll relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 py-8 lg:px-14 lg:py-10">
-          <div className="my-auto flex flex-col gap-[18px] lg:gap-[22px]">
+        <div className="lrc-scroll relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 py-6 lg:px-14 lg:py-8">
+          <div className="my-auto flex flex-col gap-3 lg:gap-4">
             {focusWindow.map(({ index, step }) => {
               const line = lines[index];
               return (
