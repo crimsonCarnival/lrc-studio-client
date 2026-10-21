@@ -10,6 +10,7 @@ import { requestsApi } from './services/requests.service';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
+import useConfirm from '@/shared/hooks/useConfirm';
 
 // Typed i18next rejects arbitrary string keys; alias for dynamic req/stat labels.
 type TkFn = (key: string) => string;
@@ -467,6 +468,7 @@ export default function AdminLevelsTab({ proposeMode = false }: { proposeMode?: 
   const [levels, setLevels] = useState<AddictionLevel[]>([]);
   const [loading, setLoading] = useState(true);
   const [formModal, setFormModal] = useState<AddictionLevel | 'new' | null>(null);
+  const [requestConfirm, confirmModal] = useConfirm();
 
   const fetchLevels = useCallback(async () => {
     setLoading(true);
@@ -497,26 +499,27 @@ export default function AdminLevelsTab({ proposeMode = false }: { proposeMode?: 
     }
   };
 
-  const handleDelete = async (level: AddictionLevel) => {
+  const handleDelete = (level: AddictionLevel) => {
     const lang: 'en' | 'es' = i18n.language === 'es' ? 'es' : 'en';
     const title = level.title?.[lang] || level.title?.en || level.id;
-    if (!window.confirm(t('admin.levels.deleteConfirm', { title }))) return;
-    if (proposeMode) {
-      try {
-        await requestsApi.submit('level_delete', { id: level.id });
-        toast.success(t('admin.requests.composer.submitted'));
-      } catch (e) {
-        toast.error((e as Error)?.message || t('admin.requests.composer.error'));
+    requestConfirm(t('admin.levels.deleteConfirm', { title }), async () => {
+      if (proposeMode) {
+        try {
+          await requestsApi.submit('level_delete', { id: level.id });
+          toast.success(t('admin.requests.composer.submitted'));
+        } catch (e) {
+          toast.error((e as Error)?.message || t('admin.requests.composer.error'));
+        }
+        return;
       }
-      return;
-    }
-    try {
-      await gqlRequest(DELETE_LEVEL, { id: level.id });
-      setLevels(prev => prev.filter(l => l.id !== level.id));
-      toast.success(t('admin.levels.deleteSuccess', { title: level.title?.en || level.id }));
-    } catch (err) {
-      toast.error((err as Error)?.message || t('admin.levels.deleteError'));
-    }
+      try {
+        await gqlRequest(DELETE_LEVEL, { id: level.id });
+        setLevels(prev => prev.filter(l => l.id !== level.id));
+        toast.success(t('admin.levels.deleteSuccess', { title: level.title?.en || level.id }));
+      } catch (err) {
+        toast.error((err as Error)?.message || t('admin.levels.deleteError'));
+      }
+    }, { variant: 'danger', title: t('common.delete') });
   };
 
   const handleMove = async (level: AddictionLevel, direction: 'up' | 'down') => {
@@ -625,6 +628,7 @@ export default function AdminLevelsTab({ proposeMode = false }: { proposeMode?: 
           />
         )}
       </AnimatePresence>
+      {confirmModal}
     </div>
   );
 }

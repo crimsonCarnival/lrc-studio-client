@@ -12,6 +12,7 @@ import { BADGE_COLORS } from '@/features/badges/badge-registry';
 import { requestsApi } from './services/requests.service';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Button } from '@ui/button';
+import useConfirm from '@/shared/hooks/useConfirm';
 
 // Typed i18next rejects arbitrary string keys / object interpolation values.
 type TkFn = (k: string, o?: Record<string, unknown>) => string;
@@ -625,6 +626,7 @@ export default function AdminBadgesTab({ proposeMode = false }: { proposeMode?: 
   const [formModal, setFormModal] = useState<BadgeDef | 'new' | null>(null);
   const [grantModal, setGrantModal] = useState<BadgeDef | null>(null);
   const [retroLoading, setRetroLoading] = useState<string | null>(null);
+  const [requestConfirm, confirmModal] = useConfirm();
 
   const fetchDefs = useCallback(async () => {
     setLoading(true);
@@ -654,26 +656,27 @@ export default function AdminBadgesTab({ proposeMode = false }: { proposeMode?: 
     toast.success(type === 'create' ? t('admin.badges.createSuccess', { label: labelText }) : t('admin.badges.updateSuccess', { label: labelText }));
   };
 
-  const handleDelete = async (def: BadgeDef) => {
+  const handleDelete = (def: BadgeDef) => {
     const lang: 'en' | 'es' = i18n.language === 'es' ? 'es' : 'en';
     const labelText = def.label?.[lang] || def.label?.en || def.id;
-    if (!window.confirm(t('admin.badges.confirmDelete', { label: labelText }))) return;
-    if (proposeMode) {
-      try {
-        await requestsApi.submit('badge_delete', { id: def.id });
-        toast.success(t('admin.requests.composer.submitted'));
-      } catch (e) {
-        toast.error((e as Error)?.message || t('admin.requests.composer.error'));
+    requestConfirm(t('admin.badges.confirmDelete', { label: labelText }), async () => {
+      if (proposeMode) {
+        try {
+          await requestsApi.submit('badge_delete', { id: def.id });
+          toast.success(t('admin.requests.composer.submitted'));
+        } catch (e) {
+          toast.error((e as Error)?.message || t('admin.requests.composer.error'));
+        }
+        return;
       }
-      return;
-    }
-    try {
-      await gqlRequest(DELETE_BADGE, { id: def.id });
-      setDefs(prev => prev.filter(d => d.id !== def.id));
-      toast.success(t('admin.badges.deleteSuccess', { label: labelText }));
-    } catch (e) {
-      toast.error((e as Error)?.message || t('admin.badges.deleteError'));
-    }
+      try {
+        await gqlRequest(DELETE_BADGE, { id: def.id });
+        setDefs(prev => prev.filter(d => d.id !== def.id));
+        toast.success(t('admin.badges.deleteSuccess', { label: labelText }));
+      } catch (e) {
+        toast.error((e as Error)?.message || t('admin.badges.deleteError'));
+      }
+    }, { variant: 'danger', title: t('common.delete') });
   };
 
   const handleRetroactive = async (badgeId: string) => {
@@ -820,6 +823,7 @@ export default function AdminBadgesTab({ proposeMode = false }: { proposeMode?: 
           <GrantModal badge={grantModal} onClose={() => setGrantModal(null)} />
         )}
       </AnimatePresence>
+      {confirmModal}
     </div>
   );
 }
