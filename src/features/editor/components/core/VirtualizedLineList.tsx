@@ -301,6 +301,29 @@ export default function VirtualizedLineList({
     toMeasure.forEach(measureLine);
   }, [dragIndex, measureLine]);
 
+  // A single-line edit is covered by the four effects above. A bulk change — furigana
+  // batch-apply, Auto Stamp, a lyrics import — touches many rows' height at once with
+  // no single index to force-measure, so it's left to each row's own ResizeObserver to
+  // catch up individually. That resize-driven update lands at low priority and visibly
+  // lags behind paint until something else (e.g. a hover) forces React to flush it —
+  // rows overlap until then. Detect "more than a couple of lines changed identity" and
+  // remeasure the whole list synchronously instead of waiting on it.
+  const prevLinesRef = useRef(lines);
+  useLayoutEffect(() => {
+    const prevLines = prevLinesRef.current;
+    prevLinesRef.current = lines;
+    if (prevLines === lines) return;
+    let changedCount = 0;
+    const maxLen = Math.max(prevLines.length, lines.length);
+    for (let idx = 0; idx < maxLen; idx++) {
+      if (prevLines[idx] !== lines[idx]) {
+        changedCount++;
+        if (changedCount > 2) break;
+      }
+    }
+    if (changedCount > 2) virtualizer.measure();
+  }, [lines, virtualizer]);
+
   // Auto-scroll to active line via virtualizer (line index → row; hidden lines don't scroll)
   const prevActiveRef = useCallback((idx: number) => {
     if (scrollAlignment === 'none') return;
