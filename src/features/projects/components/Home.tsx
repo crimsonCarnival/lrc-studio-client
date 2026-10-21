@@ -155,6 +155,22 @@ export default function Home() {
 
   const lastProject = items.length > 0 ? items[0] : null;
 
+  // The in-progress project closest to completion (with remaining lines > 0),
+  // so the header prompt never shows "One is 0 lines away from completion".
+  const closestInProgress = useMemo(() => {
+    return items
+      .filter((p) => {
+        const total = p.lineCount ?? 0;
+        const synced = p.syncedLineCount ?? 0;
+        return total > 0 && synced < total;
+      })
+      .map((p) => ({
+        remaining: (p.lineCount ?? 0) - (p.syncedLineCount ?? 0),
+        pct: (p.syncedLineCount ?? 0) / (p.lineCount ?? 1),
+      }))
+      .sort((a, b) => b.pct - a.pct || a.remaining - b.remaining)[0];
+  }, [items]);
+
   // projects.list() returns only the signed-in user's own projects, so the
   // signed-in account name IS the owner for everything on this page. Null when
   // it is not known yet; project URLs are owner-scoped, so there is nothing to
@@ -179,7 +195,9 @@ export default function Home() {
             </h1>
             <p className="text-[15px] text-zinc-400">
               {dt('home.welcomeSub')}
-              {items.length > 0 && ` ${t('home.projectProgress', { total: items.length, remaining: lastProject?.lineCount ? lastProject.lineCount - (lastProject.syncedLineCount || 0) : '?' })}`}
+              {items.length > 0 && closestInProgress && closestInProgress.remaining > 0 && (
+                ` ${t('home.projectProgress', { total: items.length, remaining: closestInProgress.remaining })}`
+              )}
             </p>
           </div>
           <Button asChild className="h-11 gap-2 px-[18px] text-base lg:h-11 lg:px-[18px] lg:text-base">
