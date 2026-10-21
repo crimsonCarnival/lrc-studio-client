@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import ActionDrawer, { DrawerItem } from '@/shared/ui/ActionDrawer';
 import { formatTime } from '@/shared/utils/format-time';
 import { hasKanji } from '@/shared/utils/furigana';
+import { ReadingInput } from '@features/editor/components/line/ReadingInput';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { DrawerKind, WordMenuData, LineMenuData } from '@/features/editor/hooks/useEditorActionDrawer';
@@ -63,6 +64,7 @@ export default function EditorActionDrawer({
 }: EditorActionDrawerProps) {
   const { t } = useTranslation();
   const [showSections, setShowSections] = useState(false);
+  const [editingReading, setEditingReading] = useState(false);
 
   const sections = (lines || [])
     .map((line, index) => ({ line, index }))
@@ -70,6 +72,7 @@ export default function EditorActionDrawer({
 
   const handleClose = () => {
     setShowSections(false);
+    setEditingReading(false);
     onClose();
   };
 
@@ -111,18 +114,28 @@ export default function EditorActionDrawer({
           )}
 
           {hasKanji(wordData.word?.word || '') && (
-            <DrawerItem
-              iconName="edit"
-              label={wordData.word?.reading ? t('editor.editReading') : t('editor.addReading')}
-              onClick={() => {
-                onClose();
-                const currentReading = wordData.word?.reading || '';
-                const newReading = window.prompt(t('editor.enterReadingPrompt'), currentReading);
-                if (newReading !== null) {
-                  handleSetWordReading(wordData.lineIndex!, wordData.wordIndex!, newReading);
-                }
-              }}
-            />
+            editingReading ? (
+              <div className="flex items-center gap-2 px-4 py-2.5">
+                <span className="text-sm text-zinc-400 shrink-0">{t('editor.editReading')}</span>
+                <ReadingInput
+                  defaultValue={wordData.word?.reading || ''}
+                  selectOnFocus
+                  onCommit={(val) => {
+                    handleSetWordReading(wordData.lineIndex!, wordData.wordIndex!, val);
+                    setEditingReading(false);
+                    onClose();
+                  }}
+                  onCancel={() => setEditingReading(false)}
+                  className="flex-1 min-w-0 bg-transparent border-b border-primary outline-none text-primary text-sm px-1 py-0.5"
+                />
+              </div>
+            ) : (
+              <DrawerItem
+                iconName="edit"
+                label={wordData.word?.reading ? t('editor.editReading') : t('editor.addReading')}
+                onClick={() => setEditingReading(true)}
+              />
+            )
           )}
 
           {/* Grouping repairs. Automatic grouping gets the ordinary line right but

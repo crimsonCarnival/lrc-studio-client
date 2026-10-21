@@ -227,7 +227,6 @@ export default {
   jumpToLine: "Ir a la línea",
   editReading: "Editar lectura",
   addReading: "Añadir lectura",
-  enterReadingPrompt: "Introduce la lectura (furigana):",
   selection: {
     hint: "Shift+Clic: rango · Ctrl+Clic: alternar · Esc: deseleccionar",
     selected: "seleccionados",
