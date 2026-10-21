@@ -125,6 +125,14 @@ function PlayerEngineInner(
   const [duration, setDuration] = useState(0);
   const [mediaUploads, setMediaUploads] = useState<UploadItem[]>([]);
 
+  // Seeking indicator: true from the moment seek() is called until updateTime
+  // confirms the playhead has landed near the target (or a safety timeout).
+  const [isSeeking, setIsSeeking] = useState(false);
+  const seekTargetRef = useRef<number | null>(null);
+  const seekStartTimeRef = useRef<number>(0);
+  const seekTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentTimeRef = useRef<number>(0);
+
   // A-B Loop state
   const [loop, setLoop] = useState<Loop>({ a: null, b: null });
   const loopA = loop.a;
@@ -153,6 +161,7 @@ function PlayerEngineInner(
 
   const updateTime = useCallback(
     (time: number) => {
+      currentTimeRef.current = time;
       // A-B loop enforcement
       const a = loopARef.current;
       const b = loopBRef.current;
@@ -164,6 +173,17 @@ function PlayerEngineInner(
         setCurrentTime(a);
         onTimeUpdate?.(a);
         return;
+      }
+      // Clear isSeeking once the playhead has landed near the target,
+      // after a minimum perceivable display duration (350ms) so it isn't cleared synchronously.
+      if (
+        seekTargetRef.current !== null &&
+        Math.abs(time - seekTargetRef.current) < 1 &&
+        Date.now() - seekStartTimeRef.current >= 350
+      ) {
+        seekTargetRef.current = null;
+        setIsSeeking(false);
+        if (seekTimeoutRef.current) { clearTimeout(seekTimeoutRef.current); seekTimeoutRef.current = null; }
       }
       setCurrentTime(time);
       onTimeUpdate?.(time);
@@ -388,6 +408,23 @@ function PlayerEngineInner(
 
   const seek = useCallback(
     (time: number) => {
+      seekTargetRef.current = time;
+      seekStartTimeRef.current = Date.now();
+      setIsSeeking(true);
+      if (seekTimeoutRef.current) clearTimeout(seekTimeoutRef.current);
+      // For paused playback where RAF polling doesn't run, check at 400ms
+      setTimeout(() => {
+        if (seekTargetRef.current !== null && Math.abs(currentTimeRef.current - seekTargetRef.current) < 1) {
+          setIsSeeking(false);
+          seekTargetRef.current = null;
+        }
+      }, 400);
+      // Safety timeout: clear after 2.5s even if updateTime never confirms.
+      seekTimeoutRef.current = setTimeout(() => {
+        setIsSeeking(false);
+        seekTargetRef.current = null;
+        seekTimeoutRef.current = null;
+      }, 2500);
       if (source === 'local') local.seek(time);
       else if (source === 'youtube') yt.seek(time);
     },
@@ -414,7 +451,6 @@ function PlayerEngineInner(
   }, [setLoop]);
 
   // Refs so the keydown handler never needs to re-register when playback state changes
-  const currentTimeRef = useRef(currentTime);
   const durationRef = useRef(duration);
   const playbackSpeedRef = useRef(playbackSpeed);
   useLayoutEffect(() => { currentTimeRef.current = currentTime; });
@@ -478,10 +514,10 @@ function PlayerEngineInner(
       if (source === 'youtube') yt.pause();
       else if (source === 'local') local.pause();
       if (initialSeek > 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         seek(initialSeek);
       }
       if (initialSpeed && initialSpeed !== 1) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         applySpeed(initialSpeed);
       }
       // A deep-linked A-B loop. Clamped to the real duration here rather than at
@@ -558,6 +594,7 @@ function PlayerEngineInner(
      through context so WaveformDisplay can read it; passing the ref identifier here is intentional. */
   const value = useMemo(() => ({
     source,
+    isSeeking,
     isPlaying,
     currentTime,
     duration,
@@ -597,7 +634,7 @@ function PlayerEngineInner(
     retryAudio,
     setLoopActiveLine,
   }), [
-    source, isPlaying, currentTime, duration, playbackSpeed, hasMedia, loop, loopA, loopB,
+    source, isSeeking, isPlaying, currentTime, duration, playbackSpeed, hasMedia, loop, loopA, loopB,
     mediaTitle, projectMetadata?.songName, projectCoverImage, local, yt, mediaUploads, cdnLoading,
     syncMode, viewerMode, SPEED_PRESETS, MIN_SPEED, MAX_SPEED,
     lines, playbackPosition, detectedUrlType, mediaPopoverProps, fetchUploads,

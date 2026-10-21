@@ -163,7 +163,7 @@ function AudioLoadError({ fileInputId, onFileChange, onRetry, canReplace }: Audi
 
 export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 'editor' | 'header' | 'mobile', youtubeAudioUrl?: string | null }) {
   const {
-    source, isPlaying, currentTime, duration, playbackSpeed,
+    source, isPlaying, isSeeking, currentTime, duration, playbackSpeed,
     hasMedia, loopA, loopB, mediaTitle, songName,
     local, yt, mediaUploads, cdnLoading,
     syncMode, viewerMode,
@@ -199,9 +199,19 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
           aria-label={t('shortcuts.playPause')}
           className="size-7 rounded-full bg-primary flex items-center justify-center shrink-0 active:scale-95 transition-all duration-100 shadow-sm shadow-primary/20"
         >
-          {isPlaying
-            ? <Icon name="pause" size={12} className="text-zinc-950" />
-            : <Icon name="play_arrow" size={12} className="text-zinc-950" />}
+          {isSeeking ? (
+            <span
+              className="eq-bars text-zinc-950"
+              style={{ '--eq-h': '11px', '--eq-w': '2px', '--eq-gap': '1.5px' } as React.CSSProperties}
+              aria-hidden
+            >
+              <i /><i /><i />
+            </span>
+          ) : isPlaying ? (
+            <Icon name="pause" size={12} className="text-zinc-950" />
+          ) : (
+            <Icon name="play_arrow" size={12} className="text-zinc-950" />
+          )}
         </button>
 
         {/* Song name (falls back to project title) */}
@@ -536,7 +546,17 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                   >
                     {/* Beat ring: a pulse off the button while audio is playing (sheet 02). */}
                     {isPlaying && <span aria-hidden className="beat-ring" />}
-                    <Icon name={isPlaying ? 'pause' : 'play_arrow'} size={26} filled />
+                    {isSeeking ? (
+                      <span
+                        className="eq-bars text-current"
+                        style={{ '--eq-h': '20px', '--eq-w': '3.5px', '--eq-gap': '3px' } as React.CSSProperties}
+                        aria-hidden
+                      >
+                        <i /><i /><i />
+                      </span>
+                    ) : (
+                      <Icon name={isPlaying ? 'pause' : 'play_arrow'} size={26} filled />
+                    )}
                   </Button>
                 </Tip>
 
@@ -880,9 +900,19 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                   aria-label={t('shortcuts.playPause')}
                   className="size-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0 active:scale-95 transition-all duration-100 shadow-lg shadow-primary/20"
                 >
-                  {isPlaying
-                    ? <Icon name="pause" size={16} className="text-zinc-950" />
-                    : <Icon name="play_arrow" size={16} className="text-zinc-950" />}
+                  {isSeeking ? (
+                    <span
+                      className="eq-bars text-zinc-950"
+                      style={{ '--eq-h': '16px', '--eq-w': '2.5px', '--eq-gap': '2px' } as React.CSSProperties}
+                      aria-hidden
+                    >
+                      <i /><i /><i />
+                    </span>
+                  ) : isPlaying ? (
+                    <Icon name="pause" size={16} className="text-zinc-950" />
+                  ) : (
+                    <Icon name="play_arrow" size={16} className="text-zinc-950" />
+                  )}
                 </button>
 
                 <div className="flex-1 flex flex-col gap-1">
