@@ -299,6 +299,17 @@ describe('applyMark — words mode', () => {
     expect(res.nextLines[0].words?.[0].time).toBe(1);
   });
 
+  it('first press on the secondary track sets the line start without touching the main word', () => {
+    const lines = [line('一', {
+      words: [{ word: '一', time: null }],
+      secondaryWords: [{ word: 'ichi', time: null }],
+    } as Partial<EditorLine>)];
+    const res = mark({ lines, time: 6, editorMode: 'words', stampTarget: 'secondary', activeWordIndex: 0 });
+    expect(res.nextLines[0].timestamp).toBe(6);
+    expect(res.nextLines[0].secondaryWords?.[0].time).toBe(6);
+    expect(res.nextLines[0].words?.[0].time).toBeNull();
+  });
+
   it('preserves per-word singer attribution while stamping', () => {
     const lines = [line('a b', {
       timestamp: 1,

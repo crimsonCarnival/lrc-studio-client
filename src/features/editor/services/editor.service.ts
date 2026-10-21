@@ -322,10 +322,14 @@ export function applyMark({ lines, activeLineIndex, time, editorMode, activeWord
         const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
         return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
       }
-      // Stamp line.timestamp + words[0] in one press
+      // Stamp line.timestamp + words[0] in one press. alignLineStart also snaps
+      // the MAIN track's word[0] to this time, which is wrong when wordField is
+      // secondaryWords — the romaji track is marked separately and must not pull
+      // the main word along (see "alignLineStart — leaves the romaji track alone").
       const newWords = [...words];
       newWords[0] = { ...newWords[0], time };
-      updated[activeLineIndex] = alignLineStart({ ...line, source: 'manual', [wordField]: newWords }, time);
+      const stamped: EditorLine = { ...line, source: 'manual', [wordField]: newWords };
+      updated[activeLineIndex] = wordField === 'words' ? alignLineStart(stamped, time) : { ...stamped, timestamp: time };
       if (words.length === 1) {
         const nextIdx = (autoAdvance || forceAdvance) ? computeNextIndex(lines, activeLineIndex, skipBlank, advanceMode) : null;
         return { nextLines: updated, nextActiveLineIndex: nextIdx, nextAwaitingEndMark: null, nextActiveWordIndex: 0 };
