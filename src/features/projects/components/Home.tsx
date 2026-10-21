@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { artistErrorMessageFor } from '@/features/artists/artist-errors';
 import { ArtistText } from '@/features/artists/ArtistText';
 import type { TFunction } from 'i18next';
