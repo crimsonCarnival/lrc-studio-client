@@ -5,6 +5,7 @@ import { useEditor } from '@features/editor/hooks/useEditor';
 import { useEditorActionDrawer } from '@features/editor/hooks/useEditorActionDrawer';
 import { useAutoStamp, type AutoStampPhase } from '@features/editor/hooks/useAutoStamp';
 import EditorToolbar from './EditorToolbar';
+import { WordsModeLayerControl } from '../modes/WordsModeColumn';
 import EditorSidePanel from './EditorSidePanel';
 import { AdLibStrip } from '../adlibs/AdLibStrip';
 import { matchKey } from '@/shared/utils/keyboard';
@@ -908,6 +909,13 @@ export default function Editor({
                 {focusLength != null && ` · ${focusLength.toFixed(2)} s`}
               </span>
             </div>
+            {focusLine && (
+              <WordsModeLayerControl
+                line={focusLine as ComponentProps<typeof WordsModeLayerControl>['line']}
+                stampTarget={stampTarget}
+                handleSetStampTarget={handleSetStampTarget}
+              />
+            )}
             <Tip content={focusLength == null ? t('editor.words.distributeUnavailable') : t('editor.words.distributeTip')}>
               <Button
                 variant="outline"
