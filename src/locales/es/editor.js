@@ -156,6 +156,7 @@ export default {
     emptyTitle: "Marca el inicio de la línea",
     emptyDesc: "Pulsa <0>{{key}}</0> cuando empiece la primera palabra. Las demás aparecerán aquí, en el tiempo.",
     dragHint: "Arrastra los bordes de cada bloque para ajustar dónde empieza una palabra.",
+    noRomaji: "Sin romaji",
     boundaryLabel: "Inicio de «{{word}}»",
     tooShort: "«{{word}}» dura {{seconds}} s: demasiado corta o se solapa con la siguiente",
     playLine: "Reproducir línea",

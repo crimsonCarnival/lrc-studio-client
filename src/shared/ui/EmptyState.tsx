@@ -37,10 +37,10 @@ function SongArt() {
 function WordsArt({ words }: { words: string[] }) {
   const ticks = [14, 8, 14, 8, 14, 8, 14];
   return (
-    <div className="relative h-[68px] w-[340px] max-w-full overflow-hidden">
-      <div className="absolute left-[22px] right-0 top-0 flex gap-2">
+    <div className="relative h-[68px] w-fit max-w-full">
+      <div className="ml-[22px] flex gap-2 overflow-hidden">
         {[...words.slice(0, 3), '…'].map((word, i) => (
-          <span key={i} className={`flex h-[38px] items-center rounded-[10px] px-[13px] font-heading text-[19px] font-bold text-faint ${DASHED}`}>
+          <span key={i} className={`flex h-[38px] shrink-0 items-center whitespace-nowrap rounded-[10px] px-[13px] font-heading text-[19px] font-bold text-faint ${DASHED}`}>
             {word}
           </span>
         ))}

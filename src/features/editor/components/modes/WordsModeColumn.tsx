@@ -306,7 +306,7 @@ export function WordsModeChips({
         // same height across layers, so picking a layer never moves the block bar
         // underneath.
         <span className="font-mono text-[11.5px] leading-none text-subtle truncate max-w-full">
-          {under || ' '}
+          {under || (stampTarget !== 'main' ? <span className="italic opacity-60">{t('editor.words.noRomaji')}</span> : ' ')}
         </span>
       )}
       {isActive && (
