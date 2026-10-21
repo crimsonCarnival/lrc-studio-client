@@ -496,7 +496,7 @@ function SectionDivider({
       ? { color: singerHexes[0] }
       : {};
 
-  // Divider lines flanking a large uppercase title, singer names as plain colored inline text.
+  // Divider lines flanking uppercase title, singer names inline with matching font size.
   return (
     <div
       className="font-heading"
@@ -505,30 +505,22 @@ function SectionDivider({
         transition: 'opacity 0.35s ease',
         display: 'flex',
         alignItems: 'center',
-        gap: '1em',
-        paddingTop: '1.4em',
-        paddingBottom: '0.8em',
+        gap: '0.75em',
+        paddingTop: '0.4em',
+        paddingBottom: '0.4em',
       }}
     >
       {alignment !== 'left' && (
         <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, transparent, ${ruleStrong}, ${ruleSoft})` }} />
       )}
       <span
-        className="whitespace-nowrap uppercase"
-        style={{
-          fontSize: 'clamp(1.1rem, 2vw, 1.5rem)',
-          fontWeight: 'var(--font-weight-black)',
-          letterSpacing: '0.14em',
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: '0.5rem',
-        }}
+        className="whitespace-nowrap flex items-baseline gap-2 text-xs sm:text-sm font-bold tracking-wider"
       >
-        <span style={titleStyle}>
+        <span className="uppercase" style={titleStyle}>
           {label || '◆'}
         </span>
         {singers.length > 0 && (
-          <span className="flex items-baseline gap-1.5 text-xs font-semibold tracking-wide normal-case">
+          <span className="flex items-baseline gap-1.5 font-semibold tracking-normal normal-case">
             <span style={{ opacity: 0.4 }}>&middot;</span>
             {singers.map((name, idx) => {
               const globalIdx = singerColorIndex(name, songSingers);
@@ -726,7 +718,7 @@ export default function ImmersiveLyricsDisplay({
   // read the same and don't drift out of sync with each other. Lives outside each view's
   // scrolling/centering area so its own height never affects line layout.
   const sectionHeader = (activeSection?.label || activeSingers.length > 0) && (
-    <div className="relative z-10 shrink-0 px-6 pt-10 pb-2 sm:px-10 lg:px-14">
+    <div className="relative z-10 shrink-0 px-6 pt-16 sm:pt-20 lg:pt-24 pb-2 sm:px-10 lg:px-14">
       <SectionDivider
         label={activeSection?.label}
         dist={0}
