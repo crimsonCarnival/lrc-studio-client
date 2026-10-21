@@ -67,11 +67,11 @@ function getDistStyle(dist: number | null) {
 // the dimming is opacity on the foreground token, so it holds in both themes.
 const FOCUS_STYLE: Record<number, { size: string; opacity: number }> = {
   // The line just sung stays readable: its colour, not its opacity, says it is past.
-  [-1]: { size: 'clamp(1.125rem, 1.8vw, 1.625rem)', opacity: 0.75 },
-  0: { size: 'clamp(2.5rem, 4.7vw, 4.25rem)', opacity: 1 },
-  1: { size: 'clamp(1.375rem, 2.4vw, 2.125rem)', opacity: 0.72 },
-  2: { size: 'clamp(1.25rem, 2.1vw, 1.875rem)', opacity: 0.42 },
-  3: { size: 'clamp(1.1875rem, 1.95vw, 1.75rem)', opacity: 0.24 },
+  [-1]: { size: 'clamp(0.95rem, 1.4vw, 1.25rem)', opacity: 0.75 },
+  0: { size: 'clamp(1.6rem, 3vw, 2.75rem)', opacity: 1 },
+  1: { size: 'clamp(1.05rem, 1.7vw, 1.5rem)', opacity: 0.72 },
+  2: { size: 'clamp(0.95rem, 1.5vw, 1.375rem)', opacity: 0.42 },
+  3: { size: 'clamp(0.9rem, 1.4vw, 1.3rem)', opacity: 0.24 },
 };
 
 const isBlank = (line: DisplayLine) => !line.text || line.text.trim() === '';
