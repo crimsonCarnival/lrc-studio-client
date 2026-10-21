@@ -67,6 +67,13 @@ type RouterAppState = AppState & {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RouterLayoutState = Record<string, any>;
 
+// Stable fallback for the `singerColors`/`declaredSingers` props below —
+// `projectMetadata?.singerColors || []` allocated a new array every render
+// whenever metadata had no singer colors yet, which invalidated editorProps/
+// previewProps (and therefore memo(Editor)/memo(Preview)) on every render
+// even when nothing about singers had changed.
+const EMPTY_STRING_ARRAY: readonly string[] = [];
+
 function RequireAdmin({ children }: { children: ReactNode }) {
   const { user, loading } = useAuthContext();
   if (loading) return <div className="flex-1 flex items-center justify-center"><LogoLoader size={32} /></div>;
@@ -335,6 +342,15 @@ export function AppRouter({
     return () => navigate(viewPath);
   }, [activepublicId, routerLocation.pathname, navigate]);
 
+  // Stable across renders (setShowNamingModal, a useState setter, never
+  // changes identity) instead of a fresh arrow — or fresh `undefined` vs.
+  // fresh-arrow flip-flopping — built inline in editorProps below on every
+  // render.
+  const handleOpenProjectSettings = useMemo(
+    () => (setShowNamingModal ? () => setShowNamingModal(true) : undefined),
+    [setShowNamingModal],
+  );
+
   const editorProps = useMemo(() => ({
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
@@ -348,11 +364,11 @@ export function AppRouter({
     saveFailed,
     onNewProject: handleNewProject,
     onShowKeyboardHelp: handleToggleKeyboardHelp,
-    onOpenProjectSettings: setShowNamingModal ? () => setShowNamingModal(true) : undefined,
+    onOpenProjectSettings: handleOpenProjectSettings,
     registerAfterSave,
     songArtists: rosterNames,
-    singerColors: projectMetadata?.singerColors || [],
-    declaredSingers: projectMetadata?.singers || [],
+    singerColors: projectMetadata?.singerColors || EMPTY_STRING_ARRAY,
+    declaredSingers: projectMetadata?.singers || EMPTY_STRING_ARRAY,
     playerSlot,
     onShowPreview: showPreviewView,
     uploadedAudio,
@@ -373,7 +389,7 @@ export function AppRouter({
     saveFailed,
     handleNewProject,
     handleToggleKeyboardHelp,
-    setShowNamingModal,
+    handleOpenProjectSettings,
     registerAfterSave,
     projectMetadata, rosterNames,
     playerSlot,
@@ -393,7 +409,7 @@ export function AppRouter({
     onViewPublic: handleViewPublic,
     setActiveLineIndex,
     songArtists: rosterNames,
-    singerColors: projectMetadata?.singerColors || [],
+    singerColors: projectMetadata?.singerColors || EMPTY_STRING_ARRAY,
     playerSlot,
   } as unknown as PreviewComponentProps), [
     lines, setLines, playbackPosition,
