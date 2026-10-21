@@ -69,8 +69,10 @@ export type ProjectSnapshot = {
 };
 
 /**
- * Either a full `sections` replace or a positional single-line patch — never
- * both. `null` from buildLyricsPatch means "lyrics unchanged, send nothing".
+ * Exactly one of `sections` (full replace), `line`+`sectionIdx`+`lineIdx`
+ * (one changed line), or `lines` (several changed lines, same shape as the
+ * single-line form but batched) is set — never more than one. `null` from
+ * buildLyricsPatch means "lyrics unchanged, send nothing".
  */
 type LyricsPatch = {
   editorMode?: string;
@@ -78,6 +80,7 @@ type LyricsPatch = {
   sectionIdx?: number;
   lineIdx?: number;
   line?: EditorLine;
+  lines?: Array<{ sectionIdx: number; lineIdx: number; line: EditorLine }>;
 };
 
 export type ProjectPatch = {
@@ -100,22 +103,39 @@ function buildLyricsPatch(
   if (!prev) return { editorMode: nextMode, sections: nextSections };
   const prevLines = Array.isArray(prev.lines) ? prev.lines : [];
   const modeChanged = prev.editorMode !== nextMode;
-  if (prevLines.length !== nextLines.length)
-    return modeChanged ? { editorMode: nextMode, sections: nextSections } : { sections: nextSections };
-  let changedIdx = -1;
+  const toFull = () => (modeChanged ? { editorMode: nextMode, sections: nextSections } : { sections: nextSections });
+  if (prevLines.length !== nextLines.length) return toFull();
+
+  // Collect every changed index instead of bailing at the second one — this
+  // is what makes the common sync-session case (several lines marked, then
+  // one autosave fires) a handful of positional writes instead of a full
+  // project re-upload. A mode change rides along on the *first* changed
+  // line only, same as the single-line patch always did.
+  const changedIdxs: number[] = [];
   for (let i = 0; i < nextLines.length; i++) {
-    if (!deepEqual(prevLines[i], nextLines[i])) {
-      if (changedIdx !== -1) return modeChanged ? { editorMode: nextMode, sections: nextSections } : { sections: nextSections };
-      changedIdx = i;
-    }
+    if (!deepEqual(prevLines[i], nextLines[i])) changedIdxs.push(i);
   }
-  if (changedIdx === -1) return modeChanged ? { editorMode: nextMode } : null;
-  // Section marker changed → send full sections (no positional patch for headers)
-  const pos = flatIndexToSectionPos(nextLines, changedIdx);
-  if (!pos) return modeChanged ? { editorMode: nextMode, sections: nextSections } : { sections: nextSections };
-  return modeChanged
-    ? { editorMode: nextMode, sectionIdx: pos.sectionIdx, lineIdx: pos.lineIdx, line: nextLines[changedIdx] }
-    : { sectionIdx: pos.sectionIdx, lineIdx: pos.lineIdx, line: nextLines[changedIdx] };
+  if (changedIdxs.length === 0) return modeChanged ? { editorMode: nextMode } : null;
+
+  // Section markers have no positional patch shape (sections/lines only,
+  // never a bare header) — any one of them in the changed set forces a full
+  // resend, same as before.
+  const positions = changedIdxs.map((idx) => flatIndexToSectionPos(nextLines, idx));
+  if (positions.some((pos) => !pos)) return toFull();
+
+  if (changedIdxs.length === 1) {
+    const pos = positions[0]!;
+    return modeChanged
+      ? { editorMode: nextMode, sectionIdx: pos.sectionIdx, lineIdx: pos.lineIdx, line: nextLines[changedIdxs[0]] }
+      : { sectionIdx: pos.sectionIdx, lineIdx: pos.lineIdx, line: nextLines[changedIdxs[0]] };
+  }
+
+  const lines = changedIdxs.map((idx, i) => ({
+    sectionIdx: positions[i]!.sectionIdx,
+    lineIdx: positions[i]!.lineIdx,
+    line: nextLines[idx],
+  }));
+  return modeChanged ? { editorMode: nextMode, lines } : { lines };
 }
 
 export type BuildProjectPatchArgs = {
