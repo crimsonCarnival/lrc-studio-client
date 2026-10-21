@@ -64,6 +64,7 @@ export default {
   securityNotice: "Registration is currently unavailable, check back later.",
   errors: {
     generic: "Something went wrong. Please try again.",
+    no_password_set: "This account was created with Google and has no password yet. Sign in with Google, or use \"Forgot password\" to set one.",
     invalid_credentials: "Incorrect credentials. Please check your details and try again.",
     email_not_found: "We couldn't find an account with that email address.",
     ip_banned_login: "Your network has been blocked due to a policy violation.",

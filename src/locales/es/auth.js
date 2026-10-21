@@ -64,6 +64,7 @@ export default {
   securityNotice: "El registro de cuentas está temporalmente deshabilitado. Disculpa las molestias.",
   errors: {
     generic: "Algo salió mal. Por favor intenta de nuevo.",
+    no_password_set: "Esta cuenta se creó con Google y aún no tiene contraseña. Inicia sesión con Google o usa \"Olvidé mi contraseña\" para crear una.",
     invalid_credentials: "Nombre de cuenta/correo o contraseña incorrectos. Por favor verifica tus datos e intenta de nuevo.",
     email_not_found: "No encontramos una cuenta con ese correo electrónico.",
     ip_banned_login: "Tu red ha sido bloqueada por una infracción de políticas. Contacta soporte si crees que es un error.",
