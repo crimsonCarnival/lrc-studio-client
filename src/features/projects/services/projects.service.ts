@@ -373,7 +373,19 @@ export const projectsService = {
 
   async update(id: string, input: UpdateProjectInput, { signal, headers }: RequestOpts = {}): Promise<{ project: Project }> {
     const data = await gqlRequest<{ updateProject: Project }>(UPDATE_PROJECT, { id, input: normalizeInput(input) }, { signal, headers });
-    projectsChanged();
+    // Every autosave patch reaches here too, and on the common sync-session
+    // cadence most of them carry only `state` (syncMode/activeLineIndex/
+    // playbackPosition/playbackSpeed) — buildProjectPatch includes it
+    // whenever anything else did too, so `state`-only means nothing else
+    // did. That can never change what any cached list shows, so it's the
+    // one case safe to skip unconditionally. `lyrics`-only patches are NOT
+    // skipped here even though they're also common during active syncing:
+    // Home.tsx renders lineCount/syncedLineCount from the `projects`/
+    // `profile` queries this invalidates, so skipping there would leave a
+    // stale sync-progress bar after returning from the editor.
+    const touchedKeys = Object.keys(input).filter((k) => k !== 'version');
+    const isStateOnly = touchedKeys.length === 1 && touchedKeys[0] === 'state';
+    if (!isStateOnly) projectsChanged();
     return { project: data.updateProject };
   },
 
