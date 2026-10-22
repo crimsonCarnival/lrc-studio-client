@@ -576,8 +576,16 @@ body,
      reading: the base box is 1em, half-leading puts (unit - 1em) / 2 above it,
      and that has to cover the rt plus its 2px offset. */
   --line-unit: 52px;
-  /* 10px furigana is legible in the abstract and not while you are working. */
-  --size-ruby-max: 13px;
+  /* 10px furigana is legible in the abstract and not while you are working. The
+     52px unit leaves 17.5px above the base; 15px plus the 2px offset fills it. */
+  --size-ruby-max: 15px;
+}
+
+/* In the editor every reading is the same, largest size the reserve allows. The
+   per-reading fit shrank long readings, so neighbouring words showed different
+   furigana sizes; a long one overhangs into the base padding instead (r2/r3). */
+.cjk-reserve-list ruby rt {
+  font-size: var(--size-ruby-max);
 }
 
 .cjk-reserve-preview {

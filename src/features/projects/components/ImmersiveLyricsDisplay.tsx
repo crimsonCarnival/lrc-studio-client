@@ -507,14 +507,14 @@ function SectionDivider({
         alignItems: 'center',
         gap: '0.75em',
         paddingTop: '0.4em',
-        paddingBottom: '0.4em',
+        paddingBottom: 0,
       }}
     >
       {alignment !== 'left' && (
         <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, transparent, ${ruleStrong}, ${ruleSoft})` }} />
       )}
       <span
-        className="whitespace-nowrap flex items-baseline gap-2 text-xs sm:text-sm font-bold tracking-wider"
+        className="whitespace-nowrap flex items-baseline gap-2 text-[13px] sm:text-[15px] font-bold tracking-wider"
       >
         <span className="uppercase" style={titleStyle}>
           {label || '◆'}
@@ -718,7 +718,7 @@ export default function ImmersiveLyricsDisplay({
   // read the same and don't drift out of sync with each other. Lives outside each view's
   // scrolling/centering area so its own height never affects line layout.
   const sectionHeader = (activeSection?.label || activeSingers.length > 0) && (
-    <div className="relative z-10 shrink-0 px-6 pt-16 sm:pt-20 lg:pt-24 pb-2 sm:px-10 lg:px-14">
+    <div className="relative z-10 shrink-0 px-6 pt-16 sm:pt-20 lg:pt-24 pb-0 sm:px-10 lg:px-14">
       <SectionDivider
         label={activeSection?.label}
         dist={0}
@@ -736,7 +736,7 @@ export default function ImmersiveLyricsDisplay({
         <ContourLines />
         {alignmentControl}
         {sectionHeader}
-        <div className="lrc-scroll relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 py-6 lg:px-14 lg:py-8">
+        <div className="lrc-scroll relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 pt-2 pb-6 lg:px-14 lg:pt-3 lg:pb-8">
           <div className="my-auto flex flex-col gap-3 lg:gap-4">
             {focusWindow.map(({ index, step }) => {
               const line = lines[index];
