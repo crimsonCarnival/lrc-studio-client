@@ -581,11 +581,12 @@ body,
   --size-ruby-max: 15px;
 }
 
-/* In the editor every reading is the same, largest size the reserve allows. The
-   per-reading fit shrank long readings, so neighbouring words showed different
-   furigana sizes; a long one overhangs into the base padding instead (r2/r3). */
+/* In the editor a reading is as large as the reserve allows (--size-ruby-max) but
+   still shrinks to sit over its own kanji. The floor is higher than the global 8px,
+   so sizes stay within a narrow band: a very long reading overhangs a little rather
+   than dropping to a size visibly different from its neighbours. */
 .cjk-reserve-list ruby rt {
-  font-size: var(--size-ruby-max);
+  font-size: max(11px, min(var(--size-ruby-max), var(--size-ruby-fit, 99px)));
 }
 
 .cjk-reserve-preview {
