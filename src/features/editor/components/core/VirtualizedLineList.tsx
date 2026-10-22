@@ -313,16 +313,20 @@ export default function VirtualizedLineList({
     const prevLines = prevLinesRef.current;
     prevLinesRef.current = lines;
     if (prevLines === lines) return;
-    let changedCount = 0;
+    const changed: number[] = [];
     const maxLen = Math.max(prevLines.length, lines.length);
     for (let idx = 0; idx < maxLen; idx++) {
       if (prevLines[idx] !== lines[idx]) {
-        changedCount++;
-        if (changedCount > 2) break;
+        changed.push(idx);
+        if (changed.length > 2) break;
       }
     }
-    if (changedCount > 2) virtualizer.measure();
-  }, [lines, virtualizer]);
+    if (changed.length > 2) virtualizer.measure();
+    // A couple of changed lines (adding a singer or a secondary lyric grows one row without
+    // any edit/active/drag trigger above firing) are re-measured directly, in the same
+    // layout pass, so neighbours never overlap while the ResizeObserver catches up.
+    else changed.forEach(measureLine);
+  }, [lines, virtualizer, measureLine]);
 
   // Auto-scroll to active line via virtualizer (line index → row; hidden lines don't scroll)
   const prevActiveRef = useCallback((idx: number) => {
