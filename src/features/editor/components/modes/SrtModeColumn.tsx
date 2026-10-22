@@ -11,6 +11,8 @@ interface FocusedTimestamp {
 }
 
 interface SrtModeColumnProps {
+  /** Seek to this line's start and play — a click on the timestamp, as in the public view. */
+  onSeekLine?: () => void;
   line: EditorLine & { endTime?: number | null };
   lineIndex: number;
   isSynced?: boolean;
@@ -28,6 +30,7 @@ interface SrtModeColumnProps {
 }
 
 export default function SrtModeColumn({
+  onSeekLine,
   line,
   lineIndex,
   isSynced,
@@ -62,7 +65,7 @@ export default function SrtModeColumn({
           isActive={isActive}
           isPlaying={isPlaying}
           precision={precision}
-          onClick={() => setFocusedTimestamp(focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start' ? null : { lineIndex: lineIndex, type: 'start' })}
+          onClick={() => { if (isSynced) onSeekLine?.(); setFocusedTimestamp(focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start' ? null : { lineIndex: lineIndex, type: 'start' }); }}
           onDoubleClick={(e) => { e.stopPropagation(); if (isSynced) setEditingTimestamp('start'); }}
           onWheel={(e) => { if (isSynced) handleTimestampWheel(e, lineIndex, 'start'); }}
           nudgeIndicator={isSynced ? nudgeIndicator : null}

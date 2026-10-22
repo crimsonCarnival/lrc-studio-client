@@ -9,6 +9,8 @@ interface FocusedTimestamp {
 }
 
 interface LrcModeColumnProps {
+  /** Seek to this line's start and play — a click on the timestamp, as in the public view. */
+  onSeekLine?: () => void;
   line: EditorLine;
   lineIndex: number;
   isSynced?: boolean;
@@ -25,6 +27,7 @@ interface LrcModeColumnProps {
 }
 
 export default function LrcModeColumn({
+  onSeekLine,
   line,
   lineIndex,
   isSynced,
@@ -58,7 +61,7 @@ export default function LrcModeColumn({
             isActive={isActive}
             isPlaying={isPlaying}
             precision={precision}
-            onClick={() => setFocusedTimestamp(focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start' ? null : { lineIndex: lineIndex, type: 'start' })}
+            onClick={() => { if (isSynced) onSeekLine?.(); setFocusedTimestamp(focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start' ? null : { lineIndex: lineIndex, type: 'start' }); }}
             onDoubleClick={(e) => { e.stopPropagation(); if (isSynced) setEditingTimestamp('start'); }}
             onWheel={(e) => { if (isSynced) handleTimestampWheel(e, lineIndex, 'start'); }}
             nudgeIndicator={isSynced ? nudgeIndicator : null}

@@ -123,6 +123,8 @@ interface FocusedTimestamp {
 }
 
 export interface WordsModeColumnProps {
+  /** Seek to this line's start and play — a click on the timestamp, as in the public view. */
+  onSeekLine?: () => void;
   line: WordLine;
   lineIndex: number;
   isSynced: boolean;
@@ -155,6 +157,7 @@ export interface WordsModeColumnProps {
 }
 
 export function WordsModeTimestamp({
+  onSeekLine,
   line,
   lineIndex,
   isSynced,
@@ -187,7 +190,7 @@ export function WordsModeTimestamp({
           isFocused={focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start'}
           isActive={isActive}
           precision={settings.editor?.timestampPrecision || 'hundredths'}
-          onClick={() => setFocusedTimestamp(focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start' ? null : { lineIndex: lineIndex, type: 'start' })}
+          onClick={() => { if (isSynced) onSeekLine?.(); setFocusedTimestamp(focusedTimestamp?.lineIndex === lineIndex && focusedTimestamp?.type === 'start' ? null : { lineIndex: lineIndex, type: 'start' }); }}
           onDoubleClick={(e) => { e.stopPropagation(); if (isSynced) setEditingTimestamp('start'); }}
           onWheel={(e) => { if (isSynced) handleTimestampWheel(e, lineIndex, 'start'); }}
           nudgeIndicator={isSynced ? nudgeIndicator : null}

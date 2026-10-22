@@ -321,6 +321,13 @@ const EditorLineItem = React.memo(({
     }
   }, [isActive, handleLineClick, playerRef, settings.playback?.seekPlays, handleSetActiveWordIndex, setFocusedTimestamp, i]);
 
+  // Clicking a line's timestamp plays from it, the same as clicking a line in the public view.
+  const handleSeekLine = useCallback(() => {
+    if (line.timestamp == null || !playerRef?.current?.seek) return;
+    playerRef.current.seek(line.timestamp);
+    playerRef.current.play?.();
+  }, [line.timestamp, playerRef]);
+
   const handleTimestampWheel = useCallback((e: { preventDefault: () => void; deltaY: number }, index: number) => {
     e.preventDefault();
     const delta = e.deltaY < 0 ? 0.01 : -0.01;
@@ -657,6 +664,7 @@ const EditorLineItem = React.memo(({
           >
             {editorMode === 'srt' ? (
             <SrtModeColumn
+              onSeekLine={handleSeekLine}
               line={line}
               lineIndex={i}
               isSynced={isSynced}
@@ -674,6 +682,7 @@ const EditorLineItem = React.memo(({
             />
           ) : (
             <LrcModeColumn
+              onSeekLine={handleSeekLine}
               line={line}
               lineIndex={i}
               isSynced={isSynced}
@@ -766,6 +775,7 @@ const EditorLineItem = React.memo(({
             <div className="flex items-center gap-2 min-w-0 relative z-10">
               {lineHandle}
               <WordsModeTimestamp
+                onSeekLine={handleSeekLine}
                 line={line as ComponentProps<typeof WordsModeTimestamp>['line']}
                 lineIndex={i}
                 isSynced={isSynced}
