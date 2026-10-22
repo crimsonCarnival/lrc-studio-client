@@ -93,6 +93,8 @@ interface EditorLineItemProps {
   singerColors?: string[];
   activeSingers?: string[];
   playerRef?: PlayerRef;
+  /** Makes this line the cursor line (what the player loops over) without locking or selecting it. */
+  activateLine?: (i: number) => void;
   shiftTime: (i: number, delta: number) => void;
   handleAddLine?: (i: number) => void;
   handleClearLine?: (i: number) => void;
@@ -174,6 +176,7 @@ const EditorLineItem = React.memo(({
   projectSingers,
   singerColors,
   playerRef,
+  activateLine,
   shiftTime,
   handleAddLine,
   handleClearLine,
@@ -320,6 +323,26 @@ const EditorLineItem = React.memo(({
       });
     }
   }, [isActive, handleLineClick, playerRef, settings.playback?.seekPlays, handleSetActiveWordIndex, setFocusedTimestamp, i]);
+
+  // Play from this line's timestamp (its ▶ button and its timestamp badge), as a line click does
+  // in the public view. While "loop current line" is on, the player is looping the cursor line,
+  // so a seek elsewhere would be pulled straight back into that loop: move the cursor here
+  // first and seek once the loop has followed it.
+  const handleSeekLine = useCallback(() => {
+    const player = playerRef?.current;
+    if (line.timestamp == null || !player?.seek) return;
+    const target = line.timestamp;
+    const go = () => {
+      player.seek?.(target);
+      player.play?.();
+    };
+    if (!isActive && activateLine) {
+      activateLine(i);
+      setTimeout(go, 0);
+    } else {
+      go();
+    }
+  }, [line.timestamp, playerRef, isActive, activateLine, i]);
 
   const handleTimestampWheel = useCallback((e: { preventDefault: () => void; deltaY: number }, index: number) => {
     e.preventDefault();
@@ -657,6 +680,7 @@ const EditorLineItem = React.memo(({
           >
             {editorMode === 'srt' ? (
             <SrtModeColumn
+              onSeekLine={handleSeekLine}
               line={line}
               lineIndex={i}
               isSynced={isSynced}
@@ -674,6 +698,7 @@ const EditorLineItem = React.memo(({
             />
           ) : (
             <LrcModeColumn
+              onSeekLine={handleSeekLine}
               line={line}
               lineIndex={i}
               isSynced={isSynced}
@@ -766,6 +791,7 @@ const EditorLineItem = React.memo(({
             <div className="flex items-center gap-2 min-w-0 relative z-10">
               {lineHandle}
               <WordsModeTimestamp
+                onSeekLine={handleSeekLine}
                 line={line as ComponentProps<typeof WordsModeTimestamp>['line']}
                 lineIndex={i}
                 isSynced={isSynced}
@@ -936,6 +962,7 @@ const EditorLineItem = React.memo(({
           songArtists={songArtists}
           handleMark={handleMark as ComponentProps<typeof LineActionToolbar>['handleMark']}
           playerRef={playerRef as ComponentProps<typeof LineActionToolbar>['playerRef']}
+          onPlayLine={handleSeekLine}
           shiftTime={shiftTime}
           handleAddLine={handleAddLine as ComponentProps<typeof LineActionToolbar>['handleAddLine']}
           handleClearLine={handleClearLine as ComponentProps<typeof LineActionToolbar>['handleClearLine']}

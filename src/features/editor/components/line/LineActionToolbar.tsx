@@ -52,6 +52,8 @@ interface LineActionToolbarProps {
   serializeToRubyMarkup: (words?: Word[]) => string;
   handleMark: (opts: { forceAdvance?: boolean }) => void;
   playerRef?: RefObject<PlayerHandle | null>;
+  /** Play from this line (also moves the cursor line there). Falls back to a bare seek + play. */
+  onPlayLine?: () => void;
   shiftTime: (lineIndex: number, delta: number) => void;
   handleAddLine: (lineIndex: number) => void;
   handleClearLine: (lineIndex: number) => void;
@@ -85,6 +87,7 @@ const LineActionToolbar = memo(({
   serializeToRubyMarkup,
   handleMark,
   playerRef,
+  onPlayLine,
   shiftTime,
   handleAddLine,
   handleClearLine,
@@ -158,7 +161,9 @@ const LineActionToolbar = memo(({
                 size="icon-sm"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (playerRef?.current?.seek) {
+                  if (onPlayLine) {
+                    onPlayLine();
+                  } else if (playerRef?.current?.seek) {
                     playerRef.current.seek(line.timestamp);
                     if (playerRef.current.play) playerRef.current.play();
                   }

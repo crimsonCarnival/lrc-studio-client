@@ -62,6 +62,7 @@ interface VirtualizedLineListProps {
   handleAssignSinger?: LineItemProps['handleAssignSinger'];
   songArtists?: string[];
   playerRef?: LineItemProps['playerRef'];
+  setActiveLineIndex?: (i: number) => void;
   shiftTime: LineItemProps['shiftTime'];
   handleAddLine?: LineItemProps['handleAddLine'];
   handleClearLine?: LineItemProps['handleClearLine'];
@@ -135,6 +136,7 @@ export default function VirtualizedLineList({
   handleAssignSinger,
   songArtists,
   playerRef,
+  setActiveLineIndex,
   shiftTime,
   handleAddLine,
   handleClearLine,
@@ -225,14 +227,27 @@ export default function VirtualizedLineList({
     }, [activeSections]),
   });
 
-  // virtualizer.measure() only drops the cached sizes; the rows then sit at the estimated
-  // height until something calls measureElement again, and an unchanged element never trips
-  // its ResizeObserver. Re-read every mounted row right away so a bulk change (e.g. assigning
-  // a singer to several selected lines) doesn't leave rows overlapping until a reload.
-  const remeasureAll = useCallback(() => {
-    virtualizer.measure();
+  // Re-read every mounted row's real height. Cheap (a handful of rows), never clears the
+  // size cache, so it is safe to call after any change.
+  const measureMounted = useCallback(() => {
     listRef.current?.querySelectorAll<HTMLElement>('[data-index]').forEach((el) => virtualizer.measureElement(el));
   }, [virtualizer, listRef]);
+
+  // virtualizer.measure() only drops the cached sizes; the rows then sit at the estimated
+  // height until something calls measureElement again, and an unchanged element never trips
+  // its ResizeObserver. getTotalSize() forces the measurements to be rebuilt against the
+  // cleared cache first — otherwise measureElement compares each row against its stale
+  // pre-clear size, sees no difference and records nothing, leaving every row at the
+  // estimate (rows overlap after a delete or a bulk edit until a reload).
+  const remeasureAll = useCallback(() => {
+    virtualizer.measure();
+    virtualizer.getTotalSize();
+    measureMounted();
+  }, [virtualizer, measureMounted]);
+
+  const scheduleMeasure = useCallback(() => {
+    requestAnimationFrame(() => requestAnimationFrame(measureMounted));
+  }, [measureMounted]);
 
   // Re-measure all items when the scroll container is resized (e.g. window/panel resize
   // changes available width, causing text to wrap differently — items don't self-measure
@@ -330,7 +345,8 @@ export default function VirtualizedLineList({
         if (changed.length > 2) break;
       }
     }
-    if (changed.length > 2) remeasureAll();
+    // Adding or removing a line shifts every row after it, so it is a bulk change too.
+    if (changed.length > 2 || prevLines.length !== lines.length) remeasureAll();
     // A couple of changed lines (adding a singer or a secondary lyric grows one row without
     // any edit/active/drag trigger above firing) are re-measured directly, in the same
     // layout pass, so neighbours never overlap while the ResizeObserver catches up.
@@ -460,6 +476,11 @@ export default function VirtualizedLineList({
         <div
           ref={listRef}
           onMouseLeave={handleLineHoverEnd}
+          // Any action inside a row (menu item, toggle, input) may change its height; re-read the
+          // mounted rows once the resulting render has landed instead of trusting the observers.
+          onClickCapture={scheduleMeasure}
+          onKeyUpCapture={scheduleMeasure}
+          onChangeCapture={scheduleMeasure}
           className="lrc-scroll h-full overflow-y-auto"
         >
           <div
@@ -553,6 +574,7 @@ export default function VirtualizedLineList({
                         handleAssignSinger={handleAssignSinger}
                         songArtists={songArtists}
                         playerRef={playerRef}
+                        activateLine={setActiveLineIndex}
                         shiftTime={shiftTime}
                         handleAddLine={handleAddLine}
                         handleClearLine={handleClearLine}
@@ -635,6 +657,7 @@ export default function VirtualizedLineList({
                       handleAssignSinger={handleAssignSinger}
                       songArtists={songArtists}
                       playerRef={playerRef}
+                        activateLine={setActiveLineIndex}
                       shiftTime={shiftTime}
                       handleAddLine={handleAddLine}
                       handleClearLine={handleClearLine}
