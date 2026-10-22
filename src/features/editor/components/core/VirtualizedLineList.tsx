@@ -62,6 +62,7 @@ interface VirtualizedLineListProps {
   handleAssignSinger?: LineItemProps['handleAssignSinger'];
   songArtists?: string[];
   playerRef?: LineItemProps['playerRef'];
+  setActiveLineIndex?: (i: number) => void;
   shiftTime: LineItemProps['shiftTime'];
   handleAddLine?: LineItemProps['handleAddLine'];
   handleClearLine?: LineItemProps['handleClearLine'];
@@ -135,6 +136,7 @@ export default function VirtualizedLineList({
   handleAssignSinger,
   songArtists,
   playerRef,
+  setActiveLineIndex,
   shiftTime,
   handleAddLine,
   handleClearLine,
@@ -572,6 +574,7 @@ export default function VirtualizedLineList({
                         handleAssignSinger={handleAssignSinger}
                         songArtists={songArtists}
                         playerRef={playerRef}
+                        activateLine={setActiveLineIndex}
                         shiftTime={shiftTime}
                         handleAddLine={handleAddLine}
                         handleClearLine={handleClearLine}
@@ -654,6 +657,7 @@ export default function VirtualizedLineList({
                       handleAssignSinger={handleAssignSinger}
                       songArtists={songArtists}
                       playerRef={playerRef}
+                        activateLine={setActiveLineIndex}
                       shiftTime={shiftTime}
                       handleAddLine={handleAddLine}
                       handleClearLine={handleClearLine}

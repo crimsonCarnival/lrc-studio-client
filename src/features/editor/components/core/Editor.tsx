@@ -1105,6 +1105,7 @@ export default function Editor({
             handleAssignSinger={handleAssignSinger}
             songArtists={combinedSingers}
             playerRef={playerRef}
+            setActiveLineIndex={setActiveLineIndex}
             shiftTime={shiftTimeWithConfidence}
             handleAddLine={handleAddLine}
             handleClearLine={handleClearLine}
