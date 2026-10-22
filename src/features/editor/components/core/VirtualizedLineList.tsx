@@ -225,6 +225,15 @@ export default function VirtualizedLineList({
     }, [activeSections]),
   });
 
+  // virtualizer.measure() only drops the cached sizes; the rows then sit at the estimated
+  // height until something calls measureElement again, and an unchanged element never trips
+  // its ResizeObserver. Re-read every mounted row right away so a bulk change (e.g. assigning
+  // a singer to several selected lines) doesn't leave rows overlapping until a reload.
+  const remeasureAll = useCallback(() => {
+    virtualizer.measure();
+    listRef.current?.querySelectorAll<HTMLElement>('[data-index]').forEach((el) => virtualizer.measureElement(el));
+  }, [virtualizer, listRef]);
+
   // Re-measure all items when the scroll container is resized (e.g. window/panel resize
   // changes available width, causing text to wrap differently — items don't self-measure
   // because their *height* hasn't changed yet from ResizeObserver's perspective).
@@ -235,12 +244,12 @@ export default function VirtualizedLineList({
     const ro = new ResizeObserver(() => {
       if (el.offsetWidth !== lastWidth) {
         lastWidth = el.offsetWidth;
-        virtualizer.measure();
+        remeasureAll();
       }
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [virtualizer, listRef]);
+  }, [remeasureAll, listRef]);
 
   // DOM rows carry the virtual ROW index in data-index; translate a line index to its row
   // element (null when the line is hidden inside a collapsed section or not rendered).
@@ -321,12 +330,12 @@ export default function VirtualizedLineList({
         if (changed.length > 2) break;
       }
     }
-    if (changed.length > 2) virtualizer.measure();
+    if (changed.length > 2) remeasureAll();
     // A couple of changed lines (adding a singer or a secondary lyric grows one row without
     // any edit/active/drag trigger above firing) are re-measured directly, in the same
     // layout pass, so neighbours never overlap while the ResizeObserver catches up.
     else changed.forEach(measureLine);
-  }, [lines, virtualizer, measureLine]);
+  }, [lines, remeasureAll, measureLine]);
 
   // Auto-scroll to active line via virtualizer (line index → row; hidden lines don't scroll)
   const prevActiveRef = useCallback((idx: number) => {
