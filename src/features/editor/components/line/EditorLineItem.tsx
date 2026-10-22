@@ -397,6 +397,8 @@ const EditorLineItem = React.memo(({
             <Checkbox
               checked={selectedLines.has(i)}
               onCheckedChange={() => handleToggleLine(i)}
+              // The row's own click also toggles the line, so letting this click bubble toggled it twice.
+              onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
               className="size-3.5 border-zinc-600 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />

@@ -308,7 +308,10 @@ const LineTextContent = memo(({
             });
             })()
             : (() => {
-              const innerHasSingerSplit = (appliedSingers?.length ?? 0) >= 2 && handleCycleWordSinger;
+              // An empty line has no words to colour, so it must fall through to the ♪ placeholder:
+              // in a two-singer section the split path below would render nothing at all, leaving
+              // only the section label visible on a freshly inserted line.
+              const innerHasSingerSplit = (appliedSingers?.length ?? 0) >= 2 && handleCycleWordSinger && !!line.text?.trim();
               if (innerHasSingerSplit) {
                 // Use existing words array or split from text
                 const displayWords: Word[] = (line.words?.length ?? 0) > 0

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { Icon } from '@/shared/ui/Icon';
+import { Popover, PopoverContent, PopoverTrigger } from '@ui/popover';
 import LineActionsPopover from './LineActionsPopover';
 import { getSingerOptionsForSelection } from '../../utils/sections';
 
@@ -357,17 +358,23 @@ function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }: 
   };
 
   return (
-    <div className="relative">
+    // Portalled: an absolutely positioned menu inside a virtualized row is clipped by the
+    // scroller and painted over by the sticky section headers' stacking contexts.
+    <Popover open={open} onOpenChange={setOpen}>
       <Tip content={t('editor.assignSingerToLines', { count: indices.length })}>
-        <Button variant="ghost" size="icon-xs" onClick={(e) => { e.stopPropagation(); setOpen(p => !p); }} className="text-zinc-500 hover:text-primary hover:bg-primary/10">
-          <Icon name="person" size={12} />
-        </Button>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon-xs" onClick={(e) => e.stopPropagation()} className="text-zinc-500 hover:text-primary hover:bg-primary/10">
+            <Icon name="person" size={12} />
+          </Button>
+        </PopoverTrigger>
       </Tip>
-      {open && (
-        <div
-          className="absolute bottom-full right-0 mb-1 w-52 bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 py-1 text-xs"
-          onClick={(e) => e.stopPropagation()}
-        >
+      <PopoverContent
+        side="top"
+        align="end"
+        collisionPadding={8}
+        className="w-52 min-w-0 max-w-none p-0 py-1 text-xs"
+        onClick={(e) => e.stopPropagation()}
+      >
           {/* Role slot picker */}
           <div className="flex gap-1 px-2 pb-1 border-b border-zinc-800 mb-1">
             {ROLE_LABELS.map((role, idx) => (
@@ -402,9 +409,8 @@ function SingerAssignButton({ selectedLines, handleAssignSinger, songArtists }: 
           <button type="button" onClick={() => { handleAssignSinger('', indices, selectedSlot); setOpen(false); }} className="w-full text-left px-3 py-1.5 text-zinc-600 hover:bg-zinc-800 hover:text-zinc-400 text-[10px]">
             {t('editor.clearSingers')}
           </button>
-        </div>
-      )}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }
 
