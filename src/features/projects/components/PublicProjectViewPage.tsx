@@ -35,6 +35,9 @@ import { projectsService } from '@features/projects/services/projects.service';
 import { artistRoster } from '@/features/artists/artist-credits';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import { projectPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle } from '@features/projects/project-path';
+import { VisualizerProvider } from '@features/visualizer/VisualizerProvider';
+import { AudioVisualizerCanvas } from '@features/visualizer/components/AudioVisualizerCanvas';
+import { VisualizerButton } from '@features/visualizer/components/VisualizerButton';
 
 interface PublicProject {
   publicId?: string;
@@ -429,6 +432,7 @@ function PublicProjectViewPageInner() {
       projectMetadata={meta}
       viewerMode
     >
+    <VisualizerProvider>
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-background">
       {/* ── Guest CTA strip ─────────────────────────────────── */}
       {/* Phones and tablets only. On desktop the lyrics run under the fixed header, so the
@@ -454,6 +458,9 @@ function PublicProjectViewPageInner() {
           {/* Left: lyrics — natural DOM order puts it first both stacked
               (mobile) and in the row (desktop), so no order-* juggling needed. */}
           <div className="relative flex-1 min-h-0 flex flex-col" style={{ minHeight: '50vh' }}>
+            {/* Behind the lyrics: painted first, and the stage below is positioned too, so it
+                stacks on top. */}
+            <AudioVisualizerCanvas lines={lines} />
             {/* Desktop only: the column that holds the card's own toggle is hidden.
                 top-23 / right-7 = the 64px header + the card's 28px padding, i.e. exactly
                 where that toggle sat, so the button does not jump when the card collapses. */}
@@ -547,6 +554,7 @@ function PublicProjectViewPageInner() {
           hasInitialMedia={!!initialMedia}
           fullLyrics={fullLyrics}
           onToggleFullLyrics={toggleFullLyrics}
+          controlsSlot={<VisualizerButton />}
           startSlot={canFork ? (
             <Tip content={t('projectView.forkButton')}>
               <Button
@@ -591,6 +599,7 @@ function PublicProjectViewPageInner() {
         </PublicPlaybackBar>
       </div>
     </div>
+    </VisualizerProvider>
     </PlayerEngineProvider>
   );
 }

@@ -74,6 +74,8 @@ interface PublicPlaybackBarProps {
   /** Phone-only actions flanking the transport (fork / share in the mock). */
   startSlot?: ReactNode;
   endSlot?: ReactNode;
+  /** Extra controls ahead of the full-lyrics toggle (the public view's visualizer picker). */
+  controlsSlot?: ReactNode;
   children?: ReactNode;
 }
 
@@ -86,6 +88,7 @@ export default function PublicPlaybackBar({
   minimal = false,
   startSlot,
   endSlot,
+  controlsSlot,
   children,
 }: PublicPlaybackBarProps) {
   const { t } = useTranslation();
@@ -388,6 +391,7 @@ export default function PublicPlaybackBar({
             SPEED_PRESETS={speedPresets}
           />
           {!minimal && <VolumeControl />}
+          {controlsSlot}
           {onToggleFullLyrics && (
           <button
             type="button"
