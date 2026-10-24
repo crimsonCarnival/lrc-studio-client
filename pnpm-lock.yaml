@@ -141,8 +141,8 @@ importers:
         specifier: 5.3.1
         version: 5.3.1
       wavesurfer.js:
-        specifier: ^7.12.12
-        version: 7.12.12
+        specifier: ^8.0.2
+        version: 8.0.2
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -4040,8 +4040,8 @@ packages:
     resolution: {integrity: sha512-OSDqupzTlzl2LGyqTdhcXcl6ezMiFhcUwLBP8YKaBIbMYW1wAwDvupw2T9G9oVaKT9RmaSpyTXjxddFPUcFFIw==}
     engines: {node: '>=12'}
 
-  wavesurfer.js@7.12.12:
-    resolution: {integrity: sha512-fyKNuREQTliCl4b9w7pUzpFXQIkX5tcdYu1o6vBdH+NlUXvTxshvfbG2hj8OxDevzQNZlDTHzZGyAT3FhuutWw==}
+  wavesurfer.js@8.0.2:
+    resolution: {integrity: sha512-REv2U0DvZIm/i4K61qA7OZ3dGjFNtZFbh0PGRJ4EPcCU3Vs2tiPzIVFw1jipapIQnib76OPH2T8ARNSW47jN+w==}
 
   wawoff2@2.0.1:
     resolution: {integrity: sha512-r0CEmvpH63r4T15ebFqeOjGqU4+EgTx4I510NtK35EMciSdcTxCw3Byy3JnBonz7iyIFZ0AbVo0bbFpEVuhCYA==}
@@ -7970,7 +7970,7 @@ snapshots:
 
   wanakana@5.3.1: {}
 
-  wavesurfer.js@7.12.12: {}
+  wavesurfer.js@8.0.2: {}
 
   wawoff2@2.0.1:
     dependencies:
