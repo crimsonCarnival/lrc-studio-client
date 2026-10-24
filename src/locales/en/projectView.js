@@ -58,6 +58,47 @@ export default {
   viewCount_other: "{{count}} views",
   projectActions: "Project actions",
   syncedBy: "Synced by",
+  visualizer: {
+    button: "Visualizer",
+    title: "Audio visualizer",
+    description: "Choose how the background behind the lyrics moves with the music.",
+    kinds: {
+      off: { label: "Off", hint: "Lyrics only" },
+      bars: { label: "Bars", hint: "Classic spectrum" },
+      wave: { label: "Wave", hint: "Oscilloscope" },
+      radial: { label: "Radial", hint: "Circular spectrum" },
+    },
+    feed: {
+      element: {
+        title: "Listening to the song",
+        body: "The visualizer reads this track's audio in real time.",
+      },
+      'element-sealed': {
+        title: "Following the lyrics",
+        body: "This audio's host doesn't allow analysing it, so the background pulses with the synced lyrics instead.",
+      },
+      tab: {
+        title: "Listening to this tab",
+        body: "The visualizer reacts to the audio playing in this tab.",
+      },
+      'tab-available': {
+        title: "YouTube keeps its audio to itself",
+        body: "Until you connect it, the background pulses with the synced lyrics. To react to the real sound, share this tab's audio: your browser will ask for permission, so leave \"Also share tab audio\" ticked.",
+      },
+      'tab-unsupported': {
+        title: "Following the lyrics",
+        body: "This browser can't share a tab's audio (desktop Chrome or Edge can), so the background pulses with the synced lyrics.",
+      },
+    },
+    shareTab: "Connect tab audio",
+    connecting: "Waiting for permission…",
+    stopSharing: "Stop sharing",
+    error: {
+      denied: "Permission to share the tab wasn't given.",
+      noAudio: "The tab was shared without its audio. Try again and tick \"Also share tab audio\".",
+      failed: "Couldn't capture this tab's audio.",
+    },
+  },
   actions: {
     menu: 'More options',
     edit: 'Edit',

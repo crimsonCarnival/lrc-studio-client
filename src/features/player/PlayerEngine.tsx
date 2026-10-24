@@ -8,6 +8,7 @@ import useHapticFeedback from '@/shared/hooks/useHapticFeedback';
 import useLocalAudio from './hooks/useLocalAudio';
 import useYouTubePlayer from './hooks/useYouTubePlayer';
 import { pushPlaybackEntry, popPrevEntry } from './playback-history';
+import { audioCorsMode, isReadableAudioUrl } from './media-cors';
 import type { PlaybackEntry } from './playback-history';
 import { PlayerContext } from './PlayerContext';
 import type { UploadItem } from './PlayerContext';
@@ -648,7 +649,12 @@ function PlayerEngineInner(
       {/* Always-rendered media elements — must survive layout switches */}
       {source === 'local' && local.localUrl && (
         <audio
+          // Once the visualizer routes an element through Web Audio it plays only through
+          // that graph, and a source it cannot read would go silent. Keyed by readability,
+          // a switch to such a source gets a fresh, unrouted element.
+          key={isReadableAudioUrl(local.localUrl) ? 'readable' : 'sealed'}
           ref={audioRef}
+          crossOrigin={audioCorsMode(local.localUrl)}
           src={local.localUrl}
           onTimeUpdate={local.handleTimeUpdate}
           onLoadedMetadata={local.handleLoadedMetadata}

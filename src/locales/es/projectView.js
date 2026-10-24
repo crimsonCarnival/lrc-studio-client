@@ -58,6 +58,47 @@ export default {
   viewCount_other: "{{count}} vistas",
   projectActions: "Acciones del proyecto",
   syncedBy: "Sincronizada por",
+  visualizer: {
+    button: "Visualizador",
+    title: "Visualizador de audio",
+    description: "Elige cómo se mueve el fondo de la letra con la música.",
+    kinds: {
+      off: { label: "Apagado", hint: "Solo la letra" },
+      bars: { label: "Barras", hint: "Espectro clásico" },
+      wave: { label: "Onda", hint: "Osciloscopio" },
+      radial: { label: "Radial", hint: "Espectro circular" },
+    },
+    feed: {
+      element: {
+        title: "Escuchando la canción",
+        body: "El visualizador lee el audio de esta pista en tiempo real.",
+      },
+      'element-sealed': {
+        title: "Siguiendo la letra",
+        body: "El servidor de este audio no permite analizarlo, así que el fondo pulsa con la letra sincronizada.",
+      },
+      tab: {
+        title: "Escuchando esta pestaña",
+        body: "El visualizador reacciona al audio que suena en esta pestaña.",
+      },
+      'tab-available': {
+        title: "YouTube no comparte su audio",
+        body: "Hasta que lo conectes, el fondo pulsa con la letra sincronizada. Para que reaccione al sonido real, comparte el audio de esta pestaña: el navegador te pedirá permiso; deja marcada la opción «Compartir también el audio de la pestaña».",
+      },
+      'tab-unsupported': {
+        title: "Siguiendo la letra",
+        body: "Este navegador no puede compartir el audio de una pestaña (Chrome o Edge de escritorio sí), así que el fondo pulsa con la letra sincronizada.",
+      },
+    },
+    shareTab: "Conectar audio de la pestaña",
+    connecting: "Esperando permiso…",
+    stopSharing: "Dejar de compartir",
+    error: {
+      denied: "No se dio permiso para compartir la pestaña.",
+      noAudio: "Se compartió la pestaña sin su audio. Vuelve a intentarlo y marca «Compartir también el audio de la pestaña».",
+      failed: "No se pudo capturar el audio de esta pestaña.",
+    },
+  },
   actions: {
     menu: 'Más opciones',
     edit: 'Editar',
