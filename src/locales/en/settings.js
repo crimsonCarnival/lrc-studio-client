@@ -370,9 +370,12 @@ export default {
       dim: "Dim Others"
     },
     weights: {
-      normal: "Normal",
+      thinnest: "Thinnest",
+      lighter: "Lighter",
       light: "Light",
-      lighter: "Lighter"
+      normal: "Normal",
+      bold: "Bold",
+      bolder: "Bolder"
     },
     sizes: {
       small: "Small",

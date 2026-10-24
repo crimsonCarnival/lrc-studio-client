@@ -13,6 +13,9 @@ interface InterfaceSettingsProps {
   searchTerm?: string;
 }
 
+// Thin → thick; each value is a [data-font-weight] ramp in index.css.
+const FONT_WEIGHTS = ['thinnest', 'lighter', 'light', 'normal', 'bold', 'bolder'] as const;
+
 const TOAST_POSITIONS = [
   { value: 'top-left', labelKey: 'topLeft', v: 'items-start', h: 'justify-start' },
   { value: 'top-center', labelKey: 'topCenter', v: 'items-start', h: 'justify-center' },
@@ -70,11 +73,12 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
         </SettingRow>
         <SettingRow label={t('settings.interface.fontWeight')} description={t('settings.interface.fontWeightDesc')}>
           <div className="flex flex-col items-end gap-1.5">
-            {seg(t('settings.interface.fontWeight'), fontWeight, [
-              ['normal', t('settings.options.weights.normal')],
-              ['light', t('settings.options.weights.light')],
-              ['lighter', t('settings.options.weights.lighter')],
-            ], (v) => updateSetting('interface.fontWeight', v))}
+            {/* Six presets don't fit a segmented control on narrow screens. */}
+            <SettingSelect label={t('settings.interface.fontWeight')} value={fontWeight} onValueChange={(v) => updateSetting('interface.fontWeight', v)}>
+              {FONT_WEIGHTS.map((w) => (
+                <SettingOption key={w} value={w}>{tk(`settings.options.weights.${w}`)}</SettingOption>
+              ))}
+            </SettingSelect>
             {/* Shows the ramp itself rather than one sample: the setting flattens the
                 distance between body copy and headings, which a single word cannot show.
                 It previews live because the attribute is already on <html>. */}

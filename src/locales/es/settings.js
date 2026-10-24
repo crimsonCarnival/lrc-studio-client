@@ -370,9 +370,12 @@ export default {
       dim: "Atenuar otras"
     },
     weights: {
-      normal: "Normal",
+      thinnest: "Finísimo",
+      lighter: "Más ligero",
       light: "Ligero",
-      lighter: "Más ligero"
+      normal: "Normal",
+      bold: "Grueso",
+      bolder: "Más grueso"
     },
     sizes: {
       small: "Pequeño",

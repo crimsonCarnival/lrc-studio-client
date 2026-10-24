@@ -62,8 +62,8 @@ export const DEFAULT_SETTINGS = {
   interface: {
     defaultLanguage: 'en',
     fontSize: 'normal',
-    // How heavy the UI's type ramp is. 'normal' is the design's own weights;
-    // the lighter steps flatten them (see index.css).
+    // How heavy the UI's type ramp is: thinnest | lighter | light | normal | bold | bolder.
+    // Buttons ignore it (see index.css).
     fontWeight: 'normal',
     spacing: 'normal',
     previewAlignment: 'left',

@@ -23,6 +23,7 @@
    src/app/cjk-font.ts. The font-family stacks below still name it, which is inert
    until that stylesheet arrives and then starts being used with no code change. */
 @import "@fontsource-variable/stack-sans-notch";
+@import "@fontsource/fira-sans/300.css";
 @import "@fontsource/fira-sans/400.css";
 @import "@fontsource/fira-sans/400-italic.css";
 @import "@fontsource/fira-sans/500.css";
@@ -1035,11 +1036,17 @@ audio::-webkit-media-controls-panel {
    no per-component setting lookup. The attribute is written on <html> by
    useThemeSync, and seeded by the first-paint script in index.html.
 
-   Nothing drops below 400: Fira Sans ships 400-900 and both display faces are
-   400..700 variable, so a lower number buys a synthesized faux-thin rather than
-   a real cut. "Lighter" instead flattens the ramp — body copy at 400 and headings
-   where semibold used to sit. */
-:root[data-font-weight='light'] {
+   Nothing drops below 300: Fira Sans has real cuts for 300-900 (imported above) but both
+   display faces are 400..700 variable, so a 300 on those synthesizes nothing and falls to
+   their lightest real weight. No attribute means 'normal', which is one notch lighter than
+   Tailwind's own ramp (400/500/600/700/800/900 for normal..black); 'bold' restores that
+   original ramp.
+
+   Buttons are deliberately excluded (last rule below): their labels keep the original ramp
+   under every preset, so a thin UI does not thin the controls. */
+:root,
+:root[data-font-weight='normal'] {
+  --font-weight-normal: 400;
   --font-weight-medium: 400;
   --font-weight-semibold: 500;
   --font-weight-bold: 600;
@@ -1047,12 +1054,65 @@ audio::-webkit-media-controls-panel {
   --font-weight-black: 800;
 }
 
+:root[data-font-weight='thinnest'] {
+  --font-weight-normal: 300;
+  --font-weight-medium: 300;
+  --font-weight-semibold: 300;
+  --font-weight-bold: 400;
+  --font-weight-extrabold: 500;
+  --font-weight-black: 600;
+}
+
 :root[data-font-weight='lighter'] {
+  --font-weight-normal: 300;
   --font-weight-medium: 400;
   --font-weight-semibold: 400;
   --font-weight-bold: 500;
   --font-weight-extrabold: 600;
   --font-weight-black: 700;
+}
+
+:root[data-font-weight='light'] {
+  --font-weight-normal: 400;
+  --font-weight-medium: 400;
+  --font-weight-semibold: 400;
+  --font-weight-bold: 500;
+  --font-weight-extrabold: 600;
+  --font-weight-black: 700;
+}
+
+:root[data-font-weight='bold'] {
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
+}
+
+:root[data-font-weight='bolder'] {
+  --font-weight-normal: 500;
+  --font-weight-medium: 600;
+  --font-weight-semibold: 700;
+  --font-weight-bold: 800;
+  --font-weight-extrabold: 900;
+  --font-weight-black: 900;
+}
+
+/* Unstyled text inherits this; without it only `font-normal` would follow the preset. */
+body { font-weight: var(--font-weight-normal); }
+
+/* Buttons keep the original ramp whatever the preset. The variables are set on the element
+   itself, so the weight utilities on a button and its children resolve to these. */
+button,
+[role='button'],
+[data-slot='button'] {
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
 }
 
 
@@ -1093,8 +1153,21 @@ audio::-webkit-media-controls-panel {
   0%, 100% { transform: scaleY(0.3); }
   50%      { transform: scaleY(1); }
 }
+/* Reduced motion keeps the loader alive: it is status feedback, and a frozen loader reads as
+   a hung page (Linux desktops with animations off report `reduce`, so this is common). Bars
+   stop moving and only fade, slowly. The longhands are !important to beat the blanket
+   0.01ms / 1-iteration override at the top of this file; the per-bar delays are left alone. */
+@keyframes eq-bars-calm {
+  0%, 100% { opacity: 0.3; }
+  50%      { opacity: 1; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .eq-bars > i { animation: none; transform: scaleY(0.7); }
+  .eq-bars > i {
+    transform: scaleY(0.7);
+    animation-name: eq-bars-calm !important;
+    animation-duration: 1.8s !important;
+    animation-iteration-count: infinite !important;
+  }
 }
 
 /* Sync sweep: a playhead crosses a row of beat ticks, lighting each one it passes
@@ -1295,7 +1368,13 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   50% { opacity: 0.3; transform: scale(0.7); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .toast-timer, .status-pulse { animation: none !important; }
+  .toast-timer { animation: none !important; }
+  /* Same reasoning as the equalizer: the "Saving…" dot is status, so it fades instead of freezing. */
+  .status-pulse {
+    animation-name: eq-bars-calm !important;
+    animation-duration: 1.8s !important;
+    animation-iteration-count: infinite !important;
+  }
 }
 
 @keyframes shine {
