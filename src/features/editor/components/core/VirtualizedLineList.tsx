@@ -5,6 +5,8 @@ import { useVirtualizer, defaultRangeExtractor } from '@tanstack/react-virtual';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
+import { Tip } from '@ui/tip';
+import { formatSectionLabel } from '@/features/editor/constants/sectionTypes';
 import EditorLineItem from '../line/EditorLineItem';
 import { sectionCollapseKey } from '@/features/editor/utils/sections';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
@@ -436,29 +438,34 @@ export default function VirtualizedLineList({
   const railMarks = useMemo(() => {
     const count = rows.length;
     if (count < 2) return null;
-    const sections: number[] = [];
-    const untimed: { top: number; height: number }[] = [];
-    let cursor: number | null = null;
+    const sections: { top: number; label: string }[] = [];
+    const untimed: { top: number; height: number; lines: number }[] = [];
+    let cursor: { top: number; line: number } | null = null;
     let runStart = -1;
+    let runLines = 0;
+    let lineNumber = 0;
     const closeRun = (end: number) => {
-      if (runStart >= 0) untimed.push({ top: runStart / count, height: (end - runStart) / count });
+      if (runStart >= 0) untimed.push({ top: runStart / count, height: (end - runStart) / count, lines: runLines });
       runStart = -1;
+      runLines = 0;
     };
     rows.forEach((lineIndex, row) => {
       const line = lines[lineIndex];
-      if (lineIndex === activeLineIndex) cursor = row / count;
+      if (line.type !== 'section') lineNumber++;
+      if (lineIndex === activeLineIndex) cursor = { top: row / count, line: lineNumber };
       if (line.type === 'section') {
-        sections.push(row / count);
+        sections.push({ top: row / count, label: formatSectionLabel(line.label, t) });
         closeRun(row);
       } else if (line.timestamp == null) {
         if (runStart < 0) runStart = row;
+        runLines++;
       } else {
         closeRun(row);
       }
     });
     closeRun(count);
-    return { sections, untimed, cursor: cursor as number | null };
-  }, [rows, lines, activeLineIndex]);
+    return { sections, untimed, cursor: cursor as { top: number; line: number } | null };
+  }, [rows, lines, activeLineIndex, t]);
 
   // Whether to reserve furigana space is decided once for the whole project, not
   // per line, so every row measures the same and adding the first reading does
@@ -688,21 +695,34 @@ export default function VirtualizedLineList({
             })}
           </div>
         </div>
-        {/* Scrollbar rail marks: beside the 12px scrollbar's thumb, never over it */}
+        {/* Scrollbar rail marks: beside the 12px scrollbar's thumb, never over it. The rail
+            ignores the pointer so the scrollbar stays draggable; each mark takes it back
+            for itself (a taller, invisible hit area) so it can carry a tooltip. */}
         {railMarks && (
-          <div aria-hidden className="absolute top-1 bottom-1 right-0 w-3 pointer-events-none">
+          <div className="absolute top-1 bottom-1 right-0 w-3 pointer-events-none">
             {railMarks.untimed.map((m, k) => (
-              <span
-                key={`u${k}`}
-                className="absolute right-0 w-[3px] min-h-[3px] rounded-full bg-warning/80"
-                style={{ top: `${m.top * 100}%`, height: `${m.height * 100}%` }}
-              />
+              <Tip key={`u${k}`} side="left" content={t('editor.rail.untimed', { count: m.lines })}>
+                <span
+                  className="absolute right-0 w-3 min-h-2 pointer-events-auto flex justify-end"
+                  style={{ top: `${m.top * 100}%`, height: `${m.height * 100}%` }}
+                >
+                  <span className="h-full w-[3px] min-h-[3px] rounded-full bg-warning/80" />
+                </span>
+              </Tip>
             ))}
-            {railMarks.sections.map((top, k) => (
-              <span key={`s${k}`} className="absolute right-0 w-[5px] h-[3px] rounded-full bg-success" style={{ top: `${top * 100}%` }} />
+            {railMarks.sections.map((m, k) => (
+              <Tip key={`s${k}`} side="left" content={m.label}>
+                <span className="absolute right-0 w-3 h-2.5 -translate-y-1/2 pointer-events-auto flex items-center justify-end" style={{ top: `${m.top * 100}%` }}>
+                  <span className="w-[5px] h-[3px] rounded-full bg-success" />
+                </span>
+              </Tip>
             ))}
             {railMarks.cursor != null && (
-              <span className="absolute inset-x-0 h-[3px] rounded-full bg-primary" style={{ top: `${railMarks.cursor * 100}%` }} />
+              <Tip side="left" content={t('editor.rail.cursor', { line: railMarks.cursor.line })}>
+                <span className="absolute inset-x-0 h-2.5 -translate-y-1/2 pointer-events-auto flex items-center" style={{ top: `${railMarks.cursor.top * 100}%` }}>
+                  <span className="h-[3px] w-full rounded-full bg-primary" />
+                </span>
+              </Tip>
             )}
           </div>
         )}

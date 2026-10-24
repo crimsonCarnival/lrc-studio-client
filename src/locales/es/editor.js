@@ -170,6 +170,11 @@ export default {
   linesTimedCount: "{{timed}}/{{total}} líneas con tiempo",
   wordProgressLabel: "Palabras con tiempo en esta línea",
   lineList: "Líneas de la letra",
+  rail: {
+    untimed_one: "{{count}} línea sin marca de tiempo",
+    untimed_other: "{{count}} líneas sin marca de tiempo",
+    cursor: "Línea activa {{line}}",
+  },
   modeGroup: "Modo de sincronía",
   wordsTimedAll: "Palabras ✓",
   wordsTimedPartial: "Palabras {{timed}}/{{total}}",

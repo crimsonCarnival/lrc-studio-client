@@ -167,6 +167,11 @@ export default {
   linesTimedCount: "{{timed}}/{{total}} lines timed",
   wordProgressLabel: "Timed words in this line",
   lineList: "Lyric lines",
+  rail: {
+    untimed_one: "{{count}} line without a timestamp",
+    untimed_other: "{{count}} lines without timestamps",
+    cursor: "Active line {{line}}",
+  },
   modeGroup: "Sync mode",
   wordsTimedAll: "Words ✓",
   wordsTimedPartial: "Words {{timed}}/{{total}}",
