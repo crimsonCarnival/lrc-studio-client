@@ -93,6 +93,14 @@ export default function AdminDashboard() {
    * uid() already encodes the id/_id duality; the empty-string check is what
    * keeps two id-less objects from comparing equal again.
    */
+  // Staff can hit actions their permissions don't cover (e.g. a preset edited
+  // after the page loaded). Say so instead of a misleading "failed to X".
+  const notifyError = (err: unknown, fallbackKey: string) => {
+    if (isSudoCancelled(err)) return;
+    const forbidden = (err as { status?: number })?.status === 403;
+    toast.error(forbidden ? t('admin.toast.noPermission') : tk(fallbackKey));
+  };
+
   const isSelf = (user: AdminUser): boolean => {
     const target = uid(user);
     return target !== '' && target === uid(currentUser as AdminUser | null);
@@ -182,6 +190,7 @@ export default function AdminDashboard() {
   const statsFetchedRef = useRef(false);
 
   const fetchStats = async () => {
+    if (!can('stats.view')) return;
     try {
       const data = await admin.getStats();
       setStats(data);
@@ -191,7 +200,12 @@ export default function AdminDashboard() {
     }
   };
 
+  // Each admin endpoint is gated by its own permission server-side. Skip the call
+  // when the user lacks it instead of firing a request that can only 403 and toast.
+  const can = (perm: Permission) => userHasPermission(currentUser?.permissions, perm);
+
   const fetchUsers = async (fetchCursor: string | null = cursor) => {
+    if (!can('users.view')) return;
     setLoading(true);
     try {
       const params: { search: string; role: string; status: string; cursor?: string } = { search, role: roleFilter, status: statusFilter };
@@ -200,44 +214,47 @@ export default function AdminDashboard() {
       setUsers(data.users);
       setHasMore(data.hasMore ?? false);
       if (data.total !== null && data.total !== undefined) setTotalUsers(data.total);
-    } catch {
-      toast.error(t('admin.toast.fetchError'));
+    } catch (err) {
+      notifyError(err, 'admin.toast.fetchError');
     } finally {
       setLoading(false);
     }
   };
 
   const fetchIps = async () => {
+    if (!can('network.block')) return;
     setLoading(true);
     try {
       const data = await admin.getBannedIps() as unknown[];
       setBannedIps(data);
-    } catch {
-      toast.error(t('admin.toast.fetchError'));
+    } catch (err) {
+      notifyError(err, 'admin.toast.fetchError');
     } finally {
       setLoading(false);
     }
   };
 
   const fetchDevices = async () => {
+    if (!can('network.block')) return;
     setLoading(true);
     try {
       const data = await admin.getBannedDevices() as unknown[];
       setBannedDevices(data);
-    } catch {
-      toast.error(t('admin.toast.fetchError'));
+    } catch (err) {
+      notifyError(err, 'admin.toast.fetchError');
     } finally {
       setLoading(false);
     }
   };
 
   const fetchAuditLogs = async () => {
+    if (!can('audit.view')) return;
     setLoading(true);
     try {
       const { logs } = await admin.getAuditLogs({ limit: '50' }) as { logs: unknown[] };
       setAuditLogs(logs);
-    } catch {
-      toast.error(t('admin.toast.fetchError'));
+    } catch (err) {
+      notifyError(err, 'admin.toast.fetchError');
     } finally {
       setLoading(false);
     }
@@ -327,7 +344,7 @@ export default function AdminDashboard() {
       toast.success(tk(action === 'grant' ? 'admin.xp.grantedXp' : 'admin.xp.revokedXp', { amount, count: result.affected }));
       refreshUsersFromStart();
     } catch (err) {
-      if (!isSudoCancelled(err)) toast.error(t('admin.xp.failedAdjust'));
+      notifyError(err, 'admin.xp.failedAdjust');
     }
   };
 
@@ -350,7 +367,7 @@ export default function AdminDashboard() {
         setAppealModal({ isOpen: false, user: null });
         refreshUsersFromStart();
       } catch (err) {
-        if (!isSudoCancelled(err)) toast.error(t('admin.toast.statusError'));
+        notifyError(err, 'admin.toast.statusError');
       }
     } else {
       setBanModal({ isOpen: true, user });
@@ -364,7 +381,7 @@ export default function AdminDashboard() {
       setAppealModal({ isOpen: false, user: null });
       refreshUsersFromStart();
     } catch (err) {
-      if (!isSudoCancelled(err)) toast.error(t('admin.toast.statusError'));
+      notifyError(err, 'admin.toast.statusError');
     }
   };
 
@@ -374,7 +391,7 @@ export default function AdminDashboard() {
       toast.success(t('admin.toast.reactivateSuccess', { name: user.displayName || user.accountName }));
       refreshUsersFromStart();
     } catch (err) {
-      if (!isSudoCancelled(err)) toast.error(t('admin.toast.statusError'));
+      notifyError(err, 'admin.toast.statusError');
     }
   };
 
@@ -388,7 +405,7 @@ export default function AdminDashboard() {
       refreshUsersFromStart();
       fetchStats();
     } catch (err) {
-      if (!isSudoCancelled(err)) toast.error(t('admin.toast.statusError'));
+      notifyError(err, 'admin.toast.statusError');
     }
   };
 
@@ -429,7 +446,7 @@ export default function AdminDashboard() {
       fetchIps();
       fetchStats();
     } catch (err) {
-      if (!isSudoCancelled(err)) toast.error(t('admin.toast.ipBlockError'));
+      notifyError(err, 'admin.toast.ipBlockError');
     }
   };
 
@@ -447,7 +464,7 @@ export default function AdminDashboard() {
       fetchDevices();
       fetchStats();
     } catch (err) {
-      if (!isSudoCancelled(err)) toast.error(t('admin.toast.deviceBlockError'));
+      notifyError(err, 'admin.toast.deviceBlockError');
     }
   };
 
@@ -492,7 +509,7 @@ export default function AdminDashboard() {
       }
       refreshUsersFromStart();
     } catch (err) {
-      if (!isSudoCancelled(err)) toast.error(t('admin.toast.statusError'));
+      notifyError(err, 'admin.toast.statusError');
     }
   };
 

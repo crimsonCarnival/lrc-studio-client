@@ -390,6 +390,7 @@ export default {
     appealError: 'Failed to submit appeal',
     fetchError: 'Failed to fetch users',
     statusError: 'Failed to change user status',
+    noPermission: "You don't have permission to do that",
     deleteSuccess: 'Deleted {{name}}',
     deleteError: 'Failed to delete user',
     bannedSuccess: 'Banned {{name}}',

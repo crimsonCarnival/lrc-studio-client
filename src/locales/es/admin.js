@@ -391,6 +391,7 @@ export default {
     noAppealForUnban: 'No hay apelación enviada para este usuario',
     fetchError: 'Error al obtener usuarios',
     statusError: 'Error al cambiar el estado del usuario',
+    noPermission: 'No tienes permiso para hacer eso',
     deleteSuccess: 'Usuario {{name}} eliminado',
     deleteError: 'Error al eliminar el usuario',
     bannedSuccess: 'Usuario {{name}} suspendido',
