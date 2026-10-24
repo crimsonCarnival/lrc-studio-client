@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "packageManager": "pnpm@10.34.8",
   "scripts": {
     "icons": "node scripts/subset-icons.mjs",
     "predev": "node scripts/subset-icons.mjs",
