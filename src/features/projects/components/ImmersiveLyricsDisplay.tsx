@@ -331,7 +331,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
         >
           {words.map((w, wi) => {
             let startTime = w.time;
-            let endTime: number | null = null;
+            let endTime: number | null;
 
             if (startTime == null) {
               // Untimed word: find surrounding timed anchors

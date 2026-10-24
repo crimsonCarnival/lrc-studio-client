@@ -40,7 +40,7 @@ export function useCardReactions(publicId: string | null) {
     // Optimistic update
     setState(prev => {
       const newMyReaction = isToggleOff ? null : emoji;
-      let newReactions = prev.reactions;
+      let newReactions: typeof prev.reactions;
       if (isToggleOff) {
         newReactions = prev.reactions.flatMap(r => {
           const next = r.emoji === emoji ? { ...r, count: r.count - 1 } : r;

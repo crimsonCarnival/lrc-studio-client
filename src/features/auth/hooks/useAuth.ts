@@ -408,7 +408,7 @@ export function useAuth() {
       setState(s => ({ ...s, user: meUser }));
     } catch (err) {
       if ((err as ApiError)?.status === 409 && err?.error === 'last_auth_method') {
-        throw new Error('Cannot disconnect Google — it is your only sign-in method. Set a password first.');
+        throw new Error('Cannot disconnect Google — it is your only sign-in method. Set a password first.', { cause: err });
       }
       throw err;
     }
