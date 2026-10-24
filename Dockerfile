@@ -11,6 +11,15 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
+
+# Vite inlines VITE_* at build time; runtime env on the nginx container has no effect
+ARG VITE_API_URL=/api
+ARG VITE_SERVER_ORIGIN
+ARG VITE_RECAPTCHA_KEY
+ENV VITE_API_URL=$VITE_API_URL \
+    VITE_SERVER_ORIGIN=$VITE_SERVER_ORIGIN \
+    VITE_RECAPTCHA_KEY=$VITE_RECAPTCHA_KEY
+
 RUN pnpm run build
 
 # Production stage
