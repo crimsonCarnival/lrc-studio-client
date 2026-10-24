@@ -3,3 +3,7 @@ packages:
 
 minimumReleaseAge: 10080
 trustPolicy: no-downgrade
+# 6.3.1 is a 2023 backport published after provenance-signed 7.x releases, so the
+# date-based check flags it. Integrity matches the previously locked tarball.
+trustPolicyExclude:
+  - semver@6.3.1
