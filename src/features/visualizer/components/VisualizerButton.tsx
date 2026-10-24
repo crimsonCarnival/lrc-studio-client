@@ -82,10 +82,10 @@ export function VisualizerButton() {
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         aria-label={t('projectView.visualizer.button')}
-        className={`inline-flex items-center justify-center gap-1.5 h-9 coarse:h-11 max-lg:size-11 lg:px-3 rounded-lg border text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${on ? 'border-primary/40 bg-primary/15 text-primary' : 'border-border text-foreground hover:bg-muted'}`}
+        className={`inline-flex items-center justify-center gap-1.5 h-9 coarse:h-11 max-lg:size-11 max-xl:min-w-9 coarse:max-xl:min-w-11 px-2 xl:px-3 shrink-0 rounded-lg border text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${on ? 'border-primary/40 bg-primary/15 text-primary' : 'border-border text-foreground hover:bg-muted'}`}
       >
         <Icon name="graphic_eq" size={18} />
-        <span className="max-lg:sr-only">{t('projectView.visualizer.button')}</span>
+        <span className="max-xl:sr-only">{t('projectView.visualizer.button')}</span>
       </button>
 
       <ResponsiveModal

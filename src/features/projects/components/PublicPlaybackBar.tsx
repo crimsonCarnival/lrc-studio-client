@@ -164,6 +164,7 @@ export default function PublicPlaybackBar({
     );
   }
 
+  const nudges = [-seekTime, -0.1, 0.1, seekTime];
   const hasLabels = segments.some((s) => s.label);
   const canStepLines = ready && lineStarts.length > 0;
 
@@ -295,9 +296,27 @@ export default function PublicPlaybackBar({
       </div>
 
       <div className="grid grid-cols-[2.75rem_1fr_2.75rem] items-center gap-x-2 gap-y-2.5 lg:grid-cols-[1fr_auto_1fr] lg:gap-x-4">
-        <span className="max-lg:hidden font-mono text-sm tabular-nums text-foreground">
-          {clock(currentTime)} <span className="text-muted-foreground">/ {clock(duration)}</span>
-        </span>
+        <div className="max-lg:hidden min-w-0 flex items-center gap-4">
+          <span className="font-mono text-sm tabular-nums whitespace-nowrap text-foreground">
+            {clock(currentTime)} <span className="text-muted-foreground">/ {clock(duration)}</span>
+          </span>
+          {!minimal && (
+            <div role="group" aria-label={t('player.jump')} className="flex items-center gap-2">
+              {nudges.map((delta) => (
+                <button
+                  key={delta}
+                  type="button"
+                  onClick={() => seek(Math.min(duration, Math.max(0, currentTime + delta)))}
+                  disabled={!ready}
+                  aria-label={t(delta < 0 ? 'shortcuts.seekBackward' : 'shortcuts.seekForward', { val: Math.abs(delta) })}
+                  className={`${NUDGE_BTN} ${Math.abs(delta) < 1 ? 'max-xl:hidden' : ''}`}
+                >
+                  {delta < 0 ? '−' : '+'}{Math.abs(delta)}s
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="lg:hidden">{startSlot}</div>
 
         <div className="flex items-center justify-center gap-1.5 lg:gap-2">
@@ -342,45 +361,28 @@ export default function PublicPlaybackBar({
 
         <div className="lg:hidden justify-self-end">{endSlot}</div>
 
-        <div className="col-span-3 lg:col-span-1 flex flex-wrap items-center justify-center lg:justify-end gap-2">
+        <div className="col-span-3 lg:col-span-1 flex flex-wrap lg:flex-nowrap items-center justify-center lg:justify-end gap-2">
+          {/* Phones keep the two big jumps here; from lg up the full group sits beside the clock. */}
           {!minimal && (
             <>
-          <button
-            type="button"
-            onClick={() => seek(Math.max(0, currentTime - seekTime))}
-            disabled={!ready}
-            aria-label={t('shortcuts.seekBackward', { val: seekTime })}
-            className={NUDGE_BTN}
-          >
-            −{seekTime}s
-          </button>
-          <button
-            type="button"
-            onClick={() => seek(Math.max(0, currentTime - 0.1))}
-            disabled={!ready}
-            aria-label={t('shortcuts.seekBackward', { val: 0.1 })}
-            className={`max-lg:hidden ${NUDGE_BTN}`}
-          >
-            −0.1s
-          </button>
-          <button
-            type="button"
-            onClick={() => seek(currentTime + 0.1)}
-            disabled={!ready}
-            aria-label={t('shortcuts.seekForward', { val: 0.1 })}
-            className={`max-lg:hidden ${NUDGE_BTN}`}
-          >
-            +0.1s
-          </button>
-          <button
-            type="button"
-            onClick={() => seek(Math.min(duration, currentTime + seekTime))}
-            disabled={!ready}
-            aria-label={t('shortcuts.seekForward', { val: seekTime })}
-            className={NUDGE_BTN}
-          >
-            +{seekTime}s
-          </button>
+              <button
+                type="button"
+                onClick={() => seek(Math.max(0, currentTime - seekTime))}
+                disabled={!ready}
+                aria-label={t('shortcuts.seekBackward', { val: seekTime })}
+                className={`lg:hidden ${NUDGE_BTN}`}
+              >
+                −{seekTime}s
+              </button>
+              <button
+                type="button"
+                onClick={() => seek(Math.min(duration, currentTime + seekTime))}
+                disabled={!ready}
+                aria-label={t('shortcuts.seekForward', { val: seekTime })}
+                className={`lg:hidden ${NUDGE_BTN}`}
+              >
+                +{seekTime}s
+              </button>
             </>
           )}
           <SpeedControl
@@ -397,10 +399,10 @@ export default function PublicPlaybackBar({
             type="button"
             onClick={onToggleFullLyrics}
             aria-pressed={fullLyrics}
-            className={`inline-flex items-center justify-center gap-1.5 h-9 coarse:h-11 max-lg:size-11 lg:px-3 rounded-lg border text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${fullLyrics ? 'border-primary/40 bg-primary/15 text-primary' : 'border-border text-foreground hover:bg-muted'}`}
+            className={`inline-flex items-center justify-center gap-1.5 h-9 coarse:h-11 max-lg:size-11 max-xl:min-w-9 coarse:max-xl:min-w-11 px-2 xl:px-3 shrink-0 rounded-lg border text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${fullLyrics ? 'border-primary/40 bg-primary/15 text-primary' : 'border-border text-foreground hover:bg-muted'}`}
           >
-            <Icon name="format_list_bulleted" size={18} className="lg:hidden" />
-            <span className="max-lg:sr-only">{t('projectView.fullLyrics')}</span>
+            <Icon name="format_list_bulleted" size={18} />
+            <span className="max-xl:sr-only">{t('projectView.fullLyrics')}</span>
           </button>
           )}
         </div>
