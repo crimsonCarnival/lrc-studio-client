@@ -29,6 +29,7 @@ export const ICON_SHAPES: Record<string, IconShape> = {
   // Transport and editing
   play_arrow: { d: 'M8.5 5.8v12.4a.6.6 0 0 0 .9.5l9.6-6.2a.6.6 0 0 0 0-1L9.4 5.3a.6.6 0 0 0-.9.5z', solid: true },
   pause: { d: 'M9 6v12 M15 6v12', weight: 1.3 },
+  swap_horiz: { d: 'M16 4l4 4-4 4 M20 8H5 M8 20l-4-4 4-4 M4 16h15' },
   repeat: { d: 'M17 3l3 3-3 3 M4 11V9a3 3 0 0 1 3-3h13 M7 21l-3-3 3-3 M20 13v2a3 3 0 0 1-3 3H4' },
   undo: { d: 'M9 14L4 9l5-5 M4 9h10.5a5.5 5.5 0 0 1 0 11H11' },
   redo: { d: 'M15 14l5-5-5-5 M20 9H9.5a5.5 5.5 0 0 0 0 11H13' },

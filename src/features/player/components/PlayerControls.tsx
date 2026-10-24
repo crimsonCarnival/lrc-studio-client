@@ -50,7 +50,7 @@ interface ChangeMediaPopoverContentProps {
   onClearMedia: () => void;
 }
 
-const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
+export const ChangeMediaPopoverContent = memo(function ChangeMediaPopoverContent({
   fileInputId, ytUrl, onYtUrlChange, onYtErrorChange, onUrlLoad,
   cdnLoading, onFileChange, uploads, onSelectUpload, onClearMedia,
 }: ChangeMediaPopoverContentProps) {
@@ -630,11 +630,12 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       <PopoverTrigger asChild>
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size={null}
                           aria-label={t('player.changeSong')}
-                          className="size-11 lg:size-11 shrink-0"
+                          className="h-11 shrink-0 gap-2 rounded-[var(--radius-control)] px-3 text-[13px] font-medium text-subtle inset-ring inset-ring-hl hover:bg-raised hover:text-foreground"
                         >
-                          <Icon name="library_music" size={20} />
+                          <Icon name="swap_horiz" size={18} />
+                          <span className="max-2xl:sr-only">{t('player.changeSong')}</span>
                         </Button>
                       </PopoverTrigger>
                     </Tip>
@@ -1018,7 +1019,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                     <Tip content={t('player.changeSong')}>
                       <PopoverTrigger asChild>
                         <button className="flex flex-col items-center justify-center size-14 rounded-2xl text-zinc-400 active:text-zinc-100 active:bg-zinc-800 active:scale-95 transition-all duration-100 shrink-0">
-                          <Icon name="library_music" size={24} />
+                          <Icon name="swap_horiz" size={24} />
                           <span className="text-[9px] font-bold mt-1 opacity-60 uppercase tracking-tight">
                             {t('player.changeSong')}
                           </span>

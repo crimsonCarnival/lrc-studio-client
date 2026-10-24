@@ -27,6 +27,7 @@ import FuriganaModal from '../line/FuriganaModal';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
 import PlayerControls from '@/features/player/components/PlayerControls';
+import { ChangeMediaDialog } from '@/features/player/components/ChangeMediaDialog';
 import DragPointerIsolate from '@/features/player/components/DragPointerIsolate';
 import { Tip } from '@ui/tip';
 import { Kbd } from '@ui/kbd';
@@ -336,6 +337,7 @@ export default function Editor({
 
   const [autoStampDismissed, setAutoStampDismissed] = useState(false);
   const [lyricsSearchOpen, setLyricsSearchOpen] = useState(false);
+  const [changeMediaOpen, setChangeMediaOpen] = useState(false);
 
   /**
    * Replaces the project's lyrics with a search result. Goes through the shared
@@ -807,6 +809,12 @@ export default function Editor({
                   {t('editor.projectSettings')}
                 </PopoverItem>
               )}
+              {hasMedia && (
+                <PopoverItem onClick={() => setChangeMediaOpen(true)}>
+                  <Icon name="swap_horiz" size={16} />
+                  {t('player.changeSong')}
+                </PopoverItem>
+              )}
               {onTogglePublicView && activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && (
                 <PopoverItem onClick={onTogglePublicView}>
                   <Icon name="public" size={16} />
@@ -887,6 +895,8 @@ export default function Editor({
         </>,
         actionsSlot,
       )}
+
+      <ChangeMediaDialog open={changeMediaOpen} onOpenChange={setChangeMediaOpen} />
 
       {playerPosition === 'top' && (!wordsFocus || !hasMedia) && playerDock}
 
