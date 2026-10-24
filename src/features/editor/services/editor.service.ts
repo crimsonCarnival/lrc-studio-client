@@ -109,18 +109,25 @@ export function detectDuplicateTimestamps(lines: EditorLine[], threshold = 0.05)
 
 /**
  * Computes the next active line index after marking.
- * Skips blank lines when skipBlank is true, skips already-timestamped lines when mode is 'next-unsynced'.
+ * Always skips section markers (they are headings, not lines to time), skips blank lines
+ * when skipBlank is true, and skips already-timestamped lines when mode is 'next-unsynced'.
  */
 function computeNextIndex(lines: EditorLine[], fromIndex: number, skipBlank?: boolean, mode?: string): number {
   let nextIndex = fromIndex + 1;
   while (nextIndex < lines.length) {
     const line = lines[nextIndex];
     const text = line?.text?.trim();
+    if (line?.type === 'section') { nextIndex++; continue; }
     if (skipBlank && (!text || text === '♪')) { nextIndex++; continue; }
     if (mode === 'next-unsynced' && line?.timestamp != null) { nextIndex++; continue; }
     break;
   }
-  return Math.min(nextIndex, lines.length - 1);
+  // Ran off the end: stay on the last timable line rather than on a trailing section marker.
+  if (nextIndex >= lines.length) {
+    for (let i = lines.length - 1; i > fromIndex; i--) if (lines[i].type !== 'section') return i;
+    return fromIndex;
+  }
+  return nextIndex;
 }
 
 /**
@@ -256,7 +263,19 @@ function stampBlanks(lines: EditorLine[], fromIndex: number, time: number, isSrt
  * nextActiveLineIndex is null if unchanged, nextAwaitingEndMark is null to clear or an object to set.
  * nextActiveWordIndex is only present in 'words' mode.
  */
-export function applyMark({ lines, activeLineIndex, time, editorMode, activeWordIndex = 0, stampTarget = 'main', awaitingEndMark, focusedTimestamp, settings, forceAdvance = false }: ApplyMarkParams): ApplyMarkResult {
+export function applyMark(params: ApplyMarkParams): ApplyMarkResult {
+  const { lines, activeLineIndex, focusedTimestamp } = params;
+  // A section marker is a heading, never a mark target: if the cursor sits on one (clicked, or
+  // the song starts with one), mark the first line under it, so a section start isn't a double mark.
+  if (focusedTimestamp || lines[activeLineIndex]?.type !== 'section') return applyMarkAt(params);
+  let target = activeLineIndex + 1;
+  while (target < lines.length && lines[target].type === 'section') target++;
+  if (target >= lines.length) return { nextLines: lines, nextActiveLineIndex: null, nextAwaitingEndMark: undefined };
+  const result = applyMarkAt({ ...params, activeLineIndex: target });
+  return result.nextActiveLineIndex == null ? { ...result, nextActiveLineIndex: target } : result;
+}
+
+function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex = 0, stampTarget = 'main', awaitingEndMark, focusedTimestamp, settings, forceAdvance = false }: ApplyMarkParams): ApplyMarkResult {
   if (activeLineIndex >= lines.length) {
     return { nextLines: lines, nextActiveLineIndex: null, nextAwaitingEndMark: undefined };
   }

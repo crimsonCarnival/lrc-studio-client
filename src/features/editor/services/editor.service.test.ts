@@ -88,6 +88,46 @@ describe('applyMark — LRC mode', () => {
   });
 });
 
+describe('applyMark — section markers are not mark targets', () => {
+  const sec = (label: string) => line('', { type: 'section', label });
+
+  it('advances past a section marker to the first line under it', () => {
+    const lines = [line('one'), sec('chorus'), line('two')];
+    const res = mark({ lines, activeLineIndex: 0 });
+    expect(res.nextActiveLineIndex).toBe(2);
+  });
+
+  it('skips consecutive section markers', () => {
+    const lines = [line('one'), sec('verse'), sec('chorus'), line('two')];
+    expect(mark({ lines, activeLineIndex: 0 }).nextActiveLineIndex).toBe(3);
+  });
+
+  it('stamps the line under a section when the cursor sits on the marker', () => {
+    const lines = [sec('intro'), line('one'), line('two')];
+    const res = mark({ lines, activeLineIndex: 0, time: 7 });
+    expect(res.nextLines[0].timestamp).toBeNull();
+    expect(res.nextLines[1].timestamp).toBe(7);
+    expect(res.nextActiveLineIndex).toBe(2);
+  });
+
+  it('moves the cursor off the marker even when auto-advance is off', () => {
+    const lines = [sec('intro'), line('one')];
+    const res = mark({ lines, activeLineIndex: 0, settings: settings({ autoAdvance: { enabled: false } }) });
+    expect(res.nextActiveLineIndex).toBe(1);
+  });
+
+  it('does not land on a trailing section marker at the end of the song', () => {
+    const lines = [line('one'), sec('outro')];
+    expect(mark({ lines, activeLineIndex: 0 }).nextActiveLineIndex).toBe(0);
+  });
+
+  it('is a no-op when only section markers remain', () => {
+    const lines = [line('one'), sec('outro')];
+    const res = mark({ lines, activeLineIndex: 1 });
+    expect(res.nextLines).toBe(lines);
+  });
+});
+
 describe('applyMark — auto-advance modes', () => {
   it('stays on the line when auto-advance is off', () => {
     const res = mark({
