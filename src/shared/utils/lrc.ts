@@ -144,7 +144,7 @@ export function compileLRC(lines: EditorLine[], includeTranslations = false, pre
       if (line.timestamp != null) {
         const ts = line.timestamp;
         const result: string[] = [];
-        let mainLyric: string | undefined = undefined;
+        let mainLyric: string | undefined;
         if (line.words?.some(w => w.reading)) {
           mainLyric = serializeToRubyMarkup(line.words);
         } else if (line.words?.length) {

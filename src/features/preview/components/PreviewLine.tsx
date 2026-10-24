@@ -540,7 +540,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
         ? words.map((w, wi) => {
           // Calculate effective start and end times for this word (interpolate if untimed)
           let startTime = w.time;
-          let endTime: number | null = null;
+          let endTime: number | null;
 
           if (startTime == null) {
             // Untimed word: find surrounding timed anchors
@@ -705,7 +705,7 @@ function renderSecondaryTrack({ line, isActive, playbackPosition, activeSecondar
       {secWords.map((w, wi) => {
         // Calculate effective start and end times for this word (interpolate if untimed)
         let startTime = w.time;
-        let endTime: number | null = null;
+        let endTime: number | null;
 
         if (startTime == null) {
           // Untimed word: find surrounding timed anchors

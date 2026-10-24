@@ -152,7 +152,7 @@ export function RedirectMessage({ from, t }: { from?: string; t: TFunction }) {
 
   if (!from || !visible) return null;
 
-  let message = '';
+  let message: string;
   let variant = 'info';
 
   switch(from) {
@@ -221,7 +221,7 @@ export function ContextBanner({ redirect, t, onDismiss }: { redirect?: string; t
   if (!redirect) return null;
 
   // Decode and clean up the redirect path for display
-  let displayPath = '';
+  let displayPath: string;
   try {
     const decoded = decodeURIComponent(redirect);
     const url = new URL(decoded, window.location.origin);
