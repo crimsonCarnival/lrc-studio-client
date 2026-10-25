@@ -707,6 +707,7 @@ export function useAppState(user?: AuthUserType | null) {
           lines,
           duration,
           srtConfig: settings.editor?.srt,
+          publicId: activepublicIdRef.current,
         }).then(({ lines: inferred }) => {
           setLines(prev =>
             prev.map((line, i) => {

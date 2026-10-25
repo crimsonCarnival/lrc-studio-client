@@ -28,6 +28,8 @@ export type ExtractOptions = {
   duration?: number | null;
   /** The hit's id, so the server can resolve it back to the exact record rather than re-matching. */
   id?: string | null;
+  /** The project the search is for, so admins can see which project a lookup belonged to. */
+  publicId?: string | null;
 };
 
 export const lyricsSearch = {
@@ -39,6 +41,7 @@ export const lyricsSearch = {
     if (options.album) params.set('album', options.album);
     if (options.duration) params.set('duration', String(Math.round(options.duration)));
     if (options.id) params.set('id', options.id);
+    if (options.publicId) params.set('publicId', options.publicId);
     return request(`/lyrics/extract?${params}`) as Promise<LyricsExtractResult>;
   },
 };

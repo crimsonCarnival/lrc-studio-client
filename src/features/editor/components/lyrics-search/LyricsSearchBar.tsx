@@ -17,9 +17,11 @@ interface LyricsSearchBarProps {
   showKeepTimestamps?: boolean;
   /** Loaded media length in seconds. Sent to the server to disambiguate covers/remasters/live cuts. */
   mediaDuration?: number | null;
+  /** The open project, if any; sent with the lookup for the admin task log. */
+  publicId?: string | null;
 }
 
-export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestamps, mediaDuration }: LyricsSearchBarProps) {
+export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestamps, mediaDuration, publicId }: LyricsSearchBarProps) {
   const { t } = useTranslation();
   const { settings } = useSettings();
   const [query, setQuery] = useState('');
@@ -85,6 +87,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
     try {
       const data = await lyricsSearch.extract(song.title, song.artist, {
         id: song.id,
+        publicId,
         album: song.album,
         // The hit's own duration is the better signal when present (it describes
         // the specific recording); fall back to whatever media is loaded.
@@ -107,7 +110,7 @@ export default function LyricsSearchBar({ onImport, autoSearch, showKeepTimestam
     } finally {
       setIsExtracting(false);
     }
-  }, [t, mediaDuration]);
+  }, [t, mediaDuration, publicId]);
 
   const handleConfirm = useCallback((lyricsText: string) => {
     onImport(lyricsText, keepTimestamps, selectedSong ? { title: selectedSong.title, artist: selectedSong.artist } : undefined);

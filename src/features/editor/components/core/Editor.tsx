@@ -1309,7 +1309,7 @@ export default function Editor({
         title={t('lyricsSearch.findLyrics')}
         description={t('lyricsSearch.replaceDesc')}
       >
-        <LyricsSearchBar onImport={handleLyricsSearchImport} />
+        <LyricsSearchBar onImport={handleLyricsSearchImport} publicId={activepublicId} />
       </ResponsiveModal>
 
       {confirmModal}

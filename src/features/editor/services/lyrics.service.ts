@@ -43,6 +43,8 @@ interface InferEndTimesParams {
   lines: unknown[];
   duration?: number;
   srtConfig?: unknown;
+  /** The open project, for the admin task log. */
+  publicId?: string | null;
 }
 
 export const lyricsService = {
@@ -102,11 +104,11 @@ export const lyricsService = {
     }
   },
 
-  async inferEndTimes({ lines, duration, srtConfig }: InferEndTimesParams): Promise<unknown> {
+  async inferEndTimes({ lines, duration, srtConfig, publicId }: InferEndTimesParams): Promise<unknown> {
     try {
       return await request('/lyrics/infer-end-times', {
         method: 'POST',
-        body: JSON.stringify({ lines, duration, srtConfig }),
+        body: JSON.stringify({ lines, duration, srtConfig, publicId: publicId || undefined }),
       });
     } catch (err) {
       console.warn('Server inferEndTimes failed, falling back to local:', err);
