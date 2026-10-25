@@ -67,6 +67,7 @@ export default {
       bars: { label: "Barras", hint: "Espectro clásico" },
       wave: { label: "Onda", hint: "Osciloscopio" },
       radial: { label: "Radial", hint: "Espectro circular" },
+      contour: { label: "Contorno", hint: "Las líneas del fondo, movidas por la música" },
     },
     feed: {
       element: {

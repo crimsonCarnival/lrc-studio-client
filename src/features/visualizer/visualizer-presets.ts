@@ -1,6 +1,6 @@
 import { BAND_COUNT, WAVE_SAMPLES } from './visualizer-signal';
 
-export const VISUALIZER_PRESETS = ['bars', 'wave', 'radial'] as const;
+export const VISUALIZER_PRESETS = ['bars', 'wave', 'radial', 'contour'] as const;
 export type VisualizerPresetId = (typeof VISUALIZER_PRESETS)[number];
 export type VisualizerKind = 'off' | VisualizerPresetId;
 
@@ -157,7 +157,47 @@ const drawRadial: Draw = (ctx, f, p) => {
   ctx.globalAlpha = 1;
 };
 
-const DRAW: Record<VisualizerPresetId, Draw> = { bars: drawBars, wave: drawWave, radial: drawRadial };
+// The stage's own background (ContourLines): ten wave rows of alternating bumps, drifting
+// sideways. Here the rows are driven by the audio: each one swells with its slice of the
+// spectrum, and the waveform ripples along the lines.
+const CONTOUR_ROWS = 10;
+const CONTOUR_SEGMENTS = 8;
+const CONTOUR_SAMPLES = 160;
+const drawContour: Draw = (ctx, f, p) => {
+  const { width: w, height: h, bands, wave, dpr, level, clock } = f;
+  const segW = w / CONTOUR_SEGMENTS;
+  // The background drifts 40 of its 1200 units back and forth; same slow sway here.
+  const drift = ((Math.sin(clock * 0.35) + 1) / 2) * (w * (40 / 1200));
+  ctx.lineWidth = 1.5 * dpr;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  for (let i = 0; i < CONTOUR_ROWS; i++) {
+    const baseY = ((20 + i * 40) / 400) * h;
+    const baseAmp = ((18 + (i % 3) * 10) / 400) * h;
+    // Rows spread over the lower three quarters of the spectrum; the top rows get the highs.
+    const band = Math.min(bands.length - 1, Math.floor((i / CONTOUR_ROWS) * bands.length * 0.75));
+    const v = bands[band] ** 1.3;
+    const amp = baseAmp * (0.55 + v * 2.4);
+    ctx.strokeStyle = i % 2 === 0 ? p.primary : p.secondary;
+    ctx.globalAlpha = 0.28 + v * 0.6;
+    ctx.beginPath();
+    for (let k = 0; k <= CONTOUR_SAMPLES; k++) {
+      const x = (k / CONTOUR_SAMPLES) * (w + segW) - drift - segW * 0.5;
+      const seg = (x + segW) / segW;
+      const within = seg - Math.floor(seg);
+      const up = (Math.floor(seg) + i) % 2 === 0;
+      const bump = Math.sin(within * Math.PI) * (up ? -1 : 1) * amp;
+      const ripple = wave[Math.floor((k / CONTOUR_SAMPLES) * (wave.length - 1))] * h * 0.05 * (0.4 + level);
+      const y = baseY + bump + ripple;
+      if (k === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+};
+
+const DRAW: Record<VisualizerPresetId, Draw> = { bars: drawBars, wave: drawWave, radial: drawRadial, contour: drawContour };
 
 // Theme tokens, so the presets follow the dark and light themes like the rest of the stage.
 function readPalette(el: Element): Palette {
