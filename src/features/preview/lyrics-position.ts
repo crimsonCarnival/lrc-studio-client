@@ -7,7 +7,7 @@ export function computeCurrentIndex(lines, playbackPosition, editorMode) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (line.timestamp == null) continue;
-    // Ad-lib lines run concurrently with their parent -- never advance the main pointer.
+    // Counterpart lines run concurrently with their parent -- never advance the main pointer.
     if (line.adLibOf != null) continue;
 
     if (line.timestamp <= playbackPosition) {

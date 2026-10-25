@@ -88,7 +88,7 @@ interface VirtualizedLineListProps {
   modifiedLines?: Set<number>;
   onToggleLineMode?: LineItemProps['onToggleLineMode'];
   confidenceById?: Map<string, ConfidenceInfo>;
-  handleToggleAdLib?: (lineIndex: number) => void;
+  handleToggleCounterpart?: (lineIndex: number) => void;
   /** Collapsed section keys (sectionCollapseKey) and the derived visible-row view. */
   collapsedSections: ReadonlySet<string>;
   collapsedView: CollapsedView;
@@ -161,7 +161,7 @@ export default function VirtualizedLineList({
   modifiedLines,
   onToggleLineMode,
   confidenceById,
-  handleToggleAdLib,
+  handleToggleCounterpart,
   collapsedSections,
   collapsedView,
   onToggleSectionCollapse,
@@ -586,7 +586,7 @@ export default function VirtualizedLineList({
                         handleAddLine={handleAddLine}
                         handleClearLine={handleClearLine}
                         handleDeleteLine={handleDeleteLine}
-                        handleToggleAdLib={handleToggleAdLib}
+                        handleToggleCounterpart={handleToggleCounterpart}
                         handleMark={handleMark}
                         handleToggleLine={handleToggleLine}
                         activeWordIndex={activeWordIndex}
@@ -669,7 +669,7 @@ export default function VirtualizedLineList({
                       handleAddLine={handleAddLine}
                       handleClearLine={handleClearLine}
                       handleDeleteLine={handleDeleteLine}
-                      handleToggleAdLib={handleToggleAdLib}
+                      handleToggleCounterpart={handleToggleCounterpart}
                       handleToggleLine={handleToggleLine}
                       handleMark={handleMark}
                       activeWordIndex={i === activeLineIndex ? activeWordIndex : -1}

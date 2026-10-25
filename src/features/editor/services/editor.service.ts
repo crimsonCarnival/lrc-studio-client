@@ -31,7 +31,8 @@ export interface EditorLine {
   /** Tracks whether this line's timestamp was set by ASR ('asr') or manually ('manual').
    *  null = legacy/unknown lines (treated as manual). Cleared when timestamp is removed. */
   source?: 'manual' | 'asr' | null;
-  /** When non-null, this line is an ad-lib overlapping the parent line at timestamp=adLibOf. */
+  /** When non-null, this line is a counterpart overlapping the parent line at timestamp=adLibOf.
+   *  Keeps its pre-rename name ("ad-lib") because it is persisted in every stored project. */
   adLibOf?: number | null;
   // Lines carry other presentation fields preserved across spreads.
   [key: string]: unknown;
@@ -143,7 +144,7 @@ export function wordTimeBounds(lines: EditorLine[], lineIndex: number): { min: n
   if (max === Infinity) {
     for (let i = lineIndex + 1; i < lines.length; i++) {
       const next = lines[i];
-      // Ad-libs run alongside their parent line; they do not end it.
+      // Counterparts run alongside their parent line; they do not end it.
       if (next.type === 'section' || next.adLibOf != null || next.timestamp == null) continue;
       max = next.timestamp;
       break;

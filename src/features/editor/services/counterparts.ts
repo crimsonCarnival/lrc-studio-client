@@ -1,49 +1,49 @@
 /**
- * Ad-libs: the second voice over a line ("yeah", "ayy"). An ad-lib is a lyric line that
+ * Counterparts: the second voice over a line ("yeah", "ayy"). A counterpart is a lyric line that
  * carries `adLibOf` (the timestamp of the line it sits over) next to its own `timestamp`,
  * and it is stored right after that line. Pure functions only.
  *
  * Capturing is two steps on purpose (redesign sheet 20): tap when you hear it, name it
- * later. A captured ad-lib with no text yet is "pending".
+ * later. A captured counterpart with no text yet is "pending".
  */
 import type { EditorLine } from './editor.service';
 
-export const isAdLib = (line: EditorLine | undefined): boolean =>
+export const isCounterpart = (line: EditorLine | undefined): boolean =>
   !!line && line.type !== 'section' && line.adLibOf != null;
 
-export const isPendingAdLib = (line: EditorLine | undefined): boolean =>
-  isAdLib(line) && !line?.text?.trim();
+export const isPendingCounterpart = (line: EditorLine | undefined): boolean =>
+  isCounterpart(line) && !line?.text?.trim();
 
-/** When the ad-lib is heard. Older ones have no time of their own and start with their line. */
-export const adLibTime = (line: EditorLine): number | null => line.timestamp ?? line.adLibOf ?? null;
+/** When the counterpart is heard. Older ones have no time of their own and start with their line. */
+export const counterpartTime = (line: EditorLine): number | null => line.timestamp ?? line.adLibOf ?? null;
 
 const isMain = (line: EditorLine) => line.type !== 'section' && line.adLibOf == null;
 
-export interface AdLibEntry {
+export interface CounterpartEntry {
   /** Index in the flat lines array. */
   index: number;
   line: EditorLine;
   time: number;
 }
 
-/** Every ad-lib that has a time, in list order. */
-export function listAdLibs(lines: EditorLine[]): AdLibEntry[] {
-  const out: AdLibEntry[] = [];
+/** Every counterpart that has a time, in list order. */
+export function listCounterparts(lines: EditorLine[]): CounterpartEntry[] {
+  const out: CounterpartEntry[] = [];
   lines.forEach((line, index) => {
-    if (!isAdLib(line)) return;
-    const time = adLibTime(line);
+    if (!isCounterpart(line)) return;
+    const time = counterpartTime(line);
     if (time != null) out.push({ index, line, time });
   });
   return out;
 }
 
 /**
- * Drops a pending ad-lib at `time`. It belongs to the last synced line that started at or
- * before `time`, and goes after that line's earlier ad-libs so the list stays in time order.
- * It takes the singers of the previous ad-lib, since a second voice rarely changes mid-song.
+ * Drops a pending counterpart at `time`. It belongs to the last synced line that started at or
+ * before `time`, and goes after that line's earlier counterparts so the list stays in time order.
+ * It takes the singers of the previous counterpart, since a second voice rarely changes mid-song.
  * Returns null when no line is synced yet at that point: there is nothing to sit over.
  */
-export function captureAdLib(lines: EditorLine[], time: number, id: string): { lines: EditorLine[]; index: number } | null {
+export function captureCounterpart(lines: EditorLine[], time: number, id: string): { lines: EditorLine[]; index: number } | null {
   let parent = -1;
   for (let i = 0; i < lines.length; i++) {
     const ts = lines[i].timestamp;
@@ -52,24 +52,24 @@ export function captureAdLib(lines: EditorLine[], time: number, id: string): { l
   if (parent < 0) return null;
 
   let insertAt = parent + 1;
-  while (insertAt < lines.length && isAdLib(lines[insertAt]) && (adLibTime(lines[insertAt]) ?? 0) <= time) insertAt++;
+  while (insertAt < lines.length && isCounterpart(lines[insertAt]) && (counterpartTime(lines[insertAt]) ?? 0) <= time) insertAt++;
 
   let singers: string[] | undefined;
   for (let i = insertAt - 1; i >= 0 && !singers; i--) {
-    if (isAdLib(lines[i]) && lines[i].singers?.length) singers = [...lines[i].singers!];
+    if (isCounterpart(lines[i]) && lines[i].singers?.length) singers = [...lines[i].singers!];
   }
 
-  const adLib: EditorLine = { id, text: '', timestamp: time, adLibOf: lines[parent].timestamp, source: 'manual', mode: 'solo', singers };
+  const counterpart: EditorLine = { id, text: '', timestamp: time, adLibOf: lines[parent].timestamp, source: 'manual', mode: 'solo', singers };
   const next = [...lines];
-  next.splice(insertAt, 0, adLib);
+  next.splice(insertAt, 0, counterpart);
   return { lines: next, index: insertAt };
 }
 
 /**
- * The span an ad-lib may move in: from the start of its line to the start of the next
+ * The span a counterpart may move in: from the start of its line to the start of the next
  * synced line. Past either end it would belong to another line.
  */
-export function adLibBounds(lines: EditorLine[], index: number): { min: number; max: number | null } {
+export function counterpartBounds(lines: EditorLine[], index: number): { min: number; max: number | null } {
   let min = lines[index]?.adLibOf ?? 0;
   for (let i = index - 1; i >= 0; i--) {
     if (isMain(lines[i])) { min = lines[i].timestamp ?? min; break; }
@@ -81,10 +81,10 @@ export function adLibBounds(lines: EditorLine[], index: number): { min: number; 
   return { min, max };
 }
 
-/** Moves an ad-lib in time, kept inside its line. Other lines are untouched. */
-export function moveAdLib(lines: EditorLine[], index: number, time: number): EditorLine[] {
-  if (!isAdLib(lines[index])) return lines;
-  const { min, max } = adLibBounds(lines, index);
+/** Moves a counterpart in time, kept inside its line. Other lines are untouched. */
+export function moveCounterpart(lines: EditorLine[], index: number, time: number): EditorLine[] {
+  if (!isCounterpart(lines[index])) return lines;
+  const { min, max } = counterpartBounds(lines, index);
   const clamped = Math.max(min, max != null ? Math.min(time, max - 0.01) : time);
   if (clamped === lines[index].timestamp) return lines;
   const next = [...lines];
@@ -93,13 +93,13 @@ export function moveAdLib(lines: EditorLine[], index: number, time: number): Edi
 }
 
 /**
- * Texts to offer when naming an ad-lib: the ones this song already uses, most used first,
+ * Texts to offer when naming a counterpart: the ones this song already uses, most used first,
  * topped up with common ones.
  */
-export function frequentAdLibs(lines: EditorLine[], defaults: string[], limit = 6): string[] {
+export function frequentCounterparts(lines: EditorLine[], defaults: string[], limit = 6): string[] {
   const counts = new Map<string, number>();
   for (const line of lines) {
-    const text = isAdLib(line) ? line.text?.trim() : '';
+    const text = isCounterpart(line) ? line.text?.trim() : '';
     if (text) counts.set(text, (counts.get(text) ?? 0) + 1);
   }
   const used = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([text]) => text);
@@ -109,9 +109,9 @@ export function frequentAdLibs(lines: EditorLine[], defaults: string[], limit = 
 
 /**
  * The stretch of the song the capture strip shows: the line being sung and the one after
- * it, so there is room to see where an ad-lib falls. At least four seconds wide.
+ * it, so there is room to see where a counterpart falls. At least four seconds wide.
  */
-export function adLibWindow(lines: EditorLine[], position: number): { start: number; end: number } {
+export function counterpartWindow(lines: EditorLine[], position: number): { start: number; end: number } {
   const starts = lines.filter((l) => isMain(l) && l.timestamp != null).map((l) => l.timestamp!).sort((a, b) => a - b);
   if (starts.length === 0) return { start: Math.max(0, position - 1), end: Math.max(0, position - 1) + 8 };
   let cur = 0;

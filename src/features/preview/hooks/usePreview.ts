@@ -214,7 +214,7 @@ export function usePreview(rawProps: unknown): UsePreviewResult {
       const l = lines[i];
       if (l.type === 'section') continue;
       total++;
-      // Ad-libs inherit their parent's time (see PreviewLine).
+      // Counterparts inherit their parent's time (see PreviewLine).
       if (l.timestamp != null || l.adLibOf != null) timed++;
       else if (firstUntimedIndex === -1) firstUntimedIndex = i;
     }

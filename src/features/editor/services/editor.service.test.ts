@@ -555,12 +555,12 @@ describe('word time bounds', () => {
     expect(wordTimeBounds(lines, 0).max).toBe(11);
   });
 
-  it('skips sections, untimed lines and ad-libs when looking for the end', () => {
+  it('skips sections, untimed lines and counterparts when looking for the end', () => {
     const lines: EditorLine[] = [
       line('one', { timestamp: 10 }),
       { type: 'section', label: 'Chorus', text: '' },
       line('untimed'),
-      line('ad-lib', { timestamp: 10.5, adLibOf: 0 }),
+      line('counterpart', { timestamp: 10.5, adLibOf: 0 }),
       line('two', { timestamp: 14 }),
     ];
     expect(wordTimeBounds(lines, 0).max).toBe(14);

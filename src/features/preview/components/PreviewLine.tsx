@@ -195,12 +195,12 @@ export default function PreviewLine({
     );
   }
 
-  const isAdLib = line.adLibOf != null;
+  const isCounterpart = line.adLibOf != null;
   const effectiveTimestamp = line.timestamp ?? line.adLibOf;
-  const adLibEndTime = line.endTime ?? nextTimestamp ?? (effectiveTimestamp != null ? effectiveTimestamp + 5 : null);
-  const isAdLibActive = isAdLib && effectiveTimestamp != null && playbackPosition != null && playbackPosition >= effectiveTimestamp && (adLibEndTime == null || playbackPosition < adLibEndTime);
+  const counterpartEndTime = line.endTime ?? nextTimestamp ?? (effectiveTimestamp != null ? effectiveTimestamp + 5 : null);
+  const isCounterpartActive = isCounterpart && effectiveTimestamp != null && playbackPosition != null && playbackPosition >= effectiveTimestamp && (counterpartEndTime == null || playbackPosition < counterpartEndTime);
 
-  const isActive = i === displayedActiveIndex || (isDualLine && i === displayLines[0].originalIndex) || isAdLibActive;
+  const isActive = i === displayedActiveIndex || (isDualLine && i === displayLines[0].originalIndex) || isCounterpartActive;
   const isPast = effectiveTimestamp != null && i < displayedActiveIndex;
   const isLocked = lockedLineIndex === i;
 
@@ -368,9 +368,9 @@ export default function PreviewLine({
       onMouseEnter={hasMedia ? () => handleLineHover(i) : undefined}
       onMouseLeave={hasMedia ? handleLineHoverEnd : undefined}
       style={{
-        opacity: isAdLib && !isActive ? parallaxOpacity * 0.5 : parallaxOpacity,
-        transform: isAdLib ? 'scale(0.95)' : undefined,
-        paddingLeft: isAdLib ? '1.5rem' : undefined,
+        opacity: isCounterpart && !isActive ? parallaxOpacity * 0.5 : parallaxOpacity,
+        transform: isCounterpart ? 'scale(0.95)' : undefined,
+        paddingLeft: isCounterpart ? '1.5rem' : undefined,
         animationDelay: staggerDelay,
       }}
       className={`w-full group flex select-none relative overflow-hidden animate-preview-line-in ${hasMedia ? 'cursor-pointer' : 'cursor-default'
@@ -420,13 +420,13 @@ export default function PreviewLine({
     </button>
   );
 
-  // A captured ad-lib that has no text yet is a to-do for the editor, not a lyric.
-  if (isAdLib && !line.text?.trim()) return null;
+  // A captured counterpart that has no text yet is a to-do for the editor, not a lyric.
+  if (isCounterpart && !line.text?.trim()) return null;
 
-  // Ad-lib lines are shown at half-opacity and indented to visually overlap with parent
-  if (isAdLib && !isActive) {
+  // Counterpart lines are shown at half-opacity and indented to visually overlap with parent
+  if (isCounterpart && !isActive) {
     return (
-      <div className="pl-6 border-l-2 border-adlib/40">
+      <div className="pl-6 border-l-2 border-counterpart/40">
         {inner}
       </div>
     );
@@ -533,7 +533,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
   return (
     <p
       lang="ja"
-      className={`ruby-host ${showFuriganaInPreview ? '' : 'ruby-off'} transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : muted ? mutedClass : isPast ? pastClass : `${futureClass}${review ? ' font-medium' : ''}`} ${isDuet ? 'bg-clip-text !text-transparent' : line.adLibOf != null ? 'italic !text-adlib-ink' : ''}`}
+      className={`ruby-host ${showFuriganaInPreview ? '' : 'ruby-off'} transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : muted ? mutedClass : isPast ? pastClass : `${futureClass}${review ? ' font-medium' : ''}`} ${isDuet ? 'bg-clip-text !text-transparent' : line.adLibOf != null ? 'italic !text-counterpart-ink' : ''}`}
       style={duetGradientStyle}
     >
       {effectiveHasWordTimestamps

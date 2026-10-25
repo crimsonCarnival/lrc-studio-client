@@ -1013,9 +1013,9 @@ audio::-webkit-media-controls-panel {
   --color-mark: var(--mark);
   --color-silver: var(--silver);
   --color-past: var(--past);
-  --color-adlib: var(--adlib);
-  --color-adlib-ink: var(--adlib-ink);
-  --color-adlib-soft: var(--adlib-soft);
+  --color-counterpart: var(--counterpart);
+  --color-counterpart-ink: var(--counterpart-ink);
+  --color-counterpart-soft: var(--counterpart-soft);
   --color-primary-strong: var(--primary-strong);
   --color-knob: var(--knob);
   --color-tip: var(--tip);
@@ -1239,16 +1239,16 @@ button,
 .staff-ring[data-staff="admin"] { --ring-a: var(--rose); --ring-b: var(--love); }
 .staff-ring[data-staff="mod"] { --ring-a: var(--foam); --ring-b: var(--pine); }
 
-/* Ad-lib capture (redesign sheet 20): a pill drops into its lane; an unnamed one pulses
+/* Counterpart capture (redesign sheet 20): a pill drops into its lane; an unnamed one pulses
    softly until it gets its text. */
-@keyframes adlib-drop { from { transform: translateY(-14px) scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes adlib-pulse { 50% { box-shadow: inset 0 0 0 1.5px var(--gold), 0 0 0 5px var(--gold-soft); } }
-@keyframes adlib-rise { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
-.adlib-pill { animation: adlib-drop 260ms var(--ease-bounce); }
-.adlib-pill[data-pending] { animation: adlib-drop 260ms var(--ease-bounce), adlib-pulse 1.4s ease-in-out 300ms infinite; }
-.adlib-live { animation: adlib-rise 300ms var(--ease-bounce); }
+@keyframes counterpart-drop { from { transform: translateY(-14px) scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes counterpart-pulse { 50% { box-shadow: inset 0 0 0 1.5px var(--gold), 0 0 0 5px var(--gold-soft); } }
+@keyframes counterpart-rise { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+.counterpart-pill { animation: counterpart-drop 260ms var(--ease-bounce); }
+.counterpart-pill[data-pending] { animation: counterpart-drop 260ms var(--ease-bounce), counterpart-pulse 1.4s ease-in-out 300ms infinite; }
+.counterpart-live { animation: counterpart-rise 300ms var(--ease-bounce); }
 @media (prefers-reduced-motion: reduce) {
-  .adlib-pill, .adlib-pill[data-pending], .adlib-live { animation: none; }
+  .counterpart-pill, .counterpart-pill[data-pending], .counterpart-live { animation: none; }
 }
 
 /* Icon motion (redesign sheet 03). Hover motions belong to buttons only, so an icon inside
@@ -1439,10 +1439,10 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   --mark: rgba(234, 157, 52, 0.24);
   --silver: #797593;
   --past: #8a77a3;
-  /* Ad-libs are the second voice: rose, so they never compete with the iris of the main line. */
-  --adlib: #d7827e;
-  --adlib-ink: #a9564f;
-  --adlib-soft: rgba(215, 130, 126, 0.16);
+  /* Counterparts are the second voice: rose, so they never compete with the iris of the main line. */
+  --counterpart: #d7827e;
+  --counterpart-ink: #a9564f;
+  --counterpart-soft: rgba(215, 130, 126, 0.16);
   --primary-strong: rgba(144, 122, 169, 0.34);
   --knob: #fffaf3;
   --tip: #575279;
@@ -1518,9 +1518,9 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   --mark: rgba(246, 193, 119, 0.22);
   --silver: #cfcbe6;
   --past: #a48cc3;
-  --adlib: #ea9a97;
-  --adlib-ink: #ea9a97;
-  --adlib-soft: rgba(234, 154, 151, 0.16);
+  --counterpart: #ea9a97;
+  --counterpart-ink: #ea9a97;
+  --counterpart-soft: rgba(234, 154, 151, 0.16);
   --primary-strong: rgba(196, 167, 231, 0.32);
   --knob: #e0def4;
   --tip: #393552;

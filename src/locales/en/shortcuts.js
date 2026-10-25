@@ -2,7 +2,7 @@ export default {
   title: "Keyboard Shortcuts",
   playPause: "Play / Pause",
   mark: "Mark current line",
-  captureAdLib: "Capture an ad-lib here",
+  captureAdLib: "Capture a counterpart here",
   nudgeLeft: "Nudge timestamp -{{val}}s",
   nudgeRight: "Nudge timestamp +{{val}}s",
   undo: "Undo",
