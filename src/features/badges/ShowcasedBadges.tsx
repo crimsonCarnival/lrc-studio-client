@@ -22,8 +22,10 @@ interface ShowcaseBadge {
 
 const EMPTY_BADGES: ShowcaseBadge[] = [];
 
-function ShowcaseCard({ badge, locale = 'en' }: { badge: ShowcaseBadge; locale?: string }) {
+function ShowcaseCard({ badge, locale }: { badge: ShowcaseBadge; locale?: string }) {
   const { t, i18n } = useTranslation();
+  // The UI language, unless a caller names one: a fixed 'en' default read "about 1 month ago" inside Spanish text.
+  const dateLocale = DATE_LOCALES[locale ?? i18n.resolvedLanguage ?? i18n.language] ?? enUS;
   const defs = useBadgeDefs();
   // badge label keys are composed from a registry; bypass strict key checking.
   const tk = t as (key: string, defaultValue?: string) => string;
@@ -33,7 +35,7 @@ function ShowcaseCard({ badge, locale = 'en' }: { badge: ShowcaseBadge; locale?:
   const rarity = badge.rarity ?? 'common';
   const rarityConf = RARITY_CONFIG[rarity] ?? RARITY_CONFIG.common;
   const grantedStr = badge.grantedAt
-    ? formatDistanceToNow(new Date(badge.grantedAt), { addSuffix: true, locale: DATE_LOCALES[locale] ?? enUS })
+    ? formatDistanceToNow(new Date(badge.grantedAt), { addSuffix: true, locale: dateLocale })
     : '';
 
   // If badge.label from API is a localized object, prefer it over def.label
@@ -87,7 +89,7 @@ interface ShowcasedBadgesProps {
   className?: string;
 }
 
-export function ShowcasedBadges({ badges = EMPTY_BADGES, maxSlots = 3, locale = 'en', className = '' }: ShowcasedBadgesProps) {
+export function ShowcasedBadges({ badges = EMPTY_BADGES, maxSlots = 3, locale, className = '' }: ShowcasedBadgesProps) {
   const { t } = useTranslation();
 
   if (badges.length === 0 && maxSlots === 0) return null;
