@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { StatusChip } from '@ui/StatusChip';
 import { useTranslation } from 'react-i18next';
 import { AdminUserContextMenu } from './AdminUserContextMenu';
@@ -68,6 +69,8 @@ interface AdminUsersTabProps {
   handleBlockDeviceDirect: (user: AdminUser) => void;
   onRefresh?: () => void;
   hideRoleFilter?: boolean;
+  /** Marks where each role's members begin. For lists already ordered by rank, like staff. */
+  groupByRank?: boolean;
   hasMore?: boolean;
   hasPrev?: boolean;
   totalUsers?: number | null;
@@ -94,13 +97,16 @@ export default function AdminUsersTab({
   handleBlockDeviceDirect,
   onRefresh,
   hideRoleFilter,
+  groupByRank,
   hasMore,
   hasPrev,
   totalUsers,
   onNextPage,
   onPrevPage,
 }: AdminUsersTabProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // The UI language, not the browser's: a Spanish page printed English-formatted dates otherwise.
+  const formatDay = (iso: string) => new Date(iso).toLocaleDateString(i18n.resolvedLanguage || i18n.language);
   // Some admin.table.* keys (e.g. delete) aren't in the typed resource map.
   const tk = t as (key: string) => string;
   const inputMethod = useInputMethod();
@@ -115,6 +121,26 @@ export default function AdminUsersTab({
   const myRank = ROLE_RANK[(currentUser?.role as Role) ?? 'user'] ?? 0;
   const canAssignRoles = userHasPermission(currentUser?.permissions, 'users.role');
   const assignableRoles = ROLES.filter(r => ROLE_RANK[r] < myRank);
+
+  // The heading before the first member of a rank, when the list is grouped by rank.
+  const rankHeading = (user: AdminUser, index: number, as: 'row' | 'block') => {
+    if (!groupByRank || (index > 0 && users[index - 1].role === user.role)) return null;
+    const role = (user.role as Role) ?? 'user';
+    const count = users.filter(u => u.role === user.role).length;
+    const tone = role === 'superadmin' ? 'text-gold-ink bg-gold' : role === 'admin' ? 'text-primary-ink bg-primary' : 'text-subtle bg-zinc-500';
+    const [textTone, barTone] = tone.split(' ');
+    const label = (
+      <span className={`flex items-center gap-3 ${textTone}`}>
+        <span aria-hidden className={`h-4 w-1 rounded-full ${barTone}`} />
+        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em]">{tk(`admin.table.${role}`)}</span>
+        <span className="font-mono text-[11px] tabular-nums opacity-60">{count}</span>
+        <span aria-hidden className="h-px flex-1 bg-zinc-800" />
+      </span>
+    );
+    return as === 'row'
+      ? <tr key={`rank-${role}`} className="bg-zinc-950/50"><td colSpan={8} className="px-4 pt-5 pb-2">{label}</td></tr>
+      : <div key={`rank-${role}`} className="pt-3 pb-1">{label}</div>;
+  };
 
   // Can act on this user: not self, and target rank strictly below mine
   const canActOn = (user: AdminUser) => {
@@ -195,11 +221,12 @@ export default function AdminUsersTab({
             {users.length === 0 ? (
               <div className="text-center p-8 text-zinc-500">{t('admin.dashboard.noUsers')}</div>
             ) : (
-              users.map(user => {
+              users.map((user, index) => {
                 const isSelf = user.id === currentUser?.id;
                 return (
+                  <Fragment key={user.id}>
+                  {rankHeading(user, index, 'block')}
                   <AdminUserContextMenu
-                    key={user.id}
                     user={user}
                     myRank={myRank}
                     myPermissions={currentUser?.permissions ?? []}
@@ -296,13 +323,13 @@ export default function AdminUsersTab({
                       <div className="flex gap-2 text-xs">
                         <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
                           <div className="flex flex-col items-center justify-center text-zinc-300">
-                            <span className="font-semibold">{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}</span>
+                            <span className="font-semibold">{user.createdAt ? formatDay(user.createdAt) : '—'}</span>
                             <span className="text-[9px] uppercase tracking-widest text-zinc-500">{t('admin.table.joined')}</span>
                           </div>
                         </div>
                         <div className="flex-1 bg-zinc-900/50 rounded px-2 py-1.5 text-center">
                           <div className="flex flex-col items-center justify-center text-zinc-300">
-                            <span className="font-semibold">{user.lastOnlineAt || user.lastUsedAt ? new Date((user.lastOnlineAt || user.lastUsedAt) as string).toLocaleDateString() : '—'}</span>
+                            <span className="font-semibold">{user.lastOnlineAt || user.lastUsedAt ? formatDay((user.lastOnlineAt || user.lastUsedAt) as string) : '—'}</span>
                             <span className="text-[9px] uppercase tracking-widest text-zinc-500">{t('admin.table.lastActive')}</span>
                           </div>
                         </div>
@@ -395,6 +422,7 @@ export default function AdminUsersTab({
                       )}
                     </div>
                   </AdminUserContextMenu>
+                  </Fragment>
                 );
               })
             )}
@@ -415,11 +443,12 @@ export default function AdminUsersTab({
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-800/30">
-          {users.map(user => {
+          {users.map((user, index) => {
             const isSelf = user.id === currentUser?.id;
             return (
+              <Fragment key={user.id}>
+              {rankHeading(user, index, 'row')}
               <AdminUserContextMenu
-                key={user.id}
                 user={user}
                 myRank={myRank}
                 myPermissions={currentUser?.permissions ?? []}
@@ -502,10 +531,10 @@ export default function AdminUsersTab({
                   <td className="p-4">
                     <div className="flex flex-col gap-1.5 text-xs text-zinc-400">
                       <div className="flex items-center gap-1.5">
-                        <Icon name="person_add" size={14} className="text-zinc-500" /> {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}
+                        <Icon name="person_add" size={14} className="text-zinc-500" /> {user.createdAt ? formatDay(user.createdAt) : '—'}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Icon name="history" size={14} className="text-zinc-500" /> {user.lastOnlineAt || user.lastUsedAt ? new Date((user.lastOnlineAt || user.lastUsedAt) as string).toLocaleDateString() : '—'}
+                        <Icon name="history" size={14} className="text-zinc-500" /> {user.lastOnlineAt || user.lastUsedAt ? formatDay((user.lastOnlineAt || user.lastUsedAt) as string) : '—'}
                       </div>
                     </div>
                   </td>
@@ -618,6 +647,7 @@ export default function AdminUsersTab({
                   </td>
                 </tr>
               </AdminUserContextMenu>
+              </Fragment>
             );
           })}
         </tbody>

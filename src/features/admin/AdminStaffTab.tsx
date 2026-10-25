@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { admin } from '@/app/api';
 import toast from 'react-hot-toast';
 import AdminUsersTab from './AdminUsersTab';
+import { ROLE_RANK, type Role } from '@/features/auth/permissions';
 
 interface AdminUser {
   id?: string;
@@ -50,7 +51,8 @@ export default function AdminStaffTab({
     setLoading(true);
     try {
       const data = await admin.getUsers({ search, role: 'mod,admin,superadmin', status: statusFilter, limit: '100' }) as { users: AdminUser[] };
-      setStaffUsers(data.users);
+      // Highest rank first: the table marks where each rank begins, so equal roles must sit together.
+      setStaffUsers([...data.users].sort((a, b) => (ROLE_RANK[(b.role as Role) ?? 'user'] ?? 0) - (ROLE_RANK[(a.role as Role) ?? 'user'] ?? 0)));
     } catch {
       toast.error(t('admin.toast.fetchError'));
     } finally {
@@ -94,6 +96,7 @@ export default function AdminStaffTab({
       handleBlockIpDirect={handleBlockIpDirect}
       handleBlockDeviceDirect={handleBlockDeviceDirect}
       hideRoleFilter
+      groupByRank
     />
   );
 }
