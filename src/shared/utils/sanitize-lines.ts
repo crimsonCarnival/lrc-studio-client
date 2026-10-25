@@ -64,6 +64,8 @@ export function sanitizeLines(raw: unknown): EditorLine[] {
       text: l.text,
       timestamp: finiteOrNull(l.timestamp),
       endTime: typeof l.endTime === 'number' && isFinite(l.endTime) ? l.endTime : undefined,
+      // Marks a counterpart; dropping it turns the line back into a main line on reload.
+      adLibOf: typeof l.adLibOf === 'number' && isFinite(l.adLibOf) ? l.adLibOf : undefined,
       secondary: typeof l.secondary === 'string' ? l.secondary : '',
       mode: typeof l.mode === 'string' ? (l.mode as EditorLine['mode']) : undefined,
       singers: Array.isArray(l.singers) ? (l.singers as string[]) : undefined,
