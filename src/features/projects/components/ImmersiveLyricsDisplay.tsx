@@ -10,7 +10,7 @@ import { Tip } from '@ui/tip';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 import { useSettings } from '@/features/settings/useSettings';
 import { usePlayer } from '@features/player/PlayerContext';
-import { hasCJK, hasKanji, toHiragana, toKatakana, splitOkurigana } from '@/shared/utils/furigana';
+import { hasKanji, toHiragana, toKatakana, splitOkurigana, needsSpaceAfter } from '@/shared/utils/furigana';
 
 // Theme-token colors: the stage sits on the app background, so text derives
 // from --foreground and stays legible in both the dark and light themes.
@@ -422,8 +422,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
         >
           {hasReadings
             ? words.map((w, wi) => {
-                const next = words[wi + 1]?.word;
-                const addSpace = !!next && !hasCJK(w.word.slice(-1)) && !hasCJK(next.slice(0, 1));
+                const addSpace = needsSpaceAfter(w.word, words[wi + 1]?.word);
                 return <Fragment key={wi}>{renderWord(w)}{addSpace ? ' ' : null}</Fragment>;
               })
             : line.text}

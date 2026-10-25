@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Ref } from 'react';
 import { useSettings } from '@/features/settings/useSettings';
-import { toHiragana, toKatakana, parseRubyMarkup, rubyRatioClass, splitOkurigana, rubyFitStyle } from '@/shared/utils/furigana';
+import { toHiragana, toKatakana, parseRubyMarkup, rubyRatioClass, splitOkurigana, rubyFitStyle, needsSpaceAfter } from '@/shared/utils/furigana';
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import { useTranslation } from 'react-i18next';
 import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
@@ -440,26 +440,6 @@ export default function PreviewLine({
   // Return without Tip wrapper — TooltipTrigger asChild can override onClick.
   // The hover hint is decorative; click-to-seek correctness takes priority.
   return inner;
-}
-
-// ——— CJK detection for spaceless scripts ———
-function isCJKChar(ch?: string): boolean {
-  if (!ch) return false;
-  const code = ch.codePointAt(0);
-  if (code == null) return false;
-  return (
-    (code >= 0x3000 && code <= 0x9FFF) ||  // CJK Unified, Hiragana, Katakana, CJK Symbols
-    (code >= 0xF900 && code <= 0xFAFF) ||   // CJK Compatibility Ideographs
-    (code >= 0xFF00 && code <= 0xFFEF) ||   // Fullwidth Forms
-    (code >= 0x20000 && code <= 0x2FA1F)    // CJK Extensions
-  );
-}
-
-function needsSpaceAfter(currentWord?: string, nextWord?: string): boolean {
-  if (!nextWord) return false;
-  const lastChar = (currentWord || '').slice(-1);
-  const firstChar = nextWord.slice(0, 1);
-  return !isCJKChar(lastChar) && !isCJKChar(firstChar);
 }
 
 interface MainTrackProps {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rubyRatioClass, splitOkurigana, rubyFitEm } from './furigana';
+import { rubyRatioClass, splitOkurigana, rubyFitEm, needsSpaceAfter } from './furigana';
 
 // The three reference cases from the ruby-rules design sheet. The ratio decides
 // whether a reading needs no adjustment, may overhang into the token's constant
@@ -74,5 +74,27 @@ describe('rubyFitEm', () => {
   it('asks for nothing when there is no reading or no kanji', () => {
     expect(rubyFitEm('ライナー', 'x')).toBeNull();
     expect(rubyFitEm('高', null)).toBeNull();
+  });
+});
+
+// Word chips are joined back into a line; only spaceless scripts run together.
+describe('needsSpaceAfter', () => {
+  it('spaces Latin words and runs CJK words together', () => {
+    expect(needsSpaceAfter('closing', 'in')).toBe(true);
+    expect(needsSpaceAfter('夢', 'を')).toBe(false);
+  });
+
+  it('keeps CJK and Latin words apart', () => {
+    expect(needsSpaceAfter('君の', 'love')).toBe(true);
+    expect(needsSpaceAfter('baby', '愛して')).toBe(true);
+  });
+
+  it('lets punctuation stick to the CJK word it follows or leads', () => {
+    expect(needsSpaceAfter('夢', '!')).toBe(false);
+    expect(needsSpaceAfter('…', '夢')).toBe(false);
+  });
+
+  it('adds nothing after the last word', () => {
+    expect(needsSpaceAfter('end', undefined)).toBe(false);
   });
 });

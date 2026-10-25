@@ -256,3 +256,29 @@ export function serializeToRubyMarkup(words?: RubyWord[]): string {
     return needsSpace ? serialized + ' ' : serialized;
   }).join('');
 }
+
+// ——— CJK detection for spaceless scripts ———
+function isCJKChar(ch?: string): boolean {
+  if (!ch) return false;
+  const code = ch.codePointAt(0);
+  if (code == null) return false;
+  return (
+    (code >= 0x3000 && code <= 0x9FFF) ||  // CJK Unified, Hiragana, Katakana, CJK Symbols
+    (code >= 0xF900 && code <= 0xFAFF) ||   // CJK Compatibility Ideographs
+    (code >= 0xFF00 && code <= 0xFFEF) ||   // Fullwidth Forms
+    (code >= 0x20000 && code <= 0x2FA1F)    // CJK Extensions
+  );
+}
+
+const HAS_WORD_CHAR = /[\p{L}\p{N}]/u;
+
+export function needsSpaceAfter(currentWord?: string, nextWord?: string): boolean {
+  if (!nextWord) return false;
+  const lastCJK = isCJKChar((currentWord || '').slice(-1));
+  const firstCJK = isCJKChar(nextWord.slice(0, 1));
+  if (lastCJK && firstCJK) return false;
+  if (!lastCJK && !firstCJK) return true;
+  // CJK meets Latin: keep them apart, unless the non-CJK side is only punctuation
+  // (a stray "!" or "…" belongs to the word it follows).
+  return HAS_WORD_CHAR.test(lastCJK ? nextWord : currentWord || '');
+}
