@@ -3,6 +3,7 @@ import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
+import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
 import { ImageCropModal } from '@ui/ImageCropModal';
 import toast from 'react-hot-toast';
@@ -84,36 +85,37 @@ export default function CoverImageUpload() {
   const hasCover = !!user?.coverImageUrl && String(user.coverImageUrl).length > 0;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2.5 min-w-0 flex-1 basis-72">
       <span className="text-sm font-semibold text-zinc-200">{t('profile.coverImage')}</span>
-      <div className="flex flex-wrap items-center gap-[18px]">
-        <button
-          type="button"
-          onClick={handlePickClick}
-          className="h-20 w-full max-w-72 rounded-[14px] bg-zinc-800 flex items-center justify-center overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50 shrink-0"
-          aria-label={t('profile.changeCover')}
-        >
-          {uploading ? (
-            <LogoLoader size={24} className="text-primary" />
-          ) : hasCover ? (
-            <LazyImage src={String(user!.coverImageUrl)} alt="" className="size-full object-cover" />
-          ) : (
-            <Icon name="image" size={28} className="text-zinc-500" />
-          )}
-        </button>
-
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={handlePickClick} disabled={uploading} variant="outline" className="h-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-100 font-semibold">
-            {t('profile.changeCover')}
+      <button
+        type="button"
+        onClick={handlePickClick}
+        className="h-20 w-full rounded-[14px] bg-zinc-800 flex items-center justify-center overflow-hidden cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+        aria-label={t('profile.changeCover')}
+      >
+        {uploading ? (
+          <LogoLoader size={24} className="text-primary" />
+        ) : hasCover ? (
+          <LazyImage src={String(user!.coverImageUrl)} alt="" className="size-full object-cover" />
+        ) : (
+          <Icon name="image" size={28} className="text-zinc-500" />
+        )}
+      </button>
+      <div className="flex gap-1.5">
+        <Tip content={t('profile.changeCover')}>
+          <Button onClick={handlePickClick} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.changeCover')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-100">
+            <Icon name="cloud_upload" size={16} />
           </Button>
-          {hasCover && (
-            <Button onClick={handleRemoveCover} disabled={uploading} variant="outline" className="h-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-400 font-semibold">
-              {t('profile.removeCover')}
+        </Tip>
+        {hasCover && (
+          <Tip content={t('profile.removeCover')}>
+            <Button onClick={handleRemoveCover} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.removeCover')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-400">
+              <Icon name="close" size={16} />
             </Button>
-          )}
-        </div>
+          </Tip>
+        )}
       </div>
-      <p className="text-[13px] text-zinc-400">{t('profile.coverHint')}</p>
+      <p className="text-xs text-zinc-400">{t('profile.coverHint')}</p>
       <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
       <ImageCropModal
         imageSrc={cropSrc}

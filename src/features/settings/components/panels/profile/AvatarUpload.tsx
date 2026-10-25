@@ -4,6 +4,7 @@ import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
+import { Tip } from '@ui/tip';
 import { LazyImage } from '@ui/LazyImage';
 import { ImageCropModal } from '@ui/ImageCropModal';
 import toast from 'react-hot-toast';
@@ -103,7 +104,7 @@ export default function AvatarUpload() {
   const hasAvatar = !!user?.avatarUrl && user.avatarUrl.length > 0;
 
   return (
-    <div className="flex flex-wrap items-center gap-[18px]">
+    <div className={`flex flex-col gap-2.5 shrink-0 ${urlMode ? 'w-72' : 'w-[10.5rem]'}`}>
       <button
         type="button"
         onClick={handleAvatarClick}
@@ -121,7 +122,7 @@ export default function AvatarUpload() {
 
       <div className="min-w-0">
         {urlMode ? (
-          <div className="flex flex-col gap-2 w-full sm:w-80">
+          <div className="flex flex-col gap-2 w-full">
             <input
               type="text"
               value={urlValue}
@@ -141,22 +142,27 @@ export default function AvatarUpload() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={handleAvatarClick} disabled={uploading} variant="outline" className="h-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-100 font-semibold">
-              {t('profile.changeAvatar')}
-            </Button>
-            <Button onClick={() => { setUrlMode(true); setUrlValue(user?.avatarUrl || ''); }} disabled={uploading} variant="outline" className="h-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-100 font-semibold">
-              <Icon name="link" size={14} />
-              {t('profile.setAvatarUrl')}
-            </Button>
-            {hasAvatar && (
-              <Button onClick={handleRemoveAvatar} disabled={uploading} variant="outline" className="h-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-400 font-semibold">
-                {t('profile.removeAvatar')}
+          <div className="flex gap-1.5">
+            <Tip content={t('profile.changeAvatar')}>
+              <Button onClick={handleAvatarClick} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.changeAvatar')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-100">
+                <Icon name="cloud_upload" size={16} />
               </Button>
+            </Tip>
+            <Tip content={t('profile.setAvatarUrl')}>
+              <Button onClick={() => { setUrlMode(true); setUrlValue(user?.avatarUrl || ''); }} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.setAvatarUrl')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-100">
+                <Icon name="link" size={16} />
+              </Button>
+            </Tip>
+            {hasAvatar && (
+              <Tip content={t('profile.removeAvatar')}>
+                <Button onClick={handleRemoveAvatar} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.removeAvatar')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-400">
+                  <Icon name="close" size={16} />
+                </Button>
+              </Tip>
             )}
           </div>
         )}
-        <p className="text-[13px] text-zinc-400 mt-2">{t('profile.avatarHint')}</p>
+        <p className="text-xs text-zinc-400 mt-2">{t('profile.avatarHint')}</p>
         <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
       </div>
       <ImageCropModal

@@ -9,7 +9,13 @@ import { authService } from '@/features/auth/services/auth.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LogoLoader } from '@ui/LogoLoader';
 
-export default function ProfileForm({ identifier }: { identifier?: React.ReactNode }) {
+type ProfileFormProps = {
+  identifier?: React.ReactNode;
+  /** Settings search narrows the form to the fields that matched. */
+  show?: { displayName: boolean; identifier: boolean; bio: boolean };
+};
+
+export default function ProfileForm({ identifier, show = { displayName: true, identifier: true, bio: true } }: ProfileFormProps) {
   const { t } = useTranslation();
   const { user, setUser } = useAuthContext();
   const [saving, setSaving] = useState(false);
@@ -51,8 +57,9 @@ export default function ProfileForm({ identifier }: { identifier?: React.ReactNo
 
   return (
     <>
-      <div className="grid gap-[18px] grid-cols-[repeat(auto-fit,minmax(240px,1fr))] mt-6">
-        <div>
+      {(show.displayName || show.identifier) && (
+      <div className="grid gap-[18px] grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
+        {show.displayName && <div>
           <label htmlFor="settings-display-name" className="block text-[13px] font-bold text-zinc-100 mb-2">
             {t('profile.displayName')}
           </label>
@@ -64,11 +71,12 @@ export default function ProfileForm({ identifier }: { identifier?: React.ReactNo
             className="bg-zinc-950 border border-zinc-700 rounded-[10px] h-11 text-[15px]"
             maxLength={50}
           />
-        </div>
-        {identifier}
+        </div>}
+        {show.identifier && identifier}
       </div>
+      )}
 
-      <div className="mt-[18px]">
+      {show.bio && <div>
         <div className="flex justify-between items-baseline mb-2 px-1">
           <label htmlFor="settings-bio" className="text-[15px] font-semibold text-foreground">{t('profile.bio')}</label>
           <span className="font-mono text-xs text-subtle">{formData.bio.length}/160</span>
@@ -81,7 +89,7 @@ export default function ProfileForm({ identifier }: { identifier?: React.ReactNo
           rows={3}
           className="min-h-[96px] resize-y"
         />
-      </div>
+      </div>}
 
       {isDirty && createPortal(
         <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
