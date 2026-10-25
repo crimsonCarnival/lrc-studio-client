@@ -67,6 +67,7 @@ export default {
     speedRangeDesc: "Velocidad más baja y más alta a la que puedes reproducir",
     speedRangeTo: "a",
     removePreset: "Quitar {{value}}",
+    presetOutOfRange: "Fuera del rango de velocidad permitido, por lo que se oculta en el reproductor",
     addPreset: "Añadir",
     waveformSnapNeedsWaveform: "requiere mostrar la forma de onda",
     label: "Reproducción",

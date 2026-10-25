@@ -5,8 +5,9 @@ import { DEFAULT_SETTINGS } from '../../settings-defaults';
 import type { AppSettings } from '@/features/settings/settings.types';
 
 const MAX_PRESETS = 6;
-// Offered in this order when "Add" is pressed and not already present.
-const PRESET_CANDIDATES = [2, 0.75, 1.25, 3, 1.75];
+// Offered in this order when "Add" is pressed: the first one not already present and inside
+// the allowed range. Long enough that the cap (MAX_PRESETS) is reachable on the default range.
+const PRESET_CANDIDATES = [2, 0.75, 1.25, 3, 1.75, 1.5, 0.5, 2.5, 0.9, 1.1, 0.25, 4, 5];
 
 const formatSpeed = (v: number) => `${String(v).replace('.', ',')}×`;
 
@@ -31,9 +32,12 @@ export default function PlaybackSettings({ settings, updateSetting, searchTerm }
   const setPresets = (next: number[]) => updateSetting('playback.speedPresets', next);
   const asEvent = (v: number) => ({ target: { value: String(v) } });
 
+  const minSpeed = settings.playback?.speedBounds?.min ?? 0.25;
+  const maxSpeed = settings.playback?.speedBounds?.max ?? 3;
+  const inRange = (v: number) => v >= minSpeed && v <= maxSpeed;
+  const nextPreset = PRESET_CANDIDATES.find((x) => !presets.includes(x) && inRange(x));
   const addPreset = () => {
-    const next = PRESET_CANDIDATES.find((x) => !presets.includes(x));
-    if (next !== undefined) setPresets([...presets, next].sort((a, b) => a - b));
+    if (nextPreset !== undefined) setPresets([...presets, nextPreset].sort((a, b) => a - b));
   };
 
   return (
@@ -66,7 +70,12 @@ export default function PlaybackSettings({ settings, updateSetting, searchTerm }
         >
           <div className="flex flex-wrap justify-end gap-1.5">
             {presets.map((v) => (
-              <span key={v} className="flex items-center h-[34px] pl-3 rounded-full bg-zinc-800 text-zinc-100 font-mono text-[13px]">
+              <span
+                key={v}
+                // The player drops presets outside the allowed range; show them as inactive, not gone.
+                title={inRange(v) ? undefined : t('settings.playback.presetOutOfRange')}
+                className={`flex items-center h-[34px] pl-3 rounded-full bg-zinc-800 text-zinc-100 font-mono text-[13px] ${inRange(v) ? '' : 'opacity-50 line-through'}`}
+              >
                 {formatSpeed(v)}
                 <button
                   type="button"
@@ -78,7 +87,7 @@ export default function PlaybackSettings({ settings, updateSetting, searchTerm }
                 </button>
               </span>
             ))}
-            {presets.length < MAX_PRESETS && (
+            {presets.length < MAX_PRESETS && nextPreset !== undefined && (
               <button
                 type="button"
                 onClick={addPreset}

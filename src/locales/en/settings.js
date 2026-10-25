@@ -67,6 +67,7 @@ export default {
     speedRangeDesc: "Lowest and highest speed you can play at",
     speedRangeTo: "to",
     removePreset: "Remove {{value}}",
+    presetOutOfRange: "Outside the allowed speed range, so it is hidden in the player",
     addPreset: "Add",
     waveformSnapNeedsWaveform: "requires the waveform to be shown",
     label: "Playback",
