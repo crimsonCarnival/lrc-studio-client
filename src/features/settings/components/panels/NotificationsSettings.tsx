@@ -6,9 +6,9 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { updatePreferences } from '@/features/settings/services/preferences.service';
 import toast from 'react-hot-toast';
 
-type NotifKey = 'follow' | 'reaction' | 'star' | 'fork' | 'badge_awarded' | 'xp_changed' | 'streak_warning';
+type NotifKey = 'follow' | 'reaction' | 'star' | 'fork' | 'badge_awarded' | 'xp_changed' | 'streak_warning' | 'followed_project' | 'wall_comment' | 'level_up' | 'playlist_saved' | 'star_milestone' | 'new_device' | 'appeal_result';
 
-const NOTIF_KEYS: NotifKey[] = ['follow', 'reaction', 'star', 'fork', 'badge_awarded', 'xp_changed', 'streak_warning'];
+const NOTIF_KEYS: NotifKey[] = ['follow', 'reaction', 'star', 'fork', 'badge_awarded', 'xp_changed', 'streak_warning', 'followed_project', 'wall_comment', 'level_up', 'playlist_saved', 'star_milestone', 'new_device', 'appeal_result'];
 
 function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
   return (

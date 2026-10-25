@@ -16,7 +16,7 @@ import { Icon } from '@/shared/ui/Icon';
 // toast — they live only in the panel.
 // badge_awarded excluded: dedicated `badge:awarded` socket event below already toasts it
 // with the badge emblem. Including it here would double-toast the same grant.
-const TOAST_TYPES = new Set(['star', 'fork', 'follow', 'reaction', 'admin_granted', 'ban', 'unban', 'request_submitted', 'request_reviewed', 'xp_changed', 'role_changed', 'streak_warning']);
+const TOAST_TYPES = new Set(['star', 'fork', 'follow', 'reaction', 'admin_granted', 'ban', 'unban', 'request_submitted', 'request_reviewed', 'xp_changed', 'role_changed', 'streak_warning', 'followed_project', 'wall_comment', 'level_up', 'playlist_saved', 'star_milestone', 'new_device', 'appeal_result']);
 
 interface AppNotification {
   _id: string;

@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { FollowNotifyMenu } from './FollowNotifyMenu';
+import type { FollowNotifyLevel } from './FollowNotifyMenu';
 import { Button } from '@ui/button';
 import { LazyImage } from '@ui/LazyImage';
 import { useState } from 'react';
@@ -81,6 +83,9 @@ interface ProfileHeaderProps {
   followLoading: boolean;
   onFollow: () => void;
   onUnfollow: () => void;
+  /** What the viewer hears about this user's projects, and the call to change it. */
+  followNotify?: FollowNotifyLevel;
+  onFollowNotify?: (level: FollowNotifyLevel) => void;
   isBlocked: boolean;
   blockLoading: boolean;
   onBlock: () => void;
@@ -132,6 +137,8 @@ export function ProfileHeader({
   xp,
   isOwner,
   isFollowing,
+  followNotify = 'off',
+  onFollowNotify,
   followLoading,
   onFollow,
   onUnfollow,
@@ -266,6 +273,9 @@ export function ProfileHeader({
                     onFollow={onFollow}
                     onUnfollow={onUnfollow}
                   />
+                )}
+                {!isBlocked && isFollowing && onFollowNotify && (
+                  <FollowNotifyMenu level={followNotify} disabled={followLoading} onChange={onFollowNotify} />
                 )}
                 <BlockControl
                   isBlocked={isBlocked}

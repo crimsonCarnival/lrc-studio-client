@@ -12,6 +12,7 @@ const PREFERENCES_FIELDS = /* GraphQL */ `
   defaultProjectPrivacy
   showActivityHeatmap
   showXpProgress
+  wallEnabled
   notifications {
     follow
     reaction
@@ -20,6 +21,13 @@ const PREFERENCES_FIELDS = /* GraphQL */ `
     badge_awarded
     xp_changed
     streak_warning
+    followed_project
+    wall_comment
+    level_up
+    playlist_saved
+    star_milestone
+    new_device
+    appeal_result
   }
 `;
 

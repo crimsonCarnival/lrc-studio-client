@@ -35,6 +35,7 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
   // Privacy-by-default: off unless explicitly enabled (server default is false too).
   const showActivityHeatmap = user?.preferences?.showActivityHeatmap ?? false;
   const showXpProgress = user?.preferences?.showXpProgress ?? false;
+  const wallEnabled = user?.preferences?.wallEnabled ?? true;
   const onlineVisibility = (user?.preferences?.onlineVisibility ?? user?.onlineVisibility ?? 'friends') as Audience;
   const lastOnlineVisibility = (user?.preferences?.lastOnlineVisibility ?? 'friends') as Audience;
   const countryVisibility = (user?.preferences?.countryVisibility ?? 'nobody') as Audience;
@@ -73,6 +74,9 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
         </SettingRow>
         <SettingRow label={tk('profile.settings.showXpProgress')} description={tk('profile.settings.showXpProgressSub')}>
           <Toggle label={tk('profile.settings.showXpProgress')} checked={showXpProgress} onChange={(v) => handlePreferenceChange('showXpProgress', v)} />
+        </SettingRow>
+        <SettingRow label={tk('profile.settings.wallEnabled')} description={tk('profile.settings.wallEnabledSub')}>
+          <Toggle label={tk('profile.settings.wallEnabled')} checked={wallEnabled} onChange={(v) => handlePreferenceChange('wallEnabled', v)} />
         </SettingRow>
       </Section>
 

@@ -1,4 +1,4 @@
-import { profilePath } from '@/features/profile/profile-path';
+import { profilePath, listPath } from '@/features/profile/profile-path';
 import type { TFunction } from 'i18next';
 import { useTranslation, Trans } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -32,7 +32,7 @@ export interface NotificationData {
   read?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string } | null;
+  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated'; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; approved?: boolean } | null;
 }
 
 const TYPE_ICON_NAME: Record<string, string> = {
@@ -52,6 +52,13 @@ const TYPE_ICON_NAME: Record<string, string> = {
   role_changed: 'manage_accounts',
   unban: 'undo',
   streak_warning: 'local_fire_department',
+  followed_project: 'queue_music',
+  wall_comment: 'forum',
+  level_up: 'trending_up',
+  playlist_saved: 'bookmark',
+  star_milestone: 'star',
+  new_device: 'devices',
+  appeal_result: 'gavel',
 };
 
 /**
@@ -85,6 +92,13 @@ export function notificationDestination(
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';
   if (type === 'verify_email') return '/settings/profile';
   if (type === 'badge_awarded') return '/settings/badges';
+  // The author is the project's owner, so the actor supplies the account name the URL needs.
+  if (type === 'followed_project' && publicId && actors?.[0]?.accountName) return projectPath({ publicId }, actors[0].accountName);
+  if (type === 'wall_comment' && notification.meta?.wall) return `${profilePath(notification.meta.wall)}#wall`;
+  if (type === 'level_up' && recipientAccountName) return profilePath(recipientAccountName);
+  if (type === 'playlist_saved' && notification.meta?.playlistId && recipientAccountName) return listPath(recipientAccountName, notification.meta.playlistId);
+  if (type === 'star_milestone' && publicId) return projectPath({ publicId }, recipientAccountName);
+  if (type === 'new_device') return '/settings/security';
   if (type === 'request_submitted' || type === 'request_reviewed') return '/admin/requests';
   // "Continue working": the user's most recently updated project, else home.
   if (type === 'streak_warning') return (publicId && projectEditPath({ publicId }, recipientAccountName)) || '/home';
@@ -172,6 +186,39 @@ export function NotificationText({ notification, t }: { notification: Notificati
       </span>
     );
   }
+  if (type === 'followed_project') {
+    return (
+      <span>
+        <Trans
+          i18nKey={notification.meta?.kind === 'updated' ? 'notifications.followedUpdated' : 'notifications.followedPublished'}
+          values={{ actors: actorStr, title: projectTitle ?? '' }}
+          components={[<strong key="0" />, <strong key="1" />]}
+        />
+      </span>
+    );
+  }
+  if (type === 'wall_comment') {
+    return (
+      <span>
+        <Trans
+          i18nKey={notification.meta?.reply ? 'notifications.wallReply' : 'notifications.wallComment'}
+          values={{ actors: actorStr, wall: notification.meta?.wall ?? '' }}
+          components={[<strong key="0" />, <strong key="1" />]}
+        />
+      </span>
+    );
+  }
+  if (type === 'level_up') {
+    return <span><Trans i18nKey="notifications.levelUp" values={{ level: notification.meta?.level ?? 0 }} components={[<strong key="0" />]} /></span>;
+  }
+  if (type === 'playlist_saved') {
+    return <span><Trans i18nKey="notifications.playlistSaved" values={{ actors: actorStr, title: projectTitle ?? '' }} components={[<strong key="0" />, <strong key="1" />]} /></span>;
+  }
+  if (type === 'star_milestone') {
+    return <span><Trans i18nKey="notifications.starMilestone" values={{ count: notification.meta?.count ?? 0, title: projectTitle ?? '' }} components={[<strong key="0" />, <strong key="1" />]} /></span>;
+  }
+  if (type === 'new_device') return <span>{t('notifications.newDevice')}</span>;
+  if (type === 'appeal_result') return <span>{t('notifications.appealRejected')}</span>;
   if (type === 'badge_awarded') {
     const def = body ? BADGE_REGISTRY[body] : null;
     const label = def ? tk(`badges.${body}.label`, def.label) : (body ?? '');

@@ -7,7 +7,7 @@ const GET_PUBLIC_PROFILE = /* GraphQL */ `
     publicProfile(accountName: $accountName, asVisitor: $asVisitor) {
       id accountName displayName avatarUrl coverImageUrl staffRole bio isVerified isAdmin createdAt
       projectCount playlistCount totalStarsReceived totalForksReceived
-      followerCount followingCount isFollowedByMe isFollowingMe isBlockedByMe showFollowers
+      followerCount followingCount isFollowedByMe followNotify isFollowingMe isBlockedByMe showFollowers
       badges { id grantedAt }
       progression { xp level }
       stats { minutesSynced }
@@ -79,6 +79,15 @@ export async function followUser(accountName: string): Promise<boolean> {
   const data = await gqlRequest<{ follow: boolean }>(FOLLOW_USER, { accountName });
   followChanged(accountName, true);
   return data?.follow ?? false;
+}
+
+export async function setFollowNotify(accountName: string, level: 'off' | 'uploads' | 'all'): Promise<boolean> {
+  const data = await gqlRequest<{ setFollowNotify: boolean }>(/* GraphQL */ `
+    mutation SetFollowNotify($accountName: String!, $level: String!) {
+      setFollowNotify(accountName: $accountName, level: $level)
+    }
+  `, { accountName, level });
+  return data?.setFollowNotify ?? false;
 }
 
 export async function unfollowUser(accountName: string): Promise<boolean> {
