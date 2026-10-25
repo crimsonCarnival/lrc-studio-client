@@ -127,7 +127,7 @@ const LineTextContent = memo(({
     ? 'text-primary-ink [text-shadow:0_0_18px_var(--primary-strong)]'
     : !isSynced
       ? 'text-faint'
-      // Rose is the second voice (redesign sheet 20): a counterpart never takes the main line's iris.
+      // Foam is the second voice: a counterpart never takes the main line's iris.
       : isCounterpart
         ? 'text-counterpart-ink'
         : isPast
@@ -175,7 +175,7 @@ const LineTextContent = memo(({
           return (
         <p
           lang="ja"
-          className={`ruby-host font-semibold transition-colors duration-300 ease-out ${isCounterpart ? 'text-[15px] italic' : 'text-[17px]'} break-words whitespace-pre-wrap ${isDuet ? 'bg-clip-text text-transparent' : lineColorClass}`}
+          className={`ruby-host font-semibold transition-colors duration-300 ease-out ${isCounterpart ? 'text-[15px]' : 'text-[17px]'} break-words whitespace-pre-wrap ${isDuet ? 'bg-clip-text text-transparent' : lineColorClass}`}
           style={duetStyle}
         >
           {(line.words?.length ?? 0) > 0

@@ -270,6 +270,7 @@ export default function PreviewLine({
   const layoutClass = translationLayout === 'side-by-side' && activeTranslationText && showTranslationsInPreview && !isEmptyLine
     ? 'flex-row items-baseline gap-3 sm:gap-6'
     : 'flex-col';
+  const previewAlign = settings.interface?.previewAlignment ?? 'left';
   const alignClass = settings.interface?.previewAlignment === 'right' ? 'items-end text-right' :
     settings.interface?.previewAlignment === 'center' ? 'items-center text-center' :
       'items-start text-left';
@@ -361,6 +362,8 @@ export default function PreviewLine({
         </>
       );
 
+  // A counterpart keeps its layout while sung: the active box, bar or margin would wrap its
+  // thread line and shift the rows. Its thread, colour and fill carry the active state instead.
   const inner = (
     <button
       type="button"
@@ -369,21 +372,30 @@ export default function PreviewLine({
       onMouseEnter={hasMedia ? () => handleLineHover(i) : undefined}
       onMouseLeave={hasMedia ? handleLineHoverEnd : undefined}
       style={{
-        opacity: isCounterpart && !isActive ? parallaxOpacity * 0.5 : parallaxOpacity,
-        transform: isCounterpart ? 'scale(0.95)' : undefined,
-        paddingLeft: isCounterpart ? '1.5rem' : undefined,
+        opacity: isCounterpart && !isActive ? parallaxOpacity * 0.7 : parallaxOpacity,
+        // Indent from the aligned edge (left by default); centred text has no edge to indent from.
+        // 2.25rem leaves room for the thread line drawn in the indent.
+        paddingLeft: isCounterpart && previewAlign === 'left' ? '2.25rem' : undefined,
+        paddingRight: isCounterpart && previewAlign === 'right' ? '2.25rem' : undefined,
         animationDelay: staggerDelay,
       }}
       className={`w-full group flex select-none relative overflow-hidden animate-preview-line-in ${hasMedia ? 'cursor-pointer' : 'cursor-default'
         } ${isReview
-          ? `gap-2 sm:gap-3.5 px-2 sm:px-3 py-[7px] sm:py-2 coarse:min-h-11 rounded-[10px] text-left transition-[opacity,background-color] duration-300 ease-out ${isActive
+          ? `gap-2 sm:gap-3.5 px-2 sm:px-3 py-[7px] sm:py-2 coarse:min-h-11 rounded-[10px] text-left transition-[opacity,background-color] duration-300 ease-out ${isActive && !isCounterpart
             ? `${activeClass} bg-zinc-800 shadow-[inset_3px_0_0_var(--color-primary)]`
             : hasMedia ? 'hover:bg-zinc-800/50' : ''}`
-          : `px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition-opacity duration-300 ease-out ${layoutClass} ${alignClass} ${isActive
+          : `px-2 sm:px-4 py-1 sm:py-2 rounded-lg transition-opacity duration-300 ease-out ${layoutClass} ${alignClass} ${isActive && !isCounterpart
             ? `${activeClass} bg-zinc-800/10`
             : hasMedia ? 'hover:bg-zinc-800/30' : ''}`
         }`}
     >
+      {isCounterpart && previewAlign !== 'center' && (
+        // Threads the counterpart to the line above, like a reply in a comment thread.
+        <span
+          aria-hidden
+          className={`pointer-events-none absolute top-0 h-1/2 w-4 border-b-2 transition-colors duration-300 ${isActive ? 'border-counterpart' : 'border-counterpart/45'} ${previewAlign === 'right' ? 'right-3 border-r-2 rounded-br-[12px]' : 'left-3 border-l-2 rounded-bl-[12px]'}`}
+        />
+      )}
       {isReview ? (
         <>
           {showTimestamps && (
@@ -423,15 +435,6 @@ export default function PreviewLine({
 
   // A captured counterpart that has no text yet is a to-do for the editor, not a lyric.
   if (isCounterpart && !line.text?.trim()) return null;
-
-  // Counterpart lines are shown at half-opacity and indented to visually overlap with parent
-  if (isCounterpart && !isActive) {
-    return (
-      <div className="pl-6 border-l-2 border-counterpart/40">
-        {inner}
-      </div>
-    );
-  }
 
   if (!hasMedia) return inner;
   // Return without Tip wrapper — TooltipTrigger asChild can override onClick.
@@ -502,6 +505,12 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
   const futureClass = `${inactiveFontSizes[sizeOption]} font-lyrics ${highlightMode === 'dim' ? 'text-zinc-800' : 'text-faint'}`;
   // Review rows: past and untimed lines recede instead of taking the accent colour.
   const mutedClass = `${inactiveFontSizes[sizeOption]} font-lyrics font-medium ${highlightMode === 'dim' ? 'text-zinc-700' : 'text-foreground/65'}`;
+  // A counterpart is the background voice: it stays at the smaller size even while it is
+  // sung, rests in foam, and fills in foam so its fill never reads as the main line's.
+  const isCounterpart = line.adLibOf != null;
+  // One weight in both states, so becoming active never reflows the line.
+  const counterpartClass = `${inactiveFontSizes[sizeOption]} font-lyrics font-semibold ${isActive ? 'text-foreground' : 'text-counterpart-ink'}`;
+  const fillColorClass = isCounterpart ? 'text-counterpart-ink' : 'text-primary-ink';
 
   // Furigana readings come from word.reading; gated by showFuriganaInPreview
   const mainText = line.text || '';
@@ -534,7 +543,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
   return (
     <p
       lang="ja"
-      className={`ruby-host ${showFuriganaInPreview ? '' : 'ruby-off'} transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isActive ? activeClass : muted ? mutedClass : isPast ? pastClass : `${futureClass}${review ? ' font-medium' : ''}`} ${isDuet ? 'bg-clip-text !text-transparent' : line.adLibOf != null ? 'italic !text-counterpart-ink' : ''}`}
+      className={`ruby-host ${showFuriganaInPreview ? '' : 'ruby-off'} transition-all duration-500 ease-out w-full break-words overflow-wrap-anywhere hyphens-auto ${isCounterpart ? counterpartClass : isActive ? activeClass : muted ? mutedClass : isPast ? pastClass : `${futureClass}${review ? ' font-medium' : ''}`} ${isDuet ? 'bg-clip-text !text-transparent' : ''}`}
       style={duetGradientStyle}
     >
       {effectiveHasWordTimestamps
@@ -602,7 +611,7 @@ function MainTrack({ line, isActive, isPast, hasWordTimestamps, playbackPosition
                 <span className={isActive ? (wordSingerColorClass || customHex ? 'opacity-50 transition-colors duration-300' : 'text-zinc-500 transition-colors duration-300') : ''}>{wordContent}</span>
                 {isActive && progress > 0 && (
                   <span
-                    className={`absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none karaoke-fill-glow ${wordSingerColorClass || (!customHex ? 'text-primary-ink' : '')}`}
+                    className={`absolute left-0 top-0 h-full w-full whitespace-nowrap pointer-events-none karaoke-fill-glow ${wordSingerColorClass || (!customHex ? fillColorClass : '')}`}
                     style={{
                       ...(customHex ? getCustomColorStyle(customHex, true) : {}),
                       clipPath: `inset(0 ${(1 - progress) * 100}% 0 0)`,

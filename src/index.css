@@ -1439,10 +1439,11 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   --mark: rgba(234, 157, 52, 0.24);
   --silver: #797593;
   --past: #8a77a3;
-  /* Counterparts are the second voice: rose, so they never compete with the iris of the main line. */
-  --counterpart: #d7827e;
-  --counterpart-ink: #a9564f;
-  --counterpart-soft: rgba(215, 130, 126, 0.16);
+  /* Counterparts are the second voice: foam, so they never compete with the iris of the
+     main line or read as a gold warning. */
+  --counterpart: var(--foam);
+  --counterpart-ink: var(--foam-ink);
+  --counterpart-soft: var(--foam-soft);
   --primary-strong: rgba(144, 122, 169, 0.34);
   --knob: #fffaf3;
   --tip: #575279;
@@ -1518,9 +1519,9 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   --mark: rgba(246, 193, 119, 0.22);
   --silver: #cfcbe6;
   --past: #a48cc3;
-  --counterpart: #ea9a97;
-  --counterpart-ink: #ea9a97;
-  --counterpart-soft: rgba(234, 154, 151, 0.16);
+  --counterpart: var(--foam);
+  --counterpart-ink: var(--foam-ink);
+  --counterpart-soft: var(--foam-soft);
   --primary-strong: rgba(196, 167, 231, 0.32);
   --knob: #e0def4;
   --tip: #393552;
