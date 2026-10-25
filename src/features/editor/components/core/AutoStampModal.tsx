@@ -14,6 +14,11 @@ interface AutoStampModalProps {
   open: boolean;
   phase: AutoStampPhase;
   errorCode: string | null;
+  /** 0..1 while phase is 'recording'. */
+  recordProgress: number;
+  /** The tab-recording fallback can run: a YouTube source, in a browser that can share tab audio. */
+  canRecordTab: boolean;
+  onRecordTab: () => void;
   pendingResult: StampResultDto[] | null;
   confidenceById: Map<string, ConfidenceInfo>;
   lines: EditorLine[];
@@ -27,6 +32,7 @@ interface AutoStampModalProps {
 
 const RUNNING_PHASE_KEYS: Partial<Record<AutoStampPhase, string>> = {
   starting: 'phaseStarting',
+  recording: 'phaseRecording',
   fetching_audio: 'phaseFetching',
   extracting_audio: 'phaseExtracting',
   transcribing: 'phaseTranscribing',
@@ -54,6 +60,10 @@ const KNOWN_ERRORS = new Set([
   'asr_malformed_response',
   'asr_job_active',
   'asr_job_not_found',
+  'asr_recording_no_audio',
+  'asr_recording_denied',
+  'asr_recording_failed',
+  'asr_recording_interrupted',
   'not_found',
 ]);
 
@@ -65,6 +75,9 @@ export default function AutoStampModal({
   open,
   phase,
   errorCode,
+  recordProgress,
+  canRecordTab,
+  onRecordTab,
   pendingResult,
   confidenceById,
   lines,
@@ -143,7 +156,7 @@ export default function AutoStampModal({
             aligning: 90,
             applying: 99,
           };
-          const pct = progressMap[phase] || 0;
+          const pct = phase === 'recording' ? Math.round(recordProgress * 100) : progressMap[phase] || 0;
 
           return (
             <div className="flex flex-col gap-4 items-center py-4">
@@ -302,6 +315,15 @@ export default function AutoStampModal({
 
         {isFailed && (
           <div className="flex flex-col gap-4">
+            {canRecordTab && (errorCode === 'asr_youtube_blocked' || errorCode?.startsWith('asr_recording_')) && (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-zinc-400">{t('editor.autoStamp.recordTabHint')}</p>
+                <Button variant="outline" onClick={onRecordTab} className="self-start border-zinc-700 text-zinc-300 hover:bg-zinc-800">
+                  <Icon name="headphones" size={16} />
+                  {t('editor.autoStamp.recordTab')}
+                </Button>
+              </div>
+            )}
             <div className="flex justify-end">
               <Button onClick={onClose} className="bg-primary text-zinc-950 hover:bg-primary/90">
                 {t('editor.autoStamp.close')}
