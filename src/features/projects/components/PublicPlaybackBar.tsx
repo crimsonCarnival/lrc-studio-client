@@ -222,8 +222,9 @@ export default function PublicPlaybackBar({
         </Suspense>
       )}
 
-      {/* Progress: one segment per section. The padding is hit area only. */}
-      <div
+      {/* Progress: one segment per section. The padding is hit area only. With a
+          waveform, the waveform is the seek bar and carries the sections itself. */}
+      {!showWaveform && <div
         ref={barRef}
         role="slider"
         tabIndex={ready ? 0 : -1}
@@ -274,9 +275,9 @@ export default function PublicPlaybackBar({
             ))}
           </>
         )}
-      </div>
+      </div>}
 
-      {hasLabels && (
+      {hasLabels && !showWaveform && (
         <div className="max-lg:hidden flex gap-1" aria-hidden>
           {segments.map((seg, i) => (
             <span
