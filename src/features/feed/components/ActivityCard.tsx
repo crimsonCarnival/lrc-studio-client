@@ -1,7 +1,7 @@
 import { profilePath } from '@/features/profile/profile-path';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
@@ -65,13 +65,27 @@ function relativeTime(isoString: string, t: TFunction): string {
 function ActivityReactions({ publicId }: { publicId: string }) {
   const { user } = useAuthContext();
   const { reactions, myReaction, loaded, load, react } = useCardReactions(publicId);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const loadRef = useRef(load);
+  useEffect(() => { loadRef.current = load; });
+
+  // Fetch once the card is about to scroll into view, so the reactions are already there
+  // instead of appearing only after the pointer reaches the card.
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        void loadRef.current();
+        observer.disconnect();
+      }
+    }, { rootMargin: '200px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <div
-      onMouseEnter={load}
-      onFocus={load}
-      className="mt-1.5"
-    >
+    <div ref={wrapRef} className="mt-1.5">
       <ReactionBar
         reactions={loaded ? reactions : []}
         myReaction={myReaction}
