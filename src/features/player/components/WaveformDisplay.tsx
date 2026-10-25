@@ -1,12 +1,62 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import type { MouseEvent as ReactMouseEvent, RefObject } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
+import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
+import { computeSectionBands } from '../timeline-bands';
+import { SectionBands } from './TimelineOverview';
 
 interface WaveLine {
+  type?: string;
+  label?: string;
   timestamp?: number | null;
   [key: string]: unknown;
+}
+
+// Bars sit on a baseline 70% of the way down; what falls below it is the dimmed reflection.
+const WAVE_HEIGHT = 64;
+const BASELINE = 0.7;
+const BAR_WIDTH = 3;
+const BAR_GAP = 1;
+
+// WaveSurfer paints its progress layer by recolouring whatever this draws (source-in), so
+// the reflection's lower alpha survives into the played half.
+function drawSoundCloudBars(peaks: Array<Float32Array | number[]>, ctx: CanvasRenderingContext2D) {
+  const { width, height } = ctx.canvas;
+  const dpr = height / WAVE_HEIGHT;
+  const channel = peaks[0];
+  if (!channel?.length) return;
+
+  const step = (BAR_WIDTH + BAR_GAP) * dpr;
+  const bars = Math.floor(width / step);
+  const base = height * BASELINE;
+  let peakMax = 0;
+  for (const c of peaks) for (let i = 0; i < c.length; i++) peakMax = Math.max(peakMax, Math.abs(c[i]));
+  if (peakMax === 0) return;
+
+  for (let b = 0; b < bars; b++) {
+    const from = Math.floor((b / bars) * channel.length);
+    const to = Math.max(from + 1, Math.floor(((b + 1) / bars) * channel.length));
+    let level = 0;
+    for (let i = from; i < to; i++) level = Math.max(level, Math.abs(channel[i]));
+    const h = Math.max(2 * dpr, (level / peakMax) * base);
+    const x = b * step;
+    const w = BAR_WIDTH * dpr;
+    ctx.globalAlpha = 1;
+    ctx.fillRect(x, base - h, w, h);
+    ctx.globalAlpha = 0.4;
+    ctx.fillRect(x, base, w, h * ((1 - BASELINE) / BASELINE));
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Canvas colours can't take a CSS variable, so the tokens are resolved first. The unplayed
+// colour has to be opaque: the progress layer inherits the alpha of what was drawn.
+function unplayedColor(primary: string, background: string): string {
+  return CSS.supports('color', 'color-mix(in srgb, red 50%, blue)') && background
+    ? `color-mix(in srgb, ${primary} 35%, ${background})`
+    : primary;
 }
 
 interface WaveformDisplayProps {
@@ -43,12 +93,14 @@ const WaveformDisplay = ({
   loopB,
   onLoopChange,
 }: WaveformDisplayProps) => {
+  const { t } = useTranslation();
   const waveContainerRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   // RegionsPlugin instance — wavesurfer plugin types are loose; keep as any.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const regionsRef = useRef<any>(null);
   const [isReady, setIsReady] = useState(false);
+  const [hoverPct, setHoverPct] = useState<number | null>(null);
 
   // ─── Seek on click/drag ───────────────────────────────────────────────────
   const isDraggingPlayhead = useRef(false);
@@ -78,33 +130,35 @@ const WaveformDisplay = ({
     return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
   }, []);
 
-  const handleWaveMouseDown = useCallback((e: ReactMouseEvent<HTMLDivElement>) => {
+  const handleWavePointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     if (!isReady || !duration || !waveContainerRef.current) return;
     isDraggingPlayhead.current = true;
     const rect = waveContainerRef.current.getBoundingClientRect();
     const pct = clientXToPct(e.clientX, rect);
     onSeek?.(snapTime(pctToTime(pct)));
 
-    const onMove = (me: MouseEvent) => {
+    const onMove = (me: PointerEvent) => {
       const r = waveContainerRef.current?.getBoundingClientRect();
       if (!r) return;
       onSeek?.(snapTime(pctToTime(clientXToPct(me.clientX, r))));
     };
     const onUp = () => {
       isDraggingPlayhead.current = false;
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
     };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
   }, [isReady, duration, onSeek, pctToTime, clientXToPct, snapTime]);
 
   // ─── Loop handle drag ─────────────────────────────────────────────────────
-  const handleLoopHandleDrag = useCallback((which: 'A' | 'B', e: ReactMouseEvent) => {
+  const handleLoopHandleDrag = useCallback((which: 'A' | 'B', e: ReactPointerEvent) => {
     e.stopPropagation();
     if (!duration || !waveContainerRef.current) return;
 
-    const onMove = (me: MouseEvent) => {
+    const onMove = (me: PointerEvent) => {
       const r = waveContainerRef.current?.getBoundingClientRect();
       if (!r) return;
       const t = pctToTime(clientXToPct(me.clientX, r));
@@ -115,11 +169,13 @@ const WaveformDisplay = ({
       }
     };
     const onUp = () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
     };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
   }, [duration, loopA, loopB, onLoopChange, pctToTime, clientXToPct]);
 
   // ─── Sync wavesurfer with audio element ──────────────────────────────────
@@ -142,18 +198,16 @@ const WaveformDisplay = ({
     if (wavesurferRef.current) wavesurferRef.current.destroy();
     if (!waveContainerRef.current) return;
 
-    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#1DB954';
+    const rootStyle = getComputedStyle(document.documentElement);
+    const primaryColor = rootStyle.getPropertyValue('--color-primary').trim() || '#1DB954';
 
     const ws = WaveSurfer.create({
       container: waveContainerRef.current,
-      waveColor: primaryColor + '55',
+      waveColor: unplayedColor(primaryColor, rootStyle.getPropertyValue('--background').trim()),
       progressColor: primaryColor,
       cursorColor: 'transparent', // we draw our own cursor
-      barWidth: 2,
-      barGap: 1,
-      barRadius: 2,
-      height: 40,
-      normalize: true,
+      renderFunction: drawSoundCloudBars,
+      height: WAVE_HEIGHT,
       interact: false,
       hideScrollbar: true,
     });
@@ -266,6 +320,19 @@ const WaveformDisplay = ({
     return ticks;
   }, [duration]);
 
+  // Section boundaries cut the wave into blocks, as the bands above it do; the first
+  // section starting at 0 needs no cut.
+  const sectionCuts = useMemo(
+    () => computeSectionBands(lines ?? [], duration).map((b) => b.start).filter((start) => start > 0),
+    [lines, duration],
+  );
+
+  const handleSeekKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (!isReady || !duration) return;
+    if (e.key === 'ArrowRight') onSeek?.(Math.min(duration, playbackPosition + 5));
+    else if (e.key === 'ArrowLeft') onSeek?.(Math.max(0, playbackPosition - 5));
+  };
+
   const playbackPct = duration > 0 ? Math.min(100, (playbackPosition / duration) * 100) : 0;
   const loopAPct = loopA != null && duration > 0 ? (loopA / duration) * 100 : null;
   const loopBPct = loopB != null && duration > 0 ? (loopB / duration) * 100 : null;
@@ -274,14 +341,51 @@ const WaveformDisplay = ({
 
   return (
     <div className="w-full flex flex-col gap-0 mt-2">
-      {/* Main waveform + overlays */}
+      <SectionBands lines={lines ?? []} duration={duration} />
+      {/* Main waveform + overlays: the wave is the seek bar */}
       <div
         ref={waveContainerRef}
-        role="presentation"
-        className="w-full h-10 relative rounded-lg overflow-hidden bg-zinc-900/40 border border-zinc-800/50 cursor-pointer select-none"
-        onMouseDown={handleWaveMouseDown}
+        role="slider"
+        tabIndex={isReady ? 0 : -1}
+        aria-label={t('player.seekPlayback')}
+        aria-valuemin={0}
+        aria-valuemax={Math.round(duration)}
+        aria-valuenow={Math.round(playbackPosition)}
+        aria-valuetext={`${formatTime(playbackPosition)} / ${formatTime(duration)}`}
+        aria-disabled={!isReady}
+        className="w-full h-16 relative overflow-hidden cursor-pointer select-none touch-none mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-sm"
+        onPointerDown={handleWavePointerDown}
+        onPointerMove={(e) => {
+          if (e.pointerType !== 'mouse' || !waveContainerRef.current) return;
+          setHoverPct(clientXToPct(e.clientX, waveContainerRef.current.getBoundingClientRect()));
+        }}
+        onPointerLeave={() => setHoverPct(null)}
+        onKeyDown={handleSeekKeyDown}
       >
         {/* WaveSurfer renders inside here */}
+
+        {/* Section cuts */}
+        {isReady && sectionCuts.map((start) => (
+          <div
+            key={start}
+            aria-hidden
+            className="absolute inset-y-0 w-[3px] -translate-x-1/2 bg-background pointer-events-none z-10"
+            style={{ left: `${(start / duration) * 100}%` }}
+          />
+        ))}
+
+        {/* Hover preview */}
+        {isReady && hoverPct != null && (
+          <div
+            aria-hidden
+            className="absolute inset-y-0 w-px bg-foreground/40 pointer-events-none z-20"
+            style={{ left: `${hoverPct * 100}%` }}
+          >
+            <span className="absolute top-0 left-1 rounded bg-background/80 px-1 font-mono text-[10px] tabular-nums text-foreground">
+              {formatTime(hoverPct * duration)}
+            </span>
+          </div>
+        )}
 
         {/* Loading skeleton */}
         {!isReady && (
@@ -308,7 +412,7 @@ const WaveformDisplay = ({
             role="presentation"
             className="absolute top-0 bottom-0 w-2 -translate-x-1/2 cursor-ew-resize z-20 flex items-center justify-center group"
             style={{ left: `${loopAPct}%` }}
-            onMouseDown={(e) => handleLoopHandleDrag('A', e)}
+            onPointerDown={(e) => handleLoopHandleDrag('A', e)}
           >
             <div className="w-1 h-6 bg-violet-400 rounded-full group-hover:bg-violet-300 transition-colors shadow-[0_0_6px_rgba(139,92,246,0.8)]" />
           </div>
@@ -320,7 +424,7 @@ const WaveformDisplay = ({
             role="presentation"
             className="absolute top-0 bottom-0 w-2 -translate-x-1/2 cursor-ew-resize z-20 flex items-center justify-center group"
             style={{ left: `${loopBPct}%` }}
-            onMouseDown={(e) => handleLoopHandleDrag('B', e)}
+            onPointerDown={(e) => handleLoopHandleDrag('B', e)}
           >
             <div className="w-1 h-6 bg-violet-400 rounded-full group-hover:bg-violet-300 transition-colors shadow-[0_0_6px_rgba(139,92,246,0.8)]" />
           </div>

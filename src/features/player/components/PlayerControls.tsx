@@ -10,7 +10,6 @@ import { usePlayer } from '../PlayerContext';
 import type { UploadItem } from '../PlayerContext';
 const WaveformDisplay = lazy(() => import('./WaveformDisplay'));
 import PlaybackProgress from './PlaybackProgress';
-import { SectionBands } from './TimelineOverview';
 import VolumeControl from './VolumeControl';
 import SpeedControl from './SpeedControl';
 import { Button } from '@ui/button';
@@ -447,7 +446,6 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
             <>
               {canShowWaveform && (
                 <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
-                  {isShowingWaveform && <div className="mt-2"><SectionBands lines={lines ?? []} duration={duration} /></div>}
                   <Suspense fallback={null}>
                     <WaveformDisplay
                       showWaveform={settings.playback?.showWaveform}
