@@ -22,7 +22,9 @@ import AdminLevelsTab from './AdminLevelsTab';
 import AdminXpTab from './AdminXpTab';
 import AdminRequestsTab from './AdminRequestsTab';
 import AdminPermissionsTab from './AdminPermissionsTab';
-import { adminPath, useAdminRoute } from './admin-nav';
+import { adminPath, useAdminRoute, useAdminSub } from './admin-nav';
+import { AdminSubNav } from './AdminSubNav';
+import AdminTasksView from './AdminTasksView';
 import type { AdminTabId } from './admin-nav';
 import { useAdminTabs } from './useAdminTabs';
 import SudoPasswordModal from './SudoPasswordModal';
@@ -118,6 +120,7 @@ export default function AdminDashboard() {
   const [searchParams] = useSearchParams();
   const { tab: routeTab } = useAdminRoute();
   const activeTab: AdminTabId = routeTab ?? 'moderation';
+  const auditView = useAdminSub('audit');
 
   // Canonicalise the URL: old `?tab=requests` links and a bare /admin land on the tab's own
   // path, and a path the user can't open falls back to the first one they can.
@@ -549,7 +552,19 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'audit' && (
-          <AdminAuditTab auditLogs={auditLogs as ComponentProps<typeof AdminAuditTab>["auditLogs"]} />
+          <>
+            <AdminSubNav
+              tab="audit"
+              current={auditView}
+              items={[
+                { id: 'log', icon: 'history', label: t('admin.dashboard.tabs.auditLogs') },
+                { id: 'tasks', icon: 'bolt', label: t('admin.tasks.tab') },
+              ]}
+            />
+            {auditView === 'tasks'
+              ? <AdminTasksView />
+              : <AdminAuditTab auditLogs={auditLogs as ComponentProps<typeof AdminAuditTab>["auditLogs"]} />}
+          </>
         )}
 
         {activeTab === 'badges' && (

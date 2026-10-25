@@ -56,6 +56,8 @@ export default function AdminPermissionsTab({ isSuperadmin }: { isSuperadmin: bo
   const [loading, setLoading] = useState(true);
   const [draftPresets, setDraftPresets] = useState<Record<Role, Permission[]>>({ user: [], mod: [], admin: [], superadmin: [] });
   const [draftUserPerms, setDraftUserPerms] = useState<Record<string, string[]>>({});
+  // Per role: carry the new default onto the staff the role already has.
+  const [applyExisting, setApplyExisting] = useState<Record<string, boolean>>({});
   const [confirm, setConfirm] = useState<{ type: 'role' | 'user'; role?: Role; userId?: string; label: string } | null>(null);
 
   const fetchAll = async () => {
@@ -118,8 +120,12 @@ export default function AdminPermissionsTab({ isSuperadmin }: { isSuperadmin: bo
 
   const saveRolePreset = async (role: Role) => {
     try {
-      const result = await admin.updateRolePreset(role, draftPresets[role]) as { presets: Record<Role, Permission[]> };
-      toast.success(tk('admin.permissions.toast.presetSaved', { role: tk(`admin.table.${role}`) }));
+      const retro = applyExisting[role] === true;
+      const result = await admin.updateRolePreset(role, draftPresets[role], retro) as { presets: Record<Role, Permission[]>; updated?: number };
+      toast.success(retro
+        ? tk('admin.permissions.toast.presetSavedRetro', { role: tk(`admin.table.${role}`), count: result.updated ?? 0 })
+        : tk('admin.permissions.toast.presetSaved', { role: tk(`admin.table.${role}`) }));
+      if (retro) fetchAll();
       setCatalog(prev => prev ? { ...prev, presets: result.presets } : prev);
     } catch (err) {
       if (!isSudoCancelled(err)) toast.error(t('admin.permissions.toast.saveError'));
@@ -223,6 +229,18 @@ export default function AdminPermissionsTab({ isSuperadmin }: { isSuperadmin: bo
                   {t('admin.permissions.save')}
                 </Button>
               </div>
+              <label className="mb-3 flex items-start gap-2 rounded-lg bg-zinc-950/40 p-2.5 text-xs text-zinc-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={applyExisting[role] === true}
+                  onChange={() => setApplyExisting(prev => ({ ...prev, [role]: !prev[role] }))}
+                  className="mt-0.5 accent-[var(--color-primary)]"
+                />
+                <span>
+                  {t('admin.permissions.applyToExisting', { role: tk(`admin.table.${role}`) })}
+                  <span className="block text-[11px] text-zinc-500">{t('admin.permissions.applyToExistingHint')}</span>
+                </span>
+              </label>
               <div className="flex flex-col gap-1.5">
                 {PERMISSIONS.map(perm => (
                   <label key={perm} className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer">
@@ -349,7 +367,7 @@ export default function AdminPermissionsTab({ isSuperadmin }: { isSuperadmin: bo
         title={confirm?.type === 'role' ? t('admin.permissions.confirmPresetTitle') : t('admin.permissions.confirmUserTitle')}
         message={
           confirm?.type === 'role'
-            ? t('admin.permissions.confirmPresetMessage', { role: confirm.label })
+            ? t(applyExisting[confirm.role ?? ''] ? 'admin.permissions.confirmPresetMessageRetro' : 'admin.permissions.confirmPresetMessage', { role: confirm.label })
             : t('admin.permissions.confirmUserMessage', { name: confirm?.label })
         }
         onConfirm={() => {

@@ -106,6 +106,11 @@ export const adminService = {
     return request(`/admin/audit-logs?${query}`);
   },
 
+  async getJobLogs(params: Record<string, string>): Promise<unknown> {
+    const query = new URLSearchParams(params).toString();
+    return request(`/admin/job-logs?${query}`);
+  },
+
   async adjustXP({ action, amount, target, userId, userIds }: AdjustXPParams): Promise<unknown> {
     return withSudo(() => request('/admin/xp', {
       method: 'POST',
@@ -120,10 +125,10 @@ export const adminService = {
     return request('/admin/permissions');
   },
 
-  async updateRolePreset(role: string, permissions: string[]): Promise<unknown> {
+  async updateRolePreset(role: string, permissions: string[], applyToExisting = false): Promise<unknown> {
     return withSudo(() => request(`/admin/permissions/roles/${role}`, {
       method: 'PUT',
-      body: JSON.stringify({ permissions }),
+      body: JSON.stringify({ permissions, ...(applyToExisting ? { applyToExisting } : {}) }),
     }));
   },
 

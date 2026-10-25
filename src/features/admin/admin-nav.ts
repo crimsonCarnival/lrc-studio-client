@@ -6,6 +6,7 @@ export type AdminTabId = (typeof ADMIN_TABS)[number];
 
 /** Tabs that split into sub-views. Only these get a second path segment; the rest are one segment. */
 export const ADMIN_SUBTABS = {
+  audit: ['log', 'tasks'],
   moderation: ['users', 'ips', 'devices'],
   xp: ['grant', 'levels'],
   permissions: ['catalog', 'defaults', 'overrides'],

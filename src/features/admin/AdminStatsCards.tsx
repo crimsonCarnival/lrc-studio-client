@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { Tip } from '@ui/tip';
+import { adminPath } from './admin-nav';
 
 interface AdminStats {
   totalUsers?: number;
@@ -70,7 +72,7 @@ export default function AdminStatsCards({ stats }: { stats?: AdminStats }) {
     )
     : t('admin.dashboard.stats.activeTip');
 
-  const cells: { label: string; value: ReactNode; color: string; tip?: ReactNode }[] = [
+  const cells: { label: string; value: ReactNode; color: string; tip?: ReactNode; to?: string }[] = [
     { label: t('admin.dashboard.stats.total'),   value: stats?.totalUsers,     color: 'text-blue-400' },
     { label: t('admin.dashboard.stats.active'),  value: stats?.activeUsers,    color: 'text-emerald-400', tip: activeTip },
     { label: t('admin.table.projects'),           value: stats?.totalProjects,  color: 'text-indigo-400' },
@@ -80,7 +82,7 @@ export default function AdminStatsCards({ stats }: { stats?: AdminStats }) {
     { label: t('admin.dashboard.stats.deleted'), value: stats?.deletedUsers,   color: 'text-zinc-400' },
     { label: t('admin.dashboard.stats.signups'), value: `${stats?.newSignups24h || 0}/${stats?.newSignups7d || 0}/${stats?.newSignups30d || 0}`, color: 'text-violet-400', tip: t('admin.dashboard.stats.signupsTip') },
     { label: t('admin.dashboard.stats.storage'), value: formatBytes(stats?.totalStorage), color: 'text-amber-400', tip: t('admin.dashboard.stats.storageTip') },
-    { label: t('admin.dashboard.stats.jobs'), value: `${stats?.jobHealth?.succeeded || 0}✓/${stats?.jobHealth?.failed || 0}✗`, color: 'text-rose-400', tip: t('admin.dashboard.stats.jobsTip') },
+    { label: t('admin.dashboard.stats.jobs'), value: `${stats?.jobHealth?.succeeded || 0}✓/${stats?.jobHealth?.failed || 0}✗`, color: 'text-rose-400', tip: t('admin.dashboard.stats.jobsTip'), to: adminPath('audit', 'tasks') },
   ];
 
   return (
@@ -99,9 +101,13 @@ export default function AdminStatsCards({ stats }: { stats?: AdminStats }) {
             </span>
           </div>
         );
+        // A cell with a destination is a link to the detail behind the number.
+        const content = cell.to
+          ? <Link to={cell.to} className="flex flex-1 hover:bg-zinc-800/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">{body}</Link>
+          : body;
         return cell.tip
-          ? <Tip key={i} content={cell.tip}>{body}</Tip>
-          : <div key={i} className="flex lg:flex-1">{body}</div>;
+          ? <Tip key={i} content={cell.tip}>{content}</Tip>
+          : <div key={i} className="flex lg:flex-1">{content}</div>;
       })}
     </div>
   );
