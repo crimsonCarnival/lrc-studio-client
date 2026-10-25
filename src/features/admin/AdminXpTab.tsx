@@ -5,6 +5,8 @@ import { Icon } from '@/shared/ui/Icon';
 import { gqlRequest } from '@/app/graphql.client';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Button } from '@ui/button';
+import { useAdminSub } from './admin-nav';
+import { AdminSubNav } from './AdminSubNav';
 
 interface AdminXpTabProps {
   onAdjustXP: (action: string, amount: number, target: string, userId?: string, userIds?: string[]) => Promise<void>;
@@ -30,9 +32,9 @@ interface XpLevelThreshold {
   showcaseSlots: number;
 }
 
-/** Levels shown before the user asks for more. The server clamps to 1..200. */
-const CURVE_PAGE_SIZE = 50;
-const CURVE_EXPANDED_SIZE = 100;
+/** The most levels the server returns (it clamps to 1..200); they are fetched once and paged here. */
+const CURVE_FETCH_LEVELS = 200;
+const CURVE_PAGE_SIZE = 20;
 
 export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
   const { t, i18n } = useTranslation();
@@ -42,17 +44,16 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
   const [xpBulkSaving, setXpBulkSaving] = useState(false);
 
   const [curve, setCurve] = useState<XpLevelThreshold[]>([]);
-  const [curveMaxLevel, setCurveMaxLevel] = useState(CURVE_PAGE_SIZE);
+  const [curvePage, setCurvePage] = useState(0);
   const [curveLoading, setCurveLoading] = useState(true);
   const [curveFailed, setCurveFailed] = useState(false);
 
-  const fetchCurve = useCallback(async (maxLevel: number) => {
+  const fetchCurve = useCallback(async () => {
     setCurveLoading(true);
     setCurveFailed(false);
     try {
-      const { xpLevelCurve } = await gqlRequest(GET_XP_CURVE, { maxLevel }) as { xpLevelCurve: XpLevelThreshold[] };
+      const { xpLevelCurve } = await gqlRequest(GET_XP_CURVE, { maxLevel: CURVE_FETCH_LEVELS }) as { xpLevelCurve: XpLevelThreshold[] };
       setCurve([...xpLevelCurve].sort((a, b) => a.level - b.level));
-      setCurveMaxLevel(maxLevel);
     } catch {
       setCurveFailed(true);
     } finally {
@@ -62,7 +63,7 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchCurve(CURVE_PAGE_SIZE);
+    fetchCurve();
   }, [fetchCurve]);
 
   // Locale-aware grouping separators; i18n.language changes must re-format.
@@ -85,8 +86,23 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
     }
   };
 
+  const view = useAdminSub('xp');
+  const pageCount = Math.max(1, Math.ceil(curve.length / CURVE_PAGE_SIZE));
+  const page = Math.min(curvePage, pageCount - 1);
+  const pageRows = curve.slice(page * CURVE_PAGE_SIZE, (page + 1) * CURVE_PAGE_SIZE);
+
   return (
     <div className="flex flex-col gap-6">
+      <AdminSubNav
+        tab="xp"
+        current={view}
+        items={[
+          { id: 'grant', icon: 'auto_awesome', label: t('admin.xp.tabs.grant') },
+          { id: 'levels', icon: 'stairs', label: t('admin.xp.tabs.levels') },
+        ]}
+      />
+
+      {view === 'grant' && <>
       {/* Header */}
       <div className="flex flex-col gap-1 max-w-xl">
         <div className="flex items-center gap-2">
@@ -163,8 +179,10 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
         </div>
       </div>
 
+      </>}
+
       {/* Level requirement curve */}
-      <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/40 flex flex-col gap-4 max-w-3xl">
+      {view === 'levels' && <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-900/40 flex flex-col gap-4 max-w-3xl">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             <Icon name="stairs" size={16} className="text-zinc-400" />
@@ -183,7 +201,7 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => fetchCurve(curveMaxLevel)}
+              onClick={() => fetchCurve()}
             >
               <Icon name="refresh" size={14} />
               {t('admin.xp.curve.retry')}
@@ -213,7 +231,7 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {curve.map(row => (
+                  {pageRows.map(row => (
                     <tr key={row.level} className="border-t border-zinc-800/60 hover:bg-zinc-800/30 transition-colors">
                       <th scope="row" className="px-3 py-1.5 text-left font-semibold text-zinc-300 tabular-nums">
                         {fmt(row.level)}
@@ -227,33 +245,39 @@ export default function AdminXpTab({ onAdjustXP }: AdminXpTabProps) {
               </table>
             </div>
 
-            <div className="flex items-center gap-3">
-              {curveMaxLevel < CURVE_EXPANDED_SIZE ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fetchCurve(CURVE_EXPANDED_SIZE)}
-                >
-                  <Icon name="expand_more" size={14} />
-                  {t('admin.xp.curve.showMore', { level: CURVE_EXPANDED_SIZE })}
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fetchCurve(CURVE_PAGE_SIZE)}
-                >
-                  <Icon name="expand_less" size={14} />
-                  {t('admin.xp.curve.showLess', { level: CURVE_PAGE_SIZE })}
-                </Button>
-              )}
+            <div className="flex items-center justify-between gap-3">
               <p className="text-[10px] uppercase tracking-widest text-zinc-600">
+                {t('admin.xp.levelsRange', { from: pageRows[0]?.level ?? 0, to: pageRows[pageRows.length - 1]?.level ?? 0 })}
+                {' · '}
                 {t('admin.xp.curve.shownCount', { total: curve.length })}
               </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled={page === 0}
+                  onClick={() => setCurvePage(page - 1)}
+                  aria-label={t('admin.xp.levelsPrev')}
+                >
+                  <Icon name="chevron_left" size={16} />
+                </Button>
+                <span className="min-w-12 text-center text-xs tabular-nums text-zinc-400">{page + 1} / {pageCount}</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled={page >= pageCount - 1}
+                  onClick={() => setCurvePage(page + 1)}
+                  aria-label={t('admin.xp.levelsNext')}
+                >
+                  <Icon name="chevron_right" size={16} />
+                </Button>
+              </div>
             </div>
           </>
         )}
-      </div>
+      </div>}
     </div>
   );
 }
