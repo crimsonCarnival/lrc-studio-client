@@ -79,13 +79,11 @@ export interface TabAudioCapture {
 export class NoTabAudioError extends Error {}
 
 /**
- * Asks to share this tab with its audio. Call it straight from the click handler:
- * getDisplayMedia needs transient user activation, so nothing may be awaited before it.
+ * Asks to share this tab with its audio and returns the audio track. Call it straight from
+ * the click handler: getDisplayMedia needs transient user activation, so nothing may be
+ * awaited before it.
  */
-export async function captureTabAudio(): Promise<TabAudioCapture> {
-  // Created inside the gesture, so it starts running.
-  const ctx = audioContext();
-  void ctx.resume();
+async function requestTabAudioTrack(): Promise<MediaStreamTrack> {
   // Chromium-only hints (not in every lib.dom version): offer just this tab, no system audio.
   const options: DisplayMediaStreamOptions & Record<string, unknown> = {
     video: true, // the API insists on video; the track is dropped as soon as it arrives
@@ -103,6 +101,14 @@ export async function captureTabAudio(): Promise<TabAudioCapture> {
     stream.getTracks().forEach((t) => t.stop());
     throw new NoTabAudioError();
   }
+  return track;
+}
+
+export async function captureTabAudio(): Promise<TabAudioCapture> {
+  // Created inside the gesture, so it starts running.
+  const ctx = audioContext();
+  void ctx.resume();
+  const track = await requestTabAudioTrack();
   const source = ctx.createMediaStreamSource(new MediaStream([track]));
   const analyser = createAnalyser(ctx);
   // Never to the destination: the tab already plays this audio, and it would echo.
@@ -112,6 +118,52 @@ export async function captureTabAudio(): Promise<TabAudioCapture> {
     track,
     stop: () => {
       source.disconnect();
+      track.stop();
+    },
+  };
+}
+
+export interface TabRecording {
+  /** Ends on stop()/abort(), or when the user clicks the browser's own "Stop sharing". */
+  track: MediaStreamTrack;
+  /** Ends the recording and resolves with everything captured so far. */
+  stop: () => Promise<Blob>;
+  /** Ends the recording and throws the audio away. */
+  abort: () => void;
+}
+
+const RECORDING_MIME_TYPES = ['audio/webm;codecs=opus', 'audio/webm'];
+
+/** Records this tab's audio to a webm blob. Same gesture rules as captureTabAudio. */
+export async function recordTabAudio(): Promise<TabRecording> {
+  const track = await requestTabAudioTrack();
+  const mimeType = RECORDING_MIME_TYPES.find((type) => MediaRecorder.isTypeSupported(type));
+  if (!mimeType) {
+    track.stop();
+    throw new Error('tab recording is not supported by this browser');
+  }
+  // 64 kbps opus is plenty for speech recognition and keeps a 20-minute song far under the 25 MB cap.
+  const recorder = new MediaRecorder(new MediaStream([track]), { mimeType, audioBitsPerSecond: 64_000 });
+  const chunks: Blob[] = [];
+  recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+  recorder.start(1000);
+
+  return {
+    track,
+    stop: () => new Promise<Blob>((resolve) => {
+      const finish = () => {
+        track.stop();
+        resolve(new Blob(chunks, { type: 'audio/webm' }));
+      };
+      // "Stop sharing" already ended the recorder: its last chunk has been delivered.
+      if (recorder.state === 'inactive') { finish(); return; }
+      recorder.onstop = finish;
+      recorder.stop();
+    }),
+    abort: () => {
+      recorder.ondataavailable = null;
+      recorder.onstop = null;
+      if (recorder.state !== 'inactive') recorder.stop();
       track.stop();
     },
   };

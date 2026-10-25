@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import type { ComponentProps } from 'react';
 import { useEditor } from '@features/editor/hooks/useEditor';
 import { useEditorActionDrawer } from '@features/editor/hooks/useEditorActionDrawer';
-import { useAutoStamp, type AutoStampPhase } from '@features/editor/hooks/useAutoStamp';
+import { useAutoStamp, type AutoStampPhase, type TabPlayback } from '@features/editor/hooks/useAutoStamp';
 import EditorToolbar from './EditorToolbar';
 import { WordsModeLayerControl } from '../modes/WordsModeColumn';
 import EditorSidePanel from './EditorSidePanel';
@@ -23,6 +23,7 @@ import EditorActionDrawer from './EditorActionDrawer';
 import SelectionActionBar from './SelectionActionBar';
 import TaggingToolbar from './TaggingToolbar';
 import AutoStampModal from './AutoStampModal';
+import { tabAudioSupported } from '@/features/visualizer/audio-source';
 import FuriganaModal from '../line/FuriganaModal';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
@@ -79,7 +80,7 @@ const ActionsDropdown = ({ children, icon = 'more_horiz', label }: { children: R
 
 // Phases during which an Auto Stamp job is actively running server-side —
 // the toolbar button stays disabled and re-clicking would race the in-flight job.
-const AUTO_STAMP_RUNNING_PHASES: ReadonlySet<AutoStampPhase> = new Set(['starting', 'fetching_audio', 'extracting_audio', 'transcribing', 'aligning', 'applying']);
+const AUTO_STAMP_RUNNING_PHASES: ReadonlySet<AutoStampPhase> = new Set(['starting', 'fetching_audio', 'extracting_audio', 'transcribing', 'aligning', 'applying', 'recording']);
 
 interface EditorProps {
   user?: AuthUser | null;
@@ -324,7 +325,36 @@ export default function Editor({
     [playerRef],
   );
 
+  // Drives the YouTube player for the tab-recording fallback. Everything is read through
+  // refs so tabPlayback keeps one identity while the player state changes every tick.
+  const player = usePlayer();
+  const playbackRef = useRef({ currentTime: player.currentTime, duration: player.duration, isPlaying: player.isPlaying });
+  const playerCtlRef = useRef(player);
+  useLayoutEffect(() => {
+    playbackRef.current = { currentTime: player.currentTime, duration: player.duration, isPlaying: player.isPlaying };
+    playerCtlRef.current = player;
+  });
+  const tabPlayback = useMemo<TabPlayback>(() => {
+    // togglePlay is a toggle and the ref only catches up on the next render, so record the
+    // intended state right away for the calls that follow in the same tick.
+    const setPlaying = (playing: boolean) => {
+      if (playbackRef.current.isPlaying === playing) return;
+      playerCtlRef.current.togglePlay();
+      playbackRef.current = { ...playbackRef.current, isPlaying: playing };
+    };
+    return {
+      getState: () => playbackRef.current,
+      prepare: () => {
+        setPlaying(false);
+        playerCtlRef.current.applySpeed(1);
+        playerCtlRef.current.seek(0);
+      },
+      setPlaying,
+    };
+  }, []);
+
   const autoStamp = useAutoStamp({
+    tabPlayback,
     lines,
     setLines,
     uploadId,
@@ -1304,6 +1334,9 @@ export default function Editor({
         open={autoStampOpen}
         phase={autoStamp.phase}
         errorCode={autoStamp.errorCode}
+        recordProgress={autoStamp.recordProgress}
+        canRecordTab={player.source === 'youtube' && tabAudioSupported()}
+        onRecordTab={autoStamp.startFromTab}
         pendingResult={autoStamp.pendingResult}
         confidenceById={autoStamp.confidenceById}
         lines={lines}

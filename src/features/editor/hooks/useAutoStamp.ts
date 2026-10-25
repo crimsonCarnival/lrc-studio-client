@@ -3,10 +3,13 @@ import { connectSocket } from '@/app/socket.client';
 import { startStamp, startStampWithFile, getStampJob, cancelStampJob, getJobAudio, type StampResultDto, type AsrJobDto } from '../services/asr.service';
 import type { EditorLine } from '../services/editor.service';
 import { alignLineStart } from '../services/editor.service';
+import { NoTabAudioError, recordTabAudio } from '@/features/visualizer/audio-source';
+import type { TabRecording } from '@/features/visualizer/audio-source';
 
 export type AutoStampPhase =
   | 'idle'
   | 'starting'
+  | 'recording'
   | 'fetching_audio'
   | 'extracting_audio'
   | 'transcribing'
@@ -20,6 +23,24 @@ export type ConfidenceInfo = { confidence: number; status: 'matched' | 'partial'
 
 /** Phases during which the job is still running server-side and worth re-querying after a reconnect. */
 const ACTIVE_PHASES: ReadonlySet<AutoStampPhase> = new Set(['starting', 'fetching_audio', 'extracting_audio', 'transcribing', 'aligning']);
+
+/** How the hook drives the YouTube player while it records the tab. */
+export type TabPlayback = {
+  getState: () => { currentTime: number; duration: number; isPlaying: boolean };
+  /** Seek to 0, normal speed, paused: the recording's clock must equal the song's. */
+  prepare: () => void;
+  setPlaying: (playing: boolean) => void;
+};
+
+// Matches the server's yt-dlp cap, so a recording can't outlast what a normal job would accept.
+const MAX_RECORD_SECONDS = 20 * 60;
+const RECORD_POLL_MS = 250;
+// Playback moves ~RECORD_POLL_MS per poll; anything far outside that is a seek, which would
+// leave a hole (or a repeat) in the recording and shift every timestamp after it.
+const MAX_POLL_DRIFT_SECONDS = 1.5;
+// play() is asynchronous; give the player a moment to actually start before treating
+// "not playing" as a pause.
+const PLAY_START_GRACE_MS = 4000;
 
 type Params = {
   lines: EditorLine[];
@@ -37,9 +58,11 @@ type Params = {
   applyMode: 'all' | 'empty-only';
   /** When 'words', word-level timestamps are merged into each line's words array. */
   editorMode: string;
+  /** Enables startFromTab; without it the tab-recording fallback is unavailable. */
+  tabPlayback?: TabPlayback;
 };
 
-export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutubeUrl, fuzzyTolerance, applyMode, editorMode }: Params) {
+export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutubeUrl, fuzzyTolerance, applyMode, editorMode, tabPlayback }: Params) {
   const [phase, setPhase] = useState<AutoStampPhase>('idle');
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [pendingResult, setPendingResult] = useState<StampResultDto[] | null>(null);
@@ -47,6 +70,8 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
   // drag reorder, an insert or a delete. Position keys silently mislabelled lines.
   const [confidenceById, setConfidenceById] = useState<Map<string, ConfidenceInfo>>(new Map());
   const [youtubeAudioUrl, setYoutubeAudioUrl] = useState<string | null>(null);
+  const [recordProgress, setRecordProgress] = useState(0);
+  const recordingRef = useRef<{ recording: TabRecording; end: (reason: 'cancelled' | 'interrupted') => void } | null>(null);
   const jobIdRef = useRef<string | null>(null);
   const jobSourceRef = useRef<'youtube' | 'upload' | 'local' | null>(null);
 
@@ -226,7 +251,7 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
     };
   }, [handleJobUpdate]);
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (recordedFile?: File) => {
     setErrorCode(null);
     setPhase('starting');
     cancelRequestedRef.current = false;
@@ -259,7 +284,10 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
       // it must win — a stale uploadId or lingering local blob from previously
       // loaded media would otherwise shadow the audio actually playing.
       const youtubeUrl = getYoutubeUrl(); // read at invocation time — never cached
-      if (youtubeUrl) {
+      if (recordedFile) {
+        jobSourceRef.current = 'local';
+        res = await startStampWithFile({ lines: payload, file: recordedFile, fuzzyTolerance });
+      } else if (youtubeUrl) {
         jobSourceRef.current = 'youtube';
         res = await startStamp({ lines: payload, youtubeUrl, fuzzyTolerance });
       } else if (uploadId) {
@@ -298,7 +326,91 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
     }
   }, [uploadId, getLocalFile, getYoutubeUrl, fuzzyTolerance, editorMode, handleJobUpdate, youtubeAudioUrl]);
 
+  /**
+   * Fallback for when the server cannot fetch the YouTube audio: records this tab while the
+   * video plays from 0:00 to the end, then stamps that recording like an uploaded file.
+   * Must be called straight from a click handler (the share prompt needs the gesture).
+   */
+  const startFromTab = useCallback(async () => {
+    if (!tabPlayback) return;
+    const { duration } = tabPlayback.getState();
+    setErrorCode(null);
+    if (!(duration > 0) || duration > MAX_RECORD_SECONDS) {
+      setErrorCode(duration > 0 ? 'asr_youtube_too_long' : 'asr_no_audio');
+      setPhase('failed');
+      return;
+    }
+    cancelRequestedRef.current = false;
+    setRecordProgress(0);
+    setPhase('recording');
+
+    let recording: TabRecording;
+    try {
+      recording = await recordTabAudio();
+    } catch (err) {
+      setErrorCode(
+        err instanceof NoTabAudioError ? 'asr_recording_no_audio'
+          : err instanceof DOMException && err.name === 'NotAllowedError' ? 'asr_recording_denied'
+            : 'asr_recording_failed',
+      );
+      setPhase('failed');
+      return;
+    }
+
+    // Resolves with why the recording ended; 'ended' means the song played through.
+    const outcome = await new Promise<'ended' | 'cancelled' | 'interrupted'>((resolve) => {
+      let settled = false;
+      let timer = 0;
+      const end = (reason: 'ended' | 'cancelled' | 'interrupted') => {
+        if (settled) return;
+        settled = true;
+        window.clearInterval(timer);
+        recording.track.removeEventListener('ended', onTrackEnded);
+        resolve(reason);
+      };
+      const onTrackEnded = () => end('interrupted'); // the browser's own "Stop sharing"
+      recording.track.addEventListener('ended', onTrackEnded);
+      recordingRef.current = { recording, end };
+
+      tabPlayback.prepare();
+      const startedAt = Date.now();
+      let last = 0;
+      tabPlayback.setPlaying(true);
+      timer = window.setInterval(() => {
+        const { currentTime, duration: total, isPlaying } = tabPlayback.getState();
+        setRecordProgress(total > 0 ? Math.min(1, currentTime / total) : 0);
+        // Until the player has caught up with prepare(), its reported position may still be
+        // wherever the user left it, including the end of the song.
+        const graceOver = Date.now() - startedAt > PLAY_START_GRACE_MS;
+        if (graceOver && currentTime >= total - 0.3) { end('ended'); return; }
+        const jumped = Math.abs(currentTime - last) > MAX_POLL_DRIFT_SECONDS;
+        // A pause or seek leaves a hole in the audio; stamps would be plausible but wrong.
+        if (jumped && graceOver) { end('interrupted'); return; }
+        if (!isPlaying && graceOver) { end('interrupted'); return; }
+        last = currentTime;
+      }, RECORD_POLL_MS);
+    });
+    recordingRef.current = null;
+    tabPlayback.setPlaying(false);
+
+    if (outcome !== 'ended') {
+      recording.abort();
+      if (outcome === 'interrupted') {
+        setErrorCode('asr_recording_interrupted');
+        setPhase('failed');
+      } else setPhase('cancelled');
+      return;
+    }
+    const blob = await recording.stop();
+    // The server picks the decoder from the extension.
+    await start(new File([blob], 'tab-recording.webm', { type: 'audio/webm' }));
+  }, [tabPlayback, start]);
+
   const cancel = useCallback(async () => {
+    if (recordingRef.current) {
+      recordingRef.current.end('cancelled');
+      return;
+    }
     if (!jobIdRef.current) {
       if (phaseRef.current === 'starting') {
         cancelRequestedRef.current = true;
@@ -335,5 +447,5 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
     });
   }, []);
 
-  return { phase, errorCode, pendingResult, confidenceById, youtubeAudioUrl, start, cancel, applyPending, discardPending, clearConfidence };
+  return { phase, errorCode, pendingResult, confidenceById, youtubeAudioUrl, recordProgress, start, startFromTab, cancel, applyPending, discardPending, clearConfidence };
 }
