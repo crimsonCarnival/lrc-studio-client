@@ -27,7 +27,6 @@ const RARITY_ORDER: Record<string, number> = { legendary: 0, epic: 1, rare: 2, u
 interface Badge {
   id: string;
   rarity?: string;
-  rarityPct?: number;
 }
 
 const EMPTY_BADGES: Badge[] = [];

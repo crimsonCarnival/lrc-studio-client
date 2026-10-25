@@ -17,7 +17,6 @@ interface ShowcaseBadge {
   color?: string;
   rarity?: string;
   grantedAt?: string;
-  rarityPct?: number;
   holderCount?: number;
 }
 
@@ -50,8 +49,7 @@ function ShowcaseCard({ badge, locale = 'en' }: { badge: ShowcaseBadge; locale?:
   const details = [
     tk(rarityConf.labelKey),
     grantedStr && t('badges.showcase.earnedAgo', { when: grantedStr }),
-    badge.rarityPct !== undefined && badge.holderCount !== undefined
-      && `${t('badges.showcase.holders', { count: badge.holderCount })} · ${badge.rarityPct.toFixed(1)}%`,
+    badge.holderCount !== undefined && t('badges.showcase.holders', { count: badge.holderCount }),
   ].filter(Boolean).join(' · ');
 
   return (

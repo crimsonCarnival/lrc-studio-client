@@ -18,7 +18,7 @@ const GET_PUBLIC_PROFILE = /* GraphQL */ `
       country
       showcasePublic
       showcasedBadges {
-        id label { en es } icon color rarity rarityPct holderCount grantedAt
+        id label { en es } icon color rarity holderCount grantedAt
       }
       projects {
         id publicId slug title starCount forkCount coverImage public lineCount syncedLineCount

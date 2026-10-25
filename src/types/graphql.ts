@@ -1189,7 +1189,6 @@ export type ShowcasedBadge = {
   id: Scalars['String']['output'];
   label: Scalars['String']['output'];
   rarity: Scalars['String']['output'];
-  rarityPct: Scalars['Float']['output'];
 };
 
 export type SpeedBoundsSettings = {
@@ -1629,7 +1628,7 @@ export type GetPublicProfileQueryVariables = Exact<{
 }>;
 
 
-export type GetPublicProfileQuery = { publicProfile: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null, bio: string | null, isVerified: boolean, isAdmin: boolean, createdAt: string | null, projectCount: number, totalStarsReceived: number, totalForksReceived: number, followerCount: number, followingCount: number, isFollowedByMe: boolean, isFollowingMe: boolean, isBlockedByMe: boolean, country: string | null, showFollowers: boolean, showcasePublic: boolean, badges: Array<{ id: string, grantedAt: string }>, progression: { xp: number | null, level: number | null } | null, stats: { minutesSynced: number | null } | null, streak: { current: number | null } | null, showcasedBadges: Array<{ id: string, label: string, icon: string, color: string, rarity: string, rarityPct: number, holderCount: number, grantedAt: string }>, projects: Array<{ id: string, publicId: string, title: string | null, starCount: number | null, forkCount: number | null, coverImage: string | null, public: boolean | null, createdAt: string | null, updatedAt: string | null, metadata: { songName: string | null, songArtist: string | null, songAlbum: string | null, songYear: string | null, genre: string | null, description: string | null, tags: Array<string> | null } | null, upload: { source: string, uploadUrl: string | null } | null }> } | null };
+export type GetPublicProfileQuery = { publicProfile: { id: string, accountName: string, displayName: string | null, avatarUrl: string | null, bio: string | null, isVerified: boolean, isAdmin: boolean, createdAt: string | null, projectCount: number, totalStarsReceived: number, totalForksReceived: number, followerCount: number, followingCount: number, isFollowedByMe: boolean, isFollowingMe: boolean, isBlockedByMe: boolean, country: string | null, showFollowers: boolean, showcasePublic: boolean, badges: Array<{ id: string, grantedAt: string }>, progression: { xp: number | null, level: number | null } | null, stats: { minutesSynced: number | null } | null, streak: { current: number | null } | null, showcasedBadges: Array<{ id: string, label: string, icon: string, color: string, rarity: string, holderCount: number, grantedAt: string }>, projects: Array<{ id: string, publicId: string, title: string | null, starCount: number | null, forkCount: number | null, coverImage: string | null, public: boolean | null, createdAt: string | null, updatedAt: string | null, metadata: { songName: string | null, songArtist: string | null, songAlbum: string | null, songYear: string | null, genre: string | null, description: string | null, tags: Array<string> | null } | null, upload: { source: string, uploadUrl: string | null } | null }> } | null };
 
 export type FollowUserMutationVariables = Exact<{
   accountName: string;
