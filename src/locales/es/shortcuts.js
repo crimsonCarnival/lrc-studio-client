@@ -2,7 +2,7 @@ export default {
   title: "Atajos de teclado",
   playPause: "Reproducir / Pausar",
   mark: "Marcar línea actual",
-  captureAdLib: "Capturar un ad-lib aquí",
+  captureAdLib: "Capturar un contracanto aquí",
   nudgeLeft: "Ajustar marca -{{val}}s",
   nudgeRight: "Ajustar marca +{{val}}s",
   undo: "Deshacer",

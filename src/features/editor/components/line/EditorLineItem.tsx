@@ -117,7 +117,7 @@ interface EditorLineItemProps {
   isModified?: boolean;
   onToggleLineMode?: (i: number, next: EditorLine) => void;
   confidenceInfo?: ConfidenceInfo;
-  handleToggleAdLib?: (lineIndex: number) => void;
+  handleToggleCounterpart?: (lineIndex: number) => void;
   /** Section markers only: number of lyric lines until the next marker (0 = no chevron). */
   sectionLineCount?: number;
   isCollapsed?: boolean;
@@ -200,7 +200,7 @@ const EditorLineItem = React.memo(({
   onToggleLineMode,
   confidenceInfo,
   activeSingers,
-  handleToggleAdLib,
+  handleToggleCounterpart,
   sectionLineCount = 0,
   isCollapsed = false,
   onToggleCollapse,
@@ -598,7 +598,7 @@ const EditorLineItem = React.memo(({
       handleInsertSection={handleInsertSection}
       handleAssignSinger={handleAssignSinger}
       songArtists={songArtists}
-      handleToggleAdLib={handleToggleAdLib}
+      handleToggleCounterpart={handleToggleCounterpart}
     >
       <div
         ref={isActive ? activeLineRef : null}

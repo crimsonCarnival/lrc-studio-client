@@ -2,6 +2,7 @@ import { ContourLines } from '@ui/ContourLines';
 import { useRef, useEffect, useCallback, useMemo, forwardRef, useState, Fragment } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
+import { counterpartEnd } from '@/features/editor/services/counterparts';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -76,15 +77,16 @@ const FOCUS_STYLE: Record<number, { size: string; opacity: number }> = {
 
 const isBlank = (line: DisplayLine) => !line.text || line.text.trim() === '';
 
-// The previous line, the active one and the next three. Ad-libs ride along
-// with the line they overlap instead of taking a slot of their own.
+// The previous line, the active one and the next three. Counterparts ride along
+// with the line they overlap instead of taking a slot of their own; one stored just
+// above the active line may still be sounding over it, so it stays in view too.
 function buildFocusWindow(lines: DisplayLine[], currentIndex: number): { index: number; step: number }[] {
   const out: { index: number; step: number }[] = [];
   for (let i = currentIndex - 1; i >= 0; i--) {
     const line = lines[i];
-    if (line.type === 'section' || line.adLibOf != null || isBlank(line)) continue;
-    out.push({ index: i, step: -1 });
-    break;
+    if (line.type === 'section' || isBlank(line)) continue;
+    out.unshift({ index: i, step: -1 });
+    if (line.adLibOf == null) break;
   }
   if (currentIndex >= 0) out.push({ index: currentIndex, step: 0 });
   let step = 0;
@@ -184,10 +186,11 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   const baseEnd = line.endTime ?? (effectiveNextTs != null ? effectiveNextTs - leadTime : (line.timestamp != null ? line.timestamp + 5 : null));
   const segmentEnd = baseEnd != null && effectiveNextTs != null ? Math.min(baseEnd, effectiveNextTs - leadTime) : baseEnd;
 
-  const isAdLib = line.adLibOf != null;
+  const isCounterpart = line.adLibOf != null;
   const effectiveTimestamp = line.timestamp ?? line.adLibOf;
-  const isAdLibActive = isAdLib && effectiveTimestamp != null && playbackPosition >= effectiveTimestamp && (segmentEnd == null || playbackPosition < segmentEnd);
-  const isActive = dist === 0 || isAdLibActive;
+  const counterpartEndTime = isCounterpart ? counterpartEnd(line, effectiveNextTs) : null;
+  const isCounterpartActive = isCounterpart && effectiveTimestamp != null && playbackPosition >= effectiveTimestamp && (counterpartEndTime == null || playbackPosition < counterpartEndTime);
+  const isActive = dist === 0 || isCounterpartActive;
 
   // The viewer's own activeHighlight preference (same setting PreviewLine
   // reads) — this component used to ignore it entirely, so a public project
@@ -212,8 +215,8 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   if (lineSingerHex && !isActive) {
     color = `${lineSingerHex}99`;
   }
-  // Rose is the second voice (redesign sheet 20): it never takes the iris of the main line.
-  if (isAdLib && !lineSingerHex) color = 'var(--color-adlib-ink)';
+  // Foam is the second voice: it never takes the iris of the main line.
+  if (isCounterpart && !lineSingerHex) color = 'var(--color-counterpart-ink)';
 
   const isWithinWindow = isActive
     && isEmptyLine
@@ -275,8 +278,8 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
 
   const staggerDelay = dist != null ? `${Math.min(dist * 40, 200)}ms` : '0ms';
 
-  // A captured ad-lib that has no text yet is a to-do for the editor, not a lyric.
-  if (isAdLib && isEmptyLine) return null;
+  // A captured counterpart that has no text yet is a to-do for the editor, not a lyric.
+  if (isCounterpart && isEmptyLine) return null;
 
   return (
     <div
@@ -284,13 +287,14 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
       onClick={clickable ? onClick : undefined}
       className="font-heading animate-preview-line-in"
       style={{
-        opacity: isAdLib && !isActive ? effectiveOpacity * 0.5 : effectiveOpacity,
-        transform: `scale(${(isAdLib ? 0.9 : 1) * (isActive && activeHighlight === 'zoom' ? 1.05 : 1)})`,
+        opacity: isCounterpart && !isActive ? effectiveOpacity * 0.7 : effectiveOpacity,
+        transform: `scale(${(isCounterpart ? 0.9 : 1) * (isActive && activeHighlight === 'zoom' ? 1.05 : 1)})`,
+        // Shrink a counterpart toward the edge the text is aligned to, so it stays lined up.
+        transformOrigin: isCounterpart ? (alignment === 'right' ? 'right center' : alignment === 'center' ? 'center' : 'left center') : undefined,
         transition: `opacity 0.4s ease, transform 0.4s ease, color 0.4s ease, text-shadow 0.4s ease${focus ? ', font-size 0.3s ease' : ''}`,
         animationDelay: staggerDelay,
         cursor: clickable ? 'pointer' : 'default',
         textAlign: alignment,
-        fontStyle: isAdLib ? 'italic' : undefined,
         color,
         textShadow: isActive && activeHighlight === 'glow'
           ? '0 0 20px color-mix(in srgb, var(--color-primary) 50%, transparent)'
@@ -302,8 +306,9 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
         letterSpacing: focusStep === 0 ? '-0.01em' : undefined,
         paddingTop: focus ? 0 : '0.65em',
         paddingBottom: focus ? 0 : '0.65em',
-        marginLeft: isAdLib ? (alignment === 'right' ? '0' : '15%') : '0',
-        marginRight: isAdLib ? (alignment === 'right' ? '15%' : '0') : '0',
+        // Indent from the aligned edge; centred text has no edge to indent from.
+        marginLeft: isCounterpart && alignment !== 'right' && alignment !== 'center' ? '15%' : '0',
+        marginRight: isCounterpart && alignment === 'right' ? '15%' : '0',
         // Ruby text needs headroom or it collides with the line above on wrap.
         lineHeight: hasReadings ? 1.9 : focus ? (focusStep === 0 ? 1.02 : 1.2) : 1.25,
         position: 'relative',
@@ -369,7 +374,7 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
             const wGlobalIdx = wSingerName ? singerColorIndex(wSingerName, songSingers) : null;
             const wColor = wGlobalIdx !== null && singerColors[wGlobalIdx] ? singerColors[wGlobalIdx] : null;
 
-            const fillHighlightColor = wColor || 'var(--color-primary-ink)';
+            const fillHighlightColor = wColor || (isCounterpart ? 'var(--color-counterpart-ink)' : 'var(--color-primary-ink)');
             const isWordFilled = isActive && startTime != null && endTime != null;
             let progress = 0;
             if (isWordFilled && playbackPosition != null) {

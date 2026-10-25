@@ -7,10 +7,10 @@ import { useAutoStamp, type AutoStampPhase } from '@features/editor/hooks/useAut
 import EditorToolbar from './EditorToolbar';
 import { WordsModeLayerControl } from '../modes/WordsModeColumn';
 import EditorSidePanel from './EditorSidePanel';
-import { AdLibStrip } from '../adlibs/AdLibStrip';
+import { CounterpartStrip } from '../counterparts/CounterpartStrip';
 import { matchKey } from '@/shared/utils/keyboard';
 import { CountDot } from '@ui/count-dot';
-import { isPendingAdLib } from '@features/editor/services/ad-libs';
+import { isPendingCounterpart } from '@features/editor/services/counterparts';
 import { WordsLineNav, WordTimeline } from '../modes/WordsFocus';
 import { usePlayer } from '@/features/player/PlayerContext';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
@@ -233,11 +233,11 @@ export default function Editor({
     handleSaveLineText,
     handleToggleLineMode,
     handleDeleteLine,
-    handleToggleAdLib,
-    handleCaptureAdLib,
-    handleMoveAdLib,
-    handleNameAdLib,
-    handleRemoveAdLib,
+    handleToggleCounterpart,
+    handleCaptureCounterpart,
+    handleMoveCounterpart,
+    handleNameCounterpart,
+    handleRemoveCounterpart,
     handleAddLine,
     handleDragStart,
     handleDragOver,
@@ -580,20 +580,20 @@ export default function Editor({
   const isLg = useBreakpoint('lg');
   const wordsFocus = isWordsMode && isLg;
 
-  // Ad-lib capture (redesign sheet 20). The strip opens itself the first time one is
+  // Counterpart capture (redesign sheet 20). The strip opens itself the first time one is
   // captured, so the shortcut works without finding the button first.
-  const [adLibOpen, setAdLibOpen] = useState(false);
-  const [adLibSelected, setAdLibSelected] = useState<string | null>(null);
-  const [adLibNaming, setAdLibNaming] = useState<string | null>(null);
+  const [counterpartOpen, setCounterpartOpen] = useState(false);
+  const [counterpartSelected, setCounterpartSelected] = useState<string | null>(null);
+  const [counterpartNaming, setCounterpartNaming] = useState<string | null>(null);
   const captureKeyRaw = settings.shortcuts?.captureAdLib?.[0] || 'a';
-  const pendingAdLibs = useMemo(() => lines.filter((l) => isPendingAdLib(l)).length, [lines]);
-  const captureAdLibHere = useCallback(() => {
-    const id = handleCaptureAdLib();
+  const pendingCounterparts = useMemo(() => lines.filter((l) => isPendingCounterpart(l)).length, [lines]);
+  const captureCounterpartHere = useCallback(() => {
+    const id = handleCaptureCounterpart();
     if (!id) return;
-    setAdLibOpen(true);
-    setAdLibSelected(id);
-    setAdLibNaming(id);
-  }, [handleCaptureAdLib]);
+    setCounterpartOpen(true);
+    setCounterpartSelected(id);
+    setCounterpartNaming(id);
+  }, [handleCaptureCounterpart]);
   useEffect(() => {
     if (wordsFocus) return;
     const onKey = (e: KeyboardEvent) => {
@@ -602,11 +602,11 @@ export default function Editor({
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return;
       if (!matchKey(e, captureKeyRaw)) return;
       e.preventDefault();
-      captureAdLibHere();
+      captureCounterpartHere();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [wordsFocus, captureKeyRaw, captureAdLibHere]);
+  }, [wordsFocus, captureKeyRaw, captureCounterpartHere]);
   const listView = useMemo(() => {
     if (lineFilter === 'all' && !wordsFocus) return collapsedView;
     const rows = wordsFocus
@@ -985,16 +985,16 @@ export default function Editor({
             ]}
           />
         )}
-        <Tip content={t('editor.adLib.toggleTip')}>
+        <Tip content={t('editor.counterpart.toggleTip')}>
           <Button
             variant="outline"
-            aria-pressed={adLibOpen}
-            onClick={() => setAdLibOpen((open) => !open)}
-            className={`relative h-9 lg:h-9 coarse:h-11 gap-1.5 rounded-lg px-3 lg:px-3 text-[13px] lg:text-[13px] font-semibold ${adLibOpen ? 'bg-adlib-soft text-adlib-ink inset-ring-adlib hover:bg-adlib-soft' : 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground'}`}
+            aria-pressed={counterpartOpen}
+            onClick={() => setCounterpartOpen((open) => !open)}
+            className={`relative h-9 lg:h-9 coarse:h-11 gap-1.5 rounded-lg px-3 lg:px-3 text-[13px] lg:text-[13px] font-semibold ${counterpartOpen ? 'bg-counterpart-soft text-counterpart-ink inset-ring-counterpart hover:bg-counterpart-soft' : 'border-zinc-800 bg-transparent text-foreground/65 hover:text-foreground'}`}
           >
             <Icon name="mic" size={16} />
-            {t('editor.adLib.toggle')}
-            <CountDot count={pendingAdLibs} className="-top-1.5 -right-1.5 bg-gold" />
+            {t('editor.counterpart.toggle')}
+            <CountDot count={pendingCounterparts} className="-top-1.5 -right-1.5 bg-gold" />
           </Button>
         </Tip>
         <Tip content={t('lyricsSearch.findLyrics')}>
@@ -1120,7 +1120,7 @@ export default function Editor({
             handleAddLine={handleAddLine}
             handleClearLine={handleClearLine}
             handleDeleteLine={handleDeleteLine}
-            handleToggleAdLib={handleToggleAdLib}
+            handleToggleCounterpart={handleToggleCounterpart}
             listRef={listRef}
             handleMark={handleMarkWithConfidence}
             handleToggleLine={handleToggleLine}
@@ -1149,22 +1149,22 @@ export default function Editor({
         </div>
       </div>
 
-      {adLibOpen && !wordsFocus && (
-        <AdLibStrip
+      {counterpartOpen && !wordsFocus && (
+        <CounterpartStrip
           lines={lines}
           playbackPosition={playbackPosition}
           // A single letter is printed as it is on the key, in capitals.
           captureKey={captureKeyRaw.length === 1 ? captureKeyRaw.toUpperCase() : keyCap(captureKeyRaw)}
-          selectedId={adLibSelected}
-          onSelect={setAdLibSelected}
-          namingId={adLibNaming}
-          onNaming={setAdLibNaming}
-          onCapture={captureAdLibHere}
-          onMove={handleMoveAdLib}
-          onName={handleNameAdLib}
-          onDelete={handleRemoveAdLib}
+          selectedId={counterpartSelected}
+          onSelect={setCounterpartSelected}
+          namingId={counterpartNaming}
+          onNaming={setCounterpartNaming}
+          onCapture={captureCounterpartHere}
+          onMove={handleMoveCounterpart}
+          onName={handleNameCounterpart}
+          onDelete={handleRemoveCounterpart}
           onSeek={seek}
-          onClose={() => setAdLibOpen(false)}
+          onClose={() => setCounterpartOpen(false)}
         />
       )}
 

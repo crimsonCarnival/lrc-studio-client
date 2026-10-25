@@ -25,7 +25,7 @@ import {
 import { getDefaultDepthForLabel, formatSectionLabelForSerialization } from '../constants/sectionTypes';
 import { useFileImport } from './useFileImport';
 import { useDragReorder } from './useDragReorder';
-import { useAdLibs } from './useAdLibs';
+import { useCounterparts } from './useCounterparts';
 import { useWordsMode } from './useWordsMode';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import type { EditorLine, EditorWord, EditorTranslation } from '../services/editor.service';
@@ -229,8 +229,8 @@ export function useEditor({
   // called here (rather than by the editor components) so the handlers still reach callers
   // through the same return object, keeping this an internal split with no call-site churn.
   const {
-    handleToggleAdLib, handleCaptureAdLib, handleMoveAdLib, handleRemoveAdLib, handleNameAdLib,
-  } = useAdLibs({
+    handleToggleCounterpart, handleCaptureCounterpart, handleMoveCounterpart, handleRemoveCounterpart, handleNameCounterpart,
+  } = useCounterparts({
     setLines, setActiveLineIndex, playerRef, linesRef, playbackPositionRef, isPlayingRef,
   });
 
@@ -894,7 +894,7 @@ export function useEditor({
 
   /**
    * Toggle adLibOf on a lyric line.
-   * If the nearest preceding timestamped non-adlib line has a timestamp,
+   * If the nearest preceding timestamped non-counterpart line has a timestamp,
    * that timestamp becomes the anchor. Toggling again clears it.
    */
   const handleAddLine = useCallback(
@@ -1425,11 +1425,11 @@ export function useEditor({
     handleSaveLineText,
     handleToggleLineMode,
     handleDeleteLine,
-    handleToggleAdLib,
-    handleCaptureAdLib,
-    handleMoveAdLib,
-    handleNameAdLib,
-    handleRemoveAdLib,
+    handleToggleCounterpart,
+    handleCaptureCounterpart,
+    handleMoveCounterpart,
+    handleNameCounterpart,
+    handleRemoveCounterpart,
     handleAddLine,
     handleDragStart,
     handleDragOver,

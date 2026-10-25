@@ -108,6 +108,14 @@ describe('sanitizeLines — numeric hardening', () => {
       expect(sanitizeLines([{ text: 'one', endTime: bad }])[0].endTime).toBeUndefined();
     }
   });
+
+  it('keeps a counterpart anchor, including one at 0:00, and drops a non-finite one', () => {
+    expect(sanitizeLines([{ text: 'over', adLibOf: 72.4 }])[0].adLibOf).toBe(72.4);
+    expect(sanitizeLines([{ text: 'over', adLibOf: 0 }])[0].adLibOf).toBe(0);
+    for (const bad of [NaN, Infinity, '72.4', null]) {
+      expect(sanitizeLines([{ text: 'over', adLibOf: bad }])[0].adLibOf).toBeUndefined();
+    }
+  });
 });
 
 describe('sanitizeLines — words', () => {

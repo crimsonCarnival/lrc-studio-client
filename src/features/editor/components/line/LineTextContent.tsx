@@ -6,6 +6,7 @@ import { ReadingInput } from './ReadingInput';
 import { Tip } from '@ui/tip';
 import { useTranslation } from 'react-i18next';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
+import { counterpartNeedsWords } from '../../services/counterparts';
 
 const WORD_SINGER_COLORS = [
   // index 0 → primary
@@ -121,18 +122,18 @@ const LineTextContent = memo(({
   // The text colour carries the line's state, not its singer (redesign sheet 13): playing
   // now glows iris, lines already sung recede, unmarked lines are faint. The singer is the
   // numbered badge in front of the text; duet and per-word splits keep their own colours.
-  const isAdLib = line.adLibOf != null;
+  const isCounterpart = line.adLibOf != null;
   const lineColorClass = isPlaying
     ? 'text-primary-ink [text-shadow:0_0_18px_var(--primary-strong)]'
     : !isSynced
       ? 'text-faint'
-      // Rose is the second voice (redesign sheet 20): an ad-lib never takes the main line's iris.
-      : isAdLib
-        ? 'text-adlib-ink'
+      // Foam is the second voice: a counterpart never takes the main line's iris.
+      : isCounterpart
+        ? 'text-counterpart-ink'
         : isPast
           ? 'text-subtle'
           : 'text-foreground';
-  const isPendingAdLib = isAdLib && !line.text?.trim();
+  const isPendingCounterpart = isCounterpart && !line.text?.trim();
 
   const fmtR = (r?: string | null) => {
     const rubyFmt = settings?.editor?.display?.readingFormat || 'hiragana';
@@ -143,13 +144,25 @@ const LineTextContent = memo(({
     <div className={`flex flex-col gap-1 group/text min-w-0 w-full ${editorMode === 'words' ? 'pt-0.5' : ''}`}>
 
       <div className="flex items-center gap-2">
-        {isAdLib && (
-          <span className={`inline-flex h-[22px] shrink-0 items-center gap-1 rounded-full px-2 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] ${isPendingAdLib ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold' : 'bg-adlib-soft text-adlib-ink'}`}>
+        {isCounterpart && (
+          <span className={`inline-flex h-[22px] shrink-0 items-center gap-1 rounded-full px-2 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] ${isPendingCounterpart ? 'bg-gold-soft text-gold-ink inset-ring-[1.5px] inset-ring-gold' : 'bg-counterpart-soft text-counterpart-ink'}`}>
             <Icon name="mic" size={11} />
-            {t('editor.adLib.chip')}
+            {t('editor.counterpart.chip')}
           </span>
         )}
-        {isPendingAdLib && <span className="text-[15px] italic text-gold-ink">{t('editor.adLib.pendingRow')}</span>}
+        {counterpartNeedsWords(line) && (
+          <Tip content={t('editor.counterpart.needsWords')}>
+            <span
+              tabIndex={0}
+              role="img"
+              aria-label={t('editor.counterpart.needsWords')}
+              className="inline-flex size-[22px] shrink-0 items-center justify-center rounded-full bg-gold-soft text-gold-ink outline-none focus-visible:ring-1 focus-visible:ring-gold"
+            >
+              <Icon name="warning" size={12} />
+            </span>
+          </Tip>
+        )}
+        {isPendingCounterpart && <span className="text-[15px] italic text-gold-ink">{t('editor.counterpart.pendingRow')}</span>}
         {(() => {
           const isDuet = line.mode === 'duet' && (appliedSingers?.length ?? 0) >= 2;
           // The furigana reserve lives in the line-height (`.ruby-host`), not in the
@@ -162,7 +175,7 @@ const LineTextContent = memo(({
           return (
         <p
           lang="ja"
-          className={`ruby-host font-semibold transition-colors duration-300 ease-out ${isAdLib ? 'text-[15px] italic' : 'text-[17px]'} break-words whitespace-pre-wrap ${isDuet ? 'bg-clip-text text-transparent' : lineColorClass}`}
+          className={`ruby-host font-semibold transition-colors duration-300 ease-out ${isCounterpart ? 'text-[15px]' : 'text-[17px]'} break-words whitespace-pre-wrap ${isDuet ? 'bg-clip-text text-transparent' : lineColorClass}`}
           style={duetStyle}
         >
           {(line.words?.length ?? 0) > 0

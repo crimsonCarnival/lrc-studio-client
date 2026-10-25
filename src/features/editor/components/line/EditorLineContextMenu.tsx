@@ -35,7 +35,7 @@ interface Props {
   onToggleDepth?: (i: number) => void;
   handleAssignSinger?: (name: string, indices: number[], slot: number) => void;
   songArtists?: string[];
-  handleToggleAdLib?: (lineIndex: number) => void;
+  handleToggleCounterpart?: (lineIndex: number) => void;
 }
 
 export function EditorLineContextMenu({
@@ -53,7 +53,7 @@ export function EditorLineContextMenu({
   onToggleDepth,
   handleAssignSinger,
   songArtists,
-  handleToggleAdLib,
+  handleToggleCounterpart,
 }: Props) {
   const { t } = useTranslation();
 
@@ -220,10 +220,10 @@ export function EditorLineContextMenu({
             </ContextMenuSubContent>
           </ContextMenuSub>
         )}
-        {handleToggleAdLib && (
-          <ContextMenuItem onClick={() => handleToggleAdLib(lineIndex)}>
+        {handleToggleCounterpart && (
+          <ContextMenuItem onClick={() => handleToggleCounterpart(lineIndex)}>
             <Icon name="queue_music" />
-            {line.adLibOf != null ? t('editor.unmarkAdLib') : t('editor.markAdLib')}
+            {line.adLibOf != null ? t('editor.unmarkCounterpart') : t('editor.markCounterpart')}
           </ContextMenuItem>
         )}
         {/* Gold: the timestamp is lost, but undo brings it back. */}

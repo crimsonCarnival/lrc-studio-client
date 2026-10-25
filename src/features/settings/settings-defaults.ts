@@ -85,6 +85,7 @@ export const DEFAULT_SETTINGS = {
     addLine: ['Ctrl+Enter'],
     deleteLine: ['Delete'],
     clearTimestamp: ['Backspace'],
+    // Captures a counterpart. Pre-rename key, kept because it is stored in user settings.
     captureAdLib: ['a'],
     switchMode: ['Ctrl+m'],
     deselect: ['Escape'],

@@ -555,12 +555,12 @@ describe('word time bounds', () => {
     expect(wordTimeBounds(lines, 0).max).toBe(11);
   });
 
-  it('skips sections, untimed lines and ad-libs when looking for the end', () => {
+  it('skips sections, untimed lines and counterparts when looking for the end', () => {
     const lines: EditorLine[] = [
       line('one', { timestamp: 10 }),
       { type: 'section', label: 'Chorus', text: '' },
       line('untimed'),
-      line('ad-lib', { timestamp: 10.5, adLibOf: 0 }),
+      line('counterpart', { timestamp: 10.5, adLibOf: 0 }),
       line('two', { timestamp: 14 }),
     ];
     expect(wordTimeBounds(lines, 0).max).toBe(14);
@@ -571,5 +571,17 @@ describe('word time bounds', () => {
     expect(wordTimeBounds(lines, 0)).toEqual({ min: 10, max: Infinity });
     expect(wordTimeBounds(lines, 1)).toEqual({ min: 0, max: Infinity });
     expect(clampWordTime(lines, 1, -1)).toBe(0);
+  });
+
+  it('lets a counterpart run past the next lines, up to its own end time', () => {
+    const lines: EditorLine[] = [
+      line('My walls are closing in', { timestamp: 72.4 }),
+      line('Without a sense of confidence', { timestamp: 73.05, adLibOf: 72.4 }),
+      line("I've felt this way before", { timestamp: 76.8 }),
+    ];
+    expect(wordTimeBounds(lines, 1)).toEqual({ min: 73.05, max: Infinity });
+    expect(clampWordTime(lines, 1, 79.2)).toBe(79.2);
+    lines[1] = { ...lines[1], endTime: 80 };
+    expect(clampWordTime(lines, 1, 81)).toBe(80);
   });
 });

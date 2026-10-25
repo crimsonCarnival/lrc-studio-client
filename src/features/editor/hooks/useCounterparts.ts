@@ -1,17 +1,17 @@
 import { useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { captureAdLib, moveAdLib, isAdLib } from '../services/ad-libs';
+import { captureCounterpart, moveCounterpart, isCounterpart } from '../services/counterparts';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import type { EditorLine } from '../services/editor.service';
 import type { PlayerHandle } from '@/shared/hooks/useAppState';
 
-interface UseAdLibsParams {
+interface UseCounterpartsParams {
   setLines: Dispatch<SetStateAction<EditorLine[]>>;
   setActiveLineIndex: Dispatch<SetStateAction<number>>;
   playerRef: RefObject<PlayerHandle | null>;
   /**
-   * Shared with useEditor rather than owned here: handleCaptureAdLib both reads the current
+   * Shared with useEditor rather than owned here: handleCaptureCounterpart both reads the current
    * lines and writes the captured result straight back, ahead of the setLines round trip, so
    * a second capture landing in the same tick sees the first one. That only holds if it is
    * the same ref instance the rest of the editor reads.
@@ -22,23 +22,23 @@ interface UseAdLibsParams {
 }
 
 /**
- * Ad-lib handlers, split out of useEditor.
+ * Counterpart handlers, split out of useEditor.
  *
  * They were already the most self-contained cluster in that hook: none of them read any of
- * its local state, the real work lives in the ad-libs service (which has its own tests), and
+ * its local state, the real work lives in the counterparts service (which has its own tests), and
  * everything they need arrives through the parameters above.
  */
-export function useAdLibs({
+export function useCounterparts({
   setLines,
   setActiveLineIndex,
   playerRef,
   linesRef,
   playbackPositionRef,
   isPlayingRef,
-}: UseAdLibsParams) {
+}: UseCounterpartsParams) {
   const { t } = useTranslation();
 
-  const handleToggleAdLib = useCallback((index: number) => {
+  const handleToggleCounterpart = useCallback((index: number) => {
     setLines((prev) => {
       const line = prev[index];
       if (!line || line.type === 'section') return prev;
@@ -61,18 +61,18 @@ export function useAdLibs({
   }, [setLines]);
 
   /**
-   * Live capture (redesign sheet 20): drops an unnamed ad-lib at the playhead and returns
+   * Live capture (redesign sheet 20): drops an unnamed counterpart at the playhead and returns
    * its id, so the caller can ask for its text. Works outside sync mode too: hearing an
-   * ad-lib and tapping is the whole gesture.
+   * counterpart and tapping is the whole gesture.
    */
-  const handleCaptureAdLib = useCallback((): string | null => {
+  const handleCaptureCounterpart = useCallback((): string | null => {
     const time = isPlayingRef.current
       ? (playerRef?.current?.getCurrentTime?.() ?? playbackPositionRef.current)
       : playbackPositionRef.current;
     const id = crypto.randomUUID();
-    const result = captureAdLib(linesRef.current, time ?? 0, id);
+    const result = captureCounterpart(linesRef.current, time ?? 0, id);
     if (!result) {
-      toast.error(t('editor.adLib.needsSyncedLine'), { id: 'adlib-needs-line' });
+      toast.error(t('editor.counterpart.needsSyncedLine'), { id: 'counterpart-needs-line' });
       return null;
     }
     linesRef.current = result.lines;
@@ -80,19 +80,19 @@ export function useAdLibs({
     return id;
   }, [playerRef, setLines, t, linesRef, playbackPositionRef, isPlayingRef]);
 
-  const handleMoveAdLib = useCallback((index: number, time: number) => {
-    setLines((prev) => moveAdLib(prev, index, time));
+  const handleMoveCounterpart = useCallback((index: number, time: number) => {
+    setLines((prev) => moveCounterpart(prev, index, time));
   }, [setLines]);
 
-  /** Removes an ad-lib without asking: it is one tap to make and undo brings it back. */
-  const handleRemoveAdLib = useCallback((index: number) => {
-    setLines((prev) => (isAdLib(prev[index]) ? prev.filter((_, i) => i !== index) : prev));
+  /** Removes a counterpart without asking: it is one tap to make and undo brings it back. */
+  const handleRemoveCounterpart = useCallback((index: number) => {
+    setLines((prev) => (isCounterpart(prev[index]) ? prev.filter((_, i) => i !== index) : prev));
     setActiveLineIndex((prevIdx) => (prevIdx > index ? prevIdx - 1 : prevIdx));
   }, [setLines, setActiveLineIndex]);
 
-  const handleNameAdLib = useCallback((index: number, text: string) => {
+  const handleNameCounterpart = useCallback((index: number, text: string) => {
     setLines((prev) => {
-      if (!isAdLib(prev[index]) || prev[index].text === text) return prev;
+      if (!isCounterpart(prev[index]) || prev[index].text === text) return prev;
       const next = [...prev];
       next[index] = { ...prev[index], text };
       return next;
@@ -100,10 +100,10 @@ export function useAdLibs({
   }, [setLines]);
 
   return {
-    handleToggleAdLib,
-    handleCaptureAdLib,
-    handleMoveAdLib,
-    handleRemoveAdLib,
-    handleNameAdLib,
+    handleToggleCounterpart,
+    handleCaptureCounterpart,
+    handleMoveCounterpart,
+    handleRemoveCounterpart,
+    handleNameCounterpart,
   };
 }
