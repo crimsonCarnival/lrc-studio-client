@@ -723,6 +723,12 @@ export default function ImmersiveLyricsDisplay({
   // scrolling/centering area so its own height never affects line layout.
   const sectionHeader = (activeSection?.label || activeSingers.length > 0) && (
     <div className="relative z-10 shrink-0 px-6 pt-16 sm:pt-20 lg:pt-24 pb-0 sm:px-10 lg:px-14">
+      {/* The contour lines run behind the title and its rule; fade them out where the header sits. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[calc(100%+1.5rem)]"
+        style={{ background: 'linear-gradient(to bottom, var(--background) 80%, transparent)' }}
+      />
       <SectionDivider
         label={activeSection?.label}
         dist={0}
