@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Icon } from '@/shared/ui/Icon';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { useIsNarrow } from '@/shared/hooks/useBreakpoint';
 import { useNotificationsContext } from '../NotificationsContext';
 import { NotificationPanel } from './NotificationPanel';
 import { Tip } from '@ui/tip';
@@ -10,8 +12,16 @@ import { CountDot } from '@ui/count-dot';
 export function NotificationBell() {
   const { t } = useTranslation();
   const { unreadCount } = useNotificationsContext();
+  const navigate = useNavigate();
+  const isNarrow = useIsNarrow();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // The dropdown panel is clipped on narrow screens; the page has room.
+  function handleClick() {
+    if (isNarrow) navigate('/notifications');
+    else setOpen(o => !o);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -30,7 +40,7 @@ export function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setOpen(o => !o)}
+          onClick={handleClick}
           aria-expanded={open}
           aria-label={unreadCount > 0 ? t('notifications.bellUnread', { count: unreadCount }) : t('notifications.bell')}
           className="relative size-10 lg:size-10 coarse:size-11"
