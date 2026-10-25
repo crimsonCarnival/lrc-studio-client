@@ -32,7 +32,7 @@ export interface NotificationData {
   read?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string } | null;
+  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string } | null;
 }
 
 const TYPE_ICON_NAME: Record<string, string> = {
@@ -71,6 +71,11 @@ export function notificationDestination(
   recipientAccountName?: string | null,
 ): string | null {
   const { type, actors, publicId } = notification;
+  // A fork opens the fork itself, which belongs to the forker. Older notifications carry no
+  // fork id and still open the source project.
+  if (type === 'fork' && notification.meta?.forkPublicId && notification.meta.forkOwner) {
+    return projectPath({ publicId: notification.meta.forkPublicId }, notification.meta.forkOwner);
+  }
   if ((type === 'star' || type === 'fork' || type === 'reaction') && publicId) {
     return projectPath({ publicId }, recipientAccountName);
   }
