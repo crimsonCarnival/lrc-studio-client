@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams, useNavigate } from 'react-router-dom';
 import { setAppNavigate } from '@/app/navigation';
 import { accessFor } from '@/app/route-access';
+import { isAdminPathname } from '@/features/admin/admin-nav';
 import { isAdminHost, wwwHostUrl, redirectOffMobileHostIfNeeded, redirectToMobileHostIfNeeded } from '@/shared/utils/host';
 import { isStaff } from '@/features/auth/permissions';
 
@@ -132,8 +133,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   // `/dashboard`). Any other page belongs on www. Convenience only — access is
   // still checked below and every admin action is re-authorised server-side.
   const onAdminHost = isAdminHost();
-  const adminPaths = ['/', '/home', '/dashboard'];
-  if (onAdminHost && !adminPaths.includes(location.pathname) && !location.pathname.startsWith('/auth')) {
+  if (onAdminHost && !isAdminPathname(location.pathname) && !location.pathname.startsWith('/auth')) {
     window.location.replace(wwwHostUrl(location.pathname + location.search + location.hash));
     return <AppLoadingScreen />;
   }

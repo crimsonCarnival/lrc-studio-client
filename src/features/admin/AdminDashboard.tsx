@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { ComponentProps, FormEvent } from 'react';
 import type { Socket } from 'socket.io-client';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { admin } from '@/app/api';
 import { isSudoCancelled } from './services/sudo';
@@ -22,7 +22,9 @@ import AdminLevelsTab from './AdminLevelsTab';
 import AdminXpTab from './AdminXpTab';
 import AdminRequestsTab from './AdminRequestsTab';
 import AdminPermissionsTab from './AdminPermissionsTab';
-import { requestsApi } from './services/requests.service';
+import { adminPath, useAdminRoute } from './admin-nav';
+import type { AdminTabId } from './admin-nav';
+import { useAdminTabs } from './useAdminTabs';
 import SudoPasswordModal from './SudoPasswordModal';
 import { LogoLoader } from '@ui/LogoLoader';
 
@@ -110,56 +112,23 @@ export default function AdminDashboard() {
   // that page edits, so it can't be gated by a permission itself). The
   // server independently re-checks this on every request; this is UX only.
   const isSuperadmin = currentUser?.role === 'superadmin';
-  // Request types this user may submit — drives propose-mode tab visibility.
-  const [submittable, setSubmittable] = useState<string[]>([]);
+  // The dashboard's tabs live in the header (AdminHeader) and each is a path of its own.
+  const visibleTabs = useAdminTabs();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { tab: routeTab } = useAdminRoute();
+  const activeTab: AdminTabId = routeTab ?? 'moderation';
+
+  // Canonicalise the URL: old `?tab=requests` links and a bare /admin land on the tab's own
+  // path, and a path the user can't open falls back to the first one they can.
   useEffect(() => {
-    requestsApi.capabilities().then(c => setSubmittable(c.submittable)).catch(() => {});
-  }, []);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'moderation';
-
-  const setActiveTab = (tab: string) => {
-    setSearchParams(prev => {
-      prev.set('tab', tab);
-      return prev;
-    }, { replace: true });
-  };
-
-  // Tabs are gated by permission — a mod sees only moderation tabs, etc.
-  const visibleTabs = useMemo(() => {
-    const defs: { id: string; icon: string; label: string; perm?: Permission }[] = [
-      { id: 'moderation', icon: 'gpp_bad', label: t('admin.dashboard.tabs.moderation'), perm: 'users.view' },
-      { id: 'staff',      icon: 'groups',  label: t('admin.dashboard.tabs.staff') },
-      { id: 'audit',      icon: 'history',     label: t('admin.dashboard.tabs.auditLogs'),  perm: 'audit.view' },
-      { id: 'badges',     icon: 'military_tech',       label: t('admin.dashboard.tabs.badges'),     perm: 'badges.manage' },
-      { id: 'levels',     icon: 'bolt',         label: t('admin.dashboard.tabs.levels'),     perm: 'levels.manage' },
-      { id: 'xp',         icon: 'auto_awesome',    label: t('admin.dashboard.tabs.xp'),         perm: 'xp.adjust' },
-      { id: 'permissions', icon: 'admin_panel_settings', label: t('admin.dashboard.tabs.permissions') },
-    ];
-    const canProposeBadges = submittable.some(ty => ty.startsWith('badge_'));
-    const canProposeLevels = submittable.some(ty => ty.startsWith('level_'));
-    const isNetworkOnly = !userHasPermission(currentUser?.permissions, 'users.view') && userHasPermission(currentUser?.permissions, 'network.block');
-    const gated = defs.filter(tab => {
-      if (tab.id === 'moderation') return userHasPermission(currentUser?.permissions, 'users.view') || userHasPermission(currentUser?.permissions, 'network.block');
-      if (tab.id === 'staff') return !isNetworkOnly; // all staff except network-only roles
-      if (tab.id === 'permissions') return isSuperadmin;
-      if (tab.perm && userHasPermission(currentUser?.permissions, tab.perm)) return true;
-      if (tab.id === 'badges' && canProposeBadges) return true;
-      if (tab.id === 'levels' && canProposeLevels) return true;
-      return false;
-    });
-    gated.push({ id: 'requests', icon: 'inbox', label: t('admin.dashboard.tabs.requests') });
-    return gated;
-  }, [t, currentUser?.permissions, submittable, isSuperadmin]);
-
-  // If the URL points at a tab the user can't access, fall back to the first
-  // permitted one.
-  useEffect(() => {
-    if (visibleTabs.length > 0 && !visibleTabs.some(tab => tab.id === activeTab)) {
-      setActiveTab(visibleTabs[0].id);
-    }
+    if (visibleTabs.length === 0) return;
+    const legacy = searchParams.get('tab');
+    const wanted = (routeTab ?? legacy) as AdminTabId | null;
+    const target = wanted && visibleTabs.some(tab => tab.id === wanted) ? wanted : visibleTabs[0].id;
+    if (target !== routeTab) navigate(adminPath(target), { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, visibleTabs]);
+  }, [routeTab, visibleTabs]);
 
   // Data States
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -524,24 +493,6 @@ export default function AdminDashboard() {
 
       {/* Stats Cards */}
       <AdminStatsCards stats={stats as ComponentProps<typeof AdminStatsCards>["stats"]} />
-
-      {/* Tab bar */}
-      <div className="flex items-center gap-0 border-b border-zinc-800/60 contrast-more:border-zinc-600 mb-4 overflow-x-auto">
-        {visibleTabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 coarse:py-3.5 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap ${
-              activeTab === tab.id
-                ? 'border-primary text-primary'
-                : 'border-transparent text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
-            }`}
-          >
-            <Icon name={tab.icon} size={14} className="shrink-0" />
-            {tab.label}
-          </button>
-        ))}
-      </div>
 
       {/* Tab Content */}
       <div className="flex-1 flex flex-col min-h-[400px]">

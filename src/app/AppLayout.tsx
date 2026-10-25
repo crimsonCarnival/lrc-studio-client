@@ -8,6 +8,8 @@ import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 
 import { AppBackground } from './layout/AppBackground';
 import { AppHeader } from './layout/header/AppHeader';
+import { AdminHeader } from './layout/header/AdminHeader';
+import { isAdminPathname } from '@/features/admin/admin-nav';
 import { AppPlayer } from './layout/AppPlayer';
 import { AppMobileNav } from './layout/AppMobileNav';
 import { AppModals } from './layout/AppModals';
@@ -101,6 +103,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     ? `${playerHeight + 80}px`
     : undefined;
 
+  const isAdminPage = isAdminPathname(location.pathname);
   const isSetupPage = location.pathname === '/project/new';
   // Same route set AppHeader treats as the editor (it calls the same predicate).
   // The editor builds its own clamped-to-viewport layout below lg (tabs pinned,
@@ -215,6 +218,16 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             </div>
           )}
 
+          {isAdminPage ? (
+            <AdminHeader
+              user={user as AuthUser | null | undefined}
+              logout={logout ?? (() => { })}
+              settings={settings}
+              updateSetting={updateSetting}
+              i18n={i18n}
+              navTo={(path) => navigate(path)}
+            />
+          ) : (
           <AppHeader
             user={user as AuthUser | null | undefined}
             logout={logout ?? (() => { })}
@@ -239,6 +252,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             onStartTour={startTour}
             workspaceView={mobileTab}
           />
+          )}
 
           <GuidedTour steps={EDITOR_TOUR_STEPS} isOpen={isTourOpen} onClose={closeTour} />
 

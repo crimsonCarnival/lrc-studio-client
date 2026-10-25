@@ -62,6 +62,10 @@ export default {
     },
     totalUsers: 'Total: {{count}} users'
   },
+  header: {
+    backToSite: 'Back to lrcstudio.app',
+    nav: 'Admin sections',
+  },
   table: {
     user: 'User',
     mod: 'Mod',
@@ -347,6 +351,10 @@ export default {
     },
   },
   xp: {
+    tabs: { grant: 'XP granter', levels: 'XP requirements' },
+    levelsRange: 'Levels {{from}}–{{to}}',
+    levelsPrev: 'Previous levels',
+    levelsNext: 'Next levels',
     hideManager: 'Hide XP Manager',
     manageXp: 'Manage XP',
     sectionTitle: 'Bulk XP Adjustment',
@@ -409,6 +417,10 @@ export default {
     deviceBlockError: 'Failed to block device',
   },
   permissions: {
+    tabs: { catalog: 'All permissions', defaults: 'Role defaults', overrides: 'Staff overrides' },
+    staffCount: '{{count}} staff',
+    overrideLegend: 'Ringed: differs from the role default',
+    overridesChanged: 'Unsaved changes',
     notAuthorized: 'Only a superadmin can manage permissions.',
     catalogTitle: 'All permissions',
     catalogSubtitle: 'Every permission the system recognizes, with what it grants.',

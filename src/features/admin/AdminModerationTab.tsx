@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -6,6 +5,8 @@ import AdminUsersTab from './AdminUsersTab';
 import AdminIpsTab from './AdminIpsTab';
 import AdminDevicesTab from './AdminDevicesTab';
 import { userHasPermission } from '@/features/auth/permissions';
+import { useAdminSub } from './admin-nav';
+import { AdminSubNav } from './AdminSubNav';
 
 interface AdminUser {
   id?: string;
@@ -68,9 +69,6 @@ export default function AdminModerationTab(props: AdminModerationTabProps) {
   const canViewUsers = userHasPermission(currentUser?.permissions, 'users.view');
   const canBlockNetwork = userHasPermission(currentUser?.permissions, 'network.block');
 
-  const defaultView: ModerationView = canViewUsers ? 'users' : canBlockNetwork ? 'ips' : 'users';
-  const [view, setView] = useState<ModerationView>(defaultView);
-
   const subNav: { id: ModerationView; icon: string; label: string; visible: boolean }[] = [
     { id: 'users',   icon: 'group',     label: t('admin.moderation.viewUsers'),   visible: canViewUsers },
     { id: 'ips',     icon: 'language',  label: t('admin.moderation.viewIps'),     visible: canBlockNetwork },
@@ -78,26 +76,12 @@ export default function AdminModerationTab(props: AdminModerationTabProps) {
   ];
 
   const visibleNav = subNav.filter(n => n.visible);
+  // Which sub-view is open is in the URL (/admin/moderation/ips); a view the user cannot see falls back to the first they can.
+  const view = useAdminSub('moderation', visibleNav.length ? visibleNav.map(n => n.id) : ['users']) as ModerationView;
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      {/* Inner sub-nav */}
-      <div className="flex items-center gap-1 px-4 pt-3 pb-0 border-b border-zinc-800/40">
-        {visibleNav.map(nav => (
-          <button
-            key={nav.id}
-            onClick={() => setView(nav.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 coarse:py-3.5 text-xs font-semibold rounded-t-md border-b-2 -mb-px transition-colors whitespace-nowrap ${
-              view === nav.id
-                ? 'border-primary/70 text-primary bg-primary/5'
-                : 'border-transparent text-zinc-500 hover:text-zinc-300'
-            }`}
-          >
-            <Icon name={nav.icon} size={14} className="shrink-0" />
-            {nav.label}
-          </button>
-        ))}
-      </div>
+      <AdminSubNav tab="moderation" items={visibleNav} current={view} />
 
       {/* Sub-tab content */}
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden">

@@ -62,6 +62,10 @@ export default {
     },
     totalUsers: 'Total: {{count}} usuarios'
   },
+  header: {
+    backToSite: 'Volver a lrcstudio.app',
+    nav: 'Secciones de administración',
+  },
   table: {
     user: 'Usuario',
     mod: 'Mod',
@@ -347,6 +351,10 @@ export default {
     },
   },
   xp: {
+    tabs: { grant: 'Otorgar XP', levels: 'Requisitos de XP' },
+    levelsRange: 'Niveles {{from}}–{{to}}',
+    levelsPrev: 'Niveles anteriores',
+    levelsNext: 'Niveles siguientes',
     hideManager: 'Ocultar gestor de XP',
     manageXp: 'Gestionar XP',
     sectionTitle: 'Ajuste Masivo de XP',
@@ -409,6 +417,10 @@ export default {
     deviceBlockError: 'Error al bloquear el dispositivo',
   },
   permissions: {
+    tabs: { catalog: 'Todos los permisos', defaults: 'Valores por rol', overrides: 'Ajustes del personal' },
+    staffCount: '{{count}} miembros',
+    overrideLegend: 'Con anillo: difiere del valor por rol',
+    overridesChanged: 'Cambios sin guardar',
     notAuthorized: 'Solo un superadministrador puede gestionar los permisos.',
     catalogTitle: 'Todos los permisos',
     catalogSubtitle: 'Cada permiso que el sistema reconoce, con lo que otorga.',

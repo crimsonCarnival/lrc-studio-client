@@ -85,7 +85,7 @@ export function notificationDestination(
   if (type === 'password_changed' || type === 'set_password') return '/settings/security';
   if (type === 'verify_email') return '/settings/profile';
   if (type === 'badge_awarded') return '/settings/badges';
-  if (type === 'request_submitted' || type === 'request_reviewed') return '/admin?tab=requests';
+  if (type === 'request_submitted' || type === 'request_reviewed') return '/admin/requests';
   // "Continue working": the user's most recently updated project, else home.
   if (type === 'streak_warning') return (publicId && projectEditPath({ publicId }, recipientAccountName)) || '/home';
   return null;

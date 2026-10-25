@@ -4,6 +4,7 @@ import {
 import type { ComponentProps, ReactNode } from 'react';
 import React from 'react';
 import { isAdminHost, canUseAdminHost, adminHostUrl } from '@/shared/utils/host';
+import { ADMIN_TABS } from '@features/admin/admin-nav';
 import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import type { NavigateFunction } from 'react-router-dom';
 import type { TFunction } from 'i18next';
@@ -87,6 +88,12 @@ function RequireAdmin({ children }: { children: ReactNode }) {
 function ExternalRedirect({ to }: { to: string }) {
   useEffect(() => { window.location.replace(to); }, [to]);
   return null;
+}
+
+// /admin/xp/levels on www is xp/levels on the admin host.
+function AdminHostRedirect() {
+  const { pathname, search } = useLocation();
+  return <ExternalRedirect to={adminHostUrl(`${pathname.replace(/^\/admin/, '') || '/'}${search}`)} />;
 }
 
 function RedirectWithParams({ to }: { to: (params: Record<string, string>) => string }) {
@@ -471,12 +478,13 @@ export function AppRouter({
           <Route index element={adminPage} />
           <Route path="home" element={adminPage} />
           <Route path="dashboard" element={adminPage} />
-          <Route path="admin" element={<Navigate to="/" replace />} />
+          {ADMIN_TABS.map(tab => <Route key={tab} path={`${tab}/:sub?`} element={adminPage} />)}
+          <Route path="admin/*" element={<Navigate to="/" replace />} />
         </>
       ) : canUseAdminHost() ? (
-        <Route path="admin" element={<ExternalRedirect to={adminHostUrl('/')} />} />
+        <Route path="admin/*" element={<AdminHostRedirect />} />
       ) : (
-        <Route path="admin" element={adminPage} />
+        <Route path="admin/*" element={adminPage} />
       )}
       <Route path=":accountName/projects/:slugId/fork" element={<ForkHandler appState={appState} navigate={navigate} />} />
       <Route path=":accountName/projects/:slugId/edit" element={
