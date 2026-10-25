@@ -865,6 +865,8 @@ export type PublicUser = {
   isAdmin: Scalars['Boolean']['output'];
   isBlockedByMe: Scalars['Boolean']['output'];
   isFollowedByMe: Scalars['Boolean']['output'];
+  /** off, uploads or all: what the viewer hears about this user's projects. */
+  followNotify?: Maybe<Scalars['String']['output']>;
   isFollowingMe: Scalars['Boolean']['output'];
   isVerified: Scalars['Boolean']['output'];
   lastOnlineAt?: Maybe<Scalars['String']['output']>;
@@ -1255,6 +1257,13 @@ export type UserPreferencesNotifications = {
   badge_awarded: Scalars['Boolean']['output'];
   xp_changed: Scalars['Boolean']['output'];
   streak_warning: Scalars['Boolean']['output'];
+  followed_project: Scalars['Boolean']['output'];
+  wall_comment: Scalars['Boolean']['output'];
+  level_up: Scalars['Boolean']['output'];
+  playlist_saved: Scalars['Boolean']['output'];
+  star_milestone: Scalars['Boolean']['output'];
+  new_device: Scalars['Boolean']['output'];
+  appeal_result: Scalars['Boolean']['output'];
 };
 
 export type UserPreferences = {
@@ -1268,6 +1277,7 @@ export type UserPreferences = {
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
   showActivityHeatmap: Scalars['Boolean']['output'];
   showXpProgress?: Maybe<Scalars['Boolean']['output']>;
+  wallEnabled?: Maybe<Scalars['Boolean']['output']>;
   notifications: UserPreferencesNotifications;
   defaultProjectPrivacy: Scalars['String']['output'];
 };
@@ -1280,6 +1290,13 @@ export type UpdatePreferencesNotificationsInput = {
   badge_awarded?: InputMaybe<Scalars['Boolean']['input']>;
   xp_changed?: InputMaybe<Scalars['Boolean']['input']>;
   streak_warning?: InputMaybe<Scalars['Boolean']['input']>;
+  followed_project?: InputMaybe<Scalars['Boolean']['input']>;
+  wall_comment?: InputMaybe<Scalars['Boolean']['input']>;
+  level_up?: InputMaybe<Scalars['Boolean']['input']>;
+  playlist_saved?: InputMaybe<Scalars['Boolean']['input']>;
+  star_milestone?: InputMaybe<Scalars['Boolean']['input']>;
+  new_device?: InputMaybe<Scalars['Boolean']['input']>;
+  appeal_result?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdatePreferencesInput = {
@@ -1292,6 +1309,7 @@ export type UpdatePreferencesInput = {
   miniProfileBadgeIds?: InputMaybe<Array<Scalars['String']['input']>>;
   showActivityHeatmap?: InputMaybe<Scalars['Boolean']['input']>;
   showXpProgress?: InputMaybe<Scalars['Boolean']['input']>;
+  wallEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   notifications?: InputMaybe<UpdatePreferencesNotificationsInput>;
   defaultProjectPrivacy?: InputMaybe<Scalars['String']['input']>;
 };

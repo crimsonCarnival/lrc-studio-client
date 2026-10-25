@@ -19,7 +19,9 @@ import { ArtistText } from '@/features/artists/ArtistText';
 import { artistFieldsFromForm, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
-import { followUser, unfollowUser, blockUser, unblockUser } from './profile.service';
+import { followUser, unfollowUser, setFollowNotify, blockUser, unblockUser } from './profile.service';
+import WallSection from './wall/WallSection';
+import type { FollowNotifyLevel } from './FollowNotifyMenu';
 import { useProfile } from './profile.queries';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSuggestedUsers } from '@/features/explore/hooks/useExplore';
@@ -332,12 +334,24 @@ export default function ProfilePage() {
     setFollowLoading(false);
   }, [user, accountName, navigate, t, setIsFollowing, setProfile]);
 
+  const handleFollowNotify = useCallback(async (level: FollowNotifyLevel) => {
+    const before = profile?.followNotify;
+    setProfile(prev => prev ? { ...prev, followNotify: level } : prev);
+    try {
+      await setFollowNotify(accountName!, level);
+      toast.success(t(`profile.followNotify.saved_${level}`));
+    } catch {
+      setProfile(prev => prev ? { ...prev, followNotify: before } : prev);
+      toast.error(t('profile.followNotify.error'));
+    }
+  }, [accountName, profile?.followNotify, setProfile, t]);
+
   const handleUnfollow = useCallback(async () => {
     setFollowLoading(true);
     try {
       await unfollowUser(accountName!);
       setIsFollowing(false);
-      setProfile(prev => prev ? { ...prev, followerCount: Math.max(0, prev.followerCount - 1) } : prev);
+      setProfile(prev => prev ? { ...prev, followerCount: Math.max(0, prev.followerCount - 1), followNotify: 'off' } : prev);
     } catch {
       toast.error(t('profile.unfollowError'));
     }
@@ -527,6 +541,8 @@ export default function ProfilePage() {
           followLoading={viewAsOthers || followLoading}
           onFollow={handleFollow}
           onUnfollow={handleUnfollow}
+          followNotify={(profile.followNotify as FollowNotifyLevel | null | undefined) ?? 'off'}
+          onFollowNotify={viewAsOthers ? undefined : handleFollowNotify}
           isBlocked={viewAsOthers ? false : isBlocked}
           blockLoading={viewAsOthers || blockLoading}
           onBlock={handleBlock}
@@ -706,6 +722,8 @@ export default function ProfilePage() {
             </aside>
           )}
         </div>
+
+        {accountName && <WallSection accountName={accountName} isOwner={isOwner} />}
 
         {followModal && profile.showFollowers && (
           <FollowModal

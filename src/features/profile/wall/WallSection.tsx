@@ -1,0 +1,334 @@
+import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
+import { Icon } from '@/shared/ui/Icon';
+import { Button } from '@ui/button';
+import { Textarea } from '@ui/textarea';
+import { Tip } from '@ui/tip';
+import { LogoLoader } from '@ui/LogoLoader';
+import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
+import { useAuthContext } from '@/features/auth/useAuthContext';
+import { useSettings } from '@/features/settings/useSettings';
+import { formatTimeAgo } from '@/features/notifications/timeAgo';
+import { profilePath } from '../profile-path';
+import {
+  addWallComment, deleteWallComment, getWall, setWallSubscription, wallErrorCode,
+  WALL_MAX_DEPTH, WALL_MAX_LENGTH,
+} from './wall.service';
+import type { Wall, WallComment } from './wall.service';
+
+const WALL_ERROR_KEYS = ['rate_limited', 'wall_disabled', 'forbidden', 'invalid_body', 'max_depth', 'not_found'] as const;
+
+/** Adds `reply` under the comment `parentId`, wherever it sits in the tree. */
+function withReply(comments: WallComment[], parentId: string, reply: WallComment): WallComment[] {
+  return comments.map(c => c.id === parentId
+    ? { ...c, replies: [...c.replies, reply] }
+    : { ...c, replies: withReply(c.replies, parentId, reply) });
+}
+
+function withoutComment(comments: WallComment[], id: string): WallComment[] {
+  return comments.filter(c => c.id !== id).map(c => ({ ...c, replies: withoutComment(c.replies, id) }));
+}
+
+const countAll = (c: WallComment): number => 1 + c.replies.reduce((n, r) => n + countAll(r), 0);
+
+interface ComposerProps {
+  placeholder: string;
+  submitLabel: string;
+  autoFocus?: boolean;
+  busy: boolean;
+  onSubmit: (body: string) => Promise<boolean>;
+  onCancel?: () => void;
+}
+
+function Composer({ placeholder, submitLabel, autoFocus, busy, onSubmit, onCancel }: ComposerProps) {
+  const { t } = useTranslation();
+  const [text, setText] = useState('');
+  const submit = async () => {
+    if (!text.trim() || busy) return;
+    if (await onSubmit(text.trim())) setText('');
+  };
+  return (
+    <div className="flex flex-col gap-2">
+      <Textarea
+        value={text}
+        autoFocus={autoFocus}
+        onChange={e => setText(e.target.value.slice(0, WALL_MAX_LENGTH))}
+        onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') void submit(); }}
+        placeholder={placeholder}
+        rows={2}
+        aria-label={placeholder}
+        className="min-h-[64px] resize-y"
+      />
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-mono text-xs text-subtle">{text.length}/{WALL_MAX_LENGTH}</span>
+        <div className="flex items-center gap-2">
+          {onCancel && <Button type="button" variant="ghost" size="sm" onClick={onCancel}>{t('common.cancel')}</Button>}
+          <Button type="button" size="sm" disabled={busy || !text.trim()} onClick={submit}>
+            {busy ? <LogoLoader size={12} /> : submitLabel}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface NodeProps {
+  comment: WallComment;
+  signedIn: boolean;
+  replyingTo: string | null;
+  busy: boolean;
+  onReplyingTo: (id: string | null) => void;
+  onReply: (parentId: string, body: string) => Promise<boolean>;
+  onDelete: (id: string) => void;
+}
+
+function CommentNode({ comment, signedIn, replyingTo, busy, onReplyingTo, onReply, onDelete }: NodeProps) {
+  const { t, i18n } = useTranslation();
+  const { settings } = useSettings();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const { author } = comment;
+  const name = author.displayName || author.accountName;
+  const open = replyingTo === comment.id;
+
+  return (
+    <li className="flex flex-col gap-2">
+      <div className="flex gap-3">
+        <Link to={profilePath(author.accountName)} className="shrink-0">
+          {author.avatarUrl
+            ? <img src={author.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-8 rounded-full object-cover" />
+            : <InitialsAvatar name={name} handle={author.accountName} className="size-8 rounded-full text-xs" />}
+        </Link>
+        <div className="min-w-0 flex-1">
+          <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
+            <Link to={profilePath(author.accountName)} className="font-semibold text-zinc-100 hover:text-primary transition-colors">{name}</Link>
+            <span className="text-xs text-zinc-500">
+              {formatTimeAgo(comment.createdAt, t, settings.advanced?.timezone, i18n.resolvedLanguage || i18n.language)}
+            </span>
+          </p>
+          <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-zinc-300">{comment.body}</p>
+          <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500">
+            {signedIn && comment.depth < WALL_MAX_DEPTH && (
+              <button type="button" onClick={() => onReplyingTo(open ? null : comment.id)} className="hover:text-zinc-200 transition-colors">
+                {t('profile.wall.reply')}
+              </button>
+            )}
+            {comment.canDelete && (
+              confirmingDelete ? (
+                <span className="flex items-center gap-2">
+                  <button type="button" onClick={() => onDelete(comment.id)} className="text-destructive hover:underline">{t('profile.wall.confirmDelete')}</button>
+                  <button type="button" onClick={() => setConfirmingDelete(false)} className="hover:text-zinc-200">{t('common.cancel')}</button>
+                </span>
+              ) : (
+                <button type="button" onClick={() => setConfirmingDelete(true)} className="hover:text-destructive transition-colors">{t('profile.wall.delete')}</button>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+
+      {(open || comment.replies.length > 0) && (
+        // The indent line is the thread: each level sits one rule further in.
+        <div className="ml-4 flex flex-col gap-3 border-l-2 border-zinc-800 pl-4 sm:ml-5">
+          {open && (
+            <Composer
+              autoFocus
+              placeholder={t('profile.wall.replyPlaceholder', { name })}
+              submitLabel={t('profile.wall.reply')}
+              busy={busy}
+              onSubmit={body => onReply(comment.id, body)}
+              onCancel={() => onReplyingTo(null)}
+            />
+          )}
+          {comment.replies.length > 0 && (
+            <ul className="flex flex-col gap-4">
+              {comment.replies.map(r => (
+                <CommentNode key={r.id} comment={r} signedIn={signedIn} replyingTo={replyingTo} busy={busy} onReplyingTo={onReplyingTo} onReply={onReply} onDelete={onDelete} />
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </li>
+  );
+}
+
+/** The comments other people leave on a profile, at the bottom of the page. */
+export default function WallSection({ accountName, isOwner }: { accountName: string; isOwner: boolean }) {
+  const { t } = useTranslation();
+  const tk = t as (key: string) => string;
+  const { user } = useAuthContext();
+  const signedIn = !!user;
+  const [wall, setWall] = useState<Wall | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setFailed(false);
+    try {
+      setWall(await getWall(accountName));
+    } catch {
+      setFailed(true);
+    }
+  }, [accountName]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setWall(null);
+    void load();
+  }, [load]);
+
+  const report = (err: unknown) => {
+    const code = wallErrorCode(err);
+    toast.error(tk(`profile.wall.errors.${(WALL_ERROR_KEYS as readonly string[]).includes(code) ? code : 'failed'}`));
+  };
+
+  const loadMore = async () => {
+    const last = wall?.comments[wall.comments.length - 1];
+    if (!wall || !last) return;
+    setLoadingMore(true);
+    try {
+      const next = await getWall(accountName, last.createdAt);
+      setWall(prev => prev ? { ...prev, comments: [...prev.comments, ...next.comments], hasMore: next.hasMore } : next);
+    } catch (err) {
+      report(err);
+    }
+    setLoadingMore(false);
+  };
+
+  const post = async (body: string, parentId: string | null): Promise<boolean> => {
+    setBusy(true);
+    try {
+      const created = await addWallComment(accountName, body, parentId);
+      setWall(prev => !prev ? prev : {
+        ...prev,
+        comments: parentId ? withReply(prev.comments, parentId, created) : [created, ...prev.comments],
+        total: parentId ? prev.total : prev.total + 1,
+        // Commenting subscribes you to the wall.
+        subscribed: isOwner ? prev.subscribed : true,
+      });
+      setReplyingTo(null);
+      return true;
+    } catch (err) {
+      report(err);
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async (id: string) => {
+    try {
+      await deleteWallComment(id);
+      setWall(prev => {
+        if (!prev) return prev;
+        const gone = prev.comments.find(c => c.id === id);
+        return { ...prev, comments: withoutComment(prev.comments, id), total: gone ? prev.total - 1 : prev.total };
+      });
+    } catch (err) {
+      report(err);
+    }
+  };
+
+  const toggleSubscription = async () => {
+    if (!wall) return;
+    const next = !wall.subscribed;
+    setWall({ ...wall, subscribed: next });
+    try {
+      await setWallSubscription(accountName, next);
+      toast.success(t(next ? 'profile.wall.subscribed' : 'profile.wall.unsubscribed'));
+    } catch (err) {
+      setWall(prev => prev ? { ...prev, subscribed: !next } : prev);
+      report(err);
+    }
+  };
+
+  if (failed) {
+    return (
+      <section className="mt-10 flex items-center gap-3 text-sm text-zinc-500">
+        <p>{t('profile.wall.loadError')}</p>
+        <Button type="button" variant="outline" size="sm" onClick={() => void load()}>{t('profile.wall.retry')}</Button>
+      </section>
+    );
+  }
+  if (!wall) return null;
+  if (!wall.enabled) {
+    // Everyone else sees nothing; the owner is told why their wall is missing.
+    return isOwner ? (
+      <section className="mt-10 rounded-xl border border-dashed border-zinc-800 p-4 text-sm text-zinc-500">
+        {t('profile.wall.disabledOwner')} <Link to="/settings/privacy" className="text-primary hover:underline">{t('profile.wall.privacySettings')}</Link>
+      </section>
+    ) : null;
+  }
+
+  const shown = wall.comments.reduce((n, c) => n + countAll(c), 0);
+
+  return (
+    <section id="wall" aria-labelledby="wall-title" className="mt-10 flex flex-col gap-5">
+      <div className="flex items-center justify-between gap-3">
+        <h2 id="wall-title" className="text-lg font-bold text-zinc-100">
+          {t('profile.wall.title')} <span className="ml-1 font-mono text-sm font-medium text-zinc-500">{shown}</span>
+        </h2>
+        {signedIn && !isOwner && (
+          <Tip content={t(wall.subscribed ? 'profile.wall.unsubscribe' : 'profile.wall.subscribe')}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-pressed={wall.subscribed}
+              onClick={toggleSubscription}
+              className={wall.subscribed ? 'border-primary/40 text-primary' : ''}
+            >
+              <Icon name="notifications" size={14} />
+              {t(wall.subscribed ? 'profile.wall.following' : 'profile.wall.follow')}
+            </Button>
+          </Tip>
+        )}
+      </div>
+
+      {signedIn ? (
+        <Composer
+          placeholder={t(isOwner ? 'profile.wall.placeholderOwn' : 'profile.wall.placeholder')}
+          submitLabel={t('profile.wall.post')}
+          busy={busy && replyingTo === null}
+          onSubmit={body => post(body, null)}
+        />
+      ) : (
+        <p className="text-sm text-zinc-500">
+          <Link to={`/auth/signin?redirect=${encodeURIComponent(profilePath(accountName))}`} className="text-primary hover:underline">{t('profile.wall.signIn')}</Link>
+          {' '}{t('profile.wall.signInToComment')}
+        </p>
+      )}
+
+      {wall.comments.length === 0 ? (
+        <p className="py-6 text-center text-sm text-zinc-500">{t('profile.wall.empty')}</p>
+      ) : (
+        <ul className="flex flex-col gap-6">
+          {wall.comments.map(c => (
+            <CommentNode
+              key={c.id}
+              comment={c}
+              signedIn={signedIn}
+              replyingTo={replyingTo}
+              busy={busy}
+              onReplyingTo={setReplyingTo}
+              onReply={(parentId, body) => post(body, parentId)}
+              onDelete={remove}
+            />
+          ))}
+        </ul>
+      )}
+
+      {wall.hasMore && (
+        <div className="flex justify-center">
+          <Button type="button" variant="outline" size="sm" disabled={loadingMore} onClick={loadMore}>
+            {loadingMore ? <LogoLoader size={12} /> : t('profile.wall.loadMore')}
+          </Button>
+        </div>
+      )}
+    </section>
+  );
+}
