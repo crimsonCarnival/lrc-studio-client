@@ -6,6 +6,7 @@ import { ReadingInput } from './ReadingInput';
 import { Tip } from '@ui/tip';
 import { useTranslation } from 'react-i18next';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
+import { counterpartNeedsWords } from '../../services/counterparts';
 
 const WORD_SINGER_COLORS = [
   // index 0 → primary
@@ -148,6 +149,18 @@ const LineTextContent = memo(({
             <Icon name="mic" size={11} />
             {t('editor.counterpart.chip')}
           </span>
+        )}
+        {counterpartNeedsWords(line) && (
+          <Tip content={t('editor.counterpart.needsWords')}>
+            <span
+              tabIndex={0}
+              role="img"
+              aria-label={t('editor.counterpart.needsWords')}
+              className="inline-flex size-[22px] shrink-0 items-center justify-center rounded-full bg-gold-soft text-gold-ink outline-none focus-visible:ring-1 focus-visible:ring-gold"
+            >
+              <Icon name="warning" size={12} />
+            </span>
+          </Tip>
         )}
         {isPendingCounterpart && <span className="text-[15px] italic text-gold-ink">{t('editor.counterpart.pendingRow')}</span>}
         {(() => {

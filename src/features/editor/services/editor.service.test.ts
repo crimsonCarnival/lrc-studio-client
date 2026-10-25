@@ -572,4 +572,16 @@ describe('word time bounds', () => {
     expect(wordTimeBounds(lines, 1)).toEqual({ min: 0, max: Infinity });
     expect(clampWordTime(lines, 1, -1)).toBe(0);
   });
+
+  it('lets a counterpart run past the next lines, up to its own end time', () => {
+    const lines: EditorLine[] = [
+      line('My walls are closing in', { timestamp: 72.4 }),
+      line('Without a sense of confidence', { timestamp: 73.05, adLibOf: 72.4 }),
+      line("I've felt this way before", { timestamp: 76.8 }),
+    ];
+    expect(wordTimeBounds(lines, 1)).toEqual({ min: 73.05, max: Infinity });
+    expect(clampWordTime(lines, 1, 79.2)).toBe(79.2);
+    lines[1] = { ...lines[1], endTime: 80 };
+    expect(clampWordTime(lines, 1, 81)).toBe(80);
+  });
 });

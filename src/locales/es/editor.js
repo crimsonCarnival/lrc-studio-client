@@ -256,6 +256,7 @@ export default {
   markCounterpart: "Marcar como contracanto",
   counterpart: {
     needsSyncedLine: "Sincroniza una línea primero: un contracanto va sobre una línea sincronizada.",
+    needsWords: "Marca las palabras de este contracanto en el modo palabras. Sin tiempos por palabra se corta cuando empieza la línea siguiente, y al exportar se pierde cuánto dura.",
     capture: "Contracanto aquí",
     toggle: "Contracantos",
     toggleTip: "Captura contracantos mientras suena la canción",

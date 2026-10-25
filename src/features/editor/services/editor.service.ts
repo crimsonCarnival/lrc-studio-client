@@ -135,13 +135,14 @@ function computeNextIndex(lines: EditorLine[], fromIndex: number, skipBlank?: bo
  * The time window a word of `lines[lineIndex]` may be placed in: from the line's
  * own start to where the line stops (its end time, else the start of the next
  * timed line). `max` is Infinity when nothing bounds the line from above, and
- * `min` is 0 for a line that has no start yet.
+ * `min` is 0 for a line that has no start yet. A counterpart is bounded only by its own
+ * end time: it is sung over the lines after it, so their starts do not end it.
  */
 export function wordTimeBounds(lines: EditorLine[], lineIndex: number): { min: number; max: number } {
   const line = lines[lineIndex];
   const min = line?.timestamp ?? 0;
   let max = line?.endTime ?? Infinity;
-  if (max === Infinity) {
+  if (max === Infinity && line?.adLibOf == null) {
     for (let i = lineIndex + 1; i < lines.length; i++) {
       const next = lines[i];
       // Counterparts run alongside their parent line; they do not end it.

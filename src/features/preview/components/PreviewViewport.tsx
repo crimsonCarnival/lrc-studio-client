@@ -6,6 +6,7 @@ import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import PreviewLineRaw from './PreviewLine';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import { hasKanji } from '@/shared/utils/furigana';
+import { counterpartEnd } from '@/features/editor/services/counterparts';
 
 // PreviewLine is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,6 +17,9 @@ interface PreviewLineData {
   type?: string;
   label?: string;
   timestamp?: number | null;
+  endTime?: number | null;
+  adLibOf?: number | null;
+  words?: { time?: number | null }[];
   singers?: string[];
   [key: string]: unknown;
 }
@@ -163,6 +167,15 @@ export default function PreviewViewport({
     }
     return arr;
   }, [lines]);
+
+  // Only the active line gets the playback position, so the rest don't re-render on every
+  // tick. A counterpart is sung alongside it, so it gets the position while it sounds too.
+  const isSoundingCounterpart = (line: PreviewLineData, nextTs: number | null, pos: number) => {
+    if (line.adLibOf == null) return false;
+    const start = line.timestamp ?? line.adLibOf;
+    const end = counterpartEnd(line, nextTs);
+    return pos >= start && (end == null || pos < end);
+  };
 
   // #6: hide unsynced section groups from the normal preview. A "group" is a section
   // marker plus the lines under it (and a leading anonymous group for lines before the
@@ -395,7 +408,7 @@ export default function PreviewViewport({
                   lockedLineIndex={null}
                   isDualLine={false}
                   displayLines={null}
-                  playbackPosition={i === currentIndex ? playbackPosition : null}
+                  playbackPosition={i === currentIndex || isSoundingCounterpart(line, nextTimestamps[i] ?? null, playbackPosition) ? playbackPosition : null}
                   activeRef={i === currentIndex ? activeRef : null}
                   handleLineClick={handleLineClick}
                   handleLineHover={() => { }}

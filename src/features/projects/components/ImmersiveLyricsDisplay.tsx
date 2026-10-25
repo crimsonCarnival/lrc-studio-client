@@ -2,6 +2,7 @@ import { ContourLines } from '@ui/ContourLines';
 import { useRef, useEffect, useCallback, useMemo, forwardRef, useState, Fragment } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
+import { counterpartEnd } from '@/features/editor/services/counterparts';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
@@ -77,14 +78,15 @@ const FOCUS_STYLE: Record<number, { size: string; opacity: number }> = {
 const isBlank = (line: DisplayLine) => !line.text || line.text.trim() === '';
 
 // The previous line, the active one and the next three. Counterparts ride along
-// with the line they overlap instead of taking a slot of their own.
+// with the line they overlap instead of taking a slot of their own; one stored just
+// above the active line may still be sounding over it, so it stays in view too.
 function buildFocusWindow(lines: DisplayLine[], currentIndex: number): { index: number; step: number }[] {
   const out: { index: number; step: number }[] = [];
   for (let i = currentIndex - 1; i >= 0; i--) {
     const line = lines[i];
-    if (line.type === 'section' || line.adLibOf != null || isBlank(line)) continue;
-    out.push({ index: i, step: -1 });
-    break;
+    if (line.type === 'section' || isBlank(line)) continue;
+    out.unshift({ index: i, step: -1 });
+    if (line.adLibOf == null) break;
   }
   if (currentIndex >= 0) out.push({ index: currentIndex, step: 0 });
   let step = 0;
@@ -186,7 +188,8 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
 
   const isCounterpart = line.adLibOf != null;
   const effectiveTimestamp = line.timestamp ?? line.adLibOf;
-  const isCounterpartActive = isCounterpart && effectiveTimestamp != null && playbackPosition >= effectiveTimestamp && (segmentEnd == null || playbackPosition < segmentEnd);
+  const counterpartEndTime = isCounterpart ? counterpartEnd(line, effectiveNextTs) : null;
+  const isCounterpartActive = isCounterpart && effectiveTimestamp != null && playbackPosition >= effectiveTimestamp && (counterpartEndTime == null || playbackPosition < counterpartEndTime);
   const isActive = dist === 0 || isCounterpartActive;
 
   // The viewer's own activeHighlight preference (same setting PreviewLine

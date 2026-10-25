@@ -253,6 +253,7 @@ export default {
   markCounterpart: "Mark as counterpart",
   counterpart: {
     needsSyncedLine: "Sync a line first: a counterpart sits over a synced line.",
+    needsWords: "Stamp this counterpart's words in words mode. Without word times it stops when the next line starts, and exports lose how long it lasts.",
     capture: "Counterpart here",
     toggle: "Counterparts",
     toggleTip: "Capture counterparts while the song plays",

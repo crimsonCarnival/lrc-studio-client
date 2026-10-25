@@ -1,7 +1,9 @@
 /**
- * Counterparts: the second voice over a line ("yeah", "ayy"). A counterpart is a lyric line that
- * carries `adLibOf` (the timestamp of the line it sits over) next to its own `timestamp`,
- * and it is stored right after that line. Pure functions only.
+ * Counterparts: a second voice sung over a line, from a short "yeah" to a whole phrase that
+ * keeps going under the next lines. A counterpart is a lyric line that carries `adLibOf`
+ * (the timestamp of the line it sits over) next to its own `timestamp`, and it is stored
+ * right after that line. It starts inside that line but may end after later lines begin.
+ * Pure functions only.
  *
  * Capturing is two steps on purpose (redesign sheet 20): tap when you hear it, name it
  * later. A captured counterpart with no text yet is "pending".
@@ -18,6 +20,34 @@ export const isPendingCounterpart = (line: EditorLine | undefined): boolean =>
 export const counterpartTime = (line: EditorLine): number | null => line.timestamp ?? line.adLibOf ?? null;
 
 const isMain = (line: EditorLine) => line.type !== 'section' && line.adLibOf == null;
+
+type TimedLine = {
+  timestamp?: number | null;
+  endTime?: number | null;
+  adLibOf?: number | null;
+  words?: { time?: number | null }[];
+};
+
+/** A counterpart with text but no word times: it can only last until the next main line. */
+export const counterpartNeedsWords = (line: TimedLine & { text?: string; type?: string }): boolean =>
+  line.type !== 'section' && line.adLibOf != null && !!line.text?.trim() && !line.words?.some((w) => w.time != null);
+
+/**
+ * When a counterpart stops sounding. Its own end time wins; otherwise its last word plus
+ * that word's estimated length (the average gap between its timed words, the same estimate
+ * the preview fill uses), so a phrase can run on under the next lines. Never earlier than
+ * the next main line, which is where a counterpart without word times has always ended.
+ */
+export function counterpartEnd(line: TimedLine, nextMainStart: number | null): number | null {
+  if (line.endTime != null) return line.endTime;
+  const start = line.timestamp ?? line.adLibOf ?? null;
+  const fallback = nextMainStart ?? (start != null ? start + 5 : null);
+  const times = (line.words ?? []).map((w) => w.time).filter((t): t is number => t != null);
+  if (times.length === 0) return fallback;
+  const last = times[times.length - 1];
+  const wordsEnd = last + (times.length >= 2 ? (last - times[0]) / (times.length - 1) : 0.8);
+  return fallback == null ? wordsEnd : Math.max(wordsEnd, fallback);
+}
 
 export interface CounterpartEntry {
   /** Index in the flat lines array. */

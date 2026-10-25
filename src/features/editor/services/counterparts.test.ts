@@ -5,8 +5,41 @@
  * silently attaches it to another line.
  */
 import { describe, it, expect } from 'vitest';
-import { captureCounterpart, moveCounterpart, counterpartBounds, frequentCounterparts, counterpartWindow, listCounterparts, isPendingCounterpart } from './counterparts';
+import { captureCounterpart, moveCounterpart, counterpartBounds, frequentCounterparts, counterpartWindow, listCounterparts, isPendingCounterpart, counterpartEnd, counterpartNeedsWords } from './counterparts';
 import type { EditorLine } from './editor.service';
+
+describe('counterpartEnd', () => {
+  const base = { timestamp: 73, adLibOf: 72 };
+
+  it('runs past the next main line when its words do', () => {
+    // Words at 73, 75, 77: average gap 2, so the last word ends at 79.
+    const line = { ...base, words: [{ time: 73 }, { time: 75 }, { time: 77 }] };
+    expect(counterpartEnd(line, 76)).toBe(79);
+  });
+
+  it('never ends before the next main line', () => {
+    expect(counterpartEnd({ ...base, words: [{ time: 73 }] }, 76)).toBe(76);
+  });
+
+  it('prefers its own end time', () => {
+    expect(counterpartEnd({ ...base, endTime: 90, words: [{ time: 77 }] }, 76)).toBe(90);
+  });
+
+  it('falls back to the next main line, then to five seconds, without word times', () => {
+    expect(counterpartEnd({ ...base, words: [{ time: null }] }, 76)).toBe(76);
+    expect(counterpartEnd(base, null)).toBe(78);
+  });
+});
+
+describe('counterpartNeedsWords', () => {
+  it('flags a named counterpart with no word times only', () => {
+    expect(counterpartNeedsWords({ text: 'phrase', timestamp: 73, adLibOf: 72 })).toBe(true);
+    const stamped: EditorLine = { text: 'phrase', timestamp: 73, adLibOf: 72, words: [{ word: 'phrase', time: 73 }] };
+    expect(counterpartNeedsWords(stamped)).toBe(false);
+    expect(counterpartNeedsWords({ text: '', timestamp: 73, adLibOf: 72 })).toBe(false);
+    expect(counterpartNeedsWords({ text: 'main line', timestamp: 73 })).toBe(false);
+  });
+});
 
 const song = (): EditorLine[] => [
   { type: 'section', label: 'Verse 1', id: 's' },

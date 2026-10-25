@@ -5,6 +5,7 @@ import { toHiragana, toKatakana, parseRubyMarkup, rubyRatioClass, splitOkurigana
 import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
 import { useTranslation } from 'react-i18next';
 import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
+import { counterpartEnd } from '@/features/editor/services/counterparts';
 import type { AppSettings } from '@/features/settings/settings.types';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';
 import InstrumentalDots from '@/features/editor/components/line/InstrumentalDots';
@@ -197,7 +198,7 @@ export default function PreviewLine({
 
   const isCounterpart = line.adLibOf != null;
   const effectiveTimestamp = line.timestamp ?? line.adLibOf;
-  const counterpartEndTime = line.endTime ?? nextTimestamp ?? (effectiveTimestamp != null ? effectiveTimestamp + 5 : null);
+  const counterpartEndTime = isCounterpart ? counterpartEnd(line, nextTimestamp ?? null) : null;
   const isCounterpartActive = isCounterpart && effectiveTimestamp != null && playbackPosition != null && playbackPosition >= effectiveTimestamp && (counterpartEndTime == null || playbackPosition < counterpartEndTime);
 
   const isActive = i === displayedActiveIndex || (isDualLine && i === displayLines[0].originalIndex) || isCounterpartActive;
