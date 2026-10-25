@@ -19,6 +19,15 @@ interface SrtConfig {
   defaultSubtitleDuration?: number;
 }
 
+/**
+ * LRC cannot say that a line overlaps the one before it instead of replacing it, so a
+ * counterpart is written with this comment line in front. `[#:…]` is the LRC comment tag:
+ * other players skip it, and the parser turns the next timed line back into a counterpart.
+ * Mirrors the server's compiler and parser (server/src/utils/lrc.ts).
+ */
+export const COUNTERPART_MARKER = '[#:counterpart]';
+const COUNTERPART_MARKER_RE = /^\[#:\s*counterpart\s*\]$/i;
+
 /** No-op kept for call-site compatibility; DB is clean, no migration needed. */
 export function migrateLines(lines: EditorLine[]) { return lines; }
 
@@ -152,6 +161,7 @@ export function compileLRC(lines: EditorLine[], includeTranslations = false, pre
         } else {
           mainLyric = line.text;
         }
+        if (line.adLibOf != null) result.push(COUNTERPART_MARKER);
         result.push(`[${formatTimestamp(ts, precision)}] ${mainLyric}`);
 
         if (includeSecondary && line.secondary) {
@@ -331,6 +341,8 @@ const generateId = (): string => {
 export function parseLrcSrtFile(content: string, filename: string, options: { preserveEmptyLines?: boolean } = {}): EditorLine[] {
   const isSrt = filename.toLowerCase().endsWith('.srt');
   const parsedLines: EditorLine[] = [];
+  // Lines that followed a COUNTERPART_MARKER; their parent is resolved during the merge.
+  const counterparts = new Set<EditorLine>();
 
   if (isSrt) {
     const blocks = content.replace(/\r\n/g, '\n').split('\n\n');
@@ -361,8 +373,14 @@ export function parseLrcSrtFile(content: string, filename: string, options: { pr
     });
   } else {
     const lrcLines = content.replace(/\r\n/g, '\n').split('\n');
+    let counterpartNext = false;
     lrcLines.forEach(line => {
       let remaining = line.trim();
+      // Checked before the `[Label: Singer]` section rule, which would read it as a section "#".
+      if (COUNTERPART_MARKER_RE.test(remaining)) { counterpartNext = true; return; }
+      // The marker only applies to the line right after it.
+      const markedCounterpart = counterpartNext && remaining !== '';
+      if (remaining !== '') counterpartNext = false;
       const tsStepRe = /^\[(\d{1,2}):(\d{2}\.\d{2,3})\]/;
       const collectedTs: number[] = [];
       let step: RegExpMatchArray | null;
@@ -401,6 +419,7 @@ export function parseLrcSrtFile(content: string, filename: string, options: { pr
         const text = rawText.replace(/<\d{1,2}:\d{2}\.\d{2,3}>/g, '').trim();
         const entry: EditorLine = { text, timestamp: primary, id: generateId() };
         if (words.length > 0) entry.words = words;
+        if (markedCounterpart) counterparts.add(entry);
         parsedLines.push(entry);
       } else if (remaining !== '') {
         // No timestamp: root section ## or child section #
@@ -444,6 +463,7 @@ export function parseLrcSrtFile(content: string, filename: string, options: { pr
   // Merge duplicate timestamps (for LRC bilingual files) using a Map for O(n) lookup
   const mergedLines: EditorLine[] = [];
   const timestampMap = new Map<number, number>();
+  let lastMainTs: number | null = null;
 
   for (const line of parsedLines) {
     // Section markers are never merged — push directly
@@ -453,6 +473,13 @@ export function parseLrcSrtFile(content: string, filename: string, options: { pr
     }
 
     const key = Math.round(line.timestamp * 100); // group within 0.01s
+    // A counterpart may start together with its parent, so it never merges into it. It
+    // takes over the timestamp slot so its own secondary/translation lines land on it.
+    if (counterparts.has(line) && lastMainTs != null) {
+      timestampMap.set(key, mergedLines.length);
+      mergedLines.push({ ...line, adLibOf: lastMainTs });
+      continue;
+    }
     if (timestampMap.has(key)) {
       const existingIndex = timestampMap.get(key)!;
       const existing = mergedLines[existingIndex];
@@ -507,6 +534,7 @@ export function parseLrcSrtFile(content: string, filename: string, options: { pr
       const idx = mergedLines.length;
       mergedLines.push({ ...line });
       timestampMap.set(key, idx);
+      lastMainTs = line.timestamp;
     }
   }
 
