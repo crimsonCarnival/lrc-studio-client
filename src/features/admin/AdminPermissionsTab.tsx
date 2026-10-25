@@ -7,6 +7,8 @@ import ConfirmModal from '@shared/ui/ConfirmModal';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { PERMISSIONS, ROLE_RANK, type Permission, type Role } from '@/features/auth/permissions';
+import { useAdminSub } from './admin-nav';
+import { AdminSubNav } from './AdminSubNav';
 
 /*
  * Note on `advanced.confirmDestructive`: this surface deliberately confirms
@@ -138,6 +140,7 @@ export default function AdminPermissionsTab({ isSuperadmin }: { isSuperadmin: bo
     }
   };
 
+  const view = useAdminSub('permissions');
   const permissionLabel = (perm: string) => tk(`admin.permissions.catalog.${perm}.label`);
   const permissionDescription = (perm: string) => tk(`admin.permissions.catalog.${perm}.description`);
 
@@ -160,9 +163,31 @@ export default function AdminPermissionsTab({ isSuperadmin }: { isSuperadmin: bo
     return <div className="flex-1 flex items-center justify-center text-zinc-500 text-sm">{t('admin.dashboard.loading')}</div>;
   }
 
+  // Staff by rank, highest first, so the list reads as the hierarchy it is.
+  const staffByRole = (['admin', 'mod'] as Role[])
+    .map(role => ({ role, members: editableStaff.filter(u => u.role === role) }))
+    .filter(group => group.members.length > 0);
+
+  // A permission that differs from what the member's role grants by default.
+  const differsFromRole = (user: StaffUser, perm: Permission) => {
+    const roleDefault = catalog?.presets[(user.role as Role) ?? 'mod'] ?? [];
+    return (draftUserPerms[user.id ?? ''] ?? []).includes(perm) !== roleDefault.includes(perm);
+  };
+
   return (
-    <div className="flex flex-col gap-8 p-1">
+    <div className="flex flex-col gap-6 p-1">
+      <AdminSubNav
+        tab="permissions"
+        current={view}
+        items={[
+          { id: 'catalog', icon: 'list', label: t('admin.permissions.tabs.catalog') },
+          { id: 'defaults', icon: 'admin_panel_settings', label: t('admin.permissions.tabs.defaults') },
+          { id: 'overrides', icon: 'groups', label: t('admin.permissions.tabs.overrides') },
+        ]}
+      />
+
       {/* Permission catalog */}
+      {view === 'catalog' && (
       <section>
         <h3 className="text-sm font-semibold text-zinc-200 mb-1">{t('admin.permissions.catalogTitle')}</h3>
         <p className="text-xs text-zinc-500 mb-3">{t('admin.permissions.catalogSubtitle')}</p>
@@ -176,8 +201,10 @@ export default function AdminPermissionsTab({ isSuperadmin }: { isSuperadmin: bo
           ))}
         </div>
       </section>
+      )}
 
       {/* Role default presets */}
+      {view === 'defaults' && (
       <section>
         <h3 className="text-sm font-semibold text-zinc-200 mb-1">{t('admin.permissions.rolePresetsTitle')}</h3>
         <p className="text-xs text-zinc-500 mb-3">{t('admin.permissions.rolePresetsSubtitle')}</p>
@@ -213,58 +240,108 @@ export default function AdminPermissionsTab({ isSuperadmin }: { isSuperadmin: bo
           ))}
         </div>
       </section>
+      )}
 
       {/* Per-staff overrides */}
-      <section>
-        <h3 className="text-sm font-semibold text-zinc-200 mb-1">{t('admin.permissions.staffTitle')}</h3>
-        <p className="text-xs text-zinc-500 mb-3">{t('admin.permissions.staffSubtitle')}</p>
-        <div className="flex flex-col gap-3">
-          {editableStaff.length === 0 && (
-            <div className="text-xs text-zinc-500">{t('admin.dashboard.noUsers')}</div>
-          )}
-          {editableStaff.map(user => (
-            <div key={user.id} className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <span className="text-sm font-medium text-zinc-200">{user.displayName || user.accountName}</span>
-                  <span className="ml-2 text-[10px] uppercase tracking-wider text-zinc-500">{tk(`admin.table.${user.role}`)}</span>
-                </div>
-                <Button
-                  type="button"
-                  variant="sync"
-                  size="xs"
-                  disabled={!userDirty(user)}
-                  onClick={() => setConfirm({ type: 'user', userId: user.id, label: user.displayName || user.accountName || '' })}
-                >
-                  {t('admin.permissions.save')}
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                {PERMISSIONS.map(perm => (
-                  <label key={perm} className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={(draftUserPerms[user.id ?? ''] ?? []).includes(perm)}
-                      onChange={() => toggleUserPerm(user.id ?? '', perm)}
-                      className="accent-[var(--color-primary)]"
-                    />
-                    {permissionLabel(perm)}
-                  </label>
+      {view === 'overrides' && (
+      <section className="flex flex-col gap-6">
+        <div>
+          <h3 className="text-sm font-semibold text-zinc-200 mb-1">{t('admin.permissions.staffTitle')}</h3>
+          <p className="text-xs text-zinc-500">{t('admin.permissions.staffSubtitle')}</p>
+        </div>
+
+        {editableStaff.length === 0 && (
+          <div className="flex items-center gap-3 rounded-xl border border-dashed border-zinc-800 px-4 py-6 text-xs text-zinc-500">
+            <Icon name="groups" size={18} className="text-zinc-600" />
+            {t('admin.dashboard.noUsers')}
+          </div>
+        )}
+
+        {staffByRole.map(({ role, members }) => (
+          <div key={role} className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400">{tk(`admin.table.${role}`)}</span>
+              <span className="text-[10px] tabular-nums text-zinc-600">{t('admin.permissions.staffCount', { count: members.length })}</span>
+              <span aria-hidden className="h-px flex-1 bg-zinc-800" />
+            </div>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+              {members.map(user => {
+                const dirty = userDirty(user);
+                const name = user.displayName || user.accountName || '';
+                return (
+                  <div key={user.id} className={`rounded-xl border bg-zinc-900/50 p-4 transition-colors ${dirty ? 'border-primary/40' : 'border-zinc-800'}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-soft font-heading text-sm font-bold text-primary-ink">
+                        {name[0]?.toUpperCase() ?? '?'}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-semibold text-zinc-100">{name}</div>
+                        {user.accountName && user.accountName !== name && (
+                          <div className="truncate font-mono text-[11px] text-zinc-500">{user.accountName}</div>
+                        )}
+                      </div>
+                      {dirty && <span className="shrink-0 text-[10px] font-semibold text-primary">{t('admin.permissions.overridesChanged')}</span>}
+                      <Button
+                        type="button"
+                        variant="sync"
+                        size="xs"
+                        disabled={!dirty}
+                        onClick={() => setConfirm({ type: 'user', userId: user.id, label: name })}
+                      >
+                        {t('admin.permissions.save')}
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {PERMISSIONS.map(perm => {
+                        const on = (draftUserPerms[user.id ?? ''] ?? []).includes(perm);
+                        const override = differsFromRole(user, perm);
+                        return (
+                          <button
+                            key={perm}
+                            type="button"
+                            aria-pressed={on}
+                            onClick={() => toggleUserPerm(user.id ?? '', perm)}
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 h-7 coarse:h-9 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                              on ? 'bg-primary-soft text-primary-ink' : 'bg-zinc-800/60 text-zinc-500 hover:text-zinc-300'
+                            } ${override ? 'ring-1 ring-amber-400/60' : ''}`}
+                          >
+                            <Icon name={on ? 'check' : 'add'} size={11} />
+                            {permissionLabel(perm)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+        {editableStaff.length > 0 && (
+          <p className="flex items-center gap-2 text-[11px] text-zinc-500">
+            <span aria-hidden className="size-2.5 rounded-full ring-1 ring-amber-400/60" />
+            {t('admin.permissions.overrideLegend')}
+          </p>
+        )}
+
+        {superadminStaff.length > 0 && (
+          <div className="flex items-start gap-3 rounded-xl border border-zinc-800/60 bg-zinc-900/30 p-4">
+            <Icon name="lock" size={16} className="mt-0.5 shrink-0 text-zinc-500" />
+            <div className="min-w-0">
+              <p className="text-xs text-zinc-400 mb-2">{t('admin.permissions.superadminNote')}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {superadminStaff.map(user => (
+                  <span key={user.id} className="rounded-full bg-zinc-800/60 px-2.5 py-1 text-[11px] text-zinc-300">
+                    {user.displayName || user.accountName}
+                  </span>
                 ))}
               </div>
             </div>
-          ))}
-
-          {superadminStaff.length > 0 && (
-            <div className="bg-zinc-900/30 border border-zinc-800/60 rounded-lg p-4">
-              <p className="text-xs text-zinc-500 mb-2">{t('admin.permissions.superadminNote')}</p>
-              {superadminStaff.map(user => (
-                <div key={user.id} className="text-xs text-zinc-400">{user.displayName || user.accountName}</div>
-              ))}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </section>
+      )}
 
       <ConfirmModal
         isOpen={!!confirm}
