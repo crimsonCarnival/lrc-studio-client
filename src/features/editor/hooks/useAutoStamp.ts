@@ -41,6 +41,8 @@ const MAX_POLL_DRIFT_SECONDS = 1.5;
 // play() is asynchronous; give the player a moment to actually start before treating
 // "not playing" as a pause.
 const PLAY_START_GRACE_MS = 4000;
+// Within this many seconds of the end, a stop or rewind counts as the video finishing.
+const END_TOLERANCE_SECONDS = 3;
 
 type Params = {
   lines: EditorLine[];
@@ -375,6 +377,7 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
       tabPlayback.prepare();
       const startedAt = Date.now();
       let last = 0;
+      let furthest = 0;
       tabPlayback.setPlaying(true);
       timer = window.setInterval(() => {
         const { currentTime, duration: total, isPlaying } = tabPlayback.getState();
@@ -382,7 +385,13 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
         // Until the player has caught up with prepare(), its reported position may still be
         // wherever the user left it, including the end of the song.
         const graceOver = Date.now() - startedAt > PLAY_START_GRACE_MS;
+        if (graceOver) furthest = Math.max(furthest, currentTime);
+        // The last polled position can sit short of the duration when the video ends, and the
+        // player then reports "not playing" or rewinds to 0. Having played to the end, that is
+        // the song finishing, not a pause or a seek.
+        const playedToEnd = graceOver && furthest >= total - END_TOLERANCE_SECONDS;
         if (graceOver && currentTime >= total - 0.3) { end('ended'); return; }
+        if (playedToEnd && (!isPlaying || currentTime < furthest - 1)) { end('ended'); return; }
         const jumped = Math.abs(currentTime - last) > MAX_POLL_DRIFT_SECONDS;
         // A pause or seek leaves a hole in the audio; stamps would be plausible but wrong.
         if (jumped && graceOver) { end('interrupted'); return; }
