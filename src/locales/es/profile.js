@@ -363,6 +363,7 @@ export default {
     reply: 'Responder',
     delete: 'Eliminar',
     confirmDelete: '¿Eliminar?',
+    deleteConfirm: 'Sí, eliminar',
     empty: 'Aún no hay nada.',
     loadMore: 'Cargar más',
     loadError: 'No se pudo cargar el muro.',

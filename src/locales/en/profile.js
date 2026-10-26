@@ -364,6 +364,7 @@ export default {
     reply: 'Reply',
     delete: 'Delete',
     confirmDelete: 'Delete it?',
+    deleteConfirm: 'Yes, delete',
     empty: 'Nothing here yet.',
     loadMore: 'Load more',
     loadError: 'The wall could not be loaded.',

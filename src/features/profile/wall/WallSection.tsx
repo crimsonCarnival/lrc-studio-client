@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -8,6 +9,7 @@ import { Textarea } from '@ui/textarea';
 import { Tip } from '@ui/tip';
 import { LogoLoader } from '@ui/LogoLoader';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
+import { cn } from '@/shared/utils/utils';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatTimeAgo } from '@/features/notifications/time-ago';
@@ -82,19 +84,82 @@ interface NodeProps {
   onReplyingTo: (id: string | null) => void;
   onReply: (parentId: string, body: string) => Promise<boolean>;
   onDelete: (id: string) => void;
+  /** The comment whose thread this one hangs from; null at the top level. */
+  threadOf?: string | null;
+  /** Last reply in its thread: the thread line ends in this reply's curve. */
+  isLast?: boolean;
+  highlightedId: string | null;
+  onHighlight: (id: string) => void;
+  hoveredThread: string | null;
+  onHoverThread: (id: string | null) => void;
 }
 
-function CommentNode({ comment, signedIn, replyingTo, busy, onReplyingTo, onReply, onDelete }: NodeProps) {
+// Thread geometry, in px from a comment's left edge. The avatar is 32px wide, so its
+// centre (where a thread line hangs) is at 16; a reply sits 32px further in.
+const lineColor = (active: boolean) => (active ? 'border-primary/70' : 'border-zinc-700');
+
+// Shared by the comment actions: a press shrinks the button slightly.
+const ACTION_BUTTON = 'rounded-full transition-[color,background-color,transform] active:scale-90';
+
+function CommentNode({
+  comment, signedIn, replyingTo, busy, onReplyingTo, onReply, onDelete,
+  threadOf = null, isLast = false, highlightedId, onHighlight, hoveredThread, onHoverThread,
+}: NodeProps) {
   const { t, i18n } = useTranslation();
   const { settings } = useSettings();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { author } = comment;
   const name = author.displayName || author.accountName;
   const open = replyingTo === comment.id;
+  const hasReplies = comment.replies.length > 0;
+  const highlighted = highlightedId === comment.id;
+  // A thread lights up while its line is hovered or its comment is highlighted.
+  const ownThreadActive = hoveredThread === comment.id || highlighted;
+  const parentThreadActive = threadOf !== null && (hoveredThread === threadOf || highlightedId === threadOf);
+
+  const handleRowClick = (e: MouseEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest('a, button, textarea, input')) return;
+    if (window.getSelection()?.toString()) return; // finishing a text selection is not a click
+    onHighlight(comment.id);
+  };
 
   return (
-    <li className="flex flex-col gap-2">
-      <div className="flex gap-3">
+    <li id={`comment-${comment.id}`} className={cn('relative flex flex-col gap-2', threadOf && 'pt-4')}>
+      {threadOf && (
+        <>
+          {/* The parent's line curving into this reply's avatar… */}
+          <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 h-9 w-3.5 rounded-bl-xl border-b-2 border-l-2 transition-colors', lineColor(parentThreadActive))} />
+          {/* …and running on past it to the replies below. */}
+          {!isLast && <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 bottom-0 border-l-2 transition-colors', lineColor(parentThreadActive))} />}
+          {/* A wider target than the 2px line, for hovering and clicking it. */}
+          <span
+            aria-hidden
+            onMouseEnter={() => onHoverThread(threadOf)}
+            onMouseLeave={() => onHoverThread(null)}
+            onClick={() => onHighlight(threadOf)}
+            className={cn('absolute -left-6 top-0 w-4 cursor-pointer', isLast ? 'h-9' : 'bottom-0')}
+          />
+        </>
+      )}
+      <div
+        onClick={handleRowClick}
+        className={cn(
+          'relative -mx-2 flex cursor-pointer gap-3 rounded-lg px-2 py-1 transition-colors',
+          highlighted ? 'bg-primary/10 ring-1 ring-primary/40' : 'hover:bg-zinc-800/30',
+        )}
+      >
+        {hasReplies && (
+          <>
+            {/* This comment's own line, from under its avatar down to its replies. */}
+            <span aria-hidden className={cn('pointer-events-none absolute left-[23px] top-10 -bottom-2 border-l-2 transition-colors', lineColor(ownThreadActive))} />
+            <span
+              aria-hidden
+              onMouseEnter={() => onHoverThread(comment.id)}
+              onMouseLeave={() => onHoverThread(null)}
+              className="absolute left-4 top-10 -bottom-2 w-4"
+            />
+          </>
+        )}
         <Link to={profilePath(author.accountName)} className="shrink-0">
           {author.avatarUrl
             ? <img src={author.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-8 rounded-full object-cover" />
@@ -108,43 +173,105 @@ function CommentNode({ comment, signedIn, replyingTo, busy, onReplyingTo, onRepl
             </span>
           </p>
           <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-zinc-300">{comment.body}</p>
-          <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500">
+          <div className="mt-1 -ml-1.5 flex items-center gap-1 text-xs text-zinc-500">
             {signedIn && comment.depth < WALL_MAX_DEPTH && (
-              <button type="button" onClick={() => onReplyingTo(open ? null : comment.id)} className="hover:text-zinc-200 transition-colors">
-                {t('profile.wall.reply')}
-              </button>
+              <Tip content={t('profile.wall.reply')}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={t('profile.wall.reply')}
+                  aria-pressed={open}
+                  onClick={() => onReplyingTo(open ? null : comment.id)}
+                  className={cn(ACTION_BUTTON, open ? 'bg-primary/15 text-primary' : 'text-zinc-500 hover:text-primary')}
+                >
+                  <Icon name="reply" size={15} />
+                </Button>
+              </Tip>
             )}
             {comment.canDelete && (
               confirmingDelete ? (
-                <span className="flex items-center gap-2">
-                  <button type="button" onClick={() => onDelete(comment.id)} className="text-destructive hover:underline">{t('profile.wall.confirmDelete')}</button>
-                  <button type="button" onClick={() => setConfirmingDelete(false)} className="hover:text-zinc-200">{t('common.cancel')}</button>
+                <span className="flex items-center gap-1">
+                  <span className="px-1 text-destructive">{t('profile.wall.confirmDelete')}</span>
+                  <Tip content={t('profile.wall.deleteConfirm')}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label={t('profile.wall.deleteConfirm')}
+                      onClick={() => onDelete(comment.id)}
+                      className={cn(ACTION_BUTTON, 'text-destructive hover:bg-destructive/15 hover:text-destructive')}
+                    >
+                      <Icon name="check" size={15} />
+                    </Button>
+                  </Tip>
+                  <Tip content={t('common.cancel')}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label={t('common.cancel')}
+                      onClick={() => setConfirmingDelete(false)}
+                      className={cn(ACTION_BUTTON, 'text-zinc-500 hover:text-zinc-100')}
+                    >
+                      <Icon name="close" size={15} />
+                    </Button>
+                  </Tip>
                 </span>
               ) : (
-                <button type="button" onClick={() => setConfirmingDelete(true)} className="hover:text-destructive transition-colors">{t('profile.wall.delete')}</button>
+                <Tip content={t('profile.wall.delete')}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={t('profile.wall.delete')}
+                    onClick={() => setConfirmingDelete(true)}
+                    className={cn(ACTION_BUTTON, 'text-zinc-500 hover:bg-destructive/15 hover:text-destructive')}
+                  >
+                    <Icon name="delete" size={15} />
+                  </Button>
+                </Tip>
               )
             )}
           </div>
         </div>
       </div>
 
-      {(open || comment.replies.length > 0) && (
-        // The indent line is the thread: each level sits one rule further in.
-        <div className="ml-4 flex flex-col gap-3 border-l-2 border-zinc-800 pl-4 sm:ml-5">
+      {(open || hasReplies) && (
+        // Replies sit 32px in. Spacing is padding, not gap, so the thread lines run unbroken.
+        <div className="ml-4 flex flex-col pl-4">
           {open && (
-            <Composer
-              autoFocus
-              placeholder={t('profile.wall.replyPlaceholder', { name })}
-              submitLabel={t('profile.wall.reply')}
-              busy={busy}
-              onSubmit={body => onReply(comment.id, body)}
-              onCancel={() => onReplyingTo(null)}
-            />
+            <div className="relative pb-2">
+              {hasReplies && <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 bottom-0 border-l-2 transition-colors', lineColor(ownThreadActive))} />}
+              <Composer
+                autoFocus
+                placeholder={t('profile.wall.replyPlaceholder', { name })}
+                submitLabel={t('profile.wall.reply')}
+                busy={busy}
+                onSubmit={body => onReply(comment.id, body)}
+                onCancel={() => onReplyingTo(null)}
+              />
+            </div>
           )}
-          {comment.replies.length > 0 && (
-            <ul className="flex flex-col gap-4">
-              {comment.replies.map(r => (
-                <CommentNode key={r.id} comment={r} signedIn={signedIn} replyingTo={replyingTo} busy={busy} onReplyingTo={onReplyingTo} onReply={onReply} onDelete={onDelete} />
+          {hasReplies && (
+            <ul className="flex flex-col">
+              {comment.replies.map((r, i) => (
+                <CommentNode
+                  key={r.id}
+                  comment={r}
+                  signedIn={signedIn}
+                  replyingTo={replyingTo}
+                  busy={busy}
+                  onReplyingTo={onReplyingTo}
+                  onReply={onReply}
+                  onDelete={onDelete}
+                  threadOf={comment.id}
+                  isLast={i === comment.replies.length - 1}
+                  highlightedId={highlightedId}
+                  onHighlight={onHighlight}
+                  hoveredThread={hoveredThread}
+                  onHoverThread={onHoverThread}
+                />
               ))}
             </ul>
           )}
@@ -165,6 +292,9 @@ export default function WallSection({ accountName, isOwner }: { accountName: str
   const [busy, setBusy] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [hoveredThread, setHoveredThread] = useState<string | null>(null);
+  const toggleHighlight = (id: string) => setHighlightedId(prev => (prev === id ? null : id));
 
   const load = useCallback(async () => {
     setFailed(false);
@@ -317,6 +447,10 @@ export default function WallSection({ accountName, isOwner }: { accountName: str
               onReplyingTo={setReplyingTo}
               onReply={(parentId, body) => post(body, parentId)}
               onDelete={remove}
+              highlightedId={highlightedId}
+              onHighlight={toggleHighlight}
+              hoveredThread={hoveredThread}
+              onHoverThread={setHoveredThread}
             />
           ))}
         </ul>
