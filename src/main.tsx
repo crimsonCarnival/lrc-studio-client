@@ -51,6 +51,7 @@ import { RecaptchaGate, RecaptchaRouteArmer } from '@/app/RecaptchaGate';
 import { gqlRequest } from '@/app/graphql.client.js';
 import { projectPath } from '@/features/projects/project-path';
 import { captureSignupAttribution } from '@/shared/utils/attribution';
+import { safeRedirectPath } from '@/shared/utils/safe-redirect';
 
 declare global {
   interface Window {
@@ -173,8 +174,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 function AuthRedirect({ defaultTo = '/home' }: { defaultTo?: string }) {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  const redirect = params.get('redirect') || defaultTo;
-  return <Navigate to={redirect} replace />;
+  return <Navigate to={safeRedirectPath(params.get('redirect'), defaultTo)} replace />;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

@@ -34,6 +34,7 @@ import type { ComponentProps } from 'react';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import type { RememberedAccount } from '@/features/auth/services/remembered-accounts.service';
 import type { SignUpIdentity } from './SignUpForm';
+import { safeRedirectPath } from '@/shared/utils/safe-redirect';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -210,7 +211,7 @@ export default function AuthPage() {
       // picks up the freshly-set cookies.
       const ott = searchParams.get('ott');
       const redirectTo = searchParams.get('redirect');
-      const doNavigate = () => navigate(redirectTo || '/home', { replace: true });
+      const doNavigate = () => navigate(safeRedirectPath(redirectTo, '/home'), { replace: true });
 
       if (ott) {
         auth.exchangeOtt(ott).then(doNavigate).catch(doNavigate);
@@ -293,15 +294,7 @@ export default function AuthPage() {
     // AuthRedirect (shown when showAuthPage=false) reads the same redirect param and
     // navigates to the same target, so there is no competing navigation.
     commitLogin();
-    if (redirectTo) {
-      if (redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {
-        navigate(redirectTo, { replace: true });
-      } else {
-        window.location.href = redirectTo;
-      }
-    } else {
-      navigate('/home', { replace: true });
-    }
+    navigate(safeRedirectPath(redirectTo, '/home'), { replace: true });
   }, [commitLogin, searchParams, navigate]);
 
   /**
@@ -386,9 +379,7 @@ export default function AuthPage() {
       const hasSession = storage.get(STORAGE_KEYS.HAS_SESSION);
       if (hasSession) {
         const redirectTo = searchParams.get('redirect');
-        window.location.href = (redirectTo?.startsWith('/') && !redirectTo.startsWith('//'))
-          ? redirectTo
-          : '/home';
+        window.location.href = safeRedirectPath(redirectTo, '/home');
       } else {
         toast.error(t('auth.errors.googleLoginFailed'));
       }
