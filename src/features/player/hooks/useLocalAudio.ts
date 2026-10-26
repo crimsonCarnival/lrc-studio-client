@@ -81,7 +81,7 @@ export default function useLocalAudio({
           const result = await uploads.uploadMedia(
             file,
             await executeRecaptchaSafe(executeRecaptcha, 'upload_audio')
-          ) as { secure_url: string; public_id: string; duration?: number | null };
+          ) as { secure_url: string; public_id: string; duration?: number | null; bytes?: number };
           try {
             // Immediately persist to database before considering it successful
             const { upload } = await uploads.saveMedia({
@@ -93,7 +93,7 @@ export default function useLocalAudio({
               duration: result.duration || null,
               // Without this the admin storage totals stay at zero — nothing
               // else supplies the byte size.
-              sizeBytes: file.size,
+              sizeBytes: result.bytes ?? file.size,
             } as Parameters<typeof uploads.saveMedia>[0]) as { upload?: { id: string } };
             if (!upload) {
               console.warn('Upload not persisted - user may not be authenticated');

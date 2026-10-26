@@ -12,12 +12,15 @@ interface CloudinarySignature {
   resourceType: string;
   transformation?: string;
   allowedFormats?: string;
+  format?: string;
 }
 
 interface CloudinaryUploadResult {
   secure_url: string;
   public_id: string;
   duration?: number | null;
+  /** Stored size, which differs from the picked file's when Cloudinary transcoded it. */
+  bytes?: number;
 }
 
 // ── Cloudinary Uploads (must stay REST — uses multipart + reCAPTCHA signing) ──
@@ -35,7 +38,7 @@ export const uploadsService = {
    * Returns { secure_url, public_id, duration }.
    */
   async uploadMedia(file: File, recaptchaToken?: string): Promise<CloudinaryUploadResult> {
-    const { signature, timestamp, cloudName, apiKey, folder, resourceType, allowedFormats } =
+    const { signature, timestamp, cloudName, apiKey, folder, resourceType, allowedFormats, format, transformation } =
       await this.getSignature({ fileName: file.name, fileSize: file.size, recaptchaToken });
 
     const formData = new FormData();
@@ -45,6 +48,9 @@ export const uploadsService = {
     formData.append('signature', signature);
     formData.append('folder', folder);
     if (allowedFormats) formData.append('allowed_formats', allowedFormats);
+    // Both are signed when the server asks for a transcode, so both must be echoed.
+    if (format) formData.append('format', format);
+    if (transformation) formData.append('transformation', transformation);
 
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/${resourceType}/upload`,
@@ -56,11 +62,12 @@ export const uploadsService = {
       throw new Error(body.error?.message || `Upload failed: ${res.status}`);
     }
 
-    const data = await res.json() as { secure_url: string; public_id: string; duration?: number };
+    const data = await res.json() as { secure_url: string; public_id: string; duration?: number; bytes?: number };
     return {
       secure_url: data.secure_url,
       public_id: data.public_id,
       duration: data.duration || null,
+      bytes: data.bytes,
     };
   },
 
