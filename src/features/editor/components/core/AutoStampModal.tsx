@@ -40,6 +40,10 @@ const RUNNING_PHASE_KEYS: Partial<Record<AutoStampPhase, string>> = {
   applying: 'phaseApplying',
 };
 
+// The server could not fetch the YouTube audio itself (extraction is off, not set up, or blocked):
+// recording the tab is the way left to stamp a YouTube source.
+const YOUTUBE_FETCH_ERRORS = new Set(['asr_youtube_disabled', 'asr_ytdlp_not_configured', 'asr_youtube_blocked']);
+
 // Every error code the server can emit that has a matching locale key. Anything
 // else (unrecognized/future codes) falls back to a generic message instead of
 // rendering a raw, untranslated 'editor.autoStamp.errors.<code>' key path.
@@ -315,7 +319,7 @@ export default function AutoStampModal({
 
         {isFailed && (
           <div className="flex flex-col gap-4">
-            {canRecordTab && (errorCode === 'asr_youtube_blocked' || errorCode?.startsWith('asr_recording_')) && (
+            {canRecordTab && (errorCode != null && (YOUTUBE_FETCH_ERRORS.has(errorCode) || errorCode.startsWith('asr_recording_'))) && (
               <div className="flex flex-col gap-2">
                 <p className="text-sm text-zinc-400">{t('editor.autoStamp.recordTabHint')}</p>
                 <Button variant="outline" onClick={onRecordTab} className="self-start border-zinc-700 text-zinc-300 hover:bg-zinc-800">
