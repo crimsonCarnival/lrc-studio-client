@@ -29,7 +29,7 @@ import { useCounterparts } from './useCounterparts';
 import { useWordsMode } from './useWordsMode';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import type { EditorLine, EditorWord, EditorTranslation } from '../services/editor.service';
-import type { PlayerHandle } from '@/shared/hooks/useAppState';
+import type { PlayerHandle } from '@/types/app-state';
 
 interface FocusedTs {
   lineIndex: number;

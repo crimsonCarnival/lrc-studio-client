@@ -41,7 +41,7 @@ import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
-import type { UploadedAudio } from '@/shared/hooks/useAppState';
+import type { UploadedAudio } from '@/types/app-state';
 import { Icon } from '@/shared/ui/Icon';
 import { linesToRawText, flatToSections, rawLineText } from '@/features/editor/utils/sections';
 import { hasCJK } from '@/shared/utils/furigana';

@@ -19,7 +19,7 @@ import {
 } from '../preview.styles';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { AppSettings } from '@/features/settings/settings.types';
-import type { ProjectMetadata, PlayerHandle } from '@/shared/hooks/useAppState';
+import type { ProjectMetadata, PlayerHandle } from '@/types/app-state';
 
 interface UsePreviewParams {
   lines: EditorLine[];

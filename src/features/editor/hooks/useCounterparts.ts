@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { captureCounterpart, moveCounterpart, isCounterpart } from '../services/counterparts';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import type { EditorLine } from '../services/editor.service';
-import type { PlayerHandle } from '@/shared/hooks/useAppState';
+import type { PlayerHandle } from '@/types/app-state';
 
 interface UseCounterpartsParams {
   setLines: Dispatch<SetStateAction<EditorLine[]>>;

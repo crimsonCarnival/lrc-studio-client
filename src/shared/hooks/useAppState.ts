@@ -4,10 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSettings } from '@/features/settings/useSettings';
 import useHistory from '@/features/editor/hooks/useHistory';
-import useConfirm from './useConfirm';
-import { useThemeSync } from './useThemeSync';
-import { useDragAndDrop } from './useDragAndDrop';
-import { useGlobalShortcuts } from './useGlobalShortcuts';
+import useConfirm from '@/shared/hooks/useConfirm';
+import { useThemeSync } from '@/shared/hooks/useThemeSync';
+import { useDragAndDrop } from '@/shared/hooks/useDragAndDrop';
+import { useGlobalShortcuts } from '@/shared/hooks/useGlobalShortcuts';
 import { useLoopCurrentLine } from '@/features/editor/hooks/useLoopCurrentLine';
 import { useAutosave } from '@/features/editor/hooks/useAutosave';
 import { useManualSave, buildProjectPatch, updateServerSnapshot } from '@/features/editor/hooks/useManualSave';
@@ -20,71 +20,14 @@ import { isEditorPath } from '@/features/projects/project-path';
 import { migrateLines } from '@/shared/utils/lrc';
 import { hasCJK } from '@/shared/utils/furigana';
 import { loadCjkFont } from '@/app/cjk-font';
-import { creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
+import { creditsOf } from '@/features/artists/artist-credits';
 import { sectionsToFlat } from '@/features/editor/utils/sections';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 import type { AuthUser as AuthUserType } from '@/features/auth/hooks/useAuth';
 import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { PlayerHandle, ProjectMetadata, RestoredMedia, UploadedAudio, ForkedFrom } from '@/types/app-state';
 
 const MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-
-export interface PlayerHandle {
-  play?: () => void;
-  pause?: () => void;
-  seek?: (time?: number | null) => void;
-  getCurrentTime?: () => number;
-  currentTime?: number;
-  togglePlay?: () => void;
-  adjustSpeed?: (delta: number) => void;
-  loadLocalAudio?: (file: File) => void;
-  [key: string]: unknown;
-}
-
-export interface ProjectMetadata {
-  description?: string;
-  tags?: string[];
-  songName?: string;
-  /** Ordered credits, primaries first. The singer roster and every artist display are built from these. */
-  artists?: ArtistCredit[];
-  /** Read-only display string derived from the credits. Never sent to the server. */
-  songArtist?: string;
-  /** The credits were edited this session; only then is an empty list sent (it would clear the stored artists). */
-  artistsDirty?: boolean;
-  songAlbum?: string;
-  songYear?: string | number;
-  genre?: string;
-  songLanguage?: string;
-  trackNumber?: number;
-  trackCount?: number;
-  /** Song-level singer roster offered when tagging sections/lines. */
-  singers?: string[];
-  [key: string]: unknown;
-}
-
-export interface RestoredMedia {
-  type: string;
-  url: string;
-  id?: string | null;
-  fileName?: string | null;
-  title?: string | null;
-  duration?: number | null;
-  publicId?: string | null;
-}
-
-export interface UploadedAudio {
-  id?: string;
-  uploadUrl?: string;
-  publicId?: string;
-  fileName?: string;
-  duration?: number;
-  [key: string]: unknown;
-}
-
-export interface ForkedFrom {
-  publicId?: string;
-  accountName?: string;
-  [key: string]: unknown;
-}
 
 export function useAppState(user?: AuthUserType | null) {
   const { t, i18n } = useTranslation();
