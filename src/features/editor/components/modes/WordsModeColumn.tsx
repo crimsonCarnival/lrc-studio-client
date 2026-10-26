@@ -13,6 +13,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { singerColorIndex } from '@features/editor/utils/singer-colors';
 import { chipWidthStep } from '../../utils/chip-width';
 import { pairedRomaji } from '../../utils/furigana-targets';
+import type { FocusedTimestamp } from '@/features/editor/editor.types';
 
 // Per-singer chip color sets [bg, border, text] for stamped and unstamped word chips.
 // Index-aligned with WORD_SINGER_COLORS in LineTextContent.tsx / SINGER_GRADIENT_STOPS
@@ -114,12 +115,6 @@ interface WordLine {
   words?: Word[];
   secondaryWords?: Word[];
   singers?: string[];
-}
-
-interface FocusedTimestamp {
-  lineIndex: number;
-  type: string;
-  wordIndex?: number;
 }
 
 export interface WordsModeColumnProps {

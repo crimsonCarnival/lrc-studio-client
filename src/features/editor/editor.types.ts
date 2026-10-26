@@ -38,3 +38,10 @@ export interface EditorLine {
 }
 
 export type LineMode = 'solo' | 'duet' | 'split';
+
+/** The timestamp the keyboard is on: a line's start/end, or one word's time when wordIndex is set. */
+export interface FocusedTimestamp {
+  lineIndex: number;
+  type: string;
+  wordIndex?: number;
+}

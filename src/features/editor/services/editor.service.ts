@@ -1,7 +1,7 @@
 /**
  * Pure functions for editor logic — no side effects, no React imports.
  */
-import type { EditorLine, EditorWord, LineMode } from '../editor.types';
+import type { EditorLine, EditorWord, FocusedTimestamp, LineMode } from '../editor.types';
 
 /**
  * Single source of truth for the singers/words ↔ mode invariant.
@@ -20,12 +20,6 @@ export function normalizeLineMode(line: EditorLine): LineMode {
 interface EditorSettings {
   autoAdvance?: { skipBlank?: boolean; enabled?: boolean; mode?: string };
   srt?: { snapToNextLine?: boolean; minSubtitleGap?: number };
-}
-
-interface FocusedTimestamp {
-  lineIndex: number;
-  type: string;
-  wordIndex?: number;
 }
 
 interface ApplyMarkParams {

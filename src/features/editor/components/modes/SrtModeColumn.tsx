@@ -3,12 +3,7 @@ import { formatTimestamp } from '@/shared/utils/lrc';
 import { InlineTimestampEdit } from '../line/InlineTimestampEdit';
 import { TimestampBadge } from '../line/TimestampBadge';
 import { timeChipClass } from '../line/time-chip-class';
-import type { EditorLine } from '@/features/editor/editor.types';
-
-interface FocusedTimestamp {
-  lineIndex: number;
-  type: string;
-}
+import type { EditorLine, FocusedTimestamp } from '@/features/editor/editor.types';
 
 interface SrtModeColumnProps {
   /** Seek to this line's start and play — a click on the timestamp, as in the public view. */

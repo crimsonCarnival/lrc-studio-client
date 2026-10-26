@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@ui/popover';
 import LineActionsPopover from './LineActionsPopover';
 import { getSingerOptionsForSelection } from '../../utils/sections';
 import type { PlayerHandle } from '@/features/player/player.types';
+import type { FocusedTimestamp } from '@/features/editor/editor.types';
 
 interface Word {
   word: string;
@@ -23,12 +24,6 @@ interface ToolbarLine {
   translations?: unknown[];
   singers?: string[];
   [key: string]: unknown;
-}
-
-interface FocusedTimestamp {
-  lineIndex: number;
-  type: string;
-  wordIndex?: number;
 }
 
 interface LineActionToolbarProps {

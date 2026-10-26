@@ -19,7 +19,7 @@ import SectionPickerDropdown from './SectionPickerDropdown';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { validateLineSingers, sectionCollapseKey } from '@features/editor/utils/sections';
 import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/singer-colors';
-import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
+import type { EditorLine, EditorWord, FocusedTimestamp } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
 import type { PlayerHandle } from '@/features/player/player.types';
@@ -34,7 +34,7 @@ interface CharSelection {
   range: { s: number; e: number } | null;
 }
 
-type FocusedTs = { lineIndex: number; type: string; wordIndex?: number } | null;
+type FocusedTs = FocusedTimestamp | null;
 type PlayerRef = RefObject<Pick<PlayerHandle, 'seek' | 'play'> | null> | null;
 
 interface EditorLineItemProps {

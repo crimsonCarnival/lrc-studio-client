@@ -1,11 +1,6 @@
 import { useRef, useEffect } from 'react';
 import type { ButtonHTMLAttributes } from 'react';
-
-interface FocusedTimestamp {
-  type?: string;
-  wordIndex?: number;
-  lineIndex?: number;
-}
+import type { FocusedTimestamp } from '@/features/editor/editor.types';
 
 interface StampedWordChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   time?: number | null;

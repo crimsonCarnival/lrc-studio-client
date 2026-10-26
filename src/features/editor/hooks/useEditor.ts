@@ -28,14 +28,9 @@ import { useDragReorder } from './useDragReorder';
 import { useCounterparts } from './useCounterparts';
 import { useWordsMode } from './useWordsMode';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
-import type { EditorLine, EditorWord, EditorTranslation } from '@/features/editor/editor.types';
+import type { EditorLine, EditorWord, EditorTranslation, FocusedTimestamp } from '@/features/editor/editor.types';
 import type { PlayerHandle } from '@/features/player/player.types';
 
-interface FocusedTs {
-  lineIndex: number;
-  type: string;
-  wordIndex?: number;
-}
 
 interface UseEditorParams {
   lines: EditorLine[];
@@ -90,7 +85,7 @@ export function useEditor({
     awaitingEndMarkFor?.lineIndex === activeLineIndex && awaitingEndMarkFor?.mode === editorMode
       ? awaitingEndMarkFor.lineIndex
       : null;
-  const [focusedTimestamp, setFocusedTimestamp] = useState<FocusedTs | null>(null);
+  const [focusedTimestamp, setFocusedTimestamp] = useState<FocusedTimestamp | null>(null);
   const [hoveredLineIndex, setHoveredLineIndex] = useState<number | null>(null);
   const [isActiveLineLocked, setIsActiveLineLocked] = useState(false);
   const [activeWordIndex, setActiveWordIndex] = useState(0);
