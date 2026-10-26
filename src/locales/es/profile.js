@@ -292,6 +292,8 @@ export default {
     showcase: "Vitrina",
     activity: "Actividad",
   },
+  projectsRange: "{{from}}–{{to}} de {{total}}",
+  goToLibrary: "Ir a tu biblioteca",
   notFound: "Usuario no encontrado.",
   notFoundSub: "Este perfil no existe o puede haber sido eliminado.",
   settings: {

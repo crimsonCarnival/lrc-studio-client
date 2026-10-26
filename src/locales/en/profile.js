@@ -293,6 +293,8 @@ export default {
     showcase: "Showcase",
     activity: "Activity",
   },
+  projectsRange: "{{from}}–{{to}} of {{total}}",
+  goToLibrary: "Go to your library",
   notFound: "User not found.",
   notFoundSub: "This profile doesn't exist or may have been removed.",
   settings: {

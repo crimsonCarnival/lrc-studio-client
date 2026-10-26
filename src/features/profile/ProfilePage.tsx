@@ -186,6 +186,16 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
   );
 }
 
+const PROJECTS_PER_PAGE = 4;
+
+/** A project's last edit as epoch ms; the API sends dates as ISO strings or epoch numbers. */
+function editedMs(project: Parameters<typeof projectEditedAt>[0]): number {
+  const v = projectEditedAt(project);
+  if (v == null) return 0;
+  if (typeof v === 'number') return v;
+  return /^\d+$/.test(v) ? Number(v) : Date.parse(v) || 0;
+}
+
 function PeopleYouMightKnow({ excludeAccountName }: { excludeAccountName?: string }) {
   const { t } = useTranslation();
   // Over-fetch by one so filtering out the viewed profile still leaves 5.
@@ -234,6 +244,7 @@ export default function ProfilePage() {
   const { user } = useAuthContext();
 
   const [activeTab, setActiveTab] = useState('projects');
+  const [projectPage, setProjectPage] = useState(0);
 
   const [followLoading, setFollowLoading] = useState(false);
   const [blockLoading, setBlockLoading] = useState(false);
@@ -503,9 +514,15 @@ export default function ProfilePage() {
   const showcaseVisibleToViewer = profile.showcasePublic !== false;
   const hasVisibleShowcase = showcaseVisibleToViewer && showcasedBadges.length > 0;
 
-  // In preview mode the server already returned the visitor projection.
-  const visibleProjects = profile.projects;
+  // In preview mode the server already returned the visitor projection. The server orders
+  // by stars; the profile shows the most recently edited first, PROJECTS_PER_PAGE at a time.
+  const visibleProjects = [...profile.projects].sort((a, b) => editedMs(b) - editedMs(a));
   const projectCount = profile.projectCount;
+  const projectPageCount = Math.max(1, Math.ceil(visibleProjects.length / PROJECTS_PER_PAGE));
+  // Clamped, not reset: navigating to another profile keeps this component mounted.
+  const currentProjectPage = Math.min(projectPage, projectPageCount - 1);
+  const pageStart = currentProjectPage * PROJECTS_PER_PAGE;
+  const pagedProjects = visibleProjects.slice(pageStart, pageStart + PROJECTS_PER_PAGE);
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
@@ -615,17 +632,41 @@ export default function ProfilePage() {
                   <p className="text-sm text-zinc-400 font-medium">{t('profile.noPublicProjects')}</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {visibleProjects.map((project) => (
-                    <ProjectCard
-                      key={project.publicId}
-                      project={project}
-                      ownerAccountName={profile.accountName}
-                      isOwner={isOwner}
-                      onEdit={handleEditProject}
-                      onDelete={handleDeleteProject}
-                    />
-                  ))}
+                <div className="flex flex-col gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {pagedProjects.map((project) => (
+                      <ProjectCard
+                        key={project.publicId}
+                        project={project}
+                        ownerAccountName={profile.accountName}
+                        isOwner={isOwner}
+                        onEdit={handleEditProject}
+                        onDelete={handleDeleteProject}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+                    {/* Library is the signed-in user's own page, so only the owner gets the link. */}
+                    {isOwner && !viewAsOthers ? (
+                      <Link to="/library" className="inline-flex items-center gap-1 text-primary hover:underline">
+                        {t('profile.goToLibrary')}
+                        <Icon name="arrow_forward" size={14} />
+                      </Link>
+                    ) : <span />}
+                    {projectPageCount > 1 && (
+                      <nav aria-label={t('profile.publicTabs.projects')} className="flex items-center gap-2">
+                        <span className="text-xs text-zinc-500">
+                          {t('profile.projectsRange', { from: pageStart + 1, to: pageStart + pagedProjects.length, total: visibleProjects.length })}
+                        </span>
+                        <Button type="button" variant="outline" size="sm" disabled={currentProjectPage === 0} onClick={() => setProjectPage(currentProjectPage - 1)}>
+                          {t('common.pagination.previous')}
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" disabled={currentProjectPage >= projectPageCount - 1} onClick={() => setProjectPage(currentProjectPage + 1)}>
+                          {t('common.pagination.next')}
+                        </Button>
+                      </nav>
+                    )}
+                  </div>
                 </div>
               )
             )}
