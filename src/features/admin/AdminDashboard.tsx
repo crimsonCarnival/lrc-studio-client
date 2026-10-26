@@ -29,6 +29,7 @@ import type { AdminTabId } from './admin-nav';
 import { useAdminTabs } from './useAdminTabs';
 import SudoPasswordModal from './SudoPasswordModal';
 import { LogoLoader } from '@ui/LogoLoader';
+import type { AdminUser } from '@/features/admin/admin.types';
 
 /*
  * Note on `advanced.confirmDestructive`: this surface deliberately confirms
@@ -44,18 +45,6 @@ import { LogoLoader } from '@ui/LogoLoader';
  * If you are here to "make this honour the setting" for consistency: that is
  * the consistency we are declining.
  */
-
-interface AdminUser {
-  id?: string;
-  _id?: string;
-  role?: string;
-  displayName?: string;
-  accountName?: string;
-  ban?: { active?: boolean } | null;
-  lastIp?: string;
-  lastDeviceId?: string;
-  [key: string]: unknown;
-}
 
 interface ConfirmModalState {
   isOpen: boolean;

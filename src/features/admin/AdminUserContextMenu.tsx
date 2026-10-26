@@ -16,20 +16,7 @@ import { ROLE_RANK, userHasPermission, type Role } from '@/features/auth/permiss
 import { adminShadowBan, adminUnshadowBan } from '@/features/settings/services/preferences.service';
 import { withSudo, isSudoCancelled } from '@/features/admin/services/sudo';
 import toast from 'react-hot-toast';
-
-interface AdminUser {
-  id?: string;
-  _id?: string;
-  accountName?: string;
-  role?: string;
-  ban?: { active?: boolean };
-  appeal?: { status?: string };
-  isDeleted?: boolean;
-  shadowBanned?: boolean;
-  lastIp?: string;
-  lastDeviceId?: string;
-  [key: string]: unknown;
-}
+import type { AdminUser } from '@/features/admin/admin.types';
 
 interface Props {
   children: React.ReactNode;

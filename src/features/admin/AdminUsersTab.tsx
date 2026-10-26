@@ -14,32 +14,7 @@ import { userHasPermission, ROLES, ROLE_RANK, type Role } from '@/features/auth/
 import { usePresence } from '@/shared/hooks/usePresence';
 import { OnlineDot } from '@/shared/ui/OnlineDot';
 import { UserHoverCard } from '@/shared/ui/UserHoverCard';
-
-interface AdminUser {
-  id?: string;
-  displayName?: string;
-  accountName?: string;
-  email?: string;
-  avatarUrl?: string;
-  role?: string;
-  ban?: { active?: boolean; reason?: string };
-  appeal?: { status?: string };
-  isDeleted?: boolean;
-  isVerified?: boolean;
-  projectCount?: number;
-  uploadCount?: number;
-  lastIp?: string;
-  lastDeviceId?: string;
-  lastDeviceName?: string;
-  country?: string | null;
-  lastOnlineAt?: string | null;
-  isOnline?: boolean;
-  storageUsed?: number;
-  createdAt?: string;
-  lastUsedAt?: string;
-  stats?: { minutesSynced?: number };
-  [key: string]: unknown;
-}
+import type { AdminUser } from '@/features/admin/admin.types';
 
 function formatBytes(bytes = 0) {
   if (bytes === 0) return '0 B';

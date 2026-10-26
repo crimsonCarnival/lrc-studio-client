@@ -4,19 +4,7 @@ import { admin } from '@/app/api';
 import toast from 'react-hot-toast';
 import AdminUsersTab from './AdminUsersTab';
 import { ROLE_RANK, type Role } from '@/features/auth/permissions';
-
-interface AdminUser {
-  id?: string;
-  _id?: string;
-  role?: string;
-  displayName?: string;
-  accountName?: string;
-  ban?: { active?: boolean; reason?: string } | null;
-  lastIp?: string;
-  lastDeviceId?: string;
-  lastDeviceName?: string;
-  [key: string]: unknown;
-}
+import type { AdminUser } from '@/features/admin/admin.types';
 
 interface AdminStaffTabProps {
   currentUser?: { id?: string; _id?: string; role?: string; permissions?: string[] } | null;

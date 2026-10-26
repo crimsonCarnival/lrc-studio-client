@@ -7,19 +7,7 @@ import AdminDevicesTab from './AdminDevicesTab';
 import { userHasPermission } from '@/features/auth/permissions';
 import { useAdminSub } from './admin-nav';
 import { AdminSubNav } from './AdminSubNav';
-
-interface AdminUser {
-  id?: string;
-  _id?: string;
-  role?: string;
-  displayName?: string;
-  accountName?: string;
-  ban?: { active?: boolean; reason?: string } | null;
-  lastIp?: string;
-  lastDeviceId?: string;
-  lastDeviceName?: string;
-  [key: string]: unknown;
-}
+import type { AdminUser } from '@/features/admin/admin.types';
 
 interface AdminModerationTabProps {
   // Users sub-tab
