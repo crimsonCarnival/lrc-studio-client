@@ -5,7 +5,7 @@ import { NotificationStickySection } from './components/NotificationStickySectio
 import { NotificationItem } from './components/NotificationItem';
 import type { AppNotification } from '@/features/notifications/notifications.types';
 
-const SOCIAL_TYPES  = new Set(['star', 'fork', 'follow', 'reaction', 'followed_project', 'wall_comment', 'playlist_saved', 'star_milestone']);
+const SOCIAL_TYPES  = new Set(['star', 'fork', 'follow', 'reaction', 'followed_project', 'wall_comment', 'mention', 'playlist_saved', 'star_milestone']);
 const BADGE_TYPES   = new Set(['badge_awarded', 'xp_changed']);
 const SYSTEM_TYPES  = new Set(['system', 'admin', 'ban', 'unban', 'password_changed', 'admin_granted', 'role_changed', 'streak_warning', 'level_up', 'new_device', 'appeal_result']);
 const STICKY_TYPES  = new Set(['verify_email', 'set_password']);

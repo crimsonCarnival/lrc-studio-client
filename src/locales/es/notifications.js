@@ -13,6 +13,7 @@ export default {
   followedUpdated: '<0>{{actors}}</0> actualizó <1>{{title}}</1>',
   wallComment: '<0>{{actors}}</0> comentó en el muro de <1>{{wall}}</1>',
   wallReply: '<0>{{actors}}</0> respondió a tu comentario en el muro de <1>{{wall}}</1>',
+  mention: '<0>{{actors}}</0> te etiquetó en el muro de <1>{{wall}}</1>',
   levelUp: 'Llegaste al <0>nivel {{level}}</0>',
   playlistSaved: '<0>{{actors}}</0> guardó tu lista <1>{{title}}</1>',
   starMilestone: '<1>{{title}}</1> llegó a <0>{{count}} estrellas</0>',

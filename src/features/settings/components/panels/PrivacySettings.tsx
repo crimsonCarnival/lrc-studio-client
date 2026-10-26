@@ -8,6 +8,14 @@ import BlockedUsersSettings from './BlockedUsersSettings';
 
 type Audience = 'everyone' | 'friends' | 'nobody';
 
+// Every notification type with a per-user switch on the server (NotificationPreferences),
+// in the order the settings list them. Each label is `profile.notif_<type>`.
+const NOTIFICATION_TYPES = [
+  'follow', 'reaction', 'star', 'fork', 'followed_project', 'wall_comment', 'mention',
+  'playlist_saved', 'star_milestone', 'badge_awarded', 'xp_changed', 'level_up',
+  'streak_warning', 'new_device', 'appeal_result',
+] as const;
+
 export default function PrivacySettings({ searchTerm }: { searchTerm?: string }) {
   const { t } = useTranslation();
   const { user, setUser } = useAuthContext();
@@ -23,6 +31,23 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
 
     try {
       const updated = await updatePreferences({ [key]: value });
+      setUser(prev => prev ? ({ ...prev, preferences: { ...prev.preferences, ...updated } } as AuthUser) : prev);
+    } catch {
+      setUser(prev => prev ? ({ ...prev, preferences: prevPrefs } as AuthUser) : prev);
+      toast.error(tk('profile.saveError'));
+    }
+  };
+
+  const notificationPrefs = (user?.preferences?.notifications ?? {}) as Partial<Record<string, boolean>>;
+  // Sends only the switched type; the server merges it into the stored set.
+  const handleNotificationChange = async (type: string, value: boolean) => {
+    const prevPrefs = user?.preferences;
+    setUser(prev => prev ? ({
+      ...prev,
+      preferences: { ...prev.preferences, notifications: { ...prev.preferences?.notifications, [type]: value } },
+    } as AuthUser) : prev);
+    try {
+      const updated = await updatePreferences({ notifications: { [type]: value } });
       setUser(prev => prev ? ({ ...prev, preferences: { ...prev.preferences, ...updated } } as AuthUser) : prev);
     } catch {
       setUser(prev => prev ? ({ ...prev, preferences: prevPrefs } as AuthUser) : prev);
@@ -106,6 +131,19 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
             onChange={(v) => handlePreferenceChange('countryVisibility', v)}
           />
         </SettingRow>
+      </Section>
+
+      <Section title={tk('profile.settings.notificationsSection')} searchTerm={searchTerm}>
+        {NOTIFICATION_TYPES.map((type) => (
+          <SettingRow key={type} label={tk(`profile.notif_${type}`)}>
+            <Toggle
+              label={tk(`profile.notif_${type}`)}
+              // Unset means on: every type defaults to enabled on the server.
+              checked={notificationPrefs[type] !== false}
+              onChange={(v) => handleNotificationChange(type, v)}
+            />
+          </SettingRow>
+        ))}
       </Section>
 
       <BlockedUsersSettings searchTerm={searchTerm} />

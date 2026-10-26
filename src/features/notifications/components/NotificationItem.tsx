@@ -54,6 +54,7 @@ const TYPE_ICON_NAME: Record<string, string> = {
   streak_warning: 'local_fire_department',
   followed_project: 'queue_music',
   wall_comment: 'forum',
+  mention: 'alternate_email',
   level_up: 'trending_up',
   playlist_saved: 'bookmark',
   star_milestone: 'star',
@@ -94,7 +95,7 @@ export function notificationDestination(
   if (type === 'badge_awarded') return '/settings/badges';
   // The author is the project's owner, so the actor supplies the account name the URL needs.
   if (type === 'followed_project' && publicId && actors?.[0]?.accountName) return projectPath({ publicId }, actors[0].accountName);
-  if (type === 'wall_comment' && notification.meta?.wall) return `${profilePath(notification.meta.wall)}#wall`;
+  if ((type === 'wall_comment' || type === 'mention') && notification.meta?.wall) return `${profilePath(notification.meta.wall)}#wall`;
   if (type === 'level_up' && recipientAccountName) return profilePath(recipientAccountName);
   if (type === 'playlist_saved' && notification.meta?.playlistId && recipientAccountName) return listPath(recipientAccountName, notification.meta.playlistId);
   if (type === 'star_milestone' && publicId) return projectPath({ publicId }, recipientAccountName);
@@ -202,6 +203,17 @@ export function NotificationText({ notification, t }: { notification: Notificati
       <span>
         <Trans
           i18nKey={notification.meta?.reply ? 'notifications.wallReply' : 'notifications.wallComment'}
+          values={{ actors: actorStr, wall: notification.meta?.wall ?? '' }}
+          components={[<strong key="0" />, <strong key="1" />]}
+        />
+      </span>
+    );
+  }
+  if (type === 'mention') {
+    return (
+      <span>
+        <Trans
+          i18nKey="notifications.mention"
           values={{ actors: actorStr, wall: notification.meta?.wall ?? '' }}
           components={[<strong key="0" />, <strong key="1" />]}
         />

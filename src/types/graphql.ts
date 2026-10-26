@@ -1259,6 +1259,7 @@ export type UserPreferencesNotifications = {
   streak_warning: Scalars['Boolean']['output'];
   followed_project: Scalars['Boolean']['output'];
   wall_comment: Scalars['Boolean']['output'];
+  mention: Scalars['Boolean']['output'];
   level_up: Scalars['Boolean']['output'];
   playlist_saved: Scalars['Boolean']['output'];
   star_milestone: Scalars['Boolean']['output'];
@@ -1292,6 +1293,7 @@ export type UpdatePreferencesNotificationsInput = {
   streak_warning?: InputMaybe<Scalars['Boolean']['input']>;
   followed_project?: InputMaybe<Scalars['Boolean']['input']>;
   wall_comment?: InputMaybe<Scalars['Boolean']['input']>;
+  mention?: InputMaybe<Scalars['Boolean']['input']>;
   level_up?: InputMaybe<Scalars['Boolean']['input']>;
   playlist_saved?: InputMaybe<Scalars['Boolean']['input']>;
   star_milestone?: InputMaybe<Scalars['Boolean']['input']>;
