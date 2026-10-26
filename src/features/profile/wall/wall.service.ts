@@ -48,9 +48,14 @@ const WALL_QUERY = /* GraphQL */ `
   }
 `;
 
+/** The query stops at the deepest level, which has no `replies` field; give every comment an array. */
+function withReplyArrays(comment: WallComment): WallComment {
+  return { ...comment, replies: (comment.replies ?? []).map(withReplyArrays) };
+}
+
 export async function getWall(accountName: string, after?: string | null): Promise<Wall> {
   const data = await gqlRequest<{ wall: Wall }>(WALL_QUERY, { accountName, after: after ?? null });
-  return data.wall;
+  return { ...data.wall, comments: data.wall.comments.map(withReplyArrays) };
 }
 
 export async function addWallComment(accountName: string, body: string, parentId?: string | null): Promise<WallComment> {
