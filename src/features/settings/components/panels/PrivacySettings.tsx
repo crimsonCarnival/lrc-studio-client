@@ -1,5 +1,8 @@
+import { useMemo } from 'react';
 import type { AuthUser } from '@/features/auth/auth.types';
 import { useTranslation } from 'react-i18next';
+import { FloatingCombobox } from '@ui/floating-combobox';
+import { countryList } from '@/shared/utils/countries';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { updatePreferences } from '@/features/settings/services/preferences.service';
 import toast from 'react-hot-toast';
@@ -17,7 +20,7 @@ const NOTIFICATION_TYPES = [
 ] as const;
 
 export default function PrivacySettings({ searchTerm }: { searchTerm?: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, setUser } = useAuthContext();
 
   const tk = t as (key: string) => string;
@@ -64,6 +67,12 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
   const onlineVisibility = (user?.preferences?.onlineVisibility ?? user?.onlineVisibility ?? 'friends') as Audience;
   const lastOnlineVisibility = (user?.preferences?.lastOnlineVisibility ?? 'friends') as Audience;
   const countryVisibility = (user?.preferences?.countryVisibility ?? 'nobody') as Audience;
+  const country = (user?.preferences?.country as string | null | undefined) ?? null;
+  const language = i18n.resolvedLanguage || i18n.language || 'en';
+  const countryOptions = useMemo(
+    () => [{ value: '', label: tk('profile.settings.countryNone') }, ...countryList(language).map((c) => ({ value: c.code, label: c.name }))],
+    [language, tk],
+  );
 
   const audienceOptions = [
     { value: 'everyone' as const, label: tk('profile.settings.visibilityEveryone') },
@@ -123,9 +132,21 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
             onChange={(v) => handlePreferenceChange('lastOnlineVisibility', v)}
           />
         </SettingRow>
-        <SettingRow label={tk('profile.settings.countryVisibility')} description={tk('profile.settings.countryVisibilityDesc')}>
+        <SettingRow label={tk('profile.settings.country')} description={tk('profile.settings.countryDesc')}>
+          <FloatingCombobox
+            label={tk('profile.settings.country')}
+            value={country ?? ''}
+            options={countryOptions}
+            strict
+            size="sm"
+            onChange={(code) => { if (code !== (country ?? '')) handlePreferenceChange('country', code || null); }}
+            className="w-56"
+          />
+        </SettingRow>
+        <SettingRow disabled={!country} label={tk('profile.settings.countryVisibility')} description={tk('profile.settings.countryVisibilityDesc')}>
           <SegmentedControl
             label={tk('profile.settings.countryVisibility')}
+            disabled={!country}
             value={countryVisibility}
             options={audienceOptions}
             onChange={(v) => handlePreferenceChange('countryVisibility', v)}

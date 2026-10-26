@@ -37,7 +37,6 @@ export default {
   send: "Send",
   delete: "Delete",
   online: "Online",
-  localNetwork: "Local Network",
   rankN: "Rank {{pos}}",
   levelN: "Level {{level}}",
   levelShort: "Lv. {{level}}",
