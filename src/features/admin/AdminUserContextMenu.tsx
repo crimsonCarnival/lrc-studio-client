@@ -14,6 +14,7 @@ import {
 import { Icon } from '@/shared/ui/Icon';
 import { ROLE_RANK, userHasPermission, type Role } from '@/features/auth/permissions';
 import { adminShadowBan, adminUnshadowBan } from '@/features/settings/services/preferences.service';
+import { withSudo, isSudoCancelled } from '@/features/admin/services/sudo';
 import toast from 'react-hot-toast';
 
 interface AdminUser {
@@ -76,10 +77,10 @@ export function AdminUserContextMenu({
     const userId = user.id || user._id;
     if (!userId) return;
     try {
-      await adminShadowBan(userId, true, true, null);
+      await withSudo(() => adminShadowBan(userId, true, true, null));
       onRefresh?.();
-    } catch {
-      toast.error(t('admin.toast.statusError'));
+    } catch (err) {
+      if (!isSudoCancelled(err)) toast.error(t('admin.toast.statusError'));
     }
   };
 
@@ -87,10 +88,10 @@ export function AdminUserContextMenu({
     const userId = user.id || user._id;
     if (!userId) return;
     try {
-      await adminUnshadowBan(userId);
+      await withSudo(() => adminUnshadowBan(userId));
       onRefresh?.();
-    } catch {
-      toast.error(t('admin.toast.statusError'));
+    } catch (err) {
+      if (!isSudoCancelled(err)) toast.error(t('admin.toast.statusError'));
     }
   };
 
