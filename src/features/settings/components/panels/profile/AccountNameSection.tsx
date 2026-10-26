@@ -8,11 +8,7 @@ import toast from 'react-hot-toast';
 import { authService } from '@/features/auth/services/auth.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LogoLoader } from '@ui/LogoLoader';
-
-interface ApiError {
-  message?: string;
-  graphqlErrors?: { extensions?: { code?: string; daysLeft?: number } }[];
-}
+import type { ApiError } from '@/types/api/error';
 
 const ACCOUNT_NAME_RE = /^[a-z0-9_.:-]{3,30}$/;
 const COOLDOWN_DAYS = 7;
@@ -60,7 +56,8 @@ export default function AccountNameSection() {
       const ext = err?.graphqlErrors?.[0]?.extensions;
       const code = ext?.code;
       if (code === 'accountName_change_cooldown') {
-        setError(t('profile.accountNameCooldownError', { days: ext?.daysLeft ?? accountNameCooldownDaysLeft ?? COOLDOWN_DAYS }));
+        const daysLeft = typeof ext?.daysLeft === 'number' ? ext.daysLeft : null;
+        setError(t('profile.accountNameCooldownError', { days: daysLeft ?? accountNameCooldownDaysLeft ?? COOLDOWN_DAYS }));
       } else if (code === 'accountName_taken' || err?.message?.includes('already taken')) {
         setError(t('profile.accountNameTaken'));
       } else {

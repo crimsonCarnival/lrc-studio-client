@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Tip } from '@ui/tip';
 import { IconRow } from './shared';
+import type { ApiError } from '@/types/api/error';
 
 interface Passkey {
   id: string;
@@ -23,11 +24,6 @@ interface Passkey {
   deviceName?: string;
   deviceType?: string;
   createdAt?: string;
-}
-
-interface ApiError {
-  code?: string;
-  message?: string;
 }
 
 export default function PasskeySection() {

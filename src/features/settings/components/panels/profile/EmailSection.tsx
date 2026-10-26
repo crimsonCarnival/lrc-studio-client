@@ -7,12 +7,7 @@ import toast from 'react-hot-toast';
 import { authService } from '@/features/auth/services/auth.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LogoLoader } from '@ui/LogoLoader';
-
-interface ApiError {
-  status?: number;
-  message?: string;
-  graphqlErrors?: { extensions?: { code?: string } }[];
-}
+import type { ApiError } from '@/types/api/error';
 
 export default function EmailSection() {
   const { t } = useTranslation();

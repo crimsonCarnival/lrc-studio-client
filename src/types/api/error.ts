@@ -13,8 +13,9 @@ export interface ApiError extends Error {
   code?: string;
   /** Raw parsed JSON error body, when present. */
   body?: unknown;
-  /** Populated by gqlRequest for GraphQL-level (non-HTTP) errors. */
-  graphqlErrors?: Array<{ message: string; extensions?: { code?: string } }>;
+  /** Populated by gqlRequest for GraphQL-level (non-HTTP) errors. `extensions` is
+   *  open-ended by spec; narrow extra fields (e.g. `daysLeft`) before using them. */
+  graphqlErrors?: Array<{ message: string; extensions?: { code?: string; [key: string]: unknown } }>;
 }
 
 /**

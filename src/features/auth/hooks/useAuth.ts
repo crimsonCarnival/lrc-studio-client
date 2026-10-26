@@ -11,6 +11,7 @@ import { startRegistration, startAuthentication } from '@simplewebauthn/browser'
 import type { AuthUser } from '@/features/auth/auth.types';
 import { getSignupAttribution, clearSignupAttribution } from '@/shared/utils/attribution';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
+import type { ApiError } from '@/types/api/error';
 
 // Migrate legacy single-account format to multi-account array on first load
 rememberedAccounts.migrate();
@@ -23,11 +24,6 @@ interface AuthInternalState {
   user: AuthUser | null;
   loading: boolean;
   heldLoginResult: unknown;
-}
-
-interface ApiError {
-  status?: number;
-  message?: string;
 }
 
 // Paints a themed spinner into a freshly opened OAuth popup so it doesn't flash a
