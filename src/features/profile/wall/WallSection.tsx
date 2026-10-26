@@ -22,7 +22,7 @@ import { userToken } from './wall-tags';
 import WallComposer from './WallComposer';
 import CommentBody from './CommentBody';
 
-const WALL_ERROR_KEYS = ['rate_limited', 'wall_disabled', 'forbidden', 'invalid_body', 'max_depth', 'not_found'] as const;
+const WALL_ERROR_KEYS = ['rate_limited', 'wall_disabled', 'forbidden', 'invalid_body', 'max_depth', 'not_found', 'tag_not_allowed'] as const;
 
 /** Adds `reply` under the comment `parentId`, wherever it sits in the tree. */
 function withReply(comments: WallComment[], parentId: string, reply: WallComment): WallComment[] {
@@ -229,8 +229,8 @@ function CommentNode({
                 busy={busy}
                 onSubmit={body => onReply(comment.id, body)}
                 onCancel={() => onReplyingTo(null)}
-                // A reply starts by tagging the author it answers, unless that's you.
-                initialTags={viewerId && author.id !== viewerId ? [{ display: `@${author.accountName}`, token: userToken(author.id) }] : undefined}
+                // A reply starts by tagging the author it answers, unless that's you or they don't allow tags.
+                initialTags={viewerId && author.id !== viewerId && author.allowsTags ? [{ display: `@${author.accountName}`, token: userToken(author.id) }] : undefined}
               />
             </div>
           )}

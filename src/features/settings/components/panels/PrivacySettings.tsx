@@ -64,6 +64,7 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
   const showActivityHeatmap = user?.preferences?.showActivityHeatmap ?? false;
   const showXpProgress = user?.preferences?.showXpProgress ?? false;
   const wallEnabled = user?.preferences?.wallEnabled ?? true;
+  const allowTags = user?.preferences?.allowTags ?? true;
   const onlineVisibility = (user?.preferences?.onlineVisibility ?? user?.onlineVisibility ?? 'friends') as Audience;
   const lastOnlineVisibility = (user?.preferences?.lastOnlineVisibility ?? 'friends') as Audience;
   const countryVisibility = (user?.preferences?.countryVisibility ?? 'nobody') as Audience;
@@ -111,6 +112,9 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
         </SettingRow>
         <SettingRow label={tk('profile.settings.wallEnabled')} description={tk('profile.settings.wallEnabledSub')}>
           <Toggle label={tk('profile.settings.wallEnabled')} checked={wallEnabled} onChange={(v) => handlePreferenceChange('wallEnabled', v)} />
+        </SettingRow>
+        <SettingRow label={tk('profile.settings.allowTags')} description={tk('profile.settings.allowTagsSub')}>
+          <Toggle label={tk('profile.settings.allowTags')} checked={allowTags} onChange={(v) => handlePreferenceChange('allowTags', v)} />
         </SettingRow>
       </Section>
 

@@ -1279,6 +1279,7 @@ export type UserPreferences = {
   showActivityHeatmap: Scalars['Boolean']['output'];
   showXpProgress?: Maybe<Scalars['Boolean']['output']>;
   wallEnabled?: Maybe<Scalars['Boolean']['output']>;
+  allowTags?: Maybe<Scalars['Boolean']['output']>;
   notifications: UserPreferencesNotifications;
   defaultProjectPrivacy: Scalars['String']['output'];
 };
@@ -1312,6 +1313,7 @@ export type UpdatePreferencesInput = {
   showActivityHeatmap?: InputMaybe<Scalars['Boolean']['input']>;
   showXpProgress?: InputMaybe<Scalars['Boolean']['input']>;
   wallEnabled?: InputMaybe<Scalars['Boolean']['input']>;
+  allowTags?: InputMaybe<Scalars['Boolean']['input']>;
   notifications?: InputMaybe<UpdatePreferencesNotificationsInput>;
   defaultProjectPrivacy?: InputMaybe<Scalars['String']['input']>;
 };

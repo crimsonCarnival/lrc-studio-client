@@ -14,6 +14,7 @@ const PREFERENCES_FIELDS = /* GraphQL */ `
   showActivityHeatmap
   showXpProgress
   wallEnabled
+  allowTags
   notifications {
     follow
     reaction

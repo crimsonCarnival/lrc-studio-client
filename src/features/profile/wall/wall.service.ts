@@ -6,6 +6,8 @@ export interface WallAuthor {
   displayName: string | null;
   avatarUrl: string | null;
   staffRole: string | null;
+  /** False when this author switched tagging off. */
+  allowsTags: boolean;
 }
 
 export interface WallMention {
@@ -49,7 +51,7 @@ export const WALL_MAX_DEPTH = 2;
 export const WALL_MAX_LENGTH = 500;
 
 const COMMENT_FIELDS = `id body createdAt depth canDelete
-  author { id accountName displayName avatarUrl staffRole }
+  author { id accountName displayName avatarUrl staffRole allowsTags }
   mentions { id accountName displayName }
   projectRefs { publicId title slug coverImage ownerAccountName }`;
 
@@ -118,21 +120,26 @@ export interface TagProject {
 const FOLLOWING_PAGE = 50;
 const MAX_FOLLOWING = 200;
 
-/** The people `accountName` follows (the @ popup), up to MAX_FOLLOWING. */
+/**
+ * The people `accountName` follows who allow tags (the @ popup), up to MAX_FOLLOWING.
+ * Someone who switched tags off is left out; the server refuses the tag anyway.
+ */
 export async function getTaggablePeople(accountName: string): Promise<TagPerson[]> {
   const people: TagPerson[] = [];
+  let seen = 0;
   for (let offset = 0; offset < MAX_FOLLOWING; offset += FOLLOWING_PAGE) {
-    const data = await gqlRequest<{ followList: { users: TagPerson[]; total: number } | null }>(/* GraphQL */ `
+    const data = await gqlRequest<{ followList: { users: Array<TagPerson & { allowsTags: boolean }>; total: number } | null }>(/* GraphQL */ `
       query TaggablePeople($accountName: String!, $offset: Int) {
         followList(accountName: $accountName, type: FOLLOWING, offset: $offset) {
-          users { id accountName displayName avatarUrl }
+          users { id accountName displayName avatarUrl allowsTags }
           total
         }
       }
     `, { accountName, offset });
     const page = data.followList?.users ?? [];
-    people.push(...page);
-    if (page.length < FOLLOWING_PAGE || people.length >= (data.followList?.total ?? 0)) break;
+    seen += page.length;
+    people.push(...page.filter((p) => p.allowsTags).map(({ allowsTags: _allowsTags, ...person }) => person));
+    if (page.length < FOLLOWING_PAGE || seen >= (data.followList?.total ?? 0)) break;
   }
   return people;
 }
