@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import useConfirm from '@/shared/hooks/useConfirm';
 import { formatInTimezone, getRelativeTime } from '@/shared/utils/date';
 import { LogoLoader } from '@ui/LogoLoader';
-import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
+import { ProjectCardMenu, ProjectCardMenuButton } from '@/features/projects/components/ProjectCardMenu';
 import { ProjectStatusTag } from '@/features/projects/components/ProjectStatusTag';
 import { projectStatus } from '@/features/projects/project-status';
 import { projectPath, projectEditPath } from '@/features/projects/project-path';
@@ -190,7 +190,7 @@ function ProjectCard({
   if (isListView) {
     return (
       <>
-        <ProjectMenu
+        <ProjectCardMenu
           project={project}
           isOwner={isOwner}
           ownerAccountName={ownerAccountName}
@@ -313,7 +313,7 @@ function ProjectCard({
                   : <Icon name="delete" size={14} />}
               </Button>
             </div>
-            <ProjectMenuButton
+            <ProjectCardMenuButton
               project={project}
               isOwner={isOwner}
               ownerAccountName={ownerAccountName}
@@ -322,7 +322,7 @@ function ProjectCard({
             />
           </div>
         </div>
-        </ProjectMenu>
+        </ProjectCardMenu>
         {confirmModal}
       </>
     );
@@ -333,7 +333,7 @@ function ProjectCard({
 
   return (
     <>
-      <ProjectMenu
+      <ProjectCardMenu
         project={project}
         isOwner={isOwner}
         ownerAccountName={ownerAccountName}
@@ -405,7 +405,7 @@ function ProjectCard({
                 {isDeleting ? <LogoLoader size={14} /> : <Icon name="delete" size={16} />}
               </Button>
             </div>
-            <ProjectMenuButton
+            <ProjectCardMenuButton
               project={project}
               isOwner={isOwner}
               ownerAccountName={ownerAccountName}
@@ -460,7 +460,7 @@ function ProjectCard({
           </div>
         </div>
       </div>
-      </ProjectMenu>
+      </ProjectCardMenu>
       {confirmModal}
     </>
   );

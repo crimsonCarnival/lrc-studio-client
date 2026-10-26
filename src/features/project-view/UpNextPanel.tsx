@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
-import { projectPath } from '../project-path';
+import { projectPath } from '@/features/projects/project-path';
 
 interface UpNextProject {
   publicId: string;
@@ -17,14 +17,14 @@ interface UpNextProject {
   [key: string]: unknown;
 }
 
-interface ProjectUpNextPanelProps {
+interface UpNextPanelProps {
   playlist?: { name: string; projects: UpNextProject[] } | null;
   currentpublicId?: string;
   listId?: string;
   accountName?: string;
 }
 
-export function ProjectUpNextPanel({ playlist, currentpublicId, listId, accountName }: ProjectUpNextPanelProps) {
+export function UpNextPanel({ playlist, currentpublicId, listId, accountName }: UpNextPanelProps) {
   const { t } = useTranslation();
   if (!playlist) return null;
 

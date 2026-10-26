@@ -3,7 +3,7 @@ import { artistDisplay } from '@/features/artists/artist-credits';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { ProjectListCover } from '@/features/projects/components/ProjectListCover';
-import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
+import { ProjectCardMenu, ProjectCardMenuButton } from '@/features/projects/components/ProjectCardMenu';
 import { projectPath } from '@/features/projects/project-path';
 import type { Project } from '@/types';
 import { Highlight } from './Highlight';
@@ -40,16 +40,16 @@ export function SearchProjectCard({ project, query }: { project: Project; query:
         <div className="flex shrink-0 items-center gap-3 font-mono text-xs font-medium text-subtle tabular-nums">
           <span className="flex items-center gap-1"><Icon name="star" size={14} />{starCount ?? 0}</span>
           <span className="flex items-center gap-1"><Icon name="call_split" size={14} />{forkCount ?? 0}</span>
-          <ProjectMenuButton project={project} isOwner={false} className="grid size-8 place-items-center rounded-[10px] text-subtle transition-colors hover:bg-raised hover:text-foreground coarse:size-11" />
+          <ProjectCardMenuButton project={project} isOwner={false} className="grid size-8 place-items-center rounded-[10px] text-subtle transition-colors hover:bg-raised hover:text-foreground coarse:size-11" />
         </div>
     </>
   );
 
   return (
-    <ProjectMenu project={project} isOwner={false}>
+    <ProjectCardMenu project={project} isOwner={false}>
       {href
         ? <Link to={href} className={ROW_CLASS}>{body}</Link>
         : <div className={ROW_CLASS}>{body}</div>}
-    </ProjectMenu>
+    </ProjectCardMenu>
   );
 }

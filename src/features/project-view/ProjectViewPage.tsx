@@ -13,14 +13,14 @@ import { usePageTitle } from '@/shared/hooks/usePageTitle';
 import { PlayerEngineProvider } from '@features/player/PlayerEngine';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { parseDeepLink } from '@/shared/utils/url-params';
-import { ProjectUpNextPanel } from './ProjectUpNextPanel';
-import { usePublicProject } from '../hooks/usePublicProject';
-import { useStarredPlaylist } from '../hooks/useStarredPlaylist';
-import ImmersiveLyricsDisplay, { type DisplayLine } from './ImmersiveLyricsDisplay';
+import { UpNextPanel } from './UpNextPanel';
+import { usePublicProject } from '@/features/projects/hooks/usePublicProject';
+import { useStarredPlaylist } from '@/features/projects/hooks/useStarredPlaylist';
+import PublicLyrics, { type DisplayLine } from './PublicLyrics';
 import ProjectInfoPanel from './ProjectInfoPanel';
 import PublicPlaybackBar from './PublicPlaybackBar';
 import { ShareOgButton } from './ShareOgButton';
-import { useProjectViewers } from '../hooks/useProjectViewers';
+import { useProjectViewers } from '@/features/projects/hooks/useProjectViewers';
 import { ViewerBadges } from './ViewerBadges';
 import { getPlaylist } from '@features/playlists/playlist.service';
 import { ReactionBar } from '@features/reactions/components/ReactionBar';
@@ -81,7 +81,7 @@ interface UpNextPlaylist {
   [key: string]: unknown;
 }
 
-function PublicProjectViewPageInner() {
+function ProjectViewPageInner() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { accountName, slugId } = useParams();
@@ -480,7 +480,7 @@ function PublicProjectViewPageInner() {
                 </Tip>
               </div>
             )}
-            <ImmersiveLyricsDisplay
+            <PublicLyrics
               lines={lines as unknown as DisplayLine[]}
               editorMode={editorMode}
               fullLyrics={fullLyrics}
@@ -535,8 +535,8 @@ function PublicProjectViewPageInner() {
 
               {/* Up-next panel (list context) */}
               {listId && playlist && (
-                <ProjectUpNextPanel
-                  playlist={playlist as Parameters<typeof ProjectUpNextPanel>[0]['playlist']}
+                <UpNextPanel
+                  playlist={playlist as Parameters<typeof UpNextPanel>[0]['playlist']}
                   currentpublicId={publicId}
                   listId={listId}
                   accountName={playlist.owner?.accountName || project?.user?.accountName}
@@ -604,11 +604,11 @@ function PublicProjectViewPageInner() {
   );
 }
 
-export default function PublicProjectViewPage() {
+export default function ProjectViewPage() {
   return (
     <SettingsProvider>
       <TooltipProvider>
-        <PublicProjectViewPageInner />
+        <ProjectViewPageInner />
       </TooltipProvider>
     </SettingsProvider>
   );

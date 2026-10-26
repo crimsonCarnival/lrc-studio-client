@@ -28,7 +28,7 @@ import { TitleFeatSuggestion } from '@/features/artists/TitleFeatSuggestion';
 import { mergeCredits, primaryArtistText } from '@/features/artists/artist-credits';
 import { formatArtistDisplay, primaryNames, type ArtistCredit } from '@/shared/utils/artists';
 import { useAuthContext } from '@/features/auth/useAuthContext';
-import YoutubeSearchPanel from '@features/projects/components/YoutubeSearchPanel';
+import YoutubeSearchPanel from '@features/editor/components/setup/YoutubeSearchPanel';
 import { YT_UNAVAILABLE_KEYS } from '@/features/player/hooks/useYouTubeAvailability';
 import toast from 'react-hot-toast';
 import MediaLibrary from './MediaLibrary';

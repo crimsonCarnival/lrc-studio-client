@@ -5,8 +5,8 @@ import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import { cn } from '@/shared/utils/utils';
 import { ShareSheet } from '@/features/sharing/components/ShareSheet';
-import { projectsService } from '../services/projects.service';
-import { ogShareUrl } from '../og-url';
+import { projectsService } from '@/features/projects/services/projects.service';
+import { ogShareUrl } from '@/features/projects/og-url';
 
 interface ShareOgButtonProps {
   publicId: string;

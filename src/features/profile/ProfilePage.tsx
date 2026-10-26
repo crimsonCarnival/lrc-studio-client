@@ -13,7 +13,7 @@ const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
 import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
-import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
+import { ProjectCardMenu, ProjectCardMenuButton } from '@/features/projects/components/ProjectCardMenu';
 import { projectPath, projectEditPath } from '@/features/projects/project-path';
 import { ArtistText } from '@/features/artists/ArtistText';
 import { artistFieldsFromForm, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
@@ -107,7 +107,7 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
   };
 
   return (
-    <ProjectMenu project={project} isOwner={isOwner} ownerAccountName={ownerAccountName} onEdit={onEdit} onDelete={onDelete}>
+    <ProjectCardMenu project={project} isOwner={isOwner} ownerAccountName={ownerAccountName} onEdit={onEdit} onDelete={onDelete}>
       <button
         type="button"
         onClick={() => {
@@ -170,9 +170,9 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
           </div>
           {/* Always-visible ⋮ — sibling of the hover-gated owner cluster above,
               not inside it, so it stays reachable on touch. Same project/isOwner/
-              onEdit/onDelete as the ProjectMenu wrapper so both triggers offer
+              onEdit/onDelete as the ProjectCardMenu wrapper so both triggers offer
               identical items. */}
-          <ProjectMenuButton
+          <ProjectCardMenuButton
             project={project}
             isOwner={isOwner}
             ownerAccountName={ownerAccountName}
@@ -182,7 +182,7 @@ function ProjectCard({ project, ownerAccountName, isOwner, onEdit, onDelete }: P
           />
         </div>
       </button>
-    </ProjectMenu>
+    </ProjectCardMenu>
   );
 }
 

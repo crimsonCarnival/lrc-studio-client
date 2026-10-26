@@ -33,9 +33,9 @@ const Editor = memo(EditorLazy);
 const Preview = memo(PreviewLazy);
 const Library = lazy(() => import('@features/library/components/Library'));
 const UploadsLibrary = lazy(() => import('@features/library/components/UploadsLibrary'));
-const UploadDetailView = lazy(() => import('@features/projects/components/UploadDetailView'));
+const UploadDetailView = lazy(() => import('@features/uploads/UploadDetailView'));
 const SetupScreen = lazy(() => import('@features/editor/components/setup/SetupScreen'));
-const Home = lazy(() => import('@features/projects/components/Home'));
+const HomePage = lazy(() => import('@features/home/HomePage'));
 const GuestLanding = lazy(() => import('@features/landing/GuestLanding'));
 const AdminDashboard = lazy(() => import('@features/admin/AdminDashboard'));
 const ProfilePage = lazy(() => import('@features/profile/ProfilePage'));
@@ -48,7 +48,7 @@ const SearchPage = lazy(() => import('@features/search/SearchPage'));
 const ExplorePage = lazy(() => import('@features/explore/ExplorePage'));
 const ExploreProjectsPage = lazy(() => import('@features/explore/ExploreProjectsPage'));
 const ExplorePlaylistsPage = lazy(() => import('@features/explore/ExplorePlaylistsPage'));
-const PublicProjectViewPage = lazy(() => import('@features/projects/components/PublicProjectViewPage'));
+const ProjectViewPage = lazy(() => import('@features/project-view/ProjectViewPage'));
 const ListPage = lazy(() => import('@features/playlists/ListPage'));
 const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage'));
 const NotificationsPage = lazy(() => import('@features/notifications/NotificationsPage'));
@@ -504,7 +504,7 @@ export function AppRouter({
       } />
       <Route path="home" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} /></div>}>
-          <Home />
+          <HomePage />
         </Suspense>
       } />
       <Route path="project/local" element={
@@ -515,7 +515,7 @@ export function AppRouter({
       } />
       <Route path=":accountName/projects/:slugId" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
-          <PublicProjectViewPage />
+          <ProjectViewPage />
         </Suspense>
       } />
       {/* Profiles and playlists live at the site root: /:accountName and /:accountName/lists/:listId.

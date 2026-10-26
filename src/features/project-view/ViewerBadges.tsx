@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Tip } from '@ui/tip';
-import type { ProjectViewer } from '../hooks/useProjectViewers';
+import type { ProjectViewer } from '@/features/projects/hooks/useProjectViewers';
 
 const MAX_AVATARS = 5;
 

@@ -6,12 +6,12 @@ import { StaffRing } from '@/shared/ui/StaffRing';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { projectPath } from '../project-path';
+import { projectPath } from '@/features/projects/project-path';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
-import { ProjectActionsMenu } from './ProjectActionsMenu';
+import { ProjectViewActions } from './ProjectViewActions';
 import { BoostButton } from './BoostButton';
 import { ShareOgButton } from './ShareOgButton';
 import { UserHoverCard } from '@ui/UserHoverCard';
@@ -218,7 +218,7 @@ export default function ProjectInfoPanel({
           )}
         </div>
         <div className="flex items-center self-start shrink-0 -mt-1.5 -mr-2">
-          <ProjectActionsMenu
+          <ProjectViewActions
             project={project}
             lines={lines ?? []}
             isOwner={isOwner}

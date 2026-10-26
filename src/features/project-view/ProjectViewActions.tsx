@@ -1,5 +1,5 @@
 import { ShareSheet } from '@/features/sharing/components/ShareSheet';
-import { ogShareUrl } from '../og-url';
+import { ogShareUrl } from '@/features/projects/og-url';
 import { useState } from 'react';
 import type { ReactNode, CSSProperties } from 'react';
 import type { TFunction } from 'i18next';
@@ -165,7 +165,7 @@ function AddToListMenu({ user, project, t }: { user: User; project: Project; t: 
   );
 }
 
-interface ProjectActionsMenuProps {
+interface ProjectViewActionsProps {
   project: Project;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lines: any[];
@@ -177,7 +177,7 @@ interface ProjectActionsMenuProps {
   triggerClassName?: string;
 }
 
-export function ProjectActionsMenu({
+export function ProjectViewActions({
   project,
   lines,
   isOwner,
@@ -185,7 +185,7 @@ export function ProjectActionsMenu({
   onEdit,
   onFork,
   triggerClassName = 'size-8 rounded-full shrink-0',
-}: ProjectActionsMenuProps) {
+}: ProjectViewActionsProps) {
   const { t } = useTranslation();
   const [linkCopied, setLinkCopied] = useState(false);
 

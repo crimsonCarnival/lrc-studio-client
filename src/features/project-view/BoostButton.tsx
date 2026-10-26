@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
-import { projectsService } from '../services/projects.service.js';
+import { projectsService } from '@/features/projects/services/projects.service.js';
 import toast from 'react-hot-toast';
 import { cn } from '@/shared/utils/utils';
 

@@ -6,7 +6,7 @@ import type { UsePreviewResult } from '../hooks/usePreview';
 import ExportPanel from './ExportPanel';
 import PreviewPasteArea from './PreviewPasteArea';
 import PreviewViewport from './PreviewViewport';
-import PublicPlaybackBar from '@/features/projects/components/PublicPlaybackBar';
+import PublicPlaybackBar from '@/features/project-view/PublicPlaybackBar';
 import { useHeaderSlot } from '@/shared/hooks/useHeaderSlot';
 import type { EditorLine } from '@/features/editor/services/editor.service';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';

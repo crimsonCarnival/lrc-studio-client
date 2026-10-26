@@ -15,15 +15,15 @@ import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { CountTabs } from '@ui/count-tabs';
 import { Skeleton, SkeletonAlmostDone, SkeletonProjectCard, SkeletonResumeCard } from '@ui/skeleton';
-import { projectStatus as statusOf } from '../project-status';
-import { projectEditPath } from '../project-path';
-import { ProjectStatusTag } from './ProjectStatusTag';
+import { projectStatus as statusOf } from '@/features/projects/project-status';
+import { projectEditPath } from '@/features/projects/project-path';
+import { ProjectStatusTag } from '@/features/projects/components/ProjectStatusTag';
 import ProjectSetupModalRaw from '@features/editor/components/setup/ProjectSetupModal';
 import ProjectCard from '@/features/library/components/ProjectCard';
-import { AlmostDoneBand } from './home/AlmostDoneBand';
-import { ActivityBand } from './home/ActivityBand';
-import { FollowingBand } from './home/FollowingBand';
-import { projectEditedAt } from '../project-edited-at';
+import { AlmostDoneBand } from './components/AlmostDoneBand';
+import { ActivityBand } from './components/ActivityBand';
+import { FollowingBand } from './components/FollowingBand';
+import { projectEditedAt } from '@/features/projects/project-edited-at';
 
 // ProjectSetupModal is a large untyped component; alias to bypass prop checking until migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,7 +73,7 @@ interface DynamicTranslation {
 type HomeFilterTab = 'all' | 'inProgress' | 'completed' | 'notStarted';
 const FILTER_TABS: HomeFilterTab[] = ['all', 'inProgress', 'completed', 'notStarted'];
 
-export default function Home() {
+export default function HomePage() {
   const { t, dt, i18n } = useDynamicTranslation() as DynamicTranslation;
   const navigate = useNavigate();
   const { user } = useAuthContext();

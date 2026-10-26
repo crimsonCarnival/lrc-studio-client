@@ -8,7 +8,7 @@ import { useProjectSearch } from '@/features/search/hooks/useProjectSearch';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Button } from '@ui/button';
 import { SearchField } from '@ui/search-field';
-import { ProjectMenu, ProjectMenuButton } from '@/features/projects/components/ProjectMenu';
+import { ProjectCardMenu, ProjectCardMenuButton } from '@/features/projects/components/ProjectCardMenu';
 
 interface ExploreProject {
   id: string;
@@ -64,7 +64,7 @@ function ExploreProjectCard({ project }: { project: ExploreProject }) {
                 {project.forkCount ?? 0}
               </span>
             </div>
-            <ProjectMenuButton
+            <ProjectCardMenuButton
               project={menuProject}
               isOwner={false}
               className="p-1 coarse:p-3.5 -m-1 rounded-md text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-colors"
@@ -74,11 +74,11 @@ function ExploreProjectCard({ project }: { project: ExploreProject }) {
     </>
   );
   return (
-    <ProjectMenu project={menuProject} isOwner={false} ownerAccountName={ownerAccountName}>
+    <ProjectCardMenu project={menuProject} isOwner={false} ownerAccountName={ownerAccountName}>
       {href
         ? <Link to={href} className={CARD_CLASS}>{body}</Link>
         : <div className={CARD_CLASS}>{body}</div>}
-    </ProjectMenu>
+    </ProjectCardMenu>
   );
 }
 

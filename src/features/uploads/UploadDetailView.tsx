@@ -8,8 +8,8 @@ import { Button } from '@ui/button';
 import NotFoundPage from '@/app/NotFoundPage';
 import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
 import { useAuthContext } from '@/features/auth/useAuthContext';
-import { projectEditPath } from '../project-path';
-import { projectEditedAt } from '../project-edited-at';
+import { projectEditPath } from '@/features/projects/project-path';
+import { projectEditedAt } from '@/features/projects/project-edited-at';
 
 interface UploadProject {
   publicId: string;

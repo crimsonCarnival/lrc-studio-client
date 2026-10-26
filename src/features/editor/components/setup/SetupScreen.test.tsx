@@ -30,7 +30,7 @@ vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k, 
 vi.mock('@/features/editor/music-library.service', () => ({ getMyMusicLibrary: vi.fn(async () => []) }));
 vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => ({ user: { id: 'me', preferences: {} } }) }));
 vi.mock('react-google-recaptcha-v3', () => ({ useGoogleReCaptcha: () => ({ executeRecaptcha: undefined }) }));
-vi.mock('@features/projects/components/YoutubeSearchPanel', () => ({ default: () => <div data-testid="yt-search" /> }));
+vi.mock('@features/editor/components/setup/YoutubeSearchPanel', () => ({ default: () => <div data-testid="yt-search" /> }));
 vi.mock('../lyrics-search/LyricsSearchBar', () => ({ default: () => null }));
 vi.mock('@/features/artists/ArtistsSection', () => ({ ArtistsSection: () => null }));
 vi.mock('@/features/artists/TitleFeatSuggestion', () => ({ TitleFeatSuggestion: () => null }));

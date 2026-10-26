@@ -15,10 +15,10 @@ import { projectPath, type ProjectPathSource } from '@/features/projects/project
  * `ExploreProject` and Library has `CardProject`, and all three should satisfy
  * this without a cast.
  */
-export type ProjectMenuProject = ProjectPathSource & Record<string, unknown>;
+export type ProjectCardMenuProject = ProjectPathSource & Record<string, unknown>;
 
-export type ProjectMenuActions = {
-  project: ProjectMenuProject;
+export type ProjectCardMenuActions = {
+  project: ProjectCardMenuProject;
   isOwner: boolean;
   /**
    * The owner's account name, for callers that know it from context rather than
@@ -27,8 +27,8 @@ export type ProjectMenuActions = {
    */
   ownerAccountName?: string | null;
   /** Optional: Search and Explore render other people's projects and pass neither. */
-  onEdit?: (project: ProjectMenuProject) => void;
-  onDelete?: (project: ProjectMenuProject) => void;
+  onEdit?: (project: ProjectCardMenuProject) => void;
+  onDelete?: (project: ProjectCardMenuProject) => void;
 };
 
 /**
@@ -36,7 +36,7 @@ export type ProjectMenuActions = {
  * ContextMenu or the DropdownMenu component set. Adding an action means editing
  * this one function, so right-click and the ⋮ button cannot diverge.
  */
-function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDelete }: ProjectMenuActions) {
+function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDelete }: ProjectCardMenuActions) {
   const { t } = useTranslation();
   const { user } = useAuthContext();
   const [copied, setCopied] = useState(false);
@@ -98,7 +98,7 @@ function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDel
 }
 
 /** Right-click trigger. `children` must be a SINGLE element — asChild forwards a ref to it. */
-export function ProjectMenu({ children, ...actions }: ProjectMenuActions & { children: ReactNode }) {
+export function ProjectCardMenu({ children, ...actions }: ProjectCardMenuActions & { children: ReactNode }) {
   const renderItems = useProjectMenuItems(actions);
   return (
     <ContextMenu>
@@ -109,7 +109,7 @@ export function ProjectMenu({ children, ...actions }: ProjectMenuActions & { chi
 }
 
 /** Visible ⋮ trigger — the touch- and keyboard-reachable path to the same items. */
-export function ProjectMenuButton({ className, ...actions }: ProjectMenuActions & { className?: string }) {
+export function ProjectCardMenuButton({ className, ...actions }: ProjectCardMenuActions & { className?: string }) {
   const { t } = useTranslation();
   const renderItems = useProjectMenuItems(actions);
   return (

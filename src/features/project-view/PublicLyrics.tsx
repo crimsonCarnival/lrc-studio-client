@@ -545,7 +545,7 @@ function SectionDivider({
   );
 }
 
-interface ImmersiveLyricsDisplayProps {
+interface PublicLyricsProps {
   lines: DisplayLine[];
   editorMode: string;
   /** Scrollable list of every line instead of the focus stage. */
@@ -559,7 +559,7 @@ interface ImmersiveLyricsDisplayProps {
 }
 
 // ── Main component ───────────────────────────────────────────
-export default function ImmersiveLyricsDisplay({
+export default function PublicLyrics({
   lines,
   editorMode,
   fullLyrics = false,
@@ -568,7 +568,7 @@ export default function ImmersiveLyricsDisplay({
   songSingers = [],
   singerColors = [],
   initialAlignment,
-}: ImmersiveLyricsDisplayProps) {
+}: PublicLyricsProps) {
   const { t } = useTranslation();
   // The playback clock is read here, not passed down from the page, so a tick
   // re-renders this stage and the playback bar but never the info aside.
