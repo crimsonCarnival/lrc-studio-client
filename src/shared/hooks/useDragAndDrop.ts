@@ -3,12 +3,11 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { lyrics } from '@/app/api';
 import type { AppSettings } from '@/features/settings/settings.types';
+import type { PlayerHandle } from '@/features/player/player.types';
 
 const MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-interface DragDropPlayerHandle {
-  loadLocalAudio?: (file: File) => void;
-}
+type DragDropPlayerHandle = Pick<PlayerHandle, 'loadLocalAudio'>;
 
 interface DragAndDropOptions {
   setLines: (lines: unknown[]) => void;

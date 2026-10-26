@@ -7,6 +7,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/popover';
 import LineActionsPopover from './LineActionsPopover';
 import { getSingerOptionsForSelection } from '../../utils/sections';
+import type { PlayerHandle } from '@/features/player/player.types';
 
 interface Word {
   word: string;
@@ -28,11 +29,6 @@ interface FocusedTimestamp {
   lineIndex: number;
   type: string;
   wordIndex?: number;
-}
-
-interface PlayerHandle {
-  seek?: (time?: number | null) => void;
-  play?: () => void;
 }
 
 interface LineActionToolbarProps {
@@ -163,7 +159,7 @@ const LineActionToolbar = memo(({
                   e.stopPropagation();
                   if (onPlayLine) {
                     onPlayLine();
-                  } else if (playerRef?.current?.seek) {
+                  } else if (playerRef?.current && line.timestamp != null) {
                     playerRef.current.seek(line.timestamp);
                     if (playerRef.current.play) playerRef.current.play();
                   }

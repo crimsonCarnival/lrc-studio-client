@@ -8,6 +8,7 @@ import LyricsModeTab from './LyricsModeTab';
 import PreviewModeTab from './PreviewModeTab';
 import { applyMark } from '@features/editor/services/editor.service';
 import type { EditorLine } from '@/features/editor/editor.types';
+import type { PlayerHandle } from '@/features/player/player.types';
 
 const TAB_TRANSITION = {
   duration: 0.15, // 150ms
@@ -19,11 +20,6 @@ const TAB_VARIANTS = {
   center: { opacity: 1, scale: 1, y: 0 },
   exit: { opacity: 0, scale: 0.98, y: -10 },
 };
-
-interface PlayerHandle {
-  getCurrentTime?: () => number;
-  currentTime?: number;
-}
 
 interface MobileEditorLayoutProps {
   activeLineIndex?: number;

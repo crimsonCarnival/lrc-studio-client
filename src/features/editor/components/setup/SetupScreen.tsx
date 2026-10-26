@@ -1,3 +1,4 @@
+import type { RefObject } from 'react';
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import type { ChangeEvent, ComponentProps, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -40,6 +41,7 @@ import type { EditorLine } from '@/features/editor/editor.types';
 import { useSetupMedia } from '@/features/editor/hooks/useSetupMedia';
 import { LogoLoader } from '@ui/LogoLoader';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
+import type { PlayerHandle } from '@/features/player/player.types';
 
 const MAX_IMPORT_FILE_SIZE = 2 * 1024 * 1024;
 
@@ -117,9 +119,7 @@ interface MusicEntry {
   language?: string;
   trackCount?: number | null;
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type PlayerRef = { current?: any } | null;
+type PlayerRef = RefObject<Pick<PlayerHandle, 'loadYouTube' | 'loadLocalAudio' | 'loadFromUrl'> | null> | null;
 
 interface SetupScreenProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

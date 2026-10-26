@@ -1,10 +1,9 @@
 import { useEffect, useRef } from 'react';
 import type { RefObject } from 'react';
 import type { EditorLine } from '@/features/editor/editor.types';
+import type { PlayerHandle } from '@/features/player/player.types';
 
-interface LoopPlayerHandle {
-  seek?: (time?: number | null) => void;
-}
+type LoopPlayerHandle = Pick<PlayerHandle, 'seek'>;
 
 interface LoopCurrentLineOptions {
   enabled: boolean;
@@ -32,10 +31,8 @@ export function useLoopCurrentLine({
   const lastLoopSeekRef = useRef(0);
 
   useEffect(() => {
-    if (!enabled || !syncMode || !lines[activeLineIndex] || lines[activeLineIndex].timestamp == null)
-      return;
-
     const currentLine = lines[activeLineIndex];
+    if (!enabled || !syncMode || !currentLine || currentLine.timestamp == null) return;
     let endMark = currentLine.endTime;
 
     if (editorMode !== 'srt' || endMark == null) {

@@ -22,6 +22,7 @@ import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/
 import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
+import type { PlayerHandle } from '@/features/player/player.types';
 
 function getSingers(line: EditorLine): string[] {
   return line.singers || [];
@@ -34,7 +35,7 @@ interface CharSelection {
 }
 
 type FocusedTs = { lineIndex: number; type: string; wordIndex?: number } | null;
-type PlayerRef = RefObject<{ seek?: (t: number) => void; play?: () => void } | null> | null;
+type PlayerRef = RefObject<Pick<PlayerHandle, 'seek' | 'play'> | null> | null;
 
 interface EditorLineItemProps {
   line: EditorLine;

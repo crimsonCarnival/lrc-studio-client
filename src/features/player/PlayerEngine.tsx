@@ -9,9 +9,9 @@ import useLocalAudio from './hooks/useLocalAudio';
 import useYouTubePlayer from './hooks/useYouTubePlayer';
 import { pushPlaybackEntry, popPrevEntry } from './playback-history';
 import { audioCorsMode, isReadableAudioUrl } from './media-cors';
-import type { PlaybackEntry } from './playback-history';
 import { PlayerContext } from './PlayerContext';
 import type { UploadItem } from './PlayerContext';
+import type { Loop, PlayerHandle } from './player.types';
 import type { EditorLine } from '@/features/editor/editor.types';
 import { uploads as uploadsApi, getAccessToken } from '@/app/api';
 import toast from 'react-hot-toast';
@@ -23,30 +23,6 @@ const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\
 const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
 const YT_PATTERN = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|watch\?.+&v=)|youtu\.be\/)([^&?/\s]{11})/;
 
-interface Loop {
-  a: number | null;
-  b: number | null;
-}
-
-export interface PlayerHandle {
-  getCurrentTime: () => number;
-  isPlaying: () => boolean;
-  play: () => void;
-  pause: () => void;
-  togglePlay: () => void;
-  adjustSpeed: (delta: number) => void;
-  getSpeed: () => number;
-  seek: (time: number) => void;
-  getAudioBlob: () => Blob | null;
-  getYoutubeUrl: () => string | null;
-  loadLocalAudio: (file: File) => void;
-  loadYouTube: (url?: string) => void;
-  loadFromUrl: (url: string, title?: string) => void;
-  setLoop: (a: number | null, b: number | null) => void;
-  clearLoop: () => void;
-  getLoop: () => Loop;
-  getPrevTrack: () => PlaybackEntry | undefined;
-}
 
 interface InitialMedia {
   type: string;

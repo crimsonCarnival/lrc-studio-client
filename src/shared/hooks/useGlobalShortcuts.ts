@@ -4,13 +4,9 @@ import { useLocation } from 'react-router-dom';
 import { matchKey } from '@/shared/utils/keyboard';
 import { isEditorPath } from '@features/projects/project-path';
 import type { AppSettings } from '@/features/settings/settings.types';
+import type { PlayerHandle } from '@/features/player/player.types';
 
-interface ShortcutPlayerHandle {
-  togglePlay?: () => void;
-  getCurrentTime?: () => number;
-  seek?: (time: number) => void;
-  adjustSpeed?: (delta: number) => void;
-}
+type ShortcutPlayerHandle = Pick<PlayerHandle, 'togglePlay' | 'getCurrentTime' | 'seek' | 'adjustSpeed'>;
 
 interface GlobalShortcutsOptions {
   undo: () => void;

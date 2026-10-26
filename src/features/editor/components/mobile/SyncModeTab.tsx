@@ -6,16 +6,13 @@ import { Icon } from '@/shared/ui/Icon';
 import { EditorLineContextMenu } from '@features/editor/components/line/EditorLineContextMenu';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
 import type { EditorLine } from '@/features/editor/editor.types';
+import type { PlayerHandle } from '@/features/player/player.types';
 
 /** Long-press acts on the pressed line alone; this tab has no multi-select. */
 const NO_SELECTION: Set<number> = new Set();
 
 /** Shown in the time gutter of a line that has not been marked yet. */
 const UNTIMED = '--:--.--';
-
-interface PlayerHandle {
-  currentTime?: number;
-}
 
 interface SyncModeTabProps {
   playbackPosition: number;

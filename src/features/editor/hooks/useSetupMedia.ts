@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { uploads as uploadsApi, getAccessToken } from '@/app/api';
 import { useYouTubeAvailability } from '@/features/player/hooks/useYouTubeAvailability';
 import type { ChangeEvent, KeyboardEvent as ReactKeyboardEvent, RefObject } from 'react';
+import type { PlayerHandle } from '@/features/player/player.types';
 
 const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\//;
 const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
@@ -28,9 +29,7 @@ export interface AudioState {
   ytUrl: string;
   selectedUpload: UploadItem | null;
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type PlayerRef = { current?: any } | null;
+type PlayerRef = RefObject<Pick<PlayerHandle, 'loadYouTube' | 'loadLocalAudio' | 'loadFromUrl'> | null> | null;
 
 interface UseSetupMediaParams {
   playerRef: PlayerRef;

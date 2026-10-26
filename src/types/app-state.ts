@@ -2,18 +2,6 @@
 // not in the hook, so features can type against them without importing app/.
 import type { ArtistCredit } from '@/features/artists/artist-credits';
 
-export interface PlayerHandle {
-  play?: () => void;
-  pause?: () => void;
-  seek?: (time?: number | null) => void;
-  getCurrentTime?: () => number;
-  currentTime?: number;
-  togglePlay?: () => void;
-  adjustSpeed?: (delta: number) => void;
-  loadLocalAudio?: (file: File) => void;
-  [key: string]: unknown;
-}
-
 export interface ProjectMetadata {
   description?: string;
   tags?: string[];
