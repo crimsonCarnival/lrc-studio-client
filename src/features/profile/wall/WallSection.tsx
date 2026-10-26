@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
-import { Textarea } from '@ui/textarea';
 import { Tip } from '@ui/tip';
 import { LogoLoader } from '@ui/LogoLoader';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
@@ -16,9 +15,12 @@ import { formatTimeAgo } from '@/features/notifications/time-ago';
 import { profilePath } from '../profile-path';
 import {
   addWallComment, deleteWallComment, getWall, setWallSubscription, wallErrorCode,
-  WALL_MAX_DEPTH, WALL_MAX_LENGTH,
+  WALL_MAX_DEPTH,
 } from './wall.service';
 import type { Wall, WallComment } from './wall.service';
+import { userToken } from './wall-tags';
+import WallComposer from './WallComposer';
+import CommentBody from './CommentBody';
 
 const WALL_ERROR_KEYS = ['rate_limited', 'wall_disabled', 'forbidden', 'invalid_body', 'max_depth', 'not_found'] as const;
 
@@ -34,47 +36,6 @@ function withoutComment(comments: WallComment[], id: string): WallComment[] {
 }
 
 const countAll = (c: WallComment): number => 1 + c.replies.reduce((n, r) => n + countAll(r), 0);
-
-interface ComposerProps {
-  placeholder: string;
-  submitLabel: string;
-  autoFocus?: boolean;
-  busy: boolean;
-  onSubmit: (body: string) => Promise<boolean>;
-  onCancel?: () => void;
-}
-
-function Composer({ placeholder, submitLabel, autoFocus, busy, onSubmit, onCancel }: ComposerProps) {
-  const { t } = useTranslation();
-  const [text, setText] = useState('');
-  const submit = async () => {
-    if (!text.trim() || busy) return;
-    if (await onSubmit(text.trim())) setText('');
-  };
-  return (
-    <div className="flex flex-col gap-2">
-      <Textarea
-        value={text}
-        autoFocus={autoFocus}
-        onChange={e => setText(e.target.value.slice(0, WALL_MAX_LENGTH))}
-        onKeyDown={e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') void submit(); }}
-        placeholder={placeholder}
-        rows={2}
-        aria-label={placeholder}
-        className="min-h-[64px] resize-y"
-      />
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-xs text-subtle">{text.length}/{WALL_MAX_LENGTH}</span>
-        <div className="flex items-center gap-2">
-          {onCancel && <Button type="button" variant="ghost" size="sm" onClick={onCancel}>{t('common.cancel')}</Button>}
-          <Button type="button" size="sm" disabled={busy || !text.trim()} onClick={submit}>
-            {busy ? <LogoLoader size={12} /> : submitLabel}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 interface NodeProps {
   comment: WallComment;
@@ -95,8 +56,11 @@ interface NodeProps {
 }
 
 // Thread geometry, in px from a comment's left edge. The avatar is 32px wide, so its
-// centre (where a thread line hangs) is at 16; a reply sits 32px further in.
+// centre (where a thread line hangs) is at 16; a reply sits 32px further in. A reply's row
+// starts 12px down (pt-3) and pads its avatar 8px (py-2), so the avatar's centre — where
+// the curve lands — is 36px below the reply's top (h-9).
 const lineColor = (active: boolean) => (active ? 'border-primary/70' : 'border-zinc-700');
+const lineFill = (active: boolean) => (active ? 'bg-primary/70' : 'bg-zinc-700');
 
 // Shared by the comment actions: a press shrinks the button slightly.
 const ACTION_BUTTON = 'rounded-full transition-[color,background-color,transform] active:scale-90';
@@ -107,6 +71,8 @@ function CommentNode({
 }: NodeProps) {
   const { t, i18n } = useTranslation();
   const { settings } = useSettings();
+  const { user } = useAuthContext();
+  const viewerId = (user?.id ?? user?._id) as string | undefined;
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { author } = comment;
   const name = author.displayName || author.accountName;
@@ -124,13 +90,22 @@ function CommentNode({
   };
 
   return (
-    <li id={`comment-${comment.id}`} className={cn('relative flex flex-col gap-2', threadOf && 'pt-4')}>
+    <li id={`comment-${comment.id}`} className={cn('relative flex flex-col gap-2', threadOf && 'pt-3')}>
       {threadOf && (
         <>
           {/* The parent's line curving into this reply's avatar… */}
           <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 h-9 w-3.5 rounded-bl-xl border-b-2 border-l-2 transition-colors', lineColor(parentThreadActive))} />
-          {/* …and running on past it to the replies below. */}
-          {!isLast && <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 bottom-0 border-l-2 transition-colors', lineColor(parentThreadActive))} />}
+          {/* …and, where more replies follow, picking up again below the curve: a short gap,
+              then a fade back in, so each branch reads as splitting off the thread. */}
+          {!isLast && (
+            <span
+              aria-hidden
+              className={cn(
+                'pointer-events-none absolute -left-[17px] top-11 bottom-0 w-0.5 transition-colors [mask-image:linear-gradient(to_bottom,transparent,black_14px)]',
+                lineFill(parentThreadActive),
+              )}
+            />
+          )}
           {/* A wider target than the 2px line, for hovering and clicking it. */}
           <span
             aria-hidden
@@ -144,19 +119,23 @@ function CommentNode({
       <div
         onClick={handleRowClick}
         className={cn(
-          'relative -mx-2 flex cursor-pointer gap-3 rounded-lg px-2 py-1 transition-colors',
-          highlighted ? 'bg-primary/10 ring-1 ring-primary/40' : 'hover:bg-zinc-800/30',
+          // -mx-3 px-3 keeps the avatar where the thread lines expect it while the row's
+          // own background and ring get room around the content.
+          'relative -mx-3 flex cursor-pointer gap-3 rounded-xl px-3 py-2 transition-colors',
+          highlighted
+            ? 'bg-primary/[0.08] ring-1 ring-inset ring-primary/35 shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-primary)_6%,transparent)]'
+            : 'hover:bg-zinc-800/40',
         )}
       >
         {hasReplies && (
           <>
             {/* This comment's own line, from under its avatar down to its replies. */}
-            <span aria-hidden className={cn('pointer-events-none absolute left-[23px] top-10 -bottom-2 border-l-2 transition-colors', lineColor(ownThreadActive))} />
+            <span aria-hidden className={cn('pointer-events-none absolute left-[27px] top-11 -bottom-2 border-l-2 transition-colors', lineColor(ownThreadActive))} />
             <span
               aria-hidden
               onMouseEnter={() => onHoverThread(comment.id)}
               onMouseLeave={() => onHoverThread(null)}
-              className="absolute left-4 top-10 -bottom-2 w-4"
+              className="absolute left-5 top-11 -bottom-2 w-4"
             />
           </>
         )}
@@ -172,7 +151,7 @@ function CommentNode({
               {formatTimeAgo(comment.createdAt, t, settings.advanced?.timezone, i18n.resolvedLanguage || i18n.language)}
             </span>
           </p>
-          <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-zinc-300">{comment.body}</p>
+          <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-300"><CommentBody comment={comment} /></p>
           <div className="mt-1 -ml-1.5 flex items-center gap-1 text-xs text-zinc-500">
             {signedIn && comment.depth < WALL_MAX_DEPTH && (
               <Tip content={t('profile.wall.reply')}>
@@ -243,13 +222,15 @@ function CommentNode({
           {open && (
             <div className="relative pb-2">
               {hasReplies && <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 bottom-0 border-l-2 transition-colors', lineColor(ownThreadActive))} />}
-              <Composer
+              <WallComposer
                 autoFocus
                 placeholder={t('profile.wall.replyPlaceholder', { name })}
                 submitLabel={t('profile.wall.reply')}
                 busy={busy}
                 onSubmit={body => onReply(comment.id, body)}
                 onCancel={() => onReplyingTo(null)}
+                // A reply starts by tagging the author it answers, unless that's you.
+                initialTags={viewerId && author.id !== viewerId ? [{ display: `@${author.accountName}`, token: userToken(author.id) }] : undefined}
               />
             </div>
           )}
@@ -420,7 +401,7 @@ export default function WallSection({ accountName, isOwner }: { accountName: str
       </div>
 
       {signedIn ? (
-        <Composer
+        <WallComposer
           placeholder={t(isOwner ? 'profile.wall.placeholderOwn' : 'profile.wall.placeholder')}
           submitLabel={t('profile.wall.post')}
           busy={busy && replyingTo === null}
