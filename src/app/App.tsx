@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
-import { useAppState } from '@/shared/hooks/useAppState';
+import { useAppState } from '@/app/useAppState';
 import { useSettings } from '@/features/settings/useSettings';
 import { useScrollLock } from '@/shared/hooks/useScrollLock';
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';

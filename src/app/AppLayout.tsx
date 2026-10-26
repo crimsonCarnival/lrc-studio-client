@@ -22,7 +22,7 @@ import { GuidedTour } from '@/features/editor/components/GuidedTour';
 import { EDITOR_TOUR_STEPS } from '@/features/editor/tour/tour-steps';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { isEditorPath, isProjectViewPath } from '@features/projects/project-path';
-import type { AppState } from '@/shared/hooks/useAppState';
+import type { AppState } from '@/app/useAppState';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 

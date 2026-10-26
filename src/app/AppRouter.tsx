@@ -16,7 +16,7 @@ import { isStaff } from '@/features/auth/permissions';
 import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import useInputMethod from '@/shared/hooks/useInputMethod';
-import type { AppState } from '@/shared/hooks/useAppState';
+import type { AppState } from '@/app/useAppState';
 import type { AuthUser } from '@/features/auth/hooks/useAuth';
 import { isApiError } from '@/types';
 import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle } from '@features/projects/project-path';
