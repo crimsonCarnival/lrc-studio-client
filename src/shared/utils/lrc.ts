@@ -3,7 +3,7 @@
  */
 
 import { serializeToRubyMarkup, parseRubyMarkup } from './furigana';
-import type { EditorLine, EditorWord, EditorTranslation } from '@/features/editor/services/editor.service';
+import type { EditorLine, EditorWord, EditorTranslation } from '@/features/editor/editor.types';
 import { formatArtistDisplay, formatTitleWithFeatured, type ArtistCredit } from '@/shared/utils/artists';
 
 const KNOWN_LRC_META_KEYS = new Set(['ti','ar','al','au','by','lg','re','ve','length','offset','tool','id','hash','album']);

@@ -7,7 +7,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { formatTime } from '@/shared/utils/format-time';
 import type { AutoStampPhase, ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
 import type { StampResultDto } from '@/features/editor/services/asr.service';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { SyncSweep } from '@ui/sync-sweep';
 
 interface AutoStampModalProps {

@@ -7,7 +7,7 @@ import VolumeControl from '@features/player/components/VolumeControl';
 import { useSettings } from '@/features/settings/useSettings';
 import { Icon } from '@/shared/ui/Icon';
 import { LogoLoader } from '@ui/LogoLoader';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 const WaveformDisplay = lazy(() => import('@features/player/components/WaveformDisplay'));
 

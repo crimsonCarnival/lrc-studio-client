@@ -1,4 +1,4 @@
-import type { AuthUser } from '@/features/auth/hooks/useAuth';
+import type { AuthUser } from '@/features/auth/auth.types';
 import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { updatePreferences } from '@/features/settings/services/preferences.service';

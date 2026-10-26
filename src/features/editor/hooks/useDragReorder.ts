@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { DragEvent, Dispatch, SetStateAction } from 'react';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { moveLineBlock } from '@/features/editor/utils/sections';
 
 interface DragReorderOptions {

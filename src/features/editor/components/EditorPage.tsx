@@ -1,7 +1,7 @@
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import Editor from './core/Editor';
 import MobileEditorLayout from './mobile/MobileEditorLayout';
-import type { EditorLine } from '../services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 interface EditorPageProps {
   activeLineIndex?: number;

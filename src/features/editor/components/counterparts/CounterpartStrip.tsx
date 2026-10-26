@@ -7,7 +7,7 @@ import { Kbd } from '@ui/kbd';
 import { Tip } from '@ui/tip';
 import { Popover, PopoverContent, PopoverTrigger } from '@ui/popover';
 import { formatTime } from '@/shared/utils/format-time';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { counterpartWindow, frequentCounterparts, isPendingCounterpart, listCounterparts } from '@/features/editor/services/counterparts';
 import { counterpartLabel } from './counterpart-label';
 

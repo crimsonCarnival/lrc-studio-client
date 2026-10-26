@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { RefObject } from 'react';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 interface LoopPlayerHandle {
   seek?: (time?: number | null) => void;

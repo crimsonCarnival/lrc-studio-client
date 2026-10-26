@@ -23,8 +23,8 @@ import { loadCjkFont } from '@/app/cjk-font';
 import { creditsOf } from '@/features/artists/artist-credits';
 import { sectionsToFlat } from '@/features/editor/utils/sections';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
-import type { AuthUser as AuthUserType } from '@/features/auth/hooks/useAuth';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { AuthUser as AuthUserType } from '@/features/auth/auth.types';
+import type { EditorLine } from '@/features/editor/editor.types';
 import type { PlayerHandle, ProjectMetadata, RestoredMedia, UploadedAudio, ForkedFrom } from '@/types/app-state';
 
 const MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024; // 5 MB

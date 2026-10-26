@@ -12,7 +12,7 @@ import { sectionCollapseKey } from '@/features/editor/utils/sections';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import { hasKanji } from '@/shared/utils/furigana';
 import type { CollapsedView } from '@/features/editor/utils/sections';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
 

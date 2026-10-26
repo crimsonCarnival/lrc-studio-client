@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { savePendingProject } from '@/features/editor/services/guest-project-db';
 import { flatToSections } from '@/features/editor/utils/sections';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 interface GuestAuthButtonsProps {
   isReady: boolean;

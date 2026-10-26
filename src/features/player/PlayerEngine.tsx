@@ -12,7 +12,7 @@ import { audioCorsMode, isReadableAudioUrl } from './media-cors';
 import type { PlaybackEntry } from './playback-history';
 import { PlayerContext } from './PlayerContext';
 import type { UploadItem } from './PlayerContext';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { uploads as uploadsApi, getAccessToken } from '@/app/api';
 import toast from 'react-hot-toast';
 

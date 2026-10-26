@@ -3,7 +3,7 @@ import { formatTimestamp } from '@/shared/utils/lrc';
 import { InlineTimestampEdit } from '../line/InlineTimestampEdit';
 import { TimestampBadge } from '../line/TimestampBadge';
 import { timeChipClass } from '../line/time-chip-class';
-import type { EditorLine } from '../../services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 interface FocusedTimestamp {
   lineIndex: number;

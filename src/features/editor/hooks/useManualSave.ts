@@ -37,7 +37,7 @@ function toLocalISOString(date: Date, utcOffset: string): string {
 
 import deepEqual from 'fast-deep-equal';
 import { flatToSections, flatIndexToSectionPos } from '../utils/sections';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { artistDisplay } from '@/features/artists/artist-credits';
 
 const cloneValue = <T,>(v: T): T => structuredClone(v);

@@ -5,7 +5,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { isAdminHost, wwwHostUrl } from '@/shared/utils/host';
 import { adminPath, useAdminRoute } from '@/features/admin/admin-nav';
 import { useAdminTabs } from '@/features/admin/useAdminTabs';
-import type { AuthUser } from '@/features/auth/hooks/useAuth';
+import type { AuthUser } from '@/features/auth/auth.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 import { UserMenu } from './UserMenu';
 

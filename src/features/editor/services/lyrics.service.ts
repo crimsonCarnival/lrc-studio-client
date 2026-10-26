@@ -1,5 +1,5 @@
 import { request } from '@/app/api.client';
-import type { EditorLine } from './editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { toArtistInput, type ArtistCredit } from '@/features/artists/artist-credits';
 import {
   parseLrcSrtFile as localParse,

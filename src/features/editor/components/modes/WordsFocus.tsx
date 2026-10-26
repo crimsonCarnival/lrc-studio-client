@@ -4,7 +4,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 const CAPTION = 'text-xs font-bold uppercase tracking-[0.08em] text-foreground/65';
 /** Smallest gap kept between two neighbouring word starts while dragging. */

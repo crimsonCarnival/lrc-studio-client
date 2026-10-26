@@ -6,7 +6,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { ReadingInput } from './ReadingInput';
 import { toHiragana, toKatakana, rubyRatioClass, splitOkurigana, rubyFitStyle } from '@/shared/utils/furigana';
 import { collectFuriganaTargets, setTextAtomReading } from '@/features/editor/utils/furigana-targets';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 interface FuriganaModalProps {
   open: boolean;

@@ -9,7 +9,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { flatToSections, sectionsToFlat } from './sections';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 const lyric = (text: string, extra: Partial<EditorLine> = {}): EditorLine =>
   ({ text, timestamp: null, ...extra } as EditorLine);

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
+import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
 
 export type DrawerKind = 'word' | 'bulk' | 'line' | null;
 

@@ -5,7 +5,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { SECTION_TYPES } from '@features/editor/constants/section-types';
 import { applyTagToSelection } from '@features/editor/utils/sections';
 import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/singer-colors';
-import type { EditorLine } from '@features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 const STANDARD_TYPES = SECTION_TYPES.filter(s => s.depth !== 0);
 const STANDARD_IDS = new Set(STANDARD_TYPES.map(s => s.id));

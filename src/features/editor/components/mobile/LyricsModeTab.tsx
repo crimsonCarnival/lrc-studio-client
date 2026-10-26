@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/ui/button';
 import { formatTime } from '@/shared/utils/format-time';
 import { EditorLineContextMenu } from '@features/editor/components/line/EditorLineContextMenu';
-import type { EditorLine } from '@features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 /** Long-press acts on the pressed line alone; the mobile tab has no multi-select. */
 const NO_SELECTION: Set<number> = new Set();

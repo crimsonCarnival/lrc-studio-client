@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { Icon } from '@/shared/ui/Icon';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { hasKanji } from '@/shared/utils/furigana';
 import { LogoLoader } from '@ui/LogoLoader';
 

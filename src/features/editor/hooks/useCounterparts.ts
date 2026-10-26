@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { captureCounterpart, moveCounterpart, isCounterpart } from '../services/counterparts';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
-import type { EditorLine } from '../services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import type { PlayerHandle } from '@/types/app-state';
 
 interface UseCounterpartsParams {

@@ -8,7 +8,7 @@
  * Capturing is two steps on purpose (redesign sheet 20): tap when you hear it, name it
  * later. A captured counterpart with no text yet is "pending".
  */
-import type { EditorLine } from './editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 export const isCounterpart = (line: EditorLine | undefined): boolean =>
   !!line && line.type !== 'section' && line.adLibOf != null;

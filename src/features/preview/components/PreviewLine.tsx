@@ -4,7 +4,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { toHiragana, toKatakana, parseRubyMarkup, rubyRatioClass, splitOkurigana, rubyFitStyle, needsSpaceAfter } from '@/shared/utils/furigana';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { useTranslation } from 'react-i18next';
-import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
+import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
 import { counterpartEnd } from '@/features/editor/services/counterparts';
 import type { AppSettings } from '@/features/settings/settings.types';
 import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-colors';

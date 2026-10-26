@@ -17,7 +17,7 @@ import {
   ACTIVE_SECONDARY_SIZES, INACTIVE_SECONDARY_SIZES,
   WRAPPER_SPACING, ACTIVE_MARGIN,
 } from '../preview.styles';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ProjectMetadata, PlayerHandle } from '@/types/app-state';
 

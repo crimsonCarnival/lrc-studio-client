@@ -5,7 +5,7 @@ import { formatTime } from '@/shared/utils/format-time';
 import { hasKanji } from '@/shared/utils/furigana';
 import { ReadingInput } from '@features/editor/components/line/ReadingInput';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import type { DrawerKind, WordMenuData, LineMenuData } from '@/features/editor/hooks/useEditorActionDrawer';
 
 interface PlayerRefLike {

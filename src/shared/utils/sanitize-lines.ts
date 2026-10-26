@@ -1,4 +1,4 @@
-import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
+import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
 
 /**
  * Validates and normalizes untrusted lyric-line data into `EditorLine[]`.

@@ -13,7 +13,7 @@ import { projectEditPath, isEditorPath, isProjectPath } from '@features/projects
 import BannedScreen from '@features/auth/components/BannedScreen';
 import GuestProjectSaveGate from '@features/editor/components/core/GuestProjectSaveGate';
 
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { AppLayout } from './AppLayout';
 import { AppRouter } from './AppRouter';
 

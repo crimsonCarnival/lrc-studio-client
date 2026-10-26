@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { lyrics } from '@/app/api';
 import { useTranslation } from 'react-i18next';
 import type { AppSettings } from '@/features/settings/settings.types';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 interface FileImportOptions {
   setLines: (lines: EditorLine[]) => void;

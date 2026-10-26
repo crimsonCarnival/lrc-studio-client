@@ -8,7 +8,7 @@ import PreviewPasteArea from './PreviewPasteArea';
 import PreviewViewport from './PreviewViewport';
 import PublicPlaybackBar from '@/features/project-view/PublicPlaybackBar';
 import { useHeaderSlot } from '@/shared/hooks/useHeaderSlot';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import { Button } from '@ui/button';
 import {

@@ -24,7 +24,7 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import { isEditorPath, isProjectViewPath } from '@features/projects/project-path';
 import type { AppState } from '@/app/useAppState';
 import type { AppSettings } from '@/features/settings/settings.types';
-import type { AuthUser } from '@/features/auth/hooks/useAuth';
+import type { AuthUser } from '@/features/auth/auth.types';
 
 // App augments the raw useAppState result with layout-driven playback state
 // before passing it down (see App.tsx enhancedAppState).

@@ -1,5 +1,5 @@
 import { hasKanji, explodeRubyAtoms, serializeRubyAtoms } from '@/shared/utils/furigana';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 /** One annotatable token: a word containing kanji, located in the project. */
 export interface FuriganaTarget {

@@ -28,7 +28,7 @@ import { useDragReorder } from './useDragReorder';
 import { useCounterparts } from './useCounterparts';
 import { useWordsMode } from './useWordsMode';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
-import type { EditorLine, EditorWord, EditorTranslation } from '../services/editor.service';
+import type { EditorLine, EditorWord, EditorTranslation } from '@/features/editor/editor.types';
 import type { PlayerHandle } from '@/types/app-state';
 
 interface FocusedTs {

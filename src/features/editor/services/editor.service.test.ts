@@ -20,7 +20,7 @@ import {
   clampWordTime,
   alignLineStart,
 } from './editor.service';
-import type { EditorLine } from './editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 type Settings = Parameters<typeof applyMark>[0]['settings'];
 

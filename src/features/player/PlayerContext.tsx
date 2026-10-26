@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { ChangeEvent, RefObject } from 'react';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 export interface UploadItem {
   id?: string;

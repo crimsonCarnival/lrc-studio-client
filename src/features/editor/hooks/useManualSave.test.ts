@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildProjectPatch, updateServerSnapshot, type ProjectSnapshot } from './useManualSave';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 // buildProjectPatch/buildLyricsPatch decide whether a save sends a full
 // `sections` replace, a single positional line patch, or (since this file's

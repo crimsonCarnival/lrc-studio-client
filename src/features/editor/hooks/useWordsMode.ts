@@ -3,7 +3,7 @@ import { hasCJK } from '@/shared/utils/furigana';
 import { groupMorphemes } from '@/features/editor/utils/morpheme-group';
 import { normalizeLineMode } from '../services/editor.service';
 import type { Dispatch, SetStateAction } from 'react';
-import type { EditorLine, EditorWord } from '../services/editor.service';
+import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
 
 interface UseWordsModeParams {
   setLines: Dispatch<SetStateAction<EditorLine[]>>;

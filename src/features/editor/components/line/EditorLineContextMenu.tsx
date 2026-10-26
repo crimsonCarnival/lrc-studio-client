@@ -18,7 +18,7 @@ import { formatSectionLabel } from '@features/editor/constants/section-types';
 // and hidden where there is no keyboard.
 const KEYS = 'ml-auto pl-3 coarse:hidden';
 const KEY = 'h-[22px] min-w-[22px] text-[11px] text-subtle';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 interface Props {
   children: React.ReactNode;

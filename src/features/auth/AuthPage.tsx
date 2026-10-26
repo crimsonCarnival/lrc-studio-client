@@ -31,7 +31,7 @@ import {
   isCredentialAlreadyStored,
 } from '@/features/auth/services/credential-manager.service';
 import type { ComponentProps } from 'react';
-import type { AuthUser } from '@/features/auth/hooks/useAuth';
+import type { AuthUser } from '@/features/auth/auth.types';
 import type { RememberedAccount } from '@/features/auth/services/remembered-accounts.service';
 import type { SignUpIdentity } from './SignUpForm';
 import { safeRedirectPath } from '@/shared/utils/safe-redirect';

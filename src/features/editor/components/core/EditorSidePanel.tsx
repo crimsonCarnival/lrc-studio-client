@@ -11,7 +11,7 @@ import { Tip } from '@ui/tip';
 import { Kbd } from '@ui/kbd';
 import { Icon } from '@/shared/ui/Icon';
 import { cn } from '@/shared/utils/utils';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 
 const CARD = 'rounded-[var(--radius-card)] bg-background inset-ring inset-ring-hl';

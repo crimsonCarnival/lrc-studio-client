@@ -1,6 +1,6 @@
 import { getDefaultDepthForLabel } from '../constants/section-types';
 import { normalizeLineMode } from '../services/editor.service';
-import type { EditorLine } from '../services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { parseRawTextLine } from './sections';
 
 // Matches an LRC timestamp: [mm:ss.xx] or [mm:ss.xxx]

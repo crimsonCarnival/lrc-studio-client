@@ -17,7 +17,7 @@ import { ShareOgButton } from './ShareOgButton';
 import { UserHoverCard } from '@ui/UserHoverCard';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 interface ProjectMeta {
   description?: string;

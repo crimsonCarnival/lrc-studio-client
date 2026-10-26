@@ -5,7 +5,7 @@ import { LogoLoader } from '@ui/LogoLoader';
 import { Icon } from '@/shared/ui/Icon';
 import { EditorLineContextMenu } from '@features/editor/components/line/EditorLineContextMenu';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
-import type { EditorLine } from '@features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 /** Long-press acts on the pressed line alone; this tab has no multi-select. */
 const NO_SELECTION: Set<number> = new Set();

@@ -8,7 +8,7 @@ import { authEvents } from '@/shared/utils/auth-events';
 import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
-import type { User } from '@/types/graphql';
+import type { AuthUser } from '@/features/auth/auth.types';
 import { getSignupAttribution, clearSignupAttribution } from '@/shared/utils/attribution';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 
@@ -18,22 +18,6 @@ rememberedAccounts.migrate();
 // Real server origin (not the Vite/Vercel proxy path) for OAuth postMessage validation
 const apiUrl = import.meta.env.VITE_API_URL || '';
 const API_ORIGIN = import.meta.env.VITE_SERVER_ORIGIN || (apiUrl ? new URL(apiUrl).origin : window.location.origin);
-
-// Paints a themed spinner into a freshly opened OAuth popup so it doesn't flash a
-// blank white window while we fetch the provider URL. The popup is an isolated
-// about:blank document with no access to the app's CSS variables, so the theme
-// colors (zinc-950 bg, primary lavender) are inlined here on purpose.
-// Mirrors the server `User` (the /me shape) with auth-only extras. Partial<User>
-// because the client sometimes holds a subset (guest, optimistic updates).
-export interface AuthUser extends Omit<Partial<User>, 'lastLoginAt' | 'lastIp' | 'lastDevice'> {
-  _id?: string;
-  isGuest?: boolean;
-  permissions?: string[];
-  lastIp?: string | null;
-  lastDevice?: string | null;
-  lastLoginAt?: string | Date | null;
-  [key: string]: unknown;
-}
 
 interface AuthInternalState {
   user: AuthUser | null;
@@ -46,6 +30,10 @@ interface ApiError {
   message?: string;
 }
 
+// Paints a themed spinner into a freshly opened OAuth popup so it doesn't flash a
+// blank white window while we fetch the provider URL. The popup is an isolated
+// about:blank document with no access to the app's CSS variables, so the theme
+// colors (zinc-950 bg, primary lavender) are inlined here on purpose.
 function renderPopupLoading(popup: Window | null) {
   if (!popup) return;
   try {

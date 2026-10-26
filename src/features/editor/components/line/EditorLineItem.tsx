@@ -19,7 +19,7 @@ import SectionPickerDropdown from './SectionPickerDropdown';
 import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { validateLineSingers, sectionCollapseKey } from '@features/editor/utils/sections';
 import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/singer-colors';
-import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
+import type { EditorLine, EditorWord } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
 

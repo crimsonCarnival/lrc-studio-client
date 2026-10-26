@@ -7,7 +7,7 @@ import SyncModeTab from './SyncModeTab';
 import LyricsModeTab from './LyricsModeTab';
 import PreviewModeTab from './PreviewModeTab';
 import { applyMark } from '@features/editor/services/editor.service';
-import type { EditorLine } from '@features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 const TAB_TRANSITION = {
   duration: 0.15, // 150ms

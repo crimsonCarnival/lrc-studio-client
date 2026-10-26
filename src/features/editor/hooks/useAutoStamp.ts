@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { connectSocket } from '@/app/socket.client';
 import { startStamp, startStampWithFile, getStampJob, cancelStampJob, getJobAudio, type StampResultDto, type AsrJobDto } from '../services/asr.service';
-import type { EditorLine } from '../services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { alignLineStart } from '../services/editor.service';
 import { NoTabAudioError, recordTabAudio } from '@/features/visualizer/audio-source';
 import type { TabRecording } from '@/features/visualizer/audio-source';

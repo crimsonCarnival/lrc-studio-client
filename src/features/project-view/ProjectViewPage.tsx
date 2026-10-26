@@ -29,7 +29,7 @@ import { useProjectReactions } from '@features/reactions/hooks/useReactions';
 import { connectSocket } from '@/app/socket.client';
 import toast from 'react-hot-toast';
 import { sectionsToFlat } from '@/features/editor/utils/sections';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { projects as projectsApi } from '@/app/api';
 import { projectsService } from '@features/projects/services/projects.service';
 import { artistRoster } from '@/features/artists/artist-credits';

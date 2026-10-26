@@ -17,7 +17,7 @@ import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/app/useAppState';
-import type { AuthUser } from '@/features/auth/hooks/useAuth';
+import type { AuthUser } from '@/features/auth/auth.types';
 import { isApiError } from '@/types';
 import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle } from '@features/projects/project-path';
 import { artistDisplay, artistRoster, type ArtistCredit } from '@features/artists/artist-credits';

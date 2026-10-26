@@ -5,7 +5,7 @@
  * Flat format: [{type:'section', label, depth, singers, ...}, {text,...}, ...]
  * Nested format: [{label, depth, singers, lines:[{text,...},...]}]
  */
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { formatSectionLabelForSerialization, isStructuralSection, getPresetDepthForLabel, presetIdForLabel } from '@/features/editor/constants/section-types';
 import { serializeToRubyMarkup } from '@/shared/utils/furigana';
 

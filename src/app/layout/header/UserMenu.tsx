@@ -15,7 +15,7 @@ import { LazyImage } from '@ui/LazyImage';
 import { projects, uploads } from '@/app/api';
 import { requestsApi } from '@/features/admin/services/requests.service';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
-import type { AuthUser } from '@/features/auth/hooks/useAuth';
+import type { AuthUser } from '@/features/auth/auth.types';
 import { isStaff } from '@/features/auth/permissions';
 import { adminHostUrl, canUseAdminHost } from '@/shared/utils/host';
 import { THEMES } from './theme-options';

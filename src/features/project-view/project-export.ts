@@ -1,5 +1,5 @@
 import { compileLRC, compileSRT } from '@/shared/utils/lrc';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 import { artistDisplay, creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
 import { getIncludeFeaturedInTitle } from '@/features/artists/include-featured-setting';
 

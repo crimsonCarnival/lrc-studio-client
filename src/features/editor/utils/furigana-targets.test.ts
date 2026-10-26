@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { collectFuriganaTargets, setTextAtomReading } from './furigana-targets';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 const lines = [
   {

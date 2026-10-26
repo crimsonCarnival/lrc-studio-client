@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { COUNTERPART_MARKER, compileLRC, parseLrcSrtFile } from './lrc';
-import type { EditorLine } from '@/features/editor/services/editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 const song: EditorLine[] = [
   { text: 'My walls are closing in', timestamp: 72.4 },

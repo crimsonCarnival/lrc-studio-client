@@ -6,7 +6,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { captureCounterpart, moveCounterpart, counterpartBounds, frequentCounterparts, counterpartWindow, listCounterparts, isPendingCounterpart, counterpartEnd, counterpartNeedsWords } from './counterparts';
-import type { EditorLine } from './editor.service';
+import type { EditorLine } from '@/features/editor/editor.types';
 
 describe('counterpartEnd', () => {
   const base = { timestamp: 73, adLibOf: 72 };
