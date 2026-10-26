@@ -26,3 +26,9 @@ export interface SettingsContextValue {
   resetSettings: () => void;
   syncFromServer: () => void;
 }
+
+/** What each per-section settings hook (useEditorSettings, …) receives to write a value. */
+export type UpdateSetting = SettingsContextValue['updateSetting'];
+
+/** The slice of a change event the section hooks read: inputs and selects alike. */
+export type ChangeLike = { target: { value: string } };

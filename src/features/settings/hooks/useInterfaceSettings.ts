@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import type { UpdateSetting, ChangeLike } from '@/features/settings/settings.types';
 
-type UpdateSetting = (path: string, value: unknown) => void;
-type ChangeLike = { target: { value: string } };
 
 export function useInterfaceSettings(updateSetting: UpdateSetting) {
   const { i18n } = useTranslation();

@@ -1,7 +1,5 @@
-import type { AppSettings } from '@/features/settings/settings.types';
+import type { AppSettings, UpdateSetting, ChangeLike } from '@/features/settings/settings.types';
 
-type UpdateSetting = (path: string, value: unknown) => void;
-type ChangeLike = { target: { value: string } };
 
 export function usePlaybackSettings(settings: AppSettings, updateSetting: UpdateSetting) {
   const handleAutoRewindChange = (e: ChangeLike) => {

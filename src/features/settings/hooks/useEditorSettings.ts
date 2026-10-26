@@ -1,5 +1,4 @@
-type UpdateSetting = (path: string, value: unknown) => void;
-type ChangeLike = { target: { value: string } };
+import type { UpdateSetting, ChangeLike } from '@/features/settings/settings.types';
 
 export function useEditorSettings(updateSetting: UpdateSetting) {
   const handleAutoPauseChange = (v: boolean) => updateSetting('editor.autoPauseOnMark', v);

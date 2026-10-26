@@ -1,5 +1,4 @@
-type UpdateSetting = (path: string, value: unknown) => void;
-type ChangeLike = { target: { value: string } };
+import type { UpdateSetting, ChangeLike } from '@/features/settings/settings.types';
 
 export function useExportSettings(updateSetting: UpdateSetting) {
   const handleLineEndingsChange = (e: ChangeLike) => updateSetting('export.lineEndings', e.target.value);
