@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@ui/button';
 import { useTranslation } from 'react-i18next';
 import { creditsOf, type ArtistCredit } from '@/features/artists/artist-credits';
+import type { ProjectMetadata } from '@/types/app-state';
 
 const EditorHelpModal = lazy(() => import('@features/settings/components/EditorHelpModal'));
 // Was a static import: AppModals is part of the always-mounted app shell (AppLayout),
@@ -11,19 +12,6 @@ const EditorHelpModal = lazy(() => import('@features/settings/components/EditorH
 // action. ProjectSetupModal is still untyped JS; cast until it is migrated.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ProjectSetupModal = lazy(() => import('@features/editor/components/setup/ProjectSetupModal')) as any;
-
-interface ProjectMetadata {
-  description?: string;
-  tags?: string[];
-  songName?: string;
-  artists?: ArtistCredit[];
-  songArtist?: string;
-  songAlbum?: string;
-  songYear?: string | number;
-  genre?: string;
-  singerColors?: string[];
-  singers?: string[];
-}
 
 // Stable fallback: ProjectSetupModal re-syncs its form whenever an initial* prop changes identity.
 const EMPTY_SINGERS: string[] = [];

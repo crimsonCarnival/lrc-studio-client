@@ -10,6 +10,7 @@ import { BadgeEmblem } from '@/features/badges/BadgeEmblem';
 import { NotificationText, NotificationAvatar, notificationDestination, type NotificationData } from './components/NotificationItem';
 import { appNavigate } from '@/app/navigation';
 import { Icon } from '@/shared/ui/Icon';
+import type { AppNotification } from '@/features/notifications/notifications.types';
 
 // Push events that warrant an on-screen toast. Sticky/system notifications
 // (verify_email, set_password, etc.) arrive on the same channel but should not
@@ -17,12 +18,6 @@ import { Icon } from '@/shared/ui/Icon';
 // badge_awarded excluded: dedicated `badge:awarded` socket event below already toasts it
 // with the badge emblem. Including it here would double-toast the same grant.
 const TOAST_TYPES = new Set(['star', 'fork', 'follow', 'reaction', 'admin_granted', 'ban', 'unban', 'request_submitted', 'request_reviewed', 'xp_changed', 'role_changed', 'streak_warning', 'followed_project', 'wall_comment', 'level_up', 'playlist_saved', 'star_milestone', 'new_device', 'appeal_result']);
-
-interface AppNotification {
-  _id: string;
-  read?: boolean;
-  [key: string]: unknown;
-}
 
 interface NotificationsContextValue {
   notifications: AppNotification[];

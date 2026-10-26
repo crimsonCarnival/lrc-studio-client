@@ -3,13 +3,7 @@ import { Button } from '@ui/button';
 import { useNotificationsContext } from './NotificationsContext';
 import { NotificationStickySection } from './components/NotificationStickySection';
 import { NotificationItem } from './components/NotificationItem';
-
-interface AppNotification {
-  _id: string;
-  type: string;
-  createdAt?: string;
-  [key: string]: unknown;
-}
+import type { AppNotification } from '@/features/notifications/notifications.types';
 
 const SOCIAL_TYPES  = new Set(['star', 'fork', 'follow', 'reaction', 'followed_project', 'wall_comment', 'playlist_saved', 'star_milestone']);
 const BADGE_TYPES   = new Set(['badge_awarded', 'xp_changed']);

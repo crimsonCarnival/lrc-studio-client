@@ -20,6 +20,7 @@ export interface ProjectMetadata {
   trackCount?: number;
   /** Song-level singer roster offered when tagging sections/lines. */
   singers?: string[];
+  singerColors?: string[];
   [key: string]: unknown;
 }
 

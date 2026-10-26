@@ -10,15 +10,7 @@ import {
   AuthField, OrDivider, AvatarBadge, GoogleButton,
 } from './auth-shared';
 import { Button } from '@ui/button';
-
-interface IdentifierData {
-  identifier?: string;
-  accountName?: string;
-  avatarUrl?: string;
-  hasPassword?: boolean;
-  hasPasskey?: boolean;
-  hasGoogle?: boolean;
-}
+import type { IdentifierData } from '@/features/auth/auth.types';
 
 interface LoginPasswordStepProps {
   t: TFunction;

@@ -4,13 +4,7 @@ import { Button } from '@ui/button';
 import { useNotificationsContext } from '../NotificationsContext';
 import { NotificationStickySection } from './NotificationStickySection';
 import { NotificationItem } from './NotificationItem';
-
-interface AppNotification {
-  _id: string;
-  type: string;
-  createdAt?: string;
-  [key: string]: unknown;
-}
+import type { AppNotification } from '@/features/notifications/notifications.types';
 
 const PANEL_CAP = 8;
 

@@ -6,20 +6,11 @@ import { uploads as uploadsApi, getAccessToken } from '@/app/api';
 import { useYouTubeAvailability } from '@/features/player/hooks/useYouTubeAvailability';
 import type { ChangeEvent, KeyboardEvent as ReactKeyboardEvent, RefObject } from 'react';
 import type { PlayerHandle } from '@/features/player/player.types';
+import type { UploadItem } from '@/features/player/PlayerContext';
 
 const CDN_PATTERN = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\//;
 const AUDIO_URL_PATTERN = /^https?:\/\/.+\.(mp3|mp4|wav|ogg|flac|aac|m4a|webm)(\?.*)?$/i;
 const YT_PATTERN = /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|watch\?.+&v=)|youtu\.be\/)([^&?/\s]{11})/;
-
-export interface UploadItem {
-  id?: string;
-  title?: string;
-  fileName?: string;
-  source?: string;
-  uploadUrl?: string;
-  duration?: number | null;
-  publicId?: string | null;
-}
 
 export interface AudioState {
   ready: boolean;

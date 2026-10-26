@@ -42,6 +42,7 @@ import { useSetupMedia } from '@/features/editor/hooks/useSetupMedia';
 import { LogoLoader } from '@ui/LogoLoader';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import type { PlayerHandle } from '@/features/player/player.types';
+import type { UploadItem } from '@/features/player/PlayerContext';
 
 const MAX_IMPORT_FILE_SIZE = 2 * 1024 * 1024;
 
@@ -67,14 +68,6 @@ interface Prefill {
   singers?: string[];
   previewUrl?: string;
   explicit?: boolean;
-}
-
-interface UploadItem {
-  id?: string;
-  title?: string;
-  fileName?: string;
-  source?: string;
-  uploadUrl?: string;
 }
 
 interface AudioState {

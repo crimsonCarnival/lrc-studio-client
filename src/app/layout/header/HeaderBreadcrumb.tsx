@@ -9,11 +9,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { LogoMark } from '@/shared/ui/LogoMark';
 import { findPrevious, readTrail, recordVisit } from '@/shared/utils/nav-trail';
 import { isProjectPath } from '@features/projects/project-path';
-
-interface ForkedFrom {
-  publicId?: string;
-  accountName?: string;
-}
+import type { ForkedFrom } from '@/types/app-state';
 
 interface HeaderBreadcrumbProps {
   isReady: boolean;

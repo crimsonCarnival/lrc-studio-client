@@ -28,11 +28,7 @@ import type { AuthUser } from '@/features/auth/auth.types';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import PlayerControls from '@/features/player/components/PlayerControls';
 import { isEditorPath, isProjectViewPath, projectEditPath } from '@features/projects/project-path';
-
-interface ForkedFrom {
-  publicId?: string;
-  accountName?: string;
-}
+import type { ForkedFrom } from '@/types/app-state';
 
 interface AppHeaderProps {
   user?: AuthUser | null;

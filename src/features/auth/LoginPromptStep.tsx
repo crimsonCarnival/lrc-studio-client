@@ -6,13 +6,7 @@ import { Button } from '@ui/button';
 import { AvatarBadge } from './auth-shared';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { toast } from 'react-hot-toast';
-
-interface IdentifierData {
-  displayName?: string;
-  accountName?: string;
-  identifier?: string;
-  avatarUrl?: string;
-}
+import type { IdentifierData } from '@/features/auth/auth.types';
 
 interface LoginPromptStepProps {
   t: TFunction;

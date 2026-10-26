@@ -31,7 +31,7 @@ import {
   isCredentialAlreadyStored,
 } from '@/features/auth/services/credential-manager.service';
 import type { ComponentProps } from 'react';
-import type { AuthUser } from '@/features/auth/auth.types';
+import type { AuthUser, IdentifierData } from '@/features/auth/auth.types';
 import type { RememberedAccount } from '@/features/auth/services/remembered-accounts.service';
 import type { SignUpIdentity } from './SignUpForm';
 import { safeRedirectPath } from '@/shared/utils/safe-redirect';
@@ -50,15 +50,6 @@ type SavedAccount = ReturnType<typeof rememberedAccounts.getAll>[number];
 
 /** Shared by both panels so they cross at the same rate and never desync. */
 const SIDE_SWAP = { duration: 0.45, ease: [0.16, 1, 0.3, 1] } as const;
-
-interface IdentifierData {
-  identifier?: string;
-  accountName?: string;
-  displayName?: string;
-  avatarUrl?: string;
-  hasPasskey?: boolean;
-  hasPassword?: boolean;
-}
 
 type HeldResult = { user?: AuthUser } | null | undefined;
 
