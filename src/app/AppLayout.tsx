@@ -19,7 +19,7 @@ import { usePlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { useGuidedTour } from '@/features/editor/hooks/useGuidedTour';
 import { GuidedTour } from '@/features/editor/components/GuidedTour';
-import { EDITOR_TOUR_STEPS } from '@/features/editor/tour/tourSteps';
+import { EDITOR_TOUR_STEPS } from '@/features/editor/tour/tour-steps';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { isEditorPath, isProjectViewPath } from '@features/projects/project-path';
 import type { AppState } from '@/shared/hooks/useAppState';

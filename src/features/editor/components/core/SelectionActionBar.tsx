@@ -6,7 +6,7 @@ import { Badge } from '@ui/badge';
 import { Separator } from '@ui/separator';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
-import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { getSingerOptionsForSelection } from '@features/editor/utils/sections';
 
 const ROLE_LABELS_SHORT = ['1', '2', '3', '4'];

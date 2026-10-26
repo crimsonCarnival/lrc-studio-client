@@ -10,7 +10,7 @@ import { LogoLoader } from '@ui/LogoLoader';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useSettings } from '@/features/settings/useSettings';
-import { formatTimeAgo } from '@/features/notifications/timeAgo';
+import { formatTimeAgo } from '@/features/notifications/time-ago';
 import { profilePath } from '../profile-path';
 import {
   addWallComment, deleteWallComment, getWall, setWallSubscription, wallErrorCode,

@@ -12,7 +12,7 @@ import {
 } from '@ui/context-menu';
 import { Icon } from '@/shared/ui/Icon';
 import { Kbd, KbdGroup } from '@ui/kbd';
-import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { formatSectionLabel } from '@features/editor/constants/section-types';
 
 // Shortcut keys at the end of a menu row: smaller and quieter than a key cap in body text,
 // and hidden where there is no keyboard.

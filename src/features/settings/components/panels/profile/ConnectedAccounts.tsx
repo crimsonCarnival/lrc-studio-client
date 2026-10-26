@@ -3,7 +3,7 @@ import { Button } from '@ui/button';
 import toast from 'react-hot-toast';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { useSettings } from '@/features/settings/useSettings';
-import { formatTimeAgo } from '@/features/notifications/timeAgo';
+import { formatTimeAgo } from '@/features/notifications/time-ago';
 import { IconRow, Chip } from '../../shared';
 
 export default function ConnectedAccounts() {

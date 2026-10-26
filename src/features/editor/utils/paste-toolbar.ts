@@ -10,7 +10,7 @@
  * line array so callers never juggle char offsets.
  */
 import { parseSectionHeader, parseSingerPrefix } from './sections';
-import { formatSectionLabelForSerialization } from '../constants/sectionTypes';
+import { formatSectionLabelForSerialization } from '../constants/section-types';
 
 export interface LineSelection {
   lines: string[];

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import { formatTimestamp } from '@/shared/utils/lrc';
 import { KEY_SYMBOLS } from '@features/settings/key-symbols';
-import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/singer-colors';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/select';
 import { Button } from '@ui/button';

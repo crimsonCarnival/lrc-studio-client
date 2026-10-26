@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
-import type { TourStep } from '../tour/tourSteps';
+import type { TourStep } from '../tour/tour-steps';
 
 const PADDING = 8;
 const CARD_WIDTH = 320;

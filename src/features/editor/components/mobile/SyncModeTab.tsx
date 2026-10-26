@@ -4,7 +4,7 @@ import { formatTime } from '@/shared/utils/format-time';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Icon } from '@/shared/ui/Icon';
 import { EditorLineContextMenu } from '@features/editor/components/line/EditorLineContextMenu';
-import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { formatSectionLabel } from '@features/editor/constants/section-types';
 import type { EditorLine } from '@features/editor/services/editor.service';
 
 /** Long-press acts on the pressed line alone; this tab has no multi-select. */

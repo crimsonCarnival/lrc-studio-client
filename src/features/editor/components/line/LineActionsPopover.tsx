@@ -4,7 +4,7 @@ import { Button } from '@ui/button';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
 import { Icon } from '@/shared/ui/Icon';
-import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { formatSectionLabel } from '@features/editor/constants/section-types';
 
 interface LineData {
   type?: string;

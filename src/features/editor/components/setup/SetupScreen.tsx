@@ -15,7 +15,7 @@ import { Tip } from '@ui/tip';
 import { TagsSelector } from '@ui/tags-selector';
 import { PRIMARY_GENRES, matchGenreFromTags } from '@features/editor/constants/genre-tags';
 import { getMyMusicLibrary } from '@/features/editor/music-library.service';
-import { parseRawLyricsText } from '@/features/editor/utils/parseRawLyrics';
+import { parseRawLyricsText } from '@/features/editor/utils/parse-raw-lyrics';
 import { Icon } from '@/shared/ui/Icon';
 import { useSetupContext } from '@/features/editor/SetupContext';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';

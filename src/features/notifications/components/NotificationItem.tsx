@@ -9,7 +9,7 @@ import { useNotificationsContext } from '../NotificationsContext';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { projectPath, projectEditPath } from '@/features/projects/project-path';
 import { useSettings } from '@/features/settings/useSettings';
-import { formatTimeAgo } from '../timeAgo';
+import { formatTimeAgo } from '../time-ago';
 import { BADGE_REGISTRY } from '@/features/badges/badge-registry';
 import { EMOJI_MAP } from '@/features/reactions/components/reaction-constants';
 import { UserHoverCard } from '@ui/UserHoverCard';

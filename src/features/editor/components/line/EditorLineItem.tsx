@@ -16,7 +16,7 @@ import { WordsModeTimestamp, WordsModeChips, WordsModeLayerControl } from '../mo
 import LineTextContent from './LineTextContent';
 import LineActionToolbar from './LineActionToolbar';
 import SectionPickerDropdown from './SectionPickerDropdown';
-import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { validateLineSingers, sectionCollapseKey } from '@features/editor/utils/sections';
 import { SINGER_GRADIENT_STOPS, singerColorIndex } from '@features/editor/utils/singer-colors';
 import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';

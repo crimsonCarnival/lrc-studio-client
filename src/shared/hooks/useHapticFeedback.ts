@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { getHapticPattern } from '../utils/hapticPatterns';
+import { getHapticPattern } from '../utils/haptic-patterns';
 
 /**
  * Hook for triggering haptic feedback (vibration) on supported devices.

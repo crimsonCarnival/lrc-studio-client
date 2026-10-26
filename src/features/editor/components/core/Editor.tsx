@@ -15,7 +15,7 @@ import { WordsLineNav, WordTimeline } from '../modes/WordsFocus';
 import { usePlayer } from '@/features/player/PlayerContext';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { formatTimestamp } from '@/shared/utils/lrc';
-import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { useHeaderSlot } from '@/shared/hooks/useHeaderSlot';
 import EditorPasteArea from '../setup/EditorPasteArea';
 import VirtualizedLineList from './VirtualizedLineList';

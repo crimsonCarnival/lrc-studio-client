@@ -2,7 +2,7 @@ import React from 'react';
 import type { Ref } from 'react';
 import { useSettings } from '@/features/settings/useSettings';
 import { toHiragana, toKatakana, parseRubyMarkup, rubyRatioClass, splitOkurigana, rubyFitStyle, needsSpaceAfter } from '@/shared/utils/furigana';
-import { formatSectionLabel } from '@features/editor/constants/sectionTypes';
+import { formatSectionLabel } from '@features/editor/constants/section-types';
 import { useTranslation } from 'react-i18next';
 import type { EditorLine, EditorWord } from '@/features/editor/services/editor.service';
 import { counterpartEnd } from '@/features/editor/services/counterparts';

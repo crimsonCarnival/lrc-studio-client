@@ -6,7 +6,7 @@ import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { Tip } from '@ui/tip';
-import { formatSectionLabel } from '@/features/editor/constants/sectionTypes';
+import { formatSectionLabel } from '@/features/editor/constants/section-types';
 import EditorLineItem from '../line/EditorLineItem';
 import { sectionCollapseKey } from '@/features/editor/utils/sections';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';

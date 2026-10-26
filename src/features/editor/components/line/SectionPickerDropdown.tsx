@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SECTION_TYPES } from '@features/editor/constants/sectionTypes';
+import { SECTION_TYPES } from '@features/editor/constants/section-types';
 
 const STANDARD_TYPES = SECTION_TYPES.filter(s => s.depth !== 0);
 const STANDARD_IDS = new Set(STANDARD_TYPES.map(s => s.id));

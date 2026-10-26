@@ -1,4 +1,4 @@
-import { getDefaultDepthForLabel } from '../constants/sectionTypes';
+import { getDefaultDepthForLabel } from '../constants/section-types';
 import { normalizeLineMode } from '../services/editor.service';
 import type { EditorLine } from '../services/editor.service';
 import { parseRawTextLine } from './sections';

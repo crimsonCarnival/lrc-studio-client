@@ -4,7 +4,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Popover, PopoverTrigger, PopoverContent, PopoverItem, PopoverSeparator } from '@ui/popover';
 import { ToggleGroup, ToggleGroupItem } from '@ui/toggle-group';
 import { Button } from '@ui/button';
-import { SECTION_TYPES, getDefaultDepthForLabel, formatSectionLabel } from '../../constants/sectionTypes';
+import { SECTION_TYPES, getDefaultDepthForLabel, formatSectionLabel } from '../../constants/section-types';
 import { parseSectionHeader } from '../../utils/sections';
 import {
   selectionToLineRange,

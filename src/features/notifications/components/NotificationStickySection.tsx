@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { useSettings } from '@/features/settings/useSettings';
-import { formatTimeAgo } from '../timeAgo';
+import { formatTimeAgo } from '../time-ago';
 
 interface StickyNotification {
   type?: string;

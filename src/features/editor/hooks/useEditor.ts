@@ -22,7 +22,7 @@ import {
   parseRawTextLine, alignRawTextItems, rawTextKeyOfLine, rawTextKeyOfItem,
   computeCollapsedView, collapsedAncestorKeys, indexMapByIdentity, remapIndexSet,
 } from '@/features/editor/utils/sections';
-import { getDefaultDepthForLabel, formatSectionLabelForSerialization } from '../constants/sectionTypes';
+import { getDefaultDepthForLabel, formatSectionLabelForSerialization } from '../constants/section-types';
 import { useFileImport } from './useFileImport';
 import { useDragReorder } from './useDragReorder';
 import { useCounterparts } from './useCounterparts';
