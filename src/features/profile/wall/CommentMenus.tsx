@@ -9,60 +9,14 @@ import { LogoLoader } from '@ui/LogoLoader';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger } from '@ui/popover';
 import { cn } from '@/shared/utils/utils';
+import { ReportForm } from '@/features/reports/ReportDialog';
 import { profilePath } from '../profile-path';
-import { getWallLikers, reportWallComment, WALL_REPORT_REASONS, wallErrorKey } from './wall.service';
-import type { WallAuthor, WallReportReason } from './wall.service';
+import { getWallLikers } from './wall.service';
+import type { WallAuthor } from './wall.service';
 
 const ACTION_BUTTON = 'rounded-full transition-[color,background-color,transform] active:scale-90';
 // Corner actions stay quiet until the row is hovered or focused, as in CommentNode.
 const CORNER_BUTTON = cn(ACTION_BUTTON, 'text-zinc-600 opacity-60 group-hover/row:opacity-100 focus-visible:opacity-100');
-
-/** Pick a reason (and optionally say more), then the report goes to the moderators. */
-function ReportForm({ commentId, onSent }: { commentId: string; onSent: () => void }) {
-  const { t } = useTranslation();
-  const tk = t as (key: string) => string;
-  const [reason, setReason] = useState<WallReportReason | null>(null);
-  const [note, setNote] = useState('');
-  const [sending, setSending] = useState(false);
-
-  const send = async () => {
-    if (!reason) return;
-    setSending(true);
-    try {
-      await reportWallComment(commentId, reason, note.trim());
-      toast.success(t('profile.wall.reported'));
-      onSent();
-    } catch (err) {
-      toast.error(tk(wallErrorKey(err)));
-    }
-    setSending(false);
-  };
-
-  return (
-    <>
-      <p className="px-3 pb-1 pt-1 text-xs font-semibold text-zinc-400">{t('profile.wall.reportTitle')}</p>
-      {WALL_REPORT_REASONS.map((r) => (
-        <PopoverItem key={r} onClick={() => setReason(r)} aria-pressed={reason === r} className={cn('text-sm', reason === r && 'bg-primary/15 text-primary')}>
-          {tk(`profile.wall.reportReasons.${r}`)}
-        </PopoverItem>
-      ))}
-      {reason && (
-        <div className="flex flex-col gap-2 px-1 pt-2">
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value.slice(0, 300))}
-            placeholder={t('profile.wall.reportNote')}
-            rows={2}
-            className="w-full resize-none rounded-lg bg-zinc-800/80 px-2 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none focus:ring-1 focus:ring-primary/50"
-          />
-          <Button type="button" size="sm" disabled={sending} onClick={send}>
-            {sending ? <LogoLoader size={12} /> : t('profile.wall.reportSend')}
-          </Button>
-        </div>
-      )}
-    </>
-  );
-}
 
 /** Copies a comment's text (tags as their readable @names), with a toast either way. */
 function useCopyText(text: string) {
@@ -117,7 +71,7 @@ export function CommentMenu({ commentId, copyText, canEdit, canReport, onEdit, o
       </Tip>
       <PopoverContent align="end" className={reporting ? 'w-64 lg:min-w-64' : 'w-48 lg:min-w-48'}>
         {reporting ? (
-          <ReportForm commentId={commentId} onSent={() => openChange(false)} />
+          <ReportForm targetType="wall_comment" targetId={commentId} onSent={() => openChange(false)} />
         ) : (
           <>
             <PopoverItem onClick={pick(copy)} className="text-sm">

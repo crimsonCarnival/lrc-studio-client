@@ -1,0 +1,71 @@
+export default {
+  // Compartido por todos los formularios de denuncia; los motivos dependen de lo que se denuncia.
+  reasons: {
+    spam: 'Spam',
+    harassment: 'Acoso',
+    hate: 'Discurso de odio',
+    sexual: 'Contenido sexual',
+    impersonation: 'Se hace pasar por otra persona',
+    copyright: 'Infracción de derechos de autor',
+    other: 'Otra cosa',
+  },
+  formTitle: '¿Por qué lo denuncias?',
+  dialogTitle: {
+    wall_comment: 'Denunciar comentario',
+    user: 'Denunciar a @{{name}}',
+    project: 'Denunciar proyecto',
+    playlist: 'Denunciar lista',
+  },
+  note: '¿Algo que los moderadores deban saber? (opcional)',
+  alsoBlock: 'Bloquear también a @{{name}}',
+  alsoBlockHint: 'No veréis los proyectos, comentarios ni el perfil del otro.',
+  send: 'Enviar denuncia',
+  sent: 'Denunciado. Gracias, un moderador lo revisará.',
+  sentAndBlocked: 'Denunciado, y @{{name}} está bloqueado.',
+  // Entradas de menú en las páginas de perfil, proyecto y lista.
+  menu: {
+    more: 'Más acciones',
+    reportUser: 'Denunciar a @{{name}}',
+    reportProject: 'Denunciar proyecto',
+    reportPlaylist: 'Denunciar lista',
+  },
+  errors: {
+    failed: 'Algo salió mal',
+    rate_limited: 'Has enviado muchas denuncias. Inténtalo más tarde.',
+    forbidden: 'No puedes denunciar esto',
+    not_found: 'Esto ya no está disponible',
+    invalid_body: 'Elige un motivo; la nota puede tener hasta 300 caracteres',
+    sudo_required: 'Confirma que eres tú para hacer esto',
+  },
+  // Lo denunciado, tal como lo muestran el historial y la pestaña de moderación.
+  preview: {
+    type: { wall_comment: 'Comentario', user: 'Cuenta', project: 'Proyecto', playlist: 'Lista' },
+    gone: {
+      wall_comment: 'Este comentario fue eliminado.',
+      user: 'Esta cuenta ya no está disponible.',
+      project: 'Este proyecto ya no está disponible.',
+      playlist: 'Esta lista ya no está disponible.',
+    },
+    onWall: 'En el muro de {{name}}',
+    inReplyTo: 'En respuesta a {{name}}',
+    by: 'de {{name}}',
+    unknownUser: 'Usuario eliminado',
+    joined: 'Se unió el {{date}}',
+    noBio: 'Sin biografía',
+    banned: 'Baneado',
+    private: 'Privado',
+  },
+  // El historial de quien denuncia, /reports.
+  page: {
+    title: 'Mis denuncias',
+    subtitle: 'Lo que denunciaste y lo que hicieron los moderadores.',
+    empty: 'No has denunciado nada.',
+    loadError: 'No se pudieron cargar tus denuncias.',
+    retry: 'Reintentar',
+    loadMore: 'Ver más',
+    status: { open: 'En revisión', dismissed: 'Sin medidas', actioned: 'Se tomaron medidas' },
+    filed: 'Denunciado {{time}}',
+    reviewed: 'Revisado {{time}}',
+    note: 'Tu nota: «{{note}}»',
+  },
+};

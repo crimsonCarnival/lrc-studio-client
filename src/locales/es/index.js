@@ -32,6 +32,7 @@ import badges from './badges.js';
 import nav from './nav.js';
 import guide from './guide.js';
 import artists from './artists.js';
+import reports from './reports.js';
 
 export default {
   translation: {
@@ -69,5 +70,6 @@ export default {
     nav,
     guide,
     artists,
+    reports,
   }
 };
