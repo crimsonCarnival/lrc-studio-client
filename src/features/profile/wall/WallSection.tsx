@@ -1,6 +1,6 @@
-import { createContext, use, useCallback, useEffect, useState } from 'react';
+import { createContext, use, useCallback, useEffect, useRef, useState } from 'react';
 import type { MouseEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
@@ -40,6 +40,20 @@ function withoutComment(comments: WallComment[], id: string): WallComment[] {
 
 const countAll = (c: WallComment): number => 1 + c.replies.reduce((n, r) => n + countAll(r), 0);
 
+/** The ids of the comments above `id` (outermost first), or null when it isn't on this page. */
+function ancestorsOf(comments: WallComment[], id: string, above: string[] = []): string[] | null {
+  for (const c of comments) {
+    if (c.id === id) return above;
+    const found = ancestorsOf(c.replies, id, [...above, c.id]);
+    if (found) return found;
+  }
+  return null;
+}
+
+// A linked comment (#comment-<id>, from a notification) flashes: tinted, then fading out.
+const FLASH_HOLD_MS = 1200;
+const FLASH_FADE_MS = 1000;
+
 /**
  * A lit stretch of thread line: from `parent`'s avatar down to its reply `child` (or just
  * `parent`'s own line when `child` is null). Only that stretch lights up — later replies of
@@ -70,6 +84,8 @@ interface WallThread {
   toggleCollapsed: (id: string) => void;
   showingAll: Set<string>;
   showAll: (id: string) => void;
+  /** The comment opened from a link, while it flashes. */
+  flash: { id: string; fading: boolean } | null;
 }
 
 const WallThreadContext = createContext<WallThread | null>(null);
@@ -119,6 +135,7 @@ function CommentNode({ comment, parentId = null, siblingIds = [], index = 0, isL
   const curveActive = fromParent.some(p => p.child === comment.id);
   const passActive = fromParent.some(p => p.child !== null && siblingIds.indexOf(p.child) > index);
   const highlighted = w.highlightedId === comment.id;
+  const flash = w.flash?.id === comment.id ? w.flash : null;
   const pathHere = parentId ? { parent: parentId, child: comment.id } : null;
 
   const handleRowClick = (e: MouseEvent<HTMLDivElement>) => {
@@ -183,6 +200,9 @@ function CommentNode({ comment, parentId = null, siblingIds = [], index = 0, isL
           highlighted
             ? 'bg-primary/[0.08] ring-1 ring-inset ring-primary/35 shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-primary)_6%,transparent)]'
             : 'hover:bg-zinc-800/40',
+          // Opened from a link: tinted, then a slow fade back (the long duration only while fading).
+          flash && !flash.fading && !highlighted && 'bg-primary/15',
+          flash?.fading && 'duration-1000',
         )}
       >
         {hasVisibleReplies && (
@@ -365,6 +385,37 @@ export default function WallSection({ accountName, isOwner }: { accountName: str
   const [hoverPath, setHoverPath] = useState<ThreadPath | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const [showingAll, setShowingAll] = useState<Set<string>>(() => new Set());
+  const [flash, setFlash] = useState<{ id: string; fading: boolean } | null>(null);
+  const location = useLocation();
+  const handledLink = useRef<string | null>(null);
+
+  // #comment-<id> (a notification's link): open the way to that comment, bring it into view
+  // and flash it. Once per navigation, so liking or replying afterwards doesn't re-trigger it.
+  useEffect(() => {
+    const id = /^#comment-([a-f0-9]{24})$/.exec(location.hash)?.[1];
+    const linkKey = `${location.key}${location.hash}`;
+    if (!wall || !id || handledLink.current === linkKey) return;
+    const above = ancestorsOf(wall.comments, id);
+    if (!above) return; // not on this page (an older page, or deleted)
+    handledLink.current = linkKey;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCollapsed(prev => { const next = new Set(prev); above.forEach(a => next.delete(a)); return next; });
+    setShowingAll(prev => { const next = new Set(prev); above.forEach(a => next.add(a)); return next; });
+    setFlash({ id, fading: false });
+    // Two frames: the first renders the newly revealed replies, the second can find the row.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      document.getElementById(`comment-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }));
+  }, [wall, location.hash, location.key]);
+
+  useEffect(() => {
+    if (!flash) return;
+    const timer = setTimeout(
+      () => (flash.fading ? setFlash(null) : setFlash({ id: flash.id, fading: true })),
+      flash.fading ? FLASH_FADE_MS : FLASH_HOLD_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [flash]);
 
   const load = useCallback(async () => {
     setFailed(false);
@@ -531,6 +582,7 @@ export default function WallSection({ accountName, isOwner }: { accountName: str
     toggleCollapsed: (id) => setCollapsed(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; }),
     showingAll,
     showAll: (id) => setShowingAll(prev => new Set(prev).add(id)),
+    flash,
   };
 
   return (

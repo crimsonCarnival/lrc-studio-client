@@ -32,7 +32,7 @@ export interface NotificationData {
   read?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated'; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; approved?: boolean } | null;
+  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated'; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean } | null;
 }
 
 const TYPE_ICON_NAME: Record<string, string> = {
@@ -95,7 +95,10 @@ export function notificationDestination(
   if (type === 'badge_awarded') return '/settings/badges';
   // The author is the project's owner, so the actor supplies the account name the URL needs.
   if (type === 'followed_project' && publicId && actors?.[0]?.accountName) return projectPath({ publicId }, actors[0].accountName);
-  if ((type === 'wall_comment' || type === 'mention') && notification.meta?.wall) return `${profilePath(notification.meta.wall)}#wall`;
+  // Straight to the comment when the notification knows it (older ones only know the wall).
+  if ((type === 'wall_comment' || type === 'mention') && notification.meta?.wall) {
+    return `${profilePath(notification.meta.wall)}#${notification.meta.commentId ? `comment-${notification.meta.commentId}` : 'wall'}`;
+  }
   if (type === 'level_up' && recipientAccountName) return profilePath(recipientAccountName);
   if (type === 'playlist_saved' && notification.meta?.playlistId && recipientAccountName) return listPath(recipientAccountName, notification.meta.playlistId);
   if (type === 'star_milestone' && publicId) return projectPath({ publicId }, recipientAccountName);

@@ -21,8 +21,25 @@ export function useSessionSocket() {
     const socket = connectSocket();
     if (!socket) return;
 
+    // A socket that connected before sign-in, or with an access token that had just expired,
+    // is anonymous to the server, and joining its user room does nothing — every push is then
+    // lost until a reload. The server answers join:user with whether it worked; when it
+    // didn't, reconnect so the handshake reads the current cookie, backing off a few times
+    // (a token refresh may land in between).
+    const MAX_REJOINS = 3;
+    let rejoins = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
     function joinRooms() {
-      socket!.emit('join:user');
+      socket!.emit('join:user', (ok: boolean) => {
+        if (ok) { rejoins = 0; return; }
+        if (rejoins >= MAX_REJOINS) return;
+        rejoins++;
+        retryTimer = setTimeout(() => {
+          socket!.disconnect();
+          socket!.connect(); // fresh handshake; onConnect joins again
+        }, 1000 * 2 ** (rejoins - 1));
+      });
       if (isStaff) socket!.emit('join:admin');
     }
 
@@ -58,6 +75,7 @@ export function useSessionSocket() {
     socket.on('activity:clear', onActivityClear);
 
     return () => {
+      if (retryTimer) clearTimeout(retryTimer);
       socket.off('connect', onConnect);
       socket.off('user:banned', onBanned);
       socket.off('session:revoked', onRevoked);
