@@ -7,6 +7,7 @@ import type { AppNotification } from '@/features/notifications/notifications.typ
 
 const SOCIAL_TYPES  = new Set(['star', 'fork', 'follow', 'reaction', 'followed_project', 'wall_comment', 'mention', 'comment_like', 'playlist_saved', 'star_milestone']);
 const BADGE_TYPES   = new Set(['badge_awarded', 'xp_changed']);
+const REQUEST_TYPES = new Set(['request_submitted', 'request_reviewed']);
 const SYSTEM_TYPES  = new Set(['system', 'admin', 'ban', 'unban', 'password_changed', 'admin_granted', 'role_changed', 'streak_warning', 'level_up', 'new_device', 'appeal_result', 'wall_report', 'wall_report_reviewed', 'wall_restricted']);
 const STICKY_TYPES  = new Set(['verify_email', 'set_password']);
 
@@ -30,10 +31,11 @@ export default function NotificationsPage() {
   };
 
   const sticky = notifications.filter(n => STICKY_TYPES.has(n.type));
+  const requests = notifications.filter(n => REQUEST_TYPES.has(n.type));
   const badges = notifications.filter(n => BADGE_TYPES.has(n.type));
   const social = notifications.filter(n => SOCIAL_TYPES.has(n.type));
   const system = notifications.filter(n => SYSTEM_TYPES.has(n.type));
-  const hasAny = sticky.length + badges.length + social.length + system.length > 0;
+  const hasAny = sticky.length + requests.length + badges.length + social.length + system.length > 0;
 
   return (
     <div className="flex-1 overflow-y-auto min-h-0">
@@ -58,6 +60,16 @@ export default function NotificationsPage() {
           <SectionLabel label={t('notifications.sectionActionRequired')} variant="action" />
           <div className="rounded-xl border border-zinc-800/60 overflow-hidden">
             <NotificationStickySection notifications={sticky} />
+          </div>
+        </>
+      )}
+
+      {/* Same order as the bell's panel: what needs acting on first. */}
+      {requests.length > 0 && (
+        <>
+          <SectionLabel label={t('notifications.sectionRequests')} variant="action" />
+          <div className="rounded-xl border border-zinc-800/60 overflow-hidden divide-y divide-zinc-800/40">
+            {requests.map(n => <NotificationItem key={n._id} notification={n} />)}
           </div>
         </>
       )}
