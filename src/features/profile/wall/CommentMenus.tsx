@@ -75,32 +75,10 @@ function useCopyText(text: string) {
   };
 }
 
-/** The report flag, for someone who can do nothing else to the comment. */
-export function ReportMenu({ commentId }: { commentId: string }) {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <Tip content={t('profile.wall.report')}>
-        <PopoverTrigger asChild>
-          <Button type="button" variant="ghost" size="icon-xs" aria-label={t('profile.wall.report')} className={cn(CORNER_BUTTON, 'hover:text-amber-400')}>
-            <Icon name="flag" size={15} />
-          </Button>
-        </PopoverTrigger>
-      </Tip>
-      <PopoverContent align="end" className="w-64 lg:min-w-64">
-        {/* Remounted on each open, so a half-filled report starts over. */}
-        {open && <ReportForm commentId={commentId} onSent={() => setOpen(false)} />}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 /**
- * The ⋯ menu, for someone who can delete the comment (its author, the wall's owner or a
- * moderator): copy, edit (the author, while the window is open), report (not your own) and
- * delete. Report swaps the menu for the reasons; delete asks in the corner, as before.
+ * The ⋯ menu, for everyone: copy, then edit (the author, while the window is open), report
+ * (signed in, not your own) and delete (its author, the wall's owner or a moderator). Report
+ * swaps the menu for the reasons; delete asks in the corner, as before.
  */
 export function CommentMenu({ commentId, copyText, canEdit, canReport, onEdit, onDelete }: {
   commentId: string;
@@ -108,7 +86,8 @@ export function CommentMenu({ commentId, copyText, canEdit, canReport, onEdit, o
   canEdit: boolean;
   canReport: boolean;
   onEdit: () => void;
-  onDelete: () => void;
+  /** Absent when the viewer can't delete the comment. */
+  onDelete?: () => void;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -154,10 +133,14 @@ export function CommentMenu({ commentId, copyText, canEdit, canReport, onEdit, o
                 <Icon name="flag" size={16} /> {t('profile.wall.report')}
               </PopoverItem>
             )}
-            <PopoverSeparator />
-            <PopoverItem onClick={pick(onDelete)} className="text-sm text-destructive hover:bg-destructive/15 hover:text-destructive">
-              <Icon name="delete" size={16} /> {t('profile.wall.delete')}
-            </PopoverItem>
+            {onDelete && (
+              <>
+                <PopoverSeparator />
+                <PopoverItem onClick={pick(onDelete)} className="text-sm text-destructive hover:bg-destructive/15 hover:text-destructive">
+                  <Icon name="delete" size={16} /> {t('profile.wall.delete')}
+                </PopoverItem>
+              </>
+            )}
           </>
         )}
       </PopoverContent>
