@@ -22,7 +22,7 @@ export function ProjectTagCard({ title, coverImage, href }: { title: string; cov
 }
 
 /** A comment's text with its tags drawn in: people as primary-coloured links, projects as mini cards. */
-export default function CommentBody({ comment }: { comment: WallComment }) {
+export default function CommentBody({ comment }: { comment: Pick<WallComment, 'body' | 'mentions' | 'projectRefs'> }) {
   const { t } = useTranslation();
   return (
     <>

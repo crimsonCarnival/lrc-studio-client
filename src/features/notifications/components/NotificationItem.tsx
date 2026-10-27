@@ -115,7 +115,8 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
   // badge label keys are composed from a registry; bypass strict key checking.
   const tk = t as (key: string, defaultValue?: string) => string;
   const { type, actors, actorCount, projectTitle, body } = notification;
-  const first = actors?.[0];
+  // The server appends actors, so the newest is last; name them newest first.
+  const first = actors?.[actors.length - 1];
   const firstName = first?.accountName ?? 'Someone';
   const wall = notification.meta?.wall ?? '';
   const ownWall = !!wall && !!viewerAccountName && wall.toLowerCase() === viewerAccountName.toLowerCase();
@@ -263,7 +264,8 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
 
 export function NotificationAvatar({ notification }: { notification: NotificationData }) {
   const { type, actors } = notification;
-  const first = actors?.[0];
+  // The newest actor, the one the text names first.
+  const first = actors?.[actors.length - 1];
   const hasActor = !!first;
 
   if (hasActor) {

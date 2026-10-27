@@ -30,3 +30,16 @@ describe('wall notification text', () => {
     expect(text(wallNote('mention'))).toBe('idkman tagged you on 32blunts’s wall');
   });
 });
+
+describe('notification actors', () => {
+  const grouped = (names: string[]): NotificationData => ({
+    ...wallNote('wall_comment', { reply: true }),
+    actors: names.map(accountName => ({ accountName })),
+    actorCount: names.length,
+  } as NotificationData);
+
+  it('names each actor once, newest first', () => {
+    expect(text(grouped(['bob', 'sam']), 'ann')).toBe('sam and bob replied to your comment on 32blunts’s wall');
+    expect(text(grouped(['bob', 'sam', 'mia']), 'ann')).toBe('mia, sam and bob replied to your comment on 32blunts’s wall');
+  });
+});

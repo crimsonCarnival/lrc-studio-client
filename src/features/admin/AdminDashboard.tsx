@@ -22,6 +22,7 @@ import AdminLevelsTab from './AdminLevelsTab';
 import AdminXpTab from './AdminXpTab';
 import AdminRequestsTab from './AdminRequestsTab';
 import AdminPermissionsTab from './AdminPermissionsTab';
+import AdminReportsTab from './AdminReportsTab';
 import { adminPath, useAdminRoute, useAdminSub } from './admin-nav';
 import { AdminSubNav } from './AdminSubNav';
 import AdminTasksView from './AdminTasksView';
@@ -524,6 +525,10 @@ export default function AdminDashboard() {
             handleUnblockDevice={handleUnblockDevice}
             bannedDevices={bannedDevices}
           />
+        )}
+
+        {activeTab === 'reports' && (
+          <AdminReportsTab />
         )}
 
         {activeTab === 'staff' && (

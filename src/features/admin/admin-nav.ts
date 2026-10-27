@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { isAdminHost } from '@/shared/utils/host';
 
-export const ADMIN_TABS = ['moderation', 'staff', 'audit', 'badges', 'levels', 'xp', 'permissions', 'requests'] as const;
+export const ADMIN_TABS = ['moderation', 'reports', 'staff', 'audit', 'badges', 'levels', 'xp', 'permissions', 'requests'] as const;
 export type AdminTabId = (typeof ADMIN_TABS)[number];
 
 /** Tabs that split into sub-views. Only these get a second path segment; the rest are one segment. */
