@@ -9,7 +9,7 @@ import { cn } from '@/shared/utils/utils';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { WALL_MAX_LENGTH, getTaggablePeople, getTaggableProjects } from './wall.service';
 import type { TagPerson, TagProject } from './wall.service';
-import { findTrigger, serializeTags, tagRanges, userToken, projectToken } from './wall-tags';
+import { activeTrigger, serializeTags, tagRanges, userToken, projectToken } from './wall-tags';
 import { ProjectTagCard } from './CommentBody';
 import type { TagEntity } from './wall-tags';
 
@@ -93,9 +93,7 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
     .filter((r) => r.kind === 'project')
     .filter((r, i, all) => all.findIndex((o) => o.entity.token === r.entity.token) === i);
 
-  const found = findTrigger(text.slice(0, caret));
-  // A tag already picked is finished: typing after `@sam/Song title` must not reopen the list.
-  const trigger = found && found.start !== dismissedAt && !entities.some((e) => text.startsWith(e.display, found.start)) ? found : null;
+  const trigger = activeTrigger(text, caret, entities, dismissedAt);
   const projectOwner = trigger?.kind === 'project' ? trigger.owner : null;
   const wantsPeople = trigger?.kind === 'user';
 
@@ -153,7 +151,8 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
       });
   }, [trigger, people, projects, t]);
 
-  const open = !!trigger && (loading || suggestions.length > 0 || trigger.query.length > 0);
+  // A project list always opens, so an owner with nothing to tag says so instead of nothing happening.
+  const open = !!trigger && (loading || suggestions.length > 0 || trigger.query.length > 0 || trigger.kind === 'project');
   const active = Math.min(activeIndex, Math.max(0, suggestions.length - 1));
 
   const body = serializeTags(text.trim(), entities);

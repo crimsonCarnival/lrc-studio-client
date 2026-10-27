@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findTrigger, serializeTags, tagRanges, bodySegments, userToken, projectToken } from './wall-tags';
+import { findTrigger, activeTrigger, serializeTags, tagRanges, bodySegments, userToken, projectToken } from './wall-tags';
 
 describe('findTrigger', () => {
   it('finds a person being typed', () => {
@@ -15,6 +15,24 @@ describe('findTrigger', () => {
 
   it('ignores an @ inside a word, like an email address', () => {
     expect(findTrigger('mail me at a@b')).toBeNull();
+  });
+});
+
+describe('activeTrigger', () => {
+  const sam = { display: '@sam', token: userToken('u1') };
+  const song = { display: '@sam/Blue Song', token: projectToken('p1') };
+
+  it("opens the owner's projects after a picked person tag and a slash", () => {
+    expect(activeTrigger('@sam/', 5, [sam], null)).toMatchObject({ kind: 'project', owner: 'sam' });
+  });
+
+  it('stays closed right after a person tag was picked, and after a picked project tag', () => {
+    expect(activeTrigger('@sam', 4, [sam], null)).toBeNull();
+    expect(activeTrigger('@sam/Blue Song more', 19, [song], null)).toBeNull();
+  });
+
+  it('stays closed for the tag the user dismissed', () => {
+    expect(activeTrigger('hi @sa', 6, [], 3)).toBeNull();
   });
 });
 

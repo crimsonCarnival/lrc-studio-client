@@ -45,6 +45,20 @@ export function findTrigger(beforeCaret: string): TagTrigger | null {
   return null;
 }
 
+/**
+ * The tag being typed at `caret`, unless it is one already picked from the list (so typing
+ * after `@sam/Song title` doesn't reopen it). A picked person tag only counts as finished
+ * while the caret is still on it: `@sam` + `/` must open sam's projects.
+ */
+export function activeTrigger(text: string, caret: number, entities: TagEntity[], dismissedAt: number | null): TagTrigger | null {
+  const found = findTrigger(text.slice(0, caret));
+  if (!found || found.start === dismissedAt) return null;
+  const finished = entities.some((e) =>
+    text.startsWith(e.display, found.start)
+    && (e.token.startsWith('@[p:') || found.start + e.display.length >= caret));
+  return finished ? null : found;
+}
+
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
