@@ -17,7 +17,7 @@ import { deserializeBody, userToken } from './wall-tags';
 import { useWallThread } from './wall-thread';
 import WallComposer from './WallComposer';
 import CommentBody from './CommentBody';
-import { LikersPopover, ReportMenu } from './CommentMenus';
+import { CommentMenu, CopyButton, LikersPopover, ReportMenu } from './CommentMenus';
 
 // Thread geometry, in px from a comment's left edge. The avatar is 32px wide, so its
 // centre (where a thread line hangs) is at 16; a reply sits 32px further in. A reply's row
@@ -99,6 +99,8 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
     />
   );
   const isOwnComment = !!w.viewerId && author.id === w.viewerId;
+  // What Copy puts on the clipboard: the text as read, tags as their @names.
+  const copyText = deserializeBody(comment.body, comment.mentions, comment.projectRefs).text;
 
   return (
     <li id={`comment-${comment.id}`} className={cn('relative flex flex-col gap-2', parentId && 'pt-3')}>
@@ -236,13 +238,6 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
                 </Button>
               </Tip>
             )}
-            {comment.canEdit && !editingThis && (
-              <Tip content={t('profile.wall.edit')}>
-                <Button type="button" variant="ghost" size="icon-xs" aria-label={t('profile.wall.edit')} onClick={() => w.setEditingId(comment.id)} className={cn(ACTION_BUTTON, 'text-zinc-500 hover:text-primary')}>
-                  <Icon name="edit" size={15} />
-                </Button>
-              </Tip>
-            )}
             {comment.replyCount > 0 && !collapsed && (
               <Tip content={t('profile.wall.hideReplies')}>
                 <Button
@@ -260,7 +255,7 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
             )}
           </div>
         </div>
-        {/* The corner: pin (the wall's owner, top-level only), report (others), delete. */}
+        {/* The corner: pin (the wall's owner, top-level only), then the ⋯ menu for whoever can delete, else copy and the report flag. */}
         <div className="absolute right-2 top-2 flex items-center gap-1 text-xs">
           {confirmingDelete ? (
             <>
@@ -293,20 +288,20 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
                   </Button>
                 </Tip>
               )}
-              {w.signedIn && !isOwnComment && <ReportMenu commentId={comment.id} />}
-              {comment.canDelete && (
-                <Tip content={t('profile.wall.delete')}>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label={t('profile.wall.delete')}
-                    onClick={() => setConfirmingDelete(true)}
-                    className={cn(CORNER_BUTTON, 'hover:bg-destructive/15 hover:text-destructive')}
-                  >
-                    <Icon name="delete" size={15} />
-                  </Button>
-                </Tip>
+              {comment.canDelete ? (
+                <CommentMenu
+                  commentId={comment.id}
+                  copyText={copyText}
+                  canEdit={comment.canEdit && !editingThis}
+                  canReport={!isOwnComment}
+                  onEdit={() => w.setEditingId(comment.id)}
+                  onDelete={() => setConfirmingDelete(true)}
+                />
+              ) : (
+                <>
+                  <CopyButton text={copyText} />
+                  {w.signedIn && !isOwnComment && <ReportMenu commentId={comment.id} />}
+                </>
               )}
             </>
           )}
