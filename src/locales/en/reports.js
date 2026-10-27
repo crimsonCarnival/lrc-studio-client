@@ -1,0 +1,71 @@
+export default {
+  // Shared by every report form; the reasons offered depend on what is reported.
+  reasons: {
+    spam: 'Spam',
+    harassment: 'Harassment or bullying',
+    hate: 'Hate speech',
+    sexual: 'Sexual content',
+    impersonation: 'Pretending to be someone else',
+    copyright: 'Copyright infringement',
+    other: 'Something else',
+  },
+  formTitle: 'Why are you reporting this?',
+  dialogTitle: {
+    wall_comment: 'Report comment',
+    user: 'Report @{{name}}',
+    project: 'Report project',
+    playlist: 'Report playlist',
+  },
+  note: 'Anything the moderators should know? (optional)',
+  alsoBlock: 'Also block @{{name}}',
+  alsoBlockHint: 'You won’t see each other’s projects, comments or profile.',
+  send: 'Send report',
+  sent: 'Reported. Thanks, a moderator will take a look.',
+  sentAndBlocked: 'Reported, and @{{name}} is blocked.',
+  // Menu entries on the profile, project and playlist pages.
+  menu: {
+    more: 'More actions',
+    reportUser: 'Report @{{name}}',
+    reportProject: 'Report project',
+    reportPlaylist: 'Report playlist',
+  },
+  errors: {
+    failed: 'Something went wrong',
+    rate_limited: 'You’ve sent a lot of reports. Try again later.',
+    forbidden: 'You can’t report this',
+    not_found: 'This is no longer available',
+    invalid_body: 'Pick a reason; a note can be up to 300 characters',
+    sudo_required: 'Confirm it’s you to do this',
+  },
+  // What was reported, as the history page and the moderators' tab show it.
+  preview: {
+    type: { wall_comment: 'Comment', user: 'Account', project: 'Project', playlist: 'Playlist' },
+    gone: {
+      wall_comment: 'This comment has been removed.',
+      user: 'This account is no longer available.',
+      project: 'This project is no longer available.',
+      playlist: 'This playlist is no longer available.',
+    },
+    onWall: "On {{name}}'s wall",
+    inReplyTo: 'In reply to {{name}}',
+    by: 'by {{name}}',
+    unknownUser: 'Deleted user',
+    joined: 'Joined {{date}}',
+    noBio: 'No bio',
+    banned: 'Banned',
+    private: 'Private',
+  },
+  // The reporter's history page, /reports.
+  page: {
+    title: 'My reports',
+    subtitle: 'What you reported, and what the moderators did about it.',
+    empty: 'You haven’t reported anything.',
+    loadError: 'Your reports could not be loaded.',
+    retry: 'Retry',
+    loadMore: 'Show more',
+    status: { open: 'Under review', dismissed: 'No action taken', actioned: 'Action taken' },
+    filed: 'Reported {{time}}',
+    reviewed: 'Reviewed {{time}}',
+    note: 'Your note: “{{note}}”',
+  },
+};

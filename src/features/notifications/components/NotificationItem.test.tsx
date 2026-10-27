@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
 import i18n from 'i18next';
 
-import { NotificationText } from './NotificationItem';
+import { NotificationText, notificationDestination } from './NotificationItem';
 import type { NotificationData } from './NotificationItem';
 
 const wallNote = (type: string, meta: Record<string, unknown> = {}): NotificationData => ({
@@ -46,6 +46,37 @@ describe('wall report notification text', () => {
   it('gives a restriction with no end date its own wording, and the reason', () => {
     const restricted = { _id: 'n2', type: 'wall_restricted', body: 'spam', meta: { until: null } } as NotificationData;
     expect(text(restricted)).toBe('A moderator stopped you from commenting on walls until further notice. Reason: spam');
+  });
+});
+
+describe('report notification text and links', () => {
+  const filed = (targetType: string, targetLabel = '') => ({
+    _id: 'n3', type: 'report', actors: [{ accountName: 'ann' }], actorCount: 1, meta: { targetType, targetLabel },
+  } as NotificationData);
+  const reviewed = (targetType: string, outcome: 'actioned' | 'dismissed', targetLabel = 'x') => ({
+    _id: 'n4', type: 'report_reviewed', actors: [], actorCount: 0, meta: { targetType, targetLabel, outcome, reportId: 'r1' },
+  } as NotificationData);
+
+  it('tells moderators who reported what, with its label when there is one', () => {
+    expect(text(filed('user', 'sam'))).toBe('ann reported an account (sam)');
+    expect(text(filed('project', 'Creep'))).toBe('ann reported a project (Creep)');
+    expect(text(filed('playlist', 'Mix'))).toBe('ann reported a playlist (Mix)');
+    expect(text(filed('wall_comment', 'hey'))).toBe('ann reported a comment (hey)');
+    expect(text(filed('project'))).toBe('ann reported a project');
+    expect(notificationDestination(filed('user', 'sam'))).toBe('/admin/reports');
+  });
+
+  it('tells the reporter what became of the report, and opens their report history', () => {
+    expect(text(reviewed('project', 'actioned', 'Creep'))).toBe('A moderator removed a project you reported (Creep)');
+    expect(text(reviewed('user', 'actioned', 'sam'))).toBe('A moderator took action on an account you reported (sam)');
+    expect(text(reviewed('playlist', 'dismissed', 'Mix'))).toBe('A moderator reviewed your report of a playlist (Mix) and left it up');
+    expect(text(reviewed('wall_comment', 'dismissed', ''))).toBe('A moderator reviewed your report of a comment and left it up');
+    expect(notificationDestination(reviewed('user', 'dismissed'))).toBe('/reports');
+  });
+
+  it('still sends old wall report notices to the right place', () => {
+    expect(notificationDestination(wallNote('wall_report'))).toBe('/admin/reports');
+    expect(notificationDestination(wallNote('wall_report_reviewed', { outcome: 'dismissed' }))).toBe('/reports');
   });
 });
 

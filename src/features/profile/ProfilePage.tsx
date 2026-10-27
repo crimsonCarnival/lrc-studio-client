@@ -391,6 +391,14 @@ export default function ProfilePage() {
     setBlockLoading(false);
   }, [user, accountName, navigate, t, setIsBlocked, setIsFollowing, setProfile, queryClient]);
 
+  // A report can block the account in the same step (the server does it); mirror handleBlock.
+  const handleReported = useCallback((blocked: boolean) => {
+    if (!blocked) return;
+    setIsBlocked(true);
+    setIsFollowing(false);
+    queryClient.invalidateQueries();
+  }, [setIsBlocked, setIsFollowing, queryClient]);
+
   const handleUnblock = useCallback(async () => {
     setBlockLoading(true);
     try {
@@ -564,6 +572,8 @@ export default function ProfilePage() {
           blockLoading={viewAsOthers || blockLoading}
           onBlock={handleBlock}
           onUnblock={handleUnblock}
+          canReport={!!user && !isSelf}
+          onReported={handleReported}
           onViewAsOthers={isSelf ? () => setViewAsOthers(true) : undefined}
         >
           <dl className="grid grid-cols-2 md:grid-cols-5 m-0">

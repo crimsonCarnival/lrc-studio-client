@@ -32,8 +32,11 @@ export interface NotificationData {
   read?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated'; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean; outcome?: 'dismissed' | 'actioned'; until?: string | null } | null;
+  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated'; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean; outcome?: 'dismissed' | 'actioned'; until?: string | null; targetType?: string; targetLabel?: string; reportId?: string } | null;
 }
+
+/** The target types a `report` / `report_reviewed` notification can name. */
+const REPORT_TARGET_TYPES = new Set(['wall_comment', 'user', 'project', 'playlist']);
 
 const TYPE_ICON_NAME: Record<string, string> = {
   star: 'star',
@@ -59,6 +62,8 @@ const TYPE_ICON_NAME: Record<string, string> = {
   wall_report: 'flag',
   wall_report_reviewed: 'done_all',
   wall_restricted: 'speaker_notes_off',
+  report: 'flag',
+  report_reviewed: 'done_all',
   level_up: 'trending_up',
   playlist_saved: 'bookmark',
   star_milestone: 'star',
@@ -108,9 +113,9 @@ export function notificationDestination(
   if (type === 'star_milestone' && publicId) return projectPath({ publicId }, recipientAccountName);
   if (type === 'new_device') return '/settings/security';
   if (type === 'request_submitted' || type === 'request_reviewed') return '/admin/requests';
-  if (type === 'wall_report') return '/admin/reports';
-  // There is no report history page yet, so the reviewed report opens the wall it was on.
-  if (type === 'wall_report_reviewed' && notification.meta?.wall) return profilePath(notification.meta.wall);
+  if (type === 'wall_report' || type === 'report') return '/admin/reports';
+  // A reviewed report opens the reporter's history, which says what became of each one.
+  if (type === 'wall_report_reviewed' || type === 'report_reviewed') return '/reports';
   // "Continue working": the user's most recently updated project, else home.
   if (type === 'streak_warning') return (publicId && projectEditPath({ publicId }, recipientAccountName)) || '/home';
   return null;
@@ -265,6 +270,23 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
           i18nKey={notification.meta?.outcome === 'actioned' ? 'notifications.wallReportActioned' : 'notifications.wallReportDismissed'}
           values={{ wall }}
           components={[<strong key="0" />]}
+        />
+      </span>
+    );
+  }
+  if ((type === 'report' || type === 'report_reviewed') && REPORT_TARGET_TYPES.has(notification.meta?.targetType ?? '')) {
+    const label = notification.meta?.targetLabel ?? '';
+    const group = type === 'report'
+      ? 'notifications.report'
+      : notification.meta?.outcome === 'actioned' ? 'notifications.reportActioned' : 'notifications.reportDismissed';
+    const key = `${group}.${notification.meta!.targetType}${label ? '' : '_bare'}`;
+    return (
+      <span>
+        <Trans
+          i18nKey={key as 'notifications.report.user'}
+          values={{ actors: actorStr, label }}
+          // The reporter's version has no actor, so its label is the first tag.
+          components={type === 'report' ? [<strong key="0" />, <strong key="1" />] : [<strong key="0" />]}
         />
       </span>
     );

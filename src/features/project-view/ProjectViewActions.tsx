@@ -10,6 +10,7 @@ import { Button } from '@ui/button';
 import { getPlaylists, addProjectToPlaylist, createPlaylist } from '@features/playlists/playlist.service';
 import { projectsService } from '@features/projects/services/projects.service';
 import { LogoLoader } from '@ui/LogoLoader';
+import { ReportDialog } from '@features/reports/ReportDialog';
 import { downloadProjectExport } from './project-export';
 
 interface Playlist {
@@ -203,6 +204,8 @@ export function ProjectViewActions({
   const [menuOpen, setMenuOpen] = useState(false);
 
   const canFork = project?.forksEnabled !== false && !project?.isForkedByMe;
+  const [reportOpen, setReportOpen] = useState(false);
+  const canReport = !isOwner && !!user && !user.isGuest && !!project?.publicId;
 
   return (
     <>
@@ -263,6 +266,18 @@ export function ProjectViewActions({
           />
         </MenuItem>
 
+        {/* Logged-in non-owner: report */}
+        {canReport && (
+          <>
+            <PopoverSeparator />
+            <MenuItem
+              iconName="flag"
+              label={t('reports.menu.reportProject')}
+              onClick={() => { setMenuOpen(false); setReportOpen(true); }}
+            />
+          </>
+        )}
+
       </PopoverContent>
     </Popover>
     {project?.publicId && (
@@ -277,6 +292,10 @@ export function ProjectViewActions({
         genre={project.metadata?.genre}
         onShared={() => { projectsService.incrementShare(project.publicId!).catch(() => {}); }}
       />
+    )}
+    {canReport && (
+      // The server takes the publicId for a project.
+      <ReportDialog open={reportOpen} onOpenChange={setReportOpen} targetType="project" targetId={project.publicId!} />
     )}
     </>
   );

@@ -17,7 +17,7 @@ import { requestsApi } from '@/features/admin/services/requests.service';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import type { AuthUser } from '@/features/auth/auth.types';
 import { isStaff, userHasPermission } from '@/features/auth/permissions';
-import { useWallReportCount } from '@/features/admin/wall-report-count';
+import { useReportCount } from '@/features/admin/report-count';
 import { adminHostUrl, canUseAdminHost } from '@/shared/utils/host';
 import { THEMES } from './theme-options';
 
@@ -40,8 +40,8 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
   const [counts, setCounts] = useState({ library: 0, uploads: 0, requests: 0 });
   const [menuOpen, setMenuOpen] = useState(false);
   const staff = isStaff(user?.permissions);
-  const openReports = useWallReportCount(userHasPermission(user?.permissions, 'users.ban'));
-  // What waits on staff in the dashboard: requests to review and reported comments.
+  const openReports = useReportCount(userHasPermission(user?.permissions, 'users.ban'));
+  // What waits on staff in the dashboard: requests to review and reported content.
   const pending = counts.requests + openReports;
 
   const fetchCounts = async () => {
@@ -151,6 +151,9 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
 
             <PopoverItem asChild><Link to="/settings" className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <Icon name="settings" size={16} className="text-zinc-400" />{t('settings.title')}
+            </Link></PopoverItem>
+            <PopoverItem asChild><Link to="/reports" onClick={(e) => guardedLinkClick(e, () => navTo('/reports'))} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+              <Icon name="flag" size={16} className="text-zinc-400" />{t('reports.page.title')}
             </Link></PopoverItem>
             {setShowKeyboardHelp && (
               <PopoverItem onClick={() => { setShowKeyboardHelp(true); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">

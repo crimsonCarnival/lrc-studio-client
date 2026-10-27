@@ -1,11 +1,12 @@
 import { useEffect, useSyncExternalStore } from 'react';
-import { gqlRequest } from '@/app/graphql.client';
 import { connectSocket } from '@/app/socket.client';
+import { getOpenReportCount } from '@/features/reports/reports.service';
 
 /**
- * Comments with open reports, for moderators: the badge on the Reports tab and on the
- * dashboard icon. One shared value, so the header, the dashboard and the icon don't each
- * keep their own copy; the server pushes `admin:wall_reports` whenever the queue changes.
+ * Targets with open reports (comments, accounts, projects, playlists), for moderators: the
+ * badge on the Reports tab and on the dashboard icon. One shared value, so the header, the
+ * dashboard and the icon don't each keep their own copy; the server pushes `admin:reports`
+ * whenever the queue changes.
  */
 let count = 0;
 let inflight: Promise<void> | null = null;
@@ -18,8 +19,8 @@ function set(next: number) {
 }
 
 function refresh(): Promise<void> {
-  inflight ??= gqlRequest<{ wallOpenReportCount: number }>('query { wallOpenReportCount }')
-    .then(d => set(d.wallOpenReportCount))
+  inflight ??= getOpenReportCount()
+    .then(set)
     .catch(() => {})
     .finally(() => { inflight = null; });
   return inflight;
@@ -31,7 +32,7 @@ function subscribe(listener: () => void) {
 }
 
 /** The open report count, or 0 when `enabled` is false (the viewer can't moderate reports). */
-export function useWallReportCount(enabled: boolean): number {
+export function useReportCount(enabled: boolean): number {
   useEffect(() => {
     if (!enabled) return;
     void refresh();
@@ -40,10 +41,10 @@ export function useWallReportCount(enabled: boolean): number {
     const onQueue = ({ open }: { open: number }) => set(open);
     // A reconnect may have missed updates.
     const onConnect = () => { void refresh(); };
-    socket.on('admin:wall_reports', onQueue);
+    socket.on('admin:reports', onQueue);
     socket.on('connect', onConnect);
     return () => {
-      socket.off('admin:wall_reports', onQueue);
+      socket.off('admin:reports', onQueue);
       socket.off('connect', onConnect);
     };
   }, [enabled]);

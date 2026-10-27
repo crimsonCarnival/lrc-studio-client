@@ -42,7 +42,7 @@ describe('accessFor', () => {
   });
 
   it('does not make private areas public by being more permissive', () => {
-    for (const path of ['/library', '/home', '/settings', '/settings/profile', '/uploads', '/uploads/abc', '/feed', '/notifications', '/library/lists/x', '/admin', '/admin/users']) {
+    for (const path of ['/library', '/home', '/settings', '/settings/profile', '/uploads', '/uploads/abc', '/feed', '/notifications', '/reports', '/library/lists/x', '/admin', '/admin/users']) {
       expect(accessFor(path)).not.toBe('public');
     }
   });
