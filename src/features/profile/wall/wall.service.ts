@@ -142,52 +142,6 @@ export async function setWallCommentPin(id: string, pinned: boolean): Promise<vo
   `, { id, pinned });
 }
 
-export const WALL_REPORT_REASONS = ['spam', 'harassment', 'hate', 'sexual', 'other'] as const;
-export type WallReportReason = (typeof WALL_REPORT_REASONS)[number];
-
-export async function reportWallComment(id: string, reason: WallReportReason, note?: string): Promise<void> {
-  await gqlRequest(/* GraphQL */ `
-    mutation ReportWallComment($id: ID!, $reason: String!, $note: String) { reportWallComment(id: $id, reason: $reason, note: $note) }
-  `, { id, reason, note: note || null });
-}
-
-export interface WallReport {
-  id: string;
-  reason: WallReportReason;
-  note: string;
-  status: 'open' | 'dismissed' | 'actioned';
-  createdAt: string;
-  openCount: number;
-  reporter: WallAuthor | null;
-  wallAccountName: string;
-  /** Null once the comment has been deleted. */
-  comment: Pick<WallComment, 'id' | 'body' | 'mentions' | 'projectRefs' | 'createdAt'> & { author: WallAuthor | null } | null;
-}
-
-export async function listWallReports(status: WallReport['status'] = 'open'): Promise<WallReport[]> {
-  const author = 'id accountName displayName avatarUrl staffRole allowsTags';
-  const data = await gqlRequest<{ wallReports: WallReport[] }>(/* GraphQL */ `
-    query WallReports($status: String) {
-      wallReports(status: $status) {
-        id reason note status createdAt openCount wallAccountName
-        reporter { ${author} }
-        comment {
-          id body createdAt author { ${author} }
-          mentions { id accountName displayName }
-          projectRefs { publicId title slug coverImage ownerAccountName }
-        }
-      }
-    }
-  `, { status });
-  return data.wallReports;
-}
-
-export async function resolveWallReport(id: string, action: 'dismiss' | 'delete'): Promise<void> {
-  await gqlRequest(/* GraphQL */ `
-    mutation ResolveWallReport($id: ID!, $action: String!) { resolveWallReport(id: $id, action: $action) }
-  `, { id, action });
-}
-
 export async function addWallComment(accountName: string, body: string, parentId?: string | null): Promise<WallComment> {
   const data = await gqlRequest<{ addWallComment: WallComment }>(/* GraphQL */ `
     mutation AddWallComment($accountName: String!, $body: String!, $parentId: ID) {

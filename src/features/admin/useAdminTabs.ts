@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { userHasPermission, type Permission } from '@/features/auth/permissions';
 import { requestsApi } from './services/requests.service';
-import { useWallReportCount } from './wall-report-count';
+import { useReportCount } from './report-count';
 import type { AdminTabId } from './admin-nav';
 
 export interface AdminTab {
@@ -19,7 +19,7 @@ export function useAdminTabs(): AdminTab[] {
   const { t } = useTranslation();
   const { user: currentUser } = useAuthContext();
   const isSuperadmin = currentUser?.role === 'superadmin';
-  const openReports = useWallReportCount(userHasPermission(currentUser?.permissions, 'users.ban'));
+  const openReports = useReportCount(userHasPermission(currentUser?.permissions, 'users.ban'));
   // Request types this user may submit: drives propose-mode tab visibility.
   const [submittable, setSubmittable] = useState<string[]>([]);
   useEffect(() => {
