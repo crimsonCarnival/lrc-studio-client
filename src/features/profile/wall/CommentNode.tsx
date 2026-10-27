@@ -13,7 +13,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { formatTimeAgo } from '@/features/notifications/time-ago';
 import { profilePath } from '../profile-path';
 import { WALL_MAX_DEPTH } from './wall.service';
-import type { WallComment } from './wall.service';
+import type { WallAuthor, WallComment } from './wall.service';
 import { deserializeBody, userToken } from './wall-tags';
 import { useWallThread } from './wall-thread';
 import WallComposer from './WallComposer';
@@ -31,6 +31,19 @@ const lineFill = (active: boolean) => (active ? 'bg-primary/70' : 'bg-zinc-700')
 const ACTION_BUTTON = 'rounded-full transition-[color,background-color,transform] active:scale-90';
 // Corner actions stay quiet until the row is hovered or focused, so they don't compete with the text.
 const CORNER_BUTTON = cn(ACTION_BUTTON, 'text-zinc-600 opacity-60 group-hover/row:opacity-100 focus-visible:opacity-100');
+
+function distinctRepliers(replies: WallComment[], max: number): WallAuthor[] {
+  const seen = new Map<string, WallAuthor>();
+  const walk = (list: WallComment[]) => {
+    for (const r of list) {
+      if (seen.size >= max) return;
+      if (!seen.has(r.author.id)) seen.set(r.author.id, r.author);
+      walk(r.replies);
+    }
+  };
+  walk(replies);
+  return [...seen.values()];
+}
 
 interface NodeProps {
   comment: WallComment;
@@ -61,6 +74,8 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
   const hiddenReplies = collapsed ? 0 : Math.max(0, comment.replyCount - comment.replies.length);
   const hasVisibleReplies = visibleReplies.length > 0;
   const visibleIds = visibleReplies.map(r => r.id);
+  // Up to two distinct people from the hidden thread, shown on the "show replies" pill.
+  const repliers = collapsed ? distinctRepliers(comment.replies, 2) : [];
 
   // Which stretches of line are lit: this comment's own line (a path into its replies), the
   // curve into it (a path ending here), and the line running past it to a later sibling.
@@ -113,16 +128,9 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
           <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 h-9 w-3.5 rounded-bl-xl border-b-2 border-l-2 transition-colors', lineColor(curveActive))} />
           {/* A path to a later reply runs straight past this one: light that stretch, not the curve. */}
           {passActive && <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 h-9 w-0.5', lineFill(true))} />}
-          {/* …and, where more replies follow, picking up again below the curve: a short gap,
-              then a fade back in, so each branch reads as splitting off the thread. */}
+          {/* …and, where more replies follow, carrying on unbroken below the curve to the next one. */}
           {!isLast && (
-            <span
-              aria-hidden
-              className={cn(
-                'pointer-events-none absolute -left-[17px] top-11 bottom-0 w-0.5 transition-colors [mask-image:linear-gradient(to_bottom,transparent,black_14px)]',
-                lineFill(passActive),
-              )}
-            />
+            <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-9 bottom-0 w-0.5 transition-colors', lineFill(passActive))} />
           )}
           {/* A wider target than the 2px line, for hovering and clicking it. */}
           <span
@@ -154,9 +162,9 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
           flash?.fading && 'duration-1000',
         )}
       >
-        {hasVisibleReplies && (
+        {(hasVisibleReplies || collapsed) && (
           <>
-            {/* This comment's own line, from under its avatar down to its replies. */}
+            {/* This comment's own line, from under its avatar down to its replies (or the "show replies" pill). */}
             <span aria-hidden className={cn('pointer-events-none absolute left-[27px] top-11 -bottom-2 border-l-2 transition-colors', lineColor(ownLineActive))} />
             <span
               aria-hidden
@@ -307,15 +315,30 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
       </div>
 
       {collapsed && (
-        <button
-          type="button"
-          onClick={() => w.toggleCollapsed(comment.id)}
-          aria-expanded={false}
-          className="ml-11 flex w-fit items-center gap-1 rounded-full border border-zinc-700 px-2.5 py-0.5 text-xs text-zinc-400 transition-colors hover:border-primary/50 hover:text-primary"
-        >
-          <Icon name="expand_more" size={14} />
-          {t('profile.wall.showReplies', { count: comment.descendantCount })}
-        </button>
+        // Sits in the replies' column: the thread line curves into it like into a reply.
+        <div className="relative ml-4 pl-4 pt-3">
+          <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 h-9 w-3.5 rounded-bl-xl border-b-2 border-l-2 transition-colors', lineColor(ownLineActive))} />
+          <button
+            type="button"
+            onClick={() => w.toggleCollapsed(comment.id)}
+            aria-expanded={false}
+            className="group/show flex w-fit items-center gap-2.5 py-2 text-xs font-medium text-zinc-400 transition-colors hover:text-primary"
+          >
+            <span className="flex items-center">
+              {repliers.map(a => (
+                <span key={a.id} className="-mr-2 flex size-6 shrink-0 overflow-hidden rounded-full ring-2 ring-background">
+                  {a.avatarUrl
+                    ? <img src={a.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-full object-cover" />
+                    : <InitialsAvatar name={a.displayName || a.accountName} handle={a.accountName} className="size-full rounded-full text-[9px]" />}
+                </span>
+              ))}
+              <span className="relative flex size-6 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-900 ring-2 ring-background transition-colors group-hover/show:bg-primary group-hover/show:text-primary-foreground">
+                <Icon name="arrow_downward" size={14} />
+              </span>
+            </span>
+            {t('profile.wall.showReplies', { count: comment.descendantCount })}
+          </button>
+        </div>
       )}
 
       {/* At the deepest level a reply sits beside this comment, so its box opens right here. */}
