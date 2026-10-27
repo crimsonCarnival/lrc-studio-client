@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { UserHoverCard } from '@ui/UserHoverCard';
 import { profilePath } from '../profile-path';
 import { projectPath } from '@/features/projects/project-path';
 import { bodySegments } from './wall-tags';
@@ -31,9 +32,11 @@ export default function CommentBody({ comment }: { comment: Pick<WallComment, 'b
         if (segment.kind === 'user') {
           const { accountName } = segment.mention;
           return (
-            <Link key={i} to={profilePath(accountName)} className="font-medium text-primary hover:underline">
-              @{accountName}
-            </Link>
+            <UserHoverCard key={i} accountName={accountName} userId={segment.mention.id}>
+              <Link to={profilePath(accountName)} className="font-medium text-primary hover:underline">
+                @{accountName}
+              </Link>
+            </UserHoverCard>
           );
         }
         if (segment.kind === 'project') {
