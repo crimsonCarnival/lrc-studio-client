@@ -391,6 +391,10 @@ export default {
     save: 'Guardar',
     replyToMissing: 'Respuesta a un comentario que ya no está',
     commentBy: 'Comentario de {{name}}',
+    copy: 'Copiar texto',
+    copied: 'Copiado',
+    copyFailed: "No se pudo copiar",
+    moreActions: 'Más acciones',
     report: 'Denunciar',
     reportTitle: '¿Por qué lo denuncias?',
     reportReasons: {

@@ -160,7 +160,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
             >
               <NotificationAvatar notification={data} />
               <p className="text-xs text-foreground leading-snug min-w-0">
-                <NotificationText notification={data} t={t} />
+                <NotificationText notification={data} t={t} viewerAccountName={recipientAccountName} />
               </p>
             </div>
           ),

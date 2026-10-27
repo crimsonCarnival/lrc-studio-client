@@ -110,12 +110,15 @@ export function notificationDestination(
   return null;
 }
 
-export function NotificationText({ notification, t }: { notification: NotificationData; t: TFunction }) {
+/** `viewerAccountName` is who is reading: on their own wall the text says "your wall". */
+export function NotificationText({ notification, t, viewerAccountName }: { notification: NotificationData; t: TFunction; viewerAccountName?: string | null }) {
   // badge label keys are composed from a registry; bypass strict key checking.
   const tk = t as (key: string, defaultValue?: string) => string;
   const { type, actors, actorCount, projectTitle, body } = notification;
   const first = actors?.[0];
   const firstName = first?.accountName ?? 'Someone';
+  const wall = notification.meta?.wall ?? '';
+  const ownWall = !!wall && !!viewerAccountName && wall.toLowerCase() === viewerAccountName.toLowerCase();
 
   let actorStr;
   if (!actorCount || actorCount <= 1) {
@@ -206,8 +209,10 @@ export function NotificationText({ notification, t }: { notification: Notificati
     return (
       <span>
         <Trans
-          i18nKey={notification.meta?.reply ? 'notifications.wallReply' : 'notifications.wallComment'}
-          values={{ actors: actorStr, wall: notification.meta?.wall ?? '' }}
+          i18nKey={notification.meta?.reply
+            ? (ownWall ? 'notifications.wallReplyOwn' : 'notifications.wallReply')
+            : (ownWall ? 'notifications.wallCommentOwn' : 'notifications.wallComment')}
+          values={{ actors: actorStr, wall }}
           components={[<strong key="0" />, <strong key="1" />]}
         />
       </span>
@@ -217,8 +222,8 @@ export function NotificationText({ notification, t }: { notification: Notificati
     return (
       <span>
         <Trans
-          i18nKey="notifications.commentLike"
-          values={{ actors: actorStr, wall: notification.meta?.wall ?? '' }}
+          i18nKey={ownWall ? 'notifications.commentLikeOwn' : 'notifications.commentLike'}
+          values={{ actors: actorStr, wall }}
           components={[<strong key="0" />, <strong key="1" />]}
         />
       </span>
@@ -228,8 +233,8 @@ export function NotificationText({ notification, t }: { notification: Notificati
     return (
       <span>
         <Trans
-          i18nKey="notifications.mention"
-          values={{ actors: actorStr, wall: notification.meta?.wall ?? '' }}
+          i18nKey={ownWall ? 'notifications.mentionOwn' : 'notifications.mention'}
+          values={{ actors: actorStr, wall }}
           components={[<strong key="0" />, <strong key="1" />]}
         />
       </span>
@@ -314,7 +319,7 @@ export function NotificationItem({ notification }: { notification: NotificationD
       <NotificationAvatar notification={notification} />
       <div className="flex-1 min-w-0">
         <p className={`text-base leading-snug ${read ? 'text-subtle' : 'text-foreground'}`}>
-          <NotificationText notification={notification} t={t} />
+          <NotificationText notification={notification} t={t} viewerAccountName={user?.accountName} />
         </p>
         {displayTime && (
           <p className="mt-0.5 font-mono text-xs text-subtle">{formatTimeAgo(displayTime, t, settings.advanced?.timezone, i18n.resolvedLanguage || i18n.language)}</p>

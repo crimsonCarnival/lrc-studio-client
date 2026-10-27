@@ -392,6 +392,10 @@ export default {
     save: 'Save',
     replyToMissing: 'Replying to a comment that’s no longer here',
     commentBy: 'Comment by {{name}}',
+    copy: 'Copy text',
+    copied: 'Copied',
+    copyFailed: "Couldn't copy",
+    moreActions: 'More actions',
     report: 'Report',
     reportTitle: 'Why are you reporting this?',
     reportReasons: {
