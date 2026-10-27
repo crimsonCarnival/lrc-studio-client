@@ -19,6 +19,8 @@ import { Tip } from '@/shared/ui/tip';
 import { CountryFlag } from '@/shared/ui/CountryFlag';
 import { WaveformBars } from '@/shared/ui/WaveformBars';
 import { FollowButton } from './FollowButton';
+import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
+import { ReportDialog } from '@/features/reports/ReportDialog';
 import type { PublicUser } from '@/types';
 import { usePresence } from '@/shared/hooks/usePresence';
 import { useStreakResetHint } from '@/shared/hooks/useStreakResetHint';
@@ -90,42 +92,81 @@ interface ProfileHeaderProps {
   blockLoading: boolean;
   onBlock: () => void;
   onUnblock: () => void;
+  /** A signed-in visitor (not the owner) may report this account from the ⋯ menu. */
+  canReport: boolean;
+  /** After a report; `blocked` when the reporter also blocked the account. */
+  onReported: (blocked: boolean) => void;
   /** Owner-only: switches the page into the "view as others" preview. */
   onViewAsOthers?: () => void;
   /** Stats strip rendered along the bottom edge of the card. */
   children?: ReactNode;
 }
 
-/** Block toggle with two-step confirm; parent owns isBlocked + the API calls. */
-function BlockControl({ isBlocked, blockLoading, onBlock, onUnblock }: {
+/**
+ * The ⋯ menu on someone else's profile: report them (signed in) and block / unblock, which
+ * asks once more in the menu before blocking. The parent owns isBlocked and the API calls.
+ */
+function ProfileMoreMenu({ accountName, userId, canReport, onReported, isBlocked, blockLoading, onBlock, onUnblock }: {
+  accountName: string;
+  userId: string;
+  canReport: boolean;
+  onReported: (blocked: boolean) => void;
   isBlocked: boolean; blockLoading: boolean; onBlock: () => void; onUnblock: () => void;
 }) {
   const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [reporting, setReporting] = useState(false);
 
-  if (isBlocked) {
-    return (
-      <Button variant="outline" size="sm" onClick={onUnblock} disabled={blockLoading}
-        className="text-destructive border-destructive/40 hover:bg-destructive/10">
-        {t('profile.unblock')}
-      </Button>
-    );
-  }
-  if (confirming) {
-    return (
-      <Button variant="outline" size="sm" onClick={() => { setConfirming(false); onBlock(); }}
-        disabled={blockLoading} className="text-destructive border-destructive/40 hover:bg-destructive/10">
-        {t('profile.confirmBlock')}
-      </Button>
-    );
-  }
+  const openChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) setConfirming(false);
+  };
+  const destructive = 'text-sm text-destructive hover:bg-destructive/15 hover:text-destructive';
+
   return (
-    <Tip content={t('profile.block')}>
-      <Button variant="outline" size="icon-sm" onClick={() => setConfirming(true)} disabled={blockLoading}
-        className="text-muted-foreground hover:text-destructive">
-        <Icon name="block" size={16} />
-      </Button>
-    </Tip>
+    <>
+      <Popover open={open} onOpenChange={openChange}>
+        <Tip content={t('reports.menu.more')}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="icon-sm" disabled={blockLoading} aria-label={t('reports.menu.more')}
+              className="bg-zinc-800/50 hover:bg-zinc-700 border-zinc-700">
+              <Icon name="more_horiz" size={16} className="opacity-70" />
+            </Button>
+          </PopoverTrigger>
+        </Tip>
+        <PopoverContent align="end" className="w-56 lg:min-w-56">
+          {canReport && !isBlocked && (
+            <PopoverItem onClick={() => { openChange(false); setReporting(true); }} className="text-sm">
+              <Icon name="flag" size={16} /> {t('reports.menu.reportUser', { name: accountName })}
+            </PopoverItem>
+          )}
+          {isBlocked ? (
+            <PopoverItem onClick={() => { openChange(false); onUnblock(); }} className="text-sm">
+              <Icon name="block" size={16} /> {t('profile.unblock')}
+            </PopoverItem>
+          ) : confirming ? (
+            <PopoverItem onClick={() => { openChange(false); onBlock(); }} className={destructive}>
+              <Icon name="block" size={16} /> {t('profile.confirmBlock')}
+            </PopoverItem>
+          ) : (
+            <PopoverItem onClick={() => setConfirming(true)} className={destructive}>
+              <Icon name="block" size={16} /> {t('profile.block')}
+            </PopoverItem>
+          )}
+        </PopoverContent>
+      </Popover>
+      {canReport && (
+        <ReportDialog
+          open={reporting}
+          onOpenChange={setReporting}
+          targetType="user"
+          targetId={userId}
+          name={accountName}
+          onSent={onReported}
+        />
+      )}
+    </>
   );
 }
 
@@ -146,6 +187,8 @@ export function ProfileHeader({
   blockLoading,
   onBlock,
   onUnblock,
+  canReport,
+  onReported,
   onViewAsOthers,
   children,
 }: ProfileHeaderProps) {
@@ -277,7 +320,11 @@ export function ProfileHeader({
                 {!isBlocked && isFollowing && onFollowNotify && (
                   <FollowNotifyMenu level={followNotify} disabled={followLoading} onChange={onFollowNotify} />
                 )}
-                <BlockControl
+                <ProfileMoreMenu
+                  accountName={profile.accountName}
+                  userId={profile.id}
+                  canReport={canReport}
+                  onReported={onReported}
                   isBlocked={isBlocked}
                   blockLoading={blockLoading}
                   onBlock={onBlock}

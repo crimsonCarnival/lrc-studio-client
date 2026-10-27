@@ -17,6 +17,8 @@ import {
 import { usePlaylistDetail } from './playlist.queries';
 import { PlaylistModal } from './PlaylistModal';
 import { LoadingSpinner } from '@ui/LoadingSpinner';
+import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
+import { ReportDialog } from '@/features/reports/ReportDialog';
 
 interface PlaylistProject {
   id: string;
@@ -64,6 +66,10 @@ export default function ListPage() {
   const [hoveringUnsave, setHoveringUnsave] = useState(false);
 
   const isOwner = !!user && user.accountName === accountName;
+  // Signed-in visitors can report the list from its ⋯ menu.
+  const canReport = !!user && !user.isGuest && !isOwner && !!listId;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   // `?list=` keeps the up-next panel on the project page; the canonical path
   // carries the project's OWN owner, which is not the playlist's owner.
@@ -229,6 +235,20 @@ export default function ListPage() {
                   {t('playlists.save')}
                 </Button>
               )}
+              {canReport && (
+                <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+                  <PopoverTrigger asChild>
+                    <Button size="icon-sm" variant="outline" aria-label={t('reports.menu.more')}>
+                      <Icon name="more_horiz" size={16} />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-52 lg:min-w-52">
+                    <PopoverItem onClick={() => { setMenuOpen(false); setReportOpen(true); }} className="text-sm">
+                      <Icon name="flag" size={16} /> {t('reports.menu.reportPlaylist')}
+                    </PopoverItem>
+                  </PopoverContent>
+                </Popover>
+              )}
             </div>
           </div>
         </div>
@@ -286,6 +306,10 @@ export default function ListPage() {
           </div>
         )}
       </div>
+
+      {canReport && (
+        <ReportDialog open={reportOpen} onOpenChange={setReportOpen} targetType="playlist" targetId={listId!} />
+      )}
 
       {showEdit && (
         <PlaylistModal
