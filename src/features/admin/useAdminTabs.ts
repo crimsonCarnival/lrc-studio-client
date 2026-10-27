@@ -3,12 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { userHasPermission, type Permission } from '@/features/auth/permissions';
 import { requestsApi } from './services/requests.service';
+import { useWallReportCount } from './wall-report-count';
 import type { AdminTabId } from './admin-nav';
 
 export interface AdminTab {
   id: AdminTabId;
   icon: string;
   label: string;
+  /** Items waiting on this tab (open reports), shown as a badge. */
+  count?: number;
 }
 
 /** The dashboard tabs the signed-in staff member may open. Shared by the header and the page. */
@@ -16,6 +19,7 @@ export function useAdminTabs(): AdminTab[] {
   const { t } = useTranslation();
   const { user: currentUser } = useAuthContext();
   const isSuperadmin = currentUser?.role === 'superadmin';
+  const openReports = useWallReportCount(userHasPermission(currentUser?.permissions, 'users.ban'));
   // Request types this user may submit: drives propose-mode tab visibility.
   const [submittable, setSubmittable] = useState<string[]>([]);
   useEffect(() => {
@@ -23,9 +27,9 @@ export function useAdminTabs(): AdminTab[] {
   }, []);
 
   return useMemo(() => {
-    const defs: { id: AdminTabId; icon: string; label: string; perm?: Permission }[] = [
+    const defs: { id: AdminTabId; icon: string; label: string; perm?: Permission; count?: number }[] = [
       { id: 'moderation', icon: 'gpp_bad', label: t('admin.dashboard.tabs.moderation'), perm: 'users.view' },
-      { id: 'reports', icon: 'flag', label: t('admin.dashboard.tabs.reports'), perm: 'users.ban' },
+      { id: 'reports', icon: 'flag', label: t('admin.dashboard.tabs.reports'), perm: 'users.ban', count: openReports },
       { id: 'staff', icon: 'groups', label: t('admin.dashboard.tabs.staff') },
       { id: 'audit', icon: 'history', label: t('admin.dashboard.tabs.auditLogs'), perm: 'audit.view' },
       { id: 'badges', icon: 'military_tech', label: t('admin.dashboard.tabs.badges'), perm: 'badges.manage' },
@@ -47,5 +51,5 @@ export function useAdminTabs(): AdminTab[] {
     });
     gated.push({ id: 'requests', icon: 'inbox', label: t('admin.dashboard.tabs.requests') });
     return gated;
-  }, [t, currentUser?.permissions, submittable, isSuperadmin]);
+  }, [t, currentUser?.permissions, submittable, isSuperadmin, openReports]);
 }

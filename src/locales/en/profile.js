@@ -449,6 +449,8 @@ export default {
   notif_wall_comment: 'Comments on walls I follow',
   notif_mention: 'Someone tagged me in a comment',
   notif_comment_like: 'Someone liked my comment',
+  notif_wall_report: 'Someone reported a wall comment',
+  notif_wall_report_reviewed: 'A moderator reviewed my report',
   notif_level_up: 'Level-ups',
   notif_playlist_saved: 'Someone saved my playlist',
   notif_star_milestone: 'Star milestones on my projects',

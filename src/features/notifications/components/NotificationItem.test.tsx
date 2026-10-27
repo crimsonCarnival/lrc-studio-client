@@ -31,6 +31,24 @@ describe('wall notification text', () => {
   });
 });
 
+describe('wall report notification text', () => {
+  it('tells moderators who reported a comment, and where', () => {
+    expect(text(wallNote('wall_report'), 'ann')).toBe('idkman reported a comment on 32blunts’s wall');
+    expect(text(wallNote('wall_report'), '32blunts')).toBe('idkman reported a comment on your wall');
+  });
+
+  it('tells the reporter how their report was settled', () => {
+    const reviewed = (outcome: string) => ({ ...wallNote('wall_report_reviewed', { outcome }), actors: [], actorCount: 0 } as NotificationData);
+    expect(text(reviewed('actioned'), 'ann')).toBe('A moderator removed a comment you reported on 32blunts’s wall');
+    expect(text(reviewed('dismissed'), 'ann')).toBe('A moderator reviewed your report on 32blunts’s wall and left the comment up');
+  });
+
+  it('gives a restriction with no end date its own wording, and the reason', () => {
+    const restricted = { _id: 'n2', type: 'wall_restricted', body: 'spam', meta: { until: null } } as NotificationData;
+    expect(text(restricted)).toBe('A moderator stopped you from commenting on walls until further notice. Reason: spam');
+  });
+});
+
 describe('notification actors', () => {
   const grouped = (names: string[]): NotificationData => ({
     ...wallNote('wall_comment', { reply: true }),

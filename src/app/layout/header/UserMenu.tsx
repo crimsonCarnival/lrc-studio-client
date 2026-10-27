@@ -16,7 +16,8 @@ import { projects, uploads } from '@/app/api';
 import { requestsApi } from '@/features/admin/services/requests.service';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import type { AuthUser } from '@/features/auth/auth.types';
-import { isStaff } from '@/features/auth/permissions';
+import { isStaff, userHasPermission } from '@/features/auth/permissions';
+import { useWallReportCount } from '@/features/admin/wall-report-count';
 import { adminHostUrl, canUseAdminHost } from '@/shared/utils/host';
 import { THEMES } from './theme-options';
 
@@ -39,6 +40,9 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
   const [counts, setCounts] = useState({ library: 0, uploads: 0, requests: 0 });
   const [menuOpen, setMenuOpen] = useState(false);
   const staff = isStaff(user?.permissions);
+  const openReports = useWallReportCount(userHasPermission(user?.permissions, 'users.ban'));
+  // What waits on staff in the dashboard: requests to review and reported comments.
+  const pending = counts.requests + openReports;
 
   const fetchCounts = async () => {
     if (!user) return;
@@ -62,13 +66,13 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
   return (
     <>
       {staff && (
-        <Tip content={t('admin.dashboard.title')}>
+        <Tip content={pending > 0 ? t('admin.header.dashboardPending', { count: pending }) : t('admin.dashboard.title')}>
           <Button asChild variant="ghost" size="icon" className="relative size-10 lg:size-10 coarse:size-11">
             {(() => {
               const inner = (
                 <>
                   <Icon name="security" size={20} />
-                  <CountDot count={counts.requests} />
+                  <CountDot count={pending} />
                 </>
               );
               // The dashboard lives on the admin host; fall back to /admin on previews/localhost.

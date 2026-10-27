@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FloatingCombobox } from '@ui/floating-combobox';
 import { countryList } from '@/shared/utils/countries';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { userHasPermission } from '@/features/auth/permissions';
 import { updatePreferences } from '@/features/settings/services/preferences.service';
 import toast from 'react-hot-toast';
 import { Section, SettingRow, SegmentedControl, Toggle } from '../shared';
@@ -14,10 +15,12 @@ type Audience = 'everyone' | 'friends' | 'nobody';
 // Every notification type with a per-user switch on the server (NotificationPreferences),
 // in the order the settings list them. Each label is `profile.notif_<type>`.
 const NOTIFICATION_TYPES = [
-  'follow', 'reaction', 'star', 'fork', 'followed_project', 'wall_comment', 'mention', 'comment_like',
+  'follow', 'reaction', 'star', 'fork', 'followed_project', 'wall_comment', 'mention', 'comment_like', 'wall_report_reviewed',
   'playlist_saved', 'star_milestone', 'badge_awarded', 'xp_changed', 'level_up',
   'streak_warning', 'new_device', 'appeal_result',
 ] as const;
+// Only moderators (users.ban) hear about new reports, so only they get its switch.
+const MODERATOR_NOTIFICATION_TYPES = ['wall_report'] as const;
 
 export default function PrivacySettings({ searchTerm }: { searchTerm?: string }) {
   const { t, i18n } = useTranslation();
@@ -159,7 +162,7 @@ export default function PrivacySettings({ searchTerm }: { searchTerm?: string })
       </Section>
 
       <Section title={tk('profile.settings.notificationsSection')} searchTerm={searchTerm}>
-        {NOTIFICATION_TYPES.map((type) => (
+        {[...NOTIFICATION_TYPES, ...(userHasPermission(user?.permissions, 'users.ban') ? MODERATOR_NOTIFICATION_TYPES : [])].map((type) => (
           <SettingRow key={type} label={tk(`profile.notif_${type}`)}>
             <Toggle
               label={tk(`profile.notif_${type}`)}

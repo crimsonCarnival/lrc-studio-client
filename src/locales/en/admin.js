@@ -65,6 +65,10 @@ export default {
   },
   header: {
     backToSite: 'Back to lrcstudio.app',
+    pending_one: '{{count}} waiting',
+    pending_other: '{{count}} waiting',
+    dashboardPending_one: 'Admin Dashboard · {{count}} waiting',
+    dashboardPending_other: 'Admin Dashboard · {{count}} waiting',
     nav: 'Admin sections',
   },
   tasks: {

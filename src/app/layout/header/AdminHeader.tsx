@@ -58,6 +58,11 @@ export function AdminHeader({ user, logout, settings, updateSetting, i18n, navTo
             >
               <Icon name={tab.icon} size={14} className="shrink-0" />
               {tab.label}
+              {!!tab.count && (
+                <span aria-label={t('admin.header.pending', { count: tab.count })} className="grid h-4 min-w-4 place-items-center rounded-full bg-love px-1 font-mono text-[10px] leading-none font-bold text-primary-foreground tabular-nums">
+                  {tab.count > 99 ? '99+' : tab.count}
+                </span>
+              )}
             </Link>
           ))}
         </nav>
