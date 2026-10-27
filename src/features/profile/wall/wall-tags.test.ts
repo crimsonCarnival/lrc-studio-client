@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findTrigger, activeTrigger, serializeTags, tagRanges, bodySegments, userToken, projectToken } from './wall-tags';
+import { findTrigger, activeTrigger, serializeTags, tagRanges, bodySegments, deserializeBody, userToken, projectToken } from './wall-tags';
 
 describe('findTrigger', () => {
   it('finds a person being typed', () => {
@@ -55,6 +55,17 @@ describe('tagRanges', () => {
     const song = { display: '@sam/Blue Song', token: projectToken('p1') };
     const ranges = tagRanges('@sam/Blue Song by @sam', [sam, song]);
     expect(ranges.map((r) => [r.start, r.end, r.kind])).toEqual([[0, 14, 'project'], [18, 22, 'user']]);
+  });
+});
+
+describe('deserializeBody', () => {
+  it('turns tokens back into editable text that serializes to the same body', () => {
+    const mention = { id: 'u1', accountName: 'sam', displayName: null };
+    const ref = { publicId: 'p1', title: 'Blue Song', slug: 'blue-song', coverImage: null, ownerAccountName: 'sam' };
+    const body = `hey ${userToken('u1')} see ${projectToken('p1')}`;
+    const { text, entities } = deserializeBody(body, [mention], [ref]);
+    expect(text).toBe('hey @sam see @sam/Blue Song');
+    expect(serializeTags(text, entities)).toBe(body);
   });
 });
 

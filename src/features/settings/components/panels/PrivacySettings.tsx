@@ -14,7 +14,7 @@ type Audience = 'everyone' | 'friends' | 'nobody';
 // Every notification type with a per-user switch on the server (NotificationPreferences),
 // in the order the settings list them. Each label is `profile.notif_<type>`.
 const NOTIFICATION_TYPES = [
-  'follow', 'reaction', 'star', 'fork', 'followed_project', 'wall_comment', 'mention',
+  'follow', 'reaction', 'star', 'fork', 'followed_project', 'wall_comment', 'mention', 'comment_like',
   'playlist_saved', 'star_milestone', 'badge_awarded', 'xp_changed', 'level_up',
   'streak_warning', 'new_device', 'appeal_result',
 ] as const;

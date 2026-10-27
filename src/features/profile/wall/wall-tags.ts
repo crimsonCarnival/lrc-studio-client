@@ -91,6 +91,32 @@ export function serializeTags(text: string, entities: TagEntity[]): string {
   return out + text.slice(last);
 }
 
+/**
+ * A stored body turned back into composer text and the tags in it (for editing): each token
+ * becomes its readable text again. A tag that no longer resolves is dropped from the text.
+ */
+export function deserializeBody(body: string, mentions: WallMention[], projectRefs: WallProjectRef[]): { text: string; entities: TagEntity[] } {
+  const entities = new Map<string, TagEntity>();
+  let text = '';
+  for (const s of bodySegments(body, mentions, projectRefs)) {
+    if (s.kind === 'text') text += s.text;
+    else if (s.kind === 'user') {
+      const e = { display: `@${s.mention.accountName}`, token: userToken(s.mention.id) };
+      entities.set(e.token, e);
+      text += e.display;
+    } else if (s.kind === 'project') {
+      const e = {
+        display: `@${s.ref.ownerAccountName}/${s.ref.title}`,
+        token: projectToken(s.ref.publicId),
+        preview: { title: s.ref.title, coverImage: s.ref.coverImage },
+      };
+      entities.set(e.token, e);
+      text += e.display;
+    }
+  }
+  return { text, entities: [...entities.values()] };
+}
+
 export type BodySegment =
   | { kind: 'text'; text: string }
   | { kind: 'user'; mention: WallMention }

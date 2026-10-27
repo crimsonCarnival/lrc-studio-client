@@ -7,7 +7,7 @@ import { LogoLoader } from '@ui/LogoLoader';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { cn } from '@/shared/utils/utils';
 import { useAuthContext } from '@/features/auth/useAuthContext';
-import { WALL_MAX_LENGTH, getTaggablePeople, getTaggableProjects } from './wall.service';
+import { WALL_MAX_LENGTH, getTaggablePeople, getTaggableProjects, searchTaggablePeople } from './wall.service';
 import type { TagPerson, TagProject } from './wall.service';
 import { activeTrigger, serializeTags, tagRanges, userToken, projectToken } from './wall-tags';
 import { ProjectTagCard } from './CommentBody';
@@ -51,22 +51,29 @@ interface WallComposerProps {
   onCancel?: () => void;
   /** Tags to start with: a reply opens already tagging the author it answers. */
   initialTags?: TagEntity[];
+  /** Text (and the tags in it) to start from: editing a comment. Wins over initialTags. */
+  initialValue?: { text: string; entities: TagEntity[] };
 }
+
+// Below this many characters the @ list only searches the people you follow.
+const SEARCH_MIN_CHARS = 2;
+const SEARCH_DEBOUNCE_MS = 200;
 
 /**
  * The wall's comment box. `@` suggests people you follow; `@owner/` suggests that owner's
  * projects. Picking one inserts readable text, and the body sent to the server carries the
  * matching id tokens instead (wall-tags.ts).
  */
-export default function WallComposer({ placeholder, submitLabel, autoFocus, busy, onSubmit, onCancel, initialTags }: WallComposerProps) {
+export default function WallComposer({ placeholder, submitLabel, autoFocus, busy, onSubmit, onCancel, initialTags, initialValue }: WallComposerProps) {
   const { t } = useTranslation();
   const { user } = useAuthContext();
   const listId = useId();
   const ref = useRef<HTMLTextAreaElement>(null);
 
-  const startText = initialTags?.length ? `${initialTags.map((e) => e.display).join(' ')} ` : '';
+  const startText = initialValue?.text ?? (initialTags?.length ? `${initialTags.map((e) => e.display).join(' ')} ` : '');
   const [text, setText] = useState(startText);
-  const [entities, setEntities] = useState<TagEntity[]>(initialTags ?? []);
+  const [entities, setEntities] = useState<TagEntity[]>(initialValue?.entities ?? initialTags ?? []);
+  const [searchResults, setSearchResults] = useState<{ query: string; people: TagPerson[] } | null>(null);
   const [caret, setCaret] = useState(startText.length);
   const [activeIndex, setActiveIndex] = useState(0);
   // Escape closes the popup for the tag being typed; a new '@' opens it again.
@@ -115,14 +122,30 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
     return () => { live = false; };
   }, [projectOwner, projects?.owner]);
 
+  // Past SEARCH_MIN_CHARS the list also searches everyone who allows tags, not just follows.
+  const searchQuery = trigger?.kind === 'user' && trigger.query.length >= SEARCH_MIN_CHARS ? trigger.query : null;
+  useEffect(() => {
+    if (!searchQuery) return;
+    let live = true;
+    const timer = setTimeout(() => {
+      searchTaggablePeople(searchQuery)
+        .then((found) => { if (live) setSearchResults({ query: searchQuery, people: found }); })
+        .catch(() => { if (live) setSearchResults({ query: searchQuery, people: [] }); });
+    }, SEARCH_DEBOUNCE_MS);
+    return () => { live = false; clearTimeout(timer); };
+  }, [searchQuery]);
+
   const loading = (trigger?.kind === 'user' && people === null) || (!!projectOwner && projects?.owner !== projectOwner);
 
   const suggestions = useMemo<Suggestion[]>(() => {
     if (!trigger) return [];
     if (trigger.kind === 'user') {
       const q = trigger.query;
-      return (people ?? [])
-        .filter((p) => p.accountName.toLowerCase().includes(q) || (p.displayName ?? '').toLowerCase().includes(q))
+      const followed = (people ?? []).filter((p) => p.accountName.toLowerCase().includes(q) || (p.displayName ?? '').toLowerCase().includes(q));
+      // People you follow first, then anyone else the search found.
+      const seen = new Set(followed.map((p) => p.id));
+      const others = searchResults?.query === q ? searchResults.people.filter((p) => !seen.has(p.id)) : [];
+      return [...followed, ...others]
         .slice(0, MAX_SUGGESTIONS)
         .map((p) => ({
           key: p.id,
@@ -149,7 +172,7 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
           entity: { display: `@${trigger.owner}/${title}`, token: projectToken(p.publicId), preview: { title, coverImage: p.coverImage } },
         };
       });
-  }, [trigger, people, projects, t]);
+  }, [trigger, people, projects, searchResults, t]);
 
   // A project list always opens, so an owner with nothing to tag says so instead of nothing happening.
   const open = !!trigger && (loading || suggestions.length > 0 || trigger.query.length > 0 || trigger.kind === 'project');

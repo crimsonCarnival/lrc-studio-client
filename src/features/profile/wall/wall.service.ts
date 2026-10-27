@@ -31,14 +31,25 @@ export interface WallComment {
   mentions: WallMention[];
   projectRefs: WallProjectRef[];
   createdAt: string;
+  /** Set once the author edited it. */
+  editedAt: string | null;
   /** 0 for a comment, 1 for a reply, 2 for a reply to a reply. */
   depth: number;
   author: WallAuthor;
   canDelete: boolean;
+  /** The viewer wrote it and the edit window is still open. */
+  canEdit: boolean;
+  /** Pinned by the wall's owner (shown first on page one). */
+  pinned: boolean;
   likeCount: number;
   likedByMe: boolean;
   /** For a reply at the deepest level: the sibling it answers (listed right after it). */
   replyToId: string | null;
+  /** It answered a comment that is no longer shown. */
+  replyToMissing: boolean;
+  /** Direct replies in total and everything beneath; `replies` may hold only the first few. */
+  replyCount: number;
+  descendantCount: number;
   replies: WallComment[];
 }
 
@@ -46,30 +57,36 @@ export interface Wall {
   enabled: boolean;
   comments: WallComment[];
   hasMore: boolean;
+  /** Top-level comments that page (not counting the pinned one). */
   total: number;
+  /** Every comment, replies included. */
+  totalAll: number;
+  /** The page returned (0-based). */
+  page: number;
   subscribed: boolean;
 }
+
+/** Top-level comments per page; the server's default. */
+export const WALL_PAGE_SIZE = 20;
 
 /** The deepest a comment can sit; mirrors the server. */
 export const WALL_MAX_DEPTH = 2;
 export const WALL_MAX_LENGTH = 500;
 
-const COMMENT_FIELDS = `id body createdAt depth canDelete likeCount likedByMe replyToId
+const COMMENT_FIELDS = `id body createdAt editedAt depth canDelete canEdit pinned likeCount likedByMe
+  replyToId replyToMissing replyCount descendantCount
   author { id accountName displayName avatarUrl staffRole allowsTags }
   mentions { id accountName displayName }
   projectRefs { publicId title slug coverImage ownerAccountName }`;
 
+// A comment with its replies, down to the deepest level.
+const THREAD_FIELDS = `${COMMENT_FIELDS} replies { ${COMMENT_FIELDS} replies { ${COMMENT_FIELDS} } }`;
+
 const WALL_QUERY = /* GraphQL */ `
-  query Wall($accountName: String!, $after: String, $limit: Int) {
-    wall(accountName: $accountName, after: $after, limit: $limit) {
-      enabled hasMore total subscribed
-      comments {
-        ${COMMENT_FIELDS}
-        replies {
-          ${COMMENT_FIELDS}
-          replies { ${COMMENT_FIELDS} }
-        }
-      }
+  query Wall($accountName: String!, $page: Int, $focus: ID) {
+    wall(accountName: $accountName, page: $page, focus: $focus) {
+      enabled hasMore total totalAll page subscribed
+      comments { ${THREAD_FIELDS} }
     }
   }
 `;
@@ -79,9 +96,91 @@ function withReplyArrays(comment: WallComment): WallComment {
   return { ...comment, replies: (comment.replies ?? []).map(withReplyArrays) };
 }
 
-export async function getWall(accountName: string, after?: string | null): Promise<Wall> {
-  const data = await gqlRequest<{ wall: Wall }>(WALL_QUERY, { accountName, after: after ?? null });
+/** One page of a wall; with `focus`, the page holding that comment, its thread in full. */
+export async function getWall(accountName: string, { page = 0, focus = null }: { page?: number; focus?: string | null } = {}): Promise<Wall> {
+  const data = await gqlRequest<{ wall: Wall }>(WALL_QUERY, { accountName, page, focus });
   return { ...data.wall, comments: data.wall.comments.map(withReplyArrays) };
+}
+
+/** More replies to a comment, after the `offset` already shown. */
+export async function getWallReplies(commentId: string, offset: number, limit = 10): Promise<WallComment[]> {
+  const data = await gqlRequest<{ wallReplies: WallComment[] }>(/* GraphQL */ `
+    query WallReplies($commentId: ID!, $offset: Int, $limit: Int) {
+      wallReplies(commentId: $commentId, offset: $offset, limit: $limit) { ${THREAD_FIELDS} }
+    }
+  `, { commentId, offset, limit });
+  return data.wallReplies.map(withReplyArrays);
+}
+
+/** One comment as the viewer sees it (live updates); null when it isn't shown to them. */
+export async function getWallComment(id: string): Promise<WallComment | null> {
+  const data = await gqlRequest<{ wallComment: WallComment | null }>(/* GraphQL */ `
+    query WallComment($id: ID!) { wallComment(id: $id) { ${THREAD_FIELDS} } }
+  `, { id });
+  return data.wallComment ? withReplyArrays(data.wallComment) : null;
+}
+
+export async function getWallLikers(id: string): Promise<{ users: WallAuthor[]; total: number }> {
+  const data = await gqlRequest<{ wallCommentLikers: { users: WallAuthor[]; total: number } }>(/* GraphQL */ `
+    query WallCommentLikers($id: ID!) {
+      wallCommentLikers(id: $id, limit: 20) { total users { id accountName displayName avatarUrl staffRole allowsTags } }
+    }
+  `, { id });
+  return data.wallCommentLikers;
+}
+
+export async function editWallComment(id: string, body: string): Promise<WallComment> {
+  const data = await gqlRequest<{ editWallComment: WallComment }>(/* GraphQL */ `
+    mutation EditWallComment($id: ID!, $body: String!) { editWallComment(id: $id, body: $body) { ${COMMENT_FIELDS} } }
+  `, { id, body });
+  return withReplyArrays(data.editWallComment);
+}
+
+export async function setWallCommentPin(id: string, pinned: boolean): Promise<void> {
+  await gqlRequest(/* GraphQL */ `
+    mutation SetWallCommentPin($id: ID!, $pinned: Boolean!) { setWallCommentPin(id: $id, pinned: $pinned) }
+  `, { id, pinned });
+}
+
+export const WALL_REPORT_REASONS = ['spam', 'harassment', 'hate', 'sexual', 'other'] as const;
+export type WallReportReason = (typeof WALL_REPORT_REASONS)[number];
+
+export async function reportWallComment(id: string, reason: WallReportReason, note?: string): Promise<void> {
+  await gqlRequest(/* GraphQL */ `
+    mutation ReportWallComment($id: ID!, $reason: String!, $note: String) { reportWallComment(id: $id, reason: $reason, note: $note) }
+  `, { id, reason, note: note || null });
+}
+
+export interface WallReport {
+  id: string;
+  reason: WallReportReason;
+  note: string;
+  status: 'open' | 'dismissed' | 'actioned';
+  createdAt: string;
+  openCount: number;
+  reporter: WallAuthor | null;
+  wallAccountName: string;
+  comment: { id: string; body: string; author: WallAuthor | null; createdAt: string } | null;
+}
+
+export async function listWallReports(status: WallReport['status'] = 'open'): Promise<WallReport[]> {
+  const author = 'id accountName displayName avatarUrl staffRole allowsTags';
+  const data = await gqlRequest<{ wallReports: WallReport[] }>(/* GraphQL */ `
+    query WallReports($status: String) {
+      wallReports(status: $status) {
+        id reason note status createdAt openCount wallAccountName
+        reporter { ${author} }
+        comment { id body createdAt author { ${author} } }
+      }
+    }
+  `, { status });
+  return data.wallReports;
+}
+
+export async function resolveWallReport(id: string, action: 'dismiss' | 'delete'): Promise<void> {
+  await gqlRequest(/* GraphQL */ `
+    mutation ResolveWallReport($id: ID!, $action: String!) { resolveWallReport(id: $id, action: $action) }
+  `, { id, action });
 }
 
 export async function addWallComment(accountName: string, body: string, parentId?: string | null): Promise<WallComment> {
@@ -175,6 +274,16 @@ export async function getTaggablePeople(accountName: string): Promise<TagPerson[
   return people;
 }
 
+/** Anyone matching `query` who allows tags (the @ popup, beyond the people you follow). */
+export async function searchTaggablePeople(query: string, limit = 8): Promise<TagPerson[]> {
+  const data = await gqlRequest<{ searchUsers: Array<TagPerson & { allowsTags: boolean }> }>(/* GraphQL */ `
+    query TaggableSearch($query: String!, $limit: Int) {
+      searchUsers(query: $query, limit: $limit) { id accountName displayName avatarUrl allowsTags }
+    }
+  `, { query, limit });
+  return (data.searchUsers ?? []).filter((p) => p.allowsTags).map(({ allowsTags: _allowsTags, ...person }) => person);
+}
+
 /**
  * `accountName`'s projects as the viewer may see them (the @owner/ popup): public ones, plus
  * private ones when the viewer is the owner. Null when there is no such user.
@@ -195,6 +304,14 @@ export async function getTaggableProjects(accountName: string): Promise<TagProje
     title: p.title ?? '',
     coverImage: p.coverImage || p.upload?.coverImage || null,
   }));
+}
+
+const WALL_ERROR_KEYS = ['rate_limited', 'wall_disabled', 'forbidden', 'invalid_body', 'max_depth', 'not_found', 'tag_not_allowed', 'edit_window_closed'] as const;
+
+/** The i18n key of the message for a failed wall call: its code's, or the generic one. */
+export function wallErrorKey(err: unknown): string {
+  const code = wallErrorCode(err);
+  return `profile.wall.errors.${(WALL_ERROR_KEYS as readonly string[]).includes(code) ? code : 'failed'}`;
 }
 
 /** The server's error code (`rate_limited`, `wall_disabled`, ...) from a failed wall call, lower-cased. */

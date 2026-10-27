@@ -55,6 +55,7 @@ const TYPE_ICON_NAME: Record<string, string> = {
   followed_project: 'queue_music',
   wall_comment: 'forum',
   mention: 'alternate_email',
+  comment_like: 'favorite',
   level_up: 'trending_up',
   playlist_saved: 'bookmark',
   star_milestone: 'star',
@@ -96,7 +97,7 @@ export function notificationDestination(
   // The author is the project's owner, so the actor supplies the account name the URL needs.
   if (type === 'followed_project' && publicId && actors?.[0]?.accountName) return projectPath({ publicId }, actors[0].accountName);
   // Straight to the comment when the notification knows it (older ones only know the wall).
-  if ((type === 'wall_comment' || type === 'mention') && notification.meta?.wall) {
+  if ((type === 'wall_comment' || type === 'mention' || type === 'comment_like') && notification.meta?.wall) {
     return `${profilePath(notification.meta.wall)}#${notification.meta.commentId ? `comment-${notification.meta.commentId}` : 'wall'}`;
   }
   if (type === 'level_up' && recipientAccountName) return profilePath(recipientAccountName);
@@ -206,6 +207,17 @@ export function NotificationText({ notification, t }: { notification: Notificati
       <span>
         <Trans
           i18nKey={notification.meta?.reply ? 'notifications.wallReply' : 'notifications.wallComment'}
+          values={{ actors: actorStr, wall: notification.meta?.wall ?? '' }}
+          components={[<strong key="0" />, <strong key="1" />]}
+        />
+      </span>
+    );
+  }
+  if (type === 'comment_like') {
+    return (
+      <span>
+        <Trans
+          i18nKey="notifications.commentLike"
           values={{ actors: actorStr, wall: notification.meta?.wall ?? '' }}
           components={[<strong key="0" />, <strong key="1" />]}
         />

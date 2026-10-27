@@ -14,6 +14,7 @@ export default {
   wallComment: '<0>{{actors}}</0> commented on <1>{{wall}}</1>’s wall',
   wallReply: '<0>{{actors}}</0> replied to your comment on <1>{{wall}}</1>’s wall',
   mention: '<0>{{actors}}</0> tagged you on <1>{{wall}}</1>’s wall',
+  commentLike: '<0>{{actors}}</0> liked your comment on <1>{{wall}}</1>’s wall',
   levelUp: 'You reached <0>level {{level}}</0>',
   playlistSaved: '<0>{{actors}}</0> saved your playlist <1>{{title}}</1>',
   starMilestone: '<1>{{title}}</1> reached <0>{{count}} stars</0>',
