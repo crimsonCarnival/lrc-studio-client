@@ -7,6 +7,7 @@ import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { LogoLoader } from '@ui/LogoLoader';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
+import { UserHoverCard } from '@ui/UserHoverCard';
 import { cn } from '@/shared/utils/utils';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatTimeAgo } from '@/features/notifications/time-ago';
@@ -72,6 +73,8 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
   const pathHere = parentId ? { parent: parentId, child: comment.id } : null;
 
   const handleRowClick = (e: MouseEvent<HTMLDivElement>) => {
+    // React bubbles clicks out of portals (a hover card, a menu); only clicks on the row itself count.
+    if (!e.currentTarget.contains(e.target as Node)) return;
     if ((e.target as HTMLElement).closest('a, button, textarea, input')) return;
     if (window.getSelection()?.toString()) return; // finishing a text selection is not a click
     w.select(comment, parentId);
@@ -163,11 +166,13 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
             />
           </>
         )}
-        <Link to={profilePath(author.accountName)} className="shrink-0">
-          {author.avatarUrl
-            ? <img src={author.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-8 rounded-full object-cover" />
-            : <InitialsAvatar name={name} handle={author.accountName} className="size-8 rounded-full text-xs" />}
-        </Link>
+        <UserHoverCard accountName={author.accountName} userId={author.id}>
+          <Link to={profilePath(author.accountName)} className="block shrink-0">
+            {author.avatarUrl
+              ? <img src={author.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-8 rounded-full object-cover" />
+              : <InitialsAvatar name={name} handle={author.accountName} className="size-8 rounded-full text-xs" />}
+          </Link>
+        </UserHoverCard>
         <div className="min-w-0 flex-1">
           {comment.pinned && (
             <p className="mb-0.5 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
