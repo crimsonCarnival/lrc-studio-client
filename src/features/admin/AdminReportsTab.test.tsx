@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -15,6 +16,8 @@ vi.mock('@/features/profile/wall/wall.service', async importOriginal => ({
   resolveWallReport,
 }));
 vi.mock('@/features/settings/useSettings', () => ({ useSettings: () => ({ settings: { advanced: {} } }) }));
+// The hover card needs the app's auth and query providers; these tests are about the rows.
+vi.mock('@ui/UserHoverCard', () => ({ UserHoverCard: ({ children }: { children: ReactNode }) => children }));
 
 import AdminReportsTab from './AdminReportsTab';
 
