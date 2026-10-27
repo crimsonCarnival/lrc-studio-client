@@ -20,7 +20,7 @@ const seg1 = (path: string): string => path.split('/')[1] || '';
 
 // Auth-only top-level segments (the route + any sub-path under it).
 const AUTH_SEGMENTS = new Set([
-  'settings', 'home', 'library', 'uploads', 'feed', 'notifications',
+  'settings', 'home', 'library', 'uploads', 'feed', 'notifications', 'reports',
 ]);
 
 const RULES: Rule[] = [

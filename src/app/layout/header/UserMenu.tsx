@@ -152,6 +152,9 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
             <PopoverItem asChild><Link to="/settings" className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <Icon name="settings" size={16} className="text-zinc-400" />{t('settings.title')}
             </Link></PopoverItem>
+            <PopoverItem asChild><Link to="/reports" onClick={(e) => guardedLinkClick(e, () => navTo('/reports'))} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+              <Icon name="flag" size={16} className="text-zinc-400" />{t('reports.page.title')}
+            </Link></PopoverItem>
             {setShowKeyboardHelp && (
               <PopoverItem onClick={() => { setShowKeyboardHelp(true); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
                 <Icon name="menu_book" size={16} className="text-zinc-400" />{t('shortcuts.title')}

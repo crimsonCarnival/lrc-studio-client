@@ -52,6 +52,7 @@ const ProjectViewPage = lazy(() => import('@features/project-view/ProjectViewPag
 const ListPage = lazy(() => import('@features/playlists/ListPage'));
 const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage'));
 const NotificationsPage = lazy(() => import('@features/notifications/NotificationsPage'));
+const MyReportsPage = lazy(() => import('@features/reports/MyReportsPage'));
 const GuidePage = lazy(() => import('@features/guide/GuidePage'));
 
 type EditorProps = ComponentProps<typeof Editor>;
@@ -580,6 +581,11 @@ export function AppRouter({
       <Route path="notifications" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <NotificationsPage />
+        </Suspense>
+      } />
+      <Route path="reports" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+          <MyReportsPage />
         </Suspense>
       } />
       <Route path="guide" element={
