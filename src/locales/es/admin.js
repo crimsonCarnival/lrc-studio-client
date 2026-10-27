@@ -65,6 +65,10 @@ export default {
   },
   header: {
     backToSite: 'Volver a lrcstudio.app',
+    pending_one: '{{count}} pendiente',
+    pending_other: '{{count}} pendientes',
+    dashboardPending_one: 'Panel de Administración · {{count}} pendiente',
+    dashboardPending_other: 'Panel de Administración · {{count}} pendientes',
     nav: 'Secciones de administración',
   },
   tasks: {
