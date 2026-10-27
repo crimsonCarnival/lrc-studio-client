@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
@@ -9,7 +9,8 @@ import { cn } from '@/shared/utils/utils';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { WALL_MAX_LENGTH, getTaggablePeople, getTaggableProjects } from './wall.service';
 import type { TagPerson, TagProject } from './wall.service';
-import { findTrigger, serializeTags, userToken, projectToken } from './wall-tags';
+import { findTrigger, serializeTags, tagRanges, userToken, projectToken } from './wall-tags';
+import { ProjectTagCard } from './CommentBody';
 import type { TagEntity } from './wall-tags';
 
 const MAX_SUGGESTIONS = 6;
@@ -72,6 +73,25 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
   const [dismissedAt, setDismissedAt] = useState<number | null>(null);
   const [people, setPeople] = useState<TagPerson[] | null>(null);
   const [projects, setProjects] = useState<{ owner: string; list: TagProject[] | null } | null>(null);
+  const mirrorRef = useRef<HTMLDivElement>(null);
+
+  // Where to put the caret after the next render: right after inserted text and its space.
+  // Without it, autoFocus leaves a reply's caret before its pre-filled `@author `, and a
+  // controlled value change can move it to the end.
+  const pendingCaret = useRef<number | null>(autoFocus && startText ? startText.length : null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (pendingCaret.current === null || !el) return;
+    el.focus();
+    el.setSelectionRange(pendingCaret.current, pendingCaret.current);
+    pendingCaret.current = null;
+  }, [text]);
+
+  const ranges = tagRanges(text, entities);
+  // The project tags still in the text, once each, for the preview cards under the box.
+  const taggedProjects = ranges
+    .filter((r) => r.kind === 'project')
+    .filter((r, i, all) => all.findIndex((o) => o.entity.token === r.entity.token) === i);
 
   const found = findTrigger(text.slice(0, caret));
   // A tag already picked is finished: typing after `@sam/Song title` must not reopen the list.
@@ -128,7 +148,7 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
           label: title,
           sub: `@${trigger.owner}`,
           image: p.coverImage,
-          entity: { display: `@${trigger.owner}/${title}`, token: projectToken(p.publicId) },
+          entity: { display: `@${trigger.owner}/${title}`, token: projectToken(p.publicId), preview: { title, coverImage: p.coverImage } },
         };
       });
   }, [trigger, people, projects, t]);
@@ -145,14 +165,11 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
     const inserted = `${s.entity.display} `;
     const next = before + inserted + text.slice(caret);
     const pos = before.length + inserted.length;
+    pendingCaret.current = pos;
     setText(next);
     setEntities((prev) => [...prev.filter((e) => e.display !== s.entity.display), s.entity]);
     setCaret(pos);
     setActiveIndex(0);
-    requestAnimationFrame(() => {
-      ref.current?.focus();
-      ref.current?.setSelectionRange(pos, pos);
-    });
   };
 
   const submit = async () => {
@@ -188,11 +205,34 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="relative">
+      <div className="relative rounded-[var(--radius-control)] bg-card">
+        {/* The styled copy of the text, drawn under a transparent-text textarea. It must wrap
+            exactly like the textarea — same padding, font, size and line height — so tags never
+            change the width of what they style: colour and a background only, no images. */}
+        <div
+          ref={mirrorRef}
+          aria-hidden
+          className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap break-words px-4 py-3 pb-7 text-base font-medium leading-snug text-foreground"
+        >
+          {ranges.map((r, i) => {
+            const before = text.slice(i === 0 ? 0 : ranges[i - 1].end, r.start);
+            const tag = text.slice(r.start, r.end);
+            return (
+              <span key={r.start}>
+                {before}
+                <span className={r.kind === 'user' ? 'text-primary' : 'rounded bg-zinc-700/70 text-zinc-100 shadow-[0_0_0_1px_var(--color-zinc-600)]'}>{tag}</span>
+              </span>
+            );
+          })}
+          {text.slice(ranges.length ? ranges[ranges.length - 1].end : 0)}
+          {/* A trailing newline only takes up a line once something follows it. */}
+          {'​'}
+        </div>
         <Textarea
           ref={ref}
           value={text}
           autoFocus={autoFocus}
+          onScroll={(e) => { if (mirrorRef.current) mirrorRef.current.scrollTop = e.currentTarget.scrollTop; }}
           onChange={(e) => {
             setText(e.target.value.slice(0, MAX_INPUT));
             setCaret(e.target.selectionStart);
@@ -209,8 +249,9 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
           aria-expanded={open}
           aria-controls={open ? listId : undefined}
           aria-activedescendant={open && suggestions.length > 0 ? `${listId}-${active}` : undefined}
-          // pb-7 keeps the text clear of the counter drawn in the bottom-left corner.
-          className="min-h-[72px] resize-y pb-7"
+          // pb-7 keeps the text clear of the counter drawn in the bottom-left corner. The text
+          // itself is transparent: the mirror above draws it, with the tags styled.
+          className="relative min-h-[72px] resize-y bg-transparent pb-7 text-transparent caret-foreground selection:bg-primary/30"
         />
         <span
           aria-live="polite"
@@ -261,8 +302,14 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
           </ul>
         )}
       </div>
-      <div className="flex items-center justify-end gap-2">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2">
+        {/* How the tagged projects will show once posted. */}
+        <div className="flex min-w-0 flex-wrap items-center gap-1">
+          {taggedProjects.map((r) => (
+            <ProjectTagCard key={r.entity.token} title={r.entity.preview?.title ?? ''} coverImage={r.entity.preview?.coverImage ?? null} />
+          ))}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           {onCancel && <Button type="button" variant="ghost" size="sm" onClick={onCancel}>{t('common.cancel')}</Button>}
           <Button type="button" size="sm" disabled={busy || !body || tooLong} onClick={submit}>
             {busy ? <LogoLoader size={12} /> : submitLabel}

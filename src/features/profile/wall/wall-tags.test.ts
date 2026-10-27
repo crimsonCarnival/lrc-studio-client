@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { findTrigger, serializeTags, bodySegments, userToken, projectToken } from './wall-tags';
+import { findTrigger, serializeTags, tagRanges, bodySegments, userToken, projectToken } from './wall-tags';
 
 describe('findTrigger', () => {
   it('finds a person being typed', () => {
@@ -28,6 +28,15 @@ describe('serializeTags', () => {
 
   it('leaves a tag alone once it runs into more name characters', () => {
     expect(serializeTags('@samuel hi', [sam])).toBe('@samuel hi');
+  });
+});
+
+describe('tagRanges', () => {
+  it('finds each tag once, longest first, in text order', () => {
+    const sam = { display: '@sam', token: userToken('u1') };
+    const song = { display: '@sam/Blue Song', token: projectToken('p1') };
+    const ranges = tagRanges('@sam/Blue Song by @sam', [sam, song]);
+    expect(ranges.map((r) => [r.start, r.end, r.kind])).toEqual([[0, 14, 'project'], [18, 22, 'user']]);
   });
 });
 

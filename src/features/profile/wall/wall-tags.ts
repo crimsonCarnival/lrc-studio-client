@@ -9,6 +9,15 @@ import type { WallMention, WallProjectRef } from './wall.service';
 export interface TagEntity {
   display: string;
   token: string;
+  /** For a project tag: what the composer's preview card shows. */
+  preview?: { title: string; coverImage: string | null };
+}
+
+export interface TagRange {
+  start: number;
+  end: number;
+  kind: 'user' | 'project';
+  entity: TagEntity;
 }
 
 export type TagTrigger =
@@ -39,17 +48,33 @@ export function findTrigger(beforeCaret: string): TagTrigger | null {
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
- * The body to send: each inserted tag's text replaced by its token. A tag only counts while
- * its text is intact and not run into more name characters (`@sam` inside `@samuel` is not
- * the tag), so editing a tag by hand turns it back into plain text.
+ * Where the inserted tags sit in `text`, in order. A tag only counts while its text is intact
+ * and not run into more name characters (`@sam` inside `@samuel` is not the tag), so editing
+ * a tag by hand turns it back into plain text. Longer tags win where two overlap.
  */
-export function serializeTags(text: string, entities: TagEntity[]): string {
-  let out = text;
+export function tagRanges(text: string, entities: TagEntity[]): TagRange[] {
+  const ranges: TagRange[] = [];
   const longestFirst = [...entities].sort((a, b) => b.display.length - a.display.length);
-  for (const e of longestFirst) {
-    out = out.replace(new RegExp(`${escapeRegex(e.display)}(?![${NAME_CHARS}/])`, 'g'), e.token);
+  for (const entity of longestFirst) {
+    for (const m of text.matchAll(new RegExp(`${escapeRegex(entity.display)}(?![${NAME_CHARS}/])`, 'g'))) {
+      const start = m.index ?? 0;
+      const end = start + entity.display.length;
+      if (ranges.some((r) => start < r.end && end > r.start)) continue;
+      ranges.push({ start, end, kind: entity.token.startsWith('@[p:') ? 'project' : 'user', entity });
+    }
   }
-  return out;
+  return ranges.sort((a, b) => a.start - b.start);
+}
+
+/** The body to send: each inserted tag's text replaced by its token. */
+export function serializeTags(text: string, entities: TagEntity[]): string {
+  let out = '';
+  let last = 0;
+  for (const r of tagRanges(text, entities)) {
+    out += text.slice(last, r.start) + r.entity.token;
+    last = r.end;
+  }
+  return out + text.slice(last);
 }
 
 export type BodySegment =

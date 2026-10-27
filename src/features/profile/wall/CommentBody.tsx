@@ -5,6 +5,22 @@ import { projectPath } from '@/features/projects/project-path';
 import { bodySegments } from './wall-tags';
 import type { WallComment } from './wall.service';
 
+const CARD_CLASS = 'mx-0.5 inline-flex max-w-full items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-800/70 px-1.5 py-0.5 align-middle text-xs font-medium text-zinc-100';
+
+/** A tagged project as an inline mini card: its cover, if it has one, and its title. */
+export function ProjectTagCard({ title, coverImage, href }: { title: string; coverImage: string | null; href?: string | null }) {
+  const { t } = useTranslation();
+  const content = (
+    <>
+      {coverImage && <img src={coverImage} alt="" referrerPolicy="no-referrer" className="-ml-1 size-5 shrink-0 rounded object-cover" />}
+      <span className="max-w-[14rem] truncate">{title || t('library.untitled')}</span>
+    </>
+  );
+  return href
+    ? <Link to={href} className={`${CARD_CLASS} transition-colors hover:border-primary/50 hover:bg-zinc-800`}>{content}</Link>
+    : <span className={CARD_CLASS}>{content}</span>;
+}
+
 /** A comment's text with its tags drawn in: people as primary-coloured links, projects as mini cards. */
 export default function CommentBody({ comment }: { comment: WallComment }) {
   const { t } = useTranslation();
@@ -23,17 +39,7 @@ export default function CommentBody({ comment }: { comment: WallComment }) {
         if (segment.kind === 'project') {
           const { ref } = segment;
           const href = projectPath({ publicId: ref.publicId, slug: ref.slug, title: ref.title }, ref.ownerAccountName);
-          const title = ref.title || t('library.untitled');
-          return (
-            <Link
-              key={i}
-              to={href ?? '#'}
-              className="mx-0.5 inline-flex max-w-full items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-800/70 px-1.5 py-0.5 align-middle text-xs font-medium text-zinc-100 transition-colors hover:border-primary/50 hover:bg-zinc-800"
-            >
-              {ref.coverImage && <img src={ref.coverImage} alt="" referrerPolicy="no-referrer" className="-ml-1 size-5 shrink-0 rounded object-cover" />}
-              <span className="max-w-[14rem] truncate">{title}</span>
-            </Link>
-          );
+          return <ProjectTagCard key={i} title={ref.title} coverImage={ref.coverImage} href={href} />;
         }
         // Deleted since, or a project the viewer may no longer see.
         return (
