@@ -160,7 +160,8 @@ export interface WallReport {
   openCount: number;
   reporter: WallAuthor | null;
   wallAccountName: string;
-  comment: { id: string; body: string; author: WallAuthor | null; createdAt: string } | null;
+  /** Null once the comment has been deleted. */
+  comment: Pick<WallComment, 'id' | 'body' | 'mentions' | 'projectRefs' | 'createdAt'> & { author: WallAuthor | null } | null;
 }
 
 export async function listWallReports(status: WallReport['status'] = 'open'): Promise<WallReport[]> {
@@ -170,7 +171,11 @@ export async function listWallReports(status: WallReport['status'] = 'open'): Pr
       wallReports(status: $status) {
         id reason note status createdAt openCount wallAccountName
         reporter { ${author} }
-        comment { id body createdAt author { ${author} } }
+        comment {
+          id body createdAt author { ${author} }
+          mentions { id accountName displayName }
+          projectRefs { publicId title slug coverImage ownerAccountName }
+        }
       }
     }
   `, { status });

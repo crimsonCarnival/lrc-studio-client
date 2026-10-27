@@ -25,6 +25,7 @@ export function useAdminTabs(): AdminTab[] {
   return useMemo(() => {
     const defs: { id: AdminTabId; icon: string; label: string; perm?: Permission }[] = [
       { id: 'moderation', icon: 'gpp_bad', label: t('admin.dashboard.tabs.moderation'), perm: 'users.view' },
+      { id: 'reports', icon: 'flag', label: t('admin.dashboard.tabs.reports'), perm: 'users.ban' },
       { id: 'staff', icon: 'groups', label: t('admin.dashboard.tabs.staff') },
       { id: 'audit', icon: 'history', label: t('admin.dashboard.tabs.auditLogs'), perm: 'audit.view' },
       { id: 'badges', icon: 'military_tech', label: t('admin.dashboard.tabs.badges'), perm: 'badges.manage' },
