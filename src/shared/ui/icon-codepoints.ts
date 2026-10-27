@@ -144,6 +144,7 @@ export const ICON_CODEPOINTS: Record<string, string> = {
   skip_next: '\u{e044}',
   skip_previous: '\u{e045}',
   smartphone: '\u{e0d4}',
+  speaker_notes_off: '\u{e92a}',
   spellcheck: '\u{e8ce}',
   stairs: '\u{f1a9}',
   stars: '\u{e739}',

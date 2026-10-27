@@ -32,7 +32,7 @@ export interface NotificationData {
   read?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated'; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean } | null;
+  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated'; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean; outcome?: 'dismissed' | 'actioned'; until?: string | null } | null;
 }
 
 const TYPE_ICON_NAME: Record<string, string> = {
@@ -56,6 +56,9 @@ const TYPE_ICON_NAME: Record<string, string> = {
   wall_comment: 'forum',
   mention: 'alternate_email',
   comment_like: 'favorite',
+  wall_report: 'flag',
+  wall_report_reviewed: 'done_all',
+  wall_restricted: 'speaker_notes_off',
   level_up: 'trending_up',
   playlist_saved: 'bookmark',
   star_milestone: 'star',
@@ -105,6 +108,9 @@ export function notificationDestination(
   if (type === 'star_milestone' && publicId) return projectPath({ publicId }, recipientAccountName);
   if (type === 'new_device') return '/settings/security';
   if (type === 'request_submitted' || type === 'request_reviewed') return '/admin/requests';
+  if (type === 'wall_report') return '/admin/reports';
+  // There is no report history page yet, so the reviewed report opens the wall it was on.
+  if (type === 'wall_report_reviewed' && notification.meta?.wall) return profilePath(notification.meta.wall);
   // "Continue working": the user's most recently updated project, else home.
   if (type === 'streak_warning') return (publicId && projectEditPath({ publicId }, recipientAccountName)) || '/home';
   return null;
@@ -238,6 +244,37 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
           values={{ actors: actorStr, wall }}
           components={[<strong key="0" />, <strong key="1" />]}
         />
+      </span>
+    );
+  }
+  if (type === 'wall_report') {
+    return (
+      <span>
+        <Trans
+          i18nKey={ownWall ? 'notifications.wallReportOwn' : 'notifications.wallReport'}
+          values={{ actors: actorStr, wall }}
+          components={[<strong key="0" />, <strong key="1" />]}
+        />
+      </span>
+    );
+  }
+  if (type === 'wall_report_reviewed') {
+    return (
+      <span>
+        <Trans
+          i18nKey={notification.meta?.outcome === 'actioned' ? 'notifications.wallReportActioned' : 'notifications.wallReportDismissed'}
+          values={{ wall }}
+          components={[<strong key="0" />]}
+        />
+      </span>
+    );
+  }
+  if (type === 'wall_restricted') {
+    const until = notification.meta?.until ? new Date(notification.meta.until).toLocaleString() : null;
+    return (
+      <span>
+        {until ? t('notifications.wallRestrictedUntil', { until }) : t('notifications.wallRestricted')}
+        {body && <> {t('notifications.wallRestrictedReason', { reason: body })}</>}
       </span>
     );
   }

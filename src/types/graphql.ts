@@ -1261,6 +1261,8 @@ export type UserPreferencesNotifications = {
   wall_comment: Scalars['Boolean']['output'];
   mention: Scalars['Boolean']['output'];
   comment_like: Scalars['Boolean']['output'];
+  wall_report: Scalars['Boolean']['output'];
+  wall_report_reviewed: Scalars['Boolean']['output'];
   level_up: Scalars['Boolean']['output'];
   playlist_saved: Scalars['Boolean']['output'];
   star_milestone: Scalars['Boolean']['output'];
@@ -1297,6 +1299,8 @@ export type UpdatePreferencesNotificationsInput = {
   wall_comment?: InputMaybe<Scalars['Boolean']['input']>;
   mention?: InputMaybe<Scalars['Boolean']['input']>;
   comment_like?: InputMaybe<Scalars['Boolean']['input']>;
+  wall_report?: InputMaybe<Scalars['Boolean']['input']>;
+  wall_report_reviewed?: InputMaybe<Scalars['Boolean']['input']>;
   level_up?: InputMaybe<Scalars['Boolean']['input']>;
   playlist_saved?: InputMaybe<Scalars['Boolean']['input']>;
   star_milestone?: InputMaybe<Scalars['Boolean']['input']>;
