@@ -75,19 +75,6 @@ function useCopyText(text: string) {
   };
 }
 
-/** The copy button, for someone who can't delete the comment (who gets it in the ⋯ menu). */
-export function CopyButton({ text }: { text: string }) {
-  const { t } = useTranslation();
-  const copy = useCopyText(text);
-  return (
-    <Tip content={t('profile.wall.copy')}>
-      <Button type="button" variant="ghost" size="icon-xs" aria-label={t('profile.wall.copy')} onClick={copy} className={cn(CORNER_BUTTON, 'hover:text-zinc-100')}>
-        <Icon name="content_copy" size={15} />
-      </Button>
-    </Tip>
-  );
-}
-
 /** The report flag, for someone who can do nothing else to the comment. */
 export function ReportMenu({ commentId }: { commentId: string }) {
   const { t } = useTranslation();

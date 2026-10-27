@@ -18,7 +18,7 @@ import { deserializeBody, userToken } from './wall-tags';
 import { useWallThread } from './wall-thread';
 import WallComposer from './WallComposer';
 import CommentBody from './CommentBody';
-import { CommentMenu, CopyButton, LikersPopover, ReportMenu } from './CommentMenus';
+import { CommentMenu, LikersPopover, ReportMenu } from './CommentMenus';
 
 // Thread geometry, in px from a comment's left edge. The avatar is 32px wide, so its
 // centre (where a thread line hangs) is at 16; a reply sits 32px further in. A reply's row
@@ -260,7 +260,7 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
             )}
           </div>
         </div>
-        {/* The corner: pin (the wall's owner, top-level only), then the ⋯ menu for whoever can delete, else copy and the report flag. */}
+        {/* The corner: pin (the wall's owner, top-level only), then the ⋯ menu for whoever can delete, else just the report flag. */}
         <div className="absolute right-2 top-2 flex items-center gap-1 text-xs">
           {confirmingDelete ? (
             <>
@@ -303,10 +303,7 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
                   onDelete={() => setConfirmingDelete(true)}
                 />
               ) : (
-                <>
-                  <CopyButton text={copyText} />
-                  {w.signedIn && !isOwnComment && <ReportMenu commentId={comment.id} />}
-                </>
+                w.signedIn && !isOwnComment && <ReportMenu commentId={comment.id} />
               )}
             </>
           )}
