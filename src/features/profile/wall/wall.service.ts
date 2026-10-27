@@ -35,6 +35,10 @@ export interface WallComment {
   depth: number;
   author: WallAuthor;
   canDelete: boolean;
+  likeCount: number;
+  likedByMe: boolean;
+  /** For a reply at the deepest level: the sibling it answers (listed right after it). */
+  replyToId: string | null;
   replies: WallComment[];
 }
 
@@ -50,7 +54,7 @@ export interface Wall {
 export const WALL_MAX_DEPTH = 2;
 export const WALL_MAX_LENGTH = 500;
 
-const COMMENT_FIELDS = `id body createdAt depth canDelete
+const COMMENT_FIELDS = `id body createdAt depth canDelete likeCount likedByMe replyToId
   author { id accountName displayName avatarUrl staffRole allowsTags }
   mentions { id accountName displayName }
   projectRefs { publicId title slug coverImage ownerAccountName }`;
@@ -87,6 +91,33 @@ export async function addWallComment(accountName: string, body: string, parentId
     }
   `, { accountName, body, parentId: parentId ?? null });
   return withReplyArrays(data.addWallComment);
+}
+
+export async function setWallCommentLike(id: string, liked: boolean): Promise<{ liked: boolean; likeCount: number }> {
+  const data = await gqlRequest<{ setWallCommentLike: { liked: boolean; likeCount: number } }>(/* GraphQL */ `
+    mutation SetWallCommentLike($id: ID!, $liked: Boolean!) {
+      setWallCommentLike(id: $id, liked: $liked) { liked likeCount }
+    }
+  `, { id, liked });
+  return data.setWallCommentLike;
+}
+
+/**
+ * Siblings oldest first, except that a reply to a sibling comes right after it (and after the
+ * earlier replies to it). Mirrors the server's order, for comments added on this page.
+ */
+export function orderSiblings(siblings: WallComment[]): WallComment[] {
+  const ids = new Set(siblings.map((s) => s.id));
+  const answers = new Map<string, WallComment[]>();
+  const roots: WallComment[] = [];
+  for (const s of siblings) {
+    if (s.replyToId && ids.has(s.replyToId)) answers.set(s.replyToId, [...(answers.get(s.replyToId) ?? []), s]);
+    else roots.push(s);
+  }
+  const out: WallComment[] = [];
+  const visit = (s: WallComment) => { out.push(s); for (const a of answers.get(s.id) ?? []) visit(a); };
+  roots.forEach(visit);
+  return out;
 }
 
 export async function deleteWallComment(id: string): Promise<void> {

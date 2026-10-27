@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { createContext, use, useCallback, useEffect, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +14,7 @@ import { useSettings } from '@/features/settings/useSettings';
 import { formatTimeAgo } from '@/features/notifications/time-ago';
 import { profilePath } from '../profile-path';
 import {
-  addWallComment, deleteWallComment, getWall, setWallSubscription, wallErrorCode,
+  addWallComment, deleteWallComment, getWall, orderSiblings, setWallCommentLike, setWallSubscription, wallErrorCode,
   WALL_MAX_DEPTH,
 } from './wall.service';
 import type { Wall, WallComment } from './wall.service';
@@ -24,11 +24,14 @@ import CommentBody from './CommentBody';
 
 const WALL_ERROR_KEYS = ['rate_limited', 'wall_disabled', 'forbidden', 'invalid_body', 'max_depth', 'not_found', 'tag_not_allowed'] as const;
 
-/** Adds `reply` under the comment `parentId`, wherever it sits in the tree. */
-function withReply(comments: WallComment[], parentId: string, reply: WallComment): WallComment[] {
-  return comments.map(c => c.id === parentId
-    ? { ...c, replies: [...c.replies, reply] }
-    : { ...c, replies: withReply(c.replies, parentId, reply) });
+// Top-level comments per page; the server's default page size.
+const PAGE_SIZE = 20;
+// Replies shown under a comment before "Show N more replies".
+const REPLIES_PREVIEW = 3;
+
+/** Applies `fn` to the comment `id`, wherever it sits in the tree. */
+function mapComment(comments: WallComment[], id: string, fn: (c: WallComment) => WallComment): WallComment[] {
+  return comments.map(c => c.id === id ? fn(c) : { ...c, replies: mapComment(c.replies, id, fn) });
 }
 
 function withoutComment(comments: WallComment[], id: string): WallComment[] {
@@ -37,23 +40,40 @@ function withoutComment(comments: WallComment[], id: string): WallComment[] {
 
 const countAll = (c: WallComment): number => 1 + c.replies.reduce((n, r) => n + countAll(r), 0);
 
-interface NodeProps {
-  comment: WallComment;
-  signedIn: boolean;
-  replyingTo: string | null;
-  busy: boolean;
-  onReplyingTo: (id: string | null) => void;
-  onReply: (parentId: string, body: string) => Promise<boolean>;
-  onDelete: (id: string) => void;
-  /** The comment whose thread this one hangs from; null at the top level. */
-  threadOf?: string | null;
-  /** Last reply in its thread: the thread line ends in this reply's curve. */
-  isLast?: boolean;
-  highlightedId: string | null;
-  onHighlight: (id: string) => void;
-  hoveredThread: string | null;
-  onHoverThread: (id: string | null) => void;
+/**
+ * A lit stretch of thread line: from `parent`'s avatar down to its reply `child` (or just
+ * `parent`'s own line when `child` is null). Only that stretch lights up — later replies of
+ * the same parent stay dim.
+ */
+interface ThreadPath {
+  parent: string;
+  child: string | null;
 }
+
+interface WallThread {
+  signedIn: boolean;
+  viewerId: string | undefined;
+  busy: boolean;
+  replyingTo: string | null;
+  setReplyingTo: (id: string | null) => void;
+  /** Posts a reply to `answered`; it is listed under `insertUnder` (its parent, at the deepest level). */
+  reply: (answered: WallComment, insertUnder: string, body: string) => Promise<boolean>;
+  remove: (id: string) => void;
+  toggleLike: (comment: WallComment) => void;
+  highlightedId: string | null;
+  /** The hovered path and the clicked one. */
+  paths: ThreadPath[];
+  setHoverPath: (path: ThreadPath | null) => void;
+  /** Clicking a reply highlights its parent and the line down to it; a top-level comment highlights itself. */
+  select: (comment: WallComment, parentId: string | null) => void;
+  collapsed: Set<string>;
+  toggleCollapsed: (id: string) => void;
+  showingAll: Set<string>;
+  showAll: (id: string) => void;
+}
+
+const WallThreadContext = createContext<WallThread | null>(null);
+const useWallThread = () => use(WallThreadContext)!;
 
 // Thread geometry, in px from a comment's left edge. The avatar is 32px wide, so its
 // centre (where a thread line hangs) is at 16; a reply sits 32px further in. A reply's row
@@ -65,36 +85,72 @@ const lineFill = (active: boolean) => (active ? 'bg-primary/70' : 'bg-zinc-700')
 // Shared by the comment actions: a press shrinks the button slightly.
 const ACTION_BUTTON = 'rounded-full transition-[color,background-color,transform] active:scale-90';
 
-function CommentNode({
-  comment, signedIn, replyingTo, busy, onReplyingTo, onReply, onDelete,
-  threadOf = null, isLast = false, highlightedId, onHighlight, hoveredThread, onHoverThread,
-}: NodeProps) {
+interface NodeProps {
+  comment: WallComment;
+  /** The comment whose thread this one hangs from; null at the top level. */
+  parentId?: string | null;
+  /** The ids of the replies shown beside this one, in order, and this one's position. */
+  siblingIds?: string[];
+  index?: number;
+  /** Last reply shown in its thread: the thread line ends in this reply's curve. */
+  isLast?: boolean;
+}
+
+function CommentNode({ comment, parentId = null, siblingIds = [], index = 0, isLast = false }: NodeProps) {
   const { t, i18n } = useTranslation();
   const { settings } = useSettings();
-  const { user } = useAuthContext();
-  const viewerId = (user?.id ?? user?._id) as string | undefined;
+  const w = useWallThread();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { author } = comment;
   const name = author.displayName || author.accountName;
-  const open = replyingTo === comment.id;
-  const hasReplies = comment.replies.length > 0;
-  const highlighted = highlightedId === comment.id;
-  // A thread lights up while its line is hovered or its comment is highlighted.
-  const ownThreadActive = hoveredThread === comment.id || highlighted;
-  const parentThreadActive = threadOf !== null && (hoveredThread === threadOf || highlightedId === threadOf);
+  const atMaxDepth = comment.depth >= WALL_MAX_DEPTH;
+  const answeringThis = w.replyingTo === comment.id;
+
+  const collapsed = w.collapsed.has(comment.id);
+  const visibleReplies = collapsed ? [] : w.showingAll.has(comment.id) ? comment.replies : comment.replies.slice(0, REPLIES_PREVIEW);
+  const hiddenReplies = collapsed ? 0 : comment.replies.length - visibleReplies.length;
+  const hasVisibleReplies = visibleReplies.length > 0;
+  const visibleIds = visibleReplies.map(r => r.id);
+
+  // Which stretches of line are lit: this comment's own line (a path into its replies), the
+  // curve into it (a path ending here), and the line running past it to a later sibling.
+  const ownLineActive = w.paths.some(p => p.parent === comment.id);
+  const fromParent = parentId ? w.paths.filter(p => p.parent === parentId) : [];
+  const curveActive = fromParent.some(p => p.child === comment.id);
+  const passActive = fromParent.some(p => p.child !== null && siblingIds.indexOf(p.child) > index);
+  const highlighted = w.highlightedId === comment.id;
+  const pathHere = parentId ? { parent: parentId, child: comment.id } : null;
 
   const handleRowClick = (e: MouseEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest('a, button, textarea, input')) return;
     if (window.getSelection()?.toString()) return; // finishing a text selection is not a click
-    onHighlight(comment.id);
+    w.select(comment, parentId);
   };
 
+  // A reply starts by tagging the author it answers, unless that's you or they don't allow tags.
+  const initialTags = w.viewerId && author.id !== w.viewerId && author.allowsTags
+    ? [{ display: `@${author.accountName}`, token: userToken(author.id) }]
+    : undefined;
+  const composer = (
+    <WallComposer
+      autoFocus
+      placeholder={t('profile.wall.replyPlaceholder', { name })}
+      submitLabel={t('profile.wall.reply')}
+      busy={w.busy}
+      onSubmit={body => w.reply(comment, atMaxDepth && parentId ? parentId : comment.id, body)}
+      onCancel={() => w.setReplyingTo(null)}
+      initialTags={initialTags}
+    />
+  );
+
   return (
-    <li id={`comment-${comment.id}`} className={cn('relative flex flex-col gap-2', threadOf && 'pt-3')}>
-      {threadOf && (
+    <li id={`comment-${comment.id}`} className={cn('relative flex flex-col gap-2', parentId && 'pt-3')}>
+      {parentId && (
         <>
           {/* The parent's line curving into this reply's avatar… */}
-          <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 h-9 w-3.5 rounded-bl-xl border-b-2 border-l-2 transition-colors', lineColor(parentThreadActive))} />
+          <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 h-9 w-3.5 rounded-bl-xl border-b-2 border-l-2 transition-colors', lineColor(curveActive))} />
+          {/* A path to a later reply runs straight past this one: light that stretch, not the curve. */}
+          {passActive && <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 h-9 w-0.5', lineFill(true))} />}
           {/* …and, where more replies follow, picking up again below the curve: a short gap,
               then a fade back in, so each branch reads as splitting off the thread. */}
           {!isLast && (
@@ -102,39 +158,41 @@ function CommentNode({
               aria-hidden
               className={cn(
                 'pointer-events-none absolute -left-[17px] top-11 bottom-0 w-0.5 transition-colors [mask-image:linear-gradient(to_bottom,transparent,black_14px)]',
-                lineFill(parentThreadActive),
+                lineFill(passActive),
               )}
             />
           )}
           {/* A wider target than the 2px line, for hovering and clicking it. */}
           <span
             aria-hidden
-            onMouseEnter={() => onHoverThread(threadOf)}
-            onMouseLeave={() => onHoverThread(null)}
-            onClick={() => onHighlight(threadOf)}
-            className={cn('absolute -left-6 top-0 w-4 cursor-pointer', isLast ? 'h-9' : 'bottom-0')}
+            onMouseEnter={() => w.setHoverPath(pathHere)}
+            onMouseLeave={() => w.setHoverPath(null)}
+            onClick={() => w.select(comment, parentId)}
+            className="absolute -left-6 top-0 h-9 w-4 cursor-pointer"
           />
         </>
       )}
       <div
         onClick={handleRowClick}
+        onMouseEnter={() => w.setHoverPath(pathHere)}
+        onMouseLeave={() => w.setHoverPath(null)}
         className={cn(
           // -mx-3 px-3 keeps the avatar where the thread lines expect it while the row's
-          // own background and ring get room around the content.
-          'relative -mx-3 flex cursor-pointer gap-3 rounded-xl px-3 py-2 transition-colors',
+          // own background and ring get room around the content; pr-12 clears the delete corner.
+          'group/row relative -mx-3 flex cursor-pointer gap-3 rounded-xl py-2 pl-3 pr-12 transition-colors',
           highlighted
             ? 'bg-primary/[0.08] ring-1 ring-inset ring-primary/35 shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-primary)_6%,transparent)]'
             : 'hover:bg-zinc-800/40',
         )}
       >
-        {hasReplies && (
+        {hasVisibleReplies && (
           <>
             {/* This comment's own line, from under its avatar down to its replies. */}
-            <span aria-hidden className={cn('pointer-events-none absolute left-[27px] top-11 -bottom-2 border-l-2 transition-colors', lineColor(ownThreadActive))} />
+            <span aria-hidden className={cn('pointer-events-none absolute left-[27px] top-11 -bottom-2 border-l-2 transition-colors', lineColor(ownLineActive))} />
             <span
               aria-hidden
-              onMouseEnter={() => onHoverThread(comment.id)}
-              onMouseLeave={() => onHoverThread(null)}
+              onMouseEnter={() => w.setHoverPath({ parent: comment.id, child: null })}
+              onMouseLeave={() => w.setHoverPath(pathHere)}
               className="absolute left-5 top-11 -bottom-2 w-4"
             />
           </>
@@ -153,108 +211,135 @@ function CommentNode({
           </p>
           <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-300"><CommentBody comment={comment} /></p>
           <div className="mt-1 -ml-1.5 flex items-center gap-1 text-xs text-zinc-500">
-            {signedIn && comment.depth < WALL_MAX_DEPTH && (
+            <Tip content={!w.signedIn ? t('profile.wall.signInToLike') : t(comment.likedByMe ? 'profile.wall.unlike' : 'profile.wall.like')}>
+              <Button
+                type="button"
+                variant="ghost"
+                size={comment.likeCount > 0 ? 'xs' : 'icon-xs'}
+                aria-label={t(comment.likedByMe ? 'profile.wall.unlike' : 'profile.wall.like')}
+                aria-pressed={comment.likedByMe}
+                disabled={!w.signedIn}
+                onClick={() => w.toggleLike(comment)}
+                className={cn(ACTION_BUTTON, comment.likedByMe ? 'text-rose-400 hover:text-rose-300' : 'text-zinc-500 hover:text-rose-400')}
+              >
+                <Icon name="favorite" size={15} filled={comment.likedByMe} />
+                {comment.likeCount > 0 && <span className="tabular-nums">{comment.likeCount}</span>}
+              </Button>
+            </Tip>
+            {w.signedIn && (
               <Tip content={t('profile.wall.reply')}>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-xs"
                   aria-label={t('profile.wall.reply')}
-                  aria-pressed={open}
-                  onClick={() => onReplyingTo(open ? null : comment.id)}
-                  className={cn(ACTION_BUTTON, open ? 'bg-primary/15 text-primary' : 'text-zinc-500 hover:text-primary')}
+                  aria-pressed={answeringThis}
+                  onClick={() => w.setReplyingTo(answeringThis ? null : comment.id)}
+                  className={cn(ACTION_BUTTON, answeringThis ? 'bg-primary/15 text-primary' : 'text-zinc-500 hover:text-primary')}
                 >
                   <Icon name="reply" size={15} />
                 </Button>
               </Tip>
             )}
-            {comment.canDelete && (
-              confirmingDelete ? (
-                <span className="flex items-center gap-1">
-                  <span className="px-1 text-destructive">{t('profile.wall.confirmDelete')}</span>
-                  <Tip content={t('profile.wall.deleteConfirm')}>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-xs"
-                      aria-label={t('profile.wall.deleteConfirm')}
-                      onClick={() => onDelete(comment.id)}
-                      className={cn(ACTION_BUTTON, 'text-destructive hover:bg-destructive/15 hover:text-destructive')}
-                    >
-                      <Icon name="check" size={15} />
-                    </Button>
-                  </Tip>
-                  <Tip content={t('common.cancel')}>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-xs"
-                      aria-label={t('common.cancel')}
-                      onClick={() => setConfirmingDelete(false)}
-                      className={cn(ACTION_BUTTON, 'text-zinc-500 hover:text-zinc-100')}
-                    >
-                      <Icon name="close" size={15} />
-                    </Button>
-                  </Tip>
-                </span>
-              ) : (
-                <Tip content={t('profile.wall.delete')}>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label={t('profile.wall.delete')}
-                    onClick={() => setConfirmingDelete(true)}
-                    className={cn(ACTION_BUTTON, 'text-zinc-500 hover:bg-destructive/15 hover:text-destructive')}
-                  >
-                    <Icon name="delete" size={15} />
-                  </Button>
-                </Tip>
-              )
+            {comment.replies.length > 0 && !collapsed && (
+              <Tip content={t('profile.wall.hideReplies')}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={t('profile.wall.hideReplies')}
+                  aria-expanded
+                  onClick={() => w.toggleCollapsed(comment.id)}
+                  className={cn(ACTION_BUTTON, 'text-zinc-500 hover:text-zinc-100')}
+                >
+                  <Icon name="expand_less" size={15} />
+                </Button>
+              </Tip>
             )}
           </div>
         </div>
+        {comment.canDelete && (
+          // The delete corner: confirming swaps the bin for "Delete it? ✓ ✕".
+          <div className="absolute right-2 top-2 flex items-center gap-1 text-xs">
+            {confirmingDelete ? (
+              <>
+                <span className="px-1 text-destructive">{t('profile.wall.confirmDelete')}</span>
+                <Tip content={t('profile.wall.deleteConfirm')}>
+                  <Button type="button" variant="ghost" size="icon-xs" aria-label={t('profile.wall.deleteConfirm')} onClick={() => w.remove(comment.id)} className={cn(ACTION_BUTTON, 'text-destructive hover:bg-destructive/15 hover:text-destructive')}>
+                    <Icon name="check" size={15} />
+                  </Button>
+                </Tip>
+                <Tip content={t('common.cancel')}>
+                  <Button type="button" variant="ghost" size="icon-xs" aria-label={t('common.cancel')} onClick={() => setConfirmingDelete(false)} className={cn(ACTION_BUTTON, 'text-zinc-500 hover:text-zinc-100')}>
+                    <Icon name="close" size={15} />
+                  </Button>
+                </Tip>
+              </>
+            ) : (
+              <Tip content={t('profile.wall.delete')}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={t('profile.wall.delete')}
+                  onClick={() => setConfirmingDelete(true)}
+                  // Quiet until the row is hovered or focused, so it doesn't compete with the text.
+                  className={cn(ACTION_BUTTON, 'text-zinc-600 opacity-60 group-hover/row:opacity-100 focus-visible:opacity-100 hover:bg-destructive/15 hover:text-destructive')}
+                >
+                  <Icon name="delete" size={15} />
+                </Button>
+              </Tip>
+            )}
+          </div>
+        )}
       </div>
 
-      {(open || hasReplies) && (
+      {collapsed && (
+        <button
+          type="button"
+          onClick={() => w.toggleCollapsed(comment.id)}
+          aria-expanded={false}
+          className="ml-11 flex w-fit items-center gap-1 rounded-full border border-zinc-700 px-2.5 py-0.5 text-xs text-zinc-400 transition-colors hover:border-primary/50 hover:text-primary"
+        >
+          <Icon name="expand_more" size={14} />
+          {t('profile.wall.showReplies', { count: countAll(comment) - 1 })}
+        </button>
+      )}
+
+      {/* At the deepest level a reply sits beside this comment, so its box opens right here. */}
+      {answeringThis && atMaxDepth && <div className="pl-11">{composer}</div>}
+
+      {((answeringThis && !atMaxDepth) || hasVisibleReplies || hiddenReplies > 0) && (
         // Replies sit 32px in. Spacing is padding, not gap, so the thread lines run unbroken.
         <div className="ml-4 flex flex-col pl-4">
-          {open && (
+          {answeringThis && !atMaxDepth && (
             <div className="relative pb-2">
-              {hasReplies && <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 bottom-0 border-l-2 transition-colors', lineColor(ownThreadActive))} />}
-              <WallComposer
-                autoFocus
-                placeholder={t('profile.wall.replyPlaceholder', { name })}
-                submitLabel={t('profile.wall.reply')}
-                busy={busy}
-                onSubmit={body => onReply(comment.id, body)}
-                onCancel={() => onReplyingTo(null)}
-                // A reply starts by tagging the author it answers, unless that's you or they don't allow tags.
-                initialTags={viewerId && author.id !== viewerId && author.allowsTags ? [{ display: `@${author.accountName}`, token: userToken(author.id) }] : undefined}
-              />
+              {hasVisibleReplies && <span aria-hidden className={cn('pointer-events-none absolute -left-[17px] top-0 bottom-0 border-l-2 transition-colors', lineColor(ownLineActive))} />}
+              {composer}
             </div>
           )}
-          {hasReplies && (
+          {hasVisibleReplies && (
             <ul className="flex flex-col">
-              {comment.replies.map((r, i) => (
+              {visibleReplies.map((r, i) => (
                 <CommentNode
                   key={r.id}
                   comment={r}
-                  signedIn={signedIn}
-                  replyingTo={replyingTo}
-                  busy={busy}
-                  onReplyingTo={onReplyingTo}
-                  onReply={onReply}
-                  onDelete={onDelete}
-                  threadOf={comment.id}
-                  isLast={i === comment.replies.length - 1}
-                  highlightedId={highlightedId}
-                  onHighlight={onHighlight}
-                  hoveredThread={hoveredThread}
-                  onHoverThread={onHoverThread}
+                  parentId={comment.id}
+                  siblingIds={visibleIds}
+                  index={i}
+                  isLast={i === visibleReplies.length - 1}
                 />
               ))}
             </ul>
+          )}
+          {hiddenReplies > 0 && (
+            <button
+              type="button"
+              onClick={() => w.showAll(comment.id)}
+              className="mt-2 ml-11 w-fit text-xs font-medium text-zinc-400 transition-colors hover:text-primary"
+            >
+              {t('profile.wall.moreReplies', { count: hiddenReplies })}
+            </button>
           )}
         </div>
       )}
@@ -268,19 +353,24 @@ export default function WallSection({ accountName, isOwner }: { accountName: str
   const tk = t as (key: string) => string;
   const { user } = useAuthContext();
   const signedIn = !!user;
+  const viewerId = (user?.id ?? user?._id) as string | undefined;
   const [wall, setWall] = useState<Wall | null>(null);
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadingPage, setLoadingPage] = useState(false);
+  // The `after` cursor of every page visited so far; the last one is the current page.
+  const [cursors, setCursors] = useState<(string | null)[]>([null]);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const [highlightedId, setHighlightedId] = useState<string | null>(null);
-  const [hoveredThread, setHoveredThread] = useState<string | null>(null);
-  const toggleHighlight = (id: string) => setHighlightedId(prev => (prev === id ? null : id));
+  const [selection, setSelection] = useState<{ highlightedId: string; path: ThreadPath } | null>(null);
+  const [hoverPath, setHoverPath] = useState<ThreadPath | null>(null);
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  const [showingAll, setShowingAll] = useState<Set<string>>(() => new Set());
 
   const load = useCallback(async () => {
     setFailed(false);
     try {
       setWall(await getWall(accountName));
+      setCursors([null]);
     } catch {
       setFailed(true);
     }
@@ -297,30 +387,53 @@ export default function WallSection({ accountName, isOwner }: { accountName: str
     toast.error(tk(`profile.wall.errors.${(WALL_ERROR_KEYS as readonly string[]).includes(code) ? code : 'failed'}`));
   };
 
-  const loadMore = async () => {
-    const last = wall?.comments[wall.comments.length - 1];
-    if (!wall || !last) return;
-    setLoadingMore(true);
+  const goToPage = async (nextCursors: (string | null)[]) => {
+    setLoadingPage(true);
     try {
-      const next = await getWall(accountName, last.createdAt);
-      setWall(prev => prev ? { ...prev, comments: [...prev.comments, ...next.comments], hasMore: next.hasMore } : next);
+      setWall(await getWall(accountName, nextCursors[nextCursors.length - 1]));
+      setCursors(nextCursors);
+      document.getElementById('wall')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
       report(err);
     }
-    setLoadingMore(false);
+    setLoadingPage(false);
   };
 
-  const post = async (body: string, parentId: string | null): Promise<boolean> => {
+  const reveal = (id: string) => {
+    setCollapsed(prev => { const next = new Set(prev); next.delete(id); return next; });
+    setShowingAll(prev => new Set(prev).add(id));
+  };
+
+  const post = async (body: string): Promise<boolean> => {
     setBusy(true);
     try {
-      const created = await addWallComment(accountName, body, parentId);
+      const created = await addWallComment(accountName, body, null);
+      if (cursors.length > 1) {
+        // A new comment is the newest, so it lives on the first page.
+        await goToPage([null]);
+      } else {
+        setWall(prev => !prev ? prev : { ...prev, comments: [created, ...prev.comments], total: prev.total + 1, subscribed: isOwner ? prev.subscribed : true });
+      }
+      return true;
+    } catch (err) {
+      report(err);
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const reply = async (answered: WallComment, insertUnder: string, body: string): Promise<boolean> => {
+    setBusy(true);
+    try {
+      const created = await addWallComment(accountName, body, answered.id);
       setWall(prev => !prev ? prev : {
         ...prev,
-        comments: parentId ? withReply(prev.comments, parentId, created) : [created, ...prev.comments],
-        total: parentId ? prev.total : prev.total + 1,
+        comments: mapComment(prev.comments, insertUnder, p => ({ ...p, replies: orderSiblings([...p.replies, created]) })),
         // Commenting subscribes you to the wall.
         subscribed: isOwner ? prev.subscribed : true,
       });
+      reveal(insertUnder); // the new reply must not land behind "Show N more replies"
       setReplyingTo(null);
       return true;
     } catch (err) {
@@ -342,6 +455,27 @@ export default function WallSection({ accountName, isOwner }: { accountName: str
     } catch (err) {
       report(err);
     }
+  };
+
+  const toggleLike = async (comment: WallComment) => {
+    const liked = !comment.likedByMe;
+    const apply = (likedByMe: boolean, likeCount: number) =>
+      setWall(prev => prev ? { ...prev, comments: mapComment(prev.comments, comment.id, c => ({ ...c, likedByMe, likeCount })) } : prev);
+    apply(liked, comment.likeCount + (liked ? 1 : -1));
+    try {
+      const result = await setWallCommentLike(comment.id, liked);
+      apply(result.liked, result.likeCount);
+    } catch (err) {
+      apply(comment.likedByMe, comment.likeCount);
+      report(err);
+    }
+  };
+
+  const select = (comment: WallComment, parentId: string | null) => {
+    const next = parentId
+      ? { highlightedId: parentId, path: { parent: parentId, child: comment.id } }
+      : { highlightedId: comment.id, path: { parent: comment.id, child: null } };
+    setSelection(prev => (prev && prev.highlightedId === next.highlightedId && prev.path.child === next.path.child ? null : next));
   };
 
   const toggleSubscription = async () => {
@@ -376,9 +510,31 @@ export default function WallSection({ accountName, isOwner }: { accountName: str
   }
 
   const shown = wall.comments.reduce((n, c) => n + countAll(c), 0);
+  const page = cursors.length - 1;
+  const pageCount = Math.max(1, Math.ceil(wall.total / PAGE_SIZE));
+  const last = wall.comments[wall.comments.length - 1];
+
+  const thread: WallThread = {
+    signedIn,
+    viewerId,
+    busy,
+    replyingTo,
+    setReplyingTo,
+    reply,
+    remove,
+    toggleLike,
+    highlightedId: selection?.highlightedId ?? null,
+    paths: [hoverPath, selection?.path].filter((p): p is ThreadPath => !!p),
+    setHoverPath,
+    select,
+    collapsed,
+    toggleCollapsed: (id) => setCollapsed(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; }),
+    showingAll,
+    showAll: (id) => setShowingAll(prev => new Set(prev).add(id)),
+  };
 
   return (
-    <section id="wall" aria-labelledby="wall-title" className="mt-10 flex flex-col gap-5">
+    <section id="wall" aria-labelledby="wall-title" className="mt-10 flex scroll-mt-20 flex-col gap-5 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-6">
       <div className="flex items-center justify-between gap-3">
         <h2 id="wall-title" className="text-lg font-bold text-zinc-100">
           {t('profile.wall.title')} <span className="ml-1 font-mono text-sm font-medium text-zinc-500">{shown}</span>
@@ -405,7 +561,7 @@ export default function WallSection({ accountName, isOwner }: { accountName: str
           placeholder={t(isOwner ? 'profile.wall.placeholderOwn' : 'profile.wall.placeholder')}
           submitLabel={t('profile.wall.post')}
           busy={busy && replyingTo === null}
-          onSubmit={body => post(body, null)}
+          onSubmit={post}
         />
       ) : (
         <p className="text-sm text-zinc-500">
@@ -414,35 +570,29 @@ export default function WallSection({ accountName, isOwner }: { accountName: str
         </p>
       )}
 
-      {wall.comments.length === 0 ? (
-        <p className="py-6 text-center text-sm text-zinc-500">{t('profile.wall.empty')}</p>
-      ) : (
-        <ul className="flex flex-col gap-6">
-          {wall.comments.map(c => (
-            <CommentNode
-              key={c.id}
-              comment={c}
-              signedIn={signedIn}
-              replyingTo={replyingTo}
-              busy={busy}
-              onReplyingTo={setReplyingTo}
-              onReply={(parentId, body) => post(body, parentId)}
-              onDelete={remove}
-              highlightedId={highlightedId}
-              onHighlight={toggleHighlight}
-              hoveredThread={hoveredThread}
-              onHoverThread={setHoveredThread}
-            />
-          ))}
-        </ul>
-      )}
+      <div className={cn('rounded-xl border border-zinc-800/80 bg-zinc-950/30 p-4 transition-opacity', loadingPage && 'opacity-60')}>
+        {wall.comments.length === 0 ? (
+          <p className="py-6 text-center text-sm text-zinc-500">{t('profile.wall.empty')}</p>
+        ) : (
+          <WallThreadContext value={thread}>
+            <ul className="flex flex-col gap-6">
+              {wall.comments.map(c => <CommentNode key={c.id} comment={c} />)}
+            </ul>
+          </WallThreadContext>
+        )}
+      </div>
 
-      {wall.hasMore && (
-        <div className="flex justify-center">
-          <Button type="button" variant="outline" size="sm" disabled={loadingMore} onClick={loadMore}>
-            {loadingMore ? <LogoLoader size={12} /> : t('profile.wall.loadMore')}
+      {pageCount > 1 && (
+        <nav aria-label={t('profile.wall.title')} className="flex items-center justify-end gap-2 text-sm">
+          {loadingPage && <LogoLoader size={12} />}
+          <span className="text-xs text-zinc-500">{t('profile.wall.pageOf', { page: page + 1, pages: pageCount })}</span>
+          <Button type="button" variant="outline" size="sm" disabled={page === 0 || loadingPage} onClick={() => void goToPage(cursors.slice(0, -1))}>
+            {t('common.pagination.previous')}
           </Button>
-        </div>
+          <Button type="button" variant="outline" size="sm" disabled={!wall.hasMore || !last || loadingPage} onClick={() => last && void goToPage([...cursors, last.createdAt])}>
+            {t('common.pagination.next')}
+          </Button>
+        </nav>
       )}
     </section>
   );

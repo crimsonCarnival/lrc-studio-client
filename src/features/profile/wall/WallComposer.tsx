@@ -209,8 +209,15 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
           aria-expanded={open}
           aria-controls={open ? listId : undefined}
           aria-activedescendant={open && suggestions.length > 0 ? `${listId}-${active}` : undefined}
-          className="min-h-[64px] resize-y"
+          // pb-7 keeps the text clear of the counter drawn in the bottom-left corner.
+          className="min-h-[72px] resize-y pb-7"
         />
+        <span
+          aria-live="polite"
+          className={cn('pointer-events-none absolute bottom-2 left-3 font-mono text-xs', tooLong ? 'text-destructive' : 'text-subtle')}
+        >
+          {body.length}/{WALL_MAX_LENGTH}
+        </span>
         {open && (
           <ul
             id={listId}
@@ -254,8 +261,7 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
           </ul>
         )}
       </div>
-      <div className="flex items-center justify-between gap-2">
-        <span className={cn('font-mono text-xs', tooLong ? 'text-destructive' : 'text-subtle')}>{body.length}/{WALL_MAX_LENGTH}</span>
+      <div className="flex items-center justify-end gap-2">
         <div className="flex items-center gap-2">
           {onCancel && <Button type="button" variant="ghost" size="sm" onClick={onCancel}>{t('common.cancel')}</Button>}
           <Button type="button" size="sm" disabled={busy || !body || tooLong} onClick={submit}>
