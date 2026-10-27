@@ -15,12 +15,12 @@ type Audience = 'everyone' | 'friends' | 'nobody';
 // Every notification type with a per-user switch on the server (NotificationPreferences),
 // in the order the settings list them. Each label is `profile.notif_<type>`.
 const NOTIFICATION_TYPES = [
-  'follow', 'reaction', 'star', 'fork', 'followed_project', 'wall_comment', 'mention', 'comment_like', 'wall_report_reviewed',
+  'follow', 'reaction', 'star', 'fork', 'followed_project', 'wall_comment', 'mention', 'comment_like', 'report_reviewed',
   'playlist_saved', 'star_milestone', 'badge_awarded', 'xp_changed', 'level_up',
   'streak_warning', 'new_device', 'appeal_result',
 ] as const;
 // Only moderators (users.ban) hear about new reports, so only they get its switch.
-const MODERATOR_NOTIFICATION_TYPES = ['wall_report'] as const;
+const MODERATOR_NOTIFICATION_TYPES = ['report'] as const;
 
 export default function PrivacySettings({ searchTerm }: { searchTerm?: string }) {
   const { t, i18n } = useTranslation();
