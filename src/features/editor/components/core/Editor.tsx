@@ -26,6 +26,7 @@ import TaggingToolbar from './TaggingToolbar';
 import AutoStampModal from './AutoStampModal';
 import { tabAudioSupported } from '@/features/visualizer/audio-source';
 import FuriganaModal from '../line/FuriganaModal';
+import SecondaryLyricsModal from '../line/SecondaryLyricsModal';
 import LyricsSearchBar from '../lyrics-search/LyricsSearchBar';
 import { stripLrcTimestamps } from '@/features/editor/utils/lrc-text';
 import PlayerControls from '@/features/player/components/PlayerControls';
@@ -233,6 +234,7 @@ export default function Editor({
     handleClearTimestamps,
     handleClearAllWordTimestamps,
     handleSaveLineText,
+    handleSetSecondaryLines,
     handleToggleLineMode,
     handleDeleteLine,
     handleToggleCounterpart,
@@ -426,6 +428,7 @@ export default function Editor({
   // time (not via an effect + setState) to avoid an extra render pass.
   const autoStampOpen = (autoStamp.phase !== 'idle' && !autoStampDismissed) || autoStamp.pendingResult != null;
   const [furiganaOpen, setFuriganaOpen] = useState(false);
+  const [secondaryOpen, setSecondaryOpen] = useState(false);
   // Button-enable signal: `hasMedia` is the freshest render-time approximation for
   // "a local file might exist" (refs can't be read during render). It's true for
   // YouTube-only media too, but that's acceptable — start() re-checks the actual
@@ -1046,6 +1049,7 @@ export default function Editor({
           autoStampRunning={autoStampRunning}
           onAutoStamp={handleAutoStampStart}
           onOpenFurigana={() => setFuriganaOpen(true)}
+          onOpenSecondary={() => setSecondaryOpen(true)}
         />
       </div>
 
@@ -1368,6 +1372,13 @@ export default function Editor({
         onFocusLine={setActiveLineIndex}
         onMergeWithNext={handleMergeWordWithNext}
         onSplitWord={handleSplitWord}
+      />
+
+      <SecondaryLyricsModal
+        open={secondaryOpen}
+        onOpenChange={setSecondaryOpen}
+        lines={lines}
+        onApply={handleSetSecondaryLines}
       />
 
       <AutoStampModal

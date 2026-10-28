@@ -15,6 +15,7 @@ interface EditorToolbarProps {
   autoStampRunning?: boolean;
   onAutoStamp?: () => void;
   onOpenFurigana?: () => void;
+  onOpenSecondary?: () => void;
 }
 
 // Teal is `success`; in the light theme that token is too pale to read as text on
@@ -30,6 +31,7 @@ export default function EditorToolbar({
   autoStampRunning,
   onAutoStamp,
   onOpenFurigana,
+  onOpenSecondary,
 }: EditorToolbarProps) {
   const { t } = useTranslation();
 
@@ -111,6 +113,19 @@ export default function EditorToolbar({
           >
             <span lang="ja" aria-hidden="true" className="text-[13px] font-bold leading-none">あ</span>
             <span className="hidden sm:inline whitespace-nowrap">{t('editor.furigana.open')}</span>
+          </Button>
+        </Tip>
+      )}
+      {onOpenSecondary && editorMode === 'lrc' && lines.some((l) => l.type !== 'section') && (
+        <Tip content={t('editor.secondaryBulk.tip')}>
+          <Button
+            variant="outline"
+            aria-label={t('editor.secondaryBulk.open')}
+            onClick={onOpenSecondary}
+            className="ml-2 h-9 lg:h-9 coarse:h-11 px-3.5 lg:px-3.5 gap-2 rounded-lg shrink-0 text-[13px] lg:text-[13px] font-semibold"
+          >
+            <Icon name="translate" size={16} />
+            <span className="hidden sm:inline whitespace-nowrap">{t('editor.secondaryBulk.open')}</span>
           </Button>
         </Tip>
       )}

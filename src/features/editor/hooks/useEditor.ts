@@ -27,6 +27,7 @@ import { useFileImport } from './useFileImport';
 import { useDragReorder } from './useDragReorder';
 import { useCounterparts } from './useCounterparts';
 import { useWordsMode } from './useWordsMode';
+import { applySecondaryLines } from '../utils/secondary-lines';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import type { EditorLine, EditorWord, EditorTranslation, FocusedTimestamp } from '@/features/editor/editor.types';
 import type { PlayerHandle } from '@/features/player/player.types';
@@ -861,6 +862,18 @@ export function useEditor({
     });
   };
 
+  /** Bulk secondary lyrics: values[n] is main (non-section) line n's secondary. One history entry. */
+  const handleSetSecondaryLines = useCallback((values: string[]) => {
+    const { lines: next, changed } = applySecondaryLines(lines, values);
+    if (!changed.length) return;
+    setModifiedLines(prev => {
+      const s = new Set(prev);
+      changed.forEach((i) => s.add(i));
+      return s;
+    });
+    setLines(next);
+  }, [lines, setLines, setModifiedLines]);
+
   const handleToggleLineMode = useCallback((index: number, next: EditorLine) => {
     setModifiedLines(prev => new Set(prev).add(index));
     setLines((prev) => {
@@ -1418,6 +1431,7 @@ export function useEditor({
     handleClearAllWordTimestamps,
     handleClearActiveLineWordTimestamps,
     handleSaveLineText,
+    handleSetSecondaryLines,
     handleToggleLineMode,
     handleDeleteLine,
     handleToggleCounterpart,
