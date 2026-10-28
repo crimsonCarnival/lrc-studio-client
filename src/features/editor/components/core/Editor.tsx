@@ -12,6 +12,7 @@ import { matchKey } from '@/shared/utils/keyboard';
 import { CountDot } from '@ui/count-dot';
 import { isPendingCounterpart } from '@features/editor/services/counterparts';
 import { WordsLineNav, WordTimeline } from '../modes/WordsFocus';
+import { WordsFocusLine } from '../modes/WordsFocusLine';
 import { usePlayer } from '@/features/player/PlayerContext';
 import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import { formatTimestamp } from '@/shared/utils/lrc';
@@ -638,14 +639,12 @@ export default function Editor({
     return () => window.removeEventListener('keydown', onKey);
   }, [wordsFocus, captureKeyRaw, captureCounterpartHere]);
   const listView = useMemo(() => {
-    if (lineFilter === 'all' && !wordsFocus) return collapsedView;
-    const rows = wordsFocus
-      ? (activeLineIndex >= 0 && activeLineIndex < lines.length ? [activeLineIndex] : [])
-      : collapsedView.rows.filter((i) => lines[i].type === 'section' || lines[i].timestamp == null || i === activeLineIndex);
+    if (lineFilter === 'all') return collapsedView;
+    const rows = collapsedView.rows.filter((i) => lines[i].type === 'section' || lines[i].timestamp == null || i === activeLineIndex);
     const rowOfLine = new Int32Array(lines.length).fill(-1);
     rows.forEach((lineIndex, row) => { rowOfLine[lineIndex] = row; });
     return { ...collapsedView, rows, rowOfLine };
-  }, [lineFilter, wordsFocus, collapsedView, lines, activeLineIndex]);
+  }, [lineFilter, collapsedView, lines, activeLineIndex]);
 
   // ── Inspector ──
   const handleInspectorSection = useCallback((lineIndex: number, sectionIndex: number) => {
@@ -1079,7 +1078,7 @@ export default function Editor({
         </ResponsiveModal>
 
         {/* Sync Mode View */}
-        <div data-tour="editor-lines" className={`relative flex flex-col min-h-0 ${wordsFocus ? 'flex-none h-[clamp(150px,26vh,260px)]' : 'flex-1'}`}>
+        <div data-tour="editor-lines" className={`relative flex flex-col min-h-0 ${wordsFocus ? 'flex-none h-[clamp(150px,26vh,260px)] overflow-y-auto lrc-scroll' : 'flex-1'}`}>
           <div className="hidden xl:block empty:hidden">
           <SelectionActionBar
             selectedLines={selectedLines}
@@ -1106,6 +1105,48 @@ export default function Editor({
             clearSelection={clearSelection as () => void}
           />
           )}
+          {wordsFocus ? (
+          <WordsFocusLine
+            lines={lines}
+            lineIndex={activeLineIndex}
+            playingWordIndex={playingWordIndex}
+            settings={settings}
+            selectedLines={selectedLines}
+            focusedTimestamp={focusedTimestamp}
+            setFocusedTimestamp={setFocusedTimestamp}
+            activeWordIndex={activeWordIndex}
+            handleSetActiveWordIndex={handleSetActiveWordIndex}
+            handleClearWordTimestamp={handleClearWordTimestamp}
+            onWordMenu={openWord}
+            onLineMenu={openLine}
+            stampTarget={stampTarget}
+            playerRef={playerRef}
+            projectSingers={combinedSingers}
+            singerColors={singerColors}
+            songArtists={combinedSingers}
+            editingLineIndex={editingLineIndex}
+            setEditingLineIndex={setEditingLineIndex}
+            editingText={editingText}
+            setEditingText={setEditingText}
+            editingSecondary={editingSecondary}
+            setEditingSecondary={setEditingSecondary}
+            editingTranslations={editingTranslations as unknown[]}
+            setEditingTranslations={setEditingTranslations as (v: unknown[]) => void}
+            editingSingers={editingSingers}
+            setEditingSingers={setEditingSingers}
+            handleSaveLineText={handleSaveLineText}
+            handleAddLine={handleAddLine}
+            handleClearLine={handleClearLine}
+            handleDeleteLine={handleDeleteLine}
+            handleMoveToSection={handleMoveToSection}
+            handleInsertSection={handleInsertSection}
+            handleAssignSinger={handleAssignSinger}
+            handleToggleCounterpart={handleToggleCounterpart}
+            handleMark={handleMarkWithConfidence}
+            shiftTime={shiftTimeWithConfidence}
+            onToggleLineMode={handleToggleLineMode}
+          />
+          ) : (
           <VirtualizedLineList
             lines={lines}
             displayedActiveIndex={displayedActiveIndex}
@@ -1172,10 +1213,9 @@ export default function Editor({
             confidenceById={autoStamp.confidenceById}
             collapsedSections={collapsedSections}
             collapsedView={listView}
-            wordsFocus={wordsFocus}
-            playingWordIndex={playingWordIndex}
             onToggleSectionCollapse={toggleSectionCollapse}
           />
+          )}
         </div>
       </div>
 

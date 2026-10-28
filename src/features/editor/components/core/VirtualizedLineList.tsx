@@ -93,10 +93,6 @@ interface VirtualizedLineListProps {
   collapsedSections: ReadonlySet<string>;
   collapsedView: CollapsedView;
   onToggleSectionCollapse: (key: string) => void;
-  /** Words mode showing a single line: the row drops its list chrome. */
-  wordsFocus?: boolean;
-  /** Word being sung on the cursor line while it plays; null when paused. */
-  playingWordIndex?: number | null;
 }
 
 export default function VirtualizedLineList({
@@ -165,8 +161,6 @@ export default function VirtualizedLineList({
   collapsedSections,
   collapsedView,
   onToggleSectionCollapse,
-  wordsFocus = false,
-  playingWordIndex = null,
 }: VirtualizedLineListProps) {
   const { t } = useTranslation();
   // The line playback is on, as opposed to the cursor (activeLineIndex) or the hovered one.
@@ -622,8 +616,6 @@ export default function VirtualizedLineList({
                       isCursor={i === activeLineIndex}
                       isPlaying={i === playingIndex}
                       isPast={isSynced && i < playingIndex}
-                      wordsFocus={wordsFocus}
-                      playingWordIndex={i === activeLineIndex ? playingWordIndex : null}
                       sectionLabel={sectionLabels[i]}
                       isLocked={isActiveLineLocked && i === activeLineIndex}
                       isSynced={isSynced}

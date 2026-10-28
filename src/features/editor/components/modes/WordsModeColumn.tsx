@@ -235,6 +235,12 @@ export function WordsModeLayerControl({
   );
 }
 
+/** The chip tray reads none of the start-timestamp editing props the header badge needs. */
+export type WordsModeChipsProps = Pick<WordsModeColumnProps,
+  'line' | 'lineIndex' | 'isActive' | 'isMobile' | 'focusedTimestamp' | 'stampTarget' | 'activeWordIndex'
+  | 'handleWordClick' | 'handleClearWordTimestamp' | 'onWordMenu' | 'settings' | 'songSingers'
+  | 'singerColors' | 'activeSingers' | 'playingWordIndex'>;
+
 export function WordsModeChips({
   line,
   lineIndex,
@@ -251,7 +257,7 @@ export function WordsModeChips({
   singerColors,
   activeSingers,
   playingWordIndex = null,
-}: WordsModeColumnProps) {
+}: WordsModeChipsProps) {
   const { t } = useTranslation();
   const playing = playingWordIndex != null;
   const roster = songSingers ?? [];

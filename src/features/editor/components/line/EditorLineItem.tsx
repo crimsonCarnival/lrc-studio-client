@@ -51,10 +51,6 @@ interface EditorLineItemProps {
   isPast?: boolean;
   /** Label of the section this line belongs to, shown in the row's meta line. */
   sectionLabel?: string;
-  /** Words mode showing only this line: no row surface, handle, number or progress. */
-  wordsFocus?: boolean;
-  /** Word being sung on this line while it plays; null when paused or not this line. */
-  playingWordIndex?: number | null;
   isLocked: boolean;
   isSynced: boolean;
   editorMode: string;
@@ -137,8 +133,6 @@ const EditorLineItem = React.memo(({
   isPlaying = false,
   isPast = false,
   sectionLabel,
-  wordsFocus = false,
-  playingWordIndex = null,
   isLocked,
   isSynced,
   editorMode,
@@ -407,7 +401,7 @@ const EditorLineItem = React.memo(({
   // Drag handle + line number. Shared by both layouts: in lrc/srt it opens the row,
   // in words mode it opens the header strip above the chip tray.
   const lineHandle = (
-    <div className={`flex items-center gap-1 shrink-0 z-10 ${wordsFocus ? 'hidden' : ''}`}>
+    <div className="flex items-center gap-1 shrink-0 z-10">
       <Tip content={t('editor.dragToReorder')}>
         <div
           className="cursor-grab active:cursor-grabbing text-faint opacity-60 group-hover:opacity-100 hover:text-subtle transition-[color,opacity] p-0.5 -ml-1 select-none"
@@ -654,11 +648,11 @@ const EditorLineItem = React.memo(({
                   // An unsaved edit is the gold dot beside the time chip; a ring per edited
                   // row turned a freshly stamped verse into a stack of gold boxes.
                   : 'bg-transparent hover:bg-raised'
-          } ${dragIndex === i ? 'opacity-40' : ''} ${justSynced ? 'ring-2 ring-primary/60 animate-just-synced' : ''} ${wordsFocus ? '!bg-transparent !shadow-none !px-3' : ''}`}
+          } ${dragIndex === i ? 'opacity-40' : ''} ${justSynced ? 'ring-2 ring-primary/60 animate-just-synced' : ''}`}
       >
 
         {/* Lock/unlock indicator */}
-        {isActive && !wordsFocus && (
+        {isActive && (
           // Clipped by the row's own radius so the bar can run into the corner
           // and join the progress bar along the bottom edge.
           <div className="absolute inset-0 z-0 rounded-[14px] overflow-hidden pointer-events-none">
@@ -788,7 +782,7 @@ const EditorLineItem = React.memo(({
               the line's progress — are one short line of metadata. So they run
               across the top instead of being stacked into a column narrow enough to
               push the tray's last chip onto an extra row. */}
-          {editorMode === 'words' && !wordsFocus && (
+          {editorMode === 'words' && (
             <div className="flex items-center gap-2 min-w-0 relative z-10">
               {lineHandle}
               <WordsModeTimestamp
@@ -856,32 +850,22 @@ const EditorLineItem = React.memo(({
               surface, so the row reads as "header over tray" rather than as a
               lyric line that happens to have grown boxes. */}
           {editorMode === 'words' && (
-            <div className={isActive && !wordsFocus ? 'rounded-xl bg-background/40 px-2 py-2 inset-ring inset-ring-hl/60' : ''}>
+            <div className={isActive ? 'rounded-xl bg-background/40 px-2 py-2 inset-ring inset-ring-hl/60' : ''}>
             <WordsModeChips
               line={line as ComponentProps<typeof WordsModeChips>['line']}
               lineIndex={i}
-              isSynced={isSynced}
               isActive={isActive}
               isMobile={isMobile}
               settings={settings}
-              editingTimestamp={editingTimestamp}
-              setEditingTimestamp={setEditingTimestamp}
               focusedTimestamp={focusedTimestamp ?? null}
-              setFocusedTimestamp={setFocusedTimestamp}
               stampTarget={stampTarget}
-              handleStampTargetToggle={handleStampTargetToggle}
-                        handleSetStampTarget={handleSetStampTarget}
               activeWordIndex={activeWordIndex}
-              handleSetTimestamp={handleSetTimestamp}
-              handleTimestampWheel={handleTimestampWheel}
-              nudgeIndicator={nudgeIndicator}
               handleWordClick={handleWordClick as ComponentProps<typeof WordsModeChips>['handleWordClick']}
               handleClearWordTimestamp={handleClearWordTimestamp as ComponentProps<typeof WordsModeChips>['handleClearWordTimestamp']}
               onWordMenu={onWordMenu}
               songSingers={projectSingers}
               singerColors={singerColors}
               activeSingers={activeSingers}
-              playingWordIndex={playingWordIndex}
             />
             </div>
           )}
