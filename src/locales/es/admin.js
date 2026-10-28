@@ -64,7 +64,7 @@ export default {
     totalUsers: 'Total: {{count}} usuarios'
   },
   header: {
-    backToSite: 'Volver a lrcstudio.app',
+    backToSite: 'Volver al Inicio',
     pending_one: '{{count}} pendiente',
     pending_other: '{{count}} pendientes',
     dashboardPending_one: 'Panel de Administración · {{count}} pendiente',
