@@ -111,6 +111,17 @@ input[type="number"] {
   }
 }
 
+/* Ellipsis-clipped text scrolls to show the rest while hovered or focused
+   (shared/utils/overflow-marquee.ts sets the attribute and the two variables). */
+[data-marquee] {
+  text-overflow: clip !important;
+  animation: overflow-marquee var(--marquee-duration, 3s) linear infinite alternate;
+}
+@keyframes overflow-marquee {
+  0%, 15% { text-indent: 0; }
+  85%, 100% { text-indent: calc(-1 * var(--marquee-distance, 0px)); }
+}
+
 /* Z-index scale utilities — explicit so they work regardless of Tailwind v4 config resolution */
 @layer utilities {
   .z-base           { z-index: 0; }

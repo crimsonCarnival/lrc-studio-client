@@ -8,6 +8,7 @@ import { SetupProvider } from '@/features/editor/SetupContext';
 import { TooltipProvider } from '@ui/tooltip';
 import { NotificationsProvider } from '@/features/notifications/NotificationsContext';
 import { connectSocket, disconnectSocket } from '@/app/socket.client';
+import { installOverflowMarquee } from '@/shared/utils/overflow-marquee';
 import { useSessionSocket } from '@/features/auth/hooks/useSessionSocket';
 import SetAccountNameModal from '@/features/auth/components/SetAccountNameModal';
 
@@ -47,6 +48,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
       disconnectSocket();
     };
   }, [socketUserId]);
+
+  // Ellipsis-clipped text anywhere in the app scrolls to show the rest on hover or focus.
+  useEffect(() => installOverflowMarquee(), []);
 
   // On touch devices a long press opens our own context menus, but the browser
   // fires its native `contextmenu` for the same gesture, so both appeared at
