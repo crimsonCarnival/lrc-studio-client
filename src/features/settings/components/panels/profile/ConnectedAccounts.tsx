@@ -2,19 +2,12 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import toast from 'react-hot-toast';
 import { useAuthContext } from '@/features/auth/useAuthContext';
-import { useSettings } from '@/features/settings/useSettings';
-import { formatTimeAgo } from '@/features/notifications/time-ago';
 import { IconRow, Chip } from '../../shared';
 
 export default function ConnectedAccounts() {
-  const { t, i18n } = useTranslation();
-  const { settings } = useSettings();
+  const { t } = useTranslation();
   const { user, connectGoogle, disconnectGoogle } = useAuthContext();
   const connected = !!user?.google?.connected;
-
-  const lastUsed = connected && user?.google?.lastUsedAt
-    ? ` · ${t('settings.google.lastUsed', { when: formatTimeAgo(user.google.lastUsedAt, t, settings.advanced?.timezone, i18n.resolvedLanguage || i18n.language) })}`
-    : '';
 
   return (
     <IconRow
@@ -23,7 +16,7 @@ export default function ConnectedAccounts() {
       title={t('settings.google.label')}
       badge={connected ? <Chip tone="teal">{t('settings.google.connected')}</Chip> : undefined}
       description={connected
-        ? `${user?.google?.email || '---'} · ${t('settings.google.connectedDesc')}${lastUsed}`
+        ? `${user?.google?.email || '---'} · ${t('settings.google.connectedDesc')}`
         : t('settings.google.connectDesc')}
     >
       {connected ? (

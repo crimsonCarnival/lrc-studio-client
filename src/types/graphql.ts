@@ -49,12 +49,14 @@ export type ActivityType =
 
 export type AdvancedSettings = {
   autoSave?: Maybe<AutoSaveSettings>;
+  autoSaveIndicator?: Maybe<Scalars['String']['output']>;
   confirmDestructive?: Maybe<Scalars['Boolean']['output']>;
   timezone?: Maybe<Scalars['String']['output']>;
 };
 
 export type AdvancedSettingsInput = {
   autoSave?: InputMaybe<AutoSaveSettingsInput>;
+  autoSaveIndicator?: InputMaybe<Scalars['String']['input']>;
   confirmDestructive?: InputMaybe<Scalars['Boolean']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
 };
@@ -98,10 +100,12 @@ export type BadgeDef = {
   conditionValue?: Maybe<Scalars['Int']['output']>;
   description: Scalars['String']['output'];
   holderCount: Scalars['Int']['output'];
+  holderPct: Scalars['Float']['output'];
   icon: Scalars['String']['output'];
   id: Scalars['String']['output'];
   isBuiltin: Scalars['Boolean']['output'];
   label: Scalars['String']['output'];
+  rarity: Scalars['String']['output'];
   xpReward: Scalars['Int']['output'];
 };
 
@@ -111,22 +115,28 @@ export type BadgeDefInput = {
   conditionType: Scalars['String']['input'];
   conditionValue?: InputMaybe<Scalars['Int']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
-  icon: Scalars['String']['input'];
+  icon?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['String']['input']>;
   label: Scalars['String']['input'];
+  rarity?: InputMaybe<Scalars['String']['input']>;
   xpReward?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type ContentStats = {
+  addictionId: Scalars['String']['output'];
+  addictionTitle: LocalizedString;
   averageLinesPerProject: Scalars['Int']['output'];
   averageProjectCompletion: Scalars['Int']['output'];
   completionPercentage: Scalars['Int']['output'];
+  currentStreak: Scalars['Int']['output'];
   forksReceived: Scalars['Int']['output'];
   fullySyncedProjects: Scalars['Int']['output'];
   karaokeLines: Scalars['Int']['output'];
   largestProject?: Maybe<ProjectStats>;
+  longestStreak: Scalars['Int']['output'];
   mostSyncedProject?: Maybe<ProjectStats>;
   musicSyncedMinutes: Scalars['Int']['output'];
+  musicSyncedSeconds: Scalars['Int']['output'];
   publicProjects: Scalars['Int']['output'];
   starsReceived: Scalars['Int']['output'];
   syncTrendPercentage: Scalars['Int']['output'];
@@ -190,12 +200,17 @@ export type EditorSettings = {
   autoPauseOnMark?: Maybe<Scalars['Boolean']['output']>;
   display?: Maybe<DisplaySettings>;
   history?: Maybe<HistorySettings>;
+  lyricsSearchSpeed?: Maybe<Scalars['String']['output']>;
   nudge?: Maybe<NudgeSettings>;
+  overlapThreshold?: Maybe<Scalars['Float']['output']>;
+  playerPosition?: Maybe<Scalars['String']['output']>;
+  preserveEmptyLines?: Maybe<Scalars['Boolean']['output']>;
   scroll?: Maybe<ScrollSettings>;
   shiftAllAmount?: Maybe<Scalars['Float']['output']>;
   showLineNumbers?: Maybe<Scalars['Boolean']['output']>;
   showShiftAll?: Maybe<Scalars['Boolean']['output']>;
   srt?: Maybe<SrtSettings>;
+  syncFlashDuration?: Maybe<Scalars['String']['output']>;
   timestampPrecision?: Maybe<Scalars['String']['output']>;
 };
 
@@ -204,12 +219,17 @@ export type EditorSettingsInput = {
   autoPauseOnMark?: InputMaybe<Scalars['Boolean']['input']>;
   display?: InputMaybe<DisplaySettingsInput>;
   history?: InputMaybe<HistorySettingsInput>;
+  lyricsSearchSpeed?: InputMaybe<Scalars['String']['input']>;
   nudge?: InputMaybe<NudgeSettingsInput>;
+  overlapThreshold?: InputMaybe<Scalars['Float']['input']>;
+  playerPosition?: InputMaybe<Scalars['String']['input']>;
+  preserveEmptyLines?: InputMaybe<Scalars['Boolean']['input']>;
   scroll?: InputMaybe<ScrollSettingsInput>;
   shiftAllAmount?: InputMaybe<Scalars['Float']['input']>;
   showLineNumbers?: InputMaybe<Scalars['Boolean']['input']>;
   showShiftAll?: InputMaybe<Scalars['Boolean']['input']>;
   srt?: InputMaybe<SrtSettingsInput>;
+  syncFlashDuration?: InputMaybe<Scalars['String']['input']>;
   timestampPrecision?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -229,6 +249,7 @@ export type ExportSettings = {
   copyFormat?: Maybe<Scalars['String']['output']>;
   defaultFilenamePattern?: Maybe<Scalars['String']['output']>;
   downloadFormat?: Maybe<Scalars['String']['output']>;
+  includeFeaturedInTitle?: Maybe<Scalars['Boolean']['output']>;
   includeMetadata?: Maybe<Scalars['Boolean']['output']>;
   lineEndings?: Maybe<Scalars['String']['output']>;
   normalizeTimestamps?: Maybe<Scalars['Boolean']['output']>;
@@ -241,6 +262,7 @@ export type ExportSettingsInput = {
   copyFormat?: InputMaybe<Scalars['String']['input']>;
   defaultFilenamePattern?: InputMaybe<Scalars['String']['input']>;
   downloadFormat?: InputMaybe<Scalars['String']['input']>;
+  includeFeaturedInTitle?: InputMaybe<Scalars['Boolean']['input']>;
   includeMetadata?: InputMaybe<Scalars['Boolean']['input']>;
   lineEndings?: InputMaybe<Scalars['String']['input']>;
   normalizeTimestamps?: InputMaybe<Scalars['Boolean']['input']>;
@@ -266,6 +288,7 @@ export type FollowListType =
 
 export type FollowUser = {
   accountName: Scalars['String']['output'];
+  allowsTags: Scalars['Boolean']['output'];
   avatarUrl?: Maybe<Scalars['String']['output']>;
   /** Subject to the user's country visibility preference. */
   country?: Maybe<Scalars['String']['output']>;
@@ -291,8 +314,6 @@ export type GoogleInfo = {
   connected: Scalars['Boolean']['output'];
   email?: Maybe<Scalars['String']['output']>;
   googleId?: Maybe<Scalars['String']['output']>;
-  /** Supplied by the REST /me payload, not the GraphQL schema. */
-  lastUsedAt?: Maybe<Scalars['String']['output']>;
   name?: Maybe<Scalars['String']['output']>;
   pictureUrl?: Maybe<Scalars['String']['output']>;
 };
@@ -316,8 +337,10 @@ export type HistorySettingsInput = {
 export type InterfaceSettings = {
   defaultLanguage?: Maybe<Scalars['String']['output']>;
   editorWidth?: Maybe<Scalars['Float']['output']>;
+  focusContrast?: Maybe<Scalars['String']['output']>;
   focusMode?: Maybe<Scalars['String']['output']>;
   fontSize?: Maybe<Scalars['String']['output']>;
+  fontWeight?: Maybe<Scalars['String']['output']>;
   layoutSwap?: Maybe<Scalars['Boolean']['output']>;
   lockLayout?: Maybe<Scalars['Boolean']['output']>;
   mobileTab?: Maybe<Scalars['String']['output']>;
@@ -331,8 +354,10 @@ export type InterfaceSettings = {
 export type InterfaceSettingsInput = {
   defaultLanguage?: InputMaybe<Scalars['String']['input']>;
   editorWidth?: InputMaybe<Scalars['Float']['input']>;
+  focusContrast?: InputMaybe<Scalars['String']['input']>;
   focusMode?: InputMaybe<Scalars['String']['input']>;
   fontSize?: InputMaybe<Scalars['String']['input']>;
+  fontWeight?: InputMaybe<Scalars['String']['input']>;
   layoutSwap?: InputMaybe<Scalars['Boolean']['input']>;
   lockLayout?: InputMaybe<Scalars['Boolean']['input']>;
   mobileTab?: InputMaybe<Scalars['String']['input']>;
@@ -358,7 +383,7 @@ export type LeaderboardUser = {
   periodXp?: Maybe<Scalars['Int']['output']>;
   progression?: Maybe<UserProgression>;
   projectCount: Scalars['Int']['output'];
-  rankScore?: Maybe<Scalars['Float']['output']>;
+  rankScore: Scalars['Float']['output'];
   stats?: Maybe<UserStats>;
   streak?: Maybe<UserStreak>;
   totalForksReceived: Scalars['Int']['output'];
@@ -374,6 +399,7 @@ export type Line = {
   secondary?: Maybe<Scalars['String']['output']>;
   secondaryWords?: Maybe<Array<Word>>;
   singers?: Maybe<Array<Scalars['String']['output']>>;
+  source?: Maybe<Scalars['String']['output']>;
   text?: Maybe<Scalars['String']['output']>;
   timestamp?: Maybe<Scalars['Float']['output']>;
   translation?: Maybe<Scalars['String']['output']>;
@@ -391,6 +417,7 @@ export type LineInput = {
   secondary?: InputMaybe<Scalars['String']['input']>;
   secondaryWords?: InputMaybe<Array<WordInput>>;
   singers?: InputMaybe<Array<Scalars['String']['input']>>;
+  source?: InputMaybe<Scalars['String']['input']>;
   text?: InputMaybe<Scalars['String']['input']>;
   timestamp?: InputMaybe<Scalars['Float']['input']>;
   translation?: InputMaybe<Scalars['String']['input']>;
@@ -444,11 +471,12 @@ export type ArtistSuggestionPage = {
 };
 
 export type MusicLibraryEntry = {
-  album?: Maybe<Scalars['String']['output']>;
-  artist?: Maybe<Scalars['String']['output']>;
+  album: Scalars['String']['output'];
+  artist: Scalars['String']['output'];
   genre?: Maybe<Scalars['String']['output']>;
   language?: Maybe<Scalars['String']['output']>;
   trackCount?: Maybe<Scalars['Int']['output']>;
+  updatedAt?: Maybe<Scalars['String']['output']>;
 };
 
 export type Mutation = {
@@ -717,10 +745,12 @@ export type Playlist = {
   projectCount: Scalars['Int']['output'];
   projects: Array<Project>;
   savedCount: Scalars['Int']['output'];
+  shareCount: Scalars['Int']['output'];
   sortMode: PlaylistSortMode;
   tags: Array<Scalars['String']['output']>;
   trendingScore?: Maybe<Scalars['Float']['output']>;
   updatedAt: Scalars['String']['output'];
+  viewCount: Scalars['Int']['output'];
 };
 
 export type PlaylistPage = {
@@ -736,8 +766,11 @@ export type PlaylistSortMode =
   | 'STARS';
 
 export type Project = {
+  boostCount?: Maybe<Scalars['Int']['output']>;
+  contentUpdatedAt?: Maybe<Scalars['String']['output']>;
   coverImage?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['String']['output']>;
+  createdFrom?: Maybe<Scalars['String']['output']>;
   expiresAt?: Maybe<Scalars['String']['output']>;
   forkCount?: Maybe<Scalars['Int']['output']>;
   forkedFrom?: Maybe<ForkedFrom>;
@@ -745,6 +778,7 @@ export type Project = {
   /** True when at least one word carries a timestamp. */
   hasWordSync?: Maybe<Scalars['Boolean']['output']>;
   id: Scalars['ID']['output'];
+  isBoostedByMe?: Maybe<Scalars['Boolean']['output']>;
   isForkedByMe?: Maybe<Scalars['Boolean']['output']>;
   isSharedToProfileByMe?: Maybe<Scalars['Boolean']['output']>;
   isStarredByMe?: Maybe<Scalars['Boolean']['output']>;
@@ -757,11 +791,12 @@ export type Project = {
   public?: Maybe<Scalars['Boolean']['output']>;
   publicId: Scalars['String']['output'];
   readOnly?: Maybe<Scalars['Boolean']['output']>;
+  shareCount?: Maybe<Scalars['Int']['output']>;
   /**
    * Readable URL slug (artist + song name, else title). `String!` on the server,
    * optional here because most selections omit it; `projectPath` derives it when absent.
    */
-  slug?: Maybe<Scalars['String']['output']>;
+  slug: Scalars['String']['output'];
   starCount?: Maybe<Scalars['Int']['output']>;
   state?: Maybe<ProjectState>;
   syncedLineCount?: Maybe<Scalars['Int']['output']>;
@@ -773,6 +808,7 @@ export type Project = {
   uploadId?: Maybe<Scalars['ID']['output']>;
   user?: Maybe<User>;
   userId?: Maybe<Scalars['ID']['output']>;
+  viewCount?: Maybe<Scalars['Int']['output']>;
 };
 
 export type ProjectLyricsInput = {
@@ -789,11 +825,13 @@ export type ProjectLyricsInput = {
 };
 
 export type ProjectMetadata = {
+  albumArt?: Maybe<Scalars['String']['output']>;
   /** Ordered credits, primaries first. `[]` on legacy rows. */
   artists: Array<ArtistCredit>;
   description?: Maybe<Scalars['String']['output']>;
   genre?: Maybe<Scalars['String']['output']>;
   singerColors?: Maybe<Array<Scalars['String']['output']>>;
+  singers?: Maybe<Array<Scalars['String']['output']>>;
   songAlbum?: Maybe<Scalars['String']['output']>;
   /** Read-only display string derived from `artists` (`A feat. B`). */
   songArtist?: Maybe<Scalars['String']['output']>;
@@ -809,11 +847,13 @@ export type ProjectMetadata = {
 };
 
 export type ProjectMetadataInput = {
+  albumArt?: InputMaybe<Scalars['String']['input']>;
   /** Omitted keeps the stored credits; `[]` clears them. `songArtist` is no longer accepted. */
   artists?: InputMaybe<Array<ArtistCreditInput>>;
   description?: InputMaybe<Scalars['String']['input']>;
   genre?: InputMaybe<Scalars['String']['input']>;
   singerColors?: InputMaybe<Array<Scalars['String']['input']>>;
+  singers?: InputMaybe<Array<Scalars['String']['input']>>;
   songAlbum?: InputMaybe<Scalars['String']['input']>;
   songGenre?: InputMaybe<Scalars['String']['input']>;
   songLanguage?: InputMaybe<Scalars['String']['input']>;
@@ -899,7 +939,7 @@ export type PublicUser = {
   isBlockedByMe: Scalars['Boolean']['output'];
   isFollowedByMe: Scalars['Boolean']['output'];
   /** off, uploads or all: what the viewer hears about this user's projects. */
-  followNotify?: Maybe<Scalars['String']['output']>;
+  followNotify: Scalars['String']['output'];
   isFollowingMe: Scalars['Boolean']['output'];
   isVerified: Scalars['Boolean']['output'];
   lastOnlineAt?: Maybe<Scalars['String']['output']>;
@@ -911,7 +951,7 @@ export type PublicUser = {
   showFollowers: Scalars['Boolean']['output'];
   showcasePublic: Scalars['Boolean']['output'];
   showcasedBadges: Array<ShowcasedBadge>;
-  showXpProgress?: Maybe<Scalars['Boolean']['output']>;
+  showXpProgress: Scalars['Boolean']['output'];
   stats?: Maybe<UserStats>;
   streak?: Maybe<UserStreak>;
   totalForksReceived: Scalars['Int']['output'];
@@ -1151,6 +1191,7 @@ export type SectionInput = {
 
 export type Settings = {
   advanced?: Maybe<AdvancedSettings>;
+  autoStamp?: Maybe<AutoStampSettings>;
   editor?: Maybe<EditorSettings>;
   export?: Maybe<ExportSettings>;
   interface?: Maybe<InterfaceSettings>;
@@ -1224,6 +1265,7 @@ export type ShowcasedBadge = {
   id: Scalars['String']['output'];
   label: Scalars['String']['output'];
   rarity: Scalars['String']['output'];
+  rarityPct: Scalars['Float']['output'];
 };
 
 export type SpeedBoundsSettings = {
@@ -1282,71 +1324,23 @@ export type UpdateProfileInput = {
   email?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type UserPreferencesNotifications = {
-  follow: Scalars['Boolean']['output'];
-  reaction: Scalars['Boolean']['output'];
-  star: Scalars['Boolean']['output'];
-  fork: Scalars['Boolean']['output'];
-  badge_awarded: Scalars['Boolean']['output'];
-  xp_changed: Scalars['Boolean']['output'];
-  streak_warning: Scalars['Boolean']['output'];
-  followed_project: Scalars['Boolean']['output'];
-  wall_comment: Scalars['Boolean']['output'];
-  mention: Scalars['Boolean']['output'];
-  project_mention: Scalars['Boolean']['output'];
-  comment_like: Scalars['Boolean']['output'];
-  wall_report: Scalars['Boolean']['output'];
-  wall_report_reviewed: Scalars['Boolean']['output'];
-  report: Scalars['Boolean']['output'];
-  report_message: Scalars['Boolean']['output'];
-  report_reviewed: Scalars['Boolean']['output'];
-  level_up: Scalars['Boolean']['output'];
-  playlist_saved: Scalars['Boolean']['output'];
-  star_milestone: Scalars['Boolean']['output'];
-  new_device: Scalars['Boolean']['output'];
-  appeal_result: Scalars['Boolean']['output'];
-};
-
 export type UserPreferences = {
   showFollowers: Scalars['Boolean']['output'];
   onlineVisibility: Scalars['String']['output'];
   lastOnlineVisibility: Scalars['String']['output'];
   country?: Maybe<Scalars['String']['output']>;
   countryVisibility: Scalars['String']['output'];
-  lastOnlineAt?: Maybe<Scalars['String']['output']>;
   miniProfileBadgesEnabled: Scalars['Boolean']['output'];
   miniProfileBadgeIds: Array<Scalars['String']['output']>;
   showActivityHeatmap: Scalars['Boolean']['output'];
-  showXpProgress?: Maybe<Scalars['Boolean']['output']>;
-  wallEnabled?: Maybe<Scalars['Boolean']['output']>;
-  allowTags?: Maybe<Scalars['Boolean']['output']>;
-  notifications: UserPreferencesNotifications;
+  showXpProgress: Scalars['Boolean']['output'];
+  wallEnabled: Scalars['Boolean']['output'];
+  allowTags: Scalars['Boolean']['output'];
+  notifications: NotificationPreferences;
   defaultProjectPrivacy: Scalars['String']['output'];
-};
-
-export type UpdatePreferencesNotificationsInput = {
-  follow?: InputMaybe<Scalars['Boolean']['input']>;
-  reaction?: InputMaybe<Scalars['Boolean']['input']>;
-  star?: InputMaybe<Scalars['Boolean']['input']>;
-  fork?: InputMaybe<Scalars['Boolean']['input']>;
-  badge_awarded?: InputMaybe<Scalars['Boolean']['input']>;
-  xp_changed?: InputMaybe<Scalars['Boolean']['input']>;
-  streak_warning?: InputMaybe<Scalars['Boolean']['input']>;
-  followed_project?: InputMaybe<Scalars['Boolean']['input']>;
-  wall_comment?: InputMaybe<Scalars['Boolean']['input']>;
-  mention?: InputMaybe<Scalars['Boolean']['input']>;
-  project_mention?: InputMaybe<Scalars['Boolean']['input']>;
-  comment_like?: InputMaybe<Scalars['Boolean']['input']>;
-  wall_report?: InputMaybe<Scalars['Boolean']['input']>;
-  wall_report_reviewed?: InputMaybe<Scalars['Boolean']['input']>;
-  report?: InputMaybe<Scalars['Boolean']['input']>;
-  report_message?: InputMaybe<Scalars['Boolean']['input']>;
-  report_reviewed?: InputMaybe<Scalars['Boolean']['input']>;
-  level_up?: InputMaybe<Scalars['Boolean']['input']>;
-  playlist_saved?: InputMaybe<Scalars['Boolean']['input']>;
-  star_milestone?: InputMaybe<Scalars['Boolean']['input']>;
-  new_device?: InputMaybe<Scalars['Boolean']['input']>;
-  appeal_result?: InputMaybe<Scalars['Boolean']['input']>;
+  wallHoldFrom: Scalars['String']['output'];
+  wallMutedWords: Array<Scalars['String']['output']>;
+  wallWhoCanComment: Scalars['String']['output'];
 };
 
 export type UpdatePreferencesInput = {
@@ -1361,8 +1355,11 @@ export type UpdatePreferencesInput = {
   showXpProgress?: InputMaybe<Scalars['Boolean']['input']>;
   wallEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   allowTags?: InputMaybe<Scalars['Boolean']['input']>;
-  notifications?: InputMaybe<UpdatePreferencesNotificationsInput>;
+  notifications?: InputMaybe<NotificationPreferencesInput>;
   defaultProjectPrivacy?: InputMaybe<Scalars['String']['input']>;
+  wallHoldFrom?: InputMaybe<Scalars['String']['input']>;
+  wallMutedWords?: InputMaybe<Array<Scalars['String']['input']>>;
+  wallWhoCanComment?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type UpdateProjectInput = {
@@ -1380,6 +1377,7 @@ export type UpdateProjectInput = {
 
 export type UpdateSettingsInput = {
   advanced?: InputMaybe<AdvancedSettingsInput>;
+  autoStamp?: InputMaybe<AutoStampSettingsInput>;
   editor?: InputMaybe<EditorSettingsInput>;
   export?: InputMaybe<ExportSettingsInput>;
   interface?: InputMaybe<InterfaceSettingsInput>;
@@ -1419,7 +1417,6 @@ export type User = {
   ban?: Maybe<UserBan>;
   bio?: Maybe<Scalars['String']['output']>;
   country?: Maybe<Scalars['String']['output']>;
-  countryVisibility?: Maybe<Scalars['String']['output']>;
   coverImageUrl?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['String']['output']>;
   displayName?: Maybe<Scalars['String']['output']>;
@@ -1432,10 +1429,10 @@ export type User = {
   lastAccountNameChangedAt?: Maybe<Scalars['String']['output']>;
   passwordChangedAt?: Maybe<Scalars['String']['output']>;
   pendingEmail?: Maybe<Scalars['String']['output']>;
+  permissions: Array<Scalars['String']['output']>;
   previousAccountNames: Array<NameChange>;
   progression?: Maybe<UserProgression>;
   projects: Array<Project>;
-  preferences?: Maybe<UserPreferences>;
   role: Scalars['String']['output'];
   settings?: Maybe<Settings>;
   showFollowers: Scalars['Boolean']['output'];
@@ -1482,8 +1479,12 @@ export type UserProgression = {
 };
 
 export type UserStats = {
+  aiSyncedLines?: Maybe<Scalars['Float']['output']>;
+  aiWordsSynced?: Maybe<Scalars['Float']['output']>;
   karaokeLines?: Maybe<Scalars['Float']['output']>;
   minutesSynced?: Maybe<Scalars['Float']['output']>;
+  secondsSynced?: Maybe<Scalars['Float']['output']>;
+  syncedLines?: Maybe<Scalars['Float']['output']>;
   wordsSynced?: Maybe<Scalars['Float']['output']>;
 };
 
@@ -1919,3 +1920,430 @@ export type GetShareProjectIdQueryVariables = Exact<{
 
 
 export type GetShareProjectIdQuery = { getShare: { publicId: string } | null };
+
+export type BlockedUser = {
+  accountName: Scalars['String']['output'];
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  blockedAt?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+};
+
+export type ProjectViewResult = {
+  counted: Scalars['Boolean']['output'];
+  viewCount: Scalars['Int']['output'];
+};
+
+export type AutoStampSettings = {
+  applyMode?: Maybe<Scalars['String']['output']>;
+  confidenceThreshold?: Maybe<Scalars['Float']['output']>;
+  fuzzyTolerance?: Maybe<Scalars['Float']['output']>;
+};
+
+export type AutoStampSettingsInput = {
+  applyMode?: InputMaybe<Scalars['String']['input']>;
+  confidenceThreshold?: InputMaybe<Scalars['Float']['input']>;
+  fuzzyTolerance?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type NotificationPreferences = {
+  appeal_result: Scalars['Boolean']['output'];
+  badge_awarded: Scalars['Boolean']['output'];
+  comment_like: Scalars['Boolean']['output'];
+  follow: Scalars['Boolean']['output'];
+  followed_project: Scalars['Boolean']['output'];
+  fork: Scalars['Boolean']['output'];
+  level_up: Scalars['Boolean']['output'];
+  mention: Scalars['Boolean']['output'];
+  new_device: Scalars['Boolean']['output'];
+  playlist_saved: Scalars['Boolean']['output'];
+  project_mention: Scalars['Boolean']['output'];
+  reaction: Scalars['Boolean']['output'];
+  report: Scalars['Boolean']['output'];
+  report_message: Scalars['Boolean']['output'];
+  report_reviewed: Scalars['Boolean']['output'];
+  star: Scalars['Boolean']['output'];
+  star_milestone: Scalars['Boolean']['output'];
+  streak_warning: Scalars['Boolean']['output'];
+  wall_comment: Scalars['Boolean']['output'];
+  wall_report: Scalars['Boolean']['output'];
+  wall_report_reviewed: Scalars['Boolean']['output'];
+  xp_changed: Scalars['Boolean']['output'];
+};
+
+export type NotificationPreferencesInput = {
+  appeal_result?: InputMaybe<Scalars['Boolean']['input']>;
+  badge_awarded?: InputMaybe<Scalars['Boolean']['input']>;
+  comment_like?: InputMaybe<Scalars['Boolean']['input']>;
+  follow?: InputMaybe<Scalars['Boolean']['input']>;
+  followed_project?: InputMaybe<Scalars['Boolean']['input']>;
+  fork?: InputMaybe<Scalars['Boolean']['input']>;
+  level_up?: InputMaybe<Scalars['Boolean']['input']>;
+  mention?: InputMaybe<Scalars['Boolean']['input']>;
+  new_device?: InputMaybe<Scalars['Boolean']['input']>;
+  playlist_saved?: InputMaybe<Scalars['Boolean']['input']>;
+  project_mention?: InputMaybe<Scalars['Boolean']['input']>;
+  reaction?: InputMaybe<Scalars['Boolean']['input']>;
+  report?: InputMaybe<Scalars['Boolean']['input']>;
+  report_message?: InputMaybe<Scalars['Boolean']['input']>;
+  report_reviewed?: InputMaybe<Scalars['Boolean']['input']>;
+  star?: InputMaybe<Scalars['Boolean']['input']>;
+  star_milestone?: InputMaybe<Scalars['Boolean']['input']>;
+  streak_warning?: InputMaybe<Scalars['Boolean']['input']>;
+  wall_comment?: InputMaybe<Scalars['Boolean']['input']>;
+  wall_report?: InputMaybe<Scalars['Boolean']['input']>;
+  wall_report_reviewed?: InputMaybe<Scalars['Boolean']['input']>;
+  xp_changed?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type LocalizedString = {
+  en: Scalars['String']['output'];
+  es: Scalars['String']['output'];
+};
+
+export type LocalizedStringInput = {
+  en: Scalars['String']['input'];
+  es?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PublicBadgeDef = {
+  color: Scalars['String']['output'];
+  description: LocalizedString;
+  holderCount: Scalars['Int']['output'];
+  holderPct: Scalars['Float']['output'];
+  icon: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  label: LocalizedString;
+  rarity: Scalars['String']['output'];
+};
+
+export type AddictionLevelRequirements = {
+  karaokeLines?: Maybe<Scalars['Int']['output']>;
+  musicSyncedMinutes?: Maybe<Scalars['Int']['output']>;
+  publicProjects?: Maybe<Scalars['Int']['output']>;
+  starsReceived?: Maybe<Scalars['Int']['output']>;
+  syncedLines?: Maybe<Scalars['Int']['output']>;
+  totalProjects?: Maybe<Scalars['Int']['output']>;
+  wordsTimestamped?: Maybe<Scalars['Int']['output']>;
+};
+
+export type AddictionLevel = {
+  description: LocalizedString;
+  id: Scalars['String']['output'];
+  order: Scalars['Int']['output'];
+  requirements: AddictionLevelRequirements;
+  title: LocalizedString;
+};
+
+export type AddictionLevelRequirementsInput = {
+  karaokeLines?: InputMaybe<Scalars['Int']['input']>;
+  musicSyncedMinutes?: InputMaybe<Scalars['Int']['input']>;
+  publicProjects?: InputMaybe<Scalars['Int']['input']>;
+  starsReceived?: InputMaybe<Scalars['Int']['input']>;
+  syncedLines?: InputMaybe<Scalars['Int']['input']>;
+  totalProjects?: InputMaybe<Scalars['Int']['input']>;
+  wordsTimestamped?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type AddictionLevelInput = {
+  description?: InputMaybe<LocalizedStringInput>;
+  id: Scalars['String']['input'];
+  order?: InputMaybe<Scalars['Int']['input']>;
+  requirements?: InputMaybe<AddictionLevelRequirementsInput>;
+  title: LocalizedStringInput;
+};
+
+export type XpLevelThreshold = {
+  level: Scalars['Int']['output'];
+  showcaseSlots: Scalars['Int']['output'];
+  xpRequired: Scalars['Int']['output'];
+  xpToNext: Scalars['Int']['output'];
+};
+
+export type AddictionLevelUpdateInput = {
+  description?: InputMaybe<LocalizedStringInput>;
+  order?: InputMaybe<Scalars['Int']['input']>;
+  requirements?: InputMaybe<AddictionLevelRequirementsInput>;
+  title?: InputMaybe<LocalizedStringInput>;
+};
+
+export type StaffRequest = {
+  createdAt?: Maybe<Scalars['String']['output']>;
+  decisionNote?: Maybe<Scalars['String']['output']>;
+  error?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  payload?: Maybe<Scalars['String']['output']>;
+  requesterId: Scalars['ID']['output'];
+  requesterName: Scalars['String']['output'];
+  resolvedAt?: Maybe<Scalars['String']['output']>;
+  reviewerName?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  summary: Scalars['String']['output'];
+  type: Scalars['String']['output'];
+};
+
+export type RequestCapabilities = {
+  reviewable: Array<Scalars['String']['output']>;
+  submittable: Array<Scalars['String']['output']>;
+};
+
+export type RequestCounts = {
+  myPending: Scalars['Int']['output'];
+  pendingReview: Scalars['Int']['output'];
+};
+
+export type ArtistParseFlagCode =
+  | 'ambiguous_separator'
+  | 'weak_marker'
+  | 'empty_feat_segment'
+  | 'unbalanced_bracket'
+  | 'duplicate_removed';
+
+export type ArtistParseFlag = {
+  code: ArtistParseFlagCode;
+  source: Scalars['String']['output'];
+  text: Scalars['String']['output'];
+};
+
+export type ParsedArtists = {
+  artists: Array<ParsedArtistCredit>;
+  display: Scalars['String']['output'];
+  flags: Array<ArtistParseFlag>;
+  title?: Maybe<Scalars['String']['output']>;
+};
+
+export type ParsedArtistCredit = {
+  name: Scalars['String']['output'];
+  order: Scalars['Int']['output'];
+  role: ArtistRole;
+};
+
+export type WallAuthor = {
+  accountName: Scalars['String']['output'];
+  allowsTags: Scalars['Boolean']['output'];
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  staffRole?: Maybe<Scalars['String']['output']>;
+};
+
+export type WallMention = {
+  accountName: Scalars['String']['output'];
+  displayName?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+};
+
+export type WallProjectRef = {
+  coverImage?: Maybe<Scalars['String']['output']>;
+  ownerAccountName: Scalars['String']['output'];
+  publicId: Scalars['ID']['output'];
+  slug: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type WallComment = {
+  author: WallAuthor;
+  body: Scalars['String']['output'];
+  canDelete: Scalars['Boolean']['output'];
+  canEdit: Scalars['Boolean']['output'];
+  canModerate: Scalars['Boolean']['output'];
+  createdAt: Scalars['String']['output'];
+  deleted: Scalars['Boolean']['output'];
+  depth: Scalars['Int']['output'];
+  descendantCount: Scalars['Int']['output'];
+  editedAt?: Maybe<Scalars['String']['output']>;
+  heldReason?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  likeCount: Scalars['Int']['output'];
+  likedByMe: Scalars['Boolean']['output'];
+  mentions: Array<WallMention>;
+  mutedByMe: Scalars['Boolean']['output'];
+  pinned: Scalars['Boolean']['output'];
+  projectRefs: Array<WallProjectRef>;
+  reactions: Array<WallReaction>;
+  replies: Array<WallComment>;
+  replyCount: Scalars['Int']['output'];
+  replyToId?: Maybe<Scalars['ID']['output']>;
+  replyToMissing: Scalars['Boolean']['output'];
+  revisionCount: Scalars['Int']['output'];
+  status: Scalars['String']['output'];
+};
+
+export type WallReaction = {
+  count: Scalars['Int']['output'];
+  emoji: Scalars['String']['output'];
+  mine: Scalars['Boolean']['output'];
+};
+
+export type WallCommentRevision = {
+  body: Scalars['String']['output'];
+  current: Scalars['Boolean']['output'];
+  editedAt: Scalars['String']['output'];
+};
+
+export type WallLikers = {
+  total: Scalars['Int']['output'];
+  users: Array<WallAuthor>;
+};
+
+export type WallReportComment = {
+  author?: Maybe<WallAuthor>;
+  body: Scalars['String']['output'];
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  mentions: Array<WallMention>;
+  projectRefs: Array<WallProjectRef>;
+  status: Scalars['String']['output'];
+};
+
+export type WallReport = {
+  comment?: Maybe<WallReportComment>;
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  note: Scalars['String']['output'];
+  openCount: Scalars['Int']['output'];
+  reason: Scalars['String']['output'];
+  reporter?: Maybe<WallAuthor>;
+  resolvedAt?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  wallAccountName: Scalars['String']['output'];
+};
+
+export type WallReportGroup = {
+  authorActionedCount: Scalars['Int']['output'];
+  authorRestrictedUntil?: Maybe<Scalars['String']['output']>;
+  comment?: Maybe<WallReportComment>;
+  commentId: Scalars['ID']['output'];
+  latestAt: Scalars['String']['output'];
+  openCount: Scalars['Int']['output'];
+  parent?: Maybe<WallReportComment>;
+  reports: Array<WallReport>;
+  wallAccountName: Scalars['String']['output'];
+};
+
+export type MyWallReports = {
+  reports: Array<WallReport>;
+  total: Scalars['Int']['output'];
+};
+
+export type WallLikeResult = {
+  likeCount: Scalars['Int']['output'];
+  liked: Scalars['Boolean']['output'];
+};
+
+export type Wall = {
+  canComment: Scalars['Boolean']['output'];
+  commentPolicy: Scalars['String']['output'];
+  comments: Array<WallComment>;
+  enabled: Scalars['Boolean']['output'];
+  hasMore: Scalars['Boolean']['output'];
+  page: Scalars['Int']['output'];
+  pendingCount: Scalars['Int']['output'];
+  restrictedUntil?: Maybe<Scalars['String']['output']>;
+  sort: Scalars['String']['output'];
+  subscribed: Scalars['Boolean']['output'];
+  total: Scalars['Int']['output'];
+  totalAll: Scalars['Int']['output'];
+};
+
+export type ReportUser = {
+  accountName: Scalars['String']['output'];
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  staffRole?: Maybe<Scalars['String']['output']>;
+};
+
+export type ReportCommentTarget = {
+  comment: WallReportComment;
+  parent?: Maybe<WallReportComment>;
+  wallAccountName: Scalars['String']['output'];
+};
+
+export type ReportUserTarget = {
+  accountName: Scalars['String']['output'];
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  banned: Scalars['Boolean']['output'];
+  bio: Scalars['String']['output'];
+  createdAt?: Maybe<Scalars['String']['output']>;
+  displayName?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+};
+
+export type ReportProjectTarget = {
+  artist?: Maybe<Scalars['String']['output']>;
+  coverImage?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  ownerAccountName: Scalars['String']['output'];
+  public: Scalars['Boolean']['output'];
+  publicId: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type ReportPlaylistTarget = {
+  coverImage?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  ownerAccountName: Scalars['String']['output'];
+  projectCount: Scalars['Int']['output'];
+  public: Scalars['Boolean']['output'];
+};
+
+export type ReportEntry = {
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  messageCount: Scalars['Int']['output'];
+  note: Scalars['String']['output'];
+  reason: Scalars['String']['output'];
+  reporter?: Maybe<ReportUser>;
+  resolvedAt?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+};
+
+export type ReportMessage = {
+  author?: Maybe<ReportUser>;
+  body: Scalars['String']['output'];
+  createdAt: Scalars['String']['output'];
+  fromReporter: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  mine: Scalars['Boolean']['output'];
+  replies: Array<ReportMessage>;
+};
+
+export type ReportGroup = {
+  comment?: Maybe<ReportCommentTarget>;
+  latestAt: Scalars['String']['output'];
+  openCount: Scalars['Int']['output'];
+  playlist?: Maybe<ReportPlaylistTarget>;
+  project?: Maybe<ReportProjectTarget>;
+  reports: Array<ReportEntry>;
+  subject?: Maybe<ReportUser>;
+  subjectActionedCount: Scalars['Int']['output'];
+  subjectRestrictedUntil?: Maybe<Scalars['String']['output']>;
+  targetId: Scalars['ID']['output'];
+  targetType: Scalars['String']['output'];
+  user?: Maybe<ReportUserTarget>;
+  wallAccountName?: Maybe<Scalars['String']['output']>;
+};
+
+export type MyReport = {
+  comment?: Maybe<ReportCommentTarget>;
+  createdAt: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  messageCount: Scalars['Int']['output'];
+  note: Scalars['String']['output'];
+  playlist?: Maybe<ReportPlaylistTarget>;
+  project?: Maybe<ReportProjectTarget>;
+  reason: Scalars['String']['output'];
+  resolvedAt?: Maybe<Scalars['String']['output']>;
+  status: Scalars['String']['output'];
+  targetId: Scalars['ID']['output'];
+  targetType: Scalars['String']['output'];
+  user?: Maybe<ReportUserTarget>;
+};
+
+export type MyReports = {
+  reports: Array<MyReport>;
+  total: Scalars['Int']['output'];
+};

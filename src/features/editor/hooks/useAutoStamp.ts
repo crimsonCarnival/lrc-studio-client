@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { connectSocket } from '@/app/socket.client';
-import { startStamp, startStampWithFile, getStampJob, cancelStampJob, getJobAudio, type StampResultDto, type AsrJobDto } from '../services/asr.service';
+import { startStamp, startStampWithFile, getStampJob, cancelStampJob, type StampResultDto, type AsrJobDto } from '../services/asr.service';
 import type { EditorLine } from '@/features/editor/editor.types';
 import { alignLineStart } from '../services/editor.service';
 import { NoTabAudioError, recordTabAudio } from '@/features/visualizer/audio-source';
@@ -71,11 +71,10 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
   // Keyed by line id, not by position: a badge must stay on its own line after a
   // drag reorder, an insert or a delete. Position keys silently mislabelled lines.
   const [confidenceById, setConfidenceById] = useState<Map<string, ConfidenceInfo>>(new Map());
-  const [youtubeAudioUrl, setYoutubeAudioUrl] = useState<string | null>(null);
   const [recordProgress, setRecordProgress] = useState(0);
   const recordingRef = useRef<{ recording: TabRecording; end: (reason: 'cancelled' | 'interrupted') => void } | null>(null);
   const jobIdRef = useRef<string | null>(null);
-  const jobSourceRef = useRef<'youtube' | 'upload' | 'local' | null>(null);
+  const jobSourceRef = useRef<'upload' | 'local' | null>(null);
 
   const linesRef = useRef(lines);
   const phaseRef = useRef(phase);
@@ -92,13 +91,6 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
   useEffect(() => {
     phaseRef.current = phase;
   }, [phase]);
-
-  // Cleanup object URLs to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (youtubeAudioUrl) URL.revokeObjectURL(youtubeAudioUrl);
-    };
-  }, [youtubeAudioUrl]);
 
 
   // NOTE: results are index-based against the flat lines array captured at start().
@@ -203,12 +195,6 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
 
   const handleJobUpdate = useCallback((evt: Pick<AsrJobDto, 'phase' | 'result' | 'errorCode'>) => {
     if (evt.phase === 'completed' && evt.result) {
-      if (jobSourceRef.current === 'youtube' && jobIdRef.current) {
-        // Fetch the cached audio buffer in the background so WaveSurfer can render the waveform
-        getJobAudio(jobIdRef.current)
-          .then(blob => setYoutubeAudioUrl(URL.createObjectURL(blob)))
-          .catch(() => { /* non-fatal */ });
-      }
       onResult(evt.result);
     }
     else if (evt.phase === 'failed') {
@@ -260,10 +246,6 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
     jobIdRef.current = null; // a stale previous job id must never be cancelled by mistake
     jobSourceRef.current = null;
     startLinesLengthRef.current = linesRef.current.length;
-    if (youtubeAudioUrl) {
-      URL.revokeObjectURL(youtubeAudioUrl);
-      setYoutubeAudioUrl(null);
-    }
     const isWordsMode = editorMode === 'words';
     const payload = linesRef.current
       .map((line, index) => {
@@ -290,8 +272,11 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
         jobSourceRef.current = 'local';
         res = await startStampWithFile({ lines: payload, file: recordedFile, fuzzyTolerance });
       } else if (youtubeUrl) {
-        jobSourceRef.current = 'youtube';
-        res = await startStamp({ lines: payload, youtubeUrl, fuzzyTolerance });
+        // The server no longer extracts YouTube audio (it answers 422 asr_youtube_disabled),
+        // so don't spend a request on it: YouTube sources go through tab recording instead.
+        setErrorCode('asr_youtube_disabled');
+        setPhase('failed');
+        return;
       } else if (uploadId) {
         jobSourceRef.current = 'upload';
         res = await startStamp({ lines: payload, uploadId, fuzzyTolerance });
@@ -326,7 +311,7 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
       setErrorCode((err as { code?: string }).code ?? 'asr_network');
       setPhase('failed');
     }
-  }, [uploadId, getLocalFile, getYoutubeUrl, fuzzyTolerance, editorMode, handleJobUpdate, youtubeAudioUrl]);
+  }, [uploadId, getLocalFile, getYoutubeUrl, fuzzyTolerance, editorMode, handleJobUpdate]);
 
   /**
    * Fallback for when the server cannot fetch the YouTube audio: records this tab while the
@@ -456,5 +441,5 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
     });
   }, []);
 
-  return { phase, errorCode, pendingResult, confidenceById, youtubeAudioUrl, recordProgress, start, startFromTab, cancel, applyPending, discardPending, clearConfidence };
+  return { phase, errorCode, pendingResult, confidenceById, recordProgress, start, startFromTab, cancel, applyPending, discardPending, clearConfidence };
 }

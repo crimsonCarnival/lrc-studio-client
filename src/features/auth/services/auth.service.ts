@@ -2,6 +2,7 @@ import { request } from '@/app/api.client';
 import { gqlRequest } from '@/app/graphql.client';
 import { profileChanged } from '@/app/cache-sync';
 import type { User, UpdateProfileInput, UserPreferences } from '@/types';
+import type { AuthUser } from '@/features/auth/auth.types';
 
 interface RegisterParams {
   accountName: string;
@@ -9,8 +10,6 @@ interface RegisterParams {
   email: string;
   password: string;
   recaptchaToken?: string;
-  claimToken?: string;
-  publicId?: string;
   signupSource?: { ref?: string; utmSource?: string; utmMedium?: string; utmCampaign?: string };
 }
 
@@ -18,8 +17,6 @@ interface LoginParams {
   identifier: string;
   password: string;
   recaptchaToken?: string;
-  claimToken?: string;
-  publicId?: string;
 }
 
 interface ChangePasswordParams {
@@ -97,7 +94,21 @@ export const authService = {
   },
 
   async validateResetToken(token: string): Promise<unknown> {
-    return request(`/auth/reset-password/validate?token=${token}`);
+    return request(`/auth/reset-password/validate?token=${encodeURIComponent(token)}`);
+  },
+
+  async forgotPassword(email: string, recaptchaToken?: string): Promise<unknown> {
+    return request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, recaptchaToken }),
+    });
+  },
+
+  async verifyEmail(token: string): Promise<unknown> {
+    return request('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
   },
 
   async resetPassword(params: ResetPasswordParams): Promise<unknown> {
@@ -158,7 +169,7 @@ export const authService = {
   },
 
   // Heavy profile/settings fields — fetched lazily when the user opens settings.
-  async meProfile(): Promise<Partial<User> | null> {
+  async meProfile(): Promise<AuthUser | null> {
     const data = await gqlRequest<{ me: Partial<User> | null; myPreferences: UserPreferences | null }>(/* GraphQL */ `
       query MeProfile {
         me {

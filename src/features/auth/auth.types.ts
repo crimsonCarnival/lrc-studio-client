@@ -1,4 +1,4 @@
-import type { User } from '@/types/graphql';
+import type { User, UserPreferences } from '@/types/graphql';
 
 // Mirrors the server `User` (the /me shape) with auth-only extras. Partial<User>
 // because the client sometimes holds a subset (guest, optimistic updates).
@@ -9,6 +9,8 @@ export interface AuthUser extends Omit<Partial<User>, 'lastLoginAt' | 'lastIp' |
   lastIp?: string | null;
   lastDevice?: string | null;
   lastLoginAt?: string | Date | null;
+  /** Not a `User` field: `meProfile` fetches `myPreferences` alongside `me` and attaches it here. */
+  preferences?: UserPreferences;
   [key: string]: unknown;
 }
 

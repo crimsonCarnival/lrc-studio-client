@@ -27,7 +27,7 @@ export function clearAccessToken(): void {
  * Performs an authenticated REST request. Cookies (HttpOnly) and the device id
  * are always sent. On a non-2xx response it throws an {@link ApiError} carrying
  * `status`/`code`/`body`. Callers annotate the resolved type:
- *   const me = await request<MeResponse>('/auth/me');
+ *   const sessions = await request<SessionsResponse>('/auth/sessions');
  *
  * Returns `null` for 204 / empty / non-JSON success bodies.
  */

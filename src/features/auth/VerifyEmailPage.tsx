@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { useAuthContext } from '@/features/auth/useAuthContext';
+import { authService } from '@/features/auth/services/auth.service';
+import { isApiError } from '@/types';
 import { LogoLoader } from '@ui/LogoLoader';
 
 function SuccessScreen({ navigate, t }: { navigate: NavigateFunction; t: TFunction }) {
@@ -37,26 +39,20 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     if (!token || status) return;
-    const apiBase = import.meta.env.VITE_API_URL || '/api';
-    fetch(`${apiBase}/auth/verify-email`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
-    })
-      .then((res) => res.json())
+    authService.verifyEmail(token)
       .then((data) => {
-        if (data.success) {
+        if ((data as { success?: boolean } | null)?.success) {
           // Immediately flip isVerified in the in-memory auth state so the
           // notification badge on the user avatar disappears right away —
           // without this the badge persists until the next token refresh cycle.
           setUser(prev => prev ? { ...prev, isVerified: true, pendingEmail: null } : prev);
           navigate('/verify-email?status=success', { replace: true });
         } else {
-          navigate(`/verify-email?status=error&code=${data.error || 'server_error'}`, { replace: true });
+          navigate('/verify-email?status=error&code=server_error', { replace: true });
         }
       })
-      .catch(() => navigate('/verify-email?status=error&code=server_error', { replace: true }));
+      // A 400 carries the reason (`invalid_token`, `token_expired`, ...) as `error`, which request() exposes as `code`.
+      .catch((err) => navigate(`/verify-email?status=error&code=${encodeURIComponent((isApiError(err) && err.code) || 'server_error')}`, { replace: true }));
   }, [token, status, navigate, setUser]);
 
   // No token and no status — navigated here without a link, nothing to do

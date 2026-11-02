@@ -13,7 +13,7 @@ export type AsrJobDto = { jobId: string; phase: string; result?: StampResultDto[
 
 type LinePayload = { index: number; text: string };
 
-export function startStamp(params: { lines: LinePayload[]; uploadId?: string; youtubeUrl?: string; fuzzyTolerance?: number }): Promise<{ jobId: string }> {
+export function startStamp(params: { lines: LinePayload[]; uploadId: string; fuzzyTolerance?: number }): Promise<{ jobId: string }> {
   return request<{ jobId: string }>('/asr/stamp', {
     method: 'POST',
     body: JSON.stringify(params),
@@ -35,16 +35,4 @@ export function getStampJob(jobId: string): Promise<AsrJobDto> {
 
 export async function cancelStampJob(jobId: string): Promise<void> {
   await request(`/asr/jobs/${jobId}/cancel`, { method: 'POST' });
-}
-
-/**
- * Fetch the cached audio buffer from a completed YouTube ASR job.
- * Returns a Blob suitable for creating an object URL for WaveSurfer.
- */
-export async function getJobAudio(jobId: string): Promise<Blob> {
-  const res = await fetch(`/api/asr/jobs/${jobId}/audio`, {
-    headers: { Authorization: `Bearer ${(await import('@/app/api')).getAccessToken() ?? ''}` },
-  });
-  if (!res.ok) throw new Error('asr_audio_not_available');
-  return res.blob();
 }

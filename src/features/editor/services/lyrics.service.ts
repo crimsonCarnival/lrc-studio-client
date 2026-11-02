@@ -1,4 +1,5 @@
 import { request } from '@/app/api.client';
+import { isApiError } from '@/types';
 import type { EditorLine } from '@/features/editor/editor.types';
 import { toArtistInput, type ArtistCredit } from '@/features/artists/artist-credits';
 import {
@@ -12,6 +13,17 @@ import {
 
 function isNetworkError(err: unknown): boolean {
   return err instanceof TypeError || (err instanceof Error && err.message === 'Failed to fetch');
+}
+
+/**
+ * The compile routes cap lines, text and word counts to bound synchronous work on the
+ * server; a project past those caps gets a 400 `validation_error` on `lines`. The local
+ * compiler has no such limit, so the export still works. Any other validation error is a
+ * real bug and must surface.
+ */
+function exceedsServerLimits(err: unknown): boolean {
+  return isApiError(err) && err.status === 400 && err.code === 'validation_error'
+    && (err.body as { field?: string } | undefined)?.field === 'lines';
 }
 
 interface CompileLrcParams {
@@ -80,7 +92,7 @@ export const lyricsService = {
       // artist-credit validator too, silently handing back a file that
       // skipped it. Only fall back on a genuine network failure, same as
       // `parse` above.
-      if (!isNetworkError(err)) throw err;
+      if (!isNetworkError(err) && !exceedsServerLimits(err)) throw err;
       const output = localCompileLRC(lines as EditorLine[], includeTranslations, precision as 'hundredths' | 'thousandths' | undefined, metadata as Parameters<typeof localCompileLRC>[3], lineEndings as 'lf' | 'crlf' | undefined, includeSecondary, wordPrecision as string | undefined, exportTranslationIndex, true, {
         artists,
         includeFeaturedInTitle,
@@ -98,7 +110,7 @@ export const lyricsService = {
     } catch (err) {
       // Same reasoning as compileLrc: only fall back on a network failure,
       // not on a validation error the server deliberately rejected.
-      if (!isNetworkError(err)) throw err;
+      if (!isNetworkError(err) && !exceedsServerLimits(err)) throw err;
       const output = localCompileSRT(lines as EditorLine[], duration ?? 0, includeTranslations, lineEndings as 'lf' | 'crlf' | undefined, srtConfig as Parameters<typeof localCompileSRT>[4], includeSecondary, exportTranslationIndex);
       return { output, format: 'srt' };
     }
@@ -115,63 +127,5 @@ export const lyricsService = {
       const result = localInferEndTimes(lines as EditorLine[], duration ?? 0, srtConfig as Parameters<typeof localInferEndTimes>[2]);
       return { lines: result };
     }
-  },
-};
-
-// ——— Editor operations ———
-
-interface MarkParams {
-  lines: unknown[];
-  activeLineIndex: number;
-  time: number;
-  editorMode: string;
-  activeWordIndex?: number;
-  stampTarget?: string;
-  awaitingEndMark?: boolean;
-  focusedTimestamp?: number | null;
-  settings?: unknown;
-}
-
-export const editorService = {
-  async mark({ lines, activeLineIndex, time, editorMode, activeWordIndex, stampTarget, awaitingEndMark, focusedTimestamp, settings }: MarkParams): Promise<unknown> {
-    return request('/editor/mark', {
-      method: 'POST',
-      body: JSON.stringify({ lines, activeLineIndex, time, editorMode, activeWordIndex, stampTarget, awaitingEndMark, focusedTimestamp, settings }),
-    });
-  },
-
-  async bulkShift({ lines, selectedIndices, delta }: { lines: unknown[]; selectedIndices: number[]; delta: number }): Promise<unknown> {
-    return request('/editor/bulk-shift', {
-      method: 'POST',
-      body: JSON.stringify({ lines, selectedIndices, delta }),
-    });
-  },
-
-  async globalOffset({ lines, delta }: { lines: unknown[]; delta: number }): Promise<unknown> {
-    return request('/editor/global-offset', {
-      method: 'POST',
-      body: JSON.stringify({ lines, delta }),
-    });
-  },
-
-  async clearAll({ lines, isSrt, isWords }: { lines: unknown[]; isSrt?: boolean; isWords?: boolean }): Promise<unknown> {
-    return request('/editor/clear-all', {
-      method: 'POST',
-      body: JSON.stringify({ lines, isSrt, isWords }),
-    });
-  },
-
-  async clearLine({ lines, index, isSrt, isWords }: { lines: unknown[]; index: number; isSrt?: boolean; isWords?: boolean }): Promise<unknown> {
-    return request('/editor/clear-line', {
-      method: 'POST',
-      body: JSON.stringify({ lines, index, isSrt, isWords }),
-    });
-  },
-
-  async detectDuplicates({ lines, threshold }: { lines: unknown[]; threshold?: number }): Promise<unknown> {
-    return request('/editor/detect-duplicates', {
-      method: 'POST',
-      body: JSON.stringify({ lines, threshold }),
-    });
   },
 };

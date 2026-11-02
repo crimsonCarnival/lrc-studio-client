@@ -60,6 +60,21 @@ export function useAuth() {
   const loading = state.loading;
   const setUser = useCallback((u: AuthUser | null | ((prev: AuthUser | null) => AuthUser | null)) => setState(s => ({ ...s, user: typeof u === 'function' ? (u as (prev: AuthUser | null) => AuthUser | null)(s.user) : u })), []);
 
+  // REST sign-in responses carry `toPublic()`, which lacks GraphQL-only `me` fields
+  // (staffRole, showcaseSlots, lastLoginAt...). Fill them in from the same query
+  // startup uses. Non-blocking: the sign-in result is already usable.
+  const hydrateSignedInUser = useCallback(async () => {
+    try {
+      const me = await auth.meCore() as (AuthUser & { wasJustUnbanned?: boolean }) | null;
+      if (!me) return;
+      const { wasJustUnbanned: _ignored, ...fields } = me;
+      // Only into the same account: a sign-out/sign-in race must not mix two users.
+      setUser(prev => prev && prev.id === fields.id ? { ...prev, ...fields } : prev);
+    } catch {
+      // Non-critical: the REST user stays in place until the next `me` load.
+    }
+  }, [setUser]);
+
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isRefreshingRef = useRef(false);
   // Holds the single in-flight refresh promise so concurrent callers coalesce.
@@ -275,9 +290,10 @@ export function useAuth() {
     setAuthFlag(true);
     setState(s => ({ ...s, user: result.user, loading: false }));
     scheduleRefresh();
+    void hydrateSignedInUser();
 
     return result;
-  }, [scheduleRefresh, executeRecaptcha]);
+  }, [scheduleRefresh, executeRecaptcha, hydrateSignedInUser]);
 
   // Variant of login that holds the user state — caller must call commitLogin() to finalise.
   // Used by the password login flow so AuthPage can show the "save info?" prompt first.
@@ -305,7 +321,8 @@ export function useAuth() {
       // Single atomic update: set user + clear heldLoginResult in one render cycle
       return { user: (s.heldLoginResult as { user: AuthUser }).user, loading: false, heldLoginResult: null };
     });
-  }, []);
+    void hydrateSignedInUser();
+  }, [hydrateSignedInUser]);
 
   const register = useCallback(async ({ accountName, email, password }) => {
     let recaptchaToken: string | undefined = undefined;
@@ -320,9 +337,10 @@ export function useAuth() {
     setAuthFlag(true);
     setState(s => ({ ...s, user: result.user, loading: false }));
     scheduleRefresh();
+    void hydrateSignedInUser();
 
     return result;
-  }, [scheduleRefresh, executeRecaptcha]);
+  }, [scheduleRefresh, executeRecaptcha, hydrateSignedInUser]);
 
   const registerAndHold = useCallback(async ({ accountName, email, password, displayName }) => {
     let recaptchaToken: string | undefined = undefined;
@@ -588,6 +606,7 @@ export function useAuth() {
       setAuthFlag(true);
       setState(s => ({ ...s, user: result.user, loading: false }));
       scheduleRefresh();
+      void hydrateSignedInUser();
 
       return result.user;
     } catch (err) {
@@ -604,7 +623,7 @@ export function useAuth() {
       }
       throw err;
     }
-  }, [scheduleRefresh]);
+  }, [scheduleRefresh, hydrateSignedInUser]);
 
   // Re-attempt a silent refresh whenever the tab becomes visible again.
   // The setTimeout-based scheduleRefresh can fire late (or not at all) if

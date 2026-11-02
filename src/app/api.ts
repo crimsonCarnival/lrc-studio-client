@@ -13,7 +13,7 @@ export { setAccessToken, getAccessToken, clearAccessToken, request, setAuthFlag 
 import { authService } from '@/features/auth/services/auth.service.js';
 import { settingsService } from '@/features/settings/services/settings.service.js';
 import { projectsService } from '@/features/projects/services/projects.service.js';
-import { lyricsService, editorService } from '@/features/editor/services/lyrics.service';
+import { lyricsService } from '@/features/editor/services/lyrics.service';
 import { uploadsService } from '@/features/projects/services/uploads.service.js';
 import { googleService } from '@/features/auth/services/google.service.js';
 import { adminService } from '@/features/admin/services/admin.service.js';
@@ -25,7 +25,6 @@ export const auth = authService;
 export const settings = settingsService;
 export const projects = projectsService;
 export const lyrics = lyricsService;
-export const editor = editorService;
 export const uploads = uploadsService;
 export const google = googleService;
 export const admin = adminService;
@@ -36,7 +35,6 @@ export const api = {
   settings,
   projects,
   lyrics,
-  editor,
   uploads,
   google,
   admin,

@@ -9,7 +9,7 @@ import { SettingsContext } from './settings-context-value';
 import { settings as settingsApi, getAccessToken } from '@/app/api';
 import type { AppSettings, SettingsContextValue } from './settings.types';
 import i18next from 'i18next';
-import { deepMerge } from './settings-merge';
+import { deepMerge, pushSettingsChanges } from './settings-merge';
 
 const STORAGE_KEY = 'lrc-syncer-settings';
 
@@ -29,6 +29,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   // Track the last version saved to server to compute diffs
   const lastSavedToServerRef = useRef<any>(null);
   const isSyncingRef = useRef(false);
+  // Last failure already logged, so a retry that fails the same way does not log again.
+  const lastWarnedFailureRef = useRef('');
   const isFirstRender = useRef(true);
   const computeChangesRef = useRef<((original: any, current: any) => any) | null>(null);
 
@@ -109,12 +111,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
       // Only send if there are actual changes
       if (Object.keys(changes).length > 0) {
-        // Use PATCH for partial updates (changed fields only)
-        settingsApi.patch(changes).then(() => {
-          // Update the last saved snapshot on success
-          lastSavedToServerRef.current = structuredClone(settings);
-        }).catch(() => {
-          // Silently fail — localStorage is the source of truth
+        // Changed fields only. A rejected key must not block the rest, so failures keep
+        // their old value in the snapshot and are re-sent by the next diff.
+        void pushSettingsChanges(changes, settings, lastSavedToServerRef.current, settingsApi.patch).then(({ snapshot, failed }) => {
+          lastSavedToServerRef.current = snapshot;
+          const failure = failed.join(',');
+          if (failure && failure !== lastWarnedFailureRef.current) {
+            console.warn('Settings not saved to the server, will retry on the next change:', failed);
+          }
+          lastWarnedFailureRef.current = failure;
         });
       }
     }, 300);

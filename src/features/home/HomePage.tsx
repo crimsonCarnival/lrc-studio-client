@@ -91,17 +91,18 @@ export default function HomePage() {
     setEditingProject(project as HomeProject);
   }, []);
 
-  const handleDelete = useCallback((publicId: string) => {
+  const handleDelete = useCallback(async (publicId: string) => {
     setDeletingId(publicId);
     try {
-      projects.remove(publicId);
+      await projects.remove(publicId);
       setItems((prev) => prev.filter((p) => p.publicId !== publicId));
     } catch {
-      // ignore — the row stays and the user can retry
+      // The row stays, so the user can retry.
+      toast.error(t('project.deleteError'));
     } finally {
       setDeletingId(null);
     }
-  }, []);
+  }, [t]);
 
   const fetchProjects = useCallback(async () => {
     if (!user) {

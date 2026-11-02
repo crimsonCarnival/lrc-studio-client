@@ -7,6 +7,7 @@ import { projects, uploads, getAccessToken, auth } from '@/app/api';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import { authEvents } from '@/shared/utils/auth-events';
+import { isAuthError } from '@/types';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 
 const _defaultTzFormatter = new Intl.DateTimeFormat();
@@ -347,20 +348,26 @@ export function useManualSave({
             await projects.patch(activepublicIdRef.current, manualPatch);
             updateServerSnapshot(lastServerSnapshotRef, { title: finalTitle, metadata: finalMetadata, state: patchState, editorMode, lines: payload.lines, uploadId: uploadIdToSave ?? undefined });
             toast.success(t('project.saved'), { id: 'manual-save-ok', duration: 2000 });
-          } catch (err) {
+          } catch (firstErr) {
+            let err = firstErr;
             // 401 / 403: access token expired — attempt one silent refresh then retry.
-            if (err?.status === 401 || err?.status === 403 || (err?.graphqlErrors && err.message?.includes('Not authorized'))) {
+            if (isAuthError(err)) {
               try {
                 await auth.refresh();
+              } catch {
+                // Refresh failed — emit expiry so useAuth handles logout + toast
+                authEvents.emit('token:expired');
+                return;
+              }
+              try {
                 // Retry the save with the fresh token (cookies are sent automatically)
                 await projects.patch(activepublicIdRef.current, manualPatch);
                 updateServerSnapshot(lastServerSnapshotRef, { title: finalTitle, metadata: finalMetadata, state: patchState, editorMode: payload.editorMode, lines: payload.lines, uploadId: uploadIdToSave ?? undefined });
                 toast.success(t('project.saved'), { id: 'manual-save-ok', duration: 2000 });
                 return; // retry succeeded
-              } catch {
-                // Refresh also failed — emit expiry so useAuth handles logout + toast
-                authEvents.emit('token:expired');
-                return;
+              } catch (retryErr) {
+                // The session is fine, so this is a real refusal (e.g. not the owner): report it below.
+                err = retryErr;
               }
             }
             console.error('[Manual Save] Server error:', err);

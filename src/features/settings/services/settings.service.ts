@@ -23,7 +23,12 @@ const GET_SETTINGS = /* GraphQL */ `
         showShiftAll
         shiftAllAmount
         showLineNumbers
+        preserveEmptyLines
+        playerPosition
         timestampPrecision
+        syncFlashDuration
+        lyricsSearchSpeed
+        overlapThreshold
         srt { defaultSubtitleDuration minSubtitleGap snapToNextLine }
         history { limit groupingThresholdMs }
         display {
@@ -55,7 +60,9 @@ const GET_SETTINGS = /* GraphQL */ `
         fontSize
         fontWeight
         spacing
+        theme
         previewAlignment
+        focusContrast
         focusMode
         layoutSwap
         playerTop
@@ -73,9 +80,11 @@ const GET_SETTINGS = /* GraphQL */ `
       }
       advanced {
         autoSave { enabled timeInterval }
+        autoSaveIndicator
         confirmDestructive
         timezone
       }
+      autoStamp { confidenceThreshold fuzzyTolerance applyMode }
     }
   }
 `;

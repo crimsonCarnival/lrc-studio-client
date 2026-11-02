@@ -475,7 +475,7 @@ export default function Editor({
       className={`relative flex-shrink-0 border-zinc-800 px-4 sm:px-6 ${playerPosition === 'top' ? 'border-b pt-1 pb-3' : 'border-t pt-3.5 pb-3'
         }`}
     >
-      <PlayerControls variant="editor" youtubeAudioUrl={autoStamp.youtubeAudioUrl} />
+      <PlayerControls variant="editor" />
       {(() => {
         const symbols = KEY_SYMBOLS as Record<string, string>;
         const rangeKey = settings.shortcuts?.rangeSelect?.[0] || 'Shift';
