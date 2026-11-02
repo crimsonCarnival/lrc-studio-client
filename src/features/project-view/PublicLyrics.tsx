@@ -1,4 +1,3 @@
-import { ContourLines } from '@ui/ContourLines';
 import { useRef, useEffect, useCallback, useMemo, forwardRef, useState, Fragment } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
@@ -743,7 +742,6 @@ export default function PublicLyrics({
   if (!showFull) {
     return (
       <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
-        <ContourLines />
         {alignmentControl}
         {sectionHeader}
         <div className="lrc-scroll relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 pt-2 pb-6 lg:px-14 lg:pt-3 lg:pb-8">
@@ -785,7 +783,6 @@ export default function PublicLyrics({
     // instead of the viewport: on a phone the stage is a fraction of the screen, and 50dvh of
     // padding pushed every line out of it before playback had moved the scroll.
     <div className="relative flex flex-1 min-h-0 flex-col overflow-hidden [container-type:size]">
-      <ContourLines />
       {alignmentControl}
       {sectionHeader}
 
