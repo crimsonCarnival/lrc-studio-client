@@ -181,6 +181,9 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
 
   const body = serializeTags(text.trim(), entities);
   const tooLong = body.length > WALL_MAX_LENGTH;
+  // Editing: nothing to save until the body differs from what the box opened with.
+  const [initialBody] = useState(() => (initialValue ? serializeTags(initialValue.text.trim(), initialValue.entities) : null));
+  const unchanged = initialBody !== null && body === initialBody;
 
   const pick = (s: Suggestion) => {
     if (!trigger) return;
@@ -196,7 +199,7 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
   };
 
   const submit = async () => {
-    if (!body || tooLong || busy) return;
+    if (!body || tooLong || busy || unchanged) return;
     if (await onSubmit(body)) {
       setText('');
       setEntities([]);
@@ -346,7 +349,7 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {onCancel && <Button type="button" variant="ghost" size="sm" onClick={onCancel}>{t('common.cancel')}</Button>}
-          <Button type="button" size="sm" disabled={busy || !body || tooLong} onClick={submit}>
+          <Button type="button" size="sm" disabled={busy || !body || tooLong || unchanged} onClick={submit}>
             {busy ? <LogoLoader size={12} /> : submitLabel}
           </Button>
         </div>

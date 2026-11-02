@@ -245,7 +245,7 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
           ) : (
             <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-zinc-300"><CommentBody comment={comment} /></p>
           )}
-          <div className="mt-1 -ml-1.5 flex items-center gap-1 text-xs text-zinc-500">
+          <div className={cn('mt-1 -ml-1.5 flex items-center gap-1 text-xs text-zinc-500', editingThis && 'hidden')}>
             <span className="flex items-center">
               <Tip content={!w.signedIn ? t('profile.wall.signInToLike') : t(comment.likedByMe ? 'profile.wall.unlike' : 'profile.wall.like')}>
                 <Button
@@ -298,7 +298,7 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
         </div>
         {/* The corner: pin (the wall's owner, top-level only), then everyone's ⋯ menu. A
             deleted comment has nothing left to act on. */}
-        <div className={cn('absolute right-2 top-2 flex items-center gap-1 text-xs', comment.deleted && 'hidden')}>
+        <div className={cn('absolute right-2 top-2 flex items-center gap-1 text-xs', (comment.deleted || editingThis) && 'hidden')}>
           {confirmingDelete ? (
             <>
               <span className="px-1 text-destructive">{t('profile.wall.confirmDelete')}</span>

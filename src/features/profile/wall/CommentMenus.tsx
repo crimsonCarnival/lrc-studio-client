@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { LogoLoader } from '@ui/LogoLoader';
@@ -17,6 +18,8 @@ import type { WallAuthor } from './wall.service';
 const ACTION_BUTTON = 'rounded-full transition-[color,background-color,transform] active:scale-90';
 // Corner actions stay quiet until the row is hovered or focused, as in CommentNode.
 const CORNER_BUTTON = cn(ACTION_BUTTON, 'text-zinc-600 opacity-60 group-hover/row:opacity-100 focus-visible:opacity-100');
+
+const COPIED_MS = 900;
 
 /** Copies a comment's text (tags as their readable @names), with a toast either way. */
 function useCopyText(text: string) {
@@ -47,12 +50,24 @@ export function CommentMenu({ commentId, copyText, canEdit, canReport, onEdit, o
   const [open, setOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
 
+  const [copied, setCopied] = useState(false);
+
   const pick = (run: () => void) => () => { setOpen(false); run(); };
   const copy = useCopyText(copyText);
+  // Copy keeps the menu open just long enough to see its icon turn into a check.
+  const copyAndConfirm = () => {
+    copy();
+    setCopied(true);
+    window.setTimeout(() => setOpen(false), COPIED_MS);
+  };
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) setCopied(false);
+  };
 
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <Tip content={t('profile.wall.moreActions')}>
           <PopoverTrigger asChild>
             <Button
@@ -62,13 +77,13 @@ export function CommentMenu({ commentId, copyText, canEdit, canReport, onEdit, o
               aria-label={t('profile.wall.moreActions')}
               className={cn(CORNER_BUTTON, 'hover:text-zinc-100', open && 'opacity-100 text-zinc-100')}
             >
-              <Icon name="more_horiz" size={15} />
+              <MorphIcon name={open ? 'more_vert' : 'more_horiz'} size={15} decorative />
             </Button>
           </PopoverTrigger>
         </Tip>
         <PopoverContent align="end" className="w-48 lg:min-w-48">
-          <PopoverItem onClick={pick(copy)} className="text-sm">
-            <Icon name="content_copy" size={16} /> {t('profile.wall.copy')}
+          <PopoverItem onClick={copyAndConfirm} className="text-sm">
+            <MorphIcon name={copied ? 'check' : 'content_copy'} size={16} decorative /> {t('profile.wall.copy')}
           </PopoverItem>
           {canEdit && (
             <PopoverItem onClick={pick(onEdit)} className="text-sm">
