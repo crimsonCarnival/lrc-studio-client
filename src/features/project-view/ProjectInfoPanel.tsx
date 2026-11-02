@@ -355,12 +355,6 @@ export default function ProjectInfoPanel({
               <Icon name="visibility" size={14} />
               {t('projectView.viewCount', { count: project?.viewCount ?? 0 })}
             </span>
-            {isOwner && (
-              <span className="flex shrink-0 items-center gap-1.5 font-mono text-xs font-medium text-subtle">
-                <Icon name="call_split" size={14} />
-                {t('projectView.forkCount', { count: project?.forkCount ?? 0 })}
-              </span>
-            )}
           </div>
         )}
         {viewersSlot && <div>{viewersSlot}</div>}

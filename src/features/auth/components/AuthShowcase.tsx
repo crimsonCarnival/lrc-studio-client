@@ -70,7 +70,6 @@ function SignUpShowcase({ t, displayName, accountName }: Omit<SignUpProps, 'vari
           </div>
           <div className="flex gap-4 text-[13px] font-semibold text-foreground/80">
             <span className="inline-flex items-center gap-1.5"><Icon name="star" size={14} />0</span>
-            <span className="inline-flex items-center gap-1.5"><Icon name="call_split" size={14} />0</span>
             <span className="inline-flex items-center gap-1.5"><Icon name="visibility" size={14} />0</span>
           </div>
           <p className="flex items-center gap-2 text-sm font-semibold text-zinc-100 min-w-0">

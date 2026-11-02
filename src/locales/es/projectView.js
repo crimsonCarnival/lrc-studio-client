@@ -77,8 +77,6 @@ export default {
   shareModeReshare: "Compartir de nuevo",
   shareModeEditHint: "Cambia la nota de lo que ya compartiste. Tus seguidores no lo vuelven a ver.",
   shareModeReshareHint: "Lo publica de nuevo: arriba en tu perfil y en el inicio de tus seguidores.",
-  forkCount_one: "{{count}} bifurcación",
-  forkCount_other: "{{count}} bifurcaciones",
   shareConfirm: "Compartir",
   hoverCard: {
     label: "Proyecto: {{title}}",

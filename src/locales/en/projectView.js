@@ -77,8 +77,6 @@ export default {
   shareModeReshare: "Share again",
   shareModeEditHint: "Changes the note on your existing share. Your followers are not notified again.",
   shareModeReshareHint: "Posts it again: back to the top of your profile and into your followers' feeds.",
-  forkCount_one: "{{count}} fork",
-  forkCount_other: "{{count}} forks",
   shareConfirm: "Share",
   hoverCard: {
     label: "Project: {{title}}",

@@ -92,7 +92,6 @@ export default {
   viewPublic: "View public page",
   statLinesTip: "Lines synced",
   statStarsTip: "Stars received",
-  statForksTip: "Times forked",
   statViewsTip: "Public page views",
   statSharesTip: "Times shared",
   searchProjects: [

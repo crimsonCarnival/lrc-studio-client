@@ -258,12 +258,6 @@ function ProjectCard({
                   {project.starCount}
                 </span>
               )}
-              {(project.forkCount ?? 0) > 0 && (
-                <span className="text-xs text-zinc-500 flex items-center gap-1">
-                  <Icon name="call_split" size={12} />
-                  {project.forkCount}
-                </span>
-              )}
               {(project.viewCount ?? 0) > 0 && (
                 <span className="text-xs text-zinc-500 flex items-center gap-1">
                   <Icon name="visibility" size={12} />
@@ -432,9 +426,6 @@ function ProjectCard({
           <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs font-medium text-subtle">
             <Tip content={t('home.statStarsTip')}>
               <span className="flex cursor-default items-center gap-1"><Icon name="star" size={13} />{project.starCount ?? 0}</span>
-            </Tip>
-            <Tip content={t('home.statForksTip')}>
-              <span className="flex cursor-default items-center gap-1"><Icon name="call_split" size={13} />{project.forkCount ?? 0}</span>
             </Tip>
             <Tip content={t('home.statViewsTip')}>
               <span className="flex cursor-default items-center gap-1"><Icon name="visibility" size={13} />{project.viewCount ?? 0}</span>
