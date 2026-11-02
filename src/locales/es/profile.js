@@ -371,6 +371,7 @@ export default {
     title: 'Muro',
     placeholder: 'Deja un comentario',
     placeholderOwn: 'Publica en tu muro',
+    deletedComment: 'Este comentario fue eliminado',
     composerHint: 'Escribe @ para etiquetar a alguien, o @nombre/ para etiquetar uno de sus proyectos. Ctrl+Enter publica.',
     replyPlaceholder: 'Responder a {{name}}',
     post: 'Comentar',

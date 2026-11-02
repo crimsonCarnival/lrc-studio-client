@@ -51,6 +51,8 @@ export interface WallComment {
   replyCount: number;
   descendantCount: number;
   replies: WallComment[];
+  /** Its author deleted it; kept, without text or author, so its replies keep their place. */
+  deleted: boolean;
 }
 
 export interface Wall {
@@ -74,7 +76,7 @@ export const WALL_MAX_DEPTH = 2;
 export const WALL_MAX_LENGTH = 500;
 
 const COMMENT_FIELDS = `id body createdAt editedAt depth canDelete canEdit pinned likeCount likedByMe
-  replyToId replyToMissing replyCount descendantCount
+  replyToId replyToMissing replyCount descendantCount deleted
   author { id accountName displayName avatarUrl staffRole allowsTags }
   mentions { id accountName displayName }
   projectRefs { publicId title slug coverImage ownerAccountName }`;

@@ -145,7 +145,7 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
       <div
         role="group"
         tabIndex={0}
-        aria-label={t('profile.wall.commentBy', { name })}
+        aria-label={comment.deleted ? t('profile.wall.deletedComment') : t('profile.wall.commentBy', { name })}
         onClick={handleRowClick}
         onKeyDown={handleRowKey}
         onMouseEnter={() => w.setHoverPath(pathHere)}
@@ -174,14 +174,41 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
             />
           </>
         )}
-        <UserHoverCard accountName={author.accountName} userId={author.id}>
-          <Link to={profilePath(author.accountName)} className="block shrink-0">
-            {author.avatarUrl
-              ? <img src={author.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-8 rounded-full object-cover" />
-              : <InitialsAvatar name={name} handle={author.accountName} className="size-8 rounded-full text-xs" />}
-          </Link>
-        </UserHoverCard>
+        {comment.deleted ? (
+          // No author on a deleted comment: an empty, dashed avatar keeps the thread lines aligned.
+          <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full border border-dashed border-zinc-700 text-zinc-600">
+            <Icon name="chat_bubble" size={14} />
+          </span>
+        ) : (
+          <UserHoverCard accountName={author.accountName} userId={author.id}>
+            <Link to={profilePath(author.accountName)} className="block shrink-0">
+              {author.avatarUrl
+                ? <img src={author.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-8 rounded-full object-cover" />
+                : <InitialsAvatar name={name} handle={author.accountName} className="size-8 rounded-full text-xs" />}
+            </Link>
+          </UserHoverCard>
+        )}
         <div className="min-w-0 flex-1">
+          {comment.deleted ? (
+            <div className="flex min-h-8 items-center gap-1">
+              <p className="text-sm italic text-zinc-500">{t('profile.wall.deletedComment')}</p>
+              {comment.replyCount > 0 && !collapsed && (
+                <Tip content={t('profile.wall.hideReplies')}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={t('profile.wall.hideReplies')}
+                    aria-expanded
+                    onClick={() => w.toggleCollapsed(comment.id)}
+                    className={cn(ACTION_BUTTON, 'text-zinc-500 hover:text-zinc-100')}
+                  >
+                    <Icon name="expand_less" size={15} />
+                  </Button>
+                </Tip>
+              )}
+            </div>
+          ) : (<>
           {comment.pinned && (
             <p className="mb-0.5 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
               <Icon name="push_pin" size={12} filled /> {t('profile.wall.pinned')}
@@ -267,9 +294,11 @@ export default function CommentNode({ comment, parentId = null, siblingIds = [],
               </Tip>
             )}
           </div>
+          </>)}
         </div>
-        {/* The corner: pin (the wall's owner, top-level only), then everyone's ⋯ menu. */}
-        <div className="absolute right-2 top-2 flex items-center gap-1 text-xs">
+        {/* The corner: pin (the wall's owner, top-level only), then everyone's ⋯ menu. A
+            deleted comment has nothing left to act on. */}
+        <div className={cn('absolute right-2 top-2 flex items-center gap-1 text-xs', comment.deleted && 'hidden')}>
           {confirmingDelete ? (
             <>
               <span className="px-1 text-destructive">{t('profile.wall.confirmDelete')}</span>

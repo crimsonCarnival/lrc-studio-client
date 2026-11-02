@@ -373,6 +373,7 @@ export default {
     placeholder: 'Leave a comment',
     placeholderOwn: 'Post on your wall',
     replyPlaceholder: 'Reply to {{name}}',
+    deletedComment: 'This comment has been deleted',
     composerHint: 'Type @ to tag someone, or @name/ to tag one of their projects. Ctrl+Enter posts.',
     post: 'Comment',
     reply: 'Reply',
