@@ -80,6 +80,10 @@ export default {
   forkCount_one: "{{count}} bifurcación",
   forkCount_other: "{{count}} bifurcaciones",
   shareConfirm: "Compartir",
+  hoverCard: {
+    label: "Proyecto: {{title}}",
+    loading: "Cargando proyecto",
+  },
   zoom: {
     label: "Tamaño de la letra",
     current: "Tamaño de la letra {{value}}",

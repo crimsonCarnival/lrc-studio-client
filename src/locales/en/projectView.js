@@ -80,6 +80,10 @@ export default {
   forkCount_one: "{{count}} fork",
   forkCount_other: "{{count}} forks",
   shareConfirm: "Share",
+  hoverCard: {
+    label: "Project: {{title}}",
+    loading: "Loading project",
+  },
   zoom: {
     label: "Lyrics size",
     current: "Lyrics size {{value}}",

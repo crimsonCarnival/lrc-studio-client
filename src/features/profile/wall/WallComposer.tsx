@@ -68,6 +68,7 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
   const { t } = useTranslation();
   const { user } = useAuthContext();
   const listId = useId();
+  const hintId = useId();
   const ref = useRef<HTMLTextAreaElement>(null);
 
   const startText = initialValue?.text ?? (initialTags?.length ? `${initialTags.map((e) => e.display).join(' ')} ` : '');
@@ -242,7 +243,17 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
             return (
               <span key={r.start}>
                 {before}
-                <span className={r.kind === 'user' ? 'text-primary' : 'rounded bg-zinc-700/70 text-zinc-100 shadow-[0_0_0_1px_var(--color-zinc-600)]'}>{tag}</span>
+                {r.kind === 'user' ? (
+                  <span className="text-primary">{tag}</span>
+                ) : (
+                  // Colour, background and a box-shadow ring only: anything that takes width
+                  // (padding, borders) would shift the mirror off the textarea's own text.
+                  // The `@owner/` prefix is quieter than the title it leads to.
+                  <span className="rounded-sm bg-primary-soft text-primary-ink shadow-[0_0_0_2px_var(--color-primary-soft)] [box-decoration-break:clone]">
+                    <span className="opacity-60">{tag.slice(0, tag.indexOf('/') + 1)}</span>
+                    {tag.slice(tag.indexOf('/') + 1)}
+                  </span>
+                )}
               </span>
             );
           })}
@@ -266,6 +277,7 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
           placeholder={placeholder}
           rows={2}
           aria-label={placeholder}
+          aria-describedby={hintId}
           role="combobox"
           aria-autocomplete="list"
           aria-expanded={open}
@@ -324,6 +336,7 @@ export default function WallComposer({ placeholder, submitLabel, autoFocus, busy
           </ul>
         )}
       </div>
+      <p id={hintId} className="text-xs text-subtle">{t('profile.wall.composerHint')}</p>
       <div className="flex items-center justify-between gap-2">
         {/* How the tagged projects will show once posted. */}
         <div className="flex min-w-0 flex-wrap items-center gap-1">
