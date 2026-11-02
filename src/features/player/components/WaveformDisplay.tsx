@@ -439,9 +439,10 @@ const WaveformDisplay = ({
         )}
       </div>
 
-      {/* Ruler with labelled ticks */}
+      {/* Ruler with labelled ticks. Below lg the labels run into each other (a long song puts
+          ten of them across a phone), and the player shows the clock underneath anyway. */}
       {isReady && duration > 0 && (
-        <div className="w-full h-5 relative select-none">
+        <div className="w-full h-5 relative select-none max-lg:hidden">
           {rulerTicks.map(({ t, pct }) => (
             <div
               key={t}
