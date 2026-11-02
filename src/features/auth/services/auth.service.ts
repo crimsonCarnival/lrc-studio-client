@@ -2,6 +2,7 @@ import { request } from '@/app/api.client';
 import { gqlRequest } from '@/app/graphql.client';
 import { profileChanged } from '@/app/cache-sync';
 import type { User, UpdateProfileInput, UserPreferences } from '@/types';
+import type { AuthUser } from '@/features/auth/auth.types';
 
 interface RegisterParams {
   accountName: string;
@@ -158,7 +159,7 @@ export const authService = {
   },
 
   // Heavy profile/settings fields — fetched lazily when the user opens settings.
-  async meProfile(): Promise<Partial<User> | null> {
+  async meProfile(): Promise<AuthUser | null> {
     const data = await gqlRequest<{ me: Partial<User> | null; myPreferences: UserPreferences | null }>(/* GraphQL */ `
       query MeProfile {
         me {

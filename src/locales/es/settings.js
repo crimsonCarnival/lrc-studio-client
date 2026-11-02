@@ -51,7 +51,6 @@ export default {
     connected: "Google Conectado",
     connectDesc: "Vincula tu cuenta de Google para iniciar sesión fácilmente",
     connectedDesc: "Usado para iniciar sesión y recuperación de cuenta",
-    lastUsed: "Usado: {{when}}",
     connectFailed: "Error al conectar Google",
     disconnected: "Cuenta de Google desconectada",
     accountInUse: "Esta cuenta de Google ya está vinculada a otra cuenta",

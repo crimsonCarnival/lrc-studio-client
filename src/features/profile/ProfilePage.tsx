@@ -353,7 +353,7 @@ export default function ProfilePage() {
       await setFollowNotify(accountName!, level);
       toast.success(t(`profile.followNotify.saved_${level}`));
     } catch {
-      setProfile(prev => prev ? { ...prev, followNotify: before } : prev);
+      setProfile(prev => prev && before ? { ...prev, followNotify: before } : prev);
       toast.error(t('profile.followNotify.error'));
     }
   }, [accountName, profile?.followNotify, setProfile, t]);

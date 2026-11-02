@@ -51,7 +51,6 @@ export default {
     connected: "Google Connected",
     connectDesc: "Link your Google account for easy sign-in",
     connectedDesc: "Used for sign-in and account recovery",
-    lastUsed: "Last used: {{when}}",
     connectFailed: "Failed to connect Google",
     disconnected: "Google account disconnected",
     accountInUse: "This Google account is already linked to another account",
