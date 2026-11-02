@@ -19,7 +19,6 @@ interface MiniProject {
   lineCount: number | null;
   hasWordSync: boolean | null;
   starCount: number | null;
-  forkCount: number | null;
   viewCount: number | null;
   metadata: { songName: string | null; songArtist: string | null; artists: ArtistCredit[] | null } | null;
   upload: { coverImage: string | null; duration: number | null } | null;
@@ -30,7 +29,7 @@ async function fetchMiniProject(publicId: string): Promise<MiniProject | null> {
   const data = await gqlRequest<{ publicProject: MiniProject | null }>(/* GraphQL */ `
     query MiniProject($publicId: String!) {
       publicProject(publicId: $publicId) {
-        publicId slug title coverImage lineCount hasWordSync starCount forkCount viewCount
+        publicId slug title coverImage lineCount hasWordSync starCount viewCount
         metadata { songName songArtist artists { name role order } }
         upload { coverImage duration }
         user { accountName displayName avatarUrl }
@@ -167,7 +166,6 @@ export function ProjectHoverCard({ publicId, children }: { publicId: string; chi
               </div>
               <div className="flex items-center gap-3 border-t border-zinc-800 pt-2.5 font-mono text-xs tabular-nums text-zinc-400">
                 <span className="flex items-center gap-1" title={t('projectView.statStars')}><Icon name="star" size={13} />{project.starCount ?? 0}</span>
-                <span className="flex items-center gap-1" title={t('projectView.statForks')}><Icon name="call_split" size={13} />{project.forkCount ?? 0}</span>
                 <span className="flex items-center gap-1" title={t('projectView.statViews')}><Icon name="visibility" size={13} />{project.viewCount ?? 0}</span>
               </div>
             </>

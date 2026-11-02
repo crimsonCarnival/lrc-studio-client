@@ -1,5 +1,6 @@
 import { request } from '@/app/api.client';
 import { withSudo } from './sudo';
+import type { PendingAppeal } from '../admin.types';
 
 interface BanOptions {
   reason?: string;
@@ -25,6 +26,10 @@ export const adminService = {
   // Destructive actions are wrapped in withSudo: if the server demands a fresh
   // sudo grant (403 sudo_required), the password prompt fires and the call is
   // retried automatically. (F24)
+  async getPendingAppeals(): Promise<{ appeals: PendingAppeal[]; total: number }> {
+    return (await request<{ appeals: PendingAppeal[]; total: number }>('/admin/appeals')) ?? { appeals: [], total: 0 };
+  },
+
   async banUser(userId: string, { reason, bannedUntil, banIp, banDevice }: BanOptions): Promise<unknown> {
     return withSudo(() => request(`/admin/users/${userId}/ban`, {
       method: 'POST',

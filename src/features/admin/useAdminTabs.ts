@@ -4,6 +4,7 @@ import { useAuthContext } from '@/features/auth/useAuthContext';
 import { userHasPermission, type Permission } from '@/features/auth/permissions';
 import { requestsApi } from './services/requests.service';
 import { useReportCount } from './report-count';
+import { useAppeals } from './appeals-store';
 import type { AdminTabId } from './admin-nav';
 
 export interface AdminTab {
@@ -19,15 +20,25 @@ export function useAdminTabs(): AdminTab[] {
   const { t } = useTranslation();
   const { user: currentUser } = useAuthContext();
   const isSuperadmin = currentUser?.role === 'superadmin';
-  const openReports = useReportCount(userHasPermission(currentUser?.permissions, 'users.ban'));
+  const canModerate = userHasPermission(currentUser?.permissions, 'users.ban');
+  const openReports = useReportCount(canModerate);
+  const appealCount = useAppeals(canModerate).total;
   // Request types this user may submit: drives propose-mode tab visibility.
   const [submittable, setSubmittable] = useState<string[]>([]);
+  const [canReview, setCanReview] = useState(false);
+  const [toReview, setToReview] = useState(0);
   useEffect(() => {
-    requestsApi.capabilities().then(c => setSubmittable(c.submittable)).catch(() => {});
+    requestsApi.capabilities().then(c => {
+      setSubmittable(c.submittable);
+      setCanReview(c.reviewable.length > 0);
+      if (c.reviewable.length > 0) requestsApi.counts().then(n => setToReview(n.pendingReview)).catch(() => {});
+    }).catch(() => {});
   }, []);
 
   return useMemo(() => {
     const defs: { id: AdminTabId; icon: string; label: string; perm?: Permission; count?: number }[] = [
+      { id: 'inbox', icon: 'notifications', label: t('admin.dashboard.tabs.inbox'), count: appealCount + openReports + toReview },
+      { id: 'appeals', icon: 'gavel', label: t('admin.dashboard.tabs.appeals'), perm: 'users.ban', count: appealCount },
       { id: 'moderation', icon: 'gpp_bad', label: t('admin.dashboard.tabs.moderation'), perm: 'users.view' },
       { id: 'reports', icon: 'flag', label: t('admin.dashboard.tabs.reports'), perm: 'users.ban', count: openReports },
       { id: 'staff', icon: 'groups', label: t('admin.dashboard.tabs.staff') },
@@ -41,6 +52,7 @@ export function useAdminTabs(): AdminTab[] {
     const canProposeLevels = submittable.some(ty => ty.startsWith('level_'));
     const isNetworkOnly = !userHasPermission(currentUser?.permissions, 'users.view') && userHasPermission(currentUser?.permissions, 'network.block');
     const gated = defs.filter(tab => {
+      if (tab.id === 'inbox') return canModerate || canReview;
       if (tab.id === 'moderation') return userHasPermission(currentUser?.permissions, 'users.view') || userHasPermission(currentUser?.permissions, 'network.block');
       if (tab.id === 'staff') return !isNetworkOnly; // all staff except network-only roles
       if (tab.id === 'permissions') return isSuperadmin;
@@ -49,7 +61,7 @@ export function useAdminTabs(): AdminTab[] {
       if (tab.id === 'levels' && canProposeLevels) return true;
       return false;
     });
-    gated.push({ id: 'requests', icon: 'inbox', label: t('admin.dashboard.tabs.requests') });
+    gated.push({ id: 'requests', icon: 'inbox', label: t('admin.dashboard.tabs.requests'), count: toReview });
     return gated;
-  }, [t, currentUser?.permissions, submittable, isSuperadmin, openReports]);
+  }, [t, currentUser?.permissions, submittable, isSuperadmin, openReports, appealCount, canModerate, canReview, toReview]);
 }

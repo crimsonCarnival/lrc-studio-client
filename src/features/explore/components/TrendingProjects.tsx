@@ -87,10 +87,6 @@ export function TrendingProjects({ limit = 6 }: { limit?: number }) {
                     <Icon name="star" size={12} />
                     {project.starCount ?? 0}
                   </span>
-                  <span className="flex items-center gap-1 text-xs text-zinc-400">
-                    <Icon name="call_split" size={12} />
-                    {project.forkCount ?? 0}
-                  </span>
                 </div>
               </div>
               </>

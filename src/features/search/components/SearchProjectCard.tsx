@@ -12,7 +12,7 @@ const ROW_CLASS = 'flex items-center gap-4 rounded-[18px] bg-background px-[18px
 
 export function SearchProjectCard({ project, query }: { project: Project; query: string }) {
   const { t } = useTranslation();
-  const { title, coverImage, starCount, forkCount, metadata, forkedFrom } = project;
+  const { title, coverImage, starCount, metadata, forkedFrom } = project;
   const displayTitle = metadata?.songName || title || t('library.untitled');
   const artist = artistDisplay(metadata);
   // Null when the search result carries no owner account name: the row then
@@ -39,7 +39,6 @@ export function SearchProjectCard({ project, query }: { project: Project; query:
 
         <div className="flex shrink-0 items-center gap-3 font-mono text-xs font-medium text-subtle tabular-nums">
           <span className="flex items-center gap-1"><Icon name="star" size={14} />{starCount ?? 0}</span>
-          <span className="flex items-center gap-1"><Icon name="call_split" size={14} />{forkCount ?? 0}</span>
           <ProjectCardMenuButton project={project} isOwner={false} className="grid size-8 place-items-center rounded-[10px] text-subtle transition-colors hover:bg-raised hover:text-foreground coarse:size-11" />
         </div>
     </>
