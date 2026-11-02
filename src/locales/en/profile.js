@@ -445,6 +445,7 @@ export default {
   notif_followed_project: 'Projects from people I follow',
   notif_wall_comment: 'Comments on walls I follow',
   notif_mention: 'Someone tagged me in a comment',
+  notif_project_mention: 'Someone mentioned one of my projects in a comment',
   notif_comment_like: 'Someone liked my comment',
   notif_report: 'Someone reported a comment, an account, a project or a playlist',
   notif_report_reviewed: 'A moderator reviewed my report',

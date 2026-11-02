@@ -31,6 +31,15 @@ describe('wall notification text', () => {
   });
 });
 
+describe('project mention notification text', () => {
+  it('names the project and the wall, and opens the comment', () => {
+    const n = { ...wallNote('project_mention', { commentId: 'c1' }), projectTitle: 'Song', publicId: 'p1' } as NotificationData;
+    expect(text(n, 'ann')).toBe('idkman mentioned Song on 32blunts’s wall');
+    expect(text(n, '32blunts')).toBe('idkman mentioned Song on your wall');
+    expect(notificationDestination(n, 'ann')).toBe('/32blunts#comment-c1');
+  });
+});
+
 describe('wall report notification text', () => {
   it('tells moderators who reported a comment, and where', () => {
     expect(text(wallNote('wall_report'), 'ann')).toBe('idkman reported a comment on 32blunts’s wall');

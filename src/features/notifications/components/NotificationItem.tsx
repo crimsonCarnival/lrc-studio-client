@@ -58,6 +58,7 @@ const TYPE_ICON_NAME: Record<string, string> = {
   followed_project: 'queue_music',
   wall_comment: 'forum',
   mention: 'alternate_email',
+  project_mention: 'alternate_email',
   comment_like: 'favorite',
   wall_report: 'flag',
   wall_report_reviewed: 'done_all',
@@ -105,7 +106,7 @@ export function notificationDestination(
   // The author is the project's owner, so the actor supplies the account name the URL needs.
   if (type === 'followed_project' && publicId && actors?.[0]?.accountName) return projectPath({ publicId }, actors[0].accountName);
   // Straight to the comment when the notification knows it (older ones only know the wall).
-  if ((type === 'wall_comment' || type === 'mention' || type === 'comment_like') && notification.meta?.wall) {
+  if ((type === 'wall_comment' || type === 'mention' || type === 'project_mention' || type === 'comment_like') && notification.meta?.wall) {
     return `${profilePath(notification.meta.wall)}#${notification.meta.commentId ? `comment-${notification.meta.commentId}` : 'wall'}`;
   }
   if (type === 'level_up' && recipientAccountName) return profilePath(recipientAccountName);
@@ -248,6 +249,17 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
           i18nKey={ownWall ? 'notifications.mentionOwn' : 'notifications.mention'}
           values={{ actors: actorStr, wall }}
           components={[<strong key="0" />, <strong key="1" />]}
+        />
+      </span>
+    );
+  }
+  if (type === 'project_mention') {
+    return (
+      <span>
+        <Trans
+          i18nKey={ownWall ? 'notifications.projectMentionOwn' : 'notifications.projectMention'}
+          values={{ actors: actorStr, title: projectTitle ?? '', wall }}
+          components={[<strong key="0" />, <strong key="1" />, <strong key="2" />]}
         />
       </span>
     );

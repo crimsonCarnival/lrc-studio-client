@@ -18,6 +18,8 @@ export default {
   wallCommentOwn: '<0>{{actors}}</0> comentó en tu muro',
   wallReplyOwn: '<0>{{actors}}</0> respondió a tu comentario en tu muro',
   mentionOwn: '<0>{{actors}}</0> te etiquetó en tu muro',
+  projectMention: '<0>{{actors}}</0> mencionó <1>{{title}}</1> en el muro de <2>{{wall}}</2>',
+  projectMentionOwn: '<0>{{actors}}</0> mencionó <1>{{title}}</1> en tu muro',
   commentLikeOwn: 'A <0>{{actors}}</0> le gustó tu comentario en tu muro',
   wallReport: '<0>{{actors}}</0> denunció un comentario en el muro de <1>{{wall}}</1>',
   wallReportOwn: '<0>{{actors}}</0> denunció un comentario en tu muro',

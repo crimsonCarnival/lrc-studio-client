@@ -444,6 +444,7 @@ export default {
   notif_followed_project: 'Proyectos de quienes sigo',
   notif_wall_comment: 'Comentarios en muros que sigo',
   notif_mention: 'Alguien me etiquetó en un comentario',
+  notif_project_mention: 'Alguien mencionó uno de mis proyectos en un comentario',
   notif_comment_like: 'A alguien le gustó mi comentario',
   notif_report: 'Alguien denunció un comentario, una cuenta, un proyecto o una lista',
   notif_report_reviewed: 'Un moderador revisó mi denuncia',

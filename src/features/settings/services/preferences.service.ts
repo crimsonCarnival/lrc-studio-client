@@ -26,6 +26,7 @@ const PREFERENCES_FIELDS = /* GraphQL */ `
     followed_project
     wall_comment
     mention
+    project_mention
     comment_like
     report
     report_reviewed
