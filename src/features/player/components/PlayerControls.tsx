@@ -160,7 +160,7 @@ function AudioLoadError({ fileInputId, onFileChange, onRetry, canReplace }: Audi
   );
 }
 
-export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 'editor' | 'header' | 'mobile', youtubeAudioUrl?: string | null }) {
+export default function PlayerControls({ variant }: { variant: 'editor' | 'header' | 'mobile' }) {
   const {
     source, isPlaying, isSeeking, currentTime, duration, playbackSpeed,
     hasMedia, loopA, loopB, mediaTitle, songName,
@@ -437,10 +437,10 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
         )}
       </div>
 
-      {/* Shared Audio waveform (Local or YouTube ASR) */}
+      {/* Audio waveform (local audio only: YouTube exposes no audio data) */}
       <div className="w-full flex flex-col items-center min-w-0 z-10">
         {(() => {
-          const canShowWaveform = Boolean((source === 'local' && local.localUrl) || (source === 'youtube' && youtubeAudioUrl));
+          const canShowWaveform = Boolean(source === 'local' && local.localUrl);
           const isShowingWaveform = Boolean(settings.playback?.showWaveform && canShowWaveform);
           return (
             <>
@@ -451,7 +451,7 @@ export default function PlayerControls({ variant, youtubeAudioUrl }: { variant: 
                       showWaveform={settings.playback?.showWaveform}
                       waveformSnap={settings.playback?.waveformSnap}
                       audioRef={audioRef}
-                      localUrl={source === 'youtube' ? youtubeAudioUrl : local.localUrl}
+                      localUrl={local.localUrl}
                       lines={lines}
                       playbackPosition={playbackPosition ?? 0}
                       duration={duration}
