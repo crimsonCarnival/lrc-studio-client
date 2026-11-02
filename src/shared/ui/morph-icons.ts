@@ -9,7 +9,9 @@ import { ICON_SHAPES, type IconShape } from './icon-paths';
  * Only names drawn in icon-paths.ts can morph. The Material Symbols fallback is a font
  * glyph, which has no path to interpolate. Adding a pair means adding its names here.
  */
-const MORPH_ICON_NAMES = ['play_arrow', 'pause'] as const;
+const MORPH_ICON_NAMES = ['play_arrow', 'pause', 'more_horiz', 'more_vert', 'content_copy', 'check',
+  'chevron_down', 'chevron_up', 'chevron_forward', 'visibility', 'visibility_off',
+  'volume_mute', 'volume_down', 'volume_up', 'volume_off', 'link', 'add', 'call_split'] as const;
 
 export type MorphIconName = (typeof MORPH_ICON_NAMES)[number];
 

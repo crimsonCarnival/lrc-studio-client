@@ -39,6 +39,23 @@ export const ICON_SHAPES: Record<string, IconShape> = {
   visibility: { d: 'M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12z M15 12a3 3 0 1 1-6 0a3 3 0 1 1 6 0' },
   close: { d: 'M6 6l12 12 M18 6L6 18' },
   check: { d: 'M5 12.5l4.5 4.5L19 7' },
+  // Zero-length strokes: the round caps draw the dots, and both orientations share one
+  // command structure, so ⋯ turns into ⋮ by sliding the dots rather than cross-fading.
+  // Unrotated chevrons: expand_less / chevron_right are the same path turned with CSS,
+  // which a morph cannot do, so a chevron that flips in place morphs between these.
+  chevron_down: { d: EXPAND },
+  chevron_up: { d: 'M6 14.5l6-6 6 6' },
+  chevron_forward: { d: 'M9.5 6l6 6-6 6' },
+  visibility_off: { d: 'M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12z M15 12a3 3 0 1 1-6 0a3 3 0 1 1 6 0 M4 4l16 16' },
+  // One speaker, then waves added: each tier extends the last, so a volume change grows
+  // or shrinks the waves instead of swapping the glyph.
+  volume_mute: { d: 'M4 9.5h3.5L12 5.5v13l-4.5-4H4z' },
+  volume_down: { d: 'M4 9.5h3.5L12 5.5v13l-4.5-4H4z M15.5 9a4 4 0 0 1 0 6' },
+  volume_up: { d: 'M4 9.5h3.5L12 5.5v13l-4.5-4H4z M15.5 9a4 4 0 0 1 0 6 M18.5 6.5a8 8 0 0 1 0 11' },
+  volume_off: { d: 'M4 9.5h3.5L12 5.5v13l-4.5-4H4z M16 9.5l5 5 M21 9.5l-5 5' },
+  more_horiz: { d: 'M5 12h.01 M12 12h.01 M19 12h.01', weight: 1.8 },
+  more_vert: { d: 'M12 5v.01 M12 12v.01 M12 19v.01', weight: 1.8 },
+  content_copy: { d: 'M9 9h11v11H9z M15 9V4H4v11h5' },
   // Lid first: it lifts on hover (see index.css).
   delete: { d: ['M4 7h16 M9 7V4.5h6V7', 'M6.5 7l1 13h9l1-13 M10 11v5 M14 11v5'] },
   edit: { d: 'M4 20h4L19 9l-4-4L4 16z M13.5 6.5l4 4' },
