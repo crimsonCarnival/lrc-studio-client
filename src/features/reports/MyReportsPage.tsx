@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { LogoLoader } from '@ui/LogoLoader';
@@ -7,6 +8,7 @@ import { formatTimeAgo } from '@/features/notifications/time-ago';
 import { listMyReports } from './reports.service';
 import type { MyReport, ReportStatus } from './reports.service';
 import { ReportTargetPreview } from './ReportTargetPreview';
+import { ReportThreadToggle } from './ReportThread';
 
 const PAGE_SIZE = 20;
 
@@ -16,14 +18,14 @@ const STATUS_STYLE: Record<ReportStatus, string> = {
   actioned:  'bg-primary/15 text-primary border-primary/30',
 };
 
-function MyReportRow({ report }: { report: MyReport }) {
+function MyReportRow({ report, focused }: { report: MyReport; focused: boolean }) {
   const { t, i18n } = useTranslation();
   const tk = t as (k: string, o?: Record<string, unknown>) => string;
   const { settings } = useSettings();
   const ago = (when: string) => formatTimeAgo(when, t, settings.advanced?.timezone, i18n.language);
 
   return (
-    <li className="flex flex-col gap-3 p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/60">
+    <li id={`report-${report.id}`} className="flex flex-col gap-3 p-4 rounded-2xl bg-zinc-900/60 border border-zinc-800/60 scroll-mt-20">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
           {tk(`reports.preview.type.${report.targetType}`)}
@@ -47,12 +49,16 @@ function MyReportRow({ report }: { report: MyReport }) {
         </p>
         {report.note && <p className="text-zinc-400">{t('reports.page.note', { note: report.note })}</p>}
       </div>
+      <ReportThreadToggle reportId={report.id} count={report.messageCount} moderatorView={false} defaultOpen={focused} />
     </li>
   );
 }
 
 /** The signed-in user's reports and what became of each, newest first. */
 export default function MyReportsPage() {
+  // A report-message notification links to #report-<id>: open that conversation.
+  const { hash } = useLocation();
+  const focusedId = hash.startsWith('#report-') ? hash.slice('#report-'.length) : null;
   const { t } = useTranslation();
   const [reports, setReports] = useState<MyReport[]>([]);
   const [total, setTotal] = useState(0);
@@ -78,6 +84,11 @@ export default function MyReportsPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
+
+  // Bring the linked report into view once the list is there.
+  useEffect(() => {
+    if (!loading && focusedId) document.getElementById(`report-${focusedId}`)?.scrollIntoView({ block: 'start' });
+  }, [loading, focusedId]);
 
   const loadMore = async () => {
     setLoadingMore(true);
@@ -113,7 +124,7 @@ export default function MyReportsPage() {
         ) : (
           <>
             <ul className="flex flex-col gap-2">
-              {reports.map(r => <MyReportRow key={r.id} report={r} />)}
+              {reports.map(r => <MyReportRow key={r.id} report={r} focused={focusedId === r.id} />)}
             </ul>
             {reports.length < total && (
               <Button type="button" variant="outline" size="sm" className="self-center" disabled={loadingMore} onClick={loadMore}>

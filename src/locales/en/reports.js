@@ -67,6 +67,26 @@ export default {
     banned: 'Banned',
     private: 'Private',
   },
+  // The conversation on a report, between the reporter and the moderators.
+  thread: {
+    title: 'Conversation',
+    toggle: 'Conversation',
+    toggleCount_one: 'Conversation ({{count}})',
+    toggleCount_other: 'Conversation ({{count}})',
+    emptyReporter: 'Want to add something, or ask about this report? Write to the moderators here.',
+    emptyModerator: 'No messages yet. The reporter is told when you write.',
+    placeholderReporter: 'Write to the moderators',
+    placeholderModerator: 'Write to the reporter',
+    replyPlaceholder: 'Write a reply',
+    send: 'Send',
+    reply: 'Reply',
+    you: 'You',
+    moderator: 'Moderator',
+    moderatorBadge: 'Moderator',
+    reporterBadge: 'Reporter',
+    privacy: 'Only you and the moderators see this conversation. Moderators reply as “Moderator”.',
+    loadError: 'This conversation could not be loaded.',
+  },
   // The reporter's history page, /reports.
   page: {
     title: 'My reports',

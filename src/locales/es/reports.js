@@ -67,6 +67,26 @@ export default {
     banned: 'Baneado',
     private: 'Privado',
   },
+  // La conversación sobre una denuncia, entre quien denunció y los moderadores.
+  thread: {
+    title: 'Conversación',
+    toggle: 'Conversación',
+    toggleCount_one: 'Conversación ({{count}})',
+    toggleCount_other: 'Conversación ({{count}})',
+    emptyReporter: '¿Quieres añadir algo o preguntar por esta denuncia? Escríbeles a los moderadores aquí.',
+    emptyModerator: 'Aún no hay mensajes. A quien denunció se le avisa cuando escribes.',
+    placeholderReporter: 'Escribe a los moderadores',
+    placeholderModerator: 'Escribe a quien denunció',
+    replyPlaceholder: 'Escribe una respuesta',
+    send: 'Enviar',
+    reply: 'Responder',
+    you: 'Tú',
+    moderator: 'Moderador',
+    moderatorBadge: 'Moderador',
+    reporterBadge: 'Denunciante',
+    privacy: 'Solo tú y los moderadores ven esta conversación. Los moderadores responden como «Moderador».',
+    loadError: 'No se pudo cargar esta conversación.',
+  },
   // El historial de quien denuncia, /reports.
   page: {
     title: 'Mis denuncias',

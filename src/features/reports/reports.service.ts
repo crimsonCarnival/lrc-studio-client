@@ -82,6 +82,8 @@ export type ReportEntry = {
   createdAt: string;
   resolvedAt: string | null;
   reporter: ReportUser | null;
+  /** Messages in this report's conversation. */
+  messageCount: number;
 };
 
 /** Every report on one target, for moderators. */
@@ -112,7 +114,24 @@ export type MyReport = ReportTargets & {
   status: ReportStatus;
   createdAt: string;
   resolvedAt: string | null;
+  /** Messages in this report's conversation. */
+  messageCount: number;
 };
+
+/** A message in a report's conversation between its reporter and the moderators. */
+export type ReportMessage = {
+  id: string;
+  body: string;
+  createdAt: string;
+  /** Null when the viewer may not see who wrote it: a moderator, seen by the reporter. */
+  author: ReportUser | null;
+  fromReporter: boolean;
+  /** The viewer wrote it. */
+  mine: boolean;
+  replies: ReportMessage[];
+};
+
+export const REPORT_MESSAGE_MAX = 1000;
 
 const USER_FIELDS = 'id accountName displayName avatarUrl staffRole';
 const COMMENT_FIELDS = `id body createdAt status
@@ -148,7 +167,7 @@ export async function listReportGroups(status: ReportStatus = 'open', targetType
         targetType targetId wallAccountName openCount latestAt subjectActionedCount subjectRestrictedUntil
         ${TARGET_FIELDS(true)}
         subject { ${USER_FIELDS} }
-        reports { id reason note status createdAt resolvedAt reporter { ${USER_FIELDS} } }
+        reports { id reason note status createdAt resolvedAt messageCount reporter { ${USER_FIELDS} } }
       }
     }
   `, { status, targetType });
@@ -167,7 +186,7 @@ export async function listMyReports(limit: number, offset: number): Promise<{ re
     query MyReports($limit: Int, $offset: Int) {
       myReports(limit: $limit, offset: $offset) {
         total
-        reports { id targetType targetId reason note status createdAt resolvedAt ${TARGET_FIELDS(false)} }
+        reports { id targetType targetId reason note status createdAt resolvedAt messageCount ${TARGET_FIELDS(false)} }
       }
     }
   `, { limit, offset });
@@ -184,6 +203,28 @@ export async function resolveReportGroup(targetType: ReportTargetType, targetId:
       resolveReportGroup(targetType: $targetType, targetId: $targetId, action: $action)
     }
   `, { targetType, targetId, action });
+}
+
+const MESSAGE_FIELDS = `id body createdAt fromReporter mine author { ${USER_FIELDS} }`;
+
+/** A report's conversation, oldest first, replies under the message they answer. */
+export async function listReportMessages(reportId: string): Promise<ReportMessage[]> {
+  const data = await gqlRequest<{ reportMessages: ReportMessage[] }>(/* GraphQL */ `
+    query ReportMessages($reportId: ID!) {
+      reportMessages(reportId: $reportId) { ${MESSAGE_FIELDS} replies { ${MESSAGE_FIELDS} replies { id } } }
+    }
+  `, { reportId });
+  return data.reportMessages;
+}
+
+/** Write in a report's conversation; `parentId` answers a message. */
+export async function addReportMessage(reportId: string, body: string, parentId: string | null = null): Promise<ReportMessage> {
+  const data = await gqlRequest<{ addReportMessage: ReportMessage }>(/* GraphQL */ `
+    mutation AddReportMessage($reportId: ID!, $body: String!, $parentId: ID) {
+      addReportMessage(reportId: $reportId, body: $body, parentId: $parentId) { ${MESSAGE_FIELDS} replies { id } }
+    }
+  `, { reportId, body, parentId });
+  return data.addReportMessage;
 }
 
 const REPORT_ERROR_KEYS = ['rate_limited', 'forbidden', 'not_found', 'invalid_body', 'sudo_required'] as const;
