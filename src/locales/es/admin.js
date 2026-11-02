@@ -83,6 +83,13 @@ export default {
     type: { extract_lyrics: 'Búsqueda de letra', infer_end_times: 'Inferencia de tiempos finales' },
     empty: 'Ninguna tarea coincide.',
     anonymous: 'Sin sesión',
+    unknownDevice: 'Dispositivo desconocido',
+    viaDevice: 'según el dispositivo',
+    errors: {
+      lyrics_unavailable: 'Ningún proveedor tiene esta letra',
+      upstream_error: 'Un proveedor de letras no respondió',
+      infer_failed: 'No se pudieron inferir los tiempos finales',
+    },
     synced: 'Sincronizada',
     plain: 'Texto plano',
     provider: 'vía {{name}}',
