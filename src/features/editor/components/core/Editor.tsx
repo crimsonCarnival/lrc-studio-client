@@ -45,6 +45,7 @@ import type { AuthUser } from '@/features/auth/auth.types';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import type { UploadedAudio } from '@/types/app-state';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { linesToRawText, flatToSections, rawLineText } from '@/features/editor/utils/sections';
 import { hasCJK } from '@/shared/utils/furigana';
 import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger } from '@ui/popover';
@@ -1294,7 +1295,7 @@ export default function Editor({
                   onClick={() => { if (hasMedia) handlePlayLine(); }}
                   className={`size-[52px] lg:size-[52px] rounded-full bg-primary hover:bg-primary-dim text-zinc-950 ${!hasMedia || (!playerIsPlaying && focusStart == null) ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <Icon name={playerIsPlaying ? 'pause' : 'play_arrow'} size={24} filled />
+                  <MorphIcon name={playerIsPlaying ? 'pause' : 'play_arrow'} size={24} decorative />
                 </Button>
               </Tip>
             </div>
