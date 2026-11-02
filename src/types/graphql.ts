@@ -25,9 +25,11 @@ export type Activity = {
   actor: FollowUser;
   coverImage?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['String']['output'];
+  description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   projectTitle: Scalars['String']['output'];
   publicId: Scalars['String']['output'];
+  tags?: Maybe<Array<Scalars['String']['output']>>;
   targetPath?: Maybe<Scalars['String']['output']>;
   type: ActivityType;
 };
@@ -39,9 +41,9 @@ export type ActivityHeatmapDay = {
 
 export type ActivityType =
   | 'PLAYLIST_CREATED'
-  | 'PROJECT_BOOSTED'
   | 'PROJECT_FORKED'
   | 'PROJECT_PUBLISHED'
+  | 'PROJECT_SHARED'
   | 'PROJECT_STARRED'
   | 'USER_FOLLOWED';
 
@@ -457,7 +459,6 @@ export type Mutation = {
   adminRetroactiveScan: RetroactiveResult;
   adminRevokeBadge: Scalars['Boolean']['output'];
   adminUpdateBadge: BadgeDef;
-  boostProject: Scalars['Boolean']['output'];
   cloneProject: Project;
   createPlaylist: Playlist;
   createProject: Project;
@@ -473,9 +474,11 @@ export type Mutation = {
   savePlaylist: Scalars['Boolean']['output'];
   sendVerificationEmail: Scalars['Boolean']['output'];
   setForksEnabled: Project;
+  shareToProfile: Scalars['Boolean']['output'];
   starProject: Project;
   unfollow: Scalars['Boolean']['output'];
   unsavePlaylist: Scalars['Boolean']['output'];
+  unshareFromProfile: Scalars['Boolean']['output'];
   unstarProject: Project;
   updateLyrics: Lyrics;
   updatePlaylist: Playlist;
@@ -522,11 +525,6 @@ export type MutationAdminRevokeBadgeArgs = {
 export type MutationAdminUpdateBadgeArgs = {
   id: Scalars['String']['input'];
   input: BadgeDefInput;
-};
-
-
-export type MutationBoostProjectArgs = {
-  publicId: Scalars['ID']['input'];
 };
 
 
@@ -590,6 +588,17 @@ export type MutationSaveMediaArgs = {
 
 export type MutationSavePlaylistArgs = {
   playlistId: Scalars['ID']['input'];
+};
+
+
+export type MutationShareToProfileArgs = {
+  input?: InputMaybe<ProfileShareInput>;
+  publicId: Scalars['ID']['input'];
+};
+
+
+export type MutationUnshareFromProfileArgs = {
+  publicId: Scalars['ID']['input'];
 };
 
 
@@ -727,7 +736,6 @@ export type PlaylistSortMode =
   | 'STARS';
 
 export type Project = {
-  boostCount?: Maybe<Scalars['Int']['output']>;
   coverImage?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['String']['output']>;
   expiresAt?: Maybe<Scalars['String']['output']>;
@@ -737,13 +745,15 @@ export type Project = {
   /** True when at least one word carries a timestamp. */
   hasWordSync?: Maybe<Scalars['Boolean']['output']>;
   id: Scalars['ID']['output'];
-  isBoostedByMe?: Maybe<Scalars['Boolean']['output']>;
   isForkedByMe?: Maybe<Scalars['Boolean']['output']>;
+  isSharedToProfileByMe?: Maybe<Scalars['Boolean']['output']>;
   isStarredByMe?: Maybe<Scalars['Boolean']['output']>;
   lineCount?: Maybe<Scalars['Int']['output']>;
   lyrics?: Maybe<Lyrics>;
   lyricsId?: Maybe<Scalars['ID']['output']>;
   metadata?: Maybe<ProjectMetadata>;
+  myProfileShare?: Maybe<ProfileShareNote>;
+  profileShareCount?: Maybe<Scalars['Int']['output']>;
   public?: Maybe<Scalars['Boolean']['output']>;
   publicId: Scalars['String']['output'];
   readOnly?: Maybe<Scalars['Boolean']['output']>;
@@ -814,6 +824,29 @@ export type ProjectMetadataInput = {
   trackNumber?: InputMaybe<Scalars['Int']['input']>;
   previewUrl?: InputMaybe<Scalars['String']['input']>;
   explicit?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type ProfileShareInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  reshare?: InputMaybe<Scalars['Boolean']['input']>;
+  tags?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type ProfileShareItem = {
+  description: Scalars['String']['output'];
+  project: Project;
+  sharedAt: Scalars['String']['output'];
+  tags: Array<Scalars['String']['output']>;
+};
+
+export type ProfileShareNote = {
+  description: Scalars['String']['output'];
+  tags: Array<Scalars['String']['output']>;
+};
+
+export type ProfileSharePage = {
+  hasMore: Scalars['Boolean']['output'];
+  items: Array<ProfileShareItem>;
 };
 
 export type ProjectPage = {
@@ -1764,13 +1797,6 @@ export type SetForksEnabledMutationVariables = Exact<{
 
 
 export type SetForksEnabledMutation = { setForksEnabled: { id: string, publicId: string, forksEnabled: boolean | null } };
-
-export type BoostProjectMutationVariables = Exact<{
-  publicId: string;
-}>;
-
-
-export type BoostProjectMutation = { boostProject: boolean };
 
 export type ListMediaQueryVariables = Exact<{
   limit?: number | null | undefined;

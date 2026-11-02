@@ -23,7 +23,8 @@ const GET_PUBLIC_PROJECT = /* GraphQL */ `
           }
         }
       }
-      starCount forkCount viewCount shareCount boostCount isStarredByMe isForkedByMe isBoostedByMe forksEnabled createdAt
+      starCount forkCount viewCount shareCount profileShareCount isStarredByMe isForkedByMe isSharedToProfileByMe forksEnabled createdAt
+      myProfileShare { description tags }
       forkedFrom { publicId accountName sourceDeleted }
     }
   }

@@ -15,6 +15,8 @@ const FEED_QUERY = /* GraphQL */ `
         projectTitle
         coverImage
         targetPath
+        description
+        tags
         createdAt
         actor {
           id

@@ -34,10 +34,10 @@ export default {
       'made a copy of',
       'branched off from',
     ],
-    project_boosted: [
-      'boosted',
+    project_shared: [
       'shared',
-      'amplified',
+      'reposted',
+      'passed along',
     ],
     playlist_created: [
       'created a playlist',

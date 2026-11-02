@@ -1,6 +1,6 @@
 import { gqlRequest } from '@/app/graphql.client';
 import { followChanged, blockChanged } from '@/app/cache-sync';
-import type { PublicUser, FollowListResult, FollowListType } from '@/types';
+import type { PublicUser, FollowListResult, FollowListType, ProfileSharePage } from '@/types';
 
 const GET_PUBLIC_PROFILE = /* GraphQL */ `
   query GetPublicProfile($accountName: String!, $asVisitor: Boolean) {
@@ -25,6 +25,23 @@ const GET_PUBLIC_PROFILE = /* GraphQL */ `
         metadata { songName songArtist artists { name role order } songAlbum songYear genre description tags singers singerColors }
         upload { source uploadUrl }
         createdAt updatedAt contentUpdatedAt
+      }
+    }
+  }
+`;
+
+const GET_PROFILE_SHARES = /* GraphQL */ `
+  query GetProfileShares($accountName: String!, $offset: Int, $limit: Int) {
+    profileShares(accountName: $accountName, offset: $offset, limit: $limit) {
+      hasMore
+      items {
+        sharedAt description tags
+        project {
+          id publicId slug title coverImage
+          metadata { songName songArtist artists { name role order } }
+          upload { source uploadUrl }
+          user { id accountName displayName }
+        }
       }
     }
   }
@@ -73,6 +90,15 @@ const GET_FOLLOW_LIST = /* GraphQL */ `
 export async function getPublicProfile(accountName: string, asVisitor = false): Promise<PublicUser | null> {
   const data = await gqlRequest<{ publicProfile: PublicUser | null }>(GET_PUBLIC_PROFILE, { accountName, asVisitor });
   return data?.publicProfile ?? null;
+}
+
+export const PROFILE_SHARES_PAGE = 12;
+
+export async function getProfileShares(accountName: string, offset: number): Promise<ProfileSharePage> {
+  const data = await gqlRequest<{ profileShares: ProfileSharePage }>(GET_PROFILE_SHARES, {
+    accountName, offset, limit: PROFILE_SHARES_PAGE,
+  });
+  return data.profileShares;
 }
 
 export async function followUser(accountName: string): Promise<boolean> {

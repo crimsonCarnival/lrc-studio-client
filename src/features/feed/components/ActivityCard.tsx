@@ -17,7 +17,7 @@ const TYPE_ICON_NAMES: Record<string, string> = {
   PROJECT_PUBLISHED: 'language',
   PROJECT_STARRED: 'star',
   PROJECT_FORKED: 'call_split',
-  PROJECT_BOOSTED: 'repeat',
+  PROJECT_SHARED: 'ios_share',
   PLAYLIST_CREATED: 'queue_music',
   USER_FOLLOWED: 'person_add',
 };
@@ -26,13 +26,13 @@ const TYPE_I18N_KEY: Record<string, string> = {
   PROJECT_PUBLISHED: 'project_published',
   PROJECT_STARRED: 'project_starred',
   PROJECT_FORKED: 'project_forked',
-  PROJECT_BOOSTED: 'project_boosted',
+  PROJECT_SHARED: 'project_shared',
   PLAYLIST_CREATED: 'playlist_created',
   USER_FOLLOWED: 'user_followed',
 };
 
 // Project-type activities that support reactions
-const REACTABLE_TYPES = new Set(['PROJECT_PUBLISHED', 'PROJECT_STARRED', 'PROJECT_FORKED', 'PROJECT_BOOSTED']);
+const REACTABLE_TYPES = new Set(['PROJECT_PUBLISHED', 'PROJECT_STARRED', 'PROJECT_FORKED', 'PROJECT_SHARED']);
 
 interface Activity {
   id: string;
@@ -42,6 +42,9 @@ interface Activity {
   projectTitle?: string | null;
   coverImage?: string | null;
   targetPath?: string | null;
+  /** PROJECT_SHARED only: the sharer's note. */
+  description?: string | null;
+  tags?: string[] | null;
   createdAt: string;
 }
 
@@ -99,14 +102,14 @@ function ActivityReactions({ publicId }: { publicId: string }) {
 export function ActivityCard({ activity }: { activity: Activity }) {
   const { t } = useTranslation();
   const tk = t as (key: string, options?: object) => unknown;
-  const { id, actor, type, publicId, projectTitle, coverImage, targetPath, createdAt } = activity;
+  const { id, actor, type, publicId, projectTitle, coverImage, targetPath, description, tags, createdAt } = activity;
   const iconName = TYPE_ICON_NAMES[type] ?? 'star';
   const i18nKey = TYPE_I18N_KEY[type] ?? 'project_starred';
   const actionText = pick(tk(`feed.action.${i18nKey}`, { returnObjects: true }), id);
 
   // The server builds `targetPath`; prefer it. The helper can only stand in for
   // PROJECT_PUBLISHED, where the actor IS the project owner — for a star, fork
-  // or boost the actor is someone else, and an Activity carries no owner
+  // or share the actor is someone else, and an Activity carries no owner
   // account name, so those stay unlinked rather than pointing at a 404.
   const targetLink = targetPath
     || (type === 'PROJECT_PUBLISHED' && publicId ? projectPath({ publicId }, actor.accountName) : null);
@@ -162,6 +165,18 @@ export function ActivityCard({ activity }: { activity: Activity }) {
               {projectTitle || t('feed.untitled')}
             </span>
           </Link>
+        )}
+
+        {/* A share's note is the sharer's own words: plain text, escaped by React. */}
+        {description && (
+          <p className="mt-1.5 text-sm text-zinc-300 whitespace-pre-wrap break-words">{description}</p>
+        )}
+        {tags && tags.length > 0 && (
+          <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label={t('projectView.shareTagsLabel')}>
+            {tags.map((tag) => (
+              <li key={tag} className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary-ink">#{tag}</li>
+            ))}
+          </ul>
         )}
 
         {isUserFollow && coverImage && targetLink && (

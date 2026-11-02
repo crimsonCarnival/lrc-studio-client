@@ -34,10 +34,10 @@ export default {
       'hizo una copia de',
       'tomó como base',
     ],
-    project_boosted: [
-      'amplificó',
+    project_shared: [
       'compartió',
-      'impulsó',
+      'recomendó',
+      'pasó',
     ],
     playlist_created: [
       'creó una lista',

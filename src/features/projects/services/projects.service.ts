@@ -1,6 +1,6 @@
 import { gqlRequest } from '@/app/graphql.client';
 import { projectsChanged, projectRemoved } from '@/app/cache-sync';
-import type { Project, CreateProjectInput, UpdateProjectInput } from '@/types';
+import type { Project, CreateProjectInput, UpdateProjectInput, ProfileShareInput } from '@/types';
 import { toArtistInput, type ArtistCredit } from '@/features/artists/artist-credits';
 
 const GET_PROJECTS = /* GraphQL */ `
@@ -307,9 +307,15 @@ const SET_FORKS_ENABLED = /* GraphQL */ `
   }
 `;
 
-const BOOST_PROJECT = /* GraphQL */ `
-  mutation BoostProject($publicId: ID!) {
-    boostProject(publicId: $publicId)
+const SHARE_TO_PROFILE = /* GraphQL */ `
+  mutation ShareToProfile($publicId: ID!, $input: ProfileShareInput) {
+    shareToProfile(publicId: $publicId, input: $input)
+  }
+`;
+
+const UNSHARE_FROM_PROFILE = /* GraphQL */ `
+  mutation UnshareFromProfile($publicId: ID!) {
+    unshareFromProfile(publicId: $publicId)
   }
 `;
 
@@ -428,9 +434,15 @@ export const projectsService = {
     return data.setForksEnabled;
   },
 
-  async boostProject(publicId: string): Promise<boolean> {
-    const data = await gqlRequest<{ boostProject: boolean }>(BOOST_PROJECT, { publicId });
-    return data.boostProject;
+  /** Shares, or on a project already shared, edits the note. */
+  async shareToProfile(publicId: string, note: ProfileShareInput = {}): Promise<boolean> {
+    const data = await gqlRequest<{ shareToProfile: boolean }>(SHARE_TO_PROFILE, { publicId, input: note });
+    return data.shareToProfile;
+  },
+
+  async unshareFromProfile(publicId: string): Promise<boolean> {
+    const data = await gqlRequest<{ unshareFromProfile: boolean }>(UNSHARE_FROM_PROFILE, { publicId });
+    return data.unshareFromProfile;
   },
 
   /**

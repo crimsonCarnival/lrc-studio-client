@@ -2,13 +2,14 @@ import { useCallback } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { FollowListType } from '@/types/graphql';
 import type { PublicUser } from '@/types';
-import { getFollowList, getPublicProfile, followUser, unfollowUser } from './profile.service';
+import { getFollowList, getPublicProfile, followUser, unfollowUser, getProfileShares, PROFILE_SHARES_PAGE } from './profile.service';
 
 export const profileKeys = {
   // asVisitor is part of the key: the owner's "view as others" preview is a
   // different server projection of the same profile.
   profile: (accountName: string, asVisitor: boolean) => ['profile', accountName, asVisitor] as const,
   followList: (accountName: string, type: FollowListType) => ['followList', accountName, type] as const,
+  shares: (accountName: string) => ['profileShares', accountName] as const,
 };
 
 /**
@@ -55,6 +56,20 @@ export function useFollowList(accountName: string, type: FollowListType, enabled
       // (blocked users are filtered out of pages but still counted).
       return lastPage.users.length > 0 && loaded < lastPage.total ? loaded : undefined;
     },
+    enabled,
+  });
+}
+
+/**
+ * The projects a user shared to their profile. The server filters hidden projects
+ * out of a page after paging, so a short page is not the end: `hasMore` decides.
+ */
+export function useProfileShares(accountName: string, enabled: boolean) {
+  return useInfiniteQuery({
+    queryKey: profileKeys.shares(accountName),
+    queryFn: ({ pageParam }) => getProfileShares(accountName, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, _pages, lastOffset) => (lastPage.hasMore ? lastOffset + PROFILE_SHARES_PAGE : undefined),
     enabled,
   });
 }

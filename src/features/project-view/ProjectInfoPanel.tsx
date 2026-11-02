@@ -12,7 +12,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { ProjectViewActions } from './ProjectViewActions';
-import { BoostButton } from './BoostButton';
+import { ShareToProfileButton } from './ShareToProfileButton';
 import { ShareOgButton } from './ShareOgButton';
 import { UserHoverCard } from '@ui/UserHoverCard';
 import { useSettings } from '@/features/settings/useSettings';
@@ -40,8 +40,8 @@ interface ProjectData {
   createdAt?: string | number;
   forksEnabled?: boolean;
   isForkedByMe?: boolean;
-  isBoostedByMe?: boolean;
-  boostCount?: number;
+  myProfileShare?: { description: string; tags: string[] } | null;
+  profileShareCount?: number;
   forkCount?: number;
   viewCount?: number;
   shareCount?: number;
@@ -49,7 +49,7 @@ interface ProjectData {
   [key: string]: unknown;
 }
 
-// One segment of the joined Star / Fork / Boost group (redesign sheet 17). Counts ride on the
+// One segment of the joined Star / Fork / Share group (redesign sheet 17). Counts ride on the
 // action they belong to, which is what let the separate four-number stats box go.
 const SEG =
   'flex items-center gap-2 h-[42px] coarse:h-11 px-3.5 text-[15px] font-semibold text-foreground whitespace-nowrap ' +
@@ -299,7 +299,9 @@ export default function ProjectInfoPanel({
               </span>
             )}
 
-            {canFork && !isOwner && !project?.isForkedByMe ? (
+            {/* Owners can't fork their own project, so the segment is left out for them; their
+                fork count sits with the views below instead. */}
+            {isOwner ? null : canFork && !project?.isForkedByMe ? (
               <button type="button" onClick={onFork} className={`${SEG} ${SEG_BUTTON}`}>
                 <Icon name="call_split" size={17} />
                 {t('projectView.forkButton')}
@@ -313,21 +315,21 @@ export default function ProjectInfoPanel({
               </span>
             )}
 
-            {user && !user.isGuest && !isOwner ? (
-              <BoostButton
+            {user && !user.isGuest ? (
+              <ShareToProfileButton
                 // Keyed so the local state resets when navigating between projects in a playlist.
                 key={project?.publicId}
                 publicId={project?.publicId ?? ''}
-                initialBoosted={!!project?.isBoostedByMe}
-                initialCount={project?.boostCount ?? 0}
+                initialShare={project?.myProfileShare ?? null}
+                initialCount={project?.profileShareCount ?? 0}
                 className={`${SEG} ${SEG_BUTTON}`}
                 countClassName={SEG_COUNT}
               />
             ) : (
               <span className={SEG}>
-                <Icon name="repeat" size={17} className="text-subtle" />
-                {t('projectView.statBoosts')}
-                <span className={SEG_COUNT}>{project?.boostCount ?? 0}</span>
+                <Icon name="ios_share" size={17} className="text-subtle" />
+                {t('projectView.statProfileShares')}
+                <span className={SEG_COUNT}>{project?.profileShareCount ?? 0}</span>
               </span>
             )}
           </div>
@@ -345,13 +347,19 @@ export default function ProjectInfoPanel({
           {isOwner && ctaSlot}
         </div>
 
-        {(reactionsSlot || (project?.viewCount ?? 0) > 0) && (
+        {(reactionsSlot || (project?.viewCount ?? 0) > 0 || isOwner) && (
           <div className="flex flex-wrap items-center gap-1.5">
             {reactionsSlot}
             <span className="ml-auto flex shrink-0 items-center gap-1.5 font-mono text-xs font-medium text-subtle">
               <Icon name="visibility" size={14} />
               {t('projectView.viewCount', { count: project?.viewCount ?? 0 })}
             </span>
+            {isOwner && (
+              <span className="flex shrink-0 items-center gap-1.5 font-mono text-xs font-medium text-subtle">
+                <Icon name="call_split" size={14} />
+                {t('projectView.forkCount', { count: project?.forkCount ?? 0 })}
+              </span>
+            )}
           </div>
         )}
         {viewersSlot && <div>{viewersSlot}</div>}

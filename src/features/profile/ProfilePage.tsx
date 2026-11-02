@@ -23,6 +23,7 @@ import { followUser, unfollowUser, setFollowNotify, blockUser, unblockUser } fro
 import WallSection from './wall/WallSection';
 import type { FollowNotifyLevel } from './FollowNotifyMenu';
 import { useProfile } from './profile.queries';
+import { SharedProjectsTab } from './SharedProjectsTab';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSuggestedUsers } from '@/features/explore/hooks/useExplore';
 import { FollowModal } from './FollowModal';
@@ -612,7 +613,7 @@ export default function ProfilePage() {
           <div className="flex-1 min-w-0">
             {/* Tabs */}
             <div className="flex gap-1 mb-6 border-b border-border">
-              {['projects', 'playlists', 'activity'].map((tab) => {
+              {['projects', 'playlists', 'shared', 'activity'].map((tab) => {
                 const tAny = t as (k: string, opts?: object) => string;
                 let label = tAny(`profile.publicTabs.${tab}`);
                 if (tab === 'projects') label = tAny('profile.publicTabs.projectsWithCount', { count: projectCount });
@@ -683,6 +684,10 @@ export default function ProfilePage() {
 
             {activeTab === 'playlists' && (
               <PlaylistGrid accountName={profile.accountName} isOwner={isOwner} />
+            )}
+
+            {activeTab === 'shared' && (
+              <SharedProjectsTab accountName={profile.accountName} isOwner={isOwner} />
             )}
 
             {activeTab === 'activity' && profile.activityHeatmap && (
