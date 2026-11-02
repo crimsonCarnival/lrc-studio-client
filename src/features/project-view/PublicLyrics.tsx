@@ -10,6 +10,8 @@ import { singerColorIndex, singerGradient } from '@features/editor/utils/singer-
 import { useSettings } from '@/features/settings/useSettings';
 import { usePlayer } from '@features/player/PlayerContext';
 import { hasKanji, toHiragana, toKatakana, splitOkurigana, needsSpaceAfter } from '@/shared/utils/furigana';
+import { readStoredZoom, storeZoom, zoomFromWheel } from './lyrics-zoom';
+import { LyricsZoomControl } from './LyricsZoomControl';
 
 // Theme-token colors: the stage sits on the app background, so text derives
 // from --foreground and stays legible in both the dark and light themes.
@@ -578,7 +580,34 @@ export default function PublicLyrics({
   // of a display preference.
   const { settings } = useSettings();
   const activeHighlight = settings.editor?.display?.activeHighlight;
-  const baseFontRem = BASE_FONT_REM[settings.interface?.fontSize || 'normal'] ?? BASE_FONT_REM.normal;
+  const [zoom, setZoom] = useState(readStoredZoom);
+  useEffect(() => { storeZoom(zoom); }, [zoom]);
+  // Zoom rides on the base size every line already derives from, so the focus stage,
+  // the full list and ruby text all scale together, and the page around them does not.
+  const baseFontRem = (BASE_FONT_REM[settings.interface?.fontSize || 'normal'] ?? BASE_FONT_REM.normal) * zoom;
+  // Callback-ref state rather than a ref object: the stage root is a different element
+  // in each view (and absent on the placeholders), and the listener must follow it.
+  const [stageEl, setStageEl] = useState<HTMLDivElement | null>(null);
+  const [zoomHintVisible, setZoomHintVisible] = useState(false);
+  const zoomHintTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Ctrl+wheel (and a trackpad pinch, which browsers report as ctrl+wheel) zooms the
+  // lyrics instead of the page. Native and non-passive: React's onWheel is passive, so
+  // it cannot stop the browser zooming the whole page.
+  useEffect(() => {
+    if (!stageEl) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setZoom((z) => zoomFromWheel(z, e.deltaY, e.deltaMode));
+      setZoomHintVisible(true);
+      if (zoomHintTimer.current) clearTimeout(zoomHintTimer.current);
+      zoomHintTimer.current = setTimeout(() => setZoomHintVisible(false), 1000);
+    };
+    stageEl.addEventListener('wheel', onWheel, { passive: false });
+    return () => stageEl.removeEventListener('wheel', onWheel);
+  }, [stageEl]);
+  useEffect(() => () => { if (zoomHintTimer.current) clearTimeout(zoomHintTimer.current); }, []);
   const containerRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLDivElement>(null);
   const lastScrolledIndex = useRef(-2);
@@ -684,10 +713,10 @@ export default function PublicLyrics({
     <div
       role="group"
       aria-label={t('projectView.alignment')}
-      // Phones: a row of its own above the lyrics, so it never covers them. Desktop: floating,
+      // Phones: in the controls row above the lyrics, so it never covers them. Desktop: floating,
       // in the same row as the info panel's toggle (top-23 = 64px header + 28px), and to its left
       // while that toggle is showing.
-      className={`z-20 flex w-fit items-center rounded-lg border border-zinc-700/50 bg-zinc-950/70 p-0.5 shadow-lg backdrop-blur-md max-lg:mx-4 max-lg:mt-2 max-lg:self-end lg:absolute lg:top-23 ${reserveCorner ? 'lg:right-18' : 'lg:right-7'}`}
+      className={`z-20 flex w-fit items-center rounded-lg border border-zinc-700/50 bg-zinc-950/70 p-0.5 shadow-lg backdrop-blur-md lg:absolute lg:top-23 ${reserveCorner ? 'lg:right-18' : 'lg:right-7'}`}
     >
       {(['left', 'center', 'right'] as const).map((align) => {
         const label = t(ALIGN_LABEL_KEYS[align]);
@@ -705,6 +734,26 @@ export default function PublicLyrics({
           </Tip>
         );
       })}
+    </div>
+  );
+
+  // Phones: one row above the lyrics for zoom and alignment. Desktop: the wrapper
+  // dissolves (lg:contents) so the alignment control floats exactly as before, and
+  // zoom is ctrl+wheel only.
+  const stageControls = (
+    <div className="z-20 flex items-center justify-end gap-2 max-lg:mx-4 max-lg:mt-2 lg:contents">
+      <LyricsZoomControl zoom={zoom} onZoomChange={setZoom} className="lg:hidden" />
+      {alignmentControl}
+    </div>
+  );
+
+  // Brief readout while ctrl+wheel zooming, since nothing else shows the level on desktop.
+  const zoomHint = (
+    <div
+      aria-live="polite"
+      className={`pointer-events-none absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-zinc-700/50 bg-zinc-950/80 px-3 py-1.5 font-mono text-sm tabular-nums text-zinc-200 shadow-lg backdrop-blur-md transition-opacity duration-200 ${zoomHintVisible ? 'opacity-100' : 'opacity-0'}`}
+    >
+      {zoomHintVisible ? t('projectView.zoom.current', { value: `${Math.round(zoom * 100)}%` }) : null}
     </div>
   );
 
@@ -741,8 +790,9 @@ export default function PublicLyrics({
 
   if (!showFull) {
     return (
-      <div className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
-        {alignmentControl}
+      <div ref={setStageEl} className="relative flex-1 min-h-0 flex flex-col overflow-hidden">
+        {stageControls}
+        {zoomHint}
         {sectionHeader}
         <div className="lrc-scroll relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-6 pt-2 pb-6 lg:px-14 lg:pt-3 lg:pb-8">
           <div className="my-auto flex flex-col gap-3 lg:gap-4">
@@ -782,8 +832,9 @@ export default function PublicLyrics({
     // container-type: size lets the half-height spacers below be measured against this box (cqh)
     // instead of the viewport: on a phone the stage is a fraction of the screen, and 50dvh of
     // padding pushed every line out of it before playback had moved the scroll.
-    <div className="relative flex flex-1 min-h-0 flex-col overflow-hidden [container-type:size]">
-      {alignmentControl}
+    <div ref={setStageEl} className="relative flex flex-1 min-h-0 flex-col overflow-hidden [container-type:size]">
+      {stageControls}
+      {zoomHint}
       {sectionHeader}
 
       {/* Top fade */}

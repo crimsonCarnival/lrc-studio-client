@@ -56,6 +56,13 @@ export default {
   statBoosts: "Impulsos",
   viewCount_one: "{{count}} vista",
   viewCount_other: "{{count}} vistas",
+  zoom: {
+    label: "Tamaño de la letra",
+    current: "Tamaño de la letra {{value}}",
+    presets: "Tamaños predefinidos",
+    slider: "Tamaño de la letra",
+    reset: "Volver a 100%",
+  },
   projectActions: "Acciones del proyecto",
   syncedBy: "Sincronizada por",
   visualizer: {

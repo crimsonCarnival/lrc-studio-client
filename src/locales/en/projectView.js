@@ -56,6 +56,13 @@ export default {
   statBoosts: "Boosts",
   viewCount_one: "{{count}} view",
   viewCount_other: "{{count}} views",
+  zoom: {
+    label: "Lyrics size",
+    current: "Lyrics size {{value}}",
+    presets: "Size presets",
+    slider: "Lyrics size",
+    reset: "Reset to 100%",
+  },
   projectActions: "Project actions",
   syncedBy: "Synced by",
   visualizer: {
