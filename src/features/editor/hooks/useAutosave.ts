@@ -4,6 +4,7 @@ import { flatToSections } from '@/features/editor/utils/sections';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 import { authEvents } from '@/shared/utils/auth-events';
+import { isApiError, isAuthError } from '@/types';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
 import { getSocket } from '@/app/socket.client';
 import { artistDisplay } from '@/features/artists/artist-credits';
@@ -193,8 +194,12 @@ export function useAutosave({
         } catch (err) {
           if ((err as { name?: string })?.name === 'AbortError') return; // superseded — ignore
           // Auth failure: token may have expired. Signal the global handler.
-          if ((err as { status?: number })?.status === 401 || (err as { status?: number })?.status === 403) {
+          if (isAuthError(err)) {
             authEvents.emit('token:expired');
+          } else if (isApiError(err) && err.code) {
+            // The server answered and refused (not_found, version_conflict, validation...):
+            // replaying the same patch later would only fail again, so it is not queued.
+            console.warn('[Autosave] Rejected by server:', err.code);
           } else {
             // Network failure — queue for retry on reconnect
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

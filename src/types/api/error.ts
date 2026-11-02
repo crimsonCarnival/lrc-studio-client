@@ -25,3 +25,14 @@ export interface ApiError extends Error {
 export function isApiError(err: unknown): err is ApiError {
   return err instanceof Error && ('status' in err || 'code' in err || 'graphqlErrors' in err);
 }
+
+/**
+ * True when a failed REST or GraphQL call means the session is missing or expired.
+ * GraphQL resolver errors arrive as HTTP 200, so they carry `code` instead of `status`.
+ * 403 counts too: once the access cookie is gone the server sees an anonymous caller and
+ * answers an ownership check with "forbidden".
+ */
+export function isAuthError(err: unknown): boolean {
+  if (!isApiError(err)) return false;
+  return err.status === 401 || err.status === 403 || err.code === 'unauthorized' || err.code === 'forbidden';
+}

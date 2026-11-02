@@ -1,5 +1,6 @@
 import { getDeviceId } from '@/shared/utils/device';
 import { authEvents } from '@/shared/utils/auth-events';
+import { getAccessToken } from './api.client';
 import type { ApiError } from '@/types';
 
 const GQL_ENDPOINT = (import.meta.env.VITE_API_URL || '/api') + '/graphql';
@@ -53,6 +54,9 @@ export async function gqlRequest<T = unknown>(
     const err = new Error(gqlErr.message) as ApiError;
     err.code = gqlErr.extensions?.code;
     err.graphqlErrors = json.errors;
+    // Resolver errors come back as HTTP 200, so an expired session shows up as this code,
+    // not as a 401. Only a signed-in client has a session worth refreshing.
+    if (err.code === 'unauthorized' && getAccessToken()) authEvents.emit('token:expired');
     throw err;
   }
 
