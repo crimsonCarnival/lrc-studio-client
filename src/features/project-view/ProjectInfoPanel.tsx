@@ -166,8 +166,12 @@ export default function ProjectInfoPanel({
                 </span>
               )}
             </StaffRing>
-            <Link to={profilePath(accountName)} className="truncate font-bold text-foreground hover:underline">
-              {authorName}
+            <Link to={profilePath(accountName)} className="flex min-w-0 items-baseline gap-1.5 hover:underline">
+              <span className="truncate font-bold text-foreground">{authorName}</span>
+              {/* The handle is what identifies them; a display name need not be unique. */}
+              {authorName !== accountName && (
+                <span className="truncate font-mono text-xs text-subtle">@{accountName}</span>
+              )}
             </Link>
             {authorLevel > 0 && (
               <span className="inline-flex h-5 shrink-0 items-center rounded-full bg-primary-soft px-[7px] font-mono text-[11px] font-semibold text-primary-ink">
