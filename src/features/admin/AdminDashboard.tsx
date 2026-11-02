@@ -23,6 +23,9 @@ import AdminXpTab from './AdminXpTab';
 import AdminRequestsTab from './AdminRequestsTab';
 import AdminPermissionsTab from './AdminPermissionsTab';
 import AdminReportsTab from './AdminReportsTab';
+import AdminAppealsTab from './AdminAppealsTab';
+import AdminInboxTab from './AdminInboxTab';
+import { refreshAppeals, useAppeals } from './appeals-store';
 import { adminPath, useAdminRoute, useAdminSub } from './admin-nav';
 import { AdminSubNav } from './AdminSubNav';
 import AdminTasksView from './AdminTasksView';
@@ -30,7 +33,7 @@ import type { AdminTabId } from './admin-nav';
 import { useAdminTabs } from './useAdminTabs';
 import SudoPasswordModal from './SudoPasswordModal';
 import { LogoLoader } from '@ui/LogoLoader';
-import type { AdminUser } from '@/features/admin/admin.types';
+import type { AdminUser, PendingAppeal } from '@/features/admin/admin.types';
 
 /*
  * Note on `advanced.confirmDestructive`: this surface deliberately confirms
@@ -111,6 +114,7 @@ export default function AdminDashboard() {
   const { tab: routeTab } = useAdminRoute();
   const activeTab: AdminTabId = routeTab ?? 'moderation';
   const auditView = useAdminSub('audit');
+  const { appeals: pendingAppeals } = useAppeals(userHasPermission(currentUser?.permissions, 'users.ban'));
 
   // Canonicalise the URL: old `?tab=requests` links and a bare /admin land on the tab's own
   // path, and a path the user can't open falls back to the first one they can.
@@ -320,6 +324,8 @@ export default function AdminDashboard() {
   // Radix Dialog while it is still open strands its scroll-lock and
   // pointer-events:none on <body> (the blurred, unclickable page).
   const closeAppealModal = () => setAppealModal(prev => ({ ...prev, isOpen: false }));
+  // A pending appeal has the fields the dialog and the unban/reject handlers read (id, names, ban, appeal).
+  const openAppeal = (appeal: PendingAppeal) => setAppealModal({ isOpen: true, user: appeal as unknown as AdminUser });
 
   const handleToggleBan = async (user: AdminUser) => {
     if (isSelf(user)) {
@@ -333,6 +339,7 @@ export default function AdminDashboard() {
         toast.success(t('admin.toast.unbannedSuccess', { name: user.displayName || user.accountName }));
         closeAppealModal();
         refreshUsersFromStart();
+        void refreshAppeals();
       } catch (err) {
         notifyError(err, 'admin.toast.statusError');
       }
@@ -347,6 +354,7 @@ export default function AdminDashboard() {
       toast.success(t('admin.toast.appealRejectedSuccess', { name: user.displayName || user.accountName }));
       closeAppealModal();
       refreshUsersFromStart();
+      void refreshAppeals();
     } catch (err) {
       notifyError(err, 'admin.toast.statusError');
     }
@@ -530,6 +538,14 @@ export default function AdminDashboard() {
             handleUnblockDevice={handleUnblockDevice}
             bannedDevices={bannedDevices}
           />
+        )}
+
+        {activeTab === 'inbox' && (
+          <AdminInboxTab appeals={pendingAppeals} />
+        )}
+
+        {activeTab === 'appeals' && (
+          <AdminAppealsTab appeals={pendingAppeals} onOpen={openAppeal} />
         )}
 
         {activeTab === 'reports' && (

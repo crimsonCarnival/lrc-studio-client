@@ -27,3 +27,14 @@ export interface AdminUser {
   stats?: { minutesSynced?: number };
   [key: string]: unknown;
 }
+
+/** A banned user whose appeal is waiting on a decision (`GET /admin/appeals`). */
+export interface PendingAppeal {
+  id: string;
+  accountName: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  email: string | null;
+  ban: { active: true; reason: string | null; until: string | null };
+  appeal: { text: string | null; status: string; submittedAt: string | null };
+}
