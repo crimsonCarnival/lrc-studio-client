@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useParams } from 'react-router-dom';
+import { matchPath, useLocation, useParams } from 'react-router-dom';
 import { isAdminPathname } from '@/features/admin/admin-nav';
 
 /**
@@ -20,6 +20,7 @@ export function usePageTitle(projectName: string | null = null) {
 
     // Remove leading/trailing slashes for easier matching
     const cleanPath = path.replace(/^\/|\/$/g, '');
+    const rootAccount = (matchPath('/:accountName', path) ?? matchPath('/:accountName/lists/:listId', path))?.params.accountName;
 
     // The admin host serves its dashboard at "/" and "/home", so it has to be told apart first.
     if ((cleanPath === 'home' || cleanPath === '') && !isAdminPathname(path)) {
@@ -64,9 +65,10 @@ export function usePageTitle(projectName: string | null = null) {
     } else if (/^[^/]+\/projects\/[^/]+(\/(edit|fork))?$/.test(cleanPath)) {
       // /:accountName/projects/:slug-:id[/edit|/fork]
       pageTitle = projectName || t('app.titles.library');
-    } else if (accountName && /^[^/]+(\/lists\/[^/]+)?$/.test(cleanPath)) {
-      // /:accountName and /:accountName/lists/:listId (reached only through those routes, so a param is set)
-      pageTitle = accountName;
+    } else if (rootAccount) {
+      // /:accountName and /:accountName/lists/:listId. The hook runs above <Routes>, so useParams is empty here
+      // and the account has to come from the pathname. An unknown account still gets its own not-found view from ProfilePage.
+      pageTitle = rootAccount;
     } else {
       // Every real route is matched above, so what is left is the catch-all 404.
       pageTitle = t('app.titles.notFound');
