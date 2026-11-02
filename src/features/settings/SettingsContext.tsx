@@ -9,25 +9,9 @@ import { SettingsContext } from './settings-context-value';
 import { settings as settingsApi, getAccessToken } from '@/app/api';
 import type { AppSettings, SettingsContextValue } from './settings.types';
 import i18next from 'i18next';
+import { deepMerge } from './settings-merge';
 
 const STORAGE_KEY = 'lrc-syncer-settings';
-
-function deepMerge(target: any, source: any): any {
-  if (typeof target !== 'object' || target === null) return source;
-  if (typeof source !== 'object' || source === null) return target;
-
-  const output = { ...target };
-  Object.keys(source).forEach(key => {
-    if (source[key] instanceof Array) {
-      output[key] = source[key]; // Arrays overwrite
-    } else if (typeof source[key] === 'object' && source[key] !== null) {
-      output[key] = deepMerge(target[key], source[key]);
-    } else {
-      output[key] = source[key];
-    }
-  });
-  return output;
-}
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(() => {
