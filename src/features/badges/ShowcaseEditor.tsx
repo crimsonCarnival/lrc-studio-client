@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { gqlRequest } from '@/app/graphql.client';
 import { BADGE_REGISTRY, RARITY_CONFIG } from './badge-registry';
 import { BadgeEmblem } from './BadgeEmblem';
@@ -64,7 +65,7 @@ function EarnedBadgeItem({ badge, isInShowcase, onToggle }: { badge: Badge; isIn
         onClick={() => onToggle(badge.id)}
         className="size-11 lg:size-9"
       >
-        <Icon name={isInShowcase ? 'check' : 'add'} size={18} />
+        <MorphIcon name={isInShowcase ? 'check' : 'add'} size={18} decorative />
       </Button>
     </li>
   );

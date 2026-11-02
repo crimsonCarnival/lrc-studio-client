@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { Button } from '@ui/button';
 import { LogoLoader } from '@ui/LogoLoader';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatTimeAgo } from '@/features/notifications/time-ago';
@@ -219,7 +220,7 @@ export function ReportThreadToggle({ reportId, count, moderatorView, defaultOpen
       >
         <Icon name="forum" size={14} />
         {count > 0 ? t('reports.thread.toggleCount', { count }) : t('reports.thread.toggle')}
-        <Icon name={open ? 'expand_less' : 'expand_more'} size={14} />
+        <MorphIcon name={open ? 'chevron_up' : 'chevron_down'} size={14} decorative />
       </button>
       {open && (
         <div id={panelId} className="rounded-xl border border-zinc-800/60 bg-zinc-950/40 p-3">

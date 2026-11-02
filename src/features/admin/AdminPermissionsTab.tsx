@@ -5,6 +5,7 @@ import { admin } from '@/app/api';
 import { isSudoCancelled } from './services/sudo';
 import ConfirmModal from '@shared/ui/ConfirmModal';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { Button } from '@ui/button';
 import { PERMISSIONS, ROLE_RANK, type Permission, type Role } from '@/features/auth/permissions';
 import { useAdminSub } from './admin-nav';
@@ -323,7 +324,7 @@ export default function AdminPermissionsTab({ isSuperadmin }: { isSuperadmin: bo
                               on ? 'bg-primary-soft text-primary-ink' : 'bg-zinc-800/60 text-zinc-500 hover:text-zinc-300'
                             } ${override ? 'ring-1 ring-amber-400/60' : ''}`}
                           >
-                            <Icon name={on ? 'check' : 'add'} size={11} />
+                            <MorphIcon name={on ? 'check' : 'add'} size={11} decorative />
                             {permissionLabel(perm)}
                           </button>
                         );

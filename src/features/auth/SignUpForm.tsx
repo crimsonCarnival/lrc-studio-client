@@ -4,6 +4,7 @@ import { Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router-dom';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { AnimatePresence, m as M } from 'framer-motion';
 import { z } from 'zod';
 import { FloatingInput } from '@ui/floating-input';
@@ -369,7 +370,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                     className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
                     aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                   >
-                    <Icon name={showPassword ? 'visibility_off' : 'visibility'} size={16} />
+                    <MorphIcon name={showPassword ? 'visibility_off' : 'visibility'} size={16} decorative />
                   </Button>
                 )}
               </div>
@@ -397,7 +398,7 @@ export default function SignUpForm({ t, onSwitchToLogin, onRegister, onGoogleLog
                     className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
                     aria-label={showConfirm ? t('auth.hidePassword') : t('auth.showPassword')}
                   >
-                    <Icon name={showConfirm ? 'visibility_off' : 'visibility'} size={16} />
+                    <MorphIcon name={showConfirm ? 'visibility_off' : 'visibility'} size={16} decorative />
                   </Button>
                 )}
               </div>

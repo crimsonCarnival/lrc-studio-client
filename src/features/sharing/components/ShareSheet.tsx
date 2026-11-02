@@ -5,6 +5,7 @@ import { siBluesky, siDiscord, siFacebook, siReddit, siTelegram, siWhatsapp, siX
 import { ResponsiveModal } from '@ui/ResponsiveModal';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { cn } from '@/shared/utils/utils';
 import { ProjectListCover } from '@/features/projects/components/ProjectListCover';
 import { PlayerContext } from '@/features/player/PlayerContext';
@@ -227,7 +228,7 @@ function ShareSheetBody({ url: baseUrl, title, subtitle, projectName, coverImage
 
         <div className="flex gap-2">
           <Button onClick={copy} className="h-11 flex-1 gap-2 text-[15px] lg:h-11 lg:text-[15px]">
-            <Icon name={copied ? 'check' : 'link'} size={18} className={copied ? 'icon-draw' : undefined} />
+            <MorphIcon name={copied ? 'check' : 'link'} size={18} decorative />
             {copied ? t('share.sheet.copied') : t('share.sheet.copy')}
           </Button>
           <Button
