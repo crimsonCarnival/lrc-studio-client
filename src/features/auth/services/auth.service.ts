@@ -98,7 +98,21 @@ export const authService = {
   },
 
   async validateResetToken(token: string): Promise<unknown> {
-    return request(`/auth/reset-password/validate?token=${token}`);
+    return request(`/auth/reset-password/validate?token=${encodeURIComponent(token)}`);
+  },
+
+  async forgotPassword(email: string, recaptchaToken?: string): Promise<unknown> {
+    return request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email, recaptchaToken }),
+    });
+  },
+
+  async verifyEmail(token: string): Promise<unknown> {
+    return request('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
   },
 
   async resetPassword(params: ResetPasswordParams): Promise<unknown> {

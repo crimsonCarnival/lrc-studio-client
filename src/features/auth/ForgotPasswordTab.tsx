@@ -5,6 +5,8 @@ import { Icon } from '@/shared/ui/Icon';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { Button } from '@ui/button';
 import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
+import { authService } from '@/features/auth/services/auth.service';
+import { isApiError } from '@/types';
 
 export default function ForgotPasswordTab({ onBackToLogin }: { onBackToLogin?: () => void }) {
   const { t } = useTranslation();
@@ -26,27 +28,17 @@ export default function ForgotPasswordTab({ onBackToLogin }: { onBackToLogin?: (
         recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'forgot_password');
       }
 
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, recaptchaToken }),
-      });
-
-      if (response.status === 429) {
-        setError(t('auth.forgotPasswordForm.errorTooMany'));
-
-        return;
-      }
-
-      if (!response.ok) {
-        setError(t('auth.forgotPasswordForm.errorFailed'));
-        return;
-      }
-
+      await authService.forgotPassword(email, recaptchaToken);
       setSuccess(true);
     } catch (err) {
-      setError(t('auth.forgotPasswordForm.errorNetwork'));
-      console.error(err);
+      if (isApiError(err) && err.status === 429) {
+        setError(t('auth.forgotPasswordForm.errorTooMany'));
+      } else if (isApiError(err) && err.status) {
+        setError(t('auth.forgotPasswordForm.errorFailed'));
+      } else {
+        setError(t('auth.forgotPasswordForm.errorNetwork'));
+        console.error(err);
+      }
     } finally {
       setLoading(false);
     }
