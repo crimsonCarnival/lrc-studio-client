@@ -9,6 +9,16 @@ export default {
     copyright: 'Infracción de derechos de autor',
     other: 'Otra cosa',
   },
+  // Una línea bajo cada motivo en el diálogo de reporte.
+  reasonHints: {
+    spam: 'Anuncios, estafas, bots o lo mismo publicado una y otra vez',
+    harassment: 'Insultos, amenazas o ataques a una persona',
+    hate: 'Ataques a personas por quiénes son',
+    sexual: 'Desnudos o material sexual',
+    impersonation: 'Usar el nombre, la foto o la identidad de otra persona',
+    copyright: 'Tu obra, o la de otra persona, usada sin permiso',
+    other: 'Algo que no encaja arriba; cuéntalo en la nota',
+  },
   formTitle: '¿Por qué lo denuncias?',
   dialogTitle: {
     wall_comment: 'Denunciar comentario',
@@ -17,6 +27,8 @@ export default {
     playlist: 'Denunciar lista',
   },
   note: '¿Algo que los moderadores deban saber? (opcional)',
+  notePlaceholder: '¿Algo que los moderadores deban saber? (opcional)',
+  privacyHint: 'Solo los moderadores ven tu denuncia. A la persona denunciada no se le dice quién la denunció.',
   alsoBlock: 'Bloquear también a @{{name}}',
   alsoBlockHint: 'No veréis los proyectos, comentarios ni el perfil del otro.',
   send: 'Enviar denuncia',

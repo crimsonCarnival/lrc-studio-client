@@ -9,7 +9,7 @@ import { LogoLoader } from '@ui/LogoLoader';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { Popover, PopoverContent, PopoverItem, PopoverSeparator, PopoverTrigger } from '@ui/popover';
 import { cn } from '@/shared/utils/utils';
-import { ReportForm } from '@/features/reports/ReportDialog';
+import { ReportDialog } from '@/features/reports/ReportDialog';
 import { profilePath } from '../profile-path';
 import { getWallLikers } from './wall.service';
 import type { WallAuthor } from './wall.service';
@@ -32,7 +32,7 @@ function useCopyText(text: string) {
 /**
  * The ⋯ menu, for everyone: copy, then edit (the author, while the window is open), report
  * (signed in, not your own) and delete (its author, the wall's owner or a moderator). Report
- * swaps the menu for the reasons; delete asks in the corner, as before.
+ * opens the report dialog; delete asks in the corner, as before.
  */
 export function CommentMenu({ commentId, copyText, canEdit, canReport, onEdit, onDelete }: {
   commentId: string;
@@ -47,58 +47,51 @@ export function CommentMenu({ commentId, copyText, canEdit, canReport, onEdit, o
   const [open, setOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
 
-  const openChange = (next: boolean) => {
-    setOpen(next);
-    if (!next) setReporting(false);
-  };
-  const pick = (run: () => void) => () => { openChange(false); run(); };
+  const pick = (run: () => void) => () => { setOpen(false); run(); };
   const copy = useCopyText(copyText);
 
   return (
-    <Popover open={open} onOpenChange={openChange}>
-      <Tip content={t('profile.wall.moreActions')}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            aria-label={t('profile.wall.moreActions')}
-            className={cn(CORNER_BUTTON, 'hover:text-zinc-100', open && 'opacity-100 text-zinc-100')}
-          >
-            <Icon name="more_horiz" size={15} />
-          </Button>
-        </PopoverTrigger>
-      </Tip>
-      <PopoverContent align="end" className={reporting ? 'w-64 lg:min-w-64' : 'w-48 lg:min-w-48'}>
-        {reporting ? (
-          <ReportForm targetType="wall_comment" targetId={commentId} onSent={() => openChange(false)} />
-        ) : (
-          <>
-            <PopoverItem onClick={pick(copy)} className="text-sm">
-              <Icon name="content_copy" size={16} /> {t('profile.wall.copy')}
+    <>
+      <Popover open={open} onOpenChange={setOpen}>
+        <Tip content={t('profile.wall.moreActions')}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              aria-label={t('profile.wall.moreActions')}
+              className={cn(CORNER_BUTTON, 'hover:text-zinc-100', open && 'opacity-100 text-zinc-100')}
+            >
+              <Icon name="more_horiz" size={15} />
+            </Button>
+          </PopoverTrigger>
+        </Tip>
+        <PopoverContent align="end" className="w-48 lg:min-w-48">
+          <PopoverItem onClick={pick(copy)} className="text-sm">
+            <Icon name="content_copy" size={16} /> {t('profile.wall.copy')}
+          </PopoverItem>
+          {canEdit && (
+            <PopoverItem onClick={pick(onEdit)} className="text-sm">
+              <Icon name="edit" size={16} /> {t('profile.wall.edit')}
             </PopoverItem>
-            {canEdit && (
-              <PopoverItem onClick={pick(onEdit)} className="text-sm">
-                <Icon name="edit" size={16} /> {t('profile.wall.edit')}
+          )}
+          {canReport && (
+            <PopoverItem onClick={pick(() => setReporting(true))} className="text-sm">
+              <Icon name="flag" size={16} /> {t('profile.wall.report')}
+            </PopoverItem>
+          )}
+          {onDelete && (
+            <>
+              <PopoverSeparator />
+              <PopoverItem onClick={pick(onDelete)} className="text-sm text-destructive hover:bg-destructive/15 hover:text-destructive">
+                <Icon name="delete" size={16} /> {t('profile.wall.delete')}
               </PopoverItem>
-            )}
-            {canReport && (
-              <PopoverItem onClick={() => setReporting(true)} className="text-sm">
-                <Icon name="flag" size={16} /> {t('profile.wall.report')}
-              </PopoverItem>
-            )}
-            {onDelete && (
-              <>
-                <PopoverSeparator />
-                <PopoverItem onClick={pick(onDelete)} className="text-sm text-destructive hover:bg-destructive/15 hover:text-destructive">
-                  <Icon name="delete" size={16} /> {t('profile.wall.delete')}
-                </PopoverItem>
-              </>
-            )}
-          </>
-        )}
-      </PopoverContent>
-    </Popover>
+            </>
+          )}
+        </PopoverContent>
+      </Popover>
+      <ReportDialog open={reporting} onOpenChange={setReporting} targetType="wall_comment" targetId={commentId} />
+    </>
   );
 }
 
