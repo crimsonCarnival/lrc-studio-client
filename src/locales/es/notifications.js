@@ -19,6 +19,8 @@ export default {
   wallReplyOwn: '<0>{{actors}}</0> respondió a tu comentario en tu muro',
   mentionOwn: '<0>{{actors}}</0> te etiquetó en tu muro',
   projectMention: '<0>{{actors}}</0> mencionó <1>{{title}}</1> en el muro de <2>{{wall}}</2>',
+  reportMessage: '<0>{{actors}}</0> escribió en la conversación de una denuncia',
+  reportMessageToReporter: 'Un moderador respondió sobre tu denuncia',
   projectMentionOwn: '<0>{{actors}}</0> mencionó <1>{{title}}</1> en tu muro',
   commentLikeOwn: 'A <0>{{actors}}</0> le gustó tu comentario en tu muro',
   wallReport: '<0>{{actors}}</0> denunció un comentario en el muro de <1>{{wall}}</1>',

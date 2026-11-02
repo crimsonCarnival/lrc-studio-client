@@ -30,6 +30,7 @@ const PREFERENCES_FIELDS = /* GraphQL */ `
     comment_like
     report
     report_reviewed
+    report_message
     level_up
     playlist_saved
     star_milestone

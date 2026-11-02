@@ -32,7 +32,7 @@ export interface NotificationData {
   read?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated'; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean; outcome?: 'dismissed' | 'actioned'; until?: string | null; targetType?: string; targetLabel?: string; reportId?: string } | null;
+  meta?: { delta?: number; before?: number; after?: number; from?: string; to?: string; current?: number; day?: string; forkPublicId?: string; forkOwner?: string; kind?: 'published' | 'updated'; level?: number; count?: number; playlistId?: string; wall?: string; reply?: boolean; commentId?: string; approved?: boolean; outcome?: 'dismissed' | 'actioned'; until?: string | null; targetType?: string; targetLabel?: string; reportId?: string; toReporter?: boolean; fromModerator?: boolean } | null;
 }
 
 /** The target types a `report` / `report_reviewed` notification can name. */
@@ -65,6 +65,7 @@ const TYPE_ICON_NAME: Record<string, string> = {
   wall_restricted: 'speaker_notes_off',
   report: 'flag',
   report_reviewed: 'done_all',
+  report_message: 'forum',
   level_up: 'trending_up',
   playlist_saved: 'bookmark',
   star_milestone: 'star',
@@ -117,6 +118,12 @@ export function notificationDestination(
   if (type === 'wall_report' || type === 'report') return '/admin/reports';
   // A reviewed report opens the reporter's history, which says what became of each one.
   if (type === 'wall_report_reviewed' || type === 'report_reviewed') return '/reports';
+  // A report's conversation: the reporter's own history, or the moderators' queue.
+  if (type === 'report_message') {
+    return notification.meta?.toReporter
+      ? (notification.meta.reportId ? `/reports#report-${notification.meta.reportId}` : '/reports')
+      : '/admin/reports';
+  }
   // "Continue working": the user's most recently updated project, else home.
   if (type === 'streak_warning') return (publicId && projectEditPath({ publicId }, recipientAccountName)) || '/home';
   return null;
@@ -274,6 +281,12 @@ export function NotificationText({ notification, t, viewerAccountName }: { notif
         />
       </span>
     );
+  }
+  if (type === 'report_message') {
+    // To the reporter, moderators are anonymous: no name, just "a moderator".
+    return notification.meta?.toReporter
+      ? <span>{t('notifications.reportMessageToReporter')}</span>
+      : <span><Trans i18nKey="notifications.reportMessage" values={{ actors: actorStr }} components={[<strong key="0" />]} /></span>;
   }
   if (type === 'wall_report_reviewed') {
     return (

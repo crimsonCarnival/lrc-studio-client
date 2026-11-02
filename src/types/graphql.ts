@@ -1960,6 +1960,7 @@ export type NotificationPreferences = {
   project_mention: Scalars['Boolean']['output'];
   reaction: Scalars['Boolean']['output'];
   report: Scalars['Boolean']['output'];
+  report_message: Scalars['Boolean']['output'];
   report_reviewed: Scalars['Boolean']['output'];
   star: Scalars['Boolean']['output'];
   star_milestone: Scalars['Boolean']['output'];
@@ -1984,6 +1985,7 @@ export type NotificationPreferencesInput = {
   project_mention?: InputMaybe<Scalars['Boolean']['input']>;
   reaction?: InputMaybe<Scalars['Boolean']['input']>;
   report?: InputMaybe<Scalars['Boolean']['input']>;
+  report_message?: InputMaybe<Scalars['Boolean']['input']>;
   report_reviewed?: InputMaybe<Scalars['Boolean']['input']>;
   star?: InputMaybe<Scalars['Boolean']['input']>;
   star_milestone?: InputMaybe<Scalars['Boolean']['input']>;
@@ -2291,11 +2293,22 @@ export type ReportPlaylistTarget = {
 export type ReportEntry = {
   createdAt: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  messageCount: Scalars['Int']['output'];
   note: Scalars['String']['output'];
   reason: Scalars['String']['output'];
   reporter?: Maybe<ReportUser>;
   resolvedAt?: Maybe<Scalars['String']['output']>;
   status: Scalars['String']['output'];
+};
+
+export type ReportMessage = {
+  author?: Maybe<ReportUser>;
+  body: Scalars['String']['output'];
+  createdAt: Scalars['String']['output'];
+  fromReporter: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  mine: Scalars['Boolean']['output'];
+  replies: Array<ReportMessage>;
 };
 
 export type ReportGroup = {
@@ -2318,6 +2331,7 @@ export type MyReport = {
   comment?: Maybe<ReportCommentTarget>;
   createdAt: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  messageCount: Scalars['Int']['output'];
   note: Scalars['String']['output'];
   playlist?: Maybe<ReportPlaylistTarget>;
   project?: Maybe<ReportProjectTarget>;

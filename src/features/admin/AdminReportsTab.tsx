@@ -12,6 +12,7 @@ import { formatTimeAgo } from '@/features/notifications/time-ago';
 import { listReportGroups, REPORT_TARGET_TYPES, resolveReportGroup } from '@/features/reports/reports.service';
 import type { ReportGroup, ReportStatus } from '@/features/reports/reports.service';
 import { PersonLink, ReportTargetPreview } from '@/features/reports/ReportTargetPreview';
+import { ReportThreadToggle } from '@/features/reports/ReportThread';
 import { isSudoCancelled, withSudo } from './services/sudo';
 import BanUserModal from './BanUserModal';
 
@@ -136,6 +137,7 @@ function GroupRow({ group, status, busy, onAct }: { group: ReportGroup; status: 
               <span>{ago(report.createdAt)}</span>
             </p>
             {report.note && <p className="text-zinc-400">{t('admin.reports.note', { note: report.note })}</p>}
+            <ReportThreadToggle reportId={report.id} count={report.messageCount} moderatorView />
           </li>
         ))}
       </ul>

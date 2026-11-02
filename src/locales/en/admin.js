@@ -83,6 +83,13 @@ export default {
     type: { extract_lyrics: 'Lyrics search', infer_end_times: 'End-time inference' },
     empty: 'No tasks match.',
     anonymous: 'Signed out',
+    unknownDevice: 'Unknown device',
+    viaDevice: 'matched by device',
+    errors: {
+      lyrics_unavailable: 'No provider has these lyrics',
+      upstream_error: 'A lyrics provider failed to respond',
+      infer_failed: 'End times could not be inferred',
+    },
     synced: 'Synced',
     plain: 'Plain text',
     provider: 'via {{name}}',

@@ -12,7 +12,7 @@ export interface AdminSubNavItem {
 /** The row of sub-view links under a tab. Each one is a URL of its own. */
 export function AdminSubNav({ tab, items, current }: { tab: AdminTabId; items: AdminSubNavItem[]; current: string }) {
   return (
-    <div role="tablist" className="flex items-center gap-1 px-4 pt-3 pb-0 border-b border-zinc-800/40 overflow-x-auto">
+    <div role="tablist" className="flex shrink-0 items-center gap-1 px-4 pt-3 pb-0 border-b border-zinc-800/40 overflow-x-auto">
       {items.map(item => (
         <Link
           key={item.id}

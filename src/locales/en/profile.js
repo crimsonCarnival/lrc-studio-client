@@ -450,6 +450,7 @@ export default {
   notif_comment_like: 'Someone liked my comment',
   notif_report: 'Someone reported a comment, an account, a project or a playlist',
   notif_report_reviewed: 'A moderator reviewed my report',
+  notif_report_message: 'Someone replied in a report conversation',
   notif_level_up: 'Level-ups',
   notif_playlist_saved: 'Someone saved my playlist',
   notif_star_milestone: 'Star milestones on my projects',

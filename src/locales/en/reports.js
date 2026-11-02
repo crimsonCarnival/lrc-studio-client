@@ -9,6 +9,16 @@ export default {
     copyright: 'Copyright infringement',
     other: 'Something else',
   },
+  // One line under each reason in the report dialog.
+  reasonHints: {
+    spam: 'Ads, scams, bots or the same thing posted over and over',
+    harassment: 'Insults, threats or targeting a person',
+    hate: 'Attacks on people for who they are',
+    sexual: 'Nudity or sexual material',
+    impersonation: 'Using someone else’s name, photo or identity',
+    copyright: 'Your work, or someone else’s, used without permission',
+    other: 'Something that doesn’t fit above; tell us in the note',
+  },
   formTitle: 'Why are you reporting this?',
   dialogTitle: {
     wall_comment: 'Report comment',
@@ -17,6 +27,8 @@ export default {
     playlist: 'Report playlist',
   },
   note: 'Anything the moderators should know? (optional)',
+  notePlaceholder: 'Anything the moderators should know? (optional)',
+  privacyHint: 'Only moderators see your report. The person you report isn’t told who reported them.',
   alsoBlock: 'Also block @{{name}}',
   alsoBlockHint: 'You won’t see each other’s projects, comments or profile.',
   send: 'Send report',
@@ -54,6 +66,26 @@ export default {
     noBio: 'No bio',
     banned: 'Banned',
     private: 'Private',
+  },
+  // The conversation on a report, between the reporter and the moderators.
+  thread: {
+    title: 'Conversation',
+    toggle: 'Conversation',
+    toggleCount_one: 'Conversation ({{count}})',
+    toggleCount_other: 'Conversation ({{count}})',
+    emptyReporter: 'Want to add something, or ask about this report? Write to the moderators here.',
+    emptyModerator: 'No messages yet. The reporter is told when you write.',
+    placeholderReporter: 'Write to the moderators',
+    placeholderModerator: 'Write to the reporter',
+    replyPlaceholder: 'Write a reply',
+    send: 'Send',
+    reply: 'Reply',
+    you: 'You',
+    moderator: 'Moderator',
+    moderatorBadge: 'Moderator',
+    reporterBadge: 'Reporter',
+    privacy: 'Only you and the moderators see this conversation. Moderators reply as “Moderator”.',
+    loadError: 'This conversation could not be loaded.',
   },
   // The reporter's history page, /reports.
   page: {

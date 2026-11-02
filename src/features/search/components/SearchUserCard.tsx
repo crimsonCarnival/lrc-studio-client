@@ -7,6 +7,7 @@ import { LazyImage } from '@ui/LazyImage';
 import { Button } from '@ui/button';
 import { CountryFlag } from '@ui/CountryFlag';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { followUser, unfollowUser } from '@/features/profile/profile.service';
 import type { FollowUser } from '@/types';
 import { Highlight } from './Highlight';
@@ -91,7 +92,7 @@ export function SearchUserCard({ user, query, canFollow }: SearchUserCardProps) 
             onClick={toggleFollow}
             className="h-10 gap-2 px-3.5 text-[15px] max-sm:flex-1 lg:h-10 lg:px-3.5 lg:text-[15px] coarse:h-11"
           >
-            <Icon name={following ? 'check' : 'add'} size={16} />
+            <MorphIcon name={following ? 'check' : 'add'} size={16} decorative />
             {following ? t('profile.following') : t('profile.follow')}
           </Button>
         )}

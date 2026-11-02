@@ -4,6 +4,7 @@ import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { Tip } from '@ui/tip';
 import { formatTime } from '@/shared/utils/format-time';
 import { formatLoopParam } from '@/shared/utils/url-params';
@@ -393,7 +394,7 @@ export function SharePanel({
                 : 'bg-zinc-800/80 border-zinc-700/60 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 hover:scale-105 active:scale-95'
               }`}
           >
-            {copied ? <Icon name="check" size={16} /> : <Icon name="content_copy" size={16} />}
+            <MorphIcon name={copied ? 'check' : 'content_copy'} size={16} decorative />
           </Button>
         </Tip>
       </div>

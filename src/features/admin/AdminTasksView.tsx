@@ -6,6 +6,8 @@ import { admin } from '@/app/api';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Tip } from '@ui/tip';
+import ClientOnlyDate from '@shared/ui/ClientOnlyDate';
 import { profilePath } from '@/features/profile/profile-path';
 import { projectPath } from '@/features/projects/project-path';
 
@@ -25,6 +27,9 @@ interface TaskLog {
   query: { track?: string; artist?: string; album?: string } | null;
   ip: string | null;
   deviceId: string | null;
+  deviceName: string | null;
+  /** `device` = not logged on the request; matched from the device's last session. */
+  userSource: 'logged' | 'device' | null;
   user: { id: string; accountName: string; displayName: string | null; avatarUrl: string | null } | null;
   project: { publicId: string; title: string | null; ownerAccountName: string | null } | null;
 }
@@ -72,7 +77,10 @@ export default function AdminTasksView() {
   const pickStatus = (next: '' | TaskStatus) => { setStatus(next); setPage(1); };
   const pickType = (next: '' | TaskType) => { setJobType(next); setPage(1); };
   const pageCount = data ? Math.max(1, Math.ceil(data.total / data.limit)) : 1;
-  const when = (iso: string) => new Date(iso).toLocaleString(i18n.resolvedLanguage || i18n.language);
+  const locale = i18n.resolvedLanguage || i18n.language;
+  // Full date with the device's own timezone name — the cell itself follows the timezone setting.
+  const localDateTime = (iso: string) => new Date(iso).toLocaleString(locale, { dateStyle: 'full', timeStyle: 'long' });
+  const errorLabel = (code: string) => (i18n.exists(`admin.tasks.errors.${code}`) ? tk(`admin.tasks.errors.${code}`) : code);
 
   const chip = (active: boolean) => `${FILTER_BTN} ${active ? 'bg-primary/15 text-primary' : 'bg-zinc-800/60 text-zinc-400 hover:text-zinc-200'}`;
 
@@ -117,20 +125,29 @@ export default function AdminTasksView() {
               {data.logs.map(log => {
                 const ok = log.status === 'succeeded';
                 const song = [log.query?.track, log.query?.artist].filter(Boolean).join(' — ');
-                const projectLink = log.project?.ownerAccountName ? projectPath({ publicId: log.project.publicId }, log.project.ownerAccountName) : null;
+                const projectLink = log.project?.ownerAccountName ? projectPath({ publicId: log.project.publicId, title: log.project.title }, log.project.ownerAccountName) : null;
                 return (
                   <tr key={log.id} className="align-top hover:bg-zinc-800/20">
-                    <td className="p-3 whitespace-nowrap text-zinc-400 tabular-nums">{when(log.createdAt)}</td>
+                    <td className="p-3 whitespace-nowrap text-zinc-400 tabular-nums">
+                      <Tip content={localDateTime(log.createdAt)}>
+                        <span className="cursor-default"><ClientOnlyDate date={log.createdAt} /></span>
+                      </Tip>
+                    </td>
                     <td className="p-3">
                       <div className="font-medium text-zinc-200">{t(`admin.tasks.type.${log.jobType}`)}</div>
                       <span className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${ok ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
-                        <Icon name={ok ? 'check' : 'close'} size={10} />
+                        <Icon name={ok ? 'check_circle' : 'error'} size={12} />
                         {t(ok ? 'admin.tasks.succeeded' : 'admin.tasks.failed')}
                       </span>
                     </td>
                     <td className="p-3">
                       {log.user
-                        ? <Link to={profilePath(log.user.accountName)} className="text-zinc-200 hover:text-primary transition-colors">{log.user.displayName || log.user.accountName}</Link>
+                        ? (
+                          <>
+                            <Link to={profilePath(log.user.accountName)} className="text-zinc-200 hover:text-primary transition-colors">{log.user.displayName || log.user.accountName}</Link>
+                            {log.userSource === 'device' && <div className="mt-0.5 text-[10px] text-zinc-600">{t('admin.tasks.viaDevice')}</div>}
+                          </>
+                        )
                         : <span className="text-zinc-600">{t('admin.tasks.anonymous')}</span>}
                     </td>
                     <td className="p-3">
@@ -148,11 +165,23 @@ export default function AdminTasksView() {
                         {log.lineCount != null && <span>{tk('admin.tasks.lines', { count: log.lineCount })}</span>}
                         {log.durationMs != null && <span>{log.durationMs} ms</span>}
                       </div>
-                      {log.error && <div className="mt-0.5 font-mono text-[11px] text-red-400">{log.error}</div>}
+                      {log.error && (
+                        <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-md border border-red-500/20 bg-red-500/10 px-2 py-1 text-[11px] font-medium text-red-300">
+                          <Icon name="error" size={12} className="shrink-0" />
+                          <Tip content={log.error}><span>{errorLabel(log.error)}</span></Tip>
+                        </div>
+                      )}
                     </td>
-                    <td className="p-3 font-mono text-[11px] text-zinc-500">
-                      <div>{log.ip ?? '—'}</div>
-                      {log.deviceId && <div className="max-w-[10rem] truncate" title={log.deviceId}>{log.deviceId}</div>}
+                    <td className="p-3 text-[11px] text-zinc-500">
+                      <div className="font-mono">{log.ip ?? '—'}</div>
+                      {log.deviceId && (
+                        <div className="mt-0.5 flex items-center gap-1.5">
+                          <Icon name="desktop_windows" size={12} className="shrink-0 text-zinc-600" />
+                          <Tip content={log.deviceId}>
+                            <span className="max-w-[10rem] truncate">{log.deviceName ?? t('admin.tasks.unknownDevice')}</span>
+                          </Tip>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );

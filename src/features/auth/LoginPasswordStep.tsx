@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import type { FormEvent } from 'react';
 import type { TFunction } from 'i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { AnimatePresence, m } from 'framer-motion';
 import { FloatingInput } from '@ui/floating-input';
 import { translateAuthError } from '@/shared/utils/auth-errors';
@@ -127,7 +128,7 @@ export default function LoginPasswordStep({ t, identifierData, onBack, onLogin, 
                   className="absolute right-1.5 top-1/2 size-9 -translate-y-1/2 lg:size-9"
                   aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                 >
-                  {showPassword ? <Icon name="visibility_off" size={16} /> : <Icon name="visibility" size={16} />}
+                  <MorphIcon name={showPassword ? 'visibility_off' : 'visibility'} size={16} decorative />
                 </Button>
               )}
             </div>

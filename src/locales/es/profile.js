@@ -449,6 +449,7 @@ export default {
   notif_comment_like: 'A alguien le gustó mi comentario',
   notif_report: 'Alguien denunció un comentario, una cuenta, un proyecto o una lista',
   notif_report_reviewed: 'Un moderador revisó mi denuncia',
+  notif_report_message: 'Alguien respondió en la conversación de una denuncia',
   notif_level_up: 'Subidas de nivel',
   notif_playlist_saved: 'Alguien guardó mi lista',
   notif_star_milestone: 'Hitos de estrellas en mis proyectos',

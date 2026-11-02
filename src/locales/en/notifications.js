@@ -19,6 +19,8 @@ export default {
   wallReplyOwn: '<0>{{actors}}</0> replied to your comment on your wall',
   mentionOwn: '<0>{{actors}}</0> tagged you on your wall',
   projectMention: '<0>{{actors}}</0> mentioned <1>{{title}}</1> on <2>{{wall}}</2>’s wall',
+  reportMessage: '<0>{{actors}}</0> wrote in a report’s conversation',
+  reportMessageToReporter: 'A moderator replied about your report',
   projectMentionOwn: '<0>{{actors}}</0> mentioned <1>{{title}}</1> on your wall',
   commentLikeOwn: '<0>{{actors}}</0> liked your comment on your wall',
   wallReport: '<0>{{actors}}</0> reported a comment on <1>{{wall}}</1>’s wall',

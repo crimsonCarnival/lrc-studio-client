@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { projectPath } from '@/features/projects/project-path';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { ProjectViewActions } from './ProjectViewActions';
@@ -240,7 +241,7 @@ export default function ProjectInfoPanel({
               aria-label={collapseLabel}
               className="size-9 lg:size-9 coarse:size-11 rounded-full shrink-0"
             >
-              <Icon name={collapsed ? 'expand_more' : 'expand_less'} size={16} />
+              <MorphIcon name={collapsed ? 'chevron_down' : 'chevron_up'} size={16} decorative />
             </Button>
           </Tip>
         </div>
@@ -309,7 +310,7 @@ export default function ProjectInfoPanel({
               </button>
             ) : (
               <span className={`${SEG} ${project?.isForkedByMe ? 'bg-primary-soft text-primary-ink' : ''}`}>
-                <Icon name={project?.isForkedByMe ? 'check' : 'call_split'} size={17} className={project?.isForkedByMe ? undefined : 'text-subtle'} />
+                <MorphIcon name={project?.isForkedByMe ? 'check' : 'call_split'} size={17} className={project?.isForkedByMe ? undefined : 'text-subtle'} decorative />
                 {project?.isForkedByMe ? t('projectView.forkedBadge') : t('projectView.statForks')}
                 <span className={`${SEG_COUNT} ${project?.isForkedByMe ? 'text-primary-ink' : ''}`}>{project?.forkCount ?? 0}</span>
               </span>

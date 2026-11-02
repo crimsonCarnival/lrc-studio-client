@@ -3,10 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { useSettings } from '@/features/settings/useSettings';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { Tip } from '@ui/tip';
 
 /** Icon tier by volume: muted/0 → off, <33% → mute (speaker, no waves), <66% → down (one wave), else → up. */
-function volumeIconName(muted: boolean, volume: number): string {
+function volumeIconName(muted: boolean, volume: number): 'volume_off' | 'volume_mute' | 'volume_down' | 'volume_up' {
   if (muted || volume <= 0) return 'volume_off';
   if (volume < 0.33) return 'volume_mute';
   if (volume < 0.66) return 'volume_down';
@@ -28,7 +29,7 @@ const VolumeControl = memo(function VolumeControl() {
           className="flex-shrink-0 size-11 lg:size-11"
           aria-label={settings.playback.muted ? t('player.unmute') : t('player.mute')}
         >
-          <Icon name={iconName} size={20} />
+          <MorphIcon name={iconName} size={20} decorative />
         </Button>
       </Tip>
 

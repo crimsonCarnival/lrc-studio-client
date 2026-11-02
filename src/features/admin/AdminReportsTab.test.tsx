@@ -42,7 +42,7 @@ const base = (targetType: ReportGroup['targetType'], targetId: string, extra: Pa
   playlist: null,
   wallAccountName: null,
   reports: [
-    { id: `${targetId}-r1`, reason: 'spam', note: 'not nice', status: 'open', createdAt: new Date().toISOString(), resolvedAt: null, reporter: person('bob') },
+    { id: `${targetId}-r1`, reason: 'spam', note: 'not nice', status: 'open', createdAt: new Date().toISOString(), resolvedAt: null, reporter: person('bob'), messageCount: 0 },
   ],
   openCount: 2,
   latestAt: new Date().toISOString(),

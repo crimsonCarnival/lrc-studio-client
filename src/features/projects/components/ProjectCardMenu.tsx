@@ -6,6 +6,7 @@ import { ContextMenu, ContextMenuTrigger, ContextMenuContent } from '@ui/context
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent } from '@ui/dropdown-menu';
 import { contextMenuComponents, dropdownMenuComponents, type MenuComponents } from '@ui/menu-components';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { Tip } from '@ui/tip';
 import { projectPath, type ProjectPathSource } from '@/features/projects/project-path';
 
@@ -68,7 +69,7 @@ function useProjectMenuItems({ project, isOwner, ownerAccountName, onEdit, onDel
           </C.Item>
 
           <C.Item onClick={handleCopyLink}>
-            {copied ? <Icon name="check" /> : <Icon name="link" />}
+            <MorphIcon name={copied ? 'check' : 'link'} size={20} decorative />
             {copied ? t('projectView.actions.copied') : t('projectView.actions.copyLink')}
           </C.Item>
         </>

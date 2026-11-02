@@ -316,6 +316,11 @@ export default function AdminDashboard() {
     fetchUsers(null);
   };
 
+  // Keep the user: AppealDetailsModal renders null without one, and unmounting a
+  // Radix Dialog while it is still open strands its scroll-lock and
+  // pointer-events:none on <body> (the blurred, unclickable page).
+  const closeAppealModal = () => setAppealModal(prev => ({ ...prev, isOpen: false }));
+
   const handleToggleBan = async (user: AdminUser) => {
     if (isSelf(user)) {
       toast.error(t('admin.toast.noSelfAction'));
@@ -326,7 +331,7 @@ export default function AdminDashboard() {
       try {
         await admin.unbanUser(uid(user));
         toast.success(t('admin.toast.unbannedSuccess', { name: user.displayName || user.accountName }));
-        setAppealModal({ isOpen: false, user: null });
+        closeAppealModal();
         refreshUsersFromStart();
       } catch (err) {
         notifyError(err, 'admin.toast.statusError');
@@ -340,7 +345,7 @@ export default function AdminDashboard() {
     try {
       await admin.rejectAppeal(uid(user));
       toast.success(t('admin.toast.appealRejectedSuccess', { name: user.displayName || user.accountName }));
-      setAppealModal({ isOpen: false, user: null });
+      closeAppealModal();
       refreshUsersFromStart();
     } catch (err) {
       notifyError(err, 'admin.toast.statusError');
@@ -622,7 +627,7 @@ export default function AdminDashboard() {
         user={appealModal.user as ComponentProps<typeof AppealDetailsModal>["user"]}
         onApprove={handleToggleBan as ComponentProps<typeof AppealDetailsModal>["onApprove"]}
         onReject={handleRejectAppeal as ComponentProps<typeof AppealDetailsModal>["onReject"]}
-        onCancel={() => setAppealModal({ isOpen: false, user: null })}
+        onCancel={closeAppealModal}
       />
 
       {/* Admin re-auth ("sudo") prompt — opens when a destructive action needs a

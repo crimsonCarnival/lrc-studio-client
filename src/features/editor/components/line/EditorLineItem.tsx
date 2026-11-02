@@ -7,6 +7,7 @@ import { Checkbox } from '@ui/checkbox';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import ResponsiveModal from '@/shared/ui/ResponsiveModal';
 import LineTextEditingForm from './LineTextEditingForm';
 import { useLineGestures } from '../../hooks/useLineGestures';
@@ -462,7 +463,7 @@ const EditorLineItem = React.memo(({
                 aria-label={isCollapsed ? t('editor.expandSection') : t('editor.collapseSection')}
                 className="relative z-10 -ml-3 mr-0.5 mb-1 p-0.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors flex items-center"
               >
-                <Icon name={isCollapsed ? 'chevron_right' : 'expand_more'} size={16} />
+                <MorphIcon name={isCollapsed ? 'chevron_forward' : 'chevron_down'} size={16} decorative />
               </button>
             </Tip>
           )}

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
+import { MorphIcon } from '@/shared/ui/MorphIcon';
 import { toggleSingerAtCaret } from '../../utils/paste-toolbar';
 
 interface RawLyricsSyntaxBarProps {
@@ -64,7 +65,7 @@ export default function RawLyricsSyntaxBar({ value, onChange, textareaRef, singe
         >
           <Icon name="help" size={13} />
           {t('editor.paste.help.toggle')}
-          <Icon name={helpOpen ? 'expand_less' : 'expand_more'} size={13} />
+          <MorphIcon name={helpOpen ? 'chevron_up' : 'chevron_down'} size={13} decorative />
         </Button>
         {singers.length > 0 && (
           <>
