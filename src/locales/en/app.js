@@ -15,7 +15,11 @@ export default {
     explore: "Explore",
     search: "Search",
     leaderboard: "Leaderboard",
-    notifications: "Notifications"
+    notifications: "Notifications",
+    reports: "My Reports",
+    guide: "Guide",
+    verifyEmail: "Verify Email",
+    notFound: "Page Not Found"
   },
   shareProject: "Share",
   focusMode: {
