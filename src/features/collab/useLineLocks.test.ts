@@ -1,4 +1,5 @@
 import { act, renderHook } from '@testing-library/react'
+import { useEffect } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as Y from 'yjs'
 import type { CollabMe, LockSnapshot } from './collab.types'
@@ -6,7 +7,7 @@ import type { CollabMe, LockSnapshot } from './collab.types'
 const h = vi.hoisted(() => ({ error: vi.fn() }))
 vi.mock('react-hot-toast', () => ({ default: { error: h.error } }))
 
-import { HEARTBEAT_MS, useLineLocks } from './useLineLocks'
+import { HEARTBEAT_MS, HIDDEN_RELEASE_MS, QUEUE_DEADLINE_MS, useLineLocks } from './useLineLocks'
 
 type Sent = { t: string; lineId?: string; lineIds?: string[] }
 
@@ -261,5 +262,122 @@ describe('useLineLocks', () => {
     expect(provider.sent).toEqual([])
     expect(provider.count('stateless')).toBe(0)
     expect(provider.count('status')).toBe(0)
+  })
+
+  // B1: the editor's claim effects release after this hook's own cleanup has run, so the
+  // teardown itself has to let go of what this connection holds.
+  it('unmount releases held and requested lines', () => {
+    const provider = fakeProvider(LINES)
+    const hook = renderHook(
+      (p: { locks: LockSnapshot }) => {
+        const locks = useLineLocks(provider as never, meWith('c1'), p.locks)
+        const { claim, release } = locks
+        // Declared after the hook, like useEditor's claim effects.
+        useEffect(() => { claim('l1'); return () => release('l1') }, [claim, release])
+        useEffect(() => { claim('l2'); return () => release('l2') }, [claim, release])
+        return locks
+      },
+      { initialProps: { locks: NONE } },
+    )
+    hook.rerender({ locks: { l1: mine('c1') } }) // l1 granted, l2 still in flight
+    provider.sent.length = 0
+    hook.unmount()
+    const unlocks = provider.sent.filter((m) => m.t === 'unlock').map((m) => m.lineId).sort()
+    expect(unlocks).toEqual(['l1', 'l2'])
+  })
+
+  // B2a: a force-unlock (or idle expiry) must not leave a stale request behind that
+  // swallows the next one.
+  it('after a force-unlock a tap asks for the lock again and the write runs on the re-grant', () => {
+    const { hook, locksOf } = setup()
+    act(() => hook.result.current.claim('l1'))
+    hook.rerender({ me: meWith('c1'), locks: { l1: mine('c1') } })
+    hook.rerender({ me: meWith('c1'), locks: NONE }) // the owner force-unlocked it
+    const write = vi.fn()
+    act(() => hook.result.current.withLock('l1', write))
+    expect(locksOf()).toEqual(['l1', 'l1'])
+    hook.rerender({ me: meWith('c1'), locks: { l1: mine('c1') } })
+    expect(write).toHaveBeenCalledTimes(1)
+  })
+
+  // B2b: a queued write never waits forever.
+  it('drops a queued write with the deny toast when no grant arrives in time', () => {
+    vi.useFakeTimers()
+    const { hook, provider } = setup()
+    const write = vi.fn()
+    act(() => hook.result.current.withLock('l1', write))
+    act(() => { vi.advanceTimersByTime(QUEUE_DEADLINE_MS - 1) })
+    expect(h.error).not.toHaveBeenCalled()
+    act(() => { vi.advanceTimersByTime(1) })
+    expect(h.error).toHaveBeenCalledTimes(1)
+    // Nothing wants the line any more: the in-flight request is cancelled...
+    expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([{ t: 'unlock', lineId: 'l1' }])
+    // ...and a late grant does not resurrect the write.
+    hook.rerender({ me: meWith('c1'), locks: { l1: mine('c1') } })
+    expect(write).not.toHaveBeenCalled()
+  })
+
+  it('drops a write waiting for a line that never arrives', () => {
+    vi.useFakeTimers()
+    const { hook, provider, locksOf } = setup()
+    const write = vi.fn()
+    act(() => hook.result.current.withLock('ghost', write))
+    act(() => { vi.advanceTimersByTime(QUEUE_DEADLINE_MS) })
+    expect(h.error).toHaveBeenCalledTimes(1)
+    act(() => provider.addLine('ghost'))
+    expect(locksOf()).toEqual([])
+    hook.rerender({ me: meWith('c1'), locks: { ghost: mine('c1') } })
+    expect(write).not.toHaveBeenCalled()
+  })
+
+  // B5: a background tab stops heartbeating and lets go after a while.
+  describe('while the tab is hidden', () => {
+    let visibility: DocumentVisibilityState = 'visible'
+    beforeEach(() => {
+      visibility = 'visible'
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => visibility })
+    })
+    afterEach(() => {
+      Reflect.deleteProperty(document, 'visibilityState')
+    })
+    const setVisibility = (v: DocumentVisibilityState) => {
+      visibility = v
+      act(() => { document.dispatchEvent(new Event('visibilitychange')) })
+    }
+
+    it('pauses the heartbeat, releases after 30s and re-claims only the wanted lines on return', () => {
+      vi.useFakeTimers()
+      const { hook, provider, locksOf } = setup()
+      act(() => hook.result.current.claim('editing-line'))
+      hook.rerender({ me: meWith('c1'), locks: { 'editing-line': mine('c1'), l9: mine('c1') } })
+      provider.sent.length = 0
+
+      setVisibility('hidden')
+      act(() => { vi.advanceTimersByTime(HEARTBEAT_MS) })
+      expect(provider.sent.filter((m) => m.t === 'heartbeat')).toEqual([])
+
+      act(() => { vi.advanceTimersByTime(HIDDEN_RELEASE_MS - HEARTBEAT_MS) })
+      const unlocks = provider.sent.filter((m) => m.t === 'unlock').map((m) => m.lineId).sort()
+      expect(unlocks).toEqual(['editing-line', 'l9'])
+
+      hook.rerender({ me: meWith('c1'), locks: NONE })
+      provider.sent.length = 0
+      setVisibility('visible')
+      expect(locksOf()).toEqual(['editing-line'])
+    })
+
+    it('a short trip to another tab keeps the locks', () => {
+      vi.useFakeTimers()
+      const { hook, provider } = setup()
+      act(() => hook.result.current.claim('editing-line'))
+      hook.rerender({ me: meWith('c1'), locks: { 'editing-line': mine('c1') } })
+      provider.sent.length = 0
+      setVisibility('hidden')
+      act(() => { vi.advanceTimersByTime(HIDDEN_RELEASE_MS - 1) })
+      setVisibility('visible')
+      act(() => { vi.advanceTimersByTime(HIDDEN_RELEASE_MS) })
+      expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([])
+      expect(provider.sent.filter((m) => m.t === 'heartbeat').length).toBeGreaterThan(0)
+    })
   })
 })

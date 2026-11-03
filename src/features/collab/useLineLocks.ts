@@ -6,6 +6,10 @@ import type { CollabMe, LockSnapshot } from './collab.types'
 
 /** Locks idle for longer than this on the server expire; held lines are refreshed well inside it. */
 export const HEARTBEAT_MS = 10_000
+/** A write parked for its lock (or for its line to reach the doc) is dropped after this long. */
+export const QUEUE_DEADLINE_MS = 5_000
+/** A tab hidden for this long lets go of its locks; it re-claims what it still wants on return. */
+export const HIDDEN_RELEASE_MS = 30_000
 
 export type LineLocks = {
   /** The server's lock table (mine and everyone else's), keyed by line id. */
@@ -39,6 +43,8 @@ function deniedLine(payload: string): string | null {
   }
 }
 
+const isHidden = () => typeof document !== 'undefined' && document.visibilityState === 'hidden'
+
 /**
  * Line locks, arbitrated by the server (see collab.server.ts). The lock table comes in
  * as `locks` (useCollabSession keeps the latest snapshot, so none is missed before this
@@ -52,13 +58,21 @@ function deniedLine(payload: string): string | null {
  * - intents: lines the UI wants held (an open text editor, the sync cursor), counted so two
  *   reasons to hold one line don't release each other. Re-claimed after a reconnect.
  * - pending: writes parked until their lock is granted. Dropped on disconnect, because the
- *   server freed this connection's locks and a write that late would land unlocked.
- * - requested: lock requests in flight, so queued writes share one request.
+ *   server freed this connection's locks and a write that late would land unlocked, and
+ *   dropped (with the deny toast) after QUEUE_DEADLINE_MS, so a grant that never comes
+ *   cannot strand them.
+ * - requested: lock requests in flight, so queued writes share one request. Every snapshot
+ *   settles them: a line the snapshot shows held (by anyone) has its answer, and one it does
+ *   not show with no write waiting on it is asked again next time rather than trusted to be
+ *   in flight — otherwise a lock taken away by a force-unlock or idle expiry would leave a
+ *   stale entry that swallows every later request.
  * - waiting: requests held back until the line exists in the local doc. The server denies a
  *   lock for a line it does not have, and a line inserted in this very commit reaches the doc
  *   in a parent's effect, after this hook's callers have already claimed it. The provider sends
  *   doc updates on the same socket in order, so a lock sent after the local doc holds the line
- *   arrives after the update that creates it.
+ *   arrives after the update that creates it. Given up after QUEUE_DEADLINE_MS.
+ * - dormant: the tab has been hidden for HIDDEN_RELEASE_MS and let go of its locks. Intents are
+ *   kept, and asked for again when the tab is visible.
  */
 export function useLineLocks(
   provider: HocuspocusProvider | null,
@@ -86,8 +100,10 @@ export function useLineLocks(
   const pending = useRef(new Map<string, (() => void)[]>())
   const requested = useRef(new Set<string>())
   const waiting = useRef(new Set<string>())
+  const deadlines = useRef(new Map<string, ReturnType<typeof setTimeout>>())
   // True from the server's hello until the socket drops.
   const live = useRef(false)
+  const dormant = useRef(false)
 
   const send = useCallback((msg: object) => {
     providerRef.current?.sendStateless(JSON.stringify(msg))
@@ -103,23 +119,68 @@ export function useLineLocks(
     [],
   )
 
+  const denyToast = useCallback((lineId: string) => {
+    const holder = locksRef.current[lineId]
+    const translate = tRef.current
+    toast.error(
+      holder && holder.holderConn !== connRef.current
+        ? translate('collab.locks.denied', { name: holder.name })
+        : translate('collab.locks.deniedGeneric'),
+      { id: `collab-lock-denied-${lineId}` },
+    )
+  }, [])
+
+  // Stops the deadline once nothing is parked on the line any more.
+  const settle = useCallback((lineId: string) => {
+    if (pending.current.has(lineId) || waiting.current.has(lineId)) return
+    const timer = deadlines.current.get(lineId)
+    if (timer === undefined) return
+    clearTimeout(timer)
+    deadlines.current.delete(lineId)
+  }, [])
+
+  const unlock = useCallback((lineId: string) => {
+    // A request still waiting for its line was never sent. Anything else may be held or in
+    // flight (an entry in `requested` can be settled away by a snapshot before its grant
+    // lands), and an unlock for a line this connection does not hold is a no-op on the server.
+    const neverSent = waiting.current.delete(lineId)
+    requested.current.delete(lineId)
+    settle(lineId)
+    if (!neverSent && live.current) send({ t: 'unlock', lineId })
+  }, [send, settle])
+
+  // Gives up on whatever is parked on the line: queued writes go with the deny toast.
+  const expire = useCallback((lineId: string) => {
+    deadlines.current.delete(lineId)
+    const writes = pending.current.get(lineId)
+    pending.current.delete(lineId)
+    if (intents.current.has(lineId)) {
+      // Still wanted (an open editor): stop waiting for the line; the heartbeat asks for it
+      // once it exists.
+      waiting.current.delete(lineId)
+    } else {
+      unlock(lineId)
+    }
+    if (writes) denyToast(lineId)
+  }, [unlock, denyToast])
+
+  const armDeadline = useCallback((lineId: string) => {
+    if (deadlines.current.has(lineId)) return
+    deadlines.current.set(lineId, setTimeout(() => expire(lineId), QUEUE_DEADLINE_MS))
+  }, [expire])
+
   const request = useCallback((lineId: string) => {
-    if (!live.current || requested.current.has(lineId) || isHeld(lineId)) return
+    if (!live.current || dormant.current || requested.current.has(lineId) || isHeld(lineId)) return
     if (!inDoc(lineId)) {
       waiting.current.add(lineId)
+      armDeadline(lineId)
       return
     }
     waiting.current.delete(lineId)
+    settle(lineId)
     requested.current.add(lineId)
     send({ t: 'lock', lineId })
-  }, [isHeld, inDoc, send])
-
-  const unlock = useCallback((lineId: string) => {
-    const had = isHeld(lineId) || requested.current.has(lineId)
-    requested.current.delete(lineId)
-    waiting.current.delete(lineId)
-    if (had && live.current) send({ t: 'unlock', lineId })
-  }, [isHeld, send])
+  }, [isHeld, inDoc, send, armDeadline, settle])
 
   const claim = useCallback((lineId: string) => {
     if (!providerRef.current) return
@@ -154,21 +215,27 @@ export function useLineLocks(
     const queue = pending.current.get(lineId)
     if (queue) queue.push(write)
     else pending.current.set(lineId, [write])
+    armDeadline(lineId)
     request(lineId)
-  }, [isHeld, request])
+  }, [isHeld, request, armDeadline])
 
-  // Grants: run the writes parked on every line this connection now holds.
+  // Every snapshot: run the writes parked on lines this connection now holds, then settle
+  // the requests the snapshot answers (see `requested` above).
   useEffect(() => {
-    if (!conn || pending.current.size === 0) return
+    if (!conn) return
     for (const [lineId, writes] of [...pending.current]) {
       if (locks[lineId]?.holderConn !== conn) continue
       pending.current.delete(lineId)
       requested.current.delete(lineId)
+      settle(lineId)
       writes.forEach((write) => write())
       // Nothing else wants this line (no open editor, no sync cursor): don't keep it alive.
       if (!intents.current.has(lineId)) unlock(lineId)
     }
-  }, [locks, conn, unlock])
+    for (const lineId of [...requested.current]) {
+      if (locks[lineId] || !pending.current.has(lineId)) requested.current.delete(lineId)
+    }
+  }, [locks, conn, unlock, settle])
 
   // A new hello means a fresh connection (the first, or after a reconnect): ask again
   // for what the UI still wants, plus any write that was queued before the hello arrived.
@@ -181,6 +248,10 @@ export function useLineLocks(
 
   useEffect(() => {
     if (!provider) return
+    const dropTimers = () => {
+      deadlines.current.forEach(clearTimeout)
+      deadlines.current.clear()
+    }
     const onStateless = ({ payload }: StatelessIn) => {
       const lineId = deniedLine(payload)
       if (!lineId) return
@@ -188,12 +259,8 @@ export function useLineLocks(
       pending.current.delete(lineId)
       waiting.current.delete(lineId)
       intents.current.delete(lineId)
-      const holder = locksRef.current[lineId]
-      const translate = tRef.current
-      toast.error(
-        holder ? translate('collab.locks.denied', { name: holder.name }) : translate('collab.locks.deniedGeneric'),
-        { id: `collab-lock-denied-${lineId}` },
-      )
+      settle(lineId)
+      denyToast(lineId)
       onDeniedRef.current?.(lineId)
     }
     const onStatus = ({ status }: StatusIn) => {
@@ -202,6 +269,7 @@ export function useLineLocks(
       requested.current.clear()
       pending.current.clear()
       waiting.current.clear()
+      dropTimers()
     }
     // Runs after the provider's own update handler (registered when it was built).
     const onDocUpdate = () => {
@@ -212,25 +280,72 @@ export function useLineLocks(
     provider.document.on('update', onDocUpdate)
 
     const beat = setInterval(() => {
-      if (!live.current) return
+      // A background tab does not keep its locks alive (see onVisibility).
+      if (!live.current || dormant.current || isHidden()) return
       const mine = Object.keys(locksRef.current).filter(isHeld)
       // Open editors too: a lock lost to expiry is re-acquired (or refused) by the heartbeat.
       const lineIds = [...new Set([...mine, ...[...intents.current.keys()].filter(inDoc)])]
       if (lineIds.length > 0) send({ t: 'heartbeat', lineIds })
     }, HEARTBEAT_MS)
 
+    // Everything this connection holds or has asked for, so it can be let go in one go. Intents
+    // count as asked for: their request may be in flight with its `requested` entry already
+    // settled away by an unrelated snapshot. Lines still waiting for the doc were never sent.
+    const ownedLines = () => new Set([
+      ...Object.keys(locksRef.current).filter(isHeld),
+      ...requested.current,
+      ...[...intents.current.keys()].filter((id) => !waiting.current.has(id)),
+    ])
+
+    // Hidden for HIDDEN_RELEASE_MS: let go of every lock so a forgotten background tab can't
+    // sit on lines (or re-take one the owner force-released). The intents stay, and the tab
+    // asks again only for those — the open editor's line and the sync cursor — once visible.
+    let hiddenTimer: ReturnType<typeof setTimeout> | undefined
+    const onVisibility = () => {
+      if (isHidden()) {
+        if (hiddenTimer === undefined && !dormant.current) {
+          hiddenTimer = setTimeout(() => {
+            hiddenTimer = undefined
+            for (const lineId of [...pending.current.keys(), ...waiting.current]) expire(lineId)
+            for (const lineId of ownedLines()) unlock(lineId)
+            dormant.current = true
+          }, HIDDEN_RELEASE_MS)
+        }
+        return
+      }
+      clearTimeout(hiddenTimer)
+      hiddenTimer = undefined
+      if (!dormant.current) return
+      dormant.current = false
+      for (const lineId of intents.current.keys()) request(lineId)
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+
     const parked = pending.current
     const waited = waiting.current
+    const inFlight = requested.current
     return () => {
+      // The editor's own claim effects release after this cleanup has run (it is declared
+      // first), when `live` is already false, so let go of everything here while the
+      // connection is still known to be up.
+      // A dormant tab already let go of everything.
+      if (live.current && !dormant.current) {
+        for (const lineId of ownedLines()) provider.sendStateless(JSON.stringify({ t: 'unlock', lineId }))
+      }
       provider.off('stateless', onStateless)
       provider.off('status', onStatus)
       provider.document.off('update', onDocUpdate)
+      document.removeEventListener('visibilitychange', onVisibility)
       clearInterval(beat)
+      clearTimeout(hiddenTimer)
+      dropTimers()
       parked.clear()
       waited.clear()
+      inFlight.clear()
+      dormant.current = false
       live.current = false
     }
-  }, [provider, isHeld, inDoc, request, send])
+  }, [provider, isHeld, inDoc, request, send, unlock, expire, settle, denyToast])
 
   const othersLocks = useMemo(() => {
     const out: LockSnapshot = {}
