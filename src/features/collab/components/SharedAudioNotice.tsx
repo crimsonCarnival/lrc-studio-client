@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import type { ChangeEvent } from 'react'
 import { Icon } from '@/shared/ui/Icon'
 import { usePlayer } from '@/features/player/PlayerContext'
-import { useCollabMedia } from '../useCollabMedia'
+import { collabMediaToRestored, useCollabMedia } from '../useCollabMedia'
 import { usePresencePeers } from '../collab-presence-context'
 import type { CollabMe, CollabMeta } from '../collab.types'
 import type * as Y from 'yjs'
@@ -78,9 +78,11 @@ export function SessionAudioNotice({ doc, me }: { doc: Y.Doc | null; me: CollabM
   if (!media || !me) return null
   // The owner is the reference: they have nobody's length to compare against. Role is stamped by the server.
   const ownerDuration = me.role === 'owner' ? null : (peers.find((p) => p.role === 'owner')?.duration ?? null)
+  // Media that fails validation is never loaded, so it counts as none: everyone is asked for a copy.
+  const source = collabMediaToRestored(media) ? media.source : null
   return (
     <SharedAudioNotice
-      source={media.source}
+      source={source}
       ownerDuration={ownerDuration}
       localDuration={hasMedia && duration > 0 ? duration : null}
       onFileChange={mediaPopoverProps.onFileChange}
