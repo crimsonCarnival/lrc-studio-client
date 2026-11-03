@@ -23,6 +23,7 @@ import { EDITOR_TOUR_STEPS } from '@/features/editor/tour/tour-steps';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { isEditorPath, isProjectViewPath } from '@features/projects/project-path';
 import type { AppState } from '@/app/useAppState';
+import { CollabPresenceProvider } from '@/features/collab/components/CollabPresenceProvider';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/auth.types';
 
@@ -205,6 +206,8 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         syncMode={syncMode}
         viewerMode={collabViewer}
       >
+        {/* Inert outside a session (no provider): nothing is published or rendered. */}
+        <CollabPresenceProvider provider={appState.collabSession.provider} me={appState.collabSession.me}>
         <div className={`${isEditorPage ? 'h-dvh' : 'min-h-screen'} lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col`}>
           <AppBackground />
 
@@ -345,6 +348,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             songSingers={songSingers}
           />
         </div>
+        </CollabPresenceProvider>
       </PlayerEngineProvider>
     </SafeAreaContainer>
   );

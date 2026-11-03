@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ComponentProps, RefObject } from 'react';
+import type { ComponentProps, PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import { useVirtualizer, defaultRangeExtractor } from '@tanstack/react-virtual';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { Button } from '@ui/button';
@@ -16,6 +16,8 @@ import type { EditorLine } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
 import type { LockSnapshot } from '@/features/collab/collab.types';
+import { usePresenceActions, useRemoteActiveLines } from '@/features/collab/collab-presence-context';
+import { RemotePointers } from '@/features/collab/components/RemotePointers';
 
 const ESTIMATED_LINE_HEIGHT = 56;
 const LINE_GAP = 4;
@@ -167,12 +169,36 @@ export default function VirtualizedLineList({
   onToggleSectionCollapse,
 }: VirtualizedLineListProps) {
   const { t } = useTranslation();
+  // Collab presence: both are null outside a session, which turns every use below off.
+  const presence = usePresenceActions();
+  const remoteActive = useRemoteActiveLines();
   // The line playback is on, as opposed to the cursor (activeLineIndex) or the hovered one.
   // -1 before the first timed line.
   const playingIndex = useMemo(
     () => (playbackPosition == null ? -1 : computeCurrentIndex(lines, playbackPosition, editorMode)),
     [lines, playbackPosition, editorMode],
   );
+  // Tell the others which line the cursor is on (the cursor, not the playing line).
+  const cursorLineId = lines[activeLineIndex]?.id ?? null;
+  useEffect(() => {
+    if (!presence) return;
+    presence.setActiveLine(cursorLineId);
+    return () => presence.setActiveLine(null);
+  }, [presence, cursorLineId]);
+  const handlePresencePointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!presence) return;
+    const row = (e.target as HTMLElement).closest<HTMLElement>('[data-line-id]');
+    if (!row?.dataset.lineId) { presence.setPointer(null); return; }
+    const r = row.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return;
+    presence.setPointer({
+      area: 'lines',
+      lineId: row.dataset.lineId,
+      xRatio: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)),
+      yRatio: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)),
+    });
+  }, [presence]);
+  const handlePresencePointerLeave = useCallback(() => presence?.setPointer(null), [presence]);
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
 
@@ -481,6 +507,8 @@ export default function VirtualizedLineList({
         <div
           ref={listRef}
           onMouseLeave={handleLineHoverEnd}
+          onPointerMove={presence ? handlePresencePointerMove : undefined}
+          onPointerLeave={presence ? handlePresencePointerLeave : undefined}
           // Any action inside a row (menu item, toggle, input) may change its height; re-read the
           // mounted rows once the resulting render has landed instead of trusting the observers.
           onClickCapture={scheduleMeasure}
@@ -494,6 +522,7 @@ export default function VirtualizedLineList({
             aria-label={t('editor.lineList')}
             style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}
           >
+            {presence && <RemotePointers scrollRef={listRef} />}
             {virtualizer.getVirtualItems().map((virtualRow) => {
               const i = rows[virtualRow.index]; // original line index — used for every action
               const line = lines[i];
@@ -521,6 +550,7 @@ export default function VirtualizedLineList({
                   // like the lyrics vanishing. Sections carry the attribute on the inner,
                   // sticky element instead — the one that actually has the row's height.
                   data-index={isSection ? undefined : virtualRow.index}
+                  data-line-id={presence && line.id != null ? line.id : undefined}
                   ref={isSection ? undefined : virtualizer.measureElement}
                   style={{
                     position: 'absolute',
@@ -602,6 +632,7 @@ export default function VirtualizedLineList({
                         onLineMenu={onLineMenu}
                         isModified={modifiedLines?.has(i) || false}
                         lockHolder={line.id != null ? lockedByOthers?.[line.id] : undefined}
+                        remoteActive={line.id != null ? remoteActive?.[line.id] : undefined}
                         editorMode={editorMode}
                         onToggleLineMode={onToggleLineMode}
                         upcomingDepth={upcomingDepth}
@@ -684,6 +715,7 @@ export default function VirtualizedLineList({
                       onLineMenu={onLineMenu}
                       isModified={modifiedLines?.has(i)}
                       lockHolder={line.id != null ? lockedByOthers?.[line.id] : undefined}
+                      remoteActive={line.id != null ? remoteActive?.[line.id] : undefined}
                       onToggleLineMode={onToggleLineMode}
                       confidenceInfo={line.id != null ? confidenceById?.get(String(line.id)) : undefined}
                     />

@@ -24,7 +24,7 @@ import type { EditorLine, EditorWord, FocusedTimestamp } from '@/features/editor
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
 import type { PlayerHandle } from '@/features/player/player.types';
-import type { LockHolderView } from '@/features/collab/collab.types';
+import type { LockHolderView, RemoteActiveView } from '@/features/collab/collab.types';
 import { LineLockBadge } from '@/features/collab/components/LineLockBadge';
 import { collabColor } from '@/features/collab/collab-color';
 
@@ -125,6 +125,8 @@ interface EditorLineItemProps {
   onToggleCollapse?: (key: string) => void;
   /** Collab: the participant holding this line's lock (never the local one). */
   lockHolder?: LockHolderView;
+  /** Collab: another participant's cursor is on this line (they are not editing it). */
+  remoteActive?: RemoteActiveView;
 }
 
 const SYNC_FLASH_MS: Record<string, number> = { short: 300, normal: 600, long: 1200 };
@@ -206,6 +208,7 @@ const EditorLineItem = React.memo(({
   isCollapsed = false,
   onToggleCollapse,
   lockHolder,
+  remoteActive,
 }: EditorLineItemProps) => {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
@@ -662,6 +665,14 @@ const EditorLineItem = React.memo(({
           } ${dragIndex === i ? 'opacity-40' : ''} ${justSynced ? 'ring-2 ring-primary/60 animate-just-synced' : ''}`}
       >
         {lockHolder && <LineLockBadge holder={lockHolder} />}
+        {remoteActive && !lockHolder && (
+          <span
+            aria-hidden
+            title={t('collab.presence.onLine', { name: remoteActive.name })}
+            className="pointer-events-none absolute inset-0 z-10 rounded-[14px] border border-dashed"
+            style={{ borderColor: collabColor(remoteActive.colorIndex) }}
+          />
+        )}
 
         {/* Lock/unlock indicator */}
         {isActive && (

@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
 import { computeSectionBands } from '../timeline-bands';
 import { SectionBands } from './TimelineOverview';
+import { usePresenceActions } from '@/features/collab/collab-presence-context';
+import { RemotePlayheads } from '@/features/collab/components/RemotePlayheads';
 
 interface WaveLine {
   type?: string;
@@ -101,6 +103,8 @@ const WaveformDisplay = ({
   const regionsRef = useRef<any>(null);
   const [isReady, setIsReady] = useState(false);
   const [hoverPct, setHoverPct] = useState<number | null>(null);
+  // Null outside a collab session.
+  const presence = usePresenceActions();
 
   // ─── Seek on click/drag ───────────────────────────────────────────────────
   const isDraggingPlayhead = useRef(false);
@@ -357,9 +361,14 @@ const WaveformDisplay = ({
         onPointerDown={handleWavePointerDown}
         onPointerMove={(e) => {
           if (e.pointerType !== 'mouse' || !waveContainerRef.current) return;
-          setHoverPct(clientXToPct(e.clientX, waveContainerRef.current.getBoundingClientRect()));
+          const pct = clientXToPct(e.clientX, waveContainerRef.current.getBoundingClientRect());
+          setHoverPct(pct);
+          if (duration > 0) presence?.setPointer({ area: 'waveform', time: pct * duration });
         }}
-        onPointerLeave={() => setHoverPct(null)}
+        onPointerLeave={() => {
+          setHoverPct(null);
+          presence?.setPointer(null);
+        }}
         onKeyDown={handleSeekKeyDown}
       >
         {/* WaveSurfer renders inside here */}
@@ -429,6 +438,8 @@ const WaveformDisplay = ({
             <div className="w-1 h-6 bg-violet-400 rounded-full group-hover:bg-violet-300 transition-colors shadow-[0_0_6px_rgba(139,92,246,0.8)]" />
           </div>
         )}
+
+        {presence && isReady && <RemotePlayheads duration={duration} onSeek={onSeek} />}
 
         {/* Playback line */}
         {isReady && (

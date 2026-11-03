@@ -17,4 +17,13 @@ export default {
     badge: 'Editing: {{name}}',
     deleteLocked: 'This line is being edited by {{name}}',
   },
+  // Presence: who else is in the session and where they are.
+  presence: {
+    participants: 'Participants',
+    you: 'You',
+    role: { owner: 'Owner', editor: 'Editor', viewer: 'Viewer' },
+    onLine: '{{name}} is on this line',
+    playhead: '{{name}}’s position, click to jump there',
+    pointer: '{{name}}’s pointer',
+  },
 };
