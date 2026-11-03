@@ -1,6 +1,7 @@
 import { request } from '@/app/api.client';
 import { gqlRequest } from '@/app/graphql.client';
 import { profileChanged } from '@/app/cache-sync';
+import { PREFERENCES_FIELDS } from '@/features/settings/services/preferences.service';
 import type { User, UpdateProfileInput, UserPreferences } from '@/types';
 import type { AuthUser } from '@/features/auth/auth.types';
 
@@ -186,16 +187,7 @@ export const authService = {
           streak { current longest lastActiveDate }
         }
         myPreferences {
-          showFollowers
-          onlineVisibility
-          lastOnlineVisibility
-          countryVisibility
-          miniProfileBadgesEnabled
-          miniProfileBadgeIds
-          defaultProjectPrivacy
-          showActivityHeatmap
-          showXpProgress
-          notifications { follow reaction star fork badge_awarded xp_changed streak_warning }
+          ${PREFERENCES_FIELDS}
         }
       }
     `);

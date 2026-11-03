@@ -2,7 +2,7 @@ import { gqlRequest } from '@/app/graphql.client';
 import { withSudo } from '@/features/admin/services/sudo';
 import type { UserPreferences, UpdatePreferencesInput } from '@/types';
 
-const PREFERENCES_FIELDS = /* GraphQL */ `
+export const PREFERENCES_FIELDS =/* GraphQL */ `
   showFollowers
   onlineVisibility
   lastOnlineVisibility
