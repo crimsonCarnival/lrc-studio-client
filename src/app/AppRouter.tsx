@@ -351,6 +351,7 @@ export function AppRouter({
     uploadedAudio,
     sessionPublicId,
     collabSession,
+    collabViewer,
     t,
   } = appState;
   const collabStatus = collabSession.status;
@@ -392,7 +393,8 @@ export function AppRouter({
 
   // Editor or preview ("Revisar"). Stored in interface.mobileTab, the setting the
   // phone tab bar already writes, so both ways of switching stay in step.
-  const view: WorkspaceView = mobileTab === 'preview' ? 'preview' : 'editor';
+  // A session viewer cannot edit, so they only ever get the read-only preview.
+  const view: WorkspaceView = collabViewer || mobileTab === 'preview' ? 'preview' : 'editor';
   const showEditorView = useCallback(() => setMobileTab('editor'), [setMobileTab]);
   const showPreviewView = useCallback(() => setMobileTab('preview'), [setMobileTab]);
 
@@ -484,7 +486,8 @@ export function AppRouter({
     shareModal, setShareModal, hasMedia,
     isPlaying, playbackSpeed, activepublicId,
     project: pendingProject, projectMetadata,
-    onShowEditor: showEditorView,
+    onShowEditor: collabViewer ? undefined : showEditorView,
+    viewerMode: collabViewer,
     onViewPublic: handleViewPublic,
     setActiveLineIndex,
     songArtists: rosterNames,
@@ -499,7 +502,7 @@ export function AppRouter({
     isPlaying, playbackSpeed, activepublicId,
     pendingProject, projectMetadata, rosterNames,
     showEditorView, handleViewPublic, setActiveLineIndex,
-    playerSlot,
+    playerSlot, collabViewer,
   ]);
 
   const adminPage = (

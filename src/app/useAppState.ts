@@ -80,6 +80,8 @@ export function useAppState(user?: AuthUserType | null) {
   const collabSession = useCollabSession(sessionPublicId);
   const collabHistory = useCollabLines(collabSession.doc);
   const collabCanWrite = collabSession.role === 'owner' || collabSession.role === 'editor';
+  // A viewer sees the session read-only (the preview); AppRouter and the player key off this.
+  const collabViewer = inSession && collabSession.role === 'viewer';
   useCollabEditorMode(collabSession.doc, collabSession.status, collabCanWrite, editorMode, setEditorModeRaw);
   const [lines, , undo, redo, canUndo, canRedo, clearHistory] = inSession ? collabHistory : soloHistory;
   // Saves read this from callbacks; the server rejects solo saves during a session (collab_active).
@@ -1038,6 +1040,7 @@ export function useAppState(user?: AuthUserType | null) {
     // provider, doc, status, me and role for the presence/lock tasks.
     sessionPublicId,
     collabSession,
+    collabViewer,
   };
 }
 

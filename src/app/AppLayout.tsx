@@ -82,6 +82,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     isProjectLoading, lines, activeLineIndex, playbackPosition, syncMode, pendingProject,
     setIsPlaying, setPlaybackSpeed,
     projectCoverImage, setProjectCoverImage,
+    collabViewer,
   } = appState;
 
   const { settings, updateSetting } = settingsState;
@@ -94,7 +95,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   const isTouch = inputMethod === 'touch';
   // The workspace shows one view at a time (see EditorWorkspace in AppRouter);
   // whichever is showing owns the desktop player dock.
-  const playerSlot = usePlayerSlot({ hideEditor: mobileTab === 'preview', hidePreview: false, focusMode: 'default', isLg, isTouch });
+  const playerSlot = usePlayerSlot({ hideEditor: mobileTab === 'preview' || collabViewer, hidePreview: false, focusMode: 'default', isLg, isTouch });
 
   // Compute dynamic bottom padding only for the mobile dock (fixed above the tab bar).
   // Desktop slots (editor/header) are in-flow — no space reservation needed.
@@ -202,6 +203,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         activeLineIndex={activeLineIndex}
         playbackPosition={playbackPosition}
         syncMode={syncMode}
+        viewerMode={collabViewer}
       >
         <div className={`${isEditorPage ? 'h-dvh' : 'min-h-screen'} lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col`}>
           <AppBackground />
