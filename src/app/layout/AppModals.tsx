@@ -19,7 +19,7 @@ const EMPTY_SINGERS: string[] = [];
 interface AppModalsProps {
   showKeyboardHelp?: boolean;
   setShowKeyboardHelp: (v: boolean) => void;
-  handleManualSave: () => void | Promise<void>;
+  handleManualSave: () => void | Promise<void | boolean>;
   showNamingModal?: boolean;
   setShowNamingModal: (v: boolean) => void;
   handleProjectConfirm: (...args: unknown[]) => void;

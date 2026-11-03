@@ -21,7 +21,7 @@ interface EditorToolbarProps {
   // Collab: only the owner of a saved project gets Start / Manage session.
   sessionOwner?: SessionOwnerControl;
   collab?: CollabLockInput;
-  onBeforeStartSession?: () => void | Promise<void>;
+  onBeforeStartSession?: () => Promise<boolean>;
 }
 
 // Teal is `success`; in the light theme that token is too pale to read as text on

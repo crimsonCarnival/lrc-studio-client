@@ -324,7 +324,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           <AppModals
             showKeyboardHelp={showKeyboardHelp}
             setShowKeyboardHelp={setShowKeyboardHelp}
-            handleManualSave={handleManualSave as () => void | Promise<void>}
+            handleManualSave={handleManualSave as () => void | Promise<void | boolean>}
             showNamingModal={showNamingModal}
             setShowNamingModal={setShowNamingModal}
             handleProjectConfirm={handleProjectConfirm}

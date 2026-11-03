@@ -22,8 +22,11 @@ type Props = {
   owner: SessionOwnerControl
   collab?: CollabLockInput
   lines: EditorLine[]
-  /** Saves pending solo edits first: the session starts from the stored project. */
-  onBeforeStart?: () => void | Promise<void>
+  /**
+   * Saves pending solo edits first: the session is seeded from the stored project, so a session
+   * started over a failed save would silently drop those edits. Resolves whether it saved.
+   */
+  onBeforeStart?: () => Promise<boolean>
 }
 
 /** "Start session" on a saved project, "Manage session" (and its modal) inside one. */
@@ -36,7 +39,11 @@ export function SessionControl({ owner, collab, lines, onBeforeStart }: Props) {
   const start = async () => {
     setStarting(true)
     try {
-      await onBeforeStart?.()
+      if (onBeforeStart && !(await onBeforeStart())) {
+        toast.error(t('collab.settings.startFailed'))
+        setStarting(false)
+        return
+      }
       await startSession(owner.publicId)
       navigate(sessionPath(owner.publicId))
     } catch {

@@ -108,7 +108,8 @@ interface EditorProps {
   setEditorMode: (m: string) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onImport?: (...args: any[]) => void;
-  handleManualSave?: (() => void | Promise<void>) | null;
+  /** Resolves whether the project was persisted (see useManualSave). */
+  handleManualSave?: (() => Promise<boolean>) | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   buildProjectPayload?: () => Record<string, any>;
   handleRemoveAllLyrics: () => void;
