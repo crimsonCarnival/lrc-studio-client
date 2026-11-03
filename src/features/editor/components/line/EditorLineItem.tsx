@@ -24,6 +24,9 @@ import type { EditorLine, EditorWord, FocusedTimestamp } from '@/features/editor
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
 import type { PlayerHandle } from '@/features/player/player.types';
+import type { LockHolderView } from '@/features/collab/collab.types';
+import { LineLockBadge } from '@/features/collab/components/LineLockBadge';
+import { collabColor } from '@/features/collab/collab-color';
 
 function getSingers(line: EditorLine): string[] {
   return line.singers || [];
@@ -120,6 +123,8 @@ interface EditorLineItemProps {
   sectionLineCount?: number;
   isCollapsed?: boolean;
   onToggleCollapse?: (key: string) => void;
+  /** Collab: the participant holding this line's lock (never the local one). */
+  lockHolder?: LockHolderView;
 }
 
 const SYNC_FLASH_MS: Record<string, number> = { short: 300, normal: 600, long: 1200 };
@@ -200,6 +205,7 @@ const EditorLineItem = React.memo(({
   sectionLineCount = 0,
   isCollapsed = false,
   onToggleCollapse,
+  lockHolder,
 }: EditorLineItemProps) => {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
@@ -444,6 +450,7 @@ const EditorLineItem = React.memo(({
         sectionLines={sectionLines}
         handleAddLine={handleAddLine as (i: number, line?: EditorLine | null, opts?: { before?: boolean }) => void}
         handleDeleteLine={handleDeleteLine}
+        deleteDisabled={!!lockHolder}
         handleMoveToSection={handleMoveToSection as unknown as (indices: number[], target: number) => void}
         onToggleDepth={onToggleDepth}
       >
@@ -590,6 +597,7 @@ const EditorLineItem = React.memo(({
       handleAddLine={handleAddLine as (i: number, line?: EditorLine | null, opts?: { before?: boolean }) => void}
       handleClearLine={handleClearLine}
       handleDeleteLine={handleDeleteLine}
+      deleteDisabled={!!lockHolder}
       handleMoveToSection={handleMoveToSection as unknown as (indices: number[], target: number) => void}
       handleInsertSection={handleInsertSection}
       handleAssignSinger={handleAssignSinger}
@@ -631,7 +639,9 @@ const EditorLineItem = React.memo(({
         onDragOver={(e) => handleDragOver(e, i)}
         onDragEnd={handleDragEnd}
         onDrop={(e) => handleDrop(e, i)}
-        style={{ animationDelay: staggerDelay }}
+        style={lockHolder
+          ? { animationDelay: staggerDelay, boxShadow: `inset 0 0 0 1.5px ${collabColor(lockHolder.colorIndex)}` }
+          : { animationDelay: staggerDelay }}
         // One height and padding for every state (redesign sheet 13): the row never jumps when
         // the cursor lands on it, and the surface alone says what it is. Outline = the line
         // marking acts on (gold while it has an unsaved edit), soft fill = multi-selected.
@@ -651,6 +661,7 @@ const EditorLineItem = React.memo(({
                   : 'bg-transparent hover:bg-raised'
           } ${dragIndex === i ? 'opacity-40' : ''} ${justSynced ? 'ring-2 ring-primary/60 animate-just-synced' : ''}`}
       >
+        {lockHolder && <LineLockBadge holder={lockHolder} />}
 
         {/* Lock/unlock indicator */}
         {isActive && (

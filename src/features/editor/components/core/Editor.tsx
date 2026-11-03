@@ -41,6 +41,7 @@ import { useTranslation } from 'react-i18next';
 import { KEY_SYMBOLS, keyCap } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/editor.types';
+import type { CollabLockInput } from '@/features/collab/collab.types';
 import type { AuthUser } from '@/features/auth/auth.types';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import type { UploadedAudio } from '@/types/app-state';
@@ -135,6 +136,8 @@ interface EditorProps {
   activepublicId?: string | null;
   onTogglePublicView?: () => void;
   isPlaying?: boolean;
+  /** Inside a collaborative session: provider, own identity and the lock table. */
+  collab?: CollabLockInput;
 }
 
 export default function Editor({
@@ -176,6 +179,7 @@ export default function Editor({
   activepublicId,
   onTogglePublicView,
   isPlaying,
+  collab,
 }: EditorProps) {
   "use no memo";
   const { t } = useTranslation();
@@ -274,6 +278,7 @@ export default function Editor({
     handleSetStampTarget,
     modifiedLines,
     clearModifiedLines,
+    othersLocks,
   } = useEditor({
     lines,
     setLines,
@@ -289,6 +294,7 @@ export default function Editor({
     clearHistory,
     singerRoster: combinedSingers,
     isPlaying,
+    collab,
   });
 
   // Register teardown / post-save hooks
@@ -1214,6 +1220,7 @@ export default function Editor({
             onWordMenu={openWord}
             onLineMenu={openLine}
             modifiedLines={modifiedLines}
+            lockedByOthers={othersLocks}
             onToggleLineMode={handleToggleLineMode}
             confidenceById={autoStamp.confidenceById}
             collapsedSections={collapsedSections}

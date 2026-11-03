@@ -15,6 +15,7 @@ import type { CollapsedView } from '@/features/editor/utils/sections';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
+import type { LockSnapshot } from '@/features/collab/collab.types';
 
 const ESTIMATED_LINE_HEIGHT = 56;
 const LINE_GAP = 4;
@@ -86,6 +87,8 @@ interface VirtualizedLineListProps {
   onWordMenu?: LineItemProps['onWordMenu'];
   onLineMenu?: LineItemProps['onLineMenu'];
   modifiedLines?: Set<number>;
+  /** Collab: locks held by other participants, keyed by line id. Absent outside a session. */
+  lockedByOthers?: LockSnapshot;
   onToggleLineMode?: LineItemProps['onToggleLineMode'];
   confidenceById?: Map<string, ConfidenceInfo>;
   handleToggleCounterpart?: (lineIndex: number) => void;
@@ -155,6 +158,7 @@ export default function VirtualizedLineList({
   onWordMenu,
   onLineMenu,
   modifiedLines,
+  lockedByOthers,
   onToggleLineMode,
   confidenceById,
   handleToggleCounterpart,
@@ -597,6 +601,7 @@ export default function VirtualizedLineList({
                         onWordMenu={onWordMenu}
                         onLineMenu={onLineMenu}
                         isModified={modifiedLines?.has(i) || false}
+                        lockHolder={line.id != null ? lockedByOthers?.[line.id] : undefined}
                         editorMode={editorMode}
                         onToggleLineMode={onToggleLineMode}
                         upcomingDepth={upcomingDepth}
@@ -678,6 +683,7 @@ export default function VirtualizedLineList({
                       onWordMenu={onWordMenu}
                       onLineMenu={onLineMenu}
                       isModified={modifiedLines?.has(i)}
+                      lockHolder={line.id != null ? lockedByOthers?.[line.id] : undefined}
                       onToggleLineMode={onToggleLineMode}
                       confidenceInfo={line.id != null ? confidenceById?.get(String(line.id)) : undefined}
                     />

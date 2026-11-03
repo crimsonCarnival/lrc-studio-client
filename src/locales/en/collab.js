@@ -9,4 +9,11 @@ export default {
     offlineBody: 'Check your connection. It keeps trying in the background, or you can try again now.',
     retry: 'Try again',
   },
+  // Line locks: one participant edits or syncs a line at a time.
+  locks: {
+    denied: '{{name}} is working on this line',
+    deniedGeneric: 'You can’t edit this line right now',
+    badge: 'Editing: {{name}}',
+    deleteLocked: 'This line is being edited by {{name}}',
+  },
 };

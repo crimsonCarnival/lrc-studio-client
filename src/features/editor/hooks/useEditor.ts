@@ -31,6 +31,8 @@ import { applySecondaryLines } from '../utils/secondary-lines';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import type { EditorLine, EditorWord, EditorTranslation, FocusedTimestamp } from '@/features/editor/editor.types';
 import type { PlayerHandle } from '@/features/player/player.types';
+import type { CollabLockInput, LockSnapshot } from '@/features/collab/collab.types';
+import { useLineLocks } from '@/features/collab/useLineLocks';
 
 
 interface UseEditorParams {
@@ -50,9 +52,12 @@ interface UseEditorParams {
   singerRoster?: string[];
   /** Drives handleMark's time source — see the comment above its body. */
   isPlaying?: boolean;
+  /** Set inside a collaborative session: lines are then locked while edited or synced. */
+  collab?: CollabLockInput;
 }
 
 const EMPTY_ROSTER: string[] = [];
+const NO_LOCKS: LockSnapshot = {};
 
 export function useEditor({
   lines,
@@ -69,6 +74,7 @@ export function useEditor({
   clearHistory,
   singerRoster = EMPTY_ROSTER,
   isPlaying = false,
+  collab,
 }: UseEditorParams) {
   const { t } = useTranslation();
   const { settings, updateSetting, updateSettings } = useSettings();
@@ -219,7 +225,61 @@ export function useEditor({
     isPlayingRef.current = isPlaying;
     activeWordIndexRef.current = activeWordIndex;
     stampTargetRef.current = stampTarget;
+    editingLineIndexRef.current = editingLineIndex;
   });
+
+  // ——— Collab line locks ———
+  // Outside a session `collab` is undefined, the hook gets no provider, and withLock
+  // runs its write at once: the solo editor behaves exactly as before.
+  const editingLineIndexRef = useRef(editingLineIndex);
+  const onLockDenied = useCallback((lineId: string) => {
+    // The server refused (or revoked) the lock on the line being typed in: close that editor.
+    const editing = editingLineIndexRef.current;
+    if (editing != null && linesRef.current[editing]?.id === lineId) setEditingLineIndex(null);
+  }, []);
+  const lineLocks = useLineLocks(collab?.provider ?? null, collab?.me ?? null, collab?.locks ?? NO_LOCKS, { onDenied: onLockDenied });
+  const { claim: claimLine, release: releaseLine, withLock } = lineLocks;
+  // Read from callbacks that must keep a stable identity (they are props of every row).
+  const lineLocksRef = useRef(lineLocks);
+  useEffect(() => { lineLocksRef.current = lineLocks; });
+
+  // The open text editor holds its line; so does the sync cursor while syncing.
+  const editingLineId = editingLineIndex !== null ? lines[editingLineIndex]?.id : undefined;
+  useEffect(() => {
+    if (!editingLineId) return;
+    claimLine(editingLineId);
+    return () => releaseLine(editingLineId);
+  }, [editingLineId, claimLine, releaseLine]);
+  const syncCursorLineId = syncMode ? lines[activeLineIndex]?.id : undefined;
+  useEffect(() => {
+    if (!syncCursorLineId) return;
+    claimLine(syncCursorLineId);
+    return () => releaseLine(syncCursorLineId);
+  }, [syncCursorLineId, claimLine, releaseLine]);
+
+  // True (after telling the user) when any of these lines is being edited by someone else.
+  const blockedByOthersLock = useCallback((indices: Iterable<number>): boolean => {
+    for (const i of indices) {
+      const id = linesRef.current[i]?.id;
+      const holder = id ? lineLocksRef.current.othersLocks[id] : undefined;
+      if (holder) {
+        toast.error(t('collab.locks.deleteLocked', { name: holder.name }), { id: 'collab-delete-locked' });
+        return true;
+      }
+    }
+    return false;
+  }, [t]);
+
+  // Opening the text editor on a line someone else holds would only end in a denial.
+  const startEditing = useCallback((index: number | null) => {
+    const id = index !== null ? linesRef.current[index]?.id : undefined;
+    const holder = id ? lineLocksRef.current.othersLocks[id] : undefined;
+    if (holder) {
+      toast.error(t('collab.locks.denied', { name: holder.name }), { id: `collab-lock-denied-${id}` });
+      return;
+    }
+    setEditingLineIndex(index);
+  }, [t]);
 
   // Two clusters that needed none of this hook's state live in their own files. They are
   // called here (rather than by the editor components) so the handlers still reach callers
@@ -641,7 +701,7 @@ export function useEditor({
     // frame), the mark is re-applied to the latest lines on the same line, found by id,
     // instead of replacing them with a stale array that would drop the other change.
     const markedId = currentLines[idx]?.id;
-    setLines((prev) => {
+    const writeMark = () => setLines((prev) => {
       if (prev === currentLines) return result.nextLines;
       const at = markedId == null ? -1 : prev.findIndex((l) => l.id === markedId);
       if (at < 0) return prev;
@@ -652,6 +712,12 @@ export function useEditor({
         awaitingEndMark: awaitingEndMark === idx ? at : awaitingEndMark,
       }).nextLines;
     });
+    // In a session the write waits for the line's lock when it is not held yet. `time` was
+    // captured above and rides in markArgs, so a late grant still stamps the instant of the
+    // keypress, and the updater re-finds the line by id. Nothing here awaits the network;
+    // outside a session withLock runs writeMark immediately.
+    if (markedId != null) withLock(markedId, writeMark);
+    else writeMark();
     if (result.nextActiveLineIndex != null) {
       setActiveLineIndex(result.nextActiveLineIndex);
     }
@@ -675,6 +741,7 @@ export function useEditor({
     awaitingEndMark,
     settings.editor,
     setModifiedLines,
+    withLock,
   ]);
 
   // ——— Shortcut handler (sync mode) ———
@@ -903,6 +970,7 @@ export function useEditor({
   }, [setLines, setModifiedLines]);
 
   const handleDeleteLine = (index) => {
+    if (blockedByOthersLock([index])) return;
     const isSection = lines[index]?.type === 'section';
     requestConfirm(isSection ? t('confirm.deleteSection') : t('confirm.deleteLine'), () => {
       setLines((prev) => {
@@ -1053,6 +1121,7 @@ export function useEditor({
   }, [selectedLines, editorMode, setLines, clearSelection, requestConfirm, t]);
 
   const handleBulkDelete = useCallback(() => {
+    if (blockedByOthersLock(selectedLines)) return;
     requestConfirm(t('confirm.bulkDelete'), () => {
       setLines((prev) => prev.filter((_, idx) => !selectedLines.has(idx)));
       setActiveLineIndex((prev) => {
@@ -1064,7 +1133,7 @@ export function useEditor({
       });
       clearSelection();
     }, { title: t('confirm.bulkDeleteTitle'), variant: 'danger' });
-  }, [selectedLines, t, setLines, setActiveLineIndex, clearSelection, requestConfirm]);
+  }, [selectedLines, t, setLines, setActiveLineIndex, clearSelection, requestConfirm, blockedByOthersLock]);
 
   const handleBulkShift = (delta) => {
     setLines((prev) => applyBulkShift(prev, selectedLines, delta));
@@ -1159,7 +1228,7 @@ export function useEditor({
         e.preventDefault();
         if (selectedLines.size > 0) {
           handleBulkDelete();
-        } else {
+        } else if (!blockedByOthersLock([activeLineIndex])) {
           setLines((prev) => {
             const newLines = prev.filter((_, i) => i !== activeLineIndex);
             setActiveLineIndex((prevIndex) =>
@@ -1195,6 +1264,7 @@ export function useEditor({
   }, [
     selectedLines,
     handleBulkDelete,
+    blockedByOthersLock,
     clearSelection,
     settings.shortcuts?.deleteLine,
     settings.shortcuts?.addLine,
@@ -1409,7 +1479,8 @@ export function useEditor({
     rawText,
     setRawText,
     editingLineIndex,
-    setEditingLineIndex,
+    setEditingLineIndex: startEditing,
+    othersLocks: lineLocks.othersLocks,
     editingText,
     setEditingText,
     editingSecondary,

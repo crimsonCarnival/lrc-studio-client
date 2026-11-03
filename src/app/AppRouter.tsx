@@ -356,6 +356,12 @@ export function AppRouter({
   const collabStatus = collabSession.status;
   const hasCollabDoc = collabSession.doc !== null;
   const retryCollab = collabSession.retry;
+  const { provider: collabProvider, me: collabMe, locks: collabLocks } = collabSession;
+  // Line locking only exists inside a session; solo editing passes no collab input at all.
+  const collab = useMemo(
+    () => (sessionPublicId !== null ? { provider: collabProvider, me: collabMe, locks: collabLocks } : undefined),
+    [sessionPublicId, collabProvider, collabMe, collabLocks],
+  );
   // In a session the editor works on the session's project, whatever project was open before.
   const editorPublicId = sessionPublicId ?? activepublicId;
 
@@ -448,6 +454,7 @@ export function AppRouter({
     activepublicId: editorPublicId,
     onTogglePublicView: handleViewPublic,
     isPlaying,
+    collab,
   } as unknown as EditorProps), [
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
@@ -466,7 +473,7 @@ export function AppRouter({
     projectMetadata, rosterNames,
     playerSlot,
     showPreviewView,
-    uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying,
+    uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying, collab,
   ]);
 
   const previewProps = useMemo(() => ({
