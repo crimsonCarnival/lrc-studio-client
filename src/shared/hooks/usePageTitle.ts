@@ -42,6 +42,10 @@ export function usePageTitle(projectName: string | null = null) {
       pageTitle = projectName || t('app.titles.shared');
     } else if (cleanPath === 'project/new') {
       pageTitle = t('app.titles.newProject');
+    } else if (cleanPath.startsWith('session/')) {
+      pageTitle = projectName || t('app.titles.session');
+    } else if (cleanPath.startsWith('join/')) {
+      pageTitle = t('app.titles.joinSession');
     } else if (cleanPath.startsWith('project/')) {
       pageTitle = projectName || t('app.titles.library');
     } else if (cleanPath === 'settings' || cleanPath.startsWith('settings/')) {

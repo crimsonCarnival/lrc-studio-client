@@ -132,6 +132,11 @@ export function useAppState(user?: AuthUserType | null) {
 
   const [syncMode, setSyncMode] = useState(true);
   const [activeLineIndex, setActiveLineIndex] = useState(0);
+  // A collaborator deleting lines can leave the cursor past the end, which no view can show.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (lines.length > 0 && activeLineIndex >= lines.length) setActiveLineIndex(lines.length - 1);
+  }, [lines.length, activeLineIndex]);
   const [activeTranslationIndex, setActiveTranslationIndex] = useState(0);
   const [playbackPosition, setPlaybackPosition] = useState(0);
   const [duration, setDuration] = useState(0);

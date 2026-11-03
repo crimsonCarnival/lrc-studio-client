@@ -19,6 +19,8 @@ export default {
     reports: "My Reports",
     guide: "Guide",
     verifyEmail: "Verify Email",
+    session: "Live session",
+    joinSession: "Join session",
     notFound: "Page Not Found"
   },
   shareProject: "Share",

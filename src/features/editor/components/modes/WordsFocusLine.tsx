@@ -97,7 +97,8 @@ export const WordsFocusLine = memo(function WordsFocusLine({
 
   // Singers of the section this line sits in, which the chips colour words by.
   const activeSingers = useMemo(() => {
-    for (let k = i - 1; k >= 0; k--) {
+    // The cursor can sit past the end for a render: lines shrink under it in a session.
+    for (let k = Math.min(i, lines.length) - 1; k >= 0; k--) {
       if (lines[k].type === 'section') return lines[k].singers;
     }
     return undefined;
