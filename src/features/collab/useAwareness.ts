@@ -11,7 +11,7 @@ export function extrapolate(p: PlayheadState, receivedAt: number, now: number): 
   return p.t + Math.max(0, now - receivedAt) / 1000 * p.rate
 }
 
-type AwarenessUser = { name: string; colorIndex: number; role: CollabRole }
+type AwarenessUser = { name: string; colorIndex: number; role: CollabRole; subject: string }
 type AwarenessState = {
   user?: AwarenessUser
   pointer?: PointerState
@@ -26,8 +26,28 @@ const ROLES: readonly string[] = ['owner', 'editor', 'viewer']
 
 function isUser(u: unknown): u is AwarenessUser {
   if (typeof u !== 'object' || u === null) return false
-  const { name, colorIndex, role } = u as Record<string, unknown>
-  return typeof name === 'string' && typeof colorIndex === 'number' && typeof role === 'string' && ROLES.includes(role)
+  const { name, colorIndex, role, subject } = u as Record<string, unknown>
+  return typeof name === 'string' && typeof subject === 'string' && typeof colorIndex === 'number'
+    && typeof role === 'string' && ROLES.includes(role)
+}
+
+const finite = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n)
+
+// Remote states are untrusted: anything of the wrong shape reads as "not there".
+function readPointer(p: unknown): PointerState {
+  if (typeof p !== 'object' || p === null) return null
+  const o = p as Record<string, unknown>
+  if (o.area === 'waveform' && finite(o.time)) return { area: 'waveform', time: o.time }
+  if (o.area === 'lines' && typeof o.lineId === 'string' && finite(o.xRatio) && finite(o.yRatio)) {
+    return { area: 'lines', lineId: o.lineId, xRatio: o.xRatio, yRatio: o.yRatio }
+  }
+  return null
+}
+
+function readPlayhead(p: unknown): PlayheadState | null {
+  if (typeof p !== 'object' || p === null) return null
+  const o = p as Record<string, unknown>
+  return finite(o.t) && typeof o.playing === 'boolean' && finite(o.rate) ? { t: o.t, playing: o.playing, rate: o.rate } : null
 }
 
 const samePlayhead = (a: PlayheadState | null, b: PlayheadState | null) =>
@@ -95,7 +115,7 @@ type Setters = {
 }
 
 function samePeer(a: CollabPeer, b: CollabPeer): boolean {
-  return a.name === b.name && a.colorIndex === b.colorIndex && a.role === b.role && a.activeLineId === b.activeLineId
+  return a.name === b.name && a.subject === b.subject && a.colorIndex === b.colorIndex && a.role === b.role && a.activeLineId === b.activeLineId
     && a.duration === b.duration && samePointer(a.pointer, b.pointer) && samePlayhead(a.playhead, b.playhead)
 }
 
@@ -115,6 +135,7 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
   // Re-published when the provider or identity changes (a reconnect builds a fresh awareness state).
   const latest = useRef<Record<LocalField, unknown>>({ pointer: null, playhead: null, activeLineId: null, duration: null })
 
+  const lastProvider = useRef<HocuspocusProvider | null>(null)
   const name = me?.name ?? null
   const colorIndex = me?.colorIndex ?? null
   const role = me?.role ?? null
@@ -127,6 +148,11 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
       return
     }
 
+    // Buffered values belong to the connection they were made for.
+    if (lastProvider.current !== provider) {
+      latest.current = { pointer: null, playhead: null, activeLineId: null, duration: null }
+      lastProvider.current = provider
+    }
     let alive = true
     const field = (key: LocalField, value: unknown) => {
       latest.current[key] = value
@@ -147,13 +173,14 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
         const s = raw as AwarenessState
         if (!isUser(s.user)) return
         const old = known.current.get(clientId)
-        const playheadNow = s.playhead ?? null
+        const playheadNow = readPlayhead(s.playhead)
         const candidate: CollabPeer = {
           clientId,
           name: s.user.name,
+          subject: s.user.subject,
           colorIndex: s.user.colorIndex,
           role: s.user.role,
-          pointer: s.pointer ?? null,
+          pointer: readPointer(s.pointer),
           playhead: playheadNow,
           activeLineId: s.activeLineId ?? null,
           duration: typeof s.duration === 'number' ? s.duration : null,
@@ -165,7 +192,8 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
         next.set(clientId, old && samePeer(old, candidate) ? old : candidate)
       })
       known.current = next
-      setPeers([...next.values()])
+      // Own publishes fire 'change' too: keep the same array when no peer object changed.
+      setPeers((prev) => (prev.length === next.size && prev.every((p) => next.get(p.clientId) === p) ? prev : [...next.values()]))
     }
     const onDestroy = () => { alive = false }
     awareness.on('change', refresh)

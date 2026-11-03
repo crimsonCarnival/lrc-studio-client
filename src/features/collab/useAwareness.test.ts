@@ -37,7 +37,7 @@ function fakeAwareness(clientID: number) {
 const meWith = (over: Partial<CollabMe> = {}): CollabMe => ({
   subject: 'user:1', name: 'Ana', colorIndex: 2, role: 'editor', conn: 'c1', clientId: 1, ...over,
 })
-const luis = { name: 'Luis', colorIndex: 5, role: 'viewer' as const }
+const luis = { name: 'Luis', colorIndex: 5, role: 'viewer' as const, subject: 'guest:luis' }
 
 function setup(me: CollabMe | null = meWith()) {
   const awareness = fakeAwareness(1)
@@ -143,12 +143,38 @@ describe('useAwareness', () => {
     expect(hook.result.current.peers).toEqual([])
   })
 
+  it('ignores malformed pointer and playhead values', () => {
+    const { awareness, hook } = setup()
+    act(() => awareness.remote(7, {
+      user: luis,
+      pointer: { area: 'lines', lineId: 'a', xRatio: 'x', yRatio: 1 },
+      playhead: { t: Infinity, playing: true, rate: 1 },
+    }))
+    expect(hook.result.current.peers[0]).toMatchObject({ pointer: null, playhead: null })
+    act(() => awareness.remote(7, { user: luis, pointer: { area: 'nowhere' }, playhead: 'now' }))
+    expect(hook.result.current.peers[0]).toMatchObject({ pointer: null, playhead: null })
+  })
+
+  it('skips a peer whose user carries no subject', () => {
+    const { awareness, hook } = setup()
+    act(() => awareness.remote(7, { user: { name: 'Luis', colorIndex: 5, role: 'viewer' } }))
+    expect(hook.result.current.peers).toEqual([])
+  })
+
+  it('keeps the same peers array when an awareness change alters nothing about peers', () => {
+    const { awareness, hook } = setup()
+    act(() => awareness.remote(7, { user: luis }))
+    const before = hook.result.current.peers
+    act(() => hook.result.current.setActiveLine('l1'))
+    expect(hook.result.current.peers).toBe(before)
+  })
+
   it('exposes a peer\'s fields, including the media duration', () => {
     const { awareness, hook } = setup()
     const playhead = { t: 12, playing: true, rate: 1 }
     act(() => awareness.remote(7, { user: luis, playhead, activeLineId: 'l3', duration: 200, pointer: { area: 'waveform', time: 4 } }))
     expect(hook.result.current.peers[0]).toMatchObject({
-      clientId: 7, name: 'Luis', colorIndex: 5, role: 'viewer', playhead, activeLineId: 'l3', duration: 200,
+      clientId: 7, subject: 'guest:luis', name: 'Luis', colorIndex: 5, role: 'viewer', playhead, activeLineId: 'l3', duration: 200,
       pointer: { area: 'waveform', time: 4 },
     })
   })
@@ -158,7 +184,7 @@ describe('useAwareness', () => {
     act(() => awareness.remote(7, { user: luis, playhead: { t: 1, playing: true, rate: 1 } }))
     const first = hook.result.current.peers[0]
     vi.advanceTimersByTime(1000)
-    act(() => awareness.remote(8, { user: { name: 'Eva', colorIndex: 3, role: 'editor' } }))
+    act(() => awareness.remote(8, { user: { name: 'Eva', colorIndex: 3, role: 'editor', subject: 'user:eva' } }))
     expect(hook.result.current.peers.find((p) => p.clientId === 7)).toBe(first)
   })
 
@@ -177,6 +203,16 @@ describe('useAwareness', () => {
     act(() => awareness.remote(7, { user: luis }))
     act(() => awareness.remote(7, null))
     expect(hook.result.current.peers).toEqual([])
+  })
+
+  it('does not carry buffered values over to a new provider', () => {
+    const a = fakeAwareness(1)
+    const b = fakeAwareness(2)
+    const me = meWith()
+    const hook = renderHook((p: { aw: ReturnType<typeof fakeAwareness> }) => useAwareness({ awareness: p.aw } as never, me), { initialProps: { aw: a } })
+    act(() => hook.result.current.setActiveLine('old'))
+    hook.rerender({ aw: b })
+    expect(b.getLocalState()).toMatchObject({ activeLineId: null })
   })
 
   it('without a provider every setter is a no-op and nobody is listed', () => {

@@ -96,6 +96,8 @@ export type PlayheadState = { t: number; playing: boolean; rate: number }
 /** Another participant, as seen through awareness. Self is never included. */
 export type CollabPeer = {
   clientId: number
+  /** Stamped by the server from the authenticated principal, so it cannot be forged by the peer. */
+  subject: string
   name: string
   colorIndex: number
   role: CollabRole
