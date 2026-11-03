@@ -29,7 +29,8 @@ vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => h.auth 
 vi.mock('@/shared/utils/device', () => ({ getDeviceId: () => Promise.resolve('dv_test') }))
 vi.mock('./collab.service', () => ({ getSession: () => Promise.resolve(null) }))
 
-import { useCollabSession } from './useCollabSession'
+import { authEvents } from '@/shared/utils/auth-events'
+import { REFRESH_RETRY_DELAY_MS, useCollabSession } from './useCollabSession'
 
 async function connected() {
   const hook = renderHook(() => useCollabSession('abc123'))
@@ -102,14 +103,62 @@ describe('useCollabSession: unauthorized handling', () => {
     expect(result.current.status).not.toBe('forbidden')
   })
 
-  it('a failed refresh becomes forbidden without reconnecting', async () => {
-    h.auth.refreshSession = vi.fn(() => Promise.reject(new Error('refresh dead')))
+  it('a dead refresh token becomes forbidden and goes through the session-expired path', async () => {
+    h.auth.refreshSession = vi.fn(() => Promise.reject(Object.assign(new Error('refresh dead'), { status: 401 })))
+    const expired = vi.fn()
+    const unsub = authEvents.on('token:expired', expired)
     const { result, provider } = await connected()
 
     act(() => provider.config.onClose({ event: { code: 4401, reason: 'unauthorized' } }))
     await flush()
+    unsub()
     expect(result.current.status).toBe('forbidden')
     expect(provider.connect).not.toHaveBeenCalled()
+    expect(expired).toHaveBeenCalledTimes(1)
+  })
+
+  it('a transient refresh failure is retried once after a delay, then reconnects', async () => {
+    try {
+      const refresh = vi.fn()
+        .mockImplementationOnce(() => Promise.reject(Object.assign(new Error('bad gateway'), { status: 502 })))
+        .mockImplementation(() => Promise.resolve())
+      h.auth.refreshSession = refresh
+      const { result, provider } = await connected()
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+
+      act(() => provider.config.onClose({ event: { code: 4401, reason: 'unauthorized' } }))
+      await flush()
+      expect(refresh).toHaveBeenCalledTimes(1)
+      expect(provider.connect).not.toHaveBeenCalled()
+      await act(async () => { vi.advanceTimersByTime(REFRESH_RETRY_DELAY_MS) })
+      await flush()
+      expect(refresh).toHaveBeenCalledTimes(2)
+      expect(provider.connect).toHaveBeenCalledTimes(1)
+      expect(result.current.status).not.toBe('forbidden')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('two transient failures in a row become forbidden without signing out', async () => {
+    const expired = vi.fn()
+    const unsub = authEvents.on('token:expired', expired)
+    try {
+      h.auth.refreshSession = vi.fn(() => Promise.reject(new Error('network down')))
+      const { result, provider } = await connected()
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+
+      act(() => provider.config.onClose({ event: { code: 4401, reason: 'unauthorized' } }))
+      await flush()
+      await act(async () => { vi.advanceTimersByTime(REFRESH_RETRY_DELAY_MS) })
+      await flush()
+      expect(result.current.status).toBe('forbidden')
+      expect(provider.connect).not.toHaveBeenCalled()
+      expect(expired).not.toHaveBeenCalled()
+    } finally {
+      unsub()
+      vi.useRealTimers()
+    }
   })
 
   it('a guest has nothing to refresh: unauthorized is terminal', async () => {

@@ -3,6 +3,8 @@ import type { AuthorizedScope, HocuspocusProvider } from '@hocuspocus/provider'
 import type * as Y from 'yjs'
 import { useAuthContext } from '@/features/auth/useAuthContext'
 import { getDeviceId } from '@/shared/utils/device'
+import { authEvents } from '@/shared/utils/auth-events'
+import type { ApiError } from '@/types'
 import { getSession } from './collab.service'
 import { loadCollabRuntime } from './load-collab-runtime'
 import type { CollabMe, CollabRole, CollabStatus } from './collab.types'
@@ -55,6 +57,16 @@ function isSessionEnded(payload: string): boolean {
   } catch {
     return false
   }
+}
+
+// Delay before the single retry of a refresh that failed for a transient reason.
+export const REFRESH_RETRY_DELAY_MS = 2000
+
+// No HTTP status (network error) or a 5xx: worth one retry. A 4xx means the refresh
+// token itself was refused.
+function isTransientRefreshError(err: unknown): boolean {
+  const status = (err as ApiError | null)?.status
+  return !status || status >= 500
 }
 
 type Connection = { publicId: string; doc: Y.Doc; provider: HocuspocusProvider }
@@ -115,6 +127,7 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
     // One refresh-and-reconnect per connection attempt; reset once authenticated.
     let refreshUsed = false
     let refreshing = false
+    let refreshRetryTimer: ReturnType<typeof setTimeout> | null = null
     const onUnauthorized = () => {
       // The server reports one refusal twice (auth message, then the close): ignore the echo.
       if (terminal || refreshing) return
@@ -123,16 +136,29 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
       refreshUsed = true
       refreshing = true
       provider?.disconnect()
-      refresh().then(
-        () => {
-          refreshing = false
-          if (!terminal) void provider?.connect()
-        },
-        () => {
-          refreshing = false
-          stop('forbidden')
-        },
-      )
+      const attempt = (retriesLeft: number): void => {
+        refresh().then(
+          () => {
+            refreshing = false
+            if (!terminal) void provider?.connect()
+          },
+          (err: unknown) => {
+            if (terminal) return
+            const transient = isTransientRefreshError(err)
+            // A network blip or a 5xx gets one more try before giving up.
+            if (transient && retriesLeft > 0) {
+              refreshRetryTimer = setTimeout(() => attempt(retriesLeft - 1), REFRESH_RETRY_DELAY_MS)
+              return
+            }
+            refreshing = false
+            stop('forbidden')
+            // A dead refresh token is the app's "session expired" case: hand it to the
+            // global token:expired handler (sign out, toast, redirect to sign-in).
+            if (!transient) authEvents.emit('token:expired')
+          },
+        )
+      }
+      attempt(1)
     }
     const refuse = (refusal: Refusal) => (refusal === 'unauthorized' ? onUnauthorized() : stop(refusal))
 
@@ -175,6 +201,7 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
     return () => {
       cancelled = true
       terminal = true
+      if (refreshRetryTimer) clearTimeout(refreshRetryTimer)
       provider?.destroy()
       doc?.destroy()
     }
