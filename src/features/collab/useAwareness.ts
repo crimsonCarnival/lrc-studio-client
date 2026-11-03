@@ -33,13 +33,25 @@ function isUser(u: unknown): u is AwarenessUser {
 
 const finite = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n)
 
-// Remote states are untrusted: anything of the wrong shape reads as "not there".
+/** Line ids are UUIDs; anything much longer is not a line id. */
+export const MAX_LINE_ID_LENGTH = 64
+/** Fastest playback speed a peer's playhead is extrapolated at. */
+export const MAX_PLAYHEAD_RATE = 4
+
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n))
+const lineIdOf = (v: unknown): string | null =>
+  typeof v === 'string' && v.length <= MAX_LINE_ID_LENGTH ? v : null
+
+// Remote states are untrusted: anything of the wrong shape reads as "not there", and geometry is
+// clamped to its range so a crafted value can't place a pointer outside its row (which would
+// scroll the page sideways) or send a playhead racing off.
 function readPointer(p: unknown): PointerState {
   if (typeof p !== 'object' || p === null) return null
   const o = p as Record<string, unknown>
-  if (o.area === 'waveform' && finite(o.time)) return { area: 'waveform', time: o.time }
-  if (o.area === 'lines' && typeof o.lineId === 'string' && finite(o.xRatio) && finite(o.yRatio)) {
-    return { area: 'lines', lineId: o.lineId, xRatio: o.xRatio, yRatio: o.yRatio }
+  if (o.area === 'waveform' && finite(o.time)) return { area: 'waveform', time: Math.max(0, o.time) }
+  const lineId = lineIdOf(o.lineId)
+  if (o.area === 'lines' && lineId !== null && finite(o.xRatio) && finite(o.yRatio)) {
+    return { area: 'lines', lineId, xRatio: clamp(o.xRatio, 0, 1), yRatio: clamp(o.yRatio, 0, 1) }
   }
   return null
 }
@@ -47,7 +59,9 @@ function readPointer(p: unknown): PointerState {
 function readPlayhead(p: unknown): PlayheadState | null {
   if (typeof p !== 'object' || p === null) return null
   const o = p as Record<string, unknown>
-  return finite(o.t) && typeof o.playing === 'boolean' && finite(o.rate) ? { t: o.t, playing: o.playing, rate: o.rate } : null
+  return finite(o.t) && typeof o.playing === 'boolean' && finite(o.rate)
+    ? { t: Math.max(0, o.t), playing: o.playing, rate: clamp(o.rate, 0, MAX_PLAYHEAD_RATE) }
+    : null
 }
 
 const samePlayhead = (a: PlayheadState | null, b: PlayheadState | null) =>
@@ -183,7 +197,7 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
           role: s.user.role,
           pointer: readPointer(s.pointer),
           playhead: playheadNow,
-          activeLineId: typeof s.activeLineId === 'string' ? s.activeLineId : null,
+          activeLineId: lineIdOf(s.activeLineId),
           duration: finite(s.duration) && s.duration >= 0 ? s.duration : null,
           // Remote states are re-decoded on every update, so the playhead is compared by value:
           // a pointer-only update must not restart the extrapolation from an old position.

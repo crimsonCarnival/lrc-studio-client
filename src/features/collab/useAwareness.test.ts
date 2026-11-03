@@ -155,6 +155,32 @@ describe('useAwareness', () => {
     expect(hook.result.current.peers[0]).toMatchObject({ pointer: null, playhead: null })
   })
 
+  // C2: geometry from a peer is untrusted; out-of-range values must not be able to push a
+  // pointer off the row (and scroll the page), nor run a playhead away.
+  it('clamps pointer ratios to the row and refuses overlong line ids', () => {
+    const { awareness, hook } = setup()
+    act(() => awareness.remote(7, { user: luis, pointer: { area: 'lines', lineId: 'a', xRatio: 1e9, yRatio: -5 } }))
+    expect(hook.result.current.peers[0].pointer).toEqual({ area: 'lines', lineId: 'a', xRatio: 1, yRatio: 0 })
+    act(() => awareness.remote(7, { user: luis, pointer: { area: 'lines', lineId: 'x'.repeat(65), xRatio: 0.5, yRatio: 0.5 } }))
+    expect(hook.result.current.peers[0].pointer).toBeNull()
+    act(() => awareness.remote(7, { user: luis, pointer: { area: 'lines', lineId: 'x'.repeat(64), xRatio: 0.5, yRatio: 0.5 } }))
+    expect(hook.result.current.peers[0].pointer).toMatchObject({ lineId: 'x'.repeat(64) })
+  })
+
+  it('clamps the playhead rate to [0, 4] and its time to zero or more', () => {
+    const { awareness, hook } = setup()
+    act(() => awareness.remote(7, { user: luis, playhead: { t: -20, playing: true, rate: 1000 } }))
+    expect(hook.result.current.peers[0].playhead).toEqual({ t: 0, playing: true, rate: 4 })
+    act(() => awareness.remote(7, { user: luis, playhead: { t: 3, playing: true, rate: -2 } }))
+    expect(hook.result.current.peers[0].playhead).toEqual({ t: 3, playing: true, rate: 0 })
+  })
+
+  it('refuses an overlong activeLineId', () => {
+    const { awareness, hook } = setup()
+    act(() => awareness.remote(7, { user: luis, activeLineId: 'x'.repeat(65) }))
+    expect(hook.result.current.peers[0].activeLineId).toBeNull()
+  })
+
   it('skips a peer whose user carries no subject', () => {
     const { awareness, hook } = setup()
     act(() => awareness.remote(7, { user: { name: 'Luis', colorIndex: 5, role: 'viewer' } }))

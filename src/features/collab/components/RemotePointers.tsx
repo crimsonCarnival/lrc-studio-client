@@ -7,6 +7,8 @@ import { usePresencePeers } from '../collab-presence-context'
 import { findRow } from './find-row'
 
 type LinesPointer = Extract<NonNullable<CollabPeer['pointer']>, { area: 'lines' }>
+// The name tag sits this far right of the arrow tip (Tailwind ml-3).
+const LABEL_OFFSET_PX = 12
 const onLines = (p: CollabPeer): p is CollabPeer & { pointer: LinesPointer } => p.pointer?.area === 'lines'
 
 /**
@@ -38,6 +40,13 @@ export function RemotePointers({ scrollRef }: { scrollRef: RefObject<HTMLElement
       const x = r.left - layerRect.left + Number(el.dataset.x) * r.width
       const y = r.top - layerRect.top + Number(el.dataset.y) * r.height
       el.style.transform = `translate(${x}px, ${y}px)`
+      // Near the right edge the name tag goes to the left of the arrow, so it stays inside
+      // the (clipped) layer instead of being cut off.
+      const label = el.querySelector<HTMLElement>('[data-pointer-label]')
+      if (label) {
+        const flip = x + LABEL_OFFSET_PX + label.offsetWidth > layerRect.width
+        label.style.transform = flip ? `translateX(calc(-100% - ${LABEL_OFFSET_PX + 2}px))` : ''
+      }
       el.style.visibility = 'visible'
     }
   }
@@ -66,7 +75,8 @@ export function RemotePointers({ scrollRef }: { scrollRef: RefObject<HTMLElement
   }, [scrollRef])
 
   return (
-    <div ref={layerRef} aria-hidden className="pointer-events-none absolute inset-0 z-40 overflow-visible">
+    // Clipped: whatever a peer sends, a pointer never widens the list into a horizontal scroll.
+    <div ref={layerRef} aria-hidden className="pointer-events-none absolute inset-0 z-40 overflow-hidden">
       {peers.map((p) => (
         <div
           key={p.clientId}
@@ -82,6 +92,7 @@ export function RemotePointers({ scrollRef }: { scrollRef: RefObject<HTMLElement
             <path d="M1 1l4.5 11 1.8-4.2L12 6z" fill="currentColor" />
           </svg>
           <span
+            data-pointer-label
             className="-mt-1 ml-3 block max-w-40 truncate whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none text-background"
             style={{ backgroundColor: collabColor(p.colorIndex) }}
           >
