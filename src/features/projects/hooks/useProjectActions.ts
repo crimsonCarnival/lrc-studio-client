@@ -48,6 +48,7 @@ export function useProjectActions({
   requestConfirm,
   isCreatingProjectRef,
   setProjectUserId,
+  replaceAllBlocked,
 }) {
   const { executeRecaptcha } = useGoogleReCaptcha();
   // ── Load a project from the library ──────────────────────────────────────
@@ -263,12 +264,15 @@ export function useProjectActions({
 
   // ── Remove all lyrics ─────────────────────────────────────────────────────
   const handleRemoveAllLyrics = useCallback(() => {
+    // In a session, refused while another participant holds a line; checked again on confirm.
+    if (replaceAllBlocked?.()) return;
     requestConfirm(t('confirm.removeLyrics'), () => {
+      if (replaceAllBlocked?.()) return;
       setEditLines([]);
       setActiveLineIndex(0);
       toast.success(t('editor.toast.allRemoved'));
     }, { title: t('confirm.removeLyricsTitle'), variant: 'danger' });
-  }, [setEditLines, setActiveLineIndex, requestConfirm, t, toast]);
+  }, [setEditLines, setActiveLineIndex, requestConfirm, t, toast, replaceAllBlocked]);
 
   // ── Reset full app state ──────────────────────────────────────────────────
   const resetAppState = useCallback(() => {

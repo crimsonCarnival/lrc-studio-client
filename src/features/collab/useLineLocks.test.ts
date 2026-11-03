@@ -7,7 +7,7 @@ import type { CollabMe, LockSnapshot } from './collab.types'
 const h = vi.hoisted(() => ({ error: vi.fn() }))
 vi.mock('react-hot-toast', () => ({ default: { error: h.error } }))
 
-import { HEARTBEAT_MS, HIDDEN_RELEASE_MS, QUEUE_DEADLINE_MS, useLineLocks } from './useLineLocks'
+import { HEARTBEAT_MS, HIDDEN_RELEASE_MS, QUEUE_DEADLINE_MS, otherLockHolder, useLineLocks } from './useLineLocks'
 
 type Sent = { t: string; lineId?: string; lineIds?: string[] }
 
@@ -379,5 +379,19 @@ describe('useLineLocks', () => {
       expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([])
       expect(provider.sent.filter((m) => m.t === 'heartbeat').length).toBeGreaterThan(0)
     })
+  })
+})
+
+// B4: whole-document replaces refuse while anyone else holds a line.
+describe('otherLockHolder', () => {
+  it('finds a line held by another connection, the same user in another tab included', () => {
+    expect(otherLockHolder({ a: mine('c1'), b: theirs }, 'c1')).toEqual(theirs)
+    expect(otherLockHolder({ a: mine('c2') }, 'c1')).toEqual(mine('c2'))
+  })
+
+  it('is null when only this connection holds lines, or nobody does', () => {
+    expect(otherLockHolder({ a: mine('c1') }, 'c1')).toBeNull()
+    expect(otherLockHolder(NONE, 'c1')).toBeNull()
+    expect(otherLockHolder(NONE, null)).toBeNull()
   })
 })

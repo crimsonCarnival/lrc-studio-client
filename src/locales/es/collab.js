@@ -17,6 +17,7 @@ export default {
     badge: 'Editando: {{name}}',
     deleteLocked: '{{name}} está editando esta línea',
     deleteGone: 'Alguien ya eliminó esa línea',
+    replaceLocked: '{{name}} está editando una línea. Espera a que termine antes de reemplazar toda la letra.',
   },
   // Presencia: quién más está en la sesión y dónde está.
   presence: {

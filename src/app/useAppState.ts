@@ -20,6 +20,7 @@ import { isEditorPath, sessionPublicIdFromPath } from '@/features/projects/proje
 import { useCollabSession } from '@/features/collab/useCollabSession';
 import { useCollabLines } from '@/features/collab/useCollabLines';
 import { useCollabEditorMode } from '@/features/collab/useCollabEditorMode';
+import { otherLockHolder } from '@/features/collab/useLineLocks';
 import type { LinesUpdater } from '@/features/collab/collab.types';
 import { migrateLines } from '@/shared/utils/lrc';
 import { hasCJK } from '@/shared/utils/furigana';
@@ -87,6 +88,17 @@ export function useAppState(user?: AuthUserType | null) {
   // Saves read this from callbacks; the server rejects solo saves during a session (collab_active).
   const inSessionRef = useRef(inSession);
   useLayoutEffect(() => { inSessionRef.current = inSession; });
+  // Removing every line refuses while another participant holds one (it would delete it from
+  // under them). Read at click and confirm time, so it uses the latest lock snapshot.
+  const collabLocksRef = useRef({ locks: collabSession.locks, conn: collabSession.me?.conn ?? null });
+  useLayoutEffect(() => { collabLocksRef.current = { locks: collabSession.locks, conn: collabSession.me?.conn ?? null }; });
+  const replaceAllBlocked = useCallback(() => {
+    const { locks, conn } = collabLocksRef.current;
+    const holder = otherLockHolder(locks, conn);
+    if (!holder) return false;
+    toast.error(t('collab.locks.replaceLocked', { name: holder.name }), { id: 'collab-replace-locked' });
+    return true;
+  }, [t]);
 
   // ── CJK fallback face ──
   // Noto Serif JP is not in the render-blocking stylesheet: its 124 unicode-range
@@ -702,6 +714,7 @@ export function useAppState(user?: AuthUserType | null) {
     requestConfirm,
     isCreatingProjectRef,
     setProjectUserId,
+    replaceAllBlocked,
   });
 
 

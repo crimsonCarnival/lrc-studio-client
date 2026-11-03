@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import type { HocuspocusProvider } from '@hocuspocus/provider'
-import type { CollabMe, LockSnapshot } from './collab.types'
+import type { CollabMe, LockHolderView, LockSnapshot } from './collab.types'
 
 /** Locks idle for longer than this on the server expire; held lines are refreshed well inside it. */
 export const HEARTBEAT_MS = 10_000
@@ -41,6 +41,16 @@ function deniedLine(payload: string): string | null {
   } catch {
     return null
   }
+}
+
+/**
+ * Someone other than this connection (another participant, or this user in another tab)
+ * holding a line, or null. Actions that replace the whole document refuse while there is one:
+ * they would delete or overwrite a line under that person's cursor.
+ */
+export function otherLockHolder(locks: LockSnapshot, conn: string | null): LockHolderView | null {
+  for (const holder of Object.values(locks)) if (holder.holderConn !== conn) return holder
+  return null
 }
 
 const isHidden = () => typeof document !== 'undefined' && document.visibilityState === 'hidden'

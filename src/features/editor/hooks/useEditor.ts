@@ -38,7 +38,7 @@ import type { Dispatch, SetStateAction, RefObject } from 'react';
 import type { EditorLine, EditorWord, EditorTranslation, FocusedTimestamp } from '@/features/editor/editor.types';
 import type { PlayerHandle } from '@/features/player/player.types';
 import type { CollabLockInput, LockSnapshot } from '@/features/collab/collab.types';
-import { useLineLocks } from '@/features/collab/useLineLocks';
+import { otherLockHolder, useLineLocks } from '@/features/collab/useLineLocks';
 
 
 interface UseEditorParams {
@@ -112,9 +112,6 @@ export function useEditor({
 
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  const { handleFileUpload, handleUrlImport, handleTextImport, fileInputRef } = useFileImport({
-    setLines, setEditorMode, setActiveLineIndex, setSyncMode, onImport, settings,
-  });
 
   // ——— Section collapse (view-only; never persisted) ———
   // Keyed by sectionCollapseKey (marker id) so it survives index shifts. Lives here, not in the
@@ -247,7 +244,11 @@ export function useEditor({
   const { claim: claimLine, release: releaseLine, withLock } = lineLocks;
   // Read from callbacks that must keep a stable identity (they are props of every row).
   const lineLocksRef = useRef(lineLocks);
-  useEffect(() => { lineLocksRef.current = lineLocks; });
+  const collabConnRef = useRef<string | null>(null);
+  useEffect(() => {
+    lineLocksRef.current = lineLocks;
+    collabConnRef.current = collab?.me?.conn ?? null;
+  });
 
   // The open text editor holds its line; so does the sync cursor while syncing.
   const editingLineId = editingLineIndex !== null ? lines[editingLineIndex]?.id : undefined;
@@ -275,6 +276,19 @@ export function useEditor({
     }
     return false;
   }, [t]);
+
+  // True (after telling the user) when an action that replaces every line must wait: someone
+  // else holds a line it would delete or overwrite. Never true outside a session.
+  const replaceAllBlocked = useCallback((): boolean => {
+    const holder = otherLockHolder(lineLocksRef.current.locks, collabConnRef.current);
+    if (!holder) return false;
+    toast.error(t('collab.locks.replaceLocked', { name: holder.name }), { id: 'collab-replace-locked' });
+    return true;
+  }, [t]);
+
+  const { handleFileUpload, handleUrlImport, handleTextImport, fileInputRef } = useFileImport({
+    setLines, setEditorMode, setActiveLineIndex, setSyncMode, onImport, settings, replaceAllBlocked,
+  });
 
   // Opening the text editor on a line someone else holds would only end in a denial.
   const startEditing = useCallback((index: number | null) => {
@@ -407,6 +421,8 @@ export function useEditor({
   }, []);
 
   const handleConfirmLyrics = useCallback(async () => {
+    // Replaces every line: refused in a session while anyone else holds one.
+    if (replaceAllBlocked()) return;
     const looksLikeLrc = /^\[(\d{1,2}):(\d{2}\.\d{2,3})\]/m.test(rawText);
     const looksLikeSrt = /^\d+\r?\n\d{2}:\d{2}:\d{2},\d{3}\s*-->/m.test(rawText);
     const looksLikeWordLrc = looksLikeLrc && /<\d{1,2}:\d{2}\.\d{2,3}>/.test(rawText);
@@ -415,6 +431,8 @@ export function useEditor({
       try {
         const { lines: parsed } = await lyrics.parse(rawText, filename) as { lines: EditorLine[] };
         if (parsed.length > 0) {
+          // Checked again: a lock may have been taken while the parse was in flight.
+          if (replaceAllBlocked()) return;
           setLines(parsed);
           clearHistory?.();
           if (looksLikeSrt) setEditorMode('srt');
@@ -539,7 +557,7 @@ export function useEditor({
     clearHistory?.();
     setActiveLineIndex(Math.max(0, updated.findIndex((l) => l.type !== 'section' && l.timestamp == null)));
     setSyncMode(true);
-  }, [rawText, lines, singerRoster, clearHistory, t, setLines, setEditorMode, setActiveLineIndex, setSyncMode]);
+  }, [rawText, lines, singerRoster, clearHistory, t, setLines, setEditorMode, setActiveLineIndex, setSyncMode, replaceAllBlocked]);
 
 
   // ——— Timestamp operations ———

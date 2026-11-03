@@ -17,6 +17,7 @@ export default {
     badge: 'Editing: {{name}}',
     deleteLocked: 'This line is being edited by {{name}}',
     deleteGone: 'Someone already removed that line',
+    replaceLocked: '{{name}} is editing a line. Wait for them to finish before replacing all lyrics.',
   },
   // Presence: who else is in the session and where they are.
   presence: {
