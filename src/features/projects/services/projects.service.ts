@@ -307,6 +307,12 @@ const SET_FORKS_ENABLED = /* GraphQL */ `
   }
 `;
 
+const REMOVE_PROJECT_COLLABORATOR = /* GraphQL */ `
+  mutation RemoveProjectCollaborator($publicId: String!, $id: ID!) {
+    removeProjectCollaborator(publicId: $publicId, id: $id)
+  }
+`;
+
 const SHARE_TO_PROFILE = /* GraphQL */ `
   mutation ShareToProfile($publicId: ID!, $input: ProfileShareInput) {
     shareToProfile(publicId: $publicId, input: $input)
@@ -438,6 +444,12 @@ export const projectsService = {
   async shareToProfile(publicId: string, note: ProfileShareInput = {}): Promise<boolean> {
     const data = await gqlRequest<{ shareToProfile: boolean }>(SHARE_TO_PROFILE, { publicId, input: note });
     return data.shareToProfile;
+  },
+
+  /** Owner only. Resolves true even if the credit was already gone; throws `not_found` if the project vanished. */
+  async removeCollaborator(publicId: string, id: string): Promise<boolean> {
+    const data = await gqlRequest<{ removeProjectCollaborator: boolean }>(REMOVE_PROJECT_COLLABORATOR, { publicId, id });
+    return data.removeProjectCollaborator;
   },
 
   async unshareFromProfile(publicId: string): Promise<boolean> {

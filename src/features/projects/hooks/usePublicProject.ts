@@ -26,6 +26,7 @@ const GET_PUBLIC_PROJECT = /* GraphQL */ `
       starCount forkCount viewCount shareCount profileShareCount isStarredByMe isForkedByMe isSharedToProfileByMe forksEnabled createdAt
       myProfileShare { description tags }
       forkedFrom { publicId accountName sourceDeleted }
+      collaborators { id name isGuest user { id accountName displayName avatarUrl } }
     }
   }
 `;
