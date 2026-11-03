@@ -23,6 +23,8 @@ export default {
   presence: {
     participants: 'Participantes',
     you: 'Tú',
+    online: 'En línea',
+    offline: 'Desconectado',
     role: { owner: 'Propietario', editor: 'Editor', viewer: 'Espectador' },
     onLine: '{{name}} está en esta línea',
     playhead: 'Posición de {{name}}, haz clic para ir allí',

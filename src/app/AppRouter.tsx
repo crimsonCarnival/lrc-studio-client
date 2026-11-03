@@ -580,7 +580,7 @@ export function AppRouter({
       } />
       <Route path="session/:publicId" element={
         <SessionWorkspace key={sessionPublicId ?? ''} valid={sessionPublicId !== null} status={collabStatus} hasDoc={hasCollabDoc} onRetry={retryCollab} t={t} navigate={navigate}>
-          <ParticipantsBar me={collabMe} />
+          <ParticipantsBar me={collabMe} publicId={sessionPublicId} />
           <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
         </SessionWorkspace>
       } />
