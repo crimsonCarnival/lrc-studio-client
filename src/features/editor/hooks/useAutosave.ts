@@ -27,6 +27,7 @@ export function useAutosave({
   pendingProject,
   isSharedProject,
   isSharedProjectRef,
+  inSessionRef,
   activepublicIdRef,
   isCreatingProjectRef,
   sessionUploadIdRef,
@@ -83,6 +84,10 @@ export function useAutosave({
   const doAutoSave = useCallback(async () => {
     // 1. Guard against concurrent creates or loads (manual restore race)
     if (isCreatingProjectRef.current || isProjectLoadingRef.current) return;
+    // A collab session persists server-side through the shared doc. Saving here would
+    // patch (or create) a project from the session's lines; the server refuses with
+    // collab_active anyway.
+    if (inSessionRef?.current) return;
 
     const s = autoSaveRef.current;
     if (!s || s.pendingProject !== null || !s.enabled) return;
@@ -319,6 +324,7 @@ export function useAutosave({
   // ensuring freshness without recreating doAutoSave on every playback tick.
   }, [
     isSharedProjectRef,
+    inSessionRef,
     activepublicIdRef,
     isCreatingProjectRef,
     sessionUploadIdRef,

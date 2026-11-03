@@ -213,6 +213,7 @@ export function useManualSave({
   uploadedAudio,
   setUploadedAudio,
   isSharedProjectRef,
+  inSessionRef,
   activepublicIdRef,
   isCreatingProjectRef,
   sessionUploadIdRef,
@@ -262,9 +263,17 @@ export function useManualSave({
     };
   }, [lines, syncMode, activeLineIndex, editorMode, settings.advanced.timezone, projectYtUrl, playbackPosition, hasMedia, mediaTitle, projectMetadata, playerRef, uploadedAudio]);
 
+  /**
+   * Resolves `true` once the project is persisted where it belongs (the server for a signed-in
+   * owner, localStorage for a guest), `false` when it is not. Failures still toast here; the
+   * boolean is for callers that must not go on with unsaved edits (starting a collab session).
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleManualSave = useCallback(async (overrides: { title?: string; metadata?: any; isPublic?: boolean; lines?: any[]; editorMode?: string; syncMode?: boolean; coverImage?: string } = {}) => {
-    if (isCreatingProjectRef.current) return;
+  const handleManualSave = useCallback(async (overrides: { title?: string; metadata?: any; isPublic?: boolean; lines?: any[]; editorMode?: string; syncMode?: boolean; coverImage?: string } = {}): Promise<boolean> => {
+    // A create is in flight: the project is not on the server yet, so the edits are unsaved.
+    if (isCreatingProjectRef.current) return false;
+    // No-op in a collab session: the shared doc is persisted server-side (see useAutosave).
+    if (inSessionRef?.current) return true;
     const key = isSharedProjectRef.current ? STORAGE_KEYS.SHARED_PROJECT : STORAGE_KEYS.PROJECT;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload = buildProjectPayload() as Record<string, any>;
@@ -357,14 +366,14 @@ export function useManualSave({
               } catch {
                 // Refresh failed — emit expiry so useAuth handles logout + toast
                 authEvents.emit('token:expired');
-                return;
+                return false;
               }
               try {
                 // Retry the save with the fresh token (cookies are sent automatically)
                 await projects.patch(activepublicIdRef.current, manualPatch);
                 updateServerSnapshot(lastServerSnapshotRef, { title: finalTitle, metadata: finalMetadata, state: patchState, editorMode: payload.editorMode, lines: payload.lines, uploadId: uploadIdToSave ?? undefined });
                 toast.success(t('project.saved'), { id: 'manual-save-ok', duration: 2000 });
-                return; // retry succeeded
+                return true; // retry succeeded
               } catch (retryErr) {
                 // The session is fine, so this is a real refusal (e.g. not the owner): report it below.
                 err = retryErr;
@@ -375,13 +384,14 @@ export function useManualSave({
             setSaveFailed?.(true);
             // Nothing was persisted: skip onSaveSuccess, which would clear the editor's
             // unsaved markers and leave it claiming "Saved".
-            return;
+            return false;
           }
         }
         onSaveSuccess?.();
+        return true;
       } finally { setIsSaving?.(false); }
     } else if (getAccessToken() && !activepublicIdRef.current && !isSharedProjectRef.current && payload.lines?.length > 0 && !sessionStorage.getItem('pendingGuestClaim:v1')) {
-      if (isCreatingProjectRef.current) return;
+      if (isCreatingProjectRef.current) return false;
       isCreatingProjectRef.current = true;
       let uploadIdToSave: string | null = null;
       const cloudinaryHasRealId = uploadedAudio?.id && !String(uploadedAudio.id).startsWith('local:');
@@ -428,9 +438,14 @@ export function useManualSave({
           isCreatingProjectRef.current = false;
         }
       };
+      // Not awaited (callers never waited for the create): at this point nothing is confirmed saved.
       performCreate();
+      return false;
     }
-  }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, uploadedAudio, duration, t, isSharedProjectRef, activepublicIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setSaveFailed, setActivepublicId, setUploadedAudio, executeRecaptcha, onSaveSuccess, setForkedFrom, settings?.advanced?.autoSaveIndicator]);
+    // A guest's save is the localStorage write above. A signed-in user here (a shared project,
+    // or nothing to create) had nothing persisted.
+    return !getAccessToken();
+  }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, uploadedAudio, duration, t, isSharedProjectRef, inSessionRef, activepublicIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setSaveFailed, setActivepublicId, setUploadedAudio, executeRecaptcha, onSaveSuccess, setForkedFrom, settings?.advanced?.autoSaveIndicator]);
 
   const manualSaveRef = useRef<typeof handleManualSave | null>(null);
   useLayoutEffect(() => { manualSaveRef.current = handleManualSave; });

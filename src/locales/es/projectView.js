@@ -91,6 +91,14 @@ export default {
   },
   projectActions: "Acciones del proyecto",
   syncedBy: "Sincronizada por",
+  syncedWith: "Sincronizada con",
+  collaborators: {
+    guest: "invitado",
+    remove: "Quitar a {{name}} de los créditos",
+    confirmTitle: "Quitar crédito",
+    confirmMessage: "{{name}} dejará de aparecer en los créditos de este proyecto.",
+    removeFailed: "No se pudo quitar el crédito",
+  },
   visualizer: {
     button: "Visualizador",
     title: "Visualizador de audio",

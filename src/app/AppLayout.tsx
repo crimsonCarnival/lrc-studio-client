@@ -23,6 +23,7 @@ import { EDITOR_TOUR_STEPS } from '@/features/editor/tour/tour-steps';
 import useInputMethod from '@/shared/hooks/useInputMethod';
 import { isEditorPath, isProjectViewPath } from '@features/projects/project-path';
 import type { AppState } from '@/app/useAppState';
+import { CollabPresenceProvider } from '@/features/collab/components/CollabPresenceProvider';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { AuthUser } from '@/features/auth/auth.types';
 
@@ -82,6 +83,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
     isProjectLoading, lines, activeLineIndex, playbackPosition, syncMode, pendingProject,
     setIsPlaying, setPlaybackSpeed,
     projectCoverImage, setProjectCoverImage,
+    collabViewer,
   } = appState;
 
   const { settings, updateSetting } = settingsState;
@@ -94,7 +96,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
   const isTouch = inputMethod === 'touch';
   // The workspace shows one view at a time (see EditorWorkspace in AppRouter);
   // whichever is showing owns the desktop player dock.
-  const playerSlot = usePlayerSlot({ hideEditor: mobileTab === 'preview', hidePreview: false, focusMode: 'default', isLg, isTouch });
+  const playerSlot = usePlayerSlot({ hideEditor: mobileTab === 'preview' || collabViewer, hidePreview: false, focusMode: 'default', isLg, isTouch });
 
   // Compute dynamic bottom padding only for the mobile dock (fixed above the tab bar).
   // Desktop slots (editor/header) are in-flow — no space reservation needed.
@@ -202,7 +204,10 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         activeLineIndex={activeLineIndex}
         playbackPosition={playbackPosition}
         syncMode={syncMode}
+        viewerMode={collabViewer}
       >
+        {/* Inert outside a session (no provider): nothing is published or rendered. */}
+        <CollabPresenceProvider provider={appState.collabSession.provider} me={appState.collabSession.me} activeLineId={lines[activeLineIndex]?.id ?? null}>
         <div className={`${isEditorPage ? 'h-dvh' : 'min-h-screen'} lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col`}>
           <AppBackground />
 
@@ -319,7 +324,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
           <AppModals
             showKeyboardHelp={showKeyboardHelp}
             setShowKeyboardHelp={setShowKeyboardHelp}
-            handleManualSave={handleManualSave as () => void | Promise<void>}
+            handleManualSave={handleManualSave as () => void | Promise<void | boolean>}
             showNamingModal={showNamingModal}
             setShowNamingModal={setShowNamingModal}
             handleProjectConfirm={handleProjectConfirm}
@@ -343,6 +348,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             songSingers={songSingers}
           />
         </div>
+        </CollabPresenceProvider>
       </PlayerEngineProvider>
     </SafeAreaContainer>
   );

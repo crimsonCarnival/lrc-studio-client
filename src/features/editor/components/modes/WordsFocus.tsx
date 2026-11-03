@@ -5,6 +5,8 @@ import type { PointerEvent } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
 import type { EditorLine } from '@/features/editor/editor.types';
+import { useRemoteActiveLines } from '@/features/collab/collab-presence-context';
+import { collabColor } from '@/features/collab/collab-color';
 
 const CAPTION = 'text-xs font-bold uppercase tracking-[0.08em] text-foreground/65';
 /** Smallest gap kept between two neighbouring word starts while dragging. */
@@ -22,14 +24,16 @@ interface WordsLineNavProps {
 export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex, onSelect }: WordsLineNavProps) {
   const { t } = useTranslation();
   const activeRef = useRef<HTMLButtonElement>(null);
+  // Lines other participants are on (null outside a session).
+  const remoteActive = useRemoteActiveLines();
 
   const items = useMemo(() => {
-    const out: { index: number; text: string; timed: number; total: number }[] = [];
+    const out: { index: number; id?: string; text: string; timed: number; total: number }[] = [];
     lines.forEach((line, index) => {
       if (line.type === 'section' || !line.text?.trim()) return;
       const total = line.words?.length || line.text.trim().split(/\s+/).length;
       const timed = line.words?.filter((w) => w.time != null).length ?? 0;
-      out.push({ index, text: line.text, timed, total });
+      out.push({ index, id: line.id, text: line.text, timed, total });
     });
     return out;
   }, [lines]);
@@ -46,6 +50,7 @@ export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex,
       <span className={`${CAPTION} px-2 pb-2`}>{t('editor.words.navTitle')}</span>
       {items.map((item) => {
         const active = item.index === activeLineIndex;
+        const remote = item.id != null ? remoteActive?.[item.id] : undefined;
         return (
           <button
             key={item.index}
@@ -58,7 +63,18 @@ export const WordsLineNav = memo(function WordsLineNav({ lines, activeLineIndex,
               : 'text-foreground/80 hover:bg-zinc-800/50'}`}
           >
             <span className="flex justify-between gap-2">
-              <span className="truncate">{item.text}</span>
+              <span className="flex min-w-0 items-center gap-1.5">
+                {remote && (
+                  <span
+                    role="img"
+                    aria-label={t('collab.presence.onLine', { name: remote.name })}
+                    title={t('collab.presence.onLine', { name: remote.name })}
+                    className="size-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: collabColor(remote.colorIndex) }}
+                  />
+                )}
+                <span className="truncate">{item.text}</span>
+              </span>
               <span className="flex-none font-mono text-[11px] font-normal tabular-nums text-foreground/65">{item.timed}/{item.total}</span>
             </span>
             <span className="h-1 rounded-full bg-zinc-700/60 overflow-hidden">

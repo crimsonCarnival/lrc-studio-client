@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { connectSocket } from '@/app/socket.client';
 import { startStamp, startStampWithFile, getStampJob, cancelStampJob, type StampResultDto, type AsrJobDto } from '../services/asr.service';
 import type { EditorLine } from '@/features/editor/editor.types';
-import { alignLineStart } from '../services/editor.service';
+import { linesNeedingIds, stampLines } from '../services/stamp-results';
+import { sentIndexResolver } from '../utils/sent-lines';
 import { NoTabAudioError, recordTabAudio } from '@/features/visualizer/audio-source';
 import type { TabRecording } from '@/features/visualizer/audio-source';
 
@@ -46,7 +47,7 @@ const END_TOLERANCE_SECONDS = 3;
 
 type Params = {
   lines: EditorLine[];
-  setLines: (lines: EditorLine[]) => void;
+  setLines: (update: (prev: EditorLine[]) => EditorLine[]) => void;
   uploadId: string | null;
   /**
    * Called at start() time to grab the raw local audio File. A getter (not a
@@ -81,6 +82,9 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
   // Lines length at job start — if it drifts before the result lands (insert/remove/
   // reorder mid-job), index-based results would land on the wrong lines.
   const startLinesLengthRef = useRef<number>(0);
+  // The lines the job was started against. Result indices refer to this array, and
+  // are mapped back to current lines through it (by id), never applied by position.
+  const startLinesRef = useRef<EditorLine[]>([]);
   // Set when cancel() is called while still in 'starting' (no jobId yet); consumed
   // once start() resolves so the just-created job is cancelled instead of applied.
   const cancelRequestedRef = useRef(false);
@@ -93,83 +97,21 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
   }, [phase]);
 
 
-  // NOTE: results are index-based against the flat lines array captured at start().
-  // The consuming UI must prevent line insert/remove/reorder while a job is active,
-  // otherwise stamps land on the wrong lines.
+  // Results are index-based against the lines captured at start(). They are matched
+  // back to the current lines by id (sentIndexResolver), so an insert, delete or
+  // reorder while the job ran (a collaborator's, or the user's) cannot move a stamp
+  // onto another line; lines added since are left alone.
   const applyResult = useCallback(
     (result: StampResultDto[]) => {
+      const startIndexOf = sentIndexResolver(startLinesRef.current);
       const current = linesRef.current;
-      const byIndex = new Map(result.map((r) => [r.index, r]));
-      const conf = new Map<string, ConfidenceInfo>();
-      const isWordsMode = editorMode === 'words';
-
-      // `id` is optional on EditorLine (server-parsed lines can arrive without
-      // one), so mint one here for any line we're about to record confidence
-      // for. Returns the id plus the line to keep, which is the original object
-      // whenever it already had an id.
-      const ensureId = (line: EditorLine): [string, EditorLine] => {
-        const existing = line.id != null ? String(line.id) : '';
-        if (existing) return [existing, line];
-        const id = crypto.randomUUID();
-        return [id, { ...line, id }];
-      };
-
-      const next = current.map((line, i) => {
-        const r = byIndex.get(i);
-        if (!r || line.type === 'section') return line;
-        if (r.timestamp === null) {
-          // Unmatched line: never stamp, but surface it for review ('none' count/filter).
-          const [id, withId] = ensureId(line);
-          conf.set(id, { confidence: r.confidence, status: r.status });
-          return withId;
-        }
-        // In Words mode "already stamped" has to mean the WORDS are stamped, not
-        // the line. The normal workflow is: rough-sync the line first, switch to
-        // Words mode, then run Auto Stamp to fill per-word times — at that point
-        // every line already has line.timestamp, so gating on it here skipped
-        // every line and merged no words at all. Auto Stamp looked like it did
-        // nothing for the entire mode.
-        const alreadyStamped = isWordsMode
-          ? (line.words?.some((w) => w.time != null) ?? false)
-          : line.timestamp != null;
-        if (applyMode === 'empty-only' && alreadyStamped) return line;
-        const [id, withId] = ensureId(line);
-        line = withId;
-        conf.set(id, { confidence: r.confidence, status: r.status });
-
-        // Merge word-level timestamps by position (only overwrite `time`, preserve reading/singerIndex).
-        let mergedWords: EditorLine['words'] = line.words;
-        if (isWordsMode && r.words && r.words.length > 0) {
-          const existing = line.words ?? [];
-          mergedWords = r.words.map((rw, pos) => ({
-            ...(existing[pos] ?? {}),
-            word: existing[pos]?.word ?? rw.word,
-            time: rw.time ?? null,
-          }));
-        }
-
-        // empty-only's promise is "fill what's missing, keep what's set" — in
-        // Words mode that has to hold at the line level too. A line that was
-        // already rough-synced (the normal pre-condition for running this at
-        // all) must not have ITS timestamp silently replaced by the ASR's own
-        // just because its words were the part that was actually missing.
-        const keepOwnTiming = isWordsMode && applyMode === 'empty-only' && line.timestamp != null;
-
-        const stamped: EditorLine = {
-          ...line,
-          ...(keepOwnTiming ? {} : { timestamp: r.timestamp, ...(r.endTime !== null ? { endTime: r.endTime } : {}) }),
-          source: 'asr' as const,
-          ...(mergedWords !== undefined ? { words: mergedWords } : {}),
-        };
-        if (!isWordsMode) return stamped;
-        // Words mode holds line.timestamp and words[0].time as one instant. Which
-        // of the two wins depends on what empty-only promised: when the user's own
-        // line timing is being kept, the first word moves onto it; otherwise the
-        // line moves onto the ASR's (more precise) first-word time.
-        const anchor = keepOwnTiming ? stamped.timestamp : (mergedWords?.[0]?.time ?? stamped.timestamp);
-        return anchor != null ? alignLineStart(stamped, anchor) : stamped;
-      });
-      setLines(next); // single call → single undo entry
+      const minted = new Map(linesNeedingIds(current, result, startIndexOf).map((l) => [l, crypto.randomUUID()] as const));
+      const options = { applyMode, editorMode, startIndexOf, minted };
+      // Confidence comes from the lines as last rendered; the write itself is an
+      // updater over the latest state, so a line that reached state since (a
+      // collaborator's insert) is kept rather than dropped by a stale array.
+      const { conf } = stampLines(current, result, options);
+      setLines((prev) => stampLines(prev, result, options).lines); // single call → single undo entry
       setConfidenceById(conf);
       setPendingResult(null);
       setPhase('completed');
@@ -181,9 +123,13 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
     (result: StampResultDto[]) => {
       setPhase('applying');
       const linesDrifted = linesRef.current.length !== startLinesLengthRef.current;
+      const startIndexOf = sentIndexResolver(startLinesRef.current);
       const wouldOverwrite =
         applyMode === 'all' &&
-        linesRef.current.some((l, i) => l.timestamp != null && result.some((r) => r.index === i && r.timestamp !== null));
+        linesRef.current.some((l) => {
+          const i = startIndexOf(l);
+          return l.timestamp != null && i !== undefined && result.some((r) => r.index === i && r.timestamp !== null);
+        });
       if (linesDrifted || wouldOverwrite) {
         setPendingResult(result);
         return; // wait for user confirmation
@@ -246,6 +192,7 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
     jobIdRef.current = null; // a stale previous job id must never be cancelled by mistake
     jobSourceRef.current = null;
     startLinesLengthRef.current = linesRef.current.length;
+    startLinesRef.current = linesRef.current;
     const isWordsMode = editorMode === 'words';
     const payload = linesRef.current
       .map((line, index) => {

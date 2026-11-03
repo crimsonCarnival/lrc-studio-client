@@ -6,6 +6,8 @@ import { Icon } from '@/shared/ui/Icon';
 import type { EditorLine } from '@/features/editor/editor.types';
 import { hasKanji } from '@/shared/utils/furigana';
 import { LogoLoader } from '@ui/LogoLoader';
+import { SessionControl, type SessionOwnerControl } from '@/features/collab/components/SessionControl';
+import type { CollabLockInput } from '@/features/collab/collab.types';
 
 interface EditorToolbarProps {
   editorMode: string;
@@ -16,6 +18,10 @@ interface EditorToolbarProps {
   onAutoStamp?: () => void;
   onOpenFurigana?: () => void;
   onOpenSecondary?: () => void;
+  // Collab: only the owner of a saved project gets Start / Manage session.
+  sessionOwner?: SessionOwnerControl;
+  collab?: CollabLockInput;
+  onBeforeStartSession?: () => Promise<boolean>;
 }
 
 // Teal is `success`; in the light theme that token is too pale to read as text on
@@ -32,6 +38,9 @@ export default function EditorToolbar({
   onAutoStamp,
   onOpenFurigana,
   onOpenSecondary,
+  sessionOwner,
+  collab,
+  onBeforeStartSession,
 }: EditorToolbarProps) {
   const { t } = useTranslation();
 
@@ -128,6 +137,9 @@ export default function EditorToolbar({
             <span className="hidden sm:inline whitespace-nowrap">{t('editor.secondaryBulk.open')}</span>
           </Button>
         </Tip>
+      )}
+      {sessionOwner && (
+        <SessionControl owner={sessionOwner} collab={collab} lines={lines} onBeforeStart={onBeforeStartSession} />
       )}
     </div>
   );

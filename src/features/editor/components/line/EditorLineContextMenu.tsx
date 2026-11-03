@@ -30,6 +30,8 @@ interface Props {
   handleAddLine?: (i: number, line?: EditorLine | null, opts?: { before?: boolean }) => void;
   handleClearLine?: (i: number) => void;
   handleDeleteLine: (i: number) => void;
+  /** Collab: someone else holds this line's lock. */
+  deleteDisabled?: boolean;
   handleMoveToSection?: (indices: number[], target: number) => void;
   handleInsertSection?: (i: number) => void;
   onToggleDepth?: (i: number) => void;
@@ -48,6 +50,7 @@ export function EditorLineContextMenu({
   handleAddLine,
   handleClearLine,
   handleDeleteLine,
+  deleteDisabled = false,
   handleMoveToSection,
   handleInsertSection,
   onToggleDepth,
@@ -85,7 +88,7 @@ export function EditorLineContextMenu({
             </ContextMenuItem>
           )}
           <ContextMenuSeparator />
-          <ContextMenuItem variant="destructive" onClick={() => handleDeleteLine(lineIndex)}>
+          <ContextMenuItem variant="destructive" disabled={deleteDisabled} onClick={() => handleDeleteLine(lineIndex)}>
             <Icon name="delete" />
             {t('editor.deleteSection')}
           </ContextMenuItem>
@@ -144,7 +147,7 @@ export function EditorLineContextMenu({
             </ContextMenuSub>
           )}
           <ContextMenuSeparator />
-          <ContextMenuItem variant="destructive" onClick={() => [...selectedLines].forEach(i => handleDeleteLine(i))}>
+          <ContextMenuItem variant="destructive" disabled={deleteDisabled} onClick={() => [...selectedLines].forEach(i => handleDeleteLine(i))}>
             <Icon name="delete" />
             {t('editor.selection.removeN', { count: selectedCount})}
             <KbdGroup className={KEYS}><Kbd className={`${KEY} text-love-ink`}>Del</Kbd></KbdGroup>
@@ -234,7 +237,7 @@ export function EditorLineContextMenu({
           </ContextMenuItem>
         )}
         <ContextMenuSeparator />
-        <ContextMenuItem variant="destructive" onClick={() => handleDeleteLine(lineIndex)}>
+        <ContextMenuItem variant="destructive" disabled={deleteDisabled} onClick={() => handleDeleteLine(lineIndex)}>
           <Icon name="delete" />
           {t('editor.removeLine')}
           <KbdGroup className={KEYS}><Kbd className={`${KEY} text-love-ink`}>Del</Kbd></KbdGroup>

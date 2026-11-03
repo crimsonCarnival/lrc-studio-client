@@ -2,6 +2,7 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import Editor from './core/Editor';
 import MobileEditorLayout from './mobile/MobileEditorLayout';
 import type { EditorLine } from '@/features/editor/editor.types';
+import { usePresenceView } from '@/features/collab/collab-presence-context';
 
 interface EditorPageProps {
   activeLineIndex?: number;
@@ -29,6 +30,8 @@ export default function EditorPage(props: EditorPageProps) {
 
   // Mobile layout when touch input (touch-only device)
   const isMobileLayout = inputMethod === 'touch';
+  // The desktop Editor publishes 'editor' / 'words-focus' itself.
+  usePresenceView(isMobileLayout ? 'mobile' : null);
 
   // Editor and MobileEditorLayout are still untyped JS; cast the passthrough props.
   // Editor and MobileEditorLayout are still untyped JS; cast the passthrough props.

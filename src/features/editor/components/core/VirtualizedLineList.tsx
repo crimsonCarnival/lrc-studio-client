@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ComponentProps, RefObject } from 'react';
+import type { ComponentProps, PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import { useVirtualizer, defaultRangeExtractor } from '@tanstack/react-virtual';
 import { ScrollProgress } from '@/shared/ui/magicui/scroll-progress';
 import { Button } from '@ui/button';
@@ -15,6 +15,10 @@ import type { CollapsedView } from '@/features/editor/utils/sections';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
+import type { LockSnapshot } from '@/features/collab/collab.types';
+import { usePresenceActions, useRemoteActiveLines } from '@/features/collab/collab-presence-context';
+import { RemotePointers } from '@/features/collab/components/RemotePointers';
+import { pointerOnRow } from '@/features/collab/components/find-row';
 
 const ESTIMATED_LINE_HEIGHT = 56;
 const LINE_GAP = 4;
@@ -86,6 +90,8 @@ interface VirtualizedLineListProps {
   onWordMenu?: LineItemProps['onWordMenu'];
   onLineMenu?: LineItemProps['onLineMenu'];
   modifiedLines?: Set<number>;
+  /** Collab: locks held by other participants, keyed by line id. Absent outside a session. */
+  lockedByOthers?: LockSnapshot;
   onToggleLineMode?: LineItemProps['onToggleLineMode'];
   confidenceById?: Map<string, ConfidenceInfo>;
   handleToggleCounterpart?: (lineIndex: number) => void;
@@ -155,6 +161,7 @@ export default function VirtualizedLineList({
   onWordMenu,
   onLineMenu,
   modifiedLines,
+  lockedByOthers,
   onToggleLineMode,
   confidenceById,
   handleToggleCounterpart,
@@ -163,12 +170,27 @@ export default function VirtualizedLineList({
   onToggleSectionCollapse,
 }: VirtualizedLineListProps) {
   const { t } = useTranslation();
+  // Collab presence: both are null outside a session, which turns every use below off.
+  const presence = usePresenceActions();
+  const remoteActive = useRemoteActiveLines();
   // The line playback is on, as opposed to the cursor (activeLineIndex) or the hovered one.
   // -1 before the first timed line.
   const playingIndex = useMemo(
     () => (playbackPosition == null ? -1 : computeCurrentIndex(lines, playbackPosition, editorMode)),
     [lines, playbackPosition, editorMode],
   );
+  // The cursor line itself is published by CollabPresenceProvider, whichever view is mounted.
+  const handlePresencePointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    // Pointers are a mouse/pen thing, like the waveform's: a finger dragging to scroll isn't one.
+    if (!presence || (e.pointerType !== 'mouse' && e.pointerType !== 'pen')) return;
+    const row = (e.target as HTMLElement).closest<HTMLElement>('[data-line-id]');
+    const lineId = row?.dataset.lineId;
+    if (!row || !lineId) { presence.setPointer(null); return; }
+    const { clientX, clientY } = e;
+    // Measured only for the updates the 50 ms throttle actually sends, not on every move.
+    presence.setPointer(() => pointerOnRow(row, lineId, clientX, clientY));
+  }, [presence]);
+  const handlePresencePointerLeave = useCallback(() => presence?.setPointer(null), [presence]);
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
   const scrollMode = settings.editor?.scroll?.mode || 'smooth';
 
@@ -477,6 +499,8 @@ export default function VirtualizedLineList({
         <div
           ref={listRef}
           onMouseLeave={handleLineHoverEnd}
+          onPointerMove={presence ? handlePresencePointerMove : undefined}
+          onPointerLeave={presence ? handlePresencePointerLeave : undefined}
           // Any action inside a row (menu item, toggle, input) may change its height; re-read the
           // mounted rows once the resulting render has landed instead of trusting the observers.
           onClickCapture={scheduleMeasure}
@@ -490,6 +514,7 @@ export default function VirtualizedLineList({
             aria-label={t('editor.lineList')}
             style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}
           >
+            {presence && <RemotePointers scrollRef={listRef} />}
             {virtualizer.getVirtualItems().map((virtualRow) => {
               const i = rows[virtualRow.index]; // original line index — used for every action
               const line = lines[i];
@@ -517,6 +542,8 @@ export default function VirtualizedLineList({
                   // like the lyrics vanishing. Sections carry the attribute on the inner,
                   // sticky element instead — the one that actually has the row's height.
                   data-index={isSection ? undefined : virtualRow.index}
+                  // Sections carry it on the inner sticky element instead: this wrapper spans the whole block.
+                  data-line-id={presence && !isSection && line.id != null ? line.id : undefined}
                   ref={isSection ? undefined : virtualizer.measureElement}
                   style={{
                     position: 'absolute',
@@ -535,6 +562,7 @@ export default function VirtualizedLineList({
                     <div
                       ref={virtualizer.measureElement}
                       data-index={virtualRow.index}
+                      data-line-id={presence && line.id != null ? line.id : undefined}
                       style={{ position: 'sticky', top: 0, pointerEvents: 'auto' }}
                     >
                       <EditorLineItem
@@ -597,6 +625,8 @@ export default function VirtualizedLineList({
                         onWordMenu={onWordMenu}
                         onLineMenu={onLineMenu}
                         isModified={modifiedLines?.has(i) || false}
+                        lockHolder={line.id != null ? lockedByOthers?.[line.id] : undefined}
+                        remoteActive={line.id != null ? remoteActive?.[line.id] : undefined}
                         editorMode={editorMode}
                         onToggleLineMode={onToggleLineMode}
                         upcomingDepth={upcomingDepth}
@@ -678,6 +708,8 @@ export default function VirtualizedLineList({
                       onWordMenu={onWordMenu}
                       onLineMenu={onLineMenu}
                       isModified={modifiedLines?.has(i)}
+                      lockHolder={line.id != null ? lockedByOthers?.[line.id] : undefined}
+                      remoteActive={line.id != null ? remoteActive?.[line.id] : undefined}
                       onToggleLineMode={onToggleLineMode}
                       confidenceInfo={line.id != null ? confidenceById?.get(String(line.id)) : undefined}
                     />

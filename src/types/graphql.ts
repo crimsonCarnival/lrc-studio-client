@@ -765,7 +765,16 @@ export type PlaylistSortMode =
   | 'MANUAL'
   | 'STARS';
 
+/** A person credited for editing a project in a live session. `user` is null for guests. */
+export type ProjectCollaborator = {
+  id: Scalars['ID']['output'];
+  isGuest: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  user?: Maybe<Pick<User, 'id' | 'accountName' | 'displayName' | 'avatarUrl'>>;
+};
+
 export type Project = {
+  collaborators?: Array<ProjectCollaborator>;
   boostCount?: Maybe<Scalars['Int']['output']>;
   contentUpdatedAt?: Maybe<Scalars['String']['output']>;
   coverImage?: Maybe<Scalars['String']['output']>;

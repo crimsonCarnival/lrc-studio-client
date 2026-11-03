@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { formatTime } from '@/shared/utils/format-time';
 import { formatTimestamp } from '@/shared/utils/lrc';
 import { SectionBands, LineMarkers } from './TimelineOverview';
+import { usePresenceActions } from '@/features/collab/collab-presence-context';
+import { RemotePlayheads } from '@/features/collab/components/RemotePlayheads';
 
 interface PlaybackProgressProps {
   playbackPosition: number;
@@ -32,6 +34,8 @@ export default function PlaybackProgress({
 }: PlaybackProgressProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
+  // Null outside a collab session.
+  const presence = usePresenceActions();
 
   const pctToTime = useCallback((pct: number) => {
     return Math.max(0, Math.min(duration, pct * duration));
@@ -179,6 +183,8 @@ export default function PlaybackProgress({
         )}
 
       </div>
+
+        {presence && <RemotePlayheads duration={duration} onSeek={onSeek} />}
 
         {/* Playhead: foam, the one colour on the timeline that is not the accent, with the
             exact time riding on it. The bubble is clamped so it stays inside the track. */}

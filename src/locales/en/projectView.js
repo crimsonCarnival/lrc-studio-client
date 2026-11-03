@@ -91,6 +91,14 @@ export default {
   },
   projectActions: "Project actions",
   syncedBy: "Synced by",
+  syncedWith: "Synced with",
+  collaborators: {
+    guest: "guest",
+    remove: "Remove {{name}} from the credits",
+    confirmTitle: "Remove credit",
+    confirmMessage: "{{name}} will no longer be credited on this project.",
+    removeFailed: "Could not remove the credit",
+  },
   visualizer: {
     button: "Visualizer",
     title: "Audio visualizer",

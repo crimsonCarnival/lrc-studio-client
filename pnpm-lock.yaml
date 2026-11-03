@@ -23,6 +23,9 @@ importers:
       '@fontsource/fira-sans':
         specifier: ^5.3.0
         version: 5.3.0
+      '@hocuspocus/provider':
+        specifier: 4.7.1
+        version: 4.7.1(y-protocols@1.0.7(yjs@13.6.33))(yjs@13.6.33)
       '@react-three/fiber':
         specifier: ^9.8.2
         version: 9.8.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.186.1)
@@ -59,6 +62,9 @@ importers:
       fflate:
         specifier: ^0.8.3
         version: 0.8.3
+      fractional-indexing:
+        specifier: 4.0.0
+        version: 4.0.0
       framer-motion:
         specifier: ^14.3.0
         version: 14.3.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -146,6 +152,9 @@ importers:
       wavesurfer.js:
         specifier: ^8.0.2
         version: 8.0.2
+      yjs:
+        specifier: 13.6.33
+        version: 13.6.33
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -526,6 +535,15 @@ packages:
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
+  '@hocuspocus/common@4.7.1':
+    resolution: {integrity: sha512-+N4t8AdBIWBUK+yHsuBvCcBm96eV2E3quIewma9+TYomqVMXhrovAf3dA6XFbYHRM7ggtXklHt2mFqTcpiMdAQ==}
+
+  '@hocuspocus/provider@4.7.1':
+    resolution: {integrity: sha512-znulqyCwwuhq86aFmTF6izOomwRWlZGReCAf+SZpLgpvdfvBQJzjoj9HdtuXXfL9wkBM2Ydt86kaMs2rjaicRA==}
+    peerDependencies:
+      y-protocols: ^1.0.6
+      yjs: ^13.6.8
+
   '@hono/node-server@2.1.5':
     resolution: {integrity: sha512-MgP/I06GdvsilDspMk/qmRzpk8LOUStP6jFAbSRi40W09DhoyUn+Mj7eyKICPqeYKybOjVFLVIAQzvu1bfIa7Q==}
     engines: {node: '>=20'}
@@ -611,6 +629,9 @@ packages:
 
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
+
+  '@lifeomic/attempt@3.1.0':
+    resolution: {integrity: sha512-QZqem4QuAnAyzfz+Gj5/+SLxqwCAw2qmt7732ZXodr6VDWGeYLG6w1i/vYLa55JQM9wRuBKLmXmiZ2P0LtE5rw==}
 
   '@modelcontextprotocol/sdk@1.32.1':
     resolution: {integrity: sha512-2DdE+SJDtzLEEWzY1ZjY7Q+VcPhcV1KisD3zI4u0XZyktsjHum1mwbMI+JaulUBi2OZk+KJAi2uPXzxichPkdw==}
@@ -2486,6 +2507,10 @@ packages:
   fraction.js@5.3.4:
     resolution: {integrity: sha512-1X1NTtiJphryn/uLQz3whtY6jK3fTqoE3ohKs0tT+Ujr1W59oopxmoEh7Lu5p6vBaPbgoM0bzveAW4Qi5RyWDQ==}
 
+  fractional-indexing@4.0.0:
+    resolution: {integrity: sha512-Nr2P1Yyaj2sy1Qdt/wI3GcByxrUdbSKg5+cGvw8f18hT2SkQt6V72iOjBpk7IO3UkzBsdlGRs2a4z6dLrJprgw==}
+    engines: {node: ^14.13.1 || >=16.0.0}
+
   framer-motion@14.3.0:
     resolution: {integrity: sha512-d8WCrU0ZQn7ukKMykCsDyIOwb/taZeDqqrDBK0du5GO0AO/ynz8fdR/LIIz9Pyy3n3tGwrneR+n0egyrrLa3fw==}
     peerDependencies:
@@ -2797,6 +2822,9 @@ packages:
     resolution: {integrity: sha512-6B3tLtFqtQS4ekarvLVMZ+X+VlvQekbe4taUkf/rhVO3d/h0M2rfARm/pXLcPEsjjMsFgrFgSrhQIxcSVrBz8w==}
     engines: {node: '>=18'}
 
+  isomorphic.js@0.2.5:
+    resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
+
   its-fine@2.1.1:
     resolution: {integrity: sha512-C5ZoVkeqSt0Aje0tzESO+iT/EQpNFNL39GkP7mCACtoZUFD6GcyerFCr6kp0ZtiII4W9HoYkY48Soy5xE/uHKw==}
     peerDependencies:
@@ -2866,6 +2894,11 @@ packages:
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
+
+  lib0@0.2.119:
+    resolution: {integrity: sha512-vh+TiejVy8Xm+hCdnRfn9BthGNvNUZdEXltNjVZL3TzRIKP3s1lnQh8pWd/Q0wCgY0FPAGVVjFF4ZiHUV3LFgA==}
+    engines: {node: '>=16'}
+    hasBin: true
 
   lightningcss-android-arm64@1.32.0:
     resolution: {integrity: sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==}
@@ -4157,6 +4190,12 @@ packages:
     resolution: {integrity: sha512-TEU+nJVUUnA4CYJFLvK5X9AOeH4KvDvhIfm0vV1GaQRtchnG0hgK5p8hw/xjv8cunWYCsiPCSDzObPyhEwq3KQ==}
     engines: {node: '>=0.4.0'}
 
+  y-protocols@1.0.7:
+    resolution: {integrity: sha512-YSVsLoXxO67J6eE/nV4AtFtT3QEotZf5sK5BHxFBXso7VDUT3Tx07IfA6hsu5Q5OmBdMkQVmFZ9QOA7fikWvnw==}
+    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
+    peerDependencies:
+      yjs: ^13.0.0
+
   y18n@4.0.3:
     resolution: {integrity: sha512-JKhqTOwSrqNA1NY5lSztJ1GrBiUodLMmIZuLiDaMRJ+itFd+ABVE8XBjOvIWL+rSqNDC74LCSFmlb/U4UZ4hJQ==}
 
@@ -4187,6 +4226,10 @@ packages:
   yargs@17.7.3:
     resolution: {integrity: sha512-GZtjxm/J/4TSxuL3FNYjCmLktBTnIw/rVmKSIyKeYAZpmJB2ig9VauCC5xsa82GNKVKDAqpOn3KVzNt0zmrU0g==}
     engines: {node: '>=12'}
+
+  yjs@13.6.33:
+    resolution: {integrity: sha512-q/UYvr1gOk4XII+Cu1CW2dINjYqJJFifTzogEaIARznrvX7uOlHsdTEXcnOBMuIsrCGEEKdNxi74kyMLZlKVfw==}
+    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
 
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
@@ -4577,6 +4620,18 @@ snapshots:
     dependencies:
       graphql: 16.14.2
 
+  '@hocuspocus/common@4.7.1':
+    dependencies:
+      lib0: 0.2.119
+
+  '@hocuspocus/provider@4.7.1(y-protocols@1.0.7(yjs@13.6.33))(yjs@13.6.33)':
+    dependencies:
+      '@hocuspocus/common': 4.7.1
+      '@lifeomic/attempt': 3.1.0
+      lib0: 0.2.119
+      y-protocols: 1.0.7(yjs@13.6.33)
+      yjs: 13.6.33
+
   '@hono/node-server@2.1.5(hono@4.13.13)':
     dependencies:
       hono: 4.13.13
@@ -4655,6 +4710,8 @@ snapshots:
       keyv: 5.6.0
 
   '@keyv/serialize@1.1.1': {}
+
+  '@lifeomic/attempt@3.1.0': {}
 
   '@modelcontextprotocol/sdk@1.32.1(zod@4.6.7)':
     dependencies:
@@ -6585,6 +6642,8 @@ snapshots:
 
   fraction.js@5.3.4: {}
 
+  fractional-indexing@4.0.0: {}
+
   framer-motion@14.3.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
     dependencies:
       motion-dom: 14.3.0
@@ -6818,6 +6877,8 @@ snapshots:
 
   isexe@3.1.5: {}
 
+  isomorphic.js@0.2.5: {}
+
   its-fine@2.1.1(@types/react@19.3.0)(react@19.3.1):
     dependencies:
       '@types/react-reconciler': 0.28.9(@types/react@19.3.0)
@@ -6890,6 +6951,10 @@ snapshots:
     dependencies:
       prelude-ls: 1.2.1
       type-check: 0.4.0
+
+  lib0@0.2.119:
+    dependencies:
+      isomorphic.js: 0.2.5
 
   lightningcss-android-arm64@1.32.0:
     optional: true
@@ -8076,6 +8141,11 @@ snapshots:
 
   xmlhttprequest-ssl@2.1.2: {}
 
+  y-protocols@1.0.7(yjs@13.6.33):
+    dependencies:
+      lib0: 0.2.119
+      yjs: 13.6.33
+
   y18n@4.0.3: {}
 
   y18n@5.0.8:
@@ -8118,6 +8188,10 @@ snapshots:
       y18n: 5.0.8
       yargs-parser: 21.1.1
     optional: true
+
+  yjs@13.6.33:
+    dependencies:
+      lib0: 0.2.119
 
   yocto-queue@0.1.0: {}
 

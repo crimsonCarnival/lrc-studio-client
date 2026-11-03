@@ -1,5 +1,5 @@
 import {
-  Suspense, lazy, useEffect, useRef, useCallback, useMemo, memo
+  Suspense, lazy, useEffect, useRef, useCallback, useMemo, useState, memo
 } from 'react';
 import type { ComponentProps, ReactNode } from 'react';
 import React from 'react';
@@ -19,7 +19,14 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/app/useAppState';
 import type { AuthUser } from '@/features/auth/auth.types';
 import { isApiError } from '@/types';
-import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle } from '@features/projects/project-path';
+import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle, sessionPath } from '@features/projects/project-path';
+import { getSession } from '@features/collab/collab.service';
+import { ParticipantsBar } from '@features/collab/components/ParticipantsBar';
+import { SessionAudioNotice } from '@features/collab/components/SharedAudioNotice';
+import type { SessionOwnerControl } from '@features/collab/components/SessionControl';
+import type { CollabStatus } from '@features/collab/collab.types';
+import { usePresenceView } from '@features/collab/collab-presence-context';
+import { Button } from '@ui/button';
 import { artistDisplay, artistRoster, type ArtistCredit } from '@features/artists/artist-credits';
 import { LogoLoader } from '@ui/LogoLoader';
 
@@ -54,6 +61,7 @@ const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage
 const NotificationsPage = lazy(() => import('@features/notifications/NotificationsPage'));
 const MyReportsPage = lazy(() => import('@features/reports/MyReportsPage'));
 const GuidePage = lazy(() => import('@features/guide/GuidePage'));
+const JoinSessionPage = lazy(() => import('@features/collab/components/JoinSessionPage'));
 
 type EditorProps = ComponentProps<typeof Editor>;
 type PreviewComponentProps = ComponentProps<typeof Preview>;
@@ -117,6 +125,8 @@ interface EditorWorkspaceProps {
 // preview. The preview stays mounted and merely hidden: it owns the export
 // dialog, which the editor's Export button opens without leaving the editor.
 const EditorWorkspace = memo(function EditorWorkspace({ view, user, editorProps, previewProps }: EditorWorkspaceProps) {
+  // The editor layouts publish their own view once mounted (EditorPage, Editor).
+  usePresenceView(view === 'preview' ? 'preview' : null);
   return (
     <div className="flex-1 min-h-0 flex flex-col w-full overflow-hidden">
       {view === 'editor' && (
@@ -167,6 +177,60 @@ function EditorContainer({ loadProject, activepublicId, isProjectLoading, projec
     }
   }, [isProjectLoading, projectUserId, activepublicId, id, user, navigate, accountName, slugId]);
 
+  // While a live session runs, the project is edited through it: solo saves are
+  // refused (collab_active), so send the owner to the session instead.
+  const signedInId = user && !user.isGuest ? user.id : null;
+  useEffect(() => {
+    if (!id || !signedInId) return;
+    let cancelled = false;
+    getSession(id)
+      .then((session) => { if (!cancelled && session) navigate(sessionPath(id), { replace: true }); })
+      .catch((err) => console.error('[collab] session lookup failed', err));
+    return () => { cancelled = true; };
+  }, [id, signedInId, navigate]);
+
+  return children;
+}
+
+interface SessionWorkspaceProps {
+  /** False when the :publicId segment is not a valid project id (nothing connects). */
+  valid: boolean;
+  status: CollabStatus;
+  hasDoc: boolean;
+  onRetry: () => void;
+  t: TFunction;
+  navigate: NavigateFunction;
+  children: ReactNode;
+}
+
+// /session/:publicId. Mounted with key={publicId}, so "has synced" resets per session.
+function SessionWorkspace({ valid, status, hasDoc, onRetry, t, navigate, children }: SessionWorkspaceProps) {
+  // Until the first sync the doc is empty; editing it then would merge a second
+  // copy of the lyrics in, so the editor waits. Later disconnects keep it open (offline edits merge).
+  const [hasSynced, setHasSynced] = useState(false);
+  if (status === 'synced' && hasDoc && !hasSynced) setHasSynced(true);
+
+  if (!valid) return <NotFoundPage type="general" />;
+  if (status === 'forbidden') return <NotFoundPage type="forbidden" />;
+  if (status === 'ended') {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4 text-center">
+        <h1 className="text-lg font-semibold text-zinc-100">{t('collab.session.endedTitle')}</h1>
+        <p className="text-sm text-zinc-400 max-w-md">{t('collab.session.endedBody')}</p>
+        <Button variant="outline" onClick={() => navigate('/home')}>{t('collab.session.goHome')}</Button>
+      </div>
+    );
+  }
+  if (!hasSynced && status === 'offline') {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4 text-center">
+        <h1 className="text-lg font-semibold text-zinc-100">{t('collab.session.offlineTitle')}</h1>
+        <p className="text-sm text-zinc-400 max-w-md">{t('collab.session.offlineBody')}</p>
+        <Button variant="outline" onClick={onRetry}>{t('collab.session.retry')}</Button>
+      </div>
+    );
+  }
+  if (!hasSynced) return <SkeletonEditor />;
   return children;
 }
 
@@ -292,12 +356,46 @@ export function AppRouter({
     buildProjectPayload,
     restoredMedia,
     uploadedAudio,
+    sessionPublicId,
+    collabSession,
+    collabViewer,
     t,
   } = appState;
+  const collabStatus = collabSession.status;
+  const hasCollabDoc = collabSession.doc !== null;
+  const retryCollab = collabSession.retry;
+  const { provider: collabProvider, me: collabMe, locks: collabLocks } = collabSession;
+  // Line locking only exists inside a session; solo editing passes no collab input at all.
+  const collab = useMemo(
+    () => (sessionPublicId !== null ? { provider: collabProvider, me: collabMe, locks: collabLocks } : undefined),
+    [sessionPublicId, collabProvider, collabMe, collabLocks],
+  );
+  // In a session the editor works on the session's project, whatever project was open before.
+  const editorPublicId = sessionPublicId ?? activepublicId;
 
   // Song and artist as the user typed them; the media title (file or video name) is only a fallback.
   const meta = projectMetadata as { name?: string; songName?: string; artists?: ArtistCredit[]; songArtist?: string } | undefined;
   const { user } = useAuthContext();
+
+  // Start / Manage session: only the owner of a server-saved project. Inside a session the server's
+  // hello says who the owner is; on the editor route the project's owner must be the signed-in user.
+  // The server re-checks ownership on every call, so this only decides whether the button is shown.
+  const ownerAccountName = user?.accountName;
+  const signedInUserId = user && !user.isGuest && user.id != null ? String(user.id) : null;
+  const collabIsOwner = collabMe?.role === 'owner';
+  // The session projected its doc into the project. Leaving the session route drops the solo
+  // copy (useAppState), so the editor route reloads the project and shows what the session saved.
+  const handleSessionEnded = useCallback(() => {
+    if (!editorPublicId) return;
+    navigate(projectEditPath({ publicId: editorPublicId }, ownerAccountName) ?? '/library');
+  }, [editorPublicId, navigate, ownerAccountName]);
+  const ownsSavedProject = signedInUserId !== null && !!activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && projectUserId === signedInUserId;
+  const sessionOwner = useMemo<SessionOwnerControl | undefined>(() => {
+    if (signedInUserId === null) return undefined;
+    if (sessionPublicId !== null) return collabIsOwner ? { publicId: sessionPublicId, live: true, onEnded: handleSessionEnded } : undefined;
+    return ownsSavedProject && activepublicId ? { publicId: activepublicId, live: false, onEnded: handleSessionEnded } : undefined;
+  }, [signedInUserId, sessionPublicId, collabIsOwner, ownsSavedProject, activepublicId, handleSessionEnded]);
+
   usePageTitle(
     projectPageTitle(
       projectDisplayName({ title: meta?.name, metadata: { songName: meta?.songName, songArtist: artistDisplay(meta) } }),
@@ -322,7 +420,8 @@ export function AppRouter({
 
   // Editor or preview ("Revisar"). Stored in interface.mobileTab, the setting the
   // phone tab bar already writes, so both ways of switching stay in step.
-  const view: WorkspaceView = mobileTab === 'preview' ? 'preview' : 'editor';
+  // A session viewer cannot edit, so they only ever get the read-only preview.
+  const view: WorkspaceView = collabViewer || mobileTab === 'preview' ? 'preview' : 'editor';
   const showEditorView = useCallback(() => setMobileTab('editor'), [setMobileTab]);
   const showPreviewView = useCallback(() => setMobileTab('preview'), [setMobileTab]);
 
@@ -381,9 +480,11 @@ export function AppRouter({
     onShowPreview: showPreviewView,
     uploadedAudio,
     hasMedia,
-    activepublicId,
+    activepublicId: editorPublicId,
     onTogglePublicView: handleViewPublic,
     isPlaying,
+    collab,
+    sessionOwner,
   } as unknown as EditorProps), [
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
@@ -402,7 +503,7 @@ export function AppRouter({
     projectMetadata, rosterNames,
     playerSlot,
     showPreviewView,
-    uploadedAudio, hasMedia, activepublicId, handleViewPublic, isPlaying,
+    uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying, collab, sessionOwner,
   ]);
 
   const previewProps = useMemo(() => ({
@@ -413,7 +514,9 @@ export function AppRouter({
     shareModal, setShareModal, hasMedia,
     isPlaying, playbackSpeed, activepublicId,
     project: pendingProject, projectMetadata,
-    onShowEditor: showEditorView,
+    onShowEditor: collabViewer ? undefined : showEditorView,
+    viewerMode: collabViewer,
+    sessionMode: sessionPublicId !== null,
     onViewPublic: handleViewPublic,
     setActiveLineIndex,
     songArtists: rosterNames,
@@ -428,7 +531,7 @@ export function AppRouter({
     isPlaying, playbackSpeed, activepublicId,
     pendingProject, projectMetadata, rosterNames,
     showEditorView, handleViewPublic, setActiveLineIndex,
-    playerSlot,
+    playerSlot, collabViewer, sessionPublicId,
   ]);
 
   const adminPage = (
@@ -502,6 +605,18 @@ export function AppRouter({
             <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
           )}
         </EditorContainer>
+      } />
+      <Route path="session/:publicId" element={
+        <SessionWorkspace key={sessionPublicId ?? ''} valid={sessionPublicId !== null} status={collabStatus} hasDoc={hasCollabDoc} onRetry={retryCollab} t={t} navigate={navigate}>
+          <ParticipantsBar me={collabMe} publicId={sessionPublicId} />
+          <SessionAudioNotice doc={collabSession.doc} me={collabMe} />
+          <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
+        </SessionWorkspace>
+      } />
+      <Route path="join/:token" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+          <JoinSessionPage />
+        </Suspense>
       } />
       <Route path="home" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} /></div>}>

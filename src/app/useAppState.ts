@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSettings } from '@/features/settings/useSettings';
 import useHistory from '@/features/editor/hooks/useHistory';
 import useConfirm from '@/shared/hooks/useConfirm';
@@ -16,12 +16,19 @@ import { useProjectActions } from '@/features/projects/hooks/useProjectActions';
 import { parseDeepLink } from '@/shared/utils/url-params';
 import { lyrics, projects, getAccessToken } from '@/app/api';
 import { STORAGE_KEYS } from '@/features/projects/services/storage.service';
-import { isEditorPath } from '@/features/projects/project-path';
+import { isEditorPath, sessionPublicIdFromPath } from '@/features/projects/project-path';
+import { useCollabSession } from '@/features/collab/useCollabSession';
+import { useCollabLines } from '@/features/collab/useCollabLines';
+import { useCollabEditorMode } from '@/features/collab/useCollabEditorMode';
+import { useCollabMedia, collabMediaToRestored } from '@/features/collab/useCollabMedia';
+import { otherLockHolder } from '@/features/collab/useLineLocks';
+import type { LinesUpdater } from '@/features/collab/collab.types';
 import { migrateLines } from '@/shared/utils/lrc';
 import { hasCJK } from '@/shared/utils/furigana';
 import { loadCjkFont } from '@/app/cjk-font';
 import { creditsOf } from '@/features/artists/artist-credits';
 import { sectionsToFlat } from '@/features/editor/utils/sections';
+import { applyInferredEndTimes, sentIndexResolver } from '@/features/editor/utils/sent-lines';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 import type { AuthUser as AuthUserType } from '@/features/auth/auth.types';
 import type { EditorLine } from '@/features/editor/editor.types';
@@ -30,11 +37,17 @@ import type { PlayerHandle } from '@/features/player/player.types';
 
 const MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
+// The edit setter a viewer gets in a collab session: the server would drop the write anyway.
+const ignoreLines = (_u: LinesUpdater): void => {};
+
 export function useAppState(user?: AuthUserType | null) {
   const { t, i18n } = useTranslation();
   const { settings, updateSetting } = useSettings();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  // `/session/:publicId`: lines and editor mode come from the shared doc instead of a project.
+  const sessionPublicId = sessionPublicIdFromPath(useLocation().pathname);
+  const inSession = sessionPublicId !== null;
 
   useThemeSync(
     settings?.interface?.theme as string | undefined,
@@ -52,12 +65,41 @@ export function useAppState(user?: AuthUserType | null) {
     }
   });
 
-  const [lines, setLines, undo, redo, canUndo, canRedo, clearHistory] = useHistory<EditorLine[]>([], {
+  // Solo history. Every load/restore path writes here (setSoloLines), never into
+  // a collab doc, even while a session is open.
+  const soloHistory = useHistory<EditorLine[]>([], {
     limit: settings.editor?.history?.limit || 250,
     groupingThresholdMs: settings.editor?.history?.groupingThresholdMs || 1000,
     getCompanion: () => editorMode,
     onRestoreCompanion: setEditorModeRaw,
   });
+  const [, setSoloLines, , , , , clearSoloHistory] = soloHistory;
+
+  // ——— Collab session (only while on /session/:publicId) ———
+  // Same 7-tuple as useHistory, so everything below reads one source. Seams for
+  // later tasks: collabSession.provider / .doc / .me / .role are returned below.
+  // The session's media hydrates the player further down ("Session media").
+  const collabSession = useCollabSession(sessionPublicId);
+  const collabHistory = useCollabLines(collabSession.doc);
+  const collabCanWrite = collabSession.role === 'owner' || collabSession.role === 'editor';
+  // A viewer sees the session read-only (the preview); AppRouter and the player key off this.
+  const collabViewer = inSession && collabSession.role === 'viewer';
+  useCollabEditorMode(collabSession.doc, collabSession.status, collabCanWrite, editorMode, setEditorModeRaw);
+  const [lines, , undo, redo, canUndo, canRedo, clearHistory] = inSession ? collabHistory : soloHistory;
+  // Saves read this from callbacks; the server rejects solo saves during a session (collab_active).
+  const inSessionRef = useRef(inSession);
+  useLayoutEffect(() => { inSessionRef.current = inSession; });
+  // Removing every line refuses while another participant holds one (it would delete it from
+  // under them). Read at click and confirm time, so it uses the latest lock snapshot.
+  const collabLocksRef = useRef({ locks: collabSession.locks, conn: collabSession.me?.conn ?? null });
+  useLayoutEffect(() => { collabLocksRef.current = { locks: collabSession.locks, conn: collabSession.me?.conn ?? null }; });
+  const replaceAllBlocked = useCallback(() => {
+    const { locks, conn } = collabLocksRef.current;
+    const holder = otherLockHolder(locks, conn);
+    if (!holder) return false;
+    toast.error(t('collab.locks.replaceLocked', { name: holder.name }), { id: 'collab-replace-locked' });
+    return true;
+  }, [t]);
 
   // ── CJK fallback face ──
   // Noto Serif JP is not in the render-blocking stylesheet: its 124 unicode-range
@@ -210,7 +252,9 @@ export function useAppState(user?: AuthUserType | null) {
   const silentRestoreRan = useRef(false);
   useEffect(() => {
     if (silentRestoreRan.current) return;
-    if (!activepublicId) {
+    // A session loads from the shared doc; restoring a project there would leak its
+    // editor state (and media) into the session.
+    if (!activepublicId || sessionPublicIdFromPath(window.location.pathname)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsProjectLoading(false);
       return;
@@ -262,8 +306,8 @@ export function useAppState(user?: AuthUserType | null) {
             }) : undefined,
           }];
         }));
-        setLines(validLines);
-        clearHistory();
+        setSoloLines(validLines);
+        clearSoloHistory();
         setSyncMode(validLines.length > 0 ? true : (parsed.syncMode ?? true));
         const idx = parsed.activeLineIndex;
         if (typeof idx === 'number' && idx >= 0 && idx < validLines.length) {
@@ -308,8 +352,8 @@ export function useAppState(user?: AuthUserType | null) {
           if (!project) return;
           // Server data found - use it as source of truth
           const serverLines = migrateLines(sectionsToFlat(project.lyrics?.sections || []).map((l) => ({ ...l, id: l.id || crypto.randomUUID() })));
-          setLines(serverLines);
-          clearHistory();
+          setSoloLines(serverLines);
+          clearSoloHistory();
           setSyncMode(serverLines.length > 0 ? true : (project.state?.syncMode ?? true));
           setActiveLineIndex(project.state?.activeLineIndex || 0);
           setEditorModeRaw(project.lyrics?.editorMode || 'lrc');
@@ -419,6 +463,7 @@ export function useAppState(user?: AuthUserType | null) {
     if (getAccessToken()) return; // auth users restore from server
     if (activepublicId) return;  // handled by the silent restore effect above
     if (window.location.hash.startsWith('#s=')) return; // shared project
+    if (sessionPublicIdFromPath(window.location.pathname)) return; // loads from the shared doc
     guestRestoreRan.current = true;
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.PROJECT);
@@ -448,8 +493,8 @@ export function useAppState(user?: AuthUserType | null) {
         }];
       });
       if (validLines.length === 0) return;
-      setLines(validLines);
-      clearHistory();
+      setSoloLines(validLines);
+      clearSoloHistory();
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSyncMode(parsed.syncMode ?? true);
       const idx = parsed.activeLineIndex;
@@ -507,6 +552,7 @@ export function useAppState(user?: AuthUserType | null) {
   // here would show a stale restoration prompt on top of the new project.
   useEffect(() => {
     if (searchParams.get('fromGuest') === '1') return;
+    if (inSession) return;
     if (user && !user.isGuest && !activepublicId && !pendingProject) {
       try {
         const saved = localStorage.getItem(STORAGE_KEYS.PROJECT);
@@ -519,7 +565,7 @@ export function useAppState(user?: AuthUserType | null) {
         }
       } catch { /* ignore */ }
     }
-  }, [user, activepublicId, pendingProject, searchParams]);
+  }, [user, activepublicId, pendingProject, searchParams, inSession]);
 
   // ——— Shared project (hash decode, fork guard, export-to-URL) ———
   const {
@@ -529,7 +575,7 @@ export function useAppState(user?: AuthUserType | null) {
     isSharedProjectRef,
     setLinesGuarded, exportToUrl,
   } = useSharedProject({
-    setLines,
+    setLines: setSoloLines,
     setSyncMode,
     setActiveLineIndex,
     setEditorModeRaw,
@@ -550,6 +596,71 @@ export function useAppState(user?: AuthUserType | null) {
     uploadedAudio,
     restoredMedia,
   });
+
+  // In a session a viewer's edits are dropped here: the server refuses them, and
+  // writing them into the local doc would only fork that viewer's copy.
+  const setCollabLines = collabCanWrite ? collabHistory[1] : ignoreLines;
+  // What `setLines` from useHistory used to be: unguarded, used by mode switching and "remove all".
+  const setLines = inSession ? setCollabLines : setSoloLines;
+  // The setter handed to the editor and to drag & drop.
+  const setLinesForEditing = inSession ? setCollabLines : setLinesGuarded;
+  // Project loads still resolve after the owner is redirected into a session; their
+  // mode must not reach the doc (useCollabEditorMode would write it back).
+  const setSoloEditorMode = useCallback((mode: string) => {
+    if (!inSessionRef.current) setEditorModeRaw(mode);
+  }, []);
+
+  // Leaving a session: the solo state still holds the project as it was before the
+  // session, and the server now has the session's edits. Forget it, so the project
+  // editor reloads it rather than showing (and autosaving over) the stale copy.
+  const wasInSessionRef = useRef(inSession);
+  useEffect(() => {
+    const left = wasInSessionRef.current && !inSession;
+    wasInSessionRef.current = inSession;
+    // An unsaved draft (no publicId) has no server copy to go stale, so it is kept.
+    if (!left || !activepublicIdRef.current) return;
+    setSoloLines([]);
+    clearSoloHistory();
+    activepublicIdRef.current = null;
+    setActivepublicId(null);
+    lastServerSnapshotRef.current = null;
+    sessionUploadIdRef.current = null;
+  }, [inSession, setSoloLines, clearSoloHistory]);
+
+  // ——— Session media ———
+  // Entering a session from another project leaves that project's audio, metadata and
+  // cover behind: forget them first, so the player never plays the wrong song under
+  // the session's lyrics. The owner arriving from their own project keeps what is
+  // loaded (it is the session's song, possibly a local file nobody else has).
+  // Then the doc's `meta.media` is loaded. It is only read: media is not edited in a session.
+  // The clear and the load land in separate commits (sessionMediaFor gates the load), so
+  // the player sees the descriptor go through null and reloads even when two projects
+  // share one upload.
+  const collabMedia = useCollabMedia(collabSession.doc);
+  const [sessionMediaFor, setSessionMediaFor] = useState<string | null>(null);
+  useEffect(() => {
+    if (sessionPublicId === sessionMediaFor) return;
+    if (sessionPublicId !== null && activepublicIdRef.current !== sessionPublicId) {
+      playerRef.current?.clearMedia();
+      setRestoredMedia(null);
+      setProjectYtUrl('');
+      setUploadedAudio(null);
+      setProjectMetadata({ description: '', tags: [] });
+      setProjectCoverImage('');
+      setForkedFrom(null);
+    }
+    // Synchronising with the route: marks which session the stale state was cleared for.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSessionMediaFor(sessionPublicId);
+  }, [sessionPublicId, sessionMediaFor]);
+  useEffect(() => {
+    if (sessionPublicId === null || sessionMediaFor !== sessionPublicId || !collabMedia) return;
+    const next = collabMediaToRestored(collabMedia);
+    // Shared-doc media, read once per change (the hook keeps its identity otherwise).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRestoredMedia(next);
+    if (next?.type === 'youtube') setProjectYtUrl(next.url);
+  }, [sessionPublicId, sessionMediaFor, collabMedia]);
 
   // Apply the deep-linked playback position once the project has lines, and
   // release the suppression in setRestoredPosition so ordinary playback can
@@ -582,6 +693,7 @@ export function useAppState(user?: AuthUserType | null) {
     uploadedAudio,
     setUploadedAudio,
     isSharedProjectRef,
+    inSessionRef,
     activepublicIdRef,
     isCreatingProjectRef,
     sessionUploadIdRef,
@@ -605,10 +717,11 @@ export function useAppState(user?: AuthUserType | null) {
     handleMediaChange,
     handleDurationChange,
   } = useProjectActions({
-    setLines,
+    setLines: setSoloLines,
+    setEditLines: setLines,
     setSyncMode,
     setActiveLineIndex,
-    setEditorModeRaw,
+    setEditorModeRaw: setSoloEditorMode,
     setMediaTitle,
     setProjectMetadata,
     setProjectYtUrl,
@@ -637,6 +750,7 @@ export function useAppState(user?: AuthUserType | null) {
     requestConfirm,
     isCreatingProjectRef,
     setProjectUserId,
+    replaceAllBlocked,
   });
 
 
@@ -647,20 +761,17 @@ export function useAppState(user?: AuthUserType | null) {
     (mode) => {
       setEditorModeRaw(mode);
       if (mode === 'srt' && editorMode !== 'srt') {
+        // Results come back by position; the lines may have moved by the time they do
+        // (a collaborator's insert, or the user's own edit), so they are matched back to
+        // the lines that were sent and only endTime is written.
+        const sentIndexOf = sentIndexResolver(lines);
         lyrics.inferEndTimes({
           lines,
           duration,
           srtConfig: settings.editor?.srt,
           publicId: activepublicIdRef.current,
         }).then(({ lines: inferred }) => {
-          setLines(prev =>
-            prev.map((line, i) => {
-              const inf = inferred[i];
-              if (!inf) return line;
-              // Preserve word-level data (readings + word timestamps) — server only infers endTime
-              return { ...inf, words: line.words, secondaryWords: line.secondaryWords };
-            })
-          );
+          setLines((prev: EditorLine[]) => applyInferredEndTimes(prev, sentIndexOf, inferred ?? []));
         }).catch((err) => {
           console.error('Failed to infer end times', err);
         });
@@ -675,6 +786,7 @@ export function useAppState(user?: AuthUserType | null) {
     pendingProject,
     isSharedProject,
     isSharedProjectRef,
+    inSessionRef,
     activepublicIdRef,
     isCreatingProjectRef,
     sessionUploadIdRef,
@@ -713,7 +825,7 @@ export function useAppState(user?: AuthUserType | null) {
   const guestSavePayloadRef = useRef<(() => unknown) | null>(null);
   useEffect(() => { guestSavePayloadRef.current = buildProjectPayload; });
   useEffect(() => {
-    if (getAccessToken() || activepublicId) return;
+    if (getAccessToken() || activepublicId || inSession) return;
     if (lines.length === 0) return;
     const id = setTimeout(() => {
       try {
@@ -722,7 +834,7 @@ export function useAppState(user?: AuthUserType | null) {
       } catch { /* ignore quota errors */ }
     }, 1500);
     return () => clearTimeout(id);
-  }, [lines, activepublicId]);
+  }, [lines, activepublicId, inSession]);
 
   // ——— Global keyboard shortcuts ———
   useGlobalShortcuts({
@@ -879,7 +991,7 @@ export function useAppState(user?: AuthUserType | null) {
 
   // ——— Drag & Drop ———
   const { isDraggingFile } = useDragAndDrop({
-    setLines: setLinesGuarded,
+    setLines: setLinesForEditing,
     setEditorMode: setEditorModeRaw,
     linesLength: lines.length,
     settings,
@@ -895,7 +1007,7 @@ export function useAppState(user?: AuthUserType | null) {
     i18n,
     settings,
     lines,
-    setLines: setLinesGuarded,
+    setLines: setLinesForEditing,
     undo,
     redo,
     canUndo,
@@ -973,6 +1085,11 @@ export function useAppState(user?: AuthUserType | null) {
     // the current media source — previously omitted from the return (latent bug).
     projectYtUrl,
     uploadedAudio,
+    // Collab: null publicId outside /session/:publicId. collabSession carries the
+    // provider, doc, status, me and role for the presence/lock tasks.
+    sessionPublicId,
+    collabSession,
+    collabViewer,
   };
 }
 

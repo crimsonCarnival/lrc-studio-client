@@ -1436,6 +1436,15 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   --love: #b4637a;
   --love-ink: #9b4a62;
   --love-soft: rgba(180, 99, 122, 0.12);
+  /* Collaborative-session participant colours (CollabMe.colorIndex 1-8) */
+  --color-collab-1: var(--love);
+  --color-collab-2: var(--gold);
+  --color-collab-3: var(--foam);
+  --color-collab-4: var(--iris);
+  --color-collab-5: var(--pine);
+  --color-collab-6: var(--rose);
+  --color-collab-7: color-mix(in srgb, var(--foam) 55%, var(--gold));
+  --color-collab-8: color-mix(in srgb, var(--iris) 55%, var(--love));
   --primary-hover: #5f4c7d;
   --primary-press: #53436e;
   --primary-off: #cfc5da;
@@ -1516,6 +1525,15 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   --love: #eb6f92;
   --love-ink: #eb6f92;
   --love-soft: rgba(235, 111, 146, 0.14);
+  /* Collaborative-session participant colours (CollabMe.colorIndex 1-8) */
+  --color-collab-1: var(--love);
+  --color-collab-2: var(--gold);
+  --color-collab-3: var(--foam);
+  --color-collab-4: var(--iris);
+  --color-collab-5: var(--pine);
+  --color-collab-6: var(--rose);
+  --color-collab-7: color-mix(in srgb, var(--foam) 55%, var(--gold));
+  --color-collab-8: color-mix(in srgb, var(--iris) 55%, var(--love));
   --primary-hover: #d3bdf0;
   --primary-press: #b393dc;
   --primary-off: #4a4064;

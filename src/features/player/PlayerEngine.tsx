@@ -472,6 +472,7 @@ function PlayerEngineInner(
       loadLocalAudio: (file: File) => local.handleFileChange(file),
       loadYouTube: (url?: string) => yt.loadYouTube(url),
       loadFromUrl: (url: string, title?: string) => local.loadFromUrl(url, title),
+      clearMedia: handleClearMedia,
       setLoop: handleLoopChange,
       clearLoop,
       getLoop: () => loop,
@@ -479,7 +480,7 @@ function PlayerEngineInner(
         return popPrevEntry()
       },
     }),
-    [source, isPlaying, togglePlay, seek, local, yt, applySpeed, playbackSpeed, handleLoopChange, clearLoop, loop],
+    [source, isPlaying, togglePlay, seek, local, yt, applySpeed, playbackSpeed, handleLoopChange, clearLoop, loop, handleClearMedia],
   );
 
   // ——— Apply restored seek/speed once after media is ready ———

@@ -15,6 +15,8 @@ import { Tip } from '@ui/tip';
 import { ProjectViewActions } from './ProjectViewActions';
 import { ShareToProfileButton } from './ShareToProfileButton';
 import { ShareOgButton } from './ShareOgButton';
+import { ProjectCollaborators } from './ProjectCollaborators';
+import type { ProjectCollaborator } from '@/types/graphql';
 import { UserHoverCard } from '@ui/UserHoverCard';
 import { useSettings } from '@/features/settings/useSettings';
 import { formatInTimezone } from '@/shared/utils/date';
@@ -46,6 +48,7 @@ interface ProjectData {
   forkCount?: number;
   viewCount?: number;
   shareCount?: number;
+  collaborators?: ProjectCollaborator[];
   forkedFrom?: { publicId?: string; accountName?: string; sourceDeleted?: boolean };
   [key: string]: unknown;
 }
@@ -360,7 +363,7 @@ export default function ProjectInfoPanel({
         {viewersSlot && <div>{viewersSlot}</div>}
 
         {/* Facts */}
-        {facts.length > 0 && (
+        {(facts.length > 0 || (project?.collaborators?.length ?? 0) > 0) && (
           <>
             <div aria-hidden className="h-px bg-hl" />
             <dl className="grid grid-cols-[110px_1fr] gap-y-2.5 text-[15px]">
@@ -370,6 +373,8 @@ export default function ProjectInfoPanel({
                   <dd className="min-w-0 text-foreground">{fact.value}</dd>
                 </div>
               ))}
+              {/* Keyed by project so a removal never carries over when the page moves to another one. */}
+              <ProjectCollaborators key={project?.publicId} publicId={project?.publicId ?? ''} collaborators={project?.collaborators ?? []} isOwner={isOwner} />
             </dl>
           </>
         )}
