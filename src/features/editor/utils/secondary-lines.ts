@@ -1,4 +1,5 @@
 import type { EditorLine } from '@/features/editor/editor.types';
+import { sentIndexResolver } from './sent-lines';
 
 /** Indices (into the flat list) of the lines a secondary lyric can attach to: every non-section line. */
 export function mainLineIndices(lines: EditorLine[]): number[] {
@@ -22,24 +23,35 @@ export function splitSecondaryText(raw: string): string[] {
 }
 
 /**
- * Writes `values` onto the main lines in order. Values past the last main line are
- * ignored; the caller is expected to refuse that case before getting here.
+ * Writes `values` onto the main lines. `values[n]` belongs to `opened[n]`, the main
+ * lines as they were when the bulk editor opened (default: the main lines of
+ * `lines`), and is matched back to `lines` by id or identity, never by position.
+ * So while the editor is open a collaborator may insert, delete or move lines:
+ * a line that is gone is skipped, a line added since is left alone, and a value
+ * the user did not change (equal to what the line had at open) is not written, so
+ * a secondary someone else edited meanwhile stands. Values past `opened` are ignored.
  *
  * A changed secondary drops `secondaryWords`: they were tokenized (and possibly
  * stamped) from the old text, and the LRC export prefers timed secondaryWords over
  * `secondary`, so keeping them would export the old romaji.
  */
-export function applySecondaryLines(lines: EditorLine[], values: string[]): { lines: EditorLine[]; changed: number[] } {
+export function applySecondaryLines(
+  lines: EditorLine[],
+  values: string[],
+  opened: EditorLine[] = mainLineIndices(lines).map((i) => lines[i]),
+): { lines: EditorLine[]; changed: number[] } {
   const changed: number[] = [];
-  const mains = mainLineIndices(lines);
-  const next = [...lines];
-  mains.forEach((lineIndex, n) => {
+  const openedIndexOf = sentIndexResolver(opened);
+  const next = lines.map((line, lineIndex) => {
+    if (line.type === 'section') return line;
+    const n = openedIndexOf(line);
+    if (n === undefined) return line;
     const value = values[n] || undefined;
-    const line = lines[lineIndex];
-    if ((line.secondary || undefined) === value) return;
+    if ((opened[n].secondary || undefined) === value) return line;
+    if ((line.secondary || undefined) === value) return line;
     const { secondaryWords: _stale, ...rest } = line;
-    next[lineIndex] = { ...rest, secondary: value };
     changed.push(lineIndex);
+    return { ...rest, secondary: value };
   });
   return { lines: changed.length ? next : lines, changed };
 }

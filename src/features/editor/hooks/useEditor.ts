@@ -863,15 +863,19 @@ export function useEditor({
   };
 
   /** Bulk secondary lyrics: values[n] is main (non-section) line n's secondary. One history entry. */
-  const handleSetSecondaryLines = useCallback((values: string[]) => {
-    const { lines: next, changed } = applySecondaryLines(lines, values);
+  // `opened` is the main lines as the modal saw them when it opened. The write is an
+  // updater over the latest lines, matched by id, so a line a collaborator inserted
+  // or moved while the modal was open is neither overwritten nor dropped.
+  const handleSetSecondaryLines = useCallback((values: string[], opened: EditorLine[]) => {
+    // The unsaved markers follow the rendered lines (UI only).
+    const { changed } = applySecondaryLines(lines, values, opened);
     if (!changed.length) return;
     setModifiedLines(prev => {
       const s = new Set(prev);
       changed.forEach((i) => s.add(i));
       return s;
     });
-    setLines(next);
+    setLines((prev) => applySecondaryLines(prev, values, opened).lines);
   }, [lines, setLines, setModifiedLines]);
 
   const handleToggleLineMode = useCallback((index: number, next: EditorLine) => {

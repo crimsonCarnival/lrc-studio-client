@@ -15,8 +15,12 @@ interface SecondaryLyricsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   lines: EditorLine[];
-  /** values[n] becomes main (non-section) line n's secondary. */
-  onApply: (values: string[]) => void;
+  /**
+   * values[n] becomes the secondary of opened[n], the n-th main (non-section) line
+   * as it was when the modal opened. The caller matches those back to the current
+   * lines, which collaborators may have changed while the modal was open.
+   */
+  onApply: (values: string[], opened: EditorLine[]) => void;
 }
 
 function caretLineOf(el: HTMLTextAreaElement): number {
@@ -28,6 +32,7 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply }: Sec
   const scrollRef = useRef<HTMLDivElement>(null);
   const [text, setText] = useState('');
   const [caretLine, setCaretLine] = useState(0);
+  const [opened, setOpened] = useState<EditorLine[]>([]);
 
   // Opens on what the project already has. A render-time adjustment, as FuriganaModal
   // does, so the previous session's text never paints for a frame.
@@ -36,6 +41,7 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply }: Sec
     setWasOpen(open);
     if (open) {
       setText(secondaryText(lines));
+      setOpened(mainLineIndices(lines).map((i) => lines[i]));
       setCaretLine(0);
     }
   }
@@ -170,7 +176,7 @@ export function SecondaryLyricsModal({ open, onOpenChange, lines, onApply }: Sec
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
           <Button
             disabled={overflow > 0}
-            onClick={() => { onApply(splitSecondaryText(text)); onOpenChange(false); }}
+            onClick={() => { onApply(splitSecondaryText(text), opened); onOpenChange(false); }}
           >
             {t('common.apply')}
           </Button>
