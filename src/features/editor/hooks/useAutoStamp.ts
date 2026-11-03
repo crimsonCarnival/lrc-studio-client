@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { connectSocket } from '@/app/socket.client';
 import { startStamp, startStampWithFile, getStampJob, cancelStampJob, type StampResultDto, type AsrJobDto } from '../services/asr.service';
 import type { EditorLine } from '@/features/editor/editor.types';
-import { alignLineStart } from '../services/editor.service';
+import { linesNeedingIds, stampLines } from '../services/stamp-results';
 import { sentIndexResolver } from '../utils/sent-lines';
 import { NoTabAudioError, recordTabAudio } from '@/features/visualizer/audio-source';
 import type { TabRecording } from '@/features/visualizer/audio-source';
@@ -47,7 +47,7 @@ const END_TOLERANCE_SECONDS = 3;
 
 type Params = {
   lines: EditorLine[];
-  setLines: (lines: EditorLine[]) => void;
+  setLines: (update: (prev: EditorLine[]) => EditorLine[]) => void;
   uploadId: string | null;
   /**
    * Called at start() time to grab the raw local audio File. A getter (not a
@@ -103,80 +103,15 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
   // onto another line; lines added since are left alone.
   const applyResult = useCallback(
     (result: StampResultDto[]) => {
-      const current = linesRef.current;
-      const byIndex = new Map(result.map((r) => [r.index, r]));
       const startIndexOf = sentIndexResolver(startLinesRef.current);
-      const conf = new Map<string, ConfidenceInfo>();
-      const isWordsMode = editorMode === 'words';
-
-      // `id` is optional on EditorLine (server-parsed lines can arrive without
-      // one), so mint one here for any line we're about to record confidence
-      // for. Returns the id plus the line to keep, which is the original object
-      // whenever it already had an id.
-      const ensureId = (line: EditorLine): [string, EditorLine] => {
-        const existing = line.id != null ? String(line.id) : '';
-        if (existing) return [existing, line];
-        const id = crypto.randomUUID();
-        return [id, { ...line, id }];
-      };
-
-      const next = current.map((line) => {
-        const startIndex = startIndexOf(line);
-        const r = startIndex === undefined ? undefined : byIndex.get(startIndex);
-        if (!r || line.type === 'section') return line;
-        if (r.timestamp === null) {
-          // Unmatched line: never stamp, but surface it for review ('none' count/filter).
-          const [id, withId] = ensureId(line);
-          conf.set(id, { confidence: r.confidence, status: r.status });
-          return withId;
-        }
-        // In Words mode "already stamped" has to mean the WORDS are stamped, not
-        // the line. The normal workflow is: rough-sync the line first, switch to
-        // Words mode, then run Auto Stamp to fill per-word times — at that point
-        // every line already has line.timestamp, so gating on it here skipped
-        // every line and merged no words at all. Auto Stamp looked like it did
-        // nothing for the entire mode.
-        const alreadyStamped = isWordsMode
-          ? (line.words?.some((w) => w.time != null) ?? false)
-          : line.timestamp != null;
-        if (applyMode === 'empty-only' && alreadyStamped) return line;
-        const [id, withId] = ensureId(line);
-        line = withId;
-        conf.set(id, { confidence: r.confidence, status: r.status });
-
-        // Merge word-level timestamps by position (only overwrite `time`, preserve reading/singerIndex).
-        let mergedWords: EditorLine['words'] = line.words;
-        if (isWordsMode && r.words && r.words.length > 0) {
-          const existing = line.words ?? [];
-          mergedWords = r.words.map((rw, pos) => ({
-            ...(existing[pos] ?? {}),
-            word: existing[pos]?.word ?? rw.word,
-            time: rw.time ?? null,
-          }));
-        }
-
-        // empty-only's promise is "fill what's missing, keep what's set" — in
-        // Words mode that has to hold at the line level too. A line that was
-        // already rough-synced (the normal pre-condition for running this at
-        // all) must not have ITS timestamp silently replaced by the ASR's own
-        // just because its words were the part that was actually missing.
-        const keepOwnTiming = isWordsMode && applyMode === 'empty-only' && line.timestamp != null;
-
-        const stamped: EditorLine = {
-          ...line,
-          ...(keepOwnTiming ? {} : { timestamp: r.timestamp, ...(r.endTime !== null ? { endTime: r.endTime } : {}) }),
-          source: 'asr' as const,
-          ...(mergedWords !== undefined ? { words: mergedWords } : {}),
-        };
-        if (!isWordsMode) return stamped;
-        // Words mode holds line.timestamp and words[0].time as one instant. Which
-        // of the two wins depends on what empty-only promised: when the user's own
-        // line timing is being kept, the first word moves onto it; otherwise the
-        // line moves onto the ASR's (more precise) first-word time.
-        const anchor = keepOwnTiming ? stamped.timestamp : (mergedWords?.[0]?.time ?? stamped.timestamp);
-        return anchor != null ? alignLineStart(stamped, anchor) : stamped;
-      });
-      setLines(next); // single call → single undo entry
+      const current = linesRef.current;
+      const minted = new Map(linesNeedingIds(current, result, startIndexOf).map((l) => [l, crypto.randomUUID()] as const));
+      const options = { applyMode, editorMode, startIndexOf, minted };
+      // Confidence comes from the lines as last rendered; the write itself is an
+      // updater over the latest state, so a line that reached state since (a
+      // collaborator's insert) is kept rather than dropped by a stale array.
+      const { conf } = stampLines(current, result, options);
+      setLines((prev) => stampLines(prev, result, options).lines); // single call → single undo entry
       setConfidenceById(conf);
       setPendingResult(null);
       setPhase('completed');

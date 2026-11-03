@@ -623,21 +623,35 @@ export function useEditor({
       playerRef?.current?.pause?.();
     }
 
-    const result = applyMark({
-      lines: currentLines,
-      activeLineIndex: idx,
+    const markArgs = {
       time,
       editorMode,
       activeWordIndex: activeWordIndexRef.current,
       stampTarget: stampTargetRef.current,
-      awaitingEndMark,
       focusedTimestamp: focusedTimestampRef.current,
       settings: settings.editor || {},
       forceAdvance,
-    });
+    };
+    const result = applyMark({ ...markArgs, lines: currentLines, activeLineIndex: idx, awaitingEndMark });
 
     setModifiedLines(prev => new Set(prev).add(idx));
-    setLines(result.nextLines);
+    // `result` comes from linesRef (the last committed lines), so the index state set
+    // below matches what the user saw. If the lines moved on before this update applies
+    // (a collaborator's edit that has not rendered yet, or a second tap in the same
+    // frame), the mark is re-applied to the latest lines on the same line, found by id,
+    // instead of replacing them with a stale array that would drop the other change.
+    const markedId = currentLines[idx]?.id;
+    setLines((prev) => {
+      if (prev === currentLines) return result.nextLines;
+      const at = markedId == null ? -1 : prev.findIndex((l) => l.id === markedId);
+      if (at < 0) return prev;
+      return applyMark({
+        ...markArgs,
+        lines: prev,
+        activeLineIndex: at,
+        awaitingEndMark: awaitingEndMark === idx ? at : awaitingEndMark,
+      }).nextLines;
+    });
     if (result.nextActiveLineIndex != null) {
       setActiveLineIndex(result.nextActiveLineIndex);
     }

@@ -70,13 +70,17 @@ export function useCounterparts({
       ? (playerRef?.current?.getCurrentTime?.() ?? playbackPositionRef.current)
       : playbackPositionRef.current;
     const id = crypto.randomUUID();
-    const result = captureCounterpart(linesRef.current, time ?? 0, id);
+    const base = linesRef.current;
+    const result = captureCounterpart(base, time ?? 0, id);
     if (!result) {
       toast.error(t('editor.counterpart.needsSyncedLine'), { id: 'counterpart-needs-line' });
       return null;
     }
     linesRef.current = result.lines;
-    setLines(result.lines);
+    // `base` is a ref snapshot; if the lines moved on before this applies (a
+    // collaborator's insert not rendered yet), capture again on the latest lines
+    // rather than replacing them with an array that lacks the other change.
+    setLines((prev) => (prev === base ? result.lines : captureCounterpart(prev, time ?? 0, id)?.lines ?? prev));
     return id;
   }, [playerRef, setLines, t, linesRef, playbackPositionRef, isPlayingRef]);
 
