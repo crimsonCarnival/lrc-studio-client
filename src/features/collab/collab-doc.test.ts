@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as Y from 'yjs'
 import type { EditorLine } from '../editor/editor.types'
-import { applyLinesToDoc, docToLines, LOCAL_ORIGIN, readMeta } from './collab-doc'
+import { applyLinesToDoc, docToLines, ensureLineIds, LOCAL_ORIGIN, readMeta } from './collab-doc'
 
 const mk = (id: string, text: string, extra: Partial<EditorLine> = {}): EditorLine => ({ id, text, ...extra })
 const ids = (ls: EditorLine[]) => ls.map((l) => l.id)
@@ -76,9 +76,9 @@ describe('collab-doc', () => {
     expect(ids(docToLines(doc, lines))).toEqual(['a', 'n', 'c'])
   })
 
-  it('assigns ids to lines without one', () => {
+  it('ensured ids are written to the doc', () => {
     const doc = new Y.Doc()
-    applyLinesToDoc(doc, [], [{ text: 'x' }])
+    applyLinesToDoc(doc, [], ensureLineIds([{ text: 'x' }]))
     const out = docToLines(doc, [])
     expect(out).toHaveLength(1)
     expect(typeof out[0].id).toBe('string')
@@ -123,5 +123,74 @@ describe('collab-doc', () => {
     doc.getMap('meta').set('title', 'T')
     doc.getMap('meta').set('editorMode', 'srt')
     expect(readMeta(doc)).toMatchObject({ title: 'T', editorMode: 'srt' })
+  })
+
+  it('a remote insert not yet in prev survives a local edit', () => {
+    const lines = [mk('a', '1'), mk('b', '2')]
+    const d1 = seeded(lines)
+    const d2 = new Y.Doc()
+    sync(d1, d2)
+    applyLinesToDoc(d2, lines, [lines[0], mk('r', 'remote'), lines[1]])
+    sync(d1, d2)
+    applyLinesToDoc(d1, lines, [lines[0], { ...lines[1], text: 'B' }])
+    expect(ids(docToLines(d1, lines))).toContain('r')
+    expect(docToLines(d1, lines).find((l) => l.id === 'b')?.text).toBe('B')
+  })
+
+  it('a remote delete is not resurrected by a local edit', () => {
+    const lines = [mk('a', '1'), mk('b', '2'), mk('c', '3')]
+    const d1 = seeded(lines)
+    const d2 = new Y.Doc()
+    sync(d1, d2)
+    applyLinesToDoc(d2, lines, [lines[0], lines[2]])
+    sync(d1, d2)
+    applyLinesToDoc(d1, lines, [{ ...lines[0], text: 'A' }, lines[1], lines[2]])
+    expect(ids(docToLines(d1, lines))).toEqual(['a', 'c'])
+  })
+
+  it('ensureLineIds keeps identity and never mutates', () => {
+    const a = mk('a', '1')
+    const same = [a]
+    expect(ensureLineIds(same)).toBe(same)
+    const bare: EditorLine = { text: 'x' }
+    const out = ensureLineIds([a, bare])
+    expect(out[0]).toBe(a)
+    expect(out[1]).not.toBe(bare)
+    expect(typeof out[1].id).toBe('string')
+    expect(bare.id).toBeUndefined()
+  })
+
+  it('applyLinesToDoc throws on an id-less line', () => {
+    expect(() => applyLinesToDoc(new Y.Doc(), [], [{ text: 'x' }])).toThrow('applyLinesToDoc: line without id')
+  })
+
+  it.each([['empty', ''], ['garbage', '!!!'], ['number', 42], ['object', { x: 1 }]])(
+    'malformed order key (%s) does not throw and is repaired',
+    (_n, bad) => {
+      const lines = [mk('a', '1'), mk('b', '2'), mk('c', '3')]
+      const doc = seeded(lines)
+      doc.transact(() => doc.getMap<Y.Map<unknown>>('lines').get('b')!.set('order', bad))
+      expect(() => docToLines(doc, lines)).not.toThrow()
+      expect(() => applyLinesToDoc(doc, lines, [lines[0], { ...lines[1], text: 'B' }, lines[2]])).not.toThrow()
+      const m = doc.getMap<Y.Map<unknown>>('lines')
+      const orders = ['a', 'b', 'c'].map((k) => m.get(k)!.get('order') as string)
+      expect(orders.every((o) => typeof o === 'string' && o !== '')).toBe(true)
+      expect(ids(docToLines(doc, lines))).toEqual(['a', 'b', 'c'])
+    },
+  )
+
+  it('duplicate and inverted anchor keys do not throw', () => {
+    const lines = [mk('a', '1'), mk('b', '2'), mk('c', '3'), mk('d', '4')]
+    const doc = seeded(lines)
+    const m = doc.getMap<Y.Map<unknown>>('lines')
+    doc.transact(() => {
+      m.get('a')!.set('order', 'a5')
+      m.get('b')!.set('order', 'a5')
+      m.get('c')!.set('order', 'a2')
+      m.get('d')!.set('order', 'a1')
+    })
+    const next = [lines[0], mk('n', 'new'), lines[1], lines[2], lines[3]]
+    expect(() => applyLinesToDoc(doc, lines, next)).not.toThrow()
+    expect(ids(docToLines(doc, lines)).sort()).toEqual(['a', 'b', 'c', 'd', 'n'])
   })
 })

@@ -1,5 +1,5 @@
 import deepEqual from 'fast-deep-equal'
-import { generateNKeysBetween } from 'fractional-indexing'
+import { generateKeyBetween, generateNKeysBetween } from 'fractional-indexing'
 import * as Y from 'yjs'
 import type { EditorLine } from '../editor/editor.types'
 import type { CollabMeta } from './collab.types'
@@ -81,45 +81,73 @@ function writeFields(map: LineMap, line: EditorLine): void {
   }
 }
 
+/** Returns `lines` itself if all have ids; otherwise a copy where only id-less lines are replaced. */
+export function ensureLineIds(lines: EditorLine[]): EditorLine[] {
+  if (lines.every((l) => l.id)) return lines
+  return lines.map((l) => (l.id ? l : { ...l, id: crypto.randomUUID() }))
+}
+
+// An order key is usable as an anchor only if fractional-indexing accepts it.
+// Anything else (a malicious or buggy client's value) is treated as missing.
+function validKey(v: unknown): v is string {
+  if (typeof v !== 'string' || v === '') return false
+  try {
+    generateKeyBetween(v, null)
+    return true
+  } catch {
+    return false
+  }
+}
+
 /**
- * Lines -> doc, as one synchronous transaction with LOCAL_ORIGIN. Writes only what changed:
- * new ids insert, missing ids delete, changed fields set per key, and only lines outside the
- * longest run that kept its relative order get a new `order`. Lines without an id are given
- * one in place (crypto.randomUUID) before diffing.
+ * Lines -> doc, as one synchronous transaction with LOCAL_ORIGIN. Writes only what changed.
+ * `prev` is the last state this client saw, so it scopes what this edit may touch:
+ * only ids in prev and not in next are deleted (a remote insert not yet in prev survives),
+ * only ids in next and not in prev are inserted (a remote delete is not resurrected), and
+ * fields are written only to lines still in the doc. Lines outside the longest run that kept
+ * its relative order get a new `order`. Every line must have an id (see ensureLineIds).
+ *
+ * Field values are shared by reference between the doc and React state: treat them as immutable.
  */
 export function applyLinesToDoc(doc: Y.Doc, prev: EditorLine[], next: EditorLine[]): void {
-  for (const l of next) if (!l.id) l.id = crypto.randomUUID()
+  if (next.some((l) => !l.id)) throw new Error('applyLinesToDoc: line without id')
   const prevById = new Map<string, EditorLine>()
   for (const l of prev) if (l.id) prevById.set(l.id, l)
   const nextIds = new Set(next.map((l) => l.id as string))
 
   doc.transact(() => {
     const lines = doc.getMap<LineMap>('lines')
-    for (const id of [...lines.keys()]) if (!nextIds.has(id)) lines.delete(id)
+    for (const id of prevById.keys()) if (!nextIds.has(id) && lines.has(id)) lines.delete(id)
 
-    // Orders of surviving lines, in the new sequence. Lines with no usable order cannot stay.
-    const stored = next.map((l) => {
-      const m = lines.get(l.id as string)
-      return m && orderOf(m) !== '' ? orderOf(m) : null
+    // Lines this edit may place: still in the doc, or genuinely new. Others were deleted remotely.
+    const live = next.filter((l) => lines.has(l.id as string) || !prevById.has(l.id as string))
+    const stored = live.map((l) => {
+      const o = lines.get(l.id as string)?.get('order')
+      return validKey(o) ? o : null
     })
     const candidates = stored.flatMap((o, i) => (o === null ? [] : [i]))
     const keep = lisIndices(candidates.map((i) => stored[i] as string))
     const stays = new Set([...keep].map((k) => candidates[k]))
 
-    // Assign fresh keys to each run of non-staying lines between two staying anchors.
     const newOrder = new Map<number, string>()
-    let i = 0
-    while (i < next.length) {
-      if (stays.has(i)) { i++; continue }
-      let j = i
-      while (j < next.length && !stays.has(j)) j++
-      const lo = i > 0 ? (stored[i - 1] as string) : null
-      const hi = j < next.length ? (stored[j] as string) : null
-      generateNKeysBetween(lo, hi, j - i).forEach((k, n) => newOrder.set(i + n, k))
-      i = j
+    try {
+      let i = 0
+      while (i < live.length) {
+        if (stays.has(i)) { i++; continue }
+        let j = i
+        while (j < live.length && !stays.has(j)) j++
+        const lo = i > 0 ? stored[i - 1] : null
+        const hi = j < live.length ? stored[j] : null
+        generateNKeysBetween(lo, hi, j - i).forEach((k, n) => newOrder.set(i + n, k))
+        i = j
+      }
+    } catch {
+      // Last resort: re-key every line we place.
+      newOrder.clear()
+      generateNKeysBetween(null, null, live.length).forEach((k, n) => newOrder.set(n, k))
     }
 
-    next.forEach((line, idx) => {
+    live.forEach((line, idx) => {
       const id = line.id as string
       let map = lines.get(id)
       if (!map) {
