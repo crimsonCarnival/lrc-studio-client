@@ -1,5 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import * as Y from 'yjs'
 import type { CollabMe, LockSnapshot } from './collab.types'
 
 const h = vi.hoisted(() => ({ error: vi.fn() }))
@@ -10,11 +11,15 @@ import { HEARTBEAT_MS, useLineLocks } from './useLineLocks'
 type Sent = { t: string; lineId?: string; lineIds?: string[] }
 
 // Just the provider surface useLineLocks touches: stateless in/out and status events.
-function fakeProvider() {
+function fakeProvider(lineIds: string[] = []) {
+  const document = new Y.Doc()
+  lineIds.forEach((id) => document.getMap('lines').set(id, true))
   const handlers = new Map<string, ((arg: unknown) => void)[]>()
   const sent: Sent[] = []
   return {
     sent,
+    document,
+    addLine(id: string) { document.getMap('lines').set(id, true) },
     on(event: string, fn: (arg: unknown) => void) { handlers.set(event, [...(handlers.get(event) ?? []), fn]) },
     off(event: string, fn: (arg: unknown) => void) { handlers.set(event, (handlers.get(event) ?? []).filter((f) => f !== fn)) },
     sendStateless(payload: string) { sent.push(JSON.parse(payload) as Sent) },
@@ -31,8 +36,11 @@ const mine = (conn: string) => ({ holderConn: conn, subject: 'user:1', name: 'An
 const theirs = { holderConn: 'other', subject: 'user:2', name: 'Luis', colorIndex: 5 }
 const NONE: LockSnapshot = {}
 
+// The doc already holds the lines the tests name, as it does once they have synced.
+const LINES = ['l1', 'l2', 'l9', 'a', 'b', 'c', 'mark-line', 'editing-line']
+
 function setup(initial: { me?: CollabMe | null; locks?: LockSnapshot } = {}) {
-  const provider = fakeProvider()
+  const provider = fakeProvider(LINES)
   const hook = renderHook(
     (p: { me: CollabMe | null; locks: LockSnapshot }) => useLineLocks(provider as never, p.me, p.locks),
     { initialProps: { me: initial.me === undefined ? meWith('c1') : initial.me, locks: initial.locks ?? NONE } },
@@ -105,7 +113,7 @@ describe('useLineLocks', () => {
   })
 
   it('tells the caller which line was denied', () => {
-    const provider = fakeProvider()
+    const provider = fakeProvider(LINES)
     const onDenied = vi.fn()
     renderHook(() => useLineLocks(provider as never, meWith('c1'), NONE, { onDenied }))
     act(() => provider.denied('l9'))
@@ -163,12 +171,61 @@ describe('useLineLocks', () => {
     // connection must not run the dropped write.
     hook.rerender({ me: meWith('c2'), locks: { l1: mine('c2') } })
     expect(write).not.toHaveBeenCalled()
+  })
 
-    const after = vi.fn()
+  it('a write made while disconnected is dropped, not replayed after the reconnect', () => {
+    const { hook, provider, locksOf } = setup()
     act(() => provider.disconnected())
-    hook.rerender({ me: meWith('c2'), locks: NONE })
-    act(() => hook.result.current.withLock('l1', after))
-    expect(after).not.toHaveBeenCalled() // not held any more: queued, not run
+    provider.sent.length = 0
+    const write = vi.fn()
+    act(() => hook.result.current.withLock('l1', write))
+    expect(write).not.toHaveBeenCalled()
+    expect(h.error).toHaveBeenCalledTimes(1)
+
+    hook.rerender({ me: meWith('c2'), locks: NONE }) // hello after the reconnect
+    expect(locksOf()).toEqual([])
+    hook.rerender({ me: meWith('c2'), locks: { l1: mine('c2') } })
+    expect(write).not.toHaveBeenCalled()
+  })
+
+  it('lets go of a lock taken only for a queued write once it has run', () => {
+    const { hook, provider } = setup()
+    const write = vi.fn()
+    act(() => hook.result.current.withLock('l1', write)) // no claim: nothing keeps the line
+    hook.rerender({ me: meWith('c1'), locks: { l1: mine('c1') } })
+    expect(write).toHaveBeenCalledTimes(1)
+    expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([{ t: 'unlock', lineId: 'l1' }])
+    // The server's follow-up snapshot no longer lists it, so no heartbeat keeps it alive.
+    hook.rerender({ me: meWith('c1'), locks: NONE })
+    vi.useFakeTimers()
+    provider.sent.length = 0
+    act(() => { vi.advanceTimersByTime(HEARTBEAT_MS) })
+    expect(provider.sent).toEqual([])
+  })
+
+  it('keeps the lock after a queued write when the line is still claimed', () => {
+    const { hook, provider } = setup()
+    act(() => { hook.result.current.claim('l1'); hook.result.current.withLock('l1', vi.fn()) })
+    hook.rerender({ me: meWith('c1'), locks: { l1: mine('c1') } })
+    expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([])
+  })
+
+  it('sends no lock for a line the local doc does not have yet, then sends it once it appears', () => {
+    const { hook, provider, locksOf } = setup()
+    act(() => hook.result.current.claim('fresh'))
+    expect(locksOf()).toEqual([])
+    act(() => provider.addLine('fresh'))
+    expect(locksOf()).toEqual(['fresh'])
+    act(() => provider.addLine('other')) // later doc updates don't resend
+    expect(locksOf()).toEqual(['fresh'])
+  })
+
+  it('a release while waiting for the line cancels the request', () => {
+    const { hook, provider, locksOf } = setup()
+    act(() => hook.result.current.claim('fresh'))
+    act(() => hook.result.current.release('fresh'))
+    act(() => provider.addLine('fresh'))
+    expect(locksOf()).toEqual([])
   })
 
   it('reconnect reclaims only the line in an open editor', () => {

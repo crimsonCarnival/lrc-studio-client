@@ -216,6 +216,7 @@ export function useEditor({
   const activeWordIndexRef = useRef(0);
   const stampTargetRef = useRef('both');
   const isPlayingRef = useRef(isPlaying);
+  const editingLineIndexRef = useRef(editingLineIndex);
   useEffect(() => {
     linesRef.current = lines;
     playbackPositionRef.current = playbackPosition;
@@ -231,7 +232,6 @@ export function useEditor({
   // ——— Collab line locks ———
   // Outside a session `collab` is undefined, the hook gets no provider, and withLock
   // runs its write at once: the solo editor behaves exactly as before.
-  const editingLineIndexRef = useRef(editingLineIndex);
   const onLockDenied = useCallback((lineId: string) => {
     // The server refused (or revoked) the lock on the line being typed in: close that editor.
     const editing = editingLineIndexRef.current;
@@ -853,9 +853,12 @@ export function useEditor({
     });
   };
 
-  const handleSaveLineText = (index, newText, newSecondary, newTranslations, singers) => {
-    setModifiedLines(prev => new Set(prev).add(index));
-    setLines((prev) => {
+  const handleSaveLineText = (at, newText, newSecondary, newTranslations, singers) => {
+    setModifiedLines(prev => new Set(prev).add(at));
+    // The save may wait for the line's lock, so the line is found again by id when it applies.
+    const lineId = linesRef.current[at]?.id;
+    const write = () => setLines((prev) => {
+      const index = lineId != null ? prev.findIndex((l) => l.id === lineId) : at;
       const updated = [...prev];
       if (index < 0 || index >= updated.length) return prev;
       const prevLine = updated[index];
@@ -941,6 +944,9 @@ export function useEditor({
       updated[index] = line;
       return updated;
     });
+    // Outside a session withLock runs the write immediately.
+    if (lineId != null) withLock(lineId, write);
+    else write();
   };
 
   /** Bulk secondary lyrics: values[n] is main (non-section) line n's secondary. One history entry. */

@@ -54,6 +54,11 @@ function deniedLine(payload: string): string | null {
  * - pending: writes parked until their lock is granted. Dropped on disconnect, because the
  *   server freed this connection's locks and a write that late would land unlocked.
  * - requested: lock requests in flight, so queued writes share one request.
+ * - waiting: requests held back until the line exists in the local doc. The server denies a
+ *   lock for a line it does not have, and a line inserted in this very commit reaches the doc
+ *   in a parent's effect, after this hook's callers have already claimed it. The provider sends
+ *   doc updates on the same socket in order, so a lock sent after the local doc holds the line
+ *   arrives after the update that creates it.
  */
 export function useLineLocks(
   provider: HocuspocusProvider | null,
@@ -80,7 +85,7 @@ export function useLineLocks(
   const intents = useRef(new Map<string, number>())
   const pending = useRef(new Map<string, (() => void)[]>())
   const requested = useRef(new Set<string>())
-  const releaseAfterFlush = useRef(new Set<string>())
+  const waiting = useRef(new Set<string>())
   // True from the server's hello until the socket drops.
   const live = useRef(false)
 
@@ -93,15 +98,26 @@ export function useLineLocks(
     [],
   )
 
+  const inDoc = useCallback(
+    (lineId: string) => providerRef.current?.document.getMap('lines').has(lineId) ?? false,
+    [],
+  )
+
   const request = useCallback((lineId: string) => {
     if (!live.current || requested.current.has(lineId) || isHeld(lineId)) return
+    if (!inDoc(lineId)) {
+      waiting.current.add(lineId)
+      return
+    }
+    waiting.current.delete(lineId)
     requested.current.add(lineId)
     send({ t: 'lock', lineId })
-  }, [isHeld, send])
+  }, [isHeld, inDoc, send])
 
   const unlock = useCallback((lineId: string) => {
     const had = isHeld(lineId) || requested.current.has(lineId)
     requested.current.delete(lineId)
+    waiting.current.delete(lineId)
     if (had && live.current) send({ t: 'unlock', lineId })
   }, [isHeld, send])
 
@@ -119,14 +135,20 @@ export function useLineLocks(
       return
     }
     intents.current.delete(lineId)
-    // A write is still waiting for this lock (a mark made just before the cursor moved on).
-    if (pending.current.has(lineId)) releaseAfterFlush.current.add(lineId)
-    else unlock(lineId)
+    // A write is still waiting for this lock (a mark made just before the cursor moved on):
+    // the grant effect lets go of the lock once it has run.
+    if (!pending.current.has(lineId)) unlock(lineId)
   }, [unlock])
 
   const withLock = useCallback((lineId: string, write: () => void) => {
     if (!providerRef.current || isHeld(lineId)) {
       write()
+      return
+    }
+    // Not connected: parking the write would replay it on a later connection, long after
+    // the moment it was made. Drop it, like a denial.
+    if (!live.current) {
+      toast.error(tRef.current('collab.locks.offline'), { id: 'collab-lock-offline' })
       return
     }
     const queue = pending.current.get(lineId)
@@ -143,7 +165,8 @@ export function useLineLocks(
       pending.current.delete(lineId)
       requested.current.delete(lineId)
       writes.forEach((write) => write())
-      if (releaseAfterFlush.current.delete(lineId)) unlock(lineId)
+      // Nothing else wants this line (no open editor, no sync cursor): don't keep it alive.
+      if (!intents.current.has(lineId)) unlock(lineId)
     }
   }, [locks, conn, unlock])
 
@@ -163,7 +186,7 @@ export function useLineLocks(
       if (!lineId) return
       requested.current.delete(lineId)
       pending.current.delete(lineId)
-      releaseAfterFlush.current.delete(lineId)
+      waiting.current.delete(lineId)
       intents.current.delete(lineId)
       const holder = locksRef.current[lineId]
       const translate = tRef.current
@@ -178,28 +201,36 @@ export function useLineLocks(
       live.current = false
       requested.current.clear()
       pending.current.clear()
-      releaseAfterFlush.current.clear()
+      waiting.current.clear()
+    }
+    // Runs after the provider's own update handler (registered when it was built).
+    const onDocUpdate = () => {
+      for (const lineId of [...waiting.current]) if (inDoc(lineId)) request(lineId)
     }
     provider.on('stateless', onStateless)
     provider.on('status', onStatus)
+    provider.document.on('update', onDocUpdate)
 
     const beat = setInterval(() => {
       if (!live.current) return
       const mine = Object.keys(locksRef.current).filter(isHeld)
       // Open editors too: a lock lost to expiry is re-acquired (or refused) by the heartbeat.
-      const lineIds = [...new Set([...mine, ...intents.current.keys()])]
+      const lineIds = [...new Set([...mine, ...[...intents.current.keys()].filter(inDoc)])]
       if (lineIds.length > 0) send({ t: 'heartbeat', lineIds })
     }, HEARTBEAT_MS)
 
     const parked = pending.current
+    const waited = waiting.current
     return () => {
       provider.off('stateless', onStateless)
       provider.off('status', onStatus)
+      provider.document.off('update', onDocUpdate)
       clearInterval(beat)
       parked.clear()
+      waited.clear()
       live.current = false
     }
-  }, [provider, isHeld, send])
+  }, [provider, isHeld, inDoc, request, send])
 
   const othersLocks = useMemo(() => {
     const out: LockSnapshot = {}

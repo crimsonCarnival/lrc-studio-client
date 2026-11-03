@@ -13,6 +13,7 @@ export default {
   locks: {
     denied: '{{name}} está trabajando en esta línea',
     deniedGeneric: 'No puedes editar esta línea ahora mismo',
+    offline: 'Estás sin conexión: ese cambio no se aplicó',
     badge: 'Editando: {{name}}',
     deleteLocked: '{{name}} está editando esta línea',
   },
