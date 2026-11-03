@@ -20,6 +20,8 @@ export interface PlayerHandle {
   loadLocalAudio: (file: File) => void;
   loadYouTube: (url?: string) => void;
   loadFromUrl: (url: string, title?: string) => void;
+  /** Unloads whatever is playing (local file or YouTube), as the media popover's remove does. */
+  clearMedia: () => void;
   setLoop: (a: number | null, b: number | null) => void;
   clearLoop: () => void;
   getLoop: () => Loop;

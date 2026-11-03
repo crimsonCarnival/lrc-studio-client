@@ -20,6 +20,7 @@ import { isEditorPath, sessionPublicIdFromPath } from '@/features/projects/proje
 import { useCollabSession } from '@/features/collab/useCollabSession';
 import { useCollabLines } from '@/features/collab/useCollabLines';
 import { useCollabEditorMode } from '@/features/collab/useCollabEditorMode';
+import { useCollabMedia, collabMediaToRestored } from '@/features/collab/useCollabMedia';
 import { otherLockHolder } from '@/features/collab/useLineLocks';
 import type { LinesUpdater } from '@/features/collab/collab.types';
 import { migrateLines } from '@/shared/utils/lrc';
@@ -77,7 +78,7 @@ export function useAppState(user?: AuthUserType | null) {
   // ——— Collab session (only while on /session/:publicId) ———
   // Same 7-tuple as useHistory, so everything below reads one source. Seams for
   // later tasks: collabSession.provider / .doc / .me / .role are returned below.
-  // Task 9: hydrate restoredMedia from readMeta(collabSession.doc).media here.
+  // The session's media hydrates the player further down ("Session media").
   const collabSession = useCollabSession(sessionPublicId);
   const collabHistory = useCollabLines(collabSession.doc);
   const collabCanWrite = collabSession.role === 'owner' || collabSession.role === 'editor';
@@ -625,6 +626,41 @@ export function useAppState(user?: AuthUserType | null) {
     lastServerSnapshotRef.current = null;
     sessionUploadIdRef.current = null;
   }, [inSession, setSoloLines, clearSoloHistory]);
+
+  // ——— Session media ———
+  // Entering a session from another project leaves that project's audio, metadata and
+  // cover behind: forget them first, so the player never plays the wrong song under
+  // the session's lyrics. The owner arriving from their own project keeps what is
+  // loaded (it is the session's song, possibly a local file nobody else has).
+  // Then the doc's `meta.media` is loaded. It is only read: media is not edited in a session.
+  // The clear and the load land in separate commits (sessionMediaFor gates the load), so
+  // the player sees the descriptor go through null and reloads even when two projects
+  // share one upload.
+  const collabMedia = useCollabMedia(collabSession.doc);
+  const [sessionMediaFor, setSessionMediaFor] = useState<string | null>(null);
+  useEffect(() => {
+    if (sessionPublicId === sessionMediaFor) return;
+    if (sessionPublicId !== null && activepublicIdRef.current !== sessionPublicId) {
+      playerRef.current?.clearMedia();
+      setRestoredMedia(null);
+      setProjectYtUrl('');
+      setUploadedAudio(null);
+      setProjectMetadata({ description: '', tags: [] });
+      setProjectCoverImage('');
+      setForkedFrom(null);
+    }
+    // Synchronising with the route: marks which session the stale state was cleared for.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSessionMediaFor(sessionPublicId);
+  }, [sessionPublicId, sessionMediaFor]);
+  useEffect(() => {
+    if (sessionPublicId === null || sessionMediaFor !== sessionPublicId || !collabMedia) return;
+    const next = collabMediaToRestored(collabMedia);
+    // Shared-doc media, read once per change (the hook keeps its identity otherwise).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setRestoredMedia(next);
+    if (next?.type === 'youtube') setProjectYtUrl(next.url);
+  }, [sessionPublicId, sessionMediaFor, collabMedia]);
 
   // Apply the deep-linked playback position once the project has lines, and
   // release the suppression in setRestoredPosition so ordinary playback can

@@ -43,6 +43,7 @@ import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
 import { usePresenceView } from '@/features/collab/collab-presence-context';
+import type { SessionOwnerControl } from '@/features/collab/components/SessionControl';
 import type { AuthUser } from '@/features/auth/auth.types';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import type { UploadedAudio } from '@/types/app-state';
@@ -139,6 +140,8 @@ interface EditorProps {
   isPlaying?: boolean;
   /** Inside a collaborative session: provider, own identity and the lock table. */
   collab?: CollabLockInput;
+  /** Set only for the owner of a saved project: shows Start / Manage session. */
+  sessionOwner?: SessionOwnerControl;
 }
 
 export default function Editor({
@@ -181,6 +184,7 @@ export default function Editor({
   onTogglePublicView,
   isPlaying,
   collab,
+  sessionOwner,
 }: EditorProps) {
   "use no memo";
   const { t } = useTranslation();
@@ -379,6 +383,9 @@ export default function Editor({
   const [autoStampDismissed, setAutoStampDismissed] = useState(false);
   const [lyricsSearchOpen, setLyricsSearchOpen] = useState(false);
   const [changeMediaOpen, setChangeMediaOpen] = useState(false);
+  // Inside a live session the doc is the project: solo save, the public view and the
+  // project's media are not the participant's to change (the server refuses solo saves anyway).
+  const inSession = collab !== undefined;
 
   /**
    * Replaces the project's lyrics with a search result. Goes through the shared
@@ -761,8 +768,9 @@ export default function Editor({
       onMouseLeave={handleLineHoverEnd}
       className={`flex ${compact ? 'flex-row gap-2' : 'flex-col'} flex-1 animate-fade-in min-h-0 relative`}
     >
-      {/* The workspace header (see AppHeader) hosts this screen's status, tabs and actions */}
-      {statusSlot && createPortal(
+      {/* The workspace header (see AppHeader) hosts this screen's status, tabs and actions.
+          No save status in a session: the server stores the shared doc, solo saves are off. */}
+      {statusSlot && !inSession && createPortal(
         <span
           role="status"
           // Each state differs by mark and wording, not colour alone: gold dot, pulsing iris
@@ -798,7 +806,7 @@ export default function Editor({
             </div>
           )}
           {/* Save stays in the bar: it is the one action nobody should have to look for. */}
-          {handleManualSave && (
+          {handleManualSave && !inSession && (
             <Tip content={isSaving ? t('project.saving') : t('project.save')}>
               <Button
                 variant="outline"
@@ -850,13 +858,13 @@ export default function Editor({
                   {t('editor.projectSettings')}
                 </PopoverItem>
               )}
-              {hasMedia && (
+              {hasMedia && !inSession && (
                 <PopoverItem onClick={() => setChangeMediaOpen(true)}>
                   <Icon name="swap_horiz" size={16} />
                   {t('player.changeSong')}
                 </PopoverItem>
               )}
-              {onTogglePublicView && activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && (
+              {onTogglePublicView && !inSession && activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && (
                 <PopoverItem onClick={onTogglePublicView}>
                   <Icon name="public" size={16} />
                   {t('editor.viewAsPublic')}
@@ -1059,6 +1067,9 @@ export default function Editor({
           onAutoStamp={handleAutoStampStart}
           onOpenFurigana={() => setFuriganaOpen(true)}
           onOpenSecondary={() => setSecondaryOpen(true)}
+          sessionOwner={sessionOwner}
+          collab={collab}
+          onBeforeStartSession={handleManualSave ?? undefined}
         />
       </div>
 

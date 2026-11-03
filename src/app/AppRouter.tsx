@@ -22,6 +22,8 @@ import { isApiError } from '@/types';
 import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle, sessionPath } from '@features/projects/project-path';
 import { getSession } from '@features/collab/collab.service';
 import { ParticipantsBar } from '@features/collab/components/ParticipantsBar';
+import { SessionAudioNotice } from '@features/collab/components/SharedAudioNotice';
+import type { SessionOwnerControl } from '@features/collab/components/SessionControl';
 import type { CollabStatus } from '@features/collab/collab.types';
 import { usePresenceView } from '@features/collab/collab-presence-context';
 import { Button } from '@ui/button';
@@ -59,6 +61,7 @@ const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage
 const NotificationsPage = lazy(() => import('@features/notifications/NotificationsPage'));
 const MyReportsPage = lazy(() => import('@features/reports/MyReportsPage'));
 const GuidePage = lazy(() => import('@features/guide/GuidePage'));
+const JoinSessionPage = lazy(() => import('@features/collab/components/JoinSessionPage'));
 
 type EditorProps = ComponentProps<typeof Editor>;
 type PreviewComponentProps = ComponentProps<typeof Preview>;
@@ -373,6 +376,26 @@ export function AppRouter({
   // Song and artist as the user typed them; the media title (file or video name) is only a fallback.
   const meta = projectMetadata as { name?: string; songName?: string; artists?: ArtistCredit[]; songArtist?: string } | undefined;
   const { user } = useAuthContext();
+
+  // Start / Manage session: only the owner of a server-saved project. Inside a session the server's
+  // hello says who the owner is; on the editor route the project's owner must be the signed-in user.
+  // The server re-checks ownership on every call, so this only decides whether the button is shown.
+  const ownerAccountName = user?.accountName;
+  const signedInUserId = user && !user.isGuest && user.id != null ? String(user.id) : null;
+  const collabIsOwner = collabMe?.role === 'owner';
+  // The session projected its doc into the project. Leaving the session route drops the solo
+  // copy (useAppState), so the editor route reloads the project and shows what the session saved.
+  const handleSessionEnded = useCallback(() => {
+    if (!editorPublicId) return;
+    navigate(projectEditPath({ publicId: editorPublicId }, ownerAccountName) ?? '/library');
+  }, [editorPublicId, navigate, ownerAccountName]);
+  const ownsSavedProject = signedInUserId !== null && !!activepublicId && activepublicId !== 'local' && activepublicId !== 'new' && projectUserId === signedInUserId;
+  const sessionOwner = useMemo<SessionOwnerControl | undefined>(() => {
+    if (signedInUserId === null) return undefined;
+    if (sessionPublicId !== null) return collabIsOwner ? { publicId: sessionPublicId, live: true, onEnded: handleSessionEnded } : undefined;
+    return ownsSavedProject && activepublicId ? { publicId: activepublicId, live: false, onEnded: handleSessionEnded } : undefined;
+  }, [signedInUserId, sessionPublicId, collabIsOwner, ownsSavedProject, activepublicId, handleSessionEnded]);
+
   usePageTitle(
     projectPageTitle(
       projectDisplayName({ title: meta?.name, metadata: { songName: meta?.songName, songArtist: artistDisplay(meta) } }),
@@ -461,6 +484,7 @@ export function AppRouter({
     onTogglePublicView: handleViewPublic,
     isPlaying,
     collab,
+    sessionOwner,
   } as unknown as EditorProps), [
     lines, setLines, syncMode, setSyncMode,
     activeLineIndex, setActiveLineIndex,
@@ -479,7 +503,7 @@ export function AppRouter({
     projectMetadata, rosterNames,
     playerSlot,
     showPreviewView,
-    uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying, collab,
+    uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying, collab, sessionOwner,
   ]);
 
   const previewProps = useMemo(() => ({
@@ -492,6 +516,7 @@ export function AppRouter({
     project: pendingProject, projectMetadata,
     onShowEditor: collabViewer ? undefined : showEditorView,
     viewerMode: collabViewer,
+    sessionMode: sessionPublicId !== null,
     onViewPublic: handleViewPublic,
     setActiveLineIndex,
     songArtists: rosterNames,
@@ -506,7 +531,7 @@ export function AppRouter({
     isPlaying, playbackSpeed, activepublicId,
     pendingProject, projectMetadata, rosterNames,
     showEditorView, handleViewPublic, setActiveLineIndex,
-    playerSlot, collabViewer,
+    playerSlot, collabViewer, sessionPublicId,
   ]);
 
   const adminPage = (
@@ -584,8 +609,14 @@ export function AppRouter({
       <Route path="session/:publicId" element={
         <SessionWorkspace key={sessionPublicId ?? ''} valid={sessionPublicId !== null} status={collabStatus} hasDoc={hasCollabDoc} onRetry={retryCollab} t={t} navigate={navigate}>
           <ParticipantsBar me={collabMe} publicId={sessionPublicId} />
+          <SessionAudioNotice doc={collabSession.doc} me={collabMe} />
           <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
         </SessionWorkspace>
+      } />
+      <Route path="join/:token" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+          <JoinSessionPage />
+        </Suspense>
       } />
       <Route path="home" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} /></div>}>

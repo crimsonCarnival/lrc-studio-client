@@ -46,4 +46,16 @@ describe('accessFor', () => {
       expect(accessFor(path)).not.toBe('public');
     }
   });
+
+  it('lets anonymous guests reach an invite link and the session it opens', () => {
+    // Guests have no account: the token (join) and the collabGuest cookie (session) are checked by the server.
+    expect(accessFor('/join/AbCdEfGhIjKlMnOpQrStUvWx')).toBe('public');
+    expect(accessFor('/session/k3x9a2c7qm')).toBe('public');
+  });
+
+  it('keeps the session rules to their exact shape', () => {
+    expect(accessFor('/join')).toBe('public'); // the bare segment is a (reserved) profile shape, as before
+    expect(accessFor('/join/abc/extra')).toBe('auth');
+    expect(accessFor('/session/k3x9a2c7qm/edit')).toBe('auth');
+  });
 });

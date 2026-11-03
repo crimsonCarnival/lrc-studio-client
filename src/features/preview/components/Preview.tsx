@@ -53,6 +53,8 @@ interface PreviewProps {
   setShareModal: (v: unknown) => void;
   hasMedia?: boolean;
   viewerMode?: boolean;
+  /** Inside a live collab session: publish and share act on a project the doc stands in for, so they are hidden. */
+  sessionMode?: boolean;
   /** Imperative player handle — forwarded to SharePanel to read the A-B loop. */
   playerRef?: { current?: { getLoop?: () => { a: number | null; b: number | null } } | null };
   isPlaying?: boolean;
@@ -190,7 +192,7 @@ export default function Preview(props: PreviewProps) {
     handleCopy,
   }: UsePreviewResult = usePreview(props);
 
-  const { lines, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, isPlaying, playbackSpeed, playerRef, onShowEditor, onViewPublic, setActiveLineIndex, active = true } = props;
+  const { lines, playbackPosition, duration, exportToUrl, isSharedProject, sharedReadOnly, setSharedReadOnly, editorMode, shareModal, setShareModal, hasMedia, viewerMode, sessionMode, isPlaying, playbackSpeed, playerRef, onShowEditor, onViewPublic, setActiveLineIndex, active = true } = props;
 
   const shareTriggerRef = useRef<HTMLButtonElement>(null);
   const sharePanelRef = useRef<HTMLDivElement>(null);
@@ -246,7 +248,7 @@ export default function Preview(props: PreviewProps) {
 
   const subtitle = [songInfo.title, songInfo.artist].filter(Boolean).join(' · ');
   const alignment = settings.interface?.previewAlignment || 'left';
-  const canPublish = !!activepublicId && !viewerMode && !isSharedProject;
+  const canPublish = !!activepublicId && !viewerMode && !sessionMode && !isSharedProject;
   const untimedCount = lineStats.total - lineStats.timed;
 
   const viewToggles = [
@@ -319,6 +321,16 @@ export default function Preview(props: PreviewProps) {
         </Button>,
         statusSlot,
       )}
+      {/* A session viewer has no editor to go back to; the badge says why. */}
+      {statusSlot && viewerMode && sessionMode && createPortal(
+        <Tip content={t('collab.session.viewOnlyHint')}>
+          <span role="status" tabIndex={0} className="inline-flex h-8 items-center gap-1.5 rounded-full bg-raised px-3 text-[13px] font-semibold text-subtle">
+            <Icon name="visibility" size={16} />
+            {t('collab.session.viewOnly')}
+          </span>
+        </Tip>,
+        statusSlot,
+      )}
       {centerSlot && createPortal(
         <div className="flex flex-col items-center gap-0.5 text-center">
           <span className="text-sm font-bold text-foreground">{t('preview.title')}</span>
@@ -337,7 +349,7 @@ export default function Preview(props: PreviewProps) {
               {t('preview.viewAsPublic')}
             </Button>
           )}
-          {!viewerMode && !isSharedProject && (
+          {!viewerMode && !sessionMode && !isSharedProject && (
             <Tip content={canPublish ? (isPublic ? t('preview.unpublishTip') : t('preview.publishTip')) : t('preview.publishNeedsSave')}>
               <Button
                 // aria-disabled keeps the tooltip reachable when the project is not saved yet.
@@ -387,7 +399,7 @@ export default function Preview(props: PreviewProps) {
                 <Icon name="download" size={16} />
                 {t('export.title')}
               </PopoverItem>
-              {user && !viewerMode && (
+              {user && !viewerMode && !sessionMode && (
                 <PopoverItem onClick={handleShareToggle}>
                   <Icon name="share" size={16} />
                   {isSharedProject ? t('share.viewingShared') : t('app.shareProject')}

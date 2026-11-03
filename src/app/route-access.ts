@@ -36,6 +36,10 @@ const RULES: Rule[] = [
   { test: p => /^\/search/.test(p), access: 'public' },
   { test: p => /^\/explore(\/.*)?$/.test(p), access: 'public' },
   { test: p => p === '/leaderboard', access: 'public' },
+  // Collab: anonymous guests join with an invite token and then hold only a collabGuest
+  // cookie, never an account session. The server checks the token and the cookie.
+  { test: p => /^\/join\/[^/]+\/?$/.test(p), access: 'public' },
+  { test: p => /^\/session\/[^/]+\/?$/.test(p), access: 'public' },
 
   // ── Auth-only app routes ── listed BEFORE the profile shapes so private
   //    single-segment routes don't get treated as /:accountName.
