@@ -14,11 +14,16 @@ import {
   clearLineTimestamp,
   applyMark,
   reapplyMarkById,
+  lineRefsAt,
+  resolveLineRefs,
+  removeLinesAt,
+  activeIndexAfterRemoval,
   detectDuplicateTimestamps,
   normalizeLineMode,
   clampWordTime,
   alignLineStart,
 } from '../services/editor.service';
+import type { LineRef } from '../services/editor.service';
 import {
   parseRawTextLine, alignRawTextItems, rawTextKeyOfLine, rawTextKeyOfItem,
   computeCollapsedView, collapsedAncestorKeys, indexMapByIdentity, remapIndexSet,
@@ -972,19 +977,38 @@ export function useEditor({
     });
   }, [setLines, setModifiedLines]);
 
+  // Deletes lines captured when the action started (a confirm dialog may have been open for a
+  // while). Each is re-found by id and its lock re-checked now, so a collaborator's insert can't
+  // redirect the delete onto another line, and a line someone took (or removed) meanwhile is
+  // skipped with a toast. The updater resolves the ids again over the latest lines.
+  const deleteLineRefs = useCallback((refs: LineRef[]) => {
+    const current = linesRef.current;
+    const found = resolveLineRefs(current, refs);
+    if (found.length < refs.length) toast.error(t('collab.locks.deleteGone'), { id: 'collab-delete-gone' });
+    const keep: number[] = [];
+    let lockedBy: string | null = null;
+    for (const i of found) {
+      const id = current[i].id;
+      const holder = id ? lineLocksRef.current.othersLocks[id] : undefined;
+      if (holder) lockedBy ??= holder.name;
+      else keep.push(i);
+    }
+    if (lockedBy) toast.error(t('collab.locks.deleteLocked', { name: lockedBy }), { id: 'collab-delete-locked' });
+    if (keep.length === 0) return;
+    const targets = lineRefsAt(current, keep);
+    setLines((prev) => {
+      const indices = resolveLineRefs(prev, targets);
+      return indices.length === 0 ? prev : removeLinesAt(prev, indices);
+    });
+    setActiveLineIndex((a) => activeIndexAfterRemoval(a, keep, current.length - keep.length));
+  }, [t, setLines, setActiveLineIndex]);
+
   const handleDeleteLine = (index) => {
     if (blockedByOthersLock([index])) return;
     const isSection = lines[index]?.type === 'section';
+    const refs = lineRefsAt(lines, [index]);
     requestConfirm(isSection ? t('confirm.deleteSection') : t('confirm.deleteLine'), () => {
-      setLines((prev) => {
-        const newLines = prev.filter((_, i) => i !== index);
-        setActiveLineIndex((prevIdx) => {
-          if (prevIdx > index) return prevIdx - 1;
-          if (prevIdx === index) return Math.max(0, Math.min(prevIdx, newLines.length - 1));
-          return prevIdx;
-        });
-        return newLines;
-      });
+      deleteLineRefs(refs);
       setEditingLineIndex(null);
     }, { title: isSection ? t('confirm.deleteSectionTitle') : t('confirm.deleteLineTitle'), variant: 'danger' });
   };
@@ -1125,18 +1149,12 @@ export function useEditor({
 
   const handleBulkDelete = useCallback(() => {
     if (blockedByOthersLock(selectedLines)) return;
+    const refs = lineRefsAt(linesRef.current, selectedLines);
     requestConfirm(t('confirm.bulkDelete'), () => {
-      setLines((prev) => prev.filter((_, idx) => !selectedLines.has(idx)));
-      setActiveLineIndex((prev) => {
-        let offset = 0;
-        for (const idx of selectedLines) {
-          if (idx < prev) offset++;
-        }
-        return Math.max(0, prev - offset);
-      });
+      deleteLineRefs(refs);
       clearSelection();
     }, { title: t('confirm.bulkDeleteTitle'), variant: 'danger' });
-  }, [selectedLines, t, setLines, setActiveLineIndex, clearSelection, requestConfirm, blockedByOthersLock]);
+  }, [selectedLines, t, clearSelection, requestConfirm, blockedByOthersLock, deleteLineRefs]);
 
   const handleBulkShift = (delta) => {
     setLines((prev) => applyBulkShift(prev, selectedLines, delta));
@@ -1231,14 +1249,9 @@ export function useEditor({
         e.preventDefault();
         if (selectedLines.size > 0) {
           handleBulkDelete();
-        } else if (!blockedByOthersLock([activeLineIndex])) {
-          setLines((prev) => {
-            const newLines = prev.filter((_, i) => i !== activeLineIndex);
-            setActiveLineIndex((prevIndex) =>
-              Math.max(0, Math.min(prevIndex, newLines.length - 1)),
-            );
-            return newLines;
-          });
+        } else {
+          // By id, with the lock re-checked (see deleteLineRefs).
+          deleteLineRefs(lineRefsAt(linesRef.current, [activeLineIndex]));
           clearSelection();
         }
       } else if (matchKey(e, settings.shortcuts?.addLine?.[0] || 'Insert')) {
@@ -1267,7 +1280,7 @@ export function useEditor({
   }, [
     selectedLines,
     handleBulkDelete,
-    blockedByOthersLock,
+    deleteLineRefs,
     clearSelection,
     settings.shortcuts?.deleteLine,
     settings.shortcuts?.addLine,

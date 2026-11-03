@@ -20,6 +20,10 @@ import {
   clampWordTime,
   alignLineStart,
   reapplyMarkById,
+  lineRefsAt,
+  resolveLineRefs,
+  removeLinesAt,
+  activeIndexAfterRemoval,
 } from './editor.service';
 import type { EditorLine } from '@/features/editor/editor.types';
 
@@ -626,5 +630,36 @@ describe('word time bounds', () => {
     expect(clampWordTime(lines, 1, 79.2)).toBe(79.2);
     lines[1] = { ...lines[1], endTime: 80 };
     expect(clampWordTime(lines, 1, 81)).toBe(80);
+  });
+});
+
+describe('deleting lines captured before a confirm dialog', () => {
+  it('re-finds the captured lines by id after a remote insert above them', () => {
+    const atOpen = [line('a', { id: 'a' }), line('b', { id: 'b' }), line('c', { id: 'c' })];
+    const refs = lineRefsAt(atOpen, [1]);
+    const atConfirm = [line('remote', { id: 'r' }), ...atOpen];
+    const indices = resolveLineRefs(atConfirm, refs);
+    expect(indices).toEqual([2]);
+    expect(removeLinesAt(atConfirm, indices).map((l) => l.id)).toEqual(['r', 'a', 'c']);
+  });
+
+  it('skips a captured line that was removed meanwhile', () => {
+    const atOpen = [line('a', { id: 'a' }), line('b', { id: 'b' })];
+    const refs = lineRefsAt(atOpen, [0, 1]);
+    expect(resolveLineRefs([line('b', { id: 'b' })], refs)).toEqual([0]);
+  });
+
+  it('falls back to the position for a line without an id', () => {
+    const atOpen = [line('a'), line('b')];
+    expect(resolveLineRefs(atOpen, lineRefsAt(atOpen, [1]))).toEqual([1]);
+    expect(resolveLineRefs([line('a')], lineRefsAt(atOpen, [1]))).toEqual([]);
+  });
+
+  it('keeps the cursor on the same line, or the one that took the deleted line’s place', () => {
+    expect(activeIndexAfterRemoval(4, [1, 2], 5)).toBe(2);
+    expect(activeIndexAfterRemoval(2, [2], 4)).toBe(2);
+    expect(activeIndexAfterRemoval(3, [3], 3)).toBe(2);
+    expect(activeIndexAfterRemoval(0, [0], 0)).toBe(0);
+    expect(activeIndexAfterRemoval(1, [3], 4)).toBe(1);
   });
 });

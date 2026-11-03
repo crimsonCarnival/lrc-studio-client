@@ -16,6 +16,7 @@ export default {
     offline: 'Estás sin conexión: ese cambio no se aplicó',
     badge: 'Editando: {{name}}',
     deleteLocked: '{{name}} está editando esta línea',
+    deleteGone: 'Alguien ya eliminó esa línea',
   },
   // Presencia: quién más está en la sesión y dónde está.
   presence: {

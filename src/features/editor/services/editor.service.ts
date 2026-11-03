@@ -269,6 +269,40 @@ export function reapplyMarkById(params: ApplyMarkParams, latest: EditorLine[]): 
   }).nextLines;
 }
 
+/** A line as captured when an action started: its id, and its position as a fallback for lines without one. */
+export type LineRef = { id?: string; index: number };
+
+export function lineRefsAt(lines: EditorLine[], indices: Iterable<number>): LineRef[] {
+  const refs: LineRef[] = [];
+  for (const index of indices) if (lines[index]) refs.push({ id: lines[index].id, index });
+  return refs;
+}
+
+/**
+ * Where the captured lines are now, ascending. A line with an id is found by id, so a line a
+ * collaborator inserted or removed in the meantime doesn't shift the target; one that is gone
+ * is skipped. Lines without an id (solo projects that predate ids) keep their position.
+ */
+export function resolveLineRefs(lines: EditorLine[], refs: LineRef[]): number[] {
+  const out = new Set<number>();
+  for (const ref of refs) {
+    const at = ref.id ? lines.findIndex((l) => l.id === ref.id) : (ref.index < lines.length ? ref.index : -1);
+    if (at >= 0) out.add(at);
+  }
+  return [...out].sort((a, b) => a - b);
+}
+
+export function removeLinesAt(lines: EditorLine[], indices: number[]): EditorLine[] {
+  const drop = new Set(indices);
+  return lines.filter((_, i) => !drop.has(i));
+}
+
+/** The cursor after `removed` (indices into the old lines) are deleted: same line, or the one that took its place. */
+export function activeIndexAfterRemoval(active: number, removed: number[], newLength: number): number {
+  const before = removed.filter((i) => i < active).length;
+  return Math.max(0, Math.min(active - before, newLength - 1));
+}
+
 function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex = 0, stampTarget = 'main', awaitingEndMark, focusedTimestamp, settings, forceAdvance = false }: ApplyMarkParams): ApplyMarkResult {
   if (activeLineIndex >= lines.length) {
     return { nextLines: lines, nextActiveLineIndex: null, nextAwaitingEndMark: undefined };
