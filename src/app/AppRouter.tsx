@@ -190,13 +190,14 @@ interface SessionWorkspaceProps {
   valid: boolean;
   status: CollabStatus;
   hasDoc: boolean;
+  onRetry: () => void;
   t: TFunction;
   navigate: NavigateFunction;
   children: ReactNode;
 }
 
 // /session/:publicId. Mounted with key={publicId}, so "has synced" resets per session.
-function SessionWorkspace({ valid, status, hasDoc, t, navigate, children }: SessionWorkspaceProps) {
+function SessionWorkspace({ valid, status, hasDoc, onRetry, t, navigate, children }: SessionWorkspaceProps) {
   // Until the first sync the doc is empty; editing it then would merge a second
   // copy of the lyrics in, so the editor waits. Later disconnects keep it open (offline edits merge).
   const [hasSynced, setHasSynced] = useState(false);
@@ -210,6 +211,15 @@ function SessionWorkspace({ valid, status, hasDoc, t, navigate, children }: Sess
         <h1 className="text-lg font-semibold text-zinc-100">{t('collab.session.endedTitle')}</h1>
         <p className="text-sm text-zinc-400 max-w-md">{t('collab.session.endedBody')}</p>
         <Button variant="outline" onClick={() => navigate('/home')}>{t('collab.session.goHome')}</Button>
+      </div>
+    );
+  }
+  if (!hasSynced && status === 'offline') {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4 text-center">
+        <h1 className="text-lg font-semibold text-zinc-100">{t('collab.session.offlineTitle')}</h1>
+        <p className="text-sm text-zinc-400 max-w-md">{t('collab.session.offlineBody')}</p>
+        <Button variant="outline" onClick={onRetry}>{t('collab.session.retry')}</Button>
       </div>
     );
   }
@@ -345,6 +355,7 @@ export function AppRouter({
   } = appState;
   const collabStatus = collabSession.status;
   const hasCollabDoc = collabSession.doc !== null;
+  const retryCollab = collabSession.retry;
   // In a session the editor works on the session's project, whatever project was open before.
   const editorPublicId = sessionPublicId ?? activepublicId;
 
@@ -557,7 +568,7 @@ export function AppRouter({
         </EditorContainer>
       } />
       <Route path="session/:publicId" element={
-        <SessionWorkspace key={sessionPublicId ?? ''} valid={sessionPublicId !== null} status={collabStatus} hasDoc={hasCollabDoc} t={t} navigate={navigate}>
+        <SessionWorkspace key={sessionPublicId ?? ''} valid={sessionPublicId !== null} status={collabStatus} hasDoc={hasCollabDoc} onRetry={retryCollab} t={t} navigate={navigate}>
           <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
         </SessionWorkspace>
       } />
