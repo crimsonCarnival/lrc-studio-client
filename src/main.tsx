@@ -22,6 +22,7 @@ import { useEffect } from 'react';
 import App from '@/app/App'
 import ErrorBoundary from '@shared/ui/ErrorBoundary'
 import { SpeedInsights } from '@vercel/speed-insights/react'
+import { redactInsightsEvent } from '@/app/speed-insights'
 
 // Bridges react-router navigation to code outside the Router tree (toasts).
 // eslint-disable-next-line react-refresh/only-export-components
@@ -282,7 +283,7 @@ i18nReady.then(() => {
         <RecaptchaGate>
           <AuthProvider>
             <LanguageSync />
-            <SpeedInsights />
+            <SpeedInsights beforeSend={redactInsightsEvent} />
             <AppProviders>
               <BrowserRouter>
                 <RecaptchaRouteArmer />
