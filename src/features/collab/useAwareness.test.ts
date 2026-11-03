@@ -94,6 +94,24 @@ describe('useAwareness', () => {
     expect(fieldCalls('pointer')).toHaveLength(2)
   })
 
+  // C3: the list passes a measuring function, so layout is read only for the updates that go out.
+  it('a lazy pointer is measured only when the throttle sends it', () => {
+    const { hook, fieldCalls } = setup()
+    const at = (xRatio: number) => ({ area: 'lines' as const, lineId: 'a', xRatio, yRatio: 0.5 })
+    const measures = [vi.fn(() => at(0.1)), vi.fn(() => at(0.2)), vi.fn(() => at(0.3))]
+    act(() => { measures.forEach((m) => hook.result.current.setPointer(m)) })
+    expect(measures.map((m) => m.mock.calls.length)).toEqual([1, 0, 0])
+    act(() => { vi.advanceTimersByTime(POINTER_THROTTLE_MS) })
+    expect(measures.map((m) => m.mock.calls.length)).toEqual([1, 0, 1])
+    expect(fieldCalls('pointer')).toEqual([at(0.1), at(0.3)])
+  })
+
+  it('a lazy pointer that cannot be measured sends nothing', () => {
+    const { hook, fieldCalls } = setup()
+    act(() => hook.result.current.setPointer(() => undefined))
+    expect(fieldCalls('pointer')).toEqual([])
+  })
+
   it('setPointer(null) after movement is the last thing sent', () => {
     const { hook, fieldCalls } = setup()
     act(() => {

@@ -186,16 +186,22 @@ export default function VirtualizedLineList({
   useEffect(() => { presenceRef.current = presence; });
   useEffect(() => () => presenceRef.current?.setActiveLine(null), []);
   const handlePresencePointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!presence) return;
+    // Pointers are a mouse/pen thing, like the waveform's: a finger dragging to scroll isn't one.
+    if (!presence || (e.pointerType !== 'mouse' && e.pointerType !== 'pen')) return;
     const row = (e.target as HTMLElement).closest<HTMLElement>('[data-line-id]');
-    if (!row?.dataset.lineId) { presence.setPointer(null); return; }
-    const r = row.getBoundingClientRect();
-    if (r.width === 0 || r.height === 0) return;
-    presence.setPointer({
-      area: 'lines',
-      lineId: row.dataset.lineId,
-      xRatio: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)),
-      yRatio: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)),
+    const lineId = row?.dataset.lineId;
+    if (!row || !lineId) { presence.setPointer(null); return; }
+    const { clientX, clientY } = e;
+    // Measured only for the updates the 50 ms throttle actually sends, not on every move.
+    presence.setPointer(() => {
+      const r = row.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) return undefined; // the row was virtualised away
+      return {
+        area: 'lines',
+        lineId,
+        xRatio: Math.min(1, Math.max(0, (clientX - r.left) / r.width)),
+        yRatio: Math.min(1, Math.max(0, (clientY - r.top) / r.height)),
+      };
     });
   }, [presence]);
   const handlePresencePointerLeave = useCallback(() => presence?.setPointer(null), [presence]);

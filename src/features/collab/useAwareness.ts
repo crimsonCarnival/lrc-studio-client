@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { HocuspocusProvider } from '@hocuspocus/provider'
-import type { CollabMe, CollabPeer, CollabRole, PlayheadState, PointerState } from './collab.types'
+import type { CollabMe, CollabPeer, CollabRole, PlayheadState, PointerInput, PointerState } from './collab.types'
 
 export const POINTER_THROTTLE_MS = 50
 export const PLAYHEAD_THROTTLE_MS = 250
@@ -75,6 +75,8 @@ function samePointer(a: PointerState, b: PointerState): boolean {
   return false
 }
 
+const resolvePointer = (v: PointerInput): PointerState | undefined => (typeof v === 'function' ? v() : v)
+
 /**
  * Leading + trailing throttle: the first call goes out at once, later ones inside the
  * window collapse into a single call with the latest value when the window ends.
@@ -113,8 +115,11 @@ function createThrottle<T>(ms: number, send: (value: T) => void) {
 
 export type Awareness = {
   peers: CollabPeer[]
-  /** Throttled to one update per 50 ms; the latest value always goes out. */
-  setPointer: (p: PointerState) => void
+  /**
+   * Throttled to one update per 50 ms; the latest value always goes out. A function is called
+   * only for the updates actually sent, so a caller can defer its layout reads to them.
+   */
+  setPointer: (p: PointerInput) => void
   /** Throttled to one update per 250 ms; the latest value always goes out. */
   setPlayhead: (p: PlayheadState | null) => void
   setActiveLine: (id: string | null) => void
@@ -123,7 +128,7 @@ export type Awareness = {
 }
 
 type Setters = {
-  pointer: ReturnType<typeof createThrottle<PointerState>>
+  pointer: ReturnType<typeof createThrottle<PointerInput>>
   playhead: ReturnType<typeof createThrottle<PlayheadState | null>>
   field: (key: LocalField, value: unknown) => void
 }
@@ -175,7 +180,10 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
     }
     awareness.setLocalState({ ...latest.current, user: { name, colorIndex, role } })
 
-    const pointer = createThrottle<PointerState>(POINTER_THROTTLE_MS, (v) => field('pointer', v))
+    const pointer = createThrottle<PointerInput>(POINTER_THROTTLE_MS, (v) => {
+      const p = resolvePointer(v)
+      if (p !== undefined) field('pointer', p)
+    })
     const playhead = createThrottle<PlayheadState | null>(PLAYHEAD_THROTTLE_MS, (v) => field('playhead', v))
     setters.current = { pointer, playhead, field }
 
@@ -230,9 +238,12 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
   }, [provider, name, colorIndex, role])
 
   // Before the identity is known there is nobody to publish to: the value is kept and goes out with it.
-  const setPointer = useCallback((p: PointerState) => {
+  const setPointer = useCallback((p: PointerInput) => {
     if (setters.current) setters.current.pointer.push(p)
-    else latest.current.pointer = p
+    else {
+      const v = resolvePointer(p)
+      if (v !== undefined) latest.current.pointer = v
+    }
   }, [])
   const setPlayhead = useCallback((p: PlayheadState | null) => {
     if (setters.current) setters.current.playhead.push(p)

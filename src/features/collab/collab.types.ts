@@ -90,6 +90,9 @@ export type PointerState =
   | { area: 'waveform'; time: number }
   | null
 
+/** A pointer, or a function measuring it when the update is sent (undefined: nothing to send). */
+export type PointerInput = PointerState | (() => PointerState | undefined)
+
 /** `t` is the player position in seconds when it was published; `rate` is the playback speed. */
 export type PlayheadState = { t: number; playing: boolean; rate: number }
 
