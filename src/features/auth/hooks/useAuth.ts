@@ -644,10 +644,19 @@ export function useAuth() {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [user, doRefresh, scheduleRefresh]);
 
+  // Renews the access cookie and resolves once it is set; rejects if the session is
+  // dead. Shares the coalesced refresh, so it never races another refresh. For
+  // callers that must wait on the result (the collab socket re-authenticates after it).
+  const refreshSession = useCallback(async () => {
+    await doRefresh();
+    scheduleRefresh();
+  }, [doRefresh, scheduleRefresh]);
+
   return {
     user,
     setUser,
     loading,
+    refreshSession,
     login,
     loginAndHold,
     commitLogin,

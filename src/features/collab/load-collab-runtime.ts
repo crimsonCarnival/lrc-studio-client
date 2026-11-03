@@ -5,7 +5,13 @@ let pending: Promise<CollabRuntime> | null = null
 
 /** Loads yjs, the provider and the doc bridge once. */
 export function loadCollabRuntime(): Promise<CollabRuntime> {
-  pending ??= import('./collab-runtime').then((m) => (loaded = m))
+  pending ??= import('./collab-runtime').then(
+    (m) => (loaded = m),
+    (err: unknown) => {
+      pending = null // a failed chunk load may succeed on retry
+      throw err
+    },
+  )
   return pending
 }
 
