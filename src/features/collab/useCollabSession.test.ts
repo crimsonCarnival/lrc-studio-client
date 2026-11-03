@@ -118,10 +118,10 @@ describe('useCollabSession: unauthorized handling', () => {
     expect(expired).toHaveBeenCalledTimes(1)
   })
 
-  it('a transient refresh failure is retried once after a delay, then reconnects', async () => {
+  it.each([502, 429, 408])('a transient refresh failure (%i) is retried once after a delay, then reconnects', async (status) => {
     try {
       const refresh = vi.fn()
-        .mockImplementationOnce(() => Promise.reject(Object.assign(new Error('bad gateway'), { status: 502 })))
+        .mockImplementationOnce(() => Promise.reject(Object.assign(new Error('transient'), { status })))
         .mockImplementation(() => Promise.resolve())
       h.auth.refreshSession = refresh
       const { result, provider } = await connected()

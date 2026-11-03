@@ -97,11 +97,11 @@ function parseServerMessage(payload: string): ServerMessage | null {
 // Delay before the single retry of a refresh that failed for a transient reason.
 export const REFRESH_RETRY_DELAY_MS = 2000
 
-// No HTTP status (network error) or a 5xx: worth one retry. A 4xx means the refresh
-// token itself was refused.
+// No HTTP status (network error), a 5xx, a rate limit (429) or a request timeout (408):
+// worth one retry. Any other 4xx means the refresh token itself was refused.
 function isTransientRefreshError(err: unknown): boolean {
   const status = (err as ApiError | null)?.status
-  return !status || status >= 500
+  return !status || status >= 500 || status === 429 || status === 408
 }
 
 type Connection = { publicId: string; doc: Y.Doc; provider: HocuspocusProvider }
