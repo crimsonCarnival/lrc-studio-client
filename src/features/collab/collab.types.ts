@@ -1,3 +1,4 @@
+import type { HocuspocusProvider } from '@hocuspocus/provider'
 import type { EditorLine } from '../editor/editor.types'
 
 export type CollabRole = 'owner' | 'editor' | 'viewer'
@@ -21,7 +22,27 @@ export type CollabMe = {
   name: string
   colorIndex: number
   role: CollabRole
+  /** This connection's id on the server (`hello.conn`): lock holders are keyed by connection, not user. */
+  conn: string
   clientId: number
+}
+
+/** A held line lock as the server reports it. */
+export type LockHolderView = {
+  holderConn: string
+  subject: string
+  name: string
+  colorIndex: number
+}
+
+/** The full lock table, keyed by line id. */
+export type LockSnapshot = Record<string, LockHolderView>
+
+/** What the editor needs from a session to take part in line locking. */
+export type CollabLockInput = {
+  provider: HocuspocusProvider | null
+  me: CollabMe | null
+  locks: LockSnapshot
 }
 
 /** Same updater shape useHistory's setter accepts. */

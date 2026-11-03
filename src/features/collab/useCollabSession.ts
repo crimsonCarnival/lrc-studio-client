@@ -5,15 +5,16 @@ import { useAuthContext } from '@/features/auth/useAuthContext'
 import { getDeviceId } from '@/shared/utils/device'
 import { authEvents } from '@/shared/utils/auth-events'
 import type { ApiError } from '@/types'
-import { getSession } from './collab.service'
 import { loadCollabRuntime } from './load-collab-runtime'
-import type { CollabMe, CollabRole, CollabStatus } from './collab.types'
+import type { CollabMe, CollabRole, CollabStatus, LockSnapshot } from './collab.types'
 
 export type CollabSessionState = {
   doc: Y.Doc | null
   provider: HocuspocusProvider | null
   status: CollabStatus
   me: CollabMe | null
+  /** Latest `{t:'locks'}` snapshot from the server (empty while disconnected). */
+  locks: LockSnapshot
   role: CollabRole | null
   /** Tears the connection down and starts over (reloading the runtime chunk if that failed). */
   retry: () => void
@@ -50,13 +51,47 @@ function refusalOf(code: number, reason: string): Refusal | null {
   return null
 }
 
-function isSessionEnded(payload: string): boolean {
-  try {
-    const msg: unknown = JSON.parse(payload)
-    return typeof msg === 'object' && msg !== null && (msg as { t?: unknown }).t === 'session-ended'
-  } catch {
-    return false
+const NO_LOCKS: LockSnapshot = {}
+const ROLES: readonly string[] = ['owner', 'editor', 'viewer']
+
+// Server stateless messages this hook consumes. `lock-denied` is handled by useLineLocks.
+type ServerMessage =
+  | { t: 'session-ended' }
+  | { t: 'hello'; conn: string; subject: string; name: string; colorIndex: number; role: CollabRole }
+  | { t: 'locks'; locks: LockSnapshot }
+
+// Every snapshot is a fresh object; keeping the old holder object where nothing changed
+// lets rows that memoise on their own lock skip re-rendering when someone else's lock moves.
+function reuseHolders(prev: LockSnapshot, next: LockSnapshot): LockSnapshot {
+  const out: LockSnapshot = {}
+  for (const [lineId, h] of Object.entries(next)) {
+    const old = prev[lineId]
+    const same = old && old.holderConn === h.holderConn && old.subject === h.subject && old.name === h.name && old.colorIndex === h.colorIndex
+    out[lineId] = same ? old : h
   }
+  return out
+}
+
+function parseServerMessage(payload: string): ServerMessage | null {
+  let msg: Record<string, unknown>
+  try {
+    const parsed: unknown = JSON.parse(payload)
+    if (typeof parsed !== 'object' || parsed === null) return null
+    msg = parsed as Record<string, unknown>
+  } catch {
+    return null
+  }
+  if (msg.t === 'session-ended') return { t: 'session-ended' }
+  if (msg.t === 'hello') {
+    const { conn, subject, name, colorIndex, role } = msg
+    if (typeof conn !== 'string' || typeof subject !== 'string' || typeof name !== 'string') return null
+    if (typeof colorIndex !== 'number' || typeof role !== 'string' || !ROLES.includes(role)) return null
+    return { t: 'hello', conn, subject, name, colorIndex, role: role as CollabRole }
+  }
+  if (msg.t === 'locks' && typeof msg.locks === 'object' && msg.locks !== null) {
+    return { t: 'locks', locks: msg.locks as LockSnapshot }
+  }
+  return null
 }
 
 // Delay before the single retry of a refresh that failed for a transient reason.
@@ -80,8 +115,10 @@ type Connection = { publicId: string; doc: Y.Doc; provider: HocuspocusProvider }
  * A second `unauthorized` in that attempt, a failed refresh, or a guest (nothing to
  * refresh) ends in 'forbidden'.
  *
- * `me` is resolved for signed-in users from `collabSession`; guests cannot query
- * it, so for them `me` stays null and `role` comes from the authorized scope.
+ * `me` comes from the server's `hello` message (first stateless message of every
+ * connection, guests included); until it arrives `role` falls back to the authorized
+ * scope. The latest `locks` snapshot is kept here too, because the provider-level
+ * `onStateless` is registered before connecting and so cannot miss the first one.
  */
 export function useCollabSession(publicId: string | null): CollabSessionState {
   const { user, refreshSession } = useAuthContext()
@@ -100,12 +137,15 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
   const [status, setStatus] = useState<CollabStatus>('connecting')
   const [scope, setScope] = useState<AuthorizedScope | null>(null)
   const [me, setMe] = useState<CollabMe | null>(null)
+  const [locks, setLocks] = useState<LockSnapshot>(NO_LOCKS)
 
   useEffect(() => {
     // Synchronising React state with an external system (the collab socket).
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setStatus('connecting')
     setScope(null)
+    setMe(null)
+    setLocks(NO_LOCKS)
     setConn(null)
     setFailedFor(null)
     if (!publicId) return
@@ -121,6 +161,7 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
       // The provider owns its socket here, so this sets shouldConnect=false and
       // clears any pending reconnect timer.
       provider?.disconnect()
+      setLocks(NO_LOCKS)
       setStatus(next)
     }
 
@@ -173,6 +214,7 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
         token: null,
         onStatus: ({ status: s }) => {
           // A deliberate disconnect to refresh the session is not "offline".
+          if (s === rt.WebSocketStatus.Disconnected) setLocks(NO_LOCKS)
           if (!terminal && !refreshing && s === rt.WebSocketStatus.Disconnected) setStatus('offline')
         },
         onSynced: ({ state }) => {
@@ -188,7 +230,11 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
           if (refusal) refuse(refusal)
         },
         onStateless: ({ payload }) => {
-          if (isSessionEnded(payload)) stop('ended')
+          const msg = parseServerMessage(payload)
+          if (!msg || terminal) return
+          if (msg.t === 'session-ended') stop('ended')
+          else if (msg.t === 'locks') setLocks((prev) => reuseHolders(prev, msg.locks))
+          else if (doc) setMe({ subject: msg.subject, name: msg.name, colorIndex: msg.colorIndex, role: msg.role, conn: msg.conn, clientId: doc.clientID })
         },
       })
       setConn({ publicId, doc, provider })
@@ -209,30 +255,14 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
 
   const active = conn && conn.publicId === publicId ? conn : null
 
-  // Who am I: re-read after every (re)authentication, so a role change shows up.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMe(null)
-    if (!active || !scope || !userId) return
-    let cancelled = false
-    const subject = `user:${userId}`
-    getSession(active.publicId)
-      .then((session) => {
-        const member = session?.members.find((m) => m.subject === subject)
-        if (cancelled || !member) return
-        setMe({ subject, name: member.name, colorIndex: member.colorIndex, role: member.role, clientId: active.doc.clientID })
-      })
-      .catch((err) => console.error('[collab] could not resolve the current participant', err))
-    return () => { cancelled = true }
-  }, [active, scope, userId])
-
   const role: CollabRole | null = me?.role ?? (scope === 'readonly' ? 'viewer' : scope === 'read-write' ? 'editor' : null)
 
   return {
     doc: active?.doc ?? null,
     provider: active?.provider ?? null,
     status: active ? status : failedFor !== null && failedFor === publicId ? 'offline' : 'connecting',
-    me,
+    me: active ? me : null,
+    locks: active ? locks : NO_LOCKS,
     role: active ? role : null,
     retry,
   }

@@ -5,6 +5,8 @@ type ProviderConfig = {
   onAuthenticated: (p: { scope: string }) => void
   onAuthenticationFailed: (p: { reason: string }) => void
   onClose: (p: { event: { code: number; reason: string } }) => void
+  onStateless: (p: { payload: string }) => void
+  onStatus: (p: { status: string }) => void
 }
 
 const h = vi.hoisted(() => ({
@@ -27,7 +29,6 @@ vi.mock('@hocuspocus/provider', () => {
 })
 vi.mock('@/features/auth/useAuthContext', () => ({ useAuthContext: () => h.auth }))
 vi.mock('@/shared/utils/device', () => ({ getDeviceId: () => Promise.resolve('dv_test') }))
-vi.mock('./collab.service', () => ({ getSession: () => Promise.resolve(null) }))
 
 import { authEvents } from '@/shared/utils/auth-events'
 import { REFRESH_RETRY_DELAY_MS, useCollabSession } from './useCollabSession'
@@ -180,5 +181,64 @@ describe('useCollabSession: unauthorized handling', () => {
     act(() => provider.config.onClose({ event: { code: 1000, reason: 'session-ended' } }))
     expect(result.current.status).toBe('ended')
     expect(refresh).not.toHaveBeenCalled()
+  })
+})
+
+describe('useCollabSession: hello and locks', () => {
+  beforeEach(() => {
+    h.providers.length = 0
+    h.auth.user = null // a guest: the old signed-in-only lookup would never have resolved `me`
+  })
+
+  const hello = { t: 'hello', conn: 'conn-1', subject: 'guest:g1', name: 'Guest', colorIndex: 3, role: 'editor' }
+  const say = (provider: { config: ProviderConfig }, msg: object) => act(() => provider.config.onStateless({ payload: JSON.stringify(msg) }))
+
+  it('takes me from the hello message, guests included', async () => {
+    const { result, provider } = await connected()
+    expect(result.current.me).toBeNull()
+    say(provider, hello)
+    expect(result.current.me).toMatchObject({ subject: 'guest:g1', name: 'Guest', colorIndex: 3, role: 'editor', conn: 'conn-1' })
+    expect(typeof result.current.me?.clientId).toBe('number')
+    expect(result.current.role).toBe('editor')
+  })
+
+  it('a new hello after a reconnect replaces me', async () => {
+    const { result, provider } = await connected()
+    say(provider, hello)
+    say(provider, { ...hello, conn: 'conn-2', role: 'viewer' })
+    expect(result.current.me?.conn).toBe('conn-2')
+    expect(result.current.role).toBe('viewer')
+  })
+
+  it('keeps the latest locks snapshot and clears it on disconnect', async () => {
+    const { result, provider } = await connected()
+    const holder = { holderConn: 'conn-9', subject: 'user:2', name: 'Luis', colorIndex: 5 }
+    say(provider, { t: 'locks', locks: { l1: holder } })
+    expect(result.current.locks).toEqual({ l1: holder })
+
+    // An unchanged holder keeps its identity, so memoised rows skip the re-render.
+    const before = result.current.locks.l1
+    say(provider, { t: 'locks', locks: { l1: { ...holder }, l2: { ...holder } } })
+    expect(result.current.locks.l1).toBe(before)
+
+    act(() => provider.config.onStatus({ status: 'disconnected' }))
+    expect(result.current.locks).toEqual({})
+  })
+
+  it('ignores malformed and unknown stateless messages', async () => {
+    const { result, provider } = await connected()
+    act(() => provider.config.onStateless({ payload: 'not json' }))
+    say(provider, { t: 'hello', conn: 1 })
+    say(provider, { t: 'something-else' })
+    expect(result.current.me).toBeNull()
+    expect(result.current.locks).toEqual({})
+  })
+
+  it('session-ended is still terminal and drops the locks', async () => {
+    const { result, provider } = await connected()
+    say(provider, { t: 'locks', locks: { l1: { holderConn: 'c', subject: 's', name: 'n', colorIndex: 1 } } })
+    say(provider, { t: 'session-ended' })
+    expect(result.current.status).toBe('ended')
+    expect(result.current.locks).toEqual({})
   })
 })
