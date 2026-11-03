@@ -82,3 +82,31 @@ export type CollabSession = {
 export type CollabKickResult = { revokedInviteId: string | null }
 
 export type CollabJoinResult = { ok: true; publicId: string; role: CollabRole }
+
+// ── Presence (Hocuspocus awareness; never written to the Y.Doc) ──────────────
+
+export type PointerState =
+  | { area: 'lines'; lineId: string; xRatio: number; yRatio: number }
+  | { area: 'waveform'; time: number }
+  | null
+
+/** `t` is the player position in seconds when it was published; `rate` is the playback speed. */
+export type PlayheadState = { t: number; playing: boolean; rate: number }
+
+/** Another participant, as seen through awareness. Self is never included. */
+export type CollabPeer = {
+  clientId: number
+  name: string
+  colorIndex: number
+  role: CollabRole
+  pointer: PointerState
+  playhead: PlayheadState | null
+  activeLineId: string | null
+  /** Seconds of the media loaded in their player, null when none. */
+  duration: number | null
+  /** Local time (ms) the playhead was received, the base for extrapolating it. */
+  receivedAt: number
+}
+
+/** A collaborator's cursor line as a row sees it. The object is reused while its fields are unchanged. */
+export type RemoteActiveView = { name: string; colorIndex: number }
