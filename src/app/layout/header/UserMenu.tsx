@@ -2,7 +2,7 @@ import { profilePath } from '@/features/profile/profile-path';
 import { StaffRing } from '@/shared/ui/StaffRing';
 import { InitialsAvatar } from '@/shared/ui/InitialsAvatar';
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { guardedLinkClick } from './guarded-link-click';
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
@@ -18,7 +18,8 @@ import { NotificationBell } from '@/features/notifications/components/Notificati
 import type { AuthUser } from '@/features/auth/auth.types';
 import { isStaff, userHasPermission } from '@/features/auth/permissions';
 import { useReportCount } from '@/features/admin/report-count';
-import { adminHostUrl, canUseAdminHost } from '@/shared/utils/host';
+import { adminHostUrl, canUseAdminHost, isAdminHost } from '@/shared/utils/host';
+import { isAdminPathname } from '@/features/admin/admin-nav';
 import { THEMES } from './theme-options';
 
 interface UserMenuProps {
@@ -40,6 +41,9 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
   const [counts, setCounts] = useState({ library: 0, uploads: 0, requests: 0 });
   const [menuOpen, setMenuOpen] = useState(false);
   const staff = isStaff(user?.permissions);
+  // The dashboard's own header carries this menu too; a link to itself would only point at a wrong host.
+  const { pathname } = useLocation();
+  const inAdmin = isAdminHost() || isAdminPathname(pathname);
   const openReports = useReportCount(userHasPermission(user?.permissions, 'users.ban'));
   // What waits on staff in the dashboard: requests to review and reported content.
   const pending = counts.requests + openReports;
@@ -65,7 +69,7 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
 
   return (
     <>
-      {staff && (
+      {staff && !inAdmin && (
         <Tip content={pending > 0 ? t('admin.header.dashboardPending', { count: pending }) : t('admin.dashboard.title')}>
           <Button asChild variant="ghost" size="icon" className="relative size-10 lg:size-10 coarse:size-11">
             {(() => {

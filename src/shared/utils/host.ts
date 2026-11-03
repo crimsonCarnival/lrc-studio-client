@@ -34,7 +34,7 @@ export function canUseAdminHost(): boolean {
 
 /** Absolute URL for `path` on the admin host, derived by swapping the leading label. */
 export function adminHostUrl(path = '/'): string {
-  const host = window.location.hostname.replace(/^(www|m)\./i, '');
+  const host = window.location.hostname.replace(/^(www|m|admin)\./i, '');
   return `${window.location.protocol}//admin.${host}${window.location.port ? `:${window.location.port}` : ''}${path}`;
 }
 
