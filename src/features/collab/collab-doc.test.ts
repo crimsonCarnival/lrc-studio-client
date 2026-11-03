@@ -193,4 +193,29 @@ describe('collab-doc', () => {
     expect(() => applyLinesToDoc(doc, lines, next)).not.toThrow()
     expect(ids(docToLines(doc, lines)).sort()).toEqual(['a', 'b', 'c', 'd', 'n'])
   })
+
+  it('a local edit of one field never reverts a remote edit of another field on the same line', () => {
+    const doc = seeded([mk('a', 'one', { timestamp: null })])
+    const prev = docToLines(doc, [])
+    // A collaborator retypes the text; this client has not seen it yet.
+    const remote = new Y.Doc()
+    Y.applyUpdate(remote, Y.encodeStateAsUpdate(doc))
+    ;(remote.getMap('lines').get('a') as Y.Map<unknown>).set('text', 'theirs')
+    Y.applyUpdate(doc, Y.encodeStateAsUpdate(remote), 'remote')
+    // Local tap on the same line, built from the stale state.
+    const next = prev.map((l) => ({ ...l, timestamp: 12.5 }))
+    applyLinesToDoc(doc, prev, next)
+    const [line] = docToLines(doc, [])
+    expect(line.text).toBe('theirs')
+    expect(line.timestamp).toBe(12.5)
+  })
+
+  it('a field cleared locally is deleted even when other fields are untouched', () => {
+    const doc = seeded([mk('a', 'one', { secondary: 'x' })])
+    const prev = docToLines(doc, [])
+    const next = prev.map((l) => { const c = { ...l }; delete c.secondary; return c })
+    applyLinesToDoc(doc, prev, next)
+    expect(docToLines(doc, [])[0].secondary).toBeUndefined()
+    expect(docToLines(doc, [])[0].text).toBe('one')
+  })
 })

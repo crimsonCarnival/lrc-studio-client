@@ -70,9 +70,12 @@ function lisIndices(seq: string[]): Set<number> {
   return out
 }
 
-function writeFields(map: LineMap, line: EditorLine): void {
+// With `before` (the line as this client last saw it), only fields this edit changed
+// are written, so a field a collaborator changed meanwhile is never reverted to a stale value.
+function writeFields(map: LineMap, line: EditorLine, before?: EditorLine): void {
   for (const f of LINE_FIELDS) {
     const v = line[f]
+    if (before && deepEqual(before[f], v)) continue
     if (v === undefined) {
       if (map.has(f)) map.delete(f)
     } else if (!deepEqual(map.get(f), v)) {
@@ -104,7 +107,7 @@ function validKey(v: unknown): v is string {
  * `prev` is the last state this client saw, so it scopes what this edit may touch:
  * only ids in prev and not in next are deleted (a remote insert not yet in prev survives),
  * only ids in next and not in prev are inserted (a remote delete is not resurrected), and
- * fields are written only to lines still in the doc. Lines outside the longest run that kept
+ * fields are written only to lines still in the doc, and only those that differ from prev. Lines outside the longest run that kept
  * its relative order get a new `order`. Every line must have an id (see ensureLineIds).
  *
  * Field values are shared by reference between the doc and React state: treat them as immutable.
@@ -160,7 +163,8 @@ export function applyLinesToDoc(doc: Y.Doc, prev: EditorLine[], next: EditorLine
       }
       const o = newOrder.get(idx)
       if (o !== undefined) map.set('order', o)
-      if (prevById.get(id) !== line) writeFields(map, line)
+      const before = prevById.get(id)
+      if (before !== line) writeFields(map, line, before)
     })
   }, LOCAL_ORIGIN)
 }
