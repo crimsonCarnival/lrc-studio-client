@@ -3,6 +3,7 @@ import { connectSocket } from '@/app/socket.client';
 import { startStamp, startStampWithFile, getStampJob, cancelStampJob, type StampResultDto, type AsrJobDto } from '../services/asr.service';
 import type { EditorLine } from '@/features/editor/editor.types';
 import { alignLineStart } from '../services/editor.service';
+import { sentIndexResolver } from '../utils/sent-lines';
 import { NoTabAudioError, recordTabAudio } from '@/features/visualizer/audio-source';
 import type { TabRecording } from '@/features/visualizer/audio-source';
 
@@ -81,6 +82,9 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
   // Lines length at job start — if it drifts before the result lands (insert/remove/
   // reorder mid-job), index-based results would land on the wrong lines.
   const startLinesLengthRef = useRef<number>(0);
+  // The lines the job was started against. Result indices refer to this array, and
+  // are mapped back to current lines through it (by id), never applied by position.
+  const startLinesRef = useRef<EditorLine[]>([]);
   // Set when cancel() is called while still in 'starting' (no jobId yet); consumed
   // once start() resolves so the just-created job is cancelled instead of applied.
   const cancelRequestedRef = useRef(false);
@@ -93,13 +97,15 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
   }, [phase]);
 
 
-  // NOTE: results are index-based against the flat lines array captured at start().
-  // The consuming UI must prevent line insert/remove/reorder while a job is active,
-  // otherwise stamps land on the wrong lines.
+  // Results are index-based against the lines captured at start(). They are matched
+  // back to the current lines by id (sentIndexResolver), so an insert, delete or
+  // reorder while the job ran (a collaborator's, or the user's) cannot move a stamp
+  // onto another line; lines added since are left alone.
   const applyResult = useCallback(
     (result: StampResultDto[]) => {
       const current = linesRef.current;
       const byIndex = new Map(result.map((r) => [r.index, r]));
+      const startIndexOf = sentIndexResolver(startLinesRef.current);
       const conf = new Map<string, ConfidenceInfo>();
       const isWordsMode = editorMode === 'words';
 
@@ -114,8 +120,9 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
         return [id, { ...line, id }];
       };
 
-      const next = current.map((line, i) => {
-        const r = byIndex.get(i);
+      const next = current.map((line) => {
+        const startIndex = startIndexOf(line);
+        const r = startIndex === undefined ? undefined : byIndex.get(startIndex);
         if (!r || line.type === 'section') return line;
         if (r.timestamp === null) {
           // Unmatched line: never stamp, but surface it for review ('none' count/filter).
@@ -181,9 +188,13 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
     (result: StampResultDto[]) => {
       setPhase('applying');
       const linesDrifted = linesRef.current.length !== startLinesLengthRef.current;
+      const startIndexOf = sentIndexResolver(startLinesRef.current);
       const wouldOverwrite =
         applyMode === 'all' &&
-        linesRef.current.some((l, i) => l.timestamp != null && result.some((r) => r.index === i && r.timestamp !== null));
+        linesRef.current.some((l) => {
+          const i = startIndexOf(l);
+          return l.timestamp != null && i !== undefined && result.some((r) => r.index === i && r.timestamp !== null);
+        });
       if (linesDrifted || wouldOverwrite) {
         setPendingResult(result);
         return; // wait for user confirmation
@@ -246,6 +257,7 @@ export function useAutoStamp({ lines, setLines, uploadId, getLocalFile, getYoutu
     jobIdRef.current = null; // a stale previous job id must never be cancelled by mistake
     jobSourceRef.current = null;
     startLinesLengthRef.current = linesRef.current.length;
+    startLinesRef.current = linesRef.current;
     const isWordsMode = editorMode === 'words';
     const payload = linesRef.current
       .map((line, index) => {

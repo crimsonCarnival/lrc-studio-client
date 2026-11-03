@@ -26,6 +26,7 @@ import { hasCJK } from '@/shared/utils/furigana';
 import { loadCjkFont } from '@/app/cjk-font';
 import { creditsOf } from '@/features/artists/artist-credits';
 import { sectionsToFlat } from '@/features/editor/utils/sections';
+import { applyInferredEndTimes, sentIndexResolver } from '@/features/editor/utils/sent-lines';
 import { uploadToRestoredMedia } from '@/shared/utils/media-hydration';
 import type { AuthUser as AuthUserType } from '@/features/auth/auth.types';
 import type { EditorLine } from '@/features/editor/editor.types';
@@ -709,20 +710,17 @@ export function useAppState(user?: AuthUserType | null) {
     (mode) => {
       setEditorModeRaw(mode);
       if (mode === 'srt' && editorMode !== 'srt') {
+        // Results come back by position; the lines may have moved by the time they do
+        // (a collaborator's insert, or the user's own edit), so they are matched back to
+        // the lines that were sent and only endTime is written.
+        const sentIndexOf = sentIndexResolver(lines);
         lyrics.inferEndTimes({
           lines,
           duration,
           srtConfig: settings.editor?.srt,
           publicId: activepublicIdRef.current,
         }).then(({ lines: inferred }) => {
-          setLines(prev =>
-            prev.map((line, i) => {
-              const inf = inferred[i];
-              if (!inf) return line;
-              // Preserve word-level data (readings + word timestamps) — server only infers endTime
-              return { ...inf, words: line.words, secondaryWords: line.secondaryWords };
-            })
-          );
+          setLines((prev: EditorLine[]) => applyInferredEndTimes(prev, sentIndexOf, inferred ?? []));
         }).catch((err) => {
           console.error('Failed to infer end times', err);
         });
