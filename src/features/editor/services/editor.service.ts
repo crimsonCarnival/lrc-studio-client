@@ -234,6 +234,41 @@ export function applyMark(params: ApplyMarkParams): ApplyMarkResult {
   return result.nextActiveLineIndex == null ? { ...result, nextActiveLineIndex: target } : result;
 }
 
+/**
+ * Re-applies a mark that was computed against `params.lines` onto `latest`, the lines as they
+ * stand when the write finally lands (a collaborator's edit or a second tap may have come in
+ * between). Every index the mark refers to — the cursor, the awaited SRT end and the focused
+ * timestamp — is re-found by line id, so the stamp lands on the line the user tapped, never on
+ * whatever now sits at its old position. The captured `time` is kept as is. Returns `latest`
+ * untouched when the line the mark writes to no longer exists.
+ */
+export function reapplyMarkById(params: ApplyMarkParams, latest: EditorLine[]): EditorLine[] {
+  const { lines, activeLineIndex, awaitingEndMark, focusedTimestamp } = params;
+  if (latest === lines) return applyMark(params).nextLines;
+  const remap = (i: number): number => {
+    const id = lines[i]?.id;
+    return id == null ? -1 : latest.findIndex((l) => l.id === id);
+  };
+  let active = remap(activeLineIndex);
+  let focused = focusedTimestamp ?? null;
+  if (focused) {
+    const at = remap(focused.lineIndex);
+    if (at < 0) return latest;
+    focused = { ...focused, lineIndex: at };
+    // The focused branch only reads the cursor for its bounds check.
+    if (active < 0) active = at;
+  } else if (active < 0) {
+    return latest;
+  }
+  return applyMark({
+    ...params,
+    lines: latest,
+    activeLineIndex: active,
+    awaitingEndMark: awaitingEndMark != null && awaitingEndMark === activeLineIndex ? active : null,
+    focusedTimestamp: focused,
+  }).nextLines;
+}
+
 function applyMarkAt({ lines, activeLineIndex, time, editorMode, activeWordIndex = 0, stampTarget = 'main', awaitingEndMark, focusedTimestamp, settings, forceAdvance = false }: ApplyMarkParams): ApplyMarkResult {
   if (activeLineIndex >= lines.length) {
     return { nextLines: lines, nextActiveLineIndex: null, nextAwaitingEndMark: undefined };

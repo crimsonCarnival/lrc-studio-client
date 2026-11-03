@@ -13,6 +13,7 @@ import {
   clearAllTimestamps,
   clearLineTimestamp,
   applyMark,
+  reapplyMarkById,
   detectDuplicateTimestamps,
   normalizeLineMode,
   clampWordTime,
@@ -698,20 +699,16 @@ export function useEditor({
     // `result` comes from linesRef (the last committed lines), so the index state set
     // below matches what the user saw. If the lines moved on before this update applies
     // (a collaborator's edit that has not rendered yet, or a second tap in the same
-    // frame), the mark is re-applied to the latest lines on the same line, found by id,
-    // instead of replacing them with a stale array that would drop the other change.
-    const markedId = currentLines[idx]?.id;
-    const writeMark = () => setLines((prev) => {
-      if (prev === currentLines) return result.nextLines;
-      const at = markedId == null ? -1 : prev.findIndex((l) => l.id === markedId);
-      if (at < 0) return prev;
-      return applyMark({
-        ...markArgs,
-        lines: prev,
-        activeLineIndex: at,
-        awaitingEndMark: awaitingEndMark === idx ? at : awaitingEndMark,
-      }).nextLines;
-    });
+    // frame), the mark is re-applied to the latest lines on the same line, found by id
+    // (the focused timestamp's line included), instead of replacing them with a stale array
+    // that would drop the other change. A focused timestamp writes to its own line, so that
+    // is the line whose lock the write needs.
+    const markedId = currentLines[markArgs.focusedTimestamp?.lineIndex ?? idx]?.id;
+    const writeMark = () => setLines((prev) => (
+      prev === currentLines
+        ? result.nextLines
+        : reapplyMarkById({ ...markArgs, lines: currentLines, activeLineIndex: idx, awaitingEndMark }, prev)
+    ));
     // In a session the write waits for the line's lock when it is not held yet. `time` was
     // captured above and rides in markArgs, so a late grant still stamps the instant of the
     // keypress, and the updater re-finds the line by id. Nothing here awaits the network;

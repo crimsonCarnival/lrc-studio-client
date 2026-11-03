@@ -19,6 +19,7 @@ import {
   wordTimeBounds,
   clampWordTime,
   alignLineStart,
+  reapplyMarkById,
 } from './editor.service';
 import type { EditorLine } from '@/features/editor/editor.types';
 
@@ -472,6 +473,48 @@ describe('applyMark — focused timestamp override', () => {
     const lines = [line('one')];
     const res = mark({ lines, time: 4, focusedTimestamp: { lineIndex: 9, type: 'start' } });
     expect(res.nextLines[0].timestamp).toBeNull();
+  });
+});
+
+describe('reapplyMarkById — the lines moved on between the tap and the write', () => {
+  const params = (over: Partial<Parameters<typeof applyMark>[0]>) =>
+    ({ activeLineIndex: 0, time: 7, editorMode: 'lrc', settings: settings(), ...over } as Parameters<typeof applyMark>[0]);
+
+  it('stamps the focused line by id after a remote insert above it', () => {
+    const tapped = [line('a', { id: 'a' }), line('b', { id: 'b' })];
+    const latest = [line('remote', { id: 'r' }), ...tapped];
+    const next = reapplyMarkById(params({ lines: tapped, focusedTimestamp: { lineIndex: 1, type: 'start' } }), latest);
+    expect(next.find((l) => l.id === 'b')?.timestamp).toBe(7);
+    expect(next.find((l) => l.id === 'a')?.timestamp).toBeNull();
+    expect(next.find((l) => l.id === 'r')?.timestamp).toBeNull();
+  });
+
+  it('drops the write when the focused line was deleted remotely', () => {
+    const tapped = [line('a', { id: 'a' }), line('b', { id: 'b' })];
+    const latest = [line('a', { id: 'a' })];
+    expect(reapplyMarkById(params({ lines: tapped, focusedTimestamp: { lineIndex: 1, type: 'start' } }), latest)).toBe(latest);
+  });
+
+  it('stamps the active line by id after a remote insert above it', () => {
+    const tapped = [line('a', { id: 'a' }), line('b', { id: 'b' })];
+    const latest = [line('remote', { id: 'r' }), ...tapped];
+    const next = reapplyMarkById(params({ lines: tapped, activeLineIndex: 1 }), latest);
+    expect(next.find((l) => l.id === 'b')?.timestamp).toBe(7);
+    expect(next.find((l) => l.id === 'a')?.timestamp).toBeNull();
+  });
+
+  it('keeps the awaited SRT end on the same line after a remote insert', () => {
+    const tapped = [line('a', { id: 'a', timestamp: 1 }), line('b', { id: 'b' })];
+    const latest = [line('remote', { id: 'r' }), ...tapped];
+    const next = reapplyMarkById(params({ lines: tapped, editorMode: 'srt', activeLineIndex: 0, awaitingEndMark: 0 }), latest);
+    const a = next.find((l) => l.id === 'a');
+    expect(a?.timestamp).toBe(1);
+    expect(a?.endTime).toBe(7);
+  });
+
+  it('applies straight onto the tapped lines when nothing moved', () => {
+    const tapped = [line('a', { id: 'a' })];
+    expect(reapplyMarkById(params({ lines: tapped }), tapped)[0].timestamp).toBe(7);
   });
 });
 
