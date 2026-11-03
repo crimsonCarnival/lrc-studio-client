@@ -123,6 +123,12 @@ export default defineConfig(({ mode }) => ({
         target: 'http://localhost:3000',
         ws: true,
       },
+      // Collab (Hocuspocus) WebSocket. A regex key so only the exact path is
+      // proxied, never a profile page of an account that happens to be named "collab".
+      '^/collab(?:[?]|$)': {
+        target: 'http://localhost:3000',
+        ws: true,
+      },
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,

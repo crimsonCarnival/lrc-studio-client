@@ -107,9 +107,22 @@ export function isProjectViewPath(pathname: string): boolean {
   return PROJECT_VIEW_PATH.test(pathname);
 }
 
-/** The editor workspace: a saved project's `/edit` page, or the local draft. */
+// A live collab session. The id charset and length mirror the server's isValidPublicId.
+const SESSION_PATH = /^\/session\/([A-Za-z0-9_-]{1,32})$/;
+
+/** `/session/:publicId`, the editor workspace backed by the shared doc. */
+export function sessionPath(publicId: string): string {
+  return `/session/${publicId}`;
+}
+
+/** The publicId of a `/session/:publicId` path, or null for any other path. */
+export function sessionPublicIdFromPath(pathname: string): string | null {
+  return SESSION_PATH.exec(pathname)?.[1] ?? null;
+}
+
+/** The editor workspace: a saved project's `/edit` page, the local draft, or a collab session. */
 export function isEditorPath(pathname: string): boolean {
-  return PROJECT_EDIT_PATH.test(pathname) || pathname === '/project/local';
+  return PROJECT_EDIT_PATH.test(pathname) || pathname === '/project/local' || SESSION_PATH.test(pathname);
 }
 
 /** Any canonical project path — view, `/edit` or `/fork`. */

@@ -1,3 +1,5 @@
+import type { EditorLine } from '../editor/editor.types'
+
 export type CollabRole = 'owner' | 'editor' | 'viewer'
 
 /** Mirrors the server's CollabMeta (the shared Y.Doc `meta` map). */
@@ -21,3 +23,41 @@ export type CollabMe = {
   role: CollabRole
   clientId: number
 }
+
+/** Same updater shape useHistory's setter accepts. */
+export type LinesUpdater = EditorLine[] | ((prev: EditorLine[]) => EditorLine[])
+
+/** Connection state of the shared doc. 'ended' and 'forbidden' are terminal: the provider stops reconnecting. */
+export type CollabStatus = 'connecting' | 'synced' | 'offline' | 'ended' | 'forbidden'
+
+// ── Server contract (GraphQL `collab` schema and POST /collab/join) ──────────
+
+export type CollabParticipant = {
+  /** `user:<id>` or `guest:<id>`. */
+  subject: string
+  name: string
+  role: CollabRole
+  colorIndex: number
+  /** Owner-only, guests only; null otherwise. */
+  inviteId: string | null
+}
+
+export type CollabInvite = {
+  id: string
+  role: Exclude<CollabRole, 'owner'>
+  revoked: boolean
+  createdAt: string
+}
+
+export type CollabSession = {
+  id: string
+  publicId: string
+  allowGuests: boolean
+  members: CollabParticipant[]
+  /** Empty unless the caller is the owner. */
+  invites: CollabInvite[]
+}
+
+export type CollabKickResult = { revokedInviteId: string | null }
+
+export type CollabJoinResult = { ok: true; publicId: string; role: CollabRole }

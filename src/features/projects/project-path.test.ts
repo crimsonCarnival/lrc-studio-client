@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   slugify, projectPath, projectEditPath, publicIdFromSlugId,
   isProjectViewPath, isEditorPath, isProjectPath, canonicalPathFromParams,
+  sessionPublicIdFromPath, sessionPath,
 } from './project-path';
 
 // These cases are copied from the server's project-slug tests: the two
@@ -122,5 +123,24 @@ describe('route-shape predicates', () => {
       expect(isProjectPath(p)).toBe(false);
     }
     expect(isEditorPath('/project/new')).toBe(false);
+  });
+});
+
+describe('collab session paths', () => {
+  it('builds and parses /session/:publicId', () => {
+    expect(sessionPath('V1StGXR8_Z')).toBe('/session/V1StGXR8_Z');
+    expect(sessionPublicIdFromPath('/session/V1StGXR8_Z')).toBe('V1StGXR8_Z');
+  });
+
+  it('treats a session as the editor workspace but not as a project path', () => {
+    expect(isEditorPath('/session/V1StGXR8_Z')).toBe(true);
+    expect(isProjectPath('/session/V1StGXR8_Z')).toBe(false);
+  });
+
+  it('rejects anything that is not exactly one safe id segment', () => {
+    for (const p of ['/session', '/session/', '/session/a/b', '/session/a b', '/x/session/abc', '/session/..']) {
+      expect(sessionPublicIdFromPath(p)).toBeNull();
+      expect(isEditorPath(p)).toBe(false);
+    }
   });
 });

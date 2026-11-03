@@ -33,6 +33,7 @@ import nav from './nav.js';
 import guide from './guide.js';
 import artists from './artists.js';
 import reports from './reports.js';
+import collab from './collab.js';
 
 export default {
   translation: {
@@ -71,5 +72,6 @@ export default {
     guide,
     artists,
     reports,
+    collab,
   }
 };

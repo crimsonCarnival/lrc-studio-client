@@ -1,5 +1,5 @@
 import {
-  Suspense, lazy, useEffect, useRef, useCallback, useMemo, memo
+  Suspense, lazy, useEffect, useRef, useCallback, useMemo, useState, memo
 } from 'react';
 import type { ComponentProps, ReactNode } from 'react';
 import React from 'react';
@@ -19,7 +19,10 @@ import useInputMethod from '@/shared/hooks/useInputMethod';
 import type { AppState } from '@/app/useAppState';
 import type { AuthUser } from '@/features/auth/auth.types';
 import { isApiError } from '@/types';
-import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle } from '@features/projects/project-path';
+import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle, sessionPath } from '@features/projects/project-path';
+import { getSession } from '@features/collab/collab.service';
+import type { CollabStatus } from '@features/collab/collab.types';
+import { Button } from '@ui/button';
 import { artistDisplay, artistRoster, type ArtistCredit } from '@features/artists/artist-credits';
 import { LogoLoader } from '@ui/LogoLoader';
 
@@ -167,6 +170,50 @@ function EditorContainer({ loadProject, activepublicId, isProjectLoading, projec
     }
   }, [isProjectLoading, projectUserId, activepublicId, id, user, navigate, accountName, slugId]);
 
+  // While a live session runs, the project is edited through it: solo saves are
+  // refused (collab_active), so send the owner to the session instead.
+  const signedInId = user && !user.isGuest ? user.id : null;
+  useEffect(() => {
+    if (!id || !signedInId) return;
+    let cancelled = false;
+    getSession(id)
+      .then((session) => { if (!cancelled && session) navigate(sessionPath(id), { replace: true }); })
+      .catch((err) => console.error('[collab] session lookup failed', err));
+    return () => { cancelled = true; };
+  }, [id, signedInId, navigate]);
+
+  return children;
+}
+
+interface SessionWorkspaceProps {
+  /** False when the :publicId segment is not a valid project id (nothing connects). */
+  valid: boolean;
+  status: CollabStatus;
+  hasDoc: boolean;
+  t: TFunction;
+  navigate: NavigateFunction;
+  children: ReactNode;
+}
+
+// /session/:publicId. Mounted with key={publicId}, so "has synced" resets per session.
+function SessionWorkspace({ valid, status, hasDoc, t, navigate, children }: SessionWorkspaceProps) {
+  // Until the first sync the doc is empty; editing it then would merge a second
+  // copy of the lyrics in, so the editor waits. Later disconnects keep it open (offline edits merge).
+  const [hasSynced, setHasSynced] = useState(false);
+  if (status === 'synced' && hasDoc && !hasSynced) setHasSynced(true);
+
+  if (!valid) return <NotFoundPage type="general" />;
+  if (status === 'forbidden') return <NotFoundPage type="forbidden" />;
+  if (status === 'ended') {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4 text-center">
+        <h1 className="text-lg font-semibold text-zinc-100">{t('collab.session.endedTitle')}</h1>
+        <p className="text-sm text-zinc-400 max-w-md">{t('collab.session.endedBody')}</p>
+        <Button variant="outline" onClick={() => navigate('/home')}>{t('collab.session.goHome')}</Button>
+      </div>
+    );
+  }
+  if (!hasSynced) return <SkeletonEditor />;
   return children;
 }
 
@@ -292,8 +339,14 @@ export function AppRouter({
     buildProjectPayload,
     restoredMedia,
     uploadedAudio,
+    sessionPublicId,
+    collabSession,
     t,
   } = appState;
+  const collabStatus = collabSession.status;
+  const hasCollabDoc = collabSession.doc !== null;
+  // In a session the editor works on the session's project, whatever project was open before.
+  const editorPublicId = sessionPublicId ?? activepublicId;
 
   // Song and artist as the user typed them; the media title (file or video name) is only a fallback.
   const meta = projectMetadata as { name?: string; songName?: string; artists?: ArtistCredit[]; songArtist?: string } | undefined;
@@ -381,7 +434,7 @@ export function AppRouter({
     onShowPreview: showPreviewView,
     uploadedAudio,
     hasMedia,
-    activepublicId,
+    activepublicId: editorPublicId,
     onTogglePublicView: handleViewPublic,
     isPlaying,
   } as unknown as EditorProps), [
@@ -402,7 +455,7 @@ export function AppRouter({
     projectMetadata, rosterNames,
     playerSlot,
     showPreviewView,
-    uploadedAudio, hasMedia, activepublicId, handleViewPublic, isPlaying,
+    uploadedAudio, hasMedia, editorPublicId, handleViewPublic, isPlaying,
   ]);
 
   const previewProps = useMemo(() => ({
@@ -502,6 +555,11 @@ export function AppRouter({
             <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
           )}
         </EditorContainer>
+      } />
+      <Route path="session/:publicId" element={
+        <SessionWorkspace key={sessionPublicId ?? ''} valid={sessionPublicId !== null} status={collabStatus} hasDoc={hasCollabDoc} t={t} navigate={navigate}>
+          <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
+        </SessionWorkspace>
       } />
       <Route path="home" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} /></div>}>

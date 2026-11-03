@@ -14,6 +14,9 @@ import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
  */
 export function useProjectActions({
   setLines,
+  // The editing setter, for user actions; load/restore/reset keep `setLines`
+  // (a collab session must never receive a project load). Defaults to setLines.
+  setEditLines = setLines,
   setSyncMode,
   setActiveLineIndex,
   setEditorModeRaw,
@@ -261,11 +264,11 @@ export function useProjectActions({
   // ── Remove all lyrics ─────────────────────────────────────────────────────
   const handleRemoveAllLyrics = useCallback(() => {
     requestConfirm(t('confirm.removeLyrics'), () => {
-      setLines([]);
+      setEditLines([]);
       setActiveLineIndex(0);
       toast.success(t('editor.toast.allRemoved'));
     }, { title: t('confirm.removeLyricsTitle'), variant: 'danger' });
-  }, [setLines, setActiveLineIndex, requestConfirm, t, toast]);
+  }, [setEditLines, setActiveLineIndex, requestConfirm, t, toast]);
 
   // ── Reset full app state ──────────────────────────────────────────────────
   const resetAppState = useCallback(() => {

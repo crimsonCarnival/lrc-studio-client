@@ -213,6 +213,7 @@ export function useManualSave({
   uploadedAudio,
   setUploadedAudio,
   isSharedProjectRef,
+  inSessionRef,
   activepublicIdRef,
   isCreatingProjectRef,
   sessionUploadIdRef,
@@ -265,6 +266,8 @@ export function useManualSave({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleManualSave = useCallback(async (overrides: { title?: string; metadata?: any; isPublic?: boolean; lines?: any[]; editorMode?: string; syncMode?: boolean; coverImage?: string } = {}) => {
     if (isCreatingProjectRef.current) return;
+    // No-op in a collab session: the shared doc is persisted server-side (see useAutosave).
+    if (inSessionRef?.current) return;
     const key = isSharedProjectRef.current ? STORAGE_KEYS.SHARED_PROJECT : STORAGE_KEYS.PROJECT;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload = buildProjectPayload() as Record<string, any>;
@@ -430,7 +433,7 @@ export function useManualSave({
       };
       performCreate();
     }
-  }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, uploadedAudio, duration, t, isSharedProjectRef, activepublicIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setSaveFailed, setActivepublicId, setUploadedAudio, executeRecaptcha, onSaveSuccess, setForkedFrom, settings?.advanced?.autoSaveIndicator]);
+  }, [buildProjectPayload, mediaTitle, projectMetadata, editorMode, activeLineIndex, uploadedAudio, duration, t, isSharedProjectRef, inSessionRef, activepublicIdRef, isCreatingProjectRef, sessionUploadIdRef, lastServerSnapshotRef, setIsAutosaving, setIsSaving, setSaveFailed, setActivepublicId, setUploadedAudio, executeRecaptcha, onSaveSuccess, setForkedFrom, settings?.advanced?.autoSaveIndicator]);
 
   const manualSaveRef = useRef<typeof handleManualSave | null>(null);
   useLayoutEffect(() => { manualSaveRef.current = handleManualSave; });
