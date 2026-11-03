@@ -180,11 +180,11 @@ export default function VirtualizedLineList({
   );
   // Tell the others which line the cursor is on (the cursor, not the playing line).
   const cursorLineId = lines[activeLineIndex]?.id ?? null;
-  useEffect(() => {
-    if (!presence) return;
-    presence.setActiveLine(cursorLineId);
-    return () => presence.setActiveLine(null);
-  }, [presence, cursorLineId]);
+  useEffect(() => { presence?.setActiveLine(cursorLineId); }, [presence, cursorLineId]);
+  // Cleared only when the list goes away, not on every cursor move.
+  const presenceRef = useRef(presence);
+  useEffect(() => { presenceRef.current = presence; });
+  useEffect(() => () => presenceRef.current?.setActiveLine(null), []);
   const handlePresencePointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     if (!presence) return;
     const row = (e.target as HTMLElement).closest<HTMLElement>('[data-line-id]');
@@ -550,7 +550,8 @@ export default function VirtualizedLineList({
                   // like the lyrics vanishing. Sections carry the attribute on the inner,
                   // sticky element instead — the one that actually has the row's height.
                   data-index={isSection ? undefined : virtualRow.index}
-                  data-line-id={presence && line.id != null ? line.id : undefined}
+                  // Sections carry it on the inner sticky element instead: this wrapper spans the whole block.
+                  data-line-id={presence && !isSection && line.id != null ? line.id : undefined}
                   ref={isSection ? undefined : virtualizer.measureElement}
                   style={{
                     position: 'absolute',
@@ -569,6 +570,7 @@ export default function VirtualizedLineList({
                     <div
                       ref={virtualizer.measureElement}
                       data-index={virtualRow.index}
+                      data-line-id={presence && line.id != null ? line.id : undefined}
                       style={{ position: 'sticky', top: 0, pointerEvents: 'auto' }}
                     >
                       <EditorLineItem
