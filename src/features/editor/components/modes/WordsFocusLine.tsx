@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
-import type { ComponentProps, MouseEvent as ReactMouseEvent } from 'react';
+import type { ComponentProps, MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tip } from '@ui/tip';
 import ResponsiveModal from '@/shared/ui/ResponsiveModal';
@@ -11,6 +11,10 @@ import { EditorLineContextMenu } from '../line/EditorLineContextMenu';
 import LineActionToolbar from '../line/LineActionToolbar';
 import LineTextEditingForm from '../line/LineTextEditingForm';
 import { WordsModeChips } from './WordsModeColumn';
+import { usePresenceActions, useRemoteActiveLines } from '@/features/collab/collab-presence-context';
+import { RemotePointers } from '@/features/collab/components/RemotePointers';
+import { pointerOnRow } from '@/features/collab/components/find-row';
+import { collabColor } from '@/features/collab/collab-color';
 
 type LineItemProps = ComponentProps<typeof EditorLineItem>;
 
@@ -117,7 +121,25 @@ export const WordsFocusLine = memo(function WordsFocusLine({
     player.play?.();
   }, [line?.timestamp, playerRef]);
 
+  // Collab presence (inert outside a session): the pointer is a fraction of this line's content
+  // box, as the line list's is of its row, so it lands on the same lyric in either view.
+  const presence = usePresenceActions();
+  const remoteActive = useRemoteActiveLines();
+  const frameRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const lineId = line?.id;
+  const handlePointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!presence || !lineId || (e.pointerType !== 'mouse' && e.pointerType !== 'pen')) return;
+    const el = contentRef.current;
+    if (!el) return;
+    const { clientX, clientY } = e;
+    presence.setPointer(() => pointerOnRow(el, lineId, clientX, clientY));
+  }, [presence, lineId]);
+  const handlePointerLeave = useCallback(() => presence?.setPointer(null), [presence]);
+
   if (!line || line.type === 'section') return null;
+
+  const remoteHere = line.id != null ? remoteActive?.[line.id] : undefined;
 
   const invalidSingers = validateLineSingers(lines, i);
 
@@ -137,8 +159,24 @@ export const WordsFocusLine = memo(function WordsFocusLine({
       songArtists={songArtists}
       handleToggleCounterpart={handleToggleCounterpart}
     >
-      <div className="group relative flex items-start gap-2 min-h-14 px-3 py-2.5 rounded-[14px]">
+      <div
+        ref={frameRef}
+        className="group relative flex items-start gap-2 min-h-14 px-3 py-2.5 rounded-[14px]"
+        onPointerMove={presence ? handlePointerMove : undefined}
+        onPointerLeave={presence ? handlePointerLeave : undefined}
+      >
+        {remoteHere && (
+          <span
+            aria-hidden
+            title={t('collab.presence.onLine', { name: remoteHere.name })}
+            className="pointer-events-none absolute inset-0 z-10 rounded-[14px] border border-dashed"
+            style={{ borderColor: collabColor(remoteHere.colorIndex) }}
+          />
+        )}
+        {presence && <RemotePointers scrollRef={frameRef} />}
         <div
+          ref={contentRef}
+          data-line-id={presence && line.id != null ? line.id : undefined}
           className="flex-1 min-w-0 flex flex-col gap-2 overflow-x-hidden pb-0.5 mt-0.5 select-text"
           onDoubleClick={() => {
             setEditingLineIndex(i);

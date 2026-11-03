@@ -18,6 +18,7 @@ import type { ConfidenceInfo } from '@/features/editor/hooks/useAutoStamp';
 import type { LockSnapshot } from '@/features/collab/collab.types';
 import { usePresenceActions, useRemoteActiveLines } from '@/features/collab/collab-presence-context';
 import { RemotePointers } from '@/features/collab/components/RemotePointers';
+import { pointerOnRow } from '@/features/collab/components/find-row';
 
 const ESTIMATED_LINE_HEIGHT = 56;
 const LINE_GAP = 4;
@@ -187,16 +188,7 @@ export default function VirtualizedLineList({
     if (!row || !lineId) { presence.setPointer(null); return; }
     const { clientX, clientY } = e;
     // Measured only for the updates the 50 ms throttle actually sends, not on every move.
-    presence.setPointer(() => {
-      const r = row.getBoundingClientRect();
-      if (r.width === 0 || r.height === 0) return undefined; // the row was virtualised away
-      return {
-        area: 'lines',
-        lineId,
-        xRatio: Math.min(1, Math.max(0, (clientX - r.left) / r.width)),
-        yRatio: Math.min(1, Math.max(0, (clientY - r.top) / r.height)),
-      };
-    });
+    presence.setPointer(() => pointerOnRow(row, lineId, clientX, clientY));
   }, [presence]);
   const handlePresencePointerLeave = useCallback(() => presence?.setPointer(null), [presence]);
   const scrollAlignment = settings.editor?.scroll?.alignment || 'center';
