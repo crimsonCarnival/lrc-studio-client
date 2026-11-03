@@ -159,7 +159,7 @@ export default function JoinSessionPage() {
           onChange={(e) => setName(e.target.value)}
           placeholder={t('collab.join.namePlaceholder')}
           autoComplete="nickname"
-          maxLength={80}
+          maxLength={40}
           autoFocus
           aria-invalid={nameError}
           aria-describedby={nameError ? 'collab-join-name-error' : undefined}

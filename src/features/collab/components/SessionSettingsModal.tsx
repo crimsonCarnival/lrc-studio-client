@@ -263,7 +263,7 @@ export function SessionSettingsModal({ open, onOpenChange, publicId, provider, l
                       )}
                     </span>
                   </span>
-                  <Button variant="outline" onClick={() => forceUnlock(lineId)}>{t('collab.settings.locks.release')}</Button>
+                  <Button variant="outline" disabled={!provider} onClick={() => forceUnlock(lineId)}>{t('collab.settings.locks.release')}</Button>
                 </li>
               ))}
             </ul>
