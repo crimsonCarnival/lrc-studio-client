@@ -26,6 +26,8 @@ import { SearchField } from '@ui/search-field';
 import { LazyImage } from '@ui/LazyImage';
 import { cn } from '@/shared/utils/utils';
 import type { AppSettings } from '@/features/settings/settings.types';
+import { SettingsDraftContext } from './SettingsDraftContext';
+import type { PanelDraft } from './SettingsDraftContext';
 
 type Settings = AppSettings;
 
@@ -133,14 +135,31 @@ export default function SettingsPage() {
   const autoSaveRef = useRef<Settings | null>(null);
   const savedSettingsRef = useRef<Settings>(globalSettings || DEFAULT_SETTINGS);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
-  const pendingNavRef = useRef<string | number | null>(null);
+  const pendingNavRef = useRef<(() => void) | null>(null);
+  // Profile and privacy stage their own edits; they report here so leaving can be guarded.
+  const panelDraftRef = useRef<PanelDraft | null>(null);
+  const [panelDirty, setPanelDirty] = useState(false);
+  const reportPanelDraft = useCallback((draft: PanelDraft | null) => {
+    panelDraftRef.current = draft;
+    setPanelDirty(!!draft?.isDirty);
+  }, []);
 
   // eslint-disable-next-line react-hooks/refs -- intentional: savedSettingsRef holds server-committed state for dirty check
   const isDirty = JSON.stringify(settings) !== JSON.stringify(savedSettingsRef.current);
 
+  // Switching tabs unmounts the panel and its staged edits, so only those need a guard here;
+  // the shared settings state survives a tab switch.
   const setTab = (id: string) => {
-    setSearchTerm('');
-    navigate(`/settings/${id}`, { replace: true });
+    const go = () => {
+      setSearchTerm('');
+      navigate(`/settings/${id}`, { replace: true });
+    };
+    if (panelDraftRef.current?.isDirty) {
+      pendingNavRef.current = go;
+      setShowLeaveModal(true);
+    } else {
+      go();
+    }
   };
 
   const updateSetting = useCallback((key: string, value: unknown) => {
@@ -176,13 +195,13 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty && !settings.advanced?.autoSave?.enabled) {
+      if ((isDirty && !settings.advanced?.autoSave?.enabled) || panelDirty) {
         e.preventDefault();
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty, settings.advanced?.autoSave?.enabled]);
+  }, [isDirty, panelDirty, settings.advanced?.autoSave?.enabled]);
 
   useLayoutEffect(() => {
     if (!searchTerm) {
@@ -222,12 +241,30 @@ export default function SettingsPage() {
   };
 
   const guardedNavigate = (target: string | number) => {
-    if (isDirty && !settings.advanced?.autoSave?.enabled) {
-      pendingNavRef.current = target;
+    if ((isDirty && !settings.advanced?.autoSave?.enabled) || panelDraftRef.current?.isDirty) {
+      pendingNavRef.current = () => navAny(target);
       setShowLeaveModal(true);
     } else {
       navAny(target);
     }
+  };
+
+  const leave = () => {
+    setShowLeaveModal(false);
+    pendingNavRef.current?.();
+  };
+  const saveAndLeave = async () => {
+    if (isDirty) handleApply();
+    // A failed panel save keeps its edits staged and keeps the user here.
+    if (panelDraftRef.current?.isDirty && !(await panelDraftRef.current.save())) {
+      setShowLeaveModal(false);
+      return;
+    }
+    leave();
+  };
+  const discardAndLeave = () => {
+    panelDraftRef.current?.discard();
+    leave();
   };
 
   const activeTabMeta = visibleTabs.find(entry => entry.id === activeTab);
@@ -403,16 +440,18 @@ export default function SettingsPage() {
                   {isSearchable && searchTerm && !hasResults && (
                     <p className="text-sm text-zinc-500 text-center py-16">{t('settings.searchNoResults')}</p>
                   )}
-                  <SettingsPanelContent
-                    activeTab={activeTab}
-                    settings={settings}
-                    updateSetting={updateSetting}
-                    validateShortcut={validateShortcut}
-                    isGuest={isGuest}
-                    userId={user?.id}
-                    focusCard={focusCard}
-                    searchTerm={isSearchable ? searchTerm : ''}
-                  />
+                  <SettingsDraftContext.Provider value={reportPanelDraft}>
+                    <SettingsPanelContent
+                      activeTab={activeTab}
+                      settings={settings}
+                      updateSetting={updateSetting}
+                      validateShortcut={validateShortcut}
+                      isGuest={isGuest}
+                      userId={user?.id}
+                      focusCard={focusCard}
+                      searchTerm={isSearchable ? searchTerm : ''}
+                    />
+                  </SettingsDraftContext.Provider>
                 </div>
               </div>
             </div>
@@ -456,14 +495,14 @@ export default function SettingsPage() {
                   <p className="text-sm text-zinc-400 mb-6">{t('confirm.unsavedChangesMessage')}</p>
                   <div className="flex flex-col gap-2">
                     <Button
-                      onClick={() => { handleApply(); setShowLeaveModal(false); navAny(pendingNavRef.current!); }}
+                      onClick={saveAndLeave}
                       className="w-full bg-primary text-zinc-950 hover:bg-primary-dim font-semibold"
                     >
                       {t('settings.applyChanges')}
                     </Button>
                     <Button
                       variant="ghost"
-                      onClick={() => { setShowLeaveModal(false); navAny(pendingNavRef.current!); }}
+                      onClick={discardAndLeave}
                       className="w-full text-red-400 hover:text-red-300 hover:bg-red-500/10"
                     >
                       {t('common.discardAndLeave')}

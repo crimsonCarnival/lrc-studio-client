@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next';
+import UnsavedChangesBar from '../UnsavedChangesBar';
 import AvatarUpload from './profile/AvatarUpload';
 import CoverImageUpload from './profile/CoverImageUpload';
 import ProfileForm from './profile/ProfileForm';
 import AccountNameSection from './profile/AccountNameSection';
 import EmailSection from './profile/EmailSection';
+import { useProfileDraft } from './profile/useProfileDraft';
 
 function blockMatches(searchTerm: string | undefined, labels: string[]) {
   if (!searchTerm) return true;
@@ -15,6 +17,7 @@ export default function ProfileSettings({ searchTerm }: { searchTerm?: string })
   const { t } = useTranslation();
   // Search-label lookups include keys not all present in typed resources.
   const tk = t as (key: string) => string;
+  const { values, set, isDirty, accountNameInvalid, accountNameError, saving, save, discard } = useProfileDraft();
 
   // Naming the page itself ("profile", "public") shows all of it; anything narrower shows
   // only the options it names.
@@ -30,7 +33,7 @@ export default function ProfileSettings({ searchTerm }: { searchTerm?: string })
 
   const showMedia = showCover || showAvatar;
   const showForm = showDisplayName || showAccountName || showBio;
-  if (!showMedia && !showForm && !showEmail) return null;
+  if (!showMedia && !showForm && !showEmail && !isDirty) return null;
 
   return (
     <>
@@ -38,19 +41,29 @@ export default function ProfileSettings({ searchTerm }: { searchTerm?: string })
         <section className="settings-section rounded-2xl border border-zinc-800 bg-zinc-900 p-6 flex flex-col gap-6">
           {showMedia && (
             <div className="flex flex-wrap items-start gap-x-6 gap-y-5">
-              {showCover && <CoverImageUpload />}
-              {showAvatar && <AvatarUpload />}
+              {showCover && <CoverImageUpload coverImageUrl={values.coverImageUrl} onChange={(url) => set('coverImageUrl', url)} />}
+              {showAvatar && <AvatarUpload avatarUrl={values.avatarUrl} onChange={(url) => set('avatarUrl', url)} />}
             </div>
           )}
           {showForm && (
             <ProfileForm
-              identifier={<AccountNameSection />}
+              values={values}
+              onChange={set}
+              identifier={
+                <AccountNameSection
+                  value={values.accountName}
+                  error={accountNameError}
+                  onChange={(v) => set('accountName', v)}
+                />
+              }
               show={{ displayName: showDisplayName, identifier: showAccountName, bio: showBio }}
             />
           )}
         </section>
       )}
       {showEmail && <EmailSection />}
+
+      {isDirty && <UnsavedChangesBar saving={saving} saveDisabled={accountNameInvalid} onSave={save} onDiscard={discard} />}
     </>
   );
 }

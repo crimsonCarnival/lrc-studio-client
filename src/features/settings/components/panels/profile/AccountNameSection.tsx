@@ -1,25 +1,22 @@
 import { useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon } from '@/shared/ui/Icon';
-import { Button } from '@ui/button';
 import { Input } from '@ui/input';
-import toast from 'react-hot-toast';
-import { authService } from '@/features/auth/services/auth.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
-import { LogoLoader } from '@ui/LogoLoader';
-import type { ApiError } from '@/types/api/error';
+import { ACCOUNT_NAME_RE } from './useProfileDraft';
 
-const ACCOUNT_NAME_RE = /^[a-z0-9_.:-]{3,30}$/;
 const COOLDOWN_DAYS = 7;
 
-export default function AccountNameSection() {
-  const { t } = useTranslation();
-  const { user, setUser } = useAuthContext();
+type AccountNameSectionProps = {
+  value: string;
+  /** Server-side rejection (taken, cooldown) from the last save attempt. */
+  error: string;
+  onChange: (value: string) => void;
+};
 
-  const [value, setValue] = useState(user?.accountName || '');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+export default function AccountNameSection({ value, error: serverError, onChange }: AccountNameSectionProps) {
+  const { t } = useTranslation();
+  const { user } = useAuthContext();
 
   // Capture mount time once — cooldown accuracy at day granularity, mount time is sufficient
   const [mountNow] = useState(() => Date.now());
@@ -31,45 +28,11 @@ export default function AccountNameSection() {
   })();
 
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
-    const val = e.target.value.toLowerCase().replace(/[^a-z0-9_.:-]/g, '');
-    setValue(val);
-    if (val && !ACCOUNT_NAME_RE.test(val)) {
-      setError(t('profile.accountNameInvalid'));
-    } else {
-      setError('');
-    }
-  }
-
-  async function handleSave() {
-    if (!ACCOUNT_NAME_RE.test(value)) {
-      setError(t('profile.accountNameInvalid'));
-      return;
-    }
-    setSaving(true);
-    setError('');
-    try {
-      const result = await authService.updateProfile({ accountName: value });
-      setUser(prev => ({ ...prev, ...result }));
-      toast.success(t('profile.saveSuccess'));
-    } catch (e) {
-      const err = e as ApiError;
-      const ext = err?.graphqlErrors?.[0]?.extensions;
-      const code = ext?.code;
-      if (code === 'accountName_change_cooldown') {
-        const daysLeft = typeof ext?.daysLeft === 'number' ? ext.daysLeft : null;
-        setError(t('profile.accountNameCooldownError', { days: daysLeft ?? accountNameCooldownDaysLeft ?? COOLDOWN_DAYS }));
-      } else if (code === 'accountName_taken' || err?.message?.includes('already taken')) {
-        setError(t('profile.accountNameTaken'));
-      } else {
-        setError(err?.message || t('profile.saveError'));
-      }
-    } finally {
-      setSaving(false);
-    }
+    onChange(e.target.value.toLowerCase().replace(/[^a-z0-9_.:-]/g, ''));
   }
 
   const inputId = 'settings-account-name';
-  const changed = value !== (user?.accountName || '');
+  const error = serverError || (value && !ACCOUNT_NAME_RE.test(value) ? t('profile.accountNameInvalid') : '');
 
   return (
     <div>
@@ -95,12 +58,6 @@ export default function AccountNameSection() {
             ? t('profile.accountNameCooldown', { days: accountNameCooldownDaysLeft })
             : t('profile.accountNameChangeEvery', { days: COOLDOWN_DAYS })}
         </p>
-      )}
-      {changed && !error && accountNameCooldownDaysLeft === 0 && (
-        <Button onClick={handleSave} disabled={saving} className="h-10 coarse:h-11 rounded-xl font-bold gap-2 text-sm mt-3" size="sm">
-          {saving ? <LogoLoader size={16} /> : <Icon name="save" size={16} />}
-          {t('profile.save')}
-        </Button>
       )}
     </div>
   );

@@ -9,7 +9,6 @@ import { LazyImage } from '@ui/LazyImage';
 import { ImageCropModal } from '@ui/ImageCropModal';
 import toast from 'react-hot-toast';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import { authService } from '@/features/auth/services/auth.service';
 import { uploadsService } from '@/features/projects/services/uploads.service';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { LogoLoader } from '@ui/LogoLoader';
@@ -20,9 +19,15 @@ import { executeRecaptchaSafe } from '@/app/recaptcha-arm';
 // not the thing doing the actual framing.
 const AVATAR_OUTPUT_SIZE = 256;
 
-export default function AvatarUpload() {
+type AvatarUploadProps = {
+  avatarUrl: string | null;
+  /** Stages the new avatar (null removes it); the page's save bar commits it. */
+  onChange: (url: string | null) => void;
+};
+
+export default function AvatarUpload({ avatarUrl, onChange }: AvatarUploadProps) {
   const { t } = useTranslation();
-  const { user, setUser } = useAuthContext();
+  const { user } = useAuthContext();
   const { executeRecaptcha } = useGoogleReCaptcha();
   const [uploading, setUploading] = useState(false);
   const [urlMode, setUrlMode] = useState(false);
@@ -61,9 +66,7 @@ export default function AvatarUpload() {
     try {
       const recaptchaToken = await executeRecaptchaSafe(executeRecaptcha, 'upload_avatar');
       const { url } = await uploadsService.uploadAvatar(blob, recaptchaToken);
-      const updatedUser = await authService.updateProfile({ avatarUrl: url });
-      setUser(prev => ({ ...prev, ...updatedUser }));
-      toast.success(t('profile.avatarUpdated'));
+      onChange(url);
     } catch {
       toast.error(t('profile.avatarUploadFailed'));
     } finally {
@@ -71,40 +74,20 @@ export default function AvatarUpload() {
     }
   };
 
-  const handleApplyUrl = async () => {
+  const handleApplyUrl = () => {
     const url = urlValue.trim();
     if (!url.startsWith('http')) return;
-    setUploading(true);
-    try {
-      const updatedUser = await authService.updateProfile({ avatarUrl: url });
-      setUser(prev => ({ ...prev, ...updatedUser }));
-      toast.success(t('profile.avatarUpdated'));
-      setUrlMode(false);
-      setUrlValue('');
-    } catch {
-      toast.error(t('profile.avatarUploadFailed'));
-    } finally {
-      setUploading(false);
-    }
+    onChange(url);
+    setUrlMode(false);
+    setUrlValue('');
   };
 
-  const handleRemoveAvatar = async () => {
-    setUploading(true);
-    try {
-      const updatedUser = await authService.updateProfile({ avatarUrl: null });
-      setUser(prev => ({ ...prev, ...updatedUser }));
-      toast.success(t('profile.avatarRemoved'));
-    } catch {
-      toast.error(t('profile.avatarRemoveFailed'));
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const hasAvatar = !!user?.avatarUrl && user.avatarUrl.length > 0;
+  const hasAvatar = !!avatarUrl;
 
   return (
     <div className={`flex flex-col gap-2.5 shrink-0 ${urlMode ? 'w-72' : 'w-[10.5rem]'}`}>
+      {/* Same label row as the cover column, so both previews start on one line. */}
+      <span className="text-sm font-semibold text-zinc-200">{t('profile.avatar')}</span>
       <button
         type="button"
         onClick={handleAvatarClick}
@@ -114,7 +97,7 @@ export default function AvatarUpload() {
         {uploading ? (
           <LogoLoader size={24} className="text-primary" />
         ) : hasAvatar ? (
-          <LazyImage src={user!.avatarUrl!} alt={t('profile.avatarAlt')} className="size-full object-cover" />
+          <LazyImage src={avatarUrl!}alt={t('profile.avatarAlt')} className="size-full object-cover" />
         ) : (
           <InitialsAvatar name={(user?.displayName || user?.accountName || '?')} handle={user?.accountName} className="size-full text-[40px]" />
         )}
@@ -149,13 +132,13 @@ export default function AvatarUpload() {
               </Button>
             </Tip>
             <Tip content={t('profile.setAvatarUrl')}>
-              <Button onClick={() => { setUrlMode(true); setUrlValue(user?.avatarUrl || ''); }} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.setAvatarUrl')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-100">
+              <Button onClick={() => { setUrlMode(true); setUrlValue(avatarUrl || ''); }} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.setAvatarUrl')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-100">
                 <Icon name="link" size={16} />
               </Button>
             </Tip>
             {hasAvatar && (
               <Tip content={t('profile.removeAvatar')}>
-                <Button onClick={handleRemoveAvatar} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.removeAvatar')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-400">
+                <Button onClick={() => onChange(null)} disabled={uploading} variant="outline" size="icon" aria-label={t('profile.removeAvatar')} className="size-9 coarse:size-11 rounded-[10px] border-zinc-700 bg-zinc-900 text-zinc-400">
                   <Icon name="close" size={16} />
                 </Button>
               </Tip>
