@@ -1,4 +1,4 @@
-import type { CollabMe, CollabParticipant, CollabPeer, CollabRole } from './collab.types'
+import type { CollabMe, CollabParticipant, CollabPeer, CollabRole, PresenceView } from './collab.types'
 
 /** One person in the participants bar. */
 export type ParticipantRow = {
@@ -8,6 +8,8 @@ export type ParticipantRow = {
   role: CollabRole
   online: boolean
   you: boolean
+  /** The view an online peer has open (from their first tab listed); null for me and offline members. */
+  view: PresenceView | null
 }
 
 /**
@@ -17,14 +19,14 @@ export type ParticipantRow = {
  */
 export function participantRows(me: CollabMe, peers: CollabPeer[], members: CollabParticipant[] | null): ParticipantRow[] {
   const rows = new Map<string, ParticipantRow>()
-  rows.set(me.subject, { subject: me.subject, name: me.name, colorIndex: me.colorIndex, role: me.role, online: true, you: true })
+  rows.set(me.subject, { subject: me.subject, name: me.name, colorIndex: me.colorIndex, role: me.role, online: true, you: true, view: null })
   for (const p of peers) {
     if (rows.has(p.subject)) continue
-    rows.set(p.subject, { subject: p.subject, name: p.name, colorIndex: p.colorIndex, role: p.role, online: true, you: false })
+    rows.set(p.subject, { subject: p.subject, name: p.name, colorIndex: p.colorIndex, role: p.role, online: true, you: false, view: p.view })
   }
   for (const m of members ?? []) {
     if (rows.has(m.subject)) continue
-    rows.set(m.subject, { subject: m.subject, name: m.name, colorIndex: m.colorIndex, role: m.role, online: false, you: false })
+    rows.set(m.subject, { subject: m.subject, name: m.name, colorIndex: m.colorIndex, role: m.role, online: false, you: false, view: null })
   }
   return [...rows.values()]
 }

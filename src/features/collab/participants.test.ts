@@ -23,6 +23,11 @@ describe('participantRows', () => {
     expect(rows[2].role).toBe('viewer')
   })
 
+  it('carries each online peer view; me and offline members have none', () => {
+    const rows = participantRows(me, [peer(2, 'user:luis', 'Luis', { view: 'words-focus' })], [member('guest:z', 'Zoe')])
+    expect(rows.map((r) => r.view)).toEqual([null, 'words-focus', null])
+  })
+
   it('my own other tabs do not show as a second me', () => {
     const rows = participantRows(me, [peer(9, 'user:me', 'Ana Ruiz', { role: 'owner' })], null)
     expect(rows).toHaveLength(1)

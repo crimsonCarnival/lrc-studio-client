@@ -26,6 +26,8 @@ export default {
     online: 'En línea',
     offline: 'Desconectado',
     role: { owner: 'Propietario', editor: 'Editor', viewer: 'Espectador' },
+    // Qué vista tiene abierta cada participante.
+    view: { editor: 'Editando', 'words-focus': 'Sincronizando palabras', preview: 'En vista previa', mobile: 'En el móvil' },
     onLine: '{{name}} está en esta línea',
     playhead: 'Posición de {{name}}, haz clic para ir allí',
     pointer: 'Puntero de {{name}}',

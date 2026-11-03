@@ -26,6 +26,8 @@ export default {
     online: 'Online',
     offline: 'Offline',
     role: { owner: 'Owner', editor: 'Editor', viewer: 'Viewer' },
+    // Which layout a participant has open.
+    view: { editor: 'Editing', 'words-focus': 'Word timing', preview: 'Previewing', mobile: 'On mobile' },
     onLine: '{{name}} is on this line',
     playhead: '{{name}}’s position, click to jump there',
     pointer: '{{name}}’s pointer',

@@ -61,6 +61,12 @@ export function ParticipantsBar({ me, publicId }: { me: CollabMe | null; publicI
             {p.you && <span className="shrink-0 text-subtle">({t('collab.presence.you')})</span>}
             <span aria-hidden className="shrink-0 text-subtle">·</span>
             <span className="shrink-0 text-subtle">{t(`collab.presence.role.${p.role}`)}</span>
+            {p.view && (
+              <>
+                <span aria-hidden className="shrink-0 text-subtle">·</span>
+                <span className="shrink-0 text-subtle">{t(`collab.presence.view.${p.view}`)}</span>
+              </>
+            )}
             <span className="sr-only">{status}</span>
           </li>
         )
