@@ -1,5 +1,5 @@
-import { createContext, useContext } from 'react'
-import type { CollabPeer, RemoteActiveView } from './collab.types'
+import { createContext, useContext, useEffect } from 'react'
+import type { CollabPeer, PresenceView, RemoteActiveView } from './collab.types'
 import type { Awareness } from './useAwareness'
 
 /**
@@ -7,7 +7,7 @@ import type { Awareness } from './useAwareness'
  * every 50 ms, the line list must not re-render for that. All three are inert outside a
  * session (peers empty, actions null, no active lines), which is what keeps solo editing unchanged.
  */
-export type PresenceActions = Pick<Awareness, 'setPointer' | 'setPlayhead' | 'setActiveLine' | 'setDuration'>
+export type PresenceActions = Pick<Awareness, 'setPointer' | 'setPlayhead' | 'setActiveLine' | 'setDuration' | 'setView'>
 
 export type RemoteActiveLines = Record<string, RemoteActiveView>
 
@@ -21,3 +21,13 @@ export const RemoteActiveContext = createContext<RemoteActiveLines | null>(null)
 export const usePresencePeers = (): CollabPeer[] => useContext(PeersContext)
 export const usePresenceActions = (): PresenceActions | null => useContext(PresenceActionsContext)
 export const useRemoteActiveLines = (): RemoteActiveLines | null => useContext(RemoteActiveContext)
+
+/**
+ * Tells the others which view this tab shows. Called by the component that makes each layout
+ * decision (workspace: preview; EditorPage: mobile; Editor: editor or words focus); null means
+ * this caller is not the one on screen, so it publishes nothing and the mounted one wins.
+ */
+export function usePresenceView(view: PresenceView | null): void {
+  const actions = usePresenceActions()
+  useEffect(() => { if (view) actions?.setView(view) }, [actions, view])
+}

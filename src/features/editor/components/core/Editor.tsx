@@ -42,6 +42,7 @@ import { KEY_SYMBOLS, keyCap } from '@features/settings/key-symbols';
 import { buildSingerRoster } from '@features/editor/utils/singer-colors';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { CollabLockInput } from '@/features/collab/collab.types';
+import { usePresenceView } from '@/features/collab/collab-presence-context';
 import type { AuthUser } from '@/features/auth/auth.types';
 import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import type { UploadedAudio } from '@/types/app-state';
@@ -620,6 +621,7 @@ export default function Editor({
   // sidebar is not shown, so the full list stays.
   const isLg = useBreakpoint('lg');
   const wordsFocus = isWordsMode && isLg;
+  usePresenceView(wordsFocus ? 'words-focus' : 'editor');
 
   // Counterpart capture (redesign sheet 20). The strip opens itself the first time one is
   // captured, so the shortcut works without finding the button first.

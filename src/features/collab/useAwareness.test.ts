@@ -69,7 +69,7 @@ describe('useAwareness', () => {
     const { awareness } = setup()
     expect(awareness.getLocalState()).toEqual({
       user: { name: 'Ana', colorIndex: 2, role: 'editor' },
-      pointer: null, playhead: null, activeLineId: null, duration: null,
+      pointer: null, playhead: null, activeLineId: null, duration: null, view: null,
     })
   })
 
@@ -171,6 +171,39 @@ describe('useAwareness', () => {
     expect(hook.result.current.peers[0]).toMatchObject({ pointer: null, playhead: null })
     act(() => awareness.remote(7, { user: luis, pointer: { area: 'nowhere' }, playhead: 'now' }))
     expect(hook.result.current.peers[0]).toMatchObject({ pointer: null, playhead: null })
+  })
+
+  // D2: which view each participant is in, read against a whitelist.
+  it('reads a peer view only from the whitelist', () => {
+    const { awareness, hook } = setup()
+    for (const view of ['editor', 'words-focus', 'preview', 'mobile']) {
+      act(() => awareness.remote(7, { user: luis, view }))
+      expect(hook.result.current.peers[0].view).toBe(view)
+    }
+    act(() => awareness.remote(7, { user: luis, view: '<img onerror>' }))
+    expect(hook.result.current.peers[0].view).toBeNull()
+    act(() => awareness.remote(7, { user: luis, view: 3 }))
+    expect(hook.result.current.peers[0].view).toBeNull()
+  })
+
+  // D3: the preview and the mobile layout show no line list to point at.
+  it('a preview or mobile view publishes a null pointer and ignores pointer moves', () => {
+    const { hook, fieldCalls } = setup()
+    const at = { area: 'lines' as const, lineId: 'a', xRatio: 0.5, yRatio: 0.5 }
+    act(() => hook.result.current.setPointer(at))
+    act(() => hook.result.current.setView('preview'))
+    expect(fieldCalls('view')).toEqual(['preview'])
+    expect(fieldCalls('pointer').at(-1)).toBeNull()
+    act(() => { vi.advanceTimersByTime(POINTER_THROTTLE_MS); hook.result.current.setPointer(at); vi.advanceTimersByTime(POINTER_THROTTLE_MS) })
+    expect(fieldCalls('pointer').at(-1)).toBeNull()
+
+    act(() => hook.result.current.setView('mobile'))
+    act(() => { hook.result.current.setPointer(at); vi.advanceTimersByTime(POINTER_THROTTLE_MS) })
+    expect(fieldCalls('pointer').at(-1)).toBeNull()
+
+    act(() => hook.result.current.setView('editor'))
+    act(() => { vi.advanceTimersByTime(POINTER_THROTTLE_MS); hook.result.current.setPointer(at) })
+    expect(fieldCalls('pointer').at(-1)).toEqual(at)
   })
 
   // C2: geometry from a peer is untrusted; out-of-range values must not be able to push a

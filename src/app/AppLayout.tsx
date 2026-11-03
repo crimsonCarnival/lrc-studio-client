@@ -207,7 +207,7 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
         viewerMode={collabViewer}
       >
         {/* Inert outside a session (no provider): nothing is published or rendered. */}
-        <CollabPresenceProvider provider={appState.collabSession.provider} me={appState.collabSession.me}>
+        <CollabPresenceProvider provider={appState.collabSession.provider} me={appState.collabSession.me} activeLineId={lines[activeLineIndex]?.id ?? null}>
         <div className={`${isEditorPage ? 'h-dvh' : 'min-h-screen'} lg:h-screen bg-zinc-950 relative overflow-hidden flex flex-col`}>
           <AppBackground />
 

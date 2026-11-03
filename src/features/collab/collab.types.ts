@@ -90,6 +90,9 @@ export type PointerState =
   | { area: 'waveform'; time: number }
   | null
 
+/** Which layout a participant has open; only these four values are accepted from a peer. */
+export type PresenceView = 'editor' | 'words-focus' | 'preview' | 'mobile'
+
 /** A pointer, or a function measuring it when the update is sent (undefined: nothing to send). */
 export type PointerInput = PointerState | (() => PointerState | undefined)
 
@@ -109,6 +112,8 @@ export type CollabPeer = {
   activeLineId: string | null
   /** Seconds of the media loaded in their player, null when none. */
   duration: number | null
+  /** The view they have open, null when unknown (an older client, or a value off the whitelist). */
+  view: PresenceView | null
   /** Local time (ms) the playhead was received, the base for extrapolating it. */
   receivedAt: number
 }

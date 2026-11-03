@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { HocuspocusProvider } from '@hocuspocus/provider'
-import type { CollabMe, CollabPeer, CollabRole, PlayheadState, PointerInput, PointerState } from './collab.types'
+import type { CollabMe, CollabPeer, CollabRole, PlayheadState, PointerInput, PointerState, PresenceView } from './collab.types'
 
 export const POINTER_THROTTLE_MS = 50
 export const PLAYHEAD_THROTTLE_MS = 250
@@ -18,11 +18,17 @@ type AwarenessState = {
   playhead?: PlayheadState | null
   activeLineId?: string | null
   duration?: number | null
+  view?: PresenceView | null
 }
-type LocalField = 'pointer' | 'playhead' | 'activeLineId' | 'duration'
+type LocalField = 'pointer' | 'playhead' | 'activeLineId' | 'duration' | 'view'
 
 const NO_PEERS: CollabPeer[] = []
 const ROLES: readonly string[] = ['owner', 'editor', 'viewer']
+const VIEWS: readonly PresenceView[] = ['editor', 'words-focus', 'preview', 'mobile']
+const readView = (v: unknown): PresenceView | null => (VIEWS as readonly unknown[]).includes(v) ? v as PresenceView : null
+/** Views with no line list to point at: their pointer is null. */
+const pointerless = (v: unknown) => v === 'preview' || v === 'mobile'
+const emptyLocal = (): Record<LocalField, unknown> => ({ pointer: null, playhead: null, activeLineId: null, duration: null, view: null })
 
 function isUser(u: unknown): u is AwarenessUser {
   if (typeof u !== 'object' || u === null) return false
@@ -125,6 +131,8 @@ export type Awareness = {
   setActiveLine: (id: string | null) => void
   /** Duration in seconds of the media loaded locally, null when there is none. Not throttled. */
   setDuration: (d: number | null) => void
+  /** Which view this tab shows. Not throttled. 'preview' and 'mobile' also clear and mute the pointer. */
+  setView: (v: PresenceView | null) => void
 }
 
 type Setters = {
@@ -135,7 +143,7 @@ type Setters = {
 
 function samePeer(a: CollabPeer, b: CollabPeer): boolean {
   return a.name === b.name && a.subject === b.subject && a.colorIndex === b.colorIndex && a.role === b.role && a.activeLineId === b.activeLineId
-    && a.duration === b.duration && samePointer(a.pointer, b.pointer) && samePlayhead(a.playhead, b.playhead)
+    && a.duration === b.duration && a.view === b.view && samePointer(a.pointer, b.pointer) && samePlayhead(a.playhead, b.playhead)
 }
 
 /**
@@ -152,7 +160,7 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
   const known = useRef<Map<number, CollabPeer>>(new Map())
   const setters = useRef<Setters | null>(null)
   // Re-published when the provider or identity changes (a reconnect builds a fresh awareness state).
-  const latest = useRef<Record<LocalField, unknown>>({ pointer: null, playhead: null, activeLineId: null, duration: null })
+  const latest = useRef<Record<LocalField, unknown>>(emptyLocal())
 
   const name = me?.name ?? null
   const colorIndex = me?.colorIndex ?? null
@@ -162,7 +170,7 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
   // run before any passive effect: children buffer their first values (the cursor line, the media
   // duration) in theirs while the identity is still unknown, and those must survive until it arrives.
   useLayoutEffect(() => {
-    latest.current = { pointer: null, playhead: null, activeLineId: null, duration: null }
+    latest.current = emptyLocal()
   }, [provider])
 
   useEffect(() => {
@@ -181,6 +189,8 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
     awareness.setLocalState({ ...latest.current, user: { name, colorIndex, role } })
 
     const pointer = createThrottle<PointerInput>(POINTER_THROTTLE_MS, (v) => {
+      // A trailing move made before switching to a pointerless view stays unsent.
+      if (pointerless(latest.current.view)) return
       const p = resolvePointer(v)
       if (p !== undefined) field('pointer', p)
     })
@@ -207,6 +217,7 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
           playhead: playheadNow,
           activeLineId: lineIdOf(s.activeLineId),
           duration: finite(s.duration) && s.duration >= 0 ? s.duration : null,
+          view: readView(s.view),
           // Remote states are re-decoded on every update, so the playhead is compared by value:
           // a pointer-only update must not restart the extrapolation from an old position.
           receivedAt: old && samePlayhead(old.playhead, playheadNow) ? old.receivedAt : now,
@@ -239,6 +250,7 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
 
   // Before the identity is known there is nobody to publish to: the value is kept and goes out with it.
   const setPointer = useCallback((p: PointerInput) => {
+    if (pointerless(latest.current.view)) return
     if (setters.current) setters.current.pointer.push(p)
     else {
       const v = resolvePointer(p)
@@ -257,11 +269,22 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
     if (setters.current) setters.current.field('duration', d)
     else latest.current.duration = d
   }, [])
+  const setView = useCallback((v: PresenceView | null) => {
+    if (latest.current.view === v) return
+    const set = setters.current
+    if (set) set.field('view', v)
+    else latest.current.view = v
+    if (!pointerless(v)) return
+    // Nothing to point at in this view: drop any queued move and clear the published pointer.
+    set?.pointer.cancel()
+    if (set) set.field('pointer', null)
+    else latest.current.pointer = null
+  }, [])
 
   // Peers of a connection that is gone (or has no identity yet) are not shown.
   const listed = provider && name !== null ? peers : NO_PEERS
   return useMemo(
-    () => ({ peers: listed, setPointer, setPlayhead, setActiveLine, setDuration }),
-    [listed, setPointer, setPlayhead, setActiveLine, setDuration],
+    () => ({ peers: listed, setPointer, setPlayhead, setActiveLine, setDuration, setView }),
+    [listed, setPointer, setPlayhead, setActiveLine, setDuration, setView],
   )
 }

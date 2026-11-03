@@ -23,6 +23,7 @@ import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDi
 import { getSession } from '@features/collab/collab.service';
 import { ParticipantsBar } from '@features/collab/components/ParticipantsBar';
 import type { CollabStatus } from '@features/collab/collab.types';
+import { usePresenceView } from '@features/collab/collab-presence-context';
 import { Button } from '@ui/button';
 import { artistDisplay, artistRoster, type ArtistCredit } from '@features/artists/artist-credits';
 import { LogoLoader } from '@ui/LogoLoader';
@@ -121,6 +122,8 @@ interface EditorWorkspaceProps {
 // preview. The preview stays mounted and merely hidden: it owns the export
 // dialog, which the editor's Export button opens without leaving the editor.
 const EditorWorkspace = memo(function EditorWorkspace({ view, user, editorProps, previewProps }: EditorWorkspaceProps) {
+  // The editor layouts publish their own view once mounted (EditorPage, Editor).
+  usePresenceView(view === 'preview' ? 'preview' : null);
   return (
     <div className="flex-1 min-h-0 flex flex-col w-full overflow-hidden">
       {view === 'editor' && (

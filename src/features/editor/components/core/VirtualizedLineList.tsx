@@ -178,13 +178,7 @@ export default function VirtualizedLineList({
     () => (playbackPosition == null ? -1 : computeCurrentIndex(lines, playbackPosition, editorMode)),
     [lines, playbackPosition, editorMode],
   );
-  // Tell the others which line the cursor is on (the cursor, not the playing line).
-  const cursorLineId = lines[activeLineIndex]?.id ?? null;
-  useEffect(() => { presence?.setActiveLine(cursorLineId); }, [presence, cursorLineId]);
-  // Cleared only when the list goes away, not on every cursor move.
-  const presenceRef = useRef(presence);
-  useEffect(() => { presenceRef.current = presence; });
-  useEffect(() => () => presenceRef.current?.setActiveLine(null), []);
+  // The cursor line itself is published by CollabPresenceProvider, whichever view is mounted.
   const handlePresencePointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     // Pointers are a mouse/pen thing, like the waveform's: a finger dragging to scroll isn't one.
     if (!presence || (e.pointerType !== 'mouse' && e.pointerType !== 'pen')) return;

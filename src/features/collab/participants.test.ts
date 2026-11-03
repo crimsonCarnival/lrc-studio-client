@@ -5,7 +5,7 @@ import { initialsOf, participantRows } from './participants'
 const me: CollabMe = { subject: 'user:me', name: 'Ana Ruiz', colorIndex: 1, role: 'owner', conn: 'c1', clientId: 1 }
 
 const peer = (clientId: number, subject: string, name: string, over: Partial<CollabPeer> = {}): CollabPeer => ({
-  clientId, subject, name, colorIndex: 3, role: 'editor', pointer: null, playhead: null, activeLineId: null, duration: null, receivedAt: 0, ...over,
+  clientId, subject, name, colorIndex: 3, role: 'editor', pointer: null, playhead: null, activeLineId: null, duration: null, view: null, receivedAt: 0, ...over,
 })
 
 const member = (subject: string, name: string, over: Partial<CollabParticipant> = {}): CollabParticipant => ({

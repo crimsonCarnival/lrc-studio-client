@@ -44,18 +44,31 @@ function PlayerPresenceBridge() {
   return null
 }
 
+/**
+ * Publishes the line the cursor is on. It lives here, not in a view, so the value follows the
+ * app state whichever view is mounted (line list, words focus, preview, mobile): a view
+ * unmounting never clears it. It goes away only with the awareness itself, when the session ends.
+ */
+function ActiveLinePresenceBridge({ activeLineId }: { activeLineId: string | null }) {
+  const actions = usePresenceActions()
+  useEffect(() => { actions?.setActiveLine(activeLineId) }, [actions, activeLineId])
+  return null
+}
+
 type Props = {
   provider: HocuspocusProvider | null
   me: CollabMe | null
+  /** Id of the line at the app's activeLineIndex (section markers included), null when none. */
+  activeLineId: string | null
   children: ReactNode
 }
 
 /** Owns this tab's awareness and hands it down. Mount it inside the PlayerEngine provider. */
-export function CollabPresenceProvider({ provider, me, children }: Props) {
-  const { peers, setPointer, setPlayhead, setActiveLine, setDuration } = useAwareness(provider, me)
+export function CollabPresenceProvider({ provider, me, activeLineId, children }: Props) {
+  const { peers, setPointer, setPlayhead, setActiveLine, setDuration, setView } = useAwareness(provider, me)
   const actions = useMemo<PresenceActions | null>(
-    () => (provider ? { setPointer, setPlayhead, setActiveLine, setDuration } : null),
-    [provider, setPointer, setPlayhead, setActiveLine, setDuration],
+    () => (provider ? { setPointer, setPlayhead, setActiveLine, setDuration, setView } : null),
+    [provider, setPointer, setPlayhead, setActiveLine, setDuration, setView],
   )
   // Derived during render from the previous value, so unchanged holders keep their identity.
   const [active, setActive] = useState<RemoteActiveLines | null>(null)
@@ -67,6 +80,7 @@ export function CollabPresenceProvider({ provider, me, children }: Props) {
       <PeersContext.Provider value={peers}>
         <RemoteActiveContext.Provider value={active}>
           {provider && <PlayerPresenceBridge />}
+          {provider && <ActiveLinePresenceBridge activeLineId={activeLineId} />}
           {children}
         </RemoteActiveContext.Provider>
       </PeersContext.Provider>
