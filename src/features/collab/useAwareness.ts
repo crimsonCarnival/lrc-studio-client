@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { HocuspocusProvider } from '@hocuspocus/provider'
 import type { CollabMe, CollabPeer, CollabRole, PlayheadState, PointerState } from './collab.types'
 
@@ -135,10 +135,16 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
   // Re-published when the provider or identity changes (a reconnect builds a fresh awareness state).
   const latest = useRef<Record<LocalField, unknown>>({ pointer: null, playhead: null, activeLineId: null, duration: null })
 
-  const lastProvider = useRef<HocuspocusProvider | null>(null)
   const name = me?.name ?? null
   const colorIndex = me?.colorIndex ?? null
   const role = me?.role ?? null
+
+  // Buffered values belong to the connection they were made for. A layout effect, because it must
+  // run before any passive effect: children buffer their first values (the cursor line, the media
+  // duration) in theirs while the identity is still unknown, and those must survive until it arrives.
+  useLayoutEffect(() => {
+    latest.current = { pointer: null, playhead: null, activeLineId: null, duration: null }
+  }, [provider])
 
   useEffect(() => {
     const awareness = provider?.awareness
@@ -148,11 +154,6 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
       return
     }
 
-    // Buffered values belong to the connection they were made for.
-    if (lastProvider.current !== provider) {
-      latest.current = { pointer: null, playhead: null, activeLineId: null, duration: null }
-      lastProvider.current = provider
-    }
     let alive = true
     const field = (key: LocalField, value: unknown) => {
       latest.current[key] = value
@@ -182,8 +183,8 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
           role: s.user.role,
           pointer: readPointer(s.pointer),
           playhead: playheadNow,
-          activeLineId: s.activeLineId ?? null,
-          duration: typeof s.duration === 'number' ? s.duration : null,
+          activeLineId: typeof s.activeLineId === 'string' ? s.activeLineId : null,
+          duration: finite(s.duration) && s.duration >= 0 ? s.duration : null,
           // Remote states are re-decoded on every update, so the playhead is compared by value:
           // a pointer-only update must not restart the extrapolation from an old position.
           receivedAt: old && samePlayhead(old.playhead, playheadNow) ? old.receivedAt : now,

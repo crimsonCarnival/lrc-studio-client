@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { collabColor } from '../collab-color'
 import type { CollabPeer } from '../collab.types'
 import { usePresencePeers } from '../collab-presence-context'
+import { findRow } from './find-row'
 
 type LinesPointer = Extract<NonNullable<CollabPeer['pointer']>, { area: 'lines' }>
 const onLines = (p: CollabPeer): p is CollabPeer & { pointer: LinesPointer } => p.pointer?.area === 'lines'
@@ -28,7 +29,7 @@ export function RemotePointers({ scrollRef }: { scrollRef: RefObject<HTMLElement
     if (!layer) return
     const layerRect = layer.getBoundingClientRect()
     for (const el of layer.querySelectorAll<HTMLElement>('[data-pointer-of]')) {
-      const row = layer.parentElement?.querySelector<HTMLElement>(`[data-line-id="${CSS.escape(el.dataset.lineId ?? '')}"]`)
+      const row = findRow(layer, el.dataset.pointerLine ?? '')
       if (!row) {
         el.style.visibility = 'hidden'
         continue
@@ -70,7 +71,7 @@ export function RemotePointers({ scrollRef }: { scrollRef: RefObject<HTMLElement
         <div
           key={p.clientId}
           data-pointer-of={p.clientId}
-          data-line-id={p.pointer.lineId}
+          data-pointer-line={p.pointer.lineId}
           data-x={p.pointer.xRatio}
           data-y={p.pointer.yRatio}
           title={t('collab.presence.pointer', { name: p.name })}

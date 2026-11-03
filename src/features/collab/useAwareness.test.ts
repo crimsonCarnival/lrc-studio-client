@@ -215,6 +215,29 @@ describe('useAwareness', () => {
     expect(b.getLocalState()).toMatchObject({ activeLineId: null })
   })
 
+  it('publishes values set before the identity was known once it arrives', () => {
+    const awareness = fakeAwareness(1)
+    const provider = { awareness }
+    const hook = renderHook((p: { me: CollabMe | null }) => useAwareness(provider as never, p.me), { initialProps: { me: null as CollabMe | null } })
+    act(() => {
+      hook.result.current.setActiveLine('l9')
+      hook.result.current.setDuration(180)
+      hook.result.current.setPlayhead({ t: 4, playing: false, rate: 1 })
+    })
+    hook.rerender({ me: meWith() })
+    expect(awareness.getLocalState()).toMatchObject({
+      activeLineId: 'l9', duration: 180, playhead: { t: 4, playing: false, rate: 1 },
+    })
+  })
+
+  it('ignores malformed activeLineId and duration', () => {
+    const { awareness, hook } = setup()
+    act(() => awareness.remote(7, { user: luis, activeLineId: 5, duration: -3 }))
+    expect(hook.result.current.peers[0]).toMatchObject({ activeLineId: null, duration: null })
+    act(() => awareness.remote(7, { user: luis, activeLineId: 'l1', duration: NaN }))
+    expect(hook.result.current.peers[0]).toMatchObject({ activeLineId: 'l1', duration: null })
+  })
+
   it('without a provider every setter is a no-op and nobody is listed', () => {
     const { result } = renderHook(() => useAwareness(null, meWith()))
     act(() => {
