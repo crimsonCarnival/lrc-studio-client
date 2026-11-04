@@ -445,7 +445,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
           return (
             <>
               {canShowWaveform && (
-                <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
+                <div className="animate-fade-in w-full">
                   <Suspense fallback={null}>
                     <WaveformDisplay
                       showWaveform={settings.playback?.showWaveform}
@@ -465,7 +465,7 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
               )}
 
               {!isShowingWaveform && hasMedia && (
-                <div className="animate-fade-in w-full max-w-[1200px] mx-auto px-4">
+                <div className="animate-fade-in w-full px-4">
                   <PlaybackProgress
                     lines={lines}
                     playbackPosition={playbackPosition ?? 0}
@@ -484,12 +484,12 @@ export default function PlayerControls({ variant }: { variant: 'editor' | 'heade
 
       <div className={`max-lg:hidden animate-fade-in flex flex-col items-center w-full min-w-0 ${variant === 'editor' ? 'overflow-hidden' : 'overflow-visible'}`}>
         {hasMedia && audioLoadFailed && (
-          <div className="w-full max-w-[1200px] mx-auto pb-2">
+          <div className="w-full pb-2">
             <AudioLoadError fileInputId="audio-reupload-desktop" onFileChange={local.handleFileChange} onRetry={retryAudio} canReplace={!viewerMode} />
           </div>
         )}
         {hasMedia && !audioLoadFailed && (
-          <div className="animate-fade-in w-full max-w-[1200px] mx-auto">
+          <div className="animate-fade-in w-full">
             {/* Wide layout: time and jump on the left, transport centred, speed / loop / volume
                 on the right. The jump group sits on the left (the mock has it on the right)
                 because with the media button the right side no longer fits beside a centred
