@@ -83,6 +83,22 @@ export function SessionSettingsModal({ open, onOpenChange, publicId, provider, l
     void refresh()
   }, [open, refresh])
 
+  useEffect(() => {
+    if (!open || !provider) return
+    const onStateless = ({ payload }: { payload: string }) => {
+      try {
+        const msg = JSON.parse(payload) as { t?: string }
+        if (msg.t === 'kicked') void refresh()
+      } catch {
+        // ignore malformed payloads
+      }
+    }
+    provider.on('stateless', onStateless)
+    return () => {
+      provider.off('stateless', onStateless)
+    }
+  }, [open, provider, refresh])
+
   const guard = async (action: () => Promise<void>, failedKey: FailedKey) => {
     try {
       await action()

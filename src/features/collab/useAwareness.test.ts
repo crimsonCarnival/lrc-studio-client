@@ -68,7 +68,7 @@ describe('useAwareness', () => {
   it('publishes the identity and initial fields once the server said who we are', () => {
     const { awareness } = setup()
     expect(awareness.getLocalState()).toEqual({
-      user: { name: 'Ana', colorIndex: 2, role: 'editor' },
+      user: { name: 'Ana', colorIndex: 2, role: 'editor', avatarUrl: null },
       pointer: null, playhead: null, activeLineId: null, duration: null, view: null,
     })
   })

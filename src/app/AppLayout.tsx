@@ -256,6 +256,9 @@ export function AppLayout({ children, user, logout, appState, settingsState, lay
             projectCoverImage={projectCoverImage}
             onStartTour={startTour}
             workspaceView={mobileTab}
+            sessionPublicId={appState.sessionPublicId}
+            collabMe={appState.collabSession.me}
+            collabProvider={appState.collabSession.provider}
           />
           )}
 

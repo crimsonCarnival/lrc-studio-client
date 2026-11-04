@@ -57,8 +57,9 @@ const ROLES: readonly string[] = ['owner', 'editor', 'viewer']
 // Server stateless messages this hook consumes. `lock-denied` is handled by useLineLocks.
 type ServerMessage =
   | { t: 'session-ended' }
-  | { t: 'hello'; conn: string; subject: string; name: string; colorIndex: number; role: CollabRole }
+  | { t: 'hello'; conn: string; subject: string; name: string; colorIndex: number; role: CollabRole; avatarUrl?: string | null }
   | { t: 'locks'; locks: LockSnapshot }
+  | { t: 'kicked'; subject: string }
 
 // Every snapshot is a fresh object; keeping the old holder object where nothing changed
 // lets rows that memoise on their own lock skip re-rendering when someone else's lock moves.
@@ -82,11 +83,16 @@ function parseServerMessage(payload: string): ServerMessage | null {
     return null
   }
   if (msg.t === 'session-ended') return { t: 'session-ended' }
+  if (msg.t === 'kicked') {
+    if (typeof msg.subject !== 'string') return null
+    return { t: 'kicked', subject: msg.subject }
+  }
   if (msg.t === 'hello') {
     const { conn, subject, name, colorIndex, role } = msg
     if (typeof conn !== 'string' || typeof subject !== 'string' || typeof name !== 'string') return null
     if (typeof colorIndex !== 'number' || typeof role !== 'string' || !ROLES.includes(role)) return null
-    return { t: 'hello', conn, subject, name, colorIndex, role: role as CollabRole }
+    const avatarUrl = typeof msg.avatarUrl === 'string' ? msg.avatarUrl : null
+    return { t: 'hello', conn, subject, name, colorIndex, role: role as CollabRole, avatarUrl }
   }
   if (msg.t === 'locks' && typeof msg.locks === 'object' && msg.locks !== null) {
     return { t: 'locks', locks: msg.locks as LockSnapshot }
@@ -125,8 +131,10 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
   const userId = user && !user.isGuest && typeof user.id === 'string' ? user.id : null
   // Read from provider callbacks, which live as long as the connection.
   const refreshRef = useRef<(() => Promise<void>) | null>(null)
+  const avatarRef = useRef<string | null>(null)
   useLayoutEffect(() => {
     refreshRef.current = userId ? refreshSession : null
+    avatarRef.current = user?.avatarUrl ?? null
   })
 
   const [attempt, setAttempt] = useState(0)
@@ -154,6 +162,7 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
     let terminal = false
     let provider: HocuspocusProvider | null = null
     let doc: Y.Doc | null = null
+    let meRef: CollabMe | null = null
 
     const stop = (next: Terminal) => {
       if (terminal) return
@@ -233,8 +242,14 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
           const msg = parseServerMessage(payload)
           if (!msg || terminal) return
           if (msg.t === 'session-ended') stop('ended')
+          else if (msg.t === 'kicked') {
+            if (meRef && meRef.subject === msg.subject) stop('forbidden')
+          }
           else if (msg.t === 'locks') setLocks((prev) => reuseHolders(prev, msg.locks))
-          else if (doc) setMe({ subject: msg.subject, name: msg.name, colorIndex: msg.colorIndex, role: msg.role, conn: msg.conn, clientId: doc.clientID })
+          else if (msg.t === 'hello' && doc) {
+            meRef = { subject: msg.subject, name: msg.name, colorIndex: msg.colorIndex, role: msg.role, conn: msg.conn, clientId: doc.clientID, avatarUrl: msg.avatarUrl ?? avatarRef.current }
+            setMe(meRef)
+          }
         },
       })
       setConn({ publicId, doc, provider })

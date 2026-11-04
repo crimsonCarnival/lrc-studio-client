@@ -241,4 +241,24 @@ describe('useCollabSession: hello and locks', () => {
     expect(result.current.status).toBe('ended')
     expect(result.current.locks).toEqual({})
   })
+
+  it('receiving kicked stateless message for own subject is terminal and sets status to forbidden', async () => {
+    const { result, provider } = await connected()
+    say(provider, hello)
+    expect(result.current.me?.subject).toBe('guest:g1')
+    expect(result.current.status).not.toBe('forbidden')
+
+    say(provider, { t: 'kicked', subject: 'guest:g1' })
+    expect(result.current.status).toBe('forbidden')
+    expect(provider.disconnect).toHaveBeenCalled()
+  })
+
+  it('receiving kicked stateless message for a different subject does not affect own session', async () => {
+    const { result, provider } = await connected()
+    say(provider, hello)
+    expect(result.current.me?.subject).toBe('guest:g1')
+
+    say(provider, { t: 'kicked', subject: 'guest:other' })
+    expect(result.current.status).not.toBe('forbidden')
+  })
 })

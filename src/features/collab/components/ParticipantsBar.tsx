@@ -1,22 +1,96 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { collabColor } from '../collab-color'
+import type { HocuspocusProvider } from '@hocuspocus/provider'
 import type { CollabMe, CollabParticipant } from '../collab.types'
 import { usePresencePeers } from '../collab-presence-context'
 import { getSession } from '../collab.service'
-import { initialsOf, participantRows } from '../participants'
+import { initialsOf, participantRows, type ParticipantRow } from '../participants'
+import { Tip } from '@ui/tip'
+import { LazyImage } from '@ui/LazyImage'
+
+function ParticipantAvatar({ p }: { p: ParticipantRow }) {
+  const { t } = useTranslation()
+  const [imgError, setImgError] = useState(false)
+  const hasAvatar = !!p.avatarUrl && !imgError
+
+  const roleText = t(`collab.presence.role.${p.role}`)
+  const tooltipContent = (
+    <div className="flex flex-col text-xs leading-snug">
+      <div className="flex items-center gap-1 font-semibold text-foreground">
+        <span>{p.name}</span>
+        {p.you && <span className="text-subtle font-normal">({t('collab.presence.you')})</span>}
+      </div>
+      <div className="flex items-center gap-1.5 text-subtle">
+        <span>{roleText}</span>
+        {!p.online && (
+          <>
+            <span>·</span>
+            <span>{t('collab.presence.offline')}</span>
+          </>
+        )}
+      </div>
+    </div>
+  )
+
+  const accessibleLabel = `${p.name}${p.you ? ` (${t('collab.presence.you')})` : ''} - ${roleText}${p.online ? '' : ` (${t('collab.presence.offline')})`}`
+
+  return (
+    <li className="list-none">
+      <Tip content={tooltipContent} side="bottom">
+        <div
+          tabIndex={0}
+          aria-label={accessibleLabel}
+          className={`relative size-8 shrink-0 rounded-full cursor-default select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${p.online ? '' : 'opacity-50'}`}
+        >
+          <div className="size-full overflow-hidden rounded-full ring-2 ring-zinc-950 bg-zinc-900 flex items-center justify-center">
+            {hasAvatar ? (
+              <LazyImage
+                src={p.avatarUrl!}
+                alt={p.name}
+                onError={() => setImgError(true)}
+                className="size-full object-cover"
+              />
+            ) : (
+              <span
+                aria-hidden
+                className="flex size-full items-center justify-center font-heading text-[11px] font-bold leading-none text-zinc-950"
+                style={{ backgroundColor: collabColor(p.colorIndex) }}
+              >
+                {initialsOf(p.name)}
+              </span>
+            )}
+          </div>
+          <span
+            aria-hidden
+            className={`absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full ring-2 ring-zinc-950 ${p.online ? 'bg-success' : 'bg-subtle'}`}
+          />
+          <span className="sr-only">{p.name}</span>
+        </div>
+      </Tip>
+    </li>
+  )
+}
 
 /**
- * Who is in the session: one row per person, each with their initials in their own colour,
- * their name, their role and whether they are online. Presence (awareness) gives the online
- * people; the owner also sees members who are not connected, from `collabSession.members`,
- * which the server answers only for the owner — everyone else sees who is online.
+ * Avatars for participants in the session: real avatar images when available,
+ * initials in their collab color otherwise, with a status dot and hover tooltip
+ * showing their name and rank.
  */
-export function ParticipantsBar({ me, publicId }: { me: CollabMe | null; publicId: string | null }) {
+export function ParticipantsBar({
+  me,
+  publicId,
+  provider,
+}: {
+  me: CollabMe | null
+  publicId: string | null
+  provider?: HocuspocusProvider | null
+}) {
   const { t } = useTranslation()
   const peers = usePresencePeers()
   // Tagged with the session it was fetched for, so another session never shows these.
   const [fetched, setFetched] = useState<{ publicId: string; members: CollabParticipant[] | null } | null>(null)
+  const [kicked, setKicked] = useState<{ publicId: string; subjects: Set<string> } | null>(null)
 
   const isOwner = me?.role === 'owner'
   // Refetched when someone comes or goes, so a newly joined member is listed once they leave.
@@ -31,46 +105,52 @@ export function ParticipantsBar({ me, publicId }: { me: CollabMe | null; publicI
     return () => { cancelled = true }
   }, [isOwner, publicId, onlineKey])
 
+  useEffect(() => {
+    if (!provider) return
+    const onStateless = ({ payload }: { payload: string }) => {
+      try {
+        const msg = JSON.parse(payload) as { t?: string; subject?: string }
+        if (msg.t === 'kicked' && typeof msg.subject === 'string') {
+          const kickedSubject = msg.subject
+          setKicked((prev) => ({
+            publicId: publicId ?? '',
+            subjects: new Set([...(prev && prev.publicId === publicId ? prev.subjects : []), kickedSubject]),
+          }))
+          setFetched((prev) =>
+            prev && prev.publicId === publicId
+              ? { ...prev, members: prev.members ? prev.members.filter((m) => m.subject !== kickedSubject) : null }
+              : prev,
+          )
+          if (isOwner && publicId) {
+            void getSession(publicId)
+              .then((session) => {
+                setFetched({ publicId, members: session?.members ?? null })
+              })
+              .catch(() => {})
+          }
+        }
+      } catch {
+        // ignore malformed payloads
+      }
+    }
+    provider.on('stateless', onStateless)
+    return () => {
+      provider.off('stateless', onStateless)
+    }
+  }, [provider, isOwner, publicId])
+
   if (!me) return null
   const members = isOwner && fetched && fetched.publicId === publicId ? fetched.members : null
-  const rows = participantRows(me, peers, members)
+  const kickedSubjects = kicked && kicked.publicId === publicId ? kicked.subjects : null
+  const visiblePeers = kickedSubjects ? peers.filter((p) => !kickedSubjects.has(p.subject)) : peers
+  const visibleMembers = members ? (kickedSubjects ? members.filter((m) => !kickedSubjects.has(m.subject)) : members) : null
+  const rows = participantRows(me, visiblePeers, visibleMembers)
+
   return (
-    <ul aria-label={t('collab.presence.participants')} className="flex shrink-0 flex-wrap items-center gap-2 px-4 pb-2 text-xs">
-      {rows.map((p) => {
-        const status = p.online ? t('collab.presence.online') : t('collab.presence.offline')
-        return (
-          <li
-            key={p.subject}
-            className={`flex max-w-64 items-center gap-1.5 rounded-full bg-raised py-0.5 pl-0.5 pr-2.5 text-foreground ${p.online ? '' : 'opacity-60'}`}
-          >
-            <span className="relative shrink-0">
-              <span
-                aria-hidden
-                className="flex size-6 items-center justify-center rounded-full text-[10px] font-semibold leading-none text-background"
-                style={{ backgroundColor: collabColor(p.colorIndex) }}
-              >
-                {initialsOf(p.name)}
-              </span>
-              <span
-                aria-hidden
-                title={status}
-                className={`absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-raised ${p.online ? 'bg-success' : 'bg-subtle'}`}
-              />
-            </span>
-            <span className="truncate font-medium">{p.name}</span>
-            {p.you && <span className="shrink-0 text-subtle">({t('collab.presence.you')})</span>}
-            <span aria-hidden className="shrink-0 text-subtle">·</span>
-            <span className="shrink-0 text-subtle">{t(`collab.presence.role.${p.role}`)}</span>
-            {p.view && (
-              <>
-                <span aria-hidden className="shrink-0 text-subtle">·</span>
-                <span className="shrink-0 text-subtle">{t(`collab.presence.view.${p.view}`)}</span>
-              </>
-            )}
-            <span className="sr-only">{status}</span>
-          </li>
-        )
-      })}
+    <ul aria-label={t('collab.presence.participants')} className="flex shrink-0 items-center gap-1.5">
+      {rows.map((p) => (
+        <ParticipantAvatar key={p.subject} p={p} />
+      ))}
     </ul>
   )
 }

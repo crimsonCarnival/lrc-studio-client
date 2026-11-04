@@ -8,6 +8,7 @@ export type ParticipantRow = {
   role: CollabRole
   online: boolean
   you: boolean
+  avatarUrl: string | null
   /** The view an online peer has open (from their first tab listed); null for me and offline members. */
   view: PresenceView | null
 }
@@ -18,15 +19,49 @@ export type ParticipantRow = {
  * when the caller can see the member list (the owner) — members with no connection, offline.
  */
 export function participantRows(me: CollabMe, peers: CollabPeer[], members: CollabParticipant[] | null): ParticipantRow[] {
+  const memberBySubject = new Map<string, CollabParticipant>()
+  for (const m of members ?? []) memberBySubject.set(m.subject, m)
+
   const rows = new Map<string, ParticipantRow>()
-  rows.set(me.subject, { subject: me.subject, name: me.name, colorIndex: me.colorIndex, role: me.role, online: true, you: true, view: null })
+  const meAvatar = me.avatarUrl ?? memberBySubject.get(me.subject)?.avatarUrl ?? null
+  rows.set(me.subject, {
+    subject: me.subject,
+    name: me.name,
+    colorIndex: me.colorIndex,
+    role: me.role,
+    online: true,
+    you: true,
+    avatarUrl: meAvatar,
+    view: null,
+  })
+
   for (const p of peers) {
     if (rows.has(p.subject)) continue
-    rows.set(p.subject, { subject: p.subject, name: p.name, colorIndex: p.colorIndex, role: p.role, online: true, you: false, view: p.view })
+    const peerAvatar = p.avatarUrl ?? memberBySubject.get(p.subject)?.avatarUrl ?? null
+    rows.set(p.subject, {
+      subject: p.subject,
+      name: p.name,
+      colorIndex: p.colorIndex,
+      role: p.role,
+      online: true,
+      you: false,
+      avatarUrl: peerAvatar,
+      view: p.view,
+    })
   }
+
   for (const m of members ?? []) {
     if (rows.has(m.subject)) continue
-    rows.set(m.subject, { subject: m.subject, name: m.name, colorIndex: m.colorIndex, role: m.role, online: false, you: false, view: null })
+    rows.set(m.subject, {
+      subject: m.subject,
+      name: m.name,
+      colorIndex: m.colorIndex,
+      role: m.role,
+      online: false,
+      you: false,
+      avatarUrl: m.avatarUrl ?? null,
+      view: null,
+    })
   }
   return [...rows.values()]
 }

@@ -11,7 +11,7 @@ export function extrapolate(p: PlayheadState, receivedAt: number, now: number): 
   return p.t + Math.max(0, now - receivedAt) / 1000 * p.rate
 }
 
-type AwarenessUser = { name: string; colorIndex: number; role: CollabRole; subject: string }
+type AwarenessUser = { name: string; colorIndex: number; role: CollabRole; subject: string; avatarUrl?: string | null }
 type AwarenessState = {
   user?: AwarenessUser
   pointer?: PointerState
@@ -32,9 +32,10 @@ const emptyLocal = (): Record<LocalField, unknown> => ({ pointer: null, playhead
 
 function isUser(u: unknown): u is AwarenessUser {
   if (typeof u !== 'object' || u === null) return false
-  const { name, colorIndex, role, subject } = u as Record<string, unknown>
+  const { name, colorIndex, role, subject, avatarUrl } = u as Record<string, unknown>
+  const avatarOk = avatarUrl === undefined || avatarUrl === null || typeof avatarUrl === 'string'
   return typeof name === 'string' && typeof subject === 'string' && typeof colorIndex === 'number'
-    && typeof role === 'string' && ROLES.includes(role)
+    && typeof role === 'string' && ROLES.includes(role) && avatarOk
 }
 
 const finite = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n)
@@ -142,7 +143,7 @@ type Setters = {
 }
 
 function samePeer(a: CollabPeer, b: CollabPeer): boolean {
-  return a.name === b.name && a.subject === b.subject && a.colorIndex === b.colorIndex && a.role === b.role && a.activeLineId === b.activeLineId
+  return a.name === b.name && a.subject === b.subject && a.colorIndex === b.colorIndex && a.role === b.role && a.avatarUrl === b.avatarUrl && a.activeLineId === b.activeLineId
     && a.duration === b.duration && a.view === b.view && samePointer(a.pointer, b.pointer) && samePlayhead(a.playhead, b.playhead)
 }
 
@@ -165,6 +166,7 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
   const name = me?.name ?? null
   const colorIndex = me?.colorIndex ?? null
   const role = me?.role ?? null
+  const avatarUrl = me?.avatarUrl ?? null
 
   // Buffered values belong to the connection they were made for. A layout effect, because it must
   // run before any passive effect: children buffer their first values (the cursor line, the media
@@ -186,7 +188,7 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
       latest.current[key] = value
       if (alive) awareness.setLocalStateField(key, value)
     }
-    awareness.setLocalState({ ...latest.current, user: { name, colorIndex, role } })
+    awareness.setLocalState({ ...latest.current, user: { name, colorIndex, role, avatarUrl } })
 
     const pointer = createThrottle<PointerInput>(POINTER_THROTTLE_MS, (v) => {
       // A trailing move made before switching to a pointerless view stays unsent.
@@ -213,6 +215,7 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
           subject: s.user.subject,
           colorIndex: s.user.colorIndex,
           role: s.user.role,
+          avatarUrl: typeof s.user.avatarUrl === 'string' ? s.user.avatarUrl : null,
           pointer: readPointer(s.pointer),
           playhead: playheadNow,
           activeLineId: lineIdOf(s.activeLineId),
@@ -246,7 +249,7 @@ export function useAwareness(provider: HocuspocusProvider | null, me: CollabMe |
         if (provider.awareness === awareness && awareness.getLocalState() !== null) awareness.setLocalState(null)
       } catch { /* awareness already destroyed */ }
     }
-  }, [provider, name, colorIndex, role])
+  }, [provider, name, colorIndex, role, avatarUrl])
 
   // Before the identity is known there is nobody to publish to: the value is kept and goes out with it.
   const setPointer = useCallback((p: PointerInput) => {

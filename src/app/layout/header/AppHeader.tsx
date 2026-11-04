@@ -29,6 +29,9 @@ import type { PlayerSlot } from '@/features/player/hooks/usePlayerSlot';
 import PlayerControls from '@/features/player/components/PlayerControls';
 import { isEditorPath, isProjectViewPath, projectEditPath } from '@features/projects/project-path';
 import type { ForkedFrom } from '@/types/app-state';
+import type { CollabMe } from '@/features/collab/collab.types';
+import type { HocuspocusProvider } from '@hocuspocus/provider';
+import { ParticipantsBar } from '@/features/collab/components/ParticipantsBar';
 
 interface AppHeaderProps {
   user?: AuthUser | null;
@@ -55,6 +58,9 @@ interface AppHeaderProps {
   onStartTour?: () => void;
   /** Which workspace view is showing; the preview replaces the breadcrumb with its back button. */
   workspaceView?: string;
+  sessionPublicId?: string | null;
+  collabMe?: CollabMe | null;
+  collabProvider?: HocuspocusProvider | null;
 }
 
 // Desktop primary navigation, in display order.
@@ -89,6 +95,9 @@ export function AppHeader({
   projectCoverImage,
   onStartTour,
   workspaceView,
+  sessionPublicId,
+  collabMe,
+  collabProvider,
 }: AppHeaderProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -243,6 +252,9 @@ export function AppHeader({
 
           {/* ── Right: Controls ── */}
           <div className={`flex items-center gap-2 coarse:gap-1 flex-shrink-0`}>
+            {sessionPublicId && (
+              <ParticipantsBar me={collabMe ?? null} publicId={sessionPublicId} provider={collabProvider} />
+            )}
             <div id="workspace-header-actions" className="empty:hidden flex items-center gap-2" />
 
             {/* Search — inline in header */}

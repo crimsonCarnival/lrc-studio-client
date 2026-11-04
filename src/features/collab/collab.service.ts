@@ -7,7 +7,7 @@ import type { CollabJoinResult, CollabKickResult, CollabRole, CollabSession } fr
 
 const SESSION_FIELDS = `
   id publicId allowGuests
-  members { subject name role colorIndex inviteId }
+  members { subject name role colorIndex inviteId avatarUrl }
   invites { id role revoked createdAt }
 `
 

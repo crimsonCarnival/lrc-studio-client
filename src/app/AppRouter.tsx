@@ -21,7 +21,6 @@ import type { AuthUser } from '@/features/auth/auth.types';
 import { isApiError } from '@/types';
 import { projectEditPath, publicIdFromSlugId, canonicalPathFromParams, projectDisplayName, projectPageTitle, sessionPath } from '@features/projects/project-path';
 import { getSession } from '@features/collab/collab.service';
-import { ParticipantsBar } from '@features/collab/components/ParticipantsBar';
 import { SessionAudioNotice } from '@features/collab/components/SharedAudioNotice';
 import type { SessionOwnerControl } from '@features/collab/components/SessionControl';
 import type { CollabStatus } from '@features/collab/collab.types';
@@ -608,7 +607,6 @@ export function AppRouter({
       } />
       <Route path="session/:publicId" element={
         <SessionWorkspace key={sessionPublicId ?? ''} valid={sessionPublicId !== null} status={collabStatus} hasDoc={hasCollabDoc} onRetry={retryCollab} t={t} navigate={navigate}>
-          <ParticipantsBar me={collabMe} publicId={sessionPublicId} />
           <SessionAudioNotice doc={collabSession.doc} me={collabMe} />
           <EditorWorkspace view={view} user={user} editorProps={editorProps} previewProps={previewProps} />
         </SessionWorkspace>

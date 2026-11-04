@@ -25,6 +25,7 @@ export type CollabMe = {
   /** This connection's id on the server (`hello.conn`): lock holders are keyed by connection, not user. */
   conn: string
   clientId: number
+  avatarUrl?: string | null
 }
 
 /** A held line lock as the server reports it. */
@@ -61,6 +62,7 @@ export type CollabParticipant = {
   colorIndex: number
   /** Owner-only, guests only; null otherwise. */
   inviteId: string | null
+  avatarUrl?: string | null
 }
 
 export type CollabInvite = {
@@ -107,6 +109,7 @@ export type CollabPeer = {
   name: string
   colorIndex: number
   role: CollabRole
+  avatarUrl: string | null
   pointer: PointerState
   playhead: PlayheadState | null
   activeLineId: string | null
