@@ -13,6 +13,7 @@ import {
   clearAllTimestamps,
   clearLineTimestamp,
   applyMark,
+  markTargetIndex,
   reapplyMarkById,
   lineRefsAt,
   resolveLineRefs,
@@ -724,9 +725,10 @@ export function useEditor({
     // (a collaborator's edit that has not rendered yet, or a second tap in the same
     // frame), the mark is re-applied to the latest lines on the same line, found by id
     // (the focused timestamp's line included), instead of replacing them with a stale array
-    // that would drop the other change. A focused timestamp writes to its own line, so that
-    // is the line whose lock the write needs.
-    const markedId = currentLines[markArgs.focusedTimestamp?.lineIndex ?? idx]?.id;
+    // that would drop the other change. The lock the write needs is on the line it stamps:
+    // a focused timestamp's own line, or the first line under a section marker.
+    const markTarget = markTargetIndex(currentLines, idx, markArgs.focusedTimestamp);
+    const markedId = markTarget != null ? currentLines[markTarget]?.id : undefined;
     const writeMark = () => setLines((prev) => (
       prev === currentLines
         ? result.nextLines

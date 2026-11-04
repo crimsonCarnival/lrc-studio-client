@@ -218,18 +218,33 @@ function stampBlanks(lines: EditorLine[], fromIndex: number, time: number, isSrt
 }
 
 /**
+ * Index of the line a mark writes to, or null when there is none: the focused timestamp's line,
+ * else the cursor, except that a section marker is a heading, never a mark target — if the
+ * cursor sits on one (clicked, or the song starts with one), the first line under it is marked,
+ * so a section start isn't a double mark. In a session this is the line whose lock the write needs.
+ */
+export function markTargetIndex(
+  lines: EditorLine[],
+  activeLineIndex: number,
+  focusedTimestamp: FocusedTimestamp | null | undefined,
+): number | null {
+  if (focusedTimestamp) return focusedTimestamp.lineIndex;
+  if (lines[activeLineIndex]?.type !== 'section') return activeLineIndex;
+  let target = activeLineIndex + 1;
+  while (target < lines.length && lines[target].type === 'section') target++;
+  return target < lines.length ? target : null;
+}
+
+/**
  * Pure function that computes the next lines state and side-effects from a mark action.
  * nextActiveLineIndex is null if unchanged, nextAwaitingEndMark is null to clear or an object to set.
  * nextActiveWordIndex is only present in 'words' mode.
  */
 export function applyMark(params: ApplyMarkParams): ApplyMarkResult {
   const { lines, activeLineIndex, focusedTimestamp } = params;
-  // A section marker is a heading, never a mark target: if the cursor sits on one (clicked, or
-  // the song starts with one), mark the first line under it, so a section start isn't a double mark.
-  if (focusedTimestamp || lines[activeLineIndex]?.type !== 'section') return applyMarkAt(params);
-  let target = activeLineIndex + 1;
-  while (target < lines.length && lines[target].type === 'section') target++;
-  if (target >= lines.length) return { nextLines: lines, nextActiveLineIndex: null, nextAwaitingEndMark: undefined };
+  const target = markTargetIndex(lines, activeLineIndex, focusedTimestamp);
+  if (focusedTimestamp || target === activeLineIndex) return applyMarkAt(params);
+  if (target === null) return { nextLines: lines, nextActiveLineIndex: null, nextAwaitingEndMark: undefined };
   const result = applyMarkAt({ ...params, activeLineIndex: target });
   return result.nextActiveLineIndex == null ? { ...result, nextActiveLineIndex: target } : result;
 }
