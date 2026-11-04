@@ -251,7 +251,8 @@ export function AppHeader({
           <div className={isWorkspace ? 'flex-1 lg:hidden' : 'flex-1'} />
 
           {/* ── Right: Controls ── */}
-          <div className={`flex items-center gap-2 coarse:gap-1 flex-shrink-0`}>
+          {/* Preview: left and right share the free width equally, so the centre slot sits in the bar's middle. */}
+          <div className={`flex items-center gap-2 coarse:gap-1 ${isWorkspace && workspaceView === 'preview' ? 'min-w-0 lg:flex-1 lg:justify-end' : 'flex-shrink-0'}`}>
             {sessionPublicId && (
               <ParticipantsBar me={collabMe ?? null} publicId={sessionPublicId} provider={collabProvider} />
             )}
