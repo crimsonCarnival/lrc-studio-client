@@ -55,8 +55,10 @@ export default {
       copyFailed: 'Could not copy. Select the link and copy it by hand.',
       dismiss: 'Done',
       createdOn: 'Created {{date}}',
-      revoked: 'Revoked',
+      // The server lists an expired link as revoked too.
+      revoked: 'Revoked or expired',
       revoke: 'Revoke',
+      revokeHint: 'Revoking a link stops anyone new from joining with it and disconnects the guests who joined with it. Signed-in members who already joined stay; remove them under People.',
       empty: 'No invite links yet.',
       limit: 'This session has reached its limit of invite links. Revoke one to create another.',
       createFailed: 'Could not create the link. Try again.',
@@ -111,7 +113,7 @@ export default {
     signIn: 'Sign in',
     errors: {
       invalid: 'This invite link is not valid. Ask the owner for a new one.',
-      revoked: 'The owner revoked this invite link. Ask for a new one.',
+      revoked: 'This invite link was revoked or has expired. Ask the owner for a new one.',
       guestsDisabled: 'The owner turned off guest access. Sign in to join.',
       kicked: 'You were removed from this session and cannot rejoin.',
       ended: 'This session has already ended.',
