@@ -65,3 +65,33 @@ export function useCollabMedia(doc: Y.Doc | null): CollabMedia | null {
 
   return media
 }
+
+type CollabSong = Pick<CollabMeta, 'title' | 'artist' | 'album'>
+
+/**
+ * The session's song fields (`meta.title/artist/album`), or null before there is a doc.
+ * The server seeds them from the project, so this is how a session participant learns
+ * what song they are working on (the project itself is never loaded in a session).
+ */
+export function useCollabSong(doc: Y.Doc | null): CollabSong | null {
+  const [song, setSong] = useState<CollabSong | null>(null)
+
+  useEffect(() => {
+    if (!doc) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSong(null)
+      return
+    }
+    const { readMeta } = requireCollabRuntime()
+    const meta = doc.getMap('meta')
+    const pull = () => {
+      const { title, artist, album } = readMeta(doc)
+      setSong((prev) => (prev && prev.title === title && prev.artist === artist && prev.album === album ? prev : { title, artist, album }))
+    }
+    pull()
+    meta.observe(pull)
+    return () => meta.unobserve(pull)
+  }, [doc])
+
+  return song
+}

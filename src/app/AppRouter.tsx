@@ -398,9 +398,10 @@ export function AppRouter({
   usePageTitle(
     projectPageTitle(
       projectDisplayName({ title: meta?.name, metadata: { songName: meta?.songName, songArtist: artistDisplay(meta) } }),
-      user?.accountName,
+      // The signed-in user is not the song's owner in a session, so no "Synced by" there.
+      sessionPublicId !== null ? null : user?.accountName,
       (name) => (t as (k: string, o?: object) => string)('app.titles.syncedBy', { name }),
-    ) || mediaTitle,
+    ) || (sessionPublicId !== null ? null : mediaTitle),
   );
   // Every credit, primaries then featured: the singer choices when assigning lines. Memoised, so the editor's props keep a stable identity.
   const rosterNames = useMemo(() => artistRoster(projectMetadata as Parameters<typeof artistRoster>[0]), [projectMetadata]);

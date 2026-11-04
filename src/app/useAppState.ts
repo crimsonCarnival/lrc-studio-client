@@ -20,7 +20,7 @@ import { isEditorPath, sessionPublicIdFromPath } from '@/features/projects/proje
 import { useCollabSession } from '@/features/collab/useCollabSession';
 import { useCollabLines } from '@/features/collab/useCollabLines';
 import { useCollabEditorMode } from '@/features/collab/useCollabEditorMode';
-import { useCollabMedia, collabMediaToRestored } from '@/features/collab/useCollabMedia';
+import { useCollabMedia, useCollabSong, collabMediaToRestored } from '@/features/collab/useCollabMedia';
 import { otherLockHolder } from '@/features/collab/useLineLocks';
 import type { LinesUpdater } from '@/features/collab/collab.types';
 import { migrateLines } from '@/shared/utils/lrc';
@@ -642,6 +642,7 @@ export function useAppState(user?: AuthUserType | null) {
   // the player sees the descriptor go through null and reloads even when two projects
   // share one upload.
   const collabMedia = useCollabMedia(collabSession.doc);
+  const collabSong = useCollabSong(collabSession.doc);
   const [sessionMediaFor, setSessionMediaFor] = useState<string | null>(null);
   useEffect(() => {
     if (sessionPublicId === sessionMediaFor) return;
@@ -666,6 +667,14 @@ export function useAppState(user?: AuthUserType | null) {
     setRestoredMedia(next);
     if (next?.type === 'youtube') setProjectYtUrl(next.url);
   }, [sessionPublicId, sessionMediaFor, collabMedia]);
+  // The session never loads the project, so its song name, artist and album come from the doc.
+  useEffect(() => {
+    if (sessionPublicId === null || sessionMediaFor !== sessionPublicId || !collabSong) return;
+    const { title, artist, album } = collabSong;
+    // Shared-doc metadata, read once per change (the hook keeps its identity otherwise).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setProjectMetadata((prev) => ({ ...prev, songName: title ?? '', songArtist: artist ?? '', songAlbum: album ?? '' }));
+  }, [sessionPublicId, sessionMediaFor, collabSong]);
 
   // Apply the deep-linked playback position once the project has lines, and
   // release the suppression in setRestoredPosition so ordinary playback can

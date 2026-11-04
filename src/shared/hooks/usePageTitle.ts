@@ -43,7 +43,8 @@ export function usePageTitle(projectName: string | null = null) {
     } else if (cleanPath === 'project/new') {
       pageTitle = t('app.titles.newProject');
     } else if (cleanPath.startsWith('session/')) {
-      pageTitle = projectName || t('app.titles.session');
+      // Just the song while it loads: the tab reads "LRC Studio", never "Live session".
+      pageTitle = projectName || '';
     } else if (cleanPath.startsWith('join/')) {
       pageTitle = t('app.titles.joinSession');
     } else if (cleanPath.startsWith('project/')) {

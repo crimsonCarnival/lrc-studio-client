@@ -19,7 +19,6 @@ export default {
     reports: "Mis Reportes",
     guide: "Guía",
     verifyEmail: "Verificar Correo",
-    session: "Sesión en vivo",
     joinSession: "Unirse a la sesión",
     notFound: "Página No Encontrada"
   },
