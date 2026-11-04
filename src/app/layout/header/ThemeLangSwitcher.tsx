@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import type { i18n as I18nInstance } from 'i18next';
+import { useState } from 'react';
 import { Popover, PopoverContent, PopoverItem, PopoverTrigger } from '@ui/popover';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { THEMES } from './theme-options';
-import { THEME_PALETTES } from '@/shared/theme/themes';
+import ThemeModal from '@/features/settings/components/theme/ThemeModal';
 
 const LANG_NAMES: Record<string, Record<string, string>> = {
   en: { en: 'English', es: 'Inglés' },
@@ -26,54 +27,38 @@ function getLangLabel(code: string, currentLang: string): string {
 
 interface ThemeLangSwitcherProps {
   currentTheme: string;
+  /** JSON of the user's own theme (`interface.customTheme`), for the theme modal's editor. */
+  customTheme?: string;
   updateSetting?: (path: string, value: unknown) => void;
   i18n?: I18nInstance;
 }
 
-export function ThemeLangSwitcher({ currentTheme, updateSetting, i18n }: ThemeLangSwitcherProps) {
+export function ThemeLangSwitcher({ currentTheme, customTheme, updateSetting, i18n }: ThemeLangSwitcherProps) {
   const { t } = useTranslation();
+  const [themeOpen, setThemeOpen] = useState(false);
   const currentLang = (i18n?.language || 'en').slice(0, 2).toUpperCase();
 
   return (
     <div className="flex items-center bg-zinc-900/60 border border-zinc-800/50 rounded-xl overflow-hidden">
 
-      {/* Theme switcher — hidden on mobile (accessible via Settings) */}
-      <Popover>
-        <Tip content={t('settings.interface.theme')} side="bottom">
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="hidden size-8 sm:inline-flex lg:size-8 coarse:size-11" aria-label={t('settings.interface.theme')}>
-              <Icon name={THEMES.find(t => t.id === currentTheme)?.iconName || 'palette'} size={14} />
-            </Button>
-          </PopoverTrigger>
-        </Tip>
-        <PopoverContent className="w-52 max-h-80 overflow-y-auto p-1" align="end" sideOffset={8}>
-          {THEMES.map(({ id, labelKey, iconName }) => (
-            <PopoverItem
-              key={id}
-              onClick={() => updateSetting?.('interface.theme', id)}
-              className={`flex items-center gap-2.5 cursor-pointer text-sm py-2 ${currentTheme === id ? 'text-primary' : ''}`}
-            >
-              <Icon name={iconName} size={14} className="shrink-0" />
-              <span className="flex-1 text-left">{t(labelKey)}</span>
-              <Icon name="check" size={12} className={`shrink-0 ${currentTheme === id ? 'text-primary' : 'invisible'}`} />
-            </PopoverItem>
-          ))}
-          {THEME_PALETTES.map(({ id, name, bg, main }) => (
-            <PopoverItem
-              key={id}
-              onClick={() => updateSetting?.('interface.theme', id)}
-              className={`flex items-center gap-2.5 cursor-pointer text-sm py-2 ${currentTheme === id ? 'text-primary' : ''}`}
-            >
-              {/* The theme's own colours, so they have to be literal. */}
-              <span className="flex size-[14px] shrink-0 items-center justify-center rounded-full border border-zinc-700" style={{ background: bg }}>
-                <span className="size-1.5 rounded-full" style={{ background: main }} />
-              </span>
-              <span className="flex-1 text-left capitalize">{name}</span>
-              <Icon name="check" size={12} className={`shrink-0 ${currentTheme === id ? 'text-primary' : 'invisible'}`} />
-            </PopoverItem>
-          ))}
-        </PopoverContent>
-      </Popover>
+      {/* Theme switcher: opens the same selector the settings page shows. Hidden on mobile (accessible via Settings). */}
+      <Tip content={t('settings.interface.theme')} side="bottom">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden size-8 sm:inline-flex lg:size-8 coarse:size-11"
+          aria-label={t('settings.interface.theme')}
+          onClick={() => setThemeOpen(true)}
+        >
+          <Icon name={THEMES.find(t => t.id === currentTheme)?.iconName || 'palette'} size={14} />
+        </Button>
+      </Tip>
+      <ThemeModal
+        open={themeOpen}
+        onOpenChange={setThemeOpen}
+        settings={{ interface: { theme: currentTheme, customTheme } }}
+        updateSetting={(path, value) => updateSetting?.(path, value)}
+      />
 
       <div className="hidden sm:block w-px h-4 bg-zinc-800/80 shrink-0" />
 

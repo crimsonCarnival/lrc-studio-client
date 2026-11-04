@@ -150,6 +150,7 @@ export function AppHeader({
   const isWorkspace = isEditorPage && location.pathname !== '/project/new' && isReady;
 
   const currentTheme = settings?.interface?.theme || 'dark';
+  const customTheme = settings?.interface?.customTheme as string | undefined;
 
   const goHomeOrWarn = () => {
     if (isEditorPage && hasUnsavedChanges()) {
@@ -301,7 +302,7 @@ export function AppHeader({
                 so guests keep the standalone switcher. */}
             {!user ? (
               <>
-                {!isWorkspace && <ThemeLangSwitcher currentTheme={currentTheme} updateSetting={updateSetting} i18n={i18n} />}
+                {!isWorkspace && <ThemeLangSwitcher currentTheme={currentTheme} customTheme={customTheme} updateSetting={updateSetting} i18n={i18n} />}
                 <GuestAuthButtons
                   isReady={isReady}
                   lines={lines}
@@ -316,6 +317,7 @@ export function AppHeader({
                 navTo={navTo}
                 setShowKeyboardHelp={setShowKeyboardHelp}
                 currentTheme={currentTheme}
+                customTheme={customTheme}
                 updateSetting={updateSetting}
                 i18n={i18n}
               />

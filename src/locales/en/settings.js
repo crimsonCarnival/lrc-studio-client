@@ -360,6 +360,21 @@ export default {
     applyModeEmptyOnly: "Only unsynced lines"
   },
 
+  themeEditor: {
+    description: "Pick a theme, or build your own from one. Changes preview live.",
+    create: "Create custom theme",
+    edit: "Edit custom theme",
+    customName: "Custom",
+    base: "Start from",
+    colors: { bg: "Background", main: "Main colour", sub: "Secondary text", text: "Text", error: "Error" },
+    radius: "Corner radius",
+    glow: { label: "Glow and shadows", off: "Off", soft: "Soft", strong: "Strong" },
+    borders: { label: "Borders", subtle: "Subtle", normal: "Normal", strong: "Strong" },
+    reset: "Reset to start",
+    cancel: "Cancel",
+    save: "Save and use",
+  },
+
   options: {
     themes: {
       dark: "Obsidian (Dark)",

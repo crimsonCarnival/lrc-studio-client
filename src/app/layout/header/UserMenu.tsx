@@ -21,6 +21,7 @@ import { useReportCount } from '@/features/admin/report-count';
 import { adminHostUrl, canUseAdminHost, isAdminHost } from '@/shared/utils/host';
 import { isAdminPathname } from '@/features/admin/admin-nav';
 import { THEMES } from './theme-options';
+import ThemeModal from '@/features/settings/components/theme/ThemeModal';
 
 interface UserMenuProps {
   user: AuthUser;
@@ -30,16 +31,19 @@ interface UserMenuProps {
   setShowKeyboardHelp?: (v: boolean) => void;
   // Theme + language now live in this menu (#14).
   currentTheme: string;
+  /** JSON of the user's own theme (`interface.customTheme`), for the theme modal's editor. */
+  customTheme?: string;
   updateSetting?: (path: string, value: unknown) => void;
   i18n?: I18nInstance;
 }
 
-export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentTheme, updateSetting, i18n }: UserMenuProps) {
+export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentTheme, customTheme, updateSetting, i18n }: UserMenuProps) {
   const { t } = useTranslation();
   const currentLang = (i18n?.language || 'en').split('-')[0];
   // Library/upload/request counts are only shown in this menu — own the state here.
   const [counts, setCounts] = useState({ library: 0, uploads: 0, requests: 0 });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
   const staff = isStaff(user?.permissions);
   // The dashboard's own header carries this menu too; a link to itself would only point at a wrong host.
   const { pathname } = useLocation();
@@ -88,6 +92,12 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
         </Tip>
       )}
       <NotificationBell />
+      <ThemeModal
+        open={themeOpen}
+        onOpenChange={setThemeOpen}
+        settings={{ interface: { theme: currentTheme, customTheme } }}
+        updateSetting={(path, value) => updateSetting?.(path, value)}
+      />
       <Popover open={menuOpen} onOpenChange={(open) => { setMenuOpen(open); if (open) fetchCounts(); }}>
         <div className="relative ml-1 flex-shrink-0">
           {/* Double ring: 2px of page colour, then a hairline, so the avatar reads as lifted off the bar (sheet 06). */}
@@ -189,9 +199,9 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
                 ))}
               </div>
             </div>
-            <PopoverItem asChild><Link to="/settings/interface" onClick={(e) => guardedLinkClick(e, () => navTo('/settings/interface'))} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+            <PopoverItem onClick={() => { setMenuOpen(false); setThemeOpen(true); }} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <Icon name="palette" size={16} className="text-zinc-400" />{t('settings.interface.moreThemes')}
-            </Link></PopoverItem>
+            </PopoverItem>
             {/* Language toggle — two languages, so a single flip (#14) */}
             <PopoverItem
               data-keep-open

@@ -360,6 +360,21 @@ export default {
     applyModeEmptyOnly: "Solo líneas sin marcar"
   },
 
+  themeEditor: {
+    description: "Elige un tema, o crea el tuyo a partir de uno. Los cambios se ven en vivo.",
+    create: "Crear tema personalizado",
+    edit: "Editar tema personalizado",
+    customName: "Personalizado",
+    base: "Partir de",
+    colors: { bg: "Fondo", main: "Color principal", sub: "Texto secundario", text: "Texto", error: "Error" },
+    radius: "Radio de esquinas",
+    glow: { label: "Brillo y sombras", off: "Apagado", soft: "Suave", strong: "Fuerte" },
+    borders: { label: "Bordes", subtle: "Sutiles", normal: "Normales", strong: "Marcados" },
+    reset: "Restablecer",
+    cancel: "Cancelar",
+    save: "Guardar y usar",
+  },
+
   options: {
     themes: {
       dark: "Obsidian (Oscuro)",

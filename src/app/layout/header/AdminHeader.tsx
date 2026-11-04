@@ -82,6 +82,7 @@ export function AdminHeader({ user, logout, settings, updateSetting, i18n, navTo
             logout={logout}
             navTo={navTo}
             currentTheme={settings?.interface?.theme || 'dark'}
+            customTheme={settings?.interface?.customTheme as string | undefined}
             updateSetting={updateSetting}
             i18n={i18n}
           />

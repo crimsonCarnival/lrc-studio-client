@@ -4,7 +4,7 @@ import { useInterfaceSettings } from '../../hooks/useInterfaceSettings';
 import { cn } from '@/shared/utils/utils';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
-import ThemeGrid from './ThemeGrid';
+import ThemeSelector from '../theme/ThemeSelector';
 type SelectEvent = { target: { value: string } };
 
 interface InterfaceSettingsProps {
@@ -66,7 +66,7 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
   return (
     <>
       <Section title={t('settings.interface.themeSection')} searchTerm={searchTerm}>
-        <ThemeGrid label={t('settings.interface.theme')} value={ui.theme ?? 'dark'} onChange={(id) => updateSetting('interface.theme', id)} />
+        <ThemeSelector settings={settings} updateSetting={updateSetting} />
       </Section>
 
       <Section title={t('settings.interface.generalSection')} searchTerm={searchTerm}>
