@@ -20,6 +20,7 @@ export default {
     guide: "Guide",
     verifyEmail: "Verify Email",
     joinSession: "Join session",
+    sessions: "Sessions",
     notFound: "Page Not Found"
   },
   shareProject: "Share",

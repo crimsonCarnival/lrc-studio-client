@@ -1,6 +1,6 @@
 import { gqlRequest } from '@/app/graphql.client'
 import { request } from '@/app/api.client'
-import type { CollabJoinResult, CollabKickResult, CollabRole, CollabSession } from './collab.types'
+import type { CollabJoinResult, CollabKickResult, CollabRole, CollabSession, CollabSessionSummary } from './collab.types'
 
 // Session and moderation are GraphQL; only the join is REST, because it sets the
 // guest cookie. No REST twin and no REST fallback for any of the GraphQL calls.
@@ -18,6 +18,14 @@ export async function getSession(publicId: string): Promise<CollabSession | null
     { publicId },
   )
   return data.collabSession
+}
+
+/** Live sessions the caller owns or joined, newest activity first. */
+export async function listMySessions(): Promise<CollabSessionSummary[]> {
+  const data = await gqlRequest<{ myCollabSessions: CollabSessionSummary[] }>(
+    'query MyCollabSessions { myCollabSessions { publicId title songName songArtist role memberCount createdAt lastActivityAt } }',
+  )
+  return data.myCollabSessions
 }
 
 /** Owner only. Returns the live session if one is already running. */

@@ -60,6 +60,7 @@ const LeaderboardPage = lazy(() => import('@features/leaderboard/LeaderboardPage
 const NotificationsPage = lazy(() => import('@features/notifications/NotificationsPage'));
 const MyReportsPage = lazy(() => import('@features/reports/MyReportsPage'));
 const GuidePage = lazy(() => import('@features/guide/GuidePage'));
+const SessionsPage = lazy(() => import('@features/collab/components/SessionsPage'));
 const JoinSessionPage = lazy(() => import('@features/collab/components/JoinSessionPage'));
 
 type EditorProps = ComponentProps<typeof Editor>;
@@ -700,6 +701,11 @@ export function AppRouter({
       <Route path="reports" element={
         <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
           <MyReportsPage />
+        </Suspense>
+      } />
+      <Route path="sessions" element={
+        <Suspense fallback={<div className="flex-1 flex items-center justify-center"><LogoLoader size={32} className="text-primary" /></div>}>
+          <SessionsPage />
         </Suspense>
       } />
       <Route path="guide" element={

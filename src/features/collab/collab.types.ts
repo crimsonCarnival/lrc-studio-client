@@ -123,3 +123,15 @@ export type CollabPeer = {
 
 /** A collaborator's cursor line as a row sees it. The object is reused while its fields are unchanged. */
 export type RemoteActiveView = { name: string; colorIndex: number }
+
+/** One row of the sessions page: a live session and the project it is about. */
+export type CollabSessionSummary = {
+  publicId: string
+  title: string
+  songName: string
+  songArtist: string
+  role: CollabRole
+  memberCount: number
+  createdAt: string
+  lastActivityAt: string
+}

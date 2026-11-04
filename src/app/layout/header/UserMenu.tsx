@@ -156,6 +156,9 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
             <PopoverItem asChild><Link to="/settings" className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <Icon name="settings" size={16} className="text-zinc-400" />{t('settings.title')}
             </Link></PopoverItem>
+            <PopoverItem asChild><Link to="/sessions" onClick={(e) => guardedLinkClick(e, () => navTo('/sessions'))} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+              <Icon name="group" size={16} className="text-zinc-400" />{t('collab.sessions.title')}
+            </Link></PopoverItem>
             <PopoverItem asChild><Link to="/reports" onClick={(e) => guardedLinkClick(e, () => navTo('/reports'))} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
               <Icon name="flag" size={16} className="text-zinc-400" />{t('reports.page.title')}
             </Link></PopoverItem>

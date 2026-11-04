@@ -45,6 +45,8 @@ export function usePageTitle(projectName: string | null = null) {
     } else if (cleanPath.startsWith('session/')) {
       // Just the song while it loads: the tab reads "LRC Studio", never "Live session".
       pageTitle = projectName || '';
+    } else if (cleanPath === 'sessions') {
+      pageTitle = t('app.titles.sessions');
     } else if (cleanPath.startsWith('join/')) {
       pageTitle = t('app.titles.joinSession');
     } else if (cleanPath.startsWith('project/')) {
