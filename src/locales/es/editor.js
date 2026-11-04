@@ -119,6 +119,8 @@ export default {
   srtEndTimes: "Tiempos de fin (SRT)",
   statusUnsaved: "Sin guardar",
   sidePanel: "Panel lateral",
+  sidePanelCollapse: "Contraer panel lateral",
+  sidePanelExpand: "Expandir panel lateral",
   lineReview: {
     title: "Revisión de línea",
     waiting: "La línea que suena aparecerá aquí.",

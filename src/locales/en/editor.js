@@ -116,6 +116,8 @@ export default {
   srtEndTimes: "End times (SRT)",
   statusUnsaved: "Unsaved",
   sidePanel: "Side panel",
+  sidePanelCollapse: "Collapse side panel",
+  sidePanelExpand: "Expand side panel",
   lineReview: {
     title: "Line review",
     waiting: "The line being sung will show here.",

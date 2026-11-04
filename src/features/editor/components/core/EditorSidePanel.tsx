@@ -1,4 +1,4 @@
-import { memo, useId, useMemo } from 'react';
+import { memo, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { computeCurrentIndex } from '@/features/preview/lyrics-position';
 import { formatTimestamp } from '@/shared/utils/lrc';
@@ -10,7 +10,6 @@ import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { Kbd } from '@ui/kbd';
 import { Icon } from '@/shared/ui/Icon';
-import { CollapsibleSection } from '@/shared/ui/collapsible-section';
 import { cn } from '@/shared/utils/utils';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
@@ -84,7 +83,6 @@ function LiveCard({ lines, playbackPosition, duration, editorMode }: Pick<Editor
   const [sung, rest] = current ? splitSung(current, playbackPosition, currentEnd) : ['', ''];
 
   return (
-    <CollapsibleSection title={t('editor.lineReview.title')} defaultOpen>
     <section aria-label={t('editor.lineReview.title')}>
       <div className={`${CARD} px-5 py-[18px] flex flex-col gap-3 min-h-[168px]`}>
         <div className="flex items-center justify-between">
@@ -105,7 +103,6 @@ function LiveCard({ lines, playbackPosition, duration, editorMode }: Pick<Editor
         </div>
       </div>
     </section>
-    </CollapsibleSection>
   );
 }
 
@@ -147,7 +144,6 @@ function LineInspector({ lines, activeLineIndex, duration, singers, singerColors
   const step = NUDGE_STEP.toFixed(1);
 
   return (
-    <CollapsibleSection title={t('editor.inspector.title', { number: lyricNumber })} defaultOpen>
     <section aria-label={t('editor.inspector.title', { number: lyricNumber })} className={`${CARD} px-5 py-[18px] flex flex-col gap-3.5`}>
       <h3 className="font-heading text-xl font-bold tracking-[-0.02em] text-foreground">{t('editor.inspector.title', { number: lyricNumber })}</h3>
 
@@ -264,7 +260,6 @@ function LineInspector({ lines, activeLineIndex, duration, singers, singerColors
         </div>
       </div>
     </section>
-    </CollapsibleSection>
   );
 }
 
@@ -299,24 +294,42 @@ function ShortcutsLegend({ settings }: Pick<EditorSidePanelProps, 'settings'>) {
 /** The editor's right-hand column: live karaoke line, inspector for the cursor line, key hints. */
 function EditorSidePanel(props: EditorSidePanelProps) {
   const { t } = useTranslation();
+  // Collapsing the column hands its width to the editor; the rail keeps the toggle reachable.
+  const [collapsed, setCollapsed] = useState(false);
   return (
     <aside
       aria-label={t('editor.sidePanel')}
-      className="lrc-scroll max-lg:hidden w-[400px] xl:w-[460px] shrink-0 min-h-0 overflow-y-auto flex flex-col gap-4 p-5 border-l border-hl bg-zinc-950/40"
+      className={cn(
+        'max-lg:hidden shrink-0 min-h-0 flex border-l border-hl bg-zinc-950/40 transition-[width] duration-200',
+        collapsed ? 'w-11' : 'w-[400px] xl:w-[460px]',
+      )}
     >
-      <LiveCard lines={props.lines} playbackPosition={props.playbackPosition} duration={props.duration} editorMode={props.editorMode} />
-      <LineInspector
-        lines={props.lines}
-        activeLineIndex={props.activeLineIndex}
-        duration={props.duration}
-        singers={props.singers}
-        singerColors={props.singerColors}
-        settings={props.settings}
-        onMoveToSection={props.onMoveToSection}
-        onAssignSinger={props.onAssignSinger}
-        onNudge={props.onNudge}
-      />
-      <ShortcutsLegend settings={props.settings} />
+      <button
+        type="button"
+        onClick={() => setCollapsed((c) => !c)}
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? t('editor.sidePanelExpand') : t('editor.sidePanelCollapse')}
+        className="shrink-0 flex h-full w-11 items-start justify-center pt-5 text-subtle hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-solid focus-visible:outline-focus"
+      >
+        <Icon name={collapsed ? 'chevron_left' : 'chevron_right'} size={18} />
+      </button>
+      {!collapsed && (
+        <div className="lrc-scroll min-w-0 flex-1 min-h-0 overflow-y-auto flex flex-col gap-4 p-5 pl-0">
+          <LiveCard lines={props.lines} playbackPosition={props.playbackPosition} duration={props.duration} editorMode={props.editorMode} />
+          <LineInspector
+            lines={props.lines}
+            activeLineIndex={props.activeLineIndex}
+            duration={props.duration}
+            singers={props.singers}
+            singerColors={props.singerColors}
+            settings={props.settings}
+            onMoveToSection={props.onMoveToSection}
+            onAssignSinger={props.onAssignSinger}
+            onNudge={props.onNudge}
+          />
+          <ShortcutsLegend settings={props.settings} />
+        </div>
+      )}
     </aside>
   );
 }
