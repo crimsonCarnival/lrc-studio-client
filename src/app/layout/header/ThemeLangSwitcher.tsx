@@ -5,6 +5,7 @@ import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
 import { Icon } from '@/shared/ui/Icon';
 import { THEMES } from './theme-options';
+import { THEME_PALETTES } from '@/shared/theme/themes';
 
 const LANG_NAMES: Record<string, Record<string, string>> = {
   en: { en: 'English', es: 'Inglés' },
@@ -41,11 +42,11 @@ export function ThemeLangSwitcher({ currentTheme, updateSetting, i18n }: ThemeLa
         <Tip content={t('settings.interface.theme')} side="bottom">
           <PopoverTrigger asChild>
             <Button variant="ghost" size="icon" className="hidden size-8 sm:inline-flex lg:size-8 coarse:size-11" aria-label={t('settings.interface.theme')}>
-              <Icon name={THEMES.find(t => t.id === currentTheme)?.iconName || 'dark_mode'} size={14} />
+              <Icon name={THEMES.find(t => t.id === currentTheme)?.iconName || 'palette'} size={14} />
             </Button>
           </PopoverTrigger>
         </Tip>
-        <PopoverContent className="w-44 p-1" align="end" sideOffset={8}>
+        <PopoverContent className="w-52 max-h-80 overflow-y-auto p-1" align="end" sideOffset={8}>
           {THEMES.map(({ id, labelKey, iconName }) => (
             <PopoverItem
               key={id}
@@ -54,6 +55,20 @@ export function ThemeLangSwitcher({ currentTheme, updateSetting, i18n }: ThemeLa
             >
               <Icon name={iconName} size={14} className="shrink-0" />
               <span className="flex-1 text-left">{t(labelKey)}</span>
+              <Icon name="check" size={12} className={`shrink-0 ${currentTheme === id ? 'text-primary' : 'invisible'}`} />
+            </PopoverItem>
+          ))}
+          {THEME_PALETTES.map(({ id, name, bg, main }) => (
+            <PopoverItem
+              key={id}
+              onClick={() => updateSetting?.('interface.theme', id)}
+              className={`flex items-center gap-2.5 cursor-pointer text-sm py-2 ${currentTheme === id ? 'text-primary' : ''}`}
+            >
+              {/* The theme's own colours, so they have to be literal. */}
+              <span className="flex size-[14px] shrink-0 items-center justify-center rounded-full border border-zinc-700" style={{ background: bg }}>
+                <span className="size-1.5 rounded-full" style={{ background: main }} />
+              </span>
+              <span className="flex-1 text-left capitalize">{name}</span>
               <Icon name="check" size={12} className={`shrink-0 ${currentTheme === id ? 'text-primary' : 'invisible'}`} />
             </PopoverItem>
           ))}

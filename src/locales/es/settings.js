@@ -235,6 +235,8 @@ export default {
     toastPositionDesc: "Controla dónde aparecen las notificaciones en pantalla",
     focusContrast: "Contraste de enfoque",
     focusContrastDesc: "Intensidad del desvanecimiento de las líneas inactivas en el panel de vista previa",
+    themeSection: "Tema",
+    moreThemes: "Más temas",
     generalSection: "General",
     displaySection: "Visualización del editor",
     scrollSection: "Desplazamiento y alineación",

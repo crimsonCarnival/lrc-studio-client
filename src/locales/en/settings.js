@@ -235,6 +235,8 @@ export default {
     lockLayoutDesc: "Freeze panels and the player bar in place to prevent accidental reordering or resizing",
     toastPosition: "Notification Position",
     toastPositionDesc: "Controls where on-screen notifications appear",
+    themeSection: "Theme",
+    moreThemes: "More themes",
     generalSection: "General",
     displaySection: "Editor Display",
     scrollSection: "Scrolling & Alignment",

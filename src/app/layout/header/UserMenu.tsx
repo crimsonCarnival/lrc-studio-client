@@ -189,6 +189,9 @@ export function UserMenu({ user, logout, navTo, setShowKeyboardHelp, currentThem
                 ))}
               </div>
             </div>
+            <PopoverItem asChild><Link to="/settings/interface" onClick={(e) => guardedLinkClick(e, () => navTo('/settings/interface'))} className="flex items-center gap-2 cursor-pointer font-medium text-sm py-3 sm:py-2">
+              <Icon name="palette" size={16} className="text-zinc-400" />{t('settings.interface.moreThemes')}
+            </Link></PopoverItem>
             {/* Language toggle — two languages, so a single flip (#14) */}
             <PopoverItem
               data-keep-open
