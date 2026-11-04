@@ -6,6 +6,18 @@ Una aplicación web profesional para sincronizar letras de canciones con audio, 
 
 > Idiomas: [English (Inglés)](../../README.md)
 
+[![React 19](https://img.shields.io/badge/React_19-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![WaveSurfer.js](https://img.shields.io/badge/WaveSurfer.js-007ACC?style=flat-square&logo=soundcharts&logoColor=white)](https://wavesurfer-js.org/)
+[![Three.js](https://img.shields.io/badge/Three.js-000000?style=flat-square&logo=threedotjs&logoColor=white)](https://threejs.org/)
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)](https://www.framer.com/motion/)
+[![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=flat-square&logo=radixui&logoColor=white)](https://www.radix-ui.com/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io/)
+[![Yjs](https://img.shields.io/badge/Yjs-D14A04?style=flat-square&logo=ycombinator&logoColor=white)](https://yjs.dev/)
+[![WebAuthn / Passkeys](https://img.shields.io/badge/WebAuthn_%2F_Passkeys-3423A6?style=flat-square&logo=webauthn&logoColor=white)](https://simplewebauthn.dev/)
+[![i18next](https://img.shields.io/badge/i18next-26A69A?style=flat-square&logo=i18next&logoColor=white)](https://www.i18next.com/)
+
 ## Tabla de Contenidos
 
 - [Características](#características)
@@ -31,6 +43,7 @@ Una aplicación web profesional para sincronizar letras de canciones con audio, 
   - [Autenticación](#autenticación)
   - [Moderación y Administración](#moderación-y-administración)
 - [Pila Tecnológica](#pila-tecnológica)
+  - [Dependencias para el Usuario](#dependencias-para-el-usuario)
 - [Empezando](#empezando)
 - [Referencia de la API](#referencia-de-la-api)
   - [`/health`](#health)
@@ -54,11 +67,18 @@ Una aplicación web profesional para sincronizar letras de canciones con audio, 
 
 ### 🎵 Fuentes de Audio
 
+[![WaveSurfer.js](https://img.shields.io/badge/WaveSurfer.js-Forma_de_Onda-007ACC?style=flat-square&logo=soundcharts&logoColor=white)](https://wavesurfer-js.org/)
+[![Cloudinary](https://img.shields.io/badge/Cloudinary-Alojamiento_de_Audio-3448C5?style=flat-square&logo=cloudinary&logoColor=white)](https://cloudinary.com/)
+[![YouTube](https://img.shields.io/badge/YouTube-Streaming_de_Audio-FF0000?style=flat-square&logo=youtube&logoColor=white)](https://youtube.com/)
+
 - **Archivos locales** — Arrastra y suelta o navega para cargar MP3, WAV, FLAC, OGG y otros formatos comunes. Forma de onda completa con controles de búsqueda y bucle.
 - **YouTube** — Pega cualquier URL de YouTube para reproducir el audio directamente en el editor. Incluye indicador visual de progreso con soporte para bucle A-B.
 - **Cloudinary / URL directa** — Pega una URL de audio directa y se carga mediante el elemento de audio HTML; las subidas autenticadas de menos de 50 MB se almacenan en Cloudinary y se restauran automáticamente al abrir el proyecto.
 
 ### Modos del Editor
+
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-Relleno_Karaoke-0055FF?style=flat-square&logo=framer&logoColor=white)](https://www.framer.com/motion/)
+[![Fractional Indexing](https://img.shields.io/badge/Fractional_Indexing-Orden_de_Líneas-6366F1?style=flat-square)](https://github.com/rocicorp/fractional-indexing)
 
 - **Modo LRC** — Sincronización línea por línea con marcas de tiempo precisas al milisegundo. Pulsa una tecla configurable (por defecto: `Space`) para estampar la posición actual de reproducción en la línea activa.
 - **Modo SRT** — Formato de subtítulos con tiempos de inicio y fin por línea, para una colocación precisa.
@@ -67,6 +87,8 @@ Una aplicación web profesional para sincronizar letras de canciones con audio, 
 El selector de modo está en la barra flotante del editor, junto a Estampado Automático. El Modo Palabras requiere al menos una línea sincronizada para poder anclar los tiempos por palabra.
 
 ### Tiempos y Sincronización
+
+[![WaveSurfer.js](https://img.shields.io/badge/WaveSurfer.js-Forma_de_Onda_y_Bucle-007ACC?style=flat-square&logo=soundcharts&logoColor=white)](https://wavesurfer-js.org/)
 
 - **Estampado con teclado** — Atajos totalmente configurables para marcar, ajustar y navegar entre líneas durante la sincronización.
 - **Ajuste fino** — Desplaza marcas de tiempo hacia delante o atrás en incrementos configurables (por defecto: 0.1 s / 0.01 s fino).
@@ -77,6 +99,9 @@ El selector de modo está en la barra flotante del editor, junto a Estampado Aut
 - **Detección de marcas superpuestas** — Una insignia advierte cuando dos líneas comparten la misma marca de tiempo.
 
 ### 🤖 Estampado Automático con IA
+
+[![Groq Whisper](https://img.shields.io/badge/Groq_Whisper-ASR_en_la_Nube-F55036?style=flat-square&logo=groq&logoColor=white)](https://groq.com/)
+[![yt-dlp](https://img.shields.io/badge/yt--dlp-Extracción_de_Audio-FF0000?style=flat-square&logo=youtube&logoColor=white)](https://github.com/yt-dlp/yt-dlp)
 
 - **Transcripción con un clic** — Carga un archivo de audio local, una subida de Cloudinary **o una URL de YouTube**, y pulsa Estampado Automático para transcribir el audio y alinear cada línea automáticamente. El audio de YouTube se extrae en el servidor; esta función no se limita a archivos locales.
 - **Estampado por palabra** — En Modo Palabras, las marcas de tiempo se distribuyen por palabra y no solo por línea, produciendo una pista de karaoke lista para usar.
@@ -93,6 +118,9 @@ El selector de modo está en la barra flotante del editor, junto a Estampado Aut
 > Requiere una clave de API de Groq en el servidor. Las fuentes de YouTube necesitan además `yt-dlp` y, en producción, un proveedor de PO-token. Límites: vídeos de 20 minutos, 25 MB de audio.
 
 ### 🔍 Búsqueda e Importación de Letras
+
+[![LRCLIB](https://img.shields.io/badge/LRCLIB-LRC_Sincronizado-2563EB?style=flat-square)](https://lrclib.net/)
+[![Genius](https://img.shields.io/badge/Genius-Búsqueda_de_Letras-FFFF64?style=flat-square&logo=genius&logoColor=black)](https://genius.com/)
 
 Busca una canción e importa su letra sin salir de la aplicación — disponible tanto en el asistente de configuración como en la barra del editor.
 
@@ -126,6 +154,9 @@ Los artistas de una canción son una lista ordenada de **créditos**, cada uno `
 - **Un proyecto debe poder nombrarse** — Hace falta un título, nombre de canción o artista que conserve letras o dígitos tras convertirlo en slug. La pantalla de configuración mantiene deshabilitado *Empezar a sincronizar* y el diálogo de ajustes del proyecto mantiene deshabilitado *Guardar* hasta que se cumple.
 
 ### Contenido de la Letra
+
+[![Wanakana](https://img.shields.io/badge/Wanakana-Furigana_y_Romaji-EF4444?style=flat-square)](https://wanakana.com/)
+[![Noto Serif JP](https://img.shields.io/badge/Fontsource-Noto_Serif_JP-10B981?style=flat-square)](https://fontsource.org/fonts/noto-serif-jp)
 
 - **Letra secundaria** — Añade una pista de texto secundaria por línea (por ejemplo, romaji o pronunciación en otro idioma).
 - **Capa de traducción** — Un campo de traducción independiente por línea.
@@ -161,7 +192,13 @@ Los artistas de una canción son una lista ordenada de **créditos**, cada uno `
 
 ### Vista Previa en Vivo
 
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-Animación_Karaoke-0055FF?style=flat-square&logo=framer&logoColor=white)](https://www.framer.com/motion/)
+[![Three.js](https://img.shields.io/badge/Three.js-Visualizador_3D-000000?style=flat-square&logo=threedotjs&logoColor=white)](https://threejs.org/)
+[![Postprocessing](https://img.shields.io/badge/Postprocessing-Sombreadores_Bloom-8B5CF6?style=flat-square)](https://github.com/pmndrs/postprocessing)
+
 - **Vista karaoke en tiempo real** — Resalta la línea en reproducción y rellena las palabras carácter por carácter (en Modo Palabras).
+- **Visualizador de audio 3D interactivo** — Escenas 3D reactivas al audio (Pilares, Túnel, Olas) generadas mediante WebGL en tiempo real con bloom y postprocesamiento de sombreadores.
+- **Suavizado del relleno karaoke** — Resalta la línea en reproducción y rellena las palabras carácter por carácter (en Modo Palabras).
 - **Suavizado del relleno karaoke** — Lineal (preciso) o ease-in/out (suave).
 - **Selección de pista de relleno** — Aplica la animación al texto principal, al secundario o a ambos.
 - **Mostrar traducción** — Muestra opcionalmente la traducción bajo cada línea.
@@ -173,8 +210,15 @@ Los artistas de una canción son una lista ordenada de **créditos**, cada uno `
 
 ### Gestión de Proyectos
 
+[![Yjs](https://img.shields.io/badge/Yjs-Sincronización_CRDT-D14A04?style=flat-square&logo=ycombinator&logoColor=white)](https://yjs.dev/)
+[![Hocuspocus](https://img.shields.io/badge/Hocuspocus-Colaboración_en_Vivo-2D3748?style=flat-square)](https://tiptap.dev/docs/hocuspocus/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-Sincronización_Multipestaña-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io/)
+[![TanStack Query](https://img.shields.io/badge/TanStack_Query-Caché_y_Estado-FF4154?style=flat-square&logo=reactquery&logoColor=white)](https://tanstack.com/query)
+[![idb](https://img.shields.io/badge/idb-IndexedDB_Sin_Conexión-3B82F6?style=flat-square)](https://github.com/jakearchibald/idb)
+
 - **Biblioteca de proyectos** — Explora, busca y gestiona todos tus proyectos. Cada uno guarda letras, marcas de tiempo, referencias de medios y estado del editor.
-- **Sincronización en la nube** — Los proyectos autenticados se guardan en el servidor automáticamente. Se crean en el primer guardado y luego se parchean de forma incremental: un cambio de una sola línea envía un parche posicional quirúrgico en lugar del documento completo.
+- **Sincronización en la nube** — Los proyectos autenticados se guardan en el servidor automáticamente.
+- **Edición colaborativa en vivo** — Sincronización multiusuario en tiempo real basada en CRDTs de Yjs y Hocuspocus con bloqueo de líneas y cursores de presencia. Se crean en el primer guardado y luego se parchean de forma incremental: un cambio de una sola línea envía un parche posicional quirúrgico en lugar del documento completo.
 - **Modo invitado y reclamación de proyectos** — Usa el editor por completo sin cuenta. Tu borrador vive en `localStorage` y migra a tu cuenta al iniciar sesión, con cualquier método de autenticación.
 - **Autoguardado** — Se activa tras un intervalo configurable o tras un número de ediciones, lo que ocurra primero.
 - **Guardado manual** — Botón de guardar con indicador de estado.
@@ -187,6 +231,11 @@ Los artistas de una canción son una lista ordenada de **créditos**, cada uno `
 - **Ajustes del proyecto** — El diálogo de ajustes edita nombre, canción, artistas (principales e invitados), portada, visibilidad y colores de intérpretes.
 
 ### 🌐 Plataforma Social
+
+[![TanStack Query](https://img.shields.io/badge/TanStack_Query-Datos_Sociales-FF4154?style=flat-square&logo=reactquery&logoColor=white)](https://tanstack.com/query)
+[![TanStack Virtual](https://img.shields.io/badge/TanStack_Virtual-Listas_Virtualizadas-FF4154?style=flat-square)](https://tanstack.com/virtual)
+[![Frimousse](https://img.shields.io/badge/Frimousse-Reacciones_Emoji-FFA116?style=flat-square)](https://github.com/koala-interactive/frimousse)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-Eventos_en_Vivo-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io/)
 
 - **Proyectos públicos** — Publica un proyecto y obtén una vista pública con su propio estilo e imagen de previsualización Open Graph.
 - **Estrellas y bifurcaciones** — Marca proyectos con estrella; bifurca uno para construir sobre él (el propietario puede desactivar la bifurcación).
@@ -213,6 +262,9 @@ Los artistas de una canción son una lista ordenada de **créditos**, cada uno `
 - **Clasificación** — Ranking global. Las líneas estampadas por IA se ponderan a 0.3× para que la sincronización manual valga más.
 
 ### Compartir
+
+[![QRCode](https://img.shields.io/badge/QRCode-Generación_QR_con_Logo-10B981?style=flat-square)](https://github.com/soldair/node-qrcode)
+[![fflate](https://img.shields.io/badge/fflate-Compresión_de_URLs-6366F1?style=flat-square)](https://github.com/101arrowz/fflate)
 
 - **Compartir público/privado** — Genera una URL para cualquier proyecto y alterna su visibilidad.
 - **Enlace profundo con marca de tiempo** — Incluye `?s=N` para iniciar la reproducción en un segundo concreto.
@@ -272,6 +324,11 @@ Todos los atajos son configurables en **Configuración → Atajos**, con detecci
 
 ### Interfaz y Temas
 
+[![Radix UI](https://img.shields.io/badge/Radix_UI-Primitivas_Accesibles-161618?style=flat-square&logo=radixui&logoColor=white)](https://www.radix-ui.com/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS_v4-Sistema_de_Estilos-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![React Resizable Panels](https://img.shields.io/badge/React_Resizable_Panels-Diseño_Dividido-64748B?style=flat-square)](https://github.com/bvaughn/react-resizable-panels)
+[![React Hot Toast](https://img.shields.io/badge/React_Hot_Toast-Alertas-E11D48?style=flat-square)](https://react-hot-toast.com/)
+
 - **Temas** — Obsidian (oscuro), Pure (claro), Cobalt, Velvet, Sage y Sistema (sigue la preferencia del SO).
 - **Estilos de resaltado de línea activa** — Brillo, Zoom, Color o Atenuado.
 - **Disposición de traducción** — Apilada o en paralelo.
@@ -282,6 +339,8 @@ Todos los atajos son configurables en **Configuración → Atajos**, con detecci
 - **Internacionalización** — Interfaz completa en **inglés** y **español** (se pueden añadir más en `src/locales/`).
 
 ### Paneles de Configuración
+
+[![i18next](https://img.shields.io/badge/i18next-Localización-26A69A?style=flat-square&logo=i18next&logoColor=white)](https://www.i18next.com/)
 
 **Editor** — Modo por defecto, visibilidad de marcas por palabra, avance automático, modo de resaltado, bucle de selección, pausa al marcar, cantidades de desplazamiento y ajuste, velocidad de búsqueda de letras, conservar líneas vacías.
 
@@ -300,6 +359,12 @@ Todos los atajos son configurables en **Configuración → Atajos**, con detecci
 **Perfil y Cuenta** — Nombre visible, nombre de cuenta, correo, avatar, contraseña, llaves de acceso, sesiones activas y preferencias de privacidad.
 
 ### Autenticación
+
+[![SimpleWebAuthn](https://img.shields.io/badge/SimpleWebAuthn-Llaves_de_Acceso-3423A6?style=flat-square&logo=webauthn&logoColor=white)](https://simplewebauthn.dev/)
+[![zxcvbn](https://img.shields.io/badge/zxcvbn-Fuerza_de_Contraseña-10B981?style=flat-square&logo=1password&logoColor=white)](https://github.com/dropbox/zxcvbn)
+[![reCAPTCHA v3](https://img.shields.io/badge/reCAPTCHA_v3-Protección_Antibot-4285F4?style=flat-square&logo=google&logoColor=white)](https://developers.google.com/recaptcha)
+[![React Easy Crop](https://img.shields.io/badge/React_Easy_Crop-Recorte_de_Imágenes-8B5CF6?style=flat-square)](https://github.com/ricardo-ch/react-easy-crop)
+[![FingerprintJS](https://img.shields.io/badge/FingerprintJS-Reconocimiento_de_Dispositivo-F43F5E?style=flat-square)](https://fingerprint.com/)
 
 - **Correo / contraseña** — Registro e inicio de sesión estándar, con verificación de correo y restablecimiento de contraseña.
 - **Llaves de acceso (WebAuthn)** — Regístrate e inicia sesión con una llave de acceso de plataforma; gestiónalas desde la configuración.
@@ -321,20 +386,58 @@ Solo para personal, con permisos granulares en lugar de un nombre de rol.
 
 ## Pila Tecnológica
 
-| Capa | Tecnología |
-|---|---|
-| Framework | [React 19](https://react.dev/) |
-| Herramienta de compilación | [Vite 8](https://vitejs.dev/) |
-| Lenguaje | [TypeScript](https://www.typescriptlang.org/) |
-| Estilos | [Tailwind CSS v4](https://tailwindcss.com/) |
-| Animaciones | [Framer Motion](https://www.framer.com/motion/) |
-| Forma de onda | [WaveSurfer.js](https://wavesurfer-js.org/) |
-| Primitivas de UI | [Radix UI](https://www.radix-ui.com/) |
-| Internacionalización | [i18next](https://www.i18next.com/) |
-| Enrutado | [React Router v7](https://reactrouter.com/) |
-| Virtualización | [TanStack Virtual](https://tanstack.com/virtual) |
-| Tiempo real | [Socket.IO](https://socket.io/) |
-| Pruebas | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) |
+| Capa | Tecnología | Insignia / Chip |
+|---|---|---|
+| Framework | [React 19](https://react.dev/) | [![React 19](https://img.shields.io/badge/React_19-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://react.dev/) |
+| Herramienta de compilación | [Vite 8](https://vitejs.dev/) | [![Vite 8](https://img.shields.io/badge/Vite_8-9135FF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/) |
+| Lenguaje | [TypeScript](https://www.typescriptlang.org/) | [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) |
+| Estilos | [Tailwind CSS v4](https://tailwindcss.com/) | [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/) |
+| Animaciones | [Framer Motion](https://www.framer.com/motion/) | [![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)](https://www.framer.com/motion/) |
+| Forma de onda | [WaveSurfer.js](https://wavesurfer-js.org/) | [![WaveSurfer.js](https://img.shields.io/badge/WaveSurfer.js-007ACC?style=flat-square&logo=soundcharts&logoColor=white)](https://wavesurfer-js.org/) |
+| Visualizador 3D | [Three.js](https://threejs.org/) | [![Three.js](https://img.shields.io/badge/Three.js-000000?style=flat-square&logo=threedotjs&logoColor=white)](https://threejs.org/) |
+| Primitivas de UI | [Radix UI](https://www.radix-ui.com/) | [![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=flat-square&logo=radixui&logoColor=white)](https://www.radix-ui.com/) |
+| Internacionalización | [i18next](https://www.i18next.com/) | [![i18next](https://img.shields.io/badge/i18next-26A69A?style=flat-square&logo=i18next&logoColor=white)](https://www.i18next.com/) |
+| Enrutado | [React Router v7](https://reactrouter.com/) | [![React Router v7](https://img.shields.io/badge/React_Router_v7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)](https://reactrouter.com/) |
+| Virtualización | [TanStack Virtual](https://tanstack.com/virtual) | [![TanStack Virtual](https://img.shields.io/badge/TanStack_Virtual-FF4154?style=flat-square)](https://tanstack.com/virtual) |
+| Tiempo real | [Socket.IO](https://socket.io/) | [![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io/) |
+| Colaboración | [Yjs](https://yjs.dev/) | [![Yjs](https://img.shields.io/badge/Yjs-D14A04?style=flat-square&logo=ycombinator&logoColor=white)](https://yjs.dev/) |
+| Pruebas | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) | [![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev/) |
+
+### Dependencias para el Usuario
+
+Un desglose detallado de las bibliotecas y paquetes que potencian las funciones interactivas orientadas al usuario en LRC Studio:
+
+| Categoría | Funcionalidad | Dependencia | Insignia / Chip | Propósito |
+|---|---|---|---|---|
+| **Audio y Reproducción** | Forma de Onda y Bucle | `wavesurfer.js` | [![WaveSurfer.js](https://img.shields.io/badge/WaveSurfer.js-007ACC?style=flat-square&logo=soundcharts&logoColor=white)](https://wavesurfer-js.org/) | Renderizado en canvas de forma de onda, zoom, navegación y bucles A-B |
+| **Audio y Reproducción** | Visualizador de Audio 3D | `three`, `@react-three/fiber` | [![Three.js](https://img.shields.io/badge/Three.js-000000?style=flat-square&logo=threedotjs&logoColor=white)](https://threejs.org/) | Escenas 3D interactivas reactivas al audio (Pilares, Túnel, Olas) con WebGL |
+| **Audio y Reproducción** | Postprocesamiento Visual | `postprocessing`, `@react-three/postprocessing` | [![Postprocessing](https://img.shields.io/badge/Postprocessing-8B5CF6?style=flat-square)](https://github.com/pmndrs/postprocessing) | Efectos de brillo (bloom), resplandor y sombreadores de cámara |
+| **Audio y Reproducción** | Audio y Medios en la Nube | `cloudinary` | [![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=flat-square&logo=cloudinary&logoColor=white)](https://cloudinary.com/) | Subida directa de pistas de audio, portadas de proyectos y avatares |
+| **Editor y Sincronización** | Animación Karaoke por Palabra | `framer-motion` | [![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)](https://www.framer.com/motion/) | Transición suave de relleno de palabras karaoke y retroalimentación interactiva |
+| **Editor y Sincronización** | Furigana y Texto Japonés | `wanakana` | [![Wanakana](https://img.shields.io/badge/Wanakana-EF4444?style=flat-square)](https://wanakana.com/) | Conversión Romaji/Kana, marcado ruby para kanji y tokenización CJK |
+| **Editor y Sincronización** | Tipografía Japonesa CJK | `@fontsource-variable/noto-serif-jp` | [![Noto Serif JP](https://img.shields.io/badge/Noto_Serif_JP-10B981?style=flat-square)](https://fontsource.org/fonts/noto-serif-jp) | Fuente serif japonesa de alta legibilidad para letras y lecturas fonéticas |
+| **Editor y Sincronización** | Paneles Redimensionables | `react-resizable-panels` | [![Resizable Panels](https://img.shields.io/badge/Resizable_Panels-64748B?style=flat-square)](https://github.com/bvaughn/react-resizable-panels) | Disposición flexible de paneles ajustables entre editor, reproductor y vista previa |
+| **Editor y Sincronización** | Orden de Líneas y Secciones | `fractional-indexing` | [![Fractional Indexing](https://img.shields.io/badge/Fractional_Indexing-6366F1?style=flat-square)](https://github.com/rocicorp/fractional-indexing) | Ordenación estable y libre de colisiones para líneas, secciones y listas |
+| **Colaboración** | Modelo de Documento en Vivo | `yjs` | [![Yjs](https://img.shields.io/badge/Yjs-D14A04?style=flat-square&logo=ycombinator&logoColor=white)](https://yjs.dev/) | Estructura CRDT compartida para edición de letras multiusuario y sin conflictos |
+| **Colaboración** | Proveedor WebSocket Colaborativo | `@hocuspocus/provider` | [![Hocuspocus](https://img.shields.io/badge/Hocuspocus-2D3748?style=flat-square)](https://tiptap.dev/docs/hocuspocus/) | Proveedor de conexión WebSocket para cursores de presencia y parches en tiempo real |
+| **Colaboración** | Eventos en Tiempo Real | `socket.io-client` | [![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io/) | Sincronización entre pestañas, recuento de espectadores, avisos y progreso ASR |
+| **Interfaz y UX** | Primitivas Accesibles | `radix-ui` | [![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=flat-square&logo=radixui&logoColor=white)](https://www.radix-ui.com/) | Diálogos, menús desplegables, tooltips, popovers y menús contextuales accesibles |
+| **Interfaz y UX** | Sistema de Estilos | `tailwindcss` v4 | [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/) | Motor moderno de estilos ultrarrápido con soporte de temas y paletas |
+| **Interfaz y UX** | Selector de Reacciones Emoji | `frimousse` | [![Frimousse](https://img.shields.io/badge/Frimousse-FFA116?style=flat-square)](https://github.com/koala-interactive/frimousse) | Selector de emojis categorizado y con búsqueda para proyectos y comentarios |
+| **Interfaz y UX** | Notificaciones Flotantes | `react-hot-toast` | [![React Hot Toast](https://img.shields.io/badge/React_Hot_Toast-E11D48?style=flat-square)](https://react-hot-toast.com/) | Notificaciones animadas de confirmación de guardado, copiado y errores |
+| **Plataforma Social** | Caché de Datos del Servidor | `@tanstack/react-query` | [![TanStack Query](https://img.shields.io/badge/TanStack_Query-FF4154?style=flat-square&logo=reactquery&logoColor=white)](https://tanstack.com/query) | Caché de consultas, paginación y actualizaciones optimistas en feeds y perfiles |
+| **Plataforma Social** | Listas Virtualizadas | `@tanstack/react-virtual` | [![TanStack Virtual](https://img.shields.io/badge/TanStack_Virtual-FF4154?style=flat-square)](https://tanstack.com/virtual) | Desplazamiento fluido a 60 fps para canciones extensas y flujos de actividad |
+| **Plataforma Social** | Consultas GraphQL | `graphql-request` | [![GraphQL](https://img.shields.io/badge/GraphQL-E10098?style=flat-square&logo=graphql&logoColor=white)](https://graphql.org/) | Cliente GraphQL con tipado estricto para perfiles, explorar y listas |
+| **Plataforma Social** | Fechas Relativas | `date-fns` | [![date--fns](https://img.shields.io/badge/date--fns-770C56?style=flat-square)](https://date-fns.org/) | Marcas temporales relativas en feeds de actividad, comentarios y rachas |
+| **Compartir** | Generación de Código QR | `qrcode` | [![QRCode](https://img.shields.io/badge/QRCode-10B981?style=flat-square)](https://github.com/soldair/node-qrcode) | Generación en canvas de código QR con logo de LRC Studio y exportación a PNG |
+| **Compartir** | Compresión de Enlaces | `fflate` | [![fflate](https://img.shields.io/badge/fflate-6366F1?style=flat-square)](https://github.com/101arrowz/fflate) | Compresión ultrarrápida del estado de proyectos para URLs compartibles compactas |
+| **Autenticación** | Llaves de Acceso y WebAuthn | `@simplewebauthn/browser` | [![SimpleWebAuthn](https://img.shields.io/badge/SimpleWebAuthn-3423A6?style=flat-square&logo=webauthn&logoColor=white)](https://simplewebauthn.dev/) | Autenticación biométrica con huella o rostro y confirmación sudo |
+| **Autenticación** | Medidor de Fuerza de Contraseña | `zxcvbn` | [![zxcvbn](https://img.shields.io/badge/zxcvbn-10B981?style=flat-square&logo=1password&logoColor=white)](https://github.com/dropbox/zxcvbn) | Estimación en tiempo real de la seguridad y entropía de contraseñas |
+| **Autenticación** | Protección contra Bots | `react-google-recaptcha-v3` | [![reCAPTCHA v3](https://img.shields.io/badge/reCAPTCHA_v3-4285F4?style=flat-square&logo=google&logoColor=white)](https://developers.google.com/recaptcha) | Protección invisible contra bots en registro de cuentas y subidas |
+| **Autenticación** | Recorte de Imágenes | `react-easy-crop` | [![React Easy Crop](https://img.shields.io/badge/React_Easy_Crop-8B5CF6?style=flat-square)](https://github.com/ricardo-ch/react-easy-crop) | Modal interactivo en canvas para recortar avatares y portadas |
+| **Autenticación** | Huella Digital de Dispositivo | `@fingerprintjs/fingerprintjs` | [![FingerprintJS](https://img.shields.io/badge/FingerprintJS-F43F5E?style=flat-square)](https://fingerprint.com/) | Identificación de dispositivos para migración de borradores y seguridad |
+| **Localización** | Soporte Multilingüe | `i18next`, `react-i18next` | [![i18next](https://img.shields.io/badge/i18next-26A69A?style=flat-square&logo=i18next&logoColor=white)](https://www.i18next.com/) | Internacionalización integral en inglés y español con detección de idioma |
+| **Almacenamiento** | Borradores Sin Conexión | `idb` | [![idb](https://img.shields.io/badge/idb-3B82F6?style=flat-square)](https://github.com/jakearchibald/idb) | Wrapper de IndexedDB que protege borradores no autenticados sin conexión |
 
 El estado se mantiene deliberadamente sin un almacén global — sin Redux ni Zustand. Vive en React Context, el hook raíz `useAppState`, una pila de deshacer/rehacer y `localStorage`. Los datos del servidor de perfiles, feed y explorar se cachean con [TanStack Query](https://tanstack.com/query) (`src/app/query.client.ts`); las escrituras la mantienen al día mediante `src/app/cache-sync.ts` (por ejemplo `profileChanged()` tras editar el perfil, para que una portada nueva se vea al instante en el perfil).
 
