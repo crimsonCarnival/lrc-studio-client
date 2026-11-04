@@ -29,14 +29,18 @@ type Refusal = Terminal | 'unauthorized'
  * because the `/api` rewrite on the host does not carry WebSockets, and this
  * origin in development, where Vite proxies `/collab` with `ws: true`.
  * The server applies device bans from `deviceId`; browsers cannot set headers on a WebSocket.
+ * `sessionId` (from `hello`) pins a reconnect to the session it joined: if that session
+ * ended and another started meanwhile, the server refuses with `session_ended` instead of
+ * silently moving the client into the new one. A first connect sends none.
  */
-export function collabUrl(deviceId: string): string {
+export function collabUrl(deviceId: string, sessionId?: string): string {
   const origin = import.meta.env.PROD ? import.meta.env.VITE_SERVER_ORIGIN : window.location.origin
   const base = import.meta.env.VITE_COLLAB_URL || `${(origin || '').replace(/\/+$/, '')}/collab`
   const url = new URL(base, window.location.href)
   if (url.protocol === 'http:') url.protocol = 'ws:'
   else if (url.protocol === 'https:') url.protocol = 'wss:'
   url.searchParams.set('deviceId', deviceId)
+  if (sessionId) url.searchParams.set('sessionId', sessionId)
   return url.toString()
 }
 
@@ -57,7 +61,7 @@ const ROLES: readonly string[] = ['owner', 'editor', 'viewer']
 // Server stateless messages this hook consumes. `lock-denied` is handled by useLineLocks.
 type ServerMessage =
   | { t: 'session-ended' }
-  | { t: 'hello'; conn: string; subject: string; name: string; colorIndex: number; role: CollabRole; avatarUrl?: string | null }
+  | { t: 'hello'; conn: string; subject: string; name: string; colorIndex: number; role: CollabRole; avatarUrl?: string | null; sessionId?: string }
   | { t: 'locks'; locks: LockSnapshot }
   | { t: 'kicked'; subject: string }
 
@@ -92,7 +96,8 @@ function parseServerMessage(payload: string): ServerMessage | null {
     if (typeof conn !== 'string' || typeof subject !== 'string' || typeof name !== 'string') return null
     if (typeof colorIndex !== 'number' || typeof role !== 'string' || !ROLES.includes(role)) return null
     const avatarUrl = typeof msg.avatarUrl === 'string' ? msg.avatarUrl : null
-    return { t: 'hello', conn, subject, name, colorIndex, role: role as CollabRole, avatarUrl }
+    const sessionId = typeof msg.sessionId === 'string' && msg.sessionId ? msg.sessionId : undefined
+    return { t: 'hello', conn, subject, name, colorIndex, role: role as CollabRole, avatarUrl, sessionId }
   }
   if (msg.t === 'locks' && typeof msg.locks === 'object' && msg.locks !== null) {
     return { t: 'locks', locks: msg.locks as LockSnapshot }
@@ -163,6 +168,8 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
     let provider: HocuspocusProvider | null = null
     let doc: Y.Doc | null = null
     let meRef: CollabMe | null = null
+    // The session this connection joined, from `hello`; sent back on every reconnect.
+    let sessionId: string | undefined
 
     const stop = (next: Terminal) => {
       if (terminal) return
@@ -249,6 +256,12 @@ export function useCollabSession(publicId: string | null): CollabSessionState {
           else if (msg.t === 'hello' && doc) {
             meRef = { subject: msg.subject, name: msg.name, colorIndex: msg.colorIndex, role: msg.role, conn: msg.conn, clientId: doc.clientID, avatarUrl: msg.avatarUrl ?? avatarRef.current }
             setMe(meRef)
+            // Every later socket of this provider (auto-reconnect, refresh-and-reconnect) is
+            // opened from this url; the doc and provider stay as they are.
+            if (msg.sessionId && msg.sessionId !== sessionId) {
+              sessionId = msg.sessionId
+              provider?.configuration.websocketProvider.setConfiguration({ url: collabUrl(deviceId, sessionId) })
+            }
           }
         },
       })
