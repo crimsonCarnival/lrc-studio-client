@@ -11,7 +11,7 @@ type BeatLines = Parameters<typeof buildBeatTimes>[0];
  * the provider has an analyser; otherwise a stand-in that pulses on the lyric timestamps.
  */
 export function AudioVisualizerCanvas({ lines }: { lines: BeatLines }) {
-  const { kind, getAnalyser } = useVisualizer();
+  const { kind, getAnalyser, bloom } = useVisualizer();
   const { currentTime, isPlaying } = usePlayer();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const beats = useMemo(() => buildBeatTimes(lines), [lines]);
@@ -41,12 +41,13 @@ export function AudioVisualizerCanvas({ lines }: { lines: BeatLines }) {
       fftToBands(fft, analyser.context.sampleRate, bands);
       timeDomainToWave(samples, wave);
       return playing;
-    });
-  }, [kind, getAnalyser]);
+    }, { bloom });
+  }, [kind, getAnalyser, bloom]);
 
   if (kind === 'off') return null;
   return (
     <canvas
+      key={kind}
       ref={canvasRef}
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 size-full opacity-55 animate-in fade-in duration-700"

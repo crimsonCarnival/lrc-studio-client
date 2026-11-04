@@ -1,8 +1,16 @@
 import { BAND_COUNT, WAVE_SAMPLES } from './visualizer-signal';
+import { VISUALIZER_3D_PRESETS, isVisualizer3dPreset, start3dVisualizer } from './visualizer-3d';
+import type { Visualizer3dPresetId, Visualizer3dOptions } from './visualizer-3d';
 
-export const VISUALIZER_PRESETS = ['bars', 'wave', 'radial', 'contour'] as const;
+export const VISUALIZER_2D_PRESETS = ['bars', 'wave', 'radial', 'contour'] as const;
+export type Visualizer2dPresetId = (typeof VISUALIZER_2D_PRESETS)[number];
+
+export const VISUALIZER_PRESETS = [...VISUALIZER_2D_PRESETS, ...VISUALIZER_3D_PRESETS] as const;
 export type VisualizerPresetId = (typeof VISUALIZER_PRESETS)[number];
 export type VisualizerKind = 'off' | VisualizerPresetId;
+
+export { VISUALIZER_3D_PRESETS, isVisualizer3dPreset };
+export type { Visualizer3dPresetId, Visualizer3dOptions };
 
 export function isVisualizerKind(value: unknown): value is VisualizerKind {
   return value === 'off' || (VISUALIZER_PRESETS as readonly unknown[]).includes(value);
@@ -197,7 +205,7 @@ const drawContour: Draw = (ctx, f, p) => {
   ctx.globalAlpha = 1;
 };
 
-const DRAW: Record<VisualizerPresetId, Draw> = { bars: drawBars, wave: drawWave, radial: drawRadial, contour: drawContour };
+const DRAW: Record<Visualizer2dPresetId, Draw> = { bars: drawBars, wave: drawWave, radial: drawRadial, contour: drawContour };
 
 // Theme tokens, so the presets follow the dark and light themes like the rest of the stage.
 function readPalette(el: Element): Palette {
@@ -217,10 +225,19 @@ function readPalette(el: Element): Palette {
 export type Sampler = (bands: Float32Array, wave: Float32Array, clock: number) => boolean;
 
 /** Animates a preset on a canvas until the returned function is called. */
-export function startVisualizer(canvas: HTMLCanvasElement, preset: VisualizerPresetId, sample: Sampler): () => void {
+export function startVisualizer(
+  canvas: HTMLCanvasElement,
+  preset: VisualizerPresetId,
+  sample: Sampler,
+  options?: Visualizer3dOptions,
+): () => void {
+  if (isVisualizer3dPreset(preset)) {
+    return start3dVisualizer(canvas, preset, sample, options);
+  }
   const ctx = canvas.getContext('2d');
   if (!ctx) return () => {};
-  const draw = DRAW[preset];
+  const draw = (DRAW as Record<string, Draw>)[preset];
+  if (!draw) return () => {};
   const state: PresetState = {};
   const targetBands = new Float32Array(BAND_COUNT);
   const targetWave = new Float32Array(WAVE_SAMPLES);

@@ -109,6 +109,11 @@ export default {
       wave: { label: "Wave", hint: "Oscilloscope" },
       radial: { label: "Radial", hint: "Circular spectrum" },
       contour: { label: "Contour", hint: "The background lines, moved by the music" },
+      orb: { label: "Orb", hint: "Pulsing 3D sphere" },
+      terrain: { label: "Terrain", hint: "Retro synthwave landscape" },
+      galaxy: { label: "Galaxy", hint: "Reactive particle starfield" },
+      tunnel: { label: "Tunnel", hint: "Hyperspace geometric wormhole" },
+      pillars: { label: "Pillars", hint: "3D equalizer matrix" },
     },
     feed: {
       element: {
@@ -139,6 +144,12 @@ export default {
       denied: "Permission to share the tab wasn't given.",
       noAudio: "The tab was shared without its audio. Try again and tick \"Also share tab audio\".",
       failed: "Couldn't capture this tab's audio.",
+    },
+    bloom: {
+      title: "3D Post-processing",
+      description: "Adds soft bloom and glow to 3D animations.",
+      tip: "Tip: If 3D animations run slowly on your device, disabling post-processing improves performance.",
+      dismissTip: "Dismiss tip",
     },
   },
   actions: {

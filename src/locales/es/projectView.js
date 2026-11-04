@@ -109,6 +109,11 @@ export default {
       wave: { label: "Onda", hint: "Osciloscopio" },
       radial: { label: "Radial", hint: "Espectro circular" },
       contour: { label: "Contorno", hint: "Las líneas del fondo, movidas por la música" },
+      orb: { label: "Orbe", hint: "Esfera 3D pulsante" },
+      terrain: { label: "Terreno", hint: "Paisaje synthwave retro" },
+      galaxy: { label: "Galaxia", hint: "Campo de partículas reactivas" },
+      tunnel: { label: "Túnel", hint: "Túnel geométrico hiperespacial" },
+      pillars: { label: "Pilares", hint: "Matriz de ecualizador 3D" },
     },
     feed: {
       element: {
@@ -139,6 +144,12 @@ export default {
       denied: "No se dio permiso para compartir la pestaña.",
       noAudio: "Se compartió la pestaña sin su audio. Vuelve a intentarlo y marca «Compartir también el audio de la pestaña».",
       failed: "No se pudo capturar el audio de esta pestaña.",
+    },
+    bloom: {
+      title: "Postprocesamiento 3D",
+      description: "Añade brillo y resplandor suave a las animaciones 3D.",
+      tip: "Consejo: Si las animaciones 3D van lentas en tu dispositivo, desactivar el postprocesamiento mejora el rendimiento.",
+      dismissTip: "Descartar aviso",
     },
   },
   actions: {

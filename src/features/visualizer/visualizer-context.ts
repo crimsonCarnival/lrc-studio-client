@@ -26,6 +26,8 @@ export interface VisualizerContextValue {
   tabError: TabAudioError | null;
   shareTabAudio: () => void;
   stopTabAudio: () => void;
+  bloom: boolean;
+  setBloom: (enabled: boolean) => void;
 }
 
 export const VisualizerContext = createContext<VisualizerContextValue | null>(null);

@@ -11,6 +11,16 @@ import type { VisualizerKind } from './visualizer-presets';
 
 // A viewer preference, like the lyric alignment: remembered on this device only.
 const KIND_KEY = 'lrc_visualizer_kind';
+const BLOOM_KEY = 'lrc_visualizer_bloom';
+
+function readStoredBloom(): boolean {
+  try {
+    const saved = localStorage.getItem(BLOOM_KEY);
+    return saved !== 'false';
+  } catch {
+    return true;
+  }
+}
 
 function readStoredKind(): VisualizerKind {
   try {
@@ -31,6 +41,12 @@ export function VisualizerProvider({ children }: { children: ReactNode }) {
   const [connecting, setConnecting] = useState(false);
   const [tabError, setTabError] = useState<TabAudioError | null>(null);
   const [canShareTab] = useState(tabAudioSupported);
+  const [bloom, setBloomState] = useState<boolean>(readStoredBloom);
+
+  const setBloom = useCallback((next: boolean) => {
+    setBloomState(next);
+    try { localStorage.setItem(BLOOM_KEY, String(next)); } catch { /* ignore */ }
+  }, []);
 
   const tabRef = useRef<TabAudioCapture | null>(null);
   const elementTapRef = useRef<{ el: HTMLMediaElement; node: AnalyserNode } | null>(null);
@@ -116,8 +132,8 @@ export function VisualizerProvider({ children }: { children: ReactNode }) {
   }, [audioRef]);
 
   const value = useMemo<VisualizerContextValue>(() => ({
-    kind, setKind, feed, getAnalyser, connecting, tabError, shareTabAudio, stopTabAudio,
-  }), [kind, setKind, feed, getAnalyser, connecting, tabError, shareTabAudio, stopTabAudio]);
+  kind, setKind, feed, getAnalyser, connecting, tabError, shareTabAudio, stopTabAudio, bloom, setBloom,
+  }), [kind, setKind, feed, getAnalyser, connecting, tabError, shareTabAudio, stopTabAudio, bloom, setBloom]);
 
-  return <VisualizerContext.Provider value={value}>{children}</VisualizerContext.Provider>;
+return <VisualizerContext.Provider value={value}>{children}</VisualizerContext.Provider>;
 }
