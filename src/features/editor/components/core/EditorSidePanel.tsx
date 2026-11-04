@@ -10,6 +10,7 @@ import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
 import { Kbd } from '@ui/kbd';
 import { Icon } from '@/shared/ui/Icon';
+import { CollapsibleSection } from '@/shared/ui/collapsible-section';
 import { cn } from '@/shared/utils/utils';
 import type { EditorLine } from '@/features/editor/editor.types';
 import type { AppSettings } from '@/features/settings/settings.types';
@@ -83,6 +84,7 @@ function LiveCard({ lines, playbackPosition, duration, editorMode }: Pick<Editor
   const [sung, rest] = current ? splitSung(current, playbackPosition, currentEnd) : ['', ''];
 
   return (
+    <CollapsibleSection title={t('editor.lineReview.title')} defaultOpen>
     <section aria-label={t('editor.lineReview.title')}>
       <div className={`${CARD} px-5 py-[18px] flex flex-col gap-3 min-h-[168px]`}>
         <div className="flex items-center justify-between">
@@ -103,6 +105,7 @@ function LiveCard({ lines, playbackPosition, duration, editorMode }: Pick<Editor
         </div>
       </div>
     </section>
+    </CollapsibleSection>
   );
 }
 
@@ -144,6 +147,7 @@ function LineInspector({ lines, activeLineIndex, duration, singers, singerColors
   const step = NUDGE_STEP.toFixed(1);
 
   return (
+    <CollapsibleSection title={t('editor.inspector.title', { number: lyricNumber })} defaultOpen>
     <section aria-label={t('editor.inspector.title', { number: lyricNumber })} className={`${CARD} px-5 py-[18px] flex flex-col gap-3.5`}>
       <h3 className="font-heading text-xl font-bold tracking-[-0.02em] text-foreground">{t('editor.inspector.title', { number: lyricNumber })}</h3>
 
@@ -260,6 +264,7 @@ function LineInspector({ lines, activeLineIndex, duration, singers, singerColors
         </div>
       </div>
     </section>
+    </CollapsibleSection>
   );
 }
 
