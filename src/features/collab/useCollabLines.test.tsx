@@ -138,4 +138,25 @@ describe('useCollabLines', () => {
     expect(docTexts(b)).toEqual(['other'])
     expect(docTexts(a)).toEqual(['one'])
   })
+
+  it('a demoted editor cannot undo or redo into the doc, and keeps no stack', () => {
+    const doc = seeded([mk('a', 'one')])
+    const { result, rerender } = renderHook(({ canWrite }) => useCollabLines(doc, canWrite), {
+      initialProps: { canWrite: true },
+    })
+    act(() => result.current[1]((prev) => prev.map((l) => ({ ...l, text: 'mine' }))))
+    expect(result.current[4]).toBe(true)
+
+    rerender({ canWrite: false })
+    expect(result.current[4]).toBe(false) // canUndo
+    act(() => result.current[2]())
+    expect(docTexts(doc)).toEqual(['mine'])
+    expect(texts(result.current[0])).toEqual(['mine'])
+
+    // Promoted back: the stack recorded while an editor is gone, so nothing old is replayed.
+    rerender({ canWrite: true })
+    expect(result.current[4]).toBe(false)
+    act(() => result.current[2]())
+    expect(docTexts(doc)).toEqual(['mine'])
+  })
 })

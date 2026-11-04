@@ -26,9 +26,14 @@ const sameLines = (a: EditorLine[], b: EditorLine[]): boolean =>
  * Remote changes (any origin other than LOCAL_ORIGIN) are read back in that same
  * effect, after any pending local write has been applied, so a local edit that
  * is not committed yet survives a remote edit landing in between.
+ *
+ * `canWrite` false (a viewer, or an editor demoted mid-session) turns undo/redo into
+ * no-ops and drops the stack: an undo is a doc write the server would refuse anyway,
+ * and stale entries must not replay if the role comes back.
  */
 export function useCollabLines(
   doc: Y.Doc | null,
+  canWrite = true,
 ): [EditorLine[], (u: LinesUpdater) => void, () => void, () => void, boolean, boolean, () => void] {
   const [state, setState] = useState<Tagged>({ doc: null, lines: EMPTY })
   // A counter bumped whenever the doc changed under us, or undo/redo was queued.
@@ -41,6 +46,14 @@ export function useCollabLines(
   const remoteDirtyRef = useRef(false)
   const opsRef = useRef<('undo' | 'redo')[]>([])
   const undoManagerRef = useRef<Y.UndoManager | null>(null)
+  const canWriteRef = useRef(canWrite)
+
+  useEffect(() => {
+    canWriteRef.current = canWrite
+    if (canWrite) return
+    opsRef.current = []
+    undoManagerRef.current?.clear()
+  }, [canWrite])
 
   // Attach: snapshot the doc, observe remote changes, own the undo manager.
   useEffect(() => {
@@ -119,11 +132,13 @@ export function useCollabLines(
   }, [])
 
   const undo = useCallback(() => {
+    if (!canWriteRef.current) return
     opsRef.current.push('undo')
     setTick((t) => t + 1)
   }, [])
 
   const redo = useCallback(() => {
+    if (!canWriteRef.current) return
     opsRef.current.push('redo')
     setTick((t) => t + 1)
   }, [])
@@ -134,5 +149,5 @@ export function useCollabLines(
   }, [])
 
   const lines = state.doc === doc ? state.lines : EMPTY
-  return [lines, setLines, undo, redo, canUndo && !!doc, canRedo && !!doc, clearHistory]
+  return [lines, setLines, undo, redo, canUndo && !!doc && canWrite, canRedo && !!doc && canWrite, clearHistory]
 }
