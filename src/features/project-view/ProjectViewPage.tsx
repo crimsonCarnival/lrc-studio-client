@@ -41,6 +41,8 @@ import { projectPath, publicIdFromSlugId, canonicalPathFromParams, projectDispla
 import { VisualizerProvider } from '@features/visualizer/VisualizerProvider';
 import { AudioVisualizerCanvas } from '@features/visualizer/components/AudioVisualizerCanvas';
 import { VisualizerButton } from '@features/visualizer/components/VisualizerButton';
+import { hasCJK } from '@/shared/utils/furigana';
+import { loadCjkFont } from '@/app/cjk-font';
 
 interface PublicProject {
   publicId?: string;
@@ -268,6 +270,23 @@ function ProjectViewPageInner() {
     () => artistRoster(project?.metadata as Parameters<typeof artistRoster>[0]),
     [project?.metadata],
   );
+
+  useEffect(() => {
+    const hasCjk =
+      hasCJK(projectTitle) ||
+      songArtists.some((name) => hasCJK(name)) ||
+      lines.some(
+        (l) =>
+          hasCJK(l.text) ||
+          hasCJK(l.label) ||
+          hasCJK(l.secondary) ||
+          l.translations?.some((tr) => hasCJK(tr?.text)),
+      );
+    if (hasCjk) {
+      void loadCjkFont();
+    }
+  }, [projectTitle, songArtists, lines]);
+
   const songSingers = useMemo(
     () => buildSingerRoster(lines, songArtists),
     [lines, songArtists],

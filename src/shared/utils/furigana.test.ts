@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rubyRatioClass, splitOkurigana, rubyFitEm, needsSpaceAfter } from './furigana';
+import { rubyRatioClass, splitOkurigana, rubyFitEm, needsSpaceAfter, hasCJK } from './furigana';
 
 // The three reference cases from the ruby-rules design sheet. The ratio decides
 // whether a reading needs no adjustment, may overhang into the token's constant
@@ -96,5 +96,29 @@ describe('needsSpaceAfter', () => {
 
   it('adds nothing after the last word', () => {
     expect(needsSpaceAfter('end', undefined)).toBe(false);
+  });
+});
+
+describe('hasCJK', () => {
+  it('detects Japanese kana and kanji', () => {
+    expect(hasCJK('ひらがな')).toBe(true);
+    expect(hasCJK('カタカナ')).toBe(true);
+    expect(hasCJK('漢字')).toBe(true);
+  });
+
+  it('detects Simplified and Traditional Chinese', () => {
+    expect(hasCJK('简体字')).toBe(true);
+    expect(hasCJK('繁體字')).toBe(true);
+  });
+
+  it('detects Korean Hangul', () => {
+    expect(hasCJK('한국어')).toBe(true);
+    expect(hasCJK('안녕')).toBe(true);
+  });
+
+  it('returns false for Latin or empty strings', () => {
+    expect(hasCJK('hello world')).toBe(false);
+    expect(hasCJK('')).toBe(false);
+    expect(hasCJK(undefined)).toBe(false);
   });
 });

@@ -17,6 +17,15 @@ importers:
       '@fontsource-variable/noto-serif-jp':
         specifier: ^5.3.1
         version: 5.3.1
+      '@fontsource-variable/noto-serif-kr':
+        specifier: ^5.3.1
+        version: 5.3.1
+      '@fontsource-variable/noto-serif-sc':
+        specifier: ^5.3.1
+        version: 5.3.1
+      '@fontsource-variable/noto-serif-tc':
+        specifier: ^5.3.1
+        version: 5.3.1
       '@fontsource-variable/stack-sans-notch':
         specifier: ^5.3.0
         version: 5.3.0
@@ -526,6 +535,15 @@ packages:
 
   '@fontsource-variable/noto-serif-jp@5.3.1':
     resolution: {integrity: sha512-quU5uIezSqZFgPaDDI2C3hQfIJHzyXVYuvMZsDDF++og8yechsAwcmCkLLdofPboUB1xHOWV3xohJyIVBi3b4g==}
+
+  '@fontsource-variable/noto-serif-kr@5.3.1':
+    resolution: {integrity: sha512-cf29V+FWfw7/9dyzwCK6zKmf0z7XkdPPoq5UxgczmjZkV3RW1mr02/1LbEsRtiCKagRgVCb9/wQ+uYci1KzRMg==}
+
+  '@fontsource-variable/noto-serif-sc@5.3.1':
+    resolution: {integrity: sha512-aIHcBaL13QctVaJFeT6wqfgO9Rq/cNtD5g2ob4ze59fYPYwacGthnIrHBe83kDpMEB/k6VGtGc6fS99RImcoSQ==}
+
+  '@fontsource-variable/noto-serif-tc@5.3.1':
+    resolution: {integrity: sha512-IW3Pydbc5NWA5JNPyk2SST3x85STRtakYXs4HQKU2cv3xB4Y192z1OV2z09XOS9TcZckbPPzagpQ1lgeBjSFNw==}
 
   '@fontsource-variable/stack-sans-notch@5.3.0':
     resolution: {integrity: sha512-RDnrc2zMy8WEWgTp9werbgQPbQg86PIdcW6iOV3xV+C9sItFr4oJ2Ta2ir1dpSBXOxjzEFrxRPRm8EncInrVsQ==}
@@ -4614,6 +4632,12 @@ snapshots:
   '@floating-ui/utils@0.2.12': {}
 
   '@fontsource-variable/noto-serif-jp@5.3.1': {}
+
+  '@fontsource-variable/noto-serif-kr@5.3.1': {}
+
+  '@fontsource-variable/noto-serif-sc@5.3.1': {}
+
+  '@fontsource-variable/noto-serif-tc@5.3.1': {}
 
   '@fontsource-variable/stack-sans-notch@5.3.0': {}
 

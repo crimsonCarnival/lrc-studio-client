@@ -4,7 +4,7 @@
  */
 
 const KANJI_RE = /[一-龯㐀-䶿豈-﫿]/;
-const CJK_RE = /[\u3000-\u9FFF\uF900-\uFAFF]/;
+const CJK_RE = /[\u1100-\u11FF\u3000-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF]/;
 
 interface RubyWord {
   word?: string;

@@ -235,9 +235,9 @@ input:-webkit-autofill:active {
      plain "<Name>". Dropping the suffix here does not error — the name simply matches
      nothing and the stack silently falls through to ui-sans-serif. @fontsource/fira-sans
      is a static package, so it keeps the bare name. */
-  --font-heading: "Stack Sans Notch Variable", "Noto Serif JP Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Fira Sans", "Noto Serif JP Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-lyrics: "Fira Sans", "Noto Serif JP Variable", ui-sans-serif, sans-serif;
+  --font-heading: "Stack Sans Notch Variable", "Noto Serif JP Variable", "Noto Serif SC Variable", "Noto Serif TC Variable", "Noto Serif KR Variable", "Noto Serif CJK JP", "Noto Serif CJK SC", "Noto Serif CJK TC", "Noto Serif CJK KR", "Noto Serif CJK", "Noto Serif JP", "Noto Serif SC", "Noto Serif TC", "Noto Serif KR", "Noto Serif", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Fira Sans", "Noto Serif JP Variable", "Noto Serif SC Variable", "Noto Serif TC Variable", "Noto Serif KR Variable", "Noto Serif CJK JP", "Noto Serif CJK SC", "Noto Serif CJK TC", "Noto Serif CJK KR", "Noto Serif CJK", "Noto Serif JP", "Noto Serif SC", "Noto Serif TC", "Noto Serif KR", "Noto Serif", ui-sans-serif, system-ui, sans-serif;
+  --font-lyrics: "Fira Sans", "Noto Serif JP Variable", "Noto Serif SC Variable", "Noto Serif TC Variable", "Noto Serif KR Variable", "Noto Serif CJK JP", "Noto Serif CJK SC", "Noto Serif CJK TC", "Noto Serif CJK KR", "Noto Serif CJK", "Noto Serif JP", "Noto Serif SC", "Noto Serif TC", "Noto Serif KR", "Noto Serif", ui-sans-serif, sans-serif;
 
   /* ── Colors ── */
   /* Rosé Pine Moon defaults (dark theme) */
