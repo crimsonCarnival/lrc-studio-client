@@ -10,6 +10,8 @@ export const HEARTBEAT_MS = 10_000
 export const QUEUE_DEADLINE_MS = 5_000
 /** A tab hidden for this long lets go of its locks; it re-claims what it still wants on return. */
 export const HIDDEN_RELEASE_MS = 30_000
+/** A released lock with no local doc write behind it is let go after this long. */
+export const UNLOCK_GRACE_MS = 250
 
 export type LineLocks = {
   /** The server's lock table (mine and everyone else's), keyed by line id. */
@@ -83,6 +85,10 @@ const isHidden = () => typeof document !== 'undefined' && document.visibilitySta
  *   arrives after the update that creates it. Given up after QUEUE_DEADLINE_MS.
  * - dormant: the tab has been hidden for HIDDEN_RELEASE_MS and let go of its locks. Intents are
  *   kept, and asked for again when the tab is visible.
+ * - releasing: unlocks held back after a release (or a queued write), because the write the lock
+ *   guarded reaches the doc in a parent's effect, after this hook's callers released it. They go
+ *   out right after the next local doc update (which the provider has sent by then), or after
+ *   UNLOCK_GRACE_MS when no write follows. A line wanted again meanwhile keeps its lock.
  */
 export function useLineLocks(
   provider: HocuspocusProvider | null,
@@ -114,6 +120,8 @@ export function useLineLocks(
   // True from the server's hello until the socket drops.
   const live = useRef(false)
   const dormant = useRef(false)
+  const releasing = useRef(new Set<string>())
+  const releaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const send = useCallback((msg: object) => {
     providerRef.current?.sendStateless(JSON.stringify(msg))
@@ -158,6 +166,27 @@ export function useLineLocks(
     settle(lineId)
     if (!neverSent && live.current) send({ t: 'unlock', lineId })
   }, [send, settle])
+
+  const flushReleases = useCallback(() => {
+    if (releaseTimer.current !== null) clearTimeout(releaseTimer.current)
+    releaseTimer.current = null
+    for (const lineId of releasing.current) {
+      if (live.current && !intents.current.has(lineId) && !pending.current.has(lineId)) {
+        send({ t: 'unlock', lineId })
+      }
+    }
+    releasing.current.clear()
+  }, [send])
+
+  // `unlock`, with the send held back until the guarded write has gone out (see `releasing`).
+  const unlockAfterWrite = useCallback((lineId: string) => {
+    const neverSent = waiting.current.delete(lineId)
+    requested.current.delete(lineId)
+    settle(lineId)
+    if (neverSent || !live.current) return
+    releasing.current.add(lineId)
+    if (releaseTimer.current === null) releaseTimer.current = setTimeout(flushReleases, UNLOCK_GRACE_MS)
+  }, [settle, flushReleases])
 
   // Gives up on whatever is parked on the line: queued writes go with the deny toast.
   const expire = useCallback((lineId: string) => {
@@ -208,8 +237,8 @@ export function useLineLocks(
     intents.current.delete(lineId)
     // A write is still waiting for this lock (a mark made just before the cursor moved on):
     // the grant effect lets go of the lock once it has run.
-    if (!pending.current.has(lineId)) unlock(lineId)
-  }, [unlock])
+    if (!pending.current.has(lineId)) unlockAfterWrite(lineId)
+  }, [unlockAfterWrite])
 
   const withLock = useCallback((lineId: string, write: () => void) => {
     if (!providerRef.current || isHeld(lineId)) {
@@ -240,12 +269,12 @@ export function useLineLocks(
       settle(lineId)
       writes.forEach((write) => write())
       // Nothing else wants this line (no open editor, no sync cursor): don't keep it alive.
-      if (!intents.current.has(lineId)) unlock(lineId)
+      if (!intents.current.has(lineId)) unlockAfterWrite(lineId)
     }
     for (const lineId of [...requested.current]) {
       if (locks[lineId] || !pending.current.has(lineId)) requested.current.delete(lineId)
     }
-  }, [locks, conn, unlock, settle])
+  }, [locks, conn, unlockAfterWrite, settle])
 
   // A new hello means a fresh connection (the first, or after a reconnect): ask again
   // for what the UI still wants, plus any write that was queued before the hello arrived.
@@ -279,10 +308,14 @@ export function useLineLocks(
       requested.current.clear()
       pending.current.clear()
       waiting.current.clear()
+      // The server freed this connection's locks: nothing is left to let go of.
+      releasing.current.clear()
       dropTimers()
     }
-    // Runs after the provider's own update handler (registered when it was built).
-    const onDocUpdate = () => {
+    // Runs after the provider's own update handler (registered when it was built), so a local
+    // update has already been sent when a held-back unlock follows it.
+    const onDocUpdate = (_update: Uint8Array, origin: unknown) => {
+      if (origin !== provider && releasing.current.size > 0) flushReleases()
       for (const lineId of [...waiting.current]) if (inDoc(lineId)) request(lineId)
     }
     provider.on('stateless', onStateless)
@@ -334,6 +367,7 @@ export function useLineLocks(
     const parked = pending.current
     const waited = waiting.current
     const inFlight = requested.current
+    const letGo = releasing.current
     return () => {
       // The editor's own claim effects release after this cleanup has run (it is declared
       // first), when `live` is already false, so let go of everything here while the
@@ -349,13 +383,16 @@ export function useLineLocks(
       clearInterval(beat)
       clearTimeout(hiddenTimer)
       dropTimers()
+      if (releaseTimer.current !== null) clearTimeout(releaseTimer.current)
+      releaseTimer.current = null
+      letGo.clear()
       parked.clear()
       waited.clear()
       inFlight.clear()
       dormant.current = false
       live.current = false
     }
-  }, [provider, isHeld, inDoc, request, send, unlock, expire, settle, denyToast])
+  }, [provider, isHeld, inDoc, request, send, unlock, expire, settle, denyToast, flushReleases])
 
   const othersLocks = useMemo(() => {
     const out: LockSnapshot = {}

@@ -83,8 +83,10 @@ export default {
       copyFailed: 'No se pudo copiar. Selecciona el enlace y cópialo a mano.',
       dismiss: 'Listo',
       createdOn: 'Creado el {{date}}',
-      revoked: 'Revocado',
+      // El servidor lista también como revocado un enlace caducado.
+      revoked: 'Revocado o caducado',
       revoke: 'Revocar',
+      revokeHint: 'Revocar un enlace impide que alguien nuevo se una con él y desconecta a los invitados que entraron con él. Los miembros con sesión iniciada que ya se unieron se quedan; quítalos en Personas.',
       empty: 'Aún no hay enlaces de invitación.',
       limit: 'Esta sesión llegó a su límite de enlaces. Revoca uno para crear otro.',
       createFailed: 'No se pudo crear el enlace. Inténtalo de nuevo.',
@@ -139,7 +141,7 @@ export default {
     signIn: 'Iniciar sesión',
     errors: {
       invalid: 'Este enlace de invitación no es válido. Pide uno nuevo al propietario.',
-      revoked: 'El propietario revocó este enlace de invitación. Pide uno nuevo.',
+      revoked: 'Este enlace de invitación fue revocado o caducó. Pide uno nuevo al propietario.',
       guestsDisabled: 'El propietario desactivó el acceso de invitados. Inicia sesión para entrar.',
       kicked: 'Te expulsaron de esta sesión y no puedes volver a entrar.',
       ended: 'Esta sesión ya terminó.',

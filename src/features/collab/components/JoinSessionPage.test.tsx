@@ -64,7 +64,7 @@ describe('JoinSessionPage', () => {
   })
 
   it.each([
-    ['collab_link_revoked', /revoked this invite link/i],
+    ['collab_link_revoked', /revoked or has expired/i],
     ['collab_guests_disabled', /turned off guest access/i],
     ['collab_kicked', /removed from this session/i],
     ['collab_session_ended', /already ended/i],

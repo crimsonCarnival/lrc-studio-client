@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 type ProviderConfig = {
+  url: string
   onAuthenticated: (p: { scope: string }) => void
   onAuthenticationFailed: (p: { reason: string }) => void
   onClose: (p: { event: { code: number; reason: string } }) => void
@@ -10,7 +11,12 @@ type ProviderConfig = {
 }
 
 const h = vi.hoisted(() => ({
-  providers: [] as { config: ProviderConfig; connect: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> }[],
+  providers: [] as {
+    config: ProviderConfig
+    connect: ReturnType<typeof vi.fn>
+    disconnect: ReturnType<typeof vi.fn>
+    configuration: { websocketProvider: { setConfiguration: ReturnType<typeof vi.fn> } }
+  }[],
   auth: { user: null as { id: string; isGuest?: boolean } | null, refreshSession: (() => Promise.resolve()) as () => Promise<void> },
 }))
 
@@ -20,6 +26,7 @@ vi.mock('@hocuspocus/provider', () => {
     connect = vi.fn(async () => {})
     disconnect = vi.fn()
     destroy = vi.fn()
+    configuration = { websocketProvider: { setConfiguration: vi.fn() } }
     constructor(config: ProviderConfig) {
       this.config = config
       h.providers.push(this)
@@ -260,5 +267,39 @@ describe('useCollabSession: hello and locks', () => {
 
     say(provider, { t: 'kicked', subject: 'guest:other' })
     expect(result.current.status).not.toBe('forbidden')
+  })
+})
+
+describe('useCollabSession: session epoch on reconnect', () => {
+  beforeEach(() => {
+    h.providers.length = 0
+    h.auth.user = null
+  })
+
+  const say = (provider: { config: ProviderConfig }, msg: object) => act(() => provider.config.onStateless({ payload: JSON.stringify(msg) }))
+  const hello = { t: 'hello', conn: 'conn-1', subject: 'guest:g1', name: 'Guest', colorIndex: 3, role: 'editor', sessionId: 'sess-1' }
+
+  it('the first connect carries no sessionId', async () => {
+    const { provider } = await connected()
+    const url = new URL(provider.config.url)
+    expect(url.searchParams.get('deviceId')).toBe('dv_test')
+    expect(url.searchParams.has('sessionId')).toBe(false)
+    expect(provider.configuration.websocketProvider.setConfiguration).not.toHaveBeenCalled()
+  })
+
+  it('pins reconnects to the session id from hello', async () => {
+    const { provider } = await connected()
+    say(provider, hello)
+    const set = provider.configuration.websocketProvider.setConfiguration
+    expect(set).toHaveBeenCalledTimes(1)
+    const url = new URL((set.mock.calls[0][0] as { url: string }).url)
+    expect(url.searchParams.get('sessionId')).toBe('sess-1')
+    expect(url.searchParams.get('deviceId')).toBe('dv_test')
+  })
+
+  it('a hello without a session id leaves the url alone', async () => {
+    const { provider } = await connected()
+    say(provider, { ...hello, sessionId: undefined })
+    expect(provider.configuration.websocketProvider.setConfiguration).not.toHaveBeenCalled()
   })
 })

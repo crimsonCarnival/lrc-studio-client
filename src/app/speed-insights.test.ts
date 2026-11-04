@@ -6,6 +6,13 @@ describe('speed insights redaction', () => {
     expect(redactPath('/join/abc123XYZ_-token')).toBe('/join/:token')
   })
 
+  it('redacts the token whatever the case of the join segment', () => {
+    // React Router matches /Join/<token> to the same route, so it carries the same secret.
+    for (const p of ['/Join/abc123secret', '/JOIN/abc123secret']) expect(redactPath(p)).toBe('/join/:token')
+    const out = redactInsightsEvent({ type: 'vital', url: 'https://www.lrcstudio.app/JoIn/abc123secret', route: '/Join/abc123secret' })
+    expect(JSON.stringify(out)).not.toContain('abc123secret')
+  })
+
   it('leaves other paths alone', () => {
     for (const p of ['/', '/home', '/join', '/session/k3x9a2c7qm', '/ana/joint-song-abc123']) {
       expect(redactPath(p)).toBe(p)

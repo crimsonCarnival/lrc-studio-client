@@ -11,6 +11,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   applyMark,
+  markTargetIndex,
   applyBulkShift,
   applyGlobalOffset,
   clearAllTimestamps,
@@ -661,5 +662,36 @@ describe('deleting lines captured before a confirm dialog', () => {
     expect(activeIndexAfterRemoval(3, [3], 3)).toBe(2);
     expect(activeIndexAfterRemoval(0, [0], 0)).toBe(0);
     expect(activeIndexAfterRemoval(1, [3], 4)).toBe(1);
+  });
+});
+
+// The line a mark writes to is the line whose lock the write needs (useEditor's handleMark).
+describe('markTargetIndex', () => {
+  const sec = (label: string) => ({ type: 'section', label, text: '' });
+  const line = (text: string) => ({ text, timestamp: null });
+
+  it('is the cursor on a lyric line', () => {
+    expect(markTargetIndex([line('a'), line('b')], 1, null)).toBe(1);
+  });
+
+  it('skips a section marker (and a run of them) to the first line under it', () => {
+    expect(markTargetIndex([sec('Verse'), line('a')], 0, null)).toBe(1);
+    expect(markTargetIndex([line('x'), sec('Verse'), sec('Pre'), line('a')], 1, null)).toBe(3);
+  });
+
+  it('is null when only section markers follow', () => {
+    expect(markTargetIndex([line('x'), sec('Outro')], 1, null)).toBeNull();
+  });
+
+  it('is the focused timestamp line when one is focused', () => {
+    expect(markTargetIndex([sec('Verse'), line('a'), line('b')], 0, { lineIndex: 2, type: 'main' })).toBe(2);
+  });
+
+  it('agrees with the line applyMark stamps', () => {
+    const lines = [sec('Verse'), line('a'), line('b')];
+    const settings = { autoAdvance: { enabled: true, mode: 'next' } };
+    const res = applyMark({ lines, activeLineIndex: 0, time: 3, editorMode: 'lrc', settings } as never);
+    const stamped = res.nextLines.findIndex((l) => l.timestamp === 3);
+    expect(stamped).toBe(markTargetIndex(lines, 0, null));
   });
 });

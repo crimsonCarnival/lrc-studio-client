@@ -7,7 +7,7 @@ import type { CollabMe, LockSnapshot } from './collab.types'
 const h = vi.hoisted(() => ({ error: vi.fn() }))
 vi.mock('react-hot-toast', () => ({ default: { error: h.error } }))
 
-import { HEARTBEAT_MS, HIDDEN_RELEASE_MS, QUEUE_DEADLINE_MS, otherLockHolder, useLineLocks } from './useLineLocks'
+import { HEARTBEAT_MS, HIDDEN_RELEASE_MS, QUEUE_DEADLINE_MS, UNLOCK_GRACE_MS, otherLockHolder, useLineLocks } from './useLineLocks'
 
 type Sent = { t: string; lineId?: string; lineIds?: string[] }
 
@@ -31,6 +31,10 @@ function fakeProvider(lineIds: string[] = []) {
   }
 }
 type FakeProvider = ReturnType<typeof fakeProvider>
+
+// A local doc write (the parent's effect committing lines): lets a held-back unlock go out.
+const localWrite = (p: FakeProvider) =>
+  act(() => p.document.transact(() => p.document.getMap('meta').set('n', Math.random()), 'local'))
 
 const meWith = (conn: string): CollabMe => ({ subject: 'user:1', name: 'Ana', colorIndex: 2, role: 'editor', conn, clientId: 1 })
 const mine = (conn: string) => ({ holderConn: conn, subject: 'user:1', name: 'Ana', colorIndex: 2 })
@@ -137,6 +141,7 @@ describe('useLineLocks', () => {
     expect(provider.sent.filter((m) => m.t === 'lock')).toHaveLength(1)
     hook.rerender({ me: meWith('c1'), locks: { l1: mine('c1') } })
     act(() => { hook.result.current.release('l1'); hook.result.current.release('l1') })
+    localWrite(provider)
     expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([{ t: 'unlock', lineId: 'l1' }])
   })
 
@@ -144,9 +149,49 @@ describe('useLineLocks', () => {
     const { hook, provider } = setup({ locks: { l1: mine('c1') } })
     act(() => { hook.result.current.claim('l1'); hook.result.current.claim('l1') })
     act(() => hook.result.current.release('l1'))
+    localWrite(provider)
     expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([])
     act(() => hook.result.current.release('l1'))
+    localWrite(provider)
     expect(provider.sent.filter((m) => m.t === 'unlock')).toHaveLength(1)
+  })
+
+  // The write a lock guarded reaches the doc in a parent's effect, after the child's release
+  // cleanup has run: the unlock must not overtake it on the socket.
+  it('holds a released unlock back until the next local doc write has gone out', () => {
+    const provider = fakeProvider(LINES)
+    const order: string[] = []
+    // The real provider sends a local update from a handler registered when it was built,
+    // so before any handler this hook adds.
+    provider.document.on('update', (_u: Uint8Array, origin: unknown) => { if (origin !== provider) order.push('update') })
+    const send = provider.sendStateless.bind(provider)
+    provider.sendStateless = (payload: string) => { order.push((JSON.parse(payload) as Sent).t); send(payload) }
+    const hook = renderHook(() => useLineLocks(provider as never, meWith('c1'), { l1: mine('c1') }))
+
+    act(() => hook.result.current.claim('l1'))
+    act(() => hook.result.current.release('l1'))
+    expect(order).toEqual([])
+    localWrite(provider)
+    expect(order).toEqual(['update', 'unlock'])
+  })
+
+  it('a released unlock with no write behind it goes out after the grace period', () => {
+    vi.useFakeTimers()
+    const { hook, provider } = setup({ locks: { l1: mine('c1') } })
+    act(() => hook.result.current.claim('l1'))
+    act(() => hook.result.current.release('l1'))
+    act(() => { vi.advanceTimersByTime(UNLOCK_GRACE_MS - 1) })
+    expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([])
+    act(() => { vi.advanceTimersByTime(1) })
+    expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([{ t: 'unlock', lineId: 'l1' }])
+  })
+
+  it('a line claimed again before its held-back unlock went out stays locked', () => {
+    const { hook, provider } = setup({ locks: { l1: mine('c1') } })
+    act(() => hook.result.current.claim('l1'))
+    act(() => { hook.result.current.release('l1'); hook.result.current.claim('l1') })
+    localWrite(provider)
+    expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([])
   })
 
   it('a release while a write is queued waits until the write has run', () => {
@@ -160,6 +205,7 @@ describe('useLineLocks', () => {
     expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([])
     hook.rerender({ me: meWith('c1'), locks: { l1: mine('c1') } })
     expect(out).toEqual(['mark'])
+    localWrite(provider)
     expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([{ t: 'unlock', lineId: 'l1' }])
   })
 
@@ -195,6 +241,7 @@ describe('useLineLocks', () => {
     act(() => hook.result.current.withLock('l1', write)) // no claim: nothing keeps the line
     hook.rerender({ me: meWith('c1'), locks: { l1: mine('c1') } })
     expect(write).toHaveBeenCalledTimes(1)
+    localWrite(provider)
     expect(provider.sent.filter((m) => m.t === 'unlock')).toEqual([{ t: 'unlock', lineId: 'l1' }])
     // The server's follow-up snapshot no longer lists it, so no heartbeat keeps it alive.
     hook.rerender({ me: meWith('c1'), locks: NONE })

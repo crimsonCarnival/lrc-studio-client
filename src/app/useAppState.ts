@@ -80,8 +80,9 @@ export function useAppState(user?: AuthUserType | null) {
   // later tasks: collabSession.provider / .doc / .me / .role are returned below.
   // The session's media hydrates the player further down ("Session media").
   const collabSession = useCollabSession(sessionPublicId);
-  const collabHistory = useCollabLines(collabSession.doc);
   const collabCanWrite = collabSession.role === 'owner' || collabSession.role === 'editor';
+  // Undo/redo are doc writes too: without write access they are no-ops.
+  const collabHistory = useCollabLines(collabSession.doc, collabCanWrite);
   // A viewer sees the session read-only (the preview); AppRouter and the player key off this.
   const collabViewer = inSession && collabSession.role === 'viewer';
   useCollabEditorMode(collabSession.doc, collabSession.status, collabCanWrite, editorMode, setEditorModeRaw);
@@ -622,8 +623,17 @@ export function useAppState(user?: AuthUserType | null) {
   useEffect(() => {
     const left = wasInSessionRef.current && !inSession;
     wasInSessionRef.current = inSession;
-    // An unsaved draft (no publicId) has no server copy to go stale, so it is kept.
-    if (!left || !activepublicIdRef.current) return;
+    if (!left) return;
+    // An unsaved draft (no publicId) has no server copy to go stale, so its lines are kept.
+    // Its media is not: entering the session already dropped it (see "Session media") and
+    // loaded the session's song, which a draft started next would otherwise save as its own.
+    if (!activepublicIdRef.current) {
+      playerRef.current?.clearMedia();
+      setRestoredMedia(null);
+      setUploadedAudio(null);
+      setProjectYtUrl('');
+      return;
+    }
     setSoloLines([]);
     clearSoloHistory();
     activepublicIdRef.current = null;

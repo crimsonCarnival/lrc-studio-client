@@ -186,6 +186,7 @@ export function SessionSettingsModal({ open, onOpenChange, publicId, provider, l
 
           <section className="flex flex-col gap-2">
             <h3 className={HEADING}>{t('collab.settings.invites.title')}</h3>
+            <p className="text-xs text-muted-foreground">{t('collab.settings.invites.revokeHint')}</p>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => void onCreateInvite('editor')}>{t('collab.settings.invites.createEditor')}</Button>
               <Button variant="outline" onClick={() => void onCreateInvite('viewer')}>{t('collab.settings.invites.createViewer')}</Button>

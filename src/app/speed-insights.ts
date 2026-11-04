@@ -3,7 +3,8 @@
 
 type InsightsEvent = { type: 'vital'; url: string; route?: string }
 
-const JOIN_PATH = /^\/join\/[^/?#]+/
+// Case-insensitive: React Router matches /Join/<token> to the same route.
+const JOIN_PATH = /^\/join\/[^/?#]+/i
 
 /** `/join/<token>` becomes `/join/:token` (query and hash dropped with it); other paths are untouched. */
 export function redactPath(path: string): string {
