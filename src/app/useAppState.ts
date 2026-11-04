@@ -5,7 +5,6 @@ import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSettings } from '@/features/settings/useSettings';
 import useHistory from '@/features/editor/hooks/useHistory';
 import useConfirm from '@/shared/hooks/useConfirm';
-import { useThemeSync } from '@/shared/hooks/useThemeSync';
 import { useDragAndDrop } from '@/shared/hooks/useDragAndDrop';
 import { useGlobalShortcuts } from '@/shared/hooks/useGlobalShortcuts';
 import { useLoopCurrentLine } from '@/features/editor/hooks/useLoopCurrentLine';
@@ -49,11 +48,6 @@ export function useAppState(user?: AuthUserType | null) {
   const sessionPublicId = sessionPublicIdFromPath(useLocation().pathname);
   const inSession = sessionPublicId !== null;
 
-  useThemeSync(
-    settings?.interface?.theme as string | undefined,
-    settings?.interface?.fontWeight as string | undefined,
-    settings?.interface?.customTheme as string | undefined,
-  );
 
   // ——— Lines state with undo/redo ———
   // editorMode must be declared before useHistory so getCompanion can close over it
@@ -120,17 +114,7 @@ export function useAppState(user?: AuthUserType | null) {
   // Cost of the scan: .some() short-circuits on the first hit, and cjkFontLoadedRef
   // stops it running again afterwards. The surviving case is a latin-only project,
   // where this is one cheap regex per line per edit; negligible beside the render.
-  const cjkFontLoadedRef = useRef(false);
-  useEffect(() => {
-    if (cjkFontLoadedRef.current) return;
-    // Section markers carry their text in `label` rather than `text`.
-    const hasCjkContent = lines.some(
-      (l) => hasCJK(l.text as string | undefined) || hasCJK(l.label as string | undefined),
-    );
-    if (!hasCjkContent) return;
-    cjkFontLoadedRef.current = true;
-    void loadCjkFont();
-  }, [lines]);
+
 
   const [syncMode, setSyncMode] = useState(true);
   const [activeLineIndex, setActiveLineIndex] = useState(0);
@@ -144,6 +128,25 @@ export function useAppState(user?: AuthUserType | null) {
   const [duration, setDuration] = useState(0);
   const [mediaTitle, setMediaTitle] = useState('');
   const [projectMetadata, setProjectMetadata] = useState<ProjectMetadata>({ description: '', tags: [] });
+
+  const cjkFontLoadedRef = useRef(false);
+  useEffect(() => {
+    if (cjkFontLoadedRef.current) return;
+    const hasCjkContent =
+      hasCJK(mediaTitle) ||
+      hasCJK(projectMetadata?.songName) ||
+      hasCJK(projectMetadata?.songArtist) ||
+      lines.some(
+        (l) =>
+          hasCJK(l.text as string | undefined) ||
+          hasCJK(l.label as string | undefined) ||
+          hasCJK(l.secondary as string | undefined) ||
+          l.translations?.some((tr) => hasCJK(tr?.text)),
+      );
+    if (!hasCjkContent) return;
+    cjkFontLoadedRef.current = true;
+    void loadCjkFont();
+  }, [lines, mediaTitle, projectMetadata]);
   const [forkedFrom, setForkedFrom] = useState<ForkedFrom | null>(null);
   const [hasMedia, setHasMedia] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);

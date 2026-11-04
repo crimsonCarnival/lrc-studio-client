@@ -61,6 +61,7 @@ export const DEFAULT_SETTINGS = {
   },
   interface: {
     defaultLanguage: 'en',
+    theme: 'dark',
     fontSize: 'normal',
     // How heavy the UI's type ramp is: thinnest | lighter | light | normal | bold | bolder.
     // Buttons ignore it (see index.css).

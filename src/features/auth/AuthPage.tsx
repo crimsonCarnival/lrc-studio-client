@@ -8,7 +8,6 @@ import { useTranslation, Trans } from 'react-i18next';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { toast } from 'react-hot-toast';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
-import { useThemeSync } from '@/shared/hooks/useThemeSync';
 import { LogoMark } from '@/shared/ui/LogoMark';
 import LoginIdentifierStep from './LoginIdentifierStep';
 import LoginPasswordStep from './LoginPasswordStep';
@@ -62,7 +61,6 @@ export default function AuthPage() {
   const { mode } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  useThemeSync();
 
   const action = mode || searchParams.get('action') || 'signin';
   const redirect = searchParams.get('redirect') || '';

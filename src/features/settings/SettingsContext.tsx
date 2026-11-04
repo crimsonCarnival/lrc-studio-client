@@ -189,7 +189,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       try {
         const localUi = (JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as { interface?: Record<string, unknown> } | null)?.interface;
         const remoteUi = (remote as { interface?: Record<string, unknown> } | null)?.interface;
-        for (const key of ['theme', 'customTheme']) {
+        for (const key of ['theme', 'customTheme', 'fontWeight']) {
           const local = localUi?.[key];
           if (typeof local === 'string' && local && (remoteUi?.[key] === null || remoteUi?.[key] === undefined)) carried[key] = local;
         }

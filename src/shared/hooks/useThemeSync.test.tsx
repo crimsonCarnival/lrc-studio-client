@@ -53,3 +53,64 @@ describe('useThemeSync language -> URL sync', () => {
     expect(window.location.search).toBe('?hl=en')
   })
 })
+
+describe('useThemeSync theme & font weight sync', () => {
+  beforeEach(() => {
+    document.documentElement.removeAttribute('style');
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-font-weight');
+    localStorage.clear();
+  });
+
+  function ThemeShell({ theme, fontWeight }: { theme?: string; fontWeight?: string }) {
+    useThemeSync(theme, fontWeight);
+    return <Outlet />;
+  }
+
+  it('applies palette theme and keeps it across route navigation', () => {
+    window.history.replaceState({}, '', '/page1');
+    const { rerender } = render(
+      <BrowserRouter>
+        <Routes>
+          <Route element={<ThemeShell theme="dracula" />}>
+            <Route path="page1" element={<div>page 1</div>} />
+            <Route path="page2" element={<div>page 2</div>} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    );
+
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.style.getPropertyValue('--background')).toBe('#282a36');
+
+    // Simulate page change to /page2
+    window.history.pushState({}, '', '/page2');
+    rerender(
+      <BrowserRouter>
+        <Routes>
+          <Route element={<ThemeShell theme="dracula" />}>
+            <Route path="page1" element={<div>page 1</div>} />
+            <Route path="page2" element={<div>page 2</div>} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    );
+
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.style.getPropertyValue('--background')).toBe('#282a36');
+  });
+
+  it('syncs font weight attribute to documentElement', () => {
+    render(
+      <BrowserRouter>
+        <Routes>
+          <Route element={<ThemeShell theme="dark" fontWeight="bold" />}>
+            <Route path="*" element={<div>content</div>} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    );
+
+    expect(document.documentElement.getAttribute('data-font-weight')).toBe('bold');
+  });
+});

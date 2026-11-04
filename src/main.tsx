@@ -36,6 +36,17 @@ function NavigationBridge() {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
+function ThemeSync() {
+  const { settings } = useSettings();
+  useThemeSync(
+    (settings?.interface?.theme as string | undefined) || 'dark',
+    settings?.interface?.fontWeight as string | undefined,
+    settings?.interface?.customTheme as string | undefined,
+  );
+  return null;
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
 function LanguageSync() {
   const { i18n } = useTranslation();
   useEffect(() => {
@@ -48,6 +59,7 @@ import { LoadingSpinner } from '@ui/LoadingSpinner'
 import { AppLoadingScreen } from '@ui/AppLoadingScreen'
 import { AppProviders } from './app/AppProviders';
 import { useSettings } from '@/features/settings/useSettings';
+import { useThemeSync } from '@/shared/hooks/useThemeSync';
 import { RecaptchaGate, RecaptchaRouteArmer } from '@/app/RecaptchaGate';
 import { gqlRequest } from '@/app/graphql.client.js';
 import { projectPath } from '@/features/projects/project-path';
@@ -286,6 +298,7 @@ i18nReady.then(() => {
             <SpeedInsights beforeSend={redactInsightsEvent} />
             <AppProviders>
               <BrowserRouter>
+                <ThemeSync />
                 <RecaptchaRouteArmer />
                 <NavigationBridge />
                 <RootRoutes />

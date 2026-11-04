@@ -5,7 +5,7 @@ import { useReplaceSearch } from './useReplaceSearch';
 import { applyTheme } from '@/shared/theme/apply-theme';
 import { parseCustomTheme } from '@/shared/theme/custom-theme';
 
-export function useThemeSync(theme?: string, fontWeight?: string, customTheme?: string) {
+export function useThemeSync(theme: string = 'dark', fontWeight?: string, customTheme?: string) {
   const { i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const replaceSearch = useReplaceSearch();
@@ -13,7 +13,7 @@ export function useThemeSync(theme?: string, fontWeight?: string, customTheme?: 
   // 1. Apply theme: `dark` (default), `light`, or one of the palette themes.
   // No theme (the auth page, or a user with none stored) means dark, as before.
   useEffect(() => {
-    applyTheme(theme, parseCustomTheme(customTheme));
+    applyTheme(theme || 'dark', parseCustomTheme(customTheme));
   }, [theme, customTheme]);
 
   // 1b. Apply the type weight ramp. Undefined means the caller has no settings to

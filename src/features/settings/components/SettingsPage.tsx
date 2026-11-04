@@ -120,7 +120,7 @@ export default function SettingsPage() {
   const searchParams = new URLSearchParams(location.search);
   const focusCard = searchParams.get('focus');
   const { user, refreshUserProfile } = useAuthContext();
-  const { settings: globalSettings, updateAllSettings } = useSettings() as { settings: Settings; updateAllSettings: (s: Settings) => void };
+  const { settings: globalSettings, updateSetting: globalUpdateSetting, updateAllSettings } = useSettings() as { settings: Settings; updateSetting: (path: string, value: unknown) => void; updateAllSettings: (s: Settings) => void };
 
   const isGuest = !user || !!user.isGuest;
   const visibleTabs = TABS.filter(entry => !entry.authOnly || !isGuest);
@@ -177,7 +177,20 @@ export default function SettingsPage() {
       }
       return next;
     });
-  }, []);
+
+    if (key === 'interface.theme' || key === 'interface.customTheme' || key === 'interface.fontWeight') {
+      globalUpdateSetting(key, value);
+      savedSettingsRef.current = {
+        ...savedSettingsRef.current,
+        interface: {
+          ...savedSettingsRef.current?.interface,
+          [key.replace('interface.', '')]: value,
+        },
+      };
+    }
+  }, [globalUpdateSetting]);
+
+
 
   useEffect(() => {
     if (autoSaveRef.current) {
@@ -229,8 +242,17 @@ export default function SettingsPage() {
   }, [updateAllSettings]);
 
   const handleApply = () => {
-    updateAllSettings(settings);
-    savedSettingsRef.current = settings;
+    const toApply = {
+      ...settings,
+      interface: {
+        ...settings.interface,
+        theme: globalSettings?.interface?.theme ?? settings.interface?.theme,
+        customTheme: globalSettings?.interface?.customTheme ?? settings.interface?.customTheme,
+        fontWeight: globalSettings?.interface?.fontWeight ?? settings.interface?.fontWeight,
+      },
+    };
+    updateAllSettings(toApply);
+    savedSettingsRef.current = toApply;
   };
 
   const handleResetSection = () => {
@@ -443,7 +465,15 @@ export default function SettingsPage() {
                   <SettingsDraftContext.Provider value={reportPanelDraft}>
                     <SettingsPanelContent
                       activeTab={activeTab}
-                      settings={settings}
+                      settings={{
+                        ...settings,
+                        interface: {
+                          ...settings.interface,
+                          theme: globalSettings?.interface?.theme ?? settings.interface?.theme,
+                          customTheme: globalSettings?.interface?.customTheme ?? settings.interface?.customTheme,
+                          fontWeight: globalSettings?.interface?.fontWeight ?? settings.interface?.fontWeight,
+                        },
+                      }}
                       updateSetting={updateSetting}
                       validateShortcut={validateShortcut}
                       isGuest={isGuest}
