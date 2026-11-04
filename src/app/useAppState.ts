@@ -623,8 +623,17 @@ export function useAppState(user?: AuthUserType | null) {
   useEffect(() => {
     const left = wasInSessionRef.current && !inSession;
     wasInSessionRef.current = inSession;
-    // An unsaved draft (no publicId) has no server copy to go stale, so it is kept.
-    if (!left || !activepublicIdRef.current) return;
+    if (!left) return;
+    // An unsaved draft (no publicId) has no server copy to go stale, so its lines are kept.
+    // Its media is not: entering the session already dropped it (see "Session media") and
+    // loaded the session's song, which a draft started next would otherwise save as its own.
+    if (!activepublicIdRef.current) {
+      playerRef.current?.clearMedia();
+      setRestoredMedia(null);
+      setUploadedAudio(null);
+      setProjectYtUrl('');
+      return;
+    }
     setSoloLines([]);
     clearSoloHistory();
     activepublicIdRef.current = null;
