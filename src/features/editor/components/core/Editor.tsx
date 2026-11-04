@@ -534,7 +534,6 @@ export default function Editor({
   }, [lines, activeLineIndex, activeWordIndex, stampTarget]);
 
   const statusSlot = useHeaderSlot('status');
-  const centerSlot = useHeaderSlot('center');
   const actionsSlot = useHeaderSlot('actions');
 
   // 'failed' only while there is still something unsaved: a later autosave that gets the
@@ -789,7 +788,6 @@ export default function Editor({
         </span>,
         statusSlot,
       )}
-      {centerSlot && createPortal(modeTabs, centerSlot)}
       {actionsSlot && createPortal(
         <>
           {syncMode && lines.length > 0 && (
@@ -958,6 +956,7 @@ export default function Editor({
         <div className="lg:hidden w-full flex">{modeTabs}</div>
         {wordsFocus ? (
           <>
+            <div className="hidden lg:flex shrink-0">{modeTabs}</div>
             <div className="flex flex-col gap-1 flex-[1_1_220px] min-w-0">
               <span className={`text-xs font-bold uppercase tracking-[0.1em] ${TEAL_TEXT}`}>
                 {t('editor.inspector.title', { number: focusInfo.lyricNumber })}
@@ -990,40 +989,23 @@ export default function Editor({
           </>
         ) : (
           <>
-        {/* One row (redesign sheet 13): count, what it counts, then the bar taking the rest. */}
+        {/* Count and what it counts on the left; the mode tabs take the room the progress bar used to. */}
         {syncProgress ? (
-          <Tip content={t('editor.wordCharCount', { words: syncProgress.wordCount, chars: syncProgress.charCount, charsNoSp: syncProgress.charCountNoSpaces })}>
-            <div className="flex items-center gap-3.5 flex-[1_1_320px] min-w-0 cursor-default">
-              <span className="font-heading text-[22px] font-bold leading-tight tracking-[-0.02em] whitespace-nowrap">
-                {t('editor.syncedCount', { synced: syncProgress.synced, count: syncProgress.total })}
+          <div className="flex items-center gap-3.5 min-w-0 cursor-default">
+            <span className="font-heading text-[22px] font-bold leading-tight tracking-[-0.02em] whitespace-nowrap">
+              {t('editor.syncedCount', { synced: syncProgress.synced, count: syncProgress.total })}
+            </span>
+            <span className="text-[15px] text-subtle truncate">
+              {t('editor.syncedLabel', { count: syncProgress.total })}
+            </span>
+            {editorMode === 'words' && syncProgress.totalWordsInLine > 0 && (
+              <span className="text-xs font-mono tabular-nums text-subtle shrink-0">
+                {syncProgress.currentWordNum}/{syncProgress.totalWordsInLine}
               </span>
-              <span className="text-[15px] text-subtle truncate">
-                {t('editor.syncedLabel', { count: syncProgress.total })} · {t('editor.wordCount', { count: syncProgress.wordCount })}
-              </span>
-              {editorMode === 'words' && syncProgress.totalWordsInLine > 0 && (
-                <span className="text-xs font-mono tabular-nums text-subtle shrink-0">
-                  {syncProgress.currentWordNum}/{syncProgress.totalWordsInLine}
-                </span>
-              )}
-              <div
-                role="progressbar"
-                aria-label={t('editor.syncProgressLabel')}
-                aria-valuemin={0}
-                aria-valuemax={syncProgress.total}
-                aria-valuenow={syncProgress.synced}
-                className="h-1 min-w-12 flex-1 rounded-sm bg-hl overflow-hidden"
-              >
-                <div
-                  // Foam once every line is marked, the same "done" colour as a full word meter.
-                  className={`h-full rounded-sm transition-[width] duration-300 ease-out ${syncProgress.synced === syncProgress.total ? 'bg-foam' : 'bg-iris'}`}
-                  style={{ width: `${(syncProgress.synced / syncProgress.total) * 100}%` }}
-                />
-              </div>
-            </div>
-          </Tip>
-        ) : (
-          <div className="flex-1" />
-        )}
+            )}
+          </div>
+        ) : null}
+        <div className="hidden lg:flex flex-1 min-w-0 justify-center">{modeTabs}</div>
         {lines.length > 0 && (
           <SegmentedControl<'all' | 'unmarked'>
             label={t('editor.filterGroup')}
@@ -1071,6 +1053,13 @@ export default function Editor({
           sessionOwner={sessionOwner}
           collab={collab}
           onBeforeStartSession={handleManualSave ?? undefined}
+          trailing={!wordsFocus && syncProgress ? (
+            <Tip content={t('editor.wordCharCount', { words: syncProgress.wordCount, chars: syncProgress.charCount, charsNoSp: syncProgress.charCountNoSpaces })}>
+              <span className="ml-auto pl-3 text-[13px] text-subtle whitespace-nowrap cursor-default">
+                {t('editor.wordCount', { count: syncProgress.wordCount })}
+              </span>
+            </Tip>
+          ) : undefined}
         />
       </div>
 

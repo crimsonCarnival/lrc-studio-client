@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@ui/button';
 import { Tip } from '@ui/tip';
@@ -22,6 +22,8 @@ interface EditorToolbarProps {
   sessionOwner?: SessionOwnerControl;
   collab?: CollabLockInput;
   onBeforeStartSession?: () => Promise<boolean>;
+  // Pinned to the far end of the row; also makes the toolbar take its own full-width row.
+  trailing?: ReactNode;
 }
 
 // Teal is `success`; in the light theme that token is too pale to read as text on
@@ -41,6 +43,7 @@ export default function EditorToolbar({
   sessionOwner,
   collab,
   onBeforeStartSession,
+  trailing,
 }: EditorToolbarProps) {
   const { t } = useTranslation();
 
@@ -91,7 +94,7 @@ export default function EditorToolbar({
   const autoStampDisabled = autoStampBlockedReason !== null;
 
   return (
-    <div className="flex items-center min-w-0">
+    <div className={`flex items-center min-w-0 ${trailing ? 'basis-full' : ''}`}>
       {onAutoStamp && (
         <Tip content={autoStampTip}>
           <Button
@@ -141,6 +144,7 @@ export default function EditorToolbar({
       {sessionOwner && (
         <SessionControl owner={sessionOwner} collab={collab} lines={lines} onBeforeStart={onBeforeStartSession} />
       )}
+      {trailing}
     </div>
   );
 }
