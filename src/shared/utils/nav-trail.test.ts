@@ -54,6 +54,21 @@ describe('recordVisit', () => {
     expect(readTrail()).toEqual({ 0: '/home', 1: '/explore' })
   })
 
+  it('never stores an invite token', () => {
+    recordVisit(0, '/home', true)
+    recordVisit(1, '/join/abc123secret', true)
+    recordVisit(2, '/Join/def456secret', true)
+
+    expect(sessionStorage.getItem('lrc-nav-trail')).not.toMatch(/secret/)
+    expect(readTrail()).toEqual({ 0: '/home', 1: '/join/:token', 2: '/join/:token' })
+  })
+
+  it('treats a join page and its redacted entry as the same page', () => {
+    recordVisit(0, '/home', true)
+    recordVisit(1, '/join/abc123secret', true)
+    expect(findPrevious(readTrail(), 1, '/join/abc123secret')).toEqual({ path: '/home', delta: -1 })
+  })
+
   it('survives corrupt storage', () => {
     sessionStorage.setItem('lrc-nav-trail', '{not json')
     expect(readTrail()).toEqual({})

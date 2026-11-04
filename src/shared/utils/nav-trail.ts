@@ -6,6 +6,11 @@ export type NavTrail = Record<number, string>;
 
 const KEY = 'lrc-nav-trail';
 
+// An invite link carries its secret token in the path; the trail keeps only `/join/:token`.
+// Case-insensitive like the router (same rule as app/speed-insights.ts).
+const JOIN_PATH = /^\/join\/[^/?#]+/i;
+const trailPath = (pathname: string): string => (JOIN_PATH.test(pathname) ? '/join/:token' : pathname);
+
 export function readTrail(): NavTrail {
   try {
     return JSON.parse(sessionStorage.getItem(KEY) || '{}') as NavTrail;
@@ -33,7 +38,7 @@ export function recordVisit(idx: number, pathname: string, isPush: boolean): voi
       if (Number(key) > idx) delete trail[Number(key)];
     }
   }
-  trail[idx] = pathname;
+  trail[idx] = trailPath(pathname);
   writeTrail(trail);
 }
 
@@ -43,7 +48,8 @@ export function recordVisit(idx: number, pathname: string, isPush: boolean): voi
  * string (a search refinement, a tab), and "back to Search" from Search would be noise.
  * Null when nothing is known, e.g. the tab was opened directly on this page.
  */
-export function findPrevious(trail: NavTrail, idx: number, pathname: string): { path: string; delta: number } | null {
+export function findPrevious(trail: NavTrail, idx: number, currentPath: string): { path: string; delta: number } | null {
+  const pathname = trailPath(currentPath);
   for (let i = idx - 1; i >= 0; i--) {
     const path = trail[i];
     if (path === undefined) return null;
