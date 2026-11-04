@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useLayoutEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
@@ -10,6 +11,7 @@ import { Icon } from '@/shared/ui/Icon';
 import { Spinner } from '@ui/skeleton';
 import { useAuthContext } from '@/features/auth/useAuthContext';
 import { usePageTitle } from '@/shared/hooks/usePageTitle';
+import { useHeaderSlot } from '@/shared/hooks/useHeaderSlot';
 import { PlayerEngineProvider } from '@features/player/PlayerEngine';
 import { resolveCoverImage } from '@/shared/utils/cover-image';
 import { parseDeepLink } from '@/shared/utils/url-params';
@@ -19,6 +21,7 @@ import { useStarredPlaylist } from '@/features/projects/hooks/useStarredPlaylist
 import PublicLyrics, { type DisplayLine } from './PublicLyrics';
 import ProjectInfoPanel from './ProjectInfoPanel';
 import PublicPlaybackBar from './PublicPlaybackBar';
+import { PublicHeaderPlayer } from './PublicHeaderPlayer';
 import { ShareOgButton } from './ShareOgButton';
 import { useProjectViewers } from '@/features/projects/hooks/useProjectViewers';
 import { ViewerBadges } from './ViewerBadges';
@@ -64,6 +67,7 @@ interface PublicProject {
 }
 
 const INFO_COLLAPSED_KEY = 'lrc_project_info_collapsed';
+const PLAYER_HIDDEN_KEY = 'lrc_project_player_hidden';
 
 interface UpNextTrack {
   publicId: string;
@@ -103,6 +107,7 @@ function ProjectViewPageInner() {
   const initialSeek = deepLinkSeek ?? 0;
 
   const rightPanelRef = useRef<HTMLDivElement>(null);
+  const actionsSlot = useHeaderSlot('actions');
 
   const { user } = useAuthContext();
   const { project, loading, notFound } = usePublicProject(publicId) as { project: PublicProject | null; loading: boolean; notFound: boolean };
@@ -309,6 +314,16 @@ function ProjectViewPageInner() {
     });
   }, []);
 
+  const [playerHidden, setPlayerHidden] = useState(() => {
+    try { return localStorage.getItem(PLAYER_HIDDEN_KEY) === '1'; } catch { return false; }
+  });
+  const togglePlayerHidden = useCallback(() => {
+    setPlayerHidden((prev) => {
+      try { localStorage.setItem(PLAYER_HIDDEN_KEY, prev ? '0' : '1'); } catch { /* still applies for this session */ }
+      return !prev;
+    });
+  }, []);
+
   // ── Ownership ────────────────────────────────────────────────
   const isOwner = !!(user && project?.user?.id && user.id === project.user.id);
 
@@ -433,6 +448,14 @@ function ProjectViewPageInner() {
       viewerMode
     >
     <VisualizerProvider>
+    {actionsSlot && createPortal(
+      <PublicHeaderPlayer
+        playerHidden={playerHidden}
+        onTogglePlayer={togglePlayerHidden}
+        hasInitialMedia={!!initialMedia}
+      />,
+      actionsSlot,
+    )}
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-background">
       {/* ── Guest CTA strip ─────────────────────────────────── */}
       {/* Phones and tablets only. On desktop the lyrics run under the fixed header, so the
@@ -489,6 +512,22 @@ function ProjectViewPageInner() {
               songSingers={songSingers}
               singerColors={singerColors}
             />
+            {playerHidden && !!initialMedia && (
+              <div className="absolute bottom-4 right-4 z-20">
+                <Tip content={t('projectView.showPlayer')}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={togglePlayerHidden}
+                    aria-label={t('projectView.showPlayer')}
+                    className="rounded-full bg-card/80 backdrop-blur-md border border-border shadow-md gap-1.5 px-3 py-1 text-xs"
+                  >
+                    <Icon name="expand_less" size={16} />
+                    <span>{t('projectView.showPlayer')}</span>
+                  </Button>
+                </Tip>
+              </div>
+            )}
           </div>
 
           {/* Right: info panel — fixed width on desktop, stacked below on mobile.
@@ -502,7 +541,7 @@ function ProjectViewPageInner() {
             ref={rightPanelRef}
             tabIndex={0}
             aria-label={t('projectView.aboutProject')}
-            className={`lrc-scroll relative min-h-0 lg:w-[400px] xl:w-[460px] lg:flex-shrink-0 overflow-y-auto border-border lg:border-l max-lg:border-t bg-card/40 max-lg:pb-64 ${infoCollapsed ? 'lg:hidden' : ''}`}
+            className={`lrc-scroll relative min-h-0 lg:w-[400px] xl:w-[460px] lg:flex-shrink-0 overflow-y-auto border-border lg:border-l max-lg:border-t bg-card/40 ${playerHidden ? 'max-lg:pb-12' : 'max-lg:pb-64'} ${infoCollapsed ? 'lg:hidden' : ''}`}
           >
             <ScrollProgress containerRef={rightPanelRef} className="absolute top-0 z-20 lg:top-16" />
             <div className="px-5 pt-6 pb-6 lg:px-7 lg:pt-23 flex flex-col gap-4 min-h-full">
@@ -549,12 +588,14 @@ function ProjectViewPageInner() {
         {/* ── Playback bar: a sibling of the 2-col row, so it spans the page.
             Below lg it pins itself to the viewport (see PublicPlaybackBar); the
             info column carries matching bottom padding. ── */}
+        {!playerHidden && (
         <PublicPlaybackBar
           lines={lines}
           hasInitialMedia={!!initialMedia}
           fullLyrics={fullLyrics}
           onToggleFullLyrics={toggleFullLyrics}
           controlsSlot={<VisualizerButton />}
+          onHidePlayer={togglePlayerHidden}
           startSlot={canFork ? (
             <Tip content={t('projectView.forkButton')}>
               <Button
@@ -597,6 +638,7 @@ function ProjectViewPageInner() {
             </div>
           )}
         </PublicPlaybackBar>
+        )}
       </div>
     </div>
     </VisualizerProvider>

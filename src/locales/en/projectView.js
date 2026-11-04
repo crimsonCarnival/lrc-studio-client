@@ -17,6 +17,8 @@ export default {
   showLess: "Show less",
   collapseInfo: "Hide project details",
   expandInfo: "Show project details",
+  hidePlayer: "Hide player",
+  showPlayer: "Show player",
   upNext: "Up next",
   noAudio: "No audio attached to this project.",
   prevTrack: "Previous",
@@ -114,6 +116,14 @@ export default {
       galaxy: { label: "Galaxy", hint: "Reactive particle starfield" },
       tunnel: { label: "Tunnel", hint: "Hyperspace geometric wormhole" },
       pillars: { label: "Pillars", hint: "3D equalizer matrix" },
+      ferrofluid: { label: "Ferrofluid", hint: "Magnetic liquid spikes" },
+      'gravity-well': { label: "Gravity Well", hint: "Particle black hole" },
+      silk: { label: "Silk", hint: "Interactive fabric" },
+      'plasma-globe': { label: "Plasma Globe", hint: "Electric lightning sphere" },
+      ribbons: { label: "Ribbons", hint: "Lagging frequency streams" },
+      swarm: { label: "Swarm", hint: "Reactive flocking boids" },
+      urchin: { label: "Urchin", hint: "Frequency spine cluster" },
+      pond: { label: "Pond", hint: "Interactive ripple surface" },
     },
     feed: {
       element: {

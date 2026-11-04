@@ -7,6 +7,7 @@ import VolumeControl from '@features/player/components/VolumeControl';
 import { useSettings } from '@/features/settings/useSettings';
 import { Icon } from '@/shared/ui/Icon';
 import { LogoLoader } from '@ui/LogoLoader';
+import { Tip } from '@ui/tip';
 import type { EditorLine } from '@/features/editor/editor.types';
 
 const WaveformDisplay = lazy(() => import('@features/player/components/WaveformDisplay'));
@@ -76,6 +77,7 @@ interface PublicPlaybackBarProps {
   endSlot?: ReactNode;
   /** Extra controls ahead of the full-lyrics toggle (the public view's visualizer picker). */
   controlsSlot?: ReactNode;
+  onHidePlayer?: () => void;
   children?: ReactNode;
 }
 
@@ -89,6 +91,7 @@ export default function PublicPlaybackBar({
   startSlot,
   endSlot,
   controlsSlot,
+  onHidePlayer,
   children,
 }: PublicPlaybackBarProps) {
   const { t } = useTranslation();
@@ -405,6 +408,18 @@ export default function PublicPlaybackBar({
             <Icon name="format_list_bulleted" size={18} />
             <span className="max-xl:sr-only">{t('projectView.fullLyrics')}</span>
           </button>
+          )}
+          {onHidePlayer && (
+            <Tip content={t('projectView.hidePlayer')}>
+              <button
+                type="button"
+                onClick={onHidePlayer}
+                aria-label={t('projectView.hidePlayer')}
+                className="inline-flex items-center justify-center h-9 coarse:h-11 size-9 max-lg:size-11 xl:size-9 shrink-0 rounded-lg border border-border text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              >
+                <Icon name="expand_more" size={18} />
+              </button>
+            </Tip>
           )}
         </div>
       </div>

@@ -17,6 +17,8 @@ export default {
   showLess: "Mostrar menos",
   collapseInfo: "Ocultar detalles del proyecto",
   expandInfo: "Mostrar detalles del proyecto",
+  hidePlayer: "Ocultar reproductor",
+  showPlayer: "Mostrar reproductor",
   upNext: "A continuación",
   noAudio: "Este proyecto no tiene audio adjunto.",
   prevTrack: "Anterior",
@@ -114,6 +116,14 @@ export default {
       galaxy: { label: "Galaxia", hint: "Campo de partículas reactivas" },
       tunnel: { label: "Túnel", hint: "Túnel geométrico hiperespacial" },
       pillars: { label: "Pilares", hint: "Matriz de ecualizador 3D" },
+      ferrofluid: { label: "Ferrofluido", hint: "Picos magnéticos líquidos" },
+      'gravity-well': { label: "Pozo de gravedad", hint: "Agujero negro de partículas" },
+      silk: { label: "Seda", hint: "Tejido interactivo" },
+      'plasma-globe': { label: "Globo de plasma", hint: "Esfera de rayos eléctricos" },
+      ribbons: { label: "Cintas", hint: "Estelas de frecuencia escalonadas" },
+      swarm: { label: "Enjambre", hint: "Bandada reactiva de boids" },
+      urchin: { label: "Erizo", hint: "Espinasterio de frecuencias" },
+      pond: { label: "Estanque", hint: "Superficie de agua con ondas" },
     },
     feed: {
       element: {
