@@ -182,11 +182,31 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const merged = remote && Object.keys(remote).length > 0
         ? deepMerge(base, remote)
         : base;
+      // A theme this browser has but the account never stored (picked as a guest, or the
+      // earlier push failed) is the user's choice, not a stale leftover: keep it and send it up,
+      // instead of letting the server's silence reset it to the default on every reload.
+      const carried: Record<string, string> = {};
+      try {
+        const localUi = (JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as { interface?: Record<string, unknown> } | null)?.interface;
+        const remoteUi = (remote as { interface?: Record<string, unknown> } | null)?.interface;
+        for (const key of ['theme', 'customTheme']) {
+          const local = localUi?.[key];
+          if (typeof local === 'string' && local && (remoteUi?.[key] === null || remoteUi?.[key] === undefined)) carried[key] = local;
+        }
+      } catch { /* unreadable local settings: nothing to carry */ }
+      const serverState = structuredClone(merged);
+      if (Object.keys(carried).length > 0) merged.interface = { ...merged.interface, ...carried };
       // Persist immediately (save effect is suppressed via isSyncingRef)
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch { /* ignore */ }
       // Update last saved snapshot since we just synced from server
-      lastSavedToServerRef.current = structuredClone(merged);
+      lastSavedToServerRef.current = serverState;
       setSettings(() => merged);
+      if (Object.keys(carried).length > 0) {
+        // On failure the snapshot still lacks the theme, so the next settings change diffs it and retries.
+        void settingsApi.patch({ interface: carried }).then(() => {
+          lastSavedToServerRef.current = structuredClone(merged);
+        }).catch(() => { /* retried by the next diff */ });
+      }
 
       // i18next's detection order is querystring -> localStorage -> navigator,
       // so it never consults the account. Without this, a language chosen on one
