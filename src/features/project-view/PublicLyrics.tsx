@@ -16,6 +16,7 @@ import { LyricsZoomControl } from './LyricsZoomControl';
 // Theme-token colors: the stage sits on the app background, so text derives
 // from --foreground and stays legible in both the dark and light themes.
 const FG = 'var(--foreground)';
+const ACTIVE = 'var(--color-primary-ink)';
 const PAST = 'var(--color-past)';
 const fgAlpha = (pct: number) => `color-mix(in srgb, var(--foreground) ${pct}%, transparent)`;
 
@@ -68,12 +69,12 @@ function getDistStyle(dist: number | null) {
 // stepping down in size and contrast. Keyed by offset from the active line;
 // the dimming is opacity on the foreground token, so it holds in both themes.
 const FOCUS_STYLE: Record<number, { size: string; opacity: number }> = {
-  // The line just sung stays readable: its colour, not its opacity, says it is past.
-  [-1]: { size: 'clamp(0.85rem, 1.1vw, 1.05rem)', opacity: 0.75 },
+  // The line just sung and the ones coming up are the plain foreground, faded: the active line alone is in the theme's colour.
+  [-1]: { size: 'clamp(0.85rem, 1.1vw, 1.05rem)', opacity: 0.5 },
   0: { size: 'clamp(1.2rem, 1.8vw, 1.65rem)', opacity: 1 },
-  1: { size: 'clamp(0.95rem, 1.3vw, 1.2rem)', opacity: 0.72 },
-  2: { size: 'clamp(0.85rem, 1.15vw, 1.05rem)', opacity: 0.42 },
-  3: { size: 'clamp(0.8rem, 1vw, 0.95rem)', opacity: 0.24 },
+  1: { size: 'clamp(0.95rem, 1.3vw, 1.2rem)', opacity: 0.55 },
+  2: { size: 'clamp(0.85rem, 1.15vw, 1.05rem)', opacity: 0.35 },
+  3: { size: 'clamp(0.8rem, 1vw, 0.95rem)', opacity: 0.2 },
 };
 
 const isBlank = (line: DisplayLine) => !line.text || line.text.trim() === '';
@@ -208,11 +209,12 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
   const lineSingerIdx = !isDuet && (line.singers?.length ?? 0) >= 1 ? singerColorIndex(line.singers![0], songSingers) : null;
   const lineSingerHex = lineSingerIdx !== null ? singerColors[lineSingerIdx] : null;
 
-  // Active is always the plain foreground — singer colors only apply to
+  // The active line is in the primary colour; singer colors only apply to
   // inactive lines, where they're the point: telling lines apart at a glance.
   // On the active line they fought the karaoke fill, which is already the
-  // color doing the work there.
-  let color = isActive ? FG : isPast ? PAST : focus ? FG : dist === 1 ? nearer : faded;
+  // color doing the work there. In the focus stage the neighbours are the plain
+  // foreground and their fade comes from opacity (FOCUS_STYLE).
+  let color = isActive ? ACTIVE : focus ? FG : isPast ? PAST : dist === 1 ? nearer : faded;
   if (lineSingerHex && !isActive) {
     color = `${lineSingerHex}99`;
   }
@@ -387,7 +389,8 @@ const ImmersiveLine = forwardRef<HTMLDivElement, ImmersiveLineProps>(function Im
               <span key={wi} className="relative inline-block mr-[0.28em] last:mr-0">
                 <span
                   style={{
-                    color: wColor ? `${wColor}bb` : undefined,
+                    // Unsung words stay foreground on the active line so the primary fill sweeping over them shows.
+                    color: wColor ? `${wColor}bb` : isActive ? FG : undefined,
                     // The focus stage keeps unsung words at full foreground; the
                     // accent fill alone marks progress.
                     opacity: isActive && !focus ? 0.35 : undefined,
