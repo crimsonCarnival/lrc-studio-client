@@ -94,6 +94,7 @@ export function createSilkPreset(
 
       const motionScale = features?.reducedMotion ? 0.35 : 1.0;
       const beatEnergy = features ? features.beatEnergy : bass * 0.5;
+      const pace = features ? features.paceMultiplier : 1.0;
 
       // Project pointer into cloth plane z = 0
       pointer.projectToPlane(camera, 0, cursorWorld);
@@ -107,14 +108,14 @@ export function createSilkPreset(
         const bx = basePositions[i3];
         const by = basePositions[i3 + 1];
 
-        // 1. Audio harmonic target displacement
+        // 1. Audio harmonic target displacement accelerated by song pace
         const col = i % (SEG_X + 1);
         const bandIdx = Math.min(63, Math.floor((col / SEG_X) * 63));
         const bandAmp = bands[bandIdx] || 0;
 
         const travelWave =
-          Math.sin(bx * 0.32 + clock * 2.2) * Math.cos(by * 0.28 + clock * 1.6) * 1.4 +
-          Math.sin(bx * 0.6 + by * 0.4 + clock * 3.0) * 0.6;
+          Math.sin(bx * 0.32 + clock * 2.2 * pace) * Math.cos(by * 0.28 + clock * 1.6 * pace) * 1.4 +
+          Math.sin(bx * 0.6 + by * 0.4 + clock * 3.0 * pace) * 0.6;
 
         const audioTargetZ = (travelWave * (0.8 + bandAmp * 2.2) + beatEnergy * 1.8) * motionScale;
 

@@ -132,6 +132,7 @@ export function createRibbonsPreset(
       features?: AudioFeatures,
     ) => {
       const motionScale = features?.reducedMotion ? 0.35 : 1.0;
+      const pace = features ? features.paceMultiplier : 1.0;
 
       // Project cursor to world z = 0
       pointer.projectToPlane(camera, 0, cursorWorld);
@@ -149,13 +150,13 @@ export function createRibbonsPreset(
 
         // Radial offset around cursor so ribbons don't all overlap into a single line
         const spreadRadius = (1.5 + normBand * 3.5) * motionScale;
-        const orbitSpeed = clock * (1.2 + normBand * 1.5);
+        const orbitSpeed = clock * (1.2 + normBand * 1.5) * pace;
         const targetHeadX = cursorWorld.x + Math.cos(ribbon.offsetAngle + orbitSpeed) * spreadRadius;
         const targetHeadY = cursorWorld.y + Math.sin(ribbon.offsetAngle + orbitSpeed) * spreadRadius;
-        const targetHeadZ = (Math.sin(clock * 2.0 + r) * 2.0 - normBand * 4.0) * motionScale;
+        const targetHeadZ = (Math.sin(clock * 2.0 * pace + r) * 2.0 - normBand * 4.0) * motionScale;
 
-        // Move head toward target with staggered inertia
-        const step = ribbon.speed * motionScale;
+        // Move head toward target with staggered inertia accelerated by song pace
+        const step = ribbon.speed * motionScale * pace;
         ribbon.headX += (targetHeadX - ribbon.headX) * step;
         ribbon.headY += (targetHeadY - ribbon.headY) * step;
         ribbon.headZ += (targetHeadZ - ribbon.headZ) * step;

@@ -105,6 +105,12 @@ export default {
     button: "Visualizer",
     title: "Audio visualizer",
     description: "Choose how the background behind the lyrics moves with the music.",
+    categories: {
+      all: "All",
+      interactive: "Interactive 3D",
+      classic: "Classic 3D",
+      twoD: "2D & Off",
+    },
     kinds: {
       off: { label: "Off", hint: "Lyrics only" },
       bars: { label: "Bars", hint: "Classic spectrum" },

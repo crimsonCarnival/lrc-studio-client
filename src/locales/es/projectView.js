@@ -105,6 +105,12 @@ export default {
     button: "Visualizador",
     title: "Visualizador de audio",
     description: "Elige cómo se mueve el fondo de la letra con la música.",
+    categories: {
+      all: "Todos",
+      interactive: "3D interactivo",
+      classic: "3D clásico",
+      twoD: "2D y apagado",
+    },
     kinds: {
       off: { label: "Apagado", hint: "Solo la letra" },
       bars: { label: "Barras", hint: "Espectro clásico" },

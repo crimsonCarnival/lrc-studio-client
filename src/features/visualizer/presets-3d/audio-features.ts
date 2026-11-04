@@ -5,6 +5,9 @@ export class AudioFeatureExtractor {
   private lastBeatTime = 0;
   private beatEnergy = 0;
   private prefersReducedMotion = false;
+  private prevBands = new Float32Array(64);
+  private recentBeatTimes: number[] = [];
+  private smoothedPace = 0;
 
   constructor() {
     if (typeof window !== 'undefined' && window.matchMedia) {
@@ -33,6 +36,7 @@ export class AudioFeatureExtractor {
     if (!active) {
       // Settle smoothly to zero during silence/pause
       this.beatEnergy *= Math.exp(-dt / 0.2);
+      this.smoothedPace *= Math.exp(-dt / 0.5);
       return {
         bass: 0,
         mid: 0,
@@ -42,6 +46,8 @@ export class AudioFeatureExtractor {
         beat: false,
         beatEnergy: this.beatEnergy,
         reducedMotion: this.prefersReducedMotion,
+        paceMultiplier: 1.0,
+        tempoDensity: 0,
       };
     }
 
@@ -90,14 +96,44 @@ export class AudioFeatureExtractor {
     this.rollingBass += (bass - this.rollingBass) * Math.min(1, dt * 2.5);
     const timeSinceLastBeat = clock - this.lastBeatTime;
     const isBeatThreshold = bass > this.rollingBass * 1.35 + 0.12;
-    const beat = isBeatThreshold && timeSinceLastBeat > 0.2; // 300 BPM max lock
+    const beat = isBeatThreshold && timeSinceLastBeat > 0.18; // 330 BPM ceiling
 
     if (beat) {
       this.lastBeatTime = clock;
       this.beatEnergy = 1.0;
+      this.recentBeatTimes.push(clock);
     } else {
       this.beatEnergy = Math.max(0, this.beatEnergy * Math.exp(-dt / 0.22));
     }
+
+    // 5. Fast-Paced Song Part Detection (Beat Density + Spectral Flux)
+    // Filter beats from the last 2.4 seconds
+    const cutoff = clock - 2.4;
+    this.recentBeatTimes = this.recentBeatTimes.filter((t) => t >= cutoff);
+    // 6 beats in 2.4s = 150 BPM; 10 beats in 2.4s = 250 BPM
+    const beatDensity = Math.min(1.0, this.recentBeatTimes.length / 7.0);
+
+    // High-frequency onset flux (transients from fast hi-hats, arps, fast tempo kicks)
+    let fluxSum = 0;
+    for (let i = 8; i < 64; i++) {
+      const diff = bands[i] - this.prevBands[i];
+      if (diff > 0) fluxSum += diff;
+      this.prevBands[i] = bands[i];
+    }
+    const fluxNorm = Math.min(1.0, fluxSum / 3.0);
+
+    // Combined instantaneous pace (fast beats + high transient flux)
+    const instantPace = Math.min(1.0, beatDensity * 0.65 + fluxNorm * 0.35);
+
+    // Fast attack, smooth decay
+    if (instantPace > this.smoothedPace) {
+      this.smoothedPace += (instantPace - this.smoothedPace) * Math.min(1, dt * 4.5);
+    } else {
+      this.smoothedPace += (instantPace - this.smoothedPace) * Math.min(1, dt * 0.8);
+    }
+
+    // Pace multiplier: 1.0 at rest/slow, up to 2.8 on intense fast-paced parts
+    const paceMultiplier = 1.0 + this.smoothedPace * 1.8;
 
     return {
       bass: Math.min(1, bass),
@@ -108,6 +144,8 @@ export class AudioFeatureExtractor {
       beat,
       beatEnergy: this.beatEnergy,
       reducedMotion: this.prefersReducedMotion,
+      paceMultiplier,
+      tempoDensity: this.smoothedPace,
     };
   }
 }

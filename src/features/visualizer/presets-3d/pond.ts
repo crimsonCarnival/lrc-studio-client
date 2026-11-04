@@ -5,19 +5,18 @@ import type { Palette3D, PointerTarget, PresetInstance, Visualizer3dOptions, Aud
  * Pond 3D Audio Visualizer
  *
  * What it does:
- * - A 3D height-field water surface running an authentic 2D discrete wave simulation.
- * - Cursor movement across the water drops ripple wakes.
- * - Audio beats spawn concentric ripple droplets.
- * - Ambient bass frequencies create rhythmic undulating deep-water swells.
+ * - A tranquil 3D height-field water surface running an authentic 2D discrete wave simulation.
+ * - Cursor following is disabled so the natural water physics and concentric ripple dynamics
+ *   can be fully appreciated.
+ * - Audio beats drop concentric ripple rings; mids and trebles trigger delicate raindrop ripples.
+ * - Detects fast-paced song parts to accelerate wave propagation and drop frequency.
  * - Angled perspective keeps the water plane below the lyrics center for clear readability.
  *
  * Audio mapping:
  * - Beat onsets: concentric droplet ripples dropping into the pond.
+ * - Mids & Treble: acoustic raindrops across the water surface.
  * - Bass (bins 0-5): surface wave swell amplitude.
- * - Mid & Treble: high-frequency caustic water surface glimmer.
- *
- * Cursor behavior:
- * - Raycasted to the water plane. Moving cursor leaves droplet ripples in the grid.
+ * - Pace multiplier: accelerates wave simulation frequency and propagation velocity.
  *
  * Tunable constants:
  * - GRID_SIZE: 54 (55x55 vertices)
@@ -78,10 +77,6 @@ export function createPondPreset(
   light2.position.set(-12, 10, -10);
   group.add(light2);
 
-  const cursorWorld = new THREE.Vector3();
-  let prevCursorGridX = -1;
-  let prevCursorGridY = -1;
-
   // Helper to inject a droplet into simulation buffer
   const dropRipple = (gx: number, gy: number, strength: number) => {
     if (gx < 2 || gx >= simCols - 2 || gy < 2 || gy >= simRows - 2) return;
@@ -94,6 +89,8 @@ export function createPondPreset(
     }
   };
 
+  let rainTimer = 0;
+
   return {
     update: (
       _bands,
@@ -101,7 +98,7 @@ export function createPondPreset(
       _level,
       bass,
       clock,
-      pointer: PointerTarget,
+      _pointer: PointerTarget,
       pal: Palette3D,
       features?: AudioFeatures,
     ) => {
@@ -111,53 +108,50 @@ export function createPondPreset(
       const motionScale = features?.reducedMotion ? 0.35 : 1.0;
       const beat = features?.beat ?? false;
       const beatEnergy = features?.beatEnergy ?? 0;
+      const pace = features?.paceMultiplier ?? 1.0;
+      const treble = features?.treble ?? 0.2;
 
-      // Project cursor to water plane
-      pointer.projectToPlane(camera, -3.5, cursorWorld);
-
-      // Convert world coords to grid index
-      const normX = (cursorWorld.x + POND_WIDTH * 0.5) / POND_WIDTH;
-      const normY = (cursorWorld.z + 4 + POND_DEPTH * 0.5) / POND_DEPTH;
-
-      const gx = Math.floor(normX * simCols);
-      const gy = Math.floor(normY * simRows);
-
-      // Drop ripple on cursor motion
-      if (gx !== prevCursorGridX || gy !== prevCursorGridY) {
-        dropRipple(gx, gy, 1.8 * motionScale);
-        prevCursorGridX = gx;
-        prevCursorGridY = gy;
-      }
-
-      // Audio beat drops concentric ripples in the pond
-      if (beat || beatEnergy > 0.75) {
-        // Drop in the center or slightly offset
+      // Concentric ripple on audio beat
+      if (beat || beatEnergy > 0.8) {
         const centerGX = Math.floor(simCols * 0.5);
         const centerGY = Math.floor(simRows * 0.5);
-        dropRipple(centerGX, centerGY, (2.5 + bass * 2.0) * motionScale);
+        dropRipple(centerGX, centerGY, (3.2 + bass * 2.5) * motionScale);
       }
 
-      // 2D discrete wave propagation simulation step
-      for (let y = 1; y < simRows - 1; y++) {
-        const rowOffset = y * simCols;
-        for (let x = 1; x < simCols - 1; x++) {
-          const idx = rowOffset + x;
-          const neighbors =
-            bufCurr[idx - 1] +
-            bufCurr[idx + 1] +
-            bufCurr[idx - simCols] +
-            bufCurr[idx + simCols];
+      // Raindrop ripples triggered by treble & fast tempo
+      rainTimer += 0.016 * pace;
+      const rainInterval = Math.max(0.12, 0.45 / pace);
+      if (rainTimer > rainInterval && (treble > 0.35 || pace > 1.4)) {
+        rainTimer = 0;
+        const rx = 4 + Math.floor(Math.random() * (simCols - 8));
+        const ry = 4 + Math.floor(Math.random() * (simRows - 8));
+        dropRipple(rx, ry, (1.2 + treble * 1.5) * motionScale);
+      }
 
-          let val = neighbors * 0.5 - bufPrev[idx];
-          val *= DAMPING;
-          bufPrev[idx] = val;
+      // Discrete wave propagation simulation step (multiple sub-steps for fast pace)
+      const steps = pace > 1.8 ? 2 : 1;
+      for (let s = 0; s < steps; s++) {
+        for (let y = 1; y < simRows - 1; y++) {
+          const rowOffset = y * simCols;
+          for (let x = 1; x < simCols - 1; x++) {
+            const idx = rowOffset + x;
+            const neighbors =
+              bufCurr[idx - 1] +
+              bufCurr[idx + 1] +
+              bufCurr[idx - simCols] +
+              bufCurr[idx + simCols];
+
+            let val = neighbors * 0.5 - bufPrev[idx];
+            val *= DAMPING;
+            bufPrev[idx] = val;
+          }
         }
-      }
 
-      // Swap buffers
-      const temp = bufPrev;
-      bufPrev = bufCurr;
-      bufCurr = temp;
+        // Swap buffers
+        const temp = bufPrev;
+        bufPrev = bufCurr;
+        bufCurr = temp;
+      }
 
       // Apply heights to vertex positions
       const positions = posAttr.array as Float32Array;
@@ -168,23 +162,24 @@ export function createPondPreset(
         const x = basePositions[i3];
         const z = basePositions[i3 + 2];
 
-        // Ambient deep water tidal swell
+        // Ambient deep water tidal swell accelerated by song pace
         const ambientSwell =
-          Math.sin(x * 0.25 + clock * 2.0) * Math.cos(z * 0.25 + clock * 1.6) * swellScale;
+          Math.sin(x * 0.25 + clock * 2.0 * pace) *
+          Math.cos(z * 0.25 + clock * 1.6 * pace) *
+          swellScale;
 
         const rippleHeight = bufCurr[i] * motionScale;
 
-        // Plane rotated: normal displacement along Y
         positions[i3 + 1] = basePositions[i3 + 1] + ambientSwell + rippleHeight;
       }
 
       posAttr.needsUpdate = true;
       planeGeo.computeVertexNormals();
 
-      // Camera parallax
-      camera.position.x = pointer.x * 3.5 * motionScale;
-      camera.position.y = 14 + pointer.y * 2.0 * motionScale;
-      camera.lookAt(pointer.x * 1.5, -2, -2);
+      // Gentle autonomous breathing camera motion
+      camera.position.x = Math.sin(clock * 0.2 * pace) * 1.2;
+      camera.position.y = 14 + Math.cos(clock * 0.15 * pace) * 0.8;
+      camera.lookAt(0, -2, -2);
     },
 
     dispose: () => {

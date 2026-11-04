@@ -115,14 +115,15 @@ export function createGravityWellPreset(
       const motionScale = features?.reducedMotion ? 0.35 : 1.0;
       const mids = features ? features.mid : 0.3;
       const beatEnergy = features ? features.beatEnergy : bass * 0.5;
+      const pace = features ? features.paceMultiplier : 1.0;
 
       // Project cursor to world plane z = 0
       pointer.projectToPlane(camera, 0, attractorWorld);
       // Smooth attractor position to avoid sudden jumps
       smoothedAttractor.lerp(attractorWorld, 0.12);
 
-      // Speed boost from mid frequencies
-      const spinMultiplier = (1.0 + mids * 2.5) * motionScale;
+      // Speed boost from mid frequencies and fast song parts
+      const spinMultiplier = (1.0 + mids * 2.5) * motionScale * pace;
 
       // Gravitational pulse shockwave
       const gravityPulse = (bass * 3.5 + beatEnergy * 2.0) * motionScale;

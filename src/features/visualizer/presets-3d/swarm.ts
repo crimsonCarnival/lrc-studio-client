@@ -5,19 +5,19 @@ import type { Palette3D, PointerTarget, PresetInstance, Visualizer3dOptions, Aud
  * Swarm 3D Audio Visualizer
  *
  * What it does:
- * - A 3D flock of 450 boids orbiting and swooping around the cursor.
- * - Reynolds flocking rules (separation, alignment, cohesion, goal pursuit).
- * - RMS audio energy accelerates flight velocity and maneuverability.
+ * - An autonomous 3D flock of 450 boids swooping through space with natural Reynolds flocking.
+ * - Cursor following is disabled so the flock moves freely as an organic murmur instead of
+ *   clumping onto the mouse pointer.
+ * - RMS audio energy accelerates flight velocity and flight maneuverability.
+ * - Detects fast-paced song parts to dramatically increase flock flight speed and banking.
  * - Spectral centroid shifts the flock's hue between low and high frequency tones.
  * - Single-draw-call InstancedMesh for 60fps performance on any device.
  *
  * Audio mapping:
- * - RMS: flock speed and turbulence.
+ * - RMS: flock flight speed and turbulence.
+ * - Pace Multiplier: accelerates flock cruising velocity and agility on fast song parts.
  * - Spectral Centroid: coloration (tertiary for bass, primary for mids, secondary for treble).
  * - Beat / Bass: sudden momentary dispersion / burst.
- *
- * Cursor behavior:
- * - Cursor is the focal attractor. Flocks orbit and stream toward the pointer.
  *
  * Tunable constants:
  * - BOID_COUNT: 450
@@ -65,11 +65,11 @@ export function createSwarmPreset(
   for (let i = 0; i < BOID_COUNT; i++) {
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
-    const r = 5.0 + Math.random() * 14.0;
+    const r = 4.0 + Math.random() * 16.0;
 
     posX[i] = r * Math.sin(phi) * Math.cos(theta);
     posY[i] = r * Math.sin(phi) * Math.sin(theta);
-    posZ[i] = (Math.random() - 0.5) * 8.0;
+    posZ[i] = (Math.random() - 0.5) * 10.0;
 
     velX[i] = (Math.random() - 0.5) * 0.4;
     velY[i] = (Math.random() - 0.5) * 0.4;
@@ -78,7 +78,7 @@ export function createSwarmPreset(
 
   const dummy = new THREE.Object3D();
   const targetCol = new THREE.Color();
-  const cursorWorld = new THREE.Vector3();
+  const flockCenter = new THREE.Vector3();
   const lookTarget = new THREE.Vector3();
 
   return {
@@ -88,7 +88,7 @@ export function createSwarmPreset(
       _level,
       bass,
       clock,
-      pointer: PointerTarget,
+      _pointer: PointerTarget,
       pal: Palette3D,
       features?: AudioFeatures,
     ) => {
@@ -96,9 +96,14 @@ export function createSwarmPreset(
       const rms = features ? features.rms : 0.3;
       const centroid = features ? features.spectralCentroid : 0.5;
       const beatEnergy = features ? features.beatEnergy : bass * 0.5;
+      const pace = features ? features.paceMultiplier : 1.0;
 
-      // Project cursor to world z = 0
-      pointer.projectToPlane(camera, 0, cursorWorld);
+      // Autonomous 3D wandering attractor center that gently sweeps through space
+      flockCenter.set(
+        Math.sin(clock * 0.4 * pace) * 12.0 + Math.sin(clock * 0.8) * 4.0,
+        Math.cos(clock * 0.35 * pace) * 8.0 + Math.sin(clock * 0.6) * 3.0,
+        Math.sin(clock * 0.25 * pace) * 6.0,
+      );
 
       // Hue calculation from spectral centroid
       if (centroid < 0.4) {
@@ -107,8 +112,9 @@ export function createSwarmPreset(
         targetCol.copy(pal.primary).lerp(pal.secondary, (centroid - 0.4) / 0.6);
       }
 
-      const speedFactor = (0.6 + rms * 2.2 + beatEnergy * 1.5) * motionScale;
-      const maxSpeed = 1.8 * speedFactor;
+      // Flight velocity scales with RMS and fast-paced song parts
+      const speedFactor = (0.7 + rms * 2.4 + (pace - 1.0) * 1.5 + beatEnergy * 1.6) * motionScale;
+      const maxSpeed = 2.4 * speedFactor;
 
       // Flocking updates
       for (let i = 0; i < BOID_COUNT; i++) {
@@ -120,25 +126,25 @@ export function createSwarmPreset(
         let vy = velY[i];
         let vz = velZ[i];
 
-        // 1. Steering toward cursor target
-        const dx = cursorWorld.x - px;
-        const dy = cursorWorld.y - py;
-        const dz = cursorWorld.z - pz;
-        const distToCursor = Math.hypot(dx, dy, dz) || 1;
+        // 1. Autonomous pursuit toward the wandering flock center
+        const dx = flockCenter.x - px;
+        const dy = flockCenter.y - py;
+        const dz = flockCenter.z - pz;
+        const distToCenter = Math.hypot(dx, dy, dz) || 1;
 
-        // Swirling vortex component perpendicular to cursor direction
-        const swirlX = -dy / distToCursor;
-        const swirlY = dx / distToCursor;
+        // Swirling vortex component in 3D
+        const swirlX = -dy / distToCenter;
+        const swirlY = dx / distToCenter;
 
-        vx += (dx / distToCursor) * 0.045 * speedFactor + swirlX * 0.035;
-        vy += (dy / distToCursor) * 0.045 * speedFactor + swirlY * 0.035;
-        vz += (dz / distToCursor) * 0.045 * speedFactor;
+        vx += (dx / distToCenter) * 0.045 * speedFactor + swirlX * 0.035 * speedFactor;
+        vy += (dy / distToCenter) * 0.045 * speedFactor + swirlY * 0.035 * speedFactor;
+        vz += (dz / distToCenter) * 0.045 * speedFactor;
 
-        // 2. Beat impulse explosion: scatter outward briefly
+        // 2. Beat explosion: scatter outward dynamically
         if (beatEnergy > 0.4) {
-          vx += (Math.random() - 0.5) * beatEnergy * 0.8;
-          vy += (Math.random() - 0.5) * beatEnergy * 0.8;
-          vz += (Math.random() - 0.5) * beatEnergy * 0.5;
+          vx += (Math.random() - 0.5) * beatEnergy * 1.0;
+          vy += (Math.random() - 0.5) * beatEnergy * 1.0;
+          vz += (Math.random() - 0.5) * beatEnergy * 0.7;
         }
 
         // 3. Local neighbor separation (sampled for performance)
@@ -149,7 +155,7 @@ export function createSwarmPreset(
           const sepDz = pz - posZ[j];
           const sepDist = Math.hypot(sepDx, sepDy, sepDz);
           if (sepDist > 0 && sepDist < SEPARATION_DIST) {
-            const rep = (1 - sepDist / SEPARATION_DIST) * 0.05;
+            const rep = (1 - sepDist / SEPARATION_DIST) * 0.06;
             vx += (sepDx / sepDist) * rep;
             vy += (sepDy / sepDist) * rep;
             vz += (sepDz / sepDist) * rep;
@@ -181,13 +187,13 @@ export function createSwarmPreset(
         dummy.position.set(px, py, pz);
         lookTarget.set(px + vx, py + vy, pz + vz);
         dummy.lookAt(lookTarget);
-        dummy.scale.set(1, 1, 1 + rms * 1.2);
+        dummy.scale.set(1, 1, 1 + rms * 1.5 + (pace - 1.0) * 0.5);
         dummy.updateMatrix();
 
         instMesh.setMatrixAt(i, dummy.matrix);
 
         // Individual hue shading with wingbeat shimmer
-        const shimmer = 0.8 + 0.4 * Math.sin(clock * 8.0 + i);
+        const shimmer = 0.8 + 0.4 * Math.sin(clock * 10.0 * pace + i);
         instMesh.setColorAt(
           i,
           new THREE.Color(
@@ -200,6 +206,9 @@ export function createSwarmPreset(
 
       instMesh.instanceMatrix.needsUpdate = true;
       if (instMesh.instanceColor) instMesh.instanceColor.needsUpdate = true;
+
+      // Group ambient rotation
+      group.rotation.y = clock * 0.05 * pace;
     },
 
     dispose: () => {

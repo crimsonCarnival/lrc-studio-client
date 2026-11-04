@@ -109,6 +109,8 @@ describe('startPointerTracker3D & AudioFeatureExtractor', () => {
     expect(silentFeatures.treble).toBe(0);
     expect(silentFeatures.rms).toBe(0);
     expect(silentFeatures.beat).toBe(false);
+    expect(silentFeatures.paceMultiplier).toBe(1.0);
+    expect(silentFeatures.tempoDensity).toBe(0);
 
     // Active with energy
     bands.fill(0.5);
@@ -119,5 +121,7 @@ describe('startPointerTracker3D & AudioFeatureExtractor', () => {
     expect(activeFeatures.treble).toBeCloseTo(0.5, 1);
     expect(activeFeatures.rms).toBeGreaterThan(0);
     expect(typeof activeFeatures.spectralCentroid).toBe('number');
+    expect(activeFeatures.paceMultiplier).toBeGreaterThanOrEqual(1.0);
+    expect(typeof activeFeatures.tempoDensity).toBe('number');
   });
 });

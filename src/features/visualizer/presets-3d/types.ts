@@ -49,6 +49,10 @@ export interface AudioFeatures {
   beatEnergy: number;
   /** Whether prefers-reduced-motion is active */
   reducedMotion: boolean;
+  /** Dynamic song pace factor (1.0 = normal/slow, up to 2.8 during fast/intense sections) */
+  paceMultiplier: number;
+  /** Recent beat frequency / tempo density [0..1] (0 = slow/sparse, 1 = intense/frenetic) */
+  tempoDensity: number;
 }
 
 export interface PresetInstance {

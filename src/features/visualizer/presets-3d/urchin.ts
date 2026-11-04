@@ -113,6 +113,7 @@ export function createUrchinPreset(
 
       const motionScale = features?.reducedMotion ? 0.35 : 1.0;
       const beatEnergy = features ? features.beatEnergy : bass * 0.5;
+      const pace = features ? features.paceMultiplier : 1.0;
 
       // Pulse central body
       const coreScale = 1.0 + (bass * 0.35 + beatEnergy * 0.2) * motionScale;
@@ -172,7 +173,7 @@ export function createUrchinPreset(
 
       // Group rotation following cursor parallax and idle spin
       group.rotation.x = pointer.y * 0.3 * motionScale;
-      group.rotation.y = pointer.x * 0.4 * motionScale + clock * 0.08;
+      group.rotation.y = pointer.x * 0.4 * motionScale + clock * 0.08 * pace;
     },
 
     dispose: () => {

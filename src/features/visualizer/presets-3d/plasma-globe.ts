@@ -125,6 +125,7 @@ export function createPlasmaGlobePreset(
       const motionScale = features?.reducedMotion ? 0.35 : 1.0;
       const treble = features ? features.treble : 0.3;
       const beatEnergy = features ? features.beatEnergy : bass * 0.5;
+      const pace = features ? features.paceMultiplier : 1.0;
 
       // Pulse core electrode with bass
       const coreScale = 1.0 + (bass * 0.45 + beatEnergy * 0.25) * motionScale;
@@ -133,9 +134,9 @@ export function createPlasmaGlobePreset(
       // Raycast cursor to outer glass sphere
       pointer.projectToSphere(camera, centerVec, GLOBE_RADIUS, cursorOnGlobe);
 
-      // Treble drives active filament count & crackle jitter
-      const activeCount = Math.max(6, Math.min(FILAMENT_COUNT, Math.floor(8 + treble * 12)));
-      const jitterAmount = (0.35 + treble * 0.85) * motionScale;
+      // Treble & pace drive active filament count & crackle jitter
+      const activeCount = Math.max(6, Math.min(FILAMENT_COUNT, Math.floor(8 + treble * 10 + (pace - 1.0) * 4)));
+      const jitterAmount = (0.35 + treble * 0.85) * motionScale * Math.min(1.8, pace);
 
       for (let f = 0; f < FILAMENT_COUNT; f++) {
         const filament = filaments[f];

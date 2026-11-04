@@ -678,6 +678,7 @@ export function start3dVisualizer(
   let resting = false;
   let frames = 0;
   let lastNow = performance.now();
+  let accumulatedClock = 0;
 
   const onResize = () => {
     width = Math.max(1, Math.round(canvas.clientWidth * dpr));
@@ -748,7 +749,11 @@ export function start3dVisualizer(
     const bass = bassSum / 6;
     const features = featureExtractor.extract(bands, wave, clock, dt, active);
 
-    instance.update(bands, wave, level, bass, clock, pointer, palette, features);
+    // Dynamic pace multiplier accelerates clock during fast-paced song sections
+    const pace = features.paceMultiplier;
+    accumulatedClock += dt * pace;
+
+    instance.update(bands, wave, level, bass, accumulatedClock, pointer, palette, features);
 
     if (composer) {
       composer.render();
