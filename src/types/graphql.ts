@@ -348,6 +348,7 @@ export type InterfaceSettings = {
   previewAlignment?: Maybe<Scalars['String']['output']>;
   spacing?: Maybe<Scalars['String']['output']>;
   theme?: Maybe<Scalars['String']['output']>;
+  customTheme?: Maybe<Scalars['String']['output']>;
   toastPosition?: Maybe<Scalars['String']['output']>;
 };
 
@@ -365,6 +366,7 @@ export type InterfaceSettingsInput = {
   previewAlignment?: InputMaybe<Scalars['String']['input']>;
   spacing?: InputMaybe<Scalars['String']['input']>;
   theme?: InputMaybe<Scalars['String']['input']>;
+  customTheme?: InputMaybe<Scalars['String']['input']>;
   toastPosition?: InputMaybe<Scalars['String']['input']>;
 };
 

@@ -1478,6 +1478,9 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   --sidebar-accent-foreground: #1a1826;
   --sidebar-border: #dfdad9;
   --sidebar-ring: #1a1826;
+  /* Channels for rgba(var(--x-rgb), a) shadows; palette themes set their own (shared/theme/themes.ts). */
+  --primary-rgb: 111, 90, 143;
+  --accent-blue-rgb: 40, 105, 131;
 }
 
 /* Rosé Pine Moon — dark theme zinc overrides + shadcn variables */
@@ -1557,6 +1560,8 @@ button:hover .app-icon[data-icon="delete"] > path:first-child { transform: trans
   --hatch: rgba(224, 222, 244, 0.05);
   --tip-foreground: #e0def4;
   --toast-shadow: 0 12px 32px rgba(8, 6, 20, 0.5);
+  --primary-rgb: 196, 167, 231;
+  --accent-blue-rgb: 156, 207, 216;
   --success: #9ccfd8;
   --success-foreground: #1a1826;
   --info: #9ccfd8;

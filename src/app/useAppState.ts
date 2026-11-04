@@ -52,6 +52,7 @@ export function useAppState(user?: AuthUserType | null) {
   useThemeSync(
     settings?.interface?.theme as string | undefined,
     settings?.interface?.fontWeight as string | undefined,
+    settings?.interface?.customTheme as string | undefined,
   );
 
   // ——— Lines state with undo/redo ———

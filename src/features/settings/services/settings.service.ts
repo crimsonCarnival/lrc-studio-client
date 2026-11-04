@@ -61,6 +61,7 @@ const GET_SETTINGS = /* GraphQL */ `
         fontWeight
         spacing
         theme
+        customTheme
         previewAlignment
         focusContrast
         focusMode

@@ -12,7 +12,7 @@ const WORD_SINGER_COLORS = [
   // index 0 → primary
   'text-primary/90 [text-shadow:0_0_8px_hsl(var(--primary)/0.5)]',
   // index 1 → sky
-  'text-sky-400/90 [text-shadow:0_0_8px_theme(colors.sky.400/0.5)]',
+  'text-sky-400/90 [text-shadow:0_0_8px_color-mix(in_srgb,var(--color-sky-400)_50%,transparent)]',
   // index 2 → violet
   'text-violet-400/90',
   // index 3 → amber
