@@ -4,9 +4,33 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { BAND_COUNT, WAVE_SAMPLES } from './visualizer-signal';
 import type { Sampler } from './visualizer-presets';
-import { startPointerTracker } from './visualizer-pointer';
+import { startPointerTracker3D } from './presets-3d/pointer-projector';
+import { AudioFeatureExtractor } from './presets-3d/audio-features';
+import type { PointerTarget, AudioFeatures } from './presets-3d/types';
+import { createFerrofluidPreset } from './presets-3d/ferrofluid';
+import { createGravityWellPreset } from './presets-3d/gravity-well';
+import { createSilkPreset } from './presets-3d/silk';
+import { createPlasmaGlobePreset } from './presets-3d/plasma-globe';
+import { createRibbonsPreset } from './presets-3d/ribbons';
+import { createSwarmPreset } from './presets-3d/swarm';
+import { createUrchinPreset } from './presets-3d/urchin';
+import { createPondPreset } from './presets-3d/pond';
 
-export const VISUALIZER_3D_PRESETS = ['orb', 'terrain', 'galaxy', 'tunnel', 'pillars'] as const;
+export const VISUALIZER_3D_PRESETS = [
+  'orb',
+  'terrain',
+  'galaxy',
+  'tunnel',
+  'pillars',
+  'ferrofluid',
+  'gravity-well',
+  'silk',
+  'plasma-globe',
+  'ribbons',
+  'swarm',
+  'urchin',
+  'pond',
+] as const;
 export type Visualizer3dPresetId = (typeof VISUALIZER_3D_PRESETS)[number];
 
 export function isVisualizer3dPreset(value: unknown): value is Visualizer3dPresetId {
@@ -49,8 +73,9 @@ interface PresetInstance {
     level: number,
     bass: number,
     clock: number,
-    pointer: { x: number; y: number },
+    pointer: PointerTarget | { x: number; y: number },
     palette: Palette3D,
+    features?: AudioFeatures,
   ) => void;
   dispose: () => void;
 }
@@ -578,13 +603,26 @@ function createPillarsPreset(scene: THREE.Scene, camera: THREE.PerspectiveCamera
 // Map preset ID to its builder
 const BUILDERS: Record<
   Visualizer3dPresetId,
-  (scene: THREE.Scene, camera: THREE.PerspectiveCamera, palette: Palette3D) => PresetInstance
+  (
+    scene: THREE.Scene,
+    camera: THREE.PerspectiveCamera,
+    palette: Palette3D,
+    options?: Visualizer3dOptions,
+  ) => PresetInstance
 > = {
   orb: createOrbPreset,
   terrain: createTerrainPreset,
   galaxy: createGalaxyPreset,
   tunnel: createTunnelPreset,
   pillars: createPillarsPreset,
+  ferrofluid: createFerrofluidPreset,
+  'gravity-well': createGravityWellPreset,
+  silk: createSilkPreset,
+  'plasma-globe': createPlasmaGlobePreset,
+  ribbons: createRibbonsPreset,
+  swarm: createSwarmPreset,
+  urchin: createUrchinPreset,
+  pond: createPondPreset,
 };
 
 // ---------------------------------------------------------------------------
@@ -627,9 +665,10 @@ export function start3dVisualizer(
   }
 
   const builder = BUILDERS[preset] || createOrbPreset;
-  const instance = builder(scene, camera, palette);
+  const instance = builder(scene, camera, palette, options);
 
-  const pointerTracker = startPointerTracker(canvas);
+  const pointerTracker = startPointerTracker3D(canvas);
+  const featureExtractor = new AudioFeatureExtractor();
 
   const targetBands = new Float32Array(BAND_COUNT);
   const targetWave = new Float32Array(WAVE_SAMPLES);
@@ -638,6 +677,7 @@ export function start3dVisualizer(
 
   let resting = false;
   let frames = 0;
+  let lastNow = performance.now();
 
   const onResize = () => {
     width = Math.max(1, Math.round(canvas.clientWidth * dpr));
@@ -655,9 +695,25 @@ export function start3dVisualizer(
   const observer = new ResizeObserver(onResize);
   observer.observe(canvas);
 
+  // Pause rendering when the tab is hidden
+  let isTabVisible = typeof document === 'undefined' ? true : !document.hidden;
+  const onVisibilityChange = () => {
+    isTabVisible = !document.hidden;
+    if (!isTabVisible && !resting) {
+      renderer.clear();
+      resting = true;
+    }
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
+
   let raf = requestAnimationFrame(function tick(now) {
     raf = requestAnimationFrame(tick);
+    if (!isTabVisible) return;
+
     const clock = now / 1000;
+    const dt = Math.min(0.1, Math.max(0.001, (now - lastNow) / 1000));
+    lastNow = now;
+
     const active = sample(targetBands, targetWave, clock);
 
     let peak = 0;
@@ -687,11 +743,12 @@ export function start3dVisualizer(
       palette = readPalette3D(canvas);
     }
 
-    const pointer = pointerTracker.getPointer();
+    const pointer = pointerTracker.getPointer(clock, dt);
     const level = sum / BAND_COUNT;
     const bass = bassSum / 6;
+    const features = featureExtractor.extract(bands, wave, clock, dt, active);
 
-    instance.update(bands, wave, level, bass, clock, pointer, palette);
+    instance.update(bands, wave, level, bass, clock, pointer, palette, features);
 
     if (composer) {
       composer.render();
@@ -703,6 +760,7 @@ export function start3dVisualizer(
   return () => {
     cancelAnimationFrame(raf);
     observer.disconnect();
+    document.removeEventListener('visibilitychange', onVisibilityChange);
     pointerTracker.stop();
     instance.dispose();
     composer?.dispose();

@@ -6,6 +6,18 @@ A professional web application for synchronizing song lyrics with audio, with su
 
 > Translations: [Español (Spanish)](docs/translations/README.es.md)
 
+[![React 19](https://img.shields.io/badge/React_19-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![WaveSurfer.js](https://img.shields.io/badge/WaveSurfer.js-007ACC?style=flat-square&logo=soundcharts&logoColor=white)](https://wavesurfer-js.org/)
+[![Three.js](https://img.shields.io/badge/Three.js-000000?style=flat-square&logo=threedotjs&logoColor=white)](https://threejs.org/)
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)](https://www.framer.com/motion/)
+[![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=flat-square&logo=radixui&logoColor=white)](https://www.radix-ui.com/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io/)
+[![Yjs](https://img.shields.io/badge/Yjs-D14A04?style=flat-square&logo=ycombinator&logoColor=white)](https://yjs.dev/)
+[![WebAuthn / Passkeys](https://img.shields.io/badge/WebAuthn_%2F_Passkeys-3423A6?style=flat-square&logo=webauthn&logoColor=white)](https://simplewebauthn.dev/)
+[![i18next](https://img.shields.io/badge/i18next-26A69A?style=flat-square&logo=i18next&logoColor=white)](https://www.i18next.com/)
+
 ## Table of Contents
 
 - [Features](#features)
@@ -31,6 +43,7 @@ A professional web application for synchronizing song lyrics with audio, with su
   - [Authentication](#authentication)
   - [Moderation & Admin](#moderation--admin)
 - [Tech Stack](#tech-stack)
+  - [User-Facing Dependencies](#user-facing-dependencies)
 - [Getting Started](#getting-started)
 - [API Reference](#api-reference)
   - [`/health`](#health)
@@ -54,11 +67,18 @@ A professional web application for synchronizing song lyrics with audio, with su
 
 ### 🎵 Audio Sources
 
+[![WaveSurfer.js](https://img.shields.io/badge/WaveSurfer.js-Waveform-007ACC?style=flat-square&logo=soundcharts&logoColor=white)](https://wavesurfer-js.org/)
+[![Cloudinary](https://img.shields.io/badge/Cloudinary-Audio_Hosting-3448C5?style=flat-square&logo=cloudinary&logoColor=white)](https://cloudinary.com/)
+[![YouTube](https://img.shields.io/badge/YouTube-Audio_Streaming-FF0000?style=flat-square&logo=youtube&logoColor=white)](https://youtube.com/)
+
 - **Local Files** — Drag and drop or browse to load MP3, WAV, FLAC, OGG, and other common formats. Full waveform display with seek and loop handles.
 - **YouTube** — Paste any YouTube URL to stream the audio directly inside the editor. Includes a visual playback progress indicator with A-B loop support.
 - **Cloudinary / direct URL** — Paste a direct audio URL and it loads through the HTML audio element; authenticated uploads under 50 MB are stored on Cloudinary and restored automatically on project load.
 
 ### Editor Modes
+
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-Karaoke_Fill-0055FF?style=flat-square&logo=framer&logoColor=white)](https://www.framer.com/motion/)
+[![Fractional Indexing](https://img.shields.io/badge/Fractional_Indexing-Line_Order-6366F1?style=flat-square)](https://github.com/rocicorp/fractional-indexing)
 
 - **LRC Mode** — Line-by-line synchronization with millisecond-accurate timestamps. Hit a configurable key (default: `Space`) to stamp the current playback position onto the active line.
 - **SRT Mode** — Subtitle format with start and end times per line. Each line gets both an in and out timestamp for precise subtitle placement.
@@ -67,6 +87,8 @@ A professional web application for synchronizing song lyrics with audio, with su
 The mode switcher sits in the floating editor toolbar alongside Auto Stamp. Words Mode requires at least one synced line, so it can anchor per-word times.
 
 ### Timing & Synchronization
+
+[![WaveSurfer.js](https://img.shields.io/badge/WaveSurfer.js-Waveform_&_Loop-007ACC?style=flat-square&logo=soundcharts&logoColor=white)](https://wavesurfer-js.org/)
 
 - **Keyboard-driven stamping** — Fully configurable shortcut keys for marking, nudging, and navigating lines during sync sessions.
 - **Fine nudging** — Shift timestamps forward or backward by configurable increments (default: 0.1s / 0.01s fine).
@@ -77,6 +99,9 @@ The mode switcher sits in the floating editor toolbar alongside Auto Stamp. Word
 - **Overlapping timestamp detection** — Visual badge warns when two lines share the same timestamp.
 
 ### 🤖 AI Auto Stamp
+
+[![Groq Whisper](https://img.shields.io/badge/Groq_Whisper-Cloud_ASR-F55036?style=flat-square&logo=groq&logoColor=white)](https://groq.com/)
+[![yt-dlp](https://img.shields.io/badge/yt--dlp-Audio_Extraction-FF0000?style=flat-square&logo=youtube&logoColor=white)](https://github.com/yt-dlp/yt-dlp)
 
 - **One-click AI transcription** — Load a local audio file, a Cloudinary upload, **or a YouTube URL**, then click Auto Stamp to have the audio transcribed and every lyric line aligned automatically. YouTube audio is extracted server-side; this is not a local-file-only feature.
 - **Word-level auto-stamping** — In Words Mode, timestamps are distributed per word rather than per line, producing a ready-made karaoke track.
@@ -93,6 +118,9 @@ The mode switcher sits in the floating editor toolbar alongside Auto Stamp. Word
 > Requires a Groq API key on the server. YouTube sources additionally need `yt-dlp`, plus a PO-token provider in production. Limits: 20-minute videos, 25 MB audio.
 
 ### 🔍 Lyrics Search & Import
+
+[![LRCLIB](https://img.shields.io/badge/LRCLIB-Synced_LRC-2563EB?style=flat-square)](https://lrclib.net/)
+[![Genius](https://img.shields.io/badge/Genius-Lyrics_Search-FFFF64?style=flat-square&logo=genius&logoColor=black)](https://genius.com/)
 
 Search for a song and import its lyrics without leaving the app — available from both the setup wizard and the editor toolbar.
 
@@ -126,6 +154,9 @@ A song's artists are an ordered list of **credits**, each `primary` or `featured
 - **A project must be nameable** — A title, song name or artist that still has letters or digits after slugging is required. The setup screen keeps *Start syncing* disabled and the project settings dialog keeps *Save* disabled until it is met.
 
 ### Lyric Content
+
+[![Wanakana](https://img.shields.io/badge/Wanakana-Furigana_&_Romaji-EF4444?style=flat-square)](https://wanakana.com/)
+[![Noto Serif JP](https://img.shields.io/badge/Fontsource-Noto_Serif_JP-10B981?style=flat-square)](https://fontsource.org/fonts/noto-serif-jp)
 
 - **Secondary lyrics** — Add a secondary text track per line (e.g., romaji, alternate language pronunciation).
 - **Translation layer** — A separate per-line translation field (e.g., an English translation alongside the main lyrics).
@@ -161,7 +192,22 @@ A song's artists are an ordered list of **credits**, each `primary` or `featured
 
 ### Live Preview
 
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-Karaoke_Animation-0055FF?style=flat-square&logo=framer&logoColor=white)](https://www.framer.com/motion/)
+[![Three.js](https://img.shields.io/badge/Three.js-3D_Visualizer-000000?style=flat-square&logo=threedotjs&logoColor=white)](https://threejs.org/)
+[![Postprocessing](https://img.shields.io/badge/Postprocessing-Bloom_Shaders-8B5CF6?style=flat-square)](https://github.com/pmndrs/postprocessing)
+
 - **Real-time karaoke preview** — Highlights the currently playing line and fills words character-by-character as they play (in Words mode).
+- **Interactive 3D audio visualizer** — WebGL-powered 3D audio-reactive scenes rendered in real time behind synced lyrics with bloom and shader postprocessing. Includes cursor-following interactive presets:
+  - **Ferrofluid**: Dark glossy metallic fluid with magnetic spikes; spikes lean toward the cursor (Bass = spike elongation, Treble = needle sharpness).
+  - **Gravity Well**: Swirling particle accretion disk where the cursor acts as the gravitational attractor (Bass = gravity shockwave pulse, Mids = orbital spin rate).
+  - **Silk**: Sheer cloth mesh with FFT-driven waves; the cursor indents and pinches the fabric with spring-back physics.
+  - **Plasma Globe**: Glass sphere housing electric discharge filaments reaching toward the cursor touch point (Treble = arc jitter and branch count, Bass = core electrode pulse).
+  - **Ribbons**: 16 floating frequency ribbons whose heads chase the cursor with staggered inertia and lag.
+  - **Swarm**: 3D boids flock orbiting and streaming toward the cursor (RMS = flight speed, Spectral Centroid = dynamic hue shift).
+  - **Urchin**: 64 mathematical spines mapped to FFT bins that flex and magnetically rotate toward the cursor.
+  - **Pond**: 3D height-field water simulation; moving the cursor deposits ripple wakes, while audio beats trigger concentric drops.
+  - **Classic 3D Presets**: Orb, Terrain, Galaxy, Tunnel, and Pillars.
+- **Karaoke fill easing** — Highlights the currently playing line and fills words character-by-character as they play (in Words mode).
 - **Karaoke fill easing** — Linear (accurate) or ease-in/out (smooth) word fill animation.
 - **Fill track selection** — Apply the animated fill to the main text, secondary text, or both.
 - **Translation display** — Optionally show the translation layer below each lyric line.
@@ -173,8 +219,15 @@ A song's artists are an ordered list of **credits**, each `primary` or `featured
 
 ### Project Management
 
+[![Yjs](https://img.shields.io/badge/Yjs-CRDT_Sync-D14A04?style=flat-square&logo=ycombinator&logoColor=white)](https://yjs.dev/)
+[![Hocuspocus](https://img.shields.io/badge/Hocuspocus-Live_Collab-2D3748?style=flat-square)](https://tiptap.dev/docs/hocuspocus/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-Multi--Tab_Sync-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io/)
+[![TanStack Query](https://img.shields.io/badge/TanStack_Query-Cache_&_Sync-FF4154?style=flat-square&logo=reactquery&logoColor=white)](https://tanstack.com/query)
+[![idb](https://img.shields.io/badge/idb-IndexedDB_Offline-3B82F6?style=flat-square)](https://github.com/jakearchibald/idb)
+
 - **Project library** — Browse, search, and manage all your projects. Each stores lyrics, timestamps, media references, and editor state.
-- **Cloud sync** — Authenticated projects save to the server automatically. Created on first save, then patched incrementally — a single-line change sends a surgical positional patch rather than the whole document.
+- **Cloud sync** — Authenticated projects save to the server automatically.
+- **Live collaborative editing** — Multi-user real-time synchronization powered by Yjs CRDTs and Hocuspocus with line-locking and awareness cursors. Created on first save, then patched incrementally — a single-line change sends a surgical positional patch rather than the whole document.
 - **Guest Mode & project claiming** — Use the editor fully without an account. Your draft lives in `localStorage` and migrates to your account on sign-in, whichever auth method you use.
 - **Autosave** — Fires after a configurable interval or after a threshold of line edits, whichever comes first.
 - **Manual save** — Save button with status indicator (spinner → checkmark).
@@ -187,6 +240,11 @@ A song's artists are an ordered list of **credits**, each `primary` or `featured
 - **Project settings** — The settings dialog edits name, song, artists (primary and featured), cover, visibility and singer colours.
 
 ### 🌐 Social Platform
+
+[![TanStack Query](https://img.shields.io/badge/TanStack_Query-Social_Data-FF4154?style=flat-square&logo=reactquery&logoColor=white)](https://tanstack.com/query)
+[![TanStack Virtual](https://img.shields.io/badge/TanStack_Virtual-Virtualized_Lists-FF4154?style=flat-square)](https://tanstack.com/virtual)
+[![Frimousse](https://img.shields.io/badge/Frimousse-Emoji_Reactions-FFA116?style=flat-square)](https://github.com/koala-interactive/frimousse)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-Live_Social_Events-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io/)
 
 - **Public projects** — Publish a project and get a public view with its own styling and Open Graph preview image.
 - **Stars & forks** — Star projects you like; fork one to build on it (the owner can disable forking per project).
@@ -213,6 +271,9 @@ A song's artists are an ordered list of **credits**, each `primary` or `featured
 - **Leaderboard** — Global ranking. AI-stamped lines are weighted at 0.3× so manual syncing stays worth more.
 
 ### Sharing
+
+[![QRCode](https://img.shields.io/badge/QRCode-Branded_QR_Generation-10B981?style=flat-square)](https://github.com/soldair/node-qrcode)
+[![fflate](https://img.shields.io/badge/fflate-URL_Compression-6366F1?style=flat-square)](https://github.com/101arrowz/fflate)
 
 - **Public/private sharing** — Generate a shareable URL for any project and toggle its visibility.
 - **Deep link with timestamp** — Include `?s=N` to start playback at a specific second.
@@ -272,6 +333,11 @@ All shortcuts are fully user-configurable via **Settings → Shortcuts**, with c
 
 ### Interface & Themes
 
+[![Radix UI](https://img.shields.io/badge/Radix_UI-Accessible_Primitives-161618?style=flat-square&logo=radixui&logoColor=white)](https://www.radix-ui.com/)
+[![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS_v4-Styling_System-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![React Resizable Panels](https://img.shields.io/badge/React_Resizable_Panels-Split_Layout-64748B?style=flat-square)](https://github.com/bvaughn/react-resizable-panels)
+[![React Hot Toast](https://img.shields.io/badge/React_Hot_Toast-Alerts-E11D48?style=flat-square)](https://react-hot-toast.com/)
+
 - **Themes** — Obsidian (dark) and Pure (light), both built on the [Rosé Pine](https://rosepinetheme.com) palette: Moon for dark, Dawn for light.
 - **Active line highlight styles** — Glow, Zoom, Color, or Dim.
 - **Translation layout** — Stacked or side-by-side.
@@ -282,6 +348,8 @@ All shortcuts are fully user-configurable via **Settings → Shortcuts**, with c
 - **Internationalization** — Full UI in **English** and **Spanish** (more can be added under `src/locales/`).
 
 ### Settings Panels
+
+[![i18next](https://img.shields.io/badge/i18next-Localization-26A69A?style=flat-square&logo=i18next&logoColor=white)](https://www.i18next.com/)
 
 **Editor** — Default editor mode, word timestamp visibility, auto-advance behavior, highlight mode, loop selection, pause on mark, shift/nudge amounts, lyrics search speed, preserve empty lines.
 
@@ -300,6 +368,12 @@ All shortcuts are fully user-configurable via **Settings → Shortcuts**, with c
 **Profile & Account** — Display name, account name, email, avatar, password, passkeys, active sessions, and privacy preferences.
 
 ### Authentication
+
+[![SimpleWebAuthn](https://img.shields.io/badge/SimpleWebAuthn-Passkeys_%26_Biometrics-3423A6?style=flat-square&logo=webauthn&logoColor=white)](https://simplewebauthn.dev/)
+[![zxcvbn](https://img.shields.io/badge/zxcvbn-Password_Strength-10B981?style=flat-square&logo=1password&logoColor=white)](https://github.com/dropbox/zxcvbn)
+[![reCAPTCHA v3](https://img.shields.io/badge/reCAPTCHA_v3-Bot_Protection-4285F4?style=flat-square&logo=google&logoColor=white)](https://developers.google.com/recaptcha)
+[![React Easy Crop](https://img.shields.io/badge/React_Easy_Crop-Avatar_Cropper-8B5CF6?style=flat-square)](https://github.com/ricardo-ch/react-easy-crop)
+[![FingerprintJS](https://img.shields.io/badge/FingerprintJS-Device_Recognition-F43F5E?style=flat-square)](https://fingerprint.com/)
 
 - **Email / password** — Standard registration and login, with email verification and password reset.
 - **Passkeys (WebAuthn)** — Register and sign in with a platform passkey; manage registered passkeys from settings.
@@ -321,20 +395,58 @@ Staff-only, gated by granular permissions rather than a role name.
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | [React 19](https://react.dev/) |
-| Build Tool | [Vite 8](https://vitejs.dev/) |
-| Language | [TypeScript](https://www.typescriptlang.org/) |
-| Styling | [Tailwind CSS v4](https://tailwindcss.com/) |
-| Animations | [Framer Motion](https://www.framer.com/motion/) |
-| Audio Waveform | [WaveSurfer.js](https://wavesurfer-js.org/) |
-| UI Primitives | [Radix UI](https://www.radix-ui.com/) |
-| Internationalization | [i18next](https://www.i18next.com/) |
-| Routing | [React Router v7](https://reactrouter.com/) |
-| Virtualization | [TanStack Virtual](https://tanstack.com/virtual) |
-| Real-time | [Socket.IO](https://socket.io/) |
-| Testing | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) |
+| Layer | Technology | Badge / Chip |
+|---|---|---|
+| Framework | [React 19](https://react.dev/) | [![React 19](https://img.shields.io/badge/React_19-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://react.dev/) |
+| Build Tool | [Vite 8](https://vitejs.dev/) | [![Vite 8](https://img.shields.io/badge/Vite_8-9135FF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/) |
+| Language | [TypeScript](https://www.typescriptlang.org/) | [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) |
+| Styling | [Tailwind CSS v4](https://tailwindcss.com/) | [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/) |
+| Animations | [Framer Motion](https://www.framer.com/motion/) | [![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)](https://www.framer.com/motion/) |
+| Audio Waveform | [WaveSurfer.js](https://wavesurfer-js.org/) | [![WaveSurfer.js](https://img.shields.io/badge/WaveSurfer.js-007ACC?style=flat-square&logo=soundcharts&logoColor=white)](https://wavesurfer-js.org/) |
+| 3D Visualizer | [Three.js](https://threejs.org/) | [![Three.js](https://img.shields.io/badge/Three.js-000000?style=flat-square&logo=threedotjs&logoColor=white)](https://threejs.org/) |
+| UI Primitives | [Radix UI](https://www.radix-ui.com/) | [![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=flat-square&logo=radixui&logoColor=white)](https://www.radix-ui.com/) |
+| Internationalization | [i18next](https://www.i18next.com/) | [![i18next](https://img.shields.io/badge/i18next-26A69A?style=flat-square&logo=i18next&logoColor=white)](https://www.i18next.com/) |
+| Routing | [React Router v7](https://reactrouter.com/) | [![React Router v7](https://img.shields.io/badge/React_Router_v7-CA4245?style=flat-square&logo=reactrouter&logoColor=white)](https://reactrouter.com/) |
+| Virtualization | [TanStack Virtual](https://tanstack.com/virtual) | [![TanStack Virtual](https://img.shields.io/badge/TanStack_Virtual-FF4154?style=flat-square)](https://tanstack.com/virtual) |
+| Real-time | [Socket.IO](https://socket.io/) | [![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io/) |
+| Collaboration | [Yjs](https://yjs.dev/) | [![Yjs](https://img.shields.io/badge/Yjs-D14A04?style=flat-square&logo=ycombinator&logoColor=white)](https://yjs.dev/) |
+| Testing | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) | [![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev/) |
+
+### User-Facing Dependencies
+
+A comprehensive map of third-party libraries and packages powering interactive user features across LRC Studio:
+
+| Category | Feature | Dependency | Badge / Chip | Role |
+|---|---|---|---|---|
+| **Audio & Playback** | Waveform & Scrubbing | `wavesurfer.js` | [![WaveSurfer.js](https://img.shields.io/badge/WaveSurfer.js-007ACC?style=flat-square&logo=soundcharts&logoColor=white)](https://wavesurfer-js.org/) | Audio waveform canvas rendering, zoom, seek, and A-B loop handles |
+| **Audio & Playback** | 3D Audio Visualizer | `three`, `@react-three/fiber` | [![Three.js](https://img.shields.io/badge/Three.js-000000?style=flat-square&logo=threedotjs&logoColor=white)](https://threejs.org/) | Audio-reactive 3D scene presets (Pillars, Tunnel, Waves) via WebGL |
+| **Audio & Playback** | Visualizer Postprocessing | `postprocessing`, `@react-three/postprocessing` | [![Postprocessing](https://img.shields.io/badge/Postprocessing-8B5CF6?style=flat-square)](https://github.com/pmndrs/postprocessing) | Bloom, glow, and camera shader postprocessing effects |
+| **Audio & Playback** | Cloud Audio & Media | `cloudinary` | [![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=flat-square&logo=cloudinary&logoColor=white)](https://cloudinary.com/) | Direct audio uploads, project covers, and user avatars |
+| **Editor & Sync** | Karaoke Word Animation | `framer-motion` | [![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)](https://www.framer.com/motion/) | Per-word karaoke fill transitions and animated UI feedback |
+| **Editor & Sync** | Furigana & Japanese Text | `wanakana` | [![Wanakana](https://img.shields.io/badge/Wanakana-EF4444?style=flat-square)](https://wanakana.com/) | Japanese Romaji/Kana conversion, ruby markup & CJK tokenization |
+| **Editor & Sync** | Japanese Typography | `@fontsource-variable/noto-serif-jp` | [![Noto Serif JP](https://img.shields.io/badge/Noto_Serif_JP-10B981?style=flat-square)](https://fontsource.org/fonts/noto-serif-jp) | High-legibility Japanese serif font for lyric and ruby display |
+| **Editor & Sync** | Split Workspace Panels | `react-resizable-panels` | [![Resizable Panels](https://img.shields.io/badge/Resizable_Panels-64748B?style=flat-square)](https://github.com/bvaughn/react-resizable-panels) | Multi-pane resizable layout between editor, player, and live preview |
+| **Editor & Sync** | Line & Section Order | `fractional-indexing` | [![Fractional Indexing](https://img.shields.io/badge/Fractional_Indexing-6366F1?style=flat-square)](https://github.com/rocicorp/fractional-indexing) | Jitter-free, collision-free ordering for lines, sections, and playlists |
+| **Collaboration** | Live Document Model | `yjs` | [![Yjs](https://img.shields.io/badge/Yjs-D14A04?style=flat-square&logo=ycombinator&logoColor=white)](https://yjs.dev/) | CRDT shared document state for simultaneous multi-user lyrics editing |
+| **Collaboration** | Collaboration WebSocket | `@hocuspocus/provider` | [![Hocuspocus](https://img.shields.io/badge/Hocuspocus-2D3748?style=flat-square)](https://tiptap.dev/docs/hocuspocus/) | WebSocket provider handling awareness cursors and real-time document patches |
+| **Collaboration** | Real-Time Events | `socket.io-client` | [![Socket.IO](https://img.shields.io/badge/Socket.IO-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io/) | Multi-tab sync, live viewer counts, notifications, and ASR job progress |
+| **UI & UX** | Accessible Primitives | `radix-ui` | [![Radix UI](https://img.shields.io/badge/Radix_UI-161618?style=flat-square&logo=radixui&logoColor=white)](https://www.radix-ui.com/) | Keyboard-accessible dialogs, dropdowns, popovers, tooltips, and context menus |
+| **UI & UX** | Styling & Design System | `tailwindcss` v4 | [![Tailwind CSS v4](https://img.shields.io/badge/Tailwind_CSS_v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/) | Modern high-performance styling engine and CSS design tokens |
+| **UI & UX** | Emoji Reaction Picker | `frimousse` | [![Frimousse](https://img.shields.io/badge/Frimousse-FFA116?style=flat-square)](https://github.com/koala-interactive/frimousse) | Searchable category-based emoji picker for project and comment reactions |
+| **UI & UX** | Interactive Toast Alerts | `react-hot-toast` | [![React Hot Toast](https://img.shields.io/badge/React_Hot_Toast-E11D48?style=flat-square)](https://react-hot-toast.com/) | Animated toast alerts for save confirmations, errors, and clipboard actions |
+| **Social & Data** | Server State Caching | `@tanstack/react-query` | [![TanStack Query](https://img.shields.io/badge/TanStack_Query-FF4154?style=flat-square&logo=reactquery&logoColor=white)](https://tanstack.com/query) | Caching, pagination, and optimistic updates for social explore, feeds, and profiles |
+| **Social & Data** | Virtualized Lists | `@tanstack/react-virtual` | [![TanStack Virtual](https://img.shields.io/badge/TanStack_Virtual-FF4154?style=flat-square)](https://tanstack.com/virtual) | 60fps virtualized rendering for long lyric sheets and activity streams |
+| **Social & Data** | Social Reads | `graphql-request` | [![GraphQL](https://img.shields.io/badge/GraphQL-E10098?style=flat-square&logo=graphql&logoColor=white)](https://graphql.org/) | Type-safe GraphQL client for profile data, explore, and playlists |
+| **Social & Data** | Relative Dates | `date-fns` | [![date--fns](https://img.shields.io/badge/date--fns-770C56?style=flat-square)](https://date-fns.org/) | Localized relative timestamps across activity feeds, comments, and streaks |
+| **Sharing** | Branded QR Generation | `qrcode` | [![QRCode](https://img.shields.io/badge/QRCode-10B981?style=flat-square)](https://github.com/soldair/node-qrcode) | Canvas QR code drawing with embedded LRC Studio mark and PNG export |
+| **Sharing** | Share Link Compression | `fflate` | [![fflate](https://img.shields.io/badge/fflate-6366F1?style=flat-square)](https://github.com/101arrowz/fflate) | High-speed compression of project states into compact shareable URLs |
+| **Auth & Security** | Passkeys & WebAuthn | `@simplewebauthn/browser` | [![SimpleWebAuthn](https://img.shields.io/badge/SimpleWebAuthn-3423A6?style=flat-square&logo=webauthn&logoColor=white)](https://simplewebauthn.dev/) | Biometric face/fingerprint authentication and sudo verification |
+| **Auth & Security** | Password Strength Meter | `zxcvbn` | [![zxcvbn](https://img.shields.io/badge/zxcvbn-10B981?style=flat-square&logo=1password&logoColor=white)](https://github.com/dropbox/zxcvbn) | Real-time password entropy estimation and safety feedback |
+| **Auth & Security** | Bot Defense | `react-google-recaptcha-v3` | [![reCAPTCHA v3](https://img.shields.io/badge/reCAPTCHA_v3-4285F4?style=flat-square&logo=google&logoColor=white)](https://developers.google.com/recaptcha) | Frictionless bot protection during account registration |
+| **Auth & Security** | Image Cropper | `react-easy-crop` | [![React Easy Crop](https://img.shields.io/badge/React_Easy_Crop-8B5CF6?style=flat-square)](https://github.com/ricardo-ch/react-easy-crop) | Canvas-based zoom/pan crop for avatars and project banners |
+| **Auth & Security** | Device Fingerprinting | `@fingerprintjs/fingerprintjs` | [![FingerprintJS](https://img.shields.io/badge/FingerprintJS-F43F5E?style=flat-square)](https://fingerprint.com/) | Client identification for guest draft migration and account security |
+| **Localization** | Multi-Language UI | `i18next`, `react-i18next` | [![i18next](https://img.shields.io/badge/i18next-26A69A?style=flat-square&logo=i18next&logoColor=white)](https://www.i18next.com/) | Seamless English & Spanish localization with browser detection |
+| **Storage** | Offline Drafts | `idb` | [![idb](https://img.shields.io/badge/idb-3B82F6?style=flat-square)](https://github.com/jakearchibald/idb) | IndexedDB persistent client storage keeping unauthenticated drafts safe |
 
 State is deliberately kept without a global store — no Redux, no Zustand. It lives in React Context, the root `useAppState` hook, an undo/redo history stack, and `localStorage`. Server data for profiles, feeds and explore is cached with [TanStack Query](https://tanstack.com/query) (`src/app/query.client.ts`); writes keep it in step through `src/app/cache-sync.ts` (for example `profileChanged()` after a profile edit, so a new cover shows on the profile at once).
 

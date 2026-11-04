@@ -121,7 +121,7 @@ export function VisualizerButton() {
           <div
             role="group"
             aria-label={t('projectView.visualizer.title')}
-            className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-5"
+            className="max-h-[min(56vh,520px)] overflow-y-auto pr-1 sm:pr-2 grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-5"
           >
             {OPTIONS.map((option) => {
               const selected = option === kind;
