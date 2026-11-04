@@ -94,6 +94,14 @@
           else if (theme === 'sage') root.classList.add('dark', 'theme-sage');
           else if (theme === 'system') { if (prefersDark) root.classList.add('dark'); }
           else root.classList.add('dark');
+          // Palette themes: useThemeSync caches the derived properties (shared/theme/apply-theme.ts).
+          // Only a cache written for this very theme applies; anything else is a stale leftover.
+          var cached = JSON.parse(localStorage.getItem('lrc-theme-cache') || 'null');
+          if (cached && cached.id === theme && cached.vars) {
+            root.classList.toggle('dark', !!cached.dark);
+            root.style.setProperty('color-scheme', cached.dark ? 'dark' : 'light');
+            for (var k in cached.vars) root.style.setProperty(k, cached.vars[k]);
+          }
         } catch (e) {
           document.documentElement.classList.add('dark');
         }

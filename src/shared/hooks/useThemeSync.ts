@@ -2,20 +2,17 @@ import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useReplaceSearch } from './useReplaceSearch';
+import { applyTheme } from '@/shared/theme/apply-theme';
 
 export function useThemeSync(theme?: string, fontWeight?: string) {
   const { i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const replaceSearch = useReplaceSearch();
 
-  // 1. Apply theme — dark (default) or light
+  // 1. Apply theme: `dark` (default), `light`, or one of the palette themes.
+  // No theme (the auth page, or a user with none stored) means dark, as before.
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'light') {
-      root.classList.remove('dark');
-    } else {
-      root.classList.add('dark');
-    }
+    applyTheme(theme);
   }, [theme]);
 
   // 1b. Apply the type weight ramp. Undefined means the caller has no settings to
