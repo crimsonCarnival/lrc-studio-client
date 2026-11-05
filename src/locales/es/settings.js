@@ -236,6 +236,8 @@ export default {
     focusContrast: "Contraste de enfoque",
     focusContrastDesc: "Intensidad del desvanecimiento de las líneas inactivas en el panel de vista previa",
     themeSection: "Tema",
+    keepThemeOnSignOut: "Mantener el tema al cerrar sesión",
+    keepThemeOnSignOutDesc: "Este navegador conserva tu tema al cerrar sesión. Desactívalo para volver al tema por defecto.",
     moreThemes: "Más temas",
     generalSection: "General",
     displaySection: "Visualización del editor",

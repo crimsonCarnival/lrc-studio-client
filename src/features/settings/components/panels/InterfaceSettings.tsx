@@ -67,6 +67,9 @@ export default function InterfaceSettings({ settings, updateSetting, searchTerm 
     <>
       <Section title={t('settings.interface.themeSection')} searchTerm={searchTerm}>
         <ThemeSelector settings={settings} updateSetting={updateSetting} />
+        <SettingRow label={t('settings.interface.keepThemeOnSignOut')} description={t('settings.interface.keepThemeOnSignOutDesc')}>
+          <Toggle id="toggle-keep-theme" label={t('settings.interface.keepThemeOnSignOut')} checked={ui.keepThemeOnSignOut ?? true} onChange={(v: boolean) => updateSetting('interface.keepThemeOnSignOut', v)} />
+        </SettingRow>
       </Section>
 
       <Section title={t('settings.interface.generalSection')} searchTerm={searchTerm}>

@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
-import { SettingsProvider } from '@/features/settings/SettingsContext';
 import { TooltipProvider } from '@ui/tooltip';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
@@ -21,6 +20,7 @@ import { useStarredPlaylist } from '@/features/projects/hooks/useStarredPlaylist
 import PublicLyrics, { type DisplayLine } from './PublicLyrics';
 import ProjectInfoPanel from './ProjectInfoPanel';
 import PublicPlaybackBar from './PublicPlaybackBar';
+import PublicShortcuts from './PublicShortcuts';
 import { PublicHeaderPlayer } from './PublicHeaderPlayer';
 import { ShareOgButton } from './ShareOgButton';
 import { useProjectViewers } from '@/features/projects/hooks/useProjectViewers';
@@ -467,6 +467,7 @@ function ProjectViewPageInner() {
       viewerMode
     >
     <VisualizerProvider>
+    <PublicShortcuts />
     {actionsSlot && createPortal(
       <PublicHeaderPlayer
         playerHidden={playerHidden}
@@ -667,10 +668,8 @@ function ProjectViewPageInner() {
 
 export default function ProjectViewPage() {
   return (
-    <SettingsProvider>
-      <TooltipProvider>
-        <ProjectViewPageInner />
-      </TooltipProvider>
-    </SettingsProvider>
+    <TooltipProvider>
+      <ProjectViewPageInner />
+    </TooltipProvider>
   );
 }

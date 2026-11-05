@@ -236,6 +236,8 @@ export default {
     toastPosition: "Notification Position",
     toastPositionDesc: "Controls where on-screen notifications appear",
     themeSection: "Theme",
+    keepThemeOnSignOut: "Keep theme after signing out",
+    keepThemeOnSignOutDesc: "This browser keeps your theme when you sign out. Turn off to return to the default theme.",
     moreThemes: "More themes",
     generalSection: "General",
     displaySection: "Editor Display",
