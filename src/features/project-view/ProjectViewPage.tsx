@@ -20,6 +20,7 @@ import { useStarredPlaylist } from '@/features/projects/hooks/useStarredPlaylist
 import PublicLyrics, { type DisplayLine } from './PublicLyrics';
 import ProjectInfoPanel from './ProjectInfoPanel';
 import PublicPlaybackBar from './PublicPlaybackBar';
+import PublicShortcuts from './PublicShortcuts';
 import { PublicHeaderPlayer } from './PublicHeaderPlayer';
 import { ShareOgButton } from './ShareOgButton';
 import { useProjectViewers } from '@/features/projects/hooks/useProjectViewers';
@@ -466,6 +467,7 @@ function ProjectViewPageInner() {
       viewerMode
     >
     <VisualizerProvider>
+    <PublicShortcuts />
     {actionsSlot && createPortal(
       <PublicHeaderPlayer
         playerHidden={playerHidden}

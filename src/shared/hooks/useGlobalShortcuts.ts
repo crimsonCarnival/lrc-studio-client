@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import type { Dispatch, SetStateAction, RefObject } from 'react';
 import { useLocation } from 'react-router-dom';
 import { matchKey } from '@/shared/utils/keyboard';
-import { isEditorPath } from '@features/projects/project-path';
+import { isEditorPath, isProjectViewPath } from '@features/projects/project-path';
 import type { AppSettings } from '@/features/settings/settings.types';
 import type { PlayerHandle } from '@/features/player/player.types';
 
@@ -35,6 +35,9 @@ export function useGlobalShortcuts({
 
   // ——— App + player shortcuts ———
   useEffect(() => {
+    // The public project view runs its own player and handles these keys itself (PublicShortcuts);
+    // the editor's player, still mounted above the routes, must not answer them.
+    const onPublicView = isProjectViewPath(location.pathname);
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
@@ -47,14 +50,14 @@ export function useGlobalShortcuts({
       } else if (matchKey(e, settings.shortcuts?.showHelp?.[0] || '?')) {
         setShowKeyboardHelp((prev) => !prev);
         // ——— Player shortcuts ———
-      } else if (matchKey(e, settings.shortcuts?.playPause?.[0] || 'Space')) {
+      } else if (!onPublicView && matchKey(e, settings.shortcuts?.playPause?.[0] || 'Space')) {
         e.preventDefault();
         playerRef.current?.togglePlay?.();
-      } else if (matchKey(e, settings.shortcuts?.seekBackward?.[0] || 'ArrowLeft')) {
+      } else if (!onPublicView && matchKey(e, settings.shortcuts?.seekBackward?.[0] || 'ArrowLeft')) {
         e.preventDefault();
         const cur = playerRef.current?.getCurrentTime?.() ?? 0;
         playerRef.current?.seek?.(Math.max(0, cur - (settings.playback?.seekTime ?? 5)));
-      } else if (matchKey(e, settings.shortcuts?.seekForward?.[0] || 'ArrowRight')) {
+      } else if (!onPublicView && matchKey(e, settings.shortcuts?.seekForward?.[0] || 'ArrowRight')) {
         e.preventDefault();
         const cur = playerRef.current?.getCurrentTime?.() ?? 0;
         playerRef.current?.seek?.(cur + (settings.playback?.seekTime ?? 5));
