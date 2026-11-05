@@ -2,7 +2,7 @@
 
 A professional web application for synchronizing song lyrics with audio, with support for karaoke-style word-level timing, multi-language content, cloud projects, and a social platform for sharing them.
 
-**[lrcstudio.app](https://www.lrcstudio.app)** · [GitHub](https://github.com/crimsonCarnival/lrc-studio) · [Server README](../server/README.md) · [Documentation (DeepWiki)](https://deepwiki.com/crimsonCarnival/lrc-studio)
+**[lrcstudio.app](https://www.lrcstudio.app)** · [GitHub](https://github.com/crimsonCarnival/lrc-studio) · [Server README](https://github.com/crimsonCarnival/lrc-studio-server/blob/main/README.md) · [Documentation (DeepWiki)](https://deepwiki.com/crimsonCarnival/lrc-studio)
 
 > Translations: [Español (Spanish)](docs/translations/README.es.md)
 
