@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import i18n from 'i18next';
 import { leaveSubdomainHostOnLogout } from '@/shared/utils/host';
 import { authEvents } from '@/shared/utils/auth-events';
-import { STORAGE_KEYS, storage } from '@/features/projects/services/storage.service';
+import { STORAGE_KEYS, storage, clearSettingsKeepAppearance } from '@/features/projects/services/storage.service';
 import { rememberedAccounts } from '@/features/auth/services/remembered-accounts.service';
 import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
 import type { AuthUser } from '@/features/auth/auth.types';
@@ -113,7 +113,7 @@ export function useAuth() {
     storage.remove(STORAGE_KEYS.SHARED_PROJECT);
     storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
     storage.remove(STORAGE_KEYS.HAS_SESSION);
-    storage.remove(STORAGE_KEYS.SETTINGS);
+    clearSettingsKeepAppearance();
     setAuthFlag(false);
     // Intentionally keep remembered accounts — they are UI metadata only.
     // The server cleared the refresh token cookie via POST /auth/logout.
@@ -165,7 +165,7 @@ export function useAuth() {
       storage.remove(STORAGE_KEYS.PROJECT);
       storage.remove(STORAGE_KEYS.SHARED_PROJECT);
       storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
-      storage.remove(STORAGE_KEYS.SETTINGS);
+      clearSettingsKeepAppearance();
     };
 
     const restore = async () => {
@@ -534,7 +534,7 @@ export function useAuth() {
     storage.remove(STORAGE_KEYS.SHARED_PROJECT);
     storage.remove(STORAGE_KEYS.ACTIVE_PROJECT_ID);
     storage.remove(STORAGE_KEYS.HAS_SESSION);
-    storage.remove(STORAGE_KEYS.SETTINGS);
+    clearSettingsKeepAppearance();
   }, []);
 
   const logoutAllDevices = useCallback(async () => {

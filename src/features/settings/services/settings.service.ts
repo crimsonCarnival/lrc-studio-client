@@ -71,6 +71,7 @@ const GET_SETTINGS = /* GraphQL */ `
         lockLayout
         mobileTab
         toastPosition
+        keepThemeOnSignOut
       }
       shortcuts {
         mark nudgeLeft nudgeRight nudgeLeftFine nudgeRightFine

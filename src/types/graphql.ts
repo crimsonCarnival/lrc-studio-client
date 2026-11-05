@@ -350,6 +350,7 @@ export type InterfaceSettings = {
   theme?: Maybe<Scalars['String']['output']>;
   customTheme?: Maybe<Scalars['String']['output']>;
   toastPosition?: Maybe<Scalars['String']['output']>;
+  keepThemeOnSignOut?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type InterfaceSettingsInput = {
@@ -368,6 +369,7 @@ export type InterfaceSettingsInput = {
   theme?: InputMaybe<Scalars['String']['input']>;
   customTheme?: InputMaybe<Scalars['String']['input']>;
   toastPosition?: InputMaybe<Scalars['String']['input']>;
+  keepThemeOnSignOut?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type LeaderboardResult = {

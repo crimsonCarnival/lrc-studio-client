@@ -97,7 +97,7 @@ const RESET_PATHS: Record<string, string[]> = {
   editor: ['editor.autoPauseOnMark', 'editor.nudge', 'editor.autoAdvance', 'editor.preserveEmptyLines', 'editor.showShiftAll', 'editor.shiftAllAmount', 'editor.showLineNumbers', 'editor.timestampPrecision', 'editor.syncFlashDuration', 'editor.lyricsSearchSpeed', 'editor.srt'],
   export: ['export'],
   shortcuts: ['shortcuts'],
-  interface: ['interface.fontSize', 'interface.spacing', 'interface.previewAlignment', 'interface.focusContrast', 'interface.lockLayout', 'interface.toastPosition', 'editor.display', 'editor.scroll'],
+  interface: ['interface.fontSize', 'interface.spacing', 'interface.previewAlignment', 'interface.focusContrast', 'interface.lockLayout', 'interface.toastPosition', 'interface.keepThemeOnSignOut', 'editor.display', 'editor.scroll'],
 };
 
 const SHORTCUT_KEYS = [

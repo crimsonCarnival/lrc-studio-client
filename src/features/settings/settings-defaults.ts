@@ -75,7 +75,8 @@ export const DEFAULT_SETTINGS = {
     editorWidth: 50,
     lockLayout: false,
     mobileTab: 'editor',
-    toastPosition: 'bottom-right'
+    toastPosition: 'bottom-right',
+    keepThemeOnSignOut: true
   },
   shortcuts: {
     mark: ['Enter'],
