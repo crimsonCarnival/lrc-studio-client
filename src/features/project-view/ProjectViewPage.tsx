@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 const NotFoundPage = lazy(() => import('@/app/NotFoundPage'));
-import { SettingsProvider } from '@/features/settings/SettingsContext';
 import { TooltipProvider } from '@ui/tooltip';
 import { Tip } from '@ui/tip';
 import { Button } from '@ui/button';
@@ -667,10 +666,8 @@ function ProjectViewPageInner() {
 
 export default function ProjectViewPage() {
   return (
-    <SettingsProvider>
-      <TooltipProvider>
-        <ProjectViewPageInner />
-      </TooltipProvider>
-    </SettingsProvider>
+    <TooltipProvider>
+      <ProjectViewPageInner />
+    </TooltipProvider>
   );
 }
