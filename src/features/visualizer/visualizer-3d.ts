@@ -2,19 +2,22 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { BAND_COUNT, WAVE_SAMPLES } from './visualizer-signal';
 import type { Sampler } from './visualizer-presets';
 import { startPointerTracker3D } from './presets-3d/pointer-projector';
 import { AudioFeatureExtractor } from './presets-3d/audio-features';
 import type { PointerTarget, AudioFeatures } from './presets-3d/types';
 import { createFerrofluidPreset } from './presets-3d/ferrofluid';
-import { createGravityWellPreset } from './presets-3d/gravity-well';
 import { createSilkPreset } from './presets-3d/silk';
 import { createPlasmaGlobePreset } from './presets-3d/plasma-globe';
-import { createRibbonsPreset } from './presets-3d/ribbons';
-import { createSwarmPreset } from './presets-3d/swarm';
 import { createUrchinPreset } from './presets-3d/urchin';
 import { createPondPreset } from './presets-3d/pond';
+import { createAuroraPreset } from './presets-3d/aurora';
+import { createCymaticsPreset } from './presets-3d/cymatics';
+import { createSkylinePreset } from './presets-3d/skyline';
+import { createVinylPreset } from './presets-3d/vinyl';
+import { createInkPreset } from './presets-3d/ink';
 
 export const VISUALIZER_3D_PRESETS = [
   'orb',
@@ -23,13 +26,15 @@ export const VISUALIZER_3D_PRESETS = [
   'tunnel',
   'pillars',
   'ferrofluid',
-  'gravity-well',
   'silk',
   'plasma-globe',
-  'ribbons',
-  'swarm',
   'urchin',
   'pond',
+  'aurora',
+  'cymatics',
+  'skyline',
+  'vinyl',
+  'ink',
 ] as const;
 export type Visualizer3dPresetId = (typeof VISUALIZER_3D_PRESETS)[number];
 
@@ -616,13 +621,38 @@ const BUILDERS: Record<
   tunnel: createTunnelPreset,
   pillars: createPillarsPreset,
   ferrofluid: createFerrofluidPreset,
-  'gravity-well': createGravityWellPreset,
   silk: createSilkPreset,
   'plasma-globe': createPlasmaGlobePreset,
-  ribbons: createRibbonsPreset,
-  swarm: createSwarmPreset,
   urchin: createUrchinPreset,
   pond: createPondPreset,
+  aurora: createAuroraPreset,
+  cymatics: createCymaticsPreset,
+  skyline: createSkylinePreset,
+  vinyl: createVinylPreset,
+  ink: createInkPreset,
+};
+
+// The bloom pass writes alpha = 1 everywhere, which turns the transparent canvas into an
+// opaque black sheet: invisible on the dark theme, a grey wash over the light one. The page
+// canvas is premultiplied, so taking alpha from the brightest channel restores transparency
+// for empty pixels and keeps the glow compositing correctly over either background.
+const BLOOM_ALPHA_SHADER = {
+  uniforms: { tDiffuse: { value: null } },
+  vertexShader: /* glsl */ `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    varying vec2 vUv;
+    void main() {
+      vec4 c = texture2D(tDiffuse, vUv);
+      gl_FragColor = vec4(c.rgb, max(c.r, max(c.g, c.b)));
+    }
+  `,
 };
 
 // ---------------------------------------------------------------------------
@@ -662,6 +692,7 @@ export function start3dVisualizer(
     composer.addPass(new RenderPass(scene, camera));
     bloomPass = new UnrealBloomPass(new THREE.Vector2(width, height), 0.95, 0.45, 0.85);
     composer.addPass(bloomPass);
+    composer.addPass(new ShaderPass(BLOOM_ALPHA_SHADER));
   }
 
   const builder = BUILDERS[preset] || createOrbPreset;

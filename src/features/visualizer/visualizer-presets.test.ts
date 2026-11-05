@@ -10,60 +10,50 @@ import { startPointerTracker } from './visualizer-pointer';
 import { startPointerTracker3D } from './presets-3d/pointer-projector';
 import { AudioFeatureExtractor } from './presets-3d/audio-features';
 
+const EXPECTED_3D = [
+  'orb',
+  'terrain',
+  'galaxy',
+  'tunnel',
+  'pillars',
+  'ferrofluid',
+  'silk',
+  'plasma-globe',
+  'urchin',
+  'pond',
+  'aurora',
+  'cymatics',
+  'skyline',
+  'vinyl',
+  'ink',
+];
+
+const REMOVED = ['gravity-well', 'ribbons', 'swarm'];
+
 describe('visualizer presets registry', () => {
   it('includes all 2D and 3D presets in the master list', () => {
     expect(VISUALIZER_2D_PRESETS).toEqual(['bars', 'wave', 'radial', 'contour']);
-    expect(VISUALIZER_3D_PRESETS).toEqual([
-      'orb',
-      'terrain',
-      'galaxy',
-      'tunnel',
-      'pillars',
-      'ferrofluid',
-      'gravity-well',
-      'silk',
-      'plasma-globe',
-      'ribbons',
-      'swarm',
-      'urchin',
-      'pond',
-    ]);
+    expect(VISUALIZER_3D_PRESETS).toEqual(EXPECTED_3D);
     expect(VISUALIZER_PRESETS).toEqual([...VISUALIZER_2D_PRESETS, ...VISUALIZER_3D_PRESETS]);
   });
 
   it('correctly validates visualizer kinds', () => {
     expect(isVisualizerKind('off')).toBe(true);
     expect(isVisualizerKind('bars')).toBe(true);
-    expect(isVisualizerKind('orb')).toBe(true);
-    expect(isVisualizerKind('terrain')).toBe(true);
-    expect(isVisualizerKind('galaxy')).toBe(true);
-    expect(isVisualizerKind('tunnel')).toBe(true);
-    expect(isVisualizerKind('pillars')).toBe(true);
-    expect(isVisualizerKind('ferrofluid')).toBe(true);
-    expect(isVisualizerKind('gravity-well')).toBe(true);
-    expect(isVisualizerKind('silk')).toBe(true);
-    expect(isVisualizerKind('plasma-globe')).toBe(true);
-    expect(isVisualizerKind('ribbons')).toBe(true);
-    expect(isVisualizerKind('swarm')).toBe(true);
-    expect(isVisualizerKind('urchin')).toBe(true);
-    expect(isVisualizerKind('pond')).toBe(true);
+    for (const id of EXPECTED_3D) expect(isVisualizerKind(id)).toBe(true);
     expect(isVisualizerKind('unknown-kind')).toBe(false);
   });
 
+  // A stored choice of a removed preset must stop validating, so the provider falls back.
+  it('rejects removed presets', () => {
+    for (const id of REMOVED) {
+      expect(isVisualizerKind(id)).toBe(false);
+      expect(isVisualizer3dPreset(id)).toBe(false);
+    }
+  });
+
   it('correctly distinguishes 3D presets from 2D presets', () => {
-    expect(isVisualizer3dPreset('orb')).toBe(true);
-    expect(isVisualizer3dPreset('terrain')).toBe(true);
-    expect(isVisualizer3dPreset('galaxy')).toBe(true);
-    expect(isVisualizer3dPreset('tunnel')).toBe(true);
-    expect(isVisualizer3dPreset('pillars')).toBe(true);
-    expect(isVisualizer3dPreset('ferrofluid')).toBe(true);
-    expect(isVisualizer3dPreset('gravity-well')).toBe(true);
-    expect(isVisualizer3dPreset('silk')).toBe(true);
-    expect(isVisualizer3dPreset('plasma-globe')).toBe(true);
-    expect(isVisualizer3dPreset('ribbons')).toBe(true);
-    expect(isVisualizer3dPreset('swarm')).toBe(true);
-    expect(isVisualizer3dPreset('urchin')).toBe(true);
-    expect(isVisualizer3dPreset('pond')).toBe(true);
+    for (const id of EXPECTED_3D) expect(isVisualizer3dPreset(id)).toBe(true);
 
     expect(isVisualizer3dPreset('bars')).toBe(false);
     expect(isVisualizer3dPreset('wave')).toBe(false);

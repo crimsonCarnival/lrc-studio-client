@@ -123,13 +123,15 @@ export default {
       tunnel: { label: "Tunnel", hint: "Hyperspace geometric wormhole" },
       pillars: { label: "Pillars", hint: "3D equalizer matrix" },
       ferrofluid: { label: "Ferrofluid", hint: "Magnetic liquid spikes" },
-      'gravity-well': { label: "Gravity Well", hint: "Particle black hole" },
       silk: { label: "Silk", hint: "Interactive fabric" },
       'plasma-globe': { label: "Plasma Globe", hint: "Electric lightning sphere" },
-      ribbons: { label: "Ribbons", hint: "Lagging frequency streams" },
-      swarm: { label: "Swarm", hint: "Reactive flocking boids" },
       urchin: { label: "Urchin", hint: "Frequency spine cluster" },
       pond: { label: "Pond", hint: "Interactive ripple surface" },
+      aurora: { label: "Aurora", hint: "Light curtains along the top" },
+      cymatics: { label: "Cymatics", hint: "Sand patterns on a vibrating plate" },
+      skyline: { label: "Skyline", hint: "Neon city equalizer" },
+      vinyl: { label: "Vinyl", hint: "A record playing the song" },
+      ink: { label: "Ink", hint: "Smoke blooming from the edges" },
     },
     feed: {
       element: {

@@ -198,15 +198,12 @@ A song's artists are an ordered list of **credits**, each `primary` or `featured
 
 - **Real-time karaoke preview** — Highlights the currently playing line and fills words character-by-character as they play (in Words mode).
 - **Interactive 3D audio visualizer** — WebGL-powered 3D audio-reactive scenes rendered in real time behind synced lyrics with bloom and shader postprocessing. Includes cursor-following interactive presets:
-  - **Ferrofluid**: Dark glossy metallic fluid with magnetic spikes; spikes lean toward the cursor (Bass = spike elongation, Treble = needle sharpness).
-  - **Gravity Well**: Swirling particle accretion disk where the cursor acts as the gravitational attractor (Bass = gravity shockwave pulse, Mids = orbital spin rate).
+  - **Ferrofluid**: Reflective liquid-metal droplet that grows cone spikes; the cursor acts as the magnet (Bands = per-spike height, Bass/beats = all spikes).
   - **Silk**: Sheer cloth mesh with FFT-driven waves; the cursor indents and pinches the fabric with spring-back physics.
   - **Plasma Globe**: Glass sphere housing electric discharge filaments reaching toward the cursor touch point (Treble = arc jitter and branch count, Bass = core electrode pulse).
-  - **Ribbons**: 16 floating frequency ribbons whose heads chase the cursor with staggered inertia and lag.
-  - **Swarm**: 3D boids flock orbiting and streaming toward the cursor (RMS = flight speed, Spectral Centroid = dynamic hue shift).
   - **Urchin**: 64 mathematical spines mapped to FFT bins that flex and magnetically rotate toward the cursor.
   - **Pond**: 3D height-field water simulation; moving the cursor deposits ripple wakes, while audio beats trigger concentric drops.
-  - **Classic 3D Presets**: Orb, Terrain, Galaxy, Tunnel, and Pillars.
+  - **Classic 3D Presets**: Orb, Terrain, Galaxy, Tunnel, Pillars, and the edge-framing Aurora, Cymatics, Skyline, Vinyl and Ink.
 - **Karaoke fill easing** — Highlights the currently playing line and fills words character-by-character as they play (in Words mode).
 - **Karaoke fill easing** — Linear (accurate) or ease-in/out (smooth) word fill animation.
 - **Fill track selection** — Apply the animated fill to the main text, secondary text, or both.

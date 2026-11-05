@@ -24,16 +24,24 @@ const CATEGORIES = [
 
 const INTERACTIVE_3D_SET = new Set<VisualizerKind>([
   'ferrofluid',
-  'gravity-well',
   'silk',
   'plasma-globe',
-  'ribbons',
-  'swarm',
   'urchin',
   'pond',
 ]);
 
-const CLASSIC_3D_SET = new Set<VisualizerKind>(['orb', 'terrain', 'galaxy', 'tunnel', 'pillars']);
+const CLASSIC_3D_SET = new Set<VisualizerKind>([
+  'orb',
+  'terrain',
+  'galaxy',
+  'tunnel',
+  'pillars',
+  'aurora',
+  'cymatics',
+  'skyline',
+  'vinyl',
+  'ink',
+]);
 
 const TWO_D_SET = new Set<VisualizerKind>(['off', 'bars', 'wave', 'radial', 'contour']);
 
