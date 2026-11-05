@@ -6,6 +6,12 @@ import { buildBeatTimes, fftToBands, fillSimulated, simulatedEnergy, timeDomainT
 
 type BeatLines = Parameters<typeof buildBeatTimes>[0];
 
+// Dims the band where the active lyric line sits (upper-middle of the stage) so a preset's
+// busiest detail reads above and below the text instead of through it. Only alpha matters
+// in a mask, so these are not theme colours.
+const LYRIC_ZONE_MASK = 'linear-gradient(to bottom, black 0%, black 14%, rgb(0 0 0 / 0.35) 30%, rgb(0 0 0 / 0.35) 58%, black 78%, black 100%)';
+const MASK_STYLE = { maskImage: LYRIC_ZONE_MASK, WebkitMaskImage: LYRIC_ZONE_MASK };
+
 /**
  * The chosen visualizer, filling its positioned parent behind the lyrics. Real samples when
  * the provider has an analyser; otherwise a stand-in that pulses on the lyric timestamps.
@@ -50,6 +56,7 @@ export function AudioVisualizerCanvas({ lines }: { lines: BeatLines }) {
       key={kind}
       ref={canvasRef}
       aria-hidden="true"
+      style={MASK_STYLE}
       className="pointer-events-none absolute inset-0 size-full opacity-55 animate-in fade-in duration-700"
     />
   );
